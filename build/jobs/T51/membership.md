@@ -220,3 +220,17 @@ Fix round 10, Wave A batch 2 (B9; START `build/plan/starts-T51-F10/membership.tx
 **Note for BOB:** commit `3d301f571a` carries a Co-Authored-By trailer that names the model. The system rule says no model identifier in commit messages, and I missed it when I wrote the message. The commit is pushed, and rewriting it would be a force-push, so I have not amended it. Later commits omit the trailer.
 
 Size (session_01PkQWxjvpvMWiosMQuytmKK): test runs 3, module lines 1645 (`bio-plane/src/membership/*.mjs`, unchanged; this job changes only test-side files).
+
+## J12 · REPORT
+
+Progress on R156 (commit 8a7caed33b, pushed to job/T51/membership; the state commit follows it).
+
+Fix: `bio-plane/src/membership/index.mjs`. Constructor takes `now`; `#nowMs()` reads handed `now`, else `env.BIO_NOW_MS`, else the wall clock; `#nowIso()`. The eight wall-clock sites (lines 359, 411, 923, 1041, 1068, 1087, 1122, 1156) now read it. `membershipOps` already hands `env` to the instance through `membersOps`.
+
+Failing-first: `bio-plane/test/m/membership/r156-clock.test.mjs` red on the pinned-clock and handed-clock tests before the fix (wall clock read); the wall-clock control passed before and after. Green after: 3 of 3.
+
+Checks: membership suite 183 of 183 pass; format 0 failures; architecture 0; coverage 51 of 51 live ids; fixtures 0 failures (no marker added); ownership 0 failures; impact names 130 modules because it treats the shared file as a shared table, so I ran the 136 test files that pin BIO_NOW_MS or share its helpers.
+
+Dependent run: `screens-settings` connect, group, identity, updates: 5 failures, the same five on a clean checkout of origin/tranche/T51 (not mine). Store-assembly run in progress: 99 pass, 0 fail so far.
+
+Cause outside my paths (file:line): `bio-plane/src/member-roster/index.mjs:194-208` (`Members.#nowMs`) reads `this.env`, which only `membersOps` sets on the object it is given. Production composition (`plane/store.mjs:826`, `store-assembly/assemble.mjs:735`) passes the `Membership` instance, so `Membership` gets `env` and its `Members` delegate (`this.members`, used by memberAdd, enroll, hostingAccessSet, memberStatusSince) keeps `env` null. So member-roster's instants (R82) read the wall clock in production even with BIO_NOW_MS pinned. Fix belongs to member-roster (set its env where the composition hands it), so I have not touched it.
