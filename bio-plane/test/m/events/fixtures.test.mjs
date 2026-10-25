@@ -2,7 +2,7 @@
  * and each test here calls it and checks the real answer. Named with the requirement each answer carries. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { recordedByMalformedExtent, sequenceUndetermined, timelineAnswer, timelineRefusal, usesOf } from "./fixtures.mjs";
+import { recordedByMalformedExtent, sequenceUndetermined, timelineAnswer, timelineRefusal, timelineUndated, usesOf } from "./fixtures.mjs";
 
 test("R49 recordedByMalformedExtent: events' own EXTENT_MALFORMED for an extent that is no object of a known kind, with its code and a reason", () => {
   for (const bad of ["page 1", {}, { kind: "nonsense" }, 5]) {
@@ -43,4 +43,11 @@ test("R46 usesOf: a world seeded with a discretion, a waiver and an assessment t
   assert.deepEqual(u.all.items.map((e) => e.use.kind).sort(), ["assessment", "discretion", "waiver"]);
   assert.equal(u.refused.ok, false);
   assert.equal(u.refused.reason, "KIND_NOT_DISCRETION");
+});
+
+test("R50 timelineUndated: the real timeline puts an undated event in placed_nowhere with grade null and grade_why and the view's why both {key, vars}", () => {
+  const { item, view } = timelineUndated();
+  assert.equal(item.grade, null);
+  assert.deepEqual(item.grade_why, { key: "events.why.grade_placed_nowhere", vars: {} });
+  assert.deepEqual(view.why, { key: "events.why.placed_nowhere_attestation", vars: {} });
 });

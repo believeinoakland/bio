@@ -75,7 +75,8 @@ test("R54 a stale when_cache answers readEvent when undetermined with why {key: 
   const lane = w.ev.timeline({ set: [p], viewer: MEMBER }).world;
   const item = [...lane.items, ...lane.placed_nowhere].find((i) => i.event_id === e);
   assert.deepEqual(item.why, { key: "events.why.cache_stale", vars: {} });
-  assert.equal(item.grade_why, word("events.why.grade_time_unread"));
+  assert.deepEqual(item.grade_why, { key: "events.why.grade_time_unread", vars: {} });
+  assert.equal(reasonText(item.grade_why), word("events.why.grade_time_unread"));
   const q = w.ev.sequence({ a: e, b: w.event({ value: "2027-01-01" }).event_id });
   assert.deepEqual([q.answer, q.why], ["undetermined", { key: "events.why.cache_stale", vars: {} }]);
   assert.ok(drawn(q.why).length > 0);
