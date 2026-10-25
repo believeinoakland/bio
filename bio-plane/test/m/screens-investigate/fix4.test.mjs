@@ -201,14 +201,13 @@ test("R18 C14 a graph with no step to colour does not read the connection vocabu
   const graph = await refused(t.world, t.me, "exploregraph", { centre: t.chen, at: { value: today, precision: "day", zone: "UTC" }, rings: 2 });
   assert.ok(graph.steps.length > 0, "the world's graph of a person has steps");
   const served = { exploregraph: async () => ({ status: 200, json: { ok: true, result: graph } }) };
-  const cases = { money: [world, me, "/app/money/" + trail, t, "money"], person: [world, me, "/app/person/" + lone, t, "person"] };
-  for (const [name, [w, m, path, tw, key]] of Object.entries(cases)) {
-    const bare = await openAs(w, m, path);
-    const g = bare.byOp("exploregraph");
-    assert.equal(g.length, 1, `${name}: the graph is read`);
+  const bareAt = { money: "/app/money/" + trail, person: "/app/person/" + lone };
+  for (const name of ["money", "person"]) {
+    const bare = await openAs(world, me, bareAt[name]);
+    assert.equal(bare.byOp("exploregraph").length, 1, `${name}: the graph is read`);
     assert.equal(bare.byOp("affordances").length, 0, `${name}: no step, no vocabulary`);
     assert.ok(main(bare).querySelector(".mk-graph, [data-state=empty]") || main(bare).textContent.length > 0, `${name}: drawn`);
-    const stepped = await openAs(tw.world, tw.me, tw.PATHS[key], key === "money" ? { plane: served } : {});
+    const stepped = await openAs(t.world, t.me, t.PATHS[name], name === "money" ? { plane: served } : {});
     assert.equal(stepped.byOp("affordances").length, 1, `${name}: control, a step is coloured by its group, one read`);
   }
 });
