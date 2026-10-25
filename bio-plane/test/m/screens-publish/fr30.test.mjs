@@ -92,7 +92,10 @@ test("R67 the receipt draws the knock's reference under the heading, by key; an 
   assert.ok(drew(withRef, "screen.doorbell.after.head"));
   assert.ok(withRef.answered("knock").knockId, "the doorbell answers a knockId");
   assert.ok(drew(withRef, "screen.doorbell.reference", { reference: withRef.answered("knock").knockId }), "the reference is the knockId the doorbell answers");
-  const without = await open("/app/doorbell", { boot: PUBLIC, plane: { knock: { status: 200, json: { ok: true, result: { ok: true } } } } });
+  /* the control: the real answer without its reference (the door always states one, so the field is taken off that answer) */
+  const bare = { ...withRef.answered("knock") };
+  delete bare.knockId;
+  const without = await open("/app/doorbell", { boot: PUBLIC, plane: { knock: ok(bare) } });
   choose(without, "db-file", new Uint8Array([104, 105]));
   await press(without, "knock");
   assert.ok(without.doc.querySelector("[data-received]"));
@@ -137,7 +140,14 @@ test("R49 'Make one for me' sends generateSecret and no phrase, even with one ty
 });
 
 test("R49 an answer without the fingerprint, size, pseudonym or phrase draws none of them (control)", async () => {
-  const p = await open("/app/doorbell", { boot: PUBLIC, plane: { knock: { status: 200, json: { ok: true, result: { ok: true, knockId: "KNOCK-1" } } } } });
+  /* the control: the real answer with those four taken off (the door always states them) */
+  const made = await openWorld("/app/doorbell");
+  choose(made, "db-file", new Uint8Array([104, 105]));
+  tick(made, "db-make", "make");
+  await press(made, "knock");
+  const bare = { ...made.answered("knock") };
+  for (const k of ["secret", "sha256", "pseudonym", "bytes"]) delete bare[k];
+  const p = await open("/app/doorbell", { boot: PUBLIC, plane: { knock: ok(bare) } });
   choose(p, "db-file", new Uint8Array([104, 105]));
   await press(p, "knock");
   assert.ok(p.doc.querySelector("[data-received]") && p.doc.querySelector("[data-receipt]"));
