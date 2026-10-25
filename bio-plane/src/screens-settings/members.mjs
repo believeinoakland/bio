@@ -37,6 +37,8 @@ export const members = {
       r.arith = { op: "adminarith" };
       // a removal under way (member-roster R75; R56 item 4)
       r.removals = { op: "adminremovalsopen" };
+      // the names of the projects the administrator sees in full, for the roster's Projects column (R47; Membership v2 §7.8)
+      r.projects = { op: "projectlist" };
     }
     return r;
   },
@@ -97,7 +99,19 @@ export const members = {
         const th = (k) => `<th><span class="k" tabindex="0" data-level="1" data-tip="${W("column.members." + k + ".shows")}">${W("column.members." + k + ".name")}</span></th>`;
         return h + `<table class="mk-table" data-list="members"><thead><tr>${th("member")}${th("may-do")}${th("expertise")}</tr></thead><tbody>${active.map((m) => `<tr><td>${nameOf(m)}${isFounder(m) && !founderHandle ? `<span class="mk-small">${W("member.founder.unnamed.help")}</span>` : ""}</td><td>${capsOf(m)}</td><td>${expText(m)}</td></tr>`).join("")}</tbody></table><p class="mk-note">${W(S + "member.note")}</p>`;
       }
-      const cols = [S + "col.handle", S + "col.cover", S + "col.role", S + "col.caps", S + "col.status", S + "col.expertise"];
+      const cols = [S + "col.handle", S + "col.cover", S + "col.role", S + "col.caps", S + "col.status", S + "col.expertise", "screen.projects.name"];
+      // the member's projects, as `memberlist` states them for an administrator's roster (membership R18: the projects the administrator sees
+      // in full, and a hidden one's owner only): each one the member has joined, by the name `projectlist` gives it, "owner of" or "works on"
+      // (the design's member card). A project the administrator can read no name for is not drawn by its id; a failed read is drawn failed.
+      const projectsOf = (m) => {
+        const mine = (Array.isArray(m.projects) ? m.projects : []).filter((p) => p && p.state === "joined");
+        if (!mine.length) return "";
+        return cs.state(data.projects, (v) => {
+          const named = new Map((Array.isArray(v.projects) ? v.projects : []).map((p) => [p.id, p.name]));
+          return mine.filter((p) => typeof named.get(p.project) === "string" && named.get(p.project) !== "")
+            .map((p) => W(p.owner === true ? "screen.members.tip.owner" : "screen.members.tip.workson", { project: named.get(p.project) })).join(" · ");
+        });
+      };
       return h + cs.rows({
         // the member's handle is their reference (R12); one not joined yet has none
         id: "roster", cols, items: list, key: (m) => m.member_id, name: (m) => nameOf(m),
@@ -108,6 +122,7 @@ export const members = {
           capsOf(m),
           W(S + "status." + (["invited", "proposed", "active", "revoked"].indexOf(m.status) >= 0 ? m.status : "other")) + (m.invitation ? " · " + W(S + "invitation." + m.invitation) : ""),
           expOf(m).filter((e) => e.state !== "withdrawn").map((e) => W(e.confirmed ? S + "expertise.confirmed" : S + "expertise.declared", { label: e.label })).join(" · "),
+          projectsOf(m),
         ],
         // each row's acts, in its panel (R2; interface-shell R19)
         acts: (m) => {
