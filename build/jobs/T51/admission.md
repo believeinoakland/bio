@@ -134,3 +134,7 @@ COMPLETE · ADMISSION #18 · R27b: the door window counts in memory, written at 
 - Note for BOB: control-plane's `r10-caseratify-chain.test.mjs` should now read one hop less (14 to 13) from this change; it is control-plane's and public-read's to bring to 11.
 
 Size (session_01CC79ZymUBLp7z7wZPzLMwE): test runs 7, module lines 1653
+
+## J7 · COMPLETE
+
+R33 met (one hop: the session read and the reauthdue question issued together; answers unchanged). Failing-first r33-one-hop.test.mjs seen red (actual ['session'] vs expected ['reauthdue','session']), now green; admission 79 pass; format, architecture, coverage (33/33), words, fixtures, ownership 0 failures. Inherited reds in users: 7 tests in 6 files (control-plane t51-round7-seam, t47-door; plane g55-alarm-l; ratification retire, declared-ops, release), identical with my change reverted. REPORT: one store call (not one hop) needs a store-door route sessionreauth answering {session, due}; shape in my record. Details in build/jobs/T51/admission.md.
