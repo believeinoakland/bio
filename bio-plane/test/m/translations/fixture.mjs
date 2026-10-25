@@ -74,12 +74,14 @@ export async function frame(m, req) {
     const raw = await req.text();
     if (raw.trim() !== "") {
       try { body = JSON.parse(raw); }
+      // fixtures-contract: store-door store-replies
       catch { return Response.json({ ok: false, reason: "BAD_JSON", detail: "the request body is not valid JSON" }, { status: 400 }); }
     }
   }
   try {
     return Response.json({ ok: true, result: await translationsOps(m, url, body)[op]() });
   } catch {
+    // fixtures-contract: store-door store-replies
     return Response.json({ ok: false, error: "internal error", reason: "STORE_INTERNAL_ERROR", code: "STORE_INTERNAL_ERROR",
                            correlation: webcrypto.randomUUID() }, { status: 500 });
   }
