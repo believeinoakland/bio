@@ -78,7 +78,7 @@ export async function deployed(ctx, parts = GATE_PARTS) {
 
 /** One object, constructed and settled (its migration and starts run). `routes(path, body)` answers its route map;
  *  `call(path, body)` the route the path names, awaited, as the frame does; `fetch(path, init)` the object's own door. */
-export async function store({ db, env: extra, before = null } = {}) {
+export async function store({ db, env: extra, before = null, retired = false } = {}) {
   const st = storage(db);
   const env = { STORE: { idFromName: (n) => n }, ...(extra || {}) };
   /* a test's own deps for a factory read on its first call only (K61), handed before construction */
@@ -86,8 +86,8 @@ export async function store({ db, env: extra, before = null } = {}) {
   const s = new Store(st.ctx, env);
   /* the class holds no route map (plane R1): a test that reads the route map reads the one assembled store over the same
      storage (store-assembly R1: a second assembly on one storage builds nothing twice), handed to the object as `s.routes` */
-  /* a retired room (R95) builds and writes nothing, so the fixture assembles nothing beside it: it is known by the object's own refusal */
-  if ((await s.fetch(new Request("http://do/whoami"))).status !== 410) {
+  /* a retired room (R95) builds and writes nothing, so the fixture assembles nothing beside it (the test says which room it made) */
+  if (!retired) {
     const assembled = assembledOver(st.ctx, env);
     s.routes = (url, body = null, grant = null) => assembled.routes(url, body, grant);
     s.read = (op, params) => assembled.read(op, params);

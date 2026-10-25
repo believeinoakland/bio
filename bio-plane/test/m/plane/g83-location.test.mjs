@@ -59,8 +59,8 @@ for (const [label, extra, naming, options] of SETTINGS) {
 
 /* ---- the object's own name, and a retired room ---- */
 const idOf = (name, env) => ({ name, equals: (other) => other && other.name === (env.STORE_GENERATION && /^[1-9][0-9]*$/.test(env.STORE_GENERATION) && Number(env.STORE_GENERATION) >= 2 ? `${name.split("~")[0]}~g${env.STORE_GENERATION}` : name.split("~")[0]) });
-function roomWorld(name, generation) {
-  return store({ env: { CAPTURES: multipartBucket(), ...(generation ? { STORE_GENERATION: generation } : {}) },
+function roomWorld(name, generation, retired = false) {
+  return store({ retired, env: { CAPTURES: multipartBucket(), ...(generation ? { STORE_GENERATION: generation } : {}) },
                  before: (ctx, env) => { env.STORE = { idFromName: (n) => ({ name: n }) }; ctx.id = { name, equals: (o) => o && o.name === name }; } });
 }
 test("R95 (G83) G1: inside the room `scratch~g2` the object's own namespace is the logical `scratch`: its evidence prefix is `scratch/captures/`, not the room's name; and a generation-2 room named `bio~g2` is `bio`", async () => {
@@ -74,7 +74,7 @@ test("R95 (G83) G1: inside the room `scratch~g2` the object's own namespace is t
 });
 
 test("R95, R111, R114 (G83) T-retired: a room of another generation (`bio`, generation 1, after the deploy sets generation 2) is inert: it builds no module, writes no table, deletes its alarm when it fires, refuses every request and RPC, and leaves its data", async () => {
-  const x = await roomWorld("bio", "2");
+  const x = await roomWorld("bio", "2", true);
   const tables = [...x.ctx.storage.sql.exec(`SELECT name FROM sqlite_master WHERE type='table'`)];
   assert.deepEqual(tables, [], "nothing was migrated: no table, no row written");
   await x.ctx.storage.setAlarm(Date.now() + 1000);
