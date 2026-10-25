@@ -194,3 +194,24 @@ B8 (fix round 10, the `conclude` re-point) is done in part and pushed as 66c36e9
 2. Accept this one arm as a documented exception, with a marker. I do not recommend it, since the code is real and a provider gives it.
 
 Nothing else in B8's scope is open. I am waiting on your ruling and have made no further change.
+
+## J11 · COMPLETE
+
+COMPLETE for B8 (fix round 10, the `conclude` re-point) and B10 (follow-up 40).
+
+**Entries applied.** B8: the `conclude` stand-in in `bio-plane/test/m/contradiction/fixture.mjs` takes basis-versions' published `concludeAct` for its `no_conclusion`, `bad_reading` and concluded arms (commit 66c36e9e2d). B10: the named-version arms take the published `adopted` (an accepted named reading) and `no_claim` (a named version not accepted, refused NO_CLAIM) kinds, in place of the hand-built refusal (commit 57668ad35f). Promotion in contradiction's own record is unchanged. The tranche is merged into the job branch, not rebased.
+
+**Deferred.** Nothing.
+
+**Found in other modules.** Nothing.
+
+**Tests and checks** (run from the product root with its absolute path):
+- Module tests `bio-plane/test/m/contradiction/*.test.mjs`: 152 tests, 144 pass, 0 fail, 8 todo, 0 cancelled.
+- `checks/fixtures.mjs /home/user/bio contradiction --list`: answer 0, 0 failures (was 1 failure at fixture.mjs:120 before B10).
+- `checks/format.mjs`: 178 modules, 0 failures.
+- `checks/architecture.mjs … contradiction`: 29 product files, 0 failures.
+- `checks/coverage.mjs … contradiction`: 61 of 61 live requirement ids named by a test, 0 failures.
+- `checks/words.mjs … contradiction`: 6201 literals, 0 failures.
+- `checks/ownership.mjs … contradiction tranche/T51`: 0 failures. The two files changed are `bio-plane/test/m/contradiction/fixture.mjs` and my job record `build/jobs/T51/contradiction.md`.
+
+Size (session_01H1kEAWw53A5hmDc6bvvHAe): test runs 2, module lines 3786
