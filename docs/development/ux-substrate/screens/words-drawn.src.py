@@ -8033,6 +8033,18 @@ w434('screen.calculation.column.help', 'Choose the column of the table this calc
 w434('screen.calculation.part', 'The value to count', 'the field: the value in that column whose rows are counted')
 w434('screen.calculation.part.help', 'Type the value as it appears in that column. The calculation counts the rows that hold it.', 'its help')
 
+# DEC-435: B522 (the Held list and the document picker specified; K5178) and B523 (SCREENS-INVESTIGATE #16 J28 (4), extends DEC-434)
+def w435(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-435: ' + note))
+w435('screen.held.empty.mine', "Nothing of yours is held. Choose Everyone's to see the captures other members are holding.", "B522: the Held list on Mine with none held, while others' may be")
+w435('screen.document.pick.more', '{count} shown here. More are on the next page.', "B522: the picker's line when the read pages by its next and gives no total (screen.list.showing when it does)")
+w435('screen.document.pick.none', 'No document you can see has “{text}” in its name.', 'B522: a search in the picker that finds none; {text} what was typed')
+w435('screen.person.holds.capacity', 'In what capacity', "B523: the field on a holds line (refusal.NO_CAPACITY when it is empty)")
+w435('refusal.NO_COLUMN', 'Choose the column of the table to work from. Nothing was written.', "B523: calculations, the column not given")
+w435('refusal.NO_PART', 'Type the value to count in that column. Nothing was written.', 'B523: calculations, the value not given')
+w435('refusal.NO_SUCH_COLUMN', 'That column is not in the table. Choose one of its columns. Nothing was written.', 'B523: calculations, a column the table does not have')
+w435('screen.timeline.nozone', 'Some times here are placed nowhere: your team has not chosen the places whose rules apply, so Civicsmith has no time zone to place them in. An administrator chooses them under Places and languages.', "B523: a hint on Timeline when the team has no active place (zone null); drawn once above the events it touches")
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
