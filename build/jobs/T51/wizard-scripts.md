@@ -590,3 +590,13 @@ fixtures wizard-scripts --list: 1 open, writing-help.test.mjs:217 LIMITS_UNREADA
 Met ids this round: R52. No fixtures-own or fixtures-generic markers added. No deferrals in wizard-scripts. Nothing else of mine changed.
 
 Size (session_0143XBw7eSFoV4QcZny2VQ3i): test runs 9, module lines 2903
+
+## J30 · BLOCKED
+
+CHANGE (B27) done in code; one edge is needed from you before the architecture check reads zero.
+
+Done (commit on job/T51/wizard-scripts, pushed): bio-plane/test/m/wizard-scripts/writing-help.test.mjs now takes answers' published limitsUnreadable() (bio-plane/test/m/answers/fixtures.mjs, its R30) in place of the hand-built LIMITS_UNREADABLE refusal. The R27 test is async and imports that fixture. Checks: wizard-scripts module suite 143 of 143; fixtures wizard-scripts reads 0 (was 1); format 0; coverage 52 of 52; ownership 0 failures.
+
+Blocked: architecture reads 1 failure, writing-help.test.mjs imports answers' fixture, which wizard-scripts does not declare in uses. The edge is in build/modules.json, which is not my file. I tested it locally and reverted it, nothing committed: adding "answers" to wizard-scripts' uses clears the check (0 failures).
+
+Needs Bob: add "answers" to the uses of wizard-scripts in build/modules.json (layer 6 is earlier than layer 11, so the order holds). Tell me when it is on the tranche, and I will merge it, re-run architecture, and post COMPLETE.
