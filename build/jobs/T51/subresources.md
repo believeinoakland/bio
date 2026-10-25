@@ -1,6 +1,6 @@
 # subresources (T51)
 
-**Status** · session_01XC1xckBh1sjtooJq8nyEsw · depth 2 · RUNNING until 2026-10-25T09:53:15Z (old-code red run of subresources tests (fix stashed)) · handled B5
+**Status** · session_01XC1xckBh1sjtooJq8nyEsw · depth 2 · COMPLETE · handled B5
 
 ## J1 · REPORT
 
