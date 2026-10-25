@@ -76,41 +76,84 @@ async function holdBytes(world, me, name, bytes, project) {
   return { sha, bundle: made.bundleId || id };
 }
 
+/** A calculation resting on a recorded draw: a project, a register the member holds with its declared table, a draw of all three rows with a question, two members'
+ *  visits (mai finds the first item repaired; mai finds the second repaired and dev finds it not: in tension; the third is not visited), the estimate over the visits
+ *  (its own calculation) and the calculation the page opens, which reads the table and the draw. All real acts. Answers the ids the world gave. */
+async function drawnWorld() {
+  const { world, me } = await inWorld();
+  await world.recipes.profiles(me, ["oakland-alameda"]);
+  const project = await world.recipes.project(me, "Repairs");
+  const csv = await world.recipes.hold(me, "Reports.csv", "id,closed\n1,y\n2,y\n3,n\n", project);
+  const table = (await me.act("tabledeclare", { body: { source: { capture_sha: csv.sha, extent: { kind: "document" } }, header: ["id", "closed"],
+    schema: { fields: [{ name: "id", type: "string" }, { name: "closed", type: "string" }] } } })).sha;
+  const period = { from: "2025-07-01", to: "2026-06-30" };
+  const question = "Was the pothole repaired?";
+  const draw = (await me.act("calculationdraw", { body: { set: table, n: 3, seed: "2026-10-05-7f31", question, project, reason: "a sample to visit" } })).draw;
+  const mai = await world.signIn("mai", { admin: true }), dev = await world.signIn("dev", { admin: true });
+  const visit = async (who, item, finding, observedAt) => {
+    const t = await who.act("testify", { body: { words: "What I saw at report " + item + ".", observedAt } });
+    await who.act("spotcheckvisit", { body: { draw, item, finding, testimony: t.capture_sha, reason: "I visited it" } });
+  };
+  const items = (await me.read("spotcheck", { query: { draw } })).items.map((x) => x.item);
+  const [yes, tension, unvisited] = items;
+  await visit(mai, yes, "yes", "2026-10-06");
+  await visit(mai, tension, "yes", "2026-10-06");
+  await visit(dev, tension, "no", "2026-10-07");
+  const estimate = (await me.act("calculationcreate", { body: { question: "Share of drawn reports repaired", period, kind: "estimate", project, inputs: [{ name: "sample", draw }] } })).calc_id;
+  const calc = (await me.act("calculationcreate", { body: { question: "Reports closed within seven days, FY2025", period, kind: "count", project, inputs: [{ name: "orders", table }, { name: "sample", draw }] } })).calc_id;
+  return { world, me, project, csv, table, draw, question, yes, tension, unvisited, estimate, calc, path: "/app/calculation/" + calc };
+}
+
 test("R5 reads calculation (the computed fact, its method as written, its inputs with their grades, its checks)", async () => {
-  const p = await open(at);
-  assert.equal(p.byOp("calculation")[0].query.id, CALC);
+  const { world, me, calc, table, path } = await drawnWorld();
+  const p = await openAs(world, me, path);
+  assert.equal(p.byOp("calculation")[0].query.id, calc);
+  const stored = await me.read("calculation", { query: { id: calc } });
   const m = main(p);
-  assert.equal(m.querySelector("h1").textContent, "Reports closed within seven days, FY2025");
-  assert.match(m.querySelector(".mk-bignum").textContent, /^812/);
-  assert.match(m.textContent, /count\(rows where closed − reported ≤ 7 days\)/);
-  drew(m, "screen.calculation.status.agrees");
+  assert.equal(m.querySelector("h1").textContent, stored.question);
+  assert.equal(m.querySelector(".mk-bignum b").textContent, stored.results.output.value, "the computed fact, as the store computed it");
+  assert.match(m.textContent, new RegExp(stored.calculation.recipe.steps[0].op), "its method as written");
+  drew(m, "screen.calculation.status." + stored.recompute_status);
   const inputs = m.querySelectorAll("section").find((s) => s.querySelector("h2").textContent === word("screen.calculation.inputs"));
-  assert.equal(inputs.querySelector(".cs-grade").textContent, word("mark.scale.capture.name") + "B");
+  const graded = stored.grade.inputs.find((x) => x.name === "orders");
+  assert.equal(inputs.querySelector(".cs-grade") ? inputs.querySelector(".cs-grade").textContent : null, /^[A-D]$/.test(graded.grade || "") ? word("mark.scale.capture.name") + graded.grade : null, "each input with the grade the store gives it");
   assert.match(inputs.textContent, /orders/);
+  assert.ok(inputs.textContent.includes(table.slice(0, 8)), "and the table it reads");
 });
 
 test("R5 the spot-check: the draw (the set, its size, the seed and method, that anyone can repeat it), the question, each drawn item with its visits and standing, the counts, the estimate with its exact range", async () => {
-  const p = await open(at);
-  assert.equal(p.byOp("spotcheck")[0].query.draw, DRAW);
-  assert.equal(p.byOp("calculation").at(-1).query.id, "CALC-2026-0002", "the estimate's own calculation");
+  const { world, me, draw, question, estimate, path } = await drawnWorld();
+  const p = await openAs(world, me, path);
+  assert.equal(p.byOp("spotcheck")[0].query.draw, draw);
+  assert.equal(p.byOp("calculation").at(-1).query.id, estimate, "the estimate's own calculation");
+  const spot = await me.read("spotcheck", { query: { draw } });
+  const iv = (await me.read("calculation", { query: { id: estimate } })).results.interval;
   const s = main(p).querySelectorAll("section").find((x) => x.querySelector("h2").textContent === word("screen.calculation.spot"));
-  drew(s, "screen.calculation.draw.what", { n: "3", size: "812", seed: "2026-10-05-7f31" });
+  drew(s, "screen.calculation.draw.what", { n: String(spot.draw.n), size: String(spot.draw.set_size), seed: spot.draw.seed });
   drew(s, "screen.calculation.draw.repeat");
-  assert.ok(s.textContent.includes("Was the pothole repaired?"), "the question, as the draw records it");
-  drew(s, "screen.calculation.counts", { visited: "2", n: "3", yes: "1", no: "0", unsure: "0" });
-  for (const k of ["disagree", "notvisited"]) drew(s, "screen.calculation.counts." + k, { n: "1" });
-  drew(s, "screen.calculation.range", { share: "81", judged: "37", confidence: "95", low: "65", high: "92" });
-  drew(s, "screen.calculation.item", { item: "17" });
-  drew(s, "screen.calculation.visit", { finding: word("screen.calculation.finding.yes"), by: "mai", date: dayOf("2026-10-06") });
-  assert.equal(s.querySelectorAll(".cs-grade[data-scale=testimony]").length, 3, "every visit, graded as testimony");
+  assert.ok(s.textContent.includes(question), "the question, as the draw records it");
+  const k = spot.counts;
+  drew(s, "screen.calculation.counts", { visited: String(spot.draw.n - k.not_visited), n: String(spot.draw.n), yes: String(k.yes), no: String(k.no), unsure: String(k.could_not_tell) });
+  assert.deepEqual([k.yes, k.disagree, k.not_visited], [1, 1, 1], "two members' visits made one item yes, one in tension, one not visited");
+  for (const key of ["disagree", "notvisited"]) drew(s, "screen.calculation.counts." + key, { n: "1" });
+  drew(s, "screen.calculation.range", { share: String(Math.round((iv.successes / iv.sample_size) * 100)), judged: String(iv.sample_size), confidence: String(Math.round(iv.confidence * 100)),
+    low: String(Math.round(iv.low_share.value * 100)), high: String(Math.round(iv.high_share.value * 100)) });
+  const first = spot.items.find((x) => x.standing === "yes");
+  drew(s, "screen.calculation.item", { item: first.item });
+  const v = first.visits[0];
+  drew(s, "screen.calculation.visit", { finding: word("screen.calculation.finding.yes"), by: v.visitor, date: dayOf(v.observed_at) });
+  assert.equal(s.querySelectorAll(".cs-grade[data-scale=testimony]").length, spot.items.reduce((n, x) => n + x.visits.length, 0), "every visit, graded as testimony");
 });
 
 test("R5 a disagreeing item's visits are drawn in tension, never one picked", async () => {
-  const p = await open(at);
-  const row = main(p).querySelectorAll(".cs-row").find((r) => r.textContent.includes(word("screen.calculation.item", { item: "4" })));
+  const { world, me, draw, tension, path } = await drawnWorld();
+  const p = await openAs(world, me, path);
+  const visits = (await me.read("spotcheck", { query: { draw } })).items.find((x) => x.item === tension).visits;
+  assert.equal(visits.length, 2);
+  const row = main(p).querySelectorAll(".cs-row").find((r) => r.textContent.includes(word("screen.calculation.item", { item: tension })));
   drew(row, "screen.calculation.standing.disagree");
-  drew(row, "screen.calculation.visit", { finding: word("screen.calculation.finding.yes"), by: "mai", date: dayOf("2026-10-06") });
-  drew(row, "screen.calculation.visit", { finding: word("screen.calculation.finding.no"), by: "dev", date: dayOf("2026-10-07") });
+  for (const v of visits) drew(row, "screen.calculation.visit", { finding: word("screen.calculation.finding." + v.finding), by: v.visitor, date: dayOf(v.observed_at) });
+  assert.deepEqual(visits.map((v) => v.finding).sort(), ["no", "yes"]);
   drew(row, "screen.calculation.tension");
 });
 

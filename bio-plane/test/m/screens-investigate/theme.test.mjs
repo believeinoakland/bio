@@ -50,14 +50,31 @@ test("R31 state a: a search sends themeread with the words; declaring sends them
 });
 
 test("R31 state b: a placement with who and when and its note, a hunch kept apart, a taken-out placement with who, when and why; control: a hunch is never drawn as a placement", async () => {
-  const p = await open(MORE_PATHS.themeOne);
+  const { world, me } = await inWorld();
+  const dev = await world.signIn("dev", { admin: true });
+  const mai = await world.signIn("mai", { admin: true });
+  const ana = await world.signIn("ana", { admin: false });
+  const project = await world.recipes.project(me, "Roof repairs");
+  const docs = [];
+  for (const n of ["Roof report", "Gutter report", "Attic report"]) docs.push((await world.recipes.hold(me, n + ".txt", n + " shows repairs put off.", project)).bundle);
+  const theme = (await me.act("themedeclare", { body: { name: "Deferred maintenance", test: "repairs put off" } })).theme_id;
+  await dev.act("themeplace", { body: { theme, target: docs[0], note: "the roof repair" } });
+  await dev.act("themepropose", { body: { theme, target: docs[1], note: "maybe" } });
+  await dev.act("themeplace", { body: { theme, target: docs[2], note: "the attic" } });
+  await mai.act("themewithdraw", { body: { theme, target: docs[2], reason: "wrong year" } });
+  const held = await me.read("themeread", { query: { id: theme } });
+  const placed = held.members.find((x) => x.document === docs[0]);
+  const hunch = held.hunches.find((x) => x.document === docs[1]);
+  const out = held.withdrawn.find((x) => x.document === docs[2]);
+  assert.ok(placed && hunch && out, "the world holds a placement, a hunch and a taken-out placement");
+  const p = await openAs(world, ana, "/app/theme/" + theme);
   const m = main(p);
   const sec = (key) => m.querySelectorAll("section").find((s) => s.querySelector("h2").textContent === word(key));
-  drew(sec("theme.placed"), "theme.placed.by", { who: "dev", date: dayOf("2026-10-02"), note: "the roof repair" });
-  drew(sec("theme.hunches"), "theme.hunch.by", { who: "dev", date: dayOf("2026-10-03"), note: "maybe" });
+  drew(sec("theme.placed"), "theme.placed.by", { who: "dev", date: dayIn(placed.placed_at), note: "the roof repair" });
+  drew(sec("theme.hunches"), "theme.hunch.by", { who: "dev", date: dayIn(hunch.proposed_at), note: "maybe" });
   drew(sec("theme.hunches"), "theme.hunch.note");
-  drew(sec("theme.out"), "theme.out.withdrawn", { who: "mai", date: dayOf("2026-10-04"), reason: "wrong year" });
-  notDrew(sec("theme.placed"), "theme.hunch.by", { who: "dev", date: dayOf("2026-10-03"), note: "maybe" });
+  drew(sec("theme.out"), "theme.out.withdrawn", { who: "mai", date: dayIn(out.ended_at), reason: "wrong year" });
+  notDrew(sec("theme.placed"), "theme.hunch.by", { who: "dev", date: dayIn(hunch.proposed_at), note: "maybe" });
   assert.equal(sec("theme.placed").querySelectorAll(".cs-ref, .cs-card").length, 1, "only the placement is in the placed list");
   assert.equal(button(p, "themeplace") !== null, true, "It belongs, at the hunch");
   assert.equal(sec("theme.placed").querySelectorAll('button[data-act="themewithdraw"]').length, 0, "Take it out only for the placer or an administrator");

@@ -25,29 +25,56 @@ const changing = (world, me, op, fn) => rewrite(world, me, (req, a) => (a && a.j
 
 /* ---------------------------------------------------------------- C14 */
 
-const picked = (rows) => (r) => ok(r.query && r.query.fields === "picker" ? { ok: true, held: rows, truncated: false } : refusedIn("TOO_SLOW", "the full list is not what a picker asks").json.result);
-const ROW = (n, title, project, sha, extra = {}) => ({ bundle_id: "INFO-2026-" + String(n).padStart(4, "0"), title, project, capture: { sha256: sha }, standing: "collected", ...extra });
+const TITLES = ["Lease amendment 1", "Rent schedule", "Vouched minutes"];
+const ORDINANCE = "Section 8.22.050 No landlord shall increase the rent above the limit the board sets.";
+const POLICY = "The Director shall repair each reported pothole within seven calendar days.";
 
-/* one act per screen, one that re-reads by default (no `rereads`) and sends something on the fixtures; each with the read it must still re-read */
+/** One project holding three documents, and a page of each screen on them: a person, a trail, two standards, a proceeding (a court, a docket) and a calculation. */
+async function screensOf(world, me) {
+  await world.recipes.profiles(me, ["oakland-alameda"]);
+  const project = await world.recipes.project(me, "Rent case");
+  const docs = [];
+  for (const t of TITLES) docs.push(await world.recipes.hold(me, t + ".txt", t === "Rent schedule" ? ORDINANCE : t === "Vouched minutes" ? POLICY : "The lease is amended: " + t + ".", project));
+  const person = (await me.act("entitycreate", { body: { kind: "person", label: "Lin Chen", note: "Director of Public Works." } })).entity_id;
+  const trail = await world.recipes.trail(me, project, "Records office budget, FY2026");
+  const ou = await readHeld(world, me, docs[1].sha), pu = await readHeld(world, me, docs[2].sha);
+  const ord = await declareStandard(me, { cite: "Ordinance 8.22", kind: "ordinance", sha: docs[1].sha, extent: ou[0].extent });
+  const pol = await declareStandard(me, { cite: "Instruction 9.1", kind: "policy", issuer: "Public Works Department", sha: docs[2].sha, extent: pu[0].extent });
+  const court = (await me.act("entitycreate", { body: { kind: "body", label: "Alameda Housing Tribunal", forum_kind: "court", note: "A court." } })).entity_id;
+  const proc = (await me.act("entitycreate", { body: { kind: "proceeding", label: "Lease rent case", note: "From the caption.", proceeding: { forum: court, kind: "civil", number: "24CV123456" } } })).entity_id;
+  const csv = await world.recipes.hold(me, "Payments.csv", "payer,payee,amount\nCity,Acme,5\nCity,Beta,7\n", project);
+  const table = (await me.act("tabledeclare", { body: { source: { capture_sha: csv.sha, extent: { kind: "document" } }, header: ["payer", "payee", "amount"],
+    schema: { fields: [{ name: "payer", type: "string" }, { name: "payee", type: "string" }, { name: "amount", type: "number" }] } } })).sha;
+  const calc = (await me.act("calculationcreate", { body: { question: "How many payments?", period: { from: "2025-07-01", to: "2026-06-30" }, kind: "count", project, inputs: [{ name: "input", table }] } })).calc_id;
+  return { project, docs, person, trail, ord, pol, proc, calc };
+}
+
+/* one act per screen, one that re-reads by default (no `rereads`) and sends something; each with the read it must still re-read */
 const SCREENS = [
-  ["person", PATHS.person, "person-fact-doc", async (p) => { fill(p, { "person-alias": "Lin C." }); await press(p, "entityalias"); }, "entityalias", "entity"],
-  ["timeline", PATHS.timeline, "tl-doc", async (p) => { fill(p, { "tl-doc": SHA, "tl-date": "2024-05-01" }); await press(p, "recorddatedfact"); }, "recorddatedfact", "image"],
-  ["money", PATHS.money, "mf-doc", async (p) => { fill(p, { "mf-expertise": "budgets" }); await press(p, "checkrequest", { reason: "the budget figures" }); }, "checkrequest", "moneyset"],
-  ["standard", "/app/standard/" + STD, "st-doc", async (p) => { fill(p, { "st-type": "implements", "st-to": "STD-2026-0001-ordinance", "st-citation": "CNT-2026-0001" }); await press(p, "lawrelate", { reason: "it implements the ordinance" }); }, "lawrelate", "standard"],
-  ["proceeding", PATHS.proceeding, "pr-doc", async (p) => { fill(p, { "pr-register": "https://court.example/register/RG26" }); await press(p, "followregister"); }, "followregister", "entity"],
-  ["calculation", PATHS.calculation, "calc-set", async (p) => { await press(p, "calculationaccept", { reason: "checked twice" }); }, "calculationaccept", "calculation"],
+  ["person", (W) => "/app/person/" + W.person, "person-fact-doc", async (p) => { fill(p, { "person-alias": "Lin C." }); await press(p, "entityalias"); }, "entityalias", "entity"],
+  ["timeline", (W) => "/app/timeline/" + W.project, "tl-doc", async (p, W) => { fill(p, { "tl-doc": W.docs[0].sha, "tl-date": "2024-05-01" }); await press(p, "recorddatedfact"); }, "recorddatedfact", "image"],
+  ["money", (W) => "/app/money/" + W.trail, "mf-doc", async (p) => { fill(p, { "mf-expertise": "budgets" }); await press(p, "checkrequest", { reason: "the budget figures" }); }, "checkrequest", "moneyset"],
+  ["standard", (W) => "/app/standard/" + W.pol, "st-doc", async (p, W) => { fill(p, { "st-type": "implements", "st-to": W.ord, "st-citation": W.cite }); await press(p, "lawrelate", { reason: "it implements the ordinance" }); }, "lawrelate", "standard"],
+  ["proceeding", (W) => "/app/proceeding/" + W.proc, "pr-doc", async (p) => { fill(p, { "pr-register": "https://court.example/register/RG26" }); await press(p, "followregister"); }, "followregister", "entity"],
+  ["calculation", (W) => "/app/calculation/" + W.calc, "calc-set", async (p) => { await press(p, "calculationaccept", { reason: "checked twice" }); }, "calculationaccept", "calculation"],
 ];
 
-for (const [name, path, field, act, op, reread] of SCREENS) {
+for (const [name, pathOf, field, act, op, reread] of SCREENS) {
   test(`R34 R52 C14 ${name}: the documents are read once when the screen opens, as the cheap picker read (held and vouched), and an act that changes no document does not read them again; control: the screen's own read is read again`, async () => {
-    const p = await open(path, { plane: { heldcaptures: picked([ROW(1, "Lease amendment 1", P, SHA), ROW(2, "Rent schedule", P, SHA2), ROW(3, "Vouched minutes", P, SHA3, { standing: "verified" })]) } });
+    const { world, me } = await inWorld();
+    const W = await screensOf(world, me);
+    W.cite = (await me.read("standard", { query: { id: W.pol } })).texts[0].content_id;
+    const p = await openAs(world, me, pathOf(W));
     const q = p.byOp("heldcaptures");
     assert.equal(q.length, 1, "one list of documents for the screen");
     assert.equal(q[0].query.fields, "picker", "the cheap read, a list to choose among");
     assert.equal(q[0].query.state, "held_and_vouched");
-    assert.deepEqual(optsOf(p, field).map(([, t]) => t.split(" · ")[0]).sort(), ["Lease amendment 1", "Rent schedule", "Vouched minutes"], "filled from the picker's rows alone (a refusal answers any other read)");
+    const rows = (await me.read("heldcaptures", { query: { limit: "200", state: "held_and_vouched", fields: "picker" } })).held;
+    assert.deepEqual(optsOf(p, field).map(([v]) => v).sort(), rows.map((r) => r.capture.sha256).sort(), "filled from the picker's rows");
+    assert.ok(TITLES.every((t) => optsOf(p, field).some(([, x]) => x.split(" · ")[0].includes(t))), "each by its title");
     const before = p.byOp(reread).length;
-    await act(p);
+    await act(p, W);
+    await settled(p);
     assert.ok(p.byOp(op).length >= 1, "the act was sent");
     assert.ok(p.byOp(reread).length > before, "what the act changed is read again");
     assert.equal(p.byOp("heldcaptures").length, 1, "and the documents are not");
@@ -78,33 +105,56 @@ test("R4 C14 money's act that files a document (acquire) reads the documents aga
 
 /* ---------------------------------------------------------------- C95 */
 
-const MINUTES_OTHER = ROW(1, "Council minutes", P2, SHA2, { collected_since: "2026-08-01T10:00:00Z" });
-const MINUTES_HERE = ROW(2, "Council minutes", P, SHA, { collected_since: "2026-10-02T10:00:00Z" });
-const MEMO_HERE = ROW(3, "Budget memo", P, SHA3, { collected_since: "2026-09-10T10:00:00Z" });
-const MANY = picked([MINUTES_OTHER, MINUTES_HERE, MEMO_HERE]);
 const type = async (p, id, text) => { const el = p.doc.getElementById(id); el.value = text; p.fire(el, "input"); await p.clock.tick(1000); await p.settle(); };
+const DAY = 86400000;
+
+/** Two projects: "Council minutes" held in the other one (first), then in this one 40 days later, and a "Budget memo" held in this one. A trail of this project.
+ *  `pickerRows` are the picker's rows as the store answers them, `here` the documents of this project in the owner's order, `others` the rest. */
+async function alike(world, me) {
+  await world.recipes.profiles(me, ["oakland-alameda"]);
+  const other = await world.recipes.project(me, "Lease renewals");
+  const project = await world.recipes.project(me, "Records office budget");
+  const away = await world.recipes.hold(me, "Council minutes", "The council met in August.", other);
+  await world.tick(40 * DAY);
+  const minutes = await world.recipes.hold(me, "Council minutes", "The council met in October.", project);
+  const memo = await world.recipes.hold(me, "Budget memo", "The budget memo for the records office.", project);
+  const trail = await world.recipes.trail(me, project, "Records office budget, FY2026");
+  const rows = (await me.read("heldcaptures", { query: { limit: "200", state: "held_and_vouched", fields: "picker" } })).held;
+  const shaOf = (r) => r.capture.sha256;
+  const first = rows.filter((r) => r.project === project).map(shaOf), rest = rows.filter((r) => r.project !== project).map(shaOf);
+  return { other, project, away, minutes, memo, trail, rows, here: first, others: rest, ordered: [...first, ...rest] };
+}
 
 test("R34 C95 the document picker lists this project's documents first, each by title and date, so documents titled alike can be told apart; control: with no project to put first, the owner's order stands", async () => {
-  const p = await open(PATHS.money, { plane: { heldcaptures: MANY } });
+  const { world, me } = await inWorld();
+  const A = await alike(world, me);
+  assert.deepEqual([...A.here].sort(), [A.minutes.sha, A.memo.sha].sort(), "the store tells which documents are this project's");
+  const p = await openAs(world, me, "/app/money/" + A.trail);
   const opts = optsOf(p, "mf-doc");
-  assert.deepEqual(opts.map(([v]) => v), [SHA, SHA3, SHA2], "this project's first, the owner's order within each");
-  assert.ok(opts[0][1].includes("Council minutes") && opts[0][1].includes(dayOf("2026-10-02")), "title and date: " + opts[0][1]);
-  assert.ok(opts[2][1].includes("Council minutes") && opts[2][1].includes(dayOf("2026-08-01")), "the alike title is told apart by its date: " + opts[2][1]);
-  const bare = await open(PATHS.person, { plane: { heldcaptures: MANY } });
-  assert.deepEqual(optsOf(bare, "person-fact-doc").map(([v]) => v), [SHA2, SHA, SHA3], "a screen with no project keeps the owner's order");
-  const here = await open("/app/standard/" + STD + "/" + P, { plane: { heldcaptures: MANY } });
-  assert.deepEqual(optsOf(here, "st-doc").map(([v]) => v), [SHA, SHA3, SHA2], "the standard opened from its project puts that project's first");
+  assert.deepEqual(opts.map(([v]) => v), A.ordered, "this project's first, the owner's order within each");
+  const row = (sha) => A.rows.find((r) => r.capture.sha256 === sha);
+  const text = (sha) => opts.find(([v]) => v === sha)[1];
+  assert.ok(text(A.minutes.sha).includes("Council minutes") && text(A.minutes.sha).includes(dayOf(row(A.minutes.sha).collected_since.slice(0, 10))), "title and date: " + text(A.minutes.sha));
+  assert.ok(text(A.away.sha).includes("Council minutes") && text(A.away.sha).includes(dayOf(row(A.away.sha).collected_since.slice(0, 10))), "the alike title is told apart by its date: " + text(A.away.sha));
+  assert.notEqual(text(A.minutes.sha), text(A.away.sha), "the two alike titles are drawn differently");
+  const bare = await openAs(world, me, "/app/person/" + (await me.act("entitycreate", { body: { kind: "person", label: "Lin Chen", note: "A person." } })).entity_id);
+  assert.deepEqual(optsOf(bare, "person-fact-doc").map(([v]) => v), A.rows.map((r) => r.capture.sha256), "a screen with no project keeps the owner's order");
+  const std = await declareStandard(me, { cite: "Ordinance 8.22", kind: "ordinance", sha: A.minutes.sha, extent: (await readHeld(world, me, A.minutes.sha))[0].extent });
+  const here = await openAs(world, me, "/app/standard/" + std + "/" + A.project);
+  assert.deepEqual(optsOf(here, "st-doc").map(([v]) => v), A.ordered, "the standard opened from its project puts that project's first");
 });
 
 test("R34 C95 a search box narrows the picker by title, without reading the documents again; control: emptying it offers them all, and a search that finds none says so and offers none", async () => {
-  const p = await open(PATHS.money, { plane: { heldcaptures: MANY } });
+  const { world, me } = await inWorld();
+  const A = await alike(world, me);
+  const p = await openAs(world, me, "/app/money/" + A.trail);
   assert.ok(p.doc.getElementById("mf-doc-q"), "the search box is drawn beside the picker");
   await type(p, "mf-doc-q", "budget");
-  assert.deepEqual(optsOf(p, "mf-doc").map(([v]) => v), [SHA3], "only the titles holding the words");
+  assert.deepEqual(optsOf(p, "mf-doc").map(([v]) => v), [A.memo.sha], "only the titles holding the words");
   await type(p, "mf-doc-q", "COUNCIL");
-  assert.deepEqual(optsOf(p, "mf-doc").map(([v]) => v), [SHA, SHA2], "case does not matter; this project's first");
+  assert.deepEqual(optsOf(p, "mf-doc").map(([v]) => v), A.ordered.filter((s) => s !== A.memo.sha), "case does not matter; this project's first");
   await type(p, "mf-doc-q", "");
-  assert.deepEqual(optsOf(p, "mf-doc").map(([v]) => v), [SHA, SHA3, SHA2], "emptied: all of them");
+  assert.deepEqual(optsOf(p, "mf-doc").map(([v]) => v), A.ordered, "emptied: all of them");
   await type(p, "mf-doc-q", "zzz");
   assert.equal(p.doc.getElementById("mf-doc"), null, "nothing to choose");
   drew(main(p), "form.choose.search.none");
@@ -113,13 +163,24 @@ test("R34 C95 a search box narrows the picker by title, without reading the docu
 });
 
 test("R34 C95 the search belongs to its own picker; control: a single document needs no search", async () => {
-  const p = await open(PATHS.calculation, { plane: { heldcaptures: MANY } });
+  const { world, me } = await inWorld();
+  const A = await alike(world, me);
+  const csv = await world.recipes.hold(me, "Payments.csv", "payer,payee,amount\nCity,Acme,5\nCity,Beta,7\n", A.project);
+  const table = (await me.act("tabledeclare", { body: { source: { capture_sha: csv.sha, extent: { kind: "document" } }, header: ["payer", "payee", "amount"],
+    schema: { fields: [{ name: "payer", type: "string" }, { name: "payee", type: "string" }, { name: "amount", type: "number" }] } } })).sha;
+  const calc = (await me.act("calculationcreate", { body: { question: "How many payments?", period: { from: "2025-07-01", to: "2026-06-30" }, kind: "count", project: A.project, inputs: [{ name: "input", table }] } })).calc_id;
+  const p = await openAs(world, me, "/app/calculation/" + calc);
+  const all = optsOf(p, "calc-set").length;
   await type(p, "calc-set-q", "memo");
-  assert.deepEqual(optsOf(p, "calc-set").map(([v]) => v), [SHA3]);
-  assert.equal(optsOf(p, "calc-wb").length, 3, "another picker of the screen is not narrowed by it");
-  const one = await open(PATHS.money, { plane: { heldcaptures: picked([MEMO_HERE]) } });
+  assert.deepEqual(optsOf(p, "calc-set").map(([v]) => v), [A.memo.sha]);
+  assert.equal(optsOf(p, "calc-wb").length, all, "another picker of the screen is not narrowed by it");
+  const solo = await inWorld();
+  const project = await solo.world.recipes.project(solo.me, "Records office budget");
+  const only = await solo.world.recipes.hold(solo.me, "Budget memo", "The budget memo for the records office.", project);
+  const trail = await solo.world.recipes.trail(solo.me, project, "Records office budget, FY2026");
+  const one = await openAs(solo.world, solo.me, "/app/money/" + trail);
   assert.equal(one.doc.getElementById("mf-doc-q"), null);
-  assert.deepEqual(optsOf(one, "mf-doc").map(([v]) => v), [SHA3]);
+  assert.deepEqual(optsOf(one, "mf-doc").map(([v]) => v), [only.sha]);
 });
 
 /* ---------------------------------------------------------------- C94 */
