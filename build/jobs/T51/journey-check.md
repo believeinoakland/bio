@@ -345,3 +345,7 @@ none were started.
 - `journey.test.mjs` (local arm) not run: waits on the cut.
 
 Size (session_01VXdF2pPmhBEVUJ6iGudgiQ): test runs 6, module lines 4011
+
+## J14 · COMPLETE
+
+COMPLETE (JOURNEY-CHECK #15, B20). Applied: R21 local arm fails an unreached carried state by name (FAIL.STATE, tested); CARRIED_STATES completed from the mock's controls (51 states, all drawn at both widths); state names read from the mock; R23 messages by localize. Checks: format, architecture, ownership 0; coverage 31/31; words 0. Suite 117 tests, 108 pass; 8 red, all named in my record: G90 x6, R17 x1 (ai-accounts row 'the account is group...' owner token, for GROUP_SENSE), invite-box x1 (screens-settings seed fails here: GROUP_ALREADY_RECORDED at store-request/fixtures.mjs:34). NOT DONE: R21 live reach functions (step 3): none written, so all 51 states fail on the local arm once it runs and are notes on the live arm; reasons in my record (live data-state markers don't map to mock states, most need acts/data the walk makes, local arm cannot run before the cut). Your call: follow-up job after the cut, or split by module now. journey.test.mjs not run (waits on the cut).
