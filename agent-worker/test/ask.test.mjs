@@ -13,6 +13,7 @@ import { ASK_SCOPE } from "../../bio-plane/src/answers/scope.mjs";
 import { ASK_BOUNDS } from "../../bio-plane/src/run-rules/index.mjs";
 import { MODEL_ENDPOINT, MODEL_FOR_MODE, USAGE_FIGURES } from "../../agent-model/src/model.mjs";
 import { ESTIMATE } from "../../agent-model/src/outcome.mjs";
+import { ceilingRefusal } from "../../bio-plane/test/m/ai-use/fixtures.mjs";
 import { MEMBER } from "./account.mjs";
 import { remoteBindings } from "./remote.mjs";
 
@@ -35,8 +36,8 @@ const AIK = "aik-" + "d".repeat(64);
 const SIGNIN_TOKEN = "sk-ant-oat-ask-signin-fixture-never-echoed";
 const PACK = { id: "investigative-session", version: "pack@ask", resident: { objective: "answer from the record" },
                disclosed: { ask: { body: "closed book" }, suggestions: { body: "labelled suggestions only" } } };
-const CEILING = { ok: false, reason: "AI_USE_CEILING_REACHED", code: "AI_USE_CEILING_REACHED", check: "C-22.30",
-                  translation: "You have reached today's limit for questions." };
+/* ai-use's real refusal for a use over its spent daily ceiling (fix round 10; the provider's published fixture). */
+const CEILING = await ceilingRefusal();
 
 /* The plane: records every call; answers the ask's own ops, its reads, and a run's ops. */
 function plane(cfg = {}) {
