@@ -281,3 +281,10 @@ test("R90 R11 (C48) an act drawn with a here word confirms with that word, not .
   assert.equal(await dialogOf(", here: 'ceremony'"), here);
   assert.equal(await dialogOf(""), does);
 });
+
+test("R11 (C76) op-grades marks no read above Reversible: every op in MARKS that its owner declares not mutating is Reversible (bootstrap's 'Irreversible' among them)", () => {
+  const reads = Object.keys(MARKS).filter((op) => Object.hasOwn(OPS, op) && OPS[op].mutating === false);
+  assert.ok(reads.includes("bootstrap") && reads.length > 20);
+  assert.deepEqual(reads.filter((op) => MARKS[op] !== "Reversible"), []);
+  assert.ok(Object.keys(MARKS).some((op) => Object.hasOwn(OPS, op) && OPS[op].mutating !== false && MARKS[op] !== "Reversible"), "control: an act keeps a mark above Reversible");
+});
