@@ -202,7 +202,8 @@ test("R13 R3: every op T33 publishes is graded — each write its rung or one gr
   assert.deepEqual(Object.keys(T33_NON_ACTS).sort(),
     [...Object.keys(T33_WRITES).filter((op) => !UNGATED_WRITES.includes(op) && !ACTS_NOW.includes(op)), ...T33_READS].sort());
   for (const op of T33_READS) { assert.ok(isRead(op) || OWNER_READS.some((r) => r.op === op), op); assert.equal(gradeOf(op), null, op); }
-  for (const { op, owner } of OWNER_READS) assert.equal(NON_ACTS[op], declaredSentence(owner, op), op);
+  /* the owner's declared sentence as its row holds it (K5157: a sentence whose key rows.mjs has not yet got is the owner's en, not a missing word) */
+  for (const { op, sentence } of OWNER_READS) assert.equal(NON_ACTS[op], sentence, op);
   for (const op of Object.keys(T33_WRITES).filter((op) => !UNGATED_WRITES.includes(op) && !ACTS_NOW.includes(op)))
     assert.ok(!isRead(op) && NON_ACTS[op].length > 20, op);
   for (const op of ACTS_NOW) assert.ok(!Object.hasOwn(NON_ACTS, op) && Object.hasOwn(MACHINE_REFUSALS, op), op);

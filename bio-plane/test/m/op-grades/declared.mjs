@@ -123,5 +123,5 @@ export async function declaredAliases() {
  *  its owner words without the "read: " lead holds the owner's sentence (K4168), so it is found by the declaration, not the lead. */
 export async function ownerReads(table) {
   const { ops, owners } = await collectDeclaredOps(new URL("../../../../", import.meta.url).pathname);
-  return Object.keys(table).filter((op) => ops[op]?.weight === "read").map((op) => ({ op, owner: owners[op] }));
+  return Object.keys(table).filter((op) => ops[op]?.weight === "read").map((op) => ({ op, owner: owners[op], sentence: ops[op].description }));
 }
