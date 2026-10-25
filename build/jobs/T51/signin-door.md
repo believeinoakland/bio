@@ -50,3 +50,26 @@ Architecture check refuses my R6 test (declared-ops.test.mjs): it imports test-s
 ## J4 · BLOCKED
 
 NEEDS BOB (permission). My permission check refused one command: a single Bash call that ran 'git push -q origin job/T51/signin-door', wrote my completion text to a scratchpad file and ran two mail read commands. I did not retry, split or work around it. State: the R6 work is committed locally on job/T51/signin-door (DECLARED_OPS in signin-door/index.mjs, test/m/signin-door/fixtures.mjs, fixtures.test.mjs, declared-ops.test.mjs; tranche/T51 merged in at B4); module tests 20 of 20 pass; format, architecture, coverage, words, ownership 0 failures. Not yet done: the push of those commits and my COMPLETE entry (full body ready: coupled-merge row for control-plane/owner-ops.mjs lines 30-32, plane OWNERS, three reds found in control-plane and plane). Needs Bob: approve pushing job/T51/signin-door to origin, or tell me the push is not mine to make.
+
+## J5 · COMPLETE
+
+Fix round 10, Wave A batch 1 (B3): `subscriptionsignin` declared here (R6, K5046 (c), K5052 (4)); `signinRefusal` published. Pushed after Bob's approval.
+
+**Entries applied.**
+1. `DECLARED_OPS` exported from `bio-plane/src/signin-door/index.mjs` (frozen): the row of `subscriptionsignin`, same fields as control-plane's; description `localize("signin-door.declared.subscriptionsignin", <same English>)`.
+2. `bio-plane/test/m/signin-door/fixtures.mjs` (new): `signinRefusal(code, extra)`, the real `subscriptionSignin` step `code` answering NO_SIGNIN_WAITING, SIGNIN_UNAVAILABLE, SIGNIN_ADDRESS_UNEXPECTED, SIGNIN_REFUSED (a binding answering the runner's refusal with its status; detail is the list's `word("refusal.<CODE>")`, SIGNIN_REFUSED's `invalid_grant`, or `extra.detail`) and AGENT_WORKER_UNBOUND (the door's own, no binding). Returns `{status, body}` with `trace`. Test: `fixtures.test.mjs` (R1, R3; control: unknown code refused).
+3. R6 tests in `declared-ops.test.mjs`: `declaredOpHolds` through `subscriptionSignin` over a binding judging `step` as agent-worker R66; the row's fields, `code`/`attempt` accepted and sent; the registration takes the row; control: disagreeing stamps refused naming `subscriptionsignin`.
+
+**For BOB at the coupled merge (K5052 (4)).**
+- Delete `bio-plane/src/control-plane/owner-ops.mjs` lines 30-32 (the whole `subscriptionsignin` row: the line beginning `  subscriptionsignin: { classes: ["admin", "member"], machineClasses: [], mutating: true, stamps: ["viewer", "by"], needs: null,`, the `weight: "credential", description: localize("control-plane.declared.subscriptionsignin", ...)` line and the `fields: { accepts: ["step", "code", "attempt"], requires: ["step"] } },` line).
+- plane's batch 1 job adds `signin-door` to `OWNERS` in `plane/declarations.mjs`.
+- Simulated both edits in a scratch tree (reverted) and ran the 151 files `impact.mjs` names: 1025 of 1028 pass. The 3 reds, none mine: (1) `control-plane/declared-ops.test.mjs:117` reads the row from control-plane's own map (control-plane's job); (2) `plane/declarations.test.mjs:107` R71 exempts only `OWNERS["control-plane"]`, needs `OWNERS["signin-door"]` too (plane's job); (3) `plane/release.test.mjs` R24, red at the tranche tip without my change. Without the edits, files that register the declarations fail "declared by two owners" (expected until the merge).
+- `rows.mjs` is stale for the new id `signin-door.declared.subscriptionsignin` (expected; BOB regenerates).
+
+**Fixture markers added.** No `fixtures-own`, no `fixtures-generic`.
+**Fixture lines.** `checks/fixtures.mjs /home/user/bio signin-door --list`: 4 left, all FIX-E (door.test.mjs:31, :52, :246, :286; providers ai-accounts, answer-envelope), for a CHANGE. signinRefusal's users (screens-settings connect.test.mjs:157, :318) re-point in their own job.
+**Deferred.** None. **Found in other modules.** The three reds above.
+
+**Checks.** Module tests 20 of 20 pass. format.mjs 0 failures (178 modules). architecture.mjs signin-door 0 failures. coverage.mjs 6 of 6 ids named; 0 failures. words.mjs signin-door 0 failures. ownership.mjs 0 failures. setup-words build --check: stale-rows note for the new id only.
+
+Size (session_01GU1iv4VtLeuTsVtVTUKjWm): test runs 7, module lines 343
