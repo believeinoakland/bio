@@ -443,3 +443,39 @@ Cause: tests; needs Bob (the R21, R29, R32 naming ruling). R18 waits on case-cat
 2. The case-catalogue job's R6 change to land, then the R18 test should pass and the chain test (case-authoring R31) can re-run.
 
 Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 9, module lines 4056
+
+## J24 · BLOCKED
+
+Cause: tests. R60 red at 12 against the bar of 11; the last call is public-read's (R44), not this module's. R18 waits on case-catalogue R6 (CHANGE).
+
+**Done since J23** (commit `84beddacc8`, pushed; tranche `origin/tranche/T51` merged in, never rebased).
+- **R21, R29, R32**: the tests now expect `SELECTION_NOT_YOURS`, per B22 (K5195). `release.test.mjs` and `retire.test.mjs`: 29 of 29 pass.
+- **R60 (chain)**: a sitting's members are gated in one `ratifygate` call, `{members: [...]}`, answered per member in the sitting's order (`ops.mjs` `readSitting`; the store arm `index.mjs` `ratifygate`). The chain went from 13 to 12.
+- **Test change, for your eye**: `sitting.test.mjs` "R60, R52 (G120b): a sitting of seven" asserted one `ratifygate` call per member. It now counts member gates inside the one call (each member's gate is still asked exactly once), and asserts that the sitting makes one gate call. The answer is byte for byte the same: the 13 sitting tests pass.
+
+**Why R60 is not met.** Chain measured by `r10-caseratify-chain.test.mjs` (scratch copy printing the call events; the test file itself is unchanged):
+1. `reauthdue` (admission, 1)
+2. `list` (the sitting's known ids; it runs in parallel with `gatefacts` and `image`, which form one hop)
+3. `ratifygate` (the sitting, 1 call)
+4. `caseratify`
+5. `reusedparts`
+6. copy read (`CAPTURES.get`), copy write (`PUBLISHED.put`)
+7. assembly: `recordcasefile`, `PUBLISHED.get`, `PUBLISHED.put`, `PUBLISHED.put`, `recordcasemanifest`
+
+That is 12. This module's share is now 6, the bar's "ratification 6". The assembly's share is 5, against the bar's 4, and that is public-read's `assembleCaseContainer` (R6, R44). I did not change it.
+
+Two things I did not do, for your ruling:
+- The `reusedparts` hop (5) appears only because the rig serves the reuse read before the copy read. The reuse check and the copy are issued together, so there is no causal dependency. Swapping the order of issue would drop that hop and make the count 11, but it would only move a queue position, not remove a hop. I did not do it.
+- `list` is a hop in this measure, but it runs in the same group as `gatefacts` and `image`, so removing it alone does not shorten the chain.
+
+**Still red**
+- `preflight.test.mjs` R18: waits on case-catalogue R6. Not on the tranche yet; I will re-run after your CHANGE.
+- `control-plane/r10-caseratify-chain.test.mjs`: 12 against 11, public-read's assembly.
+
+**Checks** (absolute root `/home/user/bio`): format 0 failures; architecture 47 product files, 249 imports, 0 failures; coverage 60 of 60 live ids named, 0 failures; ownership 3 files changed by ratification, 0 failures; ratification suite 339 tests, 338 pass, 1 fail (R18).
+
+**What I need from you**
+1. public-read's assembly to drop one hop (R44; 5 measured against 4), or a ruling that the bar counts it differently.
+2. The case-catalogue CHANGE, to clear R18.
+
+Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 8, module lines 4066
