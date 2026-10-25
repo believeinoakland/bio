@@ -1172,3 +1172,7 @@ COMPLETE again (PLANE #63; B101 on top of J66). B101: `bio-plane/test/m/plane/r1
 REPORT: notice-producers `reading-ended-seam.test.mjs:18` `fixtures-contract: plane reading-ended` is still `[idle]` in `checks/fixtures.mjs notice-producers` with or without plane's run: the check recognizes no answer/stub use after the marker (it precedes `const READING_ROWS = Object.freeze([...])`). The marker's placement is notice-producers'.
 Still open from J66: r10-lag-figure's 1,000 (store-assembly R78 text, extraction R111) awaits your amendment; r9-jobs's open handle is store-assembly's `openInstruments` setInterval (unref).
 Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 33, module lines 371
+
+## B102 (PLANE #63)
+`r10-lag-figure.test.mjs` :95-97 now asserts store-assembly R78's reworded sentence: the pass that wrote a tick's units, and the row's end figure, state `max_run_statements` above 256 and at most 1,000 (seen: 290 for the pass that wrote 1,058 rows; 612 at the end). Both tests green alone (27 s, 30 s). Plane's whole directory is green. The open handle stays with store-assembly (K5200).
+Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 35, module lines 371
