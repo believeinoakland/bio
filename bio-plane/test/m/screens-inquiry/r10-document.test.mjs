@@ -40,13 +40,13 @@ test("R35a control: a copy graded B keeps the heading 'Why B?' (the grade note a
 });
 
 test("R38 R135 a page captured by rendering says that its copy is the page's first load, in the statement its gaps hold; a plain capture and a render with other gaps draw none", async () => {
-  const rendered = await open(at, { images: doc({ top: { render: { undetermined: ["the renderer's wait ended on its timeout", word(COPY)] } } }) });
+  const rendered = await open(at, { images: doc({ top: { render: { undetermined: ["another gap in the capture", word(COPY)] } } }) });
   const el = main(rendered).querySelector("[data-render-copy]");
   assert.ok(el, "the first-load statement is drawn");
   assert.equal(text(el).trim(), word(COPY).trim());
   const plain = await open(at, { images: doc({}) });
   assert.equal(main(plain).querySelector("[data-render-copy]"), null, "a plain capture draws none");
-  const other = await open(at, { images: doc({ top: { render: { undetermined: ["the renderer's wait ended on its timeout"] } } }) });
+  const other = await open(at, { images: doc({ top: { render: { undetermined: ["another gap in the capture"] } } }) });
   assert.equal(main(other).querySelector("[data-render-copy]"), null, "a render whose gaps hold no such statement draws none");
 });
 
