@@ -81,3 +81,9 @@ Tests and checks (from civicos-process against /home/user/bio):
 - `checks/run.mjs /home/user/bio`: no finding for run-productions (the repo-wide list above is other modules').
 
 Size (session_017HzxWiogmpDtrEeVS4YKyV): test runs 5, module lines 2239
+
+## J5 · REPORT
+
+Found outside run-productions, not changed by this job (for BOB to route to agent-worker's owner):
+
+- `node --test agent-worker/test/*.test.mjs` (the impact report names agent-worker as a user of `suggestRefusals`): 302 pass, 2 fail in `agent-worker/test/requirements.test.mjs`: R45 "the static check finds nothing" and "a fresh build is byte-identical to the committed bundle". Both cite the same cause: `agent-worker: STALE BUNDLE, the source bio-plane/src/docx.mjs has changed since dist/agent-worker.bundled.mjs was built`. The rebuild the test names is `node bio-plane/scripts/bundles.mjs` from the repository root. This job's commit touches neither file; the other 20 agent-worker files pass.
