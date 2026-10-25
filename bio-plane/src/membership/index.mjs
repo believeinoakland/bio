@@ -228,15 +228,36 @@ export function notTheOwner(by, projectId, extra = null) {
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 
 export class Membership {
-  constructor({ sql, core = null, members = null } = {}) {
+  constructor({ sql, core = null, members = null, now = null } = {}) {
     this.sql = sql;
     this.core = core;
     /* R154: the members half, `member-roster`'s `Members` over the same storage. */
     this.members = members ?? new Members({ sql });
+    this.now = typeof now === "function" ? now : null;   /* R156: the clock handed in, else the store's environment, else the wall clock */
+    this.env = null;   /* R156: the store's environment, set by `membershipOps` through `membersOps` (`#nowMs`) */
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
+
+  /* R156 (T51 fix round 10; MEMBER-ROSTER #6 J9; K5132's rule, `credentials`' `#nowMs`): the instance clock. A clock handed in
+     (`now`, a function of milliseconds) answers first; else the store's environment (`env.BIO_NOW_MS`, set by `membershipOps`
+     through `membersOps`); else the wall clock. Every instant this module records, and every judgement of one, reads it. */
+  #nowMs() {
+    if (this.now) {
+      const handed = Number(this.now());
+      if (Number.isFinite(handed) && handed >= 0) return handed;
+    }
+    const raw = this.env ? this.env.BIO_NOW_MS : undefined;
+    if (raw !== undefined && raw !== null && raw !== "") {
+      const v = Number(raw);
+      if (Number.isFinite(v) && v >= 0) return v;
+    }
+    return Date.now();
+  }
+
+  /* The instant, as an ISO string, of the instance clock. */
+  #nowIso() { return new Date(this.#nowMs()).toISOString(); }
 
   /* A project's title, asked of record-core (R34): membership's SQL reads no bundle column but the R37 contract. */
   #titleOf(bundleId) {
@@ -335,7 +356,7 @@ export class Membership {
       const bad = this.visibilitySettingRefusal(visibility, projectId);
       if (bad) return bad;
     }
-    const at = new Date().toISOString();
+    const at = this.#nowIso();
     let owner = null;
     if (ownerId) {
       const claimed = this.projectClaimOwner({ projectId, memberId: ownerId });
@@ -387,7 +408,7 @@ export class Membership {
     try {
       const { projectId, memberId, by = null, comment = null, at = null } = args && typeof args === "object" ? args : {};
       if (typeof projectId !== "string" || !projectId || typeof memberId !== "string" || !memberId) return false;
-      const when = typeof at === "string" && at ? at : new Date().toISOString();
+      const when = typeof at === "string" && at ? at : this.#nowIso();
       const held = !!this.#one(`SELECT 1 AS x FROM project_participants WHERE project_id=? AND member_id=?`,
         projectId, memberId);
       const nextOrder = `(SELECT COALESCE(MAX(owner_order), 0) + 1 FROM project_participants WHERE project_id=?)`;
@@ -899,7 +920,7 @@ export class Membership {
     { const guarded = this.#projectActGuarded("visibility", projectId, by, want); if (guarded) return guarded; }   /* R128 */
     const why = reason === null || reason === undefined || String(reason).trim() === ""
       ? null : String(reason).slice(0, 280);
-    const at = new Date().toISOString();
+    const at = this.#nowIso();
     this.sql.exec(`INSERT INTO project_visibility (project_id, setting, set_by, reason, at) VALUES (?,?,?,?,?)`,
       projectId, want, by, why, at);
     /* D-497: the act is the record; the sight index is its derivation, re-derived for THIS project from the
@@ -1017,7 +1038,7 @@ export class Membership {
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     if (this.#one(`SELECT member_id FROM project_participants WHERE project_id=? AND owner=1`, projectId))
       return { ok: false, reason: "OWNED" };
-    const now = new Date().toISOString();
+    const now = this.#nowIso();
     this.sql.exec(
       `INSERT OR REPLACE INTO project_participants (project_id,member_id,state,owner,owner_order,invited_by,created,updated,
                                                     joined_at)
@@ -1044,7 +1065,7 @@ export class Membership {
     if (this.participation(projectId, target.member_id))
       return { ok: false, reason: "ALREADY_A_PARTICIPANT", handle };
     { const guarded = this.#projectActGuarded("invite", projectId, by); if (guarded) return guarded; }   /* R128 */
-    const now = new Date().toISOString();
+    const now = this.#nowIso();
     this.participationWrite("invite", { projectId, memberId: target.member_id, by, at: now });
     /* R33, R116 (REC-226; N783): the same act answers the invitee's open request to join, if they have one: R116's
        listener (`project-roster`, its R15) closes it `granted`, by the owner who invited, so a request never stays open
@@ -1063,7 +1084,7 @@ export class Membership {
     if (!p) return { ok: false, reason: "NOT_INVITED",
       detail: localize("membership.index.a_member_joins_a_project", "a member joins a project they were invited to. Being uninvited is not a refusal you can see.") };
     /* R127 (K2404): the instant the row becomes `joined`; a row already joined keeps the instant it joined. */
-    const now = new Date().toISOString();
+    const now = this.#nowIso();
     this.sql.exec(`UPDATE project_participants SET joined_at=CASE WHEN state='joined' THEN joined_at ELSE ? END,
                      state='joined', comment=NULL, updated=? WHERE project_id=? AND member_id=?`, now, now, projectId, by);
     return { ok: true, projectId, state: "joined" };
@@ -1098,7 +1119,7 @@ export class Membership {
     /* END DEC-49 REGION is-leave-owner-floor */
     const c = comment === null ? null : String(comment).slice(0, 280);
     this.sql.exec(`UPDATE project_participants SET state='leaving', comment=?, updated=? WHERE project_id=? AND member_id=?`,
-      c, new Date().toISOString(), projectId, by);
+      c, this.#nowIso(), projectId, by);
     return { ok: true, projectId, state: "leaving", comment: c,
              detail: localize("membership.index.recorded_as_a_request_to", "recorded as a request to leave. An owner of this project removes participants; this does not.") };
   }
@@ -1132,7 +1153,7 @@ export class Membership {
     if (p.owner) return { ok: false, reason: "OWNER",
       detail: localize("membership.index.an_owner_is_not_removed", "an owner is not removed from a project by this action. Ownership changes by the section 7.10 process, and removal from the project follows once they are no longer an owner.") };
     const why = comment === null || comment === undefined ? null : String(comment).slice(0, 280);
-    const at = new Date().toISOString();
+    const at = this.#nowIso();
     this.sql.exec(`DELETE FROM project_participants WHERE project_id=? AND member_id=?`, projectId, target.member_id);
     /* R63 (Bob, 2026-09-26): the removal stays in the record — who removed whom, when, and the owner's reason —
        and every participant reads it (`project-roster`'s roster read, its `removals`). */
