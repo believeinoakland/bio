@@ -416,6 +416,8 @@ A worker (sonnet, medium) closed 13 of the 15 from records and red re-runs on ea
 
 ## Still MISSING
 
+**At K5008 (BOB #284's worker, old-source runs):** row 3 (G124g) CLOSED by attribution: seam §14g (3 tests) is green on control-plane as it stood before `74f9b76617` and green on the tip, so control-plane holds no part of the limit; the failing-first is acquisition's (job 76's red, J56's own words), already recorded. Row 4 (G126c) stays MISSING: `jobs.mjs` did not exist before `74f9b76617` (that commit created it with the checked registrar; the older `pendSha` was inside `index.mjs`), so `r130-jobs` cannot be run against an older registrar; tip 8/8. What closes it: a failing-first run of the registrar's checks through control-plane's door on the tree before `74f9b76617` (a seam section driving `pendSha`'s registration), BOB's at the round end.
+
 Eight cells in eight rows, and one verdict-level item. Cell numbers are the Key's fields: (1) root cause, (2) why the tests missed it, (3) failing-first test seen red then green, (4) platform check. 'Owed by' is a job (a CHANGE to a running or restarted job, or the next fix round's job), BOB, or the redeploy / re-walk.
 
 | # | row and cell | what is missing (the record's own words where it has them) | evidence that would close it | owed by |

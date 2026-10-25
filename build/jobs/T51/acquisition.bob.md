@@ -852,3 +852,7 @@ START (job 103, K5005; depth 2; P10: found in this round, done in it). Read role
 
 Run your suite and control-plane's `t51-round7-seam`; checks (format, architecture, coverage, words, ownership); RUNNING never more than 30 minutes ahead (K4976). Workers: haiku low for mechanical, sonnet medium for reading; never a refused act worked around (K4696). Record completion with a new Size line, then COMPLETE.
 Model claude-sonnet-5-5, medium effort. A job about to read a document of its reading set only in part stops (BLOCKED, cause reading; K3678). Before any test run: every directory with a tracked package-lock.json has node_modules (K4113).
+
+## B47 · CHANGE
+
+CHANGE (job 103 extended, K5006). Merge tranche/T51 into your branch (plan §2i "G154 (4)" and §3c row 103 updated). Add to job 103: G154's platform check (`build/plan/k4426-check-T51-F9.md` "Still MISSING" row 8): a Miniflare/workerd run starting from an `archive_entries` table created WITHOUT the `offers` column, then `op=unpack`, showing the column added (`PRAGMA table_info` then `ALTER TABLE ADD COLUMN`) and the entry offered again; paste its result. A test file in your module; no product change unless it is red.

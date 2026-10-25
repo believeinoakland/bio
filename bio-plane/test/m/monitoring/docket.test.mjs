@@ -6,6 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, serve, sha, infoMd, DAEMON, NOW_MS, stubCaseImport, watchOf } from "./fixture.mjs";
+import { staleBaseRefusal } from "../promotion/fixtures.mjs";
 import { MONITOR_CADENCE_DELAY_MS, MONITOR_CADENCE_BATCH, MONITOR_TICK_MS, SLATE_FRAMING_OPEN, DOCKET_READ_INTERVAL_MS,
          DOCKET_READ_MAX_BYTES, DOCKET_PURPOSE, DOCKET_UNREADABLE } from "../../../src/monitoring/index.mjs";
 import { civicsmithUserAgent } from "../../../src/acquisition/index.mjs";
@@ -167,7 +168,7 @@ test("R67 each tick reads due watches after its batch's addresses and before its
   const order = [];
   /* the first address fails, so the epoch stays open and its claims can be read after the tick */
   w.m.monitor = async (q) => { order.push(["address", q.bundleId]);
-    return order.length === 1 ? { status: 409, body: { ok: false, reason: "BASE_MISMATCH" } } : { status: 200, body: { ok: true, status: "unchanged" } }; };
+    return order.length === 1 ? { status: 409, body: { ok: false, reason: staleBaseRefusal().reason } } : { status: 200, body: { ok: true, status: "unchanged" } }; };
   w.capture.acquire = async (body, opts) => { order.push(["request", opts.captureRequest.locator]); return { status: 502, body: { ok: false, reason: "SOURCE_REFUSED" } }; };
   for (const n of [1, 2, 3]) w.net.routes[D(n)] = () => { order.push(["docket", D(n)]); return json(docketAnswer())(); };
   const t = await w.m.cadenceTick(NOW_MS);

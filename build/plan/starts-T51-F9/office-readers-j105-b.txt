@@ -1,0 +1,1 @@
+CHANGE (job 105 extended, K5011). Merge tranche/T51 into your branch. Add office-readers R47 (G185; S-15 to S-18 of `build/plan/envelope-sheets-T51.md` §3.3, read whole: shared-formula dependents, a row or cell with no `r`, styled empty cells extending the used range, `mergeCells`). Reproduce each first on the tip, then fix; tests red first. Then COMPLETE as before.
