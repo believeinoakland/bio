@@ -160,3 +160,27 @@ Size (session_011Jyr771vUcNgdkLV7aQq1C): test runs 16, module lines 3860
 ## J8 · COMPLETE
 
 COMPLETE after B10: document-waits.test.mjs:115,124 re-pointed to capture's heldActsUnreadable; fixtures check for inquiry at 0; tests 235/233 pass/0 fail/2 todo; format, architecture, coverage, ownership, words 0.
+
+## J9 · COMPLETE
+
+COMPLETE: fix round 10, follow-up 38, the inquiry share (test files only; K5077, plan build/plan/fix-round-10-T51.md §3).
+
+**Applied.** Published `datedWaitOf({ viewer = V("alice"), date = "2026-10-10", asOf = `${date}T07:00:00Z` })` in `bio-plane/test/m/inquiry/fixtures.mjs`, made by the real code each call (a question stated by the viewer's promotion, the wait set by that promotion, the real `datedWaits` read). Returns `{ inquiry, question, viewer, date, asOf, answer, before, none }`:
+- `answer`: the real `datedWaits({ member: viewer, asOf, viewer })`, `{ ok, member, as_of, zone: "America/Los_Angeles", waits: [{ inquiry, index: 0, text: "the auditor's reply", description: "from the City", date, state: "due", set_by: viewer, set_at, set_in: null }] }`.
+- `before`: the same read at `${date}T06:59:59Z`, state `waiting`.
+- `none`: the same read by `admin`, `waits: []`.
+- The test `R55: datedWaitOf …` in `fixtures.test.mjs` checks these, and parameterises the viewer and date (`member:bob`, 2026-10-20).
+
+**For queue (follow-up 38, its `noticed.test.mjs:292`).** Its `datedWaits` stand-in takes `answer`'s shape: `{ ok, zone, waits: [...] }` with `set_by` and `set_at`. Queue's re-point is queue's new session.
+
+**Limit.** The default instant is 07:00Z, the local midnight in Los Angeles while daylight time holds (March to the first Sunday of November). A `date` outside that season needs its `asOf` passed explicitly.
+
+**Deferred.** None. **Found in another module.** None. **Markers.** No `fixtures-own` or `fixtures-generic` marker added.
+
+**Tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/inquiry/*.test.mjs` (absolute root): 236 tests, 234 pass, 0 fail, 2 todo (both already there).
+
+**Checks** (`/home/user/bio` as the root): format 0 failures; architecture inquiry 0; coverage 58 of 58 named, 0; ownership against `origin/tranche/T51` 0; words 0 failures (the 12 unkeyed are the design's list, as before); `fixtures.mjs /home/user/bio inquiry --list`: 0 findings.
+
+Commit `4d33ca45d6` on `job/T51/inquiry`, pushed.
+
+Size (session_01JMyjNSQDBNMdgULeA9Az7a): test runs 3, module lines 3844
