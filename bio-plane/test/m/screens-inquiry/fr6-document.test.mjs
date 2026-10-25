@@ -4,9 +4,9 @@
  * real op (the shapes `fr6-seam.test.mjs` makes by the member's own acts); every expectation is a word read by key (R44). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ok } from "../interface-shell/harness.mjs";
+import { boot, ok } from "../interface-shell/harness.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
-import { open, main, actsIn, says, word, D, SHA, DOCUMENT_MD } from "./fixtures.mjs";
+import { open, main, actsIn, says, word, D, SHA, DOCUMENT_MD, SCREENS, storeWorld } from "./fixtures.mjs";
 
 process.env.TZ = "UTC";
 const at = "/app/document/" + D;
@@ -23,13 +23,31 @@ const BASIS = "This file is 41942040 bytes in 5 parts, over the 25165824 bytes a
 const stated = (o = {}) => ok({ ok: true, found: true, capture_sha: WHOLE, bundle_id: D, content_type: "generic", reader_version: 1, reader_found: false, entity_count: 0,
   at: "2026-10-22T15:22:10Z", reading: { content_type: "generic", reader_version: 1, found: false, basis: BASIS, failure: "final", reason: "TOO_LARGE", size: BYTES, bound: BOUND, key: "limit.pdf.bytes", metadata: null },
   text_units: [], bytes: BYTES, format: "undetermined", ...o });
+/** The page `path` as a member of a real world (the real store, a real sign-in, the page's own door): the bundles in `images` and the reading `reading`
+ *  are the only answers the test scripts; every other op, `heldcaptures` among them, is the store's own for a copy it holds nothing of. */
+async function openIn(path, { images = {}, reading, world = null, as = null } = {}) {
+  const w = world || await storeWorld();
+  const me = as || await w.signIn("ann", { capabilities: ["contribute"] });
+  const { door, session } = w.boot(me);
+  const plane = { image: (r) => ok(Object.hasOwn(images, r.query.id) ? images[r.query.id] : null), ...(reading ? { reading } : {}) };
+  const p = await boot({ screens: SCREENS, door, session, path, plane });
+  await p.settle();
+  return p;
+}
+/** The page of a document the world holds, as `as` sees it over the world's own door: nothing scripted. */
+async function openRealDocument(world, as, bundle) {
+  const { door, session } = world.boot(as);
+  const p = await boot({ screens: SCREENS, door, session, path: "/app/document/" + bundle });
+  await p.settle();
+  return p;
+}
 const mbOf = (n) => word("size.mb", { n: (n / 1048576).toFixed(1) });
 const sizeWord = () => mbOf(BYTES);
 /* a size refusal is drawn by its own figures (R96, fix round 10): the reading's size and its limit */
 const sizeSentence = () => word("screen.document.reading.toolarge", { size: mbOf(BYTES), limit: mbOf(BOUND) });
 
 test("R96 R129 G6 a 5-part capture whose reading is stored under the whole as a final statement draws that statement with the file's size; no 'Nothing here', no OCR re-read, nothing offered after it", async () => {
-  const p = await open(at, { images: five, plane: { reading: stated(), heldcaptures: ok({ ok: true, held: [] }) } });
+  const p = await openIn(at, { images: five, reading: stated() });
   const reads = p.byOp("reading").map((r) => r.query.sha256);
   assert.deepEqual(reads, [WHOLE], "the reading is asked of the whole's digest, never a part's");
   const m = main(p);
@@ -52,7 +70,7 @@ test("R96 G6 control: a reading that found no words and states no failure still 
 });
 
 test("R96 R129 G8 a statement extraction states repairable (the old '(multipart)' final) offers 'Read it'; a plain final does not; pressing it sends readheld with the digest", async () => {
-  const rep = await open(at, { images: five, plane: { reading: stated({ repairable: true }), readheld: ok({ ok: true, read: true }) } });
+  const rep = await open(at, { images: five, plane: { reading: stated({ repairable: true }) } });
   assert.ok(actsIn(main(rep)).includes("readheld"), "Read it is offered for a repairable statement");
   assert.ok(text(main(rep)).includes(hasWord(OWED.repairable) ? word(OWED.repairable) : BASIS), "the statement is still said");
   assert.ok(!actsIn(main(rep)).includes("pdfstructure"), "and no OCR re-read");
@@ -187,8 +205,17 @@ test("R68 G17 names, name matches and connections the plane cut are said to be c
 });
 
 test("R56 G17 25 themes: 20 are drawn and the list says it is cut; the more control draws the rest", async () => {
-  const themes = Array.from({ length: 25 }, (_, i) => ({ theme_id: "TH-" + i, name: "Theme " + i }));
-  const p = await open(at, { plane: { themeread: (r) => ok(r.query.id ? { ok: true, members: [{ target: D, page: 0, placer_handle: "dev", placed_at: "2026-10-03T10:00:00Z", note: "n" }], hunches: [] } : { ok: true, themes }) } });
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", { capabilities: ["contribute", "create_projects"] });
+  const project = await world.recipes.project(ann, "Stormwater");
+  const { bundle } = await world.recipes.hold(ann, "Minutes", "The council met on Monday.", project);
+  for (let i = 0; i < 25; i++) {
+    const made = await ann.act("themedeclare", { body: { name: "Theme " + String(i).padStart(2, "0"), test: "the document concerns theme " + i } });
+    assert.equal(made.ok, true, JSON.stringify(made));
+    const placed = await ann.act("themeplace", { body: { theme: made.theme_id, target: bundle, note: "n" } });
+    assert.equal(placed.ok, true, JSON.stringify(placed));
+  }
+  const p = await openRealDocument(world, ann, bundle);
   const placed = () => main(p).querySelectorAll("p[data-theme]").length;
   assert.equal(placed(), 20, "20 themes");
   assert.ok(main(p).querySelector('[data-cut="themes"]') && text(main(p).querySelector('[data-cut="themes"]')).includes(word("screen.people.more", { n: "20" })), "said");
@@ -212,4 +239,15 @@ test("R3 G19 a web capture that skipped supporting files says how many were kept
   assert.ok(!text(main(nw).querySelector("[data-supporting]")).includes("PRIMARY_TOO_LARGE"), "and never draws the code");
   const none = await open(at, { images: doc({ kept: 12, skipped: 0, total: 12, reasons: [] }) });
   assert.ok(!main(none).querySelector("[data-supporting]"));
+});
+
+test("R96 DEC-432 a refusal measured in characters (a `_chars` metric) draws its size and limit as the design's one unit `characters`, never as bytes", async () => {
+  const UNIT = "screen.document.reading.unit.characters";
+  const fig = (n) => (hasWord(UNIT) ? word(UNIT, { n: n.toLocaleString("en-US") }) : n.toLocaleString("en-US"));
+  for (const metric of ["text_chars", "chars"]) {
+    const p = await openIn(at, { images: five, reading: stated({ reading: { content_type: "generic", reader_version: 1, found: false, basis: BASIS, failure: "final", reason: "TOO_LARGE", size: 3200000, bound: 2000000, metric, metadata: null } }) });
+    const t = text(main(p));
+    assert.ok(t.includes(fig(3200000)) && t.includes(fig(2000000)), `${metric}: the counts, in the characters unit`);
+    assert.ok(!t.includes(mbOf(3200000)), `${metric}: not drawn as a byte size`);
+  }
 });

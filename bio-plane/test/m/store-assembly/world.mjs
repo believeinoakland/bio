@@ -35,6 +35,9 @@ export const WORLD_NOW = Date.parse("2026-10-01T12:00:00Z");
 export const WORLD_PASSWORD = "world-founder-passphrase";
 /** R92: the handle the founder of a claimed world chose at the claim. */
 export const WORLD_FOUNDER_HANDLE = "founder";
+/** K5149: the slug the installer binds as `INSTANCE_NAME`, read by instance-setup's first boot (its R2): the producing team every world
+ *  records, so a bare world's promote that names its team is not refused `GROUP_UNDETERMINED`. */
+export const WORLD_INSTANCE_NAME = "town";
 
 /* ---- the platform: a Durable Object storage over node:sqlite ---- */
 
@@ -235,7 +238,7 @@ function baseOf(claimed) {
     const t0 = performance.now();
     const db = new DatabaseSync(":memory:");
     const objects = new Map();
-    const env = { STORE: { idFromName: (n) => n }, CAPTURES: memoryBucket(objects), BIO_NOW_MS: WORLD_NOW };
+    const env = { STORE: { idFromName: (n) => n }, CAPTURES: memoryBucket(objects), INSTANCE_NAME: WORLD_INSTANCE_NAME, BIO_NOW_MS: WORLD_NOW };
     const { store } = await assembled(db, env);
     let founder = null;
     if (claimed) founder = await claimOver(store, { password: WORLD_PASSWORD, handle: WORLD_FOUNDER_HANDLE });
@@ -255,7 +258,7 @@ export async function storeWorld({ claimed = true, now = WORLD_NOW, env: extra =
   const t0 = performance.now();
   const db = new DatabaseSync(":memory:");
   db.deserialize(base.bytes);
-  const env = { STORE: { idFromName: (n) => n }, CAPTURES: memoryBucket(copyObjects(base.objects)), ...extra, BIO_NOW_MS: now };
+  const env = { STORE: { idFromName: (n) => n }, CAPTURES: memoryBucket(copyObjects(base.objects)), INSTANCE_NAME: WORLD_INSTANCE_NAME, ...extra, BIO_NOW_MS: now };
   const { ctx, store } = await assembled(db, env);
   const copyMs = ms(t0);
   if (!printed) { printed = true; console.log(`storeWorld: base ${base.ms} ms, copy ${copyMs} ms`); }

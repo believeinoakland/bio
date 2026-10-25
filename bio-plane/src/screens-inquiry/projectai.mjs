@@ -70,10 +70,12 @@ function render(cs, view) {
     return t || (listed && (listed.name || listed.title)) || "";
   };
   const plain = (k, f) => String(W(k, f)).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
+  /* R40: the viewer's row is found by member (the founder's row is marked `founder: true`), else by handle */
   const me = view.me && view.me.handle;
+  const isMe = (x) => !!x && ((view.me && view.me.member === "admin" && x.founder === true) || (!!x.handle && x.handle === me));
   const parts = d.participants && d.participants.state === "ok" && Array.isArray(d.participants.value.participants)
     ? d.participants.value.participants.filter((x) => x && x.state !== "removed") : null;
-  const mine = parts ? parts.find((x) => x.handle === me) : null;
+  const mine = parts ? parts.find(isMe) : null;
   const isOwner = !!(mine && mine.owner && mine.state === "joined");
   const sole = !!(parts && parts.length === 1 && mine);
   const connected = d.signin && d.signin.state === "ok" && d.signin.value && d.signin.value.connected === true;
@@ -85,9 +87,9 @@ function render(cs, view) {
   const NOT_JOINED = ["PROJECT_SEEN_NOT_A_PARTICIPANT", "PROJECT_NOT_FOUND", "NOT_A_PARTICIPANT"];
   const refusedHer = ["project", "participants", "state", "notice", "keepaway"].some((k) => d[k] && d[k].state === "failed"
     && d[k].refusal && NOT_JOINED.includes(d[k].refusal.code));
-  const absent = parts && !parts.some((x) => x.handle === me && x.state === "joined");
+  const absent = parts && !parts.some((x) => isMe(x) && x.state === "joined");
   /* R60: a hidden project she is not in is unavailable (state b), with no form; a findable one, or her invitation, keeps Join */
-  const invited = !!(parts && parts.some((x) => x.handle === me && x.state === "invited"));
+  const invited = !!(parts && parts.some((x) => isMe(x) && x.state === "invited"));
   if ((refusedHer || absent) && !listed && !invited) return out.join("") + view.parts.unavailable(cs);
   if (listed || refusedHer || absent) {
     out.push(`<p data-state="notjoined">${W("projectai.notjoined", { project: title || plain("state.undetermined") })}</p>`
