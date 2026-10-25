@@ -3,8 +3,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot } from "../interface-shell/harness.mjs";
-import { SCREENS, word, storeWorld, main, actsIn, section, press, day, lead } from "./fixtures.mjs";
+import { SCREENS, word, storeWorld, main, actsIn, section, press, day, lead, open, says, Q, D, DOCUMENT_MD } from "./fixtures.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
+import { questionWaitsSetAside } from "../inquiry/fixtures.mjs";
+import { ok } from "../interface-shell/harness.mjs";
 
 const PASSWORD = "a founder password that is long enough";
 
@@ -206,4 +208,24 @@ test("provenance R80 a document's standing authority is read by `authority` and 
   const rl = main(reviewed).querySelector("[data-authority]");
   assert.deepEqual([rl.getAttribute("data-authority"), rl.getAttribute("data-reviewed")], ["undetermined", "1"]);
   assert.ok(rl.textContent.includes("No issuer is named on it."));
+});
+
+test("R2 R58 the question screen draws inquiry's set-aside waits and history as inquiry answers them: the wait while the document stays set aside, both acts in the history after a restore, nothing for a viewer who may not see the document", async () => {
+  const fx = questionWaitsSetAside({ asker: "member:mai", setter: "member:ben" });
+  const reads = (answer) => ({ plane: { questionwaits: ok(answer) }, images: { [fx.document]: { "bundle.md": DOCUMENT_MD } } });
+  const waiting = await open("/app/question/" + Q, reads(fx.answer));
+  const row = main(waiting).querySelector('[data-wait="aside"]');
+  assert.ok(row, "the wait is drawn");
+  assert.ok(says(row, "screen.question.waits.setaside", { document: "Pothole repair policy, Administrative Instruction 4.12", who: "ben", reason: fx.reason }), "the document by its title, who set it aside, why");
+  assert.deepEqual(actsIn(row), ["heldrestore", "search"], "restore it with a reason, or find another source");
+  assert.equal(main(waiting).querySelectorAll("[data-history-act]").length, 1, "its history: the set-aside");
+  /* after the restore: no wait, and the history holds both acts, the restore beside the set-aside it undid, each with its reason */
+  const restored = await open("/app/question/" + Q, reads(fx.restored));
+  assert.ok(!main(restored).querySelector('[data-wait="aside"]'), "a restore ends the wait");
+  const acts = main(restored).querySelectorAll("[data-history-act]");
+  assert.deepEqual(acts.map((a) => a.getAttribute("data-history-act")), ["set_aside", "restore"]);
+  assert.ok(acts[0].textContent.includes(fx.reason) && acts[1].textContent.includes(fx.restoreReason), "both reasons stay");
+  /* control: a viewer who may not see the document is shown neither */
+  const hidden = await open("/app/question/" + Q, reads(fx.hiddenFrom));
+  assert.ok(!main(hidden).querySelector('[data-wait]') && !main(hidden).querySelector("[data-history-act]"));
 });
