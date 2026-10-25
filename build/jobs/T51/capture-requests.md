@@ -135,3 +135,31 @@ Requirement lines for the record (next free ids): R57 (capturerequestretry, C20)
 - `npm ci --ignore-scripts` run in the five directories that had a tracked lock file but no node_modules (K4113).
 
 Size (session_019iGGVzKW9ch92DaSZZghQc): test runs 4, module lines 2585 (src/capture-requests, the three files).
+
+## Completion (B7 · fix round 10, Wave A batch 3: fixtures)
+
+**Published.** `bio-plane/test/m/capture-requests/fixtures.mjs` (new): `sweepScopeRegistrar`, the real R45 `registerSweepScope` first registration and a second one refused `LISTENER_DECLARED` naming the holder; `fixtures.test.mjs` calls it and checks the real answer (R45).
+
+**Own lines re-pointed (FIX-E).**
+- `fixture.mjs` `fakeCapture` (now `captureStage`): over capture's published `captureArm` (real capture, scripted network, calls recorded); a scripted answer still wins, otherwise the real capture files the address's bytes. A thrown fault is still injected by the stage.
+- `fixture.mjs` `renderRefusal`: capture's published `acquireRefusal` for RENDER_DEFERRED, RENDER_NO_RENDERER, RENDER_HOST_COOLING_OFF; for RENDER_NOT_A_PAGE, RENDER_FAILED and RENDER_AT_CAPACITY (no provider fixture gives them) the same published `captureArm` driven to the real refusal (a PDF served, a renderer answering 500, an allowance admitting none). Scripted sites in `drain.test.mjs` and `reads.test.mjs` unchanged; they now receive real answers.
+- `t35.test.mjs` `fakeStandards` (now `realStandards`): standards' published `standardReadWorld`; standards are declared through its real `declare` (held cited, text, absent), and the expected citation and addressee read from the real answer.
+
+**Markers (BOB reads each, K5060).**
+- `drain.test.mjs:286` `fixtures-own: platform`: the evidence-store (R2 bucket) double handed to the real `acquire` (head/get/put only).
+- `reads.test.mjs:105` `fixtures-generic: NOT_A_CODE`: a code made up on purpose to prove an uncatalogued code answers null check and translation.
+- `sweep.test.mjs:18` `fixtures-contract: link-sweep sweep-scope`: the four lines 22-25 of the stand-in scope check; shows `contract-no-run` until link-sweep's run is merged.
+
+**Left, named.** `sweep.test.mjs:22-25` (waits for link-sweep's `fixtures-run`); `t41.test.mjs:148` (FIX-E, provider `steps`, arrives as a CHANGE).
+
+**For BOB (other modules, P9).**
+1. `standards` fixture has no way to make a standard confidential to a project (the sight of a project), nor members other than carol. `t35.test.mjs` therefore keeps a thin wrapper (`realStandards`) that hides one named standard from viewers it lists and maps any member viewer to carol; every answer is still standards' real one. A fixture option for a project-filed standard would remove the wrapper.
+2. `capture`'s `acquireRefusal` gives three render codes; RENDER_NOT_A_PAGE, RENDER_FAILED and RENDER_AT_CAPACITY are real `acquire` answers no provider fixture offers. I made them in `fixture.mjs` through `captureArm`; capture may publish them and the local branch can go.
+
+**Tests and checks.**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/capture-requests/*.test.mjs`: 130 pass, 0 fail.
+- `checks/fixtures.mjs . capture-requests --list`: 9 failures before, 5 now (4 contract-no-run, 1 steps); 2 accepted markers.
+- format 0 failures; architecture 0; coverage 58 of 58, 0; words 0; ownership 0 (my files only).
+- `impact.mjs origin/tranche/T51 HEAD` names modules by the tranche's own changes; no module imports a file I changed (only my tests changed; the new fixture has no user yet), so no user tests needed re-running.
+
+Size (session_016v1BcEsgoXvoBS2PnqgQYs): test runs 8, module lines 2585 (src/capture-requests; only tests changed).
