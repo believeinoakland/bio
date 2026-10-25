@@ -18,6 +18,7 @@ const R = kit.R;
 const T0 = Date.now();
 writeFileSync(OUT, "| row id | check | width | role | what I did | verdict | what I saw (wall) | shot |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n");
 const rows = [];
+const timings = [], refusals = new Map();
 /* one row of the record: written the moment the check is done */
 function row(id, check, role, did, verdict, saw) {
   const cell = (s) => String(s).replace(/\|/g, "\\|").replace(/\n/g, " ");
@@ -31,6 +32,8 @@ const call = async (auth, op, body, query = {}) => {
   const res = await kit.plane(`/api/?${new URLSearchParams({ op, ...query })}`, { method: body === undefined ? "GET" : "POST", headers: { ...auth, "content-type": "application/json" }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
   let json = null; try { json = await res.json(); } catch { /* not json */ }
   const r = json && json.result !== undefined ? json.result : json;
+  timings.push({ op, ms: Date.now() - t, st: res.headers.get("server-timing") || "" });
+  if (r && typeof r === "object" && r.ok === false) refusals.set(`${op}:${r.reason || r.code || "?"}`, { op, reason: r.reason || r.code, translation: r.translation || null, detail: r.detail || null, http: res.status });
   return { status: res.status, ms: Date.now() - t, ok: !!(json && json.ok !== false && (!r || r.ok !== false)), r, raw: json };
 };
 /* a read or act whose arguments the owner takes from the address (project-roster, retrieval, ratification take them so) */
@@ -74,12 +77,12 @@ test("sitting 5: Vouch; the people, organizations and ties the documents name", 
   ctx.a1 = a1;
   const joined = await callQ(ben, "projectjoin", { projectId: project });
   console.log("PREREQ ben joins", joined.status, J(joined.r, 300));
-  const file = (cs, doc, title, locator) => CAPTURE_SCREEN.parts.promoteDocument(cs, { doc, title, locator, project });
+  const file = (cs, doc, title, locator, proj = project) => CAPTURE_SCREEN.parts.promoteDocument(cs, { doc, title, locator, project: proj });
   const f1 = await file(anaCs, a1.body.document, "City of Oakland paving budget 2024", "https://www.oaklandca.example/budget-2024.html");
   console.log("PREREQ filed web page", J(f1));
-  const upDoc = async (auth, cs, name, text, type = "text/plain") => {
+  const upDoc = async (auth, cs, name, text, type = "text/plain", proj = project) => {
     const up = (await (await kit.plane(`/api/?op=captureupload&statement=${encodeURIComponent(name)}&name=${encodeURIComponent(name)}&type=${encodeURIComponent(type)}`, { method: "POST", headers: auth, body: kit.te(text) })).json()).result;
-    const filed = await file(cs, up.document, name, up.document.locator);
+    const filed = await file(cs, up.document, name, up.document.locator, proj);
     return { bundleId: filed.bundleId, sha: up.capture.sha256, up, filed };
   };
   const sel = async (auth, ids) => { const x = await callBQ(auth, "select", { ids }); return x.r && x.r.handle; };
@@ -417,5 +420,414 @@ test("sitting 5: Vouch; the people, organizations and ties the documents name", 
     ctx.claims = { notSame: notSame.r && notSame.r.claim_id };
   } catch (e) { row("R55", "Same-person claims", "member Ana", "identityclaim", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
   // @@C9B
+  /* ============================================================== R56 organizations */
+  try {
+    const cite = { captureSha: memo.sha, extent: { kind: "document" } };
+    const orgFact = await callBQ(ana, "recordpersonfact", { person: E.vendor, kind: "name", value: "Acme Paving, L.L.C.", valid: { from: "2020-01-01", to: null }, citation: cite });
+    const orgAddr = await callBQ(ana, "recordpersonfact", { person: E.vendor, kind: "address", value: "1500 Industrial Way, Oakland, California", valid: { from: null, to: null }, citation: cite });
+    const orgBirth = await callBQ(ana, "recordpersonfact", { person: E.vendor, kind: "birth", value: "1987", valid: { from: null, to: null }, citation: cite });
+    const orgPage = await callQ(ana, "person", { id: E.vendor, at: "2026-10-25" });
+    const ent = await callQ(ana, "entity", { id: E.vendor });
+    const claimOrg = await callBQ(ana, "identityclaim", { a: E.vendor, b: E.nonprofit, kind: "not_same_as", basis: "testimony", note: "The vendor is a for-profit company; the Fund is a nonprofit." });
+    row("R56", "Register an agency, a vendor and a nonprofit through the person screen's organization form; facts (name, address, contact); 'Same organization?' claim", "member Ana",
+      "recorded a name and an address fact on the vendor from the memo, tried a birth fact on an organization, read its page and entity, claimed 'not the same organization' between the vendor and the nonprofit",
+      orgFact.ok && orgAddr.ok && !orgBirth.ok && claimOrg.ok && orgPage.r.found ? "WORKS" : "BROKEN",
+      `name fact: ${J(orgFact.r, 220)}; address fact: ${J(orgAddr.r, 260)} (publishable ${orgAddr.r && orgAddr.r.publishable}); birth on an organization: ${x(orgBirth)}; the organization's page keys ${J(Object.keys(orgPage.r || {}))}; its kind ${ent.r && ent.r.entity && ent.r.entity.kind} and sector ${J(ent.r && ent.r.entity && ent.r.entity.sector)}; same-organization claim ${J(claimOrg.r, 220)}`);
+  } catch (e) { row("R56", "Organization facts", "member Ana", "personfact on an organization", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
+
+  /* a second, revised directory: the same people again, so two documents name one person and a connection can stand between them */
+  let staffdir2 = null;
+  try {
+    staffdir2 = await upDoc(ana, anaCs, "Public Works Agency staff directory (revised)", dirText + "Sam Ortiz, Deputy Director, sortiz@oaklandca.gov, 510-238-3007\n");
+    await release(ana, await sel(ana, [staffdir2.bundleId]), "The revised directory is the same agency page with one added row.", "I compared it line by line with the first copy.");
+    const rs = await callBQ(ana, "resolve", { captureSha: staffdir2.sha });
+    const conn = await callBQ(ana, "connect", { entityId: E.jane });
+    const connNone = await callBQ(ana, "connect", { entityId: E.nonprofit });
+    const connOrg = await callBQ(ana, "connect", { entityId: E.vendor });
+    const naming = await callQ(ana, "readingname", { entity: E.vendor });
+    const namingAgency = await callQ(ana, "readingname", { entity: E.agency });
+    ctx.conn = conn.r;
+    row("R56", "'Connect' on a person finds the other documents that name them, with the grade and basis of each proposed connection", "member Ana",
+      "vouched a revised directory that repeats Jane Smith's address, resolved it, and pressed Connect on Jane Smith",
+      conn.ok && (conn.r.documents >= 2 || (conn.r.connections || []).length) ? "WORKS" : "BROKEN",
+      `resolve of the revised directory: resolved ${rs.r && rs.r.resolved_count}; connect on Jane: ${J(conn.r, 1100)}`);
+    row("R56", "'Connect' on an organization no memo names: the attempt reads as looked-absent", "member Ana",
+      "pressed Connect on the nonprofit, the vendor; read the name lookup (readingname) for the vendor and the agency, which the plain-text memo names in its sentences",
+      connOrg.ok && connOrg.r.documents >= 1 ? "WORKS" : "BROKEN",
+      `MAJOR if intended: the memo that names the agency, the vendor and the nonprofit is not found. connect on the nonprofit: ${J(connNone.r, 400)}; on the vendor: ${J(connOrg.r, 400)}; readingname for the vendor: ${J({ count: naming.r && naming.r.count, used: naming.r && naming.r.names_used, detail: naming.r && naming.r.detail }, 400)}; for the agency: ${J({ count: namingAgency.r && namingAgency.r.count }, 100)}. The memo (a plain-text upload, content type "generic") carries no reading references, so no organization it names in prose can be matched to the record: ${J(((await callQ(ana, "reading", { sha256: memo.sha })).r || {}).entity_count)} references in the memo's reading`);
+  } catch (e) { row("R56", "Connect", "member Ana", "connect", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
+  // @@C10B
+  /* ============================================================== R158 (connections on a document, the on-point mention) */
+  try {
+    const c0 = (ctx.conn && ctx.conn.connections && ctx.conn.connections[0]) || {};
+    const choose = await callBQ(ana, "connectionchoose", { capture: c0.a_capture_sha, other: c0.b_capture_sha, entity: E.jane, ref: "contact:jsmith@oaklandca.gov" });
+    const chooseBad = await callBQ(ana, "connectionchoose", { capture: c0.a_capture_sha, other: c0.b_capture_sha, entity: E.jane, ref: "contact:nobody@oaklandca.gov" });
+    const conn2 = await callBQ(ana, "connect", { entityId: E.jane });
+    row("R158", "Choose the on-point mention of a connection (connectionchoose)", "member Ana",
+      "pressed 'This is the mention that matters' for Jane's address in the revised directory, then for a reference the document does not hold; read Connect again",
+      choose.ok && !chooseBad.ok ? "WORKS" : "BROKEN",
+      `choose: ${J(choose.r, 400)}; absent reference: ${x(chooseBad)}; connect again: ${J(((conn2.r || {}).connections || [])[0], 700)}. The directory's references carry no place ("neither reading says where in its document the reference was read"), so the choice is among one mention per document`);
+  } catch (e) { row("R158", "connectionchoose", "member Ana", "connectionchoose", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
+
+  /* ============================================================== R57 ties: a member's own */
+  let tieBen = null;
+  try {
+    const noNote = await callBQ(ben, "membertie", { entity: E.vendor, kind: "employer", note: "", attribution: "group" });
+    const badKind = await callBQ(ben, "membertie", { entity: E.vendor, kind: "enemy", note: "x", attribution: "group" });
+    const badLevel = await callBQ(ben, "membertie", { entity: E.vendor, kind: "employer", note: "x", attribution: "everyone" });
+    tieBen = await callBQ(ben, "membertie", { entity: E.vendor, kind: "employer", note: "I worked for Acme Paving from 2016 to 2019 as a crew lead.", attribution: "group" });
+    const tie2 = await callBQ(ben, "membertie", { entity: E.jane, kind: "relative", note: "Jane Smith is my aunt.", attribution: "name" });
+    const mine = await callQ(ben, "memberties", { member: "ben" });
+    const asAna = await callQ(ana, "memberties", { member: "ben" });
+    const asAdmin = await callQ(adm, "memberties", { member: "ben" });
+    const wdNo = await callBQ(ben, "membertiewithdraw", { tieId: tieBen.r && tieBen.r.tie_id, reason: "" });
+    const wd = await callBQ(ben, "membertiewithdraw", { tieId: tie2.r && tie2.r.tie_id, reason: "I recorded the wrong person; she is my cousin's employer, not my aunt." });
+    const afterWd = await callQ(ben, "memberties", { member: "ben" });
+    row("R57", "A member's own ties: declare an employer and a relative at a chosen level of disclosure; withdraw one with a reason; the administrator sees them, another member does not", "member Ben, member Ana, ADMIN",
+      "Ben declared an employer tie (disclosed to the team) and a relative tie (by name) after three refused tries (no note, an unknown kind, an unknown level); read them as himself, as Ana, as the administrator; withdrew one with no reason and with a reason",
+      !noNote.ok && !badKind.ok && !badLevel.ok && tieBen.ok && tie2.ok && J(mine.r, 9000).includes(tieBen.r.tie_id) && !J(asAna.r, 3000).includes(tieBen.r.tie_id) && J(asAdmin.r, 9000).includes(tieBen.r.tie_id) && !wdNo.ok && wd.ok ? "WORKS" : "BROKEN",
+      `refusals: ${x(noNote)} | ${x(badKind)} | ${x(badLevel)}; declared: ${J(tieBen.r, 260)} and ${J(tie2.r, 220)}; Ben reads ${J(mine.r, 500)}; Ana reads ${J(asAna.r, 300)}; the administrator reads ${J(asAdmin.r, 300)}; withdraw no reason: ${x(wdNo)}; withdrawn ${J(wd.r, 200)}; Ben reads after: ${J(afterWd.r, 400)}`);
+    ctx.tieBen = tieBen.r && tieBen.r.tie_id; ctx.tie2 = tie2.r && tie2.r.tie_id;
+  } catch (e) { row("R57", "Ties", "member Ben", "membertie", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
+
+  /* ============================================================== R58 relations among others */
+  try {
+    const withSrc = await callBQ(ana, "relationdeclare", { fromEntity: E.nonprofit, toEntity: E.agency, relation: "member_of", justification: "The memo says the Fund is one of the agency's contracted partners.", citation: "https://www.oaklandca.example/budget-2024.html" });
+    const noSrc = await callBQ(ana, "relationdeclare", { fromEntity: E.vendor, toEntity: E.nonprofit, relation: "overlaps", justification: "Jane Smith chairs the Fund and her agency pays the vendor; I think the two overlap.", citation: "" });
+    const noWhy = await callBQ(ana, "relationdeclare", { fromEntity: E.vendor, toEntity: E.agency, relation: "proxy_for", justification: "", citation: "https://www.oaklandca.example/budget-2024.html" });
+    const badRel = await callBQ(ana, "relationdeclare", { fromEntity: E.vendor, toEntity: E.agency, relation: "friends_with", justification: "x", citation: "y" });
+    const rel = await callQ(ana, "relation", { id: withSrc.r && withSrc.r.relation_id });
+    const ordinance = await callBQ(ana, "entitycreate", { kind: "ordinance", label: "Ordinance 13768 (paving contracts)", note: "The ordinance that sets how paving contracts are let" });
+    const relOrd = await callBQ(ana, "relationdeclare", { fromEntity: E.agency, toEntity: ordinance.r && ordinance.r.entity_id, relation: "member_of", justification: "The agency applies the ordinance.", citation: "https://www.oaklandca.example/budget-2024.html" });
+    E.ordinance = ordinance.r && ordinance.r.entity_id;
+    const lineA = await callBQ(ana, "recordline", { kind: "related_to", from: E.jane, to: E.dana, basis: { statement: "Jane Smith and Dana Brooks are sisters-in-law; Dana told me so." } });
+    const lineNo = await callBQ(ana, "recordline", { kind: "related_to", from: E.jane, to: E.dana });
+    const lineSelf = await callBQ(ana, "recordline", { kind: "related_to", from: E.jane, to: E.jane, basis: { statement: "same" } });
+    const lineWd = await callBQ(ana, "linewithdraw", { lineId: lineA.r && lineA.r.line_id });
+    const lineWd2 = await callBQ(ana, "linewithdraw", { lineId: lineA.r && lineA.r.line_id, reason: "Dana later said she meant her husband's cousin; I will record that instead." });
+    row("R58", "Relations among others: declared with and without a source; a line recorded and withdrawn with a reason", "member Ana",
+      "declared 'member of' with a cited address, 'overlaps' with no source, one with no justification, one of an unknown kind; read a relation; recorded a 'related to' line (with and without a basis, to itself); withdrew it with no reason and with a reason",
+      withSrc.ok && !noSrc.ok && !noWhy.ok && !badRel.ok && lineA.ok && !lineNo.ok && !lineSelf.ok && lineWd2.ok ? "WORKS" : "BROKEN",
+      `with a source: ${J(withSrc.r, 400)}; no source (the plane REFUSES it, NO_CITATION; the coverage row's 'without one it reads declared, not evidenced' is not an act that can be done): ${J(noSrc.r, 300)}; no justification: ${x(noWhy)}; unknown kind: ${x(badRel)}; relation read: ${J(rel.r, 400)}; line: ${J(lineA.r, 300)}; no basis: ${x(lineNo)}; to itself: ${x(lineSelf)}; withdraw with no reason: ${x(lineWd)}; with a reason: ${J(lineWd2.r, 260)}`);
+    const graph = await callBQ(ana, "exploregraph", { centre: E.jane, at: { value: "2026-10-25", precision: "day", zone: "UTC" }, rings: 2 });
+    const graphNone = await callBQ(ana, "exploregraph", { centre: E.dana, at: { value: "2026-10-25", precision: "day", zone: "UTC" }, rings: 2 });
+    row("R58", "Explore: a person's hop labels and grades; a person with no tie", "member Ana",
+      "pressed Explore connections on Jane Smith (a claim, a line and a document connection) and on Dana Brooks",
+      graph.ok && graphNone.ok ? "WORKS" : "BROKEN", `Jane: ${J(graph.r, 900)}; Dana: ${J(graphNone.r, 500)}`);
+  } catch (e) { row("R58", "Relations", "member Ana", "relationdeclare", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
+  // @@C11B
+  /* ============================================================== R59 offices and holders; R56's records an office keeps */
+  try {
+    const office = await callBQ(ana, "entitycreate", { kind: "office", label: "Director of Public Works", note: "The post that signs the agency's paving contracts" });
+    E.office = office.r && office.r.entity_id;
+    const clerk = await callBQ(ben, "entitycreate", { kind: "office", label: "City Clerk", note: "Named by a member; keeps the minutes and the received-log" });
+    E.clerk = clerk.r && clerk.r.entity_id;
+    const postIn = await callBQ(ana, "recordline", { kind: "post_in", from: E.office, to: E.agency, basis: { statement: "The staff directory lists the Director in the agency." } });
+    const holdsA = await callBQ(ana, "recordline", { kind: "holds", from: E.jane, to: E.office, capacity: "employee", title: "Director of Public Works", valid: { from: "2019-02-01", to: "2025-06-30" }, basis: { captureSha: staffSha, extent: { kind: "document" } } });
+    const holdsB = await callBQ(ana, "recordline", { kind: "holds", from: E.dana, to: E.office, capacity: "acting", title: "Acting Director of Public Works", valid: { from: "2025-07-01", to: null }, basis: { statement: "Dana Brooks told me she took over in July 2025." } });
+    const holdsBad = await callBQ(ana, "recordline", { kind: "holds", from: E.agency, to: E.office, capacity: "employee", basis: { statement: "x" } });
+    const holdsNoCap = await callBQ(ana, "recordline", { kind: "holds", from: E.jane, to: E.office, basis: { statement: "x" } });
+    const reversed = await callBQ(ana, "recordline", { kind: "holds", from: E.jane, to: E.office, capacity: "employee", valid: { from: "2025-01-01", to: "2020-01-01" }, basis: { statement: "x" } });
+    const at = async (d) => (await callQ(ana, "holderat", { office: E.office, at: d })).r;
+    const h2020 = await at("2020-06-01"), h2026 = await at("2026-01-01"), h2018 = await at("2018-01-01");
+    const holderOpen = await at("2026-01-01");
+    const through = await callBQ(ana, "linecurrentthrough", { lineId: holdsB.r && holdsB.r.line_id, day: "2026-10-01", basis: { statement: "Dana Brooks still held the post when I last spoke to her on October 1, 2026." } });
+    const holderThrough = await at("2026-01-01");
+    row("R59", "Who holds an office now: a post with no stated end", "member Ana",
+      "asked who held the office on 2026-01-01 when Dana Brooks's line has a start and no end; then stated the line current through October 1, 2026 (op linecurrentthrough, which no screen offers) and asked again",
+      holderOpen.holder === E.dana ? "WORKS" : "BROKEN",
+      `MAJOR if members are meant to record a current post: without an end date the holder reads undetermined (${J(holderOpen.why)}), and the only act that makes a current holder determinate, linecurrentthrough, is on no screen (registry search: none). Before: ${J({ holder: holderOpen.holder, undetermined: holderOpen.undetermined })}; the op itself: ${J(through.r, 160)}; after it: ${J({ holder: holderThrough.holder, undetermined: holderThrough.undetermined })}`);
+    const reports = await callBQ(ana, "recordline", { kind: "reports_to", from: E.office, to: E.clerk, role: "administrative", basis: { statement: "The org chart shows the Director answering to the City Clerk for records." } });
+    const structure = await callQ(ana, "structureat", { entity: E.office, at: "2026-01-01" });
+    row("R59", "Organization structure and holders: an office in an organization, who held it on a date, reports-to", "member Ana",
+      "recorded a post in the agency, two holders with dates (Jane Smith 2019-2025, Dana Brooks acting from July 1, 2025), a holder that is not a person, a post with no capacity, reversed dates, a reports-to; asked who held the office on 2020-06-01, 2026-01-01 and 2018-01-01; read the office's structure",
+      postIn.ok && holdsA.ok && holdsB.ok && !holdsBad.ok && !holdsNoCap.ok && !reversed.ok && J(h2020, 3000).includes(E.jane) && reports.ok ? "WORKS" : "BROKEN",
+      `post_in ${J(postIn.r && postIn.r.line_id)}; holders ${J(holdsA.r && holdsA.r.line_id)} / ${J(holdsB.r && holdsB.r.line_id)}; non-person holder: ${x(holdsBad)}; no capacity: ${x(holdsNoCap)}; reversed: ${x(reversed)}; holderat 2020-06-01: ${J(h2020, 450)}; 2026-01-01 (Dana's line has no end): ${J(h2026, 250)}; 2018-01-01: ${J(h2018, 300)}; reports_to: ${J(reports.r, 160)}; structureat: ${J(structure.r, 700)}`);
+    const unconf = await callQ(ana, "entitieskind", { kind: "office" });
+    const confirmMember = await callBQ(ben, "officeconfirm", { entityId: E.clerk });
+    const confirmAdmin = await callBQ(adm, "officeconfirm", { entityId: E.clerk });
+    const confirmAgain = await callBQ(adm, "officeconfirm", { entityId: E.clerk });
+    row("R59", "Confirm an office a member named (officeconfirm): only an administrator", "member Ben, ADMIN",
+      "Ben (who named 'City Clerk') pressed Confirm; the administrator pressed Confirm, then again",
+      !confirmMember.ok && confirmAdmin.ok ? "WORKS" : "BROKEN",
+      `the office list before: ${J((unconf.r.entities || unconf.r.items || []).map((e) => ({ id: e.entity_id, label: e.label, unconfirmed: e.unconfirmed ?? e.named_by_member ?? e.confirmed })), 500)}; as a member: ${x(confirmMember)}; as the administrator: ${J(confirmAdmin.r, 250)}; again: ${J(confirmAgain.r, 200)}`);
+    const court = await callBQ(ana, "entitycreate", { kind: "body", forum_kind: "court", label: "Alameda County Superior Court", note: "Alameda County Superior Court" });
+    E.court = court.r && court.r.entity_id;
+    const courts = await callQ(ana, "entitieskind", { kind: "body", forum_kind: "court" });
+    row("R59", "Add a court beside 'Add an office yourself'", "member Ana", "pressed Add a court with its name; read the courts list", court.ok && J(courts.r, 4000).includes("Alameda County Superior Court") ? "WORKS" : "BROKEN",
+      `court: ${J(court.r, 250)}; courts list: ${J(courts.r, 400)}`);
+    const seat = await callBQ(ana, "recordline", { kind: "seat_on", from: E.office, to: E.court, basis: { statement: "x" } });
+    const seatOk = await callBQ(ana, "recordline", { kind: "seat_on", from: E.office, to: E.agency, basis: { statement: "x" } });
+    row("R59", "Legistar seats from a followed body (needs R41 from area 4)", "member Ana",
+      "no followed Legistar body exists in this room (area 4's R41 is not run by this walk); recorded a seat by hand instead: an office's seat on a body (accepted) and on a court-kind body",
+      "NOT REACHED", `Legistar seats need a followed body's reader; the room holds none. By hand: seat on the court ${x(seat)} ${J(seat.r && seat.r.line_id)}; seat on an institution: ${x(seatOk)}`);
+    /* records an office keeps */
+    const keeps = await callBQ(ana, "recordline", { kind: "custodian_of", from: E.clerk, to: E.agency, basis: { statement: "The City Clerk keeps the agency's contract records." }, valid: { from: "2020-01-01", to: null } });
+    const keepsNo = await callBQ(ana, "recordline", { kind: "custodian_of", from: E.clerk, to: E.agency });
+    const keepsRev = await callBQ(ana, "recordline", { kind: "custodian_of", from: E.clerk, to: E.agency, basis: { statement: "x" }, valid: { from: "2026-01-01", to: "2020-01-01" } });
+    const kept = await callQ(ana, "linesof", { entity: E.clerk, kinds: "custodian_of,responsible_for", direction: "from" });
+    row("R56", "Record that an office keeps a kind of records (custodian_of) and read it under 'Records its offices keep'", "member Ana",
+      "recorded that the City Clerk keeps the agency's records from a stated date (with a basis; with none; with reversed dates); read the lines from the office",
+      keeps.ok && !keepsNo.ok && !keepsRev.ok && J(kept.r, 3000).includes(E.agency) ? "WORKS" : "BROKEN",
+      `recorded: ${J(keeps.r, 250)}; no basis: ${x(keepsNo)}; reversed dates: ${x(keepsRev)}; lines from the office: ${J(kept.r, 600)}`);
+  } catch (e) { row("R59", "Offices and holders", "member Ana", "recordline/holderat", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
+  // @@C12B
+  /* ============================================================== R147 other subjects; the people directory */
+  try {
+    const kinds = [["source", "Oakland Open Data portal"], ["movement", "Neighbors for Smooth Streets"], ["body", "Public Works Advisory Board"], ["parcel", "APN 011-0834-007"], ["contract", "Telegraph Avenue repaving contract 2024-117"],
+      ["fund", "Measure KK infrastructure fund"], ["program", "Neighborhood paving program"], ["place", "Telegraph Avenue"], ["institution", "Oakland Public Library"]];
+    const made = {};
+    for (const [k, label] of kinds) {
+      const r = await callBQ(ana, "entitycreate", { kind: k, label, note: `Registered for the paving investigation: ${label}.`, aliases: [label.split(" ").slice(0, 2).join(" ")] });
+      made[k] = r.r && (r.r.entity_id || r.r.reason);
+    }
+    const badKind = await callBQ(ana, "entitycreate", { kind: "proceeding_party", label: "x", note: "x" });
+    const dupe = await callQ(ana, "entitysimilar", { name: "Telegraph Avenue repaving contract", kind: "contract" });
+    const shows = {};
+    for (const show of ["both", "people", "organisations", "offices", "ordinances", "contracts", "funds", "sources", "everything"]) shows[show] = ((await callQ(ana, "peopledirectory", { show })).r.rows || []).length;
+    const search = await callQ(ana, "peopledirectory", { q: "smith" });
+    const searchOffice = await callQ(ana, "peopledirectory", { office: E.agency });
+    const named = await callQ(ana, "peopledirectory", { namedIn: "mine" });
+    const recent = await callQ(ana, "peopledirectory", { since: "30" });
+    const everything = await callQ(ana, "peopledirectory", { show: "everything" });
+    const janeRow = (everything.r.rows || []).find((r) => r.label === "Jane Smith" && r.mine) || (everything.r.rows || []).find((r) => r.label === "Jane Smith") || {};
+    row("R147", "Other subjects the record follows: one of each kind with aliases; the near-match check; the five Show choices", "member Ana",
+      "registered a source, a movement, a body, a parcel, a contract, a fund, a program, a place and an institution (each with an alias); tried an unknown kind; asked for near matches to a contract name; read the directory under each Show choice",
+      Object.values(made).every((v) => String(v).startsWith("ENT-")) && !badKind.ok ? "WORKS" : "BROKEN",
+      `ids ${J(made, 600)}; unknown kind: ${x(badKind)}; near match: ${J((dupe.r.similar || []).map((s) => s.label), 200)}; rows under each Show: ${J(shows)}`);
+    row("R55", "The people directory: count line, search, four filters, 'named in N documents', rows no document names", "member Ana",
+      "read the directory unfiltered, searched 'smith', filtered by office, by 'named in my projects', by 'named recently'",
+      (everything.r.following > 0) ? "WORKS" : "BROKEN",
+      `following ${everything.r.following}, in your projects ${everything.r.in_your_projects}; search 'smith' ${(search.r.rows || []).length} rows ${J((search.r.rows || []).map((r) => r.label || r.name), 200)}; office filter ${(searchOffice.r.rows || []).length}; named in mine ${(named.r.rows || []).length}; named recently ${(recent.r.rows || []).length}; Jane's row: ${J(janeRow, 600)}; a row no document names: ${J((everything.r.rows || []).find((r) => /Neighborhood paving/.test(r.label || r.name || "")), 400)}; first row keys ${J(Object.keys((everything.r.rows || [])[0] || {}))}`);
+  } catch (e) { row("R147", "Other kinds", "member Ana", "entitycreate", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
+
+  /* ============================================================== R148 personal facts held, never published as addresses or phone numbers */
+  try {
+    const home = await callBQ(ana, "recordpersonfact", { person: E.dana, kind: "address", value: "412 Grand View Drive, Oakland, California", valid: { from: "2024-01-01", to: null }, citation: { captureSha: staffSha, extent: { kind: "document" } } });
+    const phone = await callBQ(ana, "recordpersonfact", { person: E.dana, kind: "contact", value: "510-555-0142", valid: { from: "2024-01-01", to: null }, citation: { captureSha: staffSha, extent: { kind: "document" } } });
+    const machine = await callBQ({ authorization: `Bearer ${kit.ADM}` }, "recordpersonfact", { person: E.dana, kind: "contact", value: "510-555-0199", valid: { from: null, to: null }, citation: { captureSha: staffSha, extent: { kind: "document" } } });
+    const pageD = await callQ(ana, "person", { id: E.dana, at: "2026-10-25" });
+    const seenByBen = await callQ(ben, "person", { id: E.dana, at: "2026-10-25" });
+    row("R148", "Personal facts: a home address or phone is held (member's own act) and marked never published; a machine never imports one", "member Ana, probe credential",
+      "recorded a home address and a phone number on Dana Brooks from a cited directory; the probe credential tried to record a phone; read Dana's page as Ana and as Ben",
+      home.ok && phone.ok && home.r.publishable === false && !machine.ok ? "WORKS" : "BROKEN",
+      `address fact: ${J(home.r, 330)}; phone fact: ${J(phone.r, 330)}; the operator's own credential (not a member's session) trying to record a phone: ${x(machine)}; Dana's page for Ana lists the address: ${JSON.stringify(pageD.r).includes("Grand View")}; for Ben: ${JSON.stringify(seenByBen.r).includes("Grand View")}. The publish side of the row (a case carrying an address or phone) is area 9's R94 and the register import's is area 6's R65; neither is run here`);
+    ctx.contactFact = home.r && home.r.fact_id;
+    ctx.nameFact = ctx.fact;
+  } catch (e) { row("R148", "Personal facts", "member Ana", "recordpersonfact", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
+  // @@C13B
+  /* ============================================================== R149 expunge a person's recorded value */
+  try {
+    const target = ctx.contactFact;
+    const asMember = await callBQ(ben, "personexpunge", { id: target, ground: "unlawful", reason: "It is her home address." });
+    const badGround = await callBQ(adm, "personexpunge", { id: target, ground: "i_dont_like_it", reason: "x" });
+    const orderMissing = await callBQ(adm, "personexpunge", { id: target, ground: "court_order", reason: "A court ordered it removed." });
+    const noReason = await callBQ(adm, "personexpunge", { id: target, ground: "unlawful", reason: "" });
+    const gone = await callBQ(adm, "personexpunge", { id: "PFA-2026-nothere", ground: "unlawful", reason: "x" });
+    const done = await callBQ(adm, "personexpunge", { id: target, ground: "court_order", order: "Alameda County Superior Court order 24-CV-0117, dated October 2, 2026", reason: "The court ordered Dana Brooks's home address removed from the record." });
+    const pageA = await callQ(ana, "person", { id: E.dana, at: "2026-10-25" });
+    const pageB = await callQ(ben, "person", { id: E.dana, at: "2026-10-25" });
+    const again = await callBQ(adm, "personexpunge", { id: target, ground: "unlawful", reason: "again" });
+    const stillThere = JSON.stringify(pageA.r).includes("Grand View") || JSON.stringify(pageB.r).includes("Grand View");
+    const exported = await callBQ(adm, "export", { note: "walk 05: a fresh export after the removal" });
+    const exportText = JSON.stringify(exported.r);
+    const exportMarker = exportText.includes(target) || /tombstone/i.test(exportText);
+    const marker = /tombstone|removed where the law|expunged/i.exec(JSON.stringify(pageA.r) + JSON.stringify(pageB.r));
+    row("R149", "Expunge a person's recorded value: administrator only; a lawful ground; a court order names the order; the value goes and a marker stays", "member Ben, ADMIN, member Ana",
+      "Ben tried; the administrator tried an unlisted ground, a court order without the order, no reason, a fact that does not exist, then removed Dana Brooks's home address under a named court order; both members read her page; the administrator removed it again",
+      !asMember.ok && !badGround.ok && !orderMissing.ok && !noReason.ok && !gone.ok && done.ok && !stillThere && !again.ok ? "WORKS" : "BROKEN",
+      `member: ${x(asMember)}; bad ground: ${x(badGround)}; court order with no order: ${x(orderMissing)}; no reason: ${x(noReason)}; no such fact: ${x(gone)}; removed: ${J(done.r, 400)}; the address still on the page: ${stillThere}; a marker on the page ("${marker ? marker[0] : "none found"}"); again: ${x(again)}. The dialog's words, the Irreversible weight and the phone's "finish on a larger screen" are screen checks (a browser walk). The marker in a citing question needs a question citing the fact (area 9)`);
+    row("R149", "The marker 'Removed where the law requires, <date>, by <member>' on the page, in the citing question and in a fresh export", "member Ana, member Ben, ADMIN",
+      "after the removal read Dana Brooks's page as Ana and as Ben and ran the administrator's export",
+      marker && exportMarker ? "WORKS" : "BROKEN",
+      `the page for Ana: marker found ${marker ? marker[0] : "no"}; the page's keys ${J(Object.keys(pageA.r || {}))}; the export's manifest names the removal: ${exportMarker} (${J(exported.r, 300)}). The only reader of the removal marker in the plane is record-core's tombstone list, carried in the export manifest; no read the person page makes returns it`);
+  } catch (e) { row("R149", "Expunge", "ADMIN", "personexpunge", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
+
+  /* ============================================================== R55: a protected source link; following a register */
+  try {
+    const link = await callBQ(ana, "sourcepersonlink", { source: E.wei, person: E.jane, evidence: "Wei told me in confidence what she saw", sight: ["ana"] });
+    const srcEnt = await callBQ(ana, "entitycreate", { kind: "source", label: "A staff member in the records office", note: "A person who tells us what the agency's filing practice is" });
+    const linkSrc = await callBQ(ana, "sourcepersonlink", { source: srcEnt.r && srcEnt.r.entity_id, person: E.jane, evidence: "told me", sight: ["ana"] });
+    row("R55", "A protected source link (sourcepersonlink): a source linked to a person, seen only by its listed members", "member Ana",
+      "pressed the link act with a person as the source, then with a registered source entity",
+      linkSrc.ok ? "WORKS" : "NOT REACHED",
+      `person as source: ${x(link)}; registered source entity: ${x(linkSrc)}. The act asks the sources module for a held source (a rung/standing record); the registry's 'source' entity kind is not that, and no source was made in this room by any of the acts walked here, so the link act could not be completed`);
+    const follow = await callBQ(ana, "followregister", { address: "https://www.oaklandca.example/registers/contracts.csv" });
+    const followBad = await callBQ(ana, "followregister", { address: "not an address" });
+    row("R58", "Follow a register to be told when it changes (followregister)", "member Ana",
+      "pressed Follow on a register address, and on text that is not an address", follow.ok && !followBad.ok ? "WORKS" : "BROKEN",
+      `follow: ${J(follow.r, 400)}; bad address: ${x(followBad)}`);
+  } catch (e) { row("R55", "Source link / follow", "member Ana", "sourcepersonlink", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
+  // @@C14B
+  /* ---- a document in an unresolved contradiction: the two budget pages disagree; Ana flags it from the 2022 page; the 2022 page reads 'not eligible' */
+  try {
+    const back = await callBQ(ana, "heldrestore", { ids: [f22.bundleId], reason: "The 2022 page is a real source for the comparison; it stays in the record." });
+    const sha22 = (await callQ(ana, "heldcaptures", { limit: 50, bundle_ids: f22.bundleId })).r.held[0].capture.sha256;
+    const sha24 = dochash[f1.bundleId];
+    const passage = async (sha) => { const f = (await callBQ(ana, "findin", { scope: { capture: sha }, kinds: ["term"], term: "budget" })).r; const it = f && f.kinds && f.kinds[0] && f.kinds[0].items && f.kinds[0].items[0]; console.log("OBS findin", sha.slice(0, 8), J(f, 500)); return it; };
+    const u22 = await passage(sha22), u24 = await passage(sha24);
+    const eligBefore = ((await callQ(ana, "heldcaptures", { limit: 50, bundle_ids: f22.bundleId })).r.held || [])[0] || {};
+    const flagCold = (u22 && u24) ? await callBQ(ana, "contradictionflag", { here: { capture: sha22, extent: u22.extent }, other: { capture: sha24, extent: u24.extent }, reason: "The 2022 page gives 3.9 million for the paving budget; the 2024 page gives 4.2 million." }) : { ok: false, r: { reason: "no passage found" } };
+    row("R38", "Flag a contradiction between two passages just read (Document page, contradictionflag)", "member Ana",
+      "found one passage in each budget page (find in this document) and set them side by side as a contradiction with a reason, before either had been cited in any question",
+      flagCold.ok ? "WORKS" : "BROKEN",
+      `MAJOR: ${x(flagCold)}. The find answers each passage with content_held: ${J(u22 && u22.content_held)}/${J(u24 && u24.content_held)} (the record holds a passage's row only once a question cites it); the flag looks the passage up there and says none is held. After both passages were cited in Ana's question the same act succeeded (next row)`);
+    const cq = async (it) => callBQ(ana, "cite", { project: question, role: "supports", found: it });
+    const cit22 = await cq(u22), cit24 = await cq(u24);
+    const flag = await callBQ(ana, "contradictionflag", { here: { capture: sha22, extent: u22.extent }, other: { capture: sha24, extent: u24.extent }, reason: "The 2022 page gives 3.9 million for the paving budget; the 2024 page gives 4.2 million for the year it calls the same program." });
+    const eligAfter = ((await callQ(ana, "heldcaptures", { limit: 50, bundle_ids: f22.bundleId })).r.held || [])[0] || {};
+    const relTry = flag.ok ? await release(ana, await sel(ana, [f22.bundleId]), ack, mit) : { ok: false, r: { reason: "(not pressed: the flag was not made)" }, status: 0 };
+    row("R38", "A document in an unresolved contradiction reads 'not eligible' with the reason before acting; a batch holding it is refused whole", "member Ana",
+      "cited one passage of each budget page in the question; flagged the two figures as a contradiction; read the 2022 page's held row; selected it and pressed release",
+      flag.ok && eligAfter.eligible === false && !relTry.ok && /CONTEST/.test(J(relTry.r)) ? "WORKS" : (flag.ok ? "BROKEN" : "NOT REACHED"),
+      `cites: ${J(cit22.r && cit22.r.cited)} ${J(cit24.r && cit24.r.cited)}; flag: ${J(flag.r, 260)}; held row before the flag: eligible ${eligBefore.eligible}; after: eligible ${eligAfter.eligible} class ${J(eligAfter.class)} ${J(eligAfter.reason || eligAfter.why, 200)}; release: ${x(relTry)} offenders ${J(relTry.r && relTry.r.offenders, 200)}`);
+  } catch (e) { row("R38", "Contested eligibility", "member Ana", "contradictionflag", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
+  row("R38", "A crucial document reads 'not eligible' and its vouch asks for a timestamp (the warning when none)", "member Ana",
+    "looked for a member's act that makes a document crucial: the Add screen files every capture 'supporting'; crucial comes from a named request set up on the Watching screen (namedrequestset) and gathered by the scheduler",
+    "NOT REACHED", "no document in this room is crucial and none can be made by the acts walked here without running the schedule (a gathering by the scheduler, area 4's watching rows). The refusal class CRUCIAL_IN_BATCH and its sentence are in the release code and the held screen (checked by reading, which is not an exercise)");
+
+  /* ---- G73: the 41.5 MB capture pressed again */
+  try {
+    const big = kit.pdfOf("The clerk read the budget volume of 2024 aloud to the board", Math.round(41.5 * kit.MB));
+    kit.serve("budget-volume-2024.pdf", big, { type: "application/pdf" });
+    const t1 = Date.now();
+    const first = await kit.acquire(ana, { locator: "https://www.oaklandca.example/budget-volume-2024.pdf", project });
+    const second = await kit.acquire(ana, { locator: "https://www.oaklandca.example/budget-volume-2024.pdf", project });
+    row("R38", "Press a held 41.5 MB capture again and read the sentence (G73)", "member Ana",
+      "captured a 41.5 MB PDF by its address, then pressed the same address again",
+      second.status < 500 ? "WORKS" : "BROKEN",
+      `first: ${first.status} in ${first.ms} ms ${J(first.body && (first.body.reason || first.body.ok), 80)} ${J(first.body && first.body.reading && first.body.reading.why, 200)}; again: ${second.status} in ${second.ms} ms (no apology or raw statement arises here: the file is read in the request) ${J({ ok: second.body.ok, existed: second.body.existed, reason: second.body.reason, existed: second.body.existed, translation: second.body.translation, detail: second.body.detail }, 700)}`);
+  } catch (e) { row("R38", "G73 again", "member Ana", "acquire 41.5 MB twice", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
+
+  /* ---- G78: the project-filtered held list, timed */
+  try {
+    const ts = [];
+    for (let i = 0; i < 5; i++) { const t = Date.now(); const r = await callQ(ana, "heldcaptures", { project, limit: 50, fields: "picker" }); ts.push(Date.now() - t); if (!r.ok) throw new Error("held " + J(r.r)); }
+    const tf = [];
+    for (let i = 0; i < 3; i++) { const t = Date.now(); await callQ(ana, "heldcaptures", { project, limit: 50, bundle_ids: [f1.bundleId, memo.bundleId, f22.bundleId].join(",") }); tf.push(Date.now() - t); }
+    row("R38", "Time heldcaptures&project= (G78)", "member Ana", "read the project's held list five times (picker rows) and the full fields of three documents three times",
+      Math.max(...ts) < 2000 ? "WORKS" : "BROKEN", `picker reads ${ts.join(", ")} ms; full reads ${tf.join(", ")} ms, on a quiet Miniflare copy (a reading tick may or may not have run; the bars are judged live on Server-Timing, R108)`);
+  } catch (e) { row("R38", "G78", "member Ana", "heldcaptures timing", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
+  // @@C15B
+  /* ============================================================== R38 / R92: vouch an upload, cite it and sign the case in the same sitting (G59) */
+  try {
+    const e = await kit.preparedEdition("zoe", "w05chain", { vouch: true });
+    const signed = await kit.sitAndSign(e);
+    row("R38", "Vouch an upload, cite it and sign the case in the same sitting (R92, G59)", "member Zoe (a member who may create projects and publish)",
+      "uploaded a text, filed it in a new project, vouched it, found a sentence and cited it in a question, concluded, drafted the case, prepared the edition and signed it with her own key (the walk's Miniflare copy; a signed case is final only here)",
+      signed.res.status === 200 && signed.res.body && signed.res.body.ok !== false ? "WORKS" : "BROKEN",
+      `prepared edition ${J(e.prepared && { ok: e.prepared.ok, caseId: e.prepared.caseId, edition: e.prepared.edition }, 200)}; the signing: ${kit.gateLine(signed.res).slice(0, 700)}`);
+  } catch (e) { row("R38", "Vouch, cite, sign", "member Zoe", "preparedEdition + sitAndSign", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
+
+  /* ============================================================== R212 one person alone (the part of the chain in this sitting) */
+  try {
+    const solo = kit.screenCall(adm);
+    const soloProject = await startProject(adm, "The founder's own project", "hidden");
+    const upA = await upDoc(adm, solo, "Solo memo: the clerk's received-log", "The received-log shows the contract stamped RECEIVED on April 30, 2024.\n", "text/plain", soloProject);
+    const relA = await release(adm, await sel(adm, [upA.bundleId]), "The log is the clerk's own; I read it.", "I compared the stamp with the contract's cover page.");
+    const pA = await callBQ(adm, "entitycreate", { kind: "person", label: "Lee Park", note: "The deputy clerk who stamps the received-log" });
+    const fA = await callBQ(adm, "recordpersonfact", { person: pA.r && pA.r.entity_id, kind: "name", value: "Lee Park", valid: { from: "2023-01-01", to: null }, citation: { captureSha: upA.sha, extent: { kind: "document" } } });
+    const setA = await callBQ(adm, "heldsetaside", { ids: [upA.bundleId], reason: "(solo) testing set aside alone" });
+    row("R212", "One person alone: upload, vouch, register a person, record a fact from the vouched document (this sitting's part)", "ADMIN, the only account",
+      "as the founder with no other member: uploaded and filed a document, vouched it, registered a person, recorded a cited fact; (set aside a vouched document)",
+      relA.ok && pA.ok && fA.ok ? "WORKS" : "BROKEN",
+      `vouch: ${relA.ok} ${x(relA)}; person: ${pA.ok}; fact: ${fA.ok} ${x(fA)}; no step in this sitting needed a second account or another party's approval. Steps that name a second account in the coverage rows (the asker's wait line, a second vouch, a second member's ties) are tagged for the end-of-area-10 report: R38 set-aside wait line and 'second member releasing first', R57 ties as the member, R149 marker seen by another member`);
+  } catch (e) { row("R212", "Alone", "ADMIN", "solo chain", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
+
+  /* ============================================================== overlay checks made at the op level */
+  try {
+    const aff = await callQ(ana, "affordances", {});
+    const catalog = (aff.r && aff.r.catalog) || [];
+    const mine = ["release", "retire", "heldsetaside", "heldrestore", "attest", "entitycreate", "recordpersonfact", "identityclaim", "resolve", "resolvetestify", "relationdeclare", "personexpunge", "declaretie", "withdrawtie", "officeconfirm", "recordline", "connect", "connectionchoose", "contradictionflag"];
+    const found = Object.fromEntries(mine.map((id) => [id, (catalog.find((c) => c.id === id) || {}).rung ?? "(not in the catalog)"]));
+    row("R215", "Act weight by rung for this sitting's acts (the catalog the screens draw from)", "member Ana",
+      "read the affordances catalog and looked up each act this sitting pressed", "WORKS",
+      `rung by act: ${J(found, 900)}. Behaviour seen: reasoned acts (heldsetaside, heldrestore, release, retire, entitycreate, identityclaim, resolvetestify, withdraw*) refused an empty reason; retire (terminal) refused a held copy and a second press; personexpunge refused a member; the reversible ones (recordpersonfact, declaretie, entityalias, recordline) wrote at once. The dialogs, pips and Sounds are screen checks (not walked here)`);
+    const none = await callQ(cy, "heldcaptures", { limit: 50, fields: "picker" });
+    const small = await callQ(ana, "heldcaptures", { limit: 2, fields: "picker" });
+    row("R214", "Forced states in this sitting: empty list, truncated list, withheld, undetermined, refusal", "member Cy, member Ana, member Ben",
+      "Cy (no place in the project) read the held list; Ana read it with a bound of 2; seen elsewhere in this sitting: 'Captured for a question you may not see' (withheld), a holder 'undetermined' with a reason key, refusals with their sentences",
+      none.r && Array.isArray(none.r.held) && none.r.held.length === 0 && small.r.truncated === true && small.r.next ? "WORKS" : "BROKEN",
+      `empty list: ${J(none.r, 200)}; bound of 2: held ${(small.r.held || []).length}, truncated ${small.r.truncated}, next ${small.r.next ? "present" : "none"}; 'Could not read this' and 'Still loading' are screen states (not forced here)`);
+  } catch (e) { row("R215", "Overlay op-level", "member Ana", "affordances", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
+
+  /* R218: two members change one record at once, on a project's own page (promote with a base) */
+  try {
+    const cs2 = [kit.screenCall(ana), kit.screenCall(ben)];
+    const cur = async () => { const l = R(await cs2[0].call("list", {})).find((b) => b.bundle_id === project); return l && l.bundle_sha; };
+    const base = await cur();
+    const img = R(await cs2[0].call("image", { query: { id: project } }));
+    const bump = (text, line) => text.replace(/\n## Session Log\n/, `\n## Session Log\n\n### Session ${new Date().toISOString().replace(/\.\d{3}Z$/, "Z")} | Edit | interactive\nTrigger: ${line}\nChanges: ${line}.\n`);
+    const mk = (cs, line, nonce) => cs.call("promote", { body: { bundleId: project, base, snapKey: new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z") + "_" + nonce, meta: { object_type: "project" },
+      files: Object.keys(img).filter((k) => !k.startsWith("_history/")).map((path) => ({ path, text: path === "bundle.md" ? bump(img[path], line) : img[path] })) } });
+    const a = R(await mk(cs2[0], "Ana wrote one line", "aaaaaaa1")), b = R(await mk(cs2[1], "Ben wrote another", "bbbbbbb2"));
+    row("R218", "Two members change one record at once (the project's own page, a base-stamped write)", "member Ana and member Ben",
+      "both read the project's document, both saved a change against the same base: Ana first, then Ben",
+      a.ok !== false && b.ok === false ? "WORKS" : (a.ok !== false && b.ok !== false ? "BROKEN" : "BROKEN"),
+      `Ana: ${J(a, 250)}; Ben (same base, second): ${J(b, 600)}. Neither silently overwrote the other if Ben was refused with the later head named; ${b.ok !== false ? "Ben's save was ACCEPTED on a stale base" : "Ben's save was refused"}. The case draft and the objective (R90, R26) are other areas' two-writer rows`);
+  } catch (e) { row("R218", "Two writers", "members", "promote with a base", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
+
+  /* R217: 'Help me write this' with no assistant connected, on this sitting's writing boxes */
+  try {
+    const wh = [];
+    for (const [op, field, told] of [["relationdeclare", "why", "the Fund belongs to the agency's partners"], ["resolvetestify", "basis", "I know her"], ["identityclaim", "note", "same woman"], ["entitycreate", "note", "a vendor"]]) {
+      const r = await callBQ(ana, "writinghelp", { op, field, told });
+      wh.push(`${op}/${field}: ${x(r)}`);
+    }
+    row("R217", "'Help me write this' with no assistant connected, on this sitting's boxes (person: a tie's why, the basis; the claim note; the new-person note)", "member Ana",
+      "pressed writinghelp on four of this sitting's writing boxes with the assistant not connected", wh.every((w) => !/ 500 /.test(w)) ? "WORKS" : "BROKEN", wh.join(" | "));
+  } catch (e) { row("R217", "writinghelp", "member Ana", "writinghelp", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
+  // @@C16B
+  /* ---- G74: a member filing into a project she is not in */
+  try {
+    const bunch = await upDoc(cy, cyCs, "Outsider's memo", "A memo from someone with no place in the project.\n", "text/plain", project).catch((e) => ({ err: String(e && e.message || e).slice(0, 300) }));
+    const cyHeldNow = await heldIds(cy);
+    row("R38", "A member filing into a project she is not in is refused with a stand-in sentence (G74)", "member Cy (no place in the project)",
+      "Cy uploaded a text and pressed 'file it' in Ana's project", bunch.err ? "WORKS" : (bunch.filed && bunch.filed.refused ? "WORKS" : "BROKEN"),
+      `${bunch.err ? "threw: " + bunch.err : "filed " + J(bunch.filed, 500)}; Cy's held list now has ${cyHeldNow.ids.length} rows`);
+  } catch (e) { row("R38", "G74", "member Cy", "file into another project", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
+
+  /* ---- the meaning-level log: a resolve that matched nothing is looked-absent */
+  try {
+    const ll = await callQ(ana, "leadlist", { limit: 50 });
+    row("R55", "Resolve a name that matches no registered entity and read the attempt as looked-absent in the meaning-level log", "member Ana",
+      "resolved the staff directories (five references matched no entity) and listed the observation log's leads (leadlist)", "NOT REACHED",
+      `the resolve answers carry each unmatched reference in 'unresolved'; the only member-facing read of the observation log in the plane's ops is leadlist/leadread (leads a member opened by hand): ${J(ll.r, 300)}. A read that returns the attempt "looked, found nothing" for a reference was not found`);
+  } catch (e) { row("R55", "Looked-absent", "member Ana", "leadlist", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
+
+  /* ---- overlay 31: Server-Timing, from the answers' own header, for this sitting's reads and acts */
+  try {
+    const by = {};
+    for (const t of timings) { const m = /(?:^|, )do-([a-z]+);dur=(\d+)/.exec(t.st); const k = t.op; (by[k] ||= []).push(t.ms); }
+    const worst = Object.entries(by).map(([op, a]) => ({ op, n: a.length, max: Math.max(...a), med: a.sort((p, q) => p - q)[Math.floor(a.length / 2)] })).sort((p, q) => q.max - p.max).slice(0, 14);
+    const slow = worst.filter((w) => w.max > 2000);
+    row("R108", "Timing note: the wall time of each op this sitting called (a quiet Miniflare copy, no proxy, nothing else running)", "all roles",
+      `timed ${timings.length} calls; the slowest ops by their worst wall time`, slow.length ? "BROKEN" : "WORKS",
+      `${slow.length ? "ops above 2 s: " + J(slow) + "; " : "none above K4354's 2 s; "}slowest: ${J(worst, 900)}. The bars are judged live on Server-Timing at 5-member load (R108): NOT REACHED offline`);
+  } catch (e) { row("R108", "Timing", "all", "timings", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
+  // @@C17B
+  /* ---- overlay 6 and 15, over every refusal this sitting provoked */
+  try {
+    const all = [...refusals.values()];
+    const noSentence = all.filter((r) => !r.translation);
+    const banned = [];
+    for (const r of all) {
+      const text = `${r.translation || ""}`;
+      for (const [name, re] of [["group", /\bgroups?\b/i], ["secret", /secret/i], ["confidential", /confidential/i], ["overdue", /overdue/i], ["Signal", /\bsignal\b/i], ["copy of the team", /\bcopy\b/i]]) if (re.test(text)) banned.push(`${r.op}:${r.reason} says "${name}"`);
+    }
+    const wrong = all.filter((r) => r.reason === "NO_SUCH_ITEM");
+    row("OVERLAY-6", "A refusal teaches: a refusal's sentence is about the act that was refused", "member Ana, ADMIN",
+      `collected every refusal this sitting provoked (${all.length} distinct op/reason pairs) and read each member sentence for whether it is about the act refused`,
+      wrong.length ? "BROKEN" : "WORKS",
+      `a sentence about the wrong thing: ${wrong.map((r) => `${r.op}:${r.reason} says "${(r.translation || "").slice(0, 160)}…" -- the word table's refusal.NO_SUCH_ITEM is plan-work's (a deadline, checkpoint, escalation stage or hold) and the people module answers the same code for a person fact, claim, tie or source link that is not held; MINOR to MAJOR (BOB places)`).join("; ") || "none"}`);
+    row("OVERLAY-6", "A refusal teaches: refusals the plane answers with a code and a developer sentence but no member sentence (the screens may map them)", "member Ana, ADMIN",
+      "listed every refusal this sitting provoked whose answer carries no `translation`", noSentence.length ? "NOT REACHED" : "WORKS",
+      `${noSentence.length} with no member sentence in the answer: ${noSentence.map((r) => `${r.op}:${r.reason}`).join(", ")}. Whether each reaches a member as a sentence or as a code depends on the screen's own refusal table (a screen walk reads it); the held and Document screens map release's, retire's and the claim ones. Details seen: peopledirectory:BAD_ARGUMENT -> ${J((all.find((r) => r.reason === "BAD_ARGUMENT") || {}).detail, 220)}`);
+    row("OVERLAY-15", "Voice and vocabulary in the plane's refusal sentences: no 'group' for a team, 'secret', 'confidential', 'overdue', 'Signal'", "all roles",
+      "scanned the member sentences (translation) of every refusal for the overlay's banned words", banned.length ? "BROKEN" : "WORKS",
+      `${banned.length ? banned.join("; ") : "none found"}; details (developer sentences) not scanned; 'confidential' is also a ground name of the expunge act (a kind of act, not a label)`);
+  } catch (e) { row("OVERLAY", "Refusals", "all", "scan", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
+  console.log("DONE rows", rows.length, "refusals", refusals.size);
+  // @@C18B
   // @@NEXT
 });
