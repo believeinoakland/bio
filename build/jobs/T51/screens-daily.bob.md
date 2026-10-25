@@ -401,3 +401,7 @@ Then (a CHANGE after ANSWERS #15 merges, follow-up 57): "Show how this was count
 ## B39 · CHANGE
 
 CHANGE (K5138): ANSWERS #15 is merged on the tranche: `ruleservicesstate` → `{ok: true, on}` and its fixture `ruleServicesState({on})` in `bio-plane/test/m/answers/fixtures.mjs`. Merge `origin/tranche/T51`, then R6's second half: "Show how this was counted" (`ruleanswer`) is drawn only while `ruleservicesstate` reads `on`; while off it is not drawn. Test on answers' fixture (both states), seen red first. Then COMPLETE (R6's mark is struck at that merge).
+
+## B40 · CHANGE
+
+J27: `answers` is now in screens-daily's `uses` on tranche/T51 (K5142). Merge origin/tranche/T51, re-run architecture, then post COMPLETE.
