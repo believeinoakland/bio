@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, run, HTML, page } from "./fixture.mjs";
 import { RENDER_TRIES } from "../../../src/acquisition/index.mjs";
+import { renderFailure } from "../capture-sources/fixtures.mjs";
 
 const PG = "https://r.example/p";
 const SHELL = HTML("<div id=app></div>");
@@ -18,10 +19,14 @@ function scripted(answers) {
   const w = world({ env: { RENDERER: { fetch: async (u, init) => { calls.push(JSON.parse(init.body)); const a = answers[Math.min(i++, answers.length - 1)]; return new Response(JSON.stringify(a)); } } } });
   return { w, calls };
 }
+/* the failed answers the real render driver gives (capture-sources); the time an answer states is the driver's own measurement */
+const NO_SESSION = await renderFailure({ class: "no_session" });          /* permanent */
+const REFUSED = await renderFailure({ class: "session_refused" });        /* transient */
+const OPEN_BOUND = await renderFailure({ class: "open_bound" });          /* transient, the open bound spent */
 const press = (w) => run(w, { [PG]: () => page(SHELL) }, { locator: PG, render: true }, { settle: false, ...member });
 
 test("R118: a permanent failure is charged the time it took (not the whole reservation), tried once, and answers RENDER_FAILED with its class; nothing is filed", async () => {
-  const { w, calls } = scripted([{ ok: false, error: "the browser had no session", elapsed_ms: 4200, failure_class: "permanent" }]);
+  const { w, calls } = scripted([NO_SESSION]);
   const r = await press(w);
   assert.equal(r.status, 502);
   assert.equal(r.body.reason, "RENDER_FAILED");
@@ -29,28 +34,28 @@ test("R118: a permanent failure is charged the time it took (not the whole reser
   assert.equal(calls.length, 1);
   const spends = w.store.state.spends;
   assert.equal(spends.length, 1);
-  assert.equal(spends[0].ms, 4200, "the real elapsed time is charged");
-  assert.ok(spends[0].releaseMs > 4200, "the reservation is released whole");
+  assert.equal(spends[0].ms, NO_SESSION.elapsed_ms, "the real elapsed time is charged");
+  assert.ok(spends[0].releaseMs > NO_SESSION.elapsed_ms, "the reservation is released whole");
   assert.equal(r.body.document, undefined);
 });
 
 test("R118: a transient failure is retried with back-off up to RENDER_TRIES; a render that then succeeds is filed and every attempt's time is charged", async () => {
-  const { w, calls } = scripted([{ ok: false, error: "session refused", elapsed_ms: 100, failure_class: "transient" }, { ok: false, error: "3 a second", elapsed_ms: 50, failure_class: "transient" }, OK()]);
+  const { w, calls } = scripted([OPEN_BOUND, REFUSED, OK()]);
   const r = await press(w);
   assert.equal(r.status, 200);
   assert.equal(calls.length, 3);
   assert.equal(w.store.state.spends.length, 1);
-  assert.equal(w.store.state.spends[0].ms, 100 + 50 + 12);
+  assert.equal(w.store.state.spends[0].ms, OPEN_BOUND.elapsed_ms + REFUSED.elapsed_ms + 12);
 });
 
 test("R118: a transient failure that never passes is tried RENDER_TRIES times, then RENDER_FAILED with class transient, the time of all tries charged", async () => {
   assert.equal(RENDER_TRIES, 3);
-  const { w, calls } = scripted([{ ok: false, error: "open bound", elapsed_ms: 70, failure_class: "transient" }]);
+  const { w, calls } = scripted([OPEN_BOUND]);
   const r = await press(w);
   assert.equal(r.status, 502);
   assert.equal(r.body.failure_class, "transient");
   assert.equal(calls.length, 3);
-  assert.equal(w.store.state.spends[0].ms, 210);
+  assert.equal(w.store.state.spends[0].ms, OPEN_BOUND.elapsed_ms * RENDER_TRIES);
 });
 
 test("R118 (V5): a page that answered 403, a chrome-error:// location and an empty shell are not filed as the document: RENDER_FAILED, permanent, stated", async () => {

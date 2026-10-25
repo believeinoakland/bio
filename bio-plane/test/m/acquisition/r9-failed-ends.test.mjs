@@ -13,10 +13,12 @@ const source = () => new Response(bytes, { headers: { "content-type": "applicati
 
 async function failed() {
   const w = world();
+  // fixtures-contract: plane owed-ledger
   w.store.owedLater = async () => ({ ok: true });
   const first = await run(w, { [BIG]: source }, { locator: BIG, project: "P" }, { settle: false });
   const session = first.body.fetch_pending.session;
   const net = network({ [BIG]: source });
+  // fixtures-contract: control-plane deliver-owed
   try { await owedFetch(w.store, { kind: "fetch", session }, { storeName: "bio", deliver: async () => ({ ok: false, reason: "CAPTURE_HELD_BY_ANOTHER_BUNDLE" }) }); } finally { net.restore(); }
   return { w, session };
 }
