@@ -498,3 +498,7 @@ COMPLETE · FILE-SAFETY #22 · job 99, batch D (G171): R39 renderWake now for a 
 - `impact.mjs origin/tranche/T51 HEAD`: affected 11 modules (file-safety, scheduler, affordances, notice-producers, queue, op-declarations, store-door, screens-settings, control-plane, plane, journey-check); users' tests: see the COMPLETE.
 
 Size (session_01YBRdy1ssgabFSCE7bRoS1Y): test runs 4, module lines 2336
+
+## Completion (B23 CHANGE)
+
+Merged `tranche/T51`. `tools.test.mjs` (the checksum refusal) and `wakes.test.mjs` (the unreadable refusal) now take `reputationRefresh("checksum")` / `reputationRefresh("unreadable")` from `file-scanner/test/fixtures.mjs`; the expected code is the answer's own. Tests `tools` and `wakes`: pass 19, fail 0. `checks/fixtures.mjs /home/user/bio file-safety --list`: answer 0; the 2 `contract-no-run` lines in `r1-registrar.test.mjs` wait for plane's run. No `fixtures-own` or `fixtures-generic` marker added.
