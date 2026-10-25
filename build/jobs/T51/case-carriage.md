@@ -223,3 +223,37 @@ Size (session_01Eyr6nAcJni3EthrUFAfdnx): test runs 9, module lines 1756
 ## J9 · COMPLETE
 
 COMPLETE · follow-up 70, 10A §1. Root cause as diagnosed: #isPhoto/#photo read only capture.content_type and the path extension; an upload records neither. Fixed with one rule #judgePhoto: image content_type, else profile.format.format image, else profile.source_content_type image, else extension only when nothing states a type or format (a known non-image format wins over the name). Met: R1 (and R8, R9, R13 that read it). Failing-first upload-photo.test.mjs (3 of 4 red on old code, green now). Module 110/110; impact: case-disclosures 116, case-check 35, case-authoring 257, public-read 310, scheduler 185, publication 184 pass 0 fail. format, architecture, coverage 23/23, words, ownership, fixtures --list: 0 failures. Markers added: none. REPORT: capture publishes no upload fixture; I used the shape pinned at capture/upload.test.mjs:138-155, hand-built, no marker; the through-the-door case is control-plane's to place (K5138). Record: build/jobs/T51/case-carriage.md. Size (session_01Eyr6nAcJni3EthrUFAfdnx): test runs 9, module lines 1756.
+
+## Round 10 · K5148 cause 1 (case-carriage #20, session_019b9mQAfKq3DmpzFv9GUmSd; START B11)
+
+**Cause (test files only, K5152).** `upload-photo.test.mjs` hand-built the provenance document of an upload. Diagnosis as the START gives it; the document is capture's to write.
+
+1. **Root cause, with evidence.** The hand-built document differs from what capture's real `uploadCapture` writes, in the fields this module reads:
+   - the file is `snapshots/upload-<sha>` (the real file), not a name the test chose;
+   - `profile.source_content_type` is null (an upload declares no type), where the hand-built one said `image/png` or `image/jpeg`;
+   - the profile of plain text is `format: "undetermined"`, not `"text"` as the hand-built one said.
+   Probe: `uploadProvenance({bytes: "just some notes", name: "notes.png"})` gives `format.format: "undetermined"`, `source_content_type: null`. Filed under a `.png` register path, the module's rule (`#judgePhoto`) then reads the extension and calls it a photo. Under the real upload path that cannot happen, since uploads file at `upload-<sha>`.
+2. **Failing-first.** Not reproduced as a red. The old file passed on the module as it stands, and the module is unchanged. The divergence is shown by the probe above and by a run of the new controls with their real document filed under a `.png` path: `AssertionError`, `actual: true, expected: false` (the text upload is a photo). The new test file, seen red on the first run (a `UNIQUE constraint` on two identical byte strings, fixed by distinct bytes), then green.
+3. **Fix** (`bio-plane/test/m/case-carriage/upload-photo.test.mjs` only). `uploaded()` takes its provenance document from capture's published `uploadProvenance` (`bio-plane/test/m/capture/fixtures.mjs`, made by capture's real `uploadCapture` when the test runs), and keeps only the bundle, the register and files rows, and the held bytes. The register path is the document's own `file` unless a control names one (`filedAs`).
+   - Dropped: the "declared image type over bytes of no known format" case. An upload never declares a type, so no upload's real document has that shape; the other case-carriage tests do not cover the `source_content_type` branch of `#judgePhoto` (see Found).
+   - Controls: the text-upload control is now a real text upload at its own digest path (not a photo, the name is not a path); the undetermined-format control is a real upload filed as `x.png`; the no-format control is a real text upload with no extension.
+4. **Why the tests missed it.** The file built the provenance document by hand from its own author's idea of the shape, so it could not diverge from the module's rule. Nothing compared it with capture's answer. Coverage of the rule by real documents is now through the fixture.
+
+**Deferred:** none in my paths.
+
+**Found, for BOB.**
+- **Needs Bob (architecture).** `upload-photo.test.mjs` now imports capture's published fixture (the rule K4990 requires), and capture (layer 3) is not in case-carriage's `uses`. `checks/architecture.mjs` fails: `imports bio-plane/test/m/capture/fixtures.mjs of capture, which case-carriage does not declare in uses`. The one act: add `"capture"` to the `uses` array of the case-carriage entry in `build/modules.json`. I may not write that file.
+- **Question (R1, judgment; not blocking).** A text upload whose register path has an image extension, with a profile of `undetermined`, is a photo by the extension (`#judgePhoto` treats `undetermined` as unstated). Real uploads file at `upload-<sha>`, so the upload flow cannot reach it; a bundle that files a text capture under a `.png` name can. R1's wording ("a format that is not an image wins over the extension") covers only a stated format. Is an undetermined text file at a `.png` path a photo? Best reading: no change; it is BOB's to say.
+- **Coverage gap (for capture's or case-carriage's next job).** The declared-type branch of `#judgePhoto` (`profile.source_content_type` an image type, no format) has no test whose document is capture's answer. A fetched image's declared type would come from capture's fetch fixture, if it publishes one.
+
+**Tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/case-carriage/*.test.mjs` (run without `--test-force-exit`; it exits by itself): 110 tests, 110 pass, 0 fail. `upload-photo.test.mjs` alone: 4 of 4.
+
+**Checks** (`/home/user/civicos-process`, product `/home/user/bio`):
+- `format.mjs`: 178 modules, 178 requirements files; 0 failures.
+- `architecture.mjs case-carriage`: 20 product files, 90 relative imports; **1 failure** (above, needs Bob).
+- `coverage.mjs case-carriage`: 23 of 23 live requirement ids named by a test; 0 failures.
+- `ownership.mjs case-carriage tranche/T51`: 1 file changed by case-carriage; 0 failures.
+- `words.mjs case-carriage`: 0 failures (unkeyed 1, reported, not a failure).
+- `fixtures.mjs case-carriage --list`: 0 failures; no line for this file.
+
+**Size (session_019b9mQAfKq3DmpzFv9GUmSd): test runs 6, module lines 1756**
