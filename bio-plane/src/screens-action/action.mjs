@@ -340,10 +340,20 @@ export const action = Object.freeze({
           + (minRead && minRead.state === "failed" ? cs.state(minRead) : "")
           + cs.field("minutes-passage", "screen.action.minutes.passage.label", { area: true, rec: true, help: "screen.action.minutes.passage.help1" })
           + '<div class="mk-acts">' + cs.act("actioncorrespond", { label: "screen.action.minutes.record", tone: "primary" }) + "</div>") : "";
+      // fix round 10 (diagnosis 11 §17): a reply's mark is read from `pressurefor`, from either source (the document's entry or `actionpressure`'s
+      // own record), so a reply marked is shown marked and not offered again
+      const pv = view.data.pressure && view.data.pressure.state === "ok" ? view.data.pressure.value : null;
+      const pvMore = pv && pv.truncated && pv.cursor ? P.pressurePages(cs, view, pv.cursor) : { items: [], state: "ok" };
+      const pvItems = pv ? (Array.isArray(pv.items) ? pv.items : []).concat(pvMore.items) : [];
+      const markOf = function (ord) {
+        return pvItems.find(function (m) { return m && m.arrived && m.arrived.action === view.subject && Number(m.arrived.ord) === Number(ord); }) || null;
+      };
       const replies = cs.sec("screen.action.replies", (received.length ? cs.sheet(received.map(function (c) {
         const e = entries.find(function (x) { return x.ord === c.ord; }) || {};
-        const pr = e.pressure ? cs.w("screen.action.pressure." + (["legal", "retaliation", "discrediting"].includes(e.pressure.kind) ? e.pressure.kind : "other")) : "";
-        const mark = !e.pressure && c.direction === "received"
+        const stored = markOf(c.ord);
+        const kindOf = stored && typeof stored.kind === "string" ? stored.kind : e.pressure ? e.pressure.kind : "";
+        const pr = stored || e.pressure ? cs.w("screen.action.pressure." + (["legal", "retaliation", "discrediting"].includes(kindOf) ? kindOf : "other")) : "";
+        const mark = !stored && !e.pressure && c.direction === "received"
           ? cs.choice("pressure-kind-" + c.ord, "screen.action.pressure.kind", ["legal", "retaliation", "discrediting", "other"].map(function (k) { return [k, "screen.action.pressure." + k]; }))
             + cs.field("pressure-note-" + c.ord, "screen.action.pressure.note") + cs.act("actionpressure", { data: { ord: String(c.ord) } }) : "";
         return cs.row(cs.date(c.at), cs.w(c.direction === "no_response" ? "screen.action.noresponse" : "screen.action.received")

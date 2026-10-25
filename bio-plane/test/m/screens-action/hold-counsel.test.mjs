@@ -120,3 +120,17 @@ test("R34: each matter as the packet states it, 'not determined' never stopping 
   for (const k of ["screen.counsel.defense.heading", "screen.counsel.defense.undetermined"]) said(d, k);
   said(d, "screen.counsel.defense.restson", { findings: "2", sources: "1" });
 });
+
+test("R32 (diagnosis 11 §16): each place in 'The hold is for' is named by its mark's note and day, so two marks of one day read apart", async () => {
+  const day = "2026-10-25T09:00:00Z";
+  const due = { ...HOLDS_DUE, items: [
+    { arrived: { action: ACTION_ID, ord: 1 }, project: PROJECT, note: "the city's counsel wrote", marked_by: "member:mai", marked_at: day },
+    { arrived: { action: ACTION_ID, ord: 2 }, project: PROJECT, note: "the landlord's lawyer called", marked_by: "member:dev", marked_at: day }] };
+  const p = await open(ROUTES.hold, { ...DATA_PLANE, holdsdue: ok(due) });
+  const texts = p.doc.getElementById("hold-for").querySelectorAll("option").map((o) => o.textContent.trim()).slice(0, 2);
+  assert.equal(new Set(texts).size, 2, JSON.stringify(texts));
+  assert.ok(texts[0].includes("the city's counsel wrote") && texts[0].includes(D(day)) && texts[1].includes("the landlord's lawyer called"), JSON.stringify(texts));
+  // control: a mark with no note is named by its day alone
+  const q = await open(ROUTES.hold, { ...DATA_PLANE, holdsdue: ok({ ...due, items: [{ ...due.items[0], note: "" }] }) });
+  assert.deepEqual(q.doc.getElementById("hold-for").querySelectorAll("option").map((o) => o.textContent.trim()).slice(0, 1), [D(day)]);
+});
