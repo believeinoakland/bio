@@ -143,3 +143,11 @@ Size (session_01QiJTxoqM2vV4sPHpBViTjn): test runs 40, module lines 941
 ## Saved at K5183
 
 Done: everything. Batch 7 is COMPLETE (J7), all committed and pushed; nothing half done, no worker running. Only open item: BOB adds the `store-request` `uses` edge to `screens-wizards` (J6 item 1), after which `architecture.mjs screens-wizards` is green. Next step for a continuing session: read BOB's answer to J6/J7 (`mail inbox --as job`), then act on it.
+
+## Fix round 10, batch 8 (SCREENS-WIZARDS #8; B9 START, K5202)
+
+Written, not yet run: the store cannot import until OP-GRADES #30 merges (`DECLARED_OP_DISAGREES: readtranslate description`; confirmed by running `t48.test.mjs`: 1 fail at import).
+- `bio-plane/test/m/screens-wizards/world.mjs:15`: the dead `{ group: null }` dropped (`storeWorld()`).
+- `bio-plane/test/m/screens-wizards/t51.test.mjs` (end): "R7 R11 a script the row says is required is drawn Recommended on its screen…": on `ceremony` and `members`, every `wizardsat` row carries a boolean `required`; the opened chip lists each row, and `wizard.mark.recommended` is drawn exactly for the rows with `required: true`; a control script of the member's is not marked; the ceremony offers a required script.
+- Module code unchanged: `guide.mjs:476` already reads `s.required === true` and `:491` draws the mark (T48-70); it never infers. The red-before is therefore shown by mutation after the CHANGE (the guide made to ignore the row), not by a missing field.
+Next: after OP-GRADES' CHANGE, merge `tranche/T51`, run the module, do the mutation red, run the done checks, COMPLETE.
