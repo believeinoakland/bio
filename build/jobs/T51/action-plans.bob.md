@@ -94,3 +94,7 @@ Mail with `--module action-plans`; record `build/jobs/T51/action-plans.md` (appe
 ## B7 · CHANGE
 
 J5: `basis-versions` is now in action-plans' `uses` on `tranche/T51` (K5135). Merge `origin/tranche/T51` into your branch; your lazy-dependency reading is adopted (a host with no basis-versions keeps the old answer for an open question; a concluded stance never reads as still open).
+
+## B8 · CHANGE
+
+J5: `basis-versions` is now in action-plans' `uses` on `tranche/T51` (K5135). Merge `origin/tranche/T51` into your branch; your lazy-dependency reading is adopted (a host with no basis-versions keeps the old answer for an open question; a concluded stance never reads as still open).
