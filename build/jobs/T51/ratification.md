@@ -511,3 +511,7 @@ Admission 1 + ratification 6 = 7, which is this module's bar. The assembly is 5 
 1. Either public-read drops one hop in the assembly, or you rule that R60 is met for ratification's share and the chain test's bar is the assembly's to meet. Until then, the test stays red and R60 stays unmet.
 
 Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 6, module lines 4097
+
+## J27 · REPORT
+
+Correction to J26 (the BLOCKED entry; the tool numbered it J26, not J27): its state is WAITING ON BOB (J26). Its Size line should read module lines 4102 (cat bio-plane/src/ratification/*.mjs | wc -l, measured after the publishat row), not 4097: Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 6, module lines 4102.
