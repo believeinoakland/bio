@@ -197,14 +197,36 @@ export function matchDates(text, set) {
  *  with the word found; never a force. */
 export function matchRequirements(text, set) {
   const p = patterns(set), t = String(text ?? ""), out = [];
-  const re = /[^.!?;\n]+[.!?;]?/g;
-  for (const s of t.matchAll(re)) {
-    const m = p.requirement.exec(s[0]);
+  for (const s of sentencesOf(t)) {
+    const m = p.requirement.exec(s.text);
     if (!m) continue;
-    const lead = s[0].length - s[0].trimStart().length;
-    out.push({ index: s.index + lead, end: s.index + s[0].trimEnd().length, sentence: s[0].trim(),
+    const lead = s.text.length - s.text.trimStart().length;
+    out.push({ index: s.index + lead, end: s.index + s.text.trimEnd().length, sentence: s.text.trim(),
                requirement_word: m[1].toLowerCase() });
   }
+  return out;
+}
+
+/** R2: a stop (`.` `!` `?` `;`) ends a sentence only before whitespace and a capital (a closing quote or bracket may
+ *  come between) or at the end of the text, and a `.` after a known abbreviation does not; a line break always ends
+ *  one. So never inside a number (`8.22.050`, `$4.2`) or a citation. Each piece keeps its stop, as `[{index, text}]`. */
+const ABBREVIATION = /(?:^|[^\p{L}])(?:Mr|Mrs|Ms|Dr|Prof|Hon|Rev|Gov|Jr|Sr|St|Ave|Sec|Secs|No|Nos|Art|Ch|Cl|Subd|Para|Cal|Civ|Pen|Proc|Evid|Bus|Lab|Pub|Ord|Res|Stat|Stats|Ann|Supp|Cir|App|Dept|Rep|Reg|Fed|Op|Inc|Corp|Co|Ltd|vs|v)\.$/u;
+const STOPS = ".!?;";
+const AFTER_STOP = /^["'”’)\]]*(?:\s*$|\s+["'“‘(\[]*\p{Lu})/u;
+function sentencesOf(t) {
+  const out = [];
+  let start = 0;
+  const cut = (to) => { if (to > start) out.push({ index: start, text: t.slice(start, to) }); };
+  for (let i = 0; i < t.length; i++) {
+    if (t[i] === "\n") { cut(i); start = i + 1; continue; }
+    if (!STOPS.includes(t[i])) continue;
+    let j = i;
+    while (j + 1 < t.length && STOPS.includes(t[j + 1])) j++;
+    if (!AFTER_STOP.test(t.slice(j + 1))) { i = j; continue; }
+    if (t[j] === "." && j === i && ABBREVIATION.test(t.slice(start, j + 1))) continue;
+    cut(j + 1); start = j + 1; i = j;
+  }
+  cut(t.length);
   return out;
 }
 
