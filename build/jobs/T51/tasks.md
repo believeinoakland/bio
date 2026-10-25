@@ -228,3 +228,7 @@ Size (session_014SW3dszWfYfXnSrCtVu4CS): test runs 27, module lines 1702
 **Other modules:** none to report. Any other module with a large burst of synchronous tests may show the same under `--test-force-exit`; I sampled queue only (clean).
 
 Size (session_018khTeR7Ftw2mCC35fSYLYA): test runs 130, module lines 1702
+
+## J10 · COMPLETE
+
+COMPLETE (TASKS #20, follow-up 44, K5117). Cause: reports of tasks/grammar.test.mjs's burst of sync tests are lost under --test-force-exit (all tests run; probe showed 45 of 45 ran while 46 of 53 reported); one-process run gave 103-134. Fix: root afterEach yielding one event-loop turn in grammar.test.mjs (tests only). Proof: 20 idle + 15 under 8 busy loops, 134 each, 0 fail. Checks fixtures/format/architecture/coverage/words/ownership all 0. Details in build/jobs/T51/tasks.md J8. Nothing for other modules.
