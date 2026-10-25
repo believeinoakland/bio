@@ -333,3 +333,30 @@ COMPLETE (START B17, fix round 10, Wave A batch 3).
 **Tests and checks** (from the repository root unless said): ratification suite 335 of 335 green (`node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/ratification/*.test.mjs`); g54-l and g57-l (Miniflare) 17 of 17; control-plane `r8-caseratify-calls.test.mjs` 2 of 2 (chain 15 through the door); the tests of the other modules that name caseratify/ratify (case-authoring, public-read, publication, publish-schedule, plane, op-declarations, screens-publish, affordances, action-holds, case-inputs, screens-action): 496 of 499, the three reds (op-grades `owners`, screens-publish `common` R24, `g54-page` R22) are red at the tranche tip too (inherited, none mine). Process checks: format 178 modules 0 failures; architecture ratification 0 failures; coverage ratification 59 of 59 live ids named, 0 failures; ownership 0 failures (13 files changed); words: no finding in this module; `setup-words/build.mjs --check`: the stale-rows note only (control-plane's rows), no refusal naming this module; fixtures: 15 lines left in this module, all named above as waiting.
 
 Size (session_0187Lt3bgcnMcXFPx6HVxqC5): test runs 14, module lines 4054
+
+## J20 · COMPLETE
+
+COMPLETE (START B18, fix round 10, follow-up 16: test files only). Commit `b2c066da8e` on `job/T51/ratification`, pushed.
+
+**Entries applied.** Follow-up 16, the re-points:
+- `g54-paths.test.mjs`: the ledger's refusal answers (`assemble`, the `next` path and the MATERIAL_MISSING / BUCKET_FAILED path, :109 and :114) now return public-read's real refusals from `assembleCaseContainerRefusal()` (`CASE_FILE_NOT_BUILT`, codes MATERIAL_MISSING and BUCKET_FAILED). Read whole first: its `materialMissing`, `bucketFailed` and `notAssembled` answers are the real ones; they replace the hand-built `{ok:false, reason: code, code}`. The fixture is called once, at import (`REFUSALS`).
+- `g54-paths.test.mjs` :310 and :455 (the sitting refusal, `CASE_FILE_NOT_ASSEMBLED`) take the real `notAssembled` answer.
+- `g57-heal.test.mjs:426` takes the same real `notAssembled` answer (the import is at module load, `NOT_ASSEMBLED`).
+- `g54-entry.mjs:111` (strength) and `:113` (money): not re-pointed; see Deferred.
+
+**Deferred, and why.** `g54-entry.mjs:111` and `:113` keep their stand-ins, marked `// fixtures-own: platform` (the marker is on :111, and covers :113 in the check). The entry is bundled into the Miniflare script and runs on workerd. strength's and money's published fixtures build node:sqlite worlds (`node:sqlite` imports), which cannot load there; the same reason as the existing marker at :98 (provenance). The stand-ins answer only the ok shape the sweep reads (testimony with no legs; a fact not found). Each of those two answers is a real provider's shape, so this is a REPORT, not a silent change: if BOB wants them on the fixtures, the entry needs a node-side variant, which is a change to g54-l's composition, not to this module's tests.
+
+**Findings in another module.** None.
+
+**Fixture markers (K5060).** Added: `g54-entry.mjs:111` (`fixtures-own: platform`, above, covering :111 and :113). No `fixtures-contract` or `fixtures-generic` marker added. No marker removed.
+
+**Tests and checks** (from the repository root unless said):
+- Two edited files: `g54-paths.test.mjs` and `g57-heal.test.mjs`: 33 of 33 green (`node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>`).
+- Ratification suite, all 33 files including g54-l and g57-l: 335 of 335 green, 0 fail, 0 skipped.
+- `checks/fixtures.mjs /home/user/bio ratification --list`: 0 failures (12 accepted; the six that were failing are re-pointed or marked).
+- format: 0 failures (178 modules). architecture: 0 failures. coverage: 59 of 59 live ids named, 0 failures. words: 0 failures. ownership (`tranche/T51`): 4 files changed by ratification (3 tests and this record), 0 failures.
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 1 of 178 (ratification only), affected test files 2 of 2815 (the two I changed, both green above).
+
+**Requirements.** None changed; no requirement id struck. Note for BOB: follow-up 16's R60 point stands (not struck here; control-plane's fold owns it).
+
+Size (session_01GJy1fny8QM6KzhgqNmKu8v): test runs 3, module lines 4054
