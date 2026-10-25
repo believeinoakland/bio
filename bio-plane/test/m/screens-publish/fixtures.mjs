@@ -5,10 +5,13 @@
 import { webcrypto } from "node:crypto";
 import { SCREENS } from "../../../src/screens-publish/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
-import { storeWorld } from "../store-request/fixtures.mjs"; // registers the declared ops (store-assembly) before anything reads them
+/* store-request's world registers the declared ops (store-assembly) when it is first imported. A test that registered them itself first (control-plane's
+   seam tests import this file after `register-declared.mjs`) has no world here: only `openWorld` needs it. */
+let storeWorld = null;
+try { ({ storeWorld } = await import("../store-request/fixtures.mjs")); } catch (e) { if (!/second registration|registered after the first read/.test(String(e && e.message))) throw e; }
 import { boot, counted, ok, refused, refusedIn, silent, pending, textNodes, settle, bytes, MEMBER } from "../interface-shell/harness.mjs";
 
-export { storeWorld, SCREENS, ok, refused, refusedIn, silent, pending, settle, bytes, word, hasWord };
+export { SCREENS, ok, refused, refusedIn, silent, pending, settle, bytes, word, hasWord };
 
 export const P = "PROJ-2026-0012";
 export const DR = "RVD-2026-0001";
@@ -160,6 +163,7 @@ export async function answerSign(p, yes = true, sent = null) {
  *  op the `plane` table does not (the table keeps what a world cannot make: a fault, the model's stream, a state no act reaches). `as` is a
  *  signed-in member of the world (`world.signIn`), or none for the public frame. Answers the page with its `world` and `as`. */
 export async function openWorld(path, o = {}) {
+  if (!storeWorld && !o.world) throw new Error("openWorld: the declared ops were registered before this file was imported, so no world is built here");
   const world = o.world || (await storeWorld());
   const as = o.as === undefined ? null : o.as;
   const { door, session } = world.boot(as);
