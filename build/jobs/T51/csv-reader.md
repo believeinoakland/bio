@@ -184,3 +184,7 @@ R20 done (G4): decideDelimiter now counts a delimiter consistent when it occurs 
 **fixtures-own / fixtures-generic markers added:** none. **Deferred:** none. **Found in other modules:** none. Stale bundles that embed csv-reader source: BOB regenerates.
 **Note for BOB (R22 wording, optional):** R22 could say "while R7 decides no delimiter, the bound judges the most fields the record would have under comma, semicolon, tab or pipe".
 Size (session_01KK3V2itArCQimGgpgdg95M): test runs 12, module lines 1314
+
+## J9 · COMPLETE
+
+Follow-up 11 done. Root: an undetermined delimiter (R7: fewer than 2 complete lines, or a tie) reads each record as one field, so info.cols was 1 and R22's guard never fired on a one-line 16,385-column file. Fix: the record walk also counts comma/semicolon/tab/pipe outside quotes while no delimiter is decided (info.wide); the guard judges max(cols, wide) and states the count and limit in the metric:columns marker. Dialect unchanged. Failing-first test text.test.mjs 'R22 a body of ONE line' (all four delimiters, with/without final newline, text and structure; 16,384 read; quoted commas not counted) seen red then green. csv-reader 97/97; users format-registry 59, office-readers 164, odf-reader 127, calculations 143, acquisition 356, reading-pipeline 437, extraction 381: 0 fail. Checks (absolute root): format, architecture, coverage 25/25, ownership, words, fixtures: 0 failures. fixtures markers added: none. Deferred: none. Platform N. Size (session_01KK3V2itArCQimGgpgdg95M): test runs 12, module lines 1314
