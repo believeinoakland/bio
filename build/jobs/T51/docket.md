@@ -53,3 +53,18 @@ Size (session_01SMUewbpPXf2emYuG2aQvxY): test runs 9, module lines 1657
 ## J2 · COMPLETE
 
 K4557 (E9) applied in docket: docketpressure asks membership.projectAuthority 'joined' after sight, before any write (docket/index.mjs:538); docketfile answers membership's PROJECT_ACT_NOT_A_PARTICIPANT (:387), one condition one code (K231). Failing-first through the ops map as the invited member: red (mark accepted; old code answered), green after; controls: joined, joining, leaving, unseen, absent entry, nothing written. Also: declared docketpressure and docketprepare (K4208); docketprepare now answers the kind's shelf when none is named (the screens' own call, screens-publish/docket.mjs:44,185, was refused DOCKET_WRONG_SHELF; own-module flaw, requirement line proposed in my record). Docket suite 87/87; users (53 modules, 931 files): 7593/7598, the 3 failures not docket's (R24 plane/release inherited; two flaky, pass alone). Checks 0 failures. No screen reads the old code. Requirement lines to write (R1, R2, R4, R28 wording, R31, Uses) and Size line are in build/jobs/T51/docket.md.
+
+## Fix round 10, Wave A batch 4 (B3)
+
+**Causes done.** Published `bio-plane/test/m/docket/fixtures.mjs` (new), each export made by the real code at test time and called by a test of mine in `fixtures.test.mjs` (R9 / R27 titles) that checks the real answer:
+- `coreDue`: R9, the manager's owed response (`due`), and the empty `{ok:true, items:[], count:0, wrote:false}` read by no viewer (`unread`), a non-manager and a machine.
+- `docketEntryRead`: R27, `docketPressureOf` over marks: a marked entry, one with `pressure: null`, and `NO_SUCH_DOCKET_ENTRY` for an absent and an unseen entry (alike but for the id). The plan names `docketEntry`; the module has no such read, so it is `docketPressureOf` alone.
+- `pressureMarks`: R27, `docketPressureMarks` empty (`marks: []`), with a mark, a refused kind (`DOCKET_PRESSURE_REFUSED`), and unreadable (`DOCKET_UNREADABLE`, no `marks` key). Note for BOB: the plan's "a docket not asked" (filings' `docket: {}`) has no real answer, since a module that is not wired answers nothing; filings keeps `docket: {}` as a module not wired, not as an answer of docket. I made the "refused kind" answer the third real shape.
+
+**Own line done.** publication/stampEditionRefusal: `fixture.mjs:137` now returns the refusal as given; `court.test.mjs` R25 sets `w.stamps.refuse = stampEditionRefusal().noEdition` from `../publication/fixtures.mjs` (FIX-E, merged). No `fixtures-own` or `fixtures-generic` marker added. `checks/fixtures.mjs . docket --list`: 0 failures (was 1).
+
+**Lines left:** none. **Deferred:** none. **Found in other modules:** none.
+
+**Ran.** Docket suite `bio-plane/test/m/docket/`: 90 tests, 90 pass, 0 fail. `impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178, test files 0 of 2775 (test-only change). Checks: fixtures 0 failures; format 0 failures; architecture 15 files, 0 failures; coverage 31 of 31 ids, 0 failures; ownership 0 failures.
+
+Size (session_01CnYEEbvuMRb9yWAomBsnUW): test runs 3, module lines 0
