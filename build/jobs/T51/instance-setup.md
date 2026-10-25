@@ -273,3 +273,13 @@ COMPLETE (re B16; fix round 10, Wave A batch 5: the fixture round). Test files o
 **Tests and checks (from /home/user/bio, process checks at civicos-process main):** instance-setup 239 pass, 0 fail (234 before, +5 fixtures); screens-action `join-seam-t51` and `seam-t51` (the only other importers of `instance-setup/fixture.mjs`) 4 pass. `checks/format.mjs`: 178 modules, 0 failures. `checks/architecture.mjs instance-setup`: 0 failures. `checks/coverage.mjs instance-setup`: 76 of 76 live requirement ids named, 0 failures. `checks/words.mjs instance-setup`: 0 failures (inline 0, plain 0, testcopy 0). `checks/ownership.mjs … instance-setup origin/tranche/T51 job/T51/instance-setup`: 7 files, 0 failures. `setup-words/build.mjs --check`: only the expected stale-rows note, none naming my module. `checks/fixtures.mjs instance-setup`: 21 → 3 answer lines + 1 orphan-run, all waiting as above.
 
 Size (session_01Qqt8fVgM4Tk1A5Lz73WMQG): test runs 6, module lines 3846
+
+## J22 · COMPLETE
+
+COMPLETE (re B17). Merged origin/tranche/T51 (merge commit, no rebase) and re-pointed fixture.mjs:113: the stand-in public-read registration now answers with public-read's own `groupIdentityRegistrar()` results (malformed, first, declared), still recording the identity for the tests.
+
+`checks/fixtures.mjs /home/user/bio instance-setup --list`: 0 failures; two lines listed as `accepted(store-replies)` (fixture.mjs:190, :201, store-door's run now on the tranche); the orphan-run at fixtures.test.mjs:49 cleared. No line left.
+
+Tests: instance-setup 239 pass, 0 fail. format 0 failures; architecture, coverage (76 of 76), words, ownership 0 failures.
+
+Size (session_01Qqt8fVgM4Tk1A5Lz73WMQG): test runs 8, module lines 3846
