@@ -191,8 +191,8 @@ Size (session_01XG3wEDwRsPvJ8ZMf1es3qF): test runs 7, module lines 1732
 
 **Row owed to UX-DESIGN (changed).** The stand-in id is now `workbooks.cells_not_kept` ({count}, {unreadable}, {repeated}); the old `workbooks.dropped_cells` (with `{no_reference}`) is no longer used by this module. I changed the id because the stale `rows.mjs` row for the old id wins over `en` and still needs `{no_reference}`; BOB regenerates `rows.mjs` and may drop the orphan row.
 
-**Tests and checks.** From `bio-plane/`: workbooks `tests 50, pass 50, fail 0`; plane `g124f-bounds.test.mjs` `tests 16, pass 16, fail 0` (reached through the real reading, including F1). Nothing outside this module reads `dropped.no_reference` (grep). `checks/format.mjs`: 0 failures. `architecture workbooks`: 0 failures. `coverage workbooks`: 23 of 23, 0 failures. `words workbooks`: inline 0, plain 0, testcopy 0, missingkey 0; 0 failures. `ownership workbooks tranche/T51 job/T51/workbooks`: 1 file changed besides tests... 0 failures.
+**Tests and checks.** From `bio-plane/`: workbooks `tests 50, pass 50, fail 0`; plane `g124f-bounds.test.mjs` `tests 16, pass 16, fail 0` (reached through the real reading, including F1). Nothing outside this module reads `dropped.no_reference` (grep). `checks/format.mjs`: 0 failures. `architecture workbooks`: 0 failures. `coverage workbooks`: 23 of 23, 0 failures. `words workbooks`: inline 0, plain 0, testcopy 0, missingkey 0; 0 failures. `ownership workbooks tranche/T51 job/T51/workbooks`: 1 file changed by workbooks; 0 failures.
 
 **Stale generated artifacts I make:** `setup-words/rows.mjs` (new key above), the plane bundle `dist/bio-plane.bundled.mjs`. **Found in other modules:** none. **Deferred:** none.
 
-Size (session_01A8uYztGp9qatq9Wz5yfrRC): test runs 5, module lines 1738
+Size (session_01A8uYztGp9qatq9Wz5yfrRC): test runs 5, module lines 1732
