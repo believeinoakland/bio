@@ -311,3 +311,7 @@ Merged `origin/tranche/T51` (the five `uses` edges, K5103). Architecture queue: 
 Each provider's follow-up fixture should return these by its real code (duties: empty and, if wanted, one; answers: one held-back standing run; inquiry: one due wait on a stated question); I re-point the line then.
 
 Size (session_01YN9TEdL7KJ1syeaAkvZf85): test runs 4, module lines 2956
+
+## J17 · COMPLETE
+
+COMPLETE (B19, B20). 7 of 8 fixture lines re-pointed to providers' fixtures (provenance homeOfEmpty, progressions disposeProposalOk/Refusal, monitoring monitoringReads, docket coreDue, people checkResults, money-checks noticed, real WIZARD_STEP_REFUSED/C-131.7). Markers added: none. Left: noticed.test.mjs:292, whose duties, answers and inquiry ops (shape and need) are named in my record's last section for the follow-up fixtures. After merging tranche/T51: queue 229/229; architecture, format, ownership, coverage, words 0 failures; fixtures 1 (the line above); impact set is queue only. Note: dispose.test.mjs R27 now uses definitionVersion 1, the version the provider's real world holds.
