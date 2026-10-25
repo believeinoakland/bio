@@ -289,3 +289,7 @@ START B13 (plan item 71 (3); STORE-REQUEST #1 J3 (3); K5132, R-CLOCK). The START
 **Tests and checks:** the module's tests, all 192 under `bio-plane/test/m/credentials/*.test.mjs` run together: 192 pass, 0 fail (the new three included). `format` 0 failures (178 modules); `architecture credentials` 0 failures; `coverage credentials` 58 of 58 live ids named; `ownership credentials tranche/T51` 0 failures (run before the commit that carries this change; re-run on the commit); `words` 16 failures, all outside this module, the same as the baseline (above); `fixtures credentials --list` one line, the baseline's.
 
 Size (session_01S9FGXy1ukQYTEAfDtbgonY): test runs 2, module lines 2216
+
+## J18 · REPORT
+
+Found in other modules (not my paths; nothing changed there): (1) store-assembly/ask.mjs:281,361, plane/ask.mjs:281,361, store-assembly/assemble.mjs:203,248,307, plane/store.mjs:185 call credentialsOf(ctx) without an environment, so a direct service call in a pinned world reads the wall clock until the store has served one request on the same storage (credentialsOps then sets it). Passing env to credentialsOf at those sites closes it. (2) checks/words.mjs: 16 failures, all in store-assembly (ask.mjs, wiring.mjs, wizards.mjs, declared.mjs), the same 16 on origin/tranche/T51 without my change. Details: build/jobs/T51/credentials.md J17.
