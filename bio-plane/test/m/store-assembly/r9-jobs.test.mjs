@@ -115,7 +115,8 @@ test("R74 G126j (control): a reading that is held with pictures still owed is no
   const owed = await readHeld.scanOwed();
   const held = await readHeld.held();
   const answers = [owed.answer, held];
-  const x = await world(undefined, { readAnswer: () => answers.shift() });
+  /* the scan's `ocr` entry is registered with the owed answer and is its own row: it is asked beside the reading and takes no answer of the reading's */
+  const x = await world(undefined, { readAnswer: (a) => (a.kind === "ocr" ? held : answers.shift()) });
   const d = sha("a reading whose pictures are owed");
   x.jobs.registerJob({ kind: "reading", sha: d });
   let at = Date.now() + 1000;
@@ -123,8 +124,11 @@ test("R74 G126j (control): a reading that is held with pictures still owed is no
   let r = x.jobs.jobRow({ sha: d, kind: "reading" });
   assert.notEqual(r.state, "finished", "pictures are owed: the owner's answer that it read is no end");
   assert.equal(r.last_why, "OWED");
-  await x.s.onAlarm(r.due_at + 1000);
-  r = x.jobs.jobRow({ sha: d, kind: "reading" });
+  /* at most one heavy piece in a tick: the scan's `ocr` row, registered by the owed answer, takes a tick of its own beside the reading's */
+  for (let i = 0; i < 3 && r.state !== "finished"; i++) {
+    await x.s.onAlarm((at = Math.max(at, r.due_at) + 1000));
+    r = x.jobs.jobRow({ sha: d, kind: "reading" });
+  }
   assert.deepEqual([r.state, r.owed, r.written], ["finished", 0, held.counters.written]);
 });
 

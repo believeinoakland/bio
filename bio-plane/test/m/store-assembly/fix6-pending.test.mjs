@@ -205,12 +205,15 @@ test("R68 (G13): the interrupted-run accounting is kept across pieces: a piece t
     at += 3_600_000;
     script.push(NEVER);
     if (i > 0) await restart();
-    assert.equal(await alarm(x, at), "killed", `kill ${i + 1}`);
+    const out = await alarm(x, at);
+    /* the unit is the whole read, so the first kill (cleared of the row's count by progress) still stands in the unit's attempts: the reap after the
+       second kill here is the third against the whole, and ends the row before the tick reads again */
+    assert.ok(out === "killed" || rows(x)[0].final_why === stopped, `kill ${i + 1}`);
   }
-  await restart(); at += 1000; await x.s.onAlarm(at);
+  assert.equal(rows(x)[0].interrupted, 2, "two kills counted on the row; the third, the first piece's, is the unit's");
   [r] = rows(x);
   assert.equal(r.final_why, stopped, "charged to the whole read: the third kill ends it, stated");
-  assert.equal(x.read[x.read.length - 1].killedCursor, undefined, "no window named by a real text answer's detail: none handed to step past");
+  assert.ok(x.read.every((a) => a.killedCursor === undefined), "no window named by a real text answer's detail: none handed to step past");
   /* control: a reading that never answers `more` is handed no cursor but the empty one */
   const y = await world(undefined, { readAnswer: () => "read" });
   await y.call(`/pendingadd?kind=reading&sha=${d}`);
