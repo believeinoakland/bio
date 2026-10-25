@@ -97,7 +97,7 @@ test("R80 R76 C47 (case-disclosures R7 + case-grammar R12 + public-read R41 + sc
   assert.equal(row.origin, ADDRESS);
   assert.notEqual(row.title, row.origin, "the title is not the address");
   /* ... and the passages (R17) carry the cited paragraphs */
-  const places = passagesOf(fm)[Q].map((p) => JSON.parse(p.extent)).map((e) => e.para).sort();
+  const places = passagesOf(fm)[Q].map((p) => (typeof p.extent === "string" ? JSON.parse(p.extent) : p.extent)).map((e) => e.para).sort();
   assert.deepEqual(places, [1, 3], "R17: the passages state the cited paragraphs, counted from zero");
   assert.ok(Object.keys(gradingFactsOf(fm)).includes(Q) && doc.includes(TITLE));
 

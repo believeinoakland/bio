@@ -16,7 +16,7 @@ const PUBLIC = { session: null };
 const reach = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
 const edition = (o = {}) => ({ edition: 2, imported_by: "admin", imported_at: "2026-10-01T09:00:00Z", importer: { member: "admin", handle: "rosa", founder: true },
   findings: 3, recreated: 1, recreated_in_part: 1, did_not_recreate: 1, ...o });
-const imp = (id, caseName, group, ed, latest = 2) => ({ import: id, group, case: caseName, latest_edition: latest, editions: [ed] });
+const imp = (id, caseName, group, ed, latest = 2) => ({ import: id, group, case: "CASE-" + id, scope: caseName, latest_edition: latest, editions: [ed] });
 const delay = (ms, answer) => async () => { await new Promise((r) => setTimeout(r, ms)); return answer; };
 
 /* ---------- R25, R26: imported ---------- */
@@ -59,7 +59,7 @@ test("R25 one case's page draws the band and the line of who brought it in and w
   assert.ok(drew(p, "screen.imported.from", { group: "West Oakland Neighbors", edition: "2", by: "dev", at: day("2026-10-01") }));
 });
 
-const withFields = (gf, extra = {}) => ({ importedcase: ok({ import: "IMP-2026-0001", group: "West Oakland Neighbors", case: "Port lease revenue",
+const withFields = (gf, extra = {}) => ({ importedcase: ok({ import: "IMP-2026-0001", group: "West Oakland Neighbors", case: "CASE-2026-3549", scope: "Port lease revenue",
   edition: { edition: 2, imported_by: "dev", imported_at: "2026-10-01T09:00:00Z", importer: { member: "dev", handle: "dev" }, findings: [{ finding: "F-1", title: "A finding", result: "recreated" }], group_fields: gf, ...extra } }) });
 
 test("R26 an imported case says whose stake it states: labeled as the source's, its stake and its matter stake, never this team's", async () => {

@@ -339,3 +339,85 @@ test("R6 a finding below the project's bar is said so; one the bar was not asked
     assert.ok(!drew(p, "screen.published.below", { capture: "–", connection: "–" }) && !drew(p, "screen.published.meets", { capture: "–", connection: "–" }), String(meets));
   }
 });
+
+/* ---------- fix round 10 (K5148; WALK-FINAL-10B C5): the page draws what `publishedcase` carries ---------- */
+
+const C5S = (o = {}) => ({ ...PUBLISHED_CASE, ...o });
+const C5F = (o = {}) => ({ ...PUBLISHED_CASE.findings[0], ...o });
+const c5pub = (o, p = {}) => open(`/app/published/${C}`, { boot: PUBLIC, plane: { publishedcase: ok(C5S(o)), ...p } });
+
+test("R6 (C5 a) a finding's unrated axis draws the plane's own 'not graded yet' sentence, and a case with no bar declared draws the plane's bar sentence; with a bar and grades neither is drawn (control)", async () => {
+  const UNRATED = "Not graded yet on capture: none of the documents this conclusion rests on has a grade that can be counted.";
+  const NOBAR = "No standard of evidence was recorded for this case, which is not a standard of zero.";
+  const p = await c5pub({ bar: null, bar_detail: NOBAR, findings: [C5F({
+    strength: [{ axis: "capture", state: "unrated", grade: null, detail: UNRATED }, { axis: "connection", state: "graded", grade: "B" }],
+    standing: { role: "load_bearing", bar: { capture: null, connection: null }, meets: "no_bar", short: [], line: "x" } })] });
+  const card = main(p).querySelector('[data-finding]');
+  assert.ok(text(p, card).includes(UNRATED), "the unrated axis says it is not graded yet");
+  assert.equal(main(p).querySelectorAll("[data-ungraded]").length, 1, "one axis is ungraded: one line");
+  assert.ok(text(p).includes(NOBAR) && main(p).querySelectorAll("[data-bar-none]").length === 1, "the case says no bar was declared");
+  assert.ok(!drew(p, "screen.published.meets", { capture: "–", connection: "–" }) && !drew(p, "screen.published.below", {}), "no bar: neither met nor below is said");
+  const q = await c5pub({ bar: { capture: "B", connection: "C" }, bar_detail: "the standard this case was held to" });
+  assert.equal(main(q).querySelectorAll("[data-ungraded]").length, 0, "graded axes draw no ungraded line");
+  assert.equal(main(q).querySelectorAll("[data-bar-none]").length, 0, "a declared bar draws no 'no bar' line");
+});
+
+test("R6 (C5 b, R96 a) an older edition quotes the newer edition's What-changed beside its link; a successor whose document an order withholds is pointed to, with its detail and no statement; none draws nothing (control)", async () => {
+  const one = await open(`/app/published/${encodeURIComponent(C + "/1")}`, { boot: PUBLIC, plane: { publishedcase: ok(C5S({ edition: 1,
+    successor: { edition: 2, statement: "The newer reading adds the 2025 schedules." } })) } });
+  const link = main(one).querySelector(`a[href="/app/published/${encodeURIComponent(C + "/2")}"]`);
+  assert.ok(link, "the newer edition is linked");
+  const beside = main(one).querySelector('[data-successor="2"]');
+  assert.ok(beside && text(one, beside).includes("The newer reading adds the 2025 schedules."), "its statement is quoted beside the link");
+  const held = await open(`/app/published/${encodeURIComponent(C + "/1")}`, { boot: PUBLIC, plane: { publishedcase: ok(C5S({ edition: 1,
+    successor: { edition: 2, statement: null, withheld: true, detail: "A court order withholds it." } })) } });
+  assert.ok(text(held).includes("A court order withholds it.") && !text(held).includes("null"), "the withheld successor's detail is drawn, no statement");
+  const none = await open(`/app/published/${encodeURIComponent(C + "/2")}`, { boot: PUBLIC, plane: { publishedcase: ok(C5S({ successor: null })) } });
+  assert.equal(main(none).querySelectorAll("[data-successor]").length, 0);
+});
+
+test("R6 (C5 c) the lens: its statements and the document's closing sentences are drawn under the lens heading; an edition with only the fingerprint says so; none draws no lens section (control)", async () => {
+  const lens = { bias_acknowledgement: "We read the lease as tenants.", statements: [{ bundle: "B", id: "S1", kind: "statement", subject: "x", text: "A tenant's account counts as evidence.", justification: "Tenants hold the notices.", citations: [], withheld: 0 }],
+    closing: ["Everyone who investigates looks through a lens.", "We state ours so you can discount it."], print: "…" };
+  const p = await c5pub({ bias_acknowledgement: "We read the lease as tenants.", lens });
+  const sec = main(p).querySelector("[data-lens]");
+  assert.ok(sec, "the lens section");
+  const t = text(p, sec);
+  for (const s of ["We read the lease as tenants.", "A tenant's account counts as evidence.", "Tenants hold the notices.", ...lens.closing]) assert.ok(t.includes(s), s);
+  const fp = await c5pub({ bias_acknowledgement: null, lens: null, lens_fingerprint: "f".repeat(64), lens_detail: "x" });
+  assert.ok(drewIn(main(fp).querySelector("[data-lens]"), "screen.published.this_edition_carries_only_the", { fingerprint: "f".repeat(64) }));
+  const none = await c5pub({ bias_acknowledgement: null, lens: null, lens_fingerprint: null });
+  assert.equal(main(none).querySelectorAll("[data-lens]").length, 0, "nothing signed, nothing drawn");
+});
+
+test("R6 (C5 d) the header holds the case id and the manifest's hash; without a manifest no hash is drawn (control)", async () => {
+  const p = await c5pub({ scope: "The Coliseum lease" });
+  const head = main(p).querySelector("[data-case-head]");
+  assert.ok(head && text(p, head).includes(C) && text(p, head).includes(SHA), "the case id and the manifest hash, whole");
+  const q = await c5pub({ manifest_sha: null });
+  assert.ok(text(q, main(q).querySelector("[data-case-head]")).includes(C) && !main(q).querySelector("[data-manifest]"), "no manifest: no hash drawn");
+});
+
+test("R6 (C5 e, R95 a) the plane's verification sentence is drawn with the signature check; an answer without one draws none (control)", async () => {
+  const SAID = "tamper-EVIDENT, not tamper-proof; the deliverer is this team's Civicsmith's record, not covered by any signature.";
+  const p = await c5pub({ verification: { container: "x", manifest: "y", case_file: null, findings: [], detail: SAID } });
+  assert.ok(text(p, main(p).querySelector("[data-verification]")).includes(SAID));
+  const q = await c5pub({});
+  assert.equal(main(q).querySelectorAll("[data-verification]").length, 0);
+});
+
+test("R7 (C6; case-import R4) an imported case is named by its scope and its findings by their titles, in the list and on its page, never by an id; an answer stating none draws the screen's name and 'Finding n' (control)", async () => {
+  const ID = "CASE-2026-3549", FID = "INQ-2026-0001-did-the-clerk-stamp-the-contract-before";
+  const ed = { edition: 1, imported_by: "dev", imported_at: "2026-10-01T09:00:00Z", importer: { member: "dev", handle: "dev" } };
+  const list = await open("/app/imported", { plane: { importedcases: ok({ imports: [{ import: "IMP-2026-0001", group: "West Oakland Neighbors", case: ID, scope: "Did the clerk stamp the contract before the vote?", latest_edition: 1,
+    editions: [{ ...ed, findings: 1, recreated: 1, recreated_in_part: 0, did_not_recreate: 0 }] }], count: 1, wrote: false }) } });
+  assert.ok(text(list).includes("Did the clerk stamp the contract before the vote?") && !text(list).includes(ID), "the list names the case by its scope");
+  const one = await open("/app/imported/IMP-2026-0001", { plane: { importedcase: ok({ import: "IMP-2026-0001", group: "West Oakland Neighbors", case: ID, scope: "Did the clerk stamp the contract before the vote?",
+    edition: { ...ed, findings: [{ finding: FID, title: "The clerk stamped it a day late", result: "recreated" }] }, wrote: false }) } });
+  assert.ok(text(one).includes("Did the clerk stamp the contract before the vote?") && text(one).includes("The clerk stamped it a day late"), "the page names the case and the finding");
+  assert.ok(!text(one).includes(ID) && !text(one).includes(FID), "no id is drawn");
+  const bare = await open("/app/imported/IMP-2026-0001", { plane: { importedcase: ok({ import: "IMP-2026-0001", group: "West Oakland Neighbors", case: ID, scope: null,
+    edition: { ...ed, findings: [{ finding: FID, title: null, result: "recreated" }] }, wrote: false }) } });
+  assert.ok(!text(bare).includes(ID) && !text(bare).includes(FID), "an answer that states no name draws no id either");
+  assert.ok(drew(bare, "screen.published.finding", { n: "1" }));
+});

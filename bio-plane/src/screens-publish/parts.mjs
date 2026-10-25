@@ -126,7 +126,8 @@ export const PARTS = Object.freeze({
     const v = e && e.verification && typeof e.verification === "object" ? e.verification : {};
     const c = e && e.case_file && typeof e.case_file === "object" ? e.case_file : v.case_file && typeof v.case_file === "object" ? v.case_file : null;
     if (!c || c.state === "built" || /^[0-9a-f]{64}$/.test(String(e.manifest_sha || ""))) return "";
-    const say = function (key, bare) { const t = cs.w(key); return cs.esc(t === key ? bare : t); };
+    // `cs.w` answers an escaped word (interface-shell browser `w`): only the bare fallback is escaped here, never a word a second time
+    const say = function (key, bare) { const t = cs.w(key); return t === key ? cs.esc(bare) : t; };
     const state = String(c.state || ""), code = String(c.code || "");
     if (!["being_prepared", "retrying", "stopped", "waiting_on_members"].includes(state)) return "";
     return '<span data-casefile="' + cs.esc(state) + '">' + say("screen.published.casefile." + state, state) + "</span>"

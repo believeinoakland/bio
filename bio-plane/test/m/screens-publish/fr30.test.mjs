@@ -41,7 +41,7 @@ test("R52 with no finding chosen, or no scope, nothing is sent and the refusal i
   assert.ok(main(p));
 });
 
-const IMPORT = (acc) => ({ importedcase: { status: 200, json: { ok: true, result: { import: "IMP-2026-0001", group: "West Oakland Neighbors", case: "Port lease revenue",
+const IMPORT = (acc) => ({ importedcase: { status: 200, json: { ok: true, result: { import: "IMP-2026-0001", group: "West Oakland Neighbors", case: "CASE-2026-3549", scope: "Port lease revenue",
   edition: { edition: 2, findings: [{ finding: "FND-W-1", title: "Port lease revenue fell short", result: "recreated", origin: acc ? { acceptance: { by: "ana", at: "2026-10-02T09:00:00Z", reason: "checked", checked: "x" } } : {} }] } } } } });
 
 test("R55 an accepted import offers 'Withdraw this acceptance, with a reason' and the act sends the reason", async () => {
