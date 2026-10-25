@@ -406,3 +406,54 @@ test("R18 control: a reading already held for the digest (extraction's), or one 
   assert.equal(noPuller.ok, false);
   assert.equal("reading_pending" in noPuller, false);
 });
+
+test("R7 (K5129; WALK-FINAL-04B row R39): bytes the record already holds are pulled `existed: true` and the doorbell's `holder` is the holding bundle to a viewer who may see it — the pull and the `pulled` resolve alike — and null to a viewer who may not (negative control: no viewer stamped)", async () => {
+  const r = await record();
+  /* each knock from its own sender, so the doorbell's per-sender limit does not meet the repetition */
+  let n = 10;
+  const again = async () =>
+    (await r.go(`knock?source=203.0.113.${n++}`, "POST", { content: "the same bytes twice", now: Date.now() })).json.result;
+  const first = await again();
+  const filed = await r.go(`inboxpullfile?${SESSION}`, "POST", { knockId: first.knockId });
+  assert.equal(filed.json.result.ok, true, JSON.stringify(filed.json).slice(0, 300));
+  const home = filed.json.result.bundle.bundleId;
+  const deps = () => ({ doorbell: doorbellOf(r.ctx), promotion: promotionOf(r.ctx), record: recordOf(r.ctx), provenance: provenanceOf(r.ctx) });
+  const who = { by: "ann", identity: "member:ann" };
+  for (const [name, extra] of [["pull", {}], ["resolve", { resolve: true, reason: "already in the record" }]]) {
+    const seen = await again();
+    const a = await P.pullAndFile(deps(), { ...who, knockId: seen.knockId, viewer: "member:ann", ...extra });
+    assert.equal(a.ok, true, `${name}: ${JSON.stringify(a).slice(0, 300)}`);
+    assert.deepEqual([a.existed, a.holder], [true, home], `${name}: the viewer may see the holding bundle`);
+    assert.equal(a.bundle.bundleId, home);
+    const blind = await again();
+    const b = await P.pullAndFile(deps(), { ...who, knockId: blind.knockId, viewer: "visitor", ...extra });
+    assert.deepEqual([b.ok, b.existed, b.holder], [true, true, null], `${name}: a viewer who may not see it is told no holder ${JSON.stringify(b).slice(0, 300)}`);
+    const none = await again();
+    const c = await P.pullAndFile(deps(), { ...who, knockId: none.knockId, ...extra });
+    assert.deepEqual([c.ok, c.existed, c.holder], [true, true, null], `${name}: no viewer, no holder`);
+  }
+});
+
+test("R7 (K5129; screens-intake R32 (3)): the pulled bundle's title names the knock's instant as a date a member reads and no knock id — in the pulled document, the bundle's meta and its bundle.md — and the door's list draws that title", async () => {
+  const r = await record();
+  const k = await r.knock("the minutes they did not publish", { now: Date.parse("2026-09-30T12:34:56.789Z") });
+  const promotion = promotionStandIn(r, () => true);
+  const world = homeOfWorld({ sha: k.sha256 });
+  const deps = { doorbell: doorbellOf(r.ctx), promotion, record: recordOf(r.ctx), provenance: world.provenance };
+  const a = await P.pullAndFile(deps, { knockId: k.knockId, by: "ann", identity: "member:ann", viewer: "member:ann", now: () => Date.parse("2026-10-02T08:00:00Z") });
+  assert.equal(a.ok, true, JSON.stringify(a).slice(0, 300));
+  const [real] = promotion.seen;
+  const md = real.files.find((f) => f.path === "bundle.md").text;
+  for (const title of [real.meta.title, JSON.parse(/^title: (.*)$/m.exec(md)[1])]) {
+    assert.equal(title, "Material handed in at the doorbell on 30 September 2026");
+    assert.equal(/KNOCK-/i.test(title), false);
+    assert.equal(title.includes(k.knockId), false);
+  }
+  /* through the real promotion and the record's own list */
+  const k2 = await r.knock("a second batch of minutes");
+  const p = await r.go(`inboxpullfile?${SESSION}`, "POST", { knockId: k2.knockId });
+  assert.equal(p.json.result.ok, true, JSON.stringify(p.json).slice(0, 300));
+  const head = recordOf(r.ctx).head(p.json.result.bundle.bundleId);
+  assert.match(head.title, /^Material handed in at the doorbell on \d{1,2} [A-Z][a-z]+ \d{4}$/);
+  assert.equal(head.title.includes(k2.knockId), false);
+});

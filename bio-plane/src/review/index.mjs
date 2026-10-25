@@ -892,7 +892,7 @@ export class Review {
       findings, gates: gates.gates, missing: gates.missing, evaluated: gates.evaluated,
       comments, comments_truncated: commentRows.length > cap, list_limit: cap,
       statement_acknowledgements: statementAcks,
-      observations: this.#observations(findings, ident),
+      observations: this.#observations(findings, this.#observedIdentity(d, ident)),
       updated_by: d.updated_by, updated_at: d.updated_at,
       last_change: lastChange({ draft: d, comments, acknowledgements: statementAcks.acknowledgements,
                                 grants: grantPart.grants ?? (grantPart.grant ? [grantPart.grant] : []) }),
@@ -919,9 +919,21 @@ export class Review {
              copies: Object.fromEntries(ids.map((id) => [id, this.copy({ ...args, draft: id })])) };
   }
 
+  /* R16 (K5130): THE IDENTITY THE OBSERVATIONS ARE READ AT. A draft naming a case stands at its next edition (R5). A draft
+     naming none has no identity a level can be keyed to until it has prepared its case: once it has (`case-authoring` R83's
+     `draftEditions`, which finds the preparation by the draft's own id), it stands at that prepared case and edition, and
+     its authors' choices for it are read. R5's identity and R8's live-grant predicate are not changed: a grant stays bound
+     to the draft's own identity, before the preparation and after it. Reads; never throws. */
+  #observedIdentity(draft, ident) {
+    if (ident.caseId) return ident;
+    const got = this.#editions(ident, draft);
+    return got.case && got.prepared != null ? { caseId: got.case, edition: got.prepared } : ident;
+  }
+
   /* R16 (MK-7, MEMBER-KNOWLEDGE-DESIGN.md §4.2): EVERY OBSERVATION THE EDITION WOULD REACH from its present findings,
      with whether its author has chosen an attribution level for this case edition, never the level itself (that is the
-     author's to state, in the case document). A draft naming no case has no identity a level can be keyed to. */
+     author's to state, in the case document). A draft naming no case, and with no prepared edition, has no identity a
+     level can be keyed to. */
   #observations(findings, ident) {
     const seen = findings.filter((f) => f.present).map((f) => f.target);
     const r = this.basisVersions.testimonyReach(seen);

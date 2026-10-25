@@ -6,6 +6,7 @@
    REPORT). Every sentence is asserted as `word(key, vars)` (R34): no test here holds a sentence's English. */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { world, V } from "../retrieval/fixture.mjs";
 import { open, ok, refused, text, ops, acts, button, press, beside, last, main, screen, word, hasWord, dmy, inOrder } from "./page.mjs";
 
 const REACH = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
@@ -120,7 +121,9 @@ test("R6: while not reachable the screen is \"Find and count\": search here, and
   assert.deepEqual(ops(p), ["search", "standingquestionset"]);
   assert.ok(!ops(p).includes("ask"), "no assistant control drawn (interface-shell R20)");
   await press(p, "search", { values: { "answers-q": "work orders" }, reason: R });
-  assert.equal(last(p, "search").query.q, "(work orders) OR (passage:work passage:orders)", "R35: \"Search here\" asks the passages too");
+  assert.ok(p.byOp("search").some((r) => r.query.q === "work orders"), "R6: the plain words go to the fields route alone, never joined to a passage: term by OR");
+  assert.ok(p.byOp("search").every((r) => !/\bOR\b/.test(r.query.q)), "R6: no search the screen sends joins routes by OR");
+  assert.ok(p.byOp("search").some((r) => r.query.q === "passage:work passage:orders"), "R35: the passages holding the words are asked in a read of their own");
   assert.ok(main(p).querySelector('.cs-origin[data-origin="search"]'));
   assert.deepEqual(ops(p), ["search", "ruleanswer", "standingquestionset"]);
   assert.ok(button(p, "ruleanswer").textContent.startsWith(word("act.ruleanswer.label.answers")));
@@ -155,4 +158,28 @@ test("R6: in both, standingquestionset keeps asking and standingquestionend stop
 test("R34: every key Ask reads is a word of the list", () => {
   for (const k of screen("answers").words) assert.ok(hasWord(k), k);
   for (const k of Object.values(screen("answers").acts.find((a) => a.op === "ask").refusals).filter((k) => typeof k === "string")) assert.ok(hasWord(k), k);
+});
+
+/* R6, R35 with the real search (retrieval's own world): the words are found in a title and in a passage, and no search the screen sends is refused. */
+test("R6: Ask-as-search, while not reachable, is answered by the real retrieval: words in a title and words only in a passage are found, nothing is refused ROUTES_CROSSED", async () => {
+  const w = world({ members: ["ann", "vera"], admins: ["adele"] });
+  const c = w.cap("a", "bytes");
+  w.doc("INFO-1", { title: "Sewer fund audit" }, { captures: [c] });
+  w.unit(c.sha, "INFO-1", 0, "the sewer fund was approved by the council");
+  w.doc("INFO-2", { title: "Parks budget" });
+  const refusals = [];
+  const real = async (req) => {
+    const a = w.retrieval.search({ q: req.query.q, viewer: V("vera"), mode: "page", limit: Number(req.query.limit), snippet: Number(req.query.snippet) });
+    if (a.ok === false) refusals.push(a.code || a.reason);
+    return ok(a);
+  };
+  const p = await open("/app/answers", { search: real });
+  for (const [words, title] of [["sewer", "Sewer fund audit"], ["approved council", "Sewer fund audit"], ["parks", "Parks budget"]]) {
+    await press(p, "search", { values: { "answers-q": words }, reason: R });
+    await new Promise((r) => setTimeout(r, 20));
+    assert.ok(text(p).includes(title), `${words}: the document "${title}" is found`);
+  }
+  await press(p, "search", { values: { "answers-q": "zzzzqq" }, reason: R });
+  assert.ok(text(p).includes(word("screen.finder.none")), "control: words nothing holds draw none");
+  assert.deepEqual(refusals, [], "no search the screen sent was refused");
 });

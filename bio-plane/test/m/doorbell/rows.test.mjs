@@ -100,11 +100,11 @@ test("R4 R5 R6 R7 R8 (K874): each C-85 refusal's negative control: the knock jus
   for (let i = 0; i < 9; i++) await g.c.knock({ content: `g${i}`, sourceAddress: `2.2.2.${i}`, now: t0 });
   assert.equal((await g.c.knock({ content: "g9", sourceAddress: "2.2.2.9", now: t0 })).ok, true);
   assert.equal((await g.c.knock({ content: "g10", sourceAddress: "2.2.3.0", now: t0 })).reason, "RATE_GLOBAL");
-  /* R6: a request body of exactly the cap plus 4 KiB is read; one byte more is refused before it is parsed */
+  /* R6: a request body of exactly the base64 length of the cap plus 4 KiB is read; one byte more is refused before it is parsed */
   const e = fresh({ evidence: bucket() });
   const envelope = (n) => { const head = '{"contentText":"', tail = '"}'; return head + "x".repeat(n - head.length - tail.length) + tail; };
-  assert.equal((await send(e, envelope(KNOCK.maxBytes + 4096))).body.reason, "KNOCK_PAYLOAD_TOO_LARGE", "read: the payload is judged, not the envelope");
-  assert.equal((await send(e, envelope(KNOCK.maxBytes + 4097))).body.reason, "KNOCK_ENVELOPE_TOO_LARGE");
+  assert.equal((await send(e, envelope(KNOCK.maxEnvelope))).body.reason, "KNOCK_PAYLOAD_TOO_LARGE", "read: the payload is judged, not the envelope");
+  assert.equal((await send(e, envelope(KNOCK.maxEnvelope + 1))).body.reason, "KNOCK_ENVELOPE_TOO_LARGE");
   /* R7: content of exactly the cap is admitted, one byte more refused, for each cap */
   const p = fresh({ evidence: bucket() });
   assert.equal((await send(p, JSON.stringify({ contentText: "x".repeat(KNOCK.maxBytes) }))).status, 200);

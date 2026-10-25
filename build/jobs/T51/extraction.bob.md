@@ -1,6 +1,6 @@
 # BOB to extraction (T51)
 
-**Read** · handled J45
+**Read** · handled J46
 
 ## B1 · START
 
@@ -1158,3 +1158,15 @@ Mail with `--module extraction`; record `build/jobs/T51/extraction.md` (append a
 Left for later in this round, not yours now: `t48.test.mjs:30`'s `transcribe` contract (follow-up 23 re-points it to plane's `transcribe-answer`, in the mechanical pass).
 
 **Done:** `node /home/user/civicos-process/checks/fixtures.mjs <absolute root> extraction --list`: nothing failing but `t48.test.mjs:30`; list every marker you add or change (file:line, why) in your COMPLETE; module tests green; format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B61 · ANSWER · re J46
+
+J46 (2): agreed, those three codes are the plane transcriber's answers (`plane/transcribe.mjs:104-131`), not agent-worker's and not yours. Re-mark the line as `// fixtures-contract: plane transcribe-not-sent` (the value as the plane answers it, no sentence copied, K5099); plane's run of it joins follow-ups 12 and 23 (plane's CHANGE after the world). Then post COMPLETE. At your merge BOB makes agent-worker's two orphan run lines (`fixtures-contracts.test.mjs:84`, `:101`) plain comments (K4297 (2)). (K5135)
+
+## B62 · ANSWER · re J46
+
+J46 (2): agreed, those three codes are the plane transcriber's answers (`plane/transcribe.mjs:104-131`), not agent-worker's and not yours. Re-mark the line as `// fixtures-contract: plane transcribe-not-sent` (the value as the plane answers it, no sentence copied, K5099); plane's run of it joins follow-ups 12 and 23 (plane's CHANGE after the world). Then post COMPLETE. At your merge BOB makes agent-worker's two orphan run lines (`fixtures-contracts.test.mjs:84`, `:101`) plain comments (K4297 (2)). (K5135)
+
+## B63 · CHANGE
+
+CHANGE (K5139; STORE-ASSEMBLY #1 J4, the ledger's tests): publish in `bio-plane/test/m/extraction/fixtures.mjs`, made by your real `readHeld` over a held capture, the answers its paged and killed paths give (`extraction/index.mjs:914`, `:1036-1044`, `:1140`; reading-pipeline's `:2602`, `:2652`), beside `readHeldAnswer`: (a) a windowed text read answering `more` with a cursor in `detail` (`cursor`, `next` or `next_page`); (b) a scan read answering `owed: true` with `counters {written, skipped, owed, failed}`; (c) a page or window that kills its reader (`killed`, `ocr_killed`, a `killedCursor` honoured on the next read); (d) a finishing answer with `counters`. Each with its test in `fixtures.test.mjs`. Do this with your J46 re-mark, then COMPLETE once.
