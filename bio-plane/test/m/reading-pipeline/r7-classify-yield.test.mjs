@@ -57,7 +57,12 @@ for (const [name, why] of [["plain", "a text no type matches"], ["winner", "a CE
     const { counters, next, final, ...rest } = answer;
     assert.ok(counters && "next" in answer, "the contract's fields");
     /* fix round 9 (R52, job 40): a text judged from a view (above 2 MiB) states it: `classified_over` and the sentence after the basis, taken off by name */
-    const reading = Object.fromEntries(Object.entries(rest.reading || {}).filter(([k]) => !["encoding", "encoding_assumed", "encoding_disagree", "encoding_replaced", "classified_over"].includes(k))
+    /* final pass (R63): the paragraph count a text reading states in `container_extent`, taken off by name after its shape is checked */
+    if (rest.reading && "container_extent" in rest.reading) {
+      const e = rest.reading.container_extent;
+      assert.deepEqual([e.levels, e.sheets, e.slides, Number.isInteger(e.paragraphs) && e.paragraphs > 0], [["paragraphs"], null, null, true]);
+    }
+    const reading = Object.fromEntries(Object.entries(rest.reading || {}).filter(([k]) => !["encoding", "encoding_assumed", "encoding_disagree", "encoding_replaced", "classified_over", "container_extent"].includes(k))
       .map(([k, v]) => [k, k === "basis" && typeof v === "string" ? v.replace(/ — What kind of document this is was judged from a sample of its text.*$/, "") : v]));
     const units = rest.text_units ? rest.text_units.map(({ kind, ...u }) => { assert.equal(kind, "body"); return u; }) : undefined;
     void final;

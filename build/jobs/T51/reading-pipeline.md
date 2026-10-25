@@ -1,6 +1,6 @@
 # reading-pipeline (T51)
 
-**Status** · session_01NNvA213u4YaYMybJVG2Epk · depth 2 · COMPLETE · handled B57
+**Status** · session_01BNPtcCWBZZjhbxp45P7ECD · depth 2 · COMPLETE · handled B58
 
 ## J1 · COMPLETE
 
@@ -922,3 +922,20 @@ Size (session_01NNvA213u4YaYMybJVG2Epk): test runs 12, module lines 4,266
 
 COMPLETE: B57 done. Merged tranche/T51 (pdf-reader R50). The ranged answer's `notes` were already carried onto `recovery_notes` by the same code as the whole read (st.notes from the range or the whole answer); added the ranged test to r10-recovery-notes.test.mjs using pdf-reader's published `rangedNotesFiles` (an upload read with cursor null over the damaged file lists xref_reconstructed, the cut file lists it, the intact file none). Red first: with the carry line removed on the range path the test fails (7 pass, 1 fail), restored 8 of 8. Module r10-* and r9-reader files pass; format, architecture, coverage 61 of 61, words, ownership 0 failures.
 Size (session_01NNvA213u4YaYMybJVG2Epk): test runs 15, module lines 4,266
+
+### B58 (K5148, item 74) · R63: a text reading holds its paragraph count (READING-PIPELINE #38)
+Cause (diag2-06 §4, text half): a text or HTML capture read through no format entry (`!wireable && textRead`, `reading-pipeline/index.mjs` text branch) never ran `containerExtentOf`, so its reading had no `container_extent`, though `paragraphsOfText` numbers its paragraphs; content's `coversDocPara` had no bound and admitted paragraph 99. Fix: the text branch states `container_extent = {container, levels:["paragraphs"], sheets:null, paragraphs:n, slides:null}`, n = the non-empty runs `para` numbers (a no-glyph paragraph is no unit but is numbered, R32), from `textUnitsOfText` (new key `paragraphCount`) whole, and from `totalsOfText` (new `paras`) in the first piece; where an answer does not hold the whole text (the ranged window path) `paragraphs` is null, which content states as undetermined, never a false bound.
+Why the tests missed it: convert-extent pinned "an HTML page has no container_extent key" (R12 "absent when no entry answered"), the absence the diagnosis found; no test cited a text reading's paragraph count.
+Red first: `convert-extent.test.mjs` (new R63 test, HTML test restated) failed on today's code (`actual: undefined`), green after. Platform check: N.
+Tests restated for the field R63 adds, everything else as recorded: `read.test.mjs` (html now states paragraphs: 1), `g48-first-tick.test.mjs` and `r7-classify-yield.test.mjs` (the paragraph extent taken off by name after its shape is asserted; every other recorded byte compared).
+Met: R63 (R12 and R32 unchanged in meaning). Content-side check (paragraph 99 of a 3-paragraph text is CONTENT_EXTENT_OUT_OF_RANGE) is content's, a later module than mine with no fixtures-contract of mine to reach it: REPORT for BOB to place in content's tests (`content/converts-extent.test.mjs`).
+Markers added: none. Words: no new sentence.
+Run: module + d606 + tier2-wire 442 tests (the 5 reds were the three files above, restated, now 0); extraction, content, events 673 pass, 0 fail. `impact.mjs` names 112 of 178 modules (the index file is imported widely); I ran the direct users (extraction, content, events), whose tests read a text reading. Checks (absolute root): format 0, architecture 0, coverage 0 (62 of 62), ownership 0; words 16 failures, none in reading-pipeline (store-assembly's); fixtures --list: 5 `contract-no-run` lines of transcribe/text-units, all waiting on content's run, none new.
+Size (session_01BNPtcCWBZZjhbxp45P7ECD): test runs 14, module lines 4272
+
+## J53 · COMPLETE
+
+COMPLETE: B58 done. R63 met: a text or HTML reading states container_extent {container, levels:["paragraphs"], sheets:null, paragraphs:n, slides:null}, n equal to the paragraphs `para` numbers, whole and in the first piece (null where the answer holds only a window). Red first (convert-extent, `actual: undefined`), green. Tests restated for the new field only: read.test.mjs, g48-first-tick, r7-classify-yield (every other recorded byte compared). Module 442 pass, 0 fail; extraction/content/events 673 pass, 0 fail. Checks (absolute root): format 0, architecture 0, coverage 0, ownership 0; words 16 failures, none in my module; fixtures --list no new line, no marker added.
+REPORT for BOB (K5138): the content-side check (paragraph 99 of a three-paragraph text answers CONTENT_EXTENT_OUT_OF_RANGE) is content's, a later module than mine: please place it in content/converts-extent.test.mjs, using my convert-extent text case for the reading.
+Four fields: cause and why missed in my record section B58; red first yes; platform N.
+Size (session_01BNPtcCWBZZjhbxp45P7ECD): test runs 14, module lines 4272
