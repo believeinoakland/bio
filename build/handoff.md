@@ -4,14 +4,14 @@
 
 ## Open with Bob
 
-- Nothing. Bob (K5036): the process texts are BOB's ("WAY too low level for me"); no round-end step waits on a running study session, whose findings go to the next fix round.
+- Nothing. Bob (K5036): the process texts are BOB's ("WAY too low level for me"); no round-end step waits on a running study session, whose findings go to fix round 10 of T51 (`fix-round-10-T51.md`).
 
 ## Done this session (K5031-K5039)
 
 - VERIFY #1 placed (four stale tests fixed, K5032); the K4426 check folded (G123f DONE-P, G124f, G128i DONE; G126h green at the tip; G126c MISSING, BOB's); artifacts regenerated (K5033); LOAD-REDS #2 §9, §10 merged (both TEST causes, K5035).
 - **The one redeploy** (K5037): `deploy-test/biosmoke8/wnam-g2/deploy` at `11be23b44c`, store generation 2; the new room claimed by BOB with `JOURNEY_ADMIN_*`, the member `JOURNEY_MEMBER_*` joined (leave to start projects); the token file deleted.
 - **civicsmith.org and the installer deployed** (Bob's words at K5037; K5038, K5039): `civicsmith-site` `97a23ece` (with `--var INSTALLER_ADDRESS:https://newgroup.believeinoakland.workers.dev`; a plain `wrangler deploy` in `site/` drops it), `newgroup` `fa4267b9` (embeds the signed 0.86.0 until 0.87.0).
-- civicos-process `main` @ `b10a1263cf` (PR #4): the size gate, the fixtures check (1,379 findings on bio, next round's), K4976's RUNNING cap. `prep/jobbranch-K4385` and `prep/T51-close-v2` are still to merge at T51's close.
+- civicos-process `main` @ `b10a1263cf` (PR #4): the size gate, the fixtures check (1,379 findings on bio, fix round 10's), K4976's RUNNING cap. `prep/jobbranch-K4385` and `prep/T51-close-v2` are still to merge at T51's close.
 
 ## Running (each writes on its own branch; read the record whole, K3588)
 
