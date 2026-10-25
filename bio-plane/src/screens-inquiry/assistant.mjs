@@ -118,8 +118,10 @@ function render(cs, view) {
   const proj = context && context.type === "project" ? later("projectaccount", "projectaccountstate", { project: context.id }) : null;
   const ownHeld = (ok("own") && (d.own.value.reference || d.own.value.held || d.own.value.ref))
     || (ok("signin") && d.signin.value.connected === true);
-  const groupOn = ok("groupkey") && d.groupkey.value.held && d.groupkey.value.on !== false;
-  const account = proj && proj.state === "ok" && proj.value.serving === "project" ? "ai.account.project.inline"
+  /* an administrator is told `{held, on}`; a member `{on}` alone (ai-accounts R10): with no `held`, the group key serves when it is on */
+  const gk = ok("groupkey") ? d.groupkey.value : null;
+  const groupOn = !!gk && (gk.held === undefined ? gk.on === true : gk.held && gk.on !== false);
+  const account = proj && proj.state === "ok" && (proj.value.serving === true || proj.value.serving === "project") ? "ai.account.project.inline"
     : ownHeld ? "ai.account.own.inline" : groupOn ? "ai.account.group.inline" : "";
   out.push(`<p>${account ? cs.w("screen.assistant.serves") + " " + cs.w(account) : cs.w("screen.assistant.serves.unknown")}</p>`);
   /* no count is drawn at zero (R20) */

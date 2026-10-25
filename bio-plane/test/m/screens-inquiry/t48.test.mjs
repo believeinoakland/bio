@@ -3,10 +3,10 @@
  * subject guard, R22 the original by its SHA-256 (the document's own link tests are in document.test.mjs). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ok, refusedIn, silent, ADMIN } from "../interface-shell/harness.mjs";
+import { boot, ok, refusedIn, silent, ADMIN } from "../interface-shell/harness.mjs";
 import { interfacePage } from "../../../src/interface-shell/index.mjs";
 import { SCREEN_WORDS } from "../../../src/screens-inquiry/index.mjs";
-import { open, main, plane, says, word, SCREENS, P, Q, D, SHA, BASIS, READING, PROJECT_QUESTIONS, DOCUMENT_MD, inquiryMd } from "./fixtures.mjs";
+import { open, storeWorld, WORLD_FOUNDER_HANDLE, main, plane, says, word, SCREENS, P, Q, D, SHA, BASIS, READING, PROJECT_QUESTIONS, DOCUMENT_MD, inquiryMd } from "./fixtures.mjs";
 
 const RUN = "RUN-" + "b".repeat(16);
 const text = (el) => el.textContent;
@@ -18,13 +18,43 @@ function aiUsageBars(cs, view, o) {
   return `<div class="mk-bars" data-owner="${cs.esc(o.owner)}" data-days="${o.value.days.length}" data-meters="${o.value.periods.length}"></div>`;
 }
 const SERVING = SCREENS.map((s) => (s.id === "assistant" ? { ...s, parts: { aiUsageBars } } : s));
-const OVER = (owner) => ok({ owner, days: Array.from({ length: 30 }, (_, i) => ({ day: `2026-09-${String(i + 1).padStart(2, "0")}`, calls: i, dollars: i / 10 })),
-  periods: [{ scope: "overall", unit: "usd", period: "month", period_start: "2026-10-01", used: 1.5, limit: 5 }] });
-async function dock(subject, extra = {}, whoami) {
+const OWN = { capabilities: ["contribute", "create_projects"] };
+const KEY = "sk-ant-api03-" + "7".repeat(40);
+/** The real state the dock reads (the world made with `storeWorld({ ai: true })`, K5054): the team's Claude account set and switched on by the administrator's acts, `ann` a member
+ *  with a project of her own, a question resting on a held passage and a document held in it; `own` also gives her an account of her own (`accountreferenceset`), `key` a key
+ *  for the project (`projectkeyset`, switched on). Answers `{world, admin, ann, project, doc, id}`. */
+const worldOf = async ({ own = false, key = false } = {}) => {
+  const world = await storeWorld({ ai: true });
+  const admin = await world.signIn(WORLD_FOUNDER_HANDLE);
+  await admin.act("reauth", { body: { password: admin.password } });
+  await admin.act("groupkeyset", { body: { key: "sk-ant-api03-" + "w".repeat(40) } });
+  await admin.act("groupkeyswitch", { body: { on: true } });
+  await admin.act("groupkeynoticeseen", { body: {} });
+  const ann = await world.signIn("ann", OWN);
+  await ann.act("groupkeynoticeseen", { body: {} });
+  const project = await world.recipes.project(ann, "Pothole repairs");
+  const doc = (await world.recipes.hold(ann, "Policy memo", "The Director shall repair each reported pothole within seven days.", project)).bundle;
+  const id = (await world.recipes.question(ann, project, { title: "Seven days", text: "Do crews repair each pothole within seven days?", legs: [{ target: doc, role: "supports" }], draw: true })).id;
+  if (own) {
+    /* what connecting means, read first; her password again; then the key, named as ai-accounts' route reads it */
+    const d = await ann.read("disclosureof", { query: { member: "member:" + ann.member } });
+    await ann.act("disclosureshown", { body: { member: "member:" + ann.member, version: d.version } });
+    await ann.act("reauth", { body: { password: ann.password } });
+    await ann.act("accountreferenceset", { body: { member: "member:" + ann.member, kind: "apikey", secret: KEY } });
+  }
+  if (key) {
+    await ann.act("reauth", { body: { password: ann.password } });
+    await ann.act("projectkeyset", { body: { project, key: KEY } });
+    await ann.act("projectaccountswitch", { body: { project, on: true } });
+  }
+  return { world, admin, ann, project, doc, id };
+};
+/** The page of `subject` as `as` reads it over the world's door (`plane` overrides only the ops it names), the dock opened. */
+async function dock(w, subject, extra = {}, as = w.ann) {
   const screen = /^PROJ-/.test(subject) ? "project" : /^INFO-/.test(subject) ? "document" : "question";
-  const p = await open(`/app/${screen}/${subject}`, { boot: { screens: SERVING, plane: { ...plane(), assistantstate: ok({ on: true }), accountreference: ok({ held: false }),
-    groupkeystate: ok({ held: true, on: true }), aiusage: ok({ ok: true, today: { used: "$0.42", limit: "$2.00" } }), agentpack: ok({ ok: true, pack: { version: "p@1" } }),
-    airuns: ok({ ok: true, runs: [] }), aiuseovertime: (r) => OVER(r.query.owner), ...(whoami ? { whoami } : {}), ...extra } } });
+  const { door, session } = w.world.boot(as);
+  const p = await boot({ screens: SERVING, door, session, path: `/app/${screen}/${subject}`, ...(Object.keys(extra).length ? { plane: extra } : {}) });
+  await p.settle();
   await p.click(p.root().querySelector('.cs-mast [data-shell="dock"]'));
   await p.settle();
   return p;
@@ -33,32 +63,42 @@ const panel = (p) => p.root().querySelector(".cs-dock");
 const bars = (p) => panel(p).querySelector(".mk-bars");
 
 test("R17 her own account draws the thirty days and the meters of her account, read for her as its owner", async () => {
-  const p = await dock(Q, { accountreference: ok({ held: true }) });
-  assert.deepEqual(p.byOp("aiuseovertime").map((r) => r.query.owner), ["member:mai"]);
-  assert.deepEqual([bars(p).getAttribute("data-owner"), bars(p).getAttribute("data-days"), bars(p).getAttribute("data-meters")], ["member:mai", "30", "1"]);
+  const w = await worldOf({ own: true });
+  const p = await dock(w, w.id);
+  assert.deepEqual(p.byOp("aiuseovertime").map((r) => r.query.owner), ["member:" + w.ann.member]);
+  assert.deepEqual([bars(p).getAttribute("data-owner"), bars(p).getAttribute("data-days"), bars(p).getAttribute("data-meters")], ["member:" + w.ann.member, "30", "1"]);
 });
 
 test("R17 a project's account she owns draws its bars; a refusal as a non-owner is refused draws nothing and says nothing of the account's use", async () => {
-  const own = await dock(D, { projectaccountstate: ok({ ok: true, on: true, serving: "project" }) });
-  assert.equal(bars(own).getAttribute("data-owner"), "project:" + P);
-  const other = await dock(D, { projectaccountstate: ok({ ok: true, on: true, serving: "project" }), aiuseovertime: refusedIn("ACCOUNT_NOT_OWNER", "Only an owner sees this.") });
+  const w = await worldOf({ key: true });
+  const own = await dock(w, w.doc);
+  assert.equal(bars(own).getAttribute("data-owner"), "project:" + w.project);
+  /* the real non-owner: dev joined the project (invited by her) and is not its owner, so the plane refuses the use over time */
+  const dev = await w.world.signIn("dev", OWN);
+  await w.ann.act("projectinvite", { query: { projectId: w.project, handle: "dev" }, body: {} });
+  await dev.act("projectjoin", { query: { projectId: w.project }, body: {} });
+  await dev.act("groupkeynoticeseen", { body: {} });
+  const other = await dock(w, w.doc, {}, dev);
   assert.ok(!bars(other) && !panel(other).querySelector("[data-state]"), "nothing drawn, no failure");
   assert.doesNotMatch(text(panel(other)), /Only an owner|owner/);
 });
 
 test("R17 the group's key draws its bars to an administrator; a member who does not administer reads and draws none", async () => {
-  const member = await dock(Q);
+  const w = await worldOf();
+  const member = await dock(w, w.id);
   assert.ok(says(panel(member), "ai.account.group.inline"));
   assert.equal(member.byOp("aiuseovertime").length, 0, "no read is made for an account she does not own");
   assert.ok(!bars(member));
-  const admin = await dock(Q, {}, ok(ADMIN));
+  const admin = await dock(w, w.id, {}, w.admin);
   assert.deepEqual([admin.byOp("aiuseovertime")[0].query.owner, bars(admin).getAttribute("data-owner")], ["group", "group"]);
 });
 
 test("R17 controls: an unreadable answer, and a read that fails, are drawn failed, never as zeros", async () => {
-  const unreadable = await dock(Q, { accountreference: ok({ held: true }), aiuseovertime: ok({ owner: "member:mai", unreadable: true }) });
+  /* still scripted over a real account (aiuseovertime): needed: an account whose use over time reads unreadable, or fails (no act makes the plane answer either) */
+  const w = await worldOf({ own: true });
+  const unreadable = await dock(w, w.id, { aiuseovertime: ok({ owner: "member:" + w.ann.member, unreadable: true }) });
   assert.ok(!bars(unreadable) && panel(unreadable).querySelector('[data-state="failed"]'));
-  const gone = await dock(Q, { accountreference: ok({ held: true }), aiuseovertime: silent });
+  const gone = await dock(w, w.id, { aiuseovertime: silent });
   assert.ok(!bars(gone) && panel(gone).querySelector('[data-state="failed"]'));
 });
 
@@ -111,36 +151,48 @@ test("R20 the module's real screens compose under interface-shell R56: every cla
 });
 
 test("R20 every labelled field is drawn with cs.field: no screen draws cs-form or a bare label", async () => {
-  const AI = { projectparticipants: ok({ ok: true, projectId: P, participants: [{ handle: "mai", state: "joined", owner: true }] }),
-    projectaccountstate: ok({ ok: true, held: true, kind: "apikey", on: true, serving: "project" }), projectkeynotice: ok({ ok: true, due: false }),
-    projectaikeepawaystate: ok({ ok: true, on: false }), accountuses: ok({ owner: "project:" + P, held: true, uses: {} }), ailimits: ok({ ok: true, limits: [], history: [] }),
-    aiusage: ok({ ok: true, uses: [] }), accounthistory: ok({ ok: true, changes: [] }) };
-  for (const [path, extra] of [["/app/project/" + P, {}], ["/app/question/" + Q, {}], ["/app/document/" + D, {}], ["/app/projectai/" + P, AI]]) {
-    const m = main(await open(path, { plane: extra, boot: { screens: OWN_ONLY } }));
+  /* the AI account screen over the real project: her key held and on, as the page's panel reads it */
+  const w = await worldOf({ key: true });
+  const ai = async () => {
+    const { door, session } = w.world.boot(w.ann);
+    const p = await boot({ screens: OWN_ONLY, door, session, path: "/app/projectai/" + w.project });
+    await p.settle();
+    return p;
+  };
+  for (const [path, real] of [["/app/project/" + P, false], ["/app/question/" + Q, false], ["/app/document/" + D, false], ["/app/projectai/" + w.project, true]]) {
+    const m = main(real ? await ai() : await open(path, { boot: { screens: OWN_ONLY } }));
     assert.equal(m.querySelectorAll(".cs-form").length, 0, path);
     for (const l of m.querySelectorAll("label")) assert.ok(String(l.parentElement.getAttribute("class")).split(/\s+/).includes("cs-field"), `${path}: ${l.textContent}`);
   }
-  const m = main(await open("/app/projectai/" + P, { plane: AI, boot: { screens: OWN_ONLY } }));
+  const m = main(await ai());
   const key = m.querySelectorAll("input").find((i) => i.getAttribute("type") === "password");
   assert.ok(key && key.parentElement.querySelector("label") && key.parentElement.querySelector(".help"), "the key field has its label and help");
 });
 
 test("R20 over an empty fixture no section is drawn empty and no count is drawn at zero", async () => {
-  const bare = { image: (r) => ok({ "bundle.md": r.query.id === Q ? inquiryMd(P, [], { legs: [] }) : r.query.id === D ? DOCUMENT_MD : "" }) };
-  const project = await open("/app/project/" + P, { plane: { projectstage: ok({ ok: true, project: P, stage: "forming", questions: { read: 0, with_legs: 0, concluded: 0 } }),
-    projectquestions: ok({ ok: true, project: P, items: [], cursor: null }), list: ok({ bundles: [] }),
-    projectparticipants: ok({ ok: true, projectId: P, participants: [{ handle: "mai", state: "joined", owner: true }] }) } });
-  const question = await open("/app/question/" + Q, { plane: { ...bare, basisversions: ok(BASIS({ versions: [{ name: "main", legs: [] }] })), questionwaits: ok({ ok: true, waits: [] }),
-    hypotheses: ok({ ok: true, inquiry: Q, hypotheses: [] }) } });
-  const document = await open("/app/document/" + D, { plane: { reading: ok(READING({ reading: { people: [] }, text_units: [], unread_pages: [] })),
-    backlinks: ok({ ok: true, target: D, backlinks: [] }), versionchain: ok({ ok: true, versions: [{ capture_sha: SHA }] }) } });
+  /* the real state: a project with nothing drawn into it, a question citing nothing, a document held with nothing relying on it */
+  const world = await storeWorld({ ai: true });
+  const ann = await world.signIn("ann", OWN);
+  const pid = await world.recipes.project(ann, "Pothole repairs");
+  const held = await world.recipes.hold(ann, "Policy memo", "The Director shall repair each reported pothole within seven days.", pid);
+  const qid = (await world.recipes.question(ann, pid, { title: "Seven days", text: "Do crews repair each pothole within seven days?", legs: [], draw: true })).id;
+  const pageOf = async (path, screens) => {
+    const { door, session } = world.boot(ann);
+    const p = await boot({ screens: screens || SCREENS, door, session, path });
+    await p.settle();
+    return p;
+  };
+  const project = await pageOf("/app/project/" + pid);
+  const question = await pageOf("/app/question/" + qid);
+  const document = await pageOf("/app/document/" + held.bundle);
   for (const [p, absent] of [[project, ["screen.project.draw.head"]], [question, ["screen.question.against.head", "screen.question.waits.head"]],
                              [document, ["screen.document.people.head", "screen.document.versions.head", "screen.document.backlinks.head", "screen.document.unread.head"]]]) {
     for (const h of absent) assert.ok(!heads(p).includes(word(h)), `${h} is not drawn`);
     for (const s of main(p).querySelectorAll("section")) assert.ok(text(s).length > text(s.querySelector("h2")).length, `${text(s.querySelector("h2"))} holds something`);
     for (const k of ["screen.project.stage.read", "screen.project.stage.legs", "screen.project.stage.concluded"]) assert.ok(!says(main(p), k, { count: "0" }), `${k} at zero`);
   }
-  const dockP = await dock(Q, { aiusage: ok({ ok: true, today: { used: "$0.00", limit: "$2.00" } }) });
+  const w = await worldOf();
+  const dockP = await dock(w, w.id);
   assert.ok(!says(panel(dockP), "screen.assistant.use", { used: "$0.00", limit: "$2.00" }), "no use today, no count");
   assert.ok(!panel(dockP).querySelectorAll("section").some((s) => text(s.querySelector("h2")) === word("screen.assistant.productions.head")), "no productions, no section");
 });
