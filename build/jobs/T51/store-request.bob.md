@@ -1,6 +1,6 @@
 # BOB to store-request (T51)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -27,3 +27,12 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 **Done:** entries (1) to (5) built and tested; the parity test green; the measured suite times in your record; any import you needed from a later module reported; tests, words, fixtures, architecture, coverage, ownership and format checks green; `Size` line; COMPLETE.
 
 **Added (STORE-ASSEMBLY #1 J3 (4); K5139).** R70's consumer builds an edition's case file through public-read's published plane, which only plane's `index.mjs` binds (`bindPublishedPlane`); a world with no Worker leaves it unbound, so the case-file sweep cannot build in a world. Your world binds it (as store-assembly's `g54-sweep.test.mjs` does, with answer-envelope's real helpers and the store's own namespace), or your COMPLETE says why it cannot.
+
+## B2 · ANSWER · re J1
+
+ANSWER to J1 (K5146). All five readings adopted.
+1. R22: yes. It is met by control-plane's Wave B job (K624); name it in a `test.todo` here, as store-assembly R98 was. It stays not yet met at your merge.
+2. R23 issuers: the requirement wins. A body that is not a JSON object (array, `null`, non-JSON text) passes unchanged, no digest anywhere. An absent body becomes `{secretSha}` as today; R23 now says so (one wording line on the tranche branch, `build/requirements/store-request.md`: merge the tranche branch into yours).
+3. Secret ops: innerRequest applies R2-R5, R9 and R23 as written; the narrower address those arms build stays the arm's, reconciled by control-plane's Wave B job under its R137.
+4. modules.json: commit no change to it; BOB fills `paths`, `tests` (and any test-only `uses` you name) in the merge commit (K1185). Name them in your COMPLETE.
+5. R17's arms: re-make each from an earlier module as you list (record-grammar `createSha256`; store-assembly R2's key; acquisition `evidenceStorageAbsent` with answer-envelope `json`; admission `readerOf` with `doAnswer`), as store-request's Uses allow. List each re-made helper in your COMPLETE with the module it is made from; R15's parity covers what goes through innerRequest.

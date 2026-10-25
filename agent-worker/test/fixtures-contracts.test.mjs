@@ -81,7 +81,7 @@ section("transcribe-refusal (extraction) · R72 · the worker's refusal bodies {
 section("transcribe-declined (extraction) · R72, R74 · the worker's answer when the AI declines, and when the model is silent");
 {
   const good = { capture_sha: SHA, pages: PAGES, account: ACCOUNT };
-  // fixtures-run: extraction transcribe-declined
+  // the worker's answers when the AI declines and when it is silent (extraction's t44/t46 take them from its own fixtures; K5146)
   const declined = await call("transcribe", good, async () => Response.json({ type: "error", error: { type: "overloaded_error", message: "busy" } }, { status: 529 }));
   t("transcribe-declined: every page declined -> 502 MODEL_REFUSED, ending refused, the provider's own type and status beside it",
     [declined.status, declined.body.ok, declined.body.reason, declined.body.code, declined.body.worker, declined.body.ending, declined.body.model_error, declined.body.model_status],
@@ -98,7 +98,7 @@ section("transcribe-declined (extraction) · R72, R74 · the worker's answer whe
 section("transcribe-not-sent (extraction) · R72 · AGENT_WORKER_UNBOUND, EVIDENCE_ABSENT, NO_PAGE_RENDERED are not the worker's");
 {
   const good = { capture_sha: SHA, pages: PAGES, account: ACCOUNT };
-  // fixtures-run: extraction transcribe-not-sent
+  // the three codes extraction gives before any post are none of the worker's answers (K5146)
   const NOT_SENT = ["AGENT_WORKER_UNBOUND", "EVIDENCE_ABSENT", "NO_PAGE_RENDERED"];
   const answers = [await call("transcribe", "{oops"), await call("transcribe", { ...good, capture_sha: "x" }), await call("transcribe", { ...good, pages: [] }),
     await call("transcribe", { ...good, account: undefined }), await call("transcribe", { ...good, account: null }),

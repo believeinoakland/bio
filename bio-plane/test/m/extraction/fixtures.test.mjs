@@ -72,3 +72,25 @@ test("R31 (fixture `unheldStructure`): an object the store does not hold is capt
   assert.deepEqual(a, evidenceAbsent(miss, "bio", { tokenClass: "member" }));
   assert.deepEqual([a.status, a.body.ok, a.body.reason, a.body.check], [404, false, "EVIDENCE_NOT_HELD", "C-118.1"]);
 });
+
+test("R90 R99 R101 R108 (fixture `readHeldAnswer`, the paged and killed paths): a windowed first tick, a scan's owed tick with its counters, a killed window stepped past on the next read, a finished read answering its counters", async () => {
+  const w = await readHeldAnswer.windowed();
+  assert.deepEqual([w.answer.ok, w.answer.read, w.answer.more], [true, true, true]);
+  assert.deepEqual(Object.keys(w.answer.detail).sort(), ["read_through", "total"], "the answer carries no cursor: it is the index state's");
+  assert.equal(typeof w.cursor, "string");
+  assert.ok(w.cursor.length > 0 && w.answer.detail.read_through > 0);
+  assert.deepEqual([w.units.read_through, w.units.total], [w.answer.detail.read_through, w.answer.detail.total], "unitsOf states the figures the answer does");
+  const s = await readHeldAnswer.scanOwed();
+  assert.deepEqual([s.answer.ok, s.answer.read, s.answer.owed], [true, true, true]);
+  assert.equal(s.answer.registration.registered, true);
+  assert.deepEqual(Object.keys(s.counters).sort(), ["failed", "owed", "skipped", "written"]);
+  assert.ok(s.counters.owed > 0, JSON.stringify(s.counters));
+  const k = await readHeldAnswer.killedWindow();
+  assert.equal(k.first.more, true);
+  assert.deepEqual([k.answer.ok, k.answer.read, k.answer.stated.why], [true, true, "UNIT_KILLED_READER"]);
+  assert.equal(k.answer.stated.at, k.first.detail.read_through, "the stepped window starts where the first tick ended");
+  const f = await readHeldAnswer.finished();
+  assert.deepEqual([f.answer.ok, f.answer.read, f.answer.why], [true, false, "READING_HELD"]);
+  assert.deepEqual(f.answer.counters, { written: f.counters.written, skipped: f.counters.skipped });
+  assert.deepEqual([f.counters.owed, f.counters.failed], [0, 0]);
+});
