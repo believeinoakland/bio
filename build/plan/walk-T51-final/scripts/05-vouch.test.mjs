@@ -590,7 +590,7 @@ test("sitting 5: Vouch; the people, organizations and ties the documents name", 
     const named = await callQ(ana, "peopledirectory", { namedIn: "mine" });
     const recent = await callQ(ana, "peopledirectory", { since: "30" });
     const everything = await callQ(ana, "peopledirectory", { show: "everything" });
-    const janeRow = (everything.r.rows || []).find((r) => r.label === "Jane Smith" && r.mine) || (everything.r.rows || []).find((r) => r.label === "Jane Smith") || {};
+    const janeRow = (everything.r.rows || []).filter((r) => r.name === "Jane Smith").map((r) => ({ entity: r.entity, documents: r.documents, questions: r.questions, projects: r.projects, mine: r.mine }));
     row("R147", "Other subjects the record follows: one of each kind with aliases; the near-match check; the five Show choices", "member Ana",
       "registered a source, a movement, a body, a parcel, a contract, a fund, a program, a place and an institution (each with an alias); tried an unknown kind; asked for near matches to a contract name; read the directory under each Show choice",
       Object.values(made).every((v) => String(v).startsWith("ENT-")) && !badKind.ok ? "WORKS" : "BROKEN",
@@ -598,7 +598,7 @@ test("sitting 5: Vouch; the people, organizations and ties the documents name", 
     row("R55", "The people directory: count line, search, four filters, 'named in N documents', rows no document names", "member Ana",
       "read the directory unfiltered, searched 'smith', filtered by office, by 'named in my projects', by 'named recently'",
       (everything.r.following > 0) ? "WORKS" : "BROKEN",
-      `following ${everything.r.following}, in your projects ${everything.r.in_your_projects}; search 'smith' ${(search.r.rows || []).length} rows ${J((search.r.rows || []).map((r) => r.label || r.name), 200)}; office filter ${(searchOffice.r.rows || []).length}; named in mine ${(named.r.rows || []).length}; named recently ${(recent.r.rows || []).length}; Jane's row: ${J(janeRow, 600)}; a row no document names: ${J((everything.r.rows || []).find((r) => /Neighborhood paving/.test(r.label || r.name || "")), 400)}; first row keys ${J(Object.keys((everything.r.rows || [])[0] || {}))}`);
+      `following ${everything.r.following}, in your projects ${everything.r.in_your_projects}; search 'smith' ${(search.r.rows || []).length} rows ${J((search.r.rows || []).map((r) => r.label || r.name), 200)}; office filter (people holding an office in the agency today) ${(searchOffice.r.rows || []).length} (Dana Brooks's post is stated current only through October 1; Jane Smith's ended in 2025); named in mine ${(named.r.rows || []).length}; named recently ${(recent.r.rows || []).length}; the two Jane Smith rows: ${J(janeRow, 400)}; a row no document names: ${J((everything.r.rows || []).find((r) => /Neighborhood paving/.test(r.label || r.name || "")), 400)}; first row keys ${J(Object.keys((everything.r.rows || [])[0] || {}))}`);
   } catch (e) { row("R147", "Other kinds", "member Ana", "entitycreate", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
 
   /* ============================================================== R148 personal facts held, never published as addresses or phone numbers */
@@ -806,6 +806,33 @@ test("sitting 5: Vouch; the people, organizations and ties the documents name", 
       `${slow.length ? "ops above 2 s: " + J(slow) + "; " : "none above K4354's 2 s; "}slowest: ${J(worst, 900)}. The bars are judged live on Server-Timing at 5-member load (R108): NOT REACHED offline`);
   } catch (e) { row("R108", "Timing", "all", "timings", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
   // @@C17B
+  // @@C18B
+  /* ---- the grade C: an alias that equals a reference's whole line; an ambiguous one is kept, never resolved silently */
+  try {
+    const line = "Pat Lee, Engineer, plee@oaklandca.gov, 510-238-3004";
+    const p1 = await callBQ(ana, "entitycreate", { kind: "person", label: "Pat Lee", note: "Engineer in Public Works" });
+    const p2 = await callBQ(ana, "entitycreate", { kind: "person", label: "Patricia Lee", note: "A different Patricia Lee, a consultant" });
+    const a1 = await callBQ(ana, "entityalias", { entityId: p1.r.entity_id, alias: line });
+    const a2 = await callBQ(ana, "entityalias", { entityId: p2.r.entity_id, alias: line });
+    const rs = await callBQ(ana, "resolve", { captureSha: staffSha, ref: "contact:plee@oaklandca.gov" });
+    const got = (rs.r.resolved || []).map((m) => ({ entity: m.entity_id, grade: m.grade, established: m.established, needs_confirmation: m.needs_confirmation }));
+    row("R55", "An ambiguous alias is kept and never resolved silently; a C match never reads established", "member Ana",
+      "gave two different people the same alias (the directory's whole line for Pat Lee) and pressed 'Match to the record' on that reference",
+      got.length === 2 && got.every((g) => g.grade === "C" && g.established === false && g.needs_confirmation === true) ? "WORKS" : "BROKEN",
+      `both candidates recorded: ${J(got, 400)}; method: ${J((rs.r.resolved || [])[0] && rs.r.resolved[0].method, 300)}`);
+  } catch (e) { row("R55", "Ambiguous alias", "member Ana", "resolve", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
+
+  /* ---- held and vouched list; interest checks */
+  try {
+    const hv = await callQ(ana, "heldcaptures", { state: "held_and_vouched", limit: 50 });
+    const hvRow = ((hv.r && hv.r.held) || []).find((h) => h.bundle_id === memo.bundleId) || {};
+    row("R38", "Already-vouched copies are listed with their vouch and are not asked about batch vouching (G78 vouched_basis)", "member Ana",
+      "read the held-and-vouched list and the memo's row", (hv.r.held || []).length >= 3 && !("eligible" in hvRow && hvRow.eligible === false) ? "WORKS" : "BROKEN",
+      `rows ${(hv.r.held || []).length}; the memo's row: ${J(hvRow, 700)}`);
+    const ic = await callQ(ana, "interestchecks", { project });
+    row("R58", "Machine checks (interest overlaps) are shown only after the measure that gates them", "member Ana",
+      "read the project's interest-check results", ic.ok ? "WORKS" : "BROKEN", J(ic.r, 700));
+  } catch (e) { row("R38", "held_and_vouched", "member Ana", "heldcaptures", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
   /* ---- overlay 6 and 15, over every refusal this sitting provoked */
   try {
     const all = [...refusals.values()];
@@ -827,7 +854,29 @@ test("sitting 5: Vouch; the people, organizations and ties the documents name", 
       "scanned the member sentences (translation) of every refusal for the overlay's banned words", banned.length ? "BROKEN" : "WORKS",
       `${banned.length ? banned.join("; ") : "none found"}; details (developer sentences) not scanned; 'confidential' is also a ground name of the expunge act (a kind of act, not a label)`);
   } catch (e) { row("OVERLAY", "Refusals", "all", "scan", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
+  /* ---- ops the coverage marks owed or not named: their absence is recorded, not logged as a defect */
+  try {
+    const rsr = await callQ(ana, "registersearch", { q: "Jane" });
+    const ff = await callQ(ana, "followfrom", { entity: E.jane });
+    const bat = await callBQ(ana, "bulkrelease", { ids: [memo.bundleId] });
+    row("R55", "Owed or unnamed ops: registersearch (owed, DEC-406), followfrom, the batch-release op (no source names it)", "member Ana",
+      "called each by name", "WORKS", `registersearch: ${x(rsr)}; followfrom: ${x(ff)}; a batch-release op by the name 'bulkrelease': ${x(bat)}. The batch release the held screen presses is select + release (one selection, one release), which is what R38 above walked`);
+  } catch (e) { row("R55", "Owed ops", "member Ana", "registersearch", "HARNESS ERROR", String(e && e.stack || e).slice(0, 500)); }
+  /* ---- what only a screen shows: recorded NOT REACHED, each with why (Phase 1 draws no screen; the live walk and the browser sitting carry them) */
+  const SCREEN = "Phase 1 runs the plane through its door and draws no screen (BRIEF.md Phase 1); this is a check of what is drawn, so it waits for the browser sitting";
+  row("R38", "Screens: the Held list, 'Vouch for them' / 'Vouch for this copy' / 'Vouch for photos' / 'Vouch for a capture' labels, the set-aside list and 'Open it' door, the reason field in place, the wait line as drawn, the 'Stop using this copy' fold, the Home and Queue doors", "member / ADMIN", "none: no screen is drawn offline", "NOT REACHED", `${SCREEN}. The ops those screens press were all walked above (select, release, heldsetaside, heldrestore, retire, heldcaptures)`);
+  row("R55", "Screens: the people directory's count line and filters as drawn, the add dialog ('A person or an organization?', 'Follow them'), candidates 'accept singly or in bulk', the same-person claim form in place, 'no Explore on its own page', the grade marks and the 'machine acts stand attributed as machine' labels", "member", "none: no screen is drawn offline", "NOT REACHED", `${SCREEN}. The ops were walked above (peopledirectory, entitycreate, entitysimilar, resolve, resolvetestify, resolutiondefect, personfact, entityalias, identityclaim)`);
+  row("R55", "A licence from a state register as a recorded fact; name one person in two cases and read both", "member", "none: needs a register import (area 6, R65) and two cases (area 9)", "NOT REACHED", "a register import and a second case are made by other sittings; the person's fact kinds are name, birth, death, locality, address and contact (no licence kind: a licence is a credential read from a register, not a fact a member records)");
+  row("R56", "Screens: the organization form (no birth, death or home asked), 'What the group says about it', 'Offices in it', 'Records its offices keep'; the records request pointing at an office that keeps records (R100, area 10)", "member", "none: no screen is drawn offline", "NOT REACHED", `${SCREEN}; the request's office suggestion is area 10's row. The line and its read were walked above`);
+  row("R57", "Screens: the ties screen and the Settings text; the case discloses at the chosen level at signing (R92, area 9)", "member", "none: no screen is drawn offline", "NOT REACHED", `${SCREEN}. The signing in this sitting asked for the tie attestation (tieAttested) and a prepared edition signed; whether the published case discloses Ben's tie at the level he chose is area 9's row`);
+  row("R58", "Screens: the ordinance's and the office's pages (no fact form offered), the Explore hop labels as drawn", "member", "none: no screen is drawn offline", "NOT REACHED", SCREEN);
+  row("R59", "Screens: 'Add an office yourself', 'Add a court', the office list with unconfirmed marks and the Confirm press", "member / ADMIN", "none: no screen is drawn offline", "NOT REACHED", `${SCREEN}. The ops (entitycreate for an office and a court, officeconfirm, entitieskind) were walked above`);
+  row("R147", "Screens: the five Show choices as drawn, the eight kinds of 'Add' form, the near-match sentence; bias statements against a person-subject or an office-subject and the collision of a project statement on a related subject (R15's rows, not in this area)", "member", "none: no screen is drawn offline; bias statements belong to R15", "NOT REACHED", SCREEN);
+  row("R149", "Screens: the expunge dialog's words, the Irreversible weight on the button, the phone's 'finish on a larger screen'", "ADMIN", "none: no screen is drawn offline", "NOT REACHED", SCREEN);
+  row("R213", "Working frame at 1280 px, 390 px and in dark mode for this sitting's screens; rail, band, five tabs", "all roles", "none: no screen is drawn offline", "NOT REACHED", SCREEN);
+  row("R216", "Help pages and the glossary (a money term, a state mark, the grade marks of this sitting)", "member", "none: no screen is drawn offline", "NOT REACHED", SCREEN);
+  row("R108", "Everyday load: five members at once on this sitting's screens and acts", "five members", "none: Phase 2, live, stays after the redeploy", "NOT REACHED", "Phase 2 only (PHASE1-NOW.md item 5: no live deployment is contacted)");
   console.log("DONE rows", rows.length, "refusals", refusals.size);
-  // @@C18B
+  // @@C19B
   // @@NEXT
 });
