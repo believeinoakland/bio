@@ -600,3 +600,17 @@ Done (commit on job/T51/wizard-scripts, pushed): bio-plane/test/m/wizard-scripts
 Blocked: architecture reads 1 failure, writing-help.test.mjs imports answers' fixture, which wizard-scripts does not declare in uses. The edge is in build/modules.json, which is not my file. I tested it locally and reverted it, nothing committed: adding "answers" to wizard-scripts' uses clears the check (0 failures).
 
 Needs Bob: add "answers" to the uses of wizard-scripts in build/modules.json (layer 6 is earlier than layer 11, so the order holds). Tell me when it is on the tranche, and I will merge it, re-run architecture, and post COMPLETE.
+
+## J31 · COMPLETE
+
+COMPLETE for CHANGE B28 (J30's blocker is cleared). Cursor moved through B28.
+
+Merged origin/tranche/T51 into job/T51/wizard-scripts (merge, never a rebase), so build/modules.json now gives wizard-scripts `answers`. Pushed.
+
+Changes this round (B27): bio-plane/test/m/wizard-scripts/writing-help.test.mjs takes answers' published limitsUnreadable() (bio-plane/test/m/answers/fixtures.mjs, its R30) for the R27 test, which is async now. Earlier this round (R52): bio-plane/src/wizard-scripts/index.mjs (wizardsAt rows carry required) and bio-plane/test/m/wizard-scripts/r52.test.mjs (new, failing-first, names R52); reads.test.mjs R11 row shape gains required: false.
+
+Checks (absolute root /home/user/bio), after the merge: architecture 0 failures; fixtures wizard-scripts 0 failures (answer 0); format 0; coverage 52 of 52 live ids named; ownership 0 failures (73209c08..HEAD); module suite 143 of 143.
+
+Met ids this round: R52. Markers: no fixtures-own or fixtures-generic added. Deferrals: none in this module. Found outside my paths earlier (REPORT J28): control-plane R60 and R137 fail identically before my change.
+
+Size (session_0143XBw7eSFoV4QcZny2VQ3i): test runs 13, module lines 2903
