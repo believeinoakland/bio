@@ -114,3 +114,23 @@ Size (session_014YKSz5P9aQ8AFfPFSti6pv): test runs 6, module lines 1593
 ## J6 · COMPLETE
 
 COMPLETE · ADMISSION #18 · R27b: the door window counts in memory, written at most every 5 s (WINDOW_FLUSH_MS, injected). Failing-first r10-doorwindow-writes.test.mjs red on old code, green now; admission 76/76, plane/control-plane window users 23/23; format, architecture, coverage (32/32), words, ownership 0 failures. Stale: dist/bio-plane.bundled.mjs. Details in my record's last section.
+
+## Completion (B7 · START, fix round 10 final pass: R33, ADMISSION #20)
+
+**Cause R33, one hop for the session and the re-authentication due.** Met; BOB strikes the mark on R33.
+- Root cause: `admit` (`bio-plane/src/admission/index.mjs`, `sessionRead` then, later, `reauthDuePresented`) awaited the session read and, for an act `REAUTH_ACTS` names, the `reauthdue` question one after the other, two hops in the door's chain where R33 asks one.
+- Fix: for a session-shaped token and an act `reauthAsked` names that R29 does not put to the roster first, `reauthDuePresented` is issued at the same moment as `sessionRead` (the two on the wire together). Its answer is used where R25 used it; a request an earlier gate refuses drops it unread, and its rejection is swallowed so it cannot fail a request. An administrator's own act (R29: `administratorsOwnActs`) keeps its order, so a member who may not take it is still never asked (t50's "the password is not asked" holds). Every answer is unchanged.
+- Why the tests missed it: no test recorded when the store's two questions were issued, only that each was asked once, and in what answer they ended.
+- Failing-first test `r33-one-hop.test.mjs` (three tests naming R33), seen RED on the old code: `actual: [ 'session' ], expected: [ 'reauthdue', 'session' ]` (only the session question had reached the store when the first answer left), then green on the new code (3 pass). Controls: an act asking only the session makes one store call (`["session"]`); an administrator's own act still answers `NOT_AN_ADMIN` with no `reauthdue`; locked session, unknown token, missing capability, silent session read, silent question, and a throwing question all answer as before.
+
+**REPORT for BOB (another module's route, not built).** R33 allows "one internal route answering both, or both issued together"; I built the second. The first needs the store's route in `store-door` (`bio-plane/src/store-door/dispatch.mjs`, `reauthdue` at about :476) which I may not change. If BOB wants one store call rather than one hop, the shape is a route `sessionreauth` (header `x-bio-session`, optional `?background=1`) answering `{ session, due }`: `session` as `session` answers, `due` as `reauthdue` answers it (`false` for no session). Then `admit` asks it in place of the pair for a reauth-asked act, with no other change on my side. Not needed for R33 as written.
+
+**Fixtures markers added:** none. **Deferred:** none. **Stale generated artifacts:** none.
+
+**Tests and checks.**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/admission/*.test.mjs`: 79 pass, 0 fail, 0 skipped.
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: 10 of 178 modules, 319 of 2942 test files. Users' tests that name reauth or caseratify (26 files in control-plane, plane, store-request, store-assembly, ratification): 6 files hold 7 failing tests, the same 7 with my change reverted (`t51-round7-seam`, `t47-door` in control-plane; `g55-alarm-l` in plane; `retire`, `declared-ops`, `release` in ratification), so they are inherited reds, not caused by R33; the other 20 files pass.
+- `checks/format.mjs /home/user/bio`: 0 failures. `checks/architecture.mjs`: 0. `checks/coverage.mjs`: 33 of 33 ids, 0. `checks/words.mjs`: 0. `checks/fixtures.mjs admission --list`: 0. `checks/ownership.mjs admission tranche/T51`: 0.
+- Note for BOB: control-plane's `r10-caseratify-chain.test.mjs` should now read one hop less (14 to 13) from this change; it is control-plane's and public-read's to bring to 11.
+
+Size (session_01CC79ZymUBLp7z7wZPzLMwE): test runs 7, module lines 1176
