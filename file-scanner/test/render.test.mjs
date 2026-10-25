@@ -118,7 +118,8 @@ test('R7 refusals by name: R1\'s and R2\'s, ENCRYPTED, NOT_RENDERABLE, TIME_LIMI
   const enc1 = putCapture(bucket, readFileSync(new URL('./fixtures/encrypted.pdf', import.meta.url)));
   assert.deepEqual(await answer({ store: 'bio', target: enc1, route: 'pdf' }), [422, { ok: false, code: 'ENCRYPTED', class: 'final' }]);
   const text = putCapture(bucket, enc('just some text'));
-  assert.deepEqual((await answer({ store: 'bio', target: text, route: 'pdf' }))[1], { ok: false, code: 'NOT_RENDERABLE', class: 'final' });
+  const notPdf = (await answer({ store: 'bio', target: text, route: 'pdf' }))[1];
+  assert.deepEqual([notPdf.ok, notPdf.code, notPdf.class, typeof notPdf.message], [false, 'NOT_RENDERABLE', 'final', 'string']);
   assert.deepEqual((await answer({ store: 'bio', target: text, route: 'office' }))[1].code, 'NOT_RENDERABLE');
   assert.deepEqual((await answer({ store: 'bio', target: pdf, route: 'spreadsheet' }))[1].code, 'NOT_RENDERABLE');
   // TIME_LIMIT: the image stops a render past its budget.
@@ -158,4 +159,14 @@ test('R14 the render\'s directory is gone when its answer arrives', { skip }, as
   const enc1 = putCapture(bucket, readFileSync(new URL('./fixtures/encrypted.pdf', import.meta.url)));
   await (await call(deps, { store: 'bio', target: enc1, route: 'pdf' })).json();
   assert.deepEqual(readdirSync(process.env.TMPDIR).filter((n) => n.startsWith('render-')), []);
+});
+
+test('R7 R11c a NOT_RENDERABLE refusal of the renderer reaches the answer with its message, at most 300 characters, class final', async () => {
+  const bucket = memoryBucket();
+  const pdf = putCapture(bucket, enc('%PDF-1.4 stub'));
+  const refusing = (message) => depsWith({ bucket, renderer: async () => new Response(JSON.stringify({ ok: false, code: 'NOT_RENDERABLE', ...(message === undefined ? {} : { message }) }), { status: 422 }) });
+  const answer = async (d) => { const r = await call(d, { store: 'bio', target: pdf, route: 'office' }); return [r.status, await r.json()]; };
+  assert.deepEqual(await answer(refusing('the converter produced no PDF')), [422, { ok: false, code: 'NOT_RENDERABLE', class: 'final', message: 'the converter produced no PDF' }]);
+  assert.equal((await answer(refusing('x'.repeat(900))))[1].message.length, 300);
+  assert.deepEqual(await answer(refusing()), [422, { ok: false, code: 'NOT_RENDERABLE', class: 'final' }], 'a refusal without a message states none');
 });

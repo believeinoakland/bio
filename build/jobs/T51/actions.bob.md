@@ -1,6 +1,6 @@
 # BOB to actions (T51)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -34,3 +34,30 @@ K4049 (ACTION-GRAMMAR #14 J3): action-grammar added C-117.59 `MINUTES_NOT_PUBLIC
 ## B4 · CHANGE
 
 action-grammar has merged (K4052): C-117.59 MINUTES_NOT_PUBLIC_COMMENT and C-117.60 BAD_MINUTES are on `tranche/T51`. Merge it into your branch, finish B3 (draw `DEC-49 REGION is-minutes` and raise both through the rows), confirm action-grammar's R28 census arm passes with your branch, then COMPLETE.
+
+## B5 · START
+
+START · ACTIONS #23 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 2: publish 2 fixtures, re-point 6 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #289 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/actions tranche/T51 && git branch -m job/T51/actions stale/actions-local && git checkout -b job/T51/actions origin/job/T51/actions`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module actions`; record `build/jobs/T51/actions.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `bio-plane/test/m/actions/fixtures.mjs` (new file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `actionRead` (users now: escalation 4, action-plans 1, plan-work 1): real `actions.actionRead({id,viewer,now})`: NO_SUCH_BUNDLE (unknown or unseen), NOT_AN_ACTION, and the action read.
+- `actionsForRefusal` (users now: action-replies 3, escalation 1): real `actions.actionsFor(...)` / `actionRead(...)` refusal for an unknown or unseen target.
+
+**Your own fixture lines, done in this job** (6; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- retrieval/actionRegistrar (1 mechanical): fixture.mjs:111
+- conformance/determinationRead (5 judgment): t12.test.mjs:16; t18.test.mjs:16; t45.test.mjs:40; t50.test.mjs:27; write.test.mjs:153
+
+**Fixture lines NOT done in this job** (1; their providers merge in your batch or after): FIX-E 1; FIX-E providers: consequences. They stay in your list and arrive as a CHANGE.
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . actions --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/actions.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.

@@ -5,6 +5,10 @@ import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { PROJECT_VISIBILITY_CHECKS } from "../../../src/membership/index.mjs";
+import { projectActRefusals } from "../membership/fixtures.mjs";
+
+/* membership's own answers to the two project refusals, from its published fixture (K4990): the double returns them. */
+const REAL = await projectActRefusals();
 
 export const sha = (s) => createHash("sha256").update(Buffer.from(s, "utf8")).digest("hex");
 export const EMPTY = sha("");
@@ -160,10 +164,9 @@ export function makeMembership() {
       if (!identity || !String(identity).startsWith("member:")) return null;
       const who = String(identity).slice(7);
       if (m.isProjectOwner(p, who) || (m.joined.get(p) || []).includes(who)) return null;
-      return { ok: false, reason: "PROJECT_ACT_NOT_A_PARTICIPANT", act };
+      return REAL.projectAuthority(REAL.project, REAL.identity("dee"), need, act);
     },
-    visibilitySettingRefusal: (v) => (v === "discoverable" || v === "hidden" ? null
-      : { ok: false, reason: "PROJECT_VISIBILITY_UNKNOWN_SETTING" }),
+    visibilitySettingRefusal: (v) => REAL.visibilitySettingRefusal(v),
     /* R77: C-70.1, minted by membership; the id and name only. `titleOf` is set by makePromotion from the record. */
     titleOf: () => null,
     existenceAct(projectId, viewer) {
@@ -253,4 +256,134 @@ export function staleBaseRefusal() {
   const stale = p.promote(revise(id, head.bundleSha, infoDoc(id, { title: "Late" }), { snapKey: "k3" }));
   if (stale.ok !== false || stale.reason !== "CAS_STALE") throw new Error(`staleBaseRefusal: not a stale-base refusal: ${JSON.stringify(stale)}`);
   return stale;
+}
+
+/* ---- Fixtures published for the modules that use promotion (K4990, K4993, K4995, K5044). Each is made by promotion's
+ * real code when it is called, never stored; each is checked by `fixtures.test.mjs`. ---- */
+
+/** A promotion over the caller's own record and membership (a test that keeps its record). Every step `registerStep`
+ *  accepted is read back with `registeredSteps(p)`. */
+const STEPS = new WeakMap();
+export function promotionOver({ record, membership, host = {}, now = () => "2026-09-26T12:00:00.000Z", roster = null } = {}) {
+  const p = promotionOf(host, { record, membership, now, ...(roster ? { roster } : {}) });
+  const accepted = [];
+  const real = p.registerStep.bind(p);
+  p.registerStep = (module, opts) => {
+    const r = real(module, opts);
+    if (r && r.ok) accepted.push({ module, check: opts && typeof opts.check === "function" ? opts.check : null,
+                                   project: opts && typeof opts.project === "function" ? opts.project : null });
+    return r;
+  };
+  STEPS.set(p, accepted);
+  return p;
+}
+/** What `registerStep` accepted on `p` (a promotion made by `promotionOver` or `makePromotion`), in registration order. */
+export const registeredSteps = (p) => (STEPS.get(p) || []).map((s) => ({ ...s }));
+
+/** The promotion registrations a user needs, with the refusals promotion really gives: `fact("unregistered")` is
+ *  FACT_UNAVAILABLE; a second registration of a step or a fact is STEP_DECLARED. */
+export function registrars() {
+  const { p, record, membership } = makePromotion({ facts: false });
+  const step = p.registerStep("fixture-module", { check: () => null });
+  const stepAgain = p.registerStep("fixture-module", { check: () => null });
+  const fact = p.registerFact("fixtureFact", "fixture-module", () => 1);
+  const factAgain = p.registerFact("fixtureFact", "fixture-module", () => 2);
+  const unavailable = p.fact("unregistered");
+  if (!step.ok || !fact.ok || stepAgain.reason !== "STEP_DECLARED" || factAgain.reason !== "STEP_DECLARED" || unavailable.reason !== "FACT_UNAVAILABLE")
+    throw new Error(`registrars: promotion did not answer as expected: ${JSON.stringify({ step, stepAgain, fact, factAgain, unavailable })}`);
+  return { p, record, membership, registerStep: (...a) => p.registerStep(...a), registerFact: (...a) => p.registerFact(...a),
+           fact: (...a) => p.fact(...a), onCommitted: (...a) => p.onCommitted(...a), stepDeclared: stepAgain, factDeclared: factAgain,
+           factUnavailable: unavailable };
+}
+
+/** FACT_UNAVAILABLE as promotion gives it for a fact no module provides: `{ok:false, reason, code, check, translation, fact, detail}`. */
+export function factUnavailable() {
+  const r = makePromotion({ facts: false }).p.fact("unregistered");
+  if (r.ok !== false || r.reason !== "FACT_UNAVAILABLE") throw new Error(`factUnavailable: not a FACT_UNAVAILABLE refusal: ${JSON.stringify(r)}`);
+  return r;
+}
+
+/** GROUP_UNDETERMINED (R13): a success record created where the store records no producing team and the creation names none. */
+export function groupUndetermined() {
+  const id = "SUC-2026-0001";
+  const { p } = makePromotion({ group: null });
+  const text = doc({ id, object_type: "success_record", title: "A success", current_state: "recorded", prior_state: null,
+    created: T0, last_updated: T0 });
+  const r = p.promote(create(id, text));
+  if (r.ok !== false || r.reason !== "GROUP_UNDETERMINED") throw new Error(`groupUndetermined: not a GROUP_UNDETERMINED refusal: ${JSON.stringify(r)}`);
+  return r;
+}
+
+/** A project created by `owner` (promotion's real creation), and the pieces a test needs to act on it. */
+function projectMade(owner = "ann", env = makePromotion()) {
+  const text = doc({ object_type: "project", title: "Fixture Project", current_state: "forming", created: T0, last_updated: T0 });
+  const made = env.p.promote({ base: null, snapKey: "p1", author: `member:${owner}`, ownerMemberId: owner,
+    files: [{ path: "bundle.md", text }], meta: {} });
+  if (!made.ok) throw new Error(`projectMade: the creation was refused: ${JSON.stringify(made)}`);
+  return { ...env, project: made.bundleId, made, text: env.record.readFile(made.bundleId, "bundle.md").text };
+}
+
+/** PROJECT_ACT_NOT_A_PARTICIPANT as promotion gives it when a member who is not in the project revises its document
+ *  (membership's `projectAuthority`, reached through `promote`). */
+export function projectActNotParticipant() {
+  const { p, record, project, text } = projectMade("ann");
+  const r = p.promote({ bundleId: project, base: record.head(project).bundleSha, snapKey: "s2", author: "member:carl",
+    actorIdentity: "member:carl", actorViewer: "member:carl", actorMemberId: "carl",
+    files: [{ path: "bundle.md", text: text.replace("## Session Log", "## Session Log\n\nAn outsider's edit.") }], meta: {} });
+  if (r.ok !== false || r.reason !== "PROJECT_ACT_NOT_A_PARTICIPANT") throw new Error(`projectActNotParticipant: not the refusal: ${JSON.stringify(r)}`);
+  return r;
+}
+
+/** SNAP_KEY_TAKEN: a different promotion sent under a snap key the bundle already holds. */
+export function snapKeyTaken() {
+  const id = "INFO-2026-0001";
+  const { p } = makePromotion();
+  const head = p.promote(create(id, infoDoc(id)));
+  if (!head.ok) throw new Error(`snapKeyTaken: the creation was refused: ${JSON.stringify(head)}`);
+  const r = p.promote(revise(id, head.bundleSha, infoDoc(id, { title: "Two" }), { snapKey: "k1" }));
+  if (r.ok !== false || r.reason !== "SNAP_KEY_TAKEN") throw new Error(`snapKeyTaken: not a SNAP_KEY_TAKEN refusal: ${JSON.stringify(r)}`);
+  return r;
+}
+
+/** CITED: a move into `retired` while inquiries Q and Q2 cite the item, `{ok:false, reason:"CITED", to:"retired", offenders:[{id, citedBy}]}`. */
+export function retireCited({ id = "INFO-2026-0001", citedBy = ["INQ-2026-0001", "INQ-2026-0002"] } = {}) {
+  const { p } = makePromotion({ citedBy: { [id]: citedBy } });
+  const a = p.promote(create(id, infoDoc(id, { current_state: "verified" })));
+  if (!a.ok) throw new Error(`retireCited: the creation was refused: ${JSON.stringify(a)}`);
+  const r = p.promote(revise(id, a.bundleSha, infoDoc(id, { current_state: "retired" })));
+  if (r.ok !== false || r.reason !== "CITED") throw new Error(`retireCited: not a CITED refusal: ${JSON.stringify(r)}`);
+  return r;
+}
+
+/** promotion's real `promote` over a real record, with a call log that delegates (a spy). `decide(pkg, n)` answers which
+ *  real cause the call meets: "succeed" (the default), "stale" (the base moved), "snapkey" (a held snap key), "outsider"
+ *  (a non-participant of the project), or "throw" / "fail" (the record fails under it: promotion never throws out, it answers
+ *  PROMOTE_FAILED with nothing written). */
+export function promoteControlled(decide = () => "succeed") {
+  const env = makePromotion();
+  const { p, record } = env;
+  const log = [];
+  const id = "INFO-2026-0001";
+  const first = p.promote(create(id, infoDoc(id)));
+  const project = projectMade("ann", env);
+  let head = first;
+  const promote = (pkg = {}) => {
+    const n = log.length + 1;
+    const verdict = decide(pkg, n);
+    log.push({ n, pkg, verdict });
+    if (verdict === "throw" || verdict === "fail") {
+      const broken = promotionOver({ record: { ...record, transact() { throw new Error("the record failed"); } }, membership: env.membership });
+      broken.registerFact("producingGroup", "fixture", () => "test-group");
+      return broken.promote(create("INFO-2026-0002", infoDoc("INFO-2026-0002")));
+    }
+    if (verdict === "stale") return p.promote(revise(id, "0".repeat(64), infoDoc(id, { title: `S${n}` }), { snapKey: `s${n}` }));
+    if (verdict === "snapkey") return p.promote(revise(id, head.bundleSha, infoDoc(id, { title: `T${n}` }), { snapKey: "k1" }));
+    if (verdict === "outsider") return p.promote({ bundleId: project.project, base: record.head(project.project).bundleSha, snapKey: `o${n}`,
+      author: "member:carl", actorIdentity: "member:carl", actorViewer: "member:carl", actorMemberId: "carl",
+      files: [{ path: "bundle.md", text: project.text.replace("## Session Log", "## Session Log\n\nNoted.") }], meta: {} });
+    const next = p.promote(revise(id, head.bundleSha, infoDoc(id, { title: `V${n}` }), { snapKey: `v${n}` }));
+    if (next.ok) head = next;
+    return next;
+  };
+  return { promote, log, p, record };
 }

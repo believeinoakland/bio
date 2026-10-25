@@ -1,6 +1,7 @@
-/* A Durable Object that holds record-core, acquisition and a small stand-in for provenance over a REAL workerd SQLite, for r122-workerd.test.mjs:
+/* A Durable Object that holds record-core, acquisition and the real provenance over a REAL workerd SQLite, for r122-workerd.test.mjs:
    `archive_entries` is made here WITHOUT the `offers` column (the table as it stood before R122), and acquisition's `migrate` is asked to add it. */
 import { recordOf } from "../../../src/record-core/index.mjs";
+import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { acquisitionOf, unpack } from "../../../src/acquisition/index.mjs";
 
 const OLD_ENTRIES = `CREATE TABLE archive_entries (
@@ -23,21 +24,15 @@ export class Archive {
         return { key: k, size: b.length, body: b, arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.length) }; },
       async put(k, bytes) { held.set(k, new Uint8Array(bytes)); return { key: k }; },
     };
-    this.homes = {}; this.receipts = [];
-    const homes = this.homes, receipts = this.receipts;
-    const provenance = {
-      recordReceipt(r) { receipts.push(r); return { recorded: true }; },
-      registerHolds({ sha }) { return { ok: true, sha, asked: true, registered: false, acquired: receipts.some((r) => r.captureSha === sha) || held.has(`bio/captures/${sha}`) }; },
-      capturesOf() { return []; },
-      homeOf(s) { return homes[s] ? { bundleId: homes[s], path: "data/x", encoding: "binary", bytes: 0, registered: "T", authored: false } : null; },
-      captureGrade() { return { grade: null, route: "unrecorded", determined: false, basis: "CAPTURE_ROUTE_UNRECORDED" }; },
-    };
     ctx.blockConcurrencyWhile(async () => {
       this.core = recordOf(ctx, { evidence: bucket, evidencePrefix: "bio/captures/" });
       this.core.migrate();
+      const membership = { admins: [], isAdministrator: () => false };
+      const provenance = provenanceOf(ctx, { record: this.core, membership });   /* the real provenance over this record, as provenance's `provenanceOver` builds it */
+      provenance.migrate();
       ctx.storage.sql.exec(OLD_ENTRIES);
       this.before = [...ctx.storage.sql.exec(`PRAGMA table_info(archive_entries)`)].map((c) => c.name);
-      this.acq = acquisitionOf(ctx, { record: this.core, provenance, membership: { admins: [], isAdministrator: () => false } });
+      this.acq = acquisitionOf(ctx, { record: this.core, provenance, membership });
       this.after = [...ctx.storage.sql.exec(`PRAGMA table_info(archive_entries)`)].map((c) => c.name);
       this.store = { core: this.core, acquisition: this.acq, provenance, env: {} };
     });
@@ -48,6 +43,9 @@ export class Archive {
       const bytes = new Uint8Array(await request.arrayBuffer());
       const sha = hex(await crypto.subtle.digest("SHA-256", bytes));
       await this.core.evidenceStore().put(sha, bytes);
+      /* held as the doorbell's pull holds it: the bytes and a receipt (the real provenance's, as `unpack` asks it) */
+      this.store.provenance.recordReceipt({ address: "https://files.example/set.zip", addressNorm: "https://files.example/set.zip", captureSha: sha,
+        retrieved: "2026-01-01T00:00:00Z", via: "doorbell" });
       return Response.json({ sha });
     }
     if (act === "unpack") {

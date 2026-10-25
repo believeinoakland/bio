@@ -1,6 +1,6 @@
 # contradiction (T51)
 
-**Status** · session_01U2GwkZuM3esMef8wnHkvF2 · depth 2 · COMPLETE · handled B6
+**Status** · session_01BbdQRceygyZcNQyMeGu19c · depth 2 · COMPLETE · handled B7
 
 ## J1 · COMPLETE
 
@@ -159,3 +159,24 @@ Declared as its owner's op (K4208): `DECLARED_OPS.contradictionflag` `{classes: 
 Deferred: nothing.
 
 Size (session_01U2GwkZuM3esMef8wnHkvF2): test runs 12, module lines 3786 (bio-plane/src/contradiction.mjs and bio-plane/src/contradiction/, all files).
+
+## J9 · COMPLETE
+
+COMPLETE · T51, fix round 10, Wave A batch 2 (B7).
+
+**Causes done.**
+- **Fixtures published** in `bio-plane/test/m/contradiction/fixtures.mjs` (new), each made by the real code at test time over `world()`, with `fixtures.test.mjs` (2 tests, naming R25, R50, R19) calling each and checking the real answer:
+  - `candidateReads()` → `{clean, truncated, undetermined, noSubject}`: the real `candidatesFor` answers (a clean read; one candidate shown of two with `truncated: true`; `undetermined: true` when the candidate index cannot be read; `CANDIDATES_NO_SUBJECT`). Users now: ratification 1, case-disclosures 1.
+  - `readRefusals()` → `{world, noticesClean, unknownProject, notAParticipant, noticesUndetermined, candidatesUndetermined}`: the real `conflictNotices` (`PRJ-none` → NO_SUCH_PROJECT; invited-not-joined → membership's NOT_A_PARTICIPANT, C-56.3) and the undetermined answers of `conflictNotices` and `candidatesFor`. Users now: queue-producers 2. Note: the plan's "PROJECT_NOT_PARTICIPANT" is not a code of the product; the real one is NOT_A_PARTICIPANT.
+- **Own fixture line done:** `fixture.mjs` retrieval/selectionResolve (was line 89): `inquiryOf` now takes `selectionResolve` from retrieval's published `noSelection()` fixture (real retrieval, NO_SUCH_SELECTION).
+- **Line left (named in the START):** `fixture.mjs:119` basis-versions `conclude` stand-in (FIX-E, provider `basis-versions` merges after this batch); it arrives as a CHANGE. `fixtures.mjs --list` shows that one finding for contradiction, 1 failure.
+
+**NEEDS BOB (architecture, not mine to edit):** `node checks/architecture.mjs /home/user/bio contradiction` has 1 failure: `bio-plane/test/m/contradiction/fixture.mjs` imports `retrieval`'s `fixtures.mjs` and `retrieval` is not in contradiction's `uses` in `build/modules.json`. Retrieval is earlier (73) than contradiction (86), so the edge is legal; please add `retrieval` to contradiction's `uses` (the re-point of the one FIX-E line needs it).
+
+**Markers added:** none (`fixtures-own`: 0, `fixtures-generic`: 0).
+
+**Found in other modules:** nothing.
+
+**Tests and checks.** Module: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/contradiction/*.test.mjs`: 152 tests, 144 pass, 0 fail, 8 todo (was 150). `impact.mjs origin/tranche/T51 HEAD` (after merging tranche/T51): names contradiction and affordances; affordances suite 281 tests, 281 pass. `checks/fixtures.mjs . contradiction --list`: 1 failure (the left line). words: 0 failures. format: 0 failures. coverage: 61 of 61 ids named, 0 failures. ownership (contradiction tranche/T51 job/T51/contradiction): 4 files, 0 failures. architecture: 1 failure, the `uses` edge above.
+
+Size (session_01BbdQRceygyZcNQyMeGu19c): test runs 6, module lines 3786 (source unchanged; test files only, +88 lines).

@@ -1,6 +1,6 @@
 # BOB to doc-clean (T51)
 
-**Read** · handled J8
+**Read** · handled J9
 
 ## B1 · START
 
@@ -158,3 +158,23 @@ FIRST, if `mail start` cannot push because your container's copy of your branch 
 Mail with `--module doc-clean`; record `build/jobs/T51/doc-clean.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, never above your own model (K3518); any act a safety or permission check refuses is NEVER worked around, split, rephrased or retried: post BLOCKED naming it and wait (K4696). Before any test run every directory with a tracked `package-lock.json` has its `node_modules` (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/doc-clean/` from the repository root. Your diff touches only this module's `paths`, its `tests` and your record. Never contact any live deployment.
 
 **The entry (BOB ran the test, K4849).** Since OOXML #4 merged (K4864), `ooxml.readContainer` itself refuses a package of more than `boundOf("office", "entries")` entries (`OFFICE_ENTRIES_MAX`, its R3/R31), before doc-clean's own count at `package.mjs` (the `c.entries.length` check). So `bio-plane/test/m/doc-clean/round9.test.mjs` "R3 R12 TOO_MANY_ENTRIES: a package of more entries than boundOf(office, entries) is refused with its count, nothing written; one of exactly that many is copied" fails on the tranche (`AssertionError: OFFICE_ENTRIES_MAX`, actual false). DOC-CLEAN #4 foresaw it (its J5): map ooxml's `OFFICE_ENTRIES_MAX` refusal (read its name and fields from `bio-plane/src/ooxml.mjs` as merged) to `TOO_MANY_ENTRIES` with the count, at the same place, nothing written; the package of exactly the bound is still copied. (2) Missed: ooxml's cap and doc-clean's were tested apart. (3) The failing test above is the red; green after. (4) **N**. Read whole: this START, `build/requirements/doc-clean.md` (both parts), ooxml's public part (R3, R31), `bio-plane/src/doc-clean/package.mjs`, and the test. Plan section 0 (`build/plan/fix-round-9-T51.md`) binds. Before COMPLETE: your tests, the users' (case-carriage, case-disclosures), the six checks by failure count; record with your `Size` line.
+
+## B7 · START
+
+START · DOC-CLEAN #6 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 3: publish 1 fixture (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #289 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/doc-clean tranche/T51 && git branch -m job/T51/doc-clean stale/doc-clean-local && git checkout -b job/T51/doc-clean origin/job/T51/doc-clean`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module doc-clean`; record `build/jobs/T51/doc-clean.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `bio-plane/test/m/doc-clean/fixtures.mjs` (extend the existing file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `encryptedRefusal` (users now: case-disclosures 1): real doc-clean answer for an encrypted file (`ENCRYPTED`).
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . doc-clean --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/doc-clean.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-haiku-5-5, medium effort.

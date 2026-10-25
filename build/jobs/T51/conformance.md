@@ -1,6 +1,6 @@
 # conformance (T51)
 
-**Status** · session_01ViYfNCYcxxWgYECRmXKcky · depth 2 · COMPLETE · handled B0
+**Status** · session_014bYaS8aw3Ywr8iWF6pbvdN · depth 2 · COMPLETE · handled B4
 
 ## J1 · REPORT
 
@@ -27,3 +27,33 @@ Checks run (civicos-process checks, product `/home/user/bio`):
 - `bio-plane/src/setup-words/build.mjs --check`: rows.mjs stale, as expected (BOB regenerates at layer close); no refusal naming conformance
 
 Size (session_01ViYfNCYcxxWgYECRmXKcky): test runs 3, module lines 2709
+
+## Fix round 10, Wave A batch 1 (B2) · work
+
+Published `bio-plane/test/m/conformance/fixtures.mjs` (new): `curesOf` (real `curesOf` over a noncompliant determination, its later compliant cure and the recorded link, R37), `determinationRead` (live, superseded-with-successor and unclear determinations, R9), `noDeterminations` (real module over an empty store, R19). Each returns `{conformance, ids, viewer, outsider, world}`, made by the real code when called. Their test `fixtures.test.mjs` calls each and checks the real answer (3 pass).
+
+Markers added: no `fixtures-own` or `fixtures-generic`.
+
+Lines left in `fixtures.mjs --list conformance`: 4, the FIX-E lines named in B2 (fixture.mjs:147 retrieval, :173 basis-versions, :263 case-import, t45.test.mjs:402 case-import/case-check/queue); they arrive as a CHANGE.
+
+Checks: module tests 123 pass, 0 fail; words 0 failures; format 0; architecture 0; coverage 42 of 42, 0 failures; `impact.mjs origin/tranche/T51 HEAD`: affected modules 0 (no source change), no user tests to run.
+
+Size (session_014bYaS8aw3Ywr8iWF6pbvdN): test runs 4, module lines 0 (source unchanged; 63 test lines added)
+
+## J3 · COMPLETE
+
+Fix round 10 Wave A batch 1 done: fixtures.mjs publishes curesOf, determinationRead, noDeterminations (real code, tested in fixtures.test.mjs). No fixtures-own/-generic markers added. 4 FIX-E lines left (retrieval, basis-versions, case-import x2), as B2 said. Module tests 123/0, words/format/architecture/coverage 0 failures, impact: 0 affected.
+
+## J4 · QUESTION
+
+B3: merged tranche/T51. Re-pointing fixture.mjs:147 to retrieval's noSelection().selectionResolve works (123 tests pass, the fixtures line clears), but checks/architecture.mjs fails: 'fixture.mjs imports bio-plane/test/m/retrieval/fixtures.mjs of retrieval, which conformance does not declare in uses'. build/modules.json is not mine. Please add retrieval to conformance's uses (or rule otherwise); I then apply the 3-line change (import noSelection; retrieval: { selectionResolve: noSelection().selectionResolve }) and re-COMPLETE. Reverted locally meanwhile; branch has only the tranche merge.
+
+## Fix round 10, Wave A batch 1 (B3, B4) · retrieval re-point
+
+Merged `tranche/T51`; `fixture.mjs:147` now takes retrieval's published `noSelection().selectionResolve` (was a hand-built NO_SUCH_SELECTION). Markers added: none. Lines left in `fixtures.mjs --list conformance`: 3 (basis-versions :174, case-import :264 and t45.test.mjs:402), waiting on their providers. Module tests 123 pass, 0 fail; format, architecture, coverage (42 of 42), words and ownership 0 failures.
+
+Size (session_014bYaS8aw3Ywr8iWF6pbvdN): test runs 6, module lines 0 (source unchanged)
+
+## J5 · COMPLETE
+
+B3/B4 done: fixture.mjs:147 re-pointed to retrieval's noSelection (no markers added). 3 FIX-E lines left (basis-versions, case-import x2). Tests 123/0; format, architecture, coverage, words, ownership 0 failures.

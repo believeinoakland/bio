@@ -1,7 +1,7 @@
 /* The ai-accounts module over a real SQLite database (node:sqlite), with the real membership module beside it (the
    services ai-accounts reads: memberFacts, isAdministrator, notAnAdmin, onRevoked, listenerRefusal, sight,
    existenceAct, projectAuthority, isProjectOwner, isJoinedParticipant, joinedParticipants, notTheOwner, noSuchProject)
-   and a stub record-core that provides what the two use (bundleInfo, declarePurge, declareTable). It never builds
+   and the real record-core, as its `coreOver` fixture gives it (bundleInfo, declarePurge, declareTable). It never builds
    credentials, which is later in the order (split map §6): the founder's claim, which credentials states to membership
    (its R17, membership R94), is a test fact registered here, and enrolment's password setter (membership R95) a test
    setter that stores nothing. Members are made through membership's own acts. Every test drives the module at its
@@ -10,6 +10,7 @@ import { DatabaseSync } from "node:sqlite";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { aiAccountsOf, aiAccountsOps } from "../../../src/ai-accounts/index.mjs";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
+import { coreOver } from "../record-core/fixtures.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
@@ -25,39 +26,15 @@ export function sqlOver(db) {
 /* (T47; R19) the sign-in token a member's Claude Code `setup-token` would print, one per member, a sentinel. */
 export const SIGNIN_TOKEN = (id) => `sk-ant-oat01-sentinel-${id}-0123456789`;
 
-/* A record-core stub whose `declarePurge` and `declareTable` answer as record-core's R21 does: a table declared twice,
-   or by two modules, is refused naming its holder; an entry missing a class, or with a value outside R21's, is
-   refused naming the table and the class; a refused declaration declares nothing. */
-const TABLE_CLASSES = { purge: ["clear", "exempt"], expunge: ["tombstone", "none"], export: ["yes", "admin-only", "never"],
-  sight: ["group", "bundle", "source", "owner"], derive: ["stored", "derived-rebuildable"], version_chain: [true, false] };
-function stubCore(db) {
-  const declared = new Map();
-  return {
-    declared,
-    bundleInfo(id) {
-      const r = db.prepare(`SELECT bundle_id, object_type, title, project FROM bundles WHERE bundle_id=?`).get(bind(id));
-      return r ? { id: r.bundle_id, type: r.object_type, title: r.title, project: r.project ?? null } : null;
-    },
-    declarePurge(module, tables = [], { exempt = [] } = {}) {
-      const names = [...tables.map((t) => (typeof t === "string" ? t : t.name)), ...exempt];
-      for (const n of names)
-        if (declared.has(n)) return { ok: false, reason: "TABLE_DECLARED", table: n, module, declaredBy: declared.get(n).module };
-      for (const n of tables) declared.set(typeof n === "string" ? n : n.name, { module, exempt: false });
-      for (const n of exempt) declared.set(n, { module, exempt: true });
-      return { ok: true };
-    },
-    declareTable(module, entries = []) {
-      for (const e of entries) {
-        if (declared.has(e.name)) return { ok: false, reason: "TABLE_DECLARED", table: e.name, module, declaredBy: declared.get(e.name).module };
-        for (const [cls, values] of Object.entries(TABLE_CLASSES)) {
-          if (!(cls in e)) return { ok: false, reason: "TABLE_CLASS_MISSING", table: e.name, class: cls };
-          if (!values.includes(e[cls])) return { ok: false, reason: "TABLE_CLASS_UNKNOWN", table: e.name, class: cls };
-        }
-      }
-      for (const e of entries) declared.set(e.name, { module, exempt: e.purge === "exempt", classes: { ...e } });
-      return { ok: true };
-    },
-  };
+/* The real record-core over the test's database (record-core's published `coreOver`): `declarePurge`, `declareTable`
+   and `bundleInfo` answer as record-core answers them. `declared` reads its declarations as a map of table name to
+   `{module, classes}`, fresh at each read, for the tests that look at what ai-accounts declared. */
+function coreOf(db) {
+  const core = coreOver(db);
+  Object.defineProperty(core, "declared", {
+    get: () => new Map(core.rc.declaredTables().map((d) => [d.name, { module: d.module, exempt: d.purge === "exempt", classes: { ...d } }])),
+  });
+  return core;
 }
 
 /* The seal secret the composition root hands in through credentials (R24, R32); a test world binds one unless told
@@ -73,8 +50,7 @@ function seams(m, fact) {
 
 export function world({ sealSecret = SEAL } = {}) {
   const db = new DatabaseSync(":memory:");
-  db.exec(`CREATE TABLE bundles (bundle_id TEXT PRIMARY KEY, object_type TEXT NOT NULL, title TEXT, project TEXT)`);
-  const core = stubCore(db);
+  const core = coreOf(db);
   const sql = sqlOver(db);
   const ctx = { storage: { sql } };
   const m = membershipOf(ctx, { record: core });
@@ -89,6 +65,7 @@ export function world({ sealSecret = SEAL } = {}) {
     row(q, ...args) { return sql.exec(q, ...args)[0] ?? null; },
     rows(q, ...args) { return sql.exec(q, ...args); },
     /* The founder claims the instance: the test's fact (membership R94). */
+    // fixtures-own: harness - sets the test's own fact that the registered claimed seam reads (credentials, later in the order, is never built here)
     async claim() { fact.claimed = true; return { ok: true }; },
     /* Invite (membership) and enrol to active. */
     async enrol(id, role = "member", by = "admin", caps = null) {
@@ -109,7 +86,7 @@ export function world({ sealSecret = SEAL } = {}) {
     },
     /* (T40) A project bundle created by `owner` through membership's own act (its R71), with its visibility. */
     project(id, owner, visibility = "hidden") {
-      db.prepare(`INSERT INTO bundles (bundle_id, object_type, title) VALUES (?, 'project', ?)`).run(id, `Project ${id}`);
+      core.addBundle(id, "project", `Project ${id}`);
       m.projectCreated({ projectId: id, ownerId: owner, visibility, by: owner });
       return id;
     },

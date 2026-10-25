@@ -1,6 +1,6 @@
 # pdf-reader (T51)
 
-**Status** · session_01XSLiprXchrExEGryjSadfu · depth 2 · COMPLETE · handled B19
+**Status** · session_01RNBm7pmRk2YDU7VtxCuH3U · depth 2 · COMPLETE · handled B20
 
 ## Completion (T51-7, R39)
 
@@ -397,3 +397,27 @@ Size (session_01XSLiprXchrExEGryjSadfu): test runs 12, module lines 5750
 ## J14 · COMPLETE
 
 COMPLETE job 106 (G179, R45 amended). Root: readRange's page loop, image walk, glyph/word count and the text token loop never yielded (the range closure ignored yieldNow); one 78-page range held the thread 250-450 ms. Fix: count-based slicer through readRange (pdfstructure.mjs only); answers identical. Failing-first range-yield.test.mjs seen RED (0 yields, longest stretch 312.9 ms) then green (24 yields, 22 ms). Miniflare r7-contention PDF case at 150 ms x slow (temp copy, not committed): 5/5 green under L-4B (p95 63-66 ms), RED without the fix (p95 401). For reading-pipeline's job: set that test's PDF bar to 150 ms x slow. Suite 193/193; users 69/69; format, architecture, coverage 49/49, words, ownership 0 failures. Stale bundle: pdf-worker. Deferred: one sync inflate of a single huge page stream. Record: build/jobs/T51/pdf-reader.md. Size (session_01XSLiprXchrExEGryjSadfu): test runs 12, module lines 5750
+
+## J15 · COMPLETE
+
+COMPLETE, fix round 10 wave A batch 2 (B20: publish 1 fixture, 1 marker line). Commit ab7df849d1, pushed to job/T51/pdf-reader.
+
+**Entries applied**
+- `notAPdf` published in `bio-plane/test/m/pdf-reader/fixtures.mjs` (new file): an async export that calls `extractPdfStructure(new TextEncoder().encode("not a pdf"))` at call time, nothing stored. Users now: extraction 2 (re-point in their own job).
+- `bio-plane/test/m/pdf-reader/fixtures.test.mjs` (new): test "R1: the published fixture notAPdf answers NOT_A_PDF, from the module's real code", checks the real answer.
+- Marker: `bio-plane/test/m/pdf-reader/pagesource.test.mjs:177`, `// fixtures-own: input a source's refusal, a literal handed to pageSource`. Only marker added; no `fixtures-generic`.
+
+**Deferred in my module:** none.
+
+**Found in other modules (for BOB):** `bio-plane/test/system/fleetbundles.test.mjs` fails 11 of 155 assertions: committed bundles of `agent-worker` (`dist/agent-worker.bundled.mjs`) and `bio-plane` (`dist/bio-plane.bundled.mjs`) no longer match a fresh build of their sources (staleness, no-drift, byte-identity, and the R39 export check). My commit touches no source either bundle builds from, so the failures are not from this job; they need a bundle regeneration by BOB. The pdf-worker bundle staleness from my round 9 job is not among these failures in this run.
+
+**Impact.** `build/plan/impact.mjs origin/tranche/T51 HEAD` names 92 modules, but its base is the tranche tip, which has moved 47 files past my branch, so the set is not from my change. I ran the 9 test files that import `pdfstructure.mjs` outside pdf-reader's own tests (content, doc-clean x3, format-registry, reading-pipeline x2, tier2-wire, system fleetbundles): 70 pass, 1 skipped, 1 failing file (fleetbundles, above).
+
+**Tests and checks**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/pdf-reader/*.test.mjs bio-plane/test/pdfstructure.test.mjs`: 194 tests, 194 pass, 0 fail (193 before, plus the new one).
+- `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio pdf-reader --list`: answer 0, accepted 1 (my own marker), 0 failures; the one pdf-reader finding (pagesource.test.mjs:177) is now accepted.
+- format: 0 failures. architecture: 0 failures. coverage: 49 of 49 live ids named, 0 failures. ownership (tranche/T51): 4 files, 0 failures.
+
+**Markers for BOB to read at the merge (K5060):** `pagesource.test.mjs:177` fixtures-own, reason above.
+
+Size (session_01RNBm7pmRk2YDU7VtxCuH3U): test runs 6, module lines 5750

@@ -18,6 +18,7 @@ const HELD = "CAPTURE_HELD_BY_ANOTHER_BUNDLE";
 
 async function parked() {
   const w = world();
+  // fixtures-contract: plane owed-ledger
   w.store.owedLater = async () => ({ ok: true });
   const first = await run(w, { [BIG]: source }, { locator: BIG, project: "PROJ-1" }, { settle: false });
   assert.equal(first.status, 200);
@@ -27,6 +28,7 @@ const alarm = async (w, session, refusal) => {
   const net = network({ [BIG]: source });
   let delivered = 0;
   try {
+    // fixtures-contract: control-plane deliver-owed
     const out = await owedFetch(w.store, { kind: "fetch", session }, { storeName: "bio", deliver: async () => { delivered++; return refusal; } });
     return { out, delivered, fetched: net.seen.length };
   } finally { net.restore(); }
@@ -94,6 +96,7 @@ function pending() {
   let open; const gate = new Promise((r) => (open = r));
   const w = world({ env: { RENDERER: { fetch: async (u, init) => { await gate; return new Response(JSON.stringify(R_ANSWER(JSON.parse(init.body).url))); } } } });
   const entries = new Map();
+  // fixtures-contract: plane owed-ledger
   w.store.owedLater = async (e) => { entries.set(e.session, e); return { ok: true }; };
   return { w, entries, open };
 }
@@ -110,9 +113,11 @@ test("R111 (G105) site 2, owedRun's render_done delivery: held-elsewhere ends fi
   const net = network({ [PG]: () => page(SHELL) });
   try { const done = await acquire(p.w.store, { continue: sid }, { cls: "member", member: true, sessMember: "m1", storeName: "bio" }); assert.equal(done.body.document.capture.method, "rendered"); }
   finally { net.restore(); }
+  // fixtures-contract: control-plane deliver-owed
   const transient = await owedRun(p.w.store, p.entries.get(sid), { deliver: async () => ({ ok: false, reason: "DELIVERY_FAILED" }) });
   assert.deepEqual([transient.ok, transient.done, transient.reason], [true, false, "DELIVERY_FAILED"]);
   assert.ok(p.w.store.state.sessions.has(sid), "a transient refusal keeps the copy owed");
+  // fixtures-contract: control-plane deliver-owed
   const final = await owedRun(p.w.store, p.entries.get(sid), { deliver: async () => ({ ok: false, reason: HELD }) });
   assert.deepEqual([final.ok, final.done, final.final, final.reason], [true, true, true, HELD]);
   assert.equal(p.w.store.state.sessions.has(sid), false, "the copy that can never be filed is no longer owed");
@@ -125,12 +130,14 @@ test("R111 (G105) site 3, owedRun's render_pending delivery: held-elsewhere ends
   await new Promise((r) => setTimeout(r, 50));
   const net = network({ [PG]: () => page(SHELL) });
   try {
+    // fixtures-contract: control-plane deliver-owed
     const transient = await owedRun(p.w.store, p.entries.get(sid), { deliver: async () => ({ ok: false, reason: "DELIVERY_FAILED" }) });
     assert.deepEqual([transient.ok, transient.done, transient.reason], [true, false, "DELIVERY_FAILED"]);
     assert.ok(p.w.store.state.sessions.has(sid), "a transient refusal keeps the render owed");
   } finally { net.restore(); }
   const net2 = network({ [PG]: () => page(SHELL) });
   try {
+    // fixtures-contract: control-plane deliver-owed
     const final = await owedRun(p.w.store, p.entries.get(sid), { deliver: async () => ({ ok: false, reason: HELD }) });
     assert.deepEqual([final.ok, final.done, final.final, final.reason], [true, true, true, HELD]);
     assert.equal(p.w.store.state.sessions.has(sid), false);

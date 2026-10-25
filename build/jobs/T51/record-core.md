@@ -1,6 +1,6 @@
 # record-core (T51)
 
-**Status** · session_01G8uVdUQZSoht46TsaZdEWE · depth 2 · COMPLETE · handled B9
+**Status** · session_01546V8BAmajZDX4MTnH1caQ · depth 2 · COMPLETE · handled B9
 
 ## Completion (T51-177)
 
@@ -182,3 +182,19 @@ Size (session_01G8uVdUQZSoht46TsaZdEWE): test runs 9, module lines 2507
 ## J8 · COMPLETE
 
 COMPLETE (job 61, K4912). job_unit_attempts and job_batches are on BOOKKEEPING_TABLES (record-core/index.mjs:307). Red first through plane's real ledger (r9-bookkeeping.test.mjs): 4 of 4 failed before, pass after; one test reads every *_DDL plane exports and requires each non-record table on the list. record-core suite 222/222; plane r9-jobs 29/29; seam G115 counting tests 6/6. Seam file's A1, A1 control, A1b (large capture, 'delivered within 120 s') fail, A1 control identically with my change stashed: inherited. Checks: format, architecture, coverage (91/91), ownership: 0 failures. Files created outside paths: none. Stale generated artifacts: none. Record: build/jobs/T51/record-core.md.
+
+## Fix round 10, Wave A batch 1 (B10)
+
+**Causes done.** Four fixtures published in `bio-plane/test/m/record-core/fixtures.mjs` (new), each made by record-core's real code at test time, never stored, each called by a test of mine (`fixtures.test.mjs`, 4 tests) that checks the real answer: `coreOver(db)` (`recordOf` migrated over the test's own SQLite; `bundleInfo`, `declarePurge`, `declareTable`, plus `addBundle` for a `bundles` row), `evidencePartsRefusal()` (`{refused, threw}`: EVIDENCE_STORE_REFUSED, C-102.39, completion failing and upload throwing), `perItemRetained()` (SET_ITEMS_RETAINED from one applied and one non-object item, SET_ITEM_MALFORMED, so no made-up code), `tableDeclarationRefusals(table, {by})` (TABLE_DECLARED naming `declaredBy` by both `declarePurge` and `declareTable`, TABLE_NAME_INVALID, TABLE_CLASS_UNKNOWN). `storage()` in `storage.mjs` now takes an optional `db` (a caller's own SQLite); unchanged for every other caller.
+
+**Markers added (K5060).** `record-core.test.mjs:777` `// fixtures-generic: NOPE`: the act's own refusal code in `act()`, a made-up reason the test hands `perItem` to show it carries an act's answer verbatim; it is no module's answer.
+
+**Lines.** `fixtures.mjs . record-core --list`: answer 0, 0 failures (the one generic line is accepted). Users re-point in their own jobs. Nothing deferred; nothing found in another module.
+
+**Tests and checks.** record-core 223 pass, 0 fail; the 10 plane/other test files that import `storage.mjs` 58 pass, 0 fail. `impact.mjs origin/tranche/T51 HEAD`: record-core, plane (the plane files above run). format 0 failures; architecture 0; coverage 91 of 91 ids named, 0; words 0 failures; fixtures 0; ownership 5 files, 0.
+
+Size (session_01546V8BAmajZDX4MTnH1caQ): test runs 6, module lines 2505
+
+## J9 · COMPLETE · re B10
+
+COMPLETE (fix round 10, Wave A batch 1). Published coreOver, evidencePartsRefusal, perItemRetained, tableDeclarationRefusals in bio-plane/test/m/record-core/fixtures.mjs, each with a test (fixtures.test.mjs). Marker added: record-core.test.mjs:777 // fixtures-generic: NOPE (act's made-up refusal code). storage.mjs gained an optional db argument. record-core 223/223, 10 other storage.mjs users 58/58; format, architecture, coverage, words, fixtures, ownership 0 failures. Details in my record.

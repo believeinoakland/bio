@@ -174,7 +174,7 @@ test("R49: a source whose reads fail or answer something else is a fallback, nev
   const bad = [
     { size: file.length, readRange: async () => { throw new Error("store down"); } },
     { size: file.length, readRange: () => { throw new Error("sync"); } },
-    { size: file.length, readRange: async () => ({ ok: false, reason: "NOT_HELD" }) },
+    { size: file.length, readRange: async () => ({ ok: false, reason: "NOT_HELD" }) }, // fixtures-own: input a source's refusal, a literal handed to pageSource
     { size: file.length, readRange: async () => undefined },
     { size: file.length, readRange: async () => "text" },
     { size: file.length, readRange: async () => new Uint8Array(0) },

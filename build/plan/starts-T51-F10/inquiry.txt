@@ -1,4 +1,4 @@
-START · INQUIRY #<n> · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 3: causes R30b, publish 5 fixtures, re-point 5 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+START · INQUIRY #24 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 3: causes R30b, publish 5 fixtures, re-point 5 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
 
 Depth 2 (BOB #289 is depth 1).
 
@@ -27,3 +27,5 @@ Rules of fix-round-9 §0 that bind: R-FOUR (root cause with file:line, why the t
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** each cause above fixed with its failing-first test green (seen red first) and its platform check done or named for the redeploy; your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . inquiry --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/inquiry.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+**Inherited reds (K5068, from inquiry-grammar's merge of cause 30b):** five inquiry tests still assert the old partition refusal and are red on the tranche: R8 "grounds: every leg labelled or none", R8 "the default is AND ... half-labelled basis is refused", R27/R30 "refusals in order" (partition step), R65 "an ungrouped question answers grouped false", R85 control "a partition leaving a supporting leg out is still refused", and `case-grammar.test.mjs`'s R8 test. Bring each in line with inquiry-grammar R68 as amended (an unlabelled supporting leg beside labelled grounds is a necessary leg, no finding) and with R8/R85 as amended; never weaken a control that still holds.

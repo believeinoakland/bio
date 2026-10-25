@@ -121,8 +121,8 @@ test("R128 a guard that throws, answers a promise or anything but null or a refu
     ["a string", () => "no"],
     ["an acceptance", () => ({ ok: true })],
     ["a refusal without a reason", () => ({ ok: false })],
-    ["a refusal with an empty reason", () => ({ ok: false, reason: "" })],
-    ["an array", () => [{ ok: false, reason: "X" }]],
+    ["a refusal with an empty reason", () => ({ ok: false, reason: "" })], // fixtures-generic: EMPTY_REASON
+    ["an array", () => [{ ok: false, reason: "X" }]], // fixtures-generic: X
   ];
   const row = MEMBERSHIP_CHECKS.PROJECT_GUARD_UNCHECKED;
   for (const [what, fn] of answers) {

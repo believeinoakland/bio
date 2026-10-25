@@ -1,6 +1,6 @@
 # ai-accounts (T51)
 
-**Status** · session_01VSp5XBxGxE7tGFz3UQ7JAM · depth 2 · COMPLETE · handled B5
+**Status** · session_012zC89ytoyYon28aQ3j1D4U · depth 2 · COMPLETE · handled B6
 
 ## J1 · COMPLETE
 
@@ -103,3 +103,30 @@ Completion of the fix round's job FR-54 (K4206, B5). Commit ce28481a75 on job/T5
 - `node checks/run.mjs /home/user/bio`: architecture and words 0 failures; coverage 7 failures, none in ai-accounts (above). Words for this module: 0 findings.
 
 Size (session_01VSp5XBxGxE7tGFz3UQ7JAM): test runs 4, module lines 2188
+
+## Fix round 10, Wave A batch 2 (AI-ACCOUNTS #6, session_012zC89ytoyYon28aQ3j1D4U; B6)
+
+Merged `origin/tranche/T51` into the branch first (record-core's `fixtures.mjs` was not on the branch point).
+
+**Fixtures published** (`bio-plane/test/m/ai-accounts/fixtures.mjs`, new; each called and checked against the real answer in `fixtures.test.mjs`, 14 tests): `accountForRefused`, `accountForResult`, `accountReference`, `accountsServing`, `keepAwaySet`, `keepAwayState`, `keepAwayUnreadable`, `keptAwayGroup`, `keptAwayProject`, `keptAwayUnreadable`, `noAccount`, `subscriptionDisconnect`, `switchedOff`, `tokenMalformedHold`. All run the real module over `world()`.
+- Shapes for users: `accountForRefused`/`noAccount`/`accountForResult`/`subscriptionDisconnect`/`keepAwaySet`/`keepAwayUnreadable` return the answer itself; `accountReference` returns `{without, with}`; `accountsServing` returns `{accounts, accountFor, member, key, world}`; `keepAwayState` returns `{kept, off}`; `keptAwayGroup`, `keptAwayProject`, `keptAwayUnreadable` return `{aiKeptAway, accountFor}`; `tokenMalformedHold` returns `{tooShort, notAString, held}`. `accountReference` is the real `accountReferenceState` (the op is `accountreference`).
+- **Brief against code:** the brief says NO_ACCOUNT carries check C-29.1; the module's check table gives `C-29.20`. The fixture is the real answer, so `C-29.20`; its users must not assert C-29.1. For BOB: the brief's number is wrong, not the module.
+
+**Own lines (8 of 8):** `fixture.mjs` stub record-core replaced by record-core's `coreOver` (`coreOf(db)` adds a `declared` read over `declaredTables()` for the tests that inspect declarations; the hand-made `bundles` table and insert became `addBundle`): lines 33, 44, 51, 53, 54 done. `seam.test.mjs:68,71` and `seams.test.mjs:340` take `tableDeclarationRefusals` answers: done. `node checks/fixtures.mjs . ai-accounts --list`: 0 failures, 1 accepted (own).
+
+**Markers added:**
+- `bio-plane/test/m/ai-accounts/fixture.mjs:68` `// fixtures-own: harness - sets the test's own fact that the registered claimed seam reads (credentials, later in the order, is never built here)`: the line below it, `claim()`, a world helper named like an op that sets the fact membership's claimed seam reads, no module's answer.
+Generic markers added: none.
+
+**Deferred:** none. **Reports about other modules:** none; no stale generated artifact (no source changed).
+
+**Tests and checks**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/ai-accounts/`: tests 145, pass 145, fail 0.
+- Impact (`build/plan/impact.mjs origin/tranche/T51 HEAD`): affordances 2, translations 7, instance-setup 3 (+ ai-accounts); their 71 tests (non-ai-accounts): pass 71, fail 0.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs ai-accounts`: 0 failures. `checks/coverage.mjs ai-accounts`: 37 of 37 live ids named, 0 failures. `checks/ownership.mjs ai-accounts tranche/T51`: 0 failures. `checks/fixtures.mjs . ai-accounts`: 0 failures.
+
+Size (session_012zC89ytoyYon28aQ3j1D4U): test runs 9, module lines 2188
+
+## J6 · COMPLETE · re B6
+
+COMPLETE fix round 10 Wave A batch 2. 14 fixtures published (bio-plane/test/m/ai-accounts/fixtures.mjs, 14 tests in fixtures.test.mjs); 8 own lines re-pointed to record-core coreOver / tableDeclarationRefusals (tranche/T51 merged in first); fixtures check 0 failures. Marker added: fixture.mjs:68 'fixtures-own: harness' for claim() (world helper named like an op). No generic markers. Brief says NO_ACCOUNT check C-29.1; the module's real check is C-29.20 (fixture follows the code; users must not assert C-29.1). Module tests 145/145; impact users (affordances, translations, instance-setup) 71/71; format, architecture, coverage (37/37), ownership 0 failures. Record: build/jobs/T51/ai-accounts.md. Size (session_012zC89ytoyYon28aQ3j1D4U): test runs 9, module lines 2188.

@@ -1,6 +1,6 @@
 # promotion (T51)
 
-**Status** · session_017BterrfaggzcXm1vXYhTRC · depth 2 · COMPLETE · handled B8
+**Status** · session_01FjnskQoMLcMGgXpteLNQ1m · depth 2 · COMPLETE · handled B10
 
 ## J1 · QUESTION
 
@@ -119,3 +119,29 @@ Size (session_017BterrfaggzcXm1vXYhTRC): test runs 12, module lines 3987
 ## J9 · COMPLETE · re B8
 
 B8 applied: promote refuses with PROMOTE_NOT_A_PARTICIPANT, sentence keyed refusal.PROMOTE_NOT_A_PARTICIPANT with the design's text as en (rows.mjs stale until you regenerate), {project} by name where she has existence sight else as sent, never the record's id. promotion 161 pass; format, architecture, coverage 61/61, ownership 0 failures. Pushed.
+
+## Fix round 10 · Wave A batch 2 (PROMOTION #54, session_01FjnskQoMLcMGgXpteLNQ1m)
+
+**Fixtures published** in `bio-plane/test/m/promotion/fixtures.mjs`, each made by promotion's real code when called, each checked by `fixtures.test.mjs` (8 tests, each naming its requirement): `factUnavailable` (real `fact("unregistered")`, FACT_UNAVAILABLE), `groupUndetermined` (a `SUC-` success_record created with no producing group, GROUP_UNDETERMINED, C-64.1), `promotionOver({record, membership, host, now, roster})` with `registeredSteps(p)` (what `registerStep` accepted; refused registrations are not read back), `registrars()` (real STEP_DECLARED on a second step or fact, FACT_UNAVAILABLE, `onCommitted`), `projectActNotParticipant` (real project created, then revised by a non-participant), `snapKeyTaken` (SNAP_KEY_TAKEN, C-67.1), `retireCited` (CITED with offenders), `promoteControlled(decide)` (real `promote` over a real record; verdicts `succeed`, `stale`, `snapkey`, `outsider`, `throw`/`fail`; a spy log that delegates). `makePromotion` and `staleBaseRefusal` were already published.
+**One finding about the fixture plan.** The plan says a throw "has no real cause in promotion and stays a fault". In fact `promote` never throws out: a record that fails inside the transaction is answered `PROMOTE_FAILED` (index.mjs `promote`, the catch), nothing written. `promoteControlled`'s `throw`/`fail` verdict therefore returns that real answer; a user that needs the door to see a thrown error must throw in its own double (a fault, not an answer).
+**Markers added (K5060).** `converts.test.mjs:39` `// fixtures-generic: BIAS_FENCE`: the test registers the fence itself and makes it refuse; no provider's code. `bio-plane/test/system/row-census.test.mjs:482` `// fixtures-generic: CONTROL_ARRIVAL`: a census row made up for the negative control; no module gives it.
+**Lines left (named).** `checks/fixtures.mjs . promotion --list`: 2 FIX-E lines, `fixtures.mjs:163` (`PROJECT_ACT_NOT_A_PARTICIPANT`) and `:166` (`PROJECT_VISIBILITY_UNKNOWN_SETTING`) in the `makeMembership` double, provider membership (`projectActRefusals`): not in this job, they arrive as a CHANGE.
+**Deferred.** None. **Found in other modules.** None.
+**Users run.** impact names ratification, monitoring, store-door, control-plane: their 8 affected test files, 103 pass, 0 fail.
+**Tests and checks.** `test/m/promotion/` + `d526-refusal-order`: 170 pass, 0 fail (the 8 new). `system/row-census`: 1 fail, the R50 pin against rows other modules added (C-102.34 ... C-130.22, CENSUS MOVED), awaiting the stamp (T52, accepted red by name); the same without my change, and my only edit there is a comment line. `checks/format`: 0 failures. `architecture promotion`: 0. `coverage promotion`: 61 of 61. `words promotion`: 0 failures. `fixtures . promotion --list`: 4 -> 2 failures (the two above).
+
+Size (session_01FjnskQoMLcMGgXpteLNQ1m): test runs 7, module lines 3987
+
+## J10 · COMPLETE
+
+Fix round 10, Wave A batch 2 done. Published in bio-plane/test/m/promotion/fixtures.mjs, each made by the real code and tested in fixtures.test.mjs (8 tests): factUnavailable, groupUndetermined, promotionOver + registeredSteps, registrars, projectActNotParticipant, snapKeyTaken, retireCited, promoteControlled (verdicts succeed/stale/snapkey/outsider/fail; promote never throws out, a failing record is PROMOTE_FAILED, so the plan's 'throw stays a fault' is not needed for it). makePromotion and staleBaseRefusal already published. Markers added: converts.test.mjs:39 fixtures-generic BIAS_FENCE (fence the test registers itself); test/system/row-census.test.mjs:482 fixtures-generic CONTROL_ARRIVAL (row made up for the negative control). Lines left: 2 FIX-E (fixtures.mjs:163,166, provider membership projectActRefusals), arriving as a CHANGE. promotion 170 pass; users (ratification, monitoring, store-door, control-plane) 103 pass; format, architecture, coverage 61/61, words, ownership 0 failures; system/row-census has its accepted R50 red (other modules' rows await the stamp). Pushed.
+
+## Fix round 10 · B10 applied (PROMOTION #54)
+
+`makeMembership`'s `projectAuthority` and `visibilitySettingRefusal` now return membership's own answers from its published `projectActRefusals` (`test/m/membership/fixtures.mjs`, taken once at load; membership is in my uses): the invented literals at `fixtures.mjs:163,166` are gone. `checks/fixtures.mjs /home/user/bio promotion --list`: 0 failures (2 accepted generic markers). `test/m/promotion/` + `d526-refusal-order`: 170 pass, 0 fail. format, architecture, coverage (61/61), words: 0 failures. Markers I added, unchanged: `converts.test.mjs:39` BIAS_FENCE, `row-census.test.mjs:482` CONTROL_ARRIVAL. Nothing left or deferred.
+
+Size (session_01FjnskQoMLcMGgXpteLNQ1m): test runs 9, module lines 3987
+
+## J11 · COMPLETE
+
+B10 applied: the membership double's projectAuthority and visibilitySettingRefusal now return membership's real answers from its projectActRefusals fixture; fixtures check (absolute path) 0 failures; promotion 170 pass; format, architecture, coverage 61/61, words, ownership 0 failures. Pushed.

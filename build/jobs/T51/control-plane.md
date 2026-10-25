@@ -1,6 +1,6 @@
 # control-plane (T51)
 
-**Status** · session_01E6jhERf6qDX22iHdkNSdkv · depth 2 · COMPLETE · handled B84
+**Status** · session_019S55YpubfG7GsCPNPQm4VN · depth 2 · COMPLETE · handled B85
 
 ## J1 · QUESTION
 
@@ -959,3 +959,19 @@ Applied: G162 promoteFiled follows every member filed; G160 delivery refusal car
 Red by name (REPORT J55, outside control-plane): §16 G137a and G136b safe view stays queued/pending (file-safety #ensureQueued index.mjs:988 / plane arming, suspected); §18 G125a CCITT, JPEG, PNG bombs: reading ends but its row is retried (reading-pipeline G129c, renderer bundles rB D10).
 Tests brought to the merged tree (mine): t51-g43-embed (G162), t51-round5 E3 and t51-round6 G7 (52 MB: a 40 MB text is deferred, not stated; red before the merge).
 Checks: format 0, architecture 0, coverage 102/102, words 0, ownership 0. Size (session_01E6jhERf6qDX22iHdkNSdkv): test runs 40, module lines 5,247.
+
+## Fix round 10 · Wave A batch 1 · CONTROL-PLANE #59 (B85)
+
+**Causes done.** The three contracts are stated as data in tests of mine and run against the real code: `ask-wire` and `unknown-op` in `bio-plane/test/m/control-plane/fixtures-contracts.test.mjs` (through `makeFetch`), `deliver-owed` in `r124-owed-render.test.mjs` (over the real record: a delivery that completes, one that throws, one promotion refuses as held). No product source changed.
+**Lines carried:** `// fixtures-run: agent-steps ask-wire`, `// fixtures-run: agent-worker ask-wire`, `// fixtures-run: ratification unknown-op`, `// fixtures-run: acquisition deliver-owed`.
+**Lines left at done:** `orphan-run` acquisition deliver-owed (r124-owed-render.test.mjs:237): waits for acquisition's `fixtures-contract: control-plane deliver-owed` marker. My own 64 findings and R136/R137 (coverage names them unnamed) are the Wave B job. No `fixtures-own` or `fixtures-generic` marker added.
+**Where the real answer differs from a user's hand-built value (the real one wins; the users change):**
+- ask-wire: the 403 refusal body is `ok, reason, code, check, translation` followed by the admission row's own `detail, op, tokenId, taskScope, declared, cls` (agent-steps' `refusal403` and the agent worker's `refuse_op` bodies stop at `translation`/`check`); a store that answers nothing readable is 502 STORE_DID_NOT_ANSWER (C-69.2), not a bare 500; an op with no spec is 400 UNKNOWN_OP (C-69.1); the ask* trio admit no `ai` credential (403 AI_BEYOND_TASK_SCOPE, C-29.6); the envelope is `ok, result, store, tokenClass` with `store` the namespace (`bio`; agent-steps' fake says `scratch`).
+- unknown-op: ratification's relay fixture has status 404 and `error: "unknown op: x"`; the door's own UNKNOWN_OP is 400, `error: "unknown op"`, keys `ok, error, reason, code, check (C-69.1), translation, op`. The store's own `unknown op: <op>` 404 is store-door's contract.
+**Tests and checks.** `node --test bio-plane/test/m/control-plane/*.test.mjs`: 683 tests, 683 pass, 0 fail. words 0 failures; format 0; architecture 0; ownership 0; coverage 94 of 96 (R136, R137: Wave B); fixtures `--list` for control-plane: the lines above (1 orphan-run waiting) and the Wave B findings. `impact.mjs`: control-plane 2/108 files, no other module.
+
+Size (session_019S55YpubfG7GsCPNPQm4VN): test runs 8, module lines 5247
+
+## J57 · COMPLETE · re B85
+
+control-plane fix round 10 wave A batch 1 complete and pushed: ask-wire, unknown-op (fixtures-contracts.test.mjs) and deliver-owed (r124-owed-render.test.mjs) stated as data and run against the real code; no product source changed; module suite 683/683; words, format, architecture, ownership 0 failures; coverage 94/96 (R136, R137 are Wave B). One line left: orphan-run acquisition deliver-owed, waiting on acquisition's marker. Real answers differ from users' hand-built ones (403 body extra keys, 502 STORE_DID_NOT_ANSWER, UNKNOWN_OP is 400 with error 'unknown op'): listed in the record. No fixtures-own/generic markers added.

@@ -9,6 +9,7 @@ import { ACQUISITION_CHECKS, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, R
 import * as acquisition from "../../../src/acquisition/index.mjs";
 import * as checksTable from "../../../src/acquisition/checks.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
+import { renderFailure } from "../capture-sources/fixtures.mjs";
 
 const EXPECTED = {
   CAPTURE_NOT_DRAINING: "C-28.13",
@@ -63,7 +64,7 @@ test("R29 R31: this module's table holds exactly C-48.1–C-48.7, C-83.1–C-83.
 });
 
 test("R29 R31: every refusal carrying a row answers that row's check and translation, and each has a negative control", async () => {
-  const env = rendererEnv({ ok: false, error: "crashed" });
+  const env = rendererEnv(await renderFailure({ class: "no_session" }));
   const exp = "https://docs.google.com/document/d/1AbCdEfGhIjKlMnOp/export?format=odt";
   const link = "https://docs.google.com/document/d/1AbCdEfGhIjKlMnOp/edit";
   const html = () => new Response("<!doctype html><html><body>x</body></html>", { headers: { "content-type": "text/html" } });

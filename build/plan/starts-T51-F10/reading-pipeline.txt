@@ -1,4 +1,4 @@
-START · READING-PIPELINE #<n> · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 3: causes R2b, R3, R9, R11b, R18b, publish 1 fixture, re-point 21 own lines, 8 marker lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+START · READING-PIPELINE #37 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 3: causes R2b, R3, R9, R11b, R18b, publish 1 fixture, re-point 21 own lines, 8 marker lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
 
 Depth 2 (BOB #289 is depth 1).
 
@@ -43,3 +43,7 @@ Rules of fix-round-9 §0 that bind: R-FOUR (root cause with file:line, why the t
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** each cause above fixed with its failing-first test green (seen red first) and its platform check done or named for the redeploy; your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . reading-pipeline --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/reading-pipeline.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+**From pdf-worker's merge (K5068):** pdf-worker now reads a PDF cut before its trailer at tier 2 on a repaired view: `partial: true`, note `pdf_truncated`, unread pages with reason `truncated`. reading-pipeline's `read()` of the truncated file (walk A5b, recipe rw9-A-5b truncate 0.7) consumes those markers: add the test through `read()` and carry them into the reading (pdf-worker R10).
+
+**From office-readers' merge (K5070, cause R16):** office-readers now holds a hidden pptx slide once, marked `hidden` on the slide; reading-pipeline copies `hidden` from the slide into the reading's unit (one unit, never two), with a test through `read()`.
