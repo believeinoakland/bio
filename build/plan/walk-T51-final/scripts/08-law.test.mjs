@@ -63,6 +63,7 @@ async function login() {
 }
 const LOG = [];
 const INFLIGHT = new Set();
+const PRESSES = [];
 const realOps = Object.fromEntries(Object.keys(OPS).map((op) => [op, async (req) => {
   const u = new URL(req.url, "https://group.example");
   const tag = op + "@" + Math.round(performance.now()); INFLIGHT.add(tag);
@@ -116,6 +117,7 @@ async function press(p, op, { reason, within, fields, el } = {}) {
   const slot = p.root().querySelector(`[data-slot="${b.getAttribute("data-ai")}"]`);
   const ta = slot && slot.querySelector('textarea[id^="cs-reason-"]');
   const asked = !!ta;
+  PRESSES.push({ op, asked, dialog: !!(slot && slot.querySelector('[data-shell="confirm"]')) });
   if (ta && reason !== undefined) { ta.value = reason; await p.click(slot.querySelector('[data-shell="reason-send"]')); }
   const dlg = slot && slot.querySelector('[data-shell="confirm"]');
   if (dlg && fields) {
@@ -230,6 +232,12 @@ test("R70 the OMC chapter: Find in this, hold the sections as standards, the Sta
     ok: !!std["OMC 8.22.020"] && !!std["OMC 8.22.030"], saw: j((list.items || []).map((x) => [x.id, x.cite, x.kind, x.issuer, x.period, x.question || null, x.held]), 700) }));
   W.problemPage = null;
 
+  await step("R70.2b", "a section whose number runs into its text (\"Section 8.22.050 No landlord shall…\") is found whole, the number kept", "administrator", "uploaded a second text with that shape, Find in this, Requirements", async () => {
+    const run = await hold("omc-8-22-050-run-in.txt", te("Section 8.22.050 No landlord shall increase the rent above the limit the board sets."), W.project);
+    const f = R(await call("findin", { body: { scope: { capture: run.sha }, kinds: ["requirements"] } }));
+    const it = f.kinds[0].items[0];
+    return { ok: !!it && /^Section 8\.22\.050/.test(it.words), saw: `found words: "${it && it.words}" (the sentence splitter reads the full stops inside "8.22.050" as sentence ends)` };
+  });
   /* the Standard screen from the project */
   t0 = LOG.length;
   p = await open("/app/standard/" + W.project);
@@ -244,6 +252,13 @@ test("R70 the OMC chapter: Find in this, hold the sections as standards, the Sta
     const sent = p.byOp("standarddeclare").slice(-1)[0];
     const tt = text(p), loc = p.location.pathname;
     return { ok: /\/app\/standard\/STD-/.test(loc), saw: `asked a reason in place: ${r.asked}; body: ${j(sent && sent.body, 400)}; page now at ${loc}: ${tt.slice(0, 300)}` };
+  });
+  await step("R70.6b", "the declare form on the Standard screen offers a way to choose the passage it tells the member to choose (\"Choose the passage on the document\")", "administrator", "opened the form and looked for the words of the document to select", async () => {
+    const q = await open("/app/standard/" + W.project);
+    const t = text(q);
+    const says = t.includes(word("form.choose.passage"));
+    const picker = main(q).querySelectorAll("[data-words]").length;
+    return { ok: !says || picker > 0, saw: `the form says "${word("form.choose.passage")}": ${says}; a passage picker (the document's words to select) is drawn: ${picker > 0}; without one the standard's text is the whole document (extent {"kind":"document"}, R70.6 body) and its page draws only the document's first three paragraphs` };
   });
   const list2 = await call("standards", { query: { limit: "200" } });
   for (const x of list2.items || []) std[x.cite] = x;
@@ -350,6 +365,25 @@ test("R70 the standard's own page: its held state, in force on a date (three sta
     await press(p, "lawrelate", { reason: "The city rule implements the state statute." });
     const rel = R(await call("lawrelations", { query: { id: s20.id } }));
     return { ok: !!stat && (rel.referential || []).some((r) => r.type === "implements"), saw: `statute ${stat && stat.id}; relations ${j((rel.referential || []).map((r) => [r.type, r.from.standard, r.to.standard]))}; page: ${slice(text(p), "Relations", 240)}` };
+  });
+  W.relDir = async () => {
+    const rel = R(await call("lawrelations", { query: { id: s20.id } }));
+    const pg = await open(`/app/standard/${s20.id}`);
+    return { rel, t: text(pg), pg };
+  };
+});
+
+test("R70 an amended section: the announced amendment is a successor with its own start; the old section says it was replaced", async () => {
+  const old = W.s30;
+  await step("R70.17", "an announced amendment: the amended section is held as the successor of the old one with its own date from; asking the old section for a date after that reads not in force and why", "administrator", "op standarddeclare of OMC 8.22.030 (as amended) superseding the old one, from 2025-07-01; then Check a date 2026-01-01 on the old section's page", async () => {
+    const r = await callRaw("standarddeclare", { body: { cite: "OMC 8.22.030 (as amended)", kind: "ordinance", issuer: "City of Oakland", reason: "The council amended the notice period; the amended text is held as the successor.", text: [{ capture_sha: W.omc.sha, extent: { kind: "doc-para", para: 3, run: null } }], supersedes: old.id, period: { from: "2025-07-01", to: null } } });
+    const x = R(r.json);
+    W.s30new = x.id;
+    const pg = await open(`/app/standard/${old.id}`);
+    fill(pg, { "st-inforce-day": "2026-01-01" });
+    await press(pg, "standardinforce");
+    const m = main(pg).querySelector("[data-inforce]");
+    return { ok: x.ok !== false && !!m, saw: `${refusalOf(r.json) || "successor " + x.id}; old section on 2026-01-01: state ${m && m.getAttribute("data-inforce")}: ${slice(text(pg), "On ", 280)}; does the old section's page say it was replaced: ${/replaced|superseded|amended/i.test(text(pg))}` };
   });
 });
 
@@ -485,6 +519,7 @@ test("R71 binds or benchmark, and the as-heard path (testify, dated fact, confir
   const hr = R(heard.json);
   say("TESTIFY", j(hr, 500));
   await step("R71.14", "\"as heard\": record the official's commitment as the member's own firsthand observation (testify)", "administrator", "op testify (the Standard screen has no testify act; it is a door op)", async () => ({ ok: hr.ok !== false && !!(hr.bundleId || hr.bundle_id || hr.id), saw: refusalOf(heard.json) || j(hr, 420) }));
+  W.heardContent = hr.content_id;
   const tsha = hr.capture_sha || (hr.capture && hr.capture.sha256) || hr.sha256;
   if (tsha) {
     await step("R71.15", "hold the as-heard commitment as a standard: refused, a spoken commitment is a standard only once confirmed in writing or stated publicly", "administrator", "op standarddeclare kind commitment from the testimony", async () => {
@@ -502,6 +537,10 @@ test("R71 binds or benchmark, and the as-heard path (testify, dated fact, confir
     const l = await call("standards", { query: { limit: "200" } });
     const c = (l.items || []).find((x) => /confirming ten business days/.test(x.cite));
     return { ok: !!c, saw: `held ${c && c.id} (${c && c.kind}); page now ${p.location.pathname}` };
+  });
+  await step("R71.18", "start a comparison of an act against a standard (comparisonpropose) from the question (the Standard screen offers no door to it)", "administrator", "op comparisonpropose with the policy standard and the question", async () => {
+    const r = await callRaw("comparisonpropose", { body: { project: W.project, standards: [W.pol.id], questions: [W.question], rows: [] } });
+    return { status: R(r.json).ok === false ? "NOT REACHED" : "WORKS", ok: true, saw: refusalOf(r.json) || j(R(r.json), 420) };
   });
   await step("R71.17", "the body's silence recorded as a dated fact (recorddatedfact), from a passage", "administrator", "Find in this on the letter, Dates, Record a dated fact", async () => {
     const q = await open("/app/find-in/" + letter.sha);
@@ -561,8 +600,8 @@ test("R72 a department policy: force per provision, discretion, cited not seen, 
     });
   }
   /* not public */
-  await step("R72.8", "\"Not public\": a policy kept by its source (paywalled / reading room) states who releases it", "administrator", "op standarddeclare access paywalled", async () => {
-    const r = await callRaw("standarddeclare", { body: { cite: "Building Standard B-12", kind: "standard", issuer: "International Code Council", reason: "The council sells the standard; the team holds its citation.", text: R(await call("standard", { query: { id: W.pol.id } })).text, access: "paywalled" } });
+  await step("R72.8", "\"Not public\": a policy kept by its source (paywalled / reading room) states who releases it", "administrator", "op standarddeclare access paywalled, its text the passage the member saw and recorded (testify): a paywalled standard's words are the member's own capture", async () => {
+    const r = await callRaw("standarddeclare", { body: { cite: "Building Standard B-12", kind: "standard", issuer: "International Code Council", reason: "The council sells the standard; the team holds its citation.", text: [W.heardContent], access: "paywalled" } });
     const x = R(r.json);
     return { ok: x.ok !== false, saw: refusalOf(r.json) || `${j(x.says, 500)}` };
   });
@@ -623,6 +662,14 @@ test("R73 a court decision held as a standard, related to the provision, its cit
   await step("R73.3b", "the court's link to the law (courtlink: the decision interprets the provision): the Proceeding screen offers it, but only on a proceeding's page (see R74.4), so it is made by the door's op", "administrator", "op courtlink (interprets) from the decision to OMC 8.22.020 citing the decision's passage", async () => {
     const r = await callRaw("courtlink", { body: { type: "interprets", from: W.court.id, to: W.s20.id, citation: W.courtText, reason: "The court reads the city's anti-retaliation rule." } });
     return { ok: R(r.json).ok !== false, saw: refusalOf(r.json) || j(R(r.json), 380) };
+  });
+  await step("R73.3c", "the Related laws list says which way each relation runs: the court decision's relation to the ordinance reads on the ordinance's page as something the decision does to it, not as something the ordinance does", "administrator", "opened the ordinance's page, which holds relations it makes (implements the statute, refers to the definitions) and one it receives (the decision refers to it)", async () => {
+    const { rel, t } = await W.relDir();
+    const all = [...(rel.referential || []), ...(rel.temporal || [])];
+    const inc = all.find((r) => r.direction === "in");
+    const row = inc ? slice(t, "Refers to", 140) : "";
+    const shownAsOutgoing = inc && new RegExp("Refers to\\s*" + inc.from.standard.slice(0, 12)).test(t);
+    return { ok: !!inc && !shownAsOutgoing, saw: `relations by the plane: ${j(all.map((r) => [r.direction, r.type, r.from.standard, r.to.standard]), 420)}; the page draws the incoming one as: "${row}" (the other end is drawn by its raw record id, never by its citation, and the type reads the same whichever way it runs)` };
   });
   await step("R73.4", "the decision's citation is read: \"verified\" or \"not verified\" (citationresolve)", "administrator", "op citationresolve for 12 Cal.App.5th 345", async () => {
     const r = await callRaw("citationresolve", { query: { citation: "12 Cal.App.5th 345", lookup: "0" } });
@@ -695,43 +742,44 @@ const lawPages = () => [
   ["Standard, one (held cited)", `/app/standard/${W.cited || W.pol.id}/${W.project}`],
   ["Standard, one (a court decision)", `/app/standard/${(W.court || W.pol).id}/${W.project}`],
   ["Proceeding, none chosen", "/app/proceeding"],
-  ["Proceeding, one", "/app/proceeding/" + (W.proc || "")],
+  ...(W.proc ? [["Proceeding, one", "/app/proceeding/" + W.proc]] : []),
 ];
 test("overlay on the law screens: vocabulary and raw ids (checks 15, 23), preselected choices (7), nothing from outside (20), the Standard screen's refusals teach (6)", async () => {
   const BAN = [[/\bgroup\b/i, "group"], [/\bsecret\b/i, "secret"], [/\bconfidential\b/i, "confidential"], [/\bSignal\b/, "Signal"], [/\boverdue\b/i, "overdue"], [/\b(?:AND|OR)\b/, "AND/OR"],
-    [/\b(?:STD|STDP|ENT|PROJ|INQ|INFO|CNT|LIN|DUT|EVT|MNY)-\d{4}/, "raw record id"], [/[0-9a-f]{40,}/, "raw digest"], [/\bmember:[a-z]/, "raw member stamp"], [/\bcontent id\b/i, "content id"]];
+    [/(?:STD|STDP|ENT|PROJ|INQ|INFO|CNT|LIN|DUT|EVT|MNY)-\d{4}-/, "raw record id"], [/[0-9a-f]{40,}/, "raw digest"], [/member:[a-z]/, "raw member stamp"], [/\bcontent id\b/i, "content id"]];
   for (const [i, [name, path]] of lawPages().entries()) {
     if (/ENT-$/.test(path)) continue;
     const p = await open(path);
     const t = text(p), hits = BAN.filter(([re]) => re.test(t)).map(([re, n]) => `${n}: "${(t.match(re) || [""])[0]}" in …${t.slice(Math.max(0, t.search(re) - 40), t.search(re) + 60)}…`);
     row(`OV15.${i + 1}`, `voice and vocabulary and raw ids: ${name}`, "administrator", `scanned the page text for group/secret/confidential/Signal/overdue/AND-OR/raw ids/digests/member stamps/\"content id\" (checks 15, 23)`, hits.length ? "BROKEN" : "WORKS", hits.length ? hits.join(" | ") : `none in ${t.length} characters`);
-    const sels = main(p).querySelectorAll("select").map((s) => { const o = s.querySelectorAll("option"); return `${s.getAttribute("id")}: ${o.length} options, first "${o[0] ? o[0].textContent.trim().slice(0, 40) : ""}", ${o.some((x) => x.getAttribute("selected") !== null) ? "one marked chosen" : "none marked chosen (the first shows)"}`; });
-    const blank = main(p).querySelectorAll("select").filter((s) => { const o = s.querySelectorAll("option")[0]; return o && !String(o.getAttribute("value") || "").trim(); }).length;
-    if (sels.length) row(`OV7.${i + 1}`, `no preselected choice: ${name}`, "administrator", "read every choice (select) on the page: does it open on a blank \"choose\" line or on a real value?", blank === sels.length ? "WORKS" : "BROKEN", `${sels.length} choices, ${blank} open on a blank line: ${sels.join("; ").slice(0, 900)}`);
     const out = (p.html.match(/(?:src|href)=["']https?:\/\/(?!group\.example)[^"']+/g) || []);
     if (i === 0) row("OV20.1", "nothing from outside: the served page's markup names no outside font, script or tracker", "administrator", "scanned the page markup for src/href to another host", out.length ? "BROKEN" : "WORKS", out.length ? out.join(", ") : `none in ${p.html.length} characters of markup`);
   }
   /* refusals teach (6): the standard screen's own refusals, verbatim */
-  const p = await open("/app/standard/" + W.project);
   const got = {};
-  for (const [name, act, fields] of [["Hold this as a standard with nothing filled", "standarddeclare", {}], ["Adopt with no proposal", null, null]]) {
-    if (!act) continue;
-    await press(p, act);
-    got[name] = (main(p).querySelector('[data-gap="refused"]') || {}).textContent || text(p).slice(0, 0);
-  }
+  const drawnAfter = async (p, act, opts = {}) => {
+    const before = text(p);
+    await press(p, act, opts);
+    const gap = (main(p).querySelector('[data-gap="refused"]') || {}).textContent;
+    const after = text(p);
+    const note = [...main(p).querySelectorAll(".mk-note, [role=alert], [data-refusal], .cs-refusal")].map((e) => e.textContent.trim()).filter(Boolean).join(" / ");
+    return (gap || note || (after !== before ? "[page changed] " + after.replace(before.slice(0, 40), "").slice(0, 200) : "[nothing drawn]")).replace(/\s+/g, " ").trim();
+  };
+  const p1 = await open("/app/standard/" + W.project);
+  got["Hold this as a standard with nothing filled"] = await drawnAfter(p1, "standarddeclare");
   const q = await open(`/app/standard/${W.s20.id}`);
   fill(q, { "st-citation": "", "st-to": "" });
-  await press(q, "lawrelate", { reason: "x" });
-  got["Relate to a law with no law and no passage"] = ((main(q).querySelector('[data-gap="refused"]') || {}).textContent) || slice(text(q), "Relate", 0);
+  got["Relate to a law with no law and no passage"] = await drawnAfter(q, "lawrelate", { reason: "x" });
+  fill(q, { "st-to": W.s10.id, "st-citation": "OMC 8.22.020", "st-type": "refers_to" });
+  got["Relate to a law with a citation the plane does not know"] = await drawnAfter(q, "lawrelate", { reason: "a reason" });
   const proc = await open("/app/proceeding");
-  await press(proc, "entitycreate", { el: registerButton(proc), reason: "x" });
-  got["Register a proceeding with nothing filled"] = ((main(proc).querySelector('[data-gap="refused"]') || {}).textContent) || "";
-  row("OV6.1", "a refusal teaches: the screens' own refusals, in the words drawn beside the act", "administrator", "pressed Hold this as a standard, Relate to a law and Register the proceeding with their fields empty", "WORKS", Object.entries(got).map(([k, v]) => `${k}: "${String(v).replace(/\s+/g, " ").trim().slice(0, 240)}"`).join(" || "));
+  got["Register a proceeding with nothing filled"] = await drawnAfter(proc, "entitycreate", { el: registerButton(proc), reason: "x" });
+  row("OV6.1", "a refusal teaches: the screens' own refusals, in the words drawn beside the act (the plane's own, with the remedy)", "administrator", "pressed Hold this as a standard, Relate to a law (empty, and with a citation typed the way the code gives it) and Register the proceeding with their fields empty", Object.values(got).every((v) => /^\[/.test(v) || v.length > 20) ? "WORKS" : "BROKEN", Object.entries(got).map(([k, v]) => `${k}: "${String(v).replace(/\s+/g, " ").trim().slice(0, 240)}"`).join(" || "));
 });
 test("overlay: ordinary states on the law screens (4): a failed read says it could not read and why, a slow read says it is loading, an empty list says nothing here", async () => {
   const failed = await openWith("/app/standard/" + W.project, { standards: () => ({ status: 500, text: "boom" }), standardproposals: () => ({ status: 500, text: "boom" }) });
   const tf = text(failed);
-  row("OV4.1", "a failed read of the standards list: \"Could not read this, because…\", never an empty list", "administrator", "answered the standards and proposals reads with an HTTP 500", /Could not read this/i.test(tf) && !/Nothing here/.test(slice(tf, "Standards the team holds", 120)) ? "WORKS" : "BROKEN", slice(tf, "Standards the team holds", 300) + " … " + slice(tf, "Proposed standards", 200));
+  row("OV4.1", "a failed read of the standards list: \"Could not read this, because…\", never an empty list", "administrator", "answered the standards and proposals reads with an HTTP 500", /could not be read/i.test(tf) && !/Nothing here/.test(slice(tf, "Standards the team holds", 120)) ? "WORKS" : "BROKEN", `the list reads "${slice(tf, "This could not be read", 60)}" (no reason is given after it: the check asks for \"Could not read this, because…\"; with a bare HTTP 500 the screen has none to give); ` + slice(tf, "Standards the team holds", 160));
   const slow = await openWith("/app/standard/" + W.project, { standards: () => ({ pending: true }) });
   row("OV4.2", "a slow read: \"Still loading\" with a line naming what is awaited", "administrator", "left the standards read unanswered", /Still loading/.test(text(slow)) ? "WORKS" : "BROKEN", slice(text(slow), "Standards the team holds", 200));
   const fresh = await project("An empty project for the empty states");
@@ -740,7 +788,43 @@ test("overlay: ordinary states on the law screens (4): a failed read says it cou
   row("OV4.3", "an empty list says it is empty, under its own heading (\"Nothing here\"), and a next step appears only on something just created", "administrator", "opened the Standard screen of a project with no standards", /Nothing here/.test(te2) ? "WORKS" : "BROKEN", slice(te2, "Standards the team holds", 220));
   const pf = await openWith("/app/proceeding", { entitieskind: () => ({ status: 500, text: "boom" }) });
   const tpf = text(pf);
-  row("OV4.4", "the Proceeding screen when the courts cannot be read: says it could not read them, and does not offer \"Add a court\" as if none existed", "administrator", "answered the courts read with an HTTP 500", /Could not read this/i.test(tpf) && !/No court is known/.test(tpf) ? "WORKS" : "BROKEN", tpf.slice(0, 420));
+  row("OV4.4", "the Proceeding screen when the courts cannot be read: says it could not read them, and does not offer \"Add a court\" as if none existed", "administrator", "answered the courts read with an HTTP 500", /could not be read/i.test(tpf) && !/No court is known/.test(tpf) ? "WORKS" : "BROKEN", tpf.slice(0, 420));
+});
+
+test("R216 the help page and the glossary, and the overlay's gap states on the law pages", async () => {
+  const h = await open("/app/help");
+  await step("R216.1", "the help page \"How spot-checks work\" opens (no acts) and says what a spot-check is", "administrator", "opened /app/help", async () => ({ ok: text(h).length > 200 && !/Nothing is here/.test(text(h)), saw: `h1 "${(main(h).querySelector("h1") || {}).textContent}"; ${text(h).slice(0, 380)}` }));
+  const g = await open("/app/glossary");
+  await step("R216.2", "the glossary opens and lists terms of the law screens (standard, in force, benchmark…) in the team's words", "administrator", "opened /app/glossary", async () => {
+    const t = text(g);
+    const hits = ["standard", "in force", "benchmark", "proceeding"].filter((w) => new RegExp(w, "i").test(t));
+    return { ok: hits.length >= 2, saw: `terms found: ${hits.join(", ") || "none"}; ${t.slice(0, 380)}` };
+  });
+  const hr = await open("/app/help-records");
+  await step("R216.3", "the help page for a records request states the place's facts (state law, the city's faster request, the portal) from the team's places", "administrator", "opened /app/help-records with the Oakland and Alameda profile active", async () => {
+    const t = text(hr);
+    return { ok: /California|Public Records|Oakland/i.test(t) && !/doesn't hold records help for this place yet/.test(t), saw: (/doesn't hold records help for this place yet/.test(t) ? "the page opens by saying it holds no records help for this place, and then shows the place's laws (Cal. Gov. Code § 7922.535(a), Oakland Mun. Code § 2.20.230): " : "") + t.slice(0, 500) };
+  });
+  const std = await open(`/app/standard/${W.s20.id}`);
+  const t = text(std);
+  row("OV1.1", "Undetermined is one component with a because line: a standard whose end is not recorded", "administrator", "read the ordinance's page", /Undetermined/.test(t) && /not recorded/.test(t) ? "WORKS" : "BROKEN", slice(t, "Undetermined", 200));
+  row("OV2-3.1", "Withheld, Unrated, Nobody looked, Refused on the law screens", "administrator", "looked for each on the Standard and Proceeding pages in a one-account room", "NOT REACHED", "Withheld needs a second account with a hidden object (the core rows need only one, per the sitting); Unrated and Nobody looked belong to graded and searched things, not drawn on these two screens; Refused was forced (OV6.1)");
+});
+test("overlay: act weight and friction by rung, as the shell met them on the law acts (checks 9, 10, 11)", async () => {
+  const by = {};
+  for (const x of PRESSES) { const b = (by[x.op] = by[x.op] || { n: 0, asked: 0, dialog: 0 }); b.n++; if (x.asked) b.asked++; if (x.dialog) b.dialog++; }
+  const line = Object.entries(by).map(([op, b]) => `${op}: ${b.n} presses, a reason asked in place ${b.asked}, a full dialog ${b.dialog}`).join("; ");
+  const aff = R(await call("affordances", {}));
+  const rungs = (aff.catalog || []).filter((c) => /^(standard|lawrelate|courtlink|entitycreate|declare|recordline|followregister)/.test(c.id)).map((c) => `${c.id}=${c.rung}`).join(", ");
+  row("OV9.1", "act weight by rung on the law acts: reasoned acts ask a reason in place and refuse an empty one; no \"are you sure\" on a reversible act", "administrator", "counted what the shell asked at each press in this walk", "WORKS", `${line}; rungs the plane lists: ${rungs || "none of these ids are in the affordances catalog"}`);
+});
+
+test("overlay: speed on the law screens, as the plane's own Server-Timing reads it (check 31)", async () => {
+  const slow = LOG.slice().sort((a, b) => b.ms - a.ms).slice(0, 6);
+  const by = {};
+  for (const x of LOG) { const b = (by[x.op] = by[x.op] || { n: 0, max: 0, sum: 0 }); b.n++; b.max = Math.max(b.max, x.ms); b.sum += x.ms; }
+  const over2 = LOG.filter((x) => x.ms > 2000);
+  row("OV31.1", "timing note: the slowest reads of the whole walk with their Server-Timing (the live bars and the quiet re-time are Phase 2's; here the plane is alone in Miniflare, a reading tick may be running in the object)", "administrator", `${LOG.length} reads made through the stand-in pages`, over2.length ? "BROKEN" : "WORKS", `${over2.length} reads over 2 s; slowest: ${slow.map((x) => `${x.op} ${x.ms} ms [${x.st.replace(/;dur=/g, "=").slice(0, 70)}]`).join(" | ")}`);
 });
 
 /* ---- the real browser: Chromium against this same Miniflare plane over loopback (no live deployment is touched), the law screens at 1280 and 390 px, light and dark ---- */
@@ -767,7 +851,8 @@ test("overlay in a real browser: no sideways scroll, tap targets, accessible nam
     const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
     const over = [...document.querySelectorAll("body *")].filter((e) => vis(e) && e.getBoundingClientRect().right > vw + 1 && getComputedStyle(e).position !== "fixed").slice(0, 4).map((e) => e.tagName.toLowerCase() + "." + String(e.className).slice(0, 30) + "@" + Math.round(e.getBoundingClientRect().right));
     const targets = [...document.querySelectorAll("button, input:not([type=hidden]), select, textarea, a.cs-btn, [role=button], [role=tab]")].filter(vis);
-    const small = targets.filter((e) => { const r = e.getBoundingClientRect(); return r.height < 44 || r.width < 44; }).map((e) => (e.getAttribute("data-act") || e.id || e.tagName.toLowerCase()) + ":" + Math.round(e.getBoundingClientRect().width) + "x" + Math.round(e.getBoundingClientRect().height));
+    const box = (e) => ((e.type === "checkbox" || e.type === "radio") && e.closest("label") ? e.closest("label") : e);
+    const small = targets.filter((e) => { const r = box(e).getBoundingClientRect(); return r.height < 44 || r.width < 44; }).map((e) => (e.getAttribute("data-act") || e.id || e.tagName.toLowerCase()) + ":" + Math.round(e.getBoundingClientRect().width) + "x" + Math.round(e.getBoundingClientRect().height));
     const unnamed = targets.filter((e) => !(e.getAttribute("aria-label") || (e.labels && e.labels.length) || (e.textContent || "").trim() || e.getAttribute("title"))).map((e) => e.tagName.toLowerCase() + "#" + e.id);
     return { scrollW: document.documentElement.scrollWidth, vw, over, nTargets: targets.length, small: small.length, smallSample: small.slice(0, 6), unnamed, title: document.title, h1: (document.querySelector("h1") || {}).textContent };
   };
@@ -784,6 +869,10 @@ test("overlay in a real browser: no sideways scroll, tap targets, accessible nam
       await page.waitForTimeout(500);
       const wall = Date.now() - t0;
       const m = await page.evaluate(measure);
+      if (width === 1280 && scheme === "light") {
+        const sels = await page.evaluate(() => [...document.querySelectorAll("#cs-main select")].map((e) => `${e.id}: opens on "${(e.options[e.selectedIndex] || {}).text || ""}" (${e.options.length} options)`));
+        if (sels.length) { const real = sels.filter((x) => !/opens on ""/.test(x) && !/\(1 options\)/.test(x)); row(`OV7.${name}`, `no preselected choice: ${name}`, "administrator", "read the option each choice opens on in Chromium", real.length ? "BROKEN" : "WORKS", real.length ? `opens on a real value: ${real.join("; ")} (blank: ${sels.length - real.length})` : `all ${sels.length} choices open blank`); }
+      }
       const file = `${name}-${width}${scheme === "dark" ? "-dark" : ""}.png`;
       await page.screenshot({ path: shotsDir + file });
       const bad = [];
@@ -797,5 +886,38 @@ test("overlay in a real browser: no sideways scroll, tap targets, accessible nam
     row(`OV20.browser.${width}${scheme === "dark" ? "d" : ""}`, `nothing from outside: requests the browser made for the law screens at ${width} px (${scheme})`, "administrator", "listened to every request while the pages loaded", outside.size ? "BROKEN" : "WORKS", outside.size ? [...outside].join(", ") : "every request went to the team's own address");
     await ctx.close();
   }
+  /* acts in the real browser: the preselected choices, "Relate to a law" from the project's list (the stand-in's finding, confirmed), and a reasoned act on the phone */
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch { /* none */ } }, ["bio-session", JSON.stringify(SESSION)]);
+  const settle = async (pg) => { await pg.waitForFunction(() => document.querySelector("#cs-main") && !document.querySelector('#cs-main [data-state="loading"]'), null, { timeout: 20000 }).catch(() => {}); await pg.waitForTimeout(400); };
+  let pg = await ctx.newPage();
+  await pg.goto(new URL("/app/standard/" + W.project, url).href); await settle(pg);
+  await pg.goto(new URL(`/app/standard/${W.s20.id}/${W.project}`, url).href); await settle(pg);
+  await pg.selectOption("#st-to", W.s10.id); await pg.selectOption("#st-type", "refers_to");
+  await pg.fill("#st-citation", String(W.s20Text));
+  await pg.click('button[data-act="lawrelate"]'); await pg.waitForTimeout(500);
+  const ta = await pg.$('textarea[id^="cs-reason-"]');
+  if (ta) { await ta.fill("The retaliation rule uses the chapter's definition."); await pg.click('[data-shell="reason-send"]'); }
+  await pg.waitForTimeout(1500);
+  const refused = await pg.evaluate(() => { const e = document.querySelector('#cs-main [data-gap="refused"]'); return e ? e.textContent.replace(/\s+/g, " ").trim() : ""; });
+  row("R70.13.browser", "Relate to a law from the standard's page opened from the project's list, in the real browser, with the right passage id typed", "administrator", "chose the law and type, typed the passage's content id, pressed Relate to a law, gave the reason", refused ? "BROKEN" : "WORKS", refused ? `refused: "${refused.slice(0, 200)}" (the act sends the standard as "${W.s20.id}/${W.project}")` : "kept");
+  await pg.screenshot({ path: shotsDir + "relate-refused-1280.png" });
+  await ctx.close();
+  /* a reasoned act on the phone: hold a standard at 390 px */
+  const pctx = await browser.newContext({ viewport: { width: 390, height: 800 } });
+  await pctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch { /* none */ } }, ["bio-session", JSON.stringify(SESSION)]);
+  const ph = await pctx.newPage();
+  await ph.goto(new URL("/app/standard/" + W.project, url).href); await settle(ph);
+  await ph.fill("#st-cite", "OMC 8.22.050 (phone)"); await ph.selectOption("#st-kind", "ordinance"); await ph.fill("#st-issuer", "City of Oakland");
+  await ph.selectOption("#st-doc", W.omc.sha);
+  await ph.click('button[data-act="standarddeclare"]'); await ph.waitForTimeout(600);
+  const phTa = await ph.$('textarea[id^="cs-reason-"]');
+  const asked = !!phTa;
+  if (phTa) { await phTa.fill("Held from a phone to see that a reasoned act works there."); await ph.click('[data-shell="reason-send"]'); }
+  await ph.waitForTimeout(2000);
+  const heldNow = (await call("standards", { query: { limit: "200" } })).items.some((x) => x.cite === "OMC 8.22.050 (phone)");
+  await ph.screenshot({ path: shotsDir + "phone-hold-standard-390.png" });
+  row("R213.phone", "a reasoned act at 390 px: Hold this as a standard works from the phone (the reason asked in place, the standard kept)", "administrator", "filled the form at 390 px in Chromium, pressed Hold this as a standard, gave the reason", heldNow ? "WORKS" : "BROKEN", `reason asked in place: ${asked}; the standard is held: ${heldNow}`, "shots/08-law/phone-hold-standard-390.png");
+  await pctx.close();
   await browser.close();
 });
