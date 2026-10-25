@@ -1,6 +1,6 @@
 # reevaluation (T51)
 
-**Status** · session_014QYiuArevRHEaH98AGpvCi · depth 2 · COMPLETE · handled B8
+**Status** · session_018qdj8PzS6Dm7AAErJ82iZx · depth 2 · COMPLETE · handled B11
 
 ## J1 · COMPLETE
 
@@ -162,3 +162,36 @@ Tests: reevaluation module `bio-plane/test/m/reevaluation/*.test.mjs` 165 pass, 
 Commit f27aaa0792 pushed to job/T51/reevaluation.
 
 Size (session_014QYiuArevRHEaH98AGpvCi): test runs 4, module lines 0 in src, 44 added in tests
+
+## J10 · COMPLETE
+
+COMPLETE (fix round 10, follow-up 41, test file only): `caseparts.test.mjs:30-36` (the contract stand-in for publication's `case-cited-parts`) now answers the real shape publication's run pins. A ratified case answers `{ok: true, case, edition, project, parts, limit: 1000, truncated: false}` (`limit` is publication's `CITED_PARTS_MAX`). A case with no ratified edition answers `{ok: false, reason: "NO_SUCH_CASE_EDITION", case, edition: null}`, the real answer for a call that names no edition. The value leaves out the refusal's `detail` sentence, as B10 says. The marker `// fixtures-contract: publication case-cited-parts` stays on line 30. Reevaluation's consumers (`index.mjs:514`, `:2539`) read `ok === false` and `project`, so the fuller shape changes nothing for them.
+
+Markers added: none; the existing `fixtures-contract` marker is kept.
+
+Tests: `caseparts.test.mjs` 7 of 7; `bio-plane/test/m/reevaluation/` 165 of 165 (`node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/reevaluation/`).
+
+Checks (absolute root `/home/user/bio`): `fixtures.mjs --list` 0 failures (`caseparts.test.mjs:31` is now `accepted(case-cited-parts)`, so the `contract-no-run` line from J8 is gone; publication's `fixtures-run` is no longer needed for it to pass the check); `format` 0 failures; `architecture` 0 failures; `coverage` 41 of 41 live ids, 0 failures; `words` 0 failures; `ownership` 0 failures (against `origin/tranche/T51`).
+
+Commit `25585b3bfb` on `job/T51/reevaluation`, pushed. The branch first took `origin/job/T51/reevaluation` (fast-forward) and then `origin/tranche/T51` (merged, no conflicts) at this START.
+
+Size (session_018qdj8PzS6Dm7AAErJ82iZx): test runs 4, module lines 3469
+
+## J11 · COMPLETE
+
+COMPLETE (fix round 10, follow-up 43, B11 CHANGE; test files only). Commit `6aa339c393`, pushed on `job/T51/reevaluation`.
+
+Added two sibling exports in `bio-plane/test/m/reevaluation/fixtures.mjs`, made by the real code when the test runs. `noticesRead` and its `several` scene are unchanged, so queue-producers' existing users keep their answer.
+
+- `noticesTwoVersions({ viewer = "class:admin" })`: one holder's leg (`INQ-2026-0004-q`) cites passage of `INFO-2026-0007-old3` at capture a. Two newer captures of that address, both read and changed, come in turn: a first `raiseNotices` raises one notice for the first, then the second is filed and a second `raiseNotices` raises one for it. Returns `{ world, viewer, holder, raised, newer_captures: [sha, sha], ok, limit, truncated, notices, count, cursor, state }`. Its two notices share holder and target and differ in `newer_capture`; both grade `NOT_FOUND`, `affects` `affected`.
+- `noticesHiddenVersion({ viewer = V("owen") })`: one leg (`INQ-2026-0005-q`, filed in no project) cites `INFO-2026-0010-old4` at a. Its newer capture is filed in project "Elsewhere" (owner ann), which owen does not participate in. Returns `{ world, viewer, holder, raised, newer_capture: sha, ok, limit, truncated, notices, count, cursor, state }`. Owen's one notice keeps its holder and target, with `newer_capture`, `grade` and `affects` null; the admin read of the same notice gives the sha and `affects` `affected`.
+
+Note for queue-producers (its `noticed.test.mjs`, R52): a single `raiseNotices` pass raises one notice per leg for the newest copy it can see at that time. Two notices on one leg come from two passes, one after each newer copy is filed; `noticesTwoVersions` does that by real acts.
+
+Tests: `fixtures.test.mjs` has four tests, all green. Each of the two new ones calls its export and checks the real answer and that a second `notices` read gives the same rows (the hidden one checks the admin's view too). Module suite `bio-plane/test/m/reevaluation/`: 167 of 167 pass.
+
+Checks (absolute root `/home/user/bio`): `fixtures.mjs --list` 0 failures; `format` 0; `architecture` 0; `coverage` 41 of 41 ids, 0; `words` 0 failures; `ownership` 0 failures against `origin/tranche/T51`.
+
+Markers added: none (no `fixtures-own`, `fixtures-generic` or `fixtures-contract`).
+
+Size (session_018qdj8PzS6Dm7AAErJ82iZx): test runs 6, module lines 3469
