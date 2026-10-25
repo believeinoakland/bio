@@ -373,3 +373,23 @@ Size (session_016yJWxBnqwtLKmTKCGHKJiL): test runs 30, module lines 5860
 ## J13 · COMPLETE
 
 COMPLETE · PDF-READER #15 · R49 pageSource (fallback on any irregularity; real APP volume pages read from <1 MB), embedded-file streaming SHA-256 (60 MiB: 3.9 MB live vs 60.3), 40/60 MiB text pages read in a 128 MB heap (PieceList + byte lexer; fuzz equal to tip), XMP_MAX via boundOf(pdf,xmp); R41 PER test green. Suite 190 tests all green after merge; format/architecture/coverage 49 of 49/ownership 0 failures. Users: doc-clean R3 R12 entries and file-safety R24 reds not mine. Stale bundles: pdf-worker, ocr-worker, agent-worker, bio-plane.bundled. Record: build/jobs/T51/pdf-reader.md. Size (session_016yJWxBnqwtLKmTKCGHKJiL): test runs 30, module lines 5860
+
+## Completion (job 106, G179: R45 amended, the range yields inside its compute; PDF-READER #16, session_01XSLiprXchrExEGryjSadfu)
+
+**Entry applied.** G179. `bio-plane/src/pdfstructure.mjs` only (+51/-10); new test `bio-plane/test/m/pdf-reader/range-yield.test.mjs` (3 tests, R45).
+
+1. **Root cause (located by instrumenting `readRange`, removed again).** `openPdfRange` took `yieldNow` for the open only; the `range(...)` closure never used it. A 78-page range of the 21 MB synthetic PDF is one unyielded stretch of 250-450 ms, in three loops of `readRange`: the page loop calling `extractPageText` (about 150 ms; its token loop `run`, `pdfstructure.mjs` ~3000, never awaits), the image walk `pdfPageImages` (about 52 ms, the `for (const tk of toks)` loop), and the glyph/word count (about 55 ms, `for (const ch of pg.text)` and `pg.text.match(/\S+/gu)`). Also `extractPageBoxes` on a document's first range (one pass over all pages). Not reading-pipeline's code: it already yields around `range()`.
+2. **Why the tests missed it.** R45's tests measured the open only; none timed a range with a yielding `yieldNow`.
+3. **Failing-first (seen RED, then green).** `range-yield.test.mjs`: RED `0 awaits for a range of 10 pages` and `0 yields` (unsliced one stretch 347 ms, longest stretch 312.9 ms). GREEN: 24 yields, longest stretch 22.0 ms against 331 ms unsliced. Answers identical with and without `yieldNow` (a timer turn, plain, throwing, rejecting) over text, heavy-page, scanned and encrypted files.
+4. **Fix.** A count-based slicer (`SLICE_UNITS` 4096: one per content token, one per 8 code-map entries, one per 64 characters; never a time) threaded through `readRange` into the text walk's token loop, the image walk (`pageImagesOf`, `pdfPageImages` unchanged), the glyph and word count (`matchAll`, counted) and the page-box pass (`pageBoxSteps`). `yieldNow` that throws or rejects is ignored; without one nothing awaits (R44).
+5. **Platform check (Miniflare, the figure BOB named).** A temporary copy of `r7-contention.test.mjs`'s PDF case with the bar at 150 ms times `slow` (not committed, deleted: that file is reading-pipeline's), under L-4B (4 burners): WITH the fix 5 of 5 green, cheap-read p95 63-66 ms, max 225-289 ms, slow x1.88-1.96 (bar about 295 ms). WITHOUT the fix, same load: RED, p95 401 ms, p50 250 ms.
+
+**For BOB / reading-pipeline.** `r7-contention.test.mjs` still asserts the PDF case at `BAR_MS` (500) times `slow`; to make G179's bar the test's, reading-pipeline's job sets the PDF case to 150 ms times `slow` (passes now, 5 of 5 under L-4B).
+
+**Deferred.** One synchronous stretch remains: inflating one large Flate stream (128 KiB compressed and up, `inflateProved`/`inflateSync`) of a single page is not resumable; it is bounded by the 64 MiB page bound and a range's `maxBytes` after its first page. Slicing it needs a resumable decoder; stated, not built.
+
+**Stale artifact (manifest 14).** `pdf-worker/dist/pdf-worker.bundled.mjs` (+ `.bundle.json`) embeds `pdfstructure.mjs`: stale; BOB regenerates.
+
+**Tests and checks.** `node --test test/m/pdf-reader/ test/pdfstructure.test.mjs`: 193 tests, 193 pass, 0 fail. Users: reading-pipeline `*pdf*` tests, `pdf-worker/test/structure.test.mjs`, format-registry: 69 pass, 0 fail. checks: format 0 failures; architecture 0; coverage 49 of 49 ids named, 0; words 0; ownership 3 files, 0. Not run: the whole impact set (2,691 files; B19 asked for my suite and the named files). `node_modules` missing in agent-runner, journey-check, file-scanner, sheet-worker, site (not needed by these tests; not installed).
+
+Size (session_01XSLiprXchrExEGryjSadfu): test runs 12, module lines 5909
