@@ -174,7 +174,7 @@ test("R18 the money trail draws the graph with the trail's set as the centre; a 
   /* no walk joins a money trail's set to a person (money's connections run between the parties of a figure, never to the set that gathers figures), so the
      world's graph of the set is its centre alone; a node one ring out is the externally driven part of the answer */
   const joined = changing(world, me, "exploregraph", (r) => ({ ...r, nodes: r.nodes.concat([{ id: chen, ring: 1, id_kind: "ENT", label: "L. Chen", entity_kind: "person" }]),
-    steps: [{ id: "co:1", from: trail, to: chen, kind: "mentioned_together", word: "mentioned together", class: "derived", grade: { assertion: "C", ends: ["C", "C"] }, evidence: [], valid: {} }] }));
+    steps: [{ id: "co:1", from: trail, to: chen, kind: "mentioned_together", word: "mentioned_together", class: "derived", grade: { assertion: "C", ends: ["C", "C"] }, evidence: [], valid: {} }] }));
   const p = await openAs(world, me, "/app/money/" + trail, { plane: { exploregraph: joined } });
   assert.equal(p.byOp("exploregraph")[0].body.centre, trail);
   const sec = section(p);
