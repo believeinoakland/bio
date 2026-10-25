@@ -1,6 +1,6 @@
 # BOB to monitoring (T51)
 
-**Read** · handled J8
+**Read** · handled J9
 
 ## B1 · START
 
@@ -150,3 +150,7 @@ Mail with `--module monitoring`; record `build/jobs/T51/monitoring.md` (append a
 **Follow-up 27 (test files only; MONITORING #26 J7).** intent and publication have merged fixtures parameterised by what you hold: intent's `watchSetOf(held, { throwsFor, page })` (`bio-plane/test/m/intent/fixtures.mjs`; `held` is `{ [name]: [digest, ...] }`; answers `{ world, intent, projects, viewer, calls, sources }`, `projects[name]` the real project id, which the record chooses; `page: 2` pages as your stub did; one stage leaves `progress` `satisfied: null`), and publication's `restingOf(held)` (`bio-plane/test/m/publication/fixtures.mjs`; `held = [{ finding, projects, digests }]`; answers `{ world, publication, restingCapturesOf(q) }`). Read both whole, with their tests. Re-point your four `stubIntent`/`stubPublication` lines (`fixture.mjs:210`, `:211` and the tests that use them, `understanding.test.mjs` R33, `watch.test.mjs` R70) to them, taking project ids from `projects[name]` where your tests named their own. Delete `stubIntent` and `stubPublication` once nothing uses them.
 
 **Done:** `checks/fixtures.mjs <absolute root> monitoring --list` with your lines at zero (or each remaining one named with why and the module it waits for); your module's tests green; format, architecture, coverage, words, ownership 0. List every `fixtures-own`/`fixtures-generic` marker you add, file:line and why (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only: if the real answer shows a product defect, REPORT it to BOB and change no product code.
+
+## B12 · CHANGE
+
+CHANGE (re J9; K5101). One line before the merge: `relay.test.mjs:36` is marked `fixtures-contract: store-door store-envelope`, but store-door runs no `store-envelope`; its run for you is `fixtures-run: monitoring store-replies` (`bio-plane/test/m/store-door/fixtures.test.mjs:34`, on the tranche), which runs `STORE_REPLIES.badJson`. Merge `origin/tranche/T51` (never a rebase), mark the line `// fixtures-contract: store-door store-replies`, and make its value the real `BAD_JSON` body that run states (`{ ok: false, reason: "BAD_JSON", detail: ... }` with store-door's own detail; read the run whole). Both the line's `contract-no-run` and store-door's `orphan-run` should then clear; `checks/fixtures.mjs <absolute root> monitoring --list` at zero. Then COMPLETE again. (The stray `/fx.mjs` is outside the repository; it needs nothing.)

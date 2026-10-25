@@ -10,6 +10,8 @@ import { readFile } from "node:fs/promises";
 import { world, V, F, WHY, MACHINE, actionsWith } from "./fixture.mjs";
 import { wordsRead, WORDS_OWED, CHRONOLOGY_MAX, PRESSURE_MAX } from "../../../src/filings/index.mjs";
 import { word, hasWord, localize } from "../../../src/setup-words/index.mjs";
+import { timelineRefusal } from "../events/fixtures.mjs";
+import { pressureMarks } from "../docket/fixtures.mjs";
 
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
 const READS = async () => JSON.parse(await readFile(new URL("../../../../docs/development/ux-substrate/screens/words-reads.json", import.meta.url), "utf8")).modules.filings.reads;
@@ -142,15 +144,16 @@ test("R52 a defence packet's gaps are told by key: no challenged statement, no p
   assert.equal(base.ok, true, JSON.stringify(base).slice(0, 300));
   assert.equal(base.sections.challenged.says, word("filings.says.member_named_challenged"));
   assert.equal(base.sections.pressure.says, word("filings.says.pressure_recorded_action"));
+  const marks = pressureMarks();
   const silent = defence(x.filingsWith({ docket: {}, actionHolds: {} }));
   assert.equal(silent.sections.pressure.says, word("filings.module_answers_pressure"));
-  const unread = defence(x.filingsWith({ docket: { docketPressureMarks: () => ({ ok: false }) }, actionHolds: { pressureFor: () => ({ ok: false }) } }));
+  const unread = defence(x.filingsWith({ docket: { docketPressureMarks: () => marks.unreadable }, actionHolds: { pressureFor: () => ({ ok: false }) } }));
   assert.equal(unread.sections.pressure.says, word("filings.docket_legal_marks"), "the docket's read is the last said");
-  const holdsOnly = defence(x.filingsWith({ docket: { docketPressureMarks: () => ({ ok: true, marks: [] }) }, actionHolds: { pressureFor: () => ({ ok: false }) } }));
+  const holdsOnly = defence(x.filingsWith({ docket: { docketPressureMarks: () => marks.empty }, actionHolds: { pressureFor: () => ({ ok: false }) } }));
   assert.equal(holdsOnly.sections.pressure.says, word("filings.pressure_recorded_read"));
   const noDocket = defence(x.filingsWith({ docket: {}, actionHolds: { pressureFor: () => ({ ok: true, items: [] }) } }));
   assert.equal(noDocket.sections.pressure.says, word("filings.module_answers_docket"));
-  const cut = defence(x.filingsWith({ docket: { docketPressureMarks: () => ({ ok: true, marks: [] }) }, actionHolds: { pressureFor: () => ({ ok: true, items: [], truncated: true }) } }));
+  const cut = defence(x.filingsWith({ docket: { docketPressureMarks: () => marks.empty }, actionHolds: { pressureFor: () => ({ ok: true, items: [], truncated: true }) } }));
   assert.equal(cut.sections.pressure.says, word("filings.pressure_items_read", { pressure_max: PRESSURE_MAX }));
   /* no consequences read; no profile, so no defence deadline is known */
   const noCons = defence(x.filingsWith({ consequences: { consequencesOf: () => ({ ok: false }) } }));
@@ -169,8 +172,8 @@ test("R52 the chronology's gaps are told by key: no set to read, no timeline mod
   const real = x.action();
   assert.equal(chron(x.filingsWith(), real).says, word("filings.says.world_events_group"));
   assert.equal(chron(x.filingsWith({ events: {} }), real).says, word("filings.module_answers_timeline"));
-  assert.equal(chron(x.filingsWith({ events: { timeline: () => ({ ok: false, reason: "BAD" }) } }), real).says,
-               word("filings.timeline_read_chronology", { dated: " (BAD)" }));
+  assert.equal(chron(x.filingsWith({ events: { timeline: () => timelineRefusal().badDate } }), real).says,
+               word("filings.timeline_read_chronology", { dated: " (BAD_DATE)" }));
   const t = x.events;
   const cut = x.filingsWith({ events: new Proxy(t, { get: (o, k) => (k === "timeline"
     ? (a) => { const r = o.timeline(a); return r && r.world ? { ...r, world: { ...r.world, truncated: true }, ours: { sources: [{ source: "s1", error: "boom" }, { source: "s2", items: [], truncated: true }] } } : r; }
