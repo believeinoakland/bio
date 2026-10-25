@@ -10,6 +10,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, sha, T0 } from "./fixture.mjs";
 import { caseAuthoringOps, COPY_NOW_MAX_BYTES } from "../../../src/case-authoring/index.mjs";
+import { encryptedRefusal } from "../doc-clean/fixtures.mjs";
 
 const DOC = "INFO-2026-0134-report-txt";
 const Q = "INQ-2026-0001-q";
@@ -112,7 +113,8 @@ test("G9 R85 (controls): copyNow is not asked when the first run does not refuse
   const asked = (w) => { w.copyNow = async (a) => { calls.push(a); return { ok: true }; }; };
   const done = setup(); asked(done.w); done.w.documentCopy(done.sha, "clean");
   assert.equal((await op(done.w, done.P)).ok, true);
-  const refused = setup(); asked(refused.w); refused.w.documentCopy(refused.sha, "refused", { refused: { code: "PDF_ENCRYPTED", detail: "x" } });
+  const { code, detail } = await encryptedRefusal();
+  const refused = setup(); asked(refused.w); refused.w.documentCopy(refused.sha, "refused", { refused: { code, detail } });
   assert.equal((await op(refused.w, refused.P)).code, "DOCUMENT_NOT_CLEANABLE");
   assert.deepEqual(calls, []);
 });
