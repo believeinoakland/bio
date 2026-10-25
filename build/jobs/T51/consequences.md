@@ -1,6 +1,6 @@
 # consequences (T51)
 
-**Status** · session_013DS3NRGfi1kF5LfgamSg1s · depth 2 · COMPLETE · handled B1
+**Status** · session_01XRrEmQ1bqDvp3J3ukHSBpw · depth 2 · COMPLETE · handled B1
 
 ## J1 · REPORT
 
@@ -46,3 +46,20 @@ Size (session_013DS3NRGfi1kF5LfgamSg1s): test runs 3, module lines 2114
 ## J3 · COMPLETE
 
 COMPLETE fix round 10 Wave A batch 4. Published fixtures.mjs (consequencesOfRefusal, successRecordRead) with fixtures.test.mjs; re-pointed all 5 own lines (retrieval noSelection, sources rungOf, case-inputs carryOutcome x2, promotion groupUndetermined); fixtures --list at 0; no fixtures-own or fixtures-generic marker added. Module tests 71/71; impact users (affordances backing, t45-backing) green; format, coverage, words, fixtures, ownership 0. NEEDS BOB: architecture has 2 failures: fixture.mjs imports retrieval/fixtures.mjs and sources/fixtures.mjs, and retrieval and sources are not in consequences' uses in modules.json (not mine to edit); adding both clears them. Details in the record.
+
+## Final pass, item 74 (CONSEQUENCES #16, session_01XRrEmQ1bqDvp3J3ukHSBpw)
+
+Merged `tranche/T51`. Cause 1 (diag2-11 §3): **R27 met.** `#causationNow` and `#basisChanged` now ask `basis-versions.conclusionOf(project, inquiry, viewer)` (its R22) for the determination's project (`d.project`, the part row's `project`) when the question's own state is not `concluded`/`published`; `basisVersions` is a new dep (default `basisVersionsOf(host)`; `uses` already carried the edge). Reopened likewise: a part established by the project's conclusion reads `causation_reopened` once the project withdraws it; the question's own history is still read when its own state is concluded.
+
+1. Failing-first test: `assessed.test.mjs`, two tests naming R27 (R5, R8), over basis-versions' real `conclude` (project, `reading`, then `withdraw: true`). Red on the earlier code (part `unproven` though concluded in the project, question head `open`), green now. Controls: no conclusion, and concluded in another project, stay `unproven`; a revision after the conclusion is `established`; `consequencesOf` lists no unproven part.
+2. Fix at `consequences/index.mjs` (`#concluded`, one place for both reads).
+3. Why the tests missed it: every consequences test made a question concluded by writing its own state (`inquiryAt(INQ, "concluded")`); none concluded through basis-versions in a project. The world now always carries the real basis-versions (`w.bv`), because it joins every promotion and a lazily made instance without its tables breaks promotes; `w.project(title, owner, cites)` can cite a question.
+
+REPORT for BOB: the walker's escalation-end chain through the door (L181) is control-plane's; not tested here (K5138). Requirement met: R27 (BOB strikes the mark).
+
+Tests: consequences 73/73; users escalation 102, actions 154, filings 164, action-plans 105, plan-work 52 all pass. Inherited reds, identical on `tranche/T51`: affordances t33 (1 here, 3 on the tranche tip), op-declarations 3 (t33, t36, t42), all op-table/ACT_HELP tests unrelated to this change. Checks: format 0; architecture 0; coverage 27 of 27, 0; words 0 (also the 13-module cross-run); fixtures --list 0, no marker added; ownership 0.
+Size (session_01XRrEmQ1bqDvp3J3ukHSBpw): test runs 12, module lines 2127
+
+## J4 · COMPLETE
+
+COMPLETE final pass item 74. R27 met: a question concluded in the determination's project (basis-versions conclusionOf) establishes the causation and is reopened when withdrawn; failing-first tests in assessed.test.mjs (red, then green). Module tests 73/73; users escalation, actions, filings, action-plans, plan-work green; affordances/op-declarations reds are identical on tranche/T51. format, architecture, coverage, words, fixtures, ownership 0; no fixtures marker added. REPORT: the walker's escalation-end chain through the door (L181) is control-plane's. Details in the record.

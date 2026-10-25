@@ -319,3 +319,7 @@ Mail with `--module content`; record `build/jobs/T51/content.md` (append a new s
 1. **An extent of a kind the format cannot hold is admitted** (`diag2-06.md` §5; content R62, new): `checkContentExtent` (`content/extent-core.mjs`) judges each kind only against its own figure; a `pdf-page` over a docx, a `slide-shape` over a text answer null. Refuse `CONTENT_EXTENT_OUT_OF_RANGE` naming the kind and the format, from the context's format (`containerKindOf`); a format not held is not refused (R8). Test: `converts-extent.test.mjs`, the matrix §5 lists, controls a kind the format holds and `format: null`.
 
 **Done:** module tests green; `checks/fixtures.mjs <absolute root> content --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B22 · CHANGE
+
+CHANGE (K5161, plan item 78 (4); READING-PIPELINE #38 J53): reading-pipeline R63 is merged (a text or HTML reading states `container_extent` with `paragraphs: n`). Content s side, in your job: merge `origin/tranche/T51`, then in `bio-plane/test/m/content/converts-extent.test.mjs` add the case that paragraph 99 of a three-paragraph text (the reading made by reading-pipeline s convert-extent text case, through its published fixture or its real code) answers `CONTENT_EXTENT_OUT_OF_RANGE`, and paragraph 3 resolves. If content does not refuse it today, that is a defect of yours to fix in this job (failing-first). Name it in your COMPLETE.

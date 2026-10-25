@@ -1,6 +1,6 @@
 # monitoring (T51)
 
-**Status** · session_01HedZcxhsZ2J2MxA5Rp8RZy · depth 2 · COMPLETE · handled B13
+**Status** · session_01CECUdTfDDfi9p5Y2ZtFV4w · depth 2 · COMPLETE · handled B13
 
 ## J1 · COMPLETE
 
@@ -236,3 +236,22 @@ Existing tests that took one 404 as `removed` were brought to the amended R4 by 
 **Checks** (absolute root, from `/home/user/civicos-process`): format 178 modules, 0 failures; architecture monitoring 25 files, 132 imports, 0 failures; coverage 65 of 65, 0 failures; words (monitoring following link-sweep scheduler) 0 failures; ownership (tranche/T51 to job/T51/monitoring) 10 files, 0 failures.
 
 Size (session_01HedZcxhsZ2J2MxA5Rp8RZy): test runs 8, module lines 3140
+
+## J12 · COMPLETE
+
+COMPLETE for T51 monitoring, fix round 10 (START B14, K5148; plan item 74, K5157), session session_01CECUdTfDDfi9p5Y2ZtFV4w.
+
+**Entry applied: cause 1 (diag2-06 §1), monitoring R79 met.** Every cited line re-read first: the tick promoted the copy with a register row only, called no registrar, and carried `data/provenance.json` forward untouched, so `extraction.#storedDocument` found no document for the digest. Now (`monitoring/index.mjs`): (a) `#withCopyEntry` adds a provenance document entry for the copy to the carried register, in the same promotion as the file and register row: `file`, `locator` (the baseline entry's), `retrieved`, `authority` as the baseline entry states it (else `authority_state: undetermined` with a basis), `origin` (the baseline's when `named_request` or `sweep`, else `named_request`), `attestation_attempts: []`, and `capture` {method, `grade` = record-grammar's `EARNED_CAPTURE_CEILING` (a direct fetch), `actor_class: daemon`, `actor`, `sha256`, `encoding`, `bytes`, `content_type`}. An entry that already names the digest is not added twice. (b) After the promotion that filed the copy, the tick writes `{kind: "reading", sha, carrier}` through `this.capture.registerJob` and then `armJobs`, once per filed copy (a later tick seeing the same bytes owes nothing again). A registrar that refuses or throws is stated in the answer's `note`; a host with no registrar (no owed-work ledger) owes nothing. The baseline entry stays first and unchanged (R3 reads the first row of the locator, so the baseline does not advance; not changed).
+
+**Met ids for BOB to strike:** R79.
+
+**Tests (failing first, seen red on the old code, then green):** `tick.test.mjs` "R79 a copy the tick files ...": the host's registrar (test-support's `jobRegistrarStub`) receives exactly one `reading` for the new digest and the alarm is armed; the provenance holds two entries, the baseline's and one naming the new digest with locator, file, content type and bytes; the register's home of the digest is the bundle; the same bytes seen again file and owe nothing twice; an unregistered copy (promotion refused) owes nothing and files no entry; an unchanged tick owes nothing; a refusing registrar is named in `note`. `invariants.test.mjs` R37 was pinned to the old behaviour (`documents` equal to `[baseline]`); it now asserts the baseline entry is first and unchanged and the copy is a later entry (R79 amends exactly that; R37's text, no hash as current, still holds). No assertion was weakened.
+
+**Why the tests missed it:** R9's test asserted `capture.held/registered/file/why` and the promotion, never what the record could do with the copy afterwards; the fixture host had no registrar; the register assertion in R37 pinned "the register is unchanged" as if it were the doctrine.
+
+**Deferred:** none. **Not in my paths (REPORT):** (1) the walker's full chain through the door (Check now, reading, notice graded, ADOPT) is control-plane's: a through-the-door case for BOB to place; I add none. (2) The diagnosis asks for the extraction read of the digest "by extraction's published fixture": extraction's fixtures read only their own bytes and monitoring does not use extraction, so I test the lookup that read makes (provenance's home of the digest, and the bundle's entry naming it); the real read is the door case in (1). (3) A fixtures marker I added: `tick.test.mjs:7`, `:564`, `:607` (`// fixtures-contract: plane job-registrar`, the import of test-support's `jobRegistrarStub`, the registrar it installs on the host, and one registrar that refuses). They need plane's `bio-plane/test/m/plane/r10-fixtures-run.test.mjs` to add the line `// fixtures-run: monitoring job-registrar` (as acquisition's, there); until then `checks/fixtures.mjs <root> monitoring` shows those four lines as `contract-no-run`. (4) In following: `R1 C-137.1-C-137.20` fails on the tranche without my change too (run with my work stashed): not mine.
+
+**Tests run** (`node --import ./bio-plane/test/platform-sqlite.mjs --test`): `bio-plane/test/m/monitoring/` tests 178, pass 178, fail 0. Users of the tick: scheduler 185/185, link-sweep 46/46, machinery-producers 38/38, queue-producers 155/155, following 127/128 (the one above, not mine).
+**Checks** (absolute root, from `/home/user/civicos-process`): format 178 modules, 0 failures; architecture monitoring 26 files, 133 imports, 0 failures; coverage 66 of 66, 0 failures; words monitoring 0 failures; ownership (tranche/T51 to HEAD) 4 files, 0 failures; fixtures `--list`: the four `contract-no-run` lines above, no other new line.
+
+Size (session_01CECUdTfDDfi9p5Y2ZtFV4w): test runs 10, module lines 4233

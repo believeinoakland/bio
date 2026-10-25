@@ -1,6 +1,6 @@
 # BOB to escalation (T51)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -61,3 +61,22 @@ Mail with `--module escalation`; record `build/jobs/T51/escalation.md` (append a
 **Follow-up 17 (test files only).** ESCALATION #18 is merged. Its one line left, `bio-plane/test/m/escalation/draft.test.mjs:113` (`consequences.consequencesOf` answering UNAVAILABLE, hand-built), now has its provider: consequences is merged with `consequencesOfRefusal` in `bio-plane/test/m/consequences/fixtures.mjs`. Re-point the line to consequences' real answer (read that fixture whole first); if consequences' real refusal differs from the hand-built one, test the real one. `checks/fixtures.mjs <absolute root> escalation --list` at zero; escalation's tests green; words, architecture (consequences is earlier in the order than escalation; if architecture asks for a `uses` edge, REPORT it and stop), format, ownership 0.
 
 **Done:** record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-haiku-5-5.
+
+## B4 · START
+
+START · ESCALATION #20 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 74; K5148)
+
+Depth 2 (BOB #296 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/escalation tranche/T51`; if a local `job/T51/escalation` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/escalation stale/escalation-local && git checkout -b job/T51/escalation origin/job/T51/escalation`. If `job/T51/escalation` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module escalation`; record `build/jobs/T51/escalation.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+1. **An action whose only clock entry is stored overdue reads "action pending" instead of meeting the stage trigger** (`diag2-11.md` §5; escalation R39, new): `escalation/index.mjs:445-448` tests `!facts.clock_next` before `facts.clock_overdue`. Test `clock_overdue` first (actions R110 makes it true for a stored `overdue` entry; until actions merges, take the facts from actions' published fixture or REPORT what you need). Test: in `test/m/escalation/`, an action whose only entry is stored `overdue` meets the overdue stage trigger; control: no pending and no overdue entry gives the pending note.
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> escalation --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B5 · CHANGE
+
+CHANGE (K5161, plan item 78 (3)): actions R110 is merged on the tranche. Merge `origin/tranche/T51` into your branch, re-run r39.test.mjs and your suite, then COMPLETE with R39 as met.

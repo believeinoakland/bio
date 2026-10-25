@@ -314,6 +314,7 @@ export const T33_NON_ACTS = {
   standingaiswitch: "the copy's configuration: whether standing questions' AI half runs; an administrator's, not an act on an object",
   rule: R("one rule service's value with its basis, grade and label, or not held"),
   asktallies: R("the day counts of answered, refused and withheld results, to an administrator"),
+  ruleservicesstate: localize("answers.declared.ruleservicesstate", "read: whether the rule services are switched on, so a screen draws their control only while on; writes nothing"),   // K5157: answers' declared read, its owner's sentence (R13, R51)
   standing: R("a member's own standing questions"),
   standinganswers: R("the runs of a member's own standing questions that found something new"),
   /* following */

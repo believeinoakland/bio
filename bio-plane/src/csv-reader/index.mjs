@@ -412,7 +412,7 @@ function decideDelimiter(text, first) {
   }
   if (consistent.length === 1) {
     const d = consistent[0];
-    return { delimiter: d.ch, name: d.name, confidence: "certain", lines,
+    return { delimiter: d.ch, name: d.name, confidence: "certain", lines, modalLines: d.modalLines,
       signals: [d.times === lines
         ? localize("office-readers.csv.name_occurs_v1_time_s", "{name} occurs {v1} time(s) outside quotes on every one of the first {length} complete lines", { name: String(d.name), v1: String(modal[d.name]), length: String(lines) })
         : localize("office-readers.csv.delimiter_in_the_majority_of_the_records", "{name} occurs {v1} time(s) outside quotes on {times} of the {length} complete lines read, a majority", { name: String(d.name), v1: String(modal[d.name]), times: String(d.times), length: String(lines) })],
@@ -683,7 +683,7 @@ function fileDialect(ctx) {
   } else {
     for (const w of windows) if (w.dec.lines > pick.dec.lines) pick = w;
   }
-  const delimiter = { ...pick.dec, lines: windows.reduce((n, w) => n + w.dec.lines, 0) };
+  const delimiter = { ...pick.dec, lines: windows.reduce((n, w) => n + w.dec.lines, 0), records: pick.dec.lines };
   const delim = delimiter.delimiter;
   const disagree = [];
   for (const w of windows) {
@@ -1221,6 +1221,15 @@ const BINARY_SIGNATURES = [
 const hasBinarySignature = (h) => BINARY_SIGNATURES.some((sig) => h.length >= sig.length && sig.every((v, i) => h[i] === v))
   || (h.length >= 12 && h[0] === 0x52 && h[1] === 0x49 && h[2] === 0x46 && h[3] === 0x46 && h[8] === 0x57 && h[9] === 0x45 && h[10] === 0x42 && h[11] === 0x50);   // WebP
 
+/** R26: a file declared plain text (type `text/plain` or a `.txt` name) that no declared CSV or TSV (its type, or a `.csv`/`.tsv`
+ *  name) overrides: its delimiter must repeat with one count on the majority of its lines, not merely appear on them. */
+function isDeclaredPlainText(lowerName, type) {
+  const t = type.split(";")[0].trim().toLowerCase();
+  if (t === CSV_CONTENT_TYPE || CSV_CONTENT_TYPE_SYNONYMS.includes(t) || t === TSV_CONTENT_TYPE) return false;
+  if (lowerName.endsWith(".csv") || lowerName.endsWith(".tsv")) return false;
+  return t === "text/plain" || lowerName.endsWith(".txt");
+}
+
 /** True exactly when `type` names a CSV, TSV or plain or opaque type, `name` ends in `.csv`, `.tsv`, `.tab` or `.txt`, and
  *  `head` (the first bytes of the file, up to 1 MiB) is delimited text: no binary signature, no NUL in an 8-bit head, an
  *  encoding R7 reads and one consistent delimiter. Never throws. */
@@ -1237,6 +1246,7 @@ export function isDelimitedText(name, type, head) {
     if (hasBinarySignature(h)) return false;
     const s = scanDialect(h, undefined);
     if (!s.ok || s.encoding.encoding == null || s.delimiter.delimiter == null) return false;
+    if (isDeclaredPlainText(lower, type) && !(s.delimiter.modalLines * 2 > s.delimiter.records)) return false;
     if (!s.utf16 && s.windows.some((w) => w.scan && w.scan.nul > 0)) return false;
     return true;
   } catch {
