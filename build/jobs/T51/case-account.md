@@ -13,7 +13,7 @@
 
 **Deferred.** None.
 
-**Found in another module.** `case-inputs` `index.mjs:260`, the words check's inline finding "what the outcome rests on is a list of cites in case-account R5's s…", is case-inputs' own. Nothing of this module's changed what its users read except the refusals' `detail` words (users' tests run below, green).
+**Found in another module.** `build.mjs --check` of setup-words reports `bio-plane/src/setup-words/rows.mjs` stale: word 21966 (`control-plane.declared.subscriptionsignin`) has its row `interfacewords` in the registry and the file gives `subscriptionsignin`. Not this module's; for BOB.
 
 **Tests and checks.**
 - `node --test bio-plane/test/m/case-account/*.test.mjs`: 48 pass, 0 fail (R17's new file `t51-words.test.mjs`: 5 tests, with controls).
