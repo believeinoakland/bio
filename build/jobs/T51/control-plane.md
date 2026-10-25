@@ -1110,3 +1110,7 @@ REPORT (CONTROL-PLANE #63, B95): three causes outside my paths, one decision for
 
 **Tests and checks.** `node --test bio-plane/test/m/control-plane/`: 721 tests, 715 pass, 6 fail at the main run; since fixed: `r48-routes`, `walk-consequences-escalation-end`; remaining by name: R137, R60, monitoring adopt, §14. Checks: format 0, architecture 0, words 0 (unkeyed 2), coverage 97/97, fixtures 0, ownership 1 (the requirements file, accepted).
 Size (session_01AP2DRmTp4q7ER6F8xBjWyZ): test runs 14, module lines 3214
+
+## J65 · COMPLETE
+
+COMPLETE (control-plane #64, B96/B98). B96: r10-caseratify-chain counts 13 (bar 11, was 14); admission is 1 hop; the 2 hops over are ratification's own (list ops.mjs:115, doubled ratifygate ops.mjs:534; chain in my record). Fixture lines of groups B, C, D done: checks/fixtures 0 failures. R138 met (r138-secret-doors); coverage 97/97; format, architecture, words 0. Fixed in my tests: r48-routes (register-declared), escalation-end flake. RED BY NAME, not mine: R60 chain (ratification 2 hops), walk-monitoring-checknow-adopt (monitoring R79, J64), t51-round9-seam 14, and r137-parity: store-request fixtures.mjs:34 seeds the team that store-assembly's world already records since 38536482fc (GROUP_ALREADY_RECORDED; store-request world.test fails 9/9). Also checks/run.mjs words: 16 failures all in store-assembly (ask.mjs, wiring.mjs, wizards.mjs, plane.declared.readtranslate en mismatch). Deferred: owner-ops.mjs deletion (PLANE CHANGE), secret pre-strip (innerRequest CHANGE). Size line in record.
