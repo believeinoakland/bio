@@ -201,6 +201,7 @@ const srcEngine = { name: "tesseract-wasm", version: "0.11.0", model: "tessdata_
 
 const REAL_ENGINE_NAMES = { name: "tesseract-wasm", version: "0.11.0", model: "tessdata_fast/eng" };
 
+// fixtures-own: harness the engine seam of this member's own makeMember (src/member.mjs takes the engine as an argument); a scripted engine is how a test reaches a step no real page reaches
 /** A stand-in engine. `regions` is what `transcribeFrame` answers; `calls` records every frame it was given. */
 function stubEngine({ regions = [], check = null, frame = null, boxCount, words, orientation = { rotation: 0 } } = {}) {
   const e = { ...REAL_ENGINE_NAMES, calls: [], checks: 0 };
@@ -855,7 +856,7 @@ console.log("\n--- A12 · R25: a picture says how much of it the engine could re
   const junk = await ask([line("fumnery Staft recorwenends thet", 0.3), line("comeanttes soprove", 0.2)]);
   t("R25 a share under LEGIBLE_REFUSE_BELOW is refused PICTURE_NOT_LEGIBLE (200, ok:false), carrying the figures, with no text answered",
     [junk.r.status, junk.r.body.ok, junk.r.body.reason, junk.r.body.refusal.legibility, junk.r.body.pages, junk.w.engine.calls.length],
-    [200, false, "PICTURE_NOT_LEGIBLE", { words: 6, confident_words: 0, share: 0 }, undefined, 1]);
+    [200, false, "PICTURE_NOT_LEGIBLE", { words: 6, confident_words: 0, share: 0 }, undefined, 4]);
   t("R25 the refusal says why in a sentence, and its detail is the declared one",
     [junk.r.body.detail === REFUSALS.PICTURE_NOT_LEGIBLE, junk.r.body.notes.length, junk.r.body.notes[0].trim().length > 0], [true, 1, true]);
   const edge2 = await ask([line("a b", 0.9), line("c d e f g h i j", 0.1)]);
@@ -960,9 +961,9 @@ console.log("\n--- A13 · R26: the engine's orientation is asked of every frame;
     t(`R26 a ${kind} the engine read nothing of and finds turned is asked again, and read upright`,
       [blank.r.body.ok, blank.turns, blank.r.body.image.turned_deg], [true, [0, 180], 180]);
     const both = await run({ kind, claim: { rotation: 90 }, side: garbage, up: garbage });
-    t(`R26 R25 a ${kind} still under the floor after being turned is refused as R25 says, with no text`,
+    t(`R26 R25 a ${kind} still under the floor after being turned is read the other ways too (fix round 10), and refused as R25 says, with no text`,
       [both.r.body.ok, both.r.body.reason, both.turns, both.r.body.pages, both.r.body.refusal.legibility.share],
-      [false, kind === "picture" ? "PICTURE_NOT_LEGIBLE" : "PAGE_NOT_LEGIBLE", [0, 270], undefined, 0]);
+      [false, kind === "picture" ? "PICTURE_NOT_LEGIBLE" : "PAGE_NOT_LEGIBLE", [0, 270, 90, 180], undefined, 0]);
   }
 
   /* an engine that cannot tell is stated, never read as garbage and answered with no mention */
