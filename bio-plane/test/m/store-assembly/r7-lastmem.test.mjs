@@ -38,7 +38,7 @@ test("R72 (G69): after a row ends `finished`, the last run of that digest and ki
   await reporting(ZEROS, async () => {
     let t = 9_000_000;
     const { ctx } = storage();
-    const h = pendingOf(ctx, { now: () => t, workers: { reading: async () => { t += 1_500; return { ok: true, read: true }; } } });
+    const h = pendingOf(ctx, { now: () => t, clock: () => t, workers: { reading: async () => { t += 1_500; return { ok: true, read: true }; } } });
     h.migrate();
     await h.owe({ kind: "reading", sha: D });
     await h.consumer().tick(t);
@@ -58,7 +58,7 @@ test("R72 (G69): a later run replaces the last run of its (digest, kind); a fina
   let t = 11_000_000, n = 0;
   const answers = [{ ok: false, reason: "SLOW" }, { ok: true, more: true, detail: { cursor: 2 } }, { final: true, why: "NO_TEXT" }];
   const { ctx } = storage();
-  const h = pendingOf(ctx, { now: () => t, workers: { reading: async () => { t += 100 * (n + 1); return answers[n++]; } } });
+  const h = pendingOf(ctx, { now: () => t, clock: () => t, workers: { reading: async () => { t += 100 * (n + 1); return answers[n++]; } } });
   h.migrate();
   await h.owe({ kind: "reading", sha: D });
   const seen = [];

@@ -15,7 +15,7 @@ const D = "a".repeat(64), E = "b".repeat(64);
 test("R71 (G67): a reading row after a 40 s render does not inherit it: `last_ms` and `own_ms` are the row's own 2 s, and `wait_ms` is reported apart", async () => {
   let t = 5_000_000;
   const { ctx } = storage();
-  const h = pendingOf(ctx, { now: () => t, workers: {
+  const h = pendingOf(ctx, { now: () => t, clock: () => t, workers: {
     subresources: async () => { t += 40_000; return { ok: true, done: true }; },   /* the earlier consumer: a 40 s render */
     reading: async () => { t += 2_000; return { ok: true, more: true, detail: { cursor: 1 } }; },
   } });
@@ -35,7 +35,7 @@ test("R71 (G67): a reading row after a 40 s render does not inherit it: `last_ms
 test("R71 (G67): control: a row that is the only one of its tick takes the same time as before, and a row that fails reports its own time too", async () => {
   let t = 5_000_000;
   const { ctx } = storage();
-  const h = pendingOf(ctx, { now: () => t, workers: { reading: async (row) => { t += row.sha === D ? 3_000 : 500; return row.sha === D ? { ok: false, reason: "SLOW" } : { ok: true, read: true }; } } });
+  const h = pendingOf(ctx, { now: () => t, clock: () => t, workers: { reading: async (row) => { t += row.sha === D ? 3_000 : 500; return row.sha === D ? { ok: false, reason: "SLOW" } : { ok: true, read: true }; } } });
   h.migrate();
   await h.owe({ kind: "reading", sha: D });
   await h.consumer().tick(t);
@@ -48,7 +48,7 @@ test("R71 (G67): a worker awaited by the row is its `wait_ms`, apart from `own_m
   const advance = (ms) => { t += ms; };
   const x = await store({ env: { OCR_WORKER: { fetch: async () => { advance(25_000); return { ok: true }; } },
                                   PDF_WORKER: { fetch: async () => { advance(1_000); return { ok: true }; } } },
-                          before: (ctx, env) => { pendingOf(ctx, { env, now: () => t }); } });
+                          before: (ctx, env) => { pendingOf(ctx, { env, now: () => t, clock: () => t }); } });
   extractionOf(x.ctx).readHeld = async ({ env }) => {
     advance(3_000);                                   /* the row's own thread, between the awaits */
     await Promise.all([env.OCR_WORKER.fetch("https://ocr/page/1"), env.PDF_WORKER.fetch("https://pdf/info")]);

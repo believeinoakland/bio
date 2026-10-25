@@ -137,3 +137,23 @@ test("R93: an owed row comes due by the passage of the world's time: registered 
   await w.tick(1);
   assert.equal(rowOf().attempts, 2, "asked again once the clock reaches its due");
 });
+
+test("R71 (K5132): under a pinned instance clock a run's measured times are still its work: own_ms is non-zero for an owner that works 30 ms, while its row's instants are the pinned clock's", async () => {
+  const { storage } = await import("./fixture.mjs");
+  const { pendingOf } = await import("../../../src/store-assembly/pending.mjs");
+  const st = storage();
+  const pinned = WORLD_NOW;
+  const busy = async () => { const until = performance.now() + 30; while (performance.now() < until) { /* real work */ } return { ok: true, done: true }; };
+  const ledger = pendingOf(st.ctx, { now: () => pinned, workers: { scan: busy } });
+  ledger.migrate();
+  const sha = "e".repeat(64);
+  assert.equal(ledger.registerJob({ kind: "scan", sha }).ok, true);
+  await ledger.consumer().tick(pinned);
+  const [last] = ledger.ledgerLast({ sha });
+  assert.equal(last.outcome, "finished");
+  assert.ok(last.own_ms >= 25, `own_ms ${last.own_ms} measures the work`);
+  assert.ok(last.last_ms >= last.own_ms);
+  const row = ledger.jobRow({ sha, kind: "scan" });
+  assert.equal(row.registered_at, pinned, "the row's instants are the instance clock's");
+  assert.equal(row.ended_at, pinned);
+});

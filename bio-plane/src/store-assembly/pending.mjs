@@ -203,7 +203,8 @@ const sumRows = (cursors) => {
 
 /** The pending-work holder of a host (one per storage): `{migrate, registerJob, armJobs, owe, add, list, jobRow, readingsEnded, summary,
  *  consumer, ...}`. `deps`: `env`, `store` (a function answering the object's namespace), `now` (the clock; a test's own), `deliver`
- *  (control-plane's `deliverOwedRender`, handed by the composition) and `workers` (kind -> async `(entry, {at}) -> answer`, replacing or
+ *  (control-plane's `deliverOwedRender`, handed by the composition), `clock` (the clock durations are measured on, the wall by default; K5132)
+ *  and `workers` (kind -> async `(entry, {at}) -> answer`, replacing or
  *  supplying the owner of that kind; a test's, or the composition's for the kinds this module runs no owner of). */
 export function pendingOf(ctx, deps = {}) {
   let h = HOLDERS.get(ctx);
@@ -212,6 +213,11 @@ export function pendingOf(ctx, deps = {}) {
   const env = deps.env ?? null;
   const store = typeof deps.store === "function" ? deps.store : () => "bio";
   const now = typeof deps.now === "function" ? deps.now : () => Date.now();
+  /* K5132 (R71, R78): durations are measured on a clock of their own, `deps.clock` (the wall by default), never the instance clock `now`,
+     so a pinned instance clock (`BIO_NOW_MS`) that stamps the rows' instants still measures a run's work */
+  const clock = typeof deps.clock === "function" ? deps.clock : () => Date.now();
+  /* a run's start on that clock, by row, while it runs */
+  const begun = new Map();
   const all = (q, ...a) => [...sql.exec(q, ...a)];
   const rowOf = (sha, kind) => all(`SELECT * FROM keeps_pending WHERE sha=? AND kind=?`, sha, kind)[0] || null;
   const backoff = (attempts) => Math.min(PENDING_RETRY_MAX_MS, PENDING_RETRY_MS * 2 ** Math.min(20, Math.max(0, attempts - 1)));
@@ -286,14 +292,14 @@ export function pendingOf(ctx, deps = {}) {
   const meterOf = (row) => {
     const k = keyOf(row);
     let m = meters.get(k);
-    if (!m) { m = { open: 0, since: 0, total: 0, ms() { return m.total + (m.open > 0 ? now() - m.since : 0); } }; meters.set(k, m); }
+    if (!m) { m = { open: 0, since: 0, total: 0, ms() { return m.total + (m.open > 0 ? clock() - m.since : 0); } }; meters.set(k, m); }
     return m;
   };
   /* the env an owner is handed: the same, its worker bindings' `fetch` timed. Without the bindings (a test's) the env is the owner's own. */
   const timed = (row) => {
     if (!env || typeof env !== "object") return env;
     const m = meterOf(row);
-    const span = async (fn) => { if (m.open++ === 0) m.since = now(); try { return await fn(); } finally { if (--m.open === 0) m.total += Math.max(0, now() - m.since); } };
+    const span = async (fn) => { if (m.open++ === 0) m.since = clock(); try { return await fn(); } finally { if (--m.open === 0) m.total += Math.max(0, clock() - m.since); } };
     return new Proxy(env, { get(target, key) {
       const v = target[key];
       if (!WORKER_BINDINGS.includes(key) || !v || typeof v.fetch !== "function") return v;
@@ -306,8 +312,8 @@ export function pendingOf(ctx, deps = {}) {
   const openInstruments = (row) => {
     const t = { beat: null, stretch: null, timer: null, cursors: [], run: 0, most: 0, reset: null, unmeasured: false };
     try {
-      t.beat = now();
-      t.timer = setInterval(() => { const n = now(); const gap = Math.max(0, n - t.beat - LAG_EVERY_MS); t.stretch = Math.max(t.stretch ?? 0, gap); t.beat = n; }, LAG_EVERY_MS);
+      t.beat = clock();
+      t.timer = setInterval(() => { const n = clock(); const gap = Math.max(0, n - t.beat - LAG_EVERY_MS); t.stretch = Math.max(t.stretch ?? 0, gap); t.beat = n; }, LAG_EVERY_MS);
     } catch { t.timer = null; }
     meter.active = t;
     instruments.set(keyOf(row), t);
@@ -324,7 +330,8 @@ export function pendingOf(ctx, deps = {}) {
   /* a row's run, measured at its end: the elapsed time, the part awaiting workers, the rest, the memory marker (null where none is measured)
      and what the run cost (R105) */
   const measure = (row, units = null) => {
-    const last_ms = Math.max(0, Math.round(now() - (row.started_at ?? now())));
+    const from = begun.get(keyOf(row));
+    const last_ms = Math.max(0, Math.round(from === undefined ? 0 : clock() - from));
     const wait_ms = Math.min(last_ms, Math.max(0, Math.round(meterOf(row).ms())));
     return { last_ms, wait_ms, own_ms: last_ms - wait_ms, last_mem: memory(), ...closeInstruments(row, units) };
   };
@@ -337,6 +344,7 @@ export function pendingOf(ctx, deps = {}) {
                 max_run_statements=NULLIF(MAX(COALESCE(keeps_last.max_run_statements, 0), COALESCE(excluded.max_run_statements, 0)), 0)`,
              row.sha, row.kind, m.last_ms, m.own_ms, m.wait_ms, m.last_mem, outcome, now(), m.max_stretch_ms, m.rows_read, m.rows_written, m.units, m.max_run_statements ?? null);
     meters.delete(keyOf(row));
+    begun.delete(keyOf(row));
   };
   const num = (v) => (v === null || v === undefined ? "NULL" : String(Math.round(v)));
   /* `row.attempts` already holds this run's try (`stamp`); the run's end clears `started_at` and notes how long it took and what it cost */
@@ -404,7 +412,8 @@ export function pendingOf(ctx, deps = {}) {
     const c = countersIn(r);
     const progressed = moved || (c.written ?? 0) > 0;
     const at = now();
-    const elapsed = Math.max(0, at - (row.started_at ?? at));
+    const from = begun.get(keyOf(row));
+    const elapsed = from === undefined ? 0 : Math.max(0, clock() - from);
     const rate = (c.written ?? 0) > 0 && elapsed > 0 ? Math.round(((c.written * 1000) / elapsed) * 100) / 100 : null;
     const version = typeof (r && (r.reader_version ?? r.version)) === "string" ? String(r.reader_version ?? r.version).slice(0, 80) : null;
     sql.exec(`UPDATE keeps_pending SET written=written+?, skipped=skipped+?, owed=CASE WHEN ? IS NULL THEN owed ELSE ? END,
@@ -474,6 +483,7 @@ export function pendingOf(ctx, deps = {}) {
      one more try, the back-off it will be first again after, and its unit stamped (R101) */
   const stamp = (row, at) => {
     const n = row.attempts + 1, began = now();
+    begun.set(keyOf(row), clock());
     const state = row.kind === "fetch" ? "fetching" : "reading";
     sql.exec(`UPDATE keeps_pending SET started_at=?, attempts=?, last_try=?, due_at=?, state=? WHERE sha=? AND kind=?`, began, n, at, at + backoff(n), state, row.sha, row.kind);
     const unit = unitOf(json(row.detail, {}));
