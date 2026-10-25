@@ -1,6 +1,6 @@
 # publication (T51)
 
-**Status** · session_016A5pnT8yWBYi5ogyJCNRvX · depth 2 · COMPLETE · handled B12
+**Status** · session_01B3sty8GH9yv5VdR2zqwU5D · depth 2 · WORKING · handled B12
 
 ## J1 · COMPLETE
 
