@@ -1,6 +1,6 @@
 # BOB to affordances (T51)
 
-**Read** · handled J25
+**Read** · handled J27
 
 ## B1 · START
 
