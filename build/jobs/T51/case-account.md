@@ -1,6 +1,6 @@
 # case-account (T51)
 
-**Status** · session_012jxbsx8F3dmr7RMWNhy3Pt · depth 2 · WORKING · handled B1
+**Status** · session_012jxbsx8F3dmr7RMWNhy3Pt · depth 2 · COMPLETE · handled B1
 
 ## Completion (T51-152)
 
