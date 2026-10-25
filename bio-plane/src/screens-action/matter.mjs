@@ -50,6 +50,16 @@ export const matter = Object.freeze({
       if (typeof m !== "object") return cs.esc(String(m));
       return cs.esc([m.amount !== undefined ? m.amount : m.value, m.currency || m.unit].filter(function (x) { return x !== undefined && x !== null && x !== ""; }).join(" "));
     },
+    // fix round 10 (diagnosis 11 §6): a part's label is the owner's `{machine_work, says}` (a plain sentence is read as it is); drawn by what it says,
+    // never as the object. A causation not established is drawn by the owner's own `why` (record data), so a member sees it before an escalation is refused for it.
+    labelOf: function (p) {
+      const l = p && p.label;
+      return typeof l === "string" ? l : l && typeof l === "object" && typeof l.says === "string" ? l.says : "";
+    },
+    causeOf: function (p) {
+      const c = p && p.causation;
+      return c && typeof c === "object" && c.state !== "established" && c.state !== "not_applicable" && typeof c.why === "string" ? c.why : "";
+    },
     affected: function (cs, p) {
       const a = p.affected;
       if (!a) return "";
@@ -268,13 +278,22 @@ export const matter = Object.freeze({
         + P.note(cs, "screen.matter.without_a_concluded_question_the_part_is") + P.note(cs, "screen.matter.zero_is_recorded_as_no_harm_claimed")
         + '<div class="mk-acts">' + cs.act("consequencerecord", { tone: "primary" }) + "</div>");
     },
-    // R50: a recorded part revised, with the reason; what is left empty is kept as it was
+    // R50: a recorded part revised, with the reason; what is left empty is kept as it was. It offers the same how-it-is-known controls and the
+    // question as the record form (fix round 10, diagnosis 11 §4): a part recorded as not assessed can become assessed from here.
     reviseForm: function (cs, view, k) {
       const P = view.parts;
+      const ql = P.later(cs, view, "questions", "projectquestions", { project: k.project, limit: "200" }, "");
+      const qs = ql.state === "ok" && ql.value && Array.isArray(ql.value.items) ? ql.value.items : [];
       return cs.sec("act.consequencerevise.label.matter", P.note(cs, "screen.matter.change_what_is_wrong_say_why_then")
         + cs.choice("mt-r-part", "screen.matter.consequences", k.parts.map(function (p) { return { value: p.id, text: p.affected && (p.affected.name || p.affected.description) || p.id }; }))
         + cs.field("mt-r-desc", "screen.matter.who_or_what_was_affected") + cs.field("mt-r-amt", "screen.matter.amount_or_the_lowest_and_highest_it")
         + cs.field("mt-r-from", "screen.explore.from", { type: "date" }) + cs.field("mt-r-to", "screen.request.to", { type: "date" })
+        + cs.checks("mt-r-basis", "entity.naming.basis", [["computed", "screen.matter.worked_out_from_figures_in_the_record"], ["assessed", "screen.matter.my_own_assessment_with_my_reason"], ["unknown", "screen.matter.unknown"]], { radio: true })
+        + '<details class="mk-details"><summary>' + cs.w("screen.matter.if_you_assess_it_yourself") + "</summary>"
+        + cs.field("mt-r-rat", "shell.reason", { rec: true, area: true })
+        + P.note(cs, "screen.matter.name_what_the_assessment_rests_on") + P.note(cs, "screen.matter.a_part_you_assess_is_shown_as") + "</details>"
+        + cs.choice("mt-r-cause", "screen.matter.the_question_showing_the_harm_follows_from", [{ value: "", text: "" }].concat(qs.map(function (q) { return { value: q.inquiry, text: q.title || q.inquiry }; })))
+        + P.note(cs, "screen.matter.without_a_concluded_question_the_part_is")
         + cs.field("mt-r-why", "screen.matter.why_you_are_revising_it", { rec: true }) + P.help(cs, view, "mt-r-why", "consequencerevise", "reason")
         + '<div class="mk-acts">' + cs.act("consequencerevise", {}) + "</div>");
     },
@@ -416,7 +435,7 @@ export const matter = Object.freeze({
       const cons = cn && cn.state === "empty" ? "" : cs.sec("screen.matter.what_the_breach_did", cs.state("consequences", function (c) {
         return cs.sheet(c.parts.map(function (p) {
           return cs.row(P.affected(cs, p), P.measure(cs, p), '<span class="meta">' + cs.w("screen.matter.known." + (["computed", "assessed"].includes(p.state) ? p.state : "undetermined"))
-            + (p.label ? " · " + cs.esc(p.label) : "") + "</span>", "");
+            + (P.labelOf(p) ? " · " + cs.esc(P.labelOf(p)) : "") + (P.causeOf(p) ? " · " + cs.esc(P.causeOf(p)) : "") + "</span>", "");
         }).join(""))
           + '<p class="mk-note">' + cs.w("screen.matter.neverzero") + "</p>";
       }));
@@ -587,6 +606,11 @@ export const matter = Object.freeze({
         if (measure) body.measure = measure;
         const from = line(cs.value("mt-r-from")), to = line(cs.value("mt-r-to"));
         if (from || to) body.period = { from: from, to: to };
+        // fix round 10 (diagnosis 11 §4): how it is known and the question, sent when she changes them (the same shapes `consequencerecord` sends)
+        const how = (cs.value("mt-r-basis") || [])[0] || "";
+        if (how) body.basis = how === "assessed" ? { rationale: line(cs.value("mt-r-rat")), rests_on: [] } : how === "computed" ? { op: "sum", operands: [] } : { why: "not_assessed" };
+        const cause = line(cs.value("mt-r-cause"));
+        if (cause) body.causation = cause;
         return { body: body };
       },
     },
