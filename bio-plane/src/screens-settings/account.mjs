@@ -109,7 +109,8 @@ export const account = {
       const m = roster.find((r) => r.member_id === x);
       return (m && m.handle) || cs.memberName(x);
     };
-    out.push(cs.sec(S + "key.heading", cs.state(data.signers, (v) => {
+    /* a member with no key held has nothing to list: the section is not drawn (screens-settings R28: a section that holds nothing is not drawn) */
+    const held = cs.state(data.signers, (v) => {
       const mine = (v.signers || []).filter((s) => s.member_id === me.member && s.status === "active");
       return mine.length === 0 ? "" : `<ul class="mk-list">${mine.map((s) => {
         const by = s.origin === "admin" ? whoOf(s.registered_by) : null;
@@ -118,7 +119,8 @@ export const account = {
           : s.added ? W(S + "key.held", { key: tail, date: D(s.added) }) : W("screen.members.signer.held.nodate", { key: tail });
         return `<li data-key-origin="${s.origin === "admin" ? "admin" : "self"}">${line} ${cs.act("signerrevokeown", { data: { key: s.key_b64 } })}</li>`;
       }).join("")}</ul>`;
-    })));
+    });
+    if (held) out.push(cs.sec(S + "key.heading", held));
 
     // making the key (R57 (1)): kept on this device if ticked, else a key file made under the passphrase typed here (optional)
     const reg = cs.act("signerregisterown");

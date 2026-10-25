@@ -1,9 +1,6 @@
 /* screens-publish R39 (T51-121; DEC-330 A79): "Print the case" on `published`: the page redraws into its print layout (every finding open
  * with its sources listed, the signature line at the foot, the filtered view saying so), calls the kit's print once, and `printed`
  * draws the page as it was. No print rule: what is drawn is what prints. Nothing is sent or stored. */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
