@@ -112,3 +112,24 @@ Checks by failure count (absolute root /home/user/bio):
 - module tests (bio-plane/test/m/conformance/*.test.mjs): 125 pass, 0 fail
 
 Size (session_01H6qaqGGdsgsJYq9QcBswrD): test runs 4, module lines 0 (source unchanged; test and stand-in lines only)
+
+## Fix round 10, plan item 97 (B8) · actions' determination states
+
+Published in `bio-plane/test/m/conformance/fixtures.mjs`, each made by conformance's real `determine` and `determinationRead` when called (no stored values, no `fixtures-own` or `fixtures-generic` markers):
+
+- `determinationBothBases()` (line 66): one determination resting on a held check (`checked_held`) and on another group's accepted finding (`accepted`) together. Users: `actions/t45.test.mjs:41` (ACTIONS #26 J8 item 1).
+- `matterStakeBases()` (line 84): three determinations, each on an accepted finding of an import whose source facts are one of the three states case-import answers: a matter stake recorded at import (`withStake`), recorded with none (`withoutStake`, `matter_stake: null`), and not recorded at all (`undetermined`, `matter_stake: "undetermined"`, identity null, stake undetermined). User: `actions/t50.test.mjs:27` (ACTIONS #26 J8 item 2).
+
+Tests in `fixtures.test.mjs` (lines 57 and 65) check each state's real answer. Red first: the file failed with `does not provide an export named 'determinationBothBases'`; green after the fixtures: 7 of 7 in that file.
+
+Stand-in, reported to BOB: the import facts for `matterStakeBases` are set through conformance's world stand-in `w.imports.editions` (the `case-import` R4 shape, as `t47.test.mjs` sets them), not through case-import's real import. The shape matches case-import's R25 in `case-import/matter-stake.test.mjs`. The accepted finding is the world's `w.accept` stand-in as before. No case-import-real path reaches conformance's test world today (its `caseImport` is the stand-in in `fixture.mjs:263`).
+
+Deferred: none. Found in another module: none new.
+
+Checks (absolute root `/home/user/bio`):
+- conformance suite `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/conformance/*.test.mjs`: 127 pass, 0 fail (125 before, plus the two new tests)
+- `checks/fixtures.mjs /home/user/bio conformance --list`: 0 failures
+- `checks/format.mjs`: 0 failures; `checks/architecture.mjs conformance`: 0 failures; `checks/coverage.mjs conformance`: 42 of 42, 0 failures; `checks/words.mjs conformance`: 0 failures
+- `checks/ownership.mjs` run after the commit (see the COMPLETE)
+
+Size (session_016jHoSN6Fe8DtYJkQyfT6Rr): test runs 5, module lines 0 (source unchanged; 51 test lines added)
