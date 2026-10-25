@@ -219,3 +219,7 @@ COMPLETE, fix round 10, the final pass's causes (B12). Entries applied: 1 (hidde
 **Ran.** Money 114 of 114 pass (all files in one run); the six new tests seen red on the base (5 checks + the R12 fence) and green after. Users reading sets (screens-investigate money, fix2, fix4, fold, fix4-seam, fix2w2; op-grades cause3): all `fail 0` (screens-investigate money 14, fix2 12, fix4 3, fold 9, fix4-seam 4, fix2w2 21; op-grades cause3 4); the op-declarations files were not run to the end, as none reads a set. Checks from the process repo, absolute root: format 0; architecture 0; coverage 31 of 31, 0; words 0; ownership 0; `fixtures.mjs money --list` 0 failures. Stale (not edited, P9): `bio-plane/dist/bio-plane.bundled.mjs` embeds money's source; BOB regenerates it.
 
 Size (session_014aMgy6krydsoCbHAbQm7TM): test runs 14, module lines 1631
+
+## J15 · COMPLETE
+
+Fix round 10 (B12) done, record J14. R12: readSet fences a set concerning a bundle the viewer cannot see (answers as absent). R7: checkConstant and factBySource published, index money_facts_source_row, four fixtures. Met: R12, R7 (strike marks). Money 114/114; format, architecture, coverage 31/31, words, ownership, fixtures 0 failures; dependent set-reading tests pass. Door case (max opens /app/money/trail) is control-plane's, for you to place. Stale: bio-plane.bundled.mjs.
