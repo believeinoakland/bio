@@ -661,3 +661,7 @@ REPORT for CHANGE B39 (R87). Done and pushed (job/T51/case-authoring, 5b04edf896
 - format 0; architecture 0; coverage 59 of 59; ownership 0.
 
 **Size (session_01PkeaPY8AiQwGQmpx2xoXoy): test runs 3, module lines 3121** (`bio-plane/src/case-authoring/*.mjs`; no source change this job).
+
+## J31 · REPORT
+
+REPORT for CHANGE B40 (screens-publish J43). Done and pushed (job/T51/case-authoring). fixtures.mjs publishes three real publishPreflight answers over one project: preflightTensionRefused() (first TENSION_NOT_DISCLOSED), preflightPasses() (same once disclosed; first null), preflightNoFinding() (first PUBLISH_NO_FINDING). fixtures.test.mjs checks each equals a fresh real call and writes nothing. For screens-publish: fr30:150 takes preflightNoFinding, fr30b:77 takes preflightTensionRefused. fr30:156 cannot take a real pre-flight answer: its NO_TARGET is an action-request code; the real pre-flight for no finding is PUBLISH_NO_FINDING (R3, R80). Module suite 261 of 262; the one failure is R31, awaiting its CHANGE when RATIFICATION #39 merges. Checks: format, architecture, coverage (59 of 59), ownership all 0.
