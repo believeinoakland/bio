@@ -19,8 +19,8 @@ import { scanner } from "../file-safety/fixture.mjs";
 export { SCREENS, SCREEN_WORDS, word, hasWord };
 
 /** A fresh world over the real store (store-request R16–R19): claimed by the founder, or unclaimed when a test walks the claim.
- *  `group: null` because store-assembly's base already records the team (REPORT 1, J11; store-request's default seeds it again). */
-export const worldOf = ({ claimed = true, ...o } = {}) => storeWorld({ group: null, claimed, ...o });
+ */
+export const worldOf = ({ claimed = true, ...o } = {}) => storeWorld({ claimed, ...o });
 /** The binding `FILE_SCANNER` as a platform double: file-safety's own scanner stand-in (its `fixture.mjs`, answering as `file-scanner`'s
  *  Provides state), reached by an address or a `Request` as a service binding is. `script` is that double's (`signatures`, `test`, ...). */
 export function scannerBinding(script = {}) {
