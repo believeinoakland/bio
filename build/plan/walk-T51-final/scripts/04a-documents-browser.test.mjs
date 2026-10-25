@@ -95,11 +95,11 @@ test("WALK-FINAL-04A browser half", { timeout: 3600000 }, async () => {
       site.set(`dena-${tag}.html`, site.get(`dena-${tag}.html`));
       const t0 = Date.now();
       await pg.click("button:has-text('Capture from an address')");
-      await pg.waitForFunction(() => /Grade|filed|Filed|couldn|Nothing was kept|Marker/.test(document.body.innerText), null, { timeout: 40000 }).catch(() => {});
+      await pg.waitForFunction(() => /Captured:|Grade|couldn|Nothing was kept/.test(document.body.innerText), null, { timeout: 40000 }).catch(() => {});
       await pg.waitForTimeout(1500);
       const t = await body(pg);
       const s = await shot(pg, "add-captured", width);
-      const grade = /Grade B/.test(t);
+      const grade = /Captured:/.test(t);
       return [grade ? "WORKS" : "BROKEN", `after ${Date.now() - t0} ms the page reads: ${t.slice(t.indexOf("Capture from an address") - 200, t.indexOf("Capture from an address") + 900)}`, s];
     });
     await check("R30", "UI: the same address pressed again: one sentence 'already in the record', no second bundle", W, "member (ann)", "press the same address again", async () => {
