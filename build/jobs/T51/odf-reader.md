@@ -1,6 +1,6 @@
 # odf-reader (T51)
 
-**Status** · session_01ADqp4HKjkPA6rcj1FoXALV · depth 2 · COMPLETE · handled B8
+**Status** · session_01FYSm4Xubbtcon5NpEXmiLS · depth 2 · COMPLETE · handled B10
 
 ## J1 · REPORT
 
@@ -179,3 +179,21 @@ Size (session_01ADqp4HKjkPA6rcj1FoXALV): test runs 7, module lines 2900
 ## J11 · COMPLETE
 
 Batch D (B9, G166/K4987) done: R53 amended. An ODT text_box part now carries paras; a box outside a paragraph (page-anchored or alone in a cell) was before body-only with no text_box part, so it is now a text_box unit and its paragraph slots keep their indices with text empty (paras lists them); a box inside a paragraph has paras []. Links in a box stay the body's. Red first: 2 tests red on the old module. odf-reader 122/122; callers 46/47 pass, 0 fail; format, architecture, coverage, words, ownership 0 failures. Detail and the note for reading-pipeline (job 90) in my record.
+
+## Job 111 (B10, K5011): R56, G184, S-18 and S-19's rest
+
+**Red first** (`test/m/odf-reader/r56.test.mjs`, run on the unchanged module, 4 of 5 red). (1) An error cell written `office:value-type="string"` beside `calcext:value-type="error"` answered `declared: "error"`, `type: null`: `attrsOf` keys an attribute by its local name, so the later of the two won. (2) A typed-empty cell repeated 16,384 times on 64 repeated rows was refused `over_repeat_bound` (a cell with a `value-type` and nothing else counted as carrying, so each address was paid for). (3) Every `over_repeat_bound` marker lacked `final` (`text()`, `structure()`, `cellsIn`, units and characters). (4) Two sheets of 200,000 repeat units each were refused: one meter served the whole read.
+**Did not reproduce:** S-18 (covered cells). Round 9's R50 already iterates `table:covered-table-cell`; the R56 test proves it (C1 stays C1) and is green on the unchanged module. S-19's annotation in the displayed value is also already met by R53 (`cell_note`, `note text\n5` gone).
+
+**Change (`odf.mjs`).** `attrsOf` keeps `calcext:value-type` apart (`calcext-value-type`), and a cell's type is `office:value-type`, else calcext's. A typed cell with no value attribute, formula, text or note is an empty run, advanced over and never expanded; it no longer extends the used range. `spend` and `spendChars` markers carry `final: true`. `sheetRows` starts its units at zero for each sheet (the characters a repeat copies stay one count per read: they bound the text a read can yield, R45); `cellsIn` walks the same way, so its cells equal the whole read's.
+**Tests.** `r56.test.mjs`: 5 tests, 5 pass. Existing tests changed because the marker shape changed by requirement: `repeats.test.mjs` (UNITS, CHARS), `entries.test.mjs` R41 (the units marker). `test/m/odf-reader/`: 127 tests, 127 pass. Users that read ODF output (`acquisition` grades, `doc-clean` oracles, `format-registry` builtins): 19 tests, 18 pass, 0 fail, 1 skipped. `impact.mjs` names 116 modules through a shared table; those three files are the ones that name this module's output.
+**Checks.** format: 176 modules, 0 failures. architecture odf-reader: 22 files, 0. coverage odf-reader: 56 of 56 live ids named, 0. ownership: 5 files changed, 0. `checks/run.mjs`: words inline 0, plain 0, testcopy 0, missingkey 0, marker 0; no finding in odf-reader.
+
+**Cause:** the cell walk treated "has a value type" as "carries content", took the last attribute of a shared local name, and metered the whole read once. **Why missed:** the fixtures are the module's own builder's kind of file (no `calcext`, no padding, one sheet). **Platform check:** none needed (pure module). **R-OLD:** new reads only; a stored reading keeps its old marker without `final`.
+**Fixture note (K4990):** the repo holds no committed real `.ods`; the markup follows what LibreOffice writes for an error cell and for a padded row (the module header's measurement). **Requirement lines for BOB:** R45's marker shape gains `final: true`; R45's units meter is per sheet (R56). No sentence added, so no rows owed. Census ops: none owned (K4208).
+
+Size (session_01FYSm4Xubbtcon5NpEXmiLS): test runs 5, module lines 2910
+
+## J12 · COMPLETE
+
+Job 111 (B10, R56/G184) done. Red first: error cell typed null (calcext overrode office), typed-empty repeat refused after 16 rows, over_repeat_bound markers lacked final, meter shared across sheets. Not reproduced: covered cells (R50 already met). Fixed in odf.mjs; r56.test.mjs 5/5; odf-reader suite 127/127; checks 0 failures (coverage 56/56, ownership 0, words 0). BOB: R45 marker gains final:true and its units meter is per sheet. Details in my record.

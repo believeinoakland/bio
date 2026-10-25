@@ -264,7 +264,7 @@ Terms. A **screen** is a registry screen (`docs/development/ux-substrate/screens
 - **R125** (T51 fix round 6, G12b; K4579; amends R123) **The guide's marks are asked with the screen's reads.** The guide's marks (`wizardsat` for the screen) are asked at the route's start with the screen's reads and handed to `entered` when the route has settled; the answer is held for that one reader past the end of the load and the 5 seconds (R123). Test: `g12b.test.mjs`: the marks leave within 50 ms of the first read with the read still out. Control: a screen whose guide does not name `wizardsat` sends none.
 
 
-#### T51 fix round 8 (K4817; `build/plan/fix-round-8-T51.md`)
+#### T51 fix round 8 (K4817; `build/plan/archive/fix-round-8-T51.md`)
 
 - **R128** (fix round 8, G114; K4814 (1), K4817) **The words request names the release, the language and the stamp.** `loadWords` names in `v` the release (`cs-version`), the viewer's language and the `words_version` read from `bootstrap` (`instance-setup` R103), so a change of language or of the stamp changes `v`; a load made before `bootstrap` has answered names the release alone. What the shell keeps of the answer is unchanged. Test: the request names all three; a language change or a changed stamp changes `v`.
 

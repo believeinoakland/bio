@@ -321,3 +321,7 @@ Run your suite (and the files named above); checks (format, architecture, covera
 ## B22 · CHANGE
 
 CHANGE (job 105 extended, K5011). Merge tranche/T51 into your branch. Add office-readers R47 (G185; S-15 to S-18 of `build/plan/envelope-sheets-T51.md` §3.3, read whole: shared-formula dependents, a row or cell with no `r`, styled empty cells extending the used range, `mergeCells`). Reproduce each first on the tip, then fix; tests red first. Then COMPLETE as before.
+
+## B23 · CHANGE
+
+CHANGE (K5020, G186). Merge the tranche branch: your requirements gained R48. A workbook whose rows and cells carry no `r` is read whole: `formats-xlsx.mjs:764-768` takes the used range from `r` alone, so `usedSheetRange` is null and the reading has no sheet unit (CORPUS #1's F1, `build/plan/corpus-1-T51.md` §5). Failing-first tests already on the tranche, red: plane's `bio-plane/test/m/plane/g124f-bounds.test.mjs` "G124f finding F1", C07 and C08 (run with `node --import ./test/platform-sqlite.mjs --test` from `bio-plane/`). Make them green; add your own R48 test at your interface. Deal with it in this job (P8).

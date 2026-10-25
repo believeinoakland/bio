@@ -337,7 +337,7 @@ test("R41 every \"not read\" is stated with the part and why, R45's over_repeat_
       odp: `<draw:page><presentation:notes><draw:frame><draw:text-box>${huge}</draw:text-box></draw:frame></presentation:notes></draw:page>`,
     }[f];
     const marker = { text: "undetermined", why: "over_repeat_bound", units: 262145, bound: 262144,
-      boundName: "ODF_REPEAT_EXPANSION_MAX", metric: "expanded_repeat_units" };
+      boundName: "ODF_REPEAT_EXPANSION_MAX", metric: "expanded_repeat_units", final: true };
     const sr = await e.structure(pkg(f, { body: repeatBody }));
     const tr = await e.text(pkg(f, { body: repeatBody }));
     assert.deepEqual(sr.evidentiary.undetermined.find((u) => u.part === "content.xml"),
