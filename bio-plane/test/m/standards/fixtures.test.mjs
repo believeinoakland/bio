@@ -112,3 +112,15 @@ test("R10 R17 R23 host-refusals: the ten refusals standards gives law-relations,
     assert.deepEqual(rest(got), fields, code);
   }
 });
+
+test("R7 R20 fixture inForceKnown: the real answers carry known_through beside why on the day a member's record decides, and none the day after", () => {
+  const f = F.inForceKnown();
+  const want = { through: f.through, source: { captureSha: f.captureSha, extent: f.extent }, by: f.member };
+  assert.equal(f.known.state, "in_force");
+  assert.deepEqual(f.known.known_through, want);
+  assert.deepEqual(f.knownAt.known_through, want);
+  assert.equal(typeof f.known.why, "string");
+  assert.equal(f.known.why, f.knownAt.why);
+  assert.equal(f.afterDay.state, "undetermined");
+  assert.equal(f.afterDay.known_through, undefined);
+});

@@ -1187,7 +1187,7 @@ export class Standards {
     if (!isDate(date)) return refuseDateInvalid(date);
     const r = this.inForceAt({ standard: str(id), date });
     if (r.ok === false) return r;
-    return { ok: true, id: str(id), date, state: r.state, why: r.why };
+    return { ok: true, id: str(id), date, state: r.state, why: r.why, ...(r.known_through ? { known_through: r.known_through } : {}) };
   }
 
   /* ===================================================================== *
@@ -1252,6 +1252,13 @@ export class Standards {
 
   /* R20: one version against a date: civil-time.validAt over its period, then a codifier copy's lag. */
   #versionAt(row, date, viewer) {
+    const v = this.#versionAtState(row, date, viewer);
+    /* K5178 (R7): a later rule (R38's version basis or an override) that moves the state off `in_force` leaves no record resting it */
+    if (v.state !== "in_force" && v.known_through) { const { known_through, ...rest } = v; return rest; }
+    return v;
+  }
+
+  #versionAtState(row, date, viewer) {
     /* R34: a standard whose text is not held is never a measure, and never in force */
     if ((row.held || "text") !== "text")
       return { state: "undetermined", why: word("standards.why.text_held_measure"),
@@ -1343,12 +1350,13 @@ export class Standards {
        date answers as before. An end a relation states but whose effective date is not read stays as it is. A stated
        end decides as before, the record answered beside it. */
     const known = this.#throughOf(row.standard_id);
+    let restsOnRecord = false;
     if (known && state === "undetermined" && p.to === null && !p.unread) {
       let k;
       try {
         k = validAt({ valid: { from: bound("from"), to: known.through, precision: "day", zone } }, { value: date, precision: "day", zone });
       } catch { k = null; }
-      if (k === "in") { state = "in_force"; why = known.says; }
+      if (k === "in") { state = "in_force"; why = known.says; restsOnRecord = true; }
     }
     /* codifier lag (`measures-T33/time-law.md` §4): a codifier's copy speaks only through its current-through date */
     if (state !== "not_in_force" && row.copy === "codifier" && row.current_through && date > row.current_through) {
@@ -1357,7 +1365,9 @@ export class Standards {
                                                row.instrument, row.standard_id, row.current_through) : null;
       if (!later) { state = "undetermined"; why = word("standards.why.versions_held_copy", { current_through: String(row.current_through), current_through_2: String(row.current_through), date: String(date) }); }
     }
-    return { state, why, period: { from: p.from, to: p.to }, bound_by: p.bound_by, ...(known ? { known_through: known } : {}) };
+    /* K5178 (R7): `known_through` only where the answer rests on the R50 record, the record's own fields for a screen to draw */
+    return { state, why, period: { from: p.from, to: p.to }, bound_by: p.bound_by, ...(known ? { in_force_through: known } : {}),
+             ...(known && restsOnRecord && state === "in_force" ? { known_through: known.ref } : {}) };
   }
 
   /* R51: the latest `through` among a version's standing records (R50), with its source, author and the words naming it;
@@ -1369,6 +1379,7 @@ export class Standards {
     if (!r) return null;
     const source = sourceWords(r.capture_sha, safeJson(r.extent_json));
     return { record: r.record_id, through: r.through, source, by: r.author,
+             ref: { through: r.through, source: { captureSha: r.capture_sha, extent: safeJson(r.extent_json) }, by: r.author },
              says: inForceKnownWords({ through: r.through, source, author: String(r.author ?? "").replace(/^member:/, "") }) };
   }
 
@@ -1386,7 +1397,8 @@ export class Standards {
         return { ok: true, date, state: v.state, why: v.why, standard: row.standard_id,
                  version: { standard: row.standard_id, ...v.period, bound_by: v.bound_by },
                  ...(v.overridden_by ? { overridden_by: v.overridden_by } : {}),
-                 ...(v.known_through ? { in_force_through: v.known_through } : {}) };
+                 ...(v.in_force_through ? { in_force_through: v.in_force_through } : {}),
+                 ...(v.known_through ? { known_through: v.known_through } : {}) };
       }
       const p = portion == null || portion === "" ? null : String(portion);
       const rows = this.#rows(`SELECT * FROM standards WHERE instrument=? ${p !== null ? "AND portion_path=?" : ""}
@@ -1401,7 +1413,8 @@ export class Standards {
       if (inn.length === 1 && !unsure.length)
         return { ...base, state: inn[0].state, why: inn[0].why, standard: inn[0].id, version: { standard: inn[0].id, ...inn[0].period },
                  ...(inn[0].overridden_by ? { overridden_by: inn[0].overridden_by } : {}),
-                 ...(inn[0].known_through ? { in_force_through: inn[0].known_through } : {}) };
+                 ...(inn[0].in_force_through ? { in_force_through: inn[0].in_force_through } : {}),
+                 ...(inn[0].known_through ? { known_through: inn[0].known_through } : {}) };
       if (inn.length > 1)
         return { ...base, state: "undetermined", standard: null, version: null, versions: inn.map((v) => v.id),
                  why: word("standards.why.cover_none_preferred", { inn: String(inn.map((v) => v.id).join(" and ")), date: String(date) }) };
