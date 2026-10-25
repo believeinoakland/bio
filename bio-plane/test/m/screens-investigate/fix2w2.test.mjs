@@ -4,12 +4,24 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
+import { createHash } from "node:crypto";
 import { SESSION_OPS } from "../../../src/op-declarations/index.mjs";
+import { inWorld, openAs, settled, readHeld, declareStandard, rewrite } from "./world.mjs";
 import { open, main, fill, press, plane, PATHS, MORE_PATHS, TRAIL, TIMELINE, FACTS, moneyAnswer, MATTER, DEF, PERSON, PERSON_ENTITY, STANDARD, STD_PROPOSALS, WALK, SPOT, CALCULATION,
   PROJECT_MD, ACTION, PROPOSALS, M1, P, ENT, ORG, SHA, SHA2, SHA3, STD, MSR, word, drew, dayOf } from "./fixtures.mjs";
 
 const optsOf = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => [o.getAttribute("value"), o.textContent]);
 const P2 = "PROJ-2026-0009";
+const REASON = "The minutes say so.";
+/** The page chooses a document; its passages are read when the choice changes. */
+const choose = async (p, id, sha) => {
+  fill(p, { [id]: sha }); p.fire(p.doc.getElementById(id), "change");
+  for (let i = 0; i < 3; i++) { await p.settle(20); await new Promise((r) => setTimeout(r, 30)); } /* a first read of a document answers before `settled` looks (it stalls otherwise) */
+  await settled(p);
+};
+/** An op's answer as the world gives it with its result changed by `fn(result)`: a part of the world's own answer this build does not make (K5044 (1)). */
+const changing = (world, me, op, fn) => rewrite(world, me, (req, a) => (a && a.json && a.json.result && req.url.includes("op=" + op)
+  ? { ...a, json: { ...a.json, result: fn(a.json.result) } } : a));
 
 /* ---------------------------------------------------------------- C14 */
 
@@ -43,9 +55,23 @@ for (const [name, path, field, act, op, reread] of SCREENS) {
 }
 
 test("R4 C14 money's act that files a document (acquire) reads the documents again; control: no other act of the screen does", async () => {
-  const p = await open(PATHS.money, { plane: { acquire: ok({ ok: true, sha256: SHA3 }), heldcaptures: picked([ROW(1, "Lease amendment 1", P, SHA)]) } });
+  const { world, me } = await inWorld();
+  await world.recipes.profiles(me, ["oakland-alameda"]);
+  const project = await world.recipes.project(me, "Records office budget");
+  const held = await world.recipes.hold(me, "Adopted budget.txt", "The adopted budget for the records office in fiscal year 2026 is 1,250,000.00 dollars.", project);
+  const trail = await world.recipes.trail(me, project, "Records office budget, FY2026");
+  const fact = (await me.act("recordfact", { body: { amount: "1250000.00", as_read: "$1,250,000", currency: "USD", sign: "+", precision: "exact", kind: "expenditure", phase: "adopted", basis: "budgetary",
+    period: { from: "2025-07-01", to: "2026-06-30" }, source: { capture_sha: held.sha, extent: { kind: "document" } } } })).fact_id;
+  await me.act("include", { body: { setId: trail, factId: fact, reason: REASON } });
+  const filed = await world.recipes.hold(me, "City budget.txt", "The city budget as published.", project);
+  /* the fetch of a site is externally driven (K5044 (1)): the copy it files is a real held document */
+  const p = await openAs(world, me, "/app/money/" + trail, { plane: { acquire: ok({ ok: true, sha256: filed.sha }) } });
+  const row = main(p).querySelectorAll("tr.cs-r").find((r) => r.querySelector(`[data-id="${fact}"]`));
+  await p.click(row.querySelector('[data-shell="row"]'));
+  assert.equal(p.byOp("heldcaptures").length, 1, "one list of documents for the screen");
   fill(p, { "mf-address": "https://city.example/budget.pdf" });
-  await press(p, "acquire");
+  await press(p, "acquire", { within: row.nextElementSibling, reason: REASON });
+  await settled(p);
   assert.equal(p.byOp("acquire").length, 1);
   assert.equal(p.byOp("heldcaptures").length, 2, "the new copy can be chosen");
 });
@@ -123,18 +149,32 @@ test("R1 R32 C94 person: the names of who added a name, declared a tie, made a c
 });
 
 test("R8 C94 standard: who proposed a standard and who adopted it are handles; an assistant's class is not a member and keeps its name", async () => {
-  const items = STD_PROPOSALS({ project: P, state: "all" }).items.map((x) => (x.id === "STDP-2026-0001" ? { ...x, proposed_by: "member:admin", label: { ...x.label, by: "member:admin" } }
-    : { ...x, adoption: { ...x.adoption, by: "member:u-2" } }));
-  const p = await open("/app/standard/" + P + "/all", { plane: { standardproposals: ok({ ok: true, project: P, state: "all", items, truncated: false }) } });
+  const { world, me } = await inWorld();
+  const rosa = await world.signIn("rosa", { admin: true });
+  const project = await world.recipes.project(me, "Pothole repairs");
+  const doc = await world.recipes.hold(me, "Ordinance.txt", "Section 8.22.050 No landlord shall increase the rent above the limit the board sets.", project);
+  const du = await readHeld(world, me, doc.sha);
+  const std = await declareStandard(me, { cite: "Ordinance 8.22", kind: "ordinance", sha: doc.sha, extent: du[0].extent });
+  const content = (await me.read("standard", { query: { id: std } })).texts[0].content_id;
+  const body = { project, cite: "Ordinance 9", kind: "ordinance", issuer: "City Council", why: "It governs the rent.", text: [content] };
+  await me.act("standardpropose", { body });
+  await me.act("standardpropose", { body: { ...body, cite: "Ordinance 10" } });
+  const open = (await me.read("standardproposals", { query: { project, state: "all" } })).items;
+  await rosa.act("standardadopt", { body: { proposal: open[0].id, reason: "Adopted at council." } });
+  const items = (await me.read("standardproposals", { query: { project, state: "all" } })).items;
+  const adopted = items.find((x) => x.adoption), unadopted = items.find((x) => !x.adoption);
+  const path = "/app/standard/" + project + "/all";
+  const p = await openAs(world, me, path);
   const m = main(p);
-  drew(m, "screen.standard.proposedby", { by: "sparky", date: dayOf("2026-10-05") });
-  drew(m, "screen.standard.adopted", { by: "rosa", date: dayOf("2026-10-06") });
-  noIds(m);
-  const bot = await open("/app/standard/" + P + "/all", { plane: { standardproposals: (r) => ok(STD_PROPOSALS({ ...r.query, state: "all" })) } });
-  drew(main(bot), "screen.standard.proposedby", { by: "legal_lookup", date: dayOf("2026-10-05") });
-  const bare = await open("/app/standard/" + P + "/all", { plane: { standardproposals: ok({ ok: true, project: P, state: "all", items: items.map((x) => ({ ...x, proposed_by: "member:u-3" })), truncated: false }) } });
-  drew(main(bare), "screen.standard.proposedby", { by: NOBODY(), date: dayOf("2026-10-05") });
-  noIds(main(bare));
+  drew(m, "screen.standard.proposedby", { by: me.handle, date: dayOf(unadopted.proposed_at.slice(0, 10)) });
+  drew(m, "screen.standard.adopted", { by: "rosa", date: dayOf(adopted.adoption.at.slice(0, 10)) });
+  noIds(m, [me.member]);
+  /* an assistant's class (a proposal the live copy holds that a member's session does not make) and a member the roster does not know */
+  const bot = await openAs(world, me, path, { plane: { standardproposals: changing(world, me, "standardproposals", (r) => ({ ...r, items: r.items.map((x) => ({ ...x, proposed_by: "class:legal_lookup", label: { ...x.label, by: "class:legal_lookup" } })) })) } });
+  drew(main(bot), "screen.standard.proposedby", { by: "legal_lookup", date: dayOf(unadopted.proposed_at.slice(0, 10)) });
+  const bare = await openAs(world, me, path, { plane: { standardproposals: changing(world, me, "standardproposals", (r) => ({ ...r, items: r.items.map((x) => ({ ...x, proposed_by: "member:u-3" })) })) } });
+  drew(main(bare), "screen.standard.proposedby", { by: NOBODY(), date: dayOf(unadopted.proposed_at.slice(0, 10)) });
+  noIds(main(bare), ["u-3"]);
 });
 
 test("R3 R33 C94 timeline: who threaded a document to a step and who declared a flow are handles; control: a member with no handle is the kit's word", async () => {
