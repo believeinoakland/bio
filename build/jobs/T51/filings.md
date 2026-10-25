@@ -165,3 +165,13 @@ Size (session_01Xe56US2uGqhQLaVtDchwh5): test runs 4, module lines 3811
 ## J13 · COMPLETE
 
 Fix round 10 item 1 applied: R44 met (an absent voice on a public comment reads group; other kinds unchanged). Test t45 R44 red then green; module 165 pass; format, architecture, coverage, words, ownership, fixtures 0 failures. Details in J4 of my record.
+
+## J14 · QUESTION
+
+The clock (K5202, K5132's rule) is fixed on job/T51/filings at e33250f59a, and I need one line from you before COMPLETE.
+
+Your START (B14) asks for the requirement id that gives filings its clock. None of filings' requirements states one (I read `build/requirements/filings.md` whole). Proposed wording, to add as R70:
+
+R70 (T51; K5132, K5202) The instance clock. Every instant this module records (a draft's, approval's, sending's, second approval's, joint signature's, packet's, export's, communication's and hold notice's) reads a clock handed in; else the store's environment `BIO_NOW_MS` (handed in at the constructor, as `filingsOf` already hands `env`); else the wall clock, to the second. Test: `clock.test.mjs` (the approval under a pinned clock, a handed clock, the wall clock).
+
+Until you answer I read the line as R70 and write the test under K5202. The route: the store hands `env` to `filingsOf` already (assemble.mjs:438, K4051), so filings reads `BIO_NOW_MS` from its constructor; `filingsOps` takes no environment and needs none. Tell me if you want `filingsOps` to take it as the credentials and ai-use ops do.
