@@ -48,3 +48,7 @@ B3 (K3997) processed: merged tranche/T51; lines tests 35 pass, 0 fail; coverage 
 BLOCKED (cause: needs BOB, a file outside my paths). Done and pushed: linesWorld published with its test (37 lines tests pass); promotion stub in fixture.mjs:57 replaced by makePromotion() (fixtures check: 0 failures for lines). Refused: checks/architecture.mjs lines fails once, because lines/fixture.mjs imports ../promotion/fixtures.mjs and 'promotion' is not in lines' uses in build/modules.json. Please add promotion to lines' uses (test-only) and say CHANGE/RESUME; I then re-run the check and post COMPLETE. No fixtures-own/generic markers added.
 
 - **B5 applied:** merged `origin/tranche/T51` (promotion now in lines' `uses`). `checks/architecture.mjs /home/user/bio lines`: 0 failures; format 0; fixtures (lines) 0; lines tests 37 pass, 0 fail. The one failure noted above is cleared. No `fixtures-own`/`fixtures-generic` markers added.
+
+## J6 · COMPLETE
+
+COMPLETE (B4+B5). linesWorld published (fixtures.mjs, tested); fixture.mjs:57 promotion stub replaced by makePromotion(). After merging tranche/T51: architecture 0 failures, format 0, fixtures(lines) 0, lines tests 37 pass/0 fail, impact 0 affected. No fixtures-own/generic markers added. Record: build/jobs/T51/lines.md.
