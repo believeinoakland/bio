@@ -39,6 +39,8 @@ import { caseDisclosuresOf } from "../../../src/case-disclosures/index.mjs";
 import { caseCarriageOf } from "../../../src/case-carriage/index.mjs";
 import { parseImportedFindingRef, importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
 import { caseImportOf } from "../../../src/case-import/index.mjs";
+import { noSelection } from "../retrieval/fixtures.mjs";
+import { importedWorld } from "../case-import/fixtures.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { entitiesOf } from "../../../src/entities/index.mjs";
 import { connectionsOf } from "../../../src/connections/index.mjs";
@@ -206,7 +208,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
   };
   const content = contentOf(host, { record, membership, provenance: prov, extraction: exProvider, now: () => clock.now });
   content.migrate();
-  const retrieval = { selectionResolve: () => ({ ok: false, reason: "NO_SUCH_SELECTION", check: "C-33.20" }) };
+  const retrieval = noSelection().retrieval;
   /* the record of people (layer 5), each the real module built on this host (K1619: never reached through inquiry):
      the registry, the world's events, the lines between entities, money facts and people, which case-disclosures reads
      for the people a case names (its R24–R27) and R57's timeline reads through events. */
@@ -503,6 +505,9 @@ export function world({ group = "test-group", provider = true, now = null, recor
 /** `case-import` at its ruled interface (its R4, R9, R16), standing in until it is composed here: another group's
  *  imported editions, the acceptances in force and the open flags, as a test sets them. `accept(...)` answers the ref a
  *  leg names; `flagsRead`, when set, answers `openFlagsOn` in place of the held flags (a failed or incomplete read). */
+/* case-import's real refusal of an import and edition it holds none of (its R4), taken from its published fixture. */
+const NO_SUCH_EDITION = (await importedWorld()).ci.importedCase({ import: "IMP-2026-9999", edition: 1 });
+
 export function importsStandIn() {
   const editions = new Map(), acceptances = new Map(), flags = [];
   const key = (...a) => a.join("#");
@@ -528,7 +533,7 @@ export function importsStandIn() {
       const e = editions.get(key(imp, edition));
       return e ? { ok: true, import: imp, group: e.group, case: e.case, editions: [{ edition: e.edition }],
                    edition: { edition: e.edition, manifest_sha: e.manifest_sha, findings: e.findings } }
-               : { ok: false, reason: "IMPORT_NO_SUCH_EDITION" };
+               : { ...NO_SUCH_EDITION, import: imp, edition };
     },
   };
   s.registration = {
