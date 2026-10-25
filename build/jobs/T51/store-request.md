@@ -250,3 +250,12 @@ Merged `origin/tranche/T51`. Module suite 86 tests, 85 pass, 1 todo (R22), equal
 
 **Checks.** `checks/run.mjs`: format 0, architecture 0, words 19247 unchanged (16 failures, none mine), coverage failures none in my files; `checks/fixtures.mjs store-request --list`: 0 failures (3 accepted, unchanged); ownership 0.
 Size (session_01YAznjnRHhLsjKXBKS2Q9hy): test runs ~55, module lines 559
+
+## J18 · COMPLETE
+
+COMPLETE for B16 (STORE-REQUEST #6); full account in my record, section "B16 answered". Pushed.
+BUILT: (1) the world's door now stamps reviewcopy/reviewcomment/statementack with a member's viewer as the Worker's door does (control-plane R138) and carries drafts/reason; review-copy.test.mjs (2), red before (the owner got NO_REVIEW_COPY), green now. (2) recipes projects(as,n) (201 give a cut page of 200 + cursor), draftOnly (draft on a case with no edition, optional reader comment), register (followregister + tick: follows carries last_read); recipes-b16.test.mjs (3). R19's list gains projects, draftOnly, register.
+REPORT, no act makes it (code with file:line in my record): (a) project stage investigating/paused/none: promotion/index.mjs:712-717 + history.mjs:253 + project-roster/index.mjs:928 (only forming/closed are recorded); (b) startfrom with no scripts: wizard-scripts/index.mjs:1384 offers the read-only library to every viewer (wizardretire refuses it, WIZARD_NOT_THE_GROUPS); (c) release notice for queue R19: setup.mjs:2635 verifies against RELEASE_KEYS (no private half in any repo), world hands no releaseKeys: store-assembly option needed; (d) mentioned_together hop: references come only from a wired reading's entities (reading-pipeline/index.mjs:2290-2306, extraction/index.mjs:1535-1556); a prose page read gives found:false (measured); would need an AGENT_WORKER double answering entities: a job of its own, say if wanted.
+Met (BOB strikes): R23 (viewer at the review copy's three), R17, R19. Earlier J17 report items (a)-(d: older install, deliver, clock, upload reading) still stand for store-assembly.
+Tests/checks: suite 86 tests, 85 pass, 1 todo (R22), equals sum of files; format 0, architecture 0, words 19247 unchanged, fixtures store-request 0, ownership 0. No fixtures-own/generic marker added.
+Size (session_01YAznjnRHhLsjKXBKS2Q9hy): test runs ~55, module lines 559
