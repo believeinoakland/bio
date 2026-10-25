@@ -1,6 +1,6 @@
 # plane (T51)
 
-**Status** · session_01J62mKtsqgL6Mp8fpdgGVVo · depth 2 · RUNNING until 2026-10-25T09:42:52Z (g54-l whole-file L-PIN study, 4 runs) · handled B91
+**Status** · session_01J62mKtsqgL6Mp8fpdgGVVo · depth 2 · RUNNING until 2026-10-25T10:10:58Z (g54-l overlap harness, 20 trials under L-PIN) · handled B91
 
 ## Record (PLANE #41, T51-125)
 
