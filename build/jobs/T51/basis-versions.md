@@ -70,3 +70,30 @@ COMPLETE (T51 · basis-versions), answering B7 (CHANGE, K4259). Branch `job/T51/
 - `node checks/ownership.mjs /home/user/bio basis-versions tranche/T51 job/T51/basis-versions`: 3 files changed, 0 failures.
 
 Size (session_012QGXjkj6ha3NnkkWJ68nZt): test runs 4, module lines 2850 (`bio-plane/src/basis-versions/*.mjs`, all lines, comments included; 2 lines added this job).
+
+## J7 · COMPLETE
+
+COMPLETE (T51 fix round 10, Wave A batch 4 · basis-versions), answering B8.
+
+**Cause 23 (R58; walk E1b) — done.**
+- *Root cause.* `EXTENT_FIELDS` (`basis-versions/shared.mjs:12`), so `LEG_COPY_KEYS` (`:18`), lacked `extent_range`, `extent_table`, `extent_part`, `extent_cited_as` that citation's `EXTENT_PARAMS` (`citation/index.mjs:89`) carries. `conclude`'s R51 copy (`conclude.mjs:322`) and `narrow`'s copy (`index.mjs:1490`) took a leg's fields from that list, so a `sheet-range`, `doc-table`, `doc-part` or `cited_as` leg lost its extent and the grammar refused the copy (`BASIS_VERSION_REFUSED`, C-25.10 `CONTENT_EXTENT_UNREADABLE`, "names 'undefined'"). Fix: the four fields added to `EXTENT_FIELDS` (types text, int, text, text), which also lets `narrow`'s `extent` bag take them; and `extentLegFields` (`index.mjs:97`) maps content's `range`, `table`, `part`, `cited_as` so a narrowing candidate's `fields` names them too.
+- *Why the tests missed it.* `own-reading.test.mjs` legs carried a target, role and ground only; `legkinds-compare.test.mjs` compared kinds; no test gave a leg a container extent.
+- *Failing-first test (seen red first, on the walker's exact case).* `own-reading.test.mjs` `R58: a sheet-range / doc-table / doc-part / cited_as leg … keeps every extent field …` through `conclude({reading})` on a real `world()` (the legs' documents read as an xlsx/docx capture): red before the fix with the walker's refusal, green after; each checks the field in the document's `basis_version_legs` and that the answer's leg names (`content_id`) the part cited (`citationExtent`). Also `R58: the same legs composed by appendVersion` and `R58: narrow copies every other leg … and takes a sheet-range part as the narrowing` (these two were green before the fix by the shape of their paths, narrow's four-field copy red; kept as the through-`compose` and `narrow` arms R58 names). Control: `R58 control: a doc-para leg concludes as before`.
+- *Reading of R58 for BOB.* "In the `basisVersions` answer": the answer's leg carries the part by `content_id` (R38 has no extent columns, and I changed none); the test checks the row that id names has every field of the cited extent. If BOB wants the answer's legs to also carry `extent_*` themselves, that is a new requirement line.
+- *Platform check.* N (as the START says). Screens-inquiry draws the raw `repairs` in a following entry.
+
+**K5077/K5090 (mixed partition) — done.** `versions.test.mjs` "every C-25 row … reached": C-25.5 leaves the reached list (`NEVER_RAISED` names `VERSION_PARTITION_INCOMPLETE`, the row staying declared in basis-version-grammar; the two inputs that raised it, `V1({grounds: []})` and the unlabelled-leg case, removed from the refusals; its pinned number removed from the wire list). New `own-reading.test.mjs` `R51, R3 (K5077)`: a question of one labelled ground and one unlabelled supporting leg concludes on its own reading, the unlabelled leg copied as it stands. Seen red on the pre-K5077 grammar (`git checkout d37ff74e6c~1 -- bio-plane/src/basis-version-grammar bio-plane/src/inquiry-grammar`, then restored): `BASIS_VERSION_REFUSED`, C-25.5 `VERSION_PARTITION_INCOMPLETE`; green now.
+
+**Fixture published.** `bio-plane/test/m/basis-versions/fixtures.mjs` `concludeAct({kind, target})`: the real `basisVersions.conclude` over a question of two cited passages, `kind` `concluded` (the real no-project receipt of an own reading: `{ok, target, from, to: "concluded", relationship: "no_project", project: null, own_reading, version, …}`), `no_conclusion` (NO_CONCLUSION, C-33.1, with its row's translation) or `bad_reading` (BAD_READING, translation `word("refusal.BAD_READING")`). Tested by `fixtures.test.mjs` (4 tests: each kind against the real answer and the row it must carry; control: an unknown kind is refused). Its users (contradiction 1, conformance 1) re-point in their own jobs. `fixtures-own` / `fixtures-generic` markers added: none. Contract marker on my side: none (no provider of mine is later in `modules.json`).
+
+**Lines left.** `checks/fixtures.mjs . basis-versions --list` named no line for my module at START and names none now (0 failures); none waiting, `stay` or Wave B.
+
+**Deferred.** None. **Found in other modules.** None.
+
+**Tests and checks.**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/basis-versions/*.test.mjs`: pass 194, fail 0 (was 182 at J2's measure; +R58 7, +K5077 1, +fixtures 4).
+- Users named by `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the readers of versions' legs, all 0 fail: basis-version-grammar 36, inquiry 233, strength 186, contradiction 144, run-productions 68, reevaluation 163, publication 181, ratification 335, project-stage 23, queue-producers 154, review 95, case-account 49, case-tensions 26, investigation 38, question-explorer 46, skills 133, answer-envelope 45, store-door 57.
+- control-plane 681 pass / 2 fail, plane 598 / 3: inherited, each failing test also fails with the tranche's `basis-versions` swapped in (plane's alarm/owedwork timing seams R80/R102 and the R24 screens-words test, control-plane's R9 seam timing and the §14 reading-ceiling grep "red until each quoting job merges"); op-declarations 235 / 0.
+- format 0 failures (178 modules); architecture 0 (38 product files); coverage 47 of 47 ids, 0; words 0 (inline 0, plain 0, testcopy 0, missingkey 0, handlist 0, unkeyed 0); fixtures 0 failures; ownership 7 files changed, 0 failures.
+
+Size (session_01SrdYb2t95osCMqx6hdxR2r): test runs 16, module lines 2,855
