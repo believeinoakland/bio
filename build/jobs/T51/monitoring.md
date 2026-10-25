@@ -193,3 +193,18 @@ COMPLETE for T51 monitoring, fix round 10 follow-up 27 (B11; B10 read: the four 
 **Stray file.** An early command of mine wrote `/fx.mjs` at the filesystem root (a copy of the first 318 lines of the fixture, made before I noticed an unset `$TMPDIR`). Removing it was refused by the safety check, so it is still there. It is outside the repository. Someone with access should delete it.
 
 Size (session_01GCDV8BWKs6fq93QzdCr4rY): test runs 5, module lines 3080 (non-blank, non-comment lines in src/monitoring/*.mjs; unchanged this job).
+
+## J10 · COMPLETE
+
+COMPLETE for T51 monitoring, the B12 CHANGE (re J9; K5101), session session_01GCDV8BWKs6fq93QzdCr4rY, on job/T51/monitoring at the head pushed with this entry (origin/tranche/T51 merged in, no rebase).
+
+**Entry applied (B12).** `relay.test.mjs:36` is marked `fixtures-contract: store-door store-replies` and takes the real BAD_JSON reply that store-door's run states: `{ ok: false, reason: "BAD_JSON", detail: "the request body is not valid JSON" }`. No other line changed.
+
+**Deferred:** none. **Found in another module:** none.
+
+**Tests:** `bio-plane/test/m/monitoring/*.test.mjs`: tests 172, pass 172, fail 0.
+**Checks** (absolute root, from `/home/user/civicos-process`): `checks/fixtures.mjs /home/user/bio monitoring --list`: 0 failures, stub 0, contract 0, answer 0; the seven remaining lines are accepted (own, or link-sweep later). `format`: 0 failures. `words` (monitoring, following, link-sweep, scheduler): 0 failures. `coverage`: 65 of 65, 0 failures. `ownership` (tranche/T51 to job/T51/monitoring): 5 files, 0 failures.
+
+**Markers added:** none.
+
+Size (session_01GCDV8BWKs6fq93QzdCr4rY): test runs 1, module lines 3080 (unchanged this job).
