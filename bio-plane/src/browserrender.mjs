@@ -256,13 +256,15 @@ function bodyCollector(conn, sessionId, { now, until }) {
   };
   return {
     offer,
-    /** Ends the phase; answers once every entry carries a body or the reason it has none. */
+    /** Ends the phase; answers once every entry carries a body or the reason it has none.
+        Answers whether it had to wait at all: a phase that did no work is not timed (R68). */
     async finish(entries) {
       for (const e of entries) offer(e);
       const phaseEnd = Math.min(now() + BODY_PHASE_MS, until);
+      let waited = false;
       while ((queue.length || active.size) && now() < phaseEnd) {
         pump();
-        if (queue.length || active.size) await new Promise((r) => { notify = r; setTimeout(r, 25); });
+        if (queue.length || active.size) { waited = true; await new Promise((r) => { notify = r; setTimeout(r, 25); }); }
       }
       stopped = true; notify = null;
       const sentence = phaseEnd === until
@@ -270,6 +272,7 @@ function bodyCollector(conn, sessionId, { now, until }) {
         : word("browserrender.text.ms_body_collection", { body_phase_ms: String(BODY_PHASE_MS) });
       for (const e of queue.splice(0)) e.body_unavailable = sentence;
       for (const e of active) { abandoned.add(e); e.body_unavailable = sentence; }
+      return waited;
     },
     stop() { stopped = true; queue.length = 0; },
   };
@@ -670,8 +673,8 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
     /* D-529: AFTER the document is taken, so collecting bodies cannot change what the
        page showed, and before the session closes, which is when the browser drops them. */
     const bodiesFrom = now();
-    if (sawNetwork) await collector.finish([...requests.values()]);
-    const bodiesMs = now() - bodiesFrom;
+    const waitedForBodies = sawNetwork ? await collector.finish([...requests.values()]) : false;
+    const bodiesMs = waitedForBodies ? now() - bodiesFrom : 0;
 
     const elapsed = now() - started;
     result = {

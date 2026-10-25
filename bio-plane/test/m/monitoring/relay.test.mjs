@@ -32,8 +32,8 @@ const CORR = "0f1e2d3c-4b5a-4968-8776-a5b4c3d2e1f0";
 
 test("R49 a store refusal (ok false below 500) behind the monitor relay is answered with the store's status, code and sentence through storeRefusal", async () => {
   refusals = 0;
-  // fixtures-contract: store-door store-envelope
-  const refusal = { ok: false, reason: "BAD_JSON", detail: "the body is not JSON" };
+  // fixtures-contract: store-door store-replies
+  const refusal = { ok: false, reason: "BAD_JSON", detail: "the request body is not valid JSON" };
   const r = await monitorOp(req(), store(400, refusal), H());
   assert.deepEqual(r, { s: 400, b: refusal });
   assert.equal(refusals, 1, "relayed through the plane's storeRefusal");

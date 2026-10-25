@@ -7,6 +7,7 @@
    built here from that file, never from this module. Each with a negative control (K874). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { stepRead } from "../steps/fixtures.mjs";
 import { world as stepsWorld, ANN, BOB, CAT, DAN, OUT, P1, P2, PH, PD, Q, Q2 } from "../steps/fixture.mjs";
 import { world as invWorld, P1 as IP1, Q1 as IQ1, ANN as IANN, BOB as IBOB, OUT as IOUT, DAN as IDAN } from "../investigation/fixture.mjs";
 import { world as qeWorld, Q as QQ, PROJ, CAP, CALLER } from "../question-explorer/fixture.mjs";
@@ -254,16 +255,34 @@ test("R17 review-comment-left-out: one FINDING per entry review.reviewCommentsLe
   void RQ; void SECRET;
 });
 
-test("R17 R1 each source's bound and truncated stated; a source that throws or refuses contributes no item and is named in facts.failed; the read writes nothing", () => {
+/* steps' own `laterFound`, over `n` looks that each found something later: the real answer, one entry per address looked at */
+function laterWorld(n) {
   const w = stepsWorld();
   duties(w.st);
-  const many = Array.from({ length: INVESTIGATION_ITEMS_MAX + 1 }, (_, i) => ({ step: "STP-1", look: 1, observation: i, at: "2026-10-09T00:00:00Z", questions: [], key: `k${i}` }));
-  const run = (deps) => reader(fresh(w.host, { membership: w.membership, view: UTC, steps: w.s, ...deps })).read("ann", { now: Date.parse("2026-10-09T18:00:00Z") });
-  const r = run({ steps: { ...w.s, laterFound: () => ({ ok: true, found: many }), stepsDue: (a) => w.s.stepsDue(a),
-    costShares: (a) => w.s.costShares(a), costMessages: (a) => w.s.costMessages(a) } });
+  w.clock = "2026-10-09T00:00:00.000Z";
+  const id = w.step();
+  const DOC = "INFO-2026-0001-doc", SHA = "c".repeat(64);
+  w.bundle(DOC, { type: "information" });
+  w.capture(SHA, DOC);
+  for (let i = 0; i < n; i++) {
+    const address = `https://example.org/contract-${i}.pdf`;
+    w.observationLog.observe({ actor_class: "member", actor: ANN, authority_kind: "step", authority: id, level: "document",
+      subject_kind: "address", subject: address, detail: "not posted", state: "LOOKED_ABSENT" });
+    w.observationLog.observe({ actor_class: "plane", authority_kind: "acquire", authority: DOC, level: "document",
+      subject_kind: "address", subject: address, state: "PRESENT", result_kind: "capture", result_ref: SHA, detail: "new" });
+  }
+  return w;
+}
+
+test("R17 R1 each source's bound and truncated stated; a source that throws or refuses contributes no item and is named in facts.failed; the read writes nothing", () => {
+  const w = laterWorld(INVESTIGATION_ITEMS_MAX + 1);
+  const NOW = Date.parse("2026-10-09T18:00:00Z");
+  const run = (deps, world = w) => reader(fresh(world.host, { membership: world.membership, view: UTC, steps: world.s, ...deps })).read("ann", { now: NOW });
+  assert.equal(w.s.laterFound({ viewer: ANN, at: "2026-10-09T18:00:00Z" }).found.length, INVESTIGATION_ITEMS_MAX + 1, "steps' own answer holds one more than the bound");
+  const r = run({});
   assert.equal(ofKind(r, "step-later-found").length, INVESTIGATION_ITEMS_MAX);
   assert.deepEqual(r.facts.step_later_found, { bound: INVESTIGATION_ITEMS_MAX, truncated: true });
-  assert.deepEqual(run({}).facts.step_later_found, { bound: INVESTIGATION_ITEMS_MAX, truncated: false }, "negative control: within the bound");
+  assert.deepEqual(run({}, laterWorld(3)).facts.step_later_found, { bound: INVESTIGATION_ITEMS_MAX, truncated: false }, "negative control: within the bound");
   const boom = () => { throw new Error("down"); };
   for (const [deps, name] of [[{ steps: { laterFound: boom, stepsDue: () => ({ ok: true, due: [] }), costShares: () => ({ ok: true, shares: [] }), costMessages: () => ({ ok: true, messages: [] }) } }, "steps"],
                               [{ questionExplorer: { findsFor: () => ({ ok: false }) } }, "question-explorer"],
@@ -286,7 +305,7 @@ test("R17 step-later-found's {date} is the look's own local day when steps answe
   const looked = run(entry({ looked_at: "2026-10-09T18:00:00Z" }), () => ({ ok: true, step: "STP-9", work: "Ask the clerk" }));
   assert.equal(looked.detail, say("queue.step-later-found.detail", { date: day(9, "october") }));
   assert.equal(looked.summary, say("queue.step-later-found.summary", { what: "Ask the clerk" }));
-  const plain = run(entry({}), () => ({ ok: false, reason: "NO_SUCH_STEP" }));
+  const plain = run(entry({}), () => stepRead().unknownAnswer);
   assert.equal(plain.detail, say("queue.step-later-found.detail", { date: day(1, "december") }), "negative control: no looked_at, the entry's own day");
   assert.equal(plain.summary, say("queue.step-later-found.summary", { what: "STP-9" }), "a step the read does not answer: its id");
   const boom = reader(fresh(w.host, { membership: w.membership, view: UTC, steps: { laterFound: () => ({ ok: true, found: [entry({})] }),

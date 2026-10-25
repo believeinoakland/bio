@@ -1,6 +1,6 @@
 # queue-producers (T51)
 
-**Status** · session_018ia9y7957RisU9biUjnUGX · depth 2 · COMPLETE · handled B12
+**Status** · session_016R48b4KURUGUt3h76T2fsb · depth 2 · COMPLETE · handled B13
 
 ## J1 · REPORT
 
@@ -273,3 +273,46 @@ Size (session_018ia9y7957RisU9biUjnUGX): test runs 5, module lines 3189
 ## J14 · COMPLETE
 
 G65 applied: fillWord closes up a grade's underscores so NOT_FOUND reads queue.fill.grade.notfound. Two failing-first tests (red then green); queue-producers 154, queue 210, control-plane 447 pass; coverage, words, ownership 0 failures. Details in record J5.
+
+## J15 · QUESTION
+
+QUESTION (fix round 10, batch 6; replaces nothing): `build/modules.json` is BOB's, and queue-producers' `uses` lacks `escalation`.
+
+`bio-plane/test/m/queue-producers/action.test.mjs` now takes `escalationsDue().due` from `bio-plane/test/m/escalation/fixtures.mjs` (the START's line 88; escalation is earlier in the list). `checks/architecture.mjs bio queue-producers` therefore fails once: "imports escalation/fixtures.mjs of escalation, which queue-producers does not declare in uses". Every other provider I import (action-producers, contradiction, publication, monitoring, docket, provenance) is already in `uses`.
+
+My reading: add `escalation` to queue-producers' `uses`. The alternative is to leave that line hand-built (it stays a fixtures finding), which the START does not want. I carry on with the rest and post COMPLETE with this one check red until you answer.
+
+## J16 · COMPLETE
+
+COMPLETE · fix round 10, Wave B batch 6 (B13): 30 of my 33 fixture lines re-pointed; 3 wait on providers' fixtures; 1 check waits on BOB (J15). Tests only: no source of the module changed. tranche/T51 merged (24b12d1f9f).
+
+**Lines done (fixtures check: 33 listed, 3 left, 2 accepted generic).**
+- action-producers/actionItems: `action.test.mjs:20` takes `actionItems().actionProducers` (each read recorded, its answer kept). Real answer: one item (the overdue clock), homed by its own project when no walk is passed; two assertions follow the real answer (see "Tests changed in meaning").
+- escalation/escalationsDue: `action.test.mjs:88` takes `escalationsDue().due`.
+- contradiction/readRefusals: `contradictions.test.mjs:159` takes `readRefusals().notAParticipant` (the real code is `NOT_A_PARTICIPANT`, not `PROJECT_ACT_NOT_A_PARTICIPANT` as the START said); `reads.test.mjs:90` loops the two real refusals `notAParticipant` and `unknownProject`.
+- publication/caseDocumentFacts: `credit.test.mjs:28` and `world.mjs:159` take publication's own absent answer (`caseId`, `edition`, `detail`).
+- docket/coreDue: `world.mjs:183` default is the real `unread`; `every.mjs:65` and `localday.test.mjs:38` take the real `due` (its case `DOCKET.case` is the world's case row); `feeditems.test.mjs:50` follows its real ref.
+- monitoring/monitoringReads: `world.mjs:173` defaults to `empty`; `every.mjs:59` takes `seeded` (the busy world now also raises a `source-removed`); `reads.test.mjs:21,121` take `empty`; `feeditems.test.mjs:130` takes `seeded.archiveEligible` (the address and host follow it); `producers.test.mjs:114,140` and `words.test.mjs:127` take `seeded.flagged` (titles and capture days set on its two real bundles, once titled and once not).
+- monitoring/flaggedRefusal: `producers.test.mjs:133`.
+- provenance/homeOfHomed and homeOfEmpty: `feeditems.test.mjs:125`, `lead.test.mjs:18`, `producers.test.mjs:29`, `reads.test.mjs:227` take `homed({sha: bundle})` (world.mjs, over `homeOfHomed`; digests are `sha(name)`); `world.mjs:150` default and `proposals.test.mjs:32` take `homeOfEmpty()`.
+- project-roster reads: `feeds.test.mjs:98` and `inviter.test.mjs:74`: the hand-built REFUSED is gone; the real empty `ok: true` list for a viewer it holds nothing for (R35, R36); the throw stays as the boom case. The "projects feed refused" case is no longer tested (no real refusal exists).
+- CODE `scheduled.test.mjs:62,157`: `SCHEDULED_SOURCES_CHANGED` and `SCHEDULED_HOLD_CHANGED` (both are real; the START's note that HOLD is in no source was wrong: it is C-58.9 in ratification/checks.mjs), their translations from `word("refusal.<code>")`.
+
+**Markers added (fixtures-generic; BOB reads each, K5060).**
+- `feeds.test.mjs:74` `REFUSED`: R45's loop makes each of fourteen providers' reads answer one refusal in turn; the module carries whatever code a provider gives, and most of those providers have no refusal of their own to publish.
+- `reads.test.mjs:101` `OTHER`: the control that a refusal code this module does not know is a failure; no real `conflictNotices` refusal other than the two told-nothing codes exists.
+No `fixtures-own`, no `fixtures-contract`.
+
+**Lines left, all waiting on a provider's fixture (named, not worked around).**
+- `docket.test.mjs:36` and `words.test.mjs:217` (docket/coreDue): the tests need items of kind `statement` (with and without an edition), `edition` (with `what_changed`) and `tension` (with `member`, `state`), over several cases of different projects; `coreDue().due` publishes one `response`. Owed: docket publishes `coreDue` over those kinds. (`words.test.mjs:217` already uses the real `response` item beside two hand-built kinds.)
+- `noticed.test.mjs:10` (reevaluation/noticesRead): R52 groups several notices of one holder, target and newer capture, with null grades and other holders and targets; `noticesRead()` publishes one notice. Owed: reevaluation publishes `noticesRead` over several legs, grades and holders.
+
+**Waiting on BOB.** `checks/architecture.mjs bio queue-producers`: 1 failure, `action.test.mjs` imports `escalation/fixtures.mjs` and `escalation` is not in my `uses` (QUESTION J15; the one line in `build/modules.json`). Everything else I import is declared.
+
+**Tests tightened in meaning (real answers differ from the hand-built ones).** `action.test.mjs` R8: the real action-producers gives one item, not two (the plan-review item is gone from the control), its facts are taken from its answer, the options check is the last option (`opt`) rather than the exact pair, the "no walk" check says the item is homed by its own project (the real module reads it) and queue's walk is not asked. Nothing weakened: each requirement id is still named by a full test.
+
+**Found in other modules.** None beyond the owed fixtures above. Fixture cost: `world.mjs` awaits `monitoringReads()` once per test file (about 150 ms).
+
+**Checks and tests.** queue-producers `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit` 154 tests, 154 pass, 0 fail. `impact.mjs origin/tranche/T51 HEAD`: "queue-producers 24/24, affected modules: 1 of 178" (tests only; no user to run). `checks/format.mjs`: 178 modules, 0 failures. `checks/coverage.mjs queue-producers`: 41 of 41, 0 failures. `checks/ownership.mjs queue-producers tranche/T51`: 16 files, 0 failures. `checks/words.mjs queue-producers`: 0 failures. `checks/fixtures.mjs queue-producers`: answer 3 (3 op-table), stub 0, code 0, contract 0, accepted 2; 3 failures (the three waiting lines). `checks/architecture.mjs queue-producers`: 1 failure (above).
+
+Size (session_016R48b4KURUGUt3h76T2fsb): test runs 14, module lines 3630

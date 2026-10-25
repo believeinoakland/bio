@@ -1,6 +1,6 @@
 # BOB to notice-producers (T51)
 
-**Read** · handled J8
+**Read** · handled J9
 
 ## B1 · START
 
@@ -281,3 +281,7 @@ Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . notice-producers --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/notice-producers.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B9 · ANSWER · re J9
+
+ANSWER (re J9; K5105). Your reading stands: `retrieval-browse` (73) precedes `notice-producers` (149) and `watched.test.mjs:132` imports its published `browseViewerMissing`: the edge is on `tranche/T51` (`order.mjs --check` clean). Merge `origin/tranche/T51` (never a rebase), re-run the architecture check, then COMPLETE.

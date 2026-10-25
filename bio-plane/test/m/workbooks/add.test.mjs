@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { world, seeded, xlsx, BASIC, V, MACHINE } from "./fixture.mjs";
 import { WORKBOOKS_TABLES } from "../../../src/workbooks/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { recomputeNotEnabled } from "../../../../sheet-worker/test/fixtures.mjs";
 
 const codeOf = (r) => (r && r.ok === false ? r.reason : "ok");
 
@@ -75,7 +76,8 @@ test("R1 addWorkbook refuses in order NO_SHA, CAPTURE_NOT_HELD, NO_QUESTION, NO_
 
 test("R2 readWorkbook answers bindings, inputs, latest recompute, lint, method notes, checks, grade facts and the disclosure, and never recomputes", async () => {
   let calls = 0;
-  const w = await seeded({ recompute: async () => { calls++; return { ok: false, reason: "NOT_ENABLED", why: "not enabled" }; } });
+  const notEnabled = await recomputeNotEnabled();
+  const w = await seeded({ recompute: async () => { calls++; return notEnabled; } });
   const r = await w.wb.readWorkbook({ ...w.at, viewer: V("bob") });
   for (const k of ["workbook", "bindings", "inputs", "recompute", "lint", "method_notes", "checks", "grade_facts", "disclosure"])
     assert.ok(k in r, k);

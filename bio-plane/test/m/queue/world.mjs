@@ -11,6 +11,10 @@ import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { queueOf } from "../../../src/queue/index.mjs";
 import { tasksOf } from "../../../src/tasks/index.mjs";
 import { projectRosterOf } from "../../../src/project-roster/index.mjs";
+import { homeOfEmpty } from "../provenance/fixtures.mjs";
+import { disposeProposalRefusal } from "../progressions/fixtures.mjs";
+import { monitoringReads } from "../monitoring/fixtures.mjs";
+import { coreDue } from "../docket/fixtures.mjs";
 
 export const NOW = Date.parse("2026-09-01T00:00:00Z");
 export const iso = (ms) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
@@ -112,13 +116,20 @@ export function world(fakes = {}, { bare = false, notices = null } = {}) {
   return w;
 }
 
+/* The providers' own answers for a world holding nothing, made once by their real code (their published fixtures). */
+const PROVENANCE_EMPTY = homeOfEmpty();
+const DISPOSE_REFUSAL = disposeProposalRefusal();
+const MONITORING_EMPTY = (await monitoringReads()).empty;
+const DOCKET_EMPTY = coreDue().unread;
+const again = (v) => structuredClone(v);
+
 /** Every provider the feed and the acts reach, answering nothing until a test says otherwise. queue hands the
  *  producers' own (governor … contradiction) to `queue-producers`, whose real `feedItems` then reads them, unless a
  *  test gives `producers` itself. */
 export function defaultFakes() {
   return {
     governor: { governorHolding: () => [] },
-    provenance: { homeOf: () => null },
+    provenance: { homeOf: (sha) => PROVENANCE_EMPTY.homeOf(sha) },
     capture: { liveCaptureSessions: () => [], taskEvents: () => [], taskEventCount: () => 0, taskEventAttempt: () => true,
                taskEventRemove: () => true, on: () => ({ ok: true }) },
     captureRequests: { completed: () => ({ requests: [] }), leads: () => ({ requests: [] }), rendersHeld: () => ({ requests: [] }) },
@@ -129,8 +140,7 @@ export function defaultFakes() {
                     /* the instance arm names no progression: progressions refuses it as its generic NO_KEY (C-100.1), so the fake does too */
                     disposeProposal: (a) => (a.progressionKey || (typeof a.key === "string" && a.key.includes("::"))
                       ? { ok: true, scope: "instance", progression_arm: a }
-                      : { ok: false, reason: "NO_KEY", code: "NO_KEY",
-                          detail: "a proposal disposition names its progression (progressionKey, or key='progression::stage')" }) },
+                      : again(DISPOSE_REFUSAL)) },
     aiRuns: { runFor: () => null },
     bias: { uncleared: () => ({ debts: [], limit: 200, truncated: false }),
             settled: ({ limit }) => ({ debts: [], limit, truncated: false }) },
@@ -149,7 +159,7 @@ export function defaultFakes() {
                     citedCaseDependents: () => ({ ok: true, entries: [], count: 0, limit: 200, truncated: false, cursor: null,
                                                   wrote: false }) },
     intent: { gaps: () => ({ ok: true, gaps: [] }) },
-    monitoring: { monitoring: () => ({ ok: true, items: [], truncated: false }),
+    monitoring: { monitoring: () => again(MONITORING_EMPTY.monitoring),
                   flagged: () => ({ ok: true, items: [], limit: 200, truncated: false }),
                   archiveEligible: () => ({ ok: true, eligible: [], limit: 50, truncated: false, paused: { paused: false } }) },
     /* link-sweep R11 (queue-producers R26, N506): no sweep condition until a test says otherwise. */
@@ -168,7 +178,7 @@ export function defaultFakes() {
     actionPlans: { checkpointsDue: () => ({ ok: true, items: [], truncated: false, cursor: null }),
                    plansToLookAgain: () => ({ ok: true, items: [], limit: 500, truncated: false }) },
     /* docket R9 (queue-producers R30): no core item due on any case until a test says otherwise. */
-    docket: { coreDue: () => ({ ok: true, items: [], count: 0, wrote: false }) },
+    docket: { coreDue: () => again(DOCKET_EMPTY) },
     /* case-import R20 (queue-producers R35, N545): no followed docket gained, refused or failed a read. */
     caseImport: { watchItems: () => ({ ok: true, entries: [], refused: [], unreadable: [] }) },
     /* wizard-scripts R13, R17 (queue-producers R32, R33, N545): no script broke or returned, none submitted. */

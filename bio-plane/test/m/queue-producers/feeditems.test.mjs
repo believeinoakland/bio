@@ -4,7 +4,7 @@
    layer's to-dos are action-producers' since T45 (K2781 (1)), answered through R8 (`action.test.mjs`). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, byId, NOW, iso } from "./world.mjs";
+import { world, byId, NOW, iso, sha, homed, MONITORING, DOCKET } from "./world.mjs";
 import { viewerPredicate } from "../../../src/membership/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { busy, everyKind, IMP } from "./every.mjs";
@@ -47,7 +47,7 @@ test("R8: every producer's items, homed through homesOf and offered optionsOf; n
   assert.deepEqual(m["FINDING::p::s"].options, [{ id: "opt", on: ["INF-1"] }]);
   assert.deepEqual(m["FINDING::export-performed::1"].options.map((o) => o.id), ["exportlog"]);
   assert.deepEqual(m["OBLIGATION::signer-self-registered::KEY-1"].options.map((o) => o.id), ["signerset"]);
-  assert.deepEqual(m["OBLIGATION::docket-core-due::CASE-D::response::DKT-2026-0001"].options.map((o) => o.id),
+  assert.deepEqual(m[`OBLIGATION::docket-core-due::${DOCKET.case}::response::${DOCKET.due.items[0].ref}`].options.map((o) => o.id),
     ["docketprepare", "docketdecline"]);
   assert.deepEqual(m["FINDING::edition-withdrawn::INQ-S::CASE-W#3"].options, [{ id: "opt", on: ["INQ-S"] }]);
   assert.deepEqual(m["FINDING::edition-contested::INF-1::DKT-2026-0002"].options, [{ id: "opt", on: ["INF-1"] }]);
@@ -118,17 +118,18 @@ test("R10: every FINDING's basis names its source and its derivation", () => {
 
 test("R11: no answer names a bundle the viewer may not see, and no count reveals one", () => {
   const HID = "PRJ-H";
+  /* the address monitoring's real read (its published fixture) finds eligible for the archive fallback */
+  const GONE = MONITORING.seeded.addresses.gone, HOST = new URL(GONE).host;
   const w = world({
-    governor: { governorHolding: () => [{ host: "h.example", cooloff_until: NOW + 5, refusals: 1 }] },
-    capture: { liveCaptureSessions: () => [{ session: "S1", locator: "https://h.example/1", primarySha: "c-h", created: iso(NOW),
+    governor: { governorHolding: () => [{ host: HOST, cooloff_until: NOW + 5, refusals: 1 }] },
+    capture: { liveCaptureSessions: () => [{ session: "S1", locator: GONE, primarySha: sha("c-h"), created: iso(NOW),
       updated: iso(NOW), expires: iso(NOW + 10), ticks: 1, state: {} }] },
-    provenance: { homeOf: (sha) => (sha === "c-h" ? { bundleId: HID } : null) },
+    provenance: homed({ [sha("c-h")]: HID }),
     progressions: { proposalsFeed: () => ({ instances: [], dispositions: [], proposals: [
       { key: "p::s", progression_key: "p", progression_label: "P", stage_key: "s", stage_label: "S", required: "always",
         definition_version: 1, n: 1, kinds: ["missing_predecessor"], grade: null, grade_determined: false, overdue: false,
         overdue_count: 0, surfaced_by: "machine", prior_disposition: null, instances: [{ progression_key: "p", entity_id: "E" }] }] }) },
-    monitoring: { archiveEligible: () => ({ ok: true, limit: 50, truncated: false, paused: { paused: false },
-      eligible: [{ address: "https://h.example/1", first_failure_since: iso(NOW) }] }) },
+    monitoring: { archiveEligible: () => MONITORING.seeded.archiveEligible },
     basisVersions: { projectsDrawingOn: (inq, viewer) => Object.assign(
       [{ id: "PRJ-A", title: "A", current: { version: "v1", at: iso(NOW), by: "alice" } },
        ...(viewer === "member:alice" ? [] : [{ id: HID, title: "H", current: { version: "v2", at: iso(NOW), by: "x" } }])],
@@ -139,17 +140,17 @@ test("R11: no answer names a bundle the viewer may not see, and no count reveals
   w.member("alice"); w.bundle(HID, "project"); w.bundle("INF-V"); w.bundle("INQ-S", "inquiry"); w.bundle("PRJ-A", "project");
   w.join("PRJ-A", "alice", { owner: true }); w.cite("PRJ-A", "INQ-S"); w.cite(HID, "INQ-S"); w.cite(HID, "INF-V");
   w.run(`INSERT INTO progression_instances VALUES ('p','E','s','c1',?), ('p','E','s','c2','INF-V')`, HID);
-  for (const [sha, b] of [["c-h", HID], ["c-v", "INF-V"]]) {
-    w.run(`INSERT INTO register (capture_sha, bundle_id, path, encoding, registered, bytes) VALUES (?,?,?,'utf8',?,1)`, sha, b, "snapshots/x", iso(NOW));
+  for (const [c, b] of [["c-h", HID], ["c-v", "INF-V"]]) {
+    w.run(`INSERT INTO register (capture_sha, bundle_id, path, encoding, registered, bytes) VALUES (?,?,?,'utf8',?,1)`, sha(c), b, "snapshots/x", iso(NOW));
     w.run(`INSERT INTO captured_locators (address_norm, address, capture_sha, via, first_retrieved, last_retrieved, observations) VALUES (?,?,?,?,?,?,1)`,
-      "https://h.example/1", "https://h.example/1", sha, "direct", iso(NOW), iso(NOW));
+      GONE, GONE, sha(c), "direct", iso(NOW), iso(NOW));
   }
   const man = (key, author) => w.run(`INSERT INTO manifest (bundle_id, snap_key, kind, base, author, created, files_json) VALUES (?,?, 'revision', 'b', ?, ?, '[]')`, HID, key, author, iso(NOW));
   man("k1", "alice"); man("k2", "token:daemon");
   const r = w.read("alice");
   assert.ok(!JSON.stringify(r).includes(HID), "the hidden project is named nowhere");
   const m = byId(r);
-  assert.deepEqual(m["CONDITION::governor-holding-host::h.example"].subject.bundles, ["INF-V"]);
+  assert.deepEqual(m[`CONDITION::governor-holding-host::${HOST}`].subject.bundles, ["INF-V"]);
   assert.deepEqual(m["FINDING::p::s"].subject.bundles, ["INF-V"]);
   assert.equal(m["CONDITION::partial-capture-outstanding::S1"], undefined, "a condition about a hidden bundle is withheld whole");
   assert.equal(m[`CONDITION::capture-completed-unattended::${HID}`], undefined);

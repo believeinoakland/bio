@@ -6,7 +6,7 @@
    time is the one set and never converted, and none carries `due`; an item action-producers answers keeps its own. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, byId, NOW, iso, said, atWord } from "./world.mjs";
+import { world, byId, NOW, iso, said, atWord, DOCKET } from "./world.mjs";
 
 const LA = "America/Los_Angeles";
 const placeOf = (zone) => () => (zone === null ? { time_zone: null } : { time_zone: { value: zone, status: "ruled", basis: "TEST" } });
@@ -35,8 +35,7 @@ function dated(zone) {
           since: "2026-08-31T07:30:00Z", what_changed: "c", key_listed: true, taken_back: null, legs: [{ cited_edition: 1 }] }] }) },
     caseImport: { watchItems: () => ({ entries: [{ import: IMP, group: "g2", case: "CASE-I", set_by: "alice", seq: 3, kind: "response",
       edition: 2, date: "2026-08-31", key_listed: true, move: false, taken_back: null, seen_at: "2026-08-31T05:00:00Z" }], refused: [], unreadable: [] }) },
-    docket: { coreDue: () => ({ ok: true, count: 1, wrote: false, items: [
-      { case: "CASE-D", kind: "response", ref: "DKT-1", edition: 1, since: "2026-08-31T02:00:00Z" }] }) },
+    docket: { coreDue: () => DOCKET.due },
     publishSchedule: { scheduledEditions: () => ({ ok: true, limit: 500, cursor: null, editions: [
       { case: "CASE-SW", edition: 1, project: "PRJ-A", state: "waiting", signer: "K", set_by: "alice", signed_at: "2026-08-31T04:00:00Z",
         at: { date: "2026-09-01", time: "09:30", zone: LA }, publish_at: "2026-09-01T16:30:00Z", moves: [], outcome_at: null, reasons: null }] }) },
@@ -49,7 +48,7 @@ function dated(zone) {
   w.bundle("INQ-S", "inquiry"); w.bundle("INF-1"); w.bundle("PRJ-A", "project");
   w.join("PRJ-A", "alice", { owner: true }); w.cite("PRJ-A", "INQ-S"); w.leg("INQ-S", "INF-1");
   w.run(`INSERT INTO progression_instances VALUES ('p','E','s','c1','INF-1')`);
-  w.run(`INSERT INTO cases (case_id, project_id) VALUES ('CASE-D', 'PRJ-A')`);
+  w.run(`INSERT INTO cases (case_id, project_id) VALUES (?, 'PRJ-A')`, DOCKET.case);
   return w;
 }
 const ours = (r) => r.items.filter((i) => i.kind !== "action-clock-overdue");

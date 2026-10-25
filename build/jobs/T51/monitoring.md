@@ -1,6 +1,6 @@
 # monitoring (T51)
 
-**Status** · session_013HZfjoGu9DeeFtdAsv1UPN · depth 2 · COMPLETE · handled B9
+**Status** · session_01GCDV8BWKs6fq93QzdCr4rY · depth 2 · COMPLETE · handled B12
 
 ## J1 · COMPLETE
 
@@ -161,3 +161,50 @@ No `fixtures-generic` marker.
 **Deferred:** none in the module. Source unchanged.
 
 Size (session_013HZfjoGu9DeeFtdAsv1UPN): test runs 11, module lines 3300
+
+## J9 · COMPLETE
+
+COMPLETE for T51 monitoring, fix round 10 follow-up 27 (B11; B10 read: the four lines stay named in J7 until this re-point, as B10 says), session session_01GCDV8BWKs6fq93QzdCr4rY, on job/T51/monitoring at befc3a1465 (tranche/T51 merged in, no rebase).
+
+**Entries applied.** B11 (follow-up 27): the four `stubIntent`/`stubPublication` lines are re-pointed, and both stubs are deleted.
+- `fixture.mjs`: no stub is built. An absent intent or publication is now `null`. `undefined` makes monitoring build the real module on this host (`intentOf(host)`), which fails in R41's whole-store purge with `no such table: intent_departures`; that is why the default is `null`. The header says so.
+- `understanding.test.mjs` R33 (N170, N230): `watchSetOf({...}, { page: 2 })` and `restingOf([...])` from the providers' published fixtures. Project ids come from `f.projects`. Publication's answers are followed two at a time through a small wrapper, `pagedResting`, which records each call. The unreadable-publication control stays a fault injection. The R35 `assert.ok(stubIntent)` line goes.
+- `watch.test.mjs` R70 (all three tests): intent is the real module, through `intentFor(f)`, a thin adapter that maps this world's projects to the fixture's project for each name (`w.intent.bind`). The held digests are the sha of the bytes monitored, so the watch sets are real answers. The hand-built `gaps`/`progress` overrides are gone; investigation's quiet state and its reopen hold on the real intent answers.
+  - One held digest is the greatest of P1's (the older capture at the address), so it sits on P1's last page, as the stub made it.
+  - Expectations that followed insertion order now follow sha order, because the real `watchSet` and `restingCapturesOf` page by sha.
+
+**Deferred:** none. **Found in another module:** none. Module code (`src/monitoring/`) is unchanged.
+
+**Tests run** (`node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit`)
+- `bio-plane/test/m/monitoring/*.test.mjs`: tests 172, pass 172, fail 0 (after the `null` fix; before it R41 failed on the missing table, as above).
+- `understanding.test.mjs` and `watch.test.mjs`: 20 of 20 (run first).
+- users of the fixture: `following/watches`, `scheduler/rank`, `affordances/backing`: 49 of 49, as in the START.
+
+**Checks run** (from `/home/user/civicos-process`, absolute root)
+- `checks/fixtures.mjs /home/user/bio monitoring --list`: stub 0 (was 4). The remaining monitoring lines are `accepted(own)` (`docket.test.mjs:113`, `fixture.mjs:268`), `accepted(sweep-fence)` and `accepted(sweep-mutate)` (`fixture.mjs:313`; `named-requests.test.mjs:411`, `416`, `417`; link-sweep later), and `relay.test.mjs:36` (`contract-no-run`, waiting on store-door's `fixtures-run: monitoring store-envelope`; named in J8). The check's 2 failures are that one plus store-door's own `fixtures.test.mjs:34` orphan run (not mine).
+- `checks/format.mjs /home/user/bio`: 178 modules, 178 requirements files, 0 failures.
+- `checks/architecture.mjs /home/user/bio monitoring`: 25 files, 132 relative imports, 0 failures.
+- `checks/coverage.mjs /home/user/bio monitoring`: 65 of 65 live ids named by a test, 0 failures.
+- `checks/words.mjs /home/user/bio monitoring following link-sweep scheduler`: 0 failures (testcopy 0, plain 0, inline 0, missingkey 0).
+- `checks/ownership.mjs /home/user/bio monitoring tranche/T51 job/T51/monitoring`: 4 files changed by monitoring, 0 failures.
+
+**Markers added:** none.
+
+**Stray file.** An early command of mine wrote `/fx.mjs` at the filesystem root (a copy of the first 318 lines of the fixture, made before I noticed an unset `$TMPDIR`). Removing it was refused by the safety check, so it is still there. It is outside the repository. Someone with access should delete it.
+
+Size (session_01GCDV8BWKs6fq93QzdCr4rY): test runs 5, module lines 3080 (non-blank, non-comment lines in src/monitoring/*.mjs; unchanged this job).
+
+## J10 · COMPLETE
+
+COMPLETE for T51 monitoring, the B12 CHANGE (re J9; K5101), session session_01GCDV8BWKs6fq93QzdCr4rY, on job/T51/monitoring at the head pushed with this entry (origin/tranche/T51 merged in, no rebase).
+
+**Entry applied (B12).** `relay.test.mjs:36` is marked `fixtures-contract: store-door store-replies` and takes the real BAD_JSON reply that store-door's run states: `{ ok: false, reason: "BAD_JSON", detail: "the request body is not valid JSON" }`. No other line changed.
+
+**Deferred:** none. **Found in another module:** none.
+
+**Tests:** `bio-plane/test/m/monitoring/*.test.mjs`: tests 172, pass 172, fail 0.
+**Checks** (absolute root, from `/home/user/civicos-process`): `checks/fixtures.mjs /home/user/bio monitoring --list`: 0 failures, stub 0, contract 0, answer 0; the seven remaining lines are accepted (own, or link-sweep later). `format`: 0 failures. `words` (monitoring, following, link-sweep, scheduler): 0 failures. `coverage`: 65 of 65, 0 failures. `ownership` (tranche/T51 to job/T51/monitoring): 5 files, 0 failures.
+
+**Markers added:** none.
+
+Size (session_01GCDV8BWKs6fq93QzdCr4rY): test runs 1, module lines 3080 (unchanged this job).

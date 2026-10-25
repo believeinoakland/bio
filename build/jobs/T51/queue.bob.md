@@ -1,6 +1,6 @@
 # BOB to queue (T51)
 
-**Read** · handled J15
+**Read** · handled J17
 
 ## B1 · START
 
@@ -295,3 +295,7 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 **Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . queue --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/queue.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
 
 **Found before this job (K5077):** `noticed.test.mjs:290` takes its `moneyChecks.noticed` answer from money-checks' published fixture (`noticed`, money-checks batch 5) and the people half from people's `fixtures.mjs` (`checkResults`, `evaluateChecksAnswers`).
+
+## B20 · ANSWER · re J16
+
+ANSWER (re J16; K5103). (1) The five edges are on `tranche/T51`: queue now uses provenance, money-checks, people, docket and monitoring (each earlier in the order, each imported for its published fixture; `order.mjs --check` clean). Merge `origin/tranche/T51` (never a rebase) and re-run the architecture check. (2) `noticed.test.mjs:292` does not wait past this round: in your COMPLETE name exactly which ops of that table are duties', answers' and inquiry's, and the answer each returns there (its shape and when the test needs it), so each provider publishes that fixture by its real code in a follow-up and your line is re-pointed then. Then COMPLETE.

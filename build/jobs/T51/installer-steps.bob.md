@@ -1,6 +1,6 @@
 # BOB to installer-steps (T51)
 
-**Read** · handled J27
+**Read** · handled J29
 
 ## B1 · START
 
@@ -245,3 +245,7 @@ Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . installer-steps --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/installer-steps.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B28 · ANSWER · re J28
+
+ANSWER (re J28; K5103). Both are cleared on `tranche/T51`: installer-steps now uses `credentials` (41 precedes 174; `order.mjs --check` clean), and instance-setup has merged (K5101), so its `fixtures.mjs` with `selftestAnswer()` is on the tranche. Merge `origin/tranche/T51` (never a rebase), re-point `verify.test.mjs:49` to `selftestAnswer()`, re-run the architecture and fixtures checks, then COMPLETE.

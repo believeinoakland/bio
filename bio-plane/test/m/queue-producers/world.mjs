@@ -17,6 +17,24 @@ import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 import { queueProducersOf } from "../../../src/queue-producers/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { tidy } from "../../../src/queue-producers/words.mjs";
+import { caseDocumentFacts } from "../publication/fixtures.mjs";
+import { monitoringReads } from "../monitoring/fixtures.mjs";
+import { coreDue } from "../docket/fixtures.mjs";
+import { homeOfEmpty, homeOfHomed, sha } from "../provenance/fixtures.mjs";
+
+export { sha };
+
+/* monitoring's reads over an empty world and over real monitors, and docket's `coreDue` (their published fixtures), made once at load */
+export const MONITORING = await monitoringReads();
+export const DOCKET = coreDue();
+/* provenance over an empty store (its published fixture), made once on first use: no capture has a home */
+let noHomes = null;
+/** provenance answering `homeOf` for each capture digest of `map` (`{sha: bundleId}`) with the bundle the real register acts homed it in (its published fixture). */
+export const homed = (map = {}) => { const real = homeOfHomed(map); return { homeOf: (s) => real.homeOf(s) }; };
+
+/* publication's own answer for an edition with no document (its published fixture), made once, on first use */
+let absent = null;
+const absentFacts = () => (absent ??= caseDocumentFacts().absent);
 
 export const NOW = Date.parse("2026-09-01T00:00:00Z");
 const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
@@ -147,7 +165,7 @@ export function world(fakes = {}) {
 export function defaultFakes() {
   return {
     governor: { governorHolding: () => [] },
-    provenance: { homeOf: () => null },
+    provenance: { homeOf: (s) => (noHomes ??= homeOfEmpty()).homeOf(s) },
     capture: { liveCaptureSessions: () => [] },
     captureRequests: { completed: () => ({ requests: [] }), leads: () => ({ requests: [] }), rendersHeld: () => ({ requests: [] }) },
     basisVersions: { projectsDrawingOn: () => Object.assign([], { bound: 32, truncated: false }), conclusionOf: () => null,
@@ -156,7 +174,7 @@ export function defaultFakes() {
     aiRuns: { runFor: () => null },
     bias: { uncleared: () => ({ debts: [], limit: 200, truncated: false }) },
     /* publication keeps R23's read; the scheduled editions are publish-schedule's (its R4, was publication R69; N823) */
-    publication: { caseDocumentFacts: (c, e) => ({ ok: false, reason: "NO_CASE_DOCUMENT", case: c, edition: e }) },
+    publication: { caseDocumentFacts: (c, e) => ({ ...absentFacts(), caseId: c, edition: e }) },
     publishSchedule: { scheduledEditions: () => ({ ok: true, editions: [], limit: 500, cursor: null }) },
     /* N612: a published case's tensions are case-tensions' (its R4, was publication R50) */
     caseTensions: { caseTensions: () => ({ ok: true, cases: [], limit: 200, cursor: null }) },
@@ -170,9 +188,9 @@ export function defaultFakes() {
                      submittedFor: () => ({ ok: true, entries: [], cursor: null, truncated: false }),
                      baseUpdates: () => ({ ok: true, entries: [], cursor: null, truncated: false }) },
     intent: { gaps: () => ({ ok: true, gaps: [] }) },
-    monitoring: { monitoring: () => ({ ok: true, items: [], truncated: false }),
-                  flagged: () => ({ ok: true, items: [], limit: 200, truncated: false }),
-                  archiveEligible: () => ({ ok: true, eligible: [], limit: 50, truncated: false, paused: { paused: false } }) },
+    monitoring: { monitoring: () => MONITORING.empty.monitoring,
+                  flagged: () => MONITORING.empty.flagged,
+                  archiveEligible: () => MONITORING.empty.archiveEligible },
     linkSweep: { sweepConditions: () => ({ ok: true, conditions: [] }) },
     contradiction: { candidatesFor: () => ({ ok: true, candidates: [], truncated: false, cursor: null }),
                      conflictNotices: () => ({ ok: true, notices: [], truncated: false, cursor: null }) },
@@ -180,7 +198,7 @@ export function defaultFakes() {
     actions: { place: () => ({ time_zone: { value: "UTC", status: "ruled", basis: "TEST" } }) },
     /* T45 (K2781 (1)): the Action layer's to-dos, action-producers' (its R13), answered through R8; a test fills it */
     actionProducers: { actionItems: () => ({ items: [], facts: {} }) },
-    docket: { coreDue: () => ({ ok: true, items: [], count: 0, wrote: false }) },
+    docket: { coreDue: () => DOCKET.unread },
     networkNotices: { noticesOf: ({ project }) => ({ ok: true, project, notices: [], sealed_weeks: [], methodVersion: 1 }) },
   };
 }
