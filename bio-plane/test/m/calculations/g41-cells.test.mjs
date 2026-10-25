@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import { seeded, V, R } from "./fixture.mjs";
 import { FILE_ENGINE, Calculations } from "../../../src/calculations/index.mjs";
 import { fresh, bundle, bucket, doc, sha } from "../extraction/fixture.mjs";
+import { registeredHomes } from "../provenance/fixtures.mjs";
 
 const PERIOD = { from: "2025-01-01", to: "2026-12-31" };
 const F = [{ name: "dept", type: "string" }, { name: "amount", type: "number" }];
@@ -182,18 +183,18 @@ test("R1 (G41): a small sheet's table and grading are unchanged by the asynchron
 
 /* ---- Part 2: the seam, through the real extraction and the real merged content ---- */
 
-const register = (rows) => ({ homeOf: (s) => rows.get(s) ?? null, onTestimony: () => ({ ok: true }) });
-
 async function csvWorld() {
   let t = "id,name,amount,note\n"; let i = 0;
   while (t.length < 1_048_576) { t += `${i},"name ${i}",${(i * 37) % 9973}.${i % 100},"council note ${i} budget line"\n`; i++; }
   t += `LASTROWMARK,"last name",1.00,"the final row of the sheet"\n`;
   const lines = t.trimEnd().split("\n").length;
-  const rows = new Map(), evidence = bucket();
-  const x = fresh({ evidence, provenance: register(rows) });
+  const evidence = bucket();
+  const { provenance, register } = registeredHomes();   /* provenance's own fixture: the real homeOf over captures really registered (K5044) */
+  const x = fresh({ evidence, provenance });
   bundle(x.s, "INFO-1");
   const bytes = new TextEncoder().encode(t), d = sha(bytes);
-  rows.set(d, { bundleId: "INFO-1", path: "t.csv", encoding: "binary", bytes: bytes.length, registered: "t", authored: false });
+  const reg = register(d, { bundleId: "INFO-1", path: "t.csv", encoding: "binary", bytes: bytes.length });
+  assert.equal(reg.ok, true, JSON.stringify(reg).slice(0, 200));
   await evidence.put(`bio/captures/${d}`, bytes);
   const document = doc({ digest: d, bytes: bytes.length, ct: "text/csv", format: "csv", fromText: true });
   x.core.readFile = (b, p) => (b === "INFO-1" && p === "data/provenance.json" ? { text: JSON.stringify({ documents: [document] }) } : null);
