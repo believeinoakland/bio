@@ -387,3 +387,10 @@ Size (session_01HMaPz7pqmixWTqj6Bw5a1N): test runs 3, module lines 3680
 **REPORT (setup-words, for BOB):** `plane.declared.readtranslate` has two sentences: `bio-plane/src/plane/declared.mjs:13` ("draft: a machine translation of one passage ... labele...") and `bio-plane/src/store-assembly/declared.mjs:16`. `build.mjs --check` refuses on it, and `checks/run.mjs` reports it as a marker finding in store-assembly.
 
 Size (session_01T9Q1bzf8ZbBrV2wLLGqZoT): test runs 5, module lines 1
+
+## J30 · REPORT
+
+**REPORT** · for BOB: two findings in other modules, from the K5157 cause (both in the COMPLETE entry above, J29; no change made to either module).
+
+1. `bio-plane/test/m/affordances/register-owners.mjs` registers three owners by hand (`case-inputs`, `case-import`, `contradiction`), so affordances' R12 totality does not see other owners' declared ops. Fix belongs in affordances' test: register every owner's `DECLARED_OPS` found from `build/modules.json`.
+2. `plane.declared.readtranslate` has two sentences (`bio-plane/src/plane/declared.mjs:13` and `bio-plane/src/store-assembly/declared.mjs:16`); `setup-words build.mjs --check` refuses on it.
