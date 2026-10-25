@@ -1150,3 +1150,13 @@ Exact next step: (1) apply B97: fix `bio-plane/test/m/plane/r8-headofline.test.m
 **Deferred:** none in plane.
 Remaining root for the two walks: `store-assembly/register.mjs`.
 Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 31, module lines 371
+
+## J66 · COMPLETE
+
+COMPLETE (PLANE #63; B97, B95, B100). Full account: my record, section "Record (PLANE #63 ...)".
+Met/green: B97 r8-headofline R80; B100 (1) g123f R84, R85 (3 columns for the workbook); (2) t42 `fixtures-run: extraction transcribe-not-sent` (extraction t44:93 now accepted); (3) door.test 37 routes already; also g42 (R79) and g83 (R95) fixed test-side; whole plane directory green except one red below. Checks: format, architecture, ownership, fixtures plane 0 failures; coverage 37/37; no words finding in plane.
+B95: g54-l whole file x20 under 8 busy loops, instrumented: 20/20 green, the only client throw per run is the kill test's deliberate dispose; NOT REPRODUCED. Deployed check: bio-plane/test/m/plane/deployed-alarm-request-check.mjs (for biosmoke8).
+ONE RED, yours to decide: r10-lag-figure R78/R28b expects max_run_statements > 1,000 for the pass that wrote a tick's units (store-assembly R78 text says so); extraction R111 (b195c78f02) now yields every 256 units, so the pass states 290. Amend R78's test sentence and I change the assertion (r10-lag-figure.test.mjs:95-96); I did not weaken it.
+REPORT: (a) B100 (4) is store-assembly's: pending.mjs openInstruments (~:316) lag-meter setInterval not unref'd; abandoned (killed) runs keep 16 timers alive so r9-jobs.test.mjs passes 34 and never exits; with setInterval unref'd it exits in 38 s. Fix: t.timer.unref?.(). (b) extraction/acquisition contract-no-run lines naming plane are the J64 relocation to store-assembly.
+Remaining root: store-assembly/register.mjs.
+Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 31, module lines 371
