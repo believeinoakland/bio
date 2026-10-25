@@ -8,10 +8,13 @@ import { localize } from "../setup-words/index.mjs";
 export const WORKBOOKS_OPS = Object.freeze(["workbookadd", "workbook", "workbookbind", "workbookunbind", "workbookinputs",
   "workbookrecompute", "workbooklint", "workbooklintexplain", "workbookmethodnote", "workbooksecondcheck", "workbookexport"]);
 
+/* R22: encoded in pieces of a multiple of three bytes, so no piece joins to another until the answer's one string; the
+   file is never first made a whole-file binary string for `btoa` */
+const PIECE = 0x6000;
 const base64 = (bytes) => {
-  let s = "";
-  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
-  return btoa(s);
+  const out = [];
+  for (let i = 0; i < bytes.length; i += PIECE) out.push(btoa(String.fromCharCode.apply(null, bytes.subarray(i, i + PIECE))));
+  return out.join("");
 };
 
 /** R15: the route arms, each a function of no arguments answering what its service answers. */
