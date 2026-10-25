@@ -1,6 +1,6 @@
 # conformance (T51)
 
-**Status** · session_014bYaS8aw3Ywr8iWF6pbvdN · depth 2 · COMPLETE · handled B4
+**Status** · session_01JnMCs91Bn1r2Lm9pGuRv7D · depth 2 · COMPLETE · handled B5
 
 ## J1 · REPORT
 
@@ -57,3 +57,23 @@ Size (session_014bYaS8aw3Ywr8iWF6pbvdN): test runs 6, module lines 0 (source unc
 ## J5 · COMPLETE
 
 B3/B4 done: fixture.mjs:147 re-pointed to retrieval's noSelection (no markers added). 3 FIX-E lines left (basis-versions, case-import x2). Tests 123/0; format, architecture, coverage, words, ownership 0 failures.
+
+## Fix round 10, follow-up for actions (B5) · determination variants
+
+Published in `bio-plane/test/m/conformance/fixtures.mjs`, made by the real code at call time: `determinationVariants()` (a determination resting on a held check, basis `checked_held`; one on another group's accepted finding, basis `accepted`; a compliant one; a superseded one with `superseded_by` set and its successor; a live one with `superseded_by: null`) and `voidDetermination()` (a determination whose held check's source lapsed: reads void, outcome undetermined with the recorded one beside it; plus a not-void control). Each has a test in `fixtures.test.mjs` checking the real answer. Every state in B5 is reachable by the real code; none is left unpublished. Users (re-pointed by a later actions session): actions `t45.test.mjs:40`, `t50.test.mjs:27`, `t12.test.mjs:55`.
+
+Re-pointed: `fixture.mjs` IMPORT_NO_SUCH_EDITION (was :264, a hand-built refusal) now takes case-import's real answer from its published `importedWorld({imports: []})` (code, check, translation included). case-import is already in conformance's `uses`.
+
+Markers added: no `fixtures-own` or `fixtures-generic`.
+
+Lines left in `fixtures.mjs --list conformance` (2):
+- `fixture.mjs:178` basis-versions `conclude`: basis-versions publishes no `fixtures.mjs` yet (batch 4).
+- `t45.test.mjs:402` NO_SUCH_CASE for a viewer: B5 names case-import's fixtures, but the part-3 plan classes it as `case-check/caseCheckOfNoSuchCase`, and case-check publishes no `fixtures.mjs` yet. `openFlagsUnread` is not this line's answer. Waits on case-check.
+
+Checks: module tests 125 pass, 0 fail; format 0; architecture 0; coverage 42 of 42, 0 failures; words 0; ownership 0 (before commit); `impact.mjs origin/tranche/T51 HEAD`: 0 affected.
+
+Size (session_01JnMCs91Bn1r2Lm9pGuRv7D): test runs 4, module lines 0 (source unchanged; test lines added)
+
+## J6 · COMPLETE
+
+B5 done. Published determinationVariants (held-check basis, accepted basis, compliant, superseded with superseded_by set, live with superseded_by null) and voidDetermination, from real code, each tested in fixtures.test.mjs; every state was reachable. Re-pointed the hand-built IMPORT_NO_SUCH_EDITION to case-import's importedWorld. No fixtures-own/-generic markers added. 2 lines left: fixture.mjs:178 (basis-versions, no fixtures.mjs yet) and t45.test.mjs:402 (NO_SUCH_CASE; its provider is case-check, not case-import, and publishes none yet). Module tests 125/0; format, architecture, coverage 42/42, words, ownership 0 failures; impact 0 affected.

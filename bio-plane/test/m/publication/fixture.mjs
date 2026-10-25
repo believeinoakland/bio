@@ -23,8 +23,17 @@ import { materialsLines, materialAttestationLines, acceptedWorkBlockLines, calcu
          timelineLines } from "../../../src/case-grammar/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { noSelection } from "../retrieval/fixtures.mjs";
+import { standardReadWorld } from "../standards/fixtures.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
+/** standards' own answer for an id it does not hold, or one `viewer` may not read (its fixture `standardReadWorld`), made
+ *  when first asked: the one answer (`NO_SUCH_STANDARD`) a stand-in for `standardRead` gives beside the ones it holds. */
+/* retrieval's own refusal of a selection it holds none of (its fixture `noSelection`), made when first asked */
+let heldNone = null;
+let heldStandards = null;
+export const absentStandard = (id, viewer = "nobody") =>
+  (heldStandards ||= standardReadWorld()).standardRead({ id: String(id), viewer });
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
 /* workerd's `sql.exec` answers a cursor, never an array: rows are read by iterating it (or its `toArray()`/`one()`),
@@ -134,7 +143,7 @@ export function world({ group = "test-group", workerd = false, contradiction = n
   connections.entities.migrate();
   connections.migrate();
   const k = inquiryOf(host, { record, membership, promotion, content, connections, entities: connections.entities,
-                              retrieval: { selectionResolve: () => ({ ok: false, reason: "NO_SUCH_SELECTION" }) },
+                              retrieval: { selectionResolve: (a) => (heldNone ||= noSelection()).selectionResolve(a) },
                               provenance: prov, now: () => clock.now });
   k.migrate();
   const basisVersions = basisVersionsOf(host, { record, membership, promotion, content,

@@ -1,6 +1,6 @@
 # BOB to capture (T51)
 
-**Read** · handled J38
+**Read** · handled J40
 
 ## B1 · START
 
