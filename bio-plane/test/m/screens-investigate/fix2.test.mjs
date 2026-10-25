@@ -1,14 +1,19 @@
 /* screens-investigate, T51 fix round 2 (wave 1): the causes C6 to C62 of the build walk that sit in this module (CAUSES.md), each
- * proved at the module's interface over a scripted plane, with the control that shows the fix is the cause. */
+ * proved at the module's interface over `store-request`'s world (K5148, K5054): the real store behind the page's door, a real sign-in. A state a test
+ * needs is made by the member's own acts; the values it asserts are read back from the world's answers; the control shows the fix is the cause. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, fill, press, TRAIL, FACTS, moneyAnswer, VOCAB, PLANE_EVENT_KINDS, P, ENT, SHA, SHA2, MSR, M1, M2, word, drew, notDrew } from "./fixtures.mjs";
+import { createHash } from "node:crypto";
+import { refusedIn } from "../interface-shell/harness.mjs";
+import { inWorld, openAs, settled, readHeld, declareStandard, rewrite } from "./world.mjs";
+import { main, fill, press, word, drew, notDrew } from "./fixtures.mjs";
 
 const optsOf = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => [o.getAttribute("value"), o.textContent]);
 const rowOf = (p, key) => main(p).querySelectorAll("tr.cs-r").find((r) => r.querySelector(`[data-id="${key}"]`));
-const timeline = "/app/timeline/" + P;
-const money = "/app/money/" + MSR;
+const MINUTES = "The council met on March 3, 2026 and adopted the budget.";
+const REASON = "The minutes say so.";
+/** The page chooses a document; its passages are read when the choice changes. */
+const choose = async (p, id, sha) => { fill(p, { [id]: sha }); p.fire(p.doc.getElementById(id), "change"); await settled(p); };
 
 /* ---------------------------------------------------------------- C56 */
 

@@ -87,10 +87,12 @@ test("R22 a section, list or reading that holds nothing is not drawn, and no cou
   await zero.settle();
   await settled(zero);
   const asked = zero.byOp("explore")[0];
-  console.log("DBG", JSON.stringify(asked), JSON.stringify(await me.read("explore", { query: asked.query })).slice(0,400));
-  assert.deepEqual((await me.read("explore", { query: asked.query })).paths, [], "the world's search holds no chain");
+  const walked = await me.act("explore", { body: asked.body });
+  assert.deepEqual(walked.paths, [], "the world's search holds no chain");
   notDrew(main(zero), "screen.explore.chains", { n: "0" });
-  drew(main(zero), "screen.explore.nochains", undefined, "the member's search answered");
+  /* the world's answer says in its own words that the search looked and found none (absence.meaning): that is what the page draws, in place of its fallback */
+  assert.ok(walked.absence && walked.absence.meaning, "the world's answer says what it looked for");
+  assert.ok(main(zero).textContent.includes(walked.absence.meaning), "the member's search answered, in the store's words");
 });
 
 test("R22 control: a read that failed is still drawn as failed on every screen", async () => {
@@ -120,7 +122,7 @@ test("R23 the other people fields are choices too: a claim's other record, a tim
   const chen = (await me.act("entitycreate", { body: { kind: "person", label: "L. Chen", note: "Named in the minutes." } })).entity_id;
   await me.act("entitycreate", { body: { kind: "institution", label: "Public Works Department", note: "The city department." } });
   const person = await openAs(world, me, "/app/person/" + chen);
-  console.log("DBG2", JSON.stringify(person.byOp("samepersoncandidates")));
+  assert.deepEqual((await me.read("samepersoncandidates", { query: { id: chen } })).candidates, [], "no candidate for the same person: the world's answer");
   assert.deepEqual(opts(person, "person-claim-other"), ["Public Works Department"], "the person herself is not offered");
   const tl = await open(PATHS.timeline);
   assert.deepEqual(opts(tl, "tl-who"), names);
