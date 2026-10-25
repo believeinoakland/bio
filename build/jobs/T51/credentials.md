@@ -422,3 +422,7 @@ Processed CHANGE B18 (K5200) and ANSWER B17 (K5198). Tranche merged (`3434b26261
 **Found outside credentials.** None new this round. The 15 repo-wide `run.mjs` findings in J22 still stand, unchanged by these commits.
 
 **Size (session_01MX23PSD31bEtV5CnCLBEte): test runs 11, module lines 2223**
+
+## J26 · REPORT
+
+Ring failed after COMPLETE (J25): BOB's session session_01WJsZWkoGCJqWG6874AF7LK is archived, so no doorbell could be bound to it (create_trigger: 'session not active'). The pushed J25 COMPLETE is the message; BOB's backstop reads it (mechanics §13).
