@@ -1,4 +1,4 @@
-START · SCREENS-INQUIRY #<n> · tranche T51 · product believeinoakland/bio · fix round 10, cause job, batch 2: causes R1, R2a, R4, R35a, R37, R38, R17b, R30a, re-point 2 own lines, 5 marker lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+START · SCREENS-INQUIRY #27 · tranche T51 · product believeinoakland/bio · fix round 10, cause job, batch 2: causes R1, R2a, R4, R35a, R37, R38, R17b, R30a, re-point 2 own lines, 5 marker lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
 
 Depth 2 (BOB #289 is depth 1).
 
