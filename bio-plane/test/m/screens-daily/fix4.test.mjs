@@ -8,6 +8,8 @@ import { createHash } from "node:crypto";
 import { storeWorld } from "../store-request/fixtures.mjs";
 import { open, ok, text, press, main, settle, dmy, word, MEMBER, withScreens } from "./page.mjs";
 
+/** The store's own appetite for a host's requests (`GOVERNOR_APPETITE_PER_MIN`, an instance binding): a public address is fetched at once, not after the per-host governor's wait. */
+const world = (o = {}) => storeWorld({ ...o, env: { GOVERNOR_APPETITE_PER_MIN: "6000000", ...(o.env || {}) } });
 /** A page over the REAL store (store-request's `storeWorld()`, op-tables §5.3): the team, its members, projects and captures are made by the real acts. */
 const openW = (w, as, path, plane = {}, o = {}) => open(path, plane, { ...w.boot(as), ...o });
 const CREATE = ["contribute", "create_projects"];
@@ -111,7 +113,7 @@ const ROW_IDS = (rows) => rows.map((r) => r.id);
 /** A team: rosa (an administrator) with her own project "Pothole repairs" (she takes part in it), and mo's two, "The Coliseum lease" and "Odd" (she is
  *  no participant in them: her roster rows answer `participation: null`). All by the real acts; she has looked at Home before. */
 async function roster() {
-  const w = await storeWorld();
+  const w = await world();
   const rosa = await w.signIn("rosa", { admin: true });
   const mo = await w.signIn("mo", { capabilities: CREATE });
   const coliseum = await w.recipes.project(mo, "The Coliseum lease");
@@ -148,7 +150,7 @@ const FORM = "https://www.irs.gov/pub/irs-pdf/f1040es.pdf";
 const vouchRows = (p) => main(p).querySelectorAll('button[data-act="release"]').map((b) => { let r = b; while (r && !(r.className || "").includes("cs-row")) r = r.parentNode; return r; });
 /** A member `mai` who may start projects, has looked at Home before and holds the documents titled `titles` (captured from one place, not vouched for). */
 async function holder(titles) {
-  const w = await storeWorld();
+  const w = await world();
   const mai = await w.signIn("mai", { capabilities: CREATE });
   await mai.read("lookedsince");
   await w.recipes.project(mai, "Tax help");
@@ -186,7 +188,7 @@ const AUTH = (o = {}) => ({ id: "TSK-9", class: "OBLIGATION", kind: "authority-u
 for (const [where, path] of [["queue", "/app/queue"], ["home", "/app"]]) {
   test(`R49 R97 (C25; ${where}): an item with a title is named by it; one with none and an address as its words is named by the host and the day (the one rule), never the file part of the address; control: no address, the untitled word`, { timeout: 240000 }, async () => {
     // The member and her project are the real store's; the item is the queue's own answer (no act of the door raises an issuer question for a subject it does not hold).
-    const w = await storeWorld();
+    const w = await world();
     const mai = await w.signIn("mai", { capabilities: CREATE });
     await mai.read("lookedsince");
     await w.recipes.project(mai, "Tax help");
@@ -206,7 +208,7 @@ const ITEMS = [...Array.from({ length: 72 }, (_, i) => ({ id: "TSK-" + i, class:
   ...Array.from({ length: 7 }, (_, i) => ({ id: "FND-" + i, class: "FINDING", kind: "x", summary: "Noticed " + i, subject: { kind: "bundle", id: "INF-N" + i }, options: [], case: { ungrouped: true, ancestors: [] } }))];
 /** `mai`'s group holding `n` captures from three places that nobody has vouched for, captured by `actor` ("mai" herself, or another member), by the real acts. */
 async function heldBy(actor, n) {
-  const w = await storeWorld();
+  const w = await world();
   const mai = await w.signIn("mai", { capabilities: CREATE });
   const by = actor === "mai" ? mai : await w.signIn(actor, { capabilities: ["contribute"] });
   for (let i = 0; i < n; i++) await held(w, by, { title: "Photo " + i, address: "https://city.example/p" + (i % 3) });

@@ -793,7 +793,7 @@ test("R64: edition lines: a case with a draft shared until a date says so, with 
   assert.ok(inv.includes(word("screen.home.area.edition.comments.one", { n: "1", case: k.names[1], date: dmy(day(k.at[1])), until: dmy(day(k.until[1])) })), "one recipient commented");
   assert.deepEqual(p.byOp("casedrafts").map((r) => r.query.projects), [coliseum], "one read, for the project whose row says a draft is shared (project-roster R42)");
   assert.deepEqual(p.byOp("reviewcopy").map((r) => r.query.draft).sort(), [k.drafts[0], k.drafts[1]].sort(), "a draft of no case reads no grant");
-  assert.equal(p.byOp("publishedcase").filter((r) => r.query.caseId === k.one)[0].query.edition, "2", "the latest edition");
+  assert.equal(p.byOp("publishedcase").filter((r) => r.query.id === k.one)[0].query.edition, "2", "the latest edition");
   // No draft shared (every grant withdrawn, the lapsed one already): the latest edition, alone.
   for (const g of k.grants) await rosa.act("reviewrevoke", { body: { grant: g } });
   const bare = await open(w, rosa, "/app", editions(w, rosa));
