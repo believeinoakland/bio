@@ -150,4 +150,4 @@ COMPLETE · DOORBELL #8 · fix round 9, G126 (the pull registers its row), R28. 
 
 **Deferred.** None of the module's own.
 
-Size (session_01YBReDY5hYh8xKFsNUdPD1p): test runs 6, module lines 1196
+Size (session_01YBReDY5hYh8xKFsNUdPD1p): test runs 6, module lines 1206
