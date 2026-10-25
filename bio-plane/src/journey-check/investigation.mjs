@@ -175,10 +175,10 @@ export async function pageNumbersOf(page) {
 /* What is wrong with the page numbers a document draws, or null: the first page reads 1 in the bar and in the passage's place,
    and the picker offers pages numbered from 1. */
 export function pageNumbersProblem({ bar, place, picker }) {
-  if (bar !== null && bar !== 1) return `the page bar reads page ${bar} first, not Page 1 (document.read.page)`;
-  if (place !== null && place !== 1) return `the first passage's place reads page ${place}, not Page 1 (screen.document.passage.where)`;
+  if (bar !== null && bar !== 1) return localize("journey-check.investigation.the_page_bar_reads_page_first", "the page bar reads page {bar} first, not Page 1 (document.read.page)", { bar: String(bar) });
+  if (place !== null && place !== 1) return localize("journey-check.investigation.the_first_passage_s_place_reads", "the first passage's place reads page {place}, not Page 1 (screen.document.passage.where)", { place: String(place) });
   const low = picker.filter((v) => !(Number.isInteger(Number(v)) && Number(v) >= 1));
-  if (low.length) return `the picker of unread pages offers page ${low.join(", ")}, pages are numbered from 1 (screen.document.unread.page)`;
+  if (low.length) return localize("journey-check.investigation.the_picker_of_unread_pages_offers", "the picker of unread pages offers page {pages}, pages are numbered from 1 (screen.document.unread.page)", { pages: low.join(", ") });
   return null;
 }
 export async function firstPage(walk, page, document) {
