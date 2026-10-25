@@ -11,6 +11,7 @@ import { world, V } from "./fixture.mjs";
 import { RECORDED_BY_MODULES } from "../../../src/retrieval-browse/index.mjs";
 import { canonicalExtent } from "../../../src/content/index.mjs";
 import { fresh, hold, doc, docx, wp, wr } from "../extraction/fixture.mjs";
+import { namingInRefused } from "../entities/fixtures.mjs";
 
 const DOCX_CT = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
@@ -169,7 +170,8 @@ function plain(deps = {}) {
 }
 
 test("R1 (DEC-98): people — when the followed people and offices cannot be read (no entities, or its read refuses), each read capture is in not_read with why, never \"Nothing here\"", () => {
-  for (const entities of [null, { namingIn: () => ({ ok: false, reason: "BROKEN" }) }]) {
+  const refusal = namingInRefused(); // entities' real namingIn refusal
+  for (const entities of [null, { namingIn: () => refusal }]) {
     const { w, c } = plain({ entities });
     const k = kindOf(find(w, { scope: { capture: c.sha }, kinds: ["people"] }), "people");
     assert.deepEqual([k.nothing, k.items, k.not_read.map((x) => x.capture_sha)], [false, [], [c.sha]]);

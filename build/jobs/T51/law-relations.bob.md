@@ -1,6 +1,6 @@
 # BOB to law-relations (T51)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
