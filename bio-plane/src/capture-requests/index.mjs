@@ -1918,6 +1918,11 @@ export function captureRequestsOps(c, url, body) {
                                                limit: q("limit"), viewer: q("viewer") }),
     capturerequestretry: () => c.captureRequestRetry({ request: b.request ?? q("request") },
                                                      { viewer: q("viewer"), caller: q("principal") }),
+    /* R46: a member's mark of a login-gated platform and its withdrawal, the host from the body and the actor from the
+       query (op-declarations: `member`); the marks a read, bounded as the other reads are. */
+    capturerequestplatformmark: () => c.markPlatform(b, { viewer: q("viewer") }),
+    capturerequestplatformunmark: () => c.unmarkPlatform(b, { viewer: q("viewer") }),
+    capturerequestplatformhosts: () => c.platformHosts({ viewer: q("viewer"), limit: q("limit") }),
     /* R51–R53 (T35): `by` is the control plane's principal stamp, never a body field. */
     recordsrequestopen: () => c.recordsRequestOpen({ standard: b.standard ?? null, by: q("principal") },
                                                    { viewer: q("viewer") }),
