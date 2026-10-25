@@ -57,3 +57,4 @@
 - 10B C8: "Vouch for the 6 photos you captured" for documents (already `later-ux.md:19`).
 - New member sentences written at their use this round (to review through the unreviewed list): people `PERSON_ITEM_NOT_HELD`, monitoring's `unconfirmed_removal`, `moved`, `refused` and the concealment sentence, calculations' `BINDING_UNREADABLE`, `ROW_ALREADY_WRITTEN`, the published page's unrated, no-bar and verification lines.
 - capture-requests R46 (K5151): no screen offers "mark this host a login-gated platform" (and its withdrawal and the list of marked hosts); the ops are routed now: where a member makes the mark.
+- 06/10B (K5152): `standard.inforce.known` names its variable `{author}` where the member is meant (`{member}`).
