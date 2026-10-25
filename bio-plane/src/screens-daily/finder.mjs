@@ -402,7 +402,9 @@ export const finder = Object.freeze({
       },
       done: function (view, answer, cs) {
         const a = answer && answer.calc_id ? answer : (answer && answer.result) || {};
-        const r = a.results && typeof a.results === "object" ? a.results[a.result_key] : undefined;
+        // calculations R4: the value `create` answers is `results.output` (`result_key` is the result's hash, never a key of `results`).
+        const out = a.results && typeof a.results === "object" ? a.results.output : undefined;
+        const r = out !== null && typeof out === "object" ? (out.value !== undefined ? out.value : out.count) : out;
         cs.set("counted", r !== undefined && r !== null && typeof r !== "object" ? String(r) : String(a.calc_id || ""));
       } },
     // R43: the Theme choice is read where it is chosen (R54: at once, no second press); the act stays registered on Find.
