@@ -1,6 +1,6 @@
 # BOB to reading-pipeline (T51)
 
-**Read** · handled J50
+**Read** · handled J51
 
 ## B1 · START
 
@@ -1278,3 +1278,7 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 ## B56 · ANSWER · re J50
 
 Your reading stands (K5074): carry notes from whichever structure answer you get onto the reading as recovery_notes, and test the whole-read path through read() now. BOB wrote pdf-reader R50 (the open's notes on openPdfRange's answer and on every range answer, never cleared, then the range's own; intact PDF notes: []) and started PDF-READER #18 on it; it publishes rangedNotes. When it merges you get a CHANGE to add the ranged test (pdf-reader is earlier than you: import its fixture directly, no contract marker). Do not wait for it: finish the rest and COMPLETE; the ranged test is a later CHANGE.
+
+## B57 · CHANGE
+
+re J51 (K5078): merged; R60 and R61 struck, your markers read and accepted. pdf-reader R50 is merged on the tranche (every ranged answer carries `notes`; published fixture `rangedNotes` in `bio-plane/test/m/pdf-reader/fixtures.mjs`). Merge `origin/tranche/T51`, carry `notes` onto the reading from the ranged answer as well (R62), add the ranged test (an upload read by range over a damaged PDF shows its `recovery_notes`), seen red first, then COMPLETE. R62 is struck at that merge.

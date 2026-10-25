@@ -10,12 +10,17 @@
    written reading, and Civicsmith's empty set to C-51.7. Each test names the requirement ids it checks in its title. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, member, withEntry, i2, noText, ocrAnswer, pageUnits } from "./fixture.mjs";
+import { fresh, bundle, hold, member, withEntry, i2, noText, ocrAnswer, pageUnits, payingAccount } from "./fixture.mjs";
 import { REEXTRACT_CHECKS, extractionOps } from "../../../src/extraction/index.mjs";
 import { pageTranscribeOp, extractionOp, EXTRACTION_OPS } from "../../../src/extraction/ops.mjs";
 import { listenerRefusal } from "../../../src/membership/index.mjs";
 import { evidenceAbsent } from "../../../src/capture/ops.mjs";
 import { WORD } from "./words.mjs";
+import { notAPdf } from "../pdf-reader/fixtures.mjs";
+import { keptAwayProject } from "../ai-accounts/fixtures.mjs";
+
+/* ai-accounts' real refusal for a project keeping its material away from the AI (its published fixture, K5044) */
+const KEPT_PROJECT = (await keptAwayProject({ project: "PROJ-1", use: "transcribe" })).aiKeptAway;
 
 const SENTINEL = "sk-ant-SENTINEL-KEY-0000";
 const ONE_MATTER = { id: "t-set", version: 2, matters: [{ id: "m1" }] };
@@ -36,7 +41,7 @@ function transcriber({ set = ONE_MATTER, records = [PASSED], away = () => null, 
     transcription({ member: m, project, at }) {
       calls.transcription.push({ member: m, project, at });
       return { member: m, project, at, act: `transcribe:abc:${at}`,
-        accounts: { accountFor: async (q) => { calls.accountFor.push(q); return account ?? { ok: true, kind: "apikey", level: "member", key: SENTINEL }; } },
+        accounts: { accountFor: payingAccount({ key: SENTINEL, record: calls.accountFor, answer: account }) },
         useCheck: async (q) => { calls.useCheck.push(q); return limit; },
         transcribe: async (q) => { calls.transcribe.push(q); return answer(q.pages, q); } };
     },
@@ -49,7 +54,7 @@ const pdf = (text, pages) => ({ format: "pdf",
   detect: (b) => (b && new TextDecoder().decode(b.slice(0, 5)) === "%PDF-" ? { format: "pdf", confidence: "certain", signals: [] } : null),
   structure: async (b) => (new TextDecoder().decode(b).startsWith("%PDF")
   ? { ok: true, text: structuredClone(text), pages: pages ?? (text.pages || []).length, notes: [] }
-  : { ok: false, reason: "NOT_A_PDF" }) });
+  : await notAPdf()) });
 
 /* A three-page scan: page 0 has a text layer, pages 1 and 2 are pictures. */
 const SCAN = i2([{ page: 0, text: "Minutes of the meeting" }, { page: 1, text: "", undetermined: [noText(1)] },
@@ -95,7 +100,7 @@ test("R71 R47 R72: the refusals in order, each by its row, before any byte is re
   const hidden = await hold(w.evidence, "%PDF hidden");
   w.x.writeReading({ bundleId: "PROJ-H", captureSha: hidden, reading: { entities: [], at: "a" } });
   const off = transcriber({ set: EMPTY_SET });
-  const KEPT = { ok: false, reason: "PROJECT_AI_KEPT_AWAY", code: "PROJECT_AI_KEPT_AWAY", check: "C-29.38", translation: "kept" };
+  const KEPT = KEPT_PROJECT;
   const keptFor = (p) => ({ project }) => (project === p ? KEPT : null);
   const on = transcriber({ away: keptFor("PROJ-1") });
   const ocr = member(() => { throw new Error("never"); });

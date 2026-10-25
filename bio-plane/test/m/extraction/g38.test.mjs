@@ -4,10 +4,10 @@
    12,872,074 B for 8 units, 11.8 MB of it the reading's `cells`. Each test names the requirement ids it checks. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, bucket, doc, sha } from "./fixture.mjs";
+import { fresh, bundle, bucket, doc, sha, homesOver } from "./fixture.mjs";
 import { extractionOps, READING_PAGE_BYTES, READING_KEY_BYTES } from "../../../src/extraction/index.mjs";
 
-const register = (rows) => ({ homeOf: (s) => rows.get(s) ?? null, onTestimony: () => ({ ok: true }) });
+const register = (rows) => homesOver(rows);
 const viaOp = (w, d, after = null) => extractionOps(w.x, new URL(`http://x/reading?sha256=${d}&viewer=class:admin${after === null ? "" : `&after=${after}`}`), null, {}).reading();
 const answerBytes = (a) => Buffer.byteLength(JSON.stringify(a));
 const unit = (i, bytes) => ({ extent: { kind: "pdf-page", page: i }, text: String(i).padStart(5, "0") + " " + "x".repeat(bytes - 6) });

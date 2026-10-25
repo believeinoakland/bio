@@ -7,8 +7,9 @@
    restricted to their pages) proves this module's half; the real reader's mixed case stays red by name until then. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, doc, member, ocrAnswer } from "./fixture.mjs";
+import { fresh, bundle, hold, doc, member, ocrAnswer, homesOver } from "./fixture.mjs";
 import { generate } from "../../pdfgen.mjs";
+// fixtures-contract: plane job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 import { read as readDocument } from "../../../src/reading-pipeline/index.mjs";
 import { chainKindFor, mergedChain } from "../../../src/textchain.mjs";
@@ -37,12 +38,12 @@ async function scanStore({ rangePages, kinds = ["scan"], pieceChainOf = null }) 
     }
     return out;
   };
-  const box = {};
-  const w = fresh({ reader, provenance: () => ({ homeOf: (s) => (s === box.d ? { bundleId: "B-1", bytes: box.size } : null), partsOf: () => null }) });
+  const rows = new Map();
+  const w = fresh({ reader, provenance: homesOver(rows) });
   bundle(w.s, "B-1");
   const g = generate({ kind: "pdf", seed: "s25", size: { pages: PAGES, lines: 2 }, kinds, fonts: ["type0"] });
   const bytes = await g.bytes();
-  w.d = box.d = await hold(w.evidence, bytes); box.size = bytes.length;
+  w.d = await hold(w.evidence, bytes); rows.set(w.d, { bundleId: "B-1", bytes: bytes.length });
   const document = doc({ digest: w.d, bytes: bytes.length, ct: "application/pdf", format: "pdf" });
   w.s.sql.exec(`INSERT INTO files (bundle_id, path, content, blob_sha, bytes, sha256) VALUES (?,?,?,?,?,?)`,
     "B-1", "data/provenance.json", JSON.stringify({ documents: [document] }), null, 1, "x");

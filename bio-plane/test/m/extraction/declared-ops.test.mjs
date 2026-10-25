@@ -5,11 +5,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { declaredOpHolds } from "../../declared-ops.mjs";
 import { DECLARED_OPS, extractionOps } from "../../../src/extraction/index.mjs";
-import { fresh, bundle, hold } from "./fixture.mjs";
+import { fresh, bundle, hold, homesOver } from "./fixture.mjs";
+import { keptAwayProject } from "../ai-accounts/fixtures.mjs";
 /* the composition root's transcriber, as pagetranscribe.test.mjs restates it: the bar of run-rules R19 held on a one-matter set, the capture's project kept away from the AI */
 const ONE_MATTER = { id: "t-set", version: 2, matters: [{ id: "m1" }] };
 const PASSED = { part: "transcribe", set: "t-set", set_version: 2, false_alarm_rate: 0, passed: true, graded_by: "harness", at: "2026-10-01" };
-const KEPT = { ok: false, reason: "PROJECT_AI_KEPT_AWAY", code: "PROJECT_AI_KEPT_AWAY", check: "C-29.38", translation: "kept" };
+const KEPT = (await keptAwayProject({ project: "PROJ-H", use: "transcribe" })).aiKeptAway;
 const transcriber = { deployable: () => ONE_MATTER.matters.length > 0 && PASSED.passed === true && PASSED.set === ONE_MATTER.id && PASSED.set_version === ONE_MATTER.version,
   keptAway: () => KEPT, transcription: () => { throw new Error("a kept-away capture reaches no account"); } };
 /* a store holding one stored reading of a capture filed in a project, and the transcriber registered */
@@ -60,7 +61,7 @@ test("R79 extraction declares pdfstructure: its requires alone raise no refusal 
 test("R79 R80 extraction declares readheld: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
   const setup = async () => {
     const rows = new Map();
-    const w = fresh({ provenance: { homeOf: (s) => rows.get(s) ?? null, onTestimony: () => ({ ok: true }) } });
+    const w = fresh({ provenance: homesOver(rows) });
     bundle(w.s, "INFO-80");
     const d = await hold(w.evidence, "%PDF-1.7 declared readheld");
     rows.set(d, { bundleId: "INFO-80", path: "a.pdf", encoding: "binary", bytes: 26, registered: "t", authored: false });

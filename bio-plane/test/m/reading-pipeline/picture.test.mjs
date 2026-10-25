@@ -8,6 +8,7 @@ import { fresh, hold, doc, member, ocrAnswer } from "./fixture.mjs";
 import { registerDoctype } from "../../../../docprofile/registry.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { pageNotRenderable } from "../../../../ocr-worker/test/fixtures.mjs";
 
 registerDoctypes(registerDoctype);
 
@@ -41,14 +42,17 @@ test("R4 R9 R11 R12 R3 (N853b): a JPEG and a PNG capture each read as one pictur
   }
 });
 
+const notRenderable = await pageNotRenderable();
+
 test("R4 R5 R9 (N853b): with an OCR member bound, the picture's one page is asked for (page 0, the capture's digest and store); a member that cannot render it leaves it unread with the member's reason, still a candidate, as for a scan", async () => {
   for (const format of ["jpeg", "png"]) {
-    const ocr = member(() => ({ ok: false, reason: "PAGE_NOT_RENDERABLE", page: 0, deferred: [], notes: [] }));
+    const ocr = member(() => notRenderable);   /* ocr-worker's published fixture: the real member's answer, made by its real code */
     const { d, r } = await readPicture(format, { OCR_WORKER: ocr });
     assert.deepEqual(ocr.calls.map((c) => c.body), [{ capture_sha: d, store: "bio", pages: [0] }], format);
     assert.equal(r.found, false, format);
     assert.equal(r.tier3_candidate, true, format);
-    assert.match(r.basis, /the OCR member declined to transcribe this document \(PAGE_NOT_RENDERABLE\)/, format);
+    /* R54: the renderer's own reason in the member's answer (`refusal.render.reason`) is the reason stated */
+    assert.match(r.basis, new RegExp(`the OCR member declined to transcribe this document \\(${notRenderable.refusal.render.reason}\\)`), format);
     assert.notEqual(r.text_tier, 3, format);
     /* control: a member that reads the page fills it, as it fills a scan's */
     const reads = await readPicture(format, { OCR_WORKER: member((b) => ocrAnswer(b.pages)) });

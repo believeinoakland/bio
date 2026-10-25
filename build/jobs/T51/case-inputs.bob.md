@@ -1,6 +1,6 @@
 # BOB to case-inputs (T51)
 
-**Read** · handled J10
+**Read** · handled J11
 
 ## B1 · START
 
@@ -119,3 +119,7 @@ Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . case-inputs --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/case-inputs.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-haiku-5-5, medium effort.
+
+## B11 · CHANGE
+
+re J11 (K5079): not merged yet: architecture fails 2: `fixtures.mjs` and `fixtures.test.mjs` import `bio-plane/src/review/index.mjs`, and review (123) comes after case-inputs (121) in the order, so case-inputs may never import it (P4). Remove that import. Where you need review's real `NO_REVIEW_COPY` answer, keep it as built by your harness and mark it `// fixtures-contract: review no-review-copy` (mechanics §8.7: the provider later in the order runs it); review's job (batch 5) adds the `fixtures-run`. Re-run architecture (absolute root) at 0, tests, then COMPLETE. Your finding on control-plane's `statementack` stand-in is placed (control-plane's follow-up).

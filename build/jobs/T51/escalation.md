@@ -1,6 +1,6 @@
 # escalation (T51)
 
-**Status** · session_013AsFroTyykKKbdaHRfrSrH · depth 2 · COMPLETE · handled B0
+**Status** · session_01JWt7Mqtc8vPeZptturDMR6 · depth 2 · COMPLETE · handled B2
 
 ## J1 · REPORT
 
@@ -44,3 +44,21 @@ Tests and checks (run from /home/user/bio, after the merge of tranche/T51 at 0c5
 - `node bio-plane/src/setup-words/build.mjs --check`: the stale-rows note (expected; see the REPORT).
 
 Size (session_013AsFroTyykKKbdaHRfrSrH): test runs 4, module lines 2308
+
+## J3 · COMPLETE
+
+Fix round 10, Wave A batch 3 (B2). Session session_01JWt7Mqtc8vPeZptturDMR6.
+
+Fixtures published (`bio-plane/test/m/escalation/fixtures.mjs`, tests in `fixtures.test.mjs`, R2 R3 R22 R16): `escalationRead` (read, unknown and unseen refusal, `escalationsFor` over a determination with one, none, unknown, unseen) and `escalationsDue` (empty fresh world; one item after a real `escalationOpen`). Note for the users: the real item is `{id, project, opened_by, from, to, stage, instant, age_ms, ids, by}`, with `as_of`, `truncated`, `limit`; it carries no `state` (B2 listed one), and `stage` is the stage name (`notification`).
+
+Own lines done (5, all FIX-E, re-pointed to actions' published `actionRead` / `actionsForRefusal`): `fixture.mjs` `noSuchAction(id)` is now actions' real refusal (R43, R106, `NO_SUCH_ACTION` naming the id), used for the unknown, no-action and hidden action in the stand-in `actionRead` (was lines 162, 163, 165) and in `draft.test.mjs` (the withheld action, was :143); `draft.test.mjs` the unreadable `actionsFor` takes `actionsForRefusal().unknownRead` (was :110). Markers added: none (no `fixtures-own`, no `fixtures-generic`, no `fixtures-contract`).
+
+Left: `draft.test.mjs:113` (`consequences.consequencesOf` UNAVAILABLE), the one FIX-E line whose provider (consequences) is not merged in this batch; arrives as a CHANGE.
+
+Checks: escalation tests 102 pass, 0 fail; format 0; architecture 0; coverage 38 of 38 live ids; words 0 (and the joint group names no escalation line); ownership 0; `checks/fixtures.mjs . escalation --list`: 1 line (the consequences one); impact: 0 affected modules.
+
+Size (session_01JWt7Mqtc8vPeZptturDMR6): test runs 4, module lines 0
+
+## J4 · COMPLETE
+
+Fix round 10 batch 3 done (record J3). Published fixtures escalationRead and escalationsDue (fixtures.mjs + fixtures.test.mjs). Re-pointed my 5 own actions lines to actions' published fixtures. No fixtures-own/generic/contract markers added. Left: draft.test.mjs:113 (consequences, arrives as CHANGE). Note: the real escalationsDue item has age_ms and by, no state; stage is the name. Tests 102 pass; format, architecture, coverage (38/38), words, ownership 0 failures; impact 0 modules.

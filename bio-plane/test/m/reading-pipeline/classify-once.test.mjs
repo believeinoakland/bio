@@ -66,6 +66,7 @@ test("R42 (G37) control: a failed reading is still told its content type from th
   const w = fresh();
   const d = await hold(w.evidence, "MARKERWORD in the first line\nand a second line\n");
   const document = doc({ digest: d, bytes: 44, ct: "text/x-t42", format: "t42doc", fromText: true });
+  // fixtures-own: synthetic a plug-in format entry registered through this module's own seam (`withEntry`), made up to refuse once; it is no other module's answer
   await withEntry({ format: "t42doc", text: async () => ({ ok: false, reason: "REFUSED" }) }, async () => {
     const out = await w.read(document);
     assert.equal(out.reading.found, false);

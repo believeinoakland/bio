@@ -7,6 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { read, WHOLE_READ_MAX } from "../../../src/reading-pipeline/index.mjs";
 import { bucket, evidenceStore, hold, doc, member, withEntry, ocrAnswer } from "./fixture.mjs";
+import { pageNotRenderable } from "../../../../ocr-worker/test/fixtures.mjs";
 
 const readOf = (b, document, extra = {}) => read(document, { evidence: evidenceStore(b), env: {}, storeName: "bio", ...extra });
 const u8 = (...parts) => Uint8Array.from(parts.flatMap((p) => (typeof p === "string" ? [...p].map((c) => c.charCodeAt(0)) : p)));
@@ -103,11 +104,15 @@ test("R54 (G135d): a size marker an entry leaves in its text is TOO_LARGE {size,
 });
 
 test("R54 (G135b): the reason a member refused a picture (refusal.render.reason) reaches the reading's sentence and its ocr_refused list", async () => {
-  for (const why of ["IMAGE_TOO_LARGE", "TRUNCATED_IMAGE_DATA", "UNSUPPORTED_JPEG_PROCESS"]) {
+  /* the member's answer is ocr-worker's published fixture: its real PAGE_NOT_RENDERABLE with the renderer's own reason beside it */
+  for (const renderReason of ["NOT_A_PDF", "EMPTY_FILE"]) {
+    const answer = await pageNotRenderable({ renderReason });
+    const why = answer.refusal.render.reason;   /* the reason the real renderer gave, whichever bytes were refused */
+    assert.equal(typeof why, "string");
     const b = bucket();
     const jpeg = pad(u8([0xff, 0xd8, 0xff, 0xe0]), 64);
     const d = await hold(b, jpeg);
-    const ocr = member(() => ({ ok: false, reason: "PAGE_NOT_RENDERABLE", refusal: { render: { reason: why } } }));
+    const ocr = member(() => answer);
     await withEntry({ format: "jpeg", detect: () => ({ format: "jpeg", confidence: "certain", signals: [] }), parts: null,
                       structure: async () => ({ ok: true, pages: 1, text: { document: "", pages: [{ page: 0, text: "", undetermined: [{ page: 0, reason: "no_text_layer", font: null, codes: null, count: 1 }] }],
                                                                            undetermined: [{ page: 0, reason: "no_text_layer", font: null, codes: null, count: 1 }], counts: { chars: 0, undetermined: 1 } } }) }, async () => {

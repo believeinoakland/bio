@@ -5,13 +5,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { localize } from "../../../src/setup-words/index.mjs";
-import { fresh, bundle, bucket, withEntry, i2, doc, sha } from "./fixture.mjs";
+import { fresh, bundle, bucket, withEntry, i2, doc, sha, homesOver } from "./fixture.mjs";
 import { extractionOps } from "../../../src/extraction/index.mjs";
 
 const pdfEntry = (text) => ({ format: "pdf",
   detect: (b) => (b && b.length >= 5 && String.fromCharCode(...b.subarray(0, 5)) === "%PDF-" ? { format: "pdf", confidence: "certain", signals: [] } : null),
   structure: async () => ({ ok: true, text: structuredClone(text), pages: (text.pages || []).length, notes: [] }) });
-const register = (rows) => ({ homeOf: (s) => rows.get(s) ?? null, onTestimony: () => ({ ok: true }) });
+const register = (rows, parts = null) => homesOver(rows, parts);
 const row = (bundleId, bytes = 20) => ({ bundleId, path: "a.pdf", encoding: "binary", bytes, registered: "t", authored: false });
 const count = (w, table, d) => w.one(`SELECT count(*) c FROM ${table} WHERE capture_sha=?`, d).c;
 const TEXT = i2([{ page: 0, text: "alpha beta gamma delta" }]);
@@ -20,7 +20,7 @@ const TEXT = i2([{ page: 0, text: "alpha beta gamma delta" }]);
    the bundle's `data/provenance.json` names the whole and its parts. `held: false` leaves the whole's bytes unheld. */
 async function nParts({ n = 5, held = true, bundleId = "INFO-1" } = {}) {
   const rows = new Map(), wholes = new Map(), evidence = bucket();
-  const w = fresh({ evidence, provenance: { ...register(rows), partsOf: (s) => wholes.get(s) ?? null } });
+  const w = fresh({ evidence, provenance: register(rows, wholes) });
   bundle(w.s, bundleId);
   const bytes = new TextEncoder().encode("%PDF-1.7 a packet kept in parts " + Math.random());
   const d = sha(bytes);

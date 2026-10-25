@@ -6,10 +6,10 @@
    kills its reader); their full sizes are the corpus R set's. Each test names the requirement ids it checks. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, bucket, doc, sha, hold, member, i2, noText, ocrAnswer, pageUnits } from "./fixture.mjs";
+import { fresh, bundle, bucket, doc, sha, hold, member, i2, noText, ocrAnswer, pageUnits, homesOver } from "./fixture.mjs";
 import { HALF_OCR_INVOCATIONS } from "../../../src/extraction/index.mjs";
 
-const register = (rows) => ({ homeOf: (s) => rows.get(s) ?? null, onTestimony: () => ({ ok: true }) });
+const register = (rows) => homesOver(rows);
 const LINES = 12000;
 const text = () => Array.from({ length: LINES }, (_, i) => `line ${String(i).padStart(5, "0")} ` + "council-minutes ".repeat(5).padEnd(88, ".")).concat(["ENDMARKER"]).join("\n");
 

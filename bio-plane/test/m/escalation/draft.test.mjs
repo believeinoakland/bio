@@ -2,7 +2,8 @@
    driven at the module's interface over the fixture's stand-ins, with negative controls. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { seeded, world, opened, V, MACHINE, OFFICE, ms } from "./fixture.mjs";
+import { seeded, world, opened, V, MACHINE, OFFICE, ms, noSuchAction } from "./fixture.mjs";
+import { actionsForRefusal } from "../actions/fixtures.mjs";
 import { JUDGMENT_KEYS, REASON_MAX } from "../../../src/escalation/index.mjs";
 import { proposalLabel } from "../../../src/record-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
@@ -107,7 +108,8 @@ test("R29 what could not be read is stated undetermined, never filled: the actio
 
   /* the actions and the consequences unreadable: each stated undetermined, named by the determination; nothing in
      their place */
-  w.stand.actions.actionsFor = () => ({ ok: false, reason: "UNAVAILABLE" });
+  const refused = actionsForRefusal().unknownRead;
+  w.stand.actions.actionsFor = () => refused;
   w.stand.consequences.consequencesOf = () => ({ ok: false, reason: "UNAVAILABLE" });
   const u = draftOf(w);
   assert.deepEqual(u.parts.slice(4).map((p) => [p.id, p.text]), [
@@ -140,7 +142,7 @@ test("R29 an action resting on the determination that the viewer may not see is 
   const u = seeded();
   const only = u.action({ project: u.P, restsOn: [u.D] });
   const read = u.stand.actions.actionRead;
-  u.stand.actions.actionRead = (a) => (a.id === only && a.now !== undefined ? { ok: false, reason: "NO_SUCH_BUNDLE" } : read(a));
+  u.stand.actions.actionRead = (a) => (a.id === only && a.now !== undefined ? noSuchAction(a.id) : read(a));
   assert.deepEqual(draftOf(u).parts.slice(4).map((p) => p.text), [word("escalation.action_resting_determination"),
     word("escalation.consequence_breach_recorded")]);
 });

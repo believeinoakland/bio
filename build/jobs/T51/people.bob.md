@@ -1,6 +1,6 @@
 # BOB to people (T51)
 
-**Read** · handled J10
+**Read** · handled J14
 
 ## B1 · START
 
