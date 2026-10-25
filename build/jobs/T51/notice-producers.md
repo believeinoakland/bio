@@ -137,3 +137,7 @@ Merged `tranche/T51`. No product code changed; test files only (`fixture.mjs`, `
 Generated artifacts made stale: none. Census ops owned: none changed.
 
 Size (session_01YTEEz6mMUuYSeNrA5gXVxw): test runs 9, module lines 1699
+
+## J9 · QUESTION
+
+QUESTION (fix round 10, batch 6): all 10 fixture lines are re-pointed and pushed (7874865fea): fixtures check 0 failures for notice-producers, module 151/151, format, coverage, words, ownership clean. One architecture failure remains and only your edge fixes it: watched.test.mjs:132 takes browseViewerMissing from bio-plane/test/m/retrieval-browse/fixtures.mjs (the plan's provider), and notice-producers.uses declares retrieval, not retrieval-browse. Please add retrieval-browse to notice-producers.uses in build/modules.json on tranche/T51 (or name another provider); then I merge tranche/T51 and COMPLETE. Best reading: add the edge.
