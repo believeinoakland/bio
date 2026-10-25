@@ -1,6 +1,6 @@
 # ai-accounts (T51)
 
-**Status** · session_01KopXm8kekeG6vTeWVbAtkx · depth 2 · COMPLETE · handled B7
+**Status** · session_01WiDpCbKyHnwVE29hzfWnBx · depth 2 · COMPLETE · handled B9
 
 ## J1 · COMPLETE
 
@@ -171,3 +171,27 @@ COMPLETE fix round 10 Wave A batch 2. 14 fixtures published (bio-plane/test/m/ai
 **Process note:** I read my inbox (read-only) before `mail start`, to learn my depth from `START`. The pre-start fetch and tranche merge ran before `mail start`, as the `START` asks.
 
 Size (session_01KopXm8kekeG6vTeWVbAtkx): test runs 16, module lines 2188
+
+## J8 · COMPLETE
+
+## COMPLETE · R39 (fix round 10, STORE-REQUEST #5; K5192)
+
+Commit `d822dca477` on `job/T51/ai-accounts` (pushed).
+
+**Applied:** R39. Every instant the module records, and the sign-in validity judgement, reads the instance clock: a handed `now`, else the store's `env.BIO_NOW_MS`, else the wall clock. Changes in `bio-plane/src/ai-accounts/index.mjs`: `#nowMs()` and `#at()`; `stampSecond` now takes its instant explicitly; the 13 `stampSecond()` sites and the `Date.now()` in `subscriptionTokenHold` read the instance clock; `aiAccountsOps` hands the store's environment to the instance (or to `credentials`' `accounts`); `aiAccountsOf` accepts `now`. Test fixture `bio-plane/test/m/ai-accounts/fixture.mjs` accepts `now`.
+
+**Failing-first:** `bio-plane/test/m/ai-accounts/k5192-clock.test.mjs` (new; four tests named R39). Before the change: 3 fail, 1 pass (the wall-clock control). After: 4 of 4 pass.
+
+**Suite:** ai-accounts `bio-plane/test/m/ai-accounts/*.test.mjs`: 151 pass, 0 fail, exit 0, run without force-exit.
+
+**Checks (from civicos-process, absolute root):** format 0 failures; architecture 0; coverage 39 of 39 live ids named; ownership 0; fixtures `--list` ai-accounts 0 failures, one accepted item at `fixture.mjs:69` (the existing `claim()` harness marker, not added here); `run.mjs` 16 failures, none in ai-accounts' files (op-table and words findings name other modules).
+
+**Users (impact, 114 modules):** ran the 19 test dirs of modules that use ai-accounts, plus store-assembly, plane and control-plane. The run hit the 1500 s limit (exit 124): 2960 tests, 2753 pass, 9 fail, 198 cancelled. Not complete; the cancelled tests are not verified.
+- `control-plane` `t49-door.test.mjs` R96 (controls): fails identically on `origin/tranche/T51` (checked in a temporary worktree, removed). The assertion expects a body `member` to be refused NOT_YOUR_ACCOUNT, while the door's rule (R29/R96 control, same file) deletes the body `member` and uses the session's. The two expectations conflict; cause is in control-plane's test or door, not in ai-accounts. REPORT for BOB to place.
+- The other 8 failures (instance-setup R1/R5/R67; plane g-series and fix5/fix6/hold/hosts/l75; control-plane t51-round9-seam; monitoring/reevaluation; ratification; store-request R15) are not verified against base and are not in ai-accounts' paths. REPORT for BOB; I did not open them.
+
+**Found outside my paths:** `credentialsOf` (credentials module) does not pass its `now` to `aiAccountsOf`, so a clock handed to credentials does not reach ai-accounts. Only the environment path reaches it today. REPORT for `credentials`.
+
+**Deferred:** none in my module.
+
+Size (session_01WiDpCbKyHnwVE29hzfWnBx): test runs 7, module lines 1790

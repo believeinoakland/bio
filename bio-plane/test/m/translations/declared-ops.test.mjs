@@ -68,3 +68,9 @@ test("R21 translations declares interfacewords: no field is required, so the cal
   await declaredOpHolds({ op: "interfacewords", declaration: d, call: mk("interfacewords", { viewer: "ruth" }),
     refusedNaming: named({ language: ["LANGUAGE_MALFORMED"] }, true), values: {}, same: sameCode });
 });
+
+test("R18 translations declares translationdraft: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "translationdraft", declaration: DECLARED_OPS["translationdraft"], call: mk("translationdraft", {"by":"ruth"}),
+    refusedNaming: named({"language":["LANGUAGE_MALFORMED"],"direction":["TRANSLATION_DIRECTION_UNKNOWN"],"key":["NO_SUCH_WORD"],"keys":["TRANSLATION_KEYS_MALFORMED"]}, true),
+    values: { language: "es", direction: "to_language" }, same: sameCode });
+});

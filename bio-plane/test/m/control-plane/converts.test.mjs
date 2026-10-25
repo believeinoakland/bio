@@ -108,6 +108,7 @@ test("R20 (d543-instant-precision convert): op=reviewcopy's in-band date is the 
 test("R30, R2, R59 (reviewcopy convert; publication R73, K2146): op=casedocument with a grant secret over the wire, in the POST body — the module's handler is handed the door's reader, only sha256(secret) reaches the store (in its request's body, never its address), never the secret, and a secret the store does not honour (revoked, another edition, another case) reads byte for byte as a stranger; the address form is refused CREDENTIAL_IN_ADDRESS with no store request", async () => {
   const LIVE = "rv1_live-holder", REVOKED = "rv1_revoked";
   const doc = { ok: true, case_id: "CASE-2026-0001", edition: 2, ratified: false, text: "the document", doc_sha: "d".repeat(64) };
+  // fixtures-generic: NO_CASE_DOCUMENT (the test compares the door's answers to each other: whatever refusal the store gives a stranger must read the same)
   const stranger = { ok: false, reason: "NO_CASE_DOCUMENT" };
   const w = world({ answer: (c) => c.route === "casedocument"
     ? reply({ ok: true, result: c.body?.secretSha === sha(LIVE) && c.params.case === doc.case_id && c.params.edition === "2" ? doc : stranger })

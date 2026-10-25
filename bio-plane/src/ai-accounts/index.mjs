@@ -63,18 +63,22 @@ export const SIGNIN_TOKEN_LENGTH = Object.freeze({ min: 20, max: 2000 });
 const HOUR_MS = 3600 * 1000;
 const DAY_MS = 24 * HOUR_MS;
 
-/* A whole-second instant, the record's `…:00Z` spelling. */
-const stampSecond = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
+/* A whole-second instant, the record's `…:00Z` spelling; the caller names the instant (R39: the instance clock). */
+const stampSecond = (when) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
 
 /* The founder's role and member id (membership's `ROOT_ADMIN`). */
 const ROOT = Membership.ROOT_ADMIN;
 
 export class AiAccounts {
-  constructor({ sql, core = null, membership = null, sealSecret = null } = {}) {
+  /* R39 (fix round 10, STORE-REQUEST #5; K5192): `now` is the instance clock handed in (a function of milliseconds), read
+     before the store's environment; `env` is set by `aiAccountsOps` from the store's environment (`BIO_NOW_MS`). */
+  constructor({ sql, core = null, membership = null, sealSecret = null, now = null } = {}) {
     this.sql = sql;
     this.core = core;
     this.membership = membership;
     this.#sealSecret = typeof sealSecret === "string" && sealSecret !== "" ? sealSecret : null;
+    this.now = typeof now === "function" ? now : null;
+    this.env = null;
   }
   #sealSecret;
 
@@ -82,6 +86,25 @@ export class AiAccounts {
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
+
+  /* R39 (fix round 10, K5132's rule, as `credentials`' `#nowMs`): the instance clock. A handed `now` answers first, else
+     the store's `env.BIO_NOW_MS`, else the wall clock. Every instant this module records, and every judgement of one,
+     reads it. */
+  #nowMs() {
+    if (this.now) {
+      const handed = Number(this.now());
+      if (Number.isFinite(handed) && handed >= 0) return handed;
+    }
+    const raw = this.env ? this.env.BIO_NOW_MS : undefined;
+    if (raw !== undefined && raw !== null && raw !== "") {
+      const v = Number(raw);
+      if (Number.isFinite(v) && v >= 0) return v;
+    }
+    return Date.now();
+  }
+
+  /* The instance clock's instant, as a whole second. */
+  #at() { return stampSecond(this.#nowMs()); }
 
   /* One act as one transaction, through record-core's `transact` (its R32) when the store offers it. */
   #tx(fn) { return typeof this.core?.transact === "function" ? this.core.transact(fn) : fn(); }
@@ -410,7 +433,7 @@ export class AiAccounts {
     if (unsealable) return unsealable;
     const id = AiAccounts.#memberOf(member);
     const { sealed, iv } = await this.#encrypt(`member:${id}`, kind, secret);
-    const setAt = stampSecond();
+    const setAt = this.#at();
     this.#tx(() => {
       this.sql.exec(
         `INSERT INTO account_references (member_id, kind, sealed, iv, set_at) VALUES (?,?,?,?,?)
@@ -511,7 +534,7 @@ export class AiAccounts {
   static #ownerOfProject(project) { return `project:${project}`; }
 
   /* One change, in the caller's act. `origin` names the earlier record written beside it, or null. */
-  #change(owner, change, detail, by, origin = null, at = stampSecond()) {
+  #change(owner, change, detail, by, origin = null, at = this.#at()) {
     const project = owner.startsWith("project:") ? owner.slice(8) : null;
     this.sql.exec(`INSERT OR IGNORE INTO account_changes (owner, project_id, at, by, change, detail, origin)
                    VALUES (?,?,?,?,?,?,?)`, owner, project, at, AiAccounts.#memberOf(by), change,
@@ -723,7 +746,7 @@ export class AiAccounts {
       return AiAccounts.#row(AI_ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", localize("ai-accounts.index.only_an_active_member_is", "only an active member is connected through their subscription. Nothing was recorded."));
     if (!this.#one(`SELECT member_id FROM subscription_connections WHERE member_id=?`, id))
       this.#tx(() => {
-        const since = stampSecond();
+        const since = this.#at();
         this.sql.exec(`INSERT OR IGNORE INTO subscription_connections (member_id, since) VALUES (?,?)`, id, since);
         this.#change(`member:${id}`, "signin_set", { account: "signin" }, id, null, since);   /* R16: by the member's own sign-in */
       });
@@ -756,7 +779,7 @@ export class AiAccounts {
     const unsealable = this.#seal();
     if (unsealable) return unsealable;
     const { sealed, iv } = await this.#encrypt(`member:${id}`, "signin", token);
-    const now = Date.now();
+    const now = this.#nowMs();
     const since = stampSecond(now);
     const validUntil = AiAccounts.#validUntil(validFor, now);
     this.#tx(() => {
@@ -790,7 +813,7 @@ export class AiAccounts {
     try {
       const id = AiAccounts.#memberOf(member);
       if (id === null || !this.#connected(id)) return { ok: true, dropped: false };
-      const at = stampSecond();
+      const at = this.#at();
       this.#tx(() => {
         this.sql.exec(`UPDATE subscription_connections SET sealed=NULL, iv=NULL, valid_until=NULL, refused_at=? WHERE member_id=?`,
           at, id);
@@ -903,7 +926,7 @@ export class AiAccounts {
 
   /* R5's record, and (T41; R16) its change beside it, naming it as its origin. */
   #groupKeyAct(act, detail, by) {
-    const at = stampSecond();
+    const at = this.#at();
     this.sql.exec(`INSERT INTO group_key_acts (act, detail, actor, at) VALUES (?,?,?,?)`, act, detail ?? null,
       AiAccounts.#memberOf(by), at);
     const [change, d] = AiAccounts.#legacyChange(act, detail ?? null);
@@ -920,7 +943,7 @@ export class AiAccounts {
     const unsealable = this.#seal();
     if (unsealable) return unsealable;
     const { sealed, iv } = await this.#encrypt(AiAccounts.#GROUP_KEY_OWNER, "apikey", key);
-    const setAt = stampSecond();
+    const setAt = this.#at();
     /* the key and its record (R5, R16) in one act */
     this.#tx(() => {
       const first = !this.#groupKeyFacts().held;
@@ -1001,7 +1024,7 @@ export class AiAccounts {
     if (bar) return bar;
     const id = AiAccounts.#memberOf(member);
     const already = !!this.#one(`SELECT member_id FROM group_key_notices WHERE member_id=?`, id);
-    if (!already) this.sql.exec(`INSERT INTO group_key_notices (member_id, seen_at) VALUES (?,?)`, id, stampSecond());
+    if (!already) this.sql.exec(`INSERT INTO group_key_notices (member_id, seen_at) VALUES (?,?)`, id, this.#at());
     return { ok: true, seen: true, already };
   }
 
@@ -1191,7 +1214,7 @@ export class AiAccounts {
     if (u.fault) return u.fault;
     const given = typeof reason === "string" && reason.trim() !== "";
     this.#tx(() => {
-      const at = stampSecond();
+      const at = this.#at();
       this.sql.exec(`INSERT INTO ai_keep_away (is_on, reason, set_by, set_at, uses) VALUES (?,?,?,?,?)`, turnOn ? 1 : 0,
         given ? reason : null, AiAccounts.#memberOf(by), at, u.json);
       /* R16: the change beside it */
@@ -1352,7 +1375,7 @@ export class AiAccounts {
 
   /* R10's record, and (T41; R16) its change beside it, naming it as its origin. */
   #projectAct(project, act, detail, by) {
-    const at = stampSecond();
+    const at = this.#at();
     this.sql.exec(`INSERT INTO project_account_acts (project_id, act, detail, actor, at) VALUES (?,?,?,?,?)`, project, act,
       detail ?? null, AiAccounts.#memberOf(by), at);
     const [change, d] = AiAccounts.#legacyChange(act, detail ?? null);
@@ -1371,7 +1394,7 @@ export class AiAccounts {
     const unsealable = this.#seal();
     if (unsealable) return unsealable;
     const { sealed, iv } = await this.#encrypt(`project:${project}`, "apikey", key);
-    const setAt = stampSecond();
+    const setAt = this.#at();
     const actor = AiAccounts.#memberOf(by);
     this.#tx(() => {
       const held = this.#projectAccountRow(project);
@@ -1404,7 +1427,7 @@ export class AiAccounts {
     if (!this.#connected(id))
       return AiAccounts.#row(AI_ACCOUNT_CHECKS, "SIGNIN_NOT_CONNECTED", localize("ai-accounts.index.you_are_not_connected_through", "you are not connected through your Claude subscription, so there is no sign-in of yours to serve the project. Nothing was written."), { project });
     /* END DEC-49 REGION is-signin-connected */
-    const setAt = stampSecond();
+    const setAt = this.#at();
     this.#tx(() => {
       const held = this.#projectAccountRow(project);
       if (held && held.kind === "signin" && held.member_id === id)
@@ -1481,7 +1504,7 @@ export class AiAccounts {
     if (out) return out;
     const already = !!this.#one(`SELECT member_id FROM project_key_notices WHERE member_id=? AND project_id=?`, id, project);
     if (!already) this.sql.exec(`INSERT INTO project_key_notices (member_id, project_id, seen_at) VALUES (?,?,?)`, id, project,
-      stampSecond());
+      this.#at());
     return { ok: true, seen: true, already };
   }
 
@@ -1535,7 +1558,7 @@ export class AiAccounts {
     if (u.fault) return u.fault;
     const given = typeof reason === "string" && reason.trim() !== "";
     this.#tx(() => {
-      const at = stampSecond();
+      const at = this.#at();
       this.sql.exec(`INSERT INTO project_keep_away (project_id, is_on, uses, reason, set_by, set_at) VALUES (?,?,?,?,?,?)`,
         project, turnOn ? 1 : 0, u.json, given ? reason : null, AiAccounts.#memberOf(by), at);
       /* R16: the change beside it */
@@ -1661,12 +1684,12 @@ export const KEPT_AWAY_UNREADABLE = deepFreeze(new AiAccounts({ sql: null }).aiK
    `record`, `membership` and `sealSecret` are read on the first call only (R32: credentials' factory passes the seal
    secret it is given). */
 const OF = new WeakMap();
-export function aiAccountsOf(ctx, { record = null, membership = null, sealSecret = null } = {}) {
+export function aiAccountsOf(ctx, { record = null, membership = null, sealSecret = null, now = null } = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let a = OF.get(storage);
   if (!a) {
     a = new AiAccounts({ sql: storage.sql, core: record ?? recordOf(ctx),
-                         membership: membership ?? membershipOf(ctx, { record }), sealSecret });
+                         membership: membership ?? membershipOf(ctx, { record }), sealSecret, now });
     OF.set(storage, a);
     a.start();
   }
@@ -1682,6 +1705,10 @@ export function aiAccountsOf(ctx, { record = null, membership = null, sealSecret
    routed; the retired `accountswitchset` and `groupswitchset` (R4, R9) are not in it. Which credential reaches each op
    is op-declarations' and control-plane's. */
 export function aiAccountsOps(a, url, body, env) {
+  /* R39 (K5192): the store's environment is the instance clock's source (`#nowMs`). `a` is the instance, or `credentials`'
+     instance, which answers through its `accounts`; both read the same clock. */
+  const owner = a instanceof AiAccounts ? a : a?.accounts;
+  if (owner && env && typeof env === "object") owner.env = env;
   const bodyField = (k) => (body && typeof body === "object" && !Array.isArray(body) && typeof body[k] === "string" ? body[k] : null);
   const by = () => url.searchParams.get("by");
   return {

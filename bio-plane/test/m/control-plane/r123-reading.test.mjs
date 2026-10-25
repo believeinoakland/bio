@@ -80,6 +80,7 @@ test("R123 (promote, F1): a 3 MB PDF deferred at its acquire and promoted ten mi
 });
 
 test("R123 (promote): a reading the store could not make now (no whole object yet, no home, a refusal or a silence of the route) is written down and the answer says `reading_pending`; the promotion stands whatever the route says", async () => {
+  // fixtures-generic: UNKNOWN_ROUTE (any refusal of the readHeld route: the promotion stands whatever the route says)
   for (const [label, held] of [["no whole object", ok({ ok: true, read: false, why: "NO_WHOLE_OBJECT" })], ["no home", ok({ ok: true, read: false, why: "NO_HOME" })],
                                ["refused", new Response(JSON.stringify({ ok: false, reason: "UNKNOWN_ROUTE" }), { status: 404 })], ["silent", new Response("x", { status: 500 })]]) {
     const w = world({ answer: answering(() => held.clone()) });
@@ -96,6 +97,7 @@ test("R123 (promote): every document of the promotion with no reading is followe
   const w = world({ answer: answering(ok({ ok: true, read: true })) });
   await promote(w, promoteBody([provDoc({ sha: SHA }), provDoc({ sha: SHA2, reading: true }), provDoc({ sha: "f".repeat(64) })]));
   assert.deepEqual(asked(w.env, "readheldfor").map((c) => c.params.sha), [SHA, "f".repeat(64)], "the one that carries its reading is left");
+  // fixtures-generic: FILE_DIGEST_MISMATCH (any refusal of the promotion asks nothing; the test does not depend on which)
   const refused = world({ answer: (c) => (c.route === "promote" ? ok({ ok: false, reason: "FILE_DIGEST_MISMATCH", status: 400 }) : c.route === "readheldfor" ? ok({ ok: true, read: true }) : null) });
   const f = await promote(refused, promoteBody([provDoc()]));
   assert.equal(asked(refused.env, "readheldfor").length, 0);
@@ -142,6 +144,7 @@ test("R123 (captureupload, F2; fix round 5, E3): a 22 MiB upload kept in three p
   assert.equal(s.json.result.reading_pending, undefined);
   assert.deepEqual(s.json.result.document.reading, { found: true });
   assert.equal(asked(small.env, "pendingadd").length, 0);
+  // fixtures-generic: EMPTY (any refusal of the upload asks nothing; the test does not depend on which)
   const no = world({ answer: (c) => (c.route === "captureupload" ? ok({ ok: false, reason: "EMPTY", status: 400 }) : null) });
   assert.deepEqual((await upload(no)).json.result, { ok: false, reason: "EMPTY", status: 400 });
   assert.equal(asked(no.env, "pendingadd").length, 0);
