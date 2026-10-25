@@ -606,3 +606,23 @@ Checks (absolute root /home/user/bio, tip 08f661ccb1): format 0; architecture 0;
 Tests: the interface-shell suite is 376 tests, 294 pass, 82 fail. The same 82 fail with the change reverted. The cause is outside my paths: store-assembly's world (K5149, 38536482fc) now binds INSTANCE_NAME, so the base world records the team, and store-request's storeWorld (fixtures.mjs:34) then fails GROUP_ALREADY_RECORDED on every call. Placement needed (REPORT 1 in the record). Until it lands, the interface-shell suite is not green.
 
 Record: build/jobs/T51/interface-shell.md, section J32. Size (session_0135BWD8XZpisnx9i7kU3v1o): test runs 5, module lines 3392.
+
+## J34 · REPORT
+
+K5202 (a) and (b) applied at c192bfcf0a (pushed; tranche T51 merged first, 30 commits).
+
+Changed:
+- `bio-plane/src/interface-shell/index.mjs:93-95`: re-export of `ADMIN_ACTS`, `ADMIN_SCREENS` deleted with its comment. The module's own use of them (lines 12, 171, 301, 323) stays.
+- `bio-plane/test/m/interface-shell/harness.mjs`: `interfacewords` (88), `groupidentity` (89), `queue` (90 comment, 91) and `signout` (97) removed from `FRAME`.
+- Importers of the re-export repointed to `wizard-scripts/index.mjs` (their owner): `design.test.mjs` (as the START named), `t51.test.mjs`, `fixround.test.mjs`, `kit.test.mjs`. Architecture check: 0 failures; no other importer named.
+- `cause3.test.mjs` R114: relied on the frame's `queue` default; now passes `queueOf(...)` from the harness. Passes as before.
+- `session.test.mjs` R24: relied on the frame's `groupidentity` default. See QUESTION below. Currently FAILS.
+
+Reliance on the removed defaults in screens modules (K5184 asks for this): the screens run is blocked by DECLARED_OP_DISAGREES (readtranslate description, every store), so no screens test has yet run to its assertions. The only failure in those runs that names a removed default is R24 above. Full screens run to be redone after the CHANGE; each module that relies on a default will be REPORTed by file:line then.
+
+Tests (interface-shell, 177 tests, same count as before): 158 pass / 19 fail, identical to the baseline with my change stashed. Failing set = DECLARED_OP_DISAGREES (not mine) plus the existing publishedcase FieldMismatch. Plus R24 (new, from the groupidentity removal). Failing-first: the deletions are not new behaviour; R24 and R114 were checked red-then-green on the removal.
+
+Checks: format 0; architecture 0 (interface-shell); ownership 0 (one file set vs. tranche merge-base; the 8 changed files are all mine); fixtures --list: harness 22, 23 (test-support's) and session 208 (the R24 finding below). t50 accepted(generic) x2 are accepted, not findings.
+
+Not done yet: COMPLETE waits for OP-GRADES #30 (I CHANGE) and a green run; and for the answer to the QUESTION.
+Size: record only.
