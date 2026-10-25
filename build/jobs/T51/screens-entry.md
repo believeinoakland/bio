@@ -167,3 +167,7 @@ B10 applied: C82 (R32) reset fills {name} (the team's name from groupidentity, e
 **Tests and checks.** `node --test` on `bio-plane/test/m/screens-entry/`: tests 96, pass 96, fail 0. format 0 failures; architecture 0; coverage 30 of 30; words 0; ownership 0 failures.
 
 Size (session_01Uwcy7zezKuV2SK7J8enJ5J): test runs 3, module lines 1158
+
+## J10 · COMPLETE
+
+Fix round 10 (B11): the 2 fixture lines done (setup.test.mjs:542 EXISTS, :573 NOT_AN_ADMIN: real member-roster codes, no provider fixture exists for either); module tests 96/96; format, architecture, coverage (30 of 30), words, ownership 0 failures. R34 is NOT fixable in screens-entry and needs interface-shell (for BOB): front.mjs:77 already draws session.ended for state ended; on first load whoami's 401 makes call() run over('ended') (browser.mjs:161) setting ENTRY ended, then browser.mjs:1600 (got === 'none') overwrites ENTRY with {state:null}, so front gets 'none' and draws no sentence. Fix there: keep the ended state set by over(); an unknown token (no record) stays null. Failing-first test belongs in interface-shell (page loaded with stored record whose whoami is 401 draws session.ended; control: unknown token draws none). Also: R34 is not in build/requirements/screens-entry.md (ends at R33); BOB to add it. The two op-table lines at :542/:573 wait for the storeWorld CHANGE. Details in the record.
