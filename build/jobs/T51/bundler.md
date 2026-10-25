@@ -373,3 +373,21 @@ R41 and R42 are applied and pushed (record: BUNDLER #30). R42: `result.startup_t
 ## J17 · COMPLETE
 
 R41 and R42 complete on job/T51/bundler. With runtime-limits merged: bundler + deploybindings + resolveversion + bundle + runtime-limits tests 200/200; impact set (plane limits.test.mjs) 3/3. format 0, architecture 0, coverage 42/42, ownership 0. R42 wording proposal: print only in a test deploy (R40 control). Record updated.
+
+## Record (BUNDLER #31, B18: fix round 10 item 95, the seven fixture lines)
+
+**Entries applied**
+- **Seven fixture lines (K5195, verify-marks row bundler).** Each Cloudflare-API stub is marked `// fixtures-own: platform` on the line above its declaration: `g54-observability.test.mjs` (`okStub`, was :20), `g83-g84.test.mjs` (`okStub`, was :23), `release.test.mjs` (`okStub` :248, `containerStub` :1163, `testStub` :2067), `repo.mjs` (`stubFile`/`stubLog`, was :278, marker at :277 covers the declaration and the use). The markers name the platform double: the Cloudflare API's own answers, a scripted-network double, which no module answers for.
+- `node checks/fixtures.mjs /home/user/bio bundler --list`: 0 failures; the 7 stubs are `accepted(own)`.
+- Commit `b06a10e90d` on `job/T51/bundler`, pushed. Merged `origin/tranche/T51` (`7915a4d54b`) first, because the job branch was behind it.
+
+**Tests** (`node --import ./bio-plane/test/platform-sqlite.mjs --test` over `bio-plane/test/m/bundler/*.test.mjs` and the four `system` files named in `modules.json`): 169 tests, 168 pass, 1 file fails.
+- The failing file is `bio-plane/test/system/fleetbundles.test.mjs` (146 pass, 21 fail). Its failures are `STALE BUNDLE`: the committed bundles are older than their sources. `agent-worker` (`dist/agent-worker.bundled.mjs`: sources such as `bio-plane/src/project-roster/index.mjs`, `provenance/index.mjs`, `reading-pipeline/index.mjs`, `subresources.mjs`, `acquisition/index.mjs`, `jurisdictions/profiles/oakland-alameda.mjs`), `file-scanner` (`dist/file-scanner.bundled.mjs`: `src/render.mjs`), `ocr-worker` and `pdf-worker` (their fresh builds are not byte-identical to the committed bundles). These are other modules' generated artifacts; I did not write them (mechanics §14).
+- Not caused by this job: the edits are comment lines in test files. The check compares committed source hashes with the committed bundles' manifests. I did not re-run it on the tranche tip, so this rests on reading the check, not on a run.
+- Setup (K4113): `npm ci` in `bio-plane`, `agent-runner`, `file-scanner`, `sheet-worker` and `site`. With `agent-runner` and `file-scanner` installed, R2 (G39, pure-ASCII bundle) and R39 pass; before, R2 failed with "cannot be built here".
+
+**Checks** (absolute root `/home/user/bio`): `format` 178 modules, 0 failures; `architecture` 0 failures; `coverage` 42 of 42 live ids named, 0 failures; `ownership` against `tranche/T51`, 0 failures; `run.mjs`: its findings are in other modules (control-plane, host-governor, interface-shell, retrieval-browse, screens-inquiry, store-assembly), none in a bundler path; the words count is unchanged, since no sentence was added; `impact.mjs origin/tranche/T51 HEAD`: bundler only, 1 of 178 modules, 4 of 2981 test files.
+
+**Stale artifacts I made:** none. **Deferred:** none. **Found in another module:** the four stale bundles above, reported to BOB.
+
+Size (session_01CYcedBDKbptHQ4Ss9eBGVV): test runs 3, module lines 4559
