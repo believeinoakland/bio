@@ -68,3 +68,19 @@ QUESTION (R42, RC-2): the two facts live above my layer, so I need your ruling o
 ## J6 · COMPLETE
 
 COMPLETE (fix round 3, C14 P2.2): R42 met. projectList rows carry question_count (basis-versions R41's rule over record-core's read contract, 2 statements per page) and shared_drafts (from the sharedDraftsOf reader the caller hands in, review R43, asked once per page; null when none handed in; EXISTENCE rows null for both). 112 module tests pass; users green; architecture, coverage 42/42, words, ownership 0 failures; format's one failure is build/rulings.md:4346 on the tranche tip. TO PLACE: control-plane R118 must put review's sharedDraftsByProject on the env projectRosterOps receives as env.sharedDraftsOf (or pass it to projectList as sharedDraftsOf); until then shared_drafts is null. R42's marker can go. Details in my record.
+
+## J7 · QUESTION
+
+QUESTION (START B9, fixture `projectReadRefusals`): I cannot publish it honestly, because neither read gives a refusal.
+
+- Evidence: `projectList` and `projectInvitations` (src/project-roster/index.mjs) have no `ok: false` return. `projectInvitations` answers `ok: true` with an empty list in its catch. I called both on the module's real test world: a null viewer and an unknown viewer each return `{ok: true, projects: []}` or `{ok: true, invitations: []}`.
+- Requirements R35 and R36 say a viewer with no active member gets an empty list, and the read never throws. The code matches them.
+- The two users, queue-producers `feeds.test.mjs:98` and `inviter.test.mjs:74`, build `{ok: false, reason: "REFUSED"}` by hand. No provider gives that code. The fixture rule (K4426, K5044 (5)) replaces such a code with the real one, and a real path that gives none is a product cause for you.
+
+My best reading: queue-producers re-points its refusal cases to the real answers. A throw is already covered by its `boom` case, and an empty `ok: true` list is the real answer for an unknown viewer. In that case I publish no fixture, since a fixture of refusals would invent a code.
+
+Options, for you to decide:
+(a) Recommended: queue-producers re-points its two cases to the real answers; project-roster publishes nothing for this.
+(b) Amend R35 and R36 so that these reads refuse with a named code. I would then build the refusal and publish the fixture.
+
+Also noted, not done in this job: `bio-plane/test/m/project-roster/figures-purge.test.mjs:149` re-points to record-core's `tableDeclarationRefusals` (mechanical; the fixture exists). It is for a later Wave B job, not this batch.
