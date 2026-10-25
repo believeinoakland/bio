@@ -103,3 +103,7 @@ COMPLETE for B5: fixtures definitionRead, disposeProposalOk, disposeProposalRefu
 
 ## Note on B6 (K5082)
 overdue.test.mjs:93 no longer copies the sentence: it asserts the `why` contains `word("progressions.why.captured_bound_date", {from: "registered", at})`, the `at` read from provenance. `checks/words.mjs /home/user/bio progressions`: 0 failures. Progressions tests 93 pass, 0 fail (tranche merged).
+
+## J7 · COMPLETE
+
+COMPLETE for B6: overdue.test.mjs:93 now compares through word('progressions.why.captured_bound_date', {from, at}) with the registered instant read from provenance. words check for progressions 0 failures; progressions tests 93 pass, 0 fail.
