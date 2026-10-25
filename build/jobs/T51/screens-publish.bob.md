@@ -572,3 +572,11 @@ Read items 70, 74 and 75 of `build/plan/fix-round-10-T51.md` whole first. Your c
 The harness's four frame defaults (`harness.mjs`, item 77 (5)) are deleted by the last of the batch-7 screens jobs to merge: BOB tells that job by a CHANGE; leave them.
 
 **Done:** module tests green; `checks/fixtures.mjs <absolute root> screens-publish --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B48 · CHANGE
+
+CHANGE (K5183, Bob: the weekly limit is at 99%; the work moves to Bob's primary account). SAVE NOW, before anything else, then stop:
+1. Commit everything you have changed, finished or not, on your job branch (a work-in-progress commit is right; never a reset, rebase or force), merge nothing new, and `git push origin job/T51/<module>`; check it with `git ls-remote`.
+2. Append to your record a section "Saved at K5183": what is done, what is half done (file names), the exact next step, and any worker you stop. Stop your workers.
+3. `mail state --set "WAITING ON BOB (K5183 save)"`, push, and end your turn with the one line `Waiting on BOB (K5183 save). Nothing for Bob to do.` A new session on the primary account continues your job from your record and branch.
+Do not start any long command now.
