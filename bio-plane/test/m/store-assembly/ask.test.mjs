@@ -219,7 +219,7 @@ const ask = (extra = {}) => ({ op: "writinghelp", member: "ann", session: SESSIO
                                field: "reason", firsthand: false, pack: PACK, ...extra });
 const draft = async (x, extra = {}) => { const res = await x.s.draft(ask(extra)); return { status: res.status, body: await res.json() }; };
 
-test("R17 (N686; K2062; agent-worker R59): the assembled store's `draft(args)` (`draftOnObject`): a member's draft carries their account in R6's shape and the door's pack to agent-worker's /draft, with no grant while their suggestions switch is off; agent-worker's answer comes back at its status with the switch and an empty read log", async () => {
+test("R49 (N686; K2062; agent-worker R59): the assembled store's `draft(args)` (`draftOnObject`): a member's draft carries their account in R6's shape and the door's pack to agent-worker's /draft, with no grant while their suggestions switch is off; agent-worker's answer comes back at its status with the switch and an empty read log", async () => {
   const x = await world();
   const r = await draft(x);
   assert.equal(r.status, 200);
@@ -236,7 +236,7 @@ test("R17 (N686; K2062; agent-worker R59): the assembled store's `draft(args)` (
   assert.deepEqual(x.asks[1][1].task, { op: "groupdescriptiondraft" });
 });
 
-test("R17 (N686; DEC-153 (2), K1841 (2), K2041): with the member's suggestions on, a grant is minted and sent in place of the pack, and its read log's strings come back; a firsthand field never gets one", async () => {
+test("R49 (N686; DEC-153 (2), K1841 (2), K2041): with the member's suggestions on, a grant is minted and sent in place of the pack, and its read log's strings come back; a firsthand field never gets one", async () => {
   const x = await world();
   assert.equal(credentialsOf(x.ctx).accountUsesSet({ owner: "member:ann", switch: "suggestions", on: true, by: "member:ann" }).ok, true);
   /* the assistant member reads through the grant while it drafts, as agent-worker R59's read tool does: a read on this
@@ -266,7 +266,7 @@ test("R17 (N686; DEC-153 (2), K1841 (2), K2041): with the member's suggestions o
   assert.equal([...x.ctx.storage.sql.exec(`SELECT count(*) c FROM ai_grants`)][0].c, 1, "one grant, the first draft's");
 });
 
-test("R17 (T37; K2238; agent-worker R68, run-rules R22): a translation draft carries its task {op, direction, language, words}, the account and the door's pack to /draft, and no told, grant or firsthand, even with the member's suggestions on", async () => {
+test("R49 (T37; K2238; agent-worker R68, run-rules R22): a translation draft carries its task {op, direction, language, words}, the account and the door's pack to /draft, and no told, grant or firsthand, even with the member's suggestions on", async () => {
   const x = await world();
   assert.equal(credentialsOf(x.ctx).accountUsesSet({ owner: "member:ann", switch: "suggestions", on: true, by: "member:ann" }).ok, true);
   const words = [{ key: "nav.home", en: "Home", note: "the first screen", means: "where a member starts", protected: false }];
@@ -289,7 +289,7 @@ test("R17 (T37; K2238; agent-worker R68, run-rules R22): a translation draft car
   assert.equal(x.asks.at(-1)[1].pack, undefined);
 });
 
-test("R17 (N686; credentials R35, R37): a member with no account of their own is served by the group's key, carried as level `group` with the group's suggestions switch", async () => {
+test("R49 (N686; credentials R35, R37): a member with no account of their own is served by the group's key, carried as level `group` with the group's suggestions switch", async () => {
   const x = await world({ account: false });
   const c = credentialsOf(x.ctx);
   assert.equal((await c.groupKeySet({ key: "sk-ant-zz-group", by: "ada" })).ok, true);
@@ -303,7 +303,7 @@ test("R17 (N686; credentials R35, R37): a member with no account of their own is
   assert.match(r.body.grant, /^[0-9a-f]{64}$/);
 });
 
-test("R17 negative controls (N686; N765): no assistant member, the group keeping its material away (AI_KEPT_AWAY), no account, a session not the member's, and a member that does not answer each end the draft in their owner's words at their status, nothing asked or nothing kept", async () => {
+test("R49 negative controls (N686; N765): no assistant member, the group keeping its material away (AI_KEPT_AWAY), no account, a session not the member's, and a member that does not answer each end the draft in their owner's words at their status, nothing asked or nothing kept", async () => {
   const unbound = await world({ worker: false });
   const r1 = await draft(unbound);
   assert.deepEqual([r1.status, r1.body.reason], [503, "AGENT_WORKER_UNBOUND"]);
