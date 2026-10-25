@@ -810,7 +810,7 @@ B47 done: G154 (4) platform check. New r122-workerd.test.mjs + offers-worker.mjs
 - FIX-L markers added (`// fixtures-contract: <provider> <id>`, 76 lines in 18 files, none idle): plane owed-ledger, plane keep-later, plane job-registrar, control-plane deliver-owed. These stay at `contract-no-run` until each provider's `fixtures-run` is merged: **plane** (owed-ledger, keep-later, job-registrar) and **control-plane** (deliver-owed). `fixtures --list acquisition`: 75 failures, every one `contract-no-run`, none other; no `fixtures-own` or `fixtures-generic` marker added.
 
 ### Checks (this session)
-- acquisition suite: tests 349 (r12 2, fixtures 7 new), pass 349, fail 0. Users of `fixture.mjs` (capture, screens-intake, control-plane, 10 files): 89/89.
+- acquisition suite: tests 349 (r12 2, fixtures 7 new), pass 349, fail 0. Users of `fixture.mjs` (capture, screens-intake, control-plane, 10 files): 89/89. Every other module's test file that imports acquisition (36 files): 352/352. capture, doorbell and screens-intake whole: 823/823. `impact.mjs origin/tranche/T51 HEAD`: 112 of 178 modules affected (the `textTypeOf` rule is exported and the fixture is shared), the users that name acquisition run as above.
 - `checks/run.mjs`: format 0, architecture 0, words 0 (inline 0, plain 0, testcopy 0), coverage 0 for acquisition (76 of 76; other modules' failures are theirs). No sentence added; no word row owed.
 - Found in another module (P9): none beyond csv-reader's delimited-names table not being exported.
 
