@@ -187,3 +187,7 @@ COMPLETE · R19 applied: STREAMED_BODY_OPS gains captureuploadpart (dispatch.mjs
 **Deferred:** none. **Found in another module:** none.
 
 Size (session_01KJQfyLCeG4fReDepjGQhJP): test runs 5, module lines 0 source (tests +120)
+
+## J12 · COMPLETE
+
+COMPLETE · fix round 10 batch 5: internalErrorAnswer fixture + store-replies contract (11 fixtures-run lines) published in store-door/fixtures.mjs and fixtures.test.mjs; pull.test.mjs re-pointed to promoteControlled and homeOfWorld; 6 fixtures-own and 2 fixtures-generic markers (listed in my record). Store-door suite 59 of 59; fixtures --list 0 failures; format, architecture, coverage, words, ownership 0 failures; impact: 0 modules (tests only). Real answers differ from the parts' hand-built ones (BAD_JSON has detail not error; unknown op is 400; internal error always has correlation and full row; no bare-stack 500): details in my record. Orphan-run waits on users' markers. Size (session_01KJQfyLCeG4fReDepjGQhJP): test runs 5, module lines 0 source
