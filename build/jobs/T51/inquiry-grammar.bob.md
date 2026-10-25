@@ -81,3 +81,16 @@ Rules of fix-round-9 §0 that bind: R-FOUR (root cause with file:line, why the t
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** each cause above fixed with its failing-first test green (seen red first) and its platform check done or named for the redeploy; module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/inquiry-grammar.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B9 · START
+
+START · INQUIRY-GRAMMAR #14 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 24 (plan build/plan/fix-round-10-T51.md §3; K5092)
+
+Depth 2 (BOB #291 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/inquiry-grammar tranche/T51 && git branch -m job/T51/inquiry-grammar stale/inquiry-grammar-local && git checkout -b job/T51/inquiry-grammar origin/job/T51/inquiry-grammar`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module inquiry-grammar`; record `build/jobs/T51/inquiry-grammar.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` from the process repository (K5078).
+
+**Follow-up 24 (test files only).** basis-version-grammar R3 was amended (K5077) and merged (K5090): an unlabelled supporting leg beside labelled grounds is the necessary part, and C-25.5 (`VERSION_PARTITION_INCOMPLETE`) is no longer raised. Your `golden.json` case INQ-2026-0129-versions still records that finding. Bring the golden to what the real grammar answers now (regenerate it by your own golden tool if you have one, else edit that case only), seen failing before your change against the merged grammar, green after.
+
+**Done:** `checks/fixtures.mjs <absolute root> inquiry-grammar --list` with your lines at zero (or each remaining one named with why); your module's tests green; format, architecture, coverage, words, ownership 0. List every `fixtures-own`/`fixtures-generic` marker you add, file:line and why (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-haiku-5-5.
