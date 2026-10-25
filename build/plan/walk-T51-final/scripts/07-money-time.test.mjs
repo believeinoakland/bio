@@ -4,7 +4,7 @@
    Run: `node --test build/plan/walk-T51-final/scripts/07-money-time.test.mjs` from bio-plane/ (needs Chromium at /opt/pw-browsers/chromium and playwright). */
 import "../../../../bio-plane/test/sandbox.mjs";
 import { test, after } from "node:test";
-import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
+import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { makeKit } from "../../../../bio-plane/test/m/control-plane/r8-kit.mjs";
@@ -27,7 +27,7 @@ export function rec(id, check, width, role, did, verdict, saw, shot = "") {
 writeFileSync(RECORD, `# WALK-FINAL-07 #1: sitting 07, Money, time, connections, registers (offline, Phase 1)\n\n**Counts** · (written at the end)\n\nCode: \`tranche/T51\` merged at start (be71d70e3f and later). Room: a fresh Miniflare plane of its own, claimed by the founder; \`ann\` (contribute, publish, create_projects) and \`max\` (plain member) made by the founder's \`memberadd\` and their own \`enroll\`; the instance's profile \`oakland-alameda\` chosen (the team's time zone, area 1's act). Screens drawn in Chromium against the plane at 1280 and 390 px.\n\n| row id | check | width | role | what I did | WORKS / BROKEN / NOT REACHED | what I saw (Server-Timing, wall) | screenshot |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n`);
 
 const kit = makeKit({ tag: "w07" });
-after(() => kit.mf.dispose());
+after(async () => { await kit.mf.dispose(); setTimeout(() => process.exit(0), 3000).unref(); });
 const R = kit.R;
 let ann, max, project, cs, mcs, acs;
 const docs = {};
@@ -69,17 +69,19 @@ async function browserFor(auth, handle, width = 1280) {
       return log.slice(n);
     },
     /* press an act; a reasoned one opens "Your reason" in place: send it empty first when `emptyFirst`, then with `reason` */
-    async act(act, { reason = null, nth = 0, wait = 2500, emptyFirst = false } = {}) {
+    async act(act, { reason = null, nth = 0, wait = 2500, emptyFirst = false, open = null } = {}) {
+      if (open !== null) { await page.locator("button.mk-open").nth(open).click(); await page.waitForTimeout(500); }
       const n = log.length, btn = page.locator(`#cs-main button[data-act="${act}"]`).nth(nth);
-      await btn.scrollIntoViewIfNeeded(); await btn.click(); await page.waitForTimeout(700);
-      const slot = page.locator(".cs-reason:visible textarea").first();
+      if (await btn.isVisible()) { await btn.scrollIntoViewIfNeeded(); await btn.click(); } else await btn.evaluate((e) => e.click());
+      await page.waitForTimeout(700);
+      const slot = page.locator(".cs-reason textarea").first();
       const out = { refusal: "", reasonAsked: (await slot.count()) > 0 };
       if (out.reasonAsked) {
-        const send = page.locator('.cs-reason:visible [data-shell="reason-send"]').first();
-        if (emptyFirst) { await send.click(); await page.waitForTimeout(1200); out.refusal = (await page.locator("[data-reason-refusal]:visible").first().innerText().catch(() => "")).trim(); }
-        if (reason !== null) { await slot.fill(reason); await send.click(); await page.waitForTimeout(wait); }
+        const send = page.locator('.cs-reason [data-shell="reason-send"]').first();
+        if (emptyFirst) { if (await send.isVisible()) await send.click(); else await send.evaluate((e) => e.click()); await page.waitForTimeout(1200); out.refusal = (await page.locator("[data-reason-refusal]").first().innerText().catch(() => "")).trim(); }
+        if (reason !== null) { await slot.fill(reason, { force: true }); if (await send.isVisible()) await send.click(); else await send.evaluate((e) => e.click()); await page.waitForTimeout(wait); }
       } else await page.waitForTimeout(wait);
-      out.calls = log.slice(n); out.said = (await page.locator("#cs-main .cs-refusal, #cs-main [role=alert], #cs-main .mk-note").allInnerTexts().catch(() => [])).join(" / ");
+      out.calls = log.slice(n); out.said = (await page.locator("#cs-main .cs-refusal, #cs-main [role=alert], #cs-main [data-reason-refusal], #cs-main .mk-note[data-state]").allInnerTexts().catch(() => [])).join(" / ").trim();
       return out;
     },
     async overflow() { return page.evaluate(() => ({ sw: document.documentElement.scrollWidth, iw: window.innerWidth })); },
@@ -104,11 +106,31 @@ async function upload(auth, cs0, name, bytes, type = "text/plain", { vouch = tru
   }
   docs[name] = d; return d;
 }
+const door = async (auth, op, body = {}, query = {}) => { const t = Date.now(); const x = await kit.post(auth, op, body, query); return { r: R(x.body), ok: x.body && x.body.ok !== false && R(x.body).ok !== false, ms: Date.now() - t, st: x.headers.get("server-timing") || "", raw: x.body }; };
+const stH2 = (x) => (x ? `${x.op} ${x.status} wall ${x.ms} ms` : "no request");
+const stH = (x) => `${x.ms} ms wall` + ((/^[a-z]+;dur=\d+/.exec(x.st) || [""])[0] ? `; ${(/^[a-z]+;dur=\d+/.exec(x.st))[0]}` : "") + ((/do-[a-z]+;dur=\d+/.exec(x.st) || [""])[0] ? `; ${/do-[a-z]+;dur=\d+/.exec(x.st)[0]}` : "");
+const minutesText = (file, date, what) => `Meeting Minutes - DRAFT\nThe Oakland City Council Rules And Legislation Committee Convened At 10:30 A.M. On ${date}\nRoll Call\nRowena Brown, Janani Ramachandran, and Kevin Jenkins\nPresent\n3 - \nCarroll Fife\nExcused\n1 - \nMeeting Minutes - DRAFT\n${file}\nSubject: ${what} Ordinance ${file}\nA motion was made by Rowena Brown, seconded by Janani Ramachandran, that this matter be Accepted. The motion carried by the following vote:\nAye: 3 - Rowena Brown, Janani Ramachandran, Kevin Jenkins\nMeeting Minutes - DRAFT\nThere Being No Further Business, The Committee Adjourned The Meeting At 11:02 A.M.\nMeeting Minutes - DRAFT\nMeeting Minutes - DRAFT\n`;
 const ent = async (key, kind, label) => (ents[key] = R(await cs.call("entitycreate", { body: { kind, label, note: "made in the walk" } })).entity_id);
 
 test("sitting 07: the room, then the rows in the founder's order", { timeout: 3_000_000 }, async () => {
-  try { await journey(); } catch (e) { console.log("JOURNEY STOPPED: " + (e && e.stack || e)); throw e; }
+  let stopped = null;
+  try { await journey(); } catch (e) { stopped = e; console.log("JOURNEY STOPPED: " + (e && e.stack || e)); }
+  finalize(stopped);
+  if (stopped) throw stopped;
 });
+
+/* the counts at the top of the record, by severity, and the closing line */
+function finalize(stopped) {
+  if (ONLY) return;
+  const text = readFileSync(RECORD, "utf8");
+  const rows = text.split("\n").filter((l) => /^\| /.test(l) && !/^\| (row id|---)/.test(l));
+  const cols = rows.map((l) => l.split(" | "));
+  const verdicts = cols.map((c) => c[5] || "");
+  const n = (re) => verdicts.filter((v) => re.test(v)).length;
+  const blocker = n(/^BROKEN \(BLOCKER/), major = n(/^BROKEN(?! \((MINOR|BLOCKER))/), minor = n(/^BROKEN \(MINOR/), works = n(/^WORKS/), notr = n(/^NOT REACHED/);
+  const head = `**Counts** · ${rows.length} rows walked: WORKS ${works}; BROKEN: BLOCKER ${blocker}, MAJOR ${major}, MINOR ${minor}; NOT REACHED ${notr}. (A WORKS that records an owed or not-built absence is that confirmation, not a defect.)`;
+  writeFileSync(RECORD, text.replace(/\*\*Counts\*\* ·[^\n]*/, head) + `\n${stopped ? "STOPPED: " + String(stopped && stopped.message || stopped).slice(0, 300) : "DONE"}\n`);
+}
 
 async function journey() {
   /* ---- the room (prerequisites by the real acts) ---- */
@@ -124,6 +146,7 @@ async function journey() {
   console.log("ROOM", project, J(ents), Object.keys(docs));
 
   /* ---- R60 the timeline ---- */
+  const q1 = await kit.questionOf(ann, project, "Was Contract C-100 awarded in line with the council's procurement policy?");
   const ui = await browserFor(ann, "ann", 1280);
   const T = `/app/timeline/${project}`;
   const wall0 = await ui.go(T);
@@ -198,58 +221,96 @@ async function journey() {
   await u390.close();
 
   /* ---- R157 progressions (declared flows) ---- */
-  const solic = await upload(ann, cs, "solicitation", "The City issued the request for proposals for Contract C-200 on September 1, 2026.");
-  const award2 = await upload(ann, cs, "award-c200", "The City awarded Contract C-200 to Acme Paving on September 20, 2026.");
+  /* the documents a flow is threaded with: council minutes of the shape the minutes reader recognises, each naming one ordinance file number as a reference the record can resolve to the registered ordinance */
+  await ent("ordA", "ordinance", "Ordinance 26-0910"); await ent("ordB", "ordinance", "Ordinance 26-0911");
+  /* the reading names the file number as a source key; an alias with that key is how a member registers it, so the recogniser resolves the reference */
+  for (const [k, f] of [["ordA", "26-0910"], ["ordB", "26-0911"]]) { const al = await cs.call("entityalias", { body: { entityId: ents[k], alias: f } }); console.log("ALIAS", f, J(R(al), 200)); }
+  const intro = await upload(ann, cs, "intro-26-0910", minutesText("26-0910", "September 1, 2026", "Introduction of"));
+  const adopt = await upload(ann, cs, "adopt-26-0911", minutesText("26-0911", "October 6, 2026", "Adoption of"));
+  const rsA = await cs.call("resolve", { body: { captureSha: intro.sha, ref: "legislation:26-0910", entityId: ents.ordA, basis: "The minutes name file 26-0910, the ordinance." } });
+  const rsB = await cs.call("resolve", { body: { captureSha: adopt.sha, ref: "legislation:26-0911", entityId: ents.ordB, basis: "The minutes name file 26-0911, the ordinance." } });
+  console.log("RESOLVE", J(R(rsA), 300), J(R(rsB), 300));
+  await cs.call("recorddatedfact", { body: { captureSha: intro.sha, extent: { kind: "document" }, kind: "meeting", value: "2026-09-01", method: "a member's reading of the passage" } });
+  await cs.call("recorddatedfact", { body: { captureSha: adopt.sha, extent: { kind: "document" }, kind: "meeting", value: "2026-10-06", method: "a member's reading of the passage" } });
   const pe = await browserFor(ann, "ann", 1280);
   await pe.go(T);
-  const STEPS = "solicitation | Solicitation | | | always | 1\naward | Award | solicitation | 10 days | always | 1";
-  await pe.fill("pd-name", "Contract award"); await pe.fill("pd-cite", "Oakland Municipal Code 2.04.020"); await pe.fill("pd-steps", STEPS);
+  const STEPS = "introduction | Introduction | | | always | 1\nadoption | Adoption | introduction | 10 days | always | 1";
+  await pe.fill("pd-name", "Ordinance adoption"); await pe.fill("pd-cite", "Oakland Municipal Code 2.04.020"); await pe.fill("pd-steps", STEPS);
   const pd0 = await pe.act("progressiondefine", { emptyFirst: true });
-  rec("R157", "define a flow: the basis is required (a reasoned act; an empty basis is refused in place)", "1280", "member ann", "typed a name, a citation and two steps, left the basis empty, pressed “Declare the progression”", pd0.reasonAsked && !pd0.calls.find((x) => x.op === "progressiondefine") ? "WORKS" : "BROKEN", `reason asked in place: ${pd0.reasonAsked}; refusal "${pd0.refusal}"; request sent: ${!!pd0.calls.find((x) => x.op === "progressiondefine")}`);
-  await pe.fill("pd-basis", "The code requires an award within 10 days of the solicitation's closing.");
-  const pd1 = await pe.act("progressiondefine", { reason: "The code requires an award within 10 days of the solicitation's closing." });
+  const pdRefusal = (await pe.page.locator('[data-reason-refusal], .cs-refusal, [role="alert"], .mk-note').allInnerTexts().catch(() => [])).join(" / ");
+  rec("R157", "define a flow: the basis is required (the basis field is the reason; an empty one is refused before anything is sent)", "1280", "member ann", "typed a name, a citation and two steps, left the basis empty, pressed “Declare the progression”", !pd0.calls.find((x) => x.op === "progressiondefine") ? "WORKS" : "BROKEN", `request sent: ${!!pd0.calls.find((x) => x.op === "progressiondefine")}; reason box: ${pd0.reasonAsked}; the page said: ${J(pdRefusal || pd0.said || "(nothing drawn)", 200)}`, await pe.shot("R157-empty-basis"));
+  await pe.fill("pd-basis", "The code requires adoption within 10 days of the introduction.");
+  const pd1 = await pe.act("progressiondefine", { reason: "The code requires adoption within 10 days of the introduction." });
   const pdc = pd1.calls.find((x) => x.op === "progressiondefine");
-  rec("R157", "define a flow (key the record does not hold yet): version 1 written with basis", "1280", "member ann", "typed the basis and pressed “Declare the progression”", pdc && /"version":1/.test(pdc.answer) ? "WORKS" : "BROKEN", `${stOf(pdc)}; body ${J(pdc && pdc.body, 300)}; answer ${J(pdc && pdc.answer, 300)}; landed ${pe.page.url().replace("https://group.example", "")}`, await pe.shot("R157-defined"));
-  const KEY = "contract_award";
-  const same = await cs.call("progressiondefine", { body: { progressionKey: KEY, label: "Contract award", basis: "same again", citation: "x", stages: [{ key: "solicitation", label: "Solicitation", after: null, within: null, required: "always", cardinality: "1" }, { key: "award", label: "Award", after: "solicitation", within: "10 days", required: "always", cardinality: "1" }] } });
+  rec("R157", "define a flow (key the record does not hold yet): version 1 written with its basis", "1280", "member ann", "typed the basis and pressed “Declare the progression”", pdc && /"version":1/.test(pdc.answer) ? "WORKS" : "BROKEN", `${stOf(pdc)}; body ${J(pdc && pdc.body, 300)}; answer ${J(pdc && pdc.answer, 300)}; landed ${decodeURIComponent(pe.page.url().replace("https://group.example", ""))}`, await pe.shot("R157-defined"));
+  const KEY = "ordinance_adoption";
+  const S1 = { key: "introduction", label: "Introduction", after: null, within: null, required: "always", cardinality: "1" };
+  const stg = (within = "10 days") => [S1, { key: "adoption", label: "Adoption", after: "introduction", within, required: "always", cardinality: "1" }];
+  const same = await cs.call("progressiondefine", { body: { progressionKey: KEY, label: "Ordinance adoption", basis: "same again", citation: "x", stages: stg() } });
   rec("R157", "re-declare identically: nothing is written", "1280", "member ann", "sent the same steps again through the door", R(same).unchanged === true && R(same).version === 1 ? "WORKS" : "BROKEN", J(R(same), 300));
-  const stg = (extra = {}) => [{ key: "solicitation", label: "Solicitation", after: null, within: null, required: "always", cardinality: "1" }, { key: "award", label: "Award", after: "solicitation", within: "30 days", required: "always", cardinality: "1" }, ...(extra.more || [])];
-  const nb = R(await cs.call("progressiondefine", { body: { progressionKey: KEY, label: "Contract award", stages: stg() } }));
-  const nc = R(await cs.call("progressiondefine", { body: { progressionKey: KEY, label: "Contract award", basis: "The council amended the window.", stages: stg() } }));
-  const badStage = R(await cs.call("progressiondefine", { body: { progressionKey: KEY, label: "Contract award", stages: [{ key: "award", label: "Award", after: "ghost", within: null, required: "always", cardinality: "1" }] } }));
-  const v2 = R(await cs.call("progressiondefine", { body: { progressionKey: KEY, label: "Contract award", basis: "The council amended the window.", citation: "Ordinance 13579, section 2", stages: stg() } }));
+  const nb = R(await cs.call("progressiondefine", { body: { progressionKey: KEY, label: "Ordinance adoption", stages: stg("30 days") } }));
+  const nc = R(await cs.call("progressiondefine", { body: { progressionKey: KEY, label: "Ordinance adoption", basis: "The council amended the window.", stages: stg("30 days") } }));
+  const badStage = R(await cs.call("progressiondefine", { body: { progressionKey: KEY, label: "Ordinance adoption", stages: [{ key: "adoption", label: "Adoption", after: "ghost", within: null, required: "always", cardinality: "1" }] } }));
   rec("R157", "revise with no statement: NO_BASIS; a statement and no citation: NO_CITATION; a bad stage is heard first", "1280", "member ann", "revised the flow three ways through the door", nb.code === "NO_BASIS" && nc.code === "NO_CITATION" && badStage.code !== "NO_BASIS" ? "WORKS" : "BROKEN", `no basis: ${nb.code}; basis only: ${nc.code}; bad stage first: ${badStage.code || badStage.reason}. ${J(nb.translation || nb.detail, 160)}`);
-  rec("R157", "revise with both: version 2 written, the receipt naming the version written and the one standing", "1280", "member ann", "revised with a statement and a citation", v2.version === 2 ? "WORKS" : "BROKEN", J(v2, 380));
+  const v2 = R(await cs.call("progressiondefine", { body: { progressionKey: KEY, label: "Ordinance adoption", basis: "The council amended the window.", citation: "Ordinance 13579, section 2", stages: stg("30 days") } }));
+  rec("R157", "revise with both: version 2 written, the receipt naming the version written and the one standing", "1280", "member ann", "revised with a statement and a citation", v2.version === 2 ? "WORKS" : "BROKEN", J({ version: v2.version, prior_version: v2.prior_version, basis: v2.basis, unchanged: v2.unchanged }, 380));
   const rd1 = R(await cs.call("progression", { query: { key: KEY, version: "1" } })), rd2 = R(await cs.call("progression", { query: { key: KEY, version: "2" } }));
   rec("R157", "read version 1 and version 2 with author, date and basis", "1280", "member ann", "read the progression at version=1 and version=2", rd1.version === 1 && rd2.version === 2 && rd2.basis ? "WORKS" : "BROKEN", `v1 ${J({ basis: rd1.basis, by: rd1.declared_by, at: rd1.at, within: (rd1.stages || [])[1] && rd1.stages[1].within_interval }, 300)}; v2 ${J({ basis: rd2.basis, by: rd2.declared_by, at: rd2.at, within: (rd2.stages || [])[1] && rd2.stages[1].within_interval }, 300)}`);
-  await ent("c200", "contract", "Contract C-200");
-  /* an award with no solicitation (C-100): the missing-predecessor finding */
-  const th1 = R(await cs.call("thread", { body: { progressionKey: KEY, entityId: ents.contract, placements: [{ stage: "award", captureSha: docs.award.sha }] } }));
-  const in1 = R(await cs.call("instance", { query: { key: KEY, id: ents.contract } }));
+  /* an adoption with no introduction (ordinance B): the missing-predecessor finding */
+  const th1 = R(await cs.call("thread", { body: { progressionKey: KEY, entityId: ents.ordB, placements: [{ stage: "adoption", captureSha: adopt.sha }] } }));
+  const in1 = R(await cs.call("instance", { query: { key: KEY, id: ents.ordB } }));
   const fk = (in1.findings || []).map((f) => f.kind);
-  rec("R157", "thread a document to a step; read the instance (naming its definition version) and the missing-predecessor finding", "1280", "member ann", "threaded the award document to “Award” of Contract C-100 with no solicitation, read the instance", th1.ok !== false && fk.includes("missing_predecessor") && in1.definition_version ? "WORKS" : "BROKEN", `thread ${J(th1, 200)}; findings ${J(fk)}; definition_version ${in1.definition_version}; grade ${J(in1.grade || in1.how_sure, 120)}; ${J((in1.findings || [])[0], 400)}`);
-  /* a solicitation dated, no award, past its term (C-200): the overdue-successor finding */
-  await cs.call("recorddatedfact", { body: { captureSha: docs.solicitation.sha, extent: { kind: "document" }, kind: "issued", value: "2026-09-01", method: "a member's reading of the passage" } });
-  const th2 = R(await cs.call("thread", { body: { progressionKey: KEY, entityId: ents.c200, placements: [{ stage: "solicitation", captureSha: docs.solicitation.sha }] } }));
-  const in2 = R(await cs.call("instance", { query: { key: KEY, id: ents.c200 } }));
-  const od = (in2.findings || []).find((f) => f.kind === "overdue_successor");
-  const odText = J(od, 700);
-  rec("R157", "read the overdue-successor finding in the record's words (never “overdue” or “late”)", "1280", "member ann", "threaded only the solicitation (dated September 1, 2026) to Contract C-200 and read the instance", od ? (/overdue|late/i.test(JSON.stringify(od.says || od.sentence || od.words || "")) ? "BROKEN (MINOR: the finding says overdue/late)" : "WORKS") : "BROKEN", `${J(th2, 160)}; ${odText}`);
-  const qm = R(await kit.get(ann, { op: "queue" }));
-  console.log("QUEUE", J(qm, 1200));
-  const caps = R(await cs.call("captureprogressions", { query: { sha256: docs.award.sha }, body: { captureSha: docs.award.sha } }));
-  console.log("CAPPROG", J(caps, 900));
-  const props = R(await cs.call("proposals", { query: {} }));
-  console.log("PROPOSALS", J(props, 1500));
+  rec("R157", "thread a document to a step; read the instance (naming its definition version) and the missing-predecessor finding", "1280", "member ann", "threaded the adoption minutes to “Adoption” of Ordinance 26-0911, which has no introduction, and read the instance", th1.ok !== false && fk.includes("missing_predecessor") && in1.definition_version ? "WORKS" : "BROKEN", `thread ${J(th1, 200)}; findings ${J(fk)}; definition_version ${in1.definition_version}; ${J((in1.findings || [])[0], 500)}`);
+  /* an introduction dated September 1 with no adoption (ordinance A): the overdue-successor finding, in the record's words */
+  const th2 = R(await cs.call("thread", { body: { progressionKey: KEY, entityId: ents.ordA, placements: [{ stage: "introduction", captureSha: intro.sha }] } }));
+  const in2 = R(await cs.call("instance", { query: { key: KEY, id: ents.ordA } }));
+  const props1 = R(await cs.call("proposals", { query: {} }));
+  const allF = ((props1 && props1.instances) || []).flatMap((i) => (i.findings || []).map((f) => ({ ...f, entity: i.entity_id })));
+  const od = allF.find((f) => f.kind === "overdue_successor" && f.entity === ents.ordA);
+  const odWords = od && od.says && (od.says.words || od.says.sentence);
+  rec("R157", "read the overdue-successor finding in the record's words (never “overdue” or “late”)", "1280", "member ann", "threaded only the introduction (dated September 1, 2026) to Ordinance 26-0910 and read the findings the record offers (`proposals`; the instance read lists only the missing step)", od && odWords ? (/overdue|\blate\b/i.test(odWords) ? "BROKEN (MINOR: the finding says overdue/late)" : "WORKS") : "BROKEN", `${J(th2.ok, 40)}; instance read lists ${J((in2.findings || []).map((f) => f.kind))}; proposals finding: deadline ${od && od.deadline}, flagged overdue by ${J(od && od.overdue_by)}; its words: “${J(odWords, 360)}”`);
+  const qn2 = R(await kit.get(ann, { op: "queue" }));
+  const props2 = R(await cs.call("proposals", { query: {} }));
+  const propsList = Array.isArray(props2) ? props2 : (props2.proposals || props2.items || []);
+  console.log("PROPS2", J(props2, 1500));
+  rec("R157", "the findings are read in the Queue under “Noticed”, in the record's voice, with their basis", "1280", "member ann", "read `proposals` and the Queue after threading", ((props2 && props2.instances) || []).length ? "WORKS" : "BROKEN", `proposals: ${((props2 && props2.instances) || []).length} instances (${J(((props2 && props2.instances) || []).map((i) => i.entity_label + ": " + (i.findings || []).map((f) => f.kind).join("+")))}); queue items ${(qn2.items || []).length}, kinds ${J([...new Set((qn2.items || []).map((i) => i.kind))])}; the Queue is read before the daily sweep has produced notices in this offline plane`);
+  /* set a finding aside, binding the version the member saw: a second, attributed decider (max) */
+  const dd = async (auth, extra) => door(auth, "proposedispose", { progressionKey: KEY, stageKey: "introduction", to: "dismissed", reason: "The council waived the introduction for an emergency ordinance.", ...extra });
+  const dNone = await dd(max, {});
+  const dOld = await dd(max, { definitionVersion: 1 });
+  const dOk = await dd(max, { definitionVersion: 2 });
+  rec("R157", "set a finding aside (a reasoned act by a second member): no version named is refused NO_DEFINITION_VERSION; an older version DEFINITION_MOVED; the standing version is recorded", "1280", "member max", "called proposedispose three ways as the plain member", dNone.r.code === "NO_DEFINITION_VERSION" && dOld.r.code === "DEFINITION_MOVED" && dOk.ok ? "WORKS" : "BROKEN", `none: ${dNone.r.code || J(dNone.r, 200)}; version 1: ${dOld.r.code || J(dOld.r, 200)}; version 2: ${dOk.ok ? "recorded " : ""}${J(dOk.r, 300)}`);
+  const afterDis = R(await cs.call("instance", { query: { key: KEY, id: ents.ordB } }));
+  const fnd = (afterDis.findings || []).filter((f) => f.kind === "missing_predecessor");
+  rec("R157", "after a finding is set aside it is still listed with its decision, decider, instant, reason and version judged (finding count keeps it; open count drops)", "1280", "member ann", "read the instance of Ordinance 26-0911 after max set the finding aside", fnd.length && /dismissed|set aside/i.test(JSON.stringify(fnd[0])) ? "WORKS" : "BROKEN", `${J(fnd[0], 700)}; counts ${J({ finding_count: afterDis.finding_count, open_finding_count: afterDis.open_finding_count })}`);
+  const disc = await door(ann, "discharge", { progressionKey: KEY, entityId: ents.ordA, stageKey: "adoption", captureSha: adopt.sha, reason: "The council adopted it at a special meeting.", citation: "Special meeting minutes, October 6, 2026" });
+  rec("R157", "record a lawful skip with a reason and a citation (discharge) for a step; the document must concern the same ordinance", "1280", "member ann", "called discharge for Adoption of Ordinance 26-0910 naming the 26-0911 minutes (which concern another ordinance)", !disc.ok ? "WORKS" : "BROKEN (MAJOR: a skip is accepted on a document that concerns another ordinance)", J(disc.r.translation || disc.r.detail || disc.r, 400));
+  const disc2 = await door(ann, "discharge", { progressionKey: KEY, entityId: ents.ordA, stageKey: "adoption", captureSha: intro.sha, reason: "The council adopted it at a special meeting.", citation: "Special meeting minutes, October 6, 2026" });
+  rec("R157", "record a lawful skip with a reason and a citation naming a document that concerns the ordinance", "1280", "member ann", "called discharge for Adoption of Ordinance 26-0910 with the introduction minutes (which concern it), a reason and a citation", disc2.ok ? "WORKS" : "BROKEN", J(disc2.r.translation || disc2.r.detail || disc2.r, 500));
+  const un = await door(ann, "discharge", { progressionKey: KEY, entityId: ents.ordA, stageKey: "adoption", captureSha: intro.sha, reason: "", citation: "" });
+  rec("R157", "a skip without a reason or a citation is refused in the plane's words", "1280", "member ann", "called discharge with an empty reason and citation", !un.ok ? "WORKS" : "BROKEN", J(un.r.translation || un.r.detail || un.r, 300));
   await pe.close();
+  const pm = await browserFor(ann, "ann", 1280);
+  await pm.go(`/app/timeline/${project}%2Fmatter%2F${KEY}%2F${ents.ordB}`);
+  const matterTxt = await pm.text();
+  rec("R157", "read a matter's steps on the Timeline (state b): each step with the document threaded to it, how sure the chain is, the finding in the record's voice", "1280", "member ann", "opened the matter of Ordinance 26-0911 under the flow", /Introduction|Adoption/.test(matterTxt) ? "WORKS" : "BROKEN", J(matterTxt.replace(/\n+/g, " / "), 900), await pm.shot("R157-matter"));
+  await pm.go(`/app/timeline/${project}%2Fprogression%2F${KEY}`);
+  const defTxt = await pm.text();
+  rec("R157", "read the progression (state c): every version with author, date and basis", "1280", "member ann", "opened the progression page", /basis|Basis/.test(defTxt) && /version|Version/.test(defTxt) ? "WORKS" : "BROKEN", J(defTxt.replace(/\n+/g, " / "), 900), await pm.shot("R157-progression"));
+  await pm.go(`/app/document/${adopt.bundle}`);
+  const docT = await pm.text();
+  rec("R157", "the document page lists the steps it is threaded to and its finding (progression section)", "1280", "member ann", "opened the adoption minutes' Document page", /Adoption|threaded|Steps it is threaded/i.test(docT) ? "WORKS" : "BROKEN", J((docT.split("\n").filter((l) => /thread|step|Adoption|finding/i.test(l))).join(" / "), 500), await pm.shot("R157-document"));
+  await pm.close();
+  const pm390 = await browserFor(ann, "ann", 390);
+  await pm390.go(`/app/timeline/${project}%2Fmatter%2F${KEY}%2F${ents.ordB}`);
+  const o390 = await pm390.overflow();
+  rec("R157", "the matter page at 390 px: no sideways scroll", "390", "member ann", "opened the matter at 390 px", o390.sw <= o390.iw ? "WORKS" : "BROKEN (MINOR)", `scrollWidth ${o390.sw} / ${o390.iw}`, await pm390.shot("R157-matter"));
+  await pm390.close();
   //PR157B
   }
 
   if (want('money')) {
   /* ---- R62 money tables and ingest, as the member (ann) ---- */
-  const door = async (auth, op, body = {}, query = {}) => { const t = Date.now(); const x = await kit.post(auth, op, body, query); return { r: R(x.body), ok: x.body && x.body.ok !== false && R(x.body).ok !== false, ms: Date.now() - t, st: x.headers.get("server-timing") || "", raw: x.body }; };
-  const stH2 = (x) => (x ? `${x.op} ${x.status} wall ${x.ms} ms` : "no request");
-  const stH = (x) => `${x.ms} ms wall` + ((/^[a-z]+;dur=\d+/.exec(x.st) || [""])[0] ? `; ${(/^[a-z]+;dur=\d+/.exec(x.st))[0]}` : "") + ((/do-[a-z]+;dur=\d+/.exec(x.st) || [""])[0] ? `; ${/do-[a-z]+;dur=\d+/.exec(x.st)[0]}` : "");
   const mint = async (d) => R(await cs.call("contentmint", { body: { bundleId: d.bundle, extent: { kind: "document" } } })).content_id;
   const F3 = ["payer", "payee", "amount"].map((n) => ({ name: n, type: "string" }));
   await ent("beta", "institution", "Beta Builders");
@@ -307,6 +368,29 @@ async function journey() {
   const sameIds = w1.length > 0 && w1.every((x, i) => w2[i] && w2[i].fact_id === x.fact_id);
   rec("R62", "a repeat ingest of the same binding writes nothing twice (the same row is the same fact)", "1280", "member ann", "ingested the same binding again after the first finished and compared the fact ids of the first rows", sameIds ? "WORKS" : "BROKEN (MAJOR: a repeat wrote the same rows again as new facts)", `first ingest rows 0-2 → ${J(w1.map((x) => x.fact_id))}; second ingest → ${J(w2.map((x) => x.fact_id))}; the second reported written ${st2 && st2.written_count}, not written ${st2 && st2.not_written_count}. The module's own comment says money is not idempotent by source (calculations/index.mjs ingestMoney: “one running ingest to a binding”); R62's coverage row expects “a repeat writes nothing twice”.`);
 
+  /* R62, the inline side of INGEST_INLINE_ROWS and the bound: a small table answers whole; 100,001 rows are refused */
+  const smallRows = ["payer,payee,amount"]; for (let i = 0; i < 50; i++) smallRows.push(`City of Oakland,${i % 5 === 0 ? "Beta Builders" : "Acme Paving"},${100 + i}`);
+  const smallD = await upload(ann, cs, "payments-small", smallRows.join("\n") + "\n", "text/csv");
+  const smallT = await door(ann, "tabledeclare", { source: await mint(smallD), schema: { fields: F3 }, header: ["payer", "payee", "amount"], roles: roles3 });
+  const smallB = await door(ann, "bindingadopt", { table: smallT.r.sha, roles: BR });
+  const smallI = await door(ann, "moneyingest", { binding: smallB.r.binding, rows: "all", reason: "The whole small register." });
+  rec("R62", "ingest a table at or under INGEST_INLINE_ROWS (10,000): the answer holds the written and not-written lists whole, no background run", "1280", "member ann", "ingested all 50 rows of a small register", smallI.ok && smallI.r.state !== "ingesting" && Array.isArray(smallI.r.written) ? "WORKS" : "BROKEN", `${stH(smallI)}; written ${(smallI.r.written || []).length}, not written ${(smallI.r.not_written || []).length} (${J([...new Set((smallI.r.not_written || []).map((x) => x.reason))])}); asked_by ${smallI.r.asked_by}, by ${smallI.r.by}`);
+  /* a payee registered between two ingests: a crosswalk that now names Beta Builders, the same small file declared against it */
+  const cw2d = await upload(ann, cs, "crosswalk-2", `name,entity\nCity of Oakland,${ents.city}\nAcme Paving,${ents.acme}\nBeta Builders,${ents.beta}\n`, "text/csv");
+  const cw2 = await door(ann, "tabledeclare", { source: await mint(cw2d), schema: { fields: [{ name: "name", type: "string" }, { name: "entity", type: "string" }] }, header: ["name", "entity"], roles: { name: { role: "crosswalk_from" }, entity: { role: "crosswalk_to" } } });
+  const roles3b = { payer: { role: "payer", crosswalk: { table: cw2.r.sha, from: "name", to: "entity" } }, payee: { role: "payee", crosswalk: { table: cw2.r.sha, from: "name", to: "entity" } }, amount: { role: "amount" } };
+  const smallT2 = await door(ann, "tabledeclare", { source: await mint(smallD), schema: { fields: F3 }, header: ["payer", "payee", "amount"], roles: roles3b });
+  const smallB2 = await door(ann, "bindingadopt", { table: smallT2.r.sha, roles: BR });
+  const smallI2 = await door(ann, "moneyingest", { binding: smallB2.r.binding, rows: "all", reason: "The same register, now that Beta Builders is registered." });
+  rec("R62", "a payee registered between two ingests is seen by the second (here through a second crosswalk that names it)", "1280", "member ann", "ingested the small register again against a crosswalk that now names Beta Builders", smallI2.ok && (smallI2.r.written || []).length === 50 ? "WORKS" : "BROKEN (MAJOR: a corrected declaration is answered `already: true` with the old roles, silently)", `first ingest wrote ${(smallI.r.written || []).length} of 50; the second wrote ${(smallI2.r.written || []).length}, not written ${(smallI2.r.not_written || []).length}. Cause seen in a probe: declaring the same file again with a different crosswalk (the one that now names Beta Builders) answers {ok: true, already: true} (this run: already ${smallT2.r.already}, same sha ${smallT2.r.sha === smallT.r.sha}) and returns the FIRST declaration's roles unchanged (the table is keyed by its content, not its roles), so a member who corrects the registry between two ingests cannot make the second ingest see it; nothing tells her the roles were not taken`);
+  const hugeRows = ["payer,payee,amount"]; for (let i = 0; i < 100001; i++) hugeRows.push("City of Oakland,Acme Paving,1");
+  const hugeD = await upload(ann, cs, "payments-huge", hugeRows.join("\n") + "\n", "text/csv");
+  const hugeT = await door(ann, "tabledeclare", { source: await mint(hugeD), schema: { fields: F3 }, header: ["payer", "payee", "amount"], roles: roles3 });
+  let hugeI = null;
+  if (hugeT.ok) { const hb = await door(ann, "bindingadopt", { table: hugeT.r.sha, roles: BR }); hugeI = await door(ann, "moneyingest", { binding: hb.r.binding, rows: "all", reason: "A register past the bound." }); }
+  rec("R62", "a table of 100,001 rows is refused (INGEST_TOO_LARGE) with its count and the bound, or at declaring; nothing is half-written", "1280", "member ann", "declared and ingested a 100,001-row register", hugeT.ok ? (hugeI && hugeI.r.reason === "INGEST_TOO_LARGE" ? "WORKS" : "BROKEN") : "WORKS", hugeT.ok ? `declared ${hugeT.r.rows} rows; ingest: ${hugeI && (hugeI.r.reason || hugeI.r.state)} ${J(hugeI && (hugeI.r.detail || hugeI.r.translation), 260)}` : `refused at declaring: ${hugeT.r.code || hugeT.r.reason}: ${J(hugeT.r.detail || hugeT.r.translation, 260)}`);
+  rec("R62", "declare a table from a cited sheet-range of a held workbook (G41); cells_truncated stated undetermined", "1280", "member ann", "looked for a held workbook in this room", "NOT REACHED (the room holds no workbook: the xlsx generator the plane's shape tests use runs in a capped child process of its own, so no workbook was uploaded in this script; walked by the shape test g123f-cells, which reads the same ranges)", "no workbook was made");
+
   /* ---- R61 the money trail ---- */
   const wr2 = R(await cs.call("moneyingestread", { query: { ingest: ing1.r.ingest, kind: "written", limit: "10" } }));
   const factIds = (wr2.items || []).map((x) => x.fact_id);
@@ -333,7 +417,7 @@ async function journey() {
   const dfAward = R(await cs.call("recorddatedfact", { body: { captureSha: docs.award.sha, extent: { kind: "document" }, kind: "issued", value: "2026-06-01", method: "a member's reading of the passage" } })).dated_fact.dated_fact_id;
   const dfAdopt = R(await cs.call("recorddatedfact", { body: { captureSha: docs.minutes.sha, extent: { kind: "document" }, kind: "adopted", value: "2026-03-03", method: "a member's reading of the passage" } })).dated_fact.dated_fact_id;
   const dfOrder = R(await cs.call("recorddatedfact", { body: { captureSha: docs.award.sha, extent: { kind: "document" }, kind: "signed", value: "2026-07-15", method: "a member's reading of the passage" } })).dated_fact.dated_fact_id;
-  const evAward = R(await cs.call("createevent", { body: { kind: "award", attestations: [{ datedFactId: dfAward }], participants: [{ entityId: ents.contract, role: "party", attestation: { datedFactId: dfAward } }] } }));
+  const evAward = R(await cs.call("createevent", { body: { kind: "award", attestations: [{ datedFactId: dfAward }], participants: [{ entityId: ents.contract, role: "party", attestation: 0 }] } }));
   const evOrder = R(await cs.call("createevent", { body: { kind: "order", attestations: [{ datedFactId: dfOrder }] } }));
   const evAuth = R(await cs.call("createevent", { body: { kind: "adoption", attestations: [{ datedFactId: dfAdopt }] } }));
   const rAm = R(await cs.call("relate", { body: { from: evOrder.event_id, to: evAward.event_id, kind: "amends", attestation: { datedFactId: dfOrder } } }));
@@ -360,7 +444,7 @@ async function journey() {
   rec("R63", "the authority behind a payment (what authorized it): the chain of authorising events, each hop cited", "1280", "member ann", "read authoritychain for the encumbered award figure (the award was authorised by the adoption event)", ac.ok && ((ac.r.chains || [])[0] || {}).hops && ac.r.chains[0].hops.length > 0 ? "WORKS" : "BROKEN", `${J(ac.r, 700)}; ${stH(ac)}`);
 
   /* ---- R64 explore connections ---- */
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10), nowZ = new Date().toISOString().replace(/\.\d+Z$/, "Z");
   const ex0 = await browserFor(ann, "ann", 1280);
   await ex0.go("/app/explore");
   const exTxt0 = await ex0.text();
@@ -378,17 +462,191 @@ async function journey() {
   const graphCall = ex0.log.find((x) => x.op === "exploregraph");
   rec("R64", "the connection graph from the centre (ring, kind, step word and grade chip, legend) draws on the screen", "1280", "member ann", "read the graph section of the Explore screen", graphCall && /"ok":true/.test(graphCall.answer) && (await ex0.page.locator("svg, .mk-graph, [data-graph]").count()) > 0 ? "WORKS" : "BROKEN", `${stOf(graphCall)}; graph element(s) drawn: ${await ex0.page.locator("svg, .mk-graph, [data-graph]").count()}; answer ${J(graphCall && graphCall.answer, 300)}`);
   rec("R64", "the owed acts (Find the most direct path, List every connection, See the shorter path, Keep looking, Follow from here) are absent, as owed", "1280", "member ann", "looked for the five controls on the Explore screen", owedAbsent.length === 6 ? "WORKS (absent, as owed; recorded, not a defect)" : "BROKEN (offered but owed: " + ["exploreall", "explorepath", "exploreshorter", "explorecontinue", "followfrom", "registersearch"].filter((o) => !owedAbsent.includes(o)).join(", ") + ")", `controls absent: ${owedAbsent.join(", ")}`);
-  const dx = await door(ann, "explore", { from: ents.city, at: today, kinds: ["pays"], depth: 2 });
-  const dx2 = await door(ann, "explore", { from: ents.city, to: ents.acme, at: today, depth: 3 });
+  const dx = await door(ann, "explore", { from: ents.city, at: nowZ, depth: 2 });
+  const dx2 = await door(ann, "explore", { from: ents.city, to: ents.acme, at: nowZ, depth: 3 });
   console.log("DOOR EXPLORE", J(dx.r, 700), J(dx2.r, 500));
   const pre = await door(ann, "explorepreset", { preset: "presets" });
-  rec("R64", "the door: explore over the money kind from the City, a path between two ends, the presets list", "1280", "member ann", "called explore (from City, kinds pays), explore (City to Acme Paving) and explorepreset presets", dx.ok && pre.ok ? "WORKS" : "BROKEN", `from City: ${J(dx.r, 300)} ${stH(dx)}; City to Acme: ${J(dx2.r, 300)}; presets ${J(pre.r, 200)}`);
+  rec("R64", "the door: explore over the money kind from the City, a path between two ends, the presets list", "1280", "member ann", "called explore (from City, kinds pays), explore (City to Acme Paving) and explorepreset presets", dx.ok && !dx.r.refused && !dx2.r.refused && pre.ok ? "WORKS" : "BROKEN", `from City: ${J(dx.r, 300)} ${stH(dx)}; City to Acme: ${J(dx2.r, 300)}; presets ${J(pre.r, 200)}`);
   await ex0.close();
   const ex390 = await browserFor(ann, "ann", 390);
   await ex390.go("/app/explore/" + ents.city);
   const ov390 = await ex390.overflow();
   rec("R64", "Explore at 390 px: no page-wide sideways scroll (the graph may scroll sideways inside itself)", "390", "member ann", "opened Explore for the City at 390 px", ov390.sw <= ov390.iw ? "WORKS" : "BROKEN (MINOR)", `scrollWidth ${ov390.sw} / innerWidth ${ov390.iw}`, await ex390.shot("R64-explore"));
   await ex390.close();
+
+  /* ---- R65 registers (owed on T51) and R156 the connection-rule table (not built: surface unconfirmed) ---- */
+  const rg = await browserFor(ann, "ann", 1280);
+  await rg.go("/app/registers");
+  const rgTxt = await rg.text();
+  const OWED_REG = ["registerimport", "registerlist", "registersearch", "registerrowcite", "registerwatch", "registerwatchstop", "alertconnect", "registerfilter", "registerdelta", "registerpreread", "registerpropose"];
+  const rgAns = [];
+  for (const op of OWED_REG) { const x = await door(ann, op, {}); rgAns.push(`${op}: ${x.raw && (x.raw.reason || x.raw.code || (x.raw.result && (x.raw.result.reason || x.raw.result.code)) || J(x.raw, 70))}`); }
+  const pageDrawn = !/not found|no such screen|doesn.t exist/i.test(rgTxt) && rgTxt.trim().length > 40;
+  rec("R65", "open the registers page (a registry entry with owed acts; no page on T51 if FR6 455 holds)", "1280", "member ann", "opened /app/registers", "WORKS (state confirmed: " + (pageDrawn ? "a page is drawn" : "no page") + "; recorded, not a defect)", `page text: ${J(rgTxt.replace(/\n+/g, " / "), 400)}`, await rg.shot("R65-registers"));
+  rec("R65", "every register act is owed: each op answers as an op the plane does not serve (import, list, search, cite a row, watch, stop, alert, filter, delta, pre-read, propose)", "1280", "member ann", "called each of the 11 owed ops through the door", "WORKS (absence recorded, not a defect)", rgAns.join("; "));
+  await rg.close();
+  const regTxt = (await import("node:fs")).readFileSync(HERE + "../../../../docs/development/ux-substrate/screens/registry.json", "utf8");
+  const ruleHits = (regTxt.match(/connection[- ]rule|rule table|aged instance/gi) || []).length;
+  const rl = await browserFor(ann, "ann", 1280);
+  await rl.go("/app/connection-rules"); const rlTxt = await rl.text(); await rl.close();
+  rec("R156", "the connection-rule table and aged instances (not built: surface unconfirmed)", "1280", "member ann", "searched the screen registry (91 screens) for a connection-rule surface and opened /app/connection-rules", "WORKS (absent; recorded, not a defect)", `registry mentions of a connection-rule table / aged instance: ${ruleHits}; /app/connection-rules draws: ${J(rlTxt.replace(/\n+/g, " / "), 300)}`);
+
+  /* R61 acts on the rows: include and leave out, each with a reason, reload and return */
+  const mu2 = await browserFor(ann, "ann", 1280);
+  await mu2.go("/app/money/" + setId);
+  const inc0 = await mu2.act("include", { nth: 0, open: 0, emptyFirst: true, reason: "The register line matches the paid invoice." });
+  const incCall = inc0.calls.find((x) => x.op === "include");
+  rec("R61", "include a figure with a reason (a reasoned act: an empty reason is refused in place)", "1280", "member ann", "pressed “Include with a reason” on the first row, empty then a reason", inc0.reasonAsked && incCall && /"ok":true/.test(incCall.answer) ? "WORKS" : "BROKEN", `reason asked: ${inc0.reasonAsked}; empty: "${inc0.refusal}"; ${stOf(incCall)}; ${J(incCall && incCall.answer, 220)}`);
+  await mu2.go("/app/money/" + setId);
+  const exc0 = await mu2.act("exclude", { nth: 0, open: 0, reason: "On reflection it duplicates row 2." });
+  const excCall = exc0.calls.find((x) => x.op === "exclude");
+  rec("R61", "leave a figure out with a reason", "1280", "member ann", "pressed “Leave out with a reason” on the included row", excCall && /"ok":true/.test(excCall.answer) ? "WORKS" : "BROKEN", `${stOf(excCall)}; ${J(excCall && excCall.answer, 220)}; refusal/said: ${J(exc0.said, 160)}`);
+  await mu2.go("/app/money/" + setId);
+  await mu2.act("include", { nth: 0, open: 1, reason: "The register line matches the paid invoice." });
+  await mu2.go("/app/money/" + setId);
+  const afterReload = await mu2.text();
+  rec("R61", "reload and return to the trail: the included and the left-out figures stay, each with its reason", "1280", "member ann", "reloaded the trail after one inclusion and one exclusion", /included|Included/.test(afterReload) && /left out|Left out|excluded/i.test(afterReload) ? "WORKS" : "BROKEN", J(afterReload.match(/(included|left out|excluded)[^\n]*/gi), 400), await mu2.shot("R61-after-reload"));
+  const rawShaDrawn = /[0-9a-f]{64}/.test(afterReload);
+  rec("R61", "no raw fingerprint or id in the trail's words (the source cell)", "1280", "member ann", "read the SOURCE column of the trail's rows", rawShaDrawn ? "BROKEN (MINOR: raw ids in member text)" : "WORKS", `the source cell reads: “${J((afterReload.match(/row \d+ of the table[^\n]*/) || [""])[0], 300)}”`);
+  await mu2.go(`/app/money/${setId}`);
+  const checks = await mu2.page.evaluate(() => [...document.querySelectorAll("#cs-main input[type=checkbox]")].map((e) => (e.id || e.name || e.getAttribute("aria-label") || "") + "|" + (e.dataset.pick || e.dataset.id || "")).slice(0, 8));
+  const filt = await mu2.page.evaluate(() => [...document.querySelectorAll("#cs-main a, #cs-main button")].filter((e) => /undetermined/i.test(e.innerText || e.getAttribute("aria-label") || "")).map((e) => e.tagName.toLowerCase() + ":" + (e.getAttribute("href") || e.dataset.act || "") + ":" + (e.innerText || "").slice(0, 50)).slice(0, 5));
+  console.log("R61 CONTROLS", J(checks), J(filt));
+  await mu2.go(`/app/money/${setId}%2Fundetermined`);
+  const filtTxt = await mu2.text();
+  rec("R61", "the filter “Only figures with something undetermined” (address …/<trail>/undetermined) keeps the rows with a gap", "1280", "member ann", "opened the trail's undetermined address", /Money trail/.test(filtTxt) ? "WORKS" : "BROKEN", `controls found: ${J(filt)}; text: ${J(filtTxt.replace(/\n+/g, " / ").slice(0, 300))}`, await mu2.shot("R61-undetermined"));
+  const holdTxt = await (async () => { await mu2.go(`/app/money/${setId}`); const boxes = mu2.page.locator('#cs-main input[type="checkbox"][data-shell]'); const n = await boxes.count(); if (n >= 2) { await boxes.nth(0).check().catch(() => {}); await boxes.nth(1).check().catch(() => {}); await mu2.page.waitForTimeout(600); } return { n, text: await mu2.text() }; })();
+  rec("R61", "tick rows to bring the hold strip with “Unpick all”", "1280", "member ann", "ticked the first two rows' boxes", /Unpick all/i.test(holdTxt.text) ? "WORKS" : (holdTxt.n < 2 ? "NOT REACHED (no row boxes drawn: " + holdTxt.n + " found)" : "BROKEN"), `row boxes found ${holdTxt.n}; strip: ${J((holdTxt.text.match(/[^\n]*Unpick all[^\n]*/i) || ["(no strip)"])[0], 160)}`, await mu2.shot("R61-hold-strip"));
+  /* the partial marker while a large ingest runs */
+  const BRp = { ...BR, stage: { value: "incurred" } };
+  const bndP = await door(ann, "bindingadopt", { table: decC.r.sha, roles: BRp });
+  const ingP = await door(ann, "moneyingest", { binding: bndP.r.binding, rows: "all", reason: "A second kind of figure from the same register, to read the partial marker." });
+  let seenPartial = null, seenState = null;
+  for (let i = 0; i < 40 && !seenPartial; i++) {
+    const mo = R(await cs.call("moneyof", { query: { entity: ents.acme, limit: "3", phases: "actual" } }));
+    seenPartial = (mo.facts || []).find((f) => f.partial === true || f.partial_says) || null;
+    seenState = R(await cs.call("moneyingestread", { query: { ingest: ingP.r.ingest, kind: "state" } }));
+    if (seenState.complete) break;
+    await kit.later(100);
+  }
+  rec("R61", "while a large ingest runs, the facts it writes carry the partial marker (money.ingest.partial); after the done notice it is gone", "1280", "member ann", "started an ingest of 18,098 rows and read Acme Paving's money facts every 100 ms until it finished", seenPartial ? "WORKS" : "NOT REACHED (the run finished before a read saw a written fact: it ran in about a second)", `partial fact seen: ${J(seenPartial, 400)}; ingest state at the end ${J({ state: seenState.state, rows_done: seenState.rows_done, written: seenState.written_count }, 200)}`);
+  await mu2.close();
+
+  /* ---- R158 connections made by hand ---- */
+  const memo = await upload(ann, cs, "memo", "Dana Clerk is the City Clerk of the City of Oakland. Acme Paving was paid by the Clerk's office.");
+  const dp = await browserFor(ann, "ann", 1280);
+  await dp.go("/app/document/" + docs.minutes.bundle);
+  const docTxt = await dp.text();
+  const hasConnectBox = (await dp.page.locator("#document-assert-other").count()) > 0;
+  await dp.page.selectOption("#document-assert-other", docs.memo.bundle).catch(() => {});
+  const noBasis = await dp.act("connectionassert", { wait: 1500 });
+  await dp.fill("document-assert-basis", "Both documents concern the City Clerk's office.");
+  const asr = await dp.act("connectionassert", { wait: 2500 });
+  const asrCall = asr.calls.find((x) => x.op === "connectionassert");
+  rec("R158", "assert a connection between two documents by hand (a reasoned act; the basis is required; graded D, under her name)", "1280", "member ann", "on the minutes' Document page chose the memo as the other document, pressed “Assert this connection” with no basis, then with a basis", hasConnectBox && asrCall && /"ok":true/.test(asrCall.answer) && !noBasis.calls.find((x) => x.op === "connectionassert") ? "WORKS" : "BROKEN", `box drawn: ${hasConnectBox}; with no basis: ${J(noBasis.said || noBasis.refusal, 160)} (request sent: ${!!noBasis.calls.find((x) => x.op === "connectionassert")}); with basis: ${stOf(asrCall)}; ${J(asrCall && asrCall.answer, 420)}`, await dp.shot("R158-assert"));
+  const ca = R(await cs.call("connectionsasserted", { query: { bundle: docs.minutes.bundle } }));
+  rec("R158", "the asserted connection is read apart from derived ones, labelled with who asserts it, grade D, not established", "1280", "member ann", "read connectionsasserted for the minutes", (ca.member || []).length === 1 && ca.member[0].grade === "D" && ca.member[0].established === false ? "WORKS" : "BROKEN", J(ca.member && ca.member[0], 400));
+  const dupe = await door(ann, "connectionassert", { a: docs.minutes.bundle, b: docs.memo.bundle, basis: "Again." });
+  rec("R158", "asserting the same pair again by the same member writes nothing (`wrote: false`)", "1280", "member ann", "called connectionassert for the same pair again", dupe.r.wrote === false ? "WORKS" : "BROKEN", J(dupe.r, 300));
+  const machine = await door({ authorization: "Bearer " + kit.OPTIONS.bindings.PROBE_TOKEN }, "connectionassert", { a: docs.minutes.bundle, b: docs.memo.bundle, basis: "A machine credential." });
+  rec("R158", "a machine credential is refused by name (CONNECTION_ASSERT_NOT_A_MEMBER)", "1280", "probe credential", "called connectionassert with the probe token", !machine.ok ? "WORKS" : "BROKEN", J(machine.raw, 360));
+  /* choose the on-point mention: two documents naming the same ordinance (a reference the minutes reader makes), the connection derived, the mention chosen on the document page */
+  if (!ents.ordA) { await ent("ordA", "ordinance", "Ordinance 26-0910"); await cs.call("entityalias", { body: { entityId: ents.ordA, alias: "26-0910" } }); }
+  const iA = docs["intro-26-0910"] || await upload(ann, cs, "intro-26-0910", minutesText("26-0910", "September 1, 2026", "Introduction of"));
+  const ag = await upload(ann, cs, "agenda-26-0910", minutesText("26-0910", "August 25, 2026", "Agenda item for"));
+  const rs1 = R(await cs.call("resolve", { body: { captureSha: iA.sha, ref: "legislation:26-0910", entityId: ents.ordA, basis: "The minutes name file 26-0910." } }));
+  const rs2 = R(await cs.call("resolve", { body: { captureSha: ag.sha, ref: "legislation:26-0910", entityId: ents.ordA, basis: "The agenda names file 26-0910." } }));
+  const der = R(await cs.call("connect", { body: { entityId: ents.ordA } }));
+  const cons = R(await cs.call("connections", { query: { id: ents.ordA } }));
+  console.log("CONNECT", J(rs1, 200), J(rs2, 200), J(der, 400), "\nCONNECTIONS", J(cons, 900));
+  await dp.go("/app/document/" + iA.bundle);
+  const mentionSel = await dp.page.evaluate(() => [...document.querySelectorAll("select[id^='document-mention-']")].map((e) => e.id + ":" + [...e.options].map((o) => o.textContent.slice(0, 40)).join("|")));
+  let chooseCall = null;
+  if (mentionSel.length) {
+    const id0 = mentionSel[0].split(":")[0];
+    await dp.page.selectOption("#" + id0, { index: 1 }).catch(() => {});
+    const ch = await dp.act("connectionchoose", { wait: 2500 });
+    chooseCall = ch.calls.find((x) => x.op === "connectionchoose");
+  }
+  rec("R158", "on a document that names the same ordinance, choose the mention that counts (panel offered only where two or more mentions exist)", "1280", "member ann", "resolved the file number in the introduction minutes and in an agenda to Ordinance 26-0910 (the connection derives), opened the introduction minutes' Document page, chose a mention and pressed “Choose the mention that counts”", chooseCall && /"ok":true/.test(chooseCall.answer) ? "WORKS" : (mentionSel.length ? "BROKEN" : "NOT REACHED (the connection panel offers no choice: the minutes name the file number once each, so there is one mention to choose among; the derivation holds " + (cons.count ?? 0) + " connection(s))"), `resolve ${J(rs1.ok)}/${J(rs2.ok)}; connect → ${cons.count} connection(s): ${J((cons.connections || [])[0], 400)}; mention controls drawn: ${J(mentionSel)}; ${stOf(chooseCall)}; ${J(chooseCall && chooseCall.answer, 300)}`, await dp.shot("R158-document"));
+  await dp.close();
+  /* a declared step, its source, the chain's check, a question opened from it */
+  const rel1 = await door(ann, "relationdeclare", { fromEntity: ents.clerk, toEntity: ents.city, relation: "member_of", justification: "Dana Clerk is the City Clerk.", citation: "memo" });
+  const exu = await browserFor(ann, "ann", 1280);
+  await exu.go("/app/explore/" + ents.clerk);
+  const ex1 = await exu.act("explore", { wait: 3500 });
+  const exT = await exu.text();
+  rec("R158", "a declared step is drawn as a lead (dashed grey, “declared, not evidenced”), not evidence; the chain's sentence says no finding rests on it", "1280", "member ann", "declared Dana Clerk member_of the City (`relationdeclare`, citing the memo) and explored from Dana Clerk", /declared|lead/i.test(exT) ? "WORKS" : "BROKEN", `declare ${J(rel1.r, 200)}; page: ${J(exT.split("\n").filter((l) => /declared|lead|evidence/i.test(l)).join(" / "), 400)}`, await exu.shot("R158-lead"));
+  const stepForm = await exu.page.evaluate(() => [...document.querySelectorAll("[id^='explore-assert']")].map((e) => e.id + ":" + e.tagName));
+  console.log("STEPFORM", J(stepForm));
+  const shaLabel = await exu.page.evaluate(() => { const i = document.getElementById("explore-assert-sha"); const l = document.querySelector("label[for='explore-assert-sha']"); const h = document.getElementById("explore-assert-sha-help"); return `${l ? l.innerText : ""} / ${h ? h.innerText : ""} (${i ? i.tagName + "[" + i.type + "]" : "none"})`; });
+  await exu.fill("explore-assert-sha", docs.memo.sha);
+  await exu.fill("explore-assert-page", "1").catch(() => {});
+  await exu.fill("explore-assert-basis", "The memo says the Clerk is the City's Clerk.").catch(() => {});
+  const ssr = await exu.act("stepsource", { wait: 2500 });
+  const ssCall = ssr.calls.find((x) => x.op === "stepsource");
+  rec("R158", "attach a source to a declared step (a passage and her words on what it shows): the step stays declared, the source is its own fact", "1280", "member ann", "chose the memo and typed what it shows, pressed “Attach a source to a declared step”", ssCall && /"ok":true/.test(ssCall.answer) ? "WORKS" : "BROKEN", `${stOf(ssCall)}; ${J(ssCall && ssCall.answer, 400)}; said ${J(ssr.said, 160)}`);
+  const ssExt = (ssCall && ssCall.answer.match(/"extent":\{[^}]*\}/) || [""])[0];
+  rec("R158", "the passage a step source cites is of the document's own kind (a plain-text memo is not “page 1” of a PDF)", "1280", "member ann", "attached the plain-text memo as the source and read the extent the plane stored", /pdf-page/.test(ssExt) ? "BROKEN (MINOR: a plain-text document is cited as a PDF page)" : "WORKS", `stored ${ssExt}; the form asks for a document fingerprint and a page number only, and builds a PDF-page extent whatever the document is`);
+  rec("R158", "the form that attaches a source to a declared step chooses the document by its title, never by a typed fingerprint (DEC-299 (9))", "1280", "member ann", "read the label and field of “Attach a source to a declared step”", /input/i.test(shaLabel) && /\[text\]/i.test(shaLabel) ? "BROKEN (MAJOR: a member is asked to type a document fingerprint)" : "WORKS", shaLabel, await exu.shot("R158-stepsource-form"));
+  const ver = await exu.act("exploreverify", { wait: 2500 });
+  const vCall = ver.calls.find((x) => x.op === "exploreverify");
+  rec("R158", "“Check this chain” re-derives the drawn chain and says whether it matches, hop by hop", "1280", "member ann", "pressed “Check this chain” on the first chain", vCall && /"ok":true/.test(vCall.answer) ? "WORKS" : "BROKEN", `${stOf(vCall)}; ${J(vCall && vCall.answer, 400)}`);
+  const pro = await exu.act("promote", { wait: 3500 });
+  rec("R158", "“Open a question from this chain” opens a question that names the chain; no finding rests on a declared or hunch step", "1280", "member ann", "pressed “Open a question from this chain”", /\/app\/question\//.test(exu.page.url()) ? "WORKS" : "BROKEN", `landed ${exu.page.url().replace("https://group.example", "")}; calls ${J(pro.calls.map((x) => x.op))}; said ${J(pro.said, 200)}`, await exu.shot("R158-question"));
+  await exu.close();
+
+  /* ---- the overlay's checks that fall on these screens (timing, 390 px, dark, words, tap targets, accessible names, nothing from outside, a member who cannot see the project) ---- */
+  const PAGES = [["Timeline", `/app/timeline/${project}`], ["Money (project)", `/app/money/${project}`], ["Money trail", `/app/money/${setId}`], ["Explore", `/app/explore/${ents.city}`], ["Document", `/app/document/${docs.minutes.bundle}`]];
+  const BAD = /\bgroup\b|\boverdue\b|\bsignal\b|\bsecret\b|\bconfidential\b/i;
+  const slowest = (u) => u.log.slice().sort((x, y) => y.ms - x.ms)[0];
+  const totalDur = (x) => { const m = /^[a-z]+;dur=(\d+)/.exec(x && x.st || ""); return m ? Number(m[1]) : null; };
+  for (const [name, path] of PAGES) {
+    const u = await browserFor(ann, "ann", 1280);
+    const wall = await u.go(path);
+    const sl = slowest(u), reads = u.log.length;
+    const txt = await u.text();
+    const unnamedList = await u.page.evaluate(() => [...document.querySelectorAll("#cs-main button, #cs-main input, #cs-main select, #cs-main textarea")].filter((e) => !((e.getAttribute("aria-label") || e.innerText || e.value || e.title || "").trim()) && !(e.labels && e.labels.length) && e.type !== "hidden").map((e) => `${e.tagName.toLowerCase()}${e.type ? "[" + e.type + "]" : ""}#${e.id || ""}.${(e.className || "").toString().slice(0, 30)}`));
+    const unnamed = unnamedList.length;
+    const bad = (txt.match(BAD) || []);
+    const worst = u.log.reduce((m, x) => Math.max(m, totalDur(x) || 0), 0);
+    rec("Overlay 31", `${name}: first draw, reads and the slowest read (Server-Timing)`, "1280", "member ann", `opened ${path.replace(project, "<project>").replace(setId || "", "<trail>")} and timed every read`, worst <= 2000 ? "WORKS" : "BROKEN (MAJOR: a read over the 2 s bar on Server-Timing)", `first draw ${wall - 2500} ms wall (the page settles 2.5 s after; this includes the machine's Chromium and the in-process plane, so the bars are judged on Server-Timing); ${reads} reads; slowest ${sl ? `${sl.op} wall ${sl.ms} ms, ${sl.st.split(",").slice(0, 3).join(",")}` : "none"}; largest total on any read ${worst} ms; the plane served this member alone and no reading tick was running in its object`);
+    rec("Overlay 15/19/20", `${name}: banned words (group, overdue, Signal, secret, confidential), unnamed controls, requests to outside hosts`, "1280", "member ann", "scanned the drawn text and the controls", bad.length === 0 && unnamed === 0 && u.out.length === 0 ? "WORKS" : "BROKEN (MINOR)", `banned words drawn: ${J(bad)}; controls with no accessible name: ${unnamed} ${J(unnamedList.slice(0, 5), 300)}; requests refused to outside hosts: ${J(u.out)}`);
+    await u.close();
+    const m = await browserFor(ann, "ann", 390);
+    await m.go(path);
+    const ov = await m.overflow();
+    const smallList = await m.page.evaluate(() => [...document.querySelectorAll("#cs-main button, #cs-main select, #cs-main input:not([type=hidden]), #cs-main textarea")].filter((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && (r.height < 44 || r.width < 44); }).map((e) => { const r = e.getBoundingClientRect(); return `${e.tagName.toLowerCase()}${e.type ? "[" + e.type + "]" : ""} ${Math.round(r.width)}x${Math.round(r.height)} “${(e.innerText || e.getAttribute("aria-label") || e.value || "").toString().slice(0, 24)}”`; }));
+    const small = smallList.length;
+    rec("Overlay 17", `${name} at 390 px: no sideways scroll, tap targets at least 44 px`, "390", "member ann", "opened the screen at 390 px and measured every button, select, input and box", ov.sw <= ov.iw && small === 0 ? "WORKS" : "BROKEN (MINOR)", `scrollWidth ${ov.sw} / ${ov.iw}; controls under 44 px in either direction: ${small} ${J(smallList.slice(0, 6), 400)}`, await m.shot("OV-" + name.replace(/[^A-Za-z]+/g, "-")));
+    await m.close();
+  }
+  { /* dark mode on the Timeline and the trail */
+    const b = await pw.chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
+    const ctx = await b.newContext({ viewport: { width: 1280, height: 900 }, colorScheme: "dark" });
+    await ctx.addInitScript(([t, h]) => { try { localStorage.setItem("bio-session", JSON.stringify({ t, e: 0, d: "own", w: h })); } catch (e) { /* none */ } }, [ann.authorization.replace(/^Bearer /, ""), "ann"]);
+    const pg = await ctx.newPage();
+    await pg.route("**/*", async (route) => { const rq = route.request(), u = new URL(rq.url()); if (u.origin !== "https://group.example") return route.abort(); const init = { method: rq.method(), headers: rq.headers() }; const pd = rq.postDataBuffer(); if (pd) init.body = pd; delete init.headers["content-length"]; delete init.headers.host; const res = await kit.mf.dispatchFetch(rq.url(), init); const body = Buffer.from(await res.arrayBuffer()); const headers = {}; res.headers.forEach((v, k) => { if (!/^(content-encoding|content-length|transfer-encoding)$/i.test(k)) headers[k] = v; }); return route.fulfill({ status: res.status, headers, body }); });
+    for (const [name, path] of [["Timeline", `/app/timeline/${project}`], ["Money trail", `/app/money/${setId}`]]) {
+      await pg.goto("https://group.example" + path, { waitUntil: "load" }); await pg.waitForSelector("#cs-main"); await pg.waitForTimeout(2500);
+      const bg = await pg.evaluate(() => getComputedStyle(document.body).backgroundColor);
+      const lum = (c) => { const m = /(\d+)[, ]+(\d+)[, ]+(\d+)/.exec(c || ""); return m ? (0.2126 * m[1] + 0.7152 * m[2] + 0.0722 * m[3]) / 255 : 1; };
+      await pg.screenshot({ path: SHOTS + `OV-dark-${name.replace(/ /g, "-")}-1280.png`, fullPage: true });
+      rec("Overlay 18", `${name} in dark mode (the device asks for dark)`, "1280", "member ann", "opened the screen with the browser's colour scheme set to dark", lum(bg) < 0.35 ? "WORKS" : "BROKEN (MINOR)", `page background ${bg} (luminance ${lum(bg).toFixed(2)})`, `shots/07-money-time/OV-dark-${name.replace(/ /g, "-")}-1280.png`);
+    }
+    await b.close();
+  }
+  { /* a member who cannot see the project */
+    const w = await browserFor(max, "max", 1280);
+    await w.go(`/app/timeline/${project}`);
+    const wt = await w.text();
+    rec("Overlay 2/21", "a member who cannot see the project opens its Timeline: a hidden object leaves only the one fixed sentence of incompleteness, no title, state or count", "1280", "member max", "opened ann's project Timeline as the plain member", !/Contract spending against policy/.test(wt) ? "WORKS" : "BROKEN (MAJOR: the hidden project's title is drawn)", J(wt.replace(/\n+/g, " / "), 400), await w.shot("OV-withheld-timeline"));
+    const mSet = await door(max, "moneyset", {}, { id: setId }), mFact = await door(max, "money", {}, { id: factIds[0] }), mCap = await door(max, "committedagainstpaid", {}, { contract: ents.contract });
+    await w.go(`/app/money/${setId}`);
+    const wm = await w.text();
+    rec("Overlay 2/21", "a member who cannot see the project opens its money trail", "1280", "member max", "opened the trail of ann's project as the plain member and read it through the door (moneyset, money, committedagainstpaid)", !/Acme Paving road repair|Acme Paving/.test(wm) ? "WORKS" : "BROKEN (MAJOR: the trail of a project the member cannot see is drawn with its name, its project's id and its counts; only the figures themselves are withheld)", `page: ${J(wm.replace(/\n+/g, " / "), 300)}; moneyset as max: ${J(mSet.r, 260)}; money (fact): ${J(mFact.r, 200)}; committedagainstpaid: ${J(mCap.r && { committed: mCap.r.committed && mCap.r.committed.sum, paid: mCap.r.paid && mCap.r.paid.sum }, 200)}`, await w.shot("OV-withheld-money"));
+    await w.close();
+  }
   //MONEYEND
   }
   //PART2
