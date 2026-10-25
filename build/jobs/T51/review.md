@@ -387,3 +387,34 @@ Size (session_01DzCepFNdeysrrMTS9qDDpn): test runs 1, module lines 1716
 ## J17 · COMPLETE
 
 COMPLETE for B21 (K5195): deleted the orphaned run `fixtures-run: case-inputs no-review-copy` at bio-plane/test/m/review/fixtures.test.mjs:10 (case-inputs owns the marker and deletes it in its own job). No source or requirement changed. Review tests 102/102 green; fixtures 0 failures; format, architecture, coverage (45/45 ids), ownership 0. run.mjs has no failure in review's paths (its 1502 FAIL lines are other modules'). Record: build/jobs/T51/review.md, commit 9b6282bde5, pushed to job/T51/review. Size (session_01DzCepFNdeysrrMTS9qDDpn): test runs 1, module lines 1716.
+
+## Completion record (fix round 10, K5207; START B22)
+
+COMPLETE for fix round 10 · review (BOB's B22, K5175: every bug found is fixed in this round). Branch job/T51/review. `tranche/T51` merged in, never rebased (the local job branch was behind origin and was moved aside to `stale/review-local` before recreating it from origin, as the START directs).
+
+**Entries applied**
+- **Fixtures published** in `bio-plane/test/m/review/fixtures.mjs` (new). Each export builds its own world over the real `standard()` fixture and answers the real op's answer through `reviewOps`, never a stored or hand-written value:
+  - `casedraft()` (line 35): a draft over a concluded question (its front matter holds the conclusion; state `concluded`), made by the `casedraft` op.
+  - `reviewcopy()` (line 40): that draft's copy, read as a member with standing, with the publish gates refused (the case-authoring double answers a refusal, so the copy carries `gates: "refused"` and `missing`).
+  - `reviewrevoke()` (line 50): a grant made by `reviewgrant` and revoked by its maker through `reviewrevoke`.
+  - `reviewcomment()` (line 58): an outside reader's comment through a live grant, at the reader's door (`bySecret`, the link's fingerprint in the body).
+- **Test** `bio-plane/test/m/review/fixtures-answers.test.mjs` (new, 4 tests): calls each export and asserts its real shape and values (`casedraft` ok and a `DRAFT-` id; `reviewcopy` gates refused, one missing, its finding concluded; `reviewrevoke` ok, `existed: false`, revoked by ann; `reviewcomment` ok, author kind `recipient`, author the grant id).
+- **No product change.** The real ops make each state, so none was REPORTed as unreachable.
+
+**Failing-first check (break once, red, then restore green)**
+- Broke `reviewcopy()`'s gate to `{ ok: true }` (the publish gates pass): the `reviewcopy` test went red at its `gates === "refused"` assertion. Restored the refusal; the four tests pass again.
+
+**Markers added:** none (`fixtures-own` and `fixtures-generic`: none; every value is the module's real answer).
+
+**Tests and checks** (from /home/user/bio)
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/review/*.test.mjs`: tests 106, pass 106, fail 0 (the four new ones included).
+- `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio review --list`: 0 failures (3508 test files read, 178 modules; answer 0, stub 0, code 0, contract 0).
+- `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio review 86f668d6175d9ed25d4704ca9281c1e1f0eb9a5e HEAD`: 0 failures (one file changed by review: the new fixtures file, within `paths`).
+- `node /home/user/civicos-process/checks/run.mjs /home/user/bio`: no finding in review's own files. Its findings that name review as the provider (`[op-table reviewcopy]`, `[op-table casedraft]`, `[op-table reviewrevoke]`, `[op-table reviewcomment]`, `[op-table casedrafts]`) are in screens-inquiry and screens-publish tests, which hand-build those answers; they are their fixture owners' to take from this file (the answers are published here now). The words total is unchanged: the new files add no sentence a person reads. Its other failures are store-assembly's inline sentences, not in review.
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: run after the commit (see below).
+
+**Found outside my paths:** none new from this round. The consumers' hand-built answers named above are reported for BOB to route to screens-inquiry and screens-publish.
+
+**Deferred:** nothing.
+
+Size (session_01NYhxjj1BEgs71XesoJ5bcq): test runs 7, module lines 4932
