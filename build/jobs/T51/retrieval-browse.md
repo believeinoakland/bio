@@ -209,4 +209,4 @@ B14 done on job/T51/retrieval-browse. R2 (K5148, D5) met: a stop ends a sentence
 
 **Left.** Nothing in this cause. `build/plan/fix-round-10-T51.md` §3 item 78 (5) also names `inquiry` and the stand-ins in other modules; those are theirs, not this job's.
 
-Size (session_01U8jhGJwnvMNeN9MrE5jZt6): test runs 3, module lines 1427
+Size (session_01U8jhGJwnvMNeN9MrE5jZt6): test runs 3, module lines 1449
