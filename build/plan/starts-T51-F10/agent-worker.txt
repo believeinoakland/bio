@@ -21,7 +21,7 @@ Mail with `--module agent-worker`; record `build/jobs/T51/agent-worker.md` (appe
 - ai-runs/tickStateTooLarge (1 judgment): requirements.test.mjs:1032
 - run-productions/suggestRefusals (1 mechanical): requirements.test.mjs:1428
 - CODE (GRANT_EXPIRED is in no product file. Fix: use AI_CREDENTIAL_EXPIRED (C-29.30, admission)): t35.test.mjs:567
-- agent-runner/runnerRefusal (1 judgment): t47.test.mjs:206
+- agent-runner/runnerRefusal (1 judgment): t47.test.mjs:206 (agent-runner J6: the image sends no `reason` field; the re-pointed assertion drops `reason`, K5088)
 - CODE (MEANING_ROWS_REFUSED is in no product file. Fix: use MEANING_ROWS_UNKNOWN_ARM (retrieval); the literal is FIX-E retrieval/meaningRowsUnknownArm): t50.test.mjs:83,526
 
 A `fixtures-run` you write shows `orphan-run` in your list until its user module's marker is merged, and a marker you place shows `contract-no-run` until its provider's run is merged: these are the only lines you may leave at done, each named in your record with the module it waits for.

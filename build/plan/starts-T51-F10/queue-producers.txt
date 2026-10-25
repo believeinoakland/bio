@@ -16,7 +16,7 @@ Mail with `--module queue-producers`; record `build/jobs/T51/queue-producers.md`
 - monitoring/monitoringReads (5 judgment/3 mechanical): every.mjs:59; feeditems.test.mjs:130; producers.test.mjs:114,140; reads.test.mjs:21,121; words.test.mjs:127; world.mjs:173
 - provenance/homeOfHomed (4 judgment): feeditems.test.mjs:125; lead.test.mjs:18; producers.test.mjs:29; reads.test.mjs:227
 - FIX-E (per-feed provider reads, see the part): feeds.test.mjs:74
-- project-roster/projectReadRefusals (2 judgment): feeds.test.mjs:98; inviter.test.mjs:74
+- project-roster reads (2 judgment): feeds.test.mjs:98; inviter.test.mjs:74: no `projectReadRefusals` fixture exists (K5088: `projectList` and `projectInvitations` never refuse, R35, R36); re-point each case to the real answer (an empty `ok: true` list for an unknown viewer; the throw is the `boom` case), no hand-built `REFUSED`
 - reevaluation/noticesRead (1 judgment): noticed.test.mjs:10
 - monitoring/flaggedRefusal (1 judgment): producers.test.mjs:133
 - provenance/homeOfEmpty (2 mechanical): proposals.test.mjs:32; world.mjs:150
