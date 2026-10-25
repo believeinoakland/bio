@@ -1202,3 +1202,11 @@ session_015sXYDym4apQ4UugkRYpfcT,job,affordances,9871163,121933,156,49460,,10,15
 session_012LQdkfZK3Z7i7zJvQqnFh6,job,action-producers,2120960,49299,48,7994,,3,1565
 session_01VKactdh7kQCY61oFDcnvi4,job,queue,4818357,95202,80,18496,,8,41
 session_01Rc8Zkri4gKz67HcYQk3GPC,job,instance-setup,1162290,52320,28,7611,,,
+session_01V2UjYMTJVamFVmEpii2ZSk,job,screens-action,38102613,375966,270,85050,,26,5078
+session_01HZYgtgRsQu18wZwVMWEhEJ,job,screens-inquiry,56433728,404204,370,113415,,30,6877
+session_01PGF97oMkoZ7cr2NcZU1T3u,job,control-plane,51376338,718118,454,124497,,,
+session_01NTQ4iqbexAgwqHavh3qwVV,job,case-carriage,2503810,67686,48,17103,,1,1756
+session_01JSu2f7vvcY4zxxgJ9E1EDS,job,store-request,31238742,268841,310,82639,,47,545
+session_01PfsuZ6j8UCFgigeTRxA37x,job,op-declarations,6656873,108211,110,45525,,9,7
+session_0161cAf4uvK6FvmCyPin1KSe,job,intent,3111976,90988,54,16949,,1,2276
+session_01JjkV7W74Hx4TPxHQN3nSf6,job,acquisition,7390183,99801,126,18745,,12,4479

@@ -1,6 +1,6 @@
 # BOB to store-assembly (T51)
 
-**Read** · handled J5
+**Read** · handled J7
 
 ## B1 · START
 
@@ -70,3 +70,11 @@ RESUME (BOB #296, §5.4): your session is idle while your record says RUNNING un
 ## B8 · CHANGE
 
 CHANGE (K5168; CREDENTIALS #28 J20, merged): credentials now takes its clock as `credentialsOf(ctx, { now })`, read on the first construction for a storage only. At store-assembly's first `credentialsOf` call for the store's storage (`assemble.mjs`, whichever of `:203`, `:248`, `:307` runs first, and `ask.mjs:281`, `:361` if one can run first), hand `now: () => nowMs(null)` (the `nowMs` `assemble.mjs:192` makes from `clockOf(env)`). Merge `tranche/T51` first. A test: a pinned world's claim records the pin as `consumedAt` (red first). Instance-setup's same line (71 (3)) follows when INSTANCE-SETUP #34 merges.
+
+## B9 · CHANGE
+
+CHANGE (K5171; INSTANCE-SETUP #35 J25), with B8: instance-setup reads a handed clock first (`instanceSetupOf(ctx, env, { ..., now })`). At `assemble.mjs:596` hand `now: () => nowMs(null)` as B8 does for credentials. A test: a pinned world's `instanceGroupSeed` records the pin as `recorded_at` with no `BIO_NOW_MS` relied on (red first if the env path does not already give it; else say it passes as a control).
+
+## B10 · CHANGE
+
+CHANGE (K5171), answering J6 (1), in this job with B9: find whether any producer of the ledger's answers emits `next_page` (grep every module's source, extraction and the readers first). If none does, the ledger's `next_page` reading (`pending.mjs:139` `unitOf`, `:447`) is dead in your copy: remove it and the test lines that script it (`r9-jobs.test.mjs:356`, R76 G129c), and REPORT plane's copy for its Wave B. If one does, REPORT which, and BOB asks that provider to publish the answer. Then COMPLETE.

@@ -126,3 +126,7 @@ Mail with `--module link-sweep`; record `build/jobs/T51/link-sweep.md` (append a
 1. **R14, a project's own bundle** (CONTROL-PLANE #61 J61 (1); no diagnosis file: the cause is stated here). The owner defines a sweep on her project from the watching screen (the screen sends the project as `bundle`), then ratifies it: `sweepratify` answers `SWEEP_RATIFY_NOT_AN_OWNER` ("this list belongs to no project"). Cause: `link-sweep/sweep.mjs:186-187` takes the project from `record.bundleInfo(bundle).project`, null for a project's own bundle. R14 is worded on the tranche ("a project's own bundle belongs to that project") and marked. Fix: when `bundleInfo(bundle).type` is `project`, the project is the bundle itself. Test at your interface over providers' published fixtures: the owner ratifies a sweep defined on her project's own bundle (red first); controls: a non-owner is refused, a bundle in no project has no owner. The door case is control-plane's `r41-sweepset.test.mjs` test 2 (red by name there until you merge): do not touch it.
 
 **Done:** module tests green; `checks/fixtures.mjs <absolute root> link-sweep --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B11 · CHANGE
+
+NOTE (K5170) for LINK-SWEEP #9: B9 is LINK-SWEEP #8's START, done and merged into the tranche; apply only B10.
