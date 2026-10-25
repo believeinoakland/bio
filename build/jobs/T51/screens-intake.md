@@ -850,3 +850,14 @@ REPORT (other modules; details with file:line in my record, section "Completion 
 4. control-plane t51-round7-seam (2), walk-consequences-escalation-end, walk-monitoring-checknow-adopt are red at the tranche tip too (I ran them there): money binding "period names no time zone"; COMPLIANCE_NOT_RESTORED; the newer copy not read.
 5. World gaps (23 scripted lines remain, each listed with why in my record): writinghelp's draft is not wired in the store-request door; no delivery of an owed fetch (a session that left the list, a stated TOO_LARGE); E8's rendered copy needs a browser session; a capture in parts needs a file past 32 MiB; a reading over the inline bound by address/upload; capturecredentiallist waits on the `by` stamp fix (J56 (1)); the owner's own answers it never gives (promote {ok:false}, testify without a document, acquire without a fingerprint, heldat held:false for a held file, safeview cut with unknown total, undetermined eligibility, NO_HOME).
 6. #26's save left held.test.mjs with 7 of its 19 tests (R37 and others dropped, so coverage failed on R37); the 12 are restored over the real store and coverage is 67 of 67. A regression #26's titleOf change caused in screens-daily c25-seam (green at the tip) is mended and has a failing-first test.
+
+## J58 · COMPLETE
+
+COMPLETE (B53 START, B56 RESUME): Wave B applied; details in my record's "Completion (SCREENS-INTAKE #27 ...)", pushed at job/T51/screens-intake.
+- Op tables: all files over storeWorld(); t48 converted; held.test.mjs restored to its 19 tests (#26's save had 7); common.test.mjs derives its reads (words handlist 1 -> 0). Fixture lines 353 -> 23, all op-table answers for states the world cannot make (REPORT J57; none added by me, no marker added).
+- Marks met, BOB strikes: R49 (tests r9-failed-named, t51-capture, t51-fix2/3/4, t51-seam-c9) and R61 / `control-plane R131` (t51-fix7, t51-seam-g126h).
+- Source: capture.mjs titleOf (:102-117): a source-stated name equal to the address's last segment names the document (content-disposition among the kept headers); failing-first test in t51-fix4; mends screens-daily c25-seam, which #26's heuristic had broken.
+- Tests: module 47 files, 389 pass, 0 fail. Users: 44 outside files naming screens-intake or the capture/archive routes run (260 listed by impact were too slow to run whole): green but the ones red at the tip / by the store-request double (J57).
+- Checks: format 0; coverage 67/67; ownership 0; architecture 1 (the file-safety `uses` edge, J57 item 1); run.mjs: words 19239 unchanged, handlist 0, no finding in my files but that edge.
+- Fixtures markers added: none.
+Size (session_01EQHFW8MMJUopQjEfdBp4ji): test runs ~260, module lines 3143
