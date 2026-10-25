@@ -41,6 +41,7 @@ Moved here so that `office-readers` may use `csv-reader` and not the reverse (th
 - **R25** (fix round 9, G131i; K4834) A UTF-16 body (with or without a BOM), a UTF-8 body and a body in a declared legacy charset are all read to the standard's bounds through R9's windows; a character split across a window edge is not lost, and a replacement character appears only where the encoding could not decode (counted in `counts`, with `assumed` stated, R7).
 
 Errors: none of R1–R11 ever throws. A precondition this module cannot verify is answered as a stated `undetermined`/`ok:false`, never an exception and never a guess.
+- **R26** *(not yet met: T51)* (K5157; walk-T51-final 06 §6) For a file declared `text/plain` or named `.txt`, R7's consistent delimiter must repeat with the same count (its most common non-zero count per line) on the majority of the lines; a declared CSV or TSV (its type, or a `.csv`/`.tsv` name) keeps presence on the majority (R7). Prose with commas on most of its lines is therefore not a table: `isDelimitedText` answers false (R21).
 
 ## Private
 
