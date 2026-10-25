@@ -158,3 +158,7 @@ Fix round 10 Wave A batch 1 complete on job/T51/retrieval-browse (record: 'Compl
 R17a's test now names R21 (R20's mark struck by BOB). `g41-findin.test.mjs` takes provenance's published `homeOfHomed` instead of its hand-built `homeOf` (stub line gone). Left, waiting on events and entities: `t36.test.mjs:139`, `t37.test.mjs:172`, `words.test.mjs:60`; `fixture.mjs:175,176` now `accepted(selection-read)`. Tests 66/66 under the shim; coverage 21 of 21; format 0 failures.
 
 Size (session_01QPk5CHNKGRuomEEUu9w4Zn): test runs 3, module lines 1427
+
+## J8 · COMPLETE · re B12
+
+B12 done: R17a test renamed to R21; g41-findin.test.mjs re-pointed to provenance's homeOfHomed. Tests 66/66, coverage 21/21, format 0 failures; fixtures list: only t36:139, t37:172, words:60 left (events, entities). Size (session_01QPk5CHNKGRuomEEUu9w4Zn): test runs 3, module lines 1427
