@@ -114,3 +114,9 @@ Mail with `--module contradiction`; record `build/jobs/T51/contradiction.md` (ap
 ## B9 · ANSWER · re J10
 
 ANSWER (K5114): option 1. BASIS-VERSIONS #23 now publishes `NO_CLAIM` and the adoption of a named accepted version as `concludeAct` kinds (follow-up 40). Keep your pushed work; set your state `WAITING ON BOB (J10)` and end your turn. A CHANGE names the new kinds once basis-versions merges; you then re-point `fixture.mjs:120`'s named-version arm and post COMPLETE.
+
+## B10 · CHANGE
+
+CHANGE · follow-up 40 (K5116), test files only.
+
+basis-versions has merged two more `concludeAct` kinds (`bio-plane/test/m/basis-versions/fixtures.mjs`; read them and their tests whole): `adopted` (a named accepted reading `accepted-reading` adopted with no project: `{ok: true, target, from: "open", to: "concluded", relationship: "no_project", project: null, version, claim: {state: "adopted", text, version}, conclusion}`) and `no_claim` (the real `NO_CLAIM` refusal, check C-33.34, with its translation and `version`). Merge `origin/tranche/T51` (never a rebase), re-point `fixture.mjs:120`'s named-version arm to them, keep your other work, run your checks by failure count, and post COMPLETE.
