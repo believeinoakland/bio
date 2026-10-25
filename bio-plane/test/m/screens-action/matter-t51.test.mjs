@@ -121,7 +121,7 @@ test("R45 (d): revising a determination names the one it replaces, opens with it
   assert.ok(!ops(p).includes("determine"), "the form is opened by the member's choice");
   await choose(p, "mt-mode", "determine");
   assert.ok(text(p).includes(W("screen.matter.the_earlier_determination_stays_readable_with_a")));
-  assert.equal(main(p).querySelector("#mt-d-event").value, "The 2024 rent adjustment");
+  assert.equal(main(p).querySelector("#mt-d-event").value, DETERMINATION.act.event, "the event the act was part of is chosen by its id, drawn by its name");
   assert.equal(main(p).querySelector("#mt-d-role").value, "City Administrator");
   assert.equal(main(p).querySelector("#mt-d-req").value, "a council vote");
   assert.ok(button(p, "determine").textContent.includes(W("screen.matter.record_the_revised_determination")));
@@ -130,7 +130,7 @@ test("R45 (d): revising a determination names the one it replaces, opens with it
   assert.equal(b.supersedes, DET);
   assert.equal(b.reason, "the first rule did not bind the office");
   assert.deepEqual(b.standards, [{ standard: "STD-1", outcome: "compliant" }]);
-  assert.equal(b.act.event, "The 2024 rent adjustment");
+  assert.equal(b.act.event, DETERMINATION.act.event);
   assert.deepEqual(b.act.evidence, ["CON-1"], "the passages it rested on are kept when none is chosen anew");
   assert.deepEqual(b.findings, [{ finding: "INQ-1" }], "the findings it rested on are opened chosen");
   // control: a first determination is plain

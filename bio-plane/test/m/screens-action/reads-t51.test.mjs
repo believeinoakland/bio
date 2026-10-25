@@ -12,11 +12,11 @@ import { SCREENS } from "../../../src/screens-action/index.mjs";
 const PATHS = { ...ROUTES, "request on a project": `/app/request/${PROJECT}`, "plan on a project": `/app/plan/${PROJECT}`, "start-send on an action": `/app/start-send/${ACTION_ID}` };
 /* the ops each load asks for beyond the shell's own, each exactly once (E9, K4557: `projectlist` on the screens that offer the send steps, her place in the action's project) */
 const OWN = {
-  plan: ["determinations", "list", "memberlist", "plan", "projectquestions"],
-  "start-send": ["affordances", "list", "memberlist", "optionstartpreview", "plan"],
+  plan: ["determinations", "list", "memberlist", "plan", "projectquestions", "standards"],
+  "start-send": ["affordances", "list", "memberlist", "optionstartpreview", "plan", "projectquestions"],
   request: ["action", "filingsfor", "grouplanguages", "list", "memberlanguage", "memberlist", "profiles", "projectlist", "stakeatpreparation", "templatesforaction"],
   action: ["action", "affordances", "filingsfor", "heldcaptures", "list", "memberlist", "pressurefor", "procedureguides", "profiles", "projectlist", "remindersfor", "templatesforaction"],
-  matter: ["consequencesof", "determination", "escalation", "escalationstatus", "list"],
+  matter: ["consequencesof", "determination", "escalation", "escalationstatus", "list", "standards"],
   "help-records": ["profiles"],
   actionnew: ["affordances", "list", "projectquestions"],
   hold: ["action", "holdsdue", "list", "memberlist", "projectlist"],

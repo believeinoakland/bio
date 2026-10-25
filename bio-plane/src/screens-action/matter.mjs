@@ -6,7 +6,7 @@
    determination's id, and `<determination>~<escalation>` once an escalation is opened. Every function here is self-
    contained (interface-shell R21 (1)). */
 
-import { readOnly, later, WRITE_HELP } from "./send-steps.mjs";
+import { readOnly, later, WRITE_HELP, actName, citeOf } from "./send-steps.mjs";
 
 export const matter = Object.freeze({
   id: "matter",
@@ -41,7 +41,12 @@ export const matter = Object.freeze({
   },
 
   parts: {
-    readOnly: readOnly,
+    readOnly: readOnly, actName: actName, citeOf: citeOf,
+    // R18 (fix round 10; diagnosis 11 §7a): a standard by its citation, as `standards` lists it; "" while that is not read or does not hold it
+    cite: function (cs, view, id) {
+      const sl = view.parts.later(cs, view, "standards", "standards", { limit: "200" }, "");
+      return view.parts.citeOf(sl.state === "ok" && sl.value && Array.isArray(sl.value.items) ? sl.value.items : [], id);
+    },
     det: function (view) { return String(view.subject || "").split("~")[0]; },
     outcome: function (o) { return ["compliant", "noncompliant", "unclear"].includes(o) ? o : "undetermined"; },
     measure: function (cs, p) {
@@ -127,7 +132,7 @@ export const matter = Object.freeze({
       const row = first && Array.isArray(first.rows) && first.rows.length ? first.rows[0] : {};
       const sl = view.parts.later(cs, view, "standards", "standards", { limit: "200" }, "");
       const items = sl.state === "ok" && sl.value && Array.isArray(sl.value.items) ? sl.value.items : [];
-      const stdOpts = k.standards.map(function (s) { return { value: s.standard, text: s.standard }; }).concat(items.filter(function (it) {
+      const stdOpts = k.standards.map(function (s) { return { value: s.standard, text: P.cite(cs, view, s.standard) || s.standard }; }).concat(items.filter(function (it) {
         return !k.standards.some(function (s) { return s.standard === it.id; });
       }).map(function (it) { return { value: it.id, text: it.cite || it.id }; }));
       const std = stdOpts.length ? cs.choice("mt-d-std", "screen.matter.f.rule", stdOpts, { value: first ? first.standard : stdOpts[0].value })
@@ -198,7 +203,7 @@ export const matter = Object.freeze({
         const day = e.when && typeof e.when === "object" ? String(e.when.value || "").slice(0, 10) : "";
         return { value: e.event_id, text: [e.kind, day].filter(Boolean).join(" \u00b7 ") || e.event_id };
       });
-      if (current && !opts.some(function (o) { return o.value === current; })) opts.push({ value: current, text: current });
+      if (current && !opts.some(function (o) { return o.value === current; })) opts.push({ value: current, text: P.actName(cs, k.d) || current });
       if (tl.state === "loading" || doc.state === "loading") return "";
       return opts.length ? cs.choice("mt-d-event", "screen.matter.the_event_it_was_part_of", [{ value: "", text: "" }].concat(opts), { value: current }) + cut
         : cut + '<p class="mk-small">' + cs.w("screen.matter.the_event_it_was_part_of") + '</p><p class="cs-state" data-state="empty">' + cs.w("state.empty") + "</p>";
@@ -265,7 +270,7 @@ export const matter = Object.freeze({
         ["body", "screen.matter.kind.office"], ["other", "screen.matter.kind.other"]];
       const units = [["money", "screen.matter.unit.money"], ["benefits", "screen.matter.unit.benefits"], ["services", "screen.matter.unit.services"], ["time", "screen.matter.unit.time"], ["count", "screen.matter.unit.count"]];
       return cs.sec("act.consequencerecord.label.matter", P.note(cs, "screen.matter.each_part_says_what_was_done_and")
-        + cs.choice("mt-c-std", "screen.matter.the_rule_it_breached", k.nc.map(function (s) { return { value: s.standard, text: s.standard }; }))
+        + cs.choice("mt-c-std", "screen.matter.the_rule_it_breached", k.nc.map(function (s) { return { value: s.standard, text: P.cite(cs, view, s.standard) || s.standard }; }))
         + cs.choice("mt-c-kind", "screen.matter.who_or_what_was_affected", kinds)
         + cs.field("mt-c-desc", "screen.matter.f.describe", { rec: true }) + P.help(cs, view, "mt-c-desc", "consequencerecord", "affected")
         + cs.choice("mt-c-unit", "screen.matter.what_it_is_measured_in", units)
@@ -335,7 +340,7 @@ export const matter = Object.freeze({
         + cs.field("mt-t-why", "screen.matter.your_reason_for_attaching_it", { rec: true }) + P.help(cs, view, "mt-t-why", "escalationattach", "reason")
         + (seven ? '<details class="mk-details" open><summary>' + cs.w("screen.matter.at_stage_7_political_accountability") + "</summary>"
           + cs.choice("mt-t-purpose", "screen.matter.f.purpose", purposes)
-          + cs.checks("mt-t-std", "screen.matter.the_rule_it_seeks_enforced", k.nc.map(function (s) { return { value: s.standard, text: s.standard, on: true }; })) + "</details>" : "")
+          + cs.checks("mt-t-std", "screen.matter.the_rule_it_seeks_enforced", k.nc.map(function (s) { return { value: s.standard, text: P.cite(cs, view, s.standard) || s.standard, on: true }; })) + "</details>" : "")
         + P.note(cs, "screen.matter.only_a_breach_action_that_rests_on")
         + '<div class="mk-acts">' + cs.act("escalationattach", { tone: "primary" }) + "</div>");
     },
@@ -408,7 +413,7 @@ export const matter = Object.freeze({
       const live = Array.isArray(l.items) ? l.items : [];
       const head = P.readOnly(cs, "screen.matter.name") + cs.title(null) + (live.length ? "" : '<p class="mk-sub">' + cs.w("screen.matter.nodet") + "</p>");
       const links = live.length ? cs.sheet(live.map(function (x) {
-        return cs.row("", '<a class="cs-ref" href="/app/matter/' + encodeURIComponent(x.id) + '" data-nav>' + cs.esc((x.act && (x.act.event || x.act.id)) || x.id) + "</a>", "", "");
+        return cs.row("", '<a class="cs-ref" href="/app/matter/' + encodeURIComponent(x.id) + '" data-nav>' + (cs.esc(P.actName(cs, x)) || cs.w("screen.matter.name")) + "</a>", "", "");
       }).join("")) : "";
       return head + cs.sec("screen.matter.where_this_matter_stands", (live.length ? "" : P.note(cs, "screen.matter.your_team_has_not_yet_said_whether") + P.note(cs, "screen.matter.what_a_breach_did_and_every_stage"))
         + links + (live.length ? "" : P.unavailable(cs, view)) + P.doing(cs, view, k, true));
@@ -416,14 +421,15 @@ export const matter = Object.freeze({
     return cs.state("determination", function (d) {
       const act = d.act || {};
       const actor = act.actor ? [act.actor.role, act.actor.body].filter(Boolean).join(", ") : "";
-      const head = P.readOnly(cs, "screen.matter.name") + cs.title(null) + '<p class="mk-sub">' + cs.esc(act.event || act.id || "") + (actor ? " · " + cs.w("screen.matter.by", { actor: actor }) : "")
-        + (act.when ? " · " + cs.date(act.when) : "") + "</p>";
+      // R18 (fix round 10; diagnosis 11 §7a): the act is named by the kind of event, its day and the office, never by the event's id
+      const named = [P.actName(cs, d, true)].filter(Boolean).map(cs.esc);
+      const head = P.readOnly(cs, "screen.matter.name") + cs.title(null) + '<p class="mk-sub">' + named.concat(actor ? [cs.w("screen.matter.by", { actor: actor })] : []).join(" · ") + "</p>";
 
       // R6: the determination: each standard, what it requires and what the act did, its outcome, either way alike.
       const standards = Array.isArray(d.standards) ? d.standards : [];
       const detSec = !standards.length ? (d.live === false ? '<p class="mk-note">' + cs.w("screen.matter.notlive") + "</p>" : "") : cs.sec("screen.matter.determination", cs.sheet(standards.map(function (s) {
         const rows = Array.isArray(s.rows) ? s.rows : [];
-        return cs.row("<b>" + cs.esc(s.standard || "") + "</b>", rows.map(function (r) {
+        return cs.row("<b>" + cs.esc(P.cite(cs, view, s.standard)) + "</b>", rows.map(function (r) {
           return cs.w("screen.matter.requires", { requires: r.requires || "" }) + " · " + cs.w("screen.matter.did", { did: r.did || "" });
         }).join("<br>"), cs.w("screen.matter.outcome." + P.outcome(s.outcome)), "");
       }).join(""))

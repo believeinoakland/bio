@@ -5,7 +5,7 @@ const said = (p, key, vars) => assert.ok(text(p).includes(W(key, vars)), key);
 import * as actionsFixture from "../actions/fixture.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { SCREENS, open, main, text, ops, press, last, ok, refused, refusedIn, button, beside, fill, W, D, hasWord, DATA_PLANE, PREVIEW, PLAN_ID, ACTION_ID, FILING, FILINGS, READ, STAKE, draft } from "./page.mjs";
+import { SCREENS, open, main, text, ops, press, last, ok, refused, refusedIn, button, beside, fill, W, D, hasWord, DATA_PLANE, PREVIEW, PLAN_ID, ACTION_ID, FILING, FILINGS, READ, STAKE, draft, QUESTION_TITLE } from "./page.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 
 const STEP1 = `/app/start-send/${PLAN_ID}~opt-1`;
@@ -16,7 +16,7 @@ test("R2: Step 1 reads optionstartpreview first and draws the kind, the office b
   assert.deepEqual(p.byOp("optionstartpreview")[0].body, { plan: PLAN_ID, option: "opt-1", kind: "records_request", breach: false });
   const t = text(p);
   for (const s of [W("screen.start-send.title", { option: "Records request: inspection logs" }), W("screen.start-send.nothingruns"), W("screen.start-send.kind.records_request"),
-    `City Clerk, Office of the City Clerk · ${W("screen.start-send.byrole")}`, `INQ-2026-ffffffffffffffff · ${W("screen.plan.support.hypothetical")}`,
+    `City Clerk, Office of the City Clerk · ${W("screen.start-send.byrole")}`, `${QUESTION_TITLE} · ${W("screen.plan.support.hypothetical")}`,
     `${D("2026-10-24")} · the records law's ten days`, W("screen.start-send.breach") + W("screen.start-send.breach.no")]) assert.ok(t.includes(s), s);
   assert.deepEqual(ops(p), ["optionstartpreview", "optionstart"]);
 });

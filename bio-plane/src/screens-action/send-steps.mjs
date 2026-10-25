@@ -255,6 +255,25 @@ export function marksBody(cs, view) {
   return out;
 }
 
+/** R18 (fix round 10; diagnosis 11 §7a): a determination named by its act, never by an id: the kind of event (where the read carries it; the
+ *  list does not), its day and the office (`noOffice` leaves the office out), as plain text the kit escapes; "" where the record gives none of them. */
+export function actName(cs, d, noOffice) {
+  const act = d && d.act && typeof d.act === "object" ? d.act : {};
+  const ev = d && d.event && typeof d.event === "object" ? d.event : null;
+  const w = act.when && typeof act.when === "object" ? act.when.value : act.when;
+  const day = typeof w === "string" && /^\d{4}-\d{2}-\d{2}/.test(w) ? String(cs.date(w.slice(0, 10))).replace(/<[^>]*>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&") : "";
+  const office = act.actor && typeof act.actor === "object" ? [act.actor.role, act.actor.body].filter(function (x) { return typeof x === "string" && x.trim(); }).map(function (x) { return x.trim(); })
+    .filter(function (x, i, a) { return a.findIndex(function (y) { return y.toLowerCase() === x.toLowerCase(); }) === i; }).join(", ") : "";
+  return [ev && typeof ev.kind === "string" ? ev.kind : "", day, noOffice ? "" : office].filter(Boolean).join(" \u00b7 ");
+}
+
+/** R18: a standard named by its citation, as `standards` lists it (`{id, cite}`); "" where the list does not hold it, never the standard's id. */
+export function citeOf(items, id) {
+  const hit = (Array.isArray(items) ? items : []).find(function (x) { return x && x.id === id; });
+  return hit && typeof hit.cite === "string" ? hit.cite.trim() : "";
+}
+
 /** The steps drawn: `o.request` adds the period, form and cost limit fields (R8) and the portal's warning and number. */
 export function sendSteps(cs, view, filings, o) {
   const P = view.parts;

@@ -105,7 +105,9 @@ export const QUESTION = "INQ-2026-ffffffffffffffff";
 export const QUESTION_TITLE = "Is closed the same as repaired?";
 export const PROJECT_QUESTIONS = { ok: true, project: PROJECT, items: [{ inquiry: QUESTION, title: QUESTION_TITLE },
   { inquiry: "INQ-2026-9999999999999999", title: "Who signed the closure memo?" }], cursor: null };
-export const DETERMINATIONS = { ok: true, items: [{ id: DET, project: PROJECT, act: { id: "EVT-1", event: "The 2024 rent adjustment" },
+/** The act as `conformance` answers it (R25): the event's id, the office and the day; the kind of the event is on the one read's `event` alone. */
+const ACT = { id: "EVT-2024-0001", event: "EVT-2024-0001", actor: { role: "City Administrator", body: "City" }, evidence: ["CON-1"], when: { value: "2024-03-01", precision: "day" } };
+export const DETERMINATIONS = { ok: true, items: [{ id: DET, project: PROJECT, act: ACT,
   outcomes: [{ standard: "STD-1", outcome: "noncompliant" }, { standard: "STD-2", outcome: "compliant" }], live: true, superseded_by: null }], limit: 200, truncated: false, cursor: null };
 export const PROJECTS = { bundles: [{ bundle_id: PROJECT, object_type: "project", title: "Pothole repairs" }], limit: 500, cursor: null, total: 1 };
 
@@ -197,7 +199,7 @@ export const RECORDS_HELP = { law: "Testland Records Act", days: 7, extra_days: 
     cost: "TRA § 8", cost_electronic: "TRA § 9", inspect_photograph: "TRA § 10", purpose: "TRA § 11" } };
 export const PROFILES_WITH_HELP = (help = RECORDS_HELP) => ({ ...PROFILES, view: { ...PROFILES.view, name: "Testville", records_help: help } });
 
-export const DETERMINATION = { id: DET, project: PROJECT, act: { id: "EVT-1", event: "The 2024 rent adjustment", actor: { role: "City Administrator", body: "City" }, when: "2024-03-01", evidence: ["CON-1"] },
+export const DETERMINATION = { id: DET, project: PROJECT, act: ACT, event: { id: ACT.id, kind: "vote", status: "EventScheduled", when: ACT.when },
   findings: [{ finding: "INQ-1" }],
   outcomes: [{ standard: "STD-1", outcome: "noncompliant" }, { standard: "STD-2", outcome: "compliant" }],
   standards: [{ standard: "STD-1", outcome: "noncompliant", in_force: true, rows: [{ requires: "a council vote", did: "adjusted without a vote" }] },
@@ -245,6 +247,7 @@ export const DATA_PLANE = {
   action: ok(ACTION), filingsfor: ok(FILINGS([])), actionholdpreview: ok({ target: ACTION_ID, ord: null, hold: null, restarts: [] }),
   pressurefor: ok(PRESSURE), stakeatpreparation: ok(STAKE()),
   profiles: ok(PROFILES), determination: ok(DETERMINATION), consequencesof: ok(CONSEQUENCES), escalationstatus: ok(STATUS_OPEN), escalation: ok(ESCALATION),
+  standards: ok({ ok: true, items: [{ id: "STD-1", cite: "Lease §7.2" }, { id: "STD-2", cite: "Lease §9.1" }], truncated: false }),
   affordances: ok(AFFORDANCES), holdsdue: ok(HOLDS_DUE), projectlist: ok(ROSTER), templatesforaction: ok(TEMPLATES), procedureguides: ok(GUIDES),
   actions: ok(ACTIONS), queue: ok({ items: [] }),
   // R3: the language the member states for a draft (`memberlanguage`) among those the team's profiles answer (`grouplanguages`)

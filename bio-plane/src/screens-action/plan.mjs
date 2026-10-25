@@ -8,7 +8,7 @@
    (R19): each sentence is a key read through the kit's `cs.w`, and the plan names its project and its questions by their
    titles, each a reference (R18). */
 
-import { readOnly, WRITE_HELP } from "./send-steps.mjs";
+import { readOnly, WRITE_HELP, actName, citeOf } from "./send-steps.mjs";
 
 export const plan = Object.freeze({
   id: "plan",
@@ -44,7 +44,7 @@ export const plan = Object.freeze({
   },
 
   parts: {
-    readOnly: readOnly,
+    readOnly: readOnly, actName: actName, citeOf: citeOf,
     // R25: a project's plans: its one live plan opens at once, several or only closed ones are listed (live ones first, newest
     // first, then the closed), none says where one is started. A plan the viewer may not see is not listed.
     projectPlans: function (cs, view) {
@@ -83,23 +83,26 @@ export const plan = Object.freeze({
       const sub = s && s.subject ? s.subject : {};
       if (sub.kind === "outcome" && sub.determination)
         return '<a class="cs-ref" href="/app/matter/' + encodeURIComponent(sub.determination + (s.escalation && s.escalation.id ? "~" + s.escalation.id : "")) + '" data-nav>'
-          + cs.esc(titles.determination(sub.determination) || sub.determination) + "</a>" + (sub.standard ? " · " + cs.esc(sub.standard) : "");
+          + cs.esc(titles.determination(sub.determination)) + "</a>" + (sub.standard && titles.standard(sub.standard) ? " · " + cs.esc(titles.standard(sub.standard)) : "");
       const t = sub.inquiry ? titles.question(sub.inquiry) : "";
       return t ? cs.ref("question", sub.inquiry, t, [t]) : "";
     },
     // R18: the titles the record answers, by the reference a plan holds: a question's from `projectquestions`, a
     // determination's act from `determinations`; "" where it is not (yet) answered, never the reference itself.
-    titlesOf: function (qs, ds) {
+    titlesOf: function (cs, P, qs, ds, ss) {
       const qm = new Map(qs.items.map(function (q) { return [q.inquiry, typeof q.title === "string" ? q.title : ""]; }));
-      const dm = new Map(ds.items.map(function (d) { return [d.id, d.act && typeof d.act.event === "string" ? d.act.event : ""]; }));
+      // fix round 10 (diagnosis 11 §7a): a determination is named by its act (day and office), a standard by its citation, never by id
+      const dm = new Map(ds.items.map(function (d) { return [d.id, P.actName(cs, d)]; }));
+      const cite = function (id) { return P.citeOf(ss, id); };
       const ofKey = function (k) {
         const m = /^(inquiry|outcome):([^#]+)(?:#(.*))?$/.exec(String(k));
         if (!m) return "";
         if (m[1] === "inquiry") return qm.get(m[2]) || "";
         const t = dm.get(m[2]) || "";
-        return t ? t + (m[3] ? " · " + m[3] : "") : "";
+        const c = m[3] ? cite(m[3]) : "";
+        return [t, c].filter(Boolean).join(" · ");
       };
-      return { question: function (id) { return qm.get(id) || ""; }, determination: function (id) { return dm.get(id) || ""; }, ofKey: ofKey,
+      return { question: function (id) { return qm.get(id) || ""; }, determination: function (id) { return dm.get(id) || ""; }, standard: cite, ofKey: ofKey,
         questions: qs, determinations: ds };
     },
     // R18: a list the record answers (`projectquestions`, `determinations`), read page after page by its cursor (at most
@@ -226,7 +229,9 @@ export const plan = Object.freeze({
       // R18: the plan's project and its questions, named by their titles as the record answers them, each a reference.
       const lists = p.project ? { questions: P.paged(cs, view, "questions", "projectquestions", { project: p.project, limit: "100" }),
         determinations: P.paged(cs, view, "determinations", "determinations", { project: p.project, live: "true", limit: "100" }) } : null;
-      const titles = P.titlesOf(lists ? lists.questions : { items: [] }, lists ? lists.determinations : { items: [] });
+      const stdList = p.project ? P.later(cs, view, "standards", "standards", { limit: "200" }, "") : null;
+      const stds = stdList && stdList.state === "ok" && stdList.value && Array.isArray(stdList.value.items) ? stdList.value.items : [];
+      const titles = P.titlesOf(cs, P, lists ? lists.questions : { items: [] }, lists ? lists.determinations : { items: [] }, stds);
       const projects = view.data.projects && view.data.projects.state === "ok" && view.data.projects.value && Array.isArray(view.data.projects.value.bundles)
         ? view.data.projects.value.bundles : [];
       const projectHit = projects.find(function (b) { return b.bundle_id === p.project; });
@@ -270,8 +275,8 @@ export const plan = Object.freeze({
         return { value: "inquiry:" + q.inquiry, text: typeof q.title === "string" && q.title ? q.title : null, n: i + 1 };
       }).concat(lists.determinations.items.flatMap(function (d) {
         return (Array.isArray(d.outcomes) ? d.outcomes : []).map(function (o) {
-          const t = d.act && d.act.event ? d.act.event : "";
-          return { value: "outcome:" + d.id + "#" + o.standard, text: t ? t + " · " + o.standard : o.standard, n: 0 };
+          const named = [P.actName(cs, d), P.citeOf(stds, o.standard)].filter(Boolean).join(" \u00b7 ");
+          return { value: "outcome:" + d.id + "#" + o.standard, text: named || null, n: 0 };
         });
       })).filter(function (o) { return !held.has(o.value); }) : [];
       const choices = pickable.map(function (o) {
@@ -365,7 +370,7 @@ export const plan = Object.freeze({
         const t = titles.ofKey(s.key);
         return t ? { value: s.key, text: t } : { value: s.key, key: "screen.plan.matter.n", fills: { n: String(subjects.indexOf(s) + 1) } };
       })).concat(lists ? lists.determinations.items.flatMap(function (d) { return (Array.isArray(d.outcomes) ? d.outcomes : []).map(function (o) { return o.standard; }); })
-        .filter(function (x, i, all) { return x && all.indexOf(x) === i; }).map(function (x) { return { value: x, text: x }; }) : []);
+        .filter(function (x, i, all) { return x && all.indexOf(x) === i; }).filter(function (x) { return P.citeOf(stds, x); }).map(function (x) { return { value: x, text: P.citeOf(stds, x) }; }) : []);
       const addOption = open ? cs.field("plan-opt-summary", "screen.plan.option.summary", { rec: true, max: 200 })
         + (view.reachable ? '<div class="mk-acts">' + cs.act("writinghelp", { data: { field: "summary", id: "plan-opt-summary", forop: "optionadd" } }) + "</div>" : "")
         + catChoice("plan-opt-category") + subjectChoice("plan-opt-matter")
@@ -388,7 +393,8 @@ export const plan = Object.freeze({
       const offers = (Array.isArray(p.offers) ? p.offers : []).flatMap(function (g) {
         return (g.offers || []).filter(function (o) { return !(o.adopted && o.adopted.length); }).map(function (o) {
           const k = o.kind === "chance_to_fix" ? "plan.offer.chancetofix" : "plan.offer.document";
-          return cs.row("", "<b>" + cs.w(k) + "</b> · " + cs.esc(g.key || "") + '<span class="meta">' + cs.w(k + ".means")
+          const named = titles.ofKey(g.key);
+          return cs.row("", "<b>" + cs.w(k) + "</b>" + (named ? " · " + cs.esc(named) : "") + '<span class="meta">' + cs.w(k + ".means")
             + (o.offered_again ? " · " + cs.w("plan.offer.chancetofix.again") : "") + "</span>",
           open ? cs.act("optionadopt", { label: "screen.plan.adopt", data: { subject: g.key || "", offer: o.kind } }) : "", "");
         });

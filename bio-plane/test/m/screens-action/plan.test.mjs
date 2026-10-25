@@ -290,7 +290,7 @@ test("R18: a reference is picked from a list the record answers, never typed; wh
   const field = p.doc.getElementById("plan-subject-id");
   assert.equal(field.tagName.toLowerCase(), "select", "a choice, not a typed field");
   const offered = field.querySelectorAll("option").map((o) => [o.getAttribute("value"), o.textContent.trim()]);
-  assert.deepEqual(offered, [["inquiry:INQ-2026-9999999999999999", "Who signed the closure memo?"], [`outcome:${DET}#STD-2`, "The 2024 rent adjustment · STD-2"]],
+  assert.deepEqual(offered, [["inquiry:INQ-2026-9999999999999999", "Who signed the closure memo?"], [`outcome:${DET}#STD-2`, `${D("2024-03-01")} · City Administrator, City · Lease §9.1`]],
     "the project's other question, and the determination's other standard: the matters the plan holds are left out");
   assert.equal(p.doc.getElementById("plan-subject-standard"), null, "the standard is picked with the determination, not typed");
   await press(p, "plansubjectadd", { values: { "plan-subject-id": "inquiry:INQ-2026-9999999999999999", "plan-subject-reason": "it decides the memo" } });

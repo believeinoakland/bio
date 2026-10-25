@@ -117,7 +117,7 @@ test("R7 (interface-shell R23): no place is named in the words this module reads
   for (const k of SCREEN_WORDS) assert.ok(!/California|Oakland|Alameda|NextRequest|Sunshine Ordinance|Government Code/.test(EN.get(k) || ""), k);
 });
 
-const DATA = ["River Town", "Inspection logs, 2025", "a letter from the city's counsel", "Pothole repairs", "Repairs: closed is not repaired", "INQ-2026-ffffffffffffffff", DET, "STD-1", "STD-2", ESC, ACTION_ID, PLAN_ID, PROJECT,
+const DATA = ["River Town", "Inspection logs, 2025", "a letter from the city's counsel", "Pothole repairs", "Repairs: closed is not repaired", "INQ-2026-ffffffffffffffff", DET, "STD-1", "STD-2", "Lease §7.2", "Lease §9.1", ESC, ACTION_ID, PLAN_ID, PROJECT,
   "a suspected matter", "determined", "Records request: inspection logs", "Story with a reporter", "Complaint to the auditor",
   "first, to see what closed means", "Records first", "Phase 1", "opt-1", "Scenario 1: no branch answers a hostile response to the records request.",
   "Ask the committee to agendize repair performance", "the committee oversees repairs", "machine work", `inquiry:INQ-2026-ffffffffffffffff`, `outcome:${DET}#STD-1`,
