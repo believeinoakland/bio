@@ -29,6 +29,7 @@ const screen = (ctx) => ({ now: () => Date.now(), digest: async (t) => hex(t), w
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /* the plane's ledger, as a log of entries */
+// fixtures-contract: plane owed-ledger
 const ledger = () => { const entries = new Map(); return { entries, owedLater: async (e) => { entries.set(e.session, e); return { ok: true }; } }; };
 
 async function captured() {
@@ -39,6 +40,7 @@ async function captured() {
   r.env.RENDERER = { fetch: async (u, init) => { await gate; return new Response(JSON.stringify(R_ANSWER(JSON.parse(init.body).url))); } };
   const cap = captureOf(r.ctx);
   const L = ledger();
+  // fixtures-contract: plane owed-ledger
   cap.owedLater = L.owedLater;
   const net = network({ [PG]: () => page(SHELL) });
   let first;

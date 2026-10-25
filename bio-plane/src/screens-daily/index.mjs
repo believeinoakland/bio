@@ -107,7 +107,7 @@ const WORDS_OF = {
     "mark.due.means", "mark.hint.label", "mark.hint.means",
     ...ACTS("queue", ["taskresolve", "taskforward", "proposedispose", "queuesnooze", "queuemute", "adoptversion", "keepversion", "reminderanswer", "promote",
       "projectkeyset", "exploreapprove", "actionmove", "release", "filingapprove"]), ...TODOS,
-    ...KEYED_QUEUE, "action.noreply.title", ...SOURCES, "file.trigger.queue",
+    ...KEYED_QUEUE, "action.noreply.title", ...SOURCES, "file.trigger.queue", "conformance.rests", "conformance.falsify",
     "queue.update.section", "queue.update.section_says", "queue.update.ready", "queue.update.see", "updates.ready.security", "updates.ready.security_says",
     "act.owed_updatelater.label.queue", "act.owed_updatelater.does",
     "queue.done", "queue.muted.title", "queue.muted.help", "queue.muted.kind", "queue.muted.by", "queue.muted.by.undated", "queue.muted.unmute", "queue.muted.item",

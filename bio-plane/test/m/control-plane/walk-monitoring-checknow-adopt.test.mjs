@@ -56,13 +56,20 @@ test("R17, R29, R123 (monitoring R9, R79; reevaluation R15): a watched page that
   const notice = await kit.until(async () => {
     const r = R(await kit.get(own.auth, { op: "versionnotice", target: question }));
     /* graded: a newer copy exists for the leg and its passage is judged affected or unaffected (not undetermined, not unread) */
-    const open = r && Array.isArray(r.notices) ? r.notices.find((n) => n && (n.notice || n.id) && n.newer === true && (n.affects === "affected" || n.affects === "unaffected")) : null;
+    const open = r && Array.isArray(r.notices) ? r.notices.find((n) => n && n.newer === true && (n.affects === "affected" || n.affects === "unaffected")) : null;
     return open || null;
   }, 120000, 3000);
   const asked = R(await kit.get(own.auth, { op: "versionnotice", target: question }));
   assert.ok(notice, "the notice is graded, not unread: " + JSON.stringify(asked).slice(0, 900));
   assert.doesNotMatch(JSON.stringify(asked), /newer_capture_unread/, "the newer copy is not unread: " + JSON.stringify(asked).slice(0, 900));
-  /* she adopts it, with her reason */
-  const adopted = await kit.post(own.auth, "adoptversion", { notice: String(notice.notice || notice.id), why: "The page now shows the counter at fifty-seven; the question rests on the current copy." });
+  /* she adopts it, with her reason: the notice id `adoptversion` takes is reevaluation R14's queue notice, read as the document screen reads it
+     (`reevaluationnotices {holder, state}`); `versionnotice` is the proposal read and carries no notice id */
+  const queued = await kit.until(async () => {
+    const r = R(await kit.get(own.auth, { op: "reevaluationnotices", holder: question, state: "all" }));
+    const list = r && Array.isArray(r.notices) ? r.notices : r && Array.isArray(r.items) ? r.items : [];
+    return list.find((o) => o && (o.notice || o.id) && (o.state === undefined || o.state === "open") && (String(o.target || "") === bundle || o.capture_sha === newer || o.newer_capture === newer)) || null;
+  }, 60000, 2000);
+  assert.ok(queued, "the leg's notice is in the queue: " + JSON.stringify(R(await kit.get(own.auth, { op: "reevaluationnotices", holder: question, state: "all" }))).slice(0, 900));
+  const adopted = await kit.post(own.auth, "adoptversion", { notice: String(queued.notice || queued.id), why: "The page now shows the counter at fifty-seven; the question rests on the current copy." });
   assert.equal(R(adopted.body).ok, true, "adopt answers ok: " + kit.gateLine(adopted));
 });
