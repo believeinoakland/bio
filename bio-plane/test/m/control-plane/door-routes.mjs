@@ -4,10 +4,10 @@
    (R66, R67) and `t38-door.test.mjs` (R67's `obscuremarkwithdraw`). */
 import assert from "node:assert/strict";
 import { O, world, call, opCalls, aik, cred, FORGED } from "./harness.mjs";
-/* store-request R7: the translation family's acts stamp `by` as the bare member id */
-export const TRANSLATION_ACTS = ["translationdraft", "translationgrant", "translationadopt", "translationconfirm", "translationrevert", "translationmark"];
 
 const { OPS, OP_STAMPS } = O;
+/* store-request R7: the translation family's acts stamp `by` as the bare member id: the translation ops that declare `by` */
+export const TRANSLATION_ACTS = Object.keys(OPS).filter((op) => op.startsWith("translation") && (OP_STAMPS[op] || []).includes("by"));
 export const ok = (result, status = 200) => new Response(JSON.stringify({ ok: true, result }), { status });
 
 /* Every kind of caller; only the two sessions reach a session-only op. */

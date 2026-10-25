@@ -9,7 +9,7 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { RESULT_WORDS } from "../../../src/case-checker/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { makeKit } from "./r8-kit.mjs";
 
 const kit = makeKit({ tag: "w10brec" });
@@ -48,7 +48,7 @@ test("R17, R29 (case-disclosures R15; diag2-10b C1): the served checker, run as 
     const out = execFileSync(process.execPath, ["case-checker.mjs", ...c.parts.map((_, i) => `part${i + 1}.zip`)], { cwd: dir, encoding: "utf8", env: { PATH: process.env.PATH } });
     const line = out.split("\n").find((l) => l.startsWith(`${c.finding}:`));
     assert.ok(line, "the program states the finding: " + out.slice(0, 600));
-    assert.equal(line, `${c.finding}: ${RESULT_WORDS.recreated}`, out.slice(0, 600));
+    assert.equal(line, `${c.finding}: ${word("screen.imported.result.yes")}`, out.slice(0, 600));
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
