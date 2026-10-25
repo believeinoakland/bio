@@ -89,7 +89,7 @@ import { OPS, QUERY_AUTHOR_ACTIONS, TEMPLATE_DOOR_ACTIONS, TEMPLATE_DOOR_READS, 
    aliases, alias → op (its R21). */
 import { OP_STAMPS, OP_ALIASES } from "../op-declarations/index.mjs";
 /* R136 (store-request R1, R24): the store's request, the lists it reads and the four ops' shaping are store-request's */
-import { innerRequest, promotedTypeOf, QUERY_STAMPS, BODY_STAMPS, ACT_CLOCK_OPS, CASE_IMPORT_ACTIONS } from "../store-request/index.mjs";
+import { innerRequest, promotedTypeOf, BODY_STAMPS, ACT_CLOCK_OPS, CASE_IMPORT_ACTIONS } from "../store-request/index.mjs";
 import { agentPackOp, airunDispatchOp, draftCheckOp } from "../store-request/door-ops.mjs";
 /* R53 (K1601, K1674): an ask's grant reads only its list (credentials R28). */
 import { AI_GRANT_OPS } from "../credentials/index.mjs";
@@ -317,9 +317,8 @@ async function reviewAnswer(out, op, extra = {}, group = null, batchGroup = null
    inner request carries the caller's own arguments with every stamp and credential removed. */
 /* R138 (R136; store-request R23): the request of the secret-presenting doors (`reviewcopy`, `reviewcomment`, `statementack` and the four template
    doors) is `innerRequest`'s too, a presented secret's digest its one stamp. The door sets only the reader's own sight, `reader` (`viewer`, and for
-   the template doors `author`), which no declaration stamps for these public ops. Until `innerRequest` itself removes them (REPORT, J64: R23 says the
-   secret value reaches neither address nor body, and R9 that a caller's stamps reach neither), the door drops the body's `secret` and the stamps
-   the caller names in the body before handing it over. */
+   the template doors `author`), which no declaration stamps for these public ops. `innerRequest` itself removes the grant's `secret` and the
+   caller's stamps from address and body (store-request R23, R9). */
 async function secretDoorRequest({ op, req, url, credential, reader, narrow = null }) {
   const bySecret = credential.secret !== null;
   const digest = bySecret ? await sha256Hex(credential.secret || "") : null;
@@ -329,7 +328,6 @@ async function secretDoorRequest({ op, req, url, credential, reader, narrow = nu
     let b;
     try { b = JSON.parse(body || "null"); } catch { b = undefined; }
     if (b && typeof b === "object" && !Array.isArray(b)) {
-      for (const k of ["secret", ...QUERY_STAMPS]) delete b[k];
       /* a recipient's body is the keys the arm takes (`narrow.body`) and nothing else */
       if (narrow) for (const k of Object.keys(b)) if (!narrow.body.includes(k)) delete b[k];
       body = JSON.stringify(b);

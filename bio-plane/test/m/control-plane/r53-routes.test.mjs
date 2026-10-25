@@ -24,7 +24,9 @@ const DOOR = { source: "src-test", country: null };
    (R54), and capture's own acts; membership's other `by` ops (`lookedsince`, `lookedat`) take the expression */
 const MEMBER_ID_BY = [
   ...Object.entries(O.OP_FAMILIES.membership.kinds).filter(([, kind]) => kind === "roster").map(([op]) => op),
-  "handlechange", "joindoors", ...O.OP_FAMILIES.capture.acts];
+  "handlechange", "joindoors", ...O.OP_FAMILIES.capture.acts,
+  /* store-request R7 (K5193): member-roster's isAdministrator reads the bare id, so these two reads take it too */
+  "adminremovalsopen", "expertisewithdraw"];
 const URL0 = new URL("http://do/");
 
 /* The maps R53 names, and the T33 arms of the existing modules the findings route (K1544, K1550, K1570, K1601, K1604,
