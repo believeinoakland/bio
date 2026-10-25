@@ -118,3 +118,7 @@ Fix round 10, Wave A batch 1 done (commit on job/T51/standards). Six fixtures pu
 **Tests and checks:** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/standards/*.test.mjs`: tests 119, pass 119, fail 0. format 0 failures; architecture (standards) 0; coverage 53 of 53, 0; words 0; ownership (standards, tranche/T51, job/T51/standards) see push; fixtures `--list`: only the known `orphan-run` (`fixtures.test.mjs:83`, waits for law-relations' marker). No marker added. `setup-words --check` refuses on `plane.declared.readtranslate` (plane module, not standards).
 
 Size (session_01BGmyopxvDtf9nKPbPea8fa): test runs 4, module lines 3567
+
+## J5 · COMPLETE · re B5
+
+B5 done: cause 1 (#memberCaptured accepts a bare id or member:<id>, never a machine identity) and cause 2 (the in-force why names the member without a member: stamp) fixed, each test seen red then green. Met ids: R41, R45. Tests 119/119; format, architecture, coverage, words, ownership 0; fixtures only the known orphan-run. Notes: the row standard.inforce.known names its var {author}, not {member} (design's to rename); the door case for a bare-id upload is control-plane's, for BOB to place; setup-words --check refuses on plane.declared.readtranslate (plane, not mine). Record: build/jobs/T51/standards.md.
