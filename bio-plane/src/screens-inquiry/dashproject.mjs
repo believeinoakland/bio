@@ -99,7 +99,7 @@ function render(cs, view) {
   const out = [cs.title(title || T("state.undetermined", { reason: "" }), { thing: "project" })];
   const me = view.me && view.me.handle;
   const roster = d.participants && d.participants.state === "ok" && Array.isArray(d.participants.value.participants)
-    ? d.participants.value.participants.find((x) => x && x.handle && x.handle === me) : null;
+    ? d.participants.value.participants.find((x) => P.isMe(view, x)) : null;
   const invited = !!(roster && roster.state === "invited");
   if (seen || listed || invited) {
     const owners = seen && Array.isArray(seen.owners) && seen.owners.length ? seen.owners.map((o) => whoIs(o)).join(", ") : "";

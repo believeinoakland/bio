@@ -11,7 +11,7 @@ import { OPS, registerDeclaredOps as registerOps } from "../../../src/op-declara
 import { boot, ok, refusedIn } from "../interface-shell/harness.mjs";
 import { CONTRADICTION_SCREEN, GAP_WORDS } from "../../../src/screens-inquiry/contradiction.mjs";
 import { SCREENS } from "../../../src/screens-inquiry/index.mjs";
-import { plane, main, press, fill, says, word, day, P, SHA, DOCUMENT_MD } from "./fixtures.mjs";
+import { plane, main, press, fill, says, word, day, P, SHA, DOCUMENT_MD, storeWorld } from "./fixtures.mjs";
 
 /* K4245 (test-support R17): every owner's declarations registered once, before the first read, by the one registrar */
 const REGISTRY = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8"));
@@ -40,7 +40,7 @@ const view = (c, o = {}) => ({ images: IMAGES, plane: { contradictioncandidates:
   contradictionresponses: ok({ ok: true, responses: [] }), ...(o.plane || {}) } });
 /* the other screens are served beside it, so a reference to a document or a question is a link (the kit draws a link only to a registered screen) */
 const SERVED = [...SCREENS.filter((s) => s.id !== "contradiction"), CONTRADICTION_SCREEN];
-export const open = async (path, o = {}) => { const p = await boot({ screens: SERVED, path, plane: plane(o) }); await p.settle(); return p; };
+export const open = async (path, o = {}) => { const p = await boot({ screens: SERVED, path, plane: plane(o), ...(o.boot || {}) }); await p.settle(); return p; };
 const acts = (el) => [...new Set(el.querySelectorAll("button[data-act]").map((b) => b.getAttribute("data-act")))].sort();
 const stateOf = (p) => main(p).querySelector("[data-cd]").getAttribute("data-cd");
 const act = (p, op, choice) => main(p).querySelector(`button[data-act="${op}"]${choice ? `[data-choice="${choice}"]` : ""}`);
@@ -278,7 +278,12 @@ test("R105 R36 conclude, one is wrong, two rules conflict, and nothing could cha
   assert.deepEqual(q.byOp("contradictionresolve")[0].body, { inquiry: INQ, resolution: { kind: "conflict_of_norms", canon: "later_over_earlier" },
     conclusion: "The later rule governs.", version: "main", falsifier: "A repeal." });
   /* control: a question with no accepted reading offers none and sends no version (the plane's NO_CLAIM is then its answer) */
-  const r = await open("/app/contradiction/" + CAND, { ...TAKEN(), plane: { ...TAKEN().plane, basisversions: ok({ ok: true, inquiry: INQ, versions: [] }) } });
+  /* the store holds no reading of this question: its `basisversions` is the store's own answer, over the world's door */
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", { capabilities: ["contribute"] });
+  assert.deepEqual((await ann.read("basisversions", { query: { id: INQ } })).versions, [], "the store holds no accepted reading of it");
+  const { door, session } = world.boot(ann);
+  const r = await open("/app/contradiction/" + CAND, { ...TAKEN(), plane: { ...TAKEN().plane, basisversions: undefined }, boot: { door, session } });
   fill(r, { "cd-concl": "C.", "cd-fals": "F." });
   assert.equal(r.doc.getElementById("cd-version"), null);
   await r.click(act(r, "contradictionresolve"));
