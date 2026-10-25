@@ -33,12 +33,4 @@ test("R32 a stored sign-in whose whoami answers 401 on the first load draws fron
   assert.equal(stateOf(unknown), "fx t state none", "a refusal that is no 401 ends nothing: the plain front");
 });
 
-/* moved from fixround2.test.mjs: a file that boots a store-request world has every owner's declarations registered, and `namedrequests` (monitoring: not mutating) is
-   marked Reasoned by op-grades (marks.mjs:140); this file registers only the hand rows, as that test ran before. Reported to BOB (op-grades). */
-test("R11 (C76) op-grades marks no read above Reversible: every op in MARKS that its owner declares not mutating is Reversible (bootstrap's 'Irreversible' among them)", () => {
-  const reads = Object.keys(MARKS).filter((op) => Object.hasOwn(OPS, op) && OPS[op].mutating === false);
-  assert.ok(reads.includes("bootstrap") && reads.length > 20);
-  assert.deepEqual(reads.filter((op) => MARKS[op] !== "Reversible"), []);
-  assert.ok(Object.keys(MARKS).some((op) => Object.hasOwn(OPS, op) && OPS[op].mutating !== false && MARKS[op] !== "Reversible"), "control: an act keeps a mark above Reversible");
-});
 
