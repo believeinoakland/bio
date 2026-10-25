@@ -142,3 +142,9 @@ Cause 30b (grammar half) done: checkGrounds no longer refuses an unlabelled supp
 **Deferred**: the two golden cases above, to BOB.
 
 Size (session_011JT8beX7mv7RWXrkz2inzX): test runs 1, module lines 2039
+
+## J7 · COMPLETE
+
+Follow-up 24 applied (test files only): INQ-2026-0129-versions in golden.json no longer records the C-25.5 finding (four objects: versions, both, nosubject, none), which basis-version-grammar R3 no longer raises. Red first against the merged grammar (scratch comparison of the real grammars with golden.json), green after; module tests 88/88; format, architecture, coverage, words, fixtures, ownership 0 failures.
+Found, not changed: the same stale C-25.5 finding is in INQ-2026-0130-versions-entry and INQ-2026-0134-version-name-twice (the START named only 0129). Same four-object removal; say if you want it in my next CHANGE.
+Details in my record, Completion (follow-up 24).
