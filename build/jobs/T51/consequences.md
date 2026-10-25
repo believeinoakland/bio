@@ -40,5 +40,5 @@ Lines done: 5 of 5 (`checks/fixtures.mjs . consequences --list`: 0 failures). Le
 Needs BOB: architecture reports 2 failures, `fixture.mjs` imports `retrieval/fixtures.mjs` and `sources/fixtures.mjs`, and `retrieval` and `sources` are not in consequences' `uses` in `build/modules.json` (not mine to edit). Adding both clears them; no other way is open to me.
 
 Checks: module tests 71 of 71 pass; format 0; coverage 26 of 26, 0; words 0; fixtures 0; ownership 0; architecture 2 (above). `impact.mjs` run below.
-Impact (`node build/plan/impact.mjs origin/tranche/T51 HEAD`): see the line below.
+Impact: consequences 12/12 files, affordances 2/29 (t45-backing, backing; they import consequences' fixture.mjs): both green.
 Size (session_013DS3NRGfi1kF5LfgamSg1s): test runs 3, module lines 2114
