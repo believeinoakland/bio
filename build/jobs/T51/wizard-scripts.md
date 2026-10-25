@@ -480,3 +480,26 @@ Size (session_01H5ogzKbBJfic7Cqb8K8bF6): test runs 14, module lines 2866
 ## J22 · COMPLETE
 
 COMPLETE · G53 (fix round 6): registry re-taken at f72b2f8a4c (84 screens, 609 acts: 448 declared, 83 function, 78 owed), vendored file equals the tranche's design file (commit-equality test t52g53, seen red then green), projectjoin admitted by checkScreens on start-send/request/action (scratch tree with screens-action merged: control-plane+plane 745/746, only plane release R24 accepted). Module suite 137/137. Impact: other reds are 44b/44c's and G52's held contract.test:34 only. Library and doors unchanged. R50 text proposed in my record. Checks: format/architecture/coverage 0, ownership 0, words only case-checker inline 1. Size (session_01H5ogzKbBJfic7Cqb8K8bF6): test runs 14, module lines 2866
+
+## K5046 (c) · WIZARD-SCRIPTS #25 · work record (fix round 10, Wave A batch 1; B22)
+
+**Entry.** `ADMIN_ACTS` and `ADMIN_SCREENS` move to this module (R51 names both; no QUESTION needed).
+
+**Built.**
+- `bio-plane/src/wizard-scripts/admin.mjs` (new): both constants copied verbatim from `interface-shell/index.mjs:93,163` (names, members, order, `Object.freeze`, requirement ids in the comments); exported from `index.mjs`. interface-shell keeps its pair until its Wave B job deletes it and imports these.
+- `startFrom` still takes the acts and screens as the plane hands them in `wizardRegister` (`adminActs`, `adminScreens`; R51: "the plane's registration hands both at start"). I did not default the registration to these constants: R40's test ("with no administrator acts registered nothing is withheld, and the registration reads the acts from what it is given, never a list of its own") forbids it. The plane's wiring re-points to the exported pair in its own job.
+- `bio-plane/test/m/wizard-scripts/fixtures.mjs` (new): `noSuchWizard()`, the real `wizardRead` refusal for an unknown id, made when called.
+- `bio-plane/test/m/wizard-scripts/r51.test.mjs` (new, 4 tests): both sets equal the 45 names / `updates` and are frozen; a line naming `bio-plane/src/interface-shell/index.mjs`'s pair and comparing it (the Wave B job deletes this test with its pair); `startFrom` with the real constants omits the setup script for a plain member and lists it for an administrator; `noSuchWizard` is `NO_SUCH_WIZARD`.
+
+**Fixtures.** `node checks/fixtures.mjs . wizard-scripts --list`: 1 line left, `writing-help.test.mjs:217` `LIMITS_UNREADABLE` (FIX-E, provider `answers`, arrives as a CHANGE). `fixtures-own` / `fixtures-generic` markers added: none. `noSuchWizard`'s user (screens-wizards `fixtures.mjs:55`) re-points in its own job.
+
+**Words.** No new member-facing sentence; nothing for UX-DESIGN.
+
+**Found in another module / generated artifact (REPORT).** `t52g53.test.mjs:30` (R50, "the vendored registry.json is the design's registry.json on the tranche, byte for byte") fails on `origin/tranche/T51` as merged, with and without my change (verified on a clean stash): the design's `registry.json` now carries owed `installregion K4746` and `installaddress K4937` that `source/registry.json` lacks. This is the registry's generated copy going stale after a design-files merge; the re-take (`build-data.mjs`, new counts in R41/R50 and the pin sites) is not in this entry, so I left it. BOB to decide whether it goes in this job.
+
+**Deferred:** none of mine.
+
+**Tests and checks.**
+- Module suite: 141 tests, 140 pass, 1 fail (the t52g53 R50 failure above, not mine); r51: 4/4.
+- format: 178 modules, 0 failures. architecture: 98 relative imports, 0 failures. coverage: 51 of 51 live ids named, 0 failures. ownership (tranche/T51..HEAD): 1 file changed by the module before my commit counted, 0 failures.
+- impact (`impact.mjs origin/tranche/T51 HEAD`): 26 of 178 modules; the change adds exports only, so I ran the direct users' tests (see below).
