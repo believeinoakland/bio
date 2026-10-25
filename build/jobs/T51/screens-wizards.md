@@ -119,3 +119,12 @@ B6 done: the no-subject cards for action, matter and due-date steps (guide.mjs; 
 **Deferred**: none. **Found in my module**: none (the guide and the library meet R1–R22 against the real store).
 
 Size (session_01QiJTxoqM2vV4sPHpBViTjn): test runs 40, module lines 941
+
+## J6 · REPORT
+
+REPORT · SCREENS-WIZARDS #7 · batch 7 · findings outside the module (details in my record's last section)
+
+1. USES EDGE NEEDED: `store-request` in `screens-wizards` `uses` (`bio-plane/test/m/screens-wizards/world.mjs:5` imports `store-request/fixtures.mjs`). `checks/architecture.mjs screens-wizards` fails on it alone until you add it.
+2. `storeWorld()` is red at the tranche tip (`bio-plane/test/m/store-request/fixtures.mjs:31`): its default `group: "world-town"` is seeded by `instancegroupseed` after the base already records `town` from INSTANCE_NAME (store-assembly, K5149), so it answers GROUP_ALREADY_RECORDED. `interface-shell/r129-door.test.mjs` and `screens-inquiry/fr4-question.test.mjs` fail on it today. I call `storeWorld({group: null})`. For STORE-REQUEST.
+3. `wizardsat` rows carry no `required` (wizard-scripts R11 lists `{id, version, name, steps, approver, finished}`), so screens-wizards R11's "a required one shows wizard.mark.recommended" and R7's required "Publication ceremony" mark hold only for Home's welcome, which the guide flags itself; on `ceremony` the required script is listed with no such mark (checked in the world). The fix is in wizard-scripts (R11 gains `required`); no change possible in my module.
+4. `templatereview` by a member's session through the world's door answers MACHINE_CANNOT_REVIEW_TEMPLATE ("this call carries nobody"); the member is not stamped for the secret-presenting ops (`bio-plane/src/store-request/index.mjs:85` SECRET_PRESENTING_OPS). Not used by my tests (templateapprove needs no review). For STORE-REQUEST.
