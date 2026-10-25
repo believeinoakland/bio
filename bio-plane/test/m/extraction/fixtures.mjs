@@ -79,7 +79,17 @@ export async function progressOf() {
  *  - `held()` a reading already held: `{ok: true, read: false, why: "READING_HELD", counters: {written, skipped}}`;
  *  - `final(why)` a read in pieces ended, stated, because the reader refuses the cursor (`why` `CURSOR_MISMATCH`; a refused `NOT_PIECEWISE` is stated
  *    partial once and answers `READING_HELD`, not final): `{ok: true, read: false, final: true, why}`;
- *  - `killed()` an OCR tick whose member died on a page: the answer carries `killed: [page]`. */
+ *  - `killed()` an OCR tick whose member died on a page: the answer carries `killed: [page]`;
+ *  the paged and killed paths, each made by the real `readHeld` over a held capture and answering the figures the ledger reads (K5139):
+ *  - `windowed()` `{answer, cursor, units}`: the first tick of a text read in windows. `answer` is `more: true` with `detail: {read_through, total}` and no cursor
+ *    (the cursor is the index state's, not the answer's); `cursor` is the one the state holds for the next window (what `killedCursor` names); `units` is
+ *    `unitsOf`'s answer, whose `read_through` and `total` state the same figures while more follows;
+ *  - `scanOwed()` `{answer, counters}`: the tick of a scan that leaves pages for OCR: `owed: true` with its `registration`; `counters` are the capture's
+ *    `{written, skipped, owed, failed}` as `unitsOf` states them;
+ *  - `killedWindow()` `{first, cursor, answer}`: the window at `cursor` killed its reader (the ledger hands it back as `killedCursor`): `answer` steps past it,
+ *    `more: true` with a `stated` window `{at, why: "UNIT_KILLED_READER"}` beside it;
+ *  - `finished()` `{answer, counters}`: the read of a text in pieces ended and read again: `READING_HELD` with `counters {written, skipped}`; `counters` are
+ *    `unitsOf`'s `{written, skipped, owed, failed}`, `owed` and `failed` zero. */
 export const readHeldAnswer = {
   async noHome() { const { w } = await held("a text no register names"); return w.x.readHeld({ sha: "a".repeat(64) }); },
   async read() { const h = await held(textOf(20)); return h.w.x.readHeld({ sha: h.d, kind: "reading" }); },
@@ -108,7 +118,36 @@ export const readHeldAnswer = {
     await h.w.x.readHeld({ sha: h.d, kind: "reading", env: {} });
     return h.w.x.readHeld({ sha: h.d, kind: "ocr", env: { OCR_WORKER: dies } });
   },
+  async windowed() {
+    const h = await held(textOf(9000));
+    const answer = await h.w.x.readHeld({ sha: h.d, kind: "reading" });
+    return { answer, cursor: stateOf(h).cursor, units: h.w.x.unitsOf(h.d) };
+  },
+  async scanOwed() {
+    const { generate } = await import("../../pdfgen.mjs");
+    const { jobRegistrarStub } = await import("../../job-registrar-stub.mjs");
+    const g = generate({ kind: "pdf", seed: "scan-owed", fonts: ["type0"], size: { pages: 30, lines: 1 }, kinds: ["scan"] });
+    const h = await held(await g.bytes(), { ct: "application/pdf", format: "pdf", fromText: false });
+    const jobs = jobRegistrarStub();
+    const ocr = member((body) => ocrAnswer((Array.isArray(body.pages) ? body.pages : []).slice(0, 24), { text: (p) => `ocr words of page ${p}` }));
+    const answer = await h.w.x.readHeld({ sha: h.d, kind: "reading", env: { OCR_WORKER: ocr }, registerJob: jobs.registerJob, armJobs: jobs.armJobs });
+    return { answer, counters: h.w.x.unitsOf(h.d).counters };
+  },
+  async killedWindow() {
+    const h = await held(textOf(9000));
+    const first = await h.w.x.readHeld({ sha: h.d, kind: "reading" });
+    const cursor = stateOf(h).cursor;
+    return { first, cursor, answer: await h.w.x.readHeld({ sha: h.d, kind: "reading", killedCursor: cursor }) };
+  },
+  async finished() {
+    const h = await held(textOf(4096 + 1000));
+    let more;
+    do more = (await h.w.x.readHeld({ sha: h.d, kind: "reading" })).more === true; while (more);
+    return { answer: await h.w.x.readHeld({ sha: h.d, kind: "reading" }), counters: h.w.x.unitsOf(h.d).counters };
+  },
 };
+/* the index state of a held capture's text, as the ledger's next window reads it */
+const stateOf = (h) => h.w.rows(`SELECT cursor, read_through, total, more FROM capture_text_state WHERE capture_sha=?`, h.d)[0];
 
 /** `transcribeRefusal`: the whole real refusal of `op=pagetranscribe` when the transcriber is not deployable (R47's C-51.7): `{status: 501, body: {ok: false,
  *  reason: "TRANSCRIBE_NOT_DEPLOYED", code, check: "C-51.7", translation, op}}`, with its check, made by `pageTranscribe` over a stored scan and a registered

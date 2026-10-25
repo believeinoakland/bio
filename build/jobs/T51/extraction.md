@@ -1,6 +1,6 @@
 # extraction (T51)
 
-**Status** · session_01VLArEXuqRCiEGE52grGAFk · depth 2 · COMPLETE · handled B59
+**Status** · session_01Jvm3Svfx7hGZ595k1aGkp6 · depth 2 · COMPLETE · handled B63
 
 ## J1 · REPORT
 
@@ -883,3 +883,30 @@ Size (session_01VLArEXuqRCiEGE52grGAFk): test runs 30, module lines 4980
 ## J45 · COMPLETE
 
 COMPLETE after CHANGE B59: merged tranche/T51; relays storageAbsent from capture's storageNotConfigured; ai-use's AI_LIMIT_REACHED is the contract literal (t43, t50) with fixtures-contract: ai-use use-check, since ai-use is after extraction and architecture refuses its fixtures import. Module 390/390; format, architecture, coverage 87/87, ownership 0 failures. Fixtures list 23, all waiting on providers' runs or ocr-worker's stray run line.
+
+## Fix round 10, follow-up 28 (B60)
+
+- (1) `t46`: the "six codes" table is five (`TRANSCRIBE_NEEDS_API_KEY` dropped; R75); `workerRefusal` carries the worker's real extra keys (`NO_ACCOUNT` `capability`, `BAD_ACCOUNT` `field`). `t44`, `t50` named "six" only in comments: now "five".
+- (3) `MODEL_SILENT`/`MODEL_REFUSED` (t44) carry status 502 and the real `model_error`/`model_status`; t50's two invented `busy` answers became agent-worker's real `MODEL_REFUSED` (`DECLINED`, 502, `ending: refused`, `overloaded_error`, 529). `SOME_OTHER_CODE` and `busy` stay only in t44:166 and t46:154, under `fixtures-generic` markers with their reason (the `transcribe-refusal` contract marker there is removed: nothing real stands there).
+- (2) **Not done, with why (QUESTION J-next):** `AGENT_WORKER_UNBOUND`, `EVIDENCE_ABSENT`, `NO_PAGE_RENDERED` are not extraction's own codes: `plane/transcribe.mjs` (lines 104-131) answers them to the transcriber extraction is handed, and extraction reads them in `unfilledOutcome`. Extraction cannot produce them with no answer handed in, so there is no "own refusal through its real entry" to test. The marker `fixtures-contract: agent-worker transcribe-not-sent` stays at t44:92, and agent-worker's `fixtures-run` for it only checks that its answers never equal the three. The true provider is plane (later in the order): wanted is a plane `fixtures-run: extraction transcribe-not-sent` over `plane/transcribe.mjs`'s real answers, then the marker re-pointed to `plane`.
+- For BOB (agent-worker's file): `agent-worker/test/fixtures-contracts.test.mjs:84` `fixtures-run: extraction transcribe-declined` is now an orphan-run (extraction's declined cases use the literal real answer; the check no longer sees a candidate). `:101` `transcribe-not-sent` stays paired until (2) is decided.
+- Fixtures list: failing only `t48.test.mjs:30`, plus that orphan-run line. Tests: module `ℹ tests 391`, `ℹ pass 391`, `ℹ fail 0`. Checks: format 0, architecture 0, coverage 87 of 87, words 0, ownership 0.
+
+Size (session_01Jvm3Svfx7hGZ595k1aGkp6): test runs 5, module lines 4980
+
+## J46 · COMPLETE
+
+COMPLETE follow-up 28. Done: (1) five codes in t44/t46/t50; (3) MODEL_REFUSED/MODEL_SILENT at the worker's real answers (502, model_error/model_status), t50's invented busy replaced, SOME_OTHER_CODE and busy only under fixtures-generic (t44:165-166, t46:153-154). NOT DONE, QUESTION: (2) AGENT_WORKER_UNBOUND, EVIDENCE_ABSENT, NO_PAGE_RENDERED are plane's transcriber answers (plane/transcribe.mjs:104-131), not extraction's own; extraction cannot produce them with no answer handed in, so I kept the marker fixtures-contract: agent-worker transcribe-not-sent (t44:92). Wanted: a plane fixtures-run: extraction transcribe-not-sent, then I re-point to plane. REPORT for BOB: agent-worker/test/fixtures-contracts.test.mjs:84 (transcribe-declined) is now an orphan-run, remove it; :101 stays until (2) is decided. Fixtures list fails only t48:30 plus that orphan. Module 391/391; format, architecture, coverage 87/87, words, ownership 0. Record: build/jobs/T51/extraction.md
+
+## Fix round 10, B61/B62 (J46 answer) and B63 (K5139)
+
+- B61/B62: `t44.test.mjs:92` marker re-pointed to `fixtures-contract: plane transcribe-not-sent`, values as plane answers them. Waiting on plane's run (listed `contract-no-run`, t44:93).
+- B63: four published answers added to `readHeldAnswer` in `fixtures.mjs`, each made by the real `readHeld` over a held capture, with one test (`fixtures.test.mjs`, last test): `windowed()` `{answer, cursor, units}`; `scanOwed()` `{answer, counters}`; `killedWindow()` `{first, cursor, answer}` (the next read with `killedCursor` steps past the window: `stated {at, why: "UNIT_KILLED_READER"}`); `finished()` `{answer, counters}` (`READING_HELD` with `counters {written, skipped}`). The existing `killed()` (`killed: [page]`, from `ocr_killed`) is (c)'s page case.
+- **The windowed answer has no cursor in `detail`** (the request guessed `cursor`, `next` or `next_page`): the real `detail` is `{read_through, total}`; the cursor is the index state's (`capture_text_state.cursor`), which `windowed().cursor` reads for the caller. `next` is on `unitsOf` only when units remain past its page. Counters `{written, skipped, owed, failed}` are `unitsOf`'s; the tick's own answer carries `{written, skipped}` alone, on `READING_HELD`.
+- Fixtures list: failing `t48:30` (follow-up 23), `t44:93` (plane's run to come), and agent-worker's two orphan runs (`:84`, `:101`, BOB makes them plain comments). Module 392/392; format, architecture, coverage 87/87, words 0.
+
+Size (session_01Jvm3Svfx7hGZ595k1aGkp6): test runs 9, module lines 5040
+
+## J47 · COMPLETE
+
+COMPLETE B61-B63. (1) t44:92 marker is now fixtures-contract: plane transcribe-not-sent (plane's run owed; listed contract-no-run at t44:93). (2) K5139: readHeldAnswer gains windowed(), scanOwed(), killedWindow(), finished() (existing killed() is the page case), real readHeld over held captures, one test in fixtures.test.mjs. NOTE: the windowed answer carries NO cursor in detail (real detail is {read_through, total}); the cursor is the index state's, so windowed().cursor and killedWindow().cursor read it for the caller; the tick's own counters are {written, skipped} on READING_HELD only; {written, skipped, owed, failed} are unitsOf's. Fixtures list fails only t48:30, t44:93 (plane run), agent-worker :84 and :101 (yours). Module 392/392; format, architecture, coverage 87/87, words, ownership 0. Record: build/jobs/T51/extraction.md

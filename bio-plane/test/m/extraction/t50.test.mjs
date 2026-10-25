@@ -65,6 +65,9 @@ async function heldScan(opts = {}, { text = SCAN } = {}) {
 
 /* ---- R71: the status a relayed refusal is answered with ---- */
 
+/* agent-worker's real answer when the AI declines every page (its fixtures-run `transcribe-declined`: 502 MODEL_REFUSED, the provider's type and status beside it) */
+const DECLINED = { ok: false, reason: "MODEL_REFUSED", code: "MODEL_REFUSED", detail: "d", worker: "agent-worker", status: 502, ending: "refused",
+  model_error: "overloaded_error", model_status: 529 };
 const refusalOf = (code, extra = {}) => ({ ok: false, reason: code, code, check: "C-9.9", translation: `words of ${code}`, ...extra });
 /* The four places a refusal can come from, each given the refusal: the paying account, a limit, the keep-away check,
    and agent-worker after the post. */
@@ -108,8 +111,7 @@ test("R71 (T50; N1066): the paying account's key goes to `transcribe` and nowher
     "none filled (nothing left unread)": { opts: {}, text: ALL_READ, sent: false },
     "the AI filled nothing": { opts: { answer: { ok: true, engine: "claude-test", version: "1", pages: [] } }, text: SCAN, sent: true },
     "a limit refusing": { opts: { limit: CEILING }, text: SCAN, sent: false },
-    // fixtures-contract: agent-worker transcribe-declined
-    "the AI declining": { opts: { answer: { ok: false, reason: "busy" } }, text: SCAN, sent: true },
+    "the AI declining": { opts: { answer: DECLINED }, text: SCAN, sent: true },
     "the worker silent": { opts: { answer: { ok: false, reason: "AGENT_WORKER_SILENT" } }, text: SCAN, sent: true },
     "a malformed transcribe answer (null)": { opts: { answer: null }, text: SCAN, sent: true },
     "a malformed transcribe answer (a string)": { opts: { answer: "sk" }, text: SCAN, sent: true },
@@ -228,8 +230,7 @@ test("R72 (T50; N1082; control): a `trace` or `memberRef` in the url's own query
 
 test("R72 (T50; N1082): this module reads, stores and answers neither string: no reading, history row, text row, listener payload or answer of the act holds either, written or refused", async () => {
   const T = "TRACE-ID-7788", M = "MEMBER-REF-9911";
-  // fixtures-contract: agent-worker transcribe-declined
-  for (const opts of [{}, { account: NO_ACCOUNT }, { away: KEPT_GROUP }, { answer: { ok: false, reason: "busy" } }]) {
+  for (const opts of [{}, { account: NO_ACCOUNT }, { away: KEPT_GROUP }, { answer: DECLINED }]) {
     const { w, d, payloads, run } = await heldScan(opts);
     const r = await run({ trace: T, memberRef: M });
     assert.doesNotMatch(JSON.stringify(r), /TRACE-ID-7788|MEMBER-REF-9911/, "the answer");
