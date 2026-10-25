@@ -233,3 +233,7 @@ COMPLETE for B11 (fix round 10, item 70; K5148; cause diag2-020305 §7): **R61 i
 **Tests and checks** (absolute root `/home/user/bio`): module tests `bio-plane/test/m/contradiction/`: 153 tests, 145 pass, 0 fail, 8 todo, 0 cancelled (the run exits by itself); `checks/format.mjs`: 178 modules, 0 failures; architecture: 29 product files, 0 failures; coverage: 61 of 61 live ids named, 0 failures; words: 6255 literals, 0 failures; `checks/fixtures.mjs … contradiction --list`: answer 0, 0 failures; ownership: 0 failures (files changed: `bio-plane/src/contradiction/index.mjs`, `bio-plane/test/m/contradiction/{flag.test,flag-seed,fixture}.mjs`, this record).
 
 Size (session_017TrbRYp1J3suhTf9xgvcAT): test runs 6, module lines 3833
+
+## J13 · COMPLETE
+
+COMPLETE for B11 (item 70, K5148). R61 is met (strike its mark). A passage with no content row, of a reading the viewer sees whose indexed units hold it and whose content context passes, is made citable by the flagging member (content.mint, minted_by the member) after every other refusal, then flagged; a page not in the reading, a hidden bundle and an unread capture stay FLAG_NO_PASSAGE, nothing minted or written. Failing-first test and why tests missed it are in J12. Module tests 153: 145 pass, 0 fail, 8 todo; format, architecture, coverage, words, fixtures, ownership 0 failures. REPORT: the through-the-door case (upload pair, findin, contradictionflag) belongs to control-plane (K5138); I added none. Size (session_017TrbRYp1J3suhTf9xgvcAT): test runs 6, module lines 3833.
