@@ -360,7 +360,22 @@ test("R33 (2) state b: one matter's steps in order with each document, its own d
   const aside = await pageOf(s, matterAt(s));
   assert.ok(secOf(aside, "progression.findings").textContent.includes("the clerk called"), "a finding set aside stays listed");
 });
-test.todo("REPORTED (progressions R49, K5186): the world's `instance` read carries no `says` on any finding (only `proposals` and `captureprogressions` carry the overdue finding and its sentence, progressions/index.mjs:1326, 1341; readInstance, 976, assembles none), so state b never draws progression.expects of a real matter (timeline-parts.mjs:36-39 reads `says` from the instance); the test above draws it from the proposals feed's own sentence spliced into the instance answer (R33 (2), progressions R45)");
+test("R33 (2) state b over the world: a matter threaded at a later step alone says, at the missing step, the finding's own sentence (progressions R49: a missing_predecessor finding carries `says`), or that the deadline cannot be placed; never composed here", async () => {
+  const s = await scene({ ours: true });
+  for (const d of [s.d1, s.d2]) await s.me.act("resolve", { body: { captureSha: d.sha } });
+  /* three steps: the receipt, a review within 5 days, the determination; the review is the one not placed */
+  const stages = [{ key: "sent", label: "Request sent", after: null, within: null, required: "always", cardinality: "1" },
+    { key: "review", label: "Review", after: "sent", within: "5 days", required: "always", cardinality: "1" },
+    { key: "determination", label: "Determination", after: "review", within: "10 days", required: "always", cardinality: "1" }];
+  await s.me.act("progressiondefine", { body: { progressionKey: "pra", label: "A public records request", basis: "first", citation: "Gov. Code 7922.535", stages } });
+  await s.me.act("thread", { body: { progressionKey: "pra", entityId: s.org, placements: [{ stage: "sent", captureSha: s.d1.sha, datedFact: s.df }, { stage: "determination", captureSha: s.d2.sha }] } });
+  const held = await s.me.read("instance", { query: { key: "pra", id: s.org } });
+  const missing = held.findings.find((f) => f.kind === "missing_predecessor");
+  assert.ok(missing && missing.says && missing.says.key, "the owner's finding carries its sentence as {key, vars}");
+  const p = await pageOf(s, matterAt(s));
+  const steps = secOf(p, "progression.steps");
+  drew(steps, missing.says.key, missing.says.vars || {});
+});
 
 test("R33 (2) the matter's acts: thread keeps the placements it holds and adds the chosen document at the chosen step; a lawful skip with its reason and citation; set a finding aside with a reason", async () => {
   const s = await scene({ matter: true });
