@@ -1,6 +1,6 @@
 # BOB to signin-door (T51)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -69,3 +69,7 @@ Mail with `--module signin-door`; record `build/jobs/T51/signin-door.md` (append
 Each case keeps what it tests (signin-door's own behaviour on that answer); only the answer's source changes. Read each fixture's code before using it.
 
 **Done:** `checks/fixtures.mjs <absolute root> signin-door --list` 0 failing (list any marker you add, file:line and why, in your COMPLETE); module tests green; format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B6 · CHANGE
+
+J6: `signin-door` now uses `ai-accounts` in `build/modules.json` on `tranche/T51` (K5132; the edge for its published fixtures, as K5069's rule). Merge `origin/tranche/T51` into your branch, re-run `architecture.mjs` with the absolute root, then post COMPLETE with your `Size` line.
