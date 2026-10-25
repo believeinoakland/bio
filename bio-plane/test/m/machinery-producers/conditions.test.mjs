@@ -8,6 +8,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
+import { homeOfHomed, sha } from "../provenance/fixtures.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { MACHINE_AUTHOR_PREFIX } from "../../../src/record-grammar/actors.mjs";
 
@@ -20,7 +21,7 @@ function corpus() {
   const w = world({
     governor: { governorHolding: ({ now }) => holds.filter((h) => h.cooloff_until > now) },
     capture: { liveCaptureSessions: () => [...sessions] },
-    provenance: { homeOf: (sha) => (sha === "cap88" ? { bundleId: "INFO-88" } : sha === "capP" ? { bundleId: "PRJ-1" } : null) } });
+    provenance: homeOfHomed({ [sha("cap88")]: "INFO-88", [sha("capP")]: "PRJ-1" }) });
   w.member("carol"); w.member("dave");
   w.bundle("INFO-88", "information", { title: "Controller memo" });
   w.bundle("INQ-2", "inquiry"); w.bundle("INQ-1", "inquiry"); w.bundle("PRJ-1", "project");
@@ -65,15 +66,15 @@ test("R2: governor-holding-host is the governor's own cool-off, read at the read
 
 test("R2: partial-capture-outstanding is the capture ledger's own row, about the document its bytes were registered under; withheld whole from a viewer who may not see it; gone when the session is", () => {
   const { w, sessions } = corpus();
-  sessions.push({ session: "cs_partial", locator: AGENDA, primarySha: "cap88", created: iso(NOW - 5000), updated: iso(NOW),
+  sessions.push({ session: "cs_partial", locator: AGENDA, primarySha: sha("cap88"), created: iso(NOW - 5000), updated: iso(NOW),
                   expires: iso(NOW + 60000), ticks: 2, state: { queue: ["a", "b", "c"], discovered: 41, spent: 45 } });
-  sessions.push({ session: "cs_project", locator: `https://${HOST}/packet.pdf`, primarySha: "capP", created: iso(NOW), updated: iso(NOW),
+  sessions.push({ session: "cs_project", locator: `https://${HOST}/packet.pdf`, primarySha: sha("capP"), created: iso(NOW), updated: iso(NOW),
                   expires: iso(NOW + 60000), ticks: 1, state: { queue: ["z"] } });
   const c = byId(w.read("carol")), d = w.read("dave");
   const p = c["CONDITION::partial-capture-outstanding::cs_partial"];
   assert.deepEqual([p.subject.kind, p.subject.id], ["bundle", "INFO-88"]);
   assert.deepEqual([p.basis.source, p.basis.session, p.basis.primary_sha, p.basis.bundle_id, p.basis.outstanding,
-    p.basis.discovered, p.basis.state_readable], ["capture_sessions", "cs_partial", "cap88", "INFO-88", 3, 41, true]);
+    p.basis.discovered, p.basis.state_readable], ["capture_sessions", "cs_partial", sha("cap88"), "INFO-88", 3, 41, true]);
   assert.deepEqual([p.detail.includes(`tick ${p.basis.ticks}`), p.basis.detail.includes("SCRATCH and not record")], [true, true],
     "a partial capture is not a broken one");
   assert.ok(c["CONDITION::partial-capture-outstanding::cs_project"], "carol, who owns the project, gets the condition about its capture");
@@ -95,7 +96,7 @@ test("R2: partial-capture-outstanding is not raised for a large fetch parked as 
                   state: { queue: ["https://x.example/b"], fetch_pending: { since: iso(NOW - 5000), declared_bytes: 30000000, why: "large", failed: "TOO_BIG" } } });
   assert.deepEqual(w.read("carol").items.filter((i) => i.kind === "partial-capture-outstanding"), [],
     "a parked fetch, or one that ended in a stated refusal, has captured nothing: no ceiling was reached, so no partial capture");
-  sessions.push({ session: "cs_partial", locator: AGENDA, primarySha: "cap88", created: iso(NOW - 5000), updated: iso(NOW),
+  sessions.push({ session: "cs_partial", locator: AGENDA, primarySha: sha("cap88"), created: iso(NOW - 5000), updated: iso(NOW),
                   expires: iso(NOW + 60000), ticks: 2, state: { queue: ["a", "b", "c"], discovered: 41, spent: 45 } });
   assert.deepEqual(w.read("carol").items.filter((i) => i.kind === "partial-capture-outstanding").map((i) => i.id),
     ["CONDITION::partial-capture-outstanding::cs_partial"], "control: the real partial capture is still raised, and only it");
@@ -128,7 +129,7 @@ test("R2: capture-completed-unattended is the manifest's sequence, a person's do
 test("R2, R1: the conditions report and never mutate: two reads answer the same items, and clearing one wrote nothing", () => {
   const { w, holds, sessions, manifest } = corpus();
   holds.push({ host: HOST, cooloff_until: NOW + 1000, refusals: 2 });
-  sessions.push({ session: "s", locator: AGENDA, primarySha: "cap88", created: iso(NOW), updated: iso(NOW), expires: iso(NOW + 1), ticks: 1, state: {} });
+  sessions.push({ session: "s", locator: AGENDA, primarySha: sha("cap88"), created: iso(NOW), updated: iso(NOW), expires: iso(NOW + 1), ticks: 1, state: {} });
   manifest("k1", "carol", iso(NOW - 2)); manifest("k2", `${MACHINE_AUTHOR_PREFIX}member`, iso(NOW - 1));
   const before = w.statements.length;
   const a = w.read("dave").items.map((i) => i.id), b = w.read("dave").items.map((i) => i.id);

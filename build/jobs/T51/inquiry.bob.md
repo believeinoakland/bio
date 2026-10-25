@@ -113,3 +113,9 @@ Mail with `--module inquiry`; record `build/jobs/T51/inquiry.md` (append a new s
 **Follow-up 38 (test files only; QUEUE #36, its record's last section).** queue's `noticed.test.mjs:292` needs your real `datedWaits({viewer, ...})` answering one dated wait on a stated question (`{ok, zone, waits: [{inquiry, index, text, description, date, state: "due", set_by, set_at}]}`), due before a given instant, set by that viewer. Publish it by your real acts (the question stated, the wait set), parameterised by viewer, date and the instant, so the user's world can also hold the question.
 
 **Done:** the fixture exported from `bio-plane/test/m/inquiry/fixtures.mjs` with a test in your `fixtures.test.mjs` that calls it and checks the real answer; `checks/fixtures.mjs <absolute root> inquiry --list` 0; your module's tests green; format, architecture, coverage, words, ownership 0. Name each new export and its signature in your COMPLETE (its user re-points next). List every `fixtures-own`/`fixtures-generic` marker you add (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only: if the real answer shows a product defect, REPORT it to BOB and change no product code.
+
+## B12 · CHANGE
+
+CHANGE · follow-up 9 (K5109), in this job beside B11, test files only.
+
+basis-versions has merged (K5109): its `own-reading.test.mjs` "R51, R3 (K5077)" concludes, through the real `conclude({reading})`, a question of one labelled ground and one unlabelled supporting (necessary) leg. That is the half of R85 your `necessary-leg.test.mjs:64` holds as a `test.todo`; inquiry cannot import basis-versions (later in the order), so the arm is proven there. Remove that `test.todo` and leave a one-line comment citing basis-versions' test by name. Your other R85 tests stay. Merge `origin/tranche/T51` first. Report in your COMPLETE that `necessary-leg.test.mjs` holds no R85 todo; BOB strikes R85 at your merge.

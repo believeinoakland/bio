@@ -2,7 +2,7 @@
  * its real code over the real record, events, entities and standards each time a test calls one, never stored. A module
  * that reads duties takes its answer from here and never builds one by hand. Each export returns the real answers
  * together with the ids the real code minted, so a user's test names no id of its own. */
-import { world, BOB, E, ZONE } from "./fixture.mjs";
+import { world, BOB, CAROL, E, ZONE } from "./fixture.mjs";
 
 export const AS_OF = "2026-03-09T12:00:00Z";
 const day = (value) => ({ value, precision: "day", zone: ZONE });
@@ -67,4 +67,20 @@ export function recordTransitionsAnswers() {
 export function transitionsUnknownDuty() {
   const w = world();
   return { duties: w.duties, absentId: ABSENT_ID, read: w.duties.transitionsOf({ dutyId: ABSENT_ID, viewer: BOB }) };
+}
+
+/** `dutiesOf` and `occurrencesOf` read for a viewer (the duty listing and the occurrence read a notice producer makes, K5108
+ *  follow-up 38): `none` is the listing of an entity holding no duty as obligor, from the record with no duty in it, and
+ *  `noneOccurrences` the read of a duty id that record does not hold; `held` is the listing of the one duty the viewer
+ *  sees, and `heldOccurrences` that duty read over a window holding none of its triggers. */
+export function dutiesForViewer() {
+  const empty = world();
+  const none = empty.duties.dutiesOf({ entity: E.clerk, as: "obligor", viewer: CAROL });
+  const noneOccurrences = empty.duties.occurrencesOf({ dutyId: ABSENT_ID, asOf: AS_OF, viewer: CAROL });
+  const w = world();
+  const dutyId = must(w.declare({ trigger: { kind: "date", date: "2026-02-02" } }), "duty").duty_id;
+  const held = w.duties.dutiesOf({ entity: E.clerk, as: "obligor", viewer: BOB });
+  const heldOccurrences = w.duties.occurrencesOf({ dutyId, asOf: AS_OF, from: "2026-04-01", to: "2026-04-30", viewer: BOB });
+  return { duties: w.duties, asOf: AS_OF, entity: E.clerk, viewer: CAROL, holder: BOB, dutyId, absentId: ABSENT_ID,
+           none, noneOccurrences, held, heldOccurrences };
 }
