@@ -114,10 +114,8 @@ export const front = {
         SIGN_IN_REFUSED: (r, cs) => { cs.fill("fs-pw", ""); return cs.w("refusal.SIGN_IN_REFUSED"); },
         SIGN_IN_PAUSED: (r, cs) => {
           cs.fill("fs-pw", "");
-          const s = r && r.stated && typeof r.stated === "object" ? r.stated.until || r.stated.at || r.stated.time : r && r.stated;
-          const t = new Date(typeof s === "number" ? s : String(s || ""));
-          const time = isNaN(t.getTime()) ? String(s || "") : String(t.getHours()).padStart(2, "0") + ":" + String(t.getMinutes()).padStart(2, "0");
-          return cs.w("refusal.SIGN_IN_PAUSED", { time });
+          // R2: the plane's `stated` (credentials R38) is the bound it is, drawn as the row's `{stated}`, never as a time
+          return cs.w("refusal.SIGN_IN_PAUSED", { stated: String((r && r.stated) || "") });
         },
       } },
     // the lock's password, under the locked session (credentials R65); then the page kept to return to

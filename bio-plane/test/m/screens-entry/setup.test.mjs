@@ -536,6 +536,19 @@ test("R22 control: choosing 'yes' draws no key field until 'your team pays' is c
   assert.equal(keyed(), 0);
 });
 
+test("R6 an office is never sent without its note: entities R1 refuses one, so the page asks the note and sends nothing; control: with its note the plane records it", async () => {
+  const o = await opened();
+  const before = o.requests.length;
+  const r = await o.press("entitycreate", { values: { "su-office": "The records office", "su-office-note": "  " } });
+  assert.deepEqual(r.sent, [], "no office without a note leaves the page");
+  assert.equal(o.refused.key, "refusal.ENTITY_NO_NOTE");
+  assert.deepEqual(o.requests.slice(before).map((x) => x.op), [], "nothing more is read or sent");
+  assert.ok(!(await act(o.world, { token: o.token }, "entitieskind", { query: { kind: "office", limit: "500" } })).entities.some((e) => e.label === "The records office"), "the plane holds no such office");
+  const ok = await o.press("entitycreate", { values: { "su-office": "The records office", "su-office-note": "Where the team files its requests" } });
+  assert.deepEqual(ok.sent.filter((x) => x.op === "entitycreate").map((x) => x.body), [{ kind: "office", label: "The records office", note: "Where the team files its requests" }]);
+  assert.equal(o.requests.findLast((x) => x.op === "entitycreate").answer.kind, "ok");
+});
+
 test("R22 the place: screen.setup.place.other opens placewanted, and the offices part then says offices are added by hand", async () => {
   const o = await claimed({ after: async ({ world, as }) => {
     await act(world, as, "profilesset", { body: { profiles: [PLACE] } });

@@ -55,10 +55,8 @@ export const forgot = {
         RECOVERY_REFUSED: (r, cs) => { cs.fill("fg-code", ""); return cs.w("refusal.RECOVERY_REFUSED"); },
         PASSWORD_TOO_SHORT: "refusal.PASSWORD_TOO_SHORT",
         SIGN_IN_PAUSED: (r, cs) => {
-          const s = r && r.stated && typeof r.stated === "object" ? r.stated.until || r.stated.at || r.stated.time : r && r.stated;
-          const t = new Date(typeof s === "number" ? s : String(s || ""));
-          const time = isNaN(t.getTime()) ? String(s || "") : String(t.getHours()).padStart(2, "0") + ":" + String(t.getMinutes()).padStart(2, "0");
-          return cs.w("refusal.SIGN_IN_PAUSED", { time });
+          // R2: the plane's `stated` (credentials R38) is the bound it is, drawn as the row's `{stated}`, never as a time
+          return cs.w("refusal.SIGN_IN_PAUSED", { stated: String((r && r.stated) || "") });
         },
       } },
   ],

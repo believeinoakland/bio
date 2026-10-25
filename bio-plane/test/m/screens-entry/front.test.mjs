@@ -201,6 +201,12 @@ test("R2 paused: the plane pauses sign-in after ten refused attempts and the pag
   assert.equal(o.fields["fs-pw"], "");
   assert.equal(o.fields["fs-handle"], "mai");
   assert.doesNotMatch(o.refused.text, /\{\w+\}/, "no placeholder left unfilled");
+  /* the bound the plane states (credentials R38 states no end, so no time can be told) is drawn as the bound, never as a time */
+  const stated = paused.answer.fields.stated;
+  assert.ok(typeof stated === "string" && stated.length > 0, "the plane states the bound");
+  assert.equal(o.refused.text, said("refusal.SIGN_IN_PAUSED", { stated }));
+  assert.ok(o.refused.text.includes(stated), "the plane's stated bound is drawn");
+  assert.doesNotMatch(o.refused.text, /try again at/i, "no time is promised");
 });
 
 test("R2 signed out and ended are drawn from the record's state, and neither in the other's", async () => {

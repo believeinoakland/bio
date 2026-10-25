@@ -74,7 +74,7 @@ export const READS = Object.freeze({
     ...HANDLE_REFUSALS, "founder.handle.title", "founder.handle.says", "founder.handle.choose", "founder.handle.later",
     "founder.handle.later.help", "founder.handle.done",
     "setup.member.heading", "setup.member.sub", "setup.member.home",
-    "setup.codes.once", "setup.codes.copy", "setup.codes.save", "setup.claimed.heading", "setup.claimed.sub", "refusal.ALREADY_CLAIMED",
+    "setup.codes.once", "setup.codes.copy", "setup.codes.save", "setup.claimed.heading", "setup.claimed.sub", "refusal.ALREADY_CLAIMED", "refusal.ENTITY_NO_NOTE",
     "setup.skip", "setup.skip_does", "setup.admin.invite", "setup.admin.invite_does",
     /* R26: the website file; R30: who recorded the hosting account, when it was the setup or the system */
     ...DOMAINFILE, "shell.copy", "screen.group.hosting.now.setup", "screen.group.hosting.now.system",

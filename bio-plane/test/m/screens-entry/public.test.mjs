@@ -118,6 +118,19 @@ test("R16 forgot's handle field carries no founder hint: its help is forgot.hand
   }
 });
 
+test("R2 R4 forgot paused: eleven refused recoveries from one place, then the page draws SIGN_IN_PAUSED with the plane's stated bound and no time", async () => {
+  const { world } = await founderWithCodes();
+  const o = await open("forgot", { world });
+  const values = (i) => ({ "fg-handle": "founder", "fg-code": "wrong-code-" + i, "fg-pw": "a long new password", "fg-pw2": "a long new password" });
+  for (let i = 0; i < 11 && !(o.refused && o.refused.code === "SIGN_IN_PAUSED"); i++) await o.press("recover", { values: values(i) });
+  assert.equal(o.refused.code, "SIGN_IN_PAUSED");
+  const stated = o.requests.at(-1).answer.fields.stated;
+  assert.ok(typeof stated === "string" && stated.length > 0);
+  assert.equal(o.refused.text, said("refusal.SIGN_IN_PAUSED", { stated }));
+  assert.ok(o.refused.text.includes(stated));
+  assert.doesNotMatch(o.refused.text, /try again at/i);
+});
+
 // ---- reset (R5) ----
 
 /* a team with a member, and the reset link the founder's real `passwordresetlink` makes for her (credentials R69) */
