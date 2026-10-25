@@ -1,6 +1,6 @@
 # screens-daily (T51)
 
-**Status** · session_01GykapzvyLDepprUbDPaXny · depth 2 · COMPLETE · handled B38
+**Status** · session_01GykapzvyLDepprUbDPaXny · depth 2 · COMPLETE · handled B40
 
 ## Completion (SCREENS-DAILY #18, B27: fix round 4, wave 2)
 
@@ -517,3 +517,24 @@ Size (session_01GykapzvyLDepprUbDPaXny): test runs 6, module lines 4258
 ## J26 · COMPLETE
 
 COMPLETE (B38): R6 first half met — Ask-as-search now sends plain words to search alone and the passage: terms as a second read, never joined by OR; seen red first against the real retrieval.search, green. Second half of R6 (ruleanswer drawn only while ruleservicesstate is on) waits for the CHANGE after ANSWERS #15, so R6's mark stays. Module tests 296/296, format/architecture/coverage/ownership/words 0; fixtures --list: 249, all op-table (waiting). Record: build/jobs/T51/screens-daily.md.
+
+## Completion (SCREENS-DAILY #21, B39: R6's second half, K5138)
+
+Merged `tranche/T51` first. `answers.mjs` reads `ruleservicesstate` (read `rules`, while not reachable); "Show how this was counted" (`ruleanswer`) is drawn only while it reads `on`. Test (`answers.test.mjs`, "R6 (K5131) ... ruleservicesstate reads on") on answers' published fixture `ruleServicesState({on})`, both states, red first (answers.mjs stashed: it failed), green with it; the earlier R6 Find-and-count tests now take the same fixture with `on: true`. The reads list in `contract.test.mjs` names `rules`.
+
+Tests: `screens-daily/*.test.mjs` 297 pass, 0 fail. Checks (absolute root): format 0; coverage 101/101, 0; ownership 0; words 0; fixtures `--list` 249, all `op-table` (waiting); impact: 0 other modules affected. **architecture: 1 failure**: `answers.test.mjs` imports `bio-plane/test/m/answers/fixtures.mjs` of `answers`, which `screens-daily` does not declare in `uses` (`build/modules.json` is BOB's, as with record-core in B37). BOB: add `answers` to screens-daily's `uses` (order check: answers precedes screens-daily).
+Markers added: none.
+Size (session_01GykapzvyLDepprUbDPaXny): test runs 11, module lines 4264
+
+## J27 · BLOCKED
+
+BLOCKED (cause: context-free, needs BOB's modules.json): R6's second half is done and pushed (ruleanswer drawn only while ruleservicesstate reads on; both states on answers' fixture, red first; module 297/297; format, coverage, ownership, words 0). Architecture fails once: answers.test.mjs imports bio-plane/test/m/answers/fixtures.mjs (ruleServicesState) and 'answers' is not in screens-daily's uses. Please add 'answers' to screens-daily's uses on the tranche (same as record-core in B37); then I merge, re-run architecture and post COMPLETE.
+
+## Completion (SCREENS-DAILY #21, B40)
+
+Merged `tranche/T51` (`answers` now in `uses`, K5142). architecture 0 failures (121 imports); ownership 0; format 0; coverage 101/101, 0; answers and contract tests 21 pass, 0 fail (the full module run, 297 pass, was before the merge, which changed no file of mine). B38's R6 first half and B39's second half are both done.
+Size (session_01GykapzvyLDepprUbDPaXny): test runs 13, module lines 4264
+
+## J28 · COMPLETE
+
+COMPLETE (B38, B39, B40): R6 met in both halves. Ask-as-search sends only admitted searches (fields and passages read apart, no OR); ruleanswer drawn only while ruleservicesstate reads on (both states on answers' fixture, red first). After merging tranche/T51: architecture, ownership, format, coverage 0 failures; module tests 297 pass. fixtures --list: 249, all op-table (waiting). Record: build/jobs/T51/screens-daily.md.

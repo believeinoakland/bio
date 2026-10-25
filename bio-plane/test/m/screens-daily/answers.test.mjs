@@ -7,6 +7,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "../retrieval/fixture.mjs";
+import { ruleServicesState } from "../answers/fixtures.mjs";
+const RULES_ON = { ruleservicesstate: ok(ruleServicesState({ on: true })) };
 import { open, ok, refused, text, ops, acts, button, press, beside, last, main, screen, word, hasWord, dmy, inOrder } from "./page.mjs";
 
 const REACH = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
@@ -114,6 +116,7 @@ test("R27: an answer's not_established is drawn beneath its heading as the sente
 
 test("R6: while not reachable the screen is \"Find and count\": search here, and ruleanswer \"Show how this was counted\"", async () => {
   const p = await open("/app/answers", {
+    ...RULES_ON,
     search: ok({ hits: [{ bundle_id: "INF-1", title: "Work orders", snippet: "903 rows" }] }),
     ruleanswer: ok({ ok: true, service: "occurrences", value: 812, basis: "903 rows", label: "computed_fact" }),
   });
@@ -130,7 +133,7 @@ test("R6: while not reachable the screen is \"Find and count\": search here, and
   await press(p, "ruleanswer", { reason: R });
   assert.deepEqual({ ...last(p, "ruleanswer").body, reason: undefined }, { service: "occurrences", args: { q: "work orders" }, reason: undefined });
   assert.ok(text(p).includes(word("screen.answers.rule.value", { label: word("screen.answers.label.computed_fact"), value: "812" }) + word("screen.answers.rule.basis", { basis: "903 rows" })));
-  const nh = await open("/app/answers", { search: ok({ hits: [] }), ruleanswer: ok({ ok: true, service: "occurrences", not_held: { reason: "no table declared" } }) });
+  const nh = await open("/app/answers", { ...RULES_ON, search: ok({ hits: [] }), ruleanswer: ok({ ok: true, service: "occurrences", not_held: { reason: "no table declared" } }) });
   await press(nh, "search", { values: { "answers-q": "zz" }, reason: R });
   assert.ok(text(nh).includes(word("screen.finder.none")));
   await press(nh, "ruleanswer", { reason: R });
@@ -182,4 +185,14 @@ test("R6: Ask-as-search, while not reachable, is answered by the real retrieval:
   await press(p, "search", { values: { "answers-q": "zzzzqq" }, reason: R });
   assert.ok(text(p).includes(word("screen.finder.none")), "control: words nothing holds draw none");
   assert.deepEqual(refusals, [], "no search the screen sent was refused");
+});
+
+test("R6 (K5131): \"Show how this was counted\" is drawn only while answers' ruleservicesstate reads on; control: on draws it", async () => {
+  for (const on of [true, false]) {
+    const p = await open("/app/answers", { ruleservicesstate: ok(ruleServicesState({ on })), search: ok({ hits: [{ bundle_id: "INF-1", title: "Work orders" }] }) });
+    await press(p, "search", { values: { "answers-q": "work orders" }, reason: R });
+    assert.equal(ops(p).includes("ruleanswer"), on, `rule services ${on ? "on" : "off"}`);
+    assert.equal(text(p).includes(word("act.ruleanswer.label.answers")), on);
+    assert.ok(ops(p).includes("search") && ops(p).includes("standingquestionset"), "the rest of the screen is drawn either way");
+  }
 });
