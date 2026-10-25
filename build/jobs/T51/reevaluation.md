@@ -132,3 +132,7 @@ COMPLETE (G89, R41): see the record's G89 section. Re-grade in raiseNotices, swe
 - No `fixtures-own` or `fixtures-generic` marker added; one `fixtures-contract` marker (caseparts.test.mjs:30).
 - Tests: reevaluation module tests 164 pass, 0 fail. Checks: format 0 failures; architecture 0 failures (with line 160 as original); coverage 41 of 41 ids, 0; ownership 0; words 0; fixtures --list: 2 left (caseparts:31 waiting on publication; fixture.mjs:160 awaiting BOB). impact.mjs: 0 affected modules.
 - Size (session_01Ed3McYsoc4pJynhHKAnecp): test runs 6, module lines 0 changed in src; test lines ~60
+
+## J7 · QUESTION
+
+QUESTION: one line of the batch is not doable under the rules as they stand. fixture.mjs:160 (retrieval/selectionResolve) should take retrieval's noSelection fixture, but reevaluation's uses (build/modules.json) does not include retrieval, so checks/architecture.mjs fails on the import ('which reevaluation does not declare in uses'). reevaluation reaches retrieval only as the stand-in inquiry is built with. My best reading: add retrieval to reevaluation's uses (your file), then I re-point the line in one more step. Alternative: accept the line as a stand-in (fixtures-own) with your ruling. Everything else is done and pushed (noticesRead published, standardsEmptyReads re-pointed, caseparts code fixed and contract marker added; caseparts:31 awaits publication's fixtures-run). Details in my record.
