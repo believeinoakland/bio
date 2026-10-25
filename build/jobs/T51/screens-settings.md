@@ -1,6 +1,6 @@
 # screens-settings (T51)
 
-**Status** · session_017Won73ZFYbqQngJZmEciqa · depth 2 · RUNNING until 2026-10-25T23:32:36Z (per-file sweep of 247 affected test files (300 s limit each)) · handled B52
+**Status** · session_017Won73ZFYbqQngJZmEciqa · depth 2 · RUNNING until 2026-10-26T00:06:15Z (per-file sweep of 247 affected test files (resumed)) · handled B52
 
 ## J1 · QUESTION
 
