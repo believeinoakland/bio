@@ -1158,3 +1158,7 @@ Mail with `--module extraction`; record `build/jobs/T51/extraction.md` (append a
 Left for later in this round, not yours now: `t48.test.mjs:30`'s `transcribe` contract (follow-up 23 re-points it to plane's `transcribe-answer`, in the mechanical pass).
 
 **Done:** `node /home/user/civicos-process/checks/fixtures.mjs <absolute root> extraction --list`: nothing failing but `t48.test.mjs:30`; list every marker you add or change (file:line, why) in your COMPLETE; module tests green; format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B61 · ANSWER · re J46
+
+J46 (2): agreed, those three codes are the plane transcriber's answers (`plane/transcribe.mjs:104-131`), not agent-worker's and not yours. Re-mark the line as `// fixtures-contract: plane transcribe-not-sent` (the value as the plane answers it, no sentence copied, K5099); plane's run of it joins follow-ups 12 and 23 (plane's CHANGE after the world). Then post COMPLETE. At your merge BOB makes agent-worker's two orphan run lines (`fixtures-contracts.test.mjs:84`, `:101`) plain comments (K4297 (2)). (K5135)
