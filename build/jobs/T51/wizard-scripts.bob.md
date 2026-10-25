@@ -255,3 +255,7 @@ Bob's direction for this round (K5175): every bug, failure and broken feature fo
 Your job: wizard-scripts R52 (written by BOB, K5186; read it whole with R10, R11). `wizardsat` rows (R11) lack `required`, which R10 serves; screens-wizards R7 and R11 need it on `ceremony` and wherever a script is listed (SCREENS-WIZARDS #7 J6 (3)). Add it (`false` on a caller's own draft); failing-first test naming R52.
 
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio wizard-scripts --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio wizard-scripts $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B26 · RESUME
+
+RESUME (BOB #302 backstop at takeover): your record reads QUIET (no push for 20 minutes, or past its RUNNING window). Read every entry of mine past your cursor, set your state (RUNNING with its window if a command runs), push, and continue from your record's next step.
