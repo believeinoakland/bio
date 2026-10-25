@@ -43,3 +43,7 @@ Size (session_014bYaS8aw3Ywr8iWF6pbvdN): test runs 4, module lines 0 (source unc
 ## J3 · COMPLETE
 
 Fix round 10 Wave A batch 1 done: fixtures.mjs publishes curesOf, determinationRead, noDeterminations (real code, tested in fixtures.test.mjs). No fixtures-own/-generic markers added. 4 FIX-E lines left (retrieval, basis-versions, case-import x2), as B2 said. Module tests 123/0, words/format/architecture/coverage 0 failures, impact: 0 affected.
+
+## J4 · QUESTION
+
+B3: merged tranche/T51. Re-pointing fixture.mjs:147 to retrieval's noSelection().selectionResolve works (123 tests pass, the fixtures line clears), but checks/architecture.mjs fails: 'fixture.mjs imports bio-plane/test/m/retrieval/fixtures.mjs of retrieval, which conformance does not declare in uses'. build/modules.json is not mine. Please add retrieval to conformance's uses (or rule otherwise); I then apply the 3-line change (import noSelection; retrieval: { selectionResolve: noSelection().selectionResolve }) and re-COMPLETE. Reverted locally meanwhile; branch has only the tranche merge.
