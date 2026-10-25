@@ -452,7 +452,7 @@ export function assembleStore(ctx, env, { deliver = null } = {}) {
      clear (record-core K23). Acquisition reads `cap.keepLater` as it reads `cap.waitUntil`: a keep that will not end inside the
      door's bound is written down here and put by the alarm, never left to a promise nothing keeps alive. */
   const pending = pendingOf(ctx, { env, store: () => namespace(), deliver });
-  recordOf(ctx).declarePurge("plane", ["keeps_pending", "keeps_last", "acquire_stages", "job_unit_attempts", "job_batches"]);   /* R9, R97 */
+  recordOf(ctx).declarePurge("store-assembly", ["keeps_pending", "keeps_last", "acquire_stages", "job_unit_attempts", "job_batches"]);   /* R97, R72: the owed-work ledger's tables, this module's own */
   capture.keepLater = (a) => pending.keepLater(a);
   capture.owedLater = (a) => pending.owedLater(a);   /* R77, acquisition R100: the ledger's `subresources` and `unpack` entries, registered the same way */
   /* R98 (fix round 9, G126; K4835 (2); 2c item 1): THE ONE REGISTRAR. Acquisition, capture and doorbell read it as they read `keepLater`: a

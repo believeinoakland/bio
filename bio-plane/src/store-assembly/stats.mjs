@@ -1,8 +1,9 @@
-/* plane R9, R10 (K861 (2)): the plane's own stats sight, registered as `plane` through record-core's R65. It is the one
+/* store-assembly R100, R97 (were plane R10, R9; K861 (2)): the assembly's own stats sight, registered as `store-assembly`
+   through record-core's R65. It is the one
    source behind `op=stats` and purge's proof: the caller's sight over hidden bundles and hidden runs, the three figures
    no owner reports (`refs`, read from `connections`' export, its R61; `textIndexOk`, `extraction`'s boolean;
    `observationsNonLead`), and the spread of every module's registered figures (record-core R63). Each owner's figures are
-   its own, registered under its name by the composition root (`src/plane/store.mjs`, `registerOwnersCounts`). It writes nothing. */
+   its own, registered under its name by the composition root (`assemble.mjs`, `registerOwnersCounts`). It writes nothing. */
 import { recordOf, RecordCore } from "../record-core/index.mjs";
 import { hiddenBundles, membershipOf, Membership } from "../membership/index.mjs";
 import { projectRosterOf, ProjectRoster } from "../project-roster/index.mjs";
@@ -14,13 +15,13 @@ import { inquiryOf, Inquiry } from "../inquiry/index.mjs";
 import { basisVersionsOf, BasisVersions } from "../basis-versions/index.mjs";
 import { observationLogOf, ObservationLog } from "../observation-log/index.mjs";
 
-/* The name the stats source is registered under. */
-export const PLANE = "plane";
+/* The name the stats source is registered under: this module's (it was `plane` while plane held the composition). */
+export const STATS_SOURCE = "store-assembly";
 
-/* R10 (K861 (1)): each owner's exported figure source, registered by plane under its owner's name, in the order
+/* R100 (K861 (1)): each owner's exported figure source, registered by the assembly under its owner's name, in the order
    `op=stats` has answered its keys since plane held them (K923). Each is asked of
    its owner's instance when the figures are read, never at registration, so no factory is built here before its turn
-   in the composition root (R2). */
+   in the composition (R2). */
 const OWNERS = Object.freeze([
   ["record-core", RecordCore.COUNT_KEYS, (ctx, hid) => recordOf(ctx).ownCounts(hid)],
   ["membership", Membership.COUNT_KEYS, (ctx, hid) => membershipOf(ctx).counts(hid)],
@@ -32,16 +33,16 @@ const OWNERS = Object.freeze([
   ["basis-versions", BasisVersions.COUNT_KEYS, (ctx, hid) => basisVersionsOf(ctx).counts(hid)],
 ]);
 
-/** R10: every owner's figure source registered through record-core R63 under the owner's own name. Answers each
+/** R100: every owner's figure source registered through record-core R63 under the owner's own name. Answers each
  *  registration's answer, in order. */
 export function registerOwnersCounts(ctx) {
   const record = recordOf(ctx);
   return OWNERS.map(([module, keys, counts]) => record.registerCounts(module, [...keys], (hid) => counts(ctx, hid)));
 }
 
-/** R10: the plane's own stats sight, registered as the instance's stats source (record-core R65). */
+/** R100: the assembly's own stats sight, registered as the instance's stats source (record-core R65). */
 export function registerStats(ctx) {
-  return recordOf(ctx).registerStatsSource(PLANE, ({ viewer, proof }) => figures(ctx, { proof, viewer }));
+  return recordOf(ctx).registerStatsSource(STATS_SOURCE, ({ viewer, proof }) => figures(ctx, { proof, viewer }));
 }
 
 /** The one body behind both answers, so the wire's counts and purge's proof cannot drift apart on any key but the ones
