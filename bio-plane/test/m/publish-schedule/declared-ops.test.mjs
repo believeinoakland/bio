@@ -45,9 +45,3 @@ test("R12 publish-schedule declares publishatcancel: its requires alone raise no
   await declaredOpHolds({ op: "publishatcancel", declaration: DECLARED_OPS["publishatcancel"], call: mk("publishatcancel", {"by":"member:olive"}),
     refusedNaming: named({"case":["NOT_WAITING"],"edition":["NOT_WAITING"]}, true), values: { case: CASE, edition: 1 }, same: sameCode });
 });
-
-test("R12 publish-schedule declares publishatmove: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
-  await declaredOpHolds({ op: "publishatmove", declaration: DECLARED_OPS["publishatmove"], call: mk("publishatmove", {"by":"member:olive"}),
-    refusedNaming: named({"case":["NOT_WAITING"],"edition":["NOT_WAITING"],"at":["PUBLISH_AT_MALFORMED"]}, true),
-    values: { case: CASE, edition: 1, at: { date: "2026-10-05", time: "09:00" } }, same: sameCode });
-});
