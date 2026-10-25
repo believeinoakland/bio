@@ -105,11 +105,14 @@ function titleOf(cs, o) {
   const doc = o.doc && typeof o.doc === "object" ? o.doc : {};
   const own = clean(o.reading && o.reading.title) || clean(doc.title);
   if (own) return own.slice(0, 200);
-  /* acquisition states `file_name` as the last segment of an address when the source states no name: that is the file part of the address, which never names a document (R54) */
+  /* acquisition answers `file_name` as the last segment of an address when the source states no name: that is the file part of the address, which never names a document (R54).
+     The source states a name when the response it kept carries a `content-disposition` (`capture.transport.http_headers`); otherwise a name equal to the address's last segment is the address's */
   let lastSegment = "";
   try { lastSegment = decodeURIComponent(new URL(String(o.address || "")).pathname.split("/").pop() || ""); } catch (e) { lastSegment = ""; }
+  const sent = doc.capture && doc.capture.transport && Array.isArray(doc.capture.transport.http_headers) ? doc.capture.transport.http_headers : [];
+  const disposed = sent.some((h) => Array.isArray(h) && String(h[0]).toLowerCase() === "content-disposition");
   const stated = clean(doc.capture && doc.capture.file_name);
-  const file = clean(o.fileName) || (stated && stated !== lastSegment ? stated : "") || clean(doc.name_stated && doc.name_stated.text);
+  const file = clean(o.fileName) || (stated && (disposed || stated !== lastSegment) ? stated : "") || clean(doc.name_stated && doc.name_stated.text);
   if (file) return file.slice(0, 200);
   let host = "";
   try { host = new URL(String(o.address || "")).hostname; } catch (e) { host = ""; }

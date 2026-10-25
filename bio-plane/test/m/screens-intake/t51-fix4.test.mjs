@@ -198,6 +198,13 @@ test("R54 (C25) control: a PDF with no title is named by the file name the sourc
   assert.ok(rowOf(held, filed[0].bundleId).textContent.includes("estimated-tax-vouchers.pdf"));
 });
 
+test("R54 (C25) control: a PDF with no title whose source states the very name its address ends in (a content-disposition) is named by it", async () => {
+  const { add, held, filed } = await capturePdf(false, "f1040es.pdf");
+  assert.equal(filed[0].meta.title, "f1040es.pdf", "the source stated it");
+  assert.ok(text(add).includes("f1040es.pdf"));
+  assert.ok(rowOf(held, filed[0].bundleId).textContent.includes("f1040es.pdf"));
+});
+
 test("R54 (C25) control: a PDF with no title whose source states no name is never named by the file part of its address, but by its host and the day", async () => {
   const { add, held, filed } = await capturePdf(false);
   assert.equal(filed[0].meta.title, untitled("www.irs.gov"));
