@@ -506,3 +506,26 @@ Door case for control-plane (K5138, R51): tabledeclare with source {capture_sha,
 ## J29 · COMPLETE
 
 COMPLETE (B35): R51 met; ids named: R51. declareTable accepts a found passage {capture_sha, extent}: capture resolved through provenance, sight and extent checked (NO_SUCH_CONTENT with capture_sha/extent_code when not held, not visible or no such part), content row minted with content.mint (mint-or-find) after every other check, just before the bytes are read. Test declare-found.test.mjs seen red (NO_SOURCE) then green: same table sha as from the content id after citing; refusals mint nothing. Module 159/159; format, architecture, coverage 50/50, ownership, fixtures, words 0 failures in calculations. New words ids: calculations.declare.no_capture_is_held_here, calculations.declare.the_found_passage_names_no. One honest limit, in my record: a found passage whose bytes then cannot be read has been minted its content row though the refusal says nothing was written (the row only cites a passage that exists); it is not a question, a one-function change if you want it moved. Door case REPORTed above.
+
+## J30 · COMPLETE
+
+Completion of calculations R52 (fix round 10, B36; SCREENS-DAILY #24 J30). Branch job/T51/calculations @ f8aca52307 (merged tranche/T51 first, no rebase).
+
+**What changed.** `bio-plane/src/calculations/index.mjs`:
+- new `#freezeSelections(inputs, viewer)` (just above `freezeSet`, ~l.2437): an input `{name, set}` whose `set` starts `sel-` is resolved through `retrieval.selectionResolve({handle, viewer, owner: viewer, weight: "report"})`; its members' ids (unique, sorted) are frozen as a record set with the same sha `freezeSet` gives the same ids (`sha(ids)`), and the input is rewritten to name that sha, so the stored input and a recompute never depend on a handle that expires. A refusal of retrieval's (`NO_SUCH_SELECTION`, `SELECTION_NOT_YOURS`) is relayed with its reason, plus `input` and a detail naming the input (`localize` sentences); no retrieval service answers `RETRIEVAL_NOT_REACHABLE`.
+- `create` (~l.1512) and `evaluate` (~l.1562) call it before `#compute`; `#compute`/`#bind` take `pending` (the not-yet-held sets) and the `set` arm of `#bind` (~l.1061) binds a pending set as a held one. `create` inserts the pending sets (`INSERT OR IGNORE` into `calc_sets`) in its own transaction, so a refused create writes nothing; `evaluate` writes nothing (R7).
+- No change to the ops' accepted keys (no census declaration owed): `set` was already an accepted input key.
+
+**Failing-first.** `bio-plane/test/m/calculations/r52-selection.test.mjs` (3 tests, all name R52, through the real `retrieval.selectionCreate`/`selectionRelease` of the module's real world, no hand-built answer): red on the tranche's code (`create` with `{name:"held", set:<sel-…>}` refused `NO_SUCH_INPUT`, the finder's report), green after. Checks: count 2 and `read`'s input `sha` equals the frozen set's sha (the one `freezeSet` gives the same two ids); the stored input names the frozen set; after the selection is released the calculation still recomputes `agrees: true`; `evaluate` counts 2 and freezes nothing; another member's handle `SELECTION_NOT_YOURS`, an unknown and a released one `NO_SUCH_SELECTION`, each naming input `held`, nothing frozen; control: a frozen set's sha binds as before and an unheld sha is still `NO_SUCH_INPUT`.
+
+**Suites.** calculations 162 pass, 0 fail (was 159). Users of calculations, each their whole `test/m/<module>` run: workbooks 50, strength 194, scheduler 185, answers 75, inquiry 237, hypotheses 58, reevaluation 167, case-authoring 257, conformance 125, consequences 73, notice-producers 151, affordances 289, op-declarations 248: all pass, 0 fail (store-assembly and plane call the module only through the plane; `impact.mjs` names 82 modules because of shared tables, I ran the direct users).
+
+**Checks (absolute root).** `checks/run.mjs`: format 0 failures, architecture 0; coverage and fixtures failures are other modules' (control-plane answer lines, screens-daily finder.test:189 and screens-investigate calculation.test:48-49, which name `calculations (earlier)` op-table contracts: those are their modules' lines, not new); words: no finding in calculations (my two new sentences are `localize`; total 16, was 16 before this job). `fixtures.mjs calculations --list`: 0. coverage calculations: 51 of 51 ids named, 0 failures. architecture calculations 0. ownership 0 (3 files: the module source, my test, my record). `setup-words build --check`: no refusal naming calculations.
+
+**Met ids.** R52 (BOB strikes the mark); R4 and R21 unchanged in behaviour.
+
+**fixtures-own / fixtures-generic markers added.** None.
+
+**Deferred / found elsewhere.** None. Two ids new to `rows.mjs`: `calculations.index.the_held_selection_cannot_be`, `calculations.index.the_selection_could_not_be_read`, `calculations.index.the_input_names_a_selection_refused` (stand-ins `localize(id, en)`; the design reviews them; rows.mjs is stale until the layer close).
+
+Size (session_01DCE9qJwEsxWr2VK6LZT9Rn): test runs 24, module lines 4281
