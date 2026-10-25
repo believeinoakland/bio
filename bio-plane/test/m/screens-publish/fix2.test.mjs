@@ -11,6 +11,7 @@ import assert from "node:assert/strict";
 import { webcrypto } from "node:crypto";
 import { open, main, text, drew, drewIn, ops, press, last, fill, tick, norm, until, keptKey, answerSign, button, ok, refusedIn, word, COPY, DOCUMENT, PREFLIGHT, FINDING, F1, B1, E1, P, C, DR, SHA, publishedPlane, findingPath, signDialog } from "./fixtures.mjs";
 import { MEMBER } from "../interface-shell/harness.mjs";
+import { gateRefusal } from "../case-disclosures/fixtures.mjs";
 
 const PUBLIC = { session: null };
 const CER = `/app/ceremony/${P}/${DR}`;
@@ -50,7 +51,7 @@ test("R6 C2 the case page draws each finding's signed claim, else its authored w
 /* ---------- C3: the unconfirmed documents the pre-flight lists, whether or not publish refused ---------- */
 
 test("R51 C3 a pre-flight whose publish was refused CO_ATTESTATION_UNACKNOWLEDGED, listing the unacknowledged captures in step three, draws Retry and the reason box; a ready one lists none (control)", async () => {
-  const refusal = { ok: false, code: "CO_ATTESTATION_UNACKNOWLEDGED", reason: "CO_ATTESTATION_UNACKNOWLEDGED" };
+  const refusal = gateRefusal().CO_ATTESTATION_UNACKNOWLEDGED;
   const pre = WITH(STEP3({ not_co_attested: [{ capture: B64, by: "dev", findings: [F1] }] }), { ready: false, first: refusal, blockers: [] });
   const p = await open(CER, { plane: { publishpreflight: ok(pre), captureaccounts: ok({ captureSha: B64, actors: [], accounts: [] }) } });
   assert.ok(drew(p, "screen.ceremony.conf.heading"));

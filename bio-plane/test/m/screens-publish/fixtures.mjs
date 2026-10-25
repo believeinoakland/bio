@@ -39,6 +39,7 @@ export const COPY = (o = {}) => ({ kind: "review-copy", reader: "member", draft:
   ...o });
 
 export const PREFLIGHT = (o = {}) => ({ wrote: false, ready: false,
+  // fixtures-generic: PHOTO_CHECK_UNWORDED (a code no module gives, so the pre-flight's first refusal falls back to its canned translation)
   first: { ok: false, code: "PHOTO_CHECK_UNWORDED", reason: "PHOTO_CHECK_UNWORDED", translation: "Photo 1 is not yet checked." }, // a code the list holds no word for (every code case-disclosures answers today has a refusal.<CODE> row, DEC-418)
   blockers: [{ ok: false, code: "TENSION_NOT_DISCLOSED", translation: "A contradiction is not yet disclosed." }],
   steps: [{ case: C, edition: 2, pinned: [{ target: "FND-2026-0031", bundleSha: B1 }] }, { roles: {}, required: null }, { tensions: [] },

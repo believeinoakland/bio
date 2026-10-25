@@ -211,6 +211,7 @@ test("R23 a copy whose statement is absent draws no section and no acknowledgeme
     assert.equal(p.doc.getElementById("ro-note"), null);
   }
   const SAID = "The plane's own words for a code the list does not hold.";
+  // fixtures-generic: NO_WORDS_FOR_THIS_CODE (a made-up code with no word: the page draws the plane's canned translation)
   const p = await open("/app/review", { boot: OUTSIDE, plane: { ...outsideCopy(), statementack: ok({ started: false, code: "NO_WORDS_FOR_THIS_CODE", translation: SAID }) } });
   await press(p, "statementack", { values: { "ro-note": NOTE } });
   assert.ok(text(p).includes(SAID) && !drew(p, "screen.review-outside.sent"));

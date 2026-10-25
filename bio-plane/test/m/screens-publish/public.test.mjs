@@ -324,6 +324,7 @@ test("R22 \"Check the signature\" still checks the manifest, and the page keeps 
 });
 
 test("R22 a verify answered ok that carries a refusal is no match found (D29)", async () => {
+  // fixtures-generic: VERIFY_NOT_RUN (a made-up refusal code: the page draws the plane's canned translation for a code it holds no word for)
   const p = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { verify: ok({ started: false, code: "VERIFY_NOT_RUN", translation: "The check did not run." }) } });
   await checkIt(p, E1);
   assert.ok(text(p).includes("The check did not run."), "the refusal in the plane's words");

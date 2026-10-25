@@ -11,6 +11,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, main, text, drew, day, ops, press, last, fill, tick, norm, until, keptKey, answerSign, ok, refusedIn, pending, word, hasWord, COPY, DOCUMENT, PREFLIGHT, FINDING, F1, B1, P, C, DR, SHA, publishedPlane, findingPath, signDialog } from "./fixtures.mjs";
 import { measure } from "./phone.mjs";
+import { gateRefusal } from "../case-disclosures/fixtures.mjs";
 
 const PUBLIC = { session: null };
 const CER = `/app/ceremony/${P}/${DR}`;
@@ -30,7 +31,7 @@ const count = (p, op) => p.byOp(op).length;
 
 const ROW = (o = {}) => ({ capture: B64, by: "dev", findings: [F1], timestamp_at: null, co_archive: null, missing: ["timestamp", "co_archive"], late: false, timestamp_late: false, late_words: null, ...o });
 const LATE = "It proves the bytes existed by then, not at capture.";
-const HELD_BACK = { ok: false, code: "CO_ATTESTATION_UNACKNOWLEDGED", reason: "CO_ATTESTATION_UNACKNOWLEDGED" };
+const HELD_BACK = gateRefusal().CO_ATTESTATION_UNACKNOWLEDGED;
 
 test("R74 R51 C40 after reattest the pre-flight is read again and the document's row says the timestamp was made late and that the outside copy is still missing", async () => {
   let again = false;

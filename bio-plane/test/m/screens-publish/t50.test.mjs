@@ -114,6 +114,7 @@ const PATH = `/app/ceremony/${P}/${DR}`;
 const pre = (o) => ({ publishpreflight: ok(PREFLIGHT(o)) });
 
 test("R28 the ceremony lists what stops the signing under its heading, each gate on its own line: a gate's own sentence inside ceremony.gate.other, never a check's code", async () => {
+  // fixtures-generic: STANDARD_DEPARTED (a made-up gate code carrying its own `says` words, to prove the screen draws the words and never the code)
   const p = await open(PATH, { plane: pre({ first: { ok: false, code: "STANDARD_DEPARTED", translation: "A developer text.", says: { key: "refusal.NO_REVIEW_COPY", vars: {} } },
     blockers: [{ ok: false, code: "TENSION_NOT_DISCLOSED", translation: "A contradiction is not yet disclosed." }] }) });
   const list = main(p).querySelector("[data-blockers]");

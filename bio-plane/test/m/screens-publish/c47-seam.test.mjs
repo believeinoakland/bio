@@ -12,6 +12,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, press, tick, main, norm, word, ok } from "./fixtures.mjs";
 import { world, V, AUTHORED } from "../case-authoring/fixture.mjs";
+import { planeHelpers } from "../answer-envelope/fixtures.mjs";
 import { stubOf, bucket, docketOn } from "../public-read/fixture.mjs";
 import { publicReadOf } from "../../../src/public-read/index.mjs";
 import { bindPublishedPlane, publishedRoutes } from "../../../src/publication/worker.mjs";
@@ -22,13 +23,7 @@ import { createHash } from "node:crypto";
 
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
-bindPublishedPlane({
-  json, StoreSilent: class extends Error {}, STORE_SILENT_REASON: "STORE_DID_NOT_ANSWER", STORE_SILENT_DETAIL: "silent", PUBLISHED_STORE: "bio",
-  doAnswer: async (res) => { let out = null; try { out = await (await res).json(); } catch { out = null; }
-                             return out && out.ok === true ? { answered: true, result: out.result } : { answered: false }; },
-  storeSilent: (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }, 502),
-  requiredArgument: (op, argument, shape, error) => ({ ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error }),
-});
+bindPublishedPlane({ ...planeHelpers, PUBLISHED_STORE: "bio" }); // answer-envelope's published helpers, as the plane binds them (fixtures-run by their provider)
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q";
 const TITLE = `Document ${DOC}`;          /* the capture's title as the record holds it (infoMd): never the address */
