@@ -183,3 +183,15 @@ Size (session_01Liu7BL68LjcrB4XrvLNv3e): test runs 14, module lines 2,589
 ## J11 · COMPLETE
 
 COMPLETE (ENTITIES #20): G55 tier 1 met. view() is held while the jurisdiction_profiles setting is unchanged (key JSON.stringify of the list, non-list as []), deep-frozen, viewBuilds() added; bound about 145 KB, one entry per instance. No reader of view() mutates, so none changed. g55-view.test.mjs 5 tests, seen red (1000 builds) then green; entities 161 pass; users events, lines, money, calculations, connections, duties, people, retrieval pass; checks 0 failures in entities (inherited words failure case-checker/spec.mjs:11). Proposed R20/R44 lines and counts in build/jobs/T51/entities.md. Size (session_01Liu7BL68LjcrB4XrvLNv3e): test runs 14, module lines 2,598 (the record line says 2,589; this is the right count). No census op changed.
+
+## Completion (T51 fix round 10, Wave A batch 4, ENTITIES #21)
+
+**Causes done.** Three fixtures published in the new `bio-plane/test/m/entities/fixtures.mjs`, each made by entities' real code when called, each called and checked by a test in the new `fixtures.test.mjs`: `entitiesWorld` (real `Entities` over the test profile with a person, a second person and an office, and a succeeding `addIdentifier` act `w.ok`; the real refusals UNKNOWN_KIND, ENTITY_NO_LABEL, ENTITY_NO_NOTE, NO_SUCH_ENTITY, UNKNOWN_SCHEME, SCHEME_NOT_FOR_KIND, NO_BASIS, IDENTIFIER_TAKEN), `namingInRefused` (`code`: NO_KIND, UNKNOWN_KIND, NO_SHA, TOO_MANY_CAPTURES; the default is UNKNOWN_KIND), `unreadable` (`entitiesOfKind` over a registry whose table is dropped: `{ok:false, reason:'UNREADABLE', detail}`).
+**Lines done.** `fixture.mjs:62` (promotion/makePromotion, FIX-E): the hand-built `promotionStub` is gone; `world()` takes `makePromotion().p` from promotion's published fixtures. `fixtures.mjs --list` for entities: stub 0, 0 failures. Left: none. No `fixtures-own` or `fixtures-generic` marker added.
+
+**For BOB (one failing check, a `modules.json` line only you write).** `checks/architecture.mjs . entities` fails: `bio-plane/test/m/entities/fixture.mjs` imports `promotion/fixtures.mjs` of promotion, which entities does not declare in `uses`. Entities does use promotion through extraction and provenance; add `"promotion"` to entities' `uses` (as lines' entry has it). Nothing else in that check fails.
+
+**Not mine.** `node bio-plane/src/setup-words/build.mjs --check` is stale on `control-plane.declared.subscriptionsignin` (a row of control-plane's declarations; I changed no word).
+
+**Tests and checks.** Entities' module tests (`bio-plane/test/m/entities/*.test.mjs`): 164 tests, 164 pass, 0 fail. format: 0 failures. fixtures (entities): 0 failures. coverage: 65 of 65 ids named, 0 failures. ownership: 0 failures. architecture: 1 failure (above). `impact.mjs origin/tranche/T51 HEAD` names 107 modules; my change is test files only (no source line), so no user's behaviour moved, and I ran only my own module's tests.
+Size (session_01UFnpNcKqgfLJ5Ee7BwZ3WN): test runs 4, module lines 0 (source); test lines +118
