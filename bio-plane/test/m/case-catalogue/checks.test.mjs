@@ -351,3 +351,27 @@ test("R2, R31: C-2.8's grounds arm counts only live legs, as strength does: a gr
   oneLeg.basis.push(leg("INFO-2026-0001-a", "part 2"));
   assert.deepEqual(armOf(oneLeg), ["C-2.8"], "a ground with a live leg left is asked for");
 });
+
+test("R6: the case document's member arm reads a member's references beside its basis: a severed leg is dropped there as on the member's own arm", () => {
+  const leg = (target, ground) => ({ target, role: "supports", grade: "B", grade_axis: "capture", ground });
+  const basis = [leg("INFO-2026-0001-a", "part 1"), leg("INFO-2026-0002-b", "part 2")];
+  const cite = (target, status) => ({ target, rel: "cites", status });
+  const live = [cite("INFO-2026-0001-a", "confirmed"), cite("INFO-2026-0002-b", "confirmed")];
+  const severed = [cite("INFO-2026-0001-a", "confirmed"), cite("INFO-2026-0002-b", "severed")];
+  const withGrounds = (grounds) => {
+    const d = doc();
+    d.case_strength_grounds = grounds.map((g) => ({ target: M2, ground: g, axis: "capture", state: "graded", grade: "B" }));
+    return d;
+  };
+  const asked = (grounds, entry) => R.checkCaseDocument(withGrounds(grounds), { ...CTX, memberBasis: { [M2]: entry } });
+  const codes = (out) => out.map((x) => x.check);
+  assert.deepEqual(codes(asked(["part 1"], { basis, references: severed })), [], "part 2's only leg is severed: no row for it, no finding");
+  assert.deepEqual(codes(asked(["part 1"], { basis, references: live })), ["C-2.8"], "control: the same leg live and its row absent is still the finding");
+  assert.deepEqual(codes(asked(["part 1", "part 2"], { basis, references: live })), [], "control: every live ground has its row");
+  assert.deepEqual(codes(asked(["part 1"], { basis })), ["C-2.8"], "an entry with no references drops no leg");
+  assert.deepEqual(codes(asked(["part 1"], basis)), ["C-2.8"], "control: the array form is unchanged, no leg dropped");
+  assert.deepEqual(codes(asked(["part 1", "part 2"], basis)), [], "control: the array form with every row is clean");
+  const first = asked(["part 1"], { basis, references: [cite("INFO-2026-0002-b", "confirmed"), cite("INFO-2026-0002-b", "severed")] });
+  assert.deepEqual(codes(first), ["C-2.8"], "the first entry for a target decides, as strength reads it");
+  assert.deepEqual(codes(R.checkCaseDocument(doc(), { ...CTX, memberBasis: { [M2]: { references: severed } } })), [], "an entry with no basis asks the basis arms of nothing");
+});
