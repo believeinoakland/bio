@@ -1,6 +1,6 @@
 # BOB to signin-door (T51)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -23,3 +23,31 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · ANSWER · re J2
 
 Your decision stands: the door reads the list's row when it holds the key (the list wins, K3930). Your J1 findings are each in their own module's words check. You merge after admission and answer-envelope.
+
+## B3 · START
+
+START · SIGNIN-DOOR #3 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 1: `subscriptionsignin` declared here (K5046 (c), K5052 (4)); `signinRefusal` (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #289 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/signin-door tranche/T51 && git branch -m job/T51/signin-door stale/signin-door-local && git checkout -b job/T51/signin-door origin/job/T51/signin-door`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module signin-door`; record `build/jobs/T51/signin-door.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Entry.** `subscriptionsignin` is declared by control-plane's `owner-ops.mjs` (classes admin, member; mutating; stamps viewer, by; needs none; weight credential; accepts step, code, attempt; requires step) but answered by your `subscriptionSignin` (`signin-door/index.mjs:141`). Export `DECLARED_OPS` from `signin-door` with that row (same fields; description keyed through `localize`, R-WORDS, same English) and REPORT in your COMPLETE the exact row (text and line) that must leave `control-plane/owner-ops.mjs` in the same merge (K5052 (4)); the file is control-plane's, so BOB makes that one-row deletion at the merge and you do not edit it. **Coupled merge:** plane's test names every module that exports `DECLARED_OPS` in its `OWNERS` (`plane/declarations.mjs`), so plane's batch 1 job adds `signin-door` there: BOB merges your job and plane's together.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `bio-plane/test/m/signin-door/fixtures.mjs` (new file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `signinRefusal` (users now: screens-settings 2): real signin-door `subscriptionsignin` step `code` answering the agent-runner refusal: NO_SIGNIN_WAITING, SIGNIN_UNAVAILABLE, SIGNIN_ADDRESS_UNEXPECTED, AGENT_WORKER_UNBOUND, SIGNIN_REFUSED with `detail`, `trace`.
+
+**Fixture lines NOT done in this job** (4; their providers merge in your batch or after): FIX-E 4; FIX-E providers: ai-accounts, answer-envelope. They stay in your list and arrive as a CHANGE.
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-WORDS (every sentence a member reads is a stand-in keyed through `localize`; its row goes to UX-DESIGN in the one HANDOFF); R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . signin-door --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/signin-door.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B4 · ANSWER · re J3
+
+Added: signin-door now uses test-support and op-declarations (K5066, modules.json on tranche/T51 at its tip). Merge the tranche branch into yours and keep the R6 registration test as written; the architecture check should then read 0. Note: run checks/fixtures.mjs with the absolute product path (a relative root reads nothing, K5066).

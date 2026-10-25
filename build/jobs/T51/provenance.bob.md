@@ -1,6 +1,6 @@
 # BOB to provenance (T51)
 
-**Read** · handled J11
+**Read** · handled J12
 
 ## B1 · START
 
@@ -254,3 +254,35 @@ The invariants name the module whose requirements carry them; BOB writes the wor
 ---
 
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE.
+
+## B10 · START
+
+START · PROVENANCE #29 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 1: publish 10 fixtures, 1 marker line (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #289 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/provenance tranche/T51 && git branch -m job/T51/provenance stale/provenance-local && git checkout -b job/T51/provenance origin/job/T51/provenance`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module provenance`; record `build/jobs/T51/provenance.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `bio-plane/test/m/provenance/fixtures.mjs` (new file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `heldParts` (users now: acquisition 2): the real `partsOf(sha)` of a multi-part capture registered through the real register path; `null` for an unregistered digest.
+- `holdsOf` (users now: capture 10): the real `registerHolds({sha})` answer `{ok, sha, asked, registered, acquired}` of a provenance whose register/receipts stand in the stated state (made by registering/recording through the real acts).
+- `holdsRegister` (users now: ratification 2): real `provenanceOf(...)` over seeded captures: `registerHolds({sha})`, `registeredFor`, `containerResolver` (held/registered/acquired shapes).
+- `homeOf` (users now: doorbell 2): `homeOf(captureSha)` of a capture registered in a bundle through the real register acts: `{bundleId, path, encoding, bytes, registered, authored}` or null.
+- `homeOfEmpty` (users now: tasks 1, machinery-producers 1, queue-producers 2, notice-producers 1, queue 1): real `provenanceOf(...)` over an empty store: `homeOf(sha)` answers null.
+- `homeOfHomed` (users now: tasks 4, machinery-producers 4, queue-producers 4, notice-producers 1): real `provenanceOf(...)` with named captures homed by real promotion: `homeOf(sha)` -> `{bundleId}`; fixture takes a `{sha: bundleId}` map.
+- `homeOfWorld` (users now: store-door 2, control-plane 2): real `provenanceOf(ctx)` over a record world with a registered home (or none) for a capture sha, returned with a call counter wrapped around the real `homeOf`; replaces `{homeOf: () => ...}`.
+- `provenanceOver` (users now: acquisition 4): `provenanceOf(ctx, {record, membership, now})` migrated over the user's record-core (as sources/fixture.mjs already does): `recordReceipt`, `registerHolds`, `homeOf`, `capturesOf`, `captureGrade`, `receiptsOfCapture`, `signReceipt` as provenance answers them.
+- `registeredHomes` (users now: extraction 20, content 2, progressions 1, retrieval-browse 1, calculations 1, intent 2): real provenance (provenance/fixture.mjs world()) with captures registered by really promoting a bundle with a register document (w.promoteInfo); returns {provenance, register(sha, {bundleId,path,...})}; `provenance.homeOf` and `onTestimony` are the real ones; an empty one is the same with nothing registered. Needs to accept the user's own record/membership/promotion (extraction fresh() builds its own) via `provenanceOver({record, membership, promotion})`.
+- `versionChainNoSuchVersion` (users now: agent-steps 1): versionChain({addressNorm, at}) for an address with no such version -> VERSION_CHAIN_NO_SUCH_VERSION (C-24.2).
+
+**Markers owed (K5044 (2), K5060; the audit read each line and found it no module's answer):** write on the line or up to eight lines above:
+- `// fixtures-generic: <the made-up word the line carries>`: testimony-slot.test.mjs:105
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . provenance --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/provenance.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.

@@ -1,6 +1,6 @@
 # BOB to inquiry-grammar (T51)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -63,3 +63,21 @@ ANSWER J4 (BOB #282): (1) the unknown-kind repair: do it in this job (P8). R4 no
 ## B7 · CHANGE
 
 CHANGE (BOB #282, K4988): content's job 91 (the core carries doc-part; legExtent keeps extent_part) is merged into tranche/T51, with R4's new sentence (K4986). Merge the tranche into your branch, re-run, make the repair change of B6, run the checks, and COMPLETE.
+
+## B8 · START
+
+START · INQUIRY-GRAMMAR #13 · tranche T51 · product believeinoakland/bio · fix round 10, cause job, batch 1: causes R30b (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #289 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/inquiry-grammar tranche/T51 && git branch -m job/T51/inquiry-grammar stale/inquiry-grammar-local && git checkout -b job/T51/inquiry-grammar origin/job/T51/inquiry-grammar`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module inquiry-grammar`; record `build/jobs/T51/inquiry-grammar.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Causes (fix-round-10-T51.md §1; each with K4426's four: root cause, why the tests missed it, a failing-first test on the walker's exact case seen red first, the platform check). The requirement amendments quoted are already on the tranche.**
+**R30b, the grammar half** (G6; walk E1a). The mixed shape (some passages needed, some holding each other up) needs the record to accept an unlabelled supporting leg beside labelled grounds; `inquiry-grammar` R1/R68 ("grouped whole or not at all", C-2.8) and `inquiry` R8/R85 (`ground` covers every supporting leg) refuse it, while `strength/arithmetic.mjs:86-101` already computes it ("the implicit part ... and the OR part"). BOB amended inquiry-grammar R1 and R68 (not yet met: T51; DEC-32 clause 4: the default is AND, independent sufficiency is claimed per branch): "grouped whole or not at all" no longer applies to supporting legs; each ground is still declared once, none is empty, a leg naming a ground names a declared one. Tests missed: `question.test.mjs:234-255` conclude tests use `grouped()` (one ground). Failing-first: the grammar accepts the mixed shape and still refuses a ground that covers no leg; then `inquiry` (a following job in a later batch) stores it. Platform N. The module order is grammar, then inquiry, then screens-inquiry (its CHANGE).
+
+Rules of fix-round-9 §0 that bind: R-FOUR (root cause with file:line, why the tests missed it, a failing-first test on the walker's exact case through the real entry path seen red first, the platform check); R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** each cause above fixed with its failing-first test green (seen red first) and its platform check done or named for the redeploy; module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/inquiry-grammar.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.

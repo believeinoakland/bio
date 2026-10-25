@@ -1,6 +1,7 @@
 /* file-safety R27–R32, R34, R35: the group's security tools, the reputation tool spec, and counts forwarded to the
    group's log tools. At the module's interface, over credentials' real keyed services (R28, R30) and the scripted
    scanner's provider routes. */
+import { reputationRefresh } from "../../../../file-scanner/test/fixtures.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { filedWorld as world, pdf, sha, T0 } from "./fixture.mjs";
@@ -409,9 +410,9 @@ test("R41: `refreshReputationLists({at})`, reached by no route, asks file-scanne
   assert.deepEqual(calls[1].body.tool.credentials, { api_key: "gwr-key" });
   assert.doesNotMatch(JSON.stringify(calls), new RegExp(`${s.slice(0, 12)}|secret-host|boss|m1`), "no file, address or member");
   /* the tool with no local list is not asked again until it is tested again */
-  gwr = { ok: false, list_version: "abc123", fetched_at: "2026-10-08T12:00:00.000Z", error: "LIST_CHECKSUM_MISMATCH:THREAT" };
+  gwr = await reputationRefresh("checksum");
   const r2 = await w.fs.refreshReputationLists({});
-  assert.deepEqual(r2, { ok: true, refreshed: [], failed: [{ tool_id: g, code: "LIST_CHECKSUM_MISMATCH:THREAT" }], skipped: [cf] }, "a failed refresh is named");
+  assert.deepEqual(r2, { ok: true, refreshed: [], failed: [{ tool_id: g, code: gwr.error }], skipped: [cf] }, "a failed refresh is named");
   assert.deepEqual(w.calls("/provider/refresh").slice(2).map((c) => c.body.tool.tool_id), [g]);
   await w.fs.securityToolTest({ toolId: cf, by: "boss" });
   await w.fs.refreshReputationLists({});

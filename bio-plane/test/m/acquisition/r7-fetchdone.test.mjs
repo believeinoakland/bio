@@ -16,6 +16,7 @@ const source = () => new Response(bytes, { headers: { "content-type": "applicati
 async function parked() {
   const w = world();
   const entries = [];
+  // fixtures-contract: plane owed-ledger
   w.store.owedLater = async (e) => { entries.push(e); return { ok: true }; };
   const first = await run(w, { [BIG]: source }, { locator: BIG, project: "PROJ-1" }, { settle: false });
   assert.equal(first.status, 200);
@@ -27,6 +28,7 @@ const alarm = async (w, session, refuse) => {
   const seen = [];
   const net = network({ [BIG]: source });
   try {
+    // fixtures-contract: control-plane deliver-owed
     const out = await owedFetch(w.store, { kind: "fetch", session }, { storeName: "bio", deliver: async (d) => {
       const ld = w.store.loadCaptureSession({ session: d.session });
       seen.push({ found: ld.found, fetch_pending: ld.state && ld.state.fetch_pending, fetch_done: !!(ld.state && ld.state.fetch_done), opened_by: ld.state && ld.state.opened_by, project: ld.state && ld.state.project });

@@ -18,6 +18,7 @@ const SESSION_OF = (w) => [...w.store.state.sessions.values()].find((s) => s.sta
 /* a member's large press, parked by the real `acquire` under the member's id exactly as the plane stamps it */
 async function parked(sessMember = "m1", cls = "member") {
   const w = world();
+  // fixtures-contract: plane owed-ledger
   w.store.owedLater = async () => ({ ok: true });
   const first = await run(w, { [BIG]: source }, { locator: BIG, project: "PROJ-1" }, { settle: false, sessMember, cls });
   assert.equal(first.status, 200);
@@ -69,6 +70,7 @@ test("R110 (G104): the state between made and delivered is listed: queue empty, 
   const seen = [];
   try {
     /* the delivery is held (refused) as a slow one is: the session is in the made state while it is, and listed */
+    // fixtures-contract: control-plane deliver-owed
     const out = await owedFetch(w.store, { kind: "fetch", session }, { storeName: "bio", deliver: async (d) => {
       seen.push(openCaptures(w.store, { by: "member:m1" }).captures);   // as the screen's watch asks, in the middle of the delivery
       return { ok: false, reason: "DELIVERY_FAILED" };
@@ -86,6 +88,7 @@ test("R110 (G104): the state between made and delivered is listed: queue empty, 
   assert.equal(between[0].fetch_pending.delivering, true);
   /* delivered: dropped, listed no more */
   const net2 = network({ [BIG]: source });
+  // fixtures-contract: control-plane deliver-owed
   try { const out = await owedFetch(w.store, { kind: "fetch", session }, { storeName: "bio", deliver: async () => ({ ok: true }) }); assert.deepEqual([out.ok, out.done], [true, true]); }
   finally { net2.restore(); }
   assert.deepEqual(openCaptures(w.store, { by: "member:m1" }).captures, [], "dropped on delivery");

@@ -13,6 +13,7 @@ import { combine } from "../../../../jurisdictions/index.mjs";
 import { DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, CAPTURE_REQUEST_ARM_CHECKS, acquireGradeNote, ACQUIRE_GRADE_NOTE,
          civicsmithUserAgent, CAPTURE_MAX, MULTIPART_KEEP_MAX } from "../../../src/acquisition/index.mjs";
 import { word, localize } from "../../../src/setup-words/index.mjs";
+import { renderFailure } from "../capture-sources/fixtures.mjs";
 
 const ROW = (table, code) => [table[code].check, table[code].translation];
 
@@ -241,7 +242,7 @@ test("R5 R6 R7 R29: the render arm refuses before any fetch, admits against the 
   assert.equal(env.calls.length, 0, "no renderer was asked");
   assert.equal(w2.prov.receipts.length, 0);
   /* failed render: nothing filed */
-  const w3 = world({ env: rendererEnv({ ok: false, error: "crashed" }) });
+  const w3 = world({ env: rendererEnv(await renderFailure({ class: "no_session" })) });
   const fail = await run(w3, { "https://r.example/page": page(HTML()) }, { locator: "https://r.example/page", render: true });
   assert.deepEqual([fail.status, fail.body.reason, fail.body.check, fail.body.translation, fail.body.filed], [502, "RENDER_FAILED", ...row("RENDER_FAILED"), false]);
   assert.equal(w3.prov.receipts.length, 0);

@@ -1,6 +1,6 @@
 # BOB to translations (T51)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -96,3 +96,30 @@ Owner **translations** (the op's arm answers the shown words alone unless a lang
 ## B4 · CHANGE
 
 CHANGE (K4822, from control-plane J47): the interfacewords answer's result carries words_version (your R20 value) beside language, on every answer of the op (both arms), so the door can compare the v it is asked (<release>~<language>~<words_version>) with it without another hop. Add it with a test naming R20; no other change.
+
+## B5 · START
+
+START · TRANSLATIONS #4 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 1: `interfacewords` declared here (K5046 (c), K5052 (4)); your two `store-replies` markers (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #289 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/translations tranche/T51 && git branch -m job/T51/translations stale/translations-local && git checkout -b job/T51/translations origin/job/T51/translations`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module translations`; record `build/jobs/T51/translations.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Entries.** (1) `interfacewords` is declared by control-plane's `owner-ops.mjs` (`DECLARED_OPS`, its R116 row) but answered by your arm (`translations/index.mjs:818`): add its row to your `DECLARED_OPS` (`:824`) with the same classes, weight, stamps (`viewer`), fields (accepts `language`, `v`; requires none) and description as control-plane's row (the row after `subscriptionsignin`), the description keyed through `localize` in your namespace (R-WORDS), same English; and REPORT in your COMPLETE the exact row (text and line) that must leave `control-plane/owner-ops.mjs` in the same merge (K5052 (4): an op declared by two modules stops plane's start, `plane/declarations.mjs:182-186`); the file is control-plane's, so BOB makes that one-row deletion at the merge and you do not edit it. Your own tests assume the row is gone. (2) Your two `store-replies` lines (`fixture.mjs:77`, `:83`) take `// fixtures-contract: store-door store-replies`.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `bio-plane/test/m/translations/fixtures.mjs` (new file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `memberLanguageRead` (users now: instance-setup 1): the real `registerMemberLanguageRead` and `wordsVersion`; a `wordsVersion` that throws is a fault (K5044 (1)) and needs no fixture.
+
+**Your own fixture lines, done in this job** (2; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- FIX-L store-door/store-replies: fixture.mjs:77,83
+
+A `fixtures-run` you write shows `orphan-run` in your list until its user module's marker is merged, and a marker you place shows `contract-no-run` until its provider's run is merged: these are the only lines you may leave at done, each named in your record with the module it waits for.
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-WORDS (every sentence a member reads is a stand-in keyed through `localize`; its row goes to UX-DESIGN in the one HANDOFF); R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . translations --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/translations.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.

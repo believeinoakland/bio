@@ -52,7 +52,7 @@ export function world({ omit = [] } = {}) {
     row(q, ...a) { return sql.exec(q, ...a)[0] ?? null; },
     rows(q, ...a) { return sql.exec(q, ...a); },
     /* The founder claims the instance: the fact `credentials` states (its R17). */
-    async claim() { creds.claimed = true; return { ok: true, role: "admin" }; },
+    async claim() { creds.claimed = true; return { ok: true, role: "admin" }; }, // fixtures-own: harness the founder's claim, a world helper named like an op
     /* Invite and enrol a member all the way to active; returns the enrol answer. */
     async enrol(id, role = "member", by = "admin", caps = null) {
       const a = await m.memberAdd({ memberId: id, cover: `cover of ${id}`, role, capabilities: caps, by });
@@ -96,7 +96,7 @@ export async function realWorld() {
   m.registerClaimed("credentials", () => creds.claimed);
   m.registerPasswordSetter(({ role, password }) => { creds.passwords.set(role, password); return { ok: true, role }; });
   return { db, sql, rc, m, creds,
-    async claim() { creds.claimed = true; return { ok: true, role: "admin" }; },
+    async claim() { creds.claimed = true; return { ok: true, role: "admin" }; }, // fixtures-own: harness the founder's claim, a world helper named like an op
     bundle(id, type = "project") { db.prepare(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated,
       bundle_sha) VALUES (?,?,'g',?,'forming','t','t','sha')`).run(id, type, id); m.reindexProjectSight(id); },
     row(q, ...a) { return sql.exec(q, ...a)[0] ?? null; } };

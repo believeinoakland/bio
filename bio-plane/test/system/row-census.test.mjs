@@ -479,6 +479,7 @@ test("R50 NEGATIVE CONTROL: a row added without a re-pin fails, naming it; so do
   const own = censusOf(now.lines.map((l) => { const [check, code, where, translation] = JSON.parse(l); return { check, code, where, translation }; }));
   const ctl = { pin: { version: "control", rows: own.rows, digest: own.digest }, stamped: own.lines, awaiting: [] };
   assert.equal(compare(now.lines, ctl).held, true, "the control's own stamp does not hold over the lines it was made from");
+  // fixtures-generic: CONTROL_ARRIVAL (a row made up on purpose for the negative control; no module gives it)
   const added = lineOf({ check: "C-999.1", code: "CONTROL_ARRIVAL", where: "src/nowhere.mjs control", translation: "A control arm's row." });
   const a = compare([...now.lines, added], ctl);
   assert.equal(a.held, false);

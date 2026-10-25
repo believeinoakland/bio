@@ -36,6 +36,7 @@ test("R39 (d526): promotion's own refusals are asked before any registered fence
   assert.deepEqual(asked, [], "no registered fence was asked");
   assert.equal(record.dump(), before);
   /* With the envelope agreeing, the registered fences are asked, in the modules' order (bias, layer 5, first). */
+  // fixtures-generic: BIAS_FENCE (a fence this test registers itself and makes refuse; no provider's code)
   assert.equal(p.promote(create(ID, infoDoc(ID), { meta: { object_type: "information" } })).reason, "BIAS_FENCE");
   assert.deepEqual(asked, ["bias"]);
 });

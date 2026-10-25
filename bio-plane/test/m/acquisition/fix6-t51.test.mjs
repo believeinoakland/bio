@@ -79,6 +79,7 @@ const rendered = (url) => ({ ok: true, html: VISITOR, elapsed_ms: 12, engine: "C
 /* a renderer service that answers after `ms` and counts its calls: the walker's 15 s render, scaled to what a test can wait */
 const renderer = (ms) => { const calls = []; return { calls, RENDERER: { fetch: async (u, init) => { const req = JSON.parse(init.body); calls.push(req.url); await sleep(ms); return new Response(JSON.stringify(rendered(req.url))); } } }; };
 /* the plane's owed-work ledger as a log: what `owedLater` was handed, in order */
+// fixtures-contract: plane owed-ledger
 const withLedger = (w, answer = { ok: true }) => { const log = []; w.store.owedLater = async (e) => { log.push({ ...e }); return answer; }; return log; };
 const beginRender = async (w) => {
   const first = await run(w, { [PG]: () => page(SHELL) }, { locator: PG, render: true }, { renderWaitMs: 20 });
@@ -110,6 +111,7 @@ test("R106 (G3): the object restarted and the render takes 15 s: \"Finish it\" a
   const delivered = [];
   const net = network({ [PG]: () => page(SHELL) });
   let out;
+  // fixtures-contract: control-plane deliver-owed
   try { out = await restarted.owedRun(w.store, { kind: "subresources", session: sid }, { deliver: async (d) => { delivered.push(d); return { ok: true }; } }); }
   finally { net.restore(); }
   assert.deepEqual([out.ok, out.done], [true, true]);
@@ -140,6 +142,7 @@ test("R106 (G3) controls: a render still running in this object is pending at on
   /* a ledger that refuses the entry is no ledger */
   const refusing = world({ env: renderer(150) });
   const sid3 = await beginRender(refusing);
+  // fixtures-contract: plane owed-ledger
   refusing.store.owedLater = async () => ({ ok: false, reason: "PENDING_MALFORMED" });
   const fresh3 = await import("../../../src/acquisition/index.mjs?restart=fix6-g3-refusing");
   const again = await press(fresh3, refusing, sid3);
@@ -178,6 +181,7 @@ const tick = (w, session, extra = {}) => {
   const delivered = [];
   const net = network(extra.routes || {});
   const go = async () => {
+    // fixtures-contract: control-plane deliver-owed
     try { const out = await owedFetch(w.store, { kind: "fetch", session }, { storeName: "bio", deliver: async (d) => { delivered.push(d); return extra.refuse ? { ok: false } : { ok: true }; } }); return { out, delivered }; }
     finally { net.restore(); }
   };
@@ -283,6 +287,7 @@ test("R105 (G2) controls: a 1 MB page is captured in the request as before; a sm
   assert.deepEqual([a.status, a.body.fetch_pending, a.body.document.capture.sha256], [200, undefined, sha(bigBytes)]);
   /* a ledger that does not take the kind (the plane before it knows `fetch`): the capture is read here and no session is left behind */
   const refusing = world();
+  // fixtures-contract: plane owed-ledger
   withLedger(refusing, { ok: false, reason: "PENDING_MALFORMED" });
   const b = await run(refusing, { [BIG]: () => fastBody(bigBytes) }, { locator: BIG });
   assert.deepEqual([b.status, b.body.fetch_pending, b.body.document.capture.sha256, refusing.store.state.sessions.size], [200, undefined, sha(bigBytes), 0]);
@@ -358,6 +363,7 @@ test("R105 (G2): `owedFetch` states what became of the capture: a source that re
   assert.deepEqual([t.out.done, fetched, t.delivered.length, t.delivered[0].answer.document.capture.sha256], [true, 1, 1, sha(body)]);
   assert.equal(w.store.state.sessions.has(sid), false);
   /* gone, malformed, and no deliver */
+  // fixtures-contract: control-plane deliver-owed
   assert.deepEqual(await owedFetch(w.store, { kind: "fetch", session: "fp_none" }, { deliver: async () => ({ ok: true }) }), { ok: true, done: true, reason: "NO_SUCH_SESSION" });
   assert.equal((await owedFetch(w.store, { kind: "subresources", session: "x" }, {})).reason, "OWED_MALFORMED");
   sid = await mk();

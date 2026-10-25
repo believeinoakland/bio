@@ -56,6 +56,7 @@ export async function render(deps, body) {
     const e = await r.json().catch(() => ({}));
     const code = KNOWN.has(e.code) ? e.code : 'RENDER_FAILED';
     const message = code === 'RENDER_FAILED' && e.reason === 'FIRST_PAGE_OVER_BOUND' ? localize('file-scanner.render.the_first_page_is_over_the_limit', 'the first page of the safe view is over the limit of {limit} bytes', { limit: String(SAFE_VIEW_BYTES_MAX) })
+      : code === 'NOT_RENDERABLE' ? (typeof e.message === 'string' && e.message ? e.message.slice(0, 300) : undefined)
       : code === 'RENDER_FAILED' ? String(e.message || localize('file-scanner.render.the_renderer_answered_status', 'the renderer answered {status}', { status: String(r.status) })).slice(0, 300) : undefined;
     return failed(code === 'TIME_LIMIT' ? 504 : code === 'RENDER_FAILED' ? 500 : 422, code, code === 'TIME_LIMIT' ? 'transient' : 'final', message ? { message } : {});
   }

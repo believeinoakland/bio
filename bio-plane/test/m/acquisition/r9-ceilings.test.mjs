@@ -21,12 +21,14 @@ test("R114: the exported ceilings are the table's active figures, and the archiv
 });
 
 test("R114: a capture declared one byte over the limit is refused TOO_LARGE (413) with size, bound and key, nothing filed; at the limit it is not refused (control)", async () => {
+  // fixtures-contract: plane owed-ledger
   const w = world(); w.store.owedLater = async () => ({ ok: true });
   const over = await run(w, { [U]: declared(CAPTURE_MAX + 1) }, { locator: U }, member);
   assert.equal(over.status, 413);
   assert.equal(over.body.reason, "TOO_LARGE");
   assert.deepEqual([over.body.size, over.body.bound, over.body.key], [CAPTURE_MAX + 1, CAPTURE_MAX, "limit.archive.uploaded_bytes"]);
   assert.equal(over.body.document, undefined);
+  // fixtures-contract: plane owed-ledger
   const at = await run(world(), { [U]: declared(CAPTURE_MAX) }, { locator: U }, { ...member, owedLater: async () => ({ ok: true }) });
   assert.notEqual(at.body.reason, "TOO_LARGE");
 });

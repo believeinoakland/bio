@@ -1,6 +1,6 @@
 # BOB to admission (T51)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -91,3 +91,21 @@ Mail with `--module admission`; record `build/jobs/T51/admission.md` (append a n
 (3) **Failing-first.** The owner's own (review G14): `admission/r8-session-reads.test.mjs` counts the session reads of one request through `gate` (`admission/index.mjs:667`), `readerOf` (:873) and `liveSessionDigest` (:1017): one (red: 3). The door confirmation `bio-plane/test/m/control-plane/r8-hops.test.mjs` (the `wrap-entry.mjs` counting door): the object calls per frame op for a signed-in member and the administrator: `whoami` 1, `queue` 2, `groupidentity` 3 (the session read once, `doorwindow` kept, K4814 (4): the calls are `session`, `doorwindow`, `groupidentity`; `doorwindow` is a protective limit, `admission/index.mjs:1030-1055`, review2 D2), `bootstrap` at most 3 (administrator 4, unchanged by this cause), `infolevel`, `assistantstate`, `accountreference`, `groupkeystate`, `wizardsat` and `projectlist` 2; red: `groupidentity` 4 and `bootstrap` 4-5; the session is read once per request.
 (4) Platform check **L** (the count) and **P** (R-QUIET: `groupidentity;dur` and its `do-`/`in-` entries recorded this time).
 **Fix shape.** One session read per request; `doorwindow` stays (a protective limit, K1881, K4814 (4)); K4599's combined read stays after the alpha. **Old records:** none.
+
+## B6 · START
+
+START · ADMISSION #18 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 1: causes R27b (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #289 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/admission tranche/T51 && git branch -m job/T51/admission stale/admission-local && git checkout -b job/T51/admission origin/job/T51/admission`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module admission`; record `build/jobs/T51/admission.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Causes (fix-round-10-T51.md §1; each with K4426's four: root cause, why the tests missed it, a failing-first test on the walker's exact case seen red first, the platform check). The requirement amendments quoted are already on the tranche.**
+**R27b** (G5; walk E4: `/app/group`'s `do-doorwindow` 2 s; same write hop as R24 (a)). Root: `admission/window.mjs:79-96` (`#counted`) runs a `DELETE` of passed buckets and an `INSERT ... ON CONFLICT DO UPDATE` in a transaction on every public op; 50 counts change 50 rows (live: `do-doorwindow` p50 100 ms, max 1,024 ms). BOB amended admission R21 (not yet met: T51): the window's counts are kept in memory and written at most every 5 seconds; the limit (300 in ten minutes) is judged from the counts in memory; a restart loses at most 5 s of counts. Failing-first, seen red (50 rows changed for 50 counts): new `r10-doorwindow-writes.test.mjs`: 50 `doorWindow({address,session})` calls change at most 2 rows; controls: the 301st request in ten minutes is still refused at the limit; two sources are counted apart. Platform P as credentials'. R-CLOCK: the flush interval is an injected constant.
+
+Rules of fix-round-9 §0 that bind: R-FOUR (root cause with file:line, why the tests missed it, a failing-first test on the walker's exact case through the real entry path seen red first, the platform check); R-SEAM / R-ONE; R-CLOCK; R-LAYER; R-QUIET; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** each cause above fixed with its failing-first test green (seen red first) and its platform check done or named for the redeploy; module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/admission.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
