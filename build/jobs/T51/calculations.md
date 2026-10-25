@@ -387,3 +387,32 @@ Deferred: none. Found in another module: workbooks' `#readTable` must pass `rows
 
 Tests/checks: calculations suite 143 pass, 0 fail. format 0 failures; architecture 0 failures; words 0 failures (inline 0); ownership 9 files, 0 failures; coverage 49 of 50, R50 only; setup-words --check: stale-rows note only (expected). Not run: workbooks suite re-run after job 112, seam section 4.
 Size (session_01QjzUX72r6jBzxqxd3JsT9R): test runs 12, module lines 4135
+
+## J22 · COMPLETE
+
+Fix round 10, batch 4 (B30): cause R19 and the two own fixture lines. Branch job/T51/calculations (tranche/T51 merged first, no rebase).
+
+**R19 (G4; R45's amendment).**
+- Root cause, as BOB gave it (`declareTable`, `calculations/index.mjs`): a reading's tab-joined text had its delimiter guessed, and a tie with the comma fell to the comma. Reproduced to the digit: row 1 read `["P1\tQ1\t$69","268.31",""]`. The tie needs a window in which every line holds a comma and a tab (a header line without a comma breaks it), which is why the walker's body-only text tied.
+- Fix: `#sourceRows` marks text that came from the reading's own passage (`own`); `declareTable` reads that text at tabs when a tab is on the majority of its lines (`tabJoined`). For any other text whose signature is `delimiter_undetermined_tied` and whose header has more than one column it refuses `SOURCE_NOT_READ {content_id, delimiter: null, tied, columns_expected}`, never a comma in silence. Other undetermined cases (too few lines, none consistent) are unchanged: comma as before, and the one-cell-per-line refusal still stands.
+- Why the tests missed it: `r9-cells.test.mjs` `lined` had cells with no comma. Failing-first: new `r10-tab-lines.test.mjs`, seen red on the walker's row, now green: (1) tab-joined lines with `$69,268.31` equal the input and the CSV twin's sha; (2) the generator's ODS of 200 rows x 6 columns (`rw9-B-2a`), rows equal the generator's truth and the sha equals the CSV twin's; (3) control: comma+semicolon tied text is refused with the tie named.
+- Note for BOB: test (2) builds the reading's lines from `sheetgen`'s truth joined by a tab, not through `odf.mjs`, because `odf-reader` is not in calculations' `uses` (the architecture check would refuse the import). The real ODS-to-text step is odf-reader's own; a platform re-walk of B2a is the end-to-end check. Also, test (2) makes the currency column hold a thousands comma on every line, as the walker's did.
+- Platform check: none needed (pure code); re-walk B2a on the copy: `op=table` page 0 rows equal the sheet, 0 `undetermined` cells.
+- R-WORDS: one new stand-in via `localize`, key `calculations.index.the_delimiter_is_tied`: "the source's delimiter could not be told ({tied} fit its lines equally), so it is not read as a table. Nothing was written." For the one HANDOFF row (fix-round-10-words.md names G1/R19 for UX-DESIGN).
+- Requirements: R45 stays "not yet met: T51" until BOB marks it; its amendment is now met.
+
+**Own fixture lines (2), both done.**
+- events/usesOf (`fixture.mjs`): the hand-built `KIND_NOT_DISCRETION` answer is now events' own `usesOf().refused` from `events/fixtures.mjs` (FIX-E).
+- provenance/registeredHomes (`g41-cells.test.mjs`): the hand-built `register(rows)` stand-in is now provenance's `registeredHomes()`, the file registered with its real `register` act (provenance is earlier in modules.json, so FIX-E, not a contract marker).
+- `checks/fixtures.mjs . calculations --list`: 0 failures. I added no `fixtures-own`, `fixtures-generic` or `fixtures-contract` marker.
+
+**Found in another module.** `bio-plane/test/m/op-grades/owners.test.mjs:195` ("R13 R3: every op T33 publishes is graded") fails with the op `moneyingestread` listed but not graded. I did not change any op; I did not check whether it fails on the bare tranche. For BOB: op-grades (or whoever owns `moneyingestread`).
+
+**Tests and checks.**
+- calculations module: 146/146 pass (146 tests, 0 fail).
+- Users: the 60 non-calculations test files naming `declareTable`/`tabledeclare` plus workbooks: 693 tests, 690 pass, 1 fail (the op-grades one above, unrelated). `impact.mjs origin/tranche/T51 HEAD` names 78 modules; those users' tests beyond the 60 files were not run.
+- format: 178 modules, 0 failures. architecture: 0 failures. coverage: 49 of 49 live requirement ids named, 0 failures. ownership: 5 files changed, 0 failures.
+
+**Deferred.** Nothing.
+
+Size (session_01VRJd41T1uHsmH8s4YFxQ5y): test runs 9, module lines 4150
