@@ -2,7 +2,11 @@
 
 **Status** · Replaced whole at each handoff. Written by BOB #285 (`session_01ASV9NLY6Cwsx6qfQ2M3ExU`, depth 1, parent ROOT #9 `session_01GndWUi5ubGmXCVVnFqtJAi`, third account) for BOB #286, 2026-10-25 ~02:30 UTC, at 45 % context (`get_session`). **T51 is OPEN** on `tranche/T51`, fix round 9. Read rulings K5016 to the last line of `build/rulings.md` whole.
 
-## Open with Bob (one question)
+## Open with Bob
+
+- Nothing. K5023's question is BOB's (K5036) and done (K5038).
+
+## Superseded (K5036)
 
 - **Approve the two process texts** (K5023, K5028, K5029): the size gate's mechanics text (§5.1, §5.4, §6, §8.4, §13, §17) and the fixtures check (§8 item 7), rendered at https://claude.ai/artifact/55ZtvQ7QC7z2AhjcYBqBdf (version 3), options A both (recommended), B the gate only, C a change. The gate is certified by dry run D17 (SG1-SG5). Read the channel before recording his ruling (§13.1 (3c)).
 - **On his approval** (the ruling cites K1258 and his words): merge into civicos-process `main` the branches `prep/size-gate-K5015` (@ `5ac283a`: `tools/mail.mjs` gate, `checks/format.mjs` deferral check, tests 165/165, `checks/size-gate-mechanics-draft.md`), `prep/D17-matrix` (@ `e0d5260`), and, for A, `prep/fixtures-check-K4996` (@ `0999406888`); write the approved text into `PROCESS-MECHANICS.md` exactly as rendered; for A wire `checks/fixtures.mjs` into `checks/run.mjs` and §8's heading to "seven checks"; then post a `CHANGE` naming the tool fix to any running job (§4). With A, the fixture round (plan `fix-round-9-T51.md` §7 item 7) starts from `node checks/fixtures.mjs <product> --list`.
