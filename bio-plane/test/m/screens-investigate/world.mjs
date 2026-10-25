@@ -25,10 +25,11 @@ export async function openAs(world, me, path, { plane = {}, ...options } = {}) {
 
 /** Every read the page made has answered and the page is quiet. */
 export async function settled(p) {
-  const main = p.doc.getElementById("cs-main");
   let last = -1, stable = 0;
   for (let i = 0; i < 1500 && stable < 8; i++) {
     await p.settle(20); await new Promise((r) => setTimeout(r, 10));
+    /* looked up each time: choosing a document redraws the screen and replaces `#cs-main` */
+    const main = p.doc.getElementById("cs-main");
     const busy = main.querySelectorAll('[data-state="loading"]').length > 0;
     stable = !busy && p.requests.length === last ? stable + 1 : 0; last = p.requests.length;
   }

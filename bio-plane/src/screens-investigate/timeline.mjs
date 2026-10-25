@@ -96,7 +96,8 @@ function render(cs, view) {
      here: a kind with a word of the design's is worded by it, any other by the owner's own word as record data; an unread
      vocabulary draws the choice failed, not a guess */
   const vk = view.data.vocab && view.data.vocab.state === "ok" && view.data.vocab.value && view.data.vocab.value.vocabularies ? view.data.vocab.value.vocabularies.event_kinds : null;
-  const kindOptions = vk && Array.isArray(vk.values) ? vk.values.map((k) => (cs.w(S + "evkind." + k) !== cs.esc(S + "evkind." + k) ? [k, S + "evkind." + k]
+  /* the kinds recorded only with their own act (discretion, waiver, assessment: `USE_NEEDS_ITS_ACT`) are not offered by "Record an event" */
+  const kindOptions = vk && Array.isArray(vk.values) ? vk.values.filter((k) => !["discretion", "waiver", "assessment"].includes(k)).map((k) => (cs.w(S + "evkind." + k) !== cs.esc(S + "evkind." + k) ? [k, S + "evkind." + k]
     : { value: k, text: String((vk.words && vk.words[k] && vk.words[k].word) || k) })) : null;
   const kindChoice = kindOptions ? cs.choice("tl-kind", S + "evkind", kindOptions, {}) : cs.state("vocab", view, () => `<p class="cs-state" data-state="failed" role="alert">${cs.w("state.failed", { reason: { html: cs.w("shell.noanswer") } })}</p>`);
   const precisions = ["day", "minute", "second", "edtf"];

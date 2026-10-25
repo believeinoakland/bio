@@ -66,7 +66,17 @@ async function twoDocuments() {
   const trail = await world.recipes.trail(me, project, "Pothole repairs, FY2026");
   return { world, me, project, trail, first, second, firstUnits, secondUnits };
 }
-const select = async (p, id, sha) => { fill(p, { [id]: sha }); p.fire(p.doc.getElementById(id), "change"); await settled(p); };
+/** `settled`, but `#cs-main` is looked up each round: choosing another document redraws the screen and replaces it, and world.mjs's `settled`, which holds the first
+ *  element, then waits on a detached "loading" for its whole bound (sixteen seconds). */
+async function quiet(p) {
+  let last = -1, stable = 0;
+  for (let i = 0; i < 1500 && stable < 8; i++) {
+    await p.settle(20); await new Promise((r) => setTimeout(r, 10));
+    const busy = p.doc.getElementById("cs-main").querySelectorAll('[data-state="loading"]').length > 0;
+    stable = !busy && p.requests.length === last ? stable + 1 : 0; last = p.requests.length;
+  }
+}
+const select = async (p, id, sha) => { fill(p, { [id]: sha }); p.fire(p.doc.getElementById(id), "change"); await quiet(p); };
 
 test("R34 C59 money and timeline send the passage chosen on screen, and the whole document when none is chosen", async () => {
   const w = await twoDocuments();
