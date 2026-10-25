@@ -1,6 +1,6 @@
 # BOB to capture (T51)
 
-**Read** · handled J41
+**Read** · handled J42
 
 ## B1 · START
 
@@ -802,3 +802,29 @@ Mail with `--module capture`; record `build/jobs/T51/capture.md` (append a new s
 1. **Publish the upload's provenance document** (CASE-CARRIAGE #19 J9, merged K5152): case-carriage's photo test had to hand-build the document an upload writes, because capture publishes none. Publish in your tests' `fixtures.mjs` a fixture that runs your real `uploadCapture` over a small PNG (and over a text named `notes.png`) and answers the provenance document it wrote (`capture`, `profile`, `file`), made when the test runs. Test: the fixture's document equals what `upload.test.mjs:138-155` pins. Name the fixture and its signature in your COMPLETE; case-carriage re-points to it in a later CHANGE.
 
 **Done:** module tests green; `checks/fixtures.mjs <absolute root> capture --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B42 · START
+
+START · CAPTURE #62 · tranche T51 · product believeinoakland/bio · fix round 10 (K5205)
+
+Depth 2 (BOB #304 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/capture tranche/T51`; if a local `job/T51/capture` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/capture stale/capture-local && git checkout -b job/T51/capture origin/job/T51/capture`. If `job/T51/capture` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`, then `mail inbox --as job` and `mail done --as job --through B<n>` for this START (BOB merges a COMPLETE only when your record's cursor has read BOB's newest entry, K5171). A refused step: post BLOCKED naming it.
+Mail with `--module capture`; record `build/jobs/T51/capture.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root `/home/user/bio`, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A `fixtures-own: <reason>` or `fixtures-generic: <CODE>` marker only where the value is truly your own (an input you feed, a harness, a platform double, a synthetic token), each named in your COMPLETE. A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one; REPORT the door case for BOB to place (K5138). A new sentence people read is written at its use as `localize(id, en, vars)` in a module that may (K3930, K3943); a screens module draws by key only.
+
+Bob's direction for this round (K5175): every bug, failure and broken feature found is fixed in this round; no guessing, no deferrals, no assumptions. A cause you find outside your paths is REPORTed the day you find it, with file:line.
+
+Your job: capture's instants read the wall clock where the store's clock must answer (K5132's rule: a handed `now`, else `env.BIO_NOW_MS`, else the wall clock; capture's own `#instant()`, `capture/index.mjs:485`; STORE-ASSEMBLY #4 J11): the upload receipt's `retrieved` (`stampSecond()` defaults at `:979`, `:1562`), `saveCaptureSession` (`:3265`) and `loadCaptureSession` (`:3283`, `new Date()`: a session's created, updated, expires) and `liveCaptureSessions` (`:3300`, `Date.now()` default). Each reads capture's clock, and the exported session functions take an `at`/`now` their callers hand (acquisition's job hands it, ACQUISITION #43 now). Failing-first with `BIO_NOW_MS` pinned through capture's ops map: an upload's `retrieved`, a saved session's expiry and the live list each follow the pinned clock (a session past expiry on the pinned clock leaves the list), red before, green after; a wall-clock control. Name the requirement id that states capture's clock (read your requirements whole); if none states these, QUESTION BOB with your wording. Until OP-GRADES #30 merges (I CHANGE you then), every store fails at import with `DECLARED_OP_DISAGREES: readtranslate description`: not yours; write your change meanwhile and run it green after the CHANGE.
+**Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio capture --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio capture $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B43 · CHANGE
+
+CHANGE (K5207), in this same job beside your START: publish in `bio-plane/test/m/capture/fixtures.mjs`, made by your real code each call: `reattest` for a capture whose attestation is unacknowledged (and its acknowledged answer), and `captureaccount` for a capture account by its capturing member (SCREENS-PUBLISH #23 J43: `fix3:37`, `:325`, `fix4:17`, `fr30b:116` take them). A test of yours calls each and shows it is your real answer.
+
+## B44 · ANSWER · re J42
+
+ANSWER (K5208): your R115 is written as you worded it into `build/requirements/capture.md` (marked not yet met; amends R22, R46, R86, R90). Apply it to every default of that class, listing each in COMPLETE, as you propose. Merge the tranche. B43 (reattest, captureaccount fixtures) rides in this same job.
+
+## B45 · CHANGE
+
+CHANGE (K5209): OP-GRADES #30 is merged (tranche `5a77de5ccd`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
