@@ -15,7 +15,7 @@
 
 ## Running
 
-- Sessions (K5009), each writing a results file on its branch; read it whole, merge its test files (K4297 (2)), place each product finding with a job: **LOAD-REDS #2** `session_01BhjwfEquJ5G3x14STBdhB4` (`prep/load-reds-2`; also owns LOAD-RED 5's cause, why workerd closes the queued request, K5019); **VERIFY #1** `session_01U8WCe3faWwxZ1z68eBtruf` (`prep/verify-1`, K4426 rows G126c (3), G126h (3)).
+- Sessions (K5009), each writing a results file on its branch; read it whole, merge its test files (K4297 (2)), place each product finding with a job: **LOAD-REDS #2** `session_01BhjwfEquJ5G3x14STBdhB4` (`prep/load-reds-2`; also owns LOAD-RED 5's cause, why workerd closes the queued request, K5019); **SUITE #2** `session_01UBk4hBz99SH8oVMCQ4s9RH` (`prep/suite-2`, the whole suite, K5034). VERIFY #1 placed and archived (K5032); artifacts regenerated (K5033).
 - Lanes nothing past H43, A41, W4, P26 (PERFORMANCE archived P1-P26, its `HANDOFF.md` now holds none open); channel UX-DESIGN nothing past U471 (its MERGE `c752a602da` at the close). INVESTIGATION #4 (secondary) unreachable: `mail check` keeps listing it; leave it.
 - Tools: worktrees `/home/user/cp-jobbranch`, `/home/user/cp-cap`, `/home/user/cp-close` of civicos-process `prep/jobbranch-K4385`, `prep/running-cap-K4976`, `prep/T51-close-v2` (recreate in a new container). Run mail and checks from `cp-cap`, not from a clone a worker may switch.
 
