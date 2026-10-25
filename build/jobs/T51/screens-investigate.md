@@ -340,3 +340,25 @@ COMPLETE · screens-investigate #15 · fix round 6, wave 2 (B30): G20 (S11), my 
 **Requirement line proposed (BOB writes it):** R58: a "Which document" picker offers every document `heldcaptures` holds, reading on by its cursor; past the bound it keeps (three reads of up to 1,000) it says how many it shows. Amends R52.
 **Found in other modules:** screens-publish `docket.mjs:20`, screens-action `matter.mjs:156,177`, screens-daily `doors.mjs:17` have the same fixed page (S11, other owners).
 Size (session_01XJx9SjMm4WbibPm3bDFTGW): test runs 6, module lines 3,260
+
+## J27 · QUESTION
+
+QUESTION · fix round 10 causes: new sentences for a drawn screen (replaces none)
+
+START says write a new sentence "at its use as `localize(id, en, vars)`". `checks/words.mjs` fails a `localize` call in any `screens-*` module (DRAWN_MODULES, arm `marker`), and my R30 test fails a key the word table lacks (`hasWord`). So I cannot add a sentence myself. Best reading, as for `screen.people.more` ("adopted from screens-investigate's own rows"): BOB (or the UX stream) adopts the rows below into `docs/development/ux-substrate/screens/words.json`; I code against these exact keys and draw no English of my own. Until a row exists I use a held stand-in where one fits, and only the keys marked NEW are blocked. Proposed English is a stand-in for UX-DESIGN to review.
+
+NEW keys wanted (key · proposed English):
+- screen.person.expunge.marker · Removed where the law requires, {date}, by {member}   (diag2-020305 §6; the statement already promises this sentence)
+- screen.person.holds.heading · Who holds it now
+- screen.person.holds.holder · Who holds it
+- screen.person.holds.through · Current through
+- screen.person.holds.empty · Choose who holds it and say what shows it. Nothing was sent.
+- act.recordline.label.office · Record who holds it   (+ act.recordline.does for the office form is held)
+- act.linecurrentthrough.label.person · State it current through a day   (+ act.linecurrentthrough.does)   (diag2-020305 §5)
+- screen.standard.rel.in.{implements|refers_to|amends|repeals|renumbers|recodifies|defines|excepts|incorporates} · Implemented by / Referred to by / Amended by / Repealed by / Renumbered by / Recodified by / Defined by / Excepted from by / Incorporated by   (diag2-08 C8)
+- screen.standard.issuer.typed · Or a name that is not listed   (C9)
+- screen.calculation.column · The column to work from ; screen.calculation.column.help · Choose the column of the table this reads. ; screen.calculation.part · The value to count ; screen.calculation.part.help · Type the value in that column whose rows this is about.   (item 59)
+
+Stand-ins I use now (no ask): money's source cell is `contradiction.text.row_table` with the document's title in {source_table}; the Standard's passage choice is labelled `form.choose.passage`; a choice that opens with nothing chosen has a blank first option with no text.
+
+If you would rather I ship with the stand-ins and no NEW row, say so: the office's two acts and the marker would then be left unbuilt and listed as deferred. I carry on with every cause that needs none of these.
