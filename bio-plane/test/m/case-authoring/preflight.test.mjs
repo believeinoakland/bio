@@ -13,6 +13,7 @@ import { ARCHIVE_VIA, ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/inde
 import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
 import { readFileSync } from "node:fs";
 import { localize, word as listed } from "../../../src/setup-words/index.mjs";
+import { preflightRefusal } from "../ratification/fixtures.mjs";
 /* words.json's words, read by key (K2220). */
 const WORDS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8"));
 const word = (key) => WORDS.words.find((x) => x.key === key).en;
@@ -405,8 +406,8 @@ test("R34: first is exactly the refusal op=publish would give, and blockers ever
   assert.deepEqual([ready.ready, ready.first, ready.blockers], [true, null, []], JSON.stringify(ready.blockers).slice(0, 300));
 });
 
-test("R34: ratification R18's list is folded into blockers; its undetermined answer is itself a blocker; with no pre-flight offered the list is stated as not reached, and ready is false", () => {
-  const refusal = { ok: false, reason: "NO_ATTESTING_KEY", code: "NO_ATTESTING_KEY", detail: "register a key" };
+test("R34: ratification R18's list is folded into blockers; its undetermined answer is itself a blocker; with no pre-flight offered the list is stated as not reached, and ready is false", async () => {
+  const { refusal } = await preflightRefusal();
   const one = setup({ ratification: ratifyWith({ ok: true, ready: false, refusals: [refusal] }) });
   const a = (s) => args(s.P, [Q], { selfAttested: [{ capture: s.b, reason: REASON }] });
   const r1 = one.w.ca.publishPreflight(a(one));
