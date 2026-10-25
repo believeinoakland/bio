@@ -38,3 +38,5 @@ Rules of fix-round-9 §0 that bind: R-FOUR (root cause with file:line, why the t
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** each cause above fixed with its failing-first test green (seen red first) and its platform check done or named for the redeploy; your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . screens-inquiry --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/screens-inquiry.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+**Inherited red (K5068, from inquiry-grammar's merge of cause 30b):** `R129 R3` asserts the old refusal of a half-labelled basis and is red on the tranche; bring it in line with inquiry-grammar R68 as amended, with your R30a/R30b work.

@@ -1,6 +1,6 @@
 # BOB to conformance (T51)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -46,3 +46,7 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 ## B3 · CHANGE
 
 Retrieval is merged into tranche/T51 (K5067) and publishes noSelection and selectionResolve in bio-plane/test/m/retrieval/fixtures.mjs. Merge the tranche branch into yours and re-point fixture.mjs:147 (the hand-built NO_SUCH_SELECTION) to retrieval's published fixture. The other three lines (basis-versions, case-import x2) wait for their providers. Run checks/fixtures.mjs with the absolute product path. Then record COMPLETE again.
+
+## B4 · ANSWER · re J4
+
+Added: conformance uses retrieval (K5069, modules.json at the tranche tip). Merge the tranche branch, apply your 3-line re-point, run the checks (fixtures with the absolute path), and record COMPLETE again.

@@ -390,7 +390,7 @@ test("R1, R16: a find writes nothing — no selection, no observation row, no fa
   assert.equal(snap(), before);
 });
 
-test("R17a (fix round 10, G3; retrieval R95) a term hit names the part it lies in, `part`: a footnote's hit says footnote, a body paragraph's body, a unit stored without a kind null", () => {
+test("R21 (R17a, fix round 10, G3; retrieval R95) a term hit names the part it lies in, `part`: a footnote's hit says footnote, a body paragraph's body, a unit stored without a kind null", () => {
   const w = find();
   const c = w.cap("d.docx", "d");
   w.doc("INFO-D", {}, { captures: [c] });

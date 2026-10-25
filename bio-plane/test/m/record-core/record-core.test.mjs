@@ -774,6 +774,7 @@ test("R48: instantOrder compares instants as instants in either spelling, NaN wh
 /* A set act for perItem: answers ok for a subject it accepts, a refusal of its own otherwise, and records what it was given. */
 function act() {
   const seen = [];
+  // fixtures-generic: NOPE
   const one = (b) => { seen.push(b); if (b.boom) throw new Error("kaput"); return b.id === "bad" ? { ok: false, reason: "NOPE", extra: 1 } : { ok: true, id: b.id }; };
   return { seen, one };
 }

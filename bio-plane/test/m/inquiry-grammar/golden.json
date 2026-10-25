@@ -2215,18 +2215,7 @@
     ]
    }
   ],
-  "partial": [
-   {
-    "check": "C-2.8",
-    "severity": "error",
-    "message": "1 basis leg carries no ground while 1 do: a basis is grouped WHOLE or not at all, because a leg nobody grouped sitting beside branches somebody did is a relationship the record would have to guess at",
-    "repairable": true,
-    "repairs": [
-     "give every leg a ground — a leg that is needed whatever else holds belongs in every ground, so it is its own single-leg ground only if it alone can carry the conclusion",
-     "or remove the grounds and let the basis read as its weakest leg"
-    ]
-   }
-  ],
+  "partial": [],
   "clean": []
  },
  "supersede": {
@@ -8290,16 +8279,6 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "1 basis leg carries no ground while 1 do: a basis is grouped WHOLE or not at all, because a leg nobody grouped sitting beside branches somebody did is a relationship the record would have to guess at",
-     "repairable": true,
-     "repairs": [
-      "give every leg a ground — a leg that is needed whatever else holds belongs in every ground, so it is its own single-leg ground only if it alone can carry the conclusion",
-      "or remove the grounds and let the basis read as its weakest leg"
-     ]
-    },
-    {
-     "check": "C-2.8",
-     "severity": "error",
      "message": "basis[0].ground 'a' is not declared in grounds[]: a ground that nobody asserted is independently sufficient cannot be one, and the finding must not take a maximum over a branch no member signed for",
      "repairable": true,
      "repairs": [
@@ -8387,16 +8366,6 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "1 basis leg carries no ground while 1 do: a basis is grouped WHOLE or not at all, because a leg nobody grouped sitting beside branches somebody did is a relationship the record would have to guess at",
-     "repairable": true,
-     "repairs": [
-      "give every leg a ground — a leg that is needed whatever else holds belongs in every ground, so it is its own single-leg ground only if it alone can carry the conclusion",
-      "or remove the grounds and let the basis read as its weakest leg"
-     ]
-    },
-    {
-     "check": "C-2.8",
-     "severity": "error",
      "message": "basis[0].ground 'a' is not declared in grounds[]: a ground that nobody asserted is independently sufficient cannot be one, and the finding must not take a maximum over a branch no member signed for",
      "repairable": true,
      "repairs": [
@@ -8480,16 +8449,6 @@
      "check": "C-2.8",
      "severity": "error",
      "message": "grounds[0] requires 'at' as an ISO timestamp (got 'x'): the assertion is dated because a structure authored after a strength was seen is a different act from one authored before it (DEC-32), and only a date lets a reader tell"
-    },
-    {
-     "check": "C-2.8",
-     "severity": "error",
-     "message": "1 basis leg carries no ground while 1 do: a basis is grouped WHOLE or not at all, because a leg nobody grouped sitting beside branches somebody did is a relationship the record would have to guess at",
-     "repairable": true,
-     "repairs": [
-      "give every leg a ground — a leg that is needed whatever else holds belongs in every ground, so it is its own single-leg ground only if it alone can carry the conclusion",
-      "or remove the grounds and let the basis read as its weakest leg"
-     ]
     },
     {
      "check": "C-2.8",
