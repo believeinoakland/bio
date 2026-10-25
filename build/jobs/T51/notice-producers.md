@@ -145,3 +145,7 @@ QUESTION (fix round 10, batch 6): all 10 fixture lines are re-pointed and pushed
 **Completion (after B9).** Merged `tranche/T51` (the `retrieval-browse` edge). Architecture 0 failures; format 0; coverage 29 of 29, 0; fixtures for notice-producers 0 failures; module tests 151, 151 pass. No `fixtures-own` or `fixtures-generic` marker added. Files outside my paths: none.
 
 Size (session_01YTEEz6mMUuYSeNrA5gXVxw): test runs 10, module lines 1699
+
+## J10 · COMPLETE
+
+COMPLETE (fix round 10, batch 6): 10 fixture lines re-pointed to the providers' published fixtures (FIX-E: credentials, standards, provenance x2, steps, retrieval-browse, following; steps' laterFound bound test uses 201 real entries). fixtures check 0 failures for notice-producers; architecture, format, coverage 0 failures; ownership 0; module 151/151; impact user workbooks 4/4. No fixtures-own/fixtures-generic markers. No files outside paths. Size (session_01YTEEz6mMUuYSeNrA5gXVxw): test runs 10, module lines 1699
