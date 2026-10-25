@@ -1,6 +1,6 @@
 # scheduler (T51)
 
-**Status** · session_01D72GnkQD2sSzFN9m6WNunZ · depth 2 · COMPLETE · handled B12
+**Status** · session_018cr32nWucL2LEJyJ5hyu4F · depth 2 · COMPLETE · handled B14
 
 ## J1 · REPORT
 
@@ -266,3 +266,25 @@ Size (session_01D72GnkQD2sSzFN9m6WNunZ): test runs 12, module lines 1048
 ## J13 · COMPLETE
 
 Job 85 done (G159, K4980). Cause: heal re-armed only an absent or spent alarm, so a row registered behind a future daily alarm waited for it. Why missed: no heal test had a live later alarm with a wake already come; the old R28 test pinned the opposite. Red first: spent.test.mjs 'R28 (G159)' red on tranche, green now. Platform check L: seam R8 (A1), (A1 control), (A1b) 3/3 green with this change alone. Scheduler suite 185/185; impact: 11 modules, all green except tasks R25 (K4488) and queue R55, both red on tranche too; format, architecture, coverage, words, ownership 0 failures. Details in my record. Stale: plane and agent-worker bundles. Size (session_01D72GnkQD2sSzFN9m6WNunZ): test runs 12, module lines 1048
+
+## J14 · QUESTION
+
+Batch 6 (J14): my 14 fixture lines are re-pointed and 'checks/fixtures.mjs /home/user/bio scheduler' is at 0, suite 185/185. One check fails and is not mine to change: architecture says consumers.test.mjs imports bio-plane/test/m/acquisition/fixtures.mjs (acquireRefusals, the provider of the SOURCE_REFUSED line at :234) and acquisition is not in scheduler's 'uses' in build/modules.json. Best reading: please add 'acquisition' to scheduler's uses on tranche/T51 (it is the provider the part file names for this line; scheduler already uses link-sweep, whose sweep calls acquisition). I will merge tranche/T51 when you answer and finish; everything else is ready.
+
+## Fix round 10 · batch 6 · fixture lines (SCHEDULER #46, session_018cr32nWucL2LEJyJ5hyu4F, depth 2)
+
+**Lines done (14, all FIX-E; `checks/fixtures.mjs /home/user/bio scheduler --list`: 12 findings before, 0 after).** `consumers.test.mjs:234` takes acquisition's `acquireRefusals({kind: "source_refused"})`; `copies.test.mjs:90` case-carriage's `copyTickRefusals().batch`; `copies.test.mjs:148` `onCopyWorkRegistrarRefusals()` (`twice`, `malformed`; the fault's `detail` is now the real one); `files.test.mjs:47` file-safety's `batchTickAnswers()` for the deeper batch and, per K5070, the forward counts (the real `{ok, sent, failed, record: {period, counts}}`, no longer `record: null`); `files.test.mjs:164` `declaredRefusals()`, asserted to cover every declared `*_ABSENT/_UNREADABLE/_INVALID` code of `FILE_SAFETY_CHECKS`; `fixture.mjs:39` (monitoring's idle tick answers), `:114` (duties' empty pass) and `:157` (file-safety's five batches) are taken at load from the providers' real code (`monitoring/fixture.mjs` world, `batchTickAnswers`, `recordTransitionsAnswers`), cloned at each answer; `new-work.test.mjs:92,121,167` take duties' `empty`/`unfinished`/`finished`, people's `evaluateChecksAnswers` and money-checks' `runDetectorsAnswers`. The real empty money pass reports `detectors: 0` (no work, so no alarm, R21), so the daily-consumer test uses `{...money, detectors: 2}` for that one case, commented.
+
+**Markers added:** no `fixtures-own`, no `fixtures-generic`, no `fixtures-contract`. **Left:** none of mine. No Wave B line.
+
+**Needs BOB (J14, QUESTION):** `architecture.mjs` fails on `consumers.test.mjs` importing `acquisition/fixtures.mjs`: `acquisition` is not in scheduler's `uses` (`build/modules.json`, BOB's file).
+
+**Results:** scheduler suite ℹ tests 185, ℹ pass 185, ℹ fail 0. format 178 modules, 0 failures; coverage 33 of 33, 0 failures; ownership 1 file, 0; words 3528 literals, 0; architecture 22 product files, 96 imports, 1 failure (the `uses` above). `impact.mjs origin/tranche/T51 HEAD`: scheduler only (test files only), 16/20 files of its tests run: green.
+
+**Completion (batch 6).** BOB's B14 added `acquisition` to scheduler's `uses`; `tranche/T51` merged into the branch. After the merge: architecture 22 product files, 96 imports, 0 failures; format 178 modules, 0; coverage 33 of 33, 0; ownership 6 files, 0; words 3528 literals, 0; fixtures (scheduler) 0 failures; scheduler suite ℹ tests 185, ℹ pass 185, ℹ fail 0. Markers added: none (`fixtures-own` 0, `fixtures-generic` 0). Lines left: none. Deferred: none. Other modules: none. Generated artifacts made stale: none (test files only).
+
+Size (session_018cr32nWucL2LEJyJ5hyu4F): test runs 7, module lines 1048
+
+## J15 · COMPLETE
+
+Batch 6 done: 14 fixture lines re-pointed to the providers' published fixtures (acquisition, case-carriage, file-safety incl. K5070's forward record, monitoring, duties, people, money-checks); fixtures check for scheduler 0; suite 185/185; format, architecture (after B14 and the tranche merge), coverage, ownership, words all 0 failures; impact names scheduler only. Markers added: none (no fixtures-own, no fixtures-generic). Lines left: none. Record has the details.

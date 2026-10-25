@@ -8,6 +8,7 @@ import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { tasksOf } from "../../../src/tasks/index.mjs";
+import { homeOfEmpty, registeredHomes, sha } from "../provenance/fixtures.mjs";
 
 export const NOW = Date.parse("2026-09-01T00:00:00Z");
 export const iso = (ms) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
@@ -59,7 +60,8 @@ export function world(fakes = {}, { bare = false, start = false } = {}) {
   const base = host({ bare });
   const { db, record, membership } = base;
   const F = defaultFakes();
-  for (const [k, v] of Object.entries(fakes)) F[k] = { ...F[k], ...v };
+  /* a plain object fills the default's keys; a real module's instance (provenance's fixtures) is the provider itself */
+  for (const [k, v] of Object.entries(fakes)) F[k] = Object.getPrototypeOf(v) === Object.prototype ? { ...F[k], ...v } : v;
   const t = tasksOf(base.host, { record, membership, start, now: () => w.now, ...F });
   if (!bare) t.migrate();
   const w = {
@@ -96,7 +98,7 @@ export function world(fakes = {}, { bare = false, start = false } = {}) {
 /** Every provider the inbox reaches, answering nothing until a test says otherwise. */
 export function defaultFakes() {
   return {
-    provenance: { homeOf: () => null },
+    provenance: homeOfEmpty(),
     capture: { taskEvents: () => [], taskEventCount: () => 0, taskEventAttempt: () => true,
                taskEventRemove: () => true, on: () => ({ ok: true }) },
     connections: { edgeSevered: () => false },
@@ -108,6 +110,8 @@ export function defaultFakes() {
 export function inbox(events = [], homes = {}, { fakes = {}, start = false } = {}) {
   const queue = [...events];
   const log = [], reads = [];
+  const real = registeredHomes();
+  const projectHomes = new Map();
   /* capture R45: with `kind`, only that kind's events and count; each call is logged with what it asked, and each read of
      the events with its `limit`, its `after` and the digests it answered */
   const ofKind = (kind) => queue.filter((e) => !(typeof kind === "string" && kind) || e.kind === kind);
@@ -121,7 +125,24 @@ export function inbox(events = [], homes = {}, { fakes = {}, start = false } = {
         if (e) { e.attempts += 1; e.lastTry = at; } log.push(["attempt", captureSha]); return !!e; },
       taskEventRemove: ({ kind, captureSha }) => { const i = queue.findIndex((x) => x.kind === kind && x.captureSha === captureSha);
         if (i >= 0) queue.splice(i, 1); log.push(["remove", captureSha]); return i >= 0; } },
-    provenance: { homeOf: (sha) => (homes[sha] ? { bundleId: homes[sha] } : null) }, ...fakes }, { start });
+    provenance: { homeOf: (label) => real.provenance.homeOf(sha(label)) ?? projectHomes.get(label) ?? null }, ...fakes }, { start });
+  /* provenance's real homeOf answers by a digest; a test names a capture by a label, so the label's digest is what is homed */
+  /* captures sharing a bundle are promoted together (a bundle is promoted once) */
+  w.home = (label, ...more) => w.homes({ [label]: more[0] });
+  w.homes = (map) => {
+    const byBundle = new Map();
+    for (const [label, bundleId] of Object.entries(map)) {
+      if (/^PROJ-/.test(bundleId)) { // a capture homed in a project: promotion refuses a chosen PROJ id and provenance's fixture homes only information bundles
+        projectHomes.set(label, { bundleId }); continue;
+      }
+      byBundle.set(bundleId, [...(byBundle.get(bundleId) ?? []), { sha: sha(label) }]);
+    }
+    for (const [bundleId, captures] of byBundle) {
+      const r = real.many(bundleId, captures);
+      if (r.ok !== true) throw new Error(`home: ${bundleId}: ${JSON.stringify(r)}`);
+    }
+  };
+  w.homes(homes);
   w.queue = queue; w.log = log; w.reads = reads;
   return w;
 }

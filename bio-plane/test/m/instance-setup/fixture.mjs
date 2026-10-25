@@ -9,6 +9,9 @@ import { RECORD_SCHEMA, recordOf } from "../../../src/record-core/index.mjs";
 import { InstanceSetup, instanceSetupOps } from "../../../src/setup.mjs";
 import { AI_ACCOUNT_CHECKS } from "../../../src/ai-accounts/index.mjs";
 import { localize } from "../../../src/setup-words/index.mjs";
+import { registrars } from "../promotion/fixtures.mjs";
+import { groupIdentityRegistrar } from "../public-read/fixtures.mjs";
+import { linesWorld } from "../lines/fixtures.mjs";
 
 export const WORKERD_PATTERN_CAP = 50;
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -61,9 +64,11 @@ export const applyRecordSchema = (st) => {
   for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
 };
 
+/* public-read's own answers to a registration (its published fixture). */
+const registration = groupIdentityRegistrar();
+
 /* The providers this module uses, as stand-ins that record what they were asked. */
 export function providers({ admins = ["admin", "member:ada"] } = {}) {
-  const facts = new Map();
   const consumers = [];
   const listeners = [];
   const arms = [];
@@ -71,16 +76,10 @@ export function providers({ admins = ["admin", "member:ada"] } = {}) {
   const governed = [];
   const fetched = [];
   const p = {
-    facts, consumers, listeners, arms, starts, governed, fetched,
+    consumers, listeners, arms, starts, governed, fetched,
     admins: new Set(admins),
     membership: { isAdministrator: (id) => p.admins.has(id) },
-    promotion: {
-      registerFact(name, module, fn) {
-        if (facts.has(name)) return { ok: false, reason: "STEP_DECLARED", fact: name };
-        facts.set(name, { module, fn }); return { ok: true, fact: name, module };
-      },
-      fact(name) { const f = facts.get(name); return f ? { ok: true, fact: name, value: f.fn() } : { ok: false, reason: "FACT_UNAVAILABLE" }; },
-    },
+    promotion: registrars().p,
     scheduler: {
       register(module, c) { consumers.push({ module, ...c }); return { ok: true, module, name: c.name, key: c.key }; },
       async arm() { arms.push(Date.now()); return null; },
@@ -115,9 +114,9 @@ export function providers({ admins = ["admin", "member:ada"] } = {}) {
     identities: [],
     publicRead: {
       registerGroupIdentity({ identity } = {}) {
-        if (typeof identity !== "function") return { ok: false, reason: "PROVIDER_MALFORMED" };
-        if (p.identities.length) return { ok: false, reason: "PROVIDER_DECLARED" };
-        p.identities.push(identity); return { ok: true };
+        if (typeof identity !== "function") return registration.malformed;
+        if (p.identities.length) return registration.declared;
+        p.identities.push(identity); return registration.first;
       },
     },
     /* The domain's answer: a function of the URL, or a thrown error. */
@@ -187,6 +186,7 @@ export async function frame(m, req) {
     const raw = await req.text();
     if (raw.trim() !== "") {
       try { body = JSON.parse(raw); }
+      // fixtures-contract: store-door store-replies
       catch { return Response.json({ ok: false, reason: "BAD_JSON", detail: "the request body is not valid JSON" }, { status: 400 }); }
     }
   }
@@ -197,6 +197,7 @@ export async function frame(m, req) {
     return Response.json({ ok: true, result: answer });
   }
   catch {
+    // fixtures-contract: store-door store-replies
     return Response.json({ ok: false, error: "internal error", reason: "STORE_INTERNAL_ERROR", code: "STORE_INTERNAL_ERROR",
                            correlation: webcrypto.randomUUID() }, { status: 500 });
   }
@@ -224,67 +225,33 @@ export { instanceSetupOps };
 /* A small test counter in the style every module suite uses: the title names the requirement. */
 export const read = async (res) => ({ status: res.status, body: await res.json() });
 
-/* The registry R50–R52 seed into, as a stand-in coded to its requirements (K1563 (1)'s convention for a dep a test
-   injects): `entities` R1 (a kind of the closed list, a label and a note), R43 (a scheme the active profiles declare,
-   for the entity's kind, a machine's basis `{system, row}` naming one of the scheme's systems, `IDENTIFIER_TAKEN`, a
-   repeat `already`), R44 (`entityByIdentifier`); `lines` R1, R2 and R4 (closed kinds and capacities, `seat_on` from an
-   office to a body, `holds` from a person, and a machine's line only from a system rule whose `ids` name both ends).
-   `schemes()` is the active profiles' `identifier_schemes`. Every write is kept for the test to read. */
-export async function registryOver(schemes) {
-  const { ENTITY_KINDS } = await import("../../../src/entities/index.mjs");
-  const { LINE_KINDS, CAPACITIES } = await import("../../../src/lines/index.mjs");
-  const ents = new Map(), idents = [], lines = [];
-  let n = 0, l = 0;
-  const machine = (by) => typeof by === "string" && by.startsWith("class:");
-  const byIdent = ({ scheme, id }) => {
-    const held = idents.filter((x) => x.scheme === scheme && x.id === String(id));
-    if (!held.length) return null;
-    if (new Set(held.map((x) => x.entity_id)).size > 1) return { undetermined: true, candidates: held.map((x) => x.entity_id) };
-    const e = ents.get(held[0].entity_id);
-    return { entity_id: held[0].entity_id, kind: e.kind, label: e.label, scheme, id: String(id) };
+/* The registry R50–R52 seed into: the REAL `entities` and `lines` over their own published world (lines' `linesWorld`,
+   whose `w.ents` and `w.l` are the modules' real code over a real record). `view()` is what the active profiles add to the
+   test profile's view, `{identifier_schemes, spaces}`: its schemes replace any of the same name and its forms in a space
+   come before the held ones (the first form to match a value names it). `ents`, `idents` and `lines` read what the
+   real modules wrote, from their own tables, for a test to inspect; the world's own entities and lines are not among
+   them. `captures` are the shas the record holds, for a line's basis to cite. */
+export async function registryOver(view, captures = []) {
+  const { w } = linesWorld();
+  captures.forEach((sha, i) => w.held(`INFO-2026-${String(7000 + i)}`, sha));
+  const base = w.ents.view();
+  const before = new Set(w.rows(`SELECT entity_id FROM entities`).map((r) => r.entity_id));
+  const lineBefore = new Set(w.rows(`SELECT line_id FROM lines`).map((r) => r.line_id));
+  w.ents.view = () => {
+    const { identifier_schemes: added = [], spaces: more = {} } = view();
+    const names = new Set(added.map((x) => x.scheme));
+    const spaces = { ...base.spaces };
+    for (const [k, v] of Object.entries(more)) spaces[k] = { ...(spaces[k] || {}), ...v, forms: [...(v.forms || []), ...((spaces[k] || {}).forms || [])] };
+    return { ...base, identifier_schemes: [...base.identifier_schemes.filter((x) => !names.has(x.scheme)), ...added], spaces, conflicts: [] };
   };
-  const entities = {
-    ents, idents,
-    createEntity({ kind, label, note, declaredBy, sector, forum_kind } = {}) {
-      if (!ENTITY_KINDS.includes(kind)) return { ok: false, reason: "UNKNOWN_KIND" };
-      if (typeof label !== "string" || !label.trim()) return { ok: false, reason: "ENTITY_NO_LABEL" };
-      if (typeof note !== "string" || !note.trim()) return { ok: false, reason: "ENTITY_NO_NOTE" };
-      const entity_id = `ENT-2026-${String(++n).padStart(4, "0")}`;
-      ents.set(entity_id, { kind, label, note, declared_by: declaredBy, sector: sector ?? null, forum_kind: forum_kind ?? null });
-      return { ok: true, entity_id, kind, label };
-    },
-    has: (id) => ents.has(id),
-    addIdentifier({ entityId, scheme, id, basis, by } = {}) {
-      const e = ents.get(entityId);
-      if (!e) return { ok: false, reason: "NO_SUCH_ENTITY" };
-      const sch = schemes().find((x) => x.scheme === scheme);
-      if (!sch) return { ok: false, reason: "UNKNOWN_SCHEME" };
-      if (!sch.entity_kinds.includes(e.kind)) return { ok: false, reason: "SCHEME_NOT_FOR_KIND" };
-      if (machine(by) && !(basis && (sch.systems || []).includes(basis.system) && basis.row !== undefined)) return { ok: false, reason: "NO_BASIS" };
-      const mine = idents.find((x) => x.entity_id === entityId && x.scheme === scheme && x.id === String(id));
-      if (mine) return { ok: true, already: true, entity_id: entityId };
-      if (idents.some((x) => x.entity_id !== entityId && x.scheme === scheme && x.id === String(id))) return { ok: false, reason: "IDENTIFIER_TAKEN" };
-      idents.push({ entity_id: entityId, scheme, id: String(id), basis, by });
-      return { ok: true, entity_id: entityId, scheme, id: String(id) };
-    },
-    entityByIdentifier: byIdent,
-  };
-  const linesApi = {
-    lines,
-    recordLine({ kind, from, to, capacity, valid, basis, by } = {}) {
-      if (!LINE_KINDS.includes(kind)) return { ok: false, reason: "UNKNOWN_LINE_KIND" };
-      if (!ents.has(from) || !ents.has(to)) return { ok: false, reason: "NO_SUCH_ENTITY" };
-      if (kind === "seat_on" && !(ents.get(from).kind === "office" && ents.get(to).kind === "body")) return { ok: false, reason: "SEAT_ON_ENDS" };
-      if (kind === "holds" && ents.get(from).kind !== "person") return { ok: false, reason: "HOLDER_NOT_A_PERSON" };
-      if (kind === "holds" && !CAPACITIES.includes(capacity)) return { ok: false, reason: "UNKNOWN_CAPACITY" };
-      if (kind !== "holds" && capacity) return { ok: false, reason: "BAD_CAPACITY" };
-      const ends = basis && basis.ids ? [byIdent(basis.ids.from || {}), byIdent(basis.ids.to || {})] : [null, null];
-      if (machine(by) && !(basis && basis.rule && ends[0] && ends[0].entity_id === from && ends[1] && ends[1].entity_id === to))
-        return { ok: false, reason: "MACHINE_NEEDS_IDENTIFIERS" };
-      const line_id = `LIN-2026-${String(++l).padStart(4, "0")}`;
-      lines.push({ line_id, kind, from, to, capacity: capacity ?? null, valid: valid ?? null, basis, by });
-      return { ok: true, line_id, kind, from, to };
-    },
-  };
-  return { entities, lines: linesApi };
+  const json = (t) => { try { return JSON.parse(t); } catch { return t; } };
+  Object.defineProperties(w.ents, {
+    ents: { get: () => new Map(w.rows(`SELECT * FROM entities ORDER BY entity_id`).filter((r) => !before.has(r.entity_id)).map((r) => [r.entity_id, r])) },
+    idents: { get: () => w.rows(`SELECT * FROM entity_identifiers WHERE withdrawn_at IS NULL ORDER BY rowid`)
+      .filter((r) => !before.has(r.entity_id)).map((r) => ({ entity_id: r.entity_id, scheme: r.scheme, id: r.id, basis: json(r.basis), by: r.held_by })) },
+  });
+  Object.defineProperty(w.l, "lines", { get: () => w.rows(`SELECT * FROM lines ORDER BY rowid`)
+    .filter((r) => !lineBefore.has(r.line_id)).map((r) => ({ line_id: r.line_id, kind: r.kind, from: r.from_entity, to: r.to_entity, capacity: r.capacity, valid: json(r.valid_json),
+                   basis: json(r.basis_json), by: r.asserted_by })) });
+  return { entities: w.ents, lines: w.l };
 }

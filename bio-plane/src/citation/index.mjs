@@ -388,22 +388,6 @@ export class Citation {
       : [];
   }
 
-  /* R21: the acts that clear a refused grouping, named from the DOCUMENT and the write's finding code, never from the
-     finding's English. A basis is grouped whole or not at all (C-2.8), so a new leg beside a grouped basis is refused until
-     it joins a group or the grouping is taken off. Each repair is `{key, act, fields, text}`: the word's key, the op to
-     send, the fields that op needs beyond the member's own (a reason for the regrouping is the member's), and its sentence. */
-  #groupingRepairs(project, data, promoted) {
-    const labels = this.#declaredGrounds(project);
-    const labelled = (Array.isArray(data.basis) ? data.basis : []).some((l) => l && typeof l === "object" && typeof l.ground === "string" && l.ground.trim());
-    if (!labels.length || !labelled || !Array.isArray(promoted.findings) || !promoted.findings.some((f) => f && f.check === "C-2.8")) return [];
-    return [
-      ...labels.map((ground) => ({ key: "citation.index.repair_add_to_group", act: "cite", fields: { ground },
-        text: localize("citation.index.repair_add_to_group", "Add it to the group {ground}", { ground }) })),
-      { key: "citation.index.repair_remove_grouping", act: "inquiryground", fields: { target: project, grounds: [] },
-        text: localize("citation.index.repair_remove_grouping", "Take the grouping off, so the answer reads as its weakest citation") },
-    ];
-  }
-
   /* ---- cite (R1–R3) ---- */
 
   /** R1–R3: CITING, at weight `report` (R7): material, or a question, becomes part of what a case or a question rests
@@ -805,7 +789,7 @@ export class Citation {
        MACHINE_PASSAGE_UNCHECKED; N834): this act composes legs; the write judges them. No seam of its own (K2608). */
     if (!promoted.ok)
       return { ...promoted, project, handle, drift: sel.drift,
-               ...(promoted.reason === "BASIS_REFUSED" ? { repairs: ontoInquiry && gl === null ? this.#groupingRepairs(project, doc.data, promoted) : [] } : {}) };
+               ...(promoted.reason === "BASIS_REFUSED" ? { repairs: [] } : {}) };
 
     return { ok: true, project, handle, weight: "report", moved: sel.moved, drift: sel.drift,
              cited: add.slice().sort(), alreadyCited: already.sort(), severed: [], question: questionId,
