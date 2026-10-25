@@ -6,11 +6,157 @@
    was drawn. The words are the shell's: `WORD_ROWS` (interface-shell R5), this module holding none of its own (R21);
    `word` and `hasWord` are `setup-words`' (its R11, R12), which the tests read keys through, never English.
    The real page's frame (no header, no rail, the fragment taken from the address) is tested over the shell's harness
-   in `page.test.mjs`. */
+   in `page.test.mjs`.
+   The plane behind a screen is `store-request`'s `storeWorld()` (K5054, op-tables §5.3): `open(id, {world, as})` sends every read
+   and act through the world's door (R17), as the signed-in member `as` (R16) or as nobody, and the screen is shown what the real
+   store answers; a test makes the state it needs by real acts (`act`). `table` holds only what the world cannot say: a read that is
+   pending (`"pending"`), unanswered (`"none"`) or refused with no code of its own (`{ ok: false }`), the faults the harness owns. */
 import { WORD_ROWS, word, hasWord } from "../../../src/setup-words/index.mjs";
 import { OPS, SESSION_OPS, NEEDS } from "../../../src/op-declarations/index.mjs";
 import { SCREENS, SCREEN_WORDS } from "../../../src/screens-entry/index.mjs";
+import { storeWorld } from "../store-request/fixtures.mjs";
+import { scanner } from "../file-safety/fixture.mjs";
 export { SCREENS, SCREEN_WORDS, word, hasWord };
+
+/** A fresh world over the real store (store-request R16–R19): claimed by the founder, or unclaimed when a test walks the claim.
+ *  `group: null` because store-assembly's base already records the team (REPORT 1, J11; store-request's default seeds it again). */
+export const worldOf = ({ claimed = true, ...o } = {}) => storeWorld({ group: null, claimed, ...o });
+/** The binding `FILE_SCANNER` as a platform double: file-safety's own scanner stand-in (its `fixture.mjs`, answering as `file-scanner`'s
+ *  Provides state), reached by an address or a `Request` as a service binding is. `script` is that double's (`signatures`, `test`, ...). */
+export function scannerBinding(script = {}) {
+  const s = scanner(script);
+  return { calls: s.calls, fetch: (input, init) => s.fetch(input instanceof Request ? input : new Request(input, init)) };
+}
+/** The sealing secret a team's keys are kept under (a binding of the platform, which a world is given when a test keeps a key). */
+export const SEAL = "a-long-seal-secret-for-the-test-only";
+/** A member made by the founder's real acts on a team the page itself claimed (a world's own `signIn` needs a team the world claimed): her
+ *  `memberadd` (an administrator's, with the password asked again first), the invitation's `enroll` with a password of her own, then
+ *  `login`. Answers `{handle, token, password}`. */
+export async function enrol(world, founder, founderPassword, handle, { admin = false } = {}) {
+  await act(world, founder, "reauth", { body: { password: founderPassword } });
+  const added = await act(world, founder, "memberadd", { body: { memberId: handle, cover: `the world's member ${handle}`, ...(admin ? { role: "admin" } : {}) } });
+  const password = `${handle}-world-passphrase`;
+  await act(world, null, "enroll", { body: { invite: added.invite, handle, password } });
+  const login = await act(world, null, "login", { body: { handle, password, device: "own" } });
+  return { handle, token: login.token, password };
+}
+
+/** The founder's session on a team she claimed before the handle was asked (credentials R1: a claim with no handle holds none; she signs in as `admin`). */
+export async function oldFounder({ env = {}, password = "founder long password" } = {}) {
+  const world = await worldOf({ claimed: false, env: { ACCOUNT_SEAL_SECRET: SEAL, ...env } });
+  await world.claim({ password });
+  const login = await act(world, null, "login", { body: { handle: "admin", password, device: "own" } });
+  return { world, as: { token: login.token }, password };
+}
+/** The password asked again before an act that keeps a key or changes administrators (credentials R66), as the shell asks it. */
+export const reauth = (world, as, password) => act(world, as, "reauth", { body: { password: password ?? world.password } });
+
+// ---- every screen in its states, over a team with everything set and a team with nothing ----
+const memo = new Map();
+/** `scenes(full)`: each screen drawn in the states the module draws it, once (the pages are read-only; a test that presses opens its own),
+ *  over the real store: a team with every part the founder can set already set (`full`), or with nothing set. Answers
+ *  `{pages: [{label, id, o}], acted: [{label, id, o}] (after an act), places}`; `places` the plane's own place names, record data. */
+export function scenes(full) {
+  if (!memo.has(full)) memo.set(full, buildScenes(full));
+  return memo.get(full);
+}
+async function buildScenes(full) {
+  const env = { ACCOUNT_SEAL_SECRET: SEAL, FILE_SCANNER: scannerBinding() };
+  const FPW = "a founder long password";
+  const mk = async () => {
+    const world = await worldOf({ env });
+    const admin = await world.signIn("admin");
+    if (full) {
+      await act(world, admin, "groupnameset", { body: { name: "River Town" } });
+      await act(world, admin, "groupdescriptionset", { body: { kinds: [], focus: "Leases", purpose: "Checking terms.", visibility: "public" } });
+      await act(world, admin, "grouplanguagesset", { body: { languages: ["en", "es"] } });
+      await act(world, admin, "profilesset", { body: { profiles: ["oakland-alameda"] } });
+      await act(world, admin, "entitycreate", { body: { kind: "office", label: "City Clerk", note: "Takes our requests" } });
+      await act(world, admin, "courtnoticeset", { body: { choice: "tell" } });
+      await act(world, admin, "hostingaccessset", { body: { holders: "Someone", note: null } });
+      await act(world, admin, "reauth", { body: { password: world.password } });
+      await act(world, admin, "groupkeyset", { body: { key: "sk-held-key-1234567890" } });
+      const cat = (await act(world, admin, "securitytoolcatalogue", {})).offered[0];
+      await act(world, admin, "securitytooladd", { body: { providerId: cat.provider_id, config: { region: "eu1" }, credentials: { api_key: "k", api_secret: "s" }, handlingDigest: cat.handling_digest, confirmRetention: true, use: "on_request" } });
+    }
+    return { world, admin };
+  };
+  const { world, admin } = await mk();
+  const mai = await world.signIn("mai");
+  const dev = await world.signIn("dev", { admin: true });
+  const invite = (await act(world, admin, "memberadd", { body: { memberId: "ann", cover: "Ann K." } })).invite;
+  const link = (await act(world, admin, "joinlinkenable", { body: { capabilities: ["contribute"], dailyCap: 20 } })).link;
+  const reset = (await act(world, admin, "passwordresetlink", { body: { member: "mai" } })).link;
+  const unclaimed = await worldOf({ claimed: false, env });
+  const old = await oldFounder({ env });
+  const pages = [], acted = [];
+  const page = async (label, id, opts) => { pages.push({ label, id, o: await open(id, opts) }); };
+  await page("front", "front", { world });
+  await page("front signedout", "front", { world, session: { state: "signedout", handle: "mai" } });
+  await page("front ended", "front", { world, session: { state: "ended", handle: "mai" } });
+  for (let n = 1; n <= 6; n++) await page("tour " + n, "tour", { subject: String(n), world });
+  await page("forgot", "forgot", { world });
+  await page("reset live", "reset", { world, fragment: { reset } });
+  await page("reset none", "reset", { world });
+  await page("setup unclaimed", "setup", { world: unclaimed, fragment: { boot: "otp" } });
+  await page("setup founder", "setup", { world, as: admin });
+  await page("setup old founder", "setup", { world: old.world, as: old.as });
+  await page("setup member", "setup", { world, as: mai });
+  await page("setup administrator", "setup", { world, as: dev });
+  await page("setup claimed", "setup", { world, fragment: { boot: "otp" } });
+  await page("join invitation", "join", { world, fragment: { invite } });
+  await page("join link", "join", { world, fragment: { join: link } });
+  await page("join none", "join", { world });
+  // a session the plane has locked: an own-device session idle for thirty minutes, on a team of its own (its clock moves)
+  const lockedTeam = await mk();
+  const lou = await lockedTeam.world.signIn("lou");
+  await lockedTeam.world.tick(31 * 60e3);
+  await page("front locked", "front", { world: lockedTeam.world, as: lou, session: { state: "locked", handle: "lou" } });
+  // the states only an act reaches: the codes shown, a handle chosen, an administrator invited, a password set, a member enrolled
+  const press = async (label, id, opts, op, values) => { const o = await open(id, opts); await o.press(op, { values }); acted.push({ label: id + " after " + op, id, o }); };
+  const fresh = await worldOf({ claimed: false, env });
+  await press("claim", "setup", { world: fresh, fragment: { boot: "otp" } }, "claim", { "su-handle": "rivera", "su-pw": "a long password!", "su-pw2": "a long password!" });
+  const old2 = await oldFounder({ env });
+  await press("handle", "setup", { world: old2.world, as: old2.as }, "founderhandleset", { "su-fh": "rivera" });
+  const t3 = await mk();
+  await reauth(t3.world, t3.admin);
+  await press("invite", "setup", { world: t3.world, as: t3.admin }, "memberadd", { "su-adm-id": "dev2", "su-adm-cover": "Dev" });
+  const t4 = await mk();
+  const codes = (await act(t4.world, t4.admin, "recoverycodesissue", { body: {} })).codes;
+  await press("recover", "forgot", { world: t4.world }, "recover", { "fg-handle": "founder", "fg-code": codes[0], "fg-pw": "a long password!", "fg-pw2": "a long password!" });
+  const t5 = await mk();
+  const inv5 = (await act(t5.world, t5.admin, "memberadd", { body: { memberId: "bob", cover: "Bob" } })).invite;
+  await press("enroll", "join", { world: t5.world, fragment: { invite: inv5 } }, "enroll", { "jn-handle": "bob", "jn-pw": "a long password!", "jn-pw2": "a long password!" });
+  const choices = (await act(world, admin, "profiles", {})).choices || [];
+  return { pages, acted, world, admin, places: choices.flatMap((c) => [c.name, c.id, ...(c.covers || [])]) };
+}
+
+/** A 1×1 PNG, the logo a team sets. */
+export const LOGO_PNG = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAHnOcQAAAAABJRU5ErkJggg==";
+/** The world's team as the founder's real acts make it: a name, a public description, a logo (each only when asked), the founder
+ *  signed in (`admin`). */
+export async function team({ name = "River Town Tenants", description = { focus: "Leases on public land", purpose: "We check the public body's own terms." }, logo = true, visibility = "public", claimed = true } = {}) {
+  const world = await worldOf({ claimed });
+  const admin = claimed ? await world.signIn("admin") : null;
+  if (name) await act(world, admin, "groupnameset", { body: { name } });
+  if (description) await act(world, admin, "groupdescriptionset", { body: { kinds: [], ...description, visibility } });
+  if (logo) await act(world, admin, "grouplogoset", { body: { raw: LOGO_PNG, rawType: "image/png" } });
+  return { world, admin };
+}
+/** The page's request to the world's door, as the shell sends it (interface-shell `send`): the op and query in the address, a
+ *  body as JSON, the bearer token only when the request is not public. */
+export async function viaDoor(world, op, req = {}, token = null) {
+  const qs = new URLSearchParams({ op, ...Object.fromEntries(Object.entries(req.query || {}).filter(([, v]) => v !== undefined && v !== null)) });
+  const init = req.body === undefined ? { method: "GET" } : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(req.body) };
+  return world.door({ url: `/api/?${qs}`, init }, token ? { token } : null);
+}
+/** An act or read made by real means, answered as the result it gave: `act(world, as, op, body)` (a refused one throws, naming the op). */
+export async function act(world, as, op, { body, query } = {}) {
+  const a = await viaDoor(world, op, { body, query }, as ? as.token : null);
+  const r = a.json && a.json.result !== undefined ? a.json.result : a.json;
+  if (a.status >= 400 || !a.json || a.json.ok === false || (r && r.ok === false)) throw new Error(`${op} was refused: ${JSON.stringify(a.json).slice(0, 300)}`);
+  return r;
+}
 
 // ---- the words: WORD_ROWS, as the shell carries them to the page (interface-shell R5) ----
 const WORDS = new Map(WORD_ROWS.map((r) => [r[0], r[1]]));
@@ -96,25 +242,18 @@ const answerOf = (a) => {
 };
 const NOT_FOUND = /^NO_SUCH_|_NOT_FOUND$|^NOT_FOUND$/;
 
-/** The member's session as whoami answers it, once the screen has handed one over (`cs.signin`): the founder holding the
- *  handle she chose (membership R144), the founder of a group claimed before T49 holding none (R18), a member, and an
- *  administrator who is not the founder (R19). */
-export const FOUNDER = Object.freeze({ tokenClass: "admin", session: true, member: "admin", handle: "rivera", rootOfTrust: true, administer: true, capabilities: ["contribute", "publish", "create_projects"] });
-export const OLD_FOUNDER = Object.freeze({ ...FOUNDER, handle: null });
-export const JOINED = Object.freeze({ tokenClass: "member", session: true, member: "mai", handle: "mai", rootOfTrust: false, administer: false, capabilities: ["contribute"] });
-export const AN_ADMIN = Object.freeze({ tokenClass: "member", session: true, member: "dev", handle: "dev", rootOfTrust: false, administer: true, capabilities: ["contribute", "publish", "create_projects"] });
-
 /**
  * Draws screen `id` as the shell would: `session` the record's state (`view.session`), `fragment` what the shell took
- * from the address (`view.fragment`), `me` whoami's answer when a session exists, `table` op → answer or
- * `(body, query) => answer`, `subject` the address's subject.
+ * from the address (`view.fragment`), `world` the plane behind it and `as` the member signed in (her whoami is `view.me`),
+ * `table` the faults only (op → `"pending"`, `"none"`), `subject` the address's subject.
  */
-export async function open(id, { table = {}, session = { state: "none" }, fragment = {}, me = null, subject = null, signinAs = FOUNDER } = {}) {
+export async function open(id, { table = {}, session = { state: "none" }, fragment = {}, me = null, subject = null, world = null, as = null } = {}) {
   const spec = SCREENS.find((s) => s.id === id);
   if (!spec) throw new Error("no screen " + id);
-  const o = { spec, requests: [], signins: [], gone: [], wizards: [], saves: [], copies: [], timers: [], now: 0, refused: null, token: session.state === "live" || session.state === "locked" ? "tok-locked" : null };
+  const o = { spec, requests: [], signins: [], gone: [], wizards: [], saves: [], copies: [], timers: [], now: 0, refused: null, token: as ? as.token : session.state === "live" || session.state === "locked" ? "tok-locked" : null };
   const ui = {};
   const data = {};
+  if (world && as && !me) me = (await viaDoor(world, "whoami", {}, as.token)).json.result;
   const view = { subject, data, ui, me, session, fragment: { ...fragment }, origin: "https://group.example", parts: {} };
   o.view = view;
   let drawn = [];
@@ -129,13 +268,22 @@ export async function open(id, { table = {}, session = { state: "none" }, fragme
     const set = view.me.tokenClass === "admin" ? SESSION_OPS.admin : SESSION_OPS.member;
     return set.has(op) || op === "unlock";
   };
+  let inflight = 0;
   async function request(op, req = {}) {
+    inflight++;
+    try { return await send(op, req); } finally { inflight--; }
+  }
+  async function send(op, req = {}) {
     const header = !!(o.token && !isPublic(op));
-    o.requests.push({ op, query: req.query || {}, body: req.body, header, token: header ? o.token : null });
+    const rec = { op, query: req.query || {}, body: req.body, header, token: header ? o.token : null, answer: null };
+    o.requests.push(rec);
     let a = table[op];
     if (typeof a === "function") a = a(req.body, req.query || {});
-    if (a === undefined) a = { ok: true, result: { ok: true } };
-    return answerOf(a);
+    if (a === undefined) {
+      if (!world) throw new Error(`${id}: ${op} asked, and no plane behind the screen (open it with a world)`);
+      a = (await viaDoor(world, op, req, header ? o.token : null)).json;
+    }
+    return (rec.answer = answerOf(a));
   }
   const kitOf = () => {
     const cs = {
@@ -153,7 +301,13 @@ export async function open(id, { table = {}, session = { state: "none" }, fragme
       later(ms, fn) { o.timers.push({ at: o.now + ms, fn }); },
       now: () => o.now,
       async call(op, req = {}) { const a = await request(op, req); return a.kind === "ok" ? a.json : a.kind === "refused" ? a.fields : null; },
-      async signin(answer, opts = {}) { o.signins.push({ answer, opts }); if (!(answer && answer.token)) return false; o.token = answer.token; view.me = signinAs; return true; },
+      async signin(answer, opts = {}) {
+        o.signins.push({ answer, opts }); if (!(answer && answer.token)) return false; o.token = answer.token;
+        // the member the shell reads once the session is handed over (whoami, interface-shell R32): the world's own answer
+        const r = await viaDoor(world, "whoami", {}, o.token);
+        view.me = r.json && r.json.result ? r.json.result : null;
+        return true;
+      },
       wizard(...a) { o.wizards.push(a); },
       // interface-shell R47: each answers its own control, bound by the shell
       save(name, text, opt = {}) { o.saves.push({ name, text }); return `<button type="button" class="cs-btn" data-shell="save" data-name="${esc(name)}">${w(opt.label)}</button>`; },
@@ -208,7 +362,7 @@ export async function open(id, { table = {}, session = { state: "none" }, fragme
         const v = a.value;
         const empty = r.empty ? !!r.empty(v) : v === null || v === undefined || (Array.isArray(v) && !v.length);
         data[n] = { state: empty ? "empty" : "ok", value: v, refusal: null };
-      } else if (a.kind === "refused") data[n] = { state: "failed", value: null, refusal: { code: a.code, words: WORDS.has("refusal." + a.code) ? w("refusal." + a.code) : esc(a.code) } };
+      } else if (a.kind === "refused") data[n] = { state: "failed", value: null, refusal: { code: a.code, get words() { return WORDS.has("refusal." + a.code) ? w("refusal." + a.code) : esc(a.code); } } };   // read, so drawn, only by a screen that draws the failure
       else data[n] = { state: "failed", value: null, refusal: { code: null, words: w("state.failed", { reason: "" }) } };
       if (r.subject && a.kind === "refused" && NOT_FOUND.test(a.code)) o.notFound = true;
     }
@@ -255,7 +409,8 @@ export async function open(id, { table = {}, session = { state: "none" }, fragme
       if (!due) break;
       o.now = due.at; const fn = due.fn; due.fn = null;
       await fn(kitOf(), view);
-      for (let i = 0; i < 5; i++) await new Promise((r) => setImmediate(r));
+      // the real plane answers over several turns: wait until every request this timer made has been answered
+      for (let i = 0; i < 5 || inflight > 0; i++) await new Promise((r) => setImmediate(r));
     }
     o.now = end;
     draw();
