@@ -2775,9 +2775,11 @@ export async function bytesOf(evidence, doc, { kind = null, textual = false } = 
      assembled, and bounded, only when none is held. */
   const got = wholeSha ? await whole(wholeSha).catch(() => null) : null;
   if (got) return { bytes: got, whole: true };
-  if (total > MULTIPART_READ_MAX)
+  /* R1: a textual capture is assembled as a single object of it is read, up to the whole-read ceiling; every other kind to the office entries' text bound */
+  const assembleMax = textual ? WHOLE_READ_MAX : MULTIPART_READ_MAX;
+  if (total > assembleMax)
     return { bytes: null, failure: FAILURE_TRANSIENT,
-             why: word("reading-pipeline.why.capture_bytes_parts", { total: String(total), parts: String(parts.length), multipart_read_max: String(MULTIPART_READ_MAX) }) };
+             why: word("reading-pipeline.why.capture_bytes_parts", { total: String(total), parts: String(parts.length), multipart_read_max: String(assembleMax) }) };
   const out = new Uint8Array(total);
   let at = 0;
   for (const p of parts) {
@@ -2792,6 +2794,9 @@ export async function bytesOf(evidence, doc, { kind = null, textual = false } = 
 /* R2/R32 (fix round 5, E1): a declared type that is text, as acquisition's `profilesAsText` judges it; and the bytes as text
    when they are UTF-8 without a NUL, else null. */
 const TEXT_TYPE = /^(?:text\/|application\/(?:xhtml\+xml|xml|json)|application\/[a-z0-9.+-]*\+xml)/i;
+/* R1: the formats a text declared as text can be detected as with no entry to read them (`html` is detected and read here, as text); every other detected format is read
+   by its entry or is no text, whatever type the sender declared */
+const TEXT_FORMATS = new Set([null, "undetermined", "text", "html", "json", "xml"]);
 /* R49 (fix round 9, G131g; X9): every text read here is decoded by one rule, `ooxml.decodeText` (UTF-8 with or without a BOM, UTF-16
    with or without one, the declared or detected legacy charset), handed the charset the capture's type declares. Its answer, or
    `{ok: false, why: "ENCODING_UNSUPPORTED", name}`. A replacement over `REPLACED_TOLERANCE` of the characters makes the reading
@@ -2910,11 +2915,12 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   const kindOfText = fmt === "xml" ? "xml" : fmt === "html" ? "html" : "text";
   let decoded = textRead ? decodedTextOf(bytes, declaredType, kindOfText) : null;
   if (rangedTxt) { textRead = true; decoded = rangedTxt.decoded; }
-  /* R2/R32, R49 (fix round 10): a capture held in parts, its format still undetermined and its declared type a text type, is decoded as an upload is: by the one rule,
-     and what the rule says stands (an encoding it cannot decode is refused by name below; a replacement over the tolerance leaves the reading partial, counted).
-     Bytes that decode to text holding a NUL are no text (R2 R32's control), as before. */
-  if (!textRead && multipart && bytes && fmt === "undetermined" && TEXT_TYPE.test(profile.source_content_type || "")) {
-    const d = decodedTextOf(bytes, declaredType, "text");
+  /* R1, R2/R32, R49 (fix round 10; K5200 (4)): "single part" is no condition of reading a text as text. A capture held in parts (a fetch) whose declared type is a text
+     type and whose format no entry reads (undetermined, or the web page `html` a fetch's range reads find) is decoded as an upload is: its parts joined in order, by the
+     one rule, and what the rule says stands (an encoding it cannot decode is refused by name below; a replacement over the tolerance leaves the reading partial,
+     counted). Bytes that decode to text holding a NUL are no text (R2 R32's control), as before. */
+  if (!textRead && multipart && bytes && !held && TEXT_FORMATS.has(fmt) && TEXT_TYPE.test(profile.source_content_type || ct || "")) {
+    const d = decodedTextOf(bytes, declaredType, kindOfText);
     if (!d.ok) decoded = d;
     else if (!d.text.includes("\0")) { textRead = true; decoded = d; }
   }
