@@ -86,3 +86,38 @@ Checks run (summary lines):
 - node bio-plane/src/setup-words/build.mjs --check: rows.mjs and words-unreviewed.json match words.json and the source (not regenerated).
 
 Size (session_01LY4Tk2jtCcFd4L7Syr6Sak): test runs 3, module lines 890
+
+## J5 · COMPLETE
+
+FR-51 fix round 10, Wave A batch 4 (K5044 (5)): done at 0070b60f0d on job/T51/answer-envelope (no other module changed).
+
+Entries applied (B5):
+- `door-helpers` contract, `bio-plane/test/m/answer-envelope/door-helpers.test.mjs`: each value stated as data and built by the real function on the same inputs: `json` (R1); `doAnswer`'s answered, refused and silent results, the silent one with and without a correlation (R3); `storeRefusal` (R3); `storeSilent(op, correlation)` as the 502 with code, op, detail, check C-69.2, translation and correlation (R3, R8); the UNKNOWN_OP row, code, check C-69.1 and translation, as `dispatchRow` gives it (R8); `requiredArgument(op, argument, shape, error)` with the real row, REQUIRED_ARGUMENT_MISSING, check C-61.1, translation and detail (R8). Seven `// fixtures-run:` lines, one per user: capture, doorbell, connections, public-read, ratification, case-disclosures, affordances (all `door-helpers`).
+- Fixtures published, `bio-plane/test/m/answer-envelope/fixtures.mjs`: `planeHelpers` (the real json, doAnswer, storeSilent, requiredArgument, StoreSilent, STORE_SILENT_REASON and STORE_SILENT_DETAIL as one object); `refusedAnswer()` (the real doAnswer of a refused store reply); `storeSilent(op)` (the real 502 Response) and `storeSilentParsed(op)` (its `{status, body}`). `fixtures.test.mjs` calls each and checks the real answer (3 tests, R3, R8).
+- Marker owed: `bio-plane/test/m/answer-envelope/envelope.test.mjs:169`, `// fixtures-generic: WRONG_PASSWORD`, on the line above the candidate (now line 170). It is a sentinel the store's reply carries back unchanged; the check had it as an invented code.
+- No `fixtures-own` marker added.
+
+Decisions made in this job (technical; for BOB to record):
+1. The fixtures are functions, or objects of functions, returning a fresh value per call, not stored Response values: a Response is read once, so a shared one would let one user's read disturb another's. Users re-point with `refusedAnswer()` and `storeSilent(op)`; `planeHelpers` is a plain object of the real functions (its members are stateless).
+2. Sentence text is not held by the tests (K3810): the translation is compared with the real row's translation, and the detail is checked for type and for the op and argument it names.
+3. The contract's UNKNOWN_OP row is the code, check and translation of `dispatchRow("UNKNOWN_OP")`; the `error` string is control-plane's own and stays out of this contract.
+
+Deferred: none.
+
+REPORT (other modules, not changed by this job):
+1. Fixtures check, tree-wide at this tip: 2,587 failures, all in other modules' tests (hand-built answers their owners re-point in their own jobs, K5044 (2)). Within this module: 0 failures; the 5 `fixtures-run` lines for doorbell, connections, public-read, case-disclosures and affordances show `orphan-run` until those modules' markers are merged (accepted per B5). capture and ratification markers are seen and satisfied.
+2. The fixtures check reads tracked files only: the new test files had to be `git add`ed before the contract's runs counted. They are committed now.
+3. `checks/run.mjs` tree-wide: format 0, architecture 0, words 0, channels 0; coverage 9 failures, all in other modules (basis-versions R58; control-plane R136 R137; interface-shell R129; plane R111 R114; screens-inquiry R133–R136; screens-intake R68; signin-door R6; store-assembly, 99 ids; store-request, 24 ids). Not answer-envelope's; not touched.
+4. `setup-words --check`: `rows.mjs` stale, as expected (BOB regenerates at the layer close); no refusal names this module.
+
+Checks run (summary lines):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/answer-envelope/fixtures.test.mjs bio-plane/test/m/answer-envelope/door-helpers.test.mjs`: tests 9, pass 9, fail 0.
+- The same runner over `bio-plane/test/m/answer-envelope/*.test.mjs`: tests 52, pass 52, fail 0.
+- `node checks/fixtures.mjs /home/user/bio answer-envelope`: 0 failures; accepted 1; the 5 `orphan-run` lines above.
+- `node checks/format.mjs /home/user/bio`: 178 modules, 178 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio answer-envelope`: 13 product files; 0 failures.
+- `node checks/coverage.mjs /home/user/bio answer-envelope`: 18 of 18 live requirement ids named by a test; 0 failures.
+- `node checks/ownership.mjs /home/user/bio answer-envelope tranche/T51 job/T51/answer-envelope`: 5 files changed by answer-envelope; 0 failures.
+- `node checks/run.mjs /home/user/bio`: format 0, architecture 0, words 0, channels 0; coverage 9 failures and fixtures 2,587 failures, both in other modules (REPORT 1, 3); exit 1 for those reasons.
+
+Size (session_018t8F8zPApmVgDX2vg3Mdb4): test runs 2, module lines 903
