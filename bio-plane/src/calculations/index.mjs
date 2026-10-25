@@ -335,6 +335,14 @@ function delimiterWindow(text) {
   return s.length > DELIMITER_WINDOW_CHARS ? s.slice(0, DELIMITER_WINDOW_CHARS) : s.endsWith("\n") ? s : `${s}\n`;
 }
 
+/* R45 (fix round 10, cause 19): a reading's own text of a spreadsheet or an ODS is its cells joined by a tab (`odf.mjs`, `formats-xlsx.mjs`), so
+   the tab is its delimiter whatever commas its cells hold ($69,268.31): a tab on the majority of the window's lines. */
+function tabJoined(window) {
+  let lines = 0, tabbed = 0;
+  for (const l of window.split("\n")) { if (l.trim() === "") continue; lines++; if (l.includes("\t")) tabbed++; }
+  return tabbed > 0 && tabbed * 2 > lines;
+}
+
 export class Calculations {
   #inputListeners = [];     // R11: {module, fn}
   #patternListeners = [];   // R23: {module, fn}
@@ -598,6 +606,7 @@ export class Calculations {
     const csv = row.extent_kind === "document" && this.#isCsv(row.capture_sha);
     let text = null;
     if (!csv) { try { text = this.content.passageText(row.content_id); } catch { text = null; } }
+    const own = typeof text === "string";   /* the reading's own text, not the file's bytes (R45, cause 19) */
     if (typeof text !== "string" && row.extent_kind === "document") {
       const stored = await this.#storedText(row.capture_sha);
       if (stored.tooLarge) return { tooLarge: stored.tooLarge };
@@ -608,7 +617,7 @@ export class Calculations {
     if (typeof text !== "string")
       return { fault: csv ? localize("calculations.index.the_csv_files_own_bytes", "the CSV file's own bytes are not held, and a table is made from the file, never from the index of its reading") : word("calculations.source_text_held") };
     if (text.length > TABLE_MAX_BYTES * 2) return { tooLarge: { bound: "bytes", max: TABLE_MAX_BYTES, got: text.length } };
-    return { text };
+    return { text, own };
   }
 
   /* R1 (R44; fix round 9, G131d follow-up, K4850): a document's stored bytes as text. `{text}`; `{text: null}` for a file that is not held (the store
@@ -690,8 +699,14 @@ export class Calculations {
     else {
       /* G64 (R1): the delimiter is the document's own reader's (csv-reader's signature over the head of the text): a comma, semicolon, tab
          or pipe; none found reads as a comma, as before. The canonical bytes stay comma RFC 4180, so one table has one sha. */
-      const sig = delimiterSignature(delimiterWindow(src.text));
-      const delimiter = sig.delimiter || ",";
+      const win = delimiterWindow(src.text);
+      const sig = delimiterSignature(win);
+      /* R45 (cause 19): a reading's own tab-joined text is cut at tabs; any other text whose delimiter is tied is refused, never read as a comma */
+      const tab = src.own && tabJoined(win);
+      if (!tab && !sig.delimiter && sig.undetermined === "delimiter_undetermined_tied" && names.length > 1)
+        return no("SOURCE_NOT_READ", localize("calculations.index.the_delimiter_is_tied", "the source's delimiter could not be told ({tied} fit its lines equally), so it is not read as a table. Nothing was written.", { tied: sig.tied.join(", ") }),
+          { content_id: contentId, delimiter: null, tied: sig.tied, columns_expected: names.length });
+      const delimiter = tab ? "\t" : sig.delimiter || ",";
       let widest = 0;
       const sc = scanCsv(src.text, (r) => { if (r.length > widest) widest = r.length; tb.push(r); }, delimiter);
       src.text = null;
