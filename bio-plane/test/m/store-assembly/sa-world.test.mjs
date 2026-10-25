@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 const said = [];
 const log = console.log;
 console.log = (...a) => { said.push(a.join(" ")); log(...a); };
-const { storeWorld, WORLD_NOW, WORLD_PASSWORD, WORLD_FOUNDER_HANDLE } = await import("./world.mjs");
+const { storeWorld, WORLD_NOW, WORLD_PASSWORD, WORLD_FOUNDER_HANDLE, WORLD_INSTANCE_NAME } = await import("./world.mjs");
 const { credentialsOf } = await import("../../../src/credentials/index.mjs");
 const { membershipOf } = await import("../../../src/membership/index.mjs");
 const { schedulerOf } = await import("../../../src/scheduler/index.mjs");
@@ -158,4 +158,33 @@ test("R71 (K5132): under a pinned instance clock a run's measured times are stil
   const row = ledger.jobRow({ sha, kind: "reading" });
   assert.equal(row.registered_at, pinned, "the row's instants are the instance clock's");
   assert.equal(row.ended_at, pinned);
+});
+
+test("R90 (K5149): a bare world records its producing team at its first boot, and its promote of an information bundle succeeds and names that team", async () => {
+  const { createHash } = await import("node:crypto");
+  const w = await storeWorld();
+  assert.equal(instanceSetupOf(w.ctx, w.env).producingGroup(), WORLD_INSTANCE_NAME, "the team the installer bound at the first boot");
+  const now = new Date(WORLD_NOW).toISOString();
+  const front = ["---", "id: INFO-2026-0001-minutes", "object_type: information", "schema: information@2", "title: \"minutes\"", "current_state: collected",
+    "prior_state: null", `created: ${now}`, `last_updated: ${now}`, "criticality: supporting", "source_status: unchanged", "source:", "  locator: \"upload\"",
+    "  authority: member-entered", "monitoring:", "  enabled: false", "---", "", "## Summary", "", "minutes", ""].join("\n");
+  const made = await answer(await w.send({ url: "http://x/promote", body: { bundleId: "INFO-2026-0001-minutes", base: null, snapKey: "20261001120000_abc",
+    meta: { object_type: "information", title: "minutes", current_state: "collected", created: now, last_updated: now },
+    files: [{ path: "bundle.md", text: front, bytes: front.length, sha256: createHash("sha256").update(front).digest("hex") }], register: [] } }));
+  assert.equal(made.json.result.ok, true, JSON.stringify(made.json));
+  const row = [...w.sql.exec("SELECT bundle_id, group_id FROM bundles WHERE bundle_id=?", "INFO-2026-0001-minutes")][0];
+  assert.deepEqual(row, { bundle_id: "INFO-2026-0001-minutes", group_id: WORLD_INSTANCE_NAME }, "the bundle names the team");
+});
+
+test("R5 R92 (K5168): a pinned world's claim records the pin as `consumedAt`, not the wall clock: credentials takes the store's clock at its first construction", async () => {
+  const w = await storeWorld();
+  const consumed = credentialsOf(w.ctx).bootstrapState(null).consumedAt;
+  assert.equal(consumed, new Date(WORLD_NOW).toISOString());
+});
+
+test("R5 R92 (K5171): a pinned world's producing team is recorded at the pin (`recorded_at`) at the first boot, and a seed after it is refused; instance-setup takes the clock the assembly hands it", async () => {
+  const w = await storeWorld({ claimed: false });
+  const group = instanceSetupOf(w.ctx).instanceGroup();
+  assert.equal(group.group, WORLD_INSTANCE_NAME);
+  assert.equal(group.recorded_at, new Date(WORLD_NOW).toISOString());
 });

@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7684,
+  "screen": 7703,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 1273,
+  "act": 1276,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -236,7 +236,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19217,
+  "total": 19239,
   "protected": 1158
  },
  "words": [
@@ -81913,6 +81913,160 @@
    "note": "DEC-432: B517 plane R24 (K5078)"
   },
   {
+   "key": "screen.person.expunge.marker",
+   "en": "Removed on {date} by {member}, as the law or a court order requires.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-434: B520 where an expunged value stood; {date} the day, {member} the member's name"
+  },
+  {
+   "key": "screen.person.holds.heading",
+   "en": "Who holds it now",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-434: B520 the section on an office: its current holder (lines R21)"
+  },
+  {
+   "key": "screen.person.holds.holder",
+   "en": "Who holds it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-434: B520 the field: the person or organization holding the office"
+  },
+  {
+   "key": "screen.person.holds.through",
+   "en": "Current through",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-434: B520 the field: the last day the holding is known to be current"
+  },
+  {
+   "key": "screen.person.holds.empty",
+   "en": "Choose who holds it and cite what shows it. Nothing was recorded.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-434: B520 the refusal when the holder or the citation is missing"
+  },
+  {
+   "key": "act.recordline.label.office",
+   "en": "Record who holds it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-434: B520 recordline on the office form"
+  },
+  {
+   "key": "act.linecurrentthrough.label.person",
+   "en": "Confirm it is current as of a day",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-434: B520 linecurrentthrough on a person page: a holding with no stated end"
+  },
+  {
+   "key": "act.linecurrentthrough.does",
+   "en": "Records, citing where it shows, that a holding with no stated end was still current on a day. A later statement takes its place when the page is read; the earlier one is kept.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-434: B520 lines R21"
+  },
+  {
+   "key": "screen.standard.rel.in.implements",
+   "en": "Implemented by",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-434: B520 a relation read from the other side, beside screen.standard.rel.implements"
+  },
+  {
+   "key": "screen.standard.rel.in.refers_to",
+   "en": "Referred to by",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-434: B520 a relation read from the other side, beside screen.standard.rel.refers_to"
+  },
+  {
+   "key": "screen.standard.rel.in.amends",
+   "en": "Amended by",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-434: B520 a relation read from the other side, beside screen.standard.rel.amends"
+  },
+  {
+   "key": "screen.standard.rel.in.repeals",
+   "en": "Repealed by",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-434: B520 a relation read from the other side, beside screen.standard.rel.repeals"
+  },
+  {
+   "key": "screen.standard.rel.in.renumbers",
+   "en": "Renumbered by",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-434: B520 a relation read from the other side, beside screen.standard.rel.renumbers"
+  },
+  {
+   "key": "screen.standard.rel.in.recodifies",
+   "en": "Recodified by",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-434: B520 a relation read from the other side, beside screen.standard.rel.recodifies"
+  },
+  {
+   "key": "screen.standard.rel.in.defines",
+   "en": "Has a term defined by",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-434: B520 a relation read from the other side, beside screen.standard.rel.defines"
+  },
+  {
+   "key": "screen.standard.rel.in.excepts",
+   "en": "Has an exception in",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-434: B520 a relation read from the other side, beside screen.standard.rel.excepts"
+  },
+  {
+   "key": "screen.standard.rel.in.incorporates",
+   "en": "Incorporated by",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-434: B520 a relation read from the other side, beside screen.standard.rel.incorporates"
+  },
+  {
+   "key": "screen.standard.issuer.typed",
+   "en": "Or type a name that is not listed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-434: B520 beside \"Who set it\" (screen.standard.issuer)"
+  },
+  {
+   "key": "screen.calculation.column",
+   "en": "The column to work from",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-434: B520 the field: a column of the table the calculation reads"
+  },
+  {
+   "key": "screen.calculation.column.help",
+   "en": "Choose the column of the table this calculation reads.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-434: B520 its help"
+  },
+  {
+   "key": "screen.calculation.part",
+   "en": "The value to count",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-434: B520 the field: the value in that column whose rows are counted"
+  },
+  {
+   "key": "screen.calculation.part.help",
+   "en": "Type the value as it appears in that column. The calculation counts the rows that hold it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-434: B520 its help"
+  },
+  {
    "key": "refusal.GROUP_SLUG_MALFORMED",
    "en": "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.",
    "protected": false,
@@ -127455,7 +127609,7 @@
   },
   {
    "key": "act.recordline.does",
-   "en": "Adds a party to the proceeding by its role, citing where it appears.",
+   "en": "Records a line between two entries, citing where it appears: a party to a proceeding by its role, who holds an office, or an office that keeps or answers for the records on a subject.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

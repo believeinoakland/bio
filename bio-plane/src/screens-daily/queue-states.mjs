@@ -218,6 +218,15 @@ export function queueStates() {
     }
     // The findings set aside are R61's list on this page.
     if (r.act === "set_aside") return "";
+    // R95 (item 78 (1)): a join request she answered: the requester, the project (a reference by its title), the answer and the moment;
+    // the design holds no sentence for it yet, so the request's own sentence and the answer's button word stand in.
+    if (r.act === "join_answer" && (r.answer === "granted" || r.answer === "declined")) {
+      const who = r.requester && typeof r.requester === "object" ? String(r.requester.handle || r.requester.member || "") : "";
+      const project = typeof r.title === "string" && r.title.trim() && r.project ? cs.ref("project", String(r.project), r.title, []) : title;
+      const granted = r.answer === "granted";
+      return cs.row(cs.icon(granted ? "accepted" : "refused"), cs.w("queue.project-request.summary", { who: who ? cs.memberName(who) : "", project: { html: project } })
+        + '<span class="meta">' + (at ? cs.w("queue.answered.byyou", { when: { html: at } }) + " · " : "") + cs.w(granted ? "screen.home.request.grant" : "screen.home.request.decline") + "</span>", "", "");
+    }
     const meta = at ? '<span class="meta">' + cs.w("queue.answered.byyou", { when: { html: at } }) + "</span>" : "";
     if (r.act === "dismissed") {
       const reason = typeof r.reason === "string" && r.reason.trim() ? r.reason.trim() : "";

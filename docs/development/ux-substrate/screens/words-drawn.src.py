@@ -8014,6 +8014,25 @@ REWRITE.update({
   'screen.held.more': '{count} shown here. More are on the next page.',   # DEC-432: B517 R33, drawn only with its door to the next page
 })
 
+# DEC-434: B520 (K5173; fix round 10, SCREENS-INVESTIGATE #16 J27): rows for operations that cannot be drawn without them
+def w434(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-434: B520 ' + note))
+w434('screen.person.expunge.marker', 'Removed on {date} by {member}, as the law or a court order requires.', "where an expunged value stood; {date} the day, {member} the member's name")
+w434('screen.person.holds.heading', 'Who holds it now', 'the section on an office: its current holder (lines R21)')
+w434('screen.person.holds.holder', 'Who holds it', 'the field: the person or organization holding the office')
+w434('screen.person.holds.through', 'Current through', 'the field: the last day the holding is known to be current')
+w434('screen.person.holds.empty', 'Choose who holds it and cite what shows it. Nothing was recorded.', 'the refusal when the holder or the citation is missing')
+w434('act.recordline.label.office', 'Record who holds it', 'recordline on the office form')
+w434('act.linecurrentthrough.label.person', 'Confirm it is current as of a day', 'linecurrentthrough on a person page: a holding with no stated end')
+w434('act.linecurrentthrough.does', 'Records, citing where it shows, that a holding with no stated end was still current on a day. A later statement takes its place when the page is read; the earlier one is kept.', 'lines R21')
+for k, en in [('implements', 'Implemented by'), ('refers_to', 'Referred to by'), ('amends', 'Amended by'), ('repeals', 'Repealed by'), ('renumbers', 'Renumbered by'), ('recodifies', 'Recodified by'), ('defines', 'Has a term defined by'), ('excepts', 'Has an exception in'), ('incorporates', 'Incorporated by')]:
+    w434('screen.standard.rel.in.' + k, en, 'a relation read from the other side, beside screen.standard.rel.' + k)
+w434('screen.standard.issuer.typed', 'Or type a name that is not listed', 'beside "Who set it" (screen.standard.issuer)')
+w434('screen.calculation.column', 'The column to work from', 'the field: a column of the table the calculation reads')
+w434('screen.calculation.column.help', 'Choose the column of the table this calculation reads.', 'its help')
+w434('screen.calculation.part', 'The value to count', 'the field: the value in that column whose rows are counted')
+w434('screen.calculation.part.help', 'Type the value as it appears in that column. The calculation counts the rows that hold it.', 'its help')
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

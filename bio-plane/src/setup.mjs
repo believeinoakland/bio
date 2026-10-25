@@ -29,7 +29,7 @@ import { captureOf } from "./capture/index.mjs";
 import { entitiesOf } from "./entities/index.mjs";
 import { linesOf, CAPACITIES as LINE_CAPACITIES } from "./lines/index.mjs";
 import { provenanceOf } from "./provenance/index.mjs";
-import { normAlias as termFold } from "./extraction/index.mjs";
+import { normAlias as termFold, extractionOf } from "./extraction/index.mjs";
 import { parse as legistarParse, readPages as legistarPages, readBodyName as legistarBodyName, KEY as LEGISTAR_KEY,
          BASIS as LEGISTAR_BASIS } from "../../legistar-reader/index.mjs";
 /* R65 (K1837): the no-added-fact check and the one row both assistant drafts answer until the model turn lands are
@@ -2703,6 +2703,10 @@ export class InstanceSetup {
    *  copy's own projects, documents, published case editions and active members, each taken whole, never through a
    *  viewer's sight. A fact that cannot be read now is `null`, never omitted and never `0`; no value names a member,
    *  handle or role, and none is nested. Writes nothing; never throws. */
+  /** R105 (fix round 10, K5170; extraction R110): each migration's counts, read only, as extraction states them. The Worker's
+   *  `selftest` asks this through the store's route, for an administrator; the store is the only place extraction is held. */
+  selftestMigrations() { return extractionOf(this.#ctx).migrationCounts(); }
+
   bootstrapFacts({ facts = true, viewer = null, parts = false } = {}) {
     const read = (f) => { try { return f(); } catch { return null; } };
     const text = (f) => { const v = read(f); return typeof v === "string" && v ? v : null; };
@@ -3097,6 +3101,8 @@ export function instanceSetupOps(m, url, body) {
     adminrecoverystep: () => m.adminRecoveryStep({ viewer: q("viewer") }),
     /* R95 (T51): the seven facts `op=bootstrap` states to a credentialed caller; a store-internal route (no spec), asked
        by `bootstrapReport` only for such a caller. */
+    /* R105 (fix round 10, K5170): the migrations' counts `op=selftest` states to an administrator; a store-internal route (no spec). */
+    selftestmigrations: () => m.selftestMigrations(),
     bootstrapfacts: () => (body && typeof body === "object" && !Array.isArray(body) && body.keep !== undefined
       ? m.keepFleetParts(body.keep)
       : m.bootstrapFacts({ facts: q("facts") !== "0", viewer: q("viewer"), parts: q("parts") === "1" })),
@@ -3382,6 +3388,15 @@ export async function selftest(env, storeName, { cls = null, viewer = "", scratc
     if (!sOut.answered) { out.ok = false; out.store = "ERR the store did not answer /stats"; }
     else out.store = sOut.result;
   } catch (e) { out.ok = false; out.store = "ERR " + String(e && e.message || e); }
+  /* R105 (K5170; extraction R110): an administrator is told each migration's counts, read only; a store that does not answer
+     states none, which is not a health failure. */
+  if (cls === "admin") {
+    out.migrations = null;
+    try {
+      const mOut = await doAnswer(storeStub(env, storeName).fetch("http://x/selftestmigrations"));
+      if (mOut.answered && mOut.result && Array.isArray(mOut.result.migrations)) out.migrations = mOut.result.migrations;
+    } catch { out.migrations = null; }
+  }
   if (r2Configured) {
     try {
       const key = `${scratch}/selftest-${Date.now()}`;

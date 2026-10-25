@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J60
+**Read** · handled J63
 
 ## B1 · START
 
@@ -1919,3 +1919,32 @@ A door case that fails for a cause in another module: REPORT it, never patch it.
 ## B90 · ANSWER · re J60
 
 ANSWER (K5168). (1) Your reading: re-point your ten tests to store-assembly's `ownerOps`/`OWNER_MAP_DECLARED_OPS` now; do not delete `owner-ops.mjs` yet. Plane's Wave B (which removes `plane/store.mjs:98`'s and `plane/declarations.mjs:91`'s imports) has not started; the deletion reaches you as a CHANGE when it merges. (2) Your reading: `publishcheck` takes store-request's stamp; the `innerRequest` switch (R136, R137, entry 2) after STORE-REQUEST #2 merges (sent back for four fixture lines; a CHANGE tells you). With the switch your copy's translation stamps' defect goes too (store-request J5: `translationdraft`, `translationgrant`, `translationadopt`, `translationconfirm`, `translationrevert`, `translationmark` stamped `by=member:<id>`, `translations` `viewer=member:<id>`, where translations asks of the bare id; store-request R7 now says so). Also (UX design U473): `control-plane/index.mjs:1363` holds an inline member sentence ("the file is kept, but its reading could not be queued, so it is not being read: ask again."): give it a key at its use (`localize`), as the words check wants.
+
+## B91 · ANSWER · re J61
+
+ANSWER (K5170), for CONTROL-PLANE #62, who continues from your record's Resume notes. J61 placed: (1) link-sweep R14 (a project's own bundle) is LINK-SWEEP #9's (START B-k5170); keep `r41-sweepset` test 2 red by name until it merges. (2) The session and re-authentication hop is admission R33, ADMISSION #19's; keep `r10-caseratify-chain` red by name. (3) `selftest`'s migration counts are instance-setup R105, INSTANCE-SETUP #35's (a CHANGE): not yours. `index.mjs:1363` already keyed: noted. The `innerRequest` switch and `owner-ops.mjs`'s deletion still wait for their CHANGEs.
+
+## B92 · CHANGE
+
+CHANGE (K5171): STORE-REQUEST #2 is merged (R25 `publishcheck` stamp, R7's translation stamps by the bare member, R26-R28 `agentPackOp`, `airunDispatchOp`, `draftCheckOp` in `bio-plane/src/store-request/door-ops.mjs`). Merge `tranche/T51`, then do the `innerRequest` switch (R136, R137, entry 2): your door's own construction and the four ops' shaping give way to store-request's, so your copies of the R25 stamp and the translation stamps' defect go with them. `owner-ops.mjs`'s deletion still waits for plane's Wave B.
+
+## B93 · CHANGE
+
+CHANGE (K5172): LINK-SWEEP #9 is merged (R14: a project's own bundle is its own project). Merge `tranche/T51`; `r41-sweepset` test 2 should now be green: un-name it.
+
+## B94 · CHANGE
+
+CHANGE (K5178): more through-the-door cases for your Wave B (K5138), each the walker's case, beside items 72 (3), 73 (6), 78 (6), 81 (5):
+1. SCREENS-INVESTIGATE #16 J28 (8): `createevent` with `{datedFactId}` placed on a lane; `lawrelate` from a standard under a project path; `standarddeclare` with a body's `ENT-` id as issuer, then `bindsat`; a person's `removed` rows after `personexpunge`, read by another member.
+2. CONTENT #23 J19: `cite` with `extent_kind=pdf-page` over a docx selection answers `BASIS_REFUSED` carrying content's C-45.1 finding (diag2-06 §5).
+3. STORE-REQUEST #3 J11 (3): the publication's `held: true` case: `recipes.finding` (merged, `bio-plane/test/m/store-request/recipes.mjs`) makes the concluded own reading; `publishpreflight` then `publishcheck` through the door with every authored field.
+Merge origin/tranche/T51 for the recipes. Each in your record with K4426's fields when one is red.
+
+## B95 · RESUME
+
+RESUME (K5180) for CONTROL-PLANE #63. CONTROL-PLANE #62's J63 work (R136, R137, the door cases of B89-B93) is merged into the tranche; BOB merged and archived it while it was still writing CHANGE B94's door cases (its last commit `54007f3a07`, "cite pdf-page over docx, publishcheck held", is on your branch and not yet merged; the rest of B94 was in a worker's hands and is lost). Merge origin/tranche/T51 into your branch first (never a rebase). Then, in order, each with K4426's fields in your record when a case is red:
+1. **B94 whole:** check which of its cases `54007f3a07` holds; write the rest (screens-investigate's four; content's `cite`; store-request's `held: true` publish).
+2. **R136 covers every request the door sends to the store** (BOB's reading, your J63 question): the review-copy and template-grant secret doors build their request through `innerRequest` too, not an allow-list; a failing-first case each.
+3. **Reds you named:** `walk-monitoring-checknow-adopt` (monitoring R79's copy entry lacks `provenance_chain`; extraction reads a text/plain copy as `final`): REPORT each with file:line in the owning module the day you confirm it (BOB starts those jobs); money R105 G61/G63 in `t51-round7-seam` (BINDING_UNREADABLE, MONEY_BAD_PERIOD, red before your change): find the cause (file:line) and REPORT or fix it if yours; `r9-seam` §14 and `r10-caseratify-chain` stay red by name until their quoting jobs and ADMISSION #20 merge.
+4. **Your own fixture lines** (68 in `checks/fixtures.mjs /home/user/bio control-plane --list`, all in older tests): to zero (re-point to providers' published fixtures or `storeWorld()`; markers listed in COMPLETE).
+5. `owner-ops.mjs` is deleted once PLANE #62 merges (BOB sends a CHANGE then); leave it until then.

@@ -86,11 +86,11 @@ test("R65 control: an answer with no states draws only the first revision's row 
 });
 
 test("R65 a refusal of the history is drawn in the section by its words, and the document's own page stands", async () => {
-  const p = await open(at, { plane: { bundlehistory: refusedIn("NO_SUCH_BUNDLE", "The record of this copy could not be read just now.") } });
+  const p = await open(at, { plane: { bundlehistory: refusedIn("NO_SUCH_DOCUMENT", "The record of this copy could not be read just now.") } });
   assert.ok(record(p).textContent.includes("The record of this copy could not be read just now."));
   assert.ok(main(p).querySelector("h1") && section(p, "document.read.title"), "never the page's absence");
-  const bare = await open(at, { plane: { bundlehistory: refusedIn("NO_SUCH_BUNDLE") } });
-  assert.ok(says(record(bare), "refusal.NO_SUCH_BUNDLE"), "without the plane's words, the word held for the code");
+  const bare = await open(at, { plane: { bundlehistory: refusedIn("NO_SUCH_DOCUMENT") } });
+  assert.ok(says(record(bare), "refusal.NO_SUCH_DOCUMENT"), "without the plane's words, the word held for the code");
 });
 
 test("R65 R70 a standing is the stated word of its key: `retired` as state.item.retired.name, a standing no key names as state.undetermined", async () => {

@@ -527,6 +527,11 @@ export function checkContentExtent(extent, ctx = {}) {
       return refusal("CONTENT_EXTENT_NO_CHAIN",
         localize('content.extent-core.embedded_image_text_has_no', 'this citation asks for the TEXT of an embedded image, and nothing in this record has read text off an embedded image — the container\'s transcription covers its text parts and never its media. Cite the image as itself (cited_as: bytes), or cite the passage that quotes it'));
   }
+  /* R62 (K5157): THE FORMAT HOLDS THE KIND. Asked where the record holds the capture's format and skipped where it does not
+     (R8); after every shape and container arm above, so an unreadable address stays unreadable and a figure the context
+     holds still names itself, and before the chain arm, which is a fact about the capture and not the extent. */
+  const misfit = ctx.known !== false ? kindFormatMisfit(e, ctx.container) : null;
+  if (misfit) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", misfit);
   /* THE CHAIN, LAST, AND IT IS A FACT ABOUT THE CAPTURE RATHER THAN THE EXTENT.
      A content row is an address into TEXT somebody or something produced, and a
      capture nobody has read holds no text to address. A DOCUMENT extent is
@@ -621,6 +626,29 @@ function checkPart(e, ctx) {
  * this module answers carries its row's check and translation is
  * `test/m/content/seams.test.mjs`' (R48).
  */
+
+/** R62 — THE EXTENT KINDS EACH FORMAT HOLDS. Only the six kinds that address a place in one family of document are judged
+ *  (a page of a PDF, a sheet's cell or range, a paragraph, a table of a text document, a slide's shape): the kinds that
+ *  also address a part (`image`, `doc-part`, `envelope`) and the whole document are held by more than one family and are
+ *  not judged here. A format outside this table is not judged either: the record is not refused for what it did not
+ *  measure. */
+const FORMAT_HOLDS = Object.freeze({
+  pdf: ["pdf-page"],
+  docx: ["doc-para", "doc-table"], odt: ["doc-para", "doc-table"],
+  xlsx: ["sheet-cell", "sheet-range"], ods: ["sheet-cell", "sheet-range"], csv: ["sheet-cell", "sheet-range"],
+  pptx: ["slide-shape"], odp: ["slide-shape"],
+  text: ["doc-para"],
+});
+const PLACE_KINDS = new Set(Object.values(FORMAT_HOLDS).flat());
+
+/** An extent of a place kind over a capture whose held format cannot hold that kind: the sentence naming the kind and the
+ *  format, or null (the format not held, not in the table, or the kind held by it). */
+function kindFormatMisfit(e, container) {
+  const format = container && typeof container.format === 'string' ? container.format.trim().toLowerCase() : '';
+  if (!format || !Object.prototype.hasOwnProperty.call(FORMAT_HOLDS, format)) return null;
+  if (!PLACE_KINDS.has(e.kind) || FORMAT_HOLDS[format].includes(e.kind)) return null;
+  return localize('content.extent-core.format_cannot_hold_kind', 'a {kind} extent cannot be held by a {format} document, which holds {holds}', { kind: String(e.kind), format: String(format), holds: String(FORMAT_HOLDS[format].join(', ')) });
+}
 
 /** A cell of a named sheet, against the workbook as the record holds it.
  *  Returns the sentence naming what is outside, or null. */

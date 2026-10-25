@@ -4,7 +4,7 @@
  * ends, and the goals the objective serves. In the drawing's order (`SCR.objective`, DEC-374), each section only when its read answers
  * (R20), a read that failed drawn failed. Progress is derived by the plane on every read and is never typed here (`intent` R19).
  *
- * Reads: `objectiveprogress`, `objectivegaps`, `intentproposals`, `aspirations` (for the project and for her), `list` (type `goal`);
+ * Reads: `objectiveprogress`, `objectivegaps`, `intentproposals`, `aspirations` (for the project and for her, and again with `retired`), `list` (type `goal`);
  * then, as it draws, `progression` and `entity` (the measure's flow, party and stages by name), `pursuit` (an aspiration's dead ends)
  * and `goal`. Acts, each the fields `intent` declares: `objectivecondition` (the reason is the box "Why you measure it this way"; a
  * removal too), `triage`, `aspirationdeclare`, `aspirationdepart`, `aspirationdeadend` (the note), `aspirationretire` (what it taught),
@@ -20,6 +20,7 @@ export const PENDING_WORDS = Object.freeze([
   "what-success-means", "proposals-to-decide", "aspirations", "declare-an-aspiration", "whose-it-is", "the-whole-team-s", "this-project-s", "mine",
   "about-which-party", "which-aspiration", "which-goal", "which-proposal", "open-a-goal", "what-it-pursues", "what-limits-it", "close-a-goal", "why-it-closes",
   "put-it-off", "dismiss-it", "retire-an-aspiration", "held-by-this-project", "held-by-me", "this-project-departed",
+  "retired-aspirations", "retired",
 ].map((s) => "screen.objective." + s));
 
 function reads(view) {
@@ -32,7 +33,11 @@ function reads(view) {
     gaps: { op: "objectivegaps", query: { project: id }, empty: () => false },
     proposals: { op: "intentproposals", query: { project: id }, empty: () => false },
     aspirations: { op: "aspirations", query: { project: id, ...(me ? { member: String(me) } : {}) }, empty: () => false },
+    /* R106 (K5157; WALK-FINAL-03b §12; `intent` R37): the retired ones, which stay readable with what pursuing them taught and their dead ends */
+    retired: { op: "aspirations", query: { project: id, ...(me ? { member: String(me) } : {}), retired: "true" }, empty: () => false },
     goals: { op: "list", query: { type: "goal", limit: "200" }, empty: () => false },
+    /* R46 (K5148; WALK-FINAL-03b §14): the founder's handle, from the roster's founder row, so a declarer `admin` reads as her handle here as on the project */
+    participants: { op: "projectparticipants", query: { projectId: id }, empty: () => false },
   };
 }
 
@@ -75,7 +80,11 @@ function render(cs, view) {
   const gaps = val(d.gaps) && Array.isArray(val(d.gaps).gaps) ? val(d.gaps).gaps : [];
   const asp = val(d.aspirations) || {};
   const aspirations = Array.isArray(asp.aspirations) ? asp.aspirations : [];
+  const roster = val(d.participants) && Array.isArray(val(d.participants).participants) ? val(d.participants).participants : [];
+  const founderRow = roster.find((x) => x && x.founder === true);
+  const founder = founderRow && founderRow.handle ? String(founderRow.handle) : "";
   const departures = Array.isArray(asp.departures) ? asp.departures : [];
+  const gone = val(d.retired) && Array.isArray(val(d.retired).aspirations) ? val(d.retired).aspirations : [];
 
   /* the flows and parties this screen can name: the measure's own, and those the proposals and shortfalls name */
   const flows = new Map(), parties = new Map();
@@ -113,7 +122,7 @@ function render(cs, view) {
       ? W(K("success-is-reached-when-at-least-of-the-made-for"), { share, flow: flows.get(cond.progression) || cond.progression, party: parties.get(cond.entity) || cond.entity || "",
         stage: (req.stages || []).map(stageName).join(", "), grade: req.grade })
       : [flows.get(cond.progression) || cond.progression, parties.get(cond.entity) || cond.entity, (req.stages || []).map(stageName).join(", "), req.grade, share].filter(Boolean).map(data).join(" · ");
-    const setBy = [pr.set_by ? P.who(cs, pr.set_by) : "", day(pr.set_at)].filter(Boolean).join(" · ");
+    const setBy = [pr.set_by ? P.who(cs, pr.set_by, founder) : "", day(pr.set_at)].filter(Boolean).join(" · ");
     means = cs.row(cs.icon("accepted"), sentence, "", setBy);
   } else if (pr) means = `<p>${W(K("this-objective-has-no-measure-of-success-yet-so"))} ${W(K("choose-what-counts-and-the-screen-works-it-out-f"))}</p>`;
   else means = failed(d.progress);
@@ -196,7 +205,7 @@ function render(cs, view) {
   const pursuits = new Map(shown.concat(departures.map((x) => ({ id: x.aspiration }))).filter((a) => a && a.id).slice(0, 40).map((a) => [a.id, val(ask("pur:" + a.id, "pursuit", { id: a.id }))]));
   const scopeWords = (a) => (a.scope === "group" ? W(K("held-by-the-whole-team")) : a.scope === "project" && held(K("held-by-this-project")) ? W(K("held-by-this-project"))
     : a.scope === "member" && held(K("held-by-me")) ? W(K("held-by-me")) : "");
-  const aRow = (a, departed) => cs.row(cs.icon(a.scope === "group" ? "group" : "subject"), `<b class="mk-data">${cs.esc(a.statement || "")}</b><span class="meta">${[scopeWords(a), a.author ? P.who(cs, a.author) : ""].filter(Boolean).join(" · ")}</span>`,
+  const aRow = (a, departed) => cs.row(cs.icon(a.scope === "group" ? "group" : "subject"), `<b class="mk-data">${cs.esc(a.statement || "")}</b><span class="meta">${[scopeWords(a), a.author ? P.who(cs, a.author, founder) : ""].filter(Boolean).join(" · ")}</span>`,
     departed && held(K("this-project-departed")) ? W(K("this-project-departed")) : "");
   const departedIds = new Set(departures.map((x) => x.aspiration));
   const rowsA = aspirations.map((a) => aRow(a, departedIds.has(a.id)))
@@ -204,7 +213,7 @@ function render(cs, view) {
       .map((x) => aRow(pursuits.get(x.aspiration).aspiration, true)));
   const lines = departures.map((x) => `<p class="mk-small muted">${W(K("this-project-departed-from-the-team-s-aspiration"), { date: { html: day(x.at) }, reason: { html: quote(x.reason || "") } })}</p>`)
     .concat([...pursuits.values()].flatMap((u) => (u && Array.isArray(u.dead_ends) ? u.dead_ends : []).map((e) => `<p class="mk-small muted">${W(K("dead-ends-so-far"), { note: { html: quote(e.note || "") },
-      by: { html: data([P.who(cs, e.author), day(e.at)].filter(Boolean).join(", ") + ".") } })}</p>`)));
+      by: { html: data([P.who(cs, e.author, founder), day(e.at)].filter(Boolean).join(", ") + ".") } })}</p>`)));
   const aOpts = aspirations.map((a) => ({ value: String(a.id), text: String(a.statement || a.id) }));
   const groupOpts = aspirations.filter((a) => a.scope === "group").map((a) => ({ value: String(a.id), text: String(a.statement || a.id) }));
   const scopeOpts = [["group", K("the-whole-team-s")], ["project", K("this-project-s")], ["member", K("mine")]];
@@ -224,15 +233,28 @@ function render(cs, view) {
     + cs.choice("ob-ret-asp", K("which-aspiration"), aOpts, {})
     + `<div class="cs-reason">${cs.field("ob-ret-taught", K("what-pursuing-it-taught"), { rec: true, area: true })}${help("ob-ret-taught", "taught", "aspirationretire")}${cs.act("aspirationretire")}</div>`
     + fold(K("when-retiring-is-refused"), gap("retiring-records-what-pursuing-it-taught", "write-it-and-try-again") + gap("an-aspiration-already-retired-cannot-be-retired")) : "";
+  /* intent R37: a retired aspiration stays readable, marked, with what pursuing it taught and its dead ends, in a fold under the held ones */
+  const goneRow = (a) => `<div data-retired="${cs.esc(String(a.id))}">`
+    + cs.row(cs.icon("subject"), `<b class="mk-data">${cs.esc(a.statement || "")}</b><span class="meta">${[scopeWords(a), a.author ? P.who(cs, a.author, founder) : ""].filter(Boolean).join(" · ")}</span>`, W(K("retired")))
+    + (a.taught ? `<p class="mk-small muted">${W(K("what-pursuing-it-taught"))} ${quote(a.taught)}</p>` : "")
+    + (Array.isArray(a.dead_ends) ? a.dead_ends : []).map((e) => `<p class="mk-small muted">${W(K("dead-ends-so-far"), { note: { html: quote(e.note || "") },
+      by: { html: data([P.who(cs, e.author, founder), day(e.at)].filter(Boolean).join(", ") + ".") } })}</p>`).join("") + `</div>`;
+  const goneBlock = gone.length ? fold(K("retired-aspirations"), cs.sheet(gone.map(goneRow).join(""))) : "";
   out.push(cs.sec(K("aspirations"), failed(d.aspirations) + `<p class="mk-small muted">${W(K("what-a-team-a-project-or-a-member-holds-itself-t"))} ${W(K("an-aspiration-is-not-a-measure-it-is-the-standar"))}</p>`
-    + (rowsA.length ? cs.sheet(rowsA.join("")) : "") + lines.join("") + fold(K("declare-an-aspiration"), declare)
+    + (rowsA.length ? cs.sheet(rowsA.join("")) : "") + lines.join("") + goneBlock + fold(K("declare-an-aspiration"), declare)
     + (depart ? fold(K("depart-from-the-team-s-aspiration"), depart) : "") + (deadEnd ? fold(K("record-a-dead-end"), deadEnd) : "") + (retire ? fold(K("retire-an-aspiration"), retire) : "")));
 
   /* the goals this objective serves: the goals the plane lists, each read for its statement, limit and state */
   const listed = val(d.goals) && Array.isArray(val(d.goals).bundles) ? val(d.goals).bundles.slice(0, 40) : [];
   const goals = listed.map((b) => val(ask("goal:" + b.bundle_id, "goal", { id: b.bundle_id }))).map((v) => v && v.goal).filter(Boolean);
   const open = goals.filter((g) => g.state === "open");
-  const gRows = goals.map((g) => cs.row(cs.icon("status"), `<b class="mk-data">${cs.esc(g.statement || "")}</b><span class="meta">${[g.bounds ? data(g.bounds) : "", g.author ? P.who(cs, g.author) : ""].filter(Boolean).join(" · ")}</span>`,
+  /* R106 (K5157; WALK-FINAL-03b §13): each goal row lists the objectives linked to it, the project's name, who linked it and the day (`goalread`'s
+     `objectives`: only those the viewer may see); a goal with none linked draws nothing more */
+  const projectRead = val(ask("projects", "projectlist", { limit: "200" }));
+  const names = new Map((projectRead && Array.isArray(projectRead.projects) ? projectRead.projects : []).filter((x) => x && x.id && x.name).map((x) => [String(x.id), String(x.name)]));
+  const linked = (g) => (Array.isArray(g.objectives) ? g.objectives : []).filter((o) => o && o.project).map((o) =>
+    `<span class="meta" data-objective-link="${cs.esc(String(o.project))}">${[data(names.get(String(o.project)) || T("screen.project.name")), o.by ? P.who(cs, o.by, founder) : "", day(o.at)].filter(Boolean).join(" · ")}</span>`).join("");
+  const gRows = goals.map((g) => cs.row(cs.icon("status"), `<b class="mk-data">${cs.esc(g.statement || "")}</b><span class="meta">${[g.bounds ? data(g.bounds) : "", g.author ? P.who(cs, g.author, founder) : ""].filter(Boolean).join(" · ")}</span>${linked(g)}`,
     g.state === "closed" && g.closed_reason ? quote(g.closed_reason) : ""));
   const gOpts = open.map((g) => ({ value: String(g.id), text: String(g.statement || g.id) }));
   const openGoal = cs.field("ob-goal-st", K("what-it-pursues"), { rec: true, area: true }) + help("ob-goal-st", "statement", "goaldeclare")
@@ -355,7 +377,7 @@ const words = Object.freeze([
     "when-linking-is-refused", "a-closed-goal-takes-no-new-objective", "choose-an-open-goal-or-open-a-new-one", "a-closed-goal-stays-readable-with-its-projects-a", "you-cannot-reopen-it",
     "when-closing-is-refused", "a-goal-closes-with-its-reason", "write-why-and-try-again", "a-goal-already-closed-stays-as-it-is"].map((s) => "screen.objective." + s),
   "queue.objective-gap.detail.stages", "queue.objective-gap.detail.grade", "draft.machine.label", "shell.reason.needed", "state.empty", "state.loading", "state.failed", "shell.unread",
-  "mark.gap.undetermined.name", "mark.gap.undetermined.means", "refusal.INTENT_NO_SUCH_PROGRESSION",
+  "mark.gap.undetermined.name", "mark.gap.undetermined.means", "refusal.INTENT_NO_SUCH_PROGRESSION", "screen.project.name", "member.founder.unnamed",
 ]);
 
 /** A project's objective (interface-shell R21), with the module's shared readers as its parts. */

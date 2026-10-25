@@ -6,8 +6,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
 import { SCREEN_WORDS } from "../../../src/screens-inquiry/index.mjs";
-import { ok } from "../interface-shell/harness.mjs";
-import { open, main, section, says, word, day, SCREENS, P, Q, D } from "./fixtures.mjs";
+import { boot } from "../interface-shell/harness.mjs";
+import { open, main, section, says, word, day, storeWorld, SCREENS, P, Q, D } from "./fixtures.mjs";
 
 const READS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words-reads.json", import.meta.url), "utf8"))
   .modules["screens-inquiry"];
@@ -39,7 +39,12 @@ test("R44 over fixtures, what the screens draw for a sample of their keys equals
   assert.ok(says(main(q), "question.ask.first.title") && says(main(q), "question.ask.first.says"));
   const d = await open("/app/document/" + D);
   assert.ok(says(main(d), "screen.document.captured", { date: day("2026-10-02T09:00:00Z", { year: true }), source: "https://example.org/ai-4-12.pdf" }));
-  const a = await open("/app/projectai/" + P, { plane: { projectparticipants: ok({ ok: true, participants: [{ handle: "mai", state: "joined", owner: true }] }),
-    projectaccountstate: ok({ ok: true, held: false }), projectaikeepawaystate: ok({ ok: true, on: false }) } });
+  /* the project's AI page over the real world: a team's owner on a project she started, no account held and no keep-away set */
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", { capabilities: ["contribute", "create_projects"] });
+  const project = await world.recipes.project(ann, "Stormwater");
+  const { door, session } = world.boot(ann);
+  const a = await boot({ screens: SCREENS, door, session, path: "/app/projectai/" + project });
+  await a.settle();
   assert.ok(says(main(a), "screen.projectai.account.none") && says(main(a), "screen.projectai.keepaway.off"));
 });
