@@ -533,3 +533,22 @@ Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 7, module lines 4103
 ## J29 · REPORT
 
 Correction to J28's Size line: module lines 4102 (measured), not 4103. Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 7, module lines 4102.
+
+## J30 · BLOCKED
+
+Cause: tests, and a failure owned by store-assembly, already on the tranche.
+
+**Done since J29** (merged the tranche, never rebased; pushed).
+- OP-GRADES #29 merged, so the `publishat` weight registers. Its hand row's sentence (op-grades `index.mjs:1556`, "case-directed: keyed by a case edition…") differed from my row's words key, so op-grades refused with `DECLARED_OP_DISAGREES: publishat description`. My row now carries that sentence exactly. The R54 agreement check passes for `publishat`.
+- Ratification suite: 340 of 340 pass. `declared-ops.test.mjs`: 4 of 4, including `publishat`.
+
+**Why R60 is still not green.** `control-plane/r10-caseratify-chain.test.mjs` fails at load, before any count:
+`DECLARED_OP_DISAGREES: readtranslate description` (raised by op-grades `declared.mjs`, at the owner row's description check).
+- Owner: store-assembly. Its `bio-plane/src/store-assembly/declared.mjs:16` declares `readtranslate` with a description that differs from op-grades' hand row.
+- I checked it is on the tranche without my change: I restored the tranche's `ratification/index.mjs` for one run and got the same error. Then I put my version back. So it is not from my change.
+
+I have not measured the chain on this tranche, so the count (12, bar 12) still stands only from before.
+
+**What I need from you**: store-assembly to agree `readtranslate`'s description with its hand row (or you rule who moves). After that I re-run the chain test and post COMPLETE with R18, R21, R53, R60, R61 met, if it is at or under 12.
+
+Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 11, module lines 4102
