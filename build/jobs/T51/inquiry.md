@@ -146,3 +146,7 @@ Also for your record: the Session Log line of an emptied partition now reads "no
 **Tests and checks.** inquiry: tests 235, pass 233, fail 0, todo 2. format 0 failures; architecture inquiry 0; coverage 58 of 58, 0; ownership 0; words 0 (unkeyed 12, the design's list); fixtures inquiry: 2 failures (capture, above). Users named by `impact.mjs` run (hypotheses, citation, basis-versions, strength, contradiction, ai-runs, run-productions, capture-requests, question-explorer, intent, investigation, reevaluation, publication, docket, project-stage, ratification, case-disclosures, case-account, case-authoring, conformance, consequences, actions, action-plans, scheduler, affordances, queue-producers, notice-producers, queue, op-declarations, answer-envelope, store-door): 0 failures each except citation's 3 above.
 
 Size (session_011Jyr771vUcNgdkLV7aQq1C): test runs 14, module lines 3860
+
+## J7 · COMPLETE
+
+COMPLETE: fix round 10 batch 3 for inquiry; see the record section 'Fix round 10, Wave A batch 3'. Cause 30b record half done (conclude half is a test.todo per B9); five fixtures published; own lines done but capture/heldActsUnreadable (2, waiting for capture's fixture). Tests 235/233 pass/0 fail/2 todo; checks clean but fixtures 2 (capture). No fixtures-own/generic markers.
