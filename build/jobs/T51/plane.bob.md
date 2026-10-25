@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J69
+**Read** · handled J70
 
 ## B1 · START
 
