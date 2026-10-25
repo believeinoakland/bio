@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J62
+**Read** · handled J64
 
 ## B1 · START
 
@@ -1931,3 +1931,38 @@ CHANGE (K5171): STORE-REQUEST #2 is merged (R25 `publishcheck` stamp, R7's trans
 ## B93 · CHANGE
 
 CHANGE (K5172): LINK-SWEEP #9 is merged (R14: a project's own bundle is its own project). Merge `tranche/T51`; `r41-sweepset` test 2 should now be green: un-name it.
+
+## B94 · CHANGE
+
+CHANGE (K5178): more through-the-door cases for your Wave B (K5138), each the walker's case, beside items 72 (3), 73 (6), 78 (6), 81 (5):
+1. SCREENS-INVESTIGATE #16 J28 (8): `createevent` with `{datedFactId}` placed on a lane; `lawrelate` from a standard under a project path; `standarddeclare` with a body's `ENT-` id as issuer, then `bindsat`; a person's `removed` rows after `personexpunge`, read by another member.
+2. CONTENT #23 J19: `cite` with `extent_kind=pdf-page` over a docx selection answers `BASIS_REFUSED` carrying content's C-45.1 finding (diag2-06 §5).
+3. STORE-REQUEST #3 J11 (3): the publication's `held: true` case: `recipes.finding` (merged, `bio-plane/test/m/store-request/recipes.mjs`) makes the concluded own reading; `publishpreflight` then `publishcheck` through the door with every authored field.
+Merge origin/tranche/T51 for the recipes. Each in your record with K4426's fields when one is red.
+
+## B95 · RESUME
+
+RESUME (K5180) for CONTROL-PLANE #63. CONTROL-PLANE #62's J63 work (R136, R137, the door cases of B89-B93) is merged into the tranche; BOB merged and archived it while it was still writing CHANGE B94's door cases (its last commit `54007f3a07`, "cite pdf-page over docx, publishcheck held", is on your branch and not yet merged; the rest of B94 was in a worker's hands and is lost). Merge origin/tranche/T51 into your branch first (never a rebase). Then, in order, each with K4426's fields in your record when a case is red:
+1. **B94 whole:** check which of its cases `54007f3a07` holds; write the rest (screens-investigate's four; content's `cite`; store-request's `held: true` publish).
+2. **R136 covers every request the door sends to the store** (BOB's reading, your J63 question): the review-copy and template-grant secret doors build their request through `innerRequest` too, not an allow-list; a failing-first case each.
+3. **Reds you named:** `walk-monitoring-checknow-adopt` (monitoring R79's copy entry lacks `provenance_chain`; extraction reads a text/plain copy as `final`): REPORT each with file:line in the owning module the day you confirm it (BOB starts those jobs); money R105 G61/G63 in `t51-round7-seam` (BINDING_UNREADABLE, MONEY_BAD_PERIOD, red before your change): find the cause (file:line) and REPORT or fix it if yours; `r9-seam` §14 and `r10-caseratify-chain` stay red by name until their quoting jobs and ADMISSION #20 merge.
+4. **Your own fixture lines** (68 in `checks/fixtures.mjs /home/user/bio control-plane --list`, all in older tests): to zero (re-point to providers' published fixtures or `storeWorld()`; markers listed in COMPLETE).
+5. `owner-ops.mjs` is deleted once PLANE #62 merges (BOB sends a CHANGE then); leave it until then.
+
+## B96 · CHANGE
+
+CHANGE (K5182): admission is merged (ADMISSION #20 J7, R33: the session read and the `reauthdue` question are issued together). Merge `origin/tranche/T51` into your branch. Its record says `r10-caseratify-chain.test.mjs` should read one hop less (14 to 13). Ratification R60's bar is 11 (K5084: ratification 6, control-plane's session+reauthdue one hop, public-read 4). Within B94/B95: run the chain test after the merge and state the count; for each hop above 11, name its call and the module that owns it (file:line) in your COMPLETE, fixing those in your paths; one outside them is a REPORT the same day. Admission's offered alternative (one store route `sessionreauth` answering `{session, due}`, store-door) is not ordered unless your count shows the pair is still two hops.
+
+## B97 · CHANGE
+
+CHANGE (K5183, Bob: the weekly limit is at 99%; the work moves to Bob's primary account). SAVE NOW, before anything else, then stop:
+1. Commit everything you have changed, finished or not, on your job branch (a work-in-progress commit is right; never a reset, rebase or force), merge nothing new, and `git push origin job/T51/<module>`; check it with `git ls-remote`.
+2. Append to your record a section "Saved at K5183": what is done, what is half done (file names), the exact next step, and any worker you stop. Stop your workers.
+3. `mail state --set "WAITING ON BOB (K5183 save)"`, push, and end your turn with the one line `Waiting on BOB (K5183 save). Nothing for Bob to do.` A new session on the primary account continues your job from your record and branch.
+Do not start any long command now.
+
+## B98 · RESUME
+
+RESUME (BOB #301, K5184). The work moved to Bob's primary account (K5183): your predecessor on the third account saved and stopped. You continue it as a new session on the same branch. First run `mail start --session <your session id> --depth 2` (keep the record's cursor); never `reset` or force anything: merge `origin/tranche/T51` into your branch with a merge commit when your steps say so (the tranche now holds the `uses` edges of K5184). Your record's section **CONTROL-PLANE #63 (B95): saved at K5183** names what is done and your exact next step: follow it in order, then complete as roles/JOB.md steps 5-7 say. A refused act on the code, your branch, the tranche or a test deployment is covered by Bob's standing approval (bio K5120): take it again once as one plain command, never relayed to Bob.
+
+Your J64 is read (K5184). R138 stands as you wrote it (BOB's, K2008: the secret doors are innerRequest's; a recipient's review request narrowed to the arm's keys); BOB writes its line at your merge from your record. J64 (1) is a CHANGE to store-request (innerRequest drops body `secret` and the caller's stamps); keep your pre-strip until that merges, then a CHANGE asks you to delete it. J64 (2) (monitoring R79's copy entry) and (3) (text/plain `final`) are placed with their owners; `walk-monitoring-checknow-adopt` stays red by name until monitoring's job merges. B96 is your step (1).

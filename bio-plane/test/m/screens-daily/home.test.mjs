@@ -27,7 +27,9 @@ const PLANE = {
     { id: "PROJ-2", name: "Pothole repairs", stage: "forming", lastChange: "2026-09-20T15:00:00Z", question_count: 1, shared_drafts: { count: 0, newest: null } },
     { id: "PROJ-3", name: "Odd", stage: "paused", question_count: 0, shared_drafts: null },
   ] }),
-  startfrom: ok({ ok: true, scripts: [], doors: [{ door: "elsewhere", scripts: [], opens: "elsewhere" }] }),
+  // K5148 (R42): "What happened?" is asked over the five doors only, so a member who may start projects is offered at least one with a script.
+  startfrom: ok({ ok: true, scripts: [{ id: "WIZ-33b5887790b7561b", version: 1, name: "Trace the deed", start: "finder" }],
+    doors: [{ door: "problem", scripts: ["WIZ-33b5887790b7561b"] }, { door: "elsewhere", scripts: [], opens: "elsewhere" }] }),
   lookedsince: ok({ since: "2026-10-01T00:00:00Z" }),
 };
 const CREATOR = { whoami: ok({ ...MEMBER, capabilities: ["contribute", "create_projects"] }) };

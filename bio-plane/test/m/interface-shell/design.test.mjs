@@ -78,7 +78,7 @@ test("R54 the paths of the screens PR #34's registry adds are mock-shell.js' PAT
 });
 
 test("R55 (amended by R73) the one op a screen needs that the registry does not list stays a named re-point: stepsourcewithdraw on explore; control: a screen naming another unlisted op still throws", () => {
-  assert.deepEqual(RE_POINTS, { explore: ["stepsourcewithdraw"], document: ["readheld"] });
+  assert.deepEqual(RE_POINTS, { explore: ["stepsourcewithdraw"], document: ["readheld"], person: ["linecurrentthrough"] });
   const r = (id, ...ops) => ({ id, render: () => "", acts: ops.map((op) => ({ op })) });
   assert.equal(checkScreens([r("explore", "stepsourcewithdraw")]), true);
   assert.ok(interfacePage([r("explore", "stepsourcewithdraw")]).length > 1000, "served");

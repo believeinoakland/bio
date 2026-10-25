@@ -21,7 +21,11 @@ export const IMPORTED = Object.freeze({
   render: function (cs, view) {
     const P = view.parts, ui = view.ui;
     const c = view.data.chosen && view.data.chosen.state === "ok" ? view.data.chosen.value : null;
-    const out = [cs.title(c ? (c.case && (c.case.title || c.case.id)) || c.case || c.import : null, { thing: "case" })];
+    // 10B C6 (R6, R98): a case is named by its `scope` and a finding by its `title`, as case-import R4 answers them, never by an id: an
+    // answer that states none is the screen's own name, and a finding with no title is "Finding n"
+    const scopeOf = function (x) { return x && typeof x.scope === "string" && x.scope.trim() ? x.scope.trim() : ""; };
+    const nameOf = function (f, i) { return f && typeof f.title === "string" && f.title.trim() ? cs.esc(f.title.trim()) : cs.w("screen.published.finding", { n: String(i + 1) }); };
+    const out = [cs.title(c ? scopeOf(c) || null : null, { thing: "case" })];
     if (c) {
       const ed = c.edition || {};
       const group = String(c.group && (c.group.name || c.group.slug) || c.group || "");
@@ -34,10 +38,10 @@ export const IMPORTED = Object.freeze({
         recreated: String(findings.filter(function (f) { return resultOf(f) === "yes"; }).length), findings: String(findings.length) }) + "</p>");
       out.push('<p class="mk-sub">' + cs.mark("origin", "elsewhere") + " " + cs.w("screen.imported.from", { group: group,
         edition: String(ed.edition || ""), by: importer, at: { html: ed.imported_at ? cs.date(ed.imported_at) : "" } }) + "</p>");
-      out.push(P.sec(cs, "screen.imported.findings", findings.length ? cs.sheet(findings.map(function (f) {
+      out.push(P.sec(cs, "screen.imported.findings", findings.length ? cs.sheet(findings.map(function (f, i) {
         const r = resultOf(f);
         const own = f.origin && f.origin.acceptance ? cs.mark("origin", "accepted") : f.origin && Array.isArray(f.origin.flags) && f.origin.flags.length ? cs.mark("origin", "flagged") : "";
-        return cs.row("", '<span class="rec">' + cs.esc(f.title || f.finding || "") + "</span>",
+        return cs.row("", '<span class="rec">' + nameOf(f, i) + "</span>",
           '<span class="cs-recreate" data-r="' + r + '">' + cs.w("screen.imported.result." + r) + "</span>", own);
       }).join("")) : ""));
 
@@ -71,7 +75,7 @@ export const IMPORTED = Object.freeze({
       // chosen for her), the findings that moved and the statement that moved each, and the limit sentence. Nothing is saved or sent.
       const lensKeys = [["as_published", "screen.imported.lens_as_published"], ["removed", "screen.imported.lens_removed"], ["own", "screen.imported.lens_own"]];
       const rg = ui.regrade && ui.regrade.import === c.import ? ui.regrade : null;
-      const titleOf = function (id) { const f = findings.find(function (x) { return x.finding === id; }); return f ? f.title || f.finding : id; };
+      const titleOf = function (id) { const i = findings.findIndex(function (x) { return x.finding === id; }); return i >= 0 ? nameOf(findings[i], i) : cs.w("screen.imported.findings"); };
       const pairOf = function (x) { return x && typeof x === "object" ? [x.capture, x.connection].filter(Boolean).join("/") || JSON.stringify(x) : x ? String(x) : ""; };
       out.push(cs.sec("act.owed_importregrade.label.imported", '<p class="mk-small">' + cs.w("screen.imported.lens_what") + "</p>"
         + cs.checks("im-lens", { key: "act.owed_importregrade.label.imported" }, lensKeys.map(function (k) { return [k[0], k[1], false]; }), { radio: true })
@@ -81,7 +85,7 @@ export const IMPORTED = Object.freeze({
           + (rg.lens === "undetermined" ? P.fold(cs, "screen.imported.lens_unreadable_summary", "<p>" + cs.w("screen.imported.lens_unreadable") + "</p>") : "")
           + cs.sheet((Array.isArray(rg.findings) ? rg.findings : []).map(function (f) {
             const why = Array.isArray(f.because) ? f.because : [];
-            return cs.row("", '<span class="rec">' + cs.esc(titleOf(f.finding)) + "</span>" + '<span class="meta" data-moved="' + (f.moved === true ? "yes" : "no") + '">'
+            return cs.row("", '<span class="rec">' + titleOf(f.finding) + "</span>" + '<span class="meta" data-moved="' + (f.moved === true ? "yes" : "no") + '">'
               + (f.moved === true ? cs.w("screen.imported.lens_moved", { published: pairOf(f.published && f.published.pair), regraded: pairOf(f.pair) })
                 + why.map(function (b) { return " " + cs.w("screen.imported.lens_because", { statement: b.text || b.statement || "", part: b.touched && b.touched.target ? b.touched.target : "" }); }).join("")
                 : f.moved === false ? cs.w("screen.imported.lens_unmoved") : "") + "</span>", "");
@@ -101,7 +105,7 @@ export const IMPORTED = Object.freeze({
         const ql = P.later(cs, view, "questions", "list", { query: { type: "inquiry", limit: "500" } }, function () { return false; });
         const qs = ql.state === "ok" && Array.isArray(ql.value.bundles) ? ql.value.bundles : [];
         out.push(cs.sec("screen.imported.citeimp.head", accepted.map(function (f, i) {
-          return '<div data-citeimp="' + cs.esc(f.finding) + '"><p><span class="rec">' + cs.esc(f.title || f.finding || "") + "</span></p>"
+          return '<div data-citeimp="' + cs.esc(f.finding) + '"><p><span class="rec">' + nameOf(f, findings.indexOf(f)) + "</span></p>"
             + cs.choice("im-ci-q-" + i, "screen.imported.citeimp.q", [{ value: "", text: "" }].concat(qs.map(function (q) { return { value: String(q.bundle_id), text: String(q.title || q.bundle_id) }; })))
             + cs.checks("im-ci-role-" + i, { key: "screen.imported.citeimp.role" }, [["supports", "screen.imported.citeimp.role.supports", false], ["cuts_against", "screen.imported.citeimp.role.cuts", false]], { radio: true })
             + cs.field("im-ci-note-" + i, "screen.imported.citeimp.note")
@@ -130,7 +134,7 @@ export const IMPORTED = Object.freeze({
             date: { html: ed.imported_at ? cs.date(ed.imported_at) : "" }, recreated: count(ed.recreated), findings: count(ed.findings) });
           if (typeof ed.recreated_in_part === "number" && ed.recreated_in_part > 0) says += " · " + cs.w("screen.imported.list.row.part", { n: String(ed.recreated_in_part) });
           return cs.row(cs.mark("origin", "elsewhere"), '<a class="cs-btn" data-tone="quiet" href="/app/imported/' + encodeURIComponent(x.import) + '" data-nav>'
-            + cs.esc((x.case && (x.case.title || x.case.id)) || x.case || x.import) + "</a>", '<span class="meta">' + says + "</span>");
+            + (scopeOf(x) ? cs.esc(scopeOf(x)) : cs.w("screen.imported.name")) + "</a>", '<span class="meta">' + says + "</span>");
         }).join(""));
       }), { help: "screen.imported.list.tip" }));
     out.push(cs.sec("screen.imported.import", cs.field("im-file", "screen.imported.file.label", { type: "file", help: "screen.imported.file.help" })

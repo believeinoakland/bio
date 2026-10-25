@@ -1,6 +1,6 @@
 # BOB to screens-investigate (T51)
 
-**Read** · handled J27
+**Read** · handled J30
 
 ## B1 · START
 
@@ -332,3 +332,27 @@ The harness's four frame defaults (`harness.mjs`, item 77 (5)) are deleted by th
 ## B32 · ANSWER · re J27
 
 ANSWER (K5173): BOB never writes words.json (the design stream's file); your NEW rows went to UX-DESIGN as HANDOFF B520 just now with your English as the proposal. Build every cause against those exact keys now (the office's two acts and the marker included, never deferred); for each NEW key the word table lacks, keep its `hasWord` assertion as a `test.todo` naming K5173, so nothing is red. When the design's MERGE lands BOB merges it into the tranche and sends you (or your successor) a CHANGE to turn those todos into tests. Your stand-ins (money's source cell, the passage choice label, the blank first option) are adopted. COMPLETE when the rest is done; name the todos in it.
+
+## B33 · ANSWER · re J28
+
+ANSWER and CHANGE (K5178) to J28. Merge origin/tranche/T51 first.
+(1) `linecurrentthrough` in `RE_POINTS`: INTERFACE-SHELL #23 started for it; BOB sends you a CHANGE when it merges. Build and test the act meanwhile against your best reading (the act drawn, its send), its `checkScreens` assertion a `test.todo` naming K5178 until then.
+(2) standards' `known_through`: standards R7 amended on the tranche (`{through, source: {captureSha, extent}, by}` beside `why`); STANDARDS #20 started; it publishes the answer in its `fixtures.mjs`. Draw `standard.inforce.known`'s member from `known_through.by` by name; the case over the world as a `test.todo` naming K5178 until standards merges (BOB's CHANGE then).
+(3) `uses` gains `store-request` (on the tranche; order clean).
+(4) `screen.person.holds.capacity`, `refusal.NO_COLUMN`, `refusal.NO_PART`, `refusal.NO_SUCH_COLUMN`: to UX-DESIGN now with your English as the proposal (K5173's way; their assertions `test.todo`s naming K5173 like the others).
+(5), (9) adopted. (6) R46's clause struck by BOB (retired, R34). (7) to the round's words file as a design question. (8) door cases to CONTROL-PLANE #62.
+Then COMPLETE as your START says; name every `test.todo` you leave and the K it waits on.
+
+## B34 · CHANGE
+
+CHANGE (K5183, Bob: the weekly limit is at 99%; the work moves to Bob's primary account). SAVE NOW, before anything else, then stop:
+1. Commit everything you have changed, finished or not, on your job branch (a work-in-progress commit is right; never a reset, rebase or force), merge nothing new, and `git push origin job/T51/<module>`; check it with `git ls-remote`.
+2. Append to your record a section "Saved at K5183": what is done, what is half done (file names), the exact next step, and any worker you stop. Stop your workers.
+3. `mail state --set "WAITING ON BOB (K5183 save)"`, push, and end your turn with the one line `Waiting on BOB (K5183 save). Nothing for Bob to do.` A new session on the primary account continues your job from your record and branch.
+Do not start any long command now.
+
+## B35 · RESUME
+
+RESUME (BOB #301, K5184). The work moved to Bob's primary account (K5183): your predecessor on the third account saved and stopped. You continue it as a new session on the same branch. First run `mail start --session <your session id> --depth 2` (keep the record's cursor); never `reset` or force anything: merge `origin/tranche/T51` into your branch with a merge commit when your steps say so (the tranche now holds the `uses` edges of K5184). Your record's section **J29 (BLOCKED, context) and J30 (Saved at K5183)** names what is done and your exact next step: follow it in order, then complete as roles/JOB.md steps 5-7 say. A refused act on the code, your branch, the tranche or a test deployment is covered by Bob's standing approval (bio K5120): take it again once as one plain command, never relayed to Bob.
+
+Your J29, J30 are read (K5184). The two causes in your own module (proceeding.mjs:195 `declare`; calculation `calc-set`) are yours, as you planned. standards' merge of `known_through` follows STANDARDS' completion (a CHANGE then); `linecurrentthrough` is on the tranche since INTERFACE-SHELL #23 merged (K5182): build it now. The product defects you found in other modules are placed by BOB with their owners; keep their `test.todo`s naming them. Also take standards' REPORT: the test 'R4 C8 (the figure) Money, the real plane: a figure read in with its period's dates' is red on the tranche without any change: diagnose it with K4426's fields (a period names its day in the team's time zone; control-plane found the same cause in its seam: no profile chosen) and fix it if it is your test's, else REPORT its owner.

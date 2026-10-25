@@ -3,7 +3,7 @@
    Its own process, so its first read is this registration (R81). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { DECLARED_OPS } from "../../../src/control-plane/owner-ops.mjs";
+import { OWNER_MAP_DECLARED_OPS as DECLARED_OPS } from "../../../src/store-assembly/owner-ops.mjs";
 import { registerDeclaredOps as registerRows } from "../../../src/op-declarations/index.mjs";
 
 test("R112 control (K4206): a row whose stamps disagree with its hand row is refused naming the op, and the start would stop", () => {

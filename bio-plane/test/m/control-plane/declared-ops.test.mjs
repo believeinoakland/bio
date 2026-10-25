@@ -6,13 +6,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { declaredOpHolds } from "../../declared-ops.mjs";
-import { DECLARED_OPS, controlPlaneOwnerOps } from "../../../src/control-plane/owner-ops.mjs";
+import { OWNER_MAP_DECLARED_OPS as DECLARED_OPS, ownerOps as controlPlaneOwnerOps } from "../../../src/store-assembly/owner-ops.mjs";
 import { OPS, OP_STAMPS, NEEDS } from "../../../src/op-declarations/index.mjs";
 import { fresh } from "../capture/fixture.mjs";
 import { world as caseWorld, V as CV } from "../case-account/fixture.mjs";
 import { world as clockWorld, MACHINE, CLK } from "../action-clocks/fixture.mjs";
 import { boot as translationsBoot } from "../translations/fixture.mjs";
 import { translationsOps, DECLARED_OPS as TRANSLATIONS_DECLARED } from "../../../src/translations/index.mjs";
+import { DECLARED_OPS as SIGNIN_DECLARED } from "../../../src/signin-door/index.mjs";
 import { call } from "./harness.mjs";
 import { callers } from "./door-routes.mjs";
 
@@ -114,8 +115,9 @@ test("R112 (K4210) clockpropose: its target and rule are required, each missing 
     refusedNaming: named({ target: ["NO_TARGET"], rule: ["NO_SUCH_RULE"] }), values: { target: A, rule: "records_answer" }, same: sameCode });
 });
 
+/* the declaration is signin-door's (R6 there, K5052 (4)), read from its own DECLARED_OPS; it declares no `fields` yet, so this is RED BY NAME until signin-door adds them (REPORTed) */
 test("R112 (K4210) subscriptionsignin: its step is required, a step agent-worker does not judge refused naming it by BAD_STEP; a field outside accepts is dropped", async () => {
-  await declaredOpHolds({ op: "subscriptionsignin", declaration: DECLARED_OPS.subscriptionsignin, call: signinOf,
+  await declaredOpHolds({ op: "subscriptionsignin", declaration: SIGNIN_DECLARED.subscriptionsignin, call: signinOf,
     refusedNaming: named({ step: ["BAD_STEP"] }), values: { step: "signout" }, same: sameSignin });
 });
 

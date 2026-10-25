@@ -9,8 +9,6 @@ import { fileURLToPath } from "node:url";
 import { interfacePage, interfaceScript, scriptPath } from "../../../src/interface-shell/index.mjs";
 import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import { SCREENS } from "../../../src/screens-settings/index.mjs";
-import "./register.mjs";
-import { FRAME } from "../interface-shell/harness.mjs";
 
 const root = (p) => fileURLToPath(new URL("../../../../" + p, import.meta.url));
 function engine() {
@@ -22,18 +20,17 @@ function engine() {
 }
 const EXE = process.env.CHROMIUM || "/opt/pw-browsers/chromium";
 
-/** Draws `path` at `width` px over `plane` (the harness's answers: `{status, json}`, or a function of the request), waits for `ready`
+/** Draws `path` at `width` px over the world's `door` (a function of the request `{op, query, body}` → `{status, json}`), for the member whose `session` the page holds, waits for `ready`
  *  (a selector in the main area), and answers what `measure` (run in the page, given `width`) returns. */
-export async function measure({ path, width, plane, ready, measure: fn, screens = SCREENS }) {
+export async function measure({ path, width, door, session, ready, measure: fn, screens = SCREENS }) {
   const pw = engine();
   assert.ok(pw && pw.chromium, "playwright-core is needed beside the product (`npm ci` in site/), with Chromium: this test cannot measure without them");
   assert.ok(existsSync(EXE), "Chromium is needed at CHROMIUM or /opt/pw-browsers/chromium");
   const html = interfacePage(screens), script = interfaceScript(screens);
-  const answers = { ...FRAME, ...plane };
   const browser = await pw.chromium.launch({ executablePath: EXE });
   try {
     const ctx = await browser.newContext({ viewport: { width, height: 900 } });
-    await ctx.addInitScript(() => localStorage.setItem("bio-session", JSON.stringify({ t: "tok", e: 0, d: "own", w: "mai" })));
+    await ctx.addInitScript((rec) => localStorage.setItem("bio-session", JSON.stringify(rec)), session || { t: "tok", e: 0, d: "own", w: "mai" });
     const page = await ctx.newPage();
     await page.route("**/*", async (r) => {
       const u = new URL(r.request().url());
@@ -44,9 +41,7 @@ export async function measure({ path, width, plane, ready, measure: fn, screens 
       }
       if (u.pathname === "/api/" || u.pathname === "/api") {
         const op = u.searchParams.get("op");
-        let a = answers[op];
-        if (typeof a === "function") a = await a({ op, query: Object.fromEntries(u.searchParams), body: r.request().postData() ? JSON.parse(r.request().postData()) : undefined });
-        if (a === undefined) a = { status: 200, json: { ok: true, result: null } };
+        const a = await door({ op, query: Object.fromEntries(u.searchParams), body: r.request().postData() ? JSON.parse(r.request().postData()) : undefined });
         if (a.pending) return new Promise(() => {});
         return r.fulfill({ status: a.status, contentType: "application/json", body: JSON.stringify(a.json ?? "") });
       }
@@ -77,14 +72,3 @@ export const FIT = (W) => {
   }
   return out;
 };
-
-/** A fixtures table (`fixtures.mjs`: op → answer or function of the query and body) as the page's plane, for `measure`: `me` the signed-in member. */
-export function planeOf(table, me) {
-  const plane = {};
-  for (const [op, a] of Object.entries(table)) {
-    plane[op] = (req) => { const v = typeof a === "function" ? a(req.query, req.body) : a; return v === "none" || v === null ? { status: 500, json: "" } : v && v.ok === false && v.result === undefined ? { status: v.status || 409, json: v } : { status: 200, json: v }; };
-  }
-  // the session, as the kit's `open` answers it (`session: true`), over whatever the table holds for `whoami`
-  plane.whoami = { status: 200, json: { ok: true, result: { ...me, session: true } } };
-  return plane;
-}

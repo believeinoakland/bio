@@ -1,9 +1,6 @@
 /* screens-publish FR-30, second part (K4165, K4168, K4192, K4194, K4197; DEC-374 to DEC-378, DEC-382, DEC-384): R44, R46, R51, R53, R57
  * on the case editor and the ceremony; R47, R54 on the published page; R58, R59 on the imported page. Each sentence is asserted by its
  * key (R24); every request is compared with its owner's declaration by the harness (interface-shell R104). */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { webcrypto } from "node:crypto";
@@ -188,7 +185,7 @@ test("R53 with no reason the shell asks and nothing is sent (control); a project
   assert.ok(!none.doc.querySelector('[data-cited]') && !drew(none, "screen.case-editor.the_passages_this_case_cites"));
 });
 
-const IMPORT = (acc) => ({ importedcase: { status: 200, json: { ok: true, result: { import: "IMP-2026-0001", group: "West Oakland Neighbors", case: "Port lease revenue",
+const IMPORT = (acc) => ({ importedcase: { status: 200, json: { ok: true, result: { import: "IMP-2026-0001", group: "West Oakland Neighbors", case: "CASE-2026-3549", scope: "Port lease revenue",
   edition: { edition: 2, findings: [{ finding: "FND-W-1", title: "Port lease revenue fell short", result: "recreated", origin: acc ? { acceptance: { by: "ana", at: "2026-10-02T09:00:00Z", reason: "checked", checked: "x" } } : {} }] } } } } });
 const IMP = "/app/imported/IMP-2026-0001/2";
 const noneChosen = (p) => p.doc.getElementById("im-lens").querySelectorAll("input").every((i) => !i.checked);
@@ -216,7 +213,9 @@ test("R58 'Re-run this work in your own project' sends rerunstart with the proje
   assert.equal(p.byOp("rerunstart").length, 0);
   fill(p, { "im-rerun": P });
   await press(p, "rerunstart", { reason: "x" });
-  assert.deepEqual(last(p, "rerunstart").body, { project: P, import: "IMP-2026-0001", edition: 2, reason: "x" }, "the reason is the shell's mark of a reasoned act, not a declared field");
+  /* the product registers op-declarations and op-grades together (store-assembly R83): `rerunstart` is not a reasoned act there, so the shell asks for
+     no reason and the body is the declared fields alone */
+  assert.deepEqual(last(p, "rerunstart").body, { project: P, import: "IMP-2026-0001", edition: 2 });
   const q = await open(IMP, { plane: { ...IMPORT(false), rerunstart: ok({ ok: false, code: "RERUN_ALREADY", reason: "RERUN_ALREADY" }) } });
   fill(q, { "im-rerun": P });
   await press(q, "rerunstart", { reason: "x" });
