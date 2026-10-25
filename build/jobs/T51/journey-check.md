@@ -324,3 +324,16 @@ Run so far: `live.test.mjs` 15 of 15 (before items 9-10), then the new live test
 ### Workers stopped
 
 none were started.
+
+## Completion record (JOURNEY-CHECK #15, B20 RESUME)
+
+**Entries applied**
+- R21 (1): `walkStates` fails an unreached state on the local arm by its name (kind `state`, `FAIL.STATE` in `walker.mjs`); on the live arm it stays the note. Test `frames.test.mjs` "R21: on the local arm a state that cannot be reached fails by its name ..." (a reached state is paired on both arms; the unreached one fails locally and is a note on the live arm).
+- R21 (2): `CARRIED_STATES` completed from the mock's own first "show" control of each screen of screens-settings, screens-intake and screens-daily, and `counsel`'s (31 states added, 51 in all; each option pattern is a word or two read against the mock, unique among its options). A state without a `state` name of its own is named by the label the mock gives its option (`drawState` now returns `label`), so no sentence is copied here. `frames.test.mjs` R21 draws every one at both widths from the mock: all pass. `hold`, `holdnotice` and `grouprules` have no state control in the mock (only form options): their drawn state is the default R6 already pairs.
+- Words: `investigation.mjs` R23's three messages by `localize`; `dec340.test.mjs` compares them by equality (no sentence in a regex). Words check on journey-check: 0 failures.
+
+**Not done: R21 (3), the live `reach` functions.** None is written, so every state is "not reached" and the local arm fails each by name (51 failures when it can run) and the live arm notes each. Why: a live screen's `data-state` markers do not correspond to the mock's states one to one (screens-daily/settings/intake carry ~50 markers such as `empty`, `failed`, `tznone`, `since`), most states need data the walk must first make by acts (a second owner, a published notice, a withdrawn key, a stopped assistant run), and the local arm cannot run to the end before the 0.87.0 cut (G90), so no reach could be proven against a real walk. Each reach needs its screen's source read whole and an interface-harness test; that is 51 small pieces of work across three modules' screens. BOB's call: a follow-up job after the cut, or a split by module now.
+
+**Found in other modules:** none new beyond G90.
+
+**Checks:** format 0, architecture 0, coverage 31 of 31, ownership 0, words 0 failures for journey-check; impact names journey-check alone.
