@@ -162,3 +162,18 @@ Deferred: none. Found elsewhere: `build/rulings.md` K4301 lacks the standing-lis
 Note: an earlier commit on this branch (3976b9f286) carries a model-naming Co-Authored-By line; this round's commit has none.
 
 Size (session_01ECyVAGFG2gSJzC9b78r7qH): test runs 8, module lines 1868
+
+## J11 · REPORT
+
+Fixture round 10, Wave A batch 3 (people): three fixtures published in bio-plane/test/m/people/fixtures.mjs, each checked by fixtures.test.mjs at the interface (R20, R22, R23, R24). Commit 0b2c72995a on job/T51/people.
+
+Published, with the real answer each hands on:
+- checkResults (R22, R24): { checkResults, listChecks }, the real people methods over an empty record. Shipped revolving-door check only, gated, no result shown; no viewer refused NO_VIEWER.
+- evaluateChecksAnswers (R23): people.evaluateChecks; over the empty record the one person the test world registers: {ok, evaluated: 1, remaining: false}.
+- tiesConcerningRefusal (R20): people.tiesConcerning with a bad argument (member named none): {ok: true, member: null, ties: []}. Decision for BOB: tiesConcerning has no refusal at all (it answers ok with an empty list for every argument), so the user's refusal branch (case-disclosures people.test.mjs:317, a reason "down") has no real answer to copy. The fixture gives the real answer and says so in its comment; the user re-points to it and tests its empty branch, or the refusal is raised as a product change (not mine).
+
+Not published, needs BOB: moneyChecks.noticed (listed under this fixture by the plan, used by queue noticed.test.mjs:290). It is money-checks' real code. people does not declare money-checks in uses, and the architecture check would fail an import from people's tests. Best reading: money-checks publishes its own fixture from its own tests (a later money-checks job), and queue's re-point takes both halves from the two providers. The alternative is a uses change in build/modules.json (your file). Please decide.
+
+Markers: none added (no fixtures-own, no fixtures-generic). Users of these fixtures are later in modules.json than people, so no fixtures-contract or fixtures-run markers are needed.
+
+Lines of the list: the people fixture lines are done except the one FIX-E events line you named (why.test.mjs:110, op-table sequence; events' fixture, left for the CHANGE). checks/fixtures.mjs people: 1 failure, that line.
