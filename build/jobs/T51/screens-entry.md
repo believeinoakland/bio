@@ -218,3 +218,7 @@ REPORT 2 (published-case recipe; for store-request). `front.test.mjs`:18: the pu
 ## J14 · REPORT
 
 REPORT 3 (system hosting recorder; for the module that owns hostingaccess). R30: hosting recorded by the system (`bootstrap`, `system:seed`, `token:ops`) has no act of the door that records it; `setup.test.mjs` R30 writes the rows to the `hosting_access` table the plane reads. Needed: a recipe or act in a provider that records hosting as the system, so the test can go through the door.
+
+## J15 · REPORT
+
+REPORT 4 (store-assembly `world.script` is process-global). `store-assembly/world.mjs`:290 `script()` pushes onto the module's `SCRIPTS` (:178), shared by every world of the process and never emptied, so one test's network script answers another test's world. My tests name a domain per team to avoid it. Fix belongs to store-assembly: scope SCRIPTS to the world.
