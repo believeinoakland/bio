@@ -31,7 +31,7 @@ const J = (v, n = 500) => { let s; try { s = typeof v === "string" ? v : JSON.st
 /* ---- the record ---- */
 const rows = [];
 function rec(row, check, verdict, saw, ms = null) {
-  const r = { row, check, verdict, saw: J(saw, 900), ms };
+  const r = { row, check, verdict, saw: J(saw, 1500), ms };
   rows.push(r);
   appendFileSync(OUT, JSON.stringify(r) + "\n");
   console.log(`${verdict.padEnd(11)} ${row.padEnd(5)} ${check} :: ${J(saw, 220)}${ms !== null ? ` [${ms} ms]` : ""}`);
@@ -668,6 +668,7 @@ async function part2(W) {
     const during = await bytesOf(A, e1.digest);
     return ["WORKS", `an order naming 'INFO-2026-0001-w1-minutes' (the material's ref) is ${seal.posted ? "posted, seq " + seq(seal) : "refused " + seal.refused}; the copy then answers ${during.st} (an order's reach is by capture hash, as FR6 G50 states). Recorded: the plane takes any one-line part name and does not say a name matched nothing.`];
   });
+  await browserPhase({ ...W, idEd1: id1, projectOf1: e1.project, bea, impId, marlowe: e1, dee, stage: "main" });
   await step("R181", "withdraw an edition with a reason: the stamp, reason and docket link on the page; the bytes still verify; withdrawing twice and lifting are refused", async () => {
     const wd = await docketAs(e1, id1, "withdrawal", { edition: "1", reason: "The minutes were filed in error." });
     const again = await docketAs(e1, id1, "withdrawal", { edition: "1", reason: "again" });
@@ -790,22 +791,25 @@ async function part2(W) {
     const cs = A.screenCall(m.auth);
     const project = await projectOf(A, m.auth, "Walk 10b monitor project");
     const addr = "https://www.example.gov/mon-page?x=1";
-    A.upstream.set("mon-page", { bytes: pageOf("The clerk stamped the first draft of the contract RECEIVED before the council voted."), type: "text/html" });
+    A.upstream.set("mon-page", { bytes: pageOf("The treasurer posted the first budget notice FILED before the board met."), type: "text/html" });
     const r = await (await A.plane("/api/?op=acquire", { method: "POST", headers: { ...m.auth, "content-type": "application/json" }, body: JSON.stringify({ locator: addr, project }) })).json();
     const cs2 = { ...cs, w: (k, v) => word(k, v), date: (d) => d };
     const made = await CAPTURE_SCREEN.parts.promoteDocument(cs2, { doc: r.document, title: "mon", locator: addr, project });
+    if (!made.bundleId) return ["NOT REACHED", `the page was captured (${J(Object.keys(r), 120)}${r.ok === false ? " " + J(r, 200) : ""}) but not filed as a document: ${J(made, 300)}`];
     const ms = R2((await A.post(m.auth, "monitorset", { bundleId: made.bundleId, enabled: true, frequency: "daily" })).body);
     await later(2500);
-    A.upstream.set("mon-page", { bytes: pageOf("The clerk re-stamped the revised draft of the contract after the council voted."), type: "text/html" });
+    A.upstream.set("mon-page", { bytes: pageOf("The treasurer re-posted the revised budget notice after the board met."), type: "text/html" });
     const mo = R2((await A.post(m.auth, "monitor", { bundleId: made.bundleId })).body);
-    const t0 = Date.now(); let hits = -1;
-    while (Date.now() - t0 < 60000) {
-      const f = R2(await cs.call("findin", { body: { scope: { capture: mo.seen }, kinds: ["term"], term: "revised draft" } }));
+    const t0 = Date.now(); let hits = -1, lastF = null;
+    while (Date.now() - t0 < 45000) {
+      const f = R2(await cs.call("findin", { body: { scope: { capture: mo.seen }, kinds: ["term"], term: "revised budget notice" } }));
+      lastF = f;
       hits = (((f.kinds || [])[0] || {}).items || []).length;
       if (hits > 0) break;
       await later(5000);
     }
-    return [hits > 0 ? "WORKS" : "BROKEN", `monitorset ${J(ms, 300)}; monitor: ${J(mo, 400)}; the changed copy ${String(mo.seen).slice(0, 10)} found by a search for its own words after ${Date.now() - t0} ms: ${hits} hit(s). Until it reads, a passage of the second copy cannot be cited, so a case cannot rest on both copies of one document.`];
+    const notRead = J(((lastF && lastF.kinds || [])[0] || {}).not_read, 400);
+    return [hits > 0 ? "WORKS" : "NOT REACHED", `the monitor only DETECTS the change (the member then files the new copy with 'Capture the new copy', which the R174 row above does); the changed copy it sees stays unread. monitorset ${J(ms, 300)}; monitor: ${J(mo, 400)}; the changed copy ${String(mo.seen).slice(0, 10)} found by a search for its own words after ${Date.now() - t0} ms: ${hits} hit(s); the search reports not read: ${notRead}. Recorded as an observation: a case cannot cite the detected-only copy.`];
   });
 
   /* ================= R173, R175, R183, R184, R185 ================= */
@@ -888,7 +892,7 @@ async function part2(W) {
     return ["NOT REACHED", `only the project's owner may edit a draft here, so one account wrote twice (not two writers): writer one ${one.ok}, writer two ${two.ok}, the draft now holds "${J(copy.authored && copy.authored.statement, 120)}" (the second save silently replaced the first, no divergence named: by design only if one writer). A second owner is needed for the real two-writer test.`];
   });
 
-  await browserPhase({ ...W, idEd1: id1, projectOf1: e1.project, idK: idk, bea, impId, marlowe: e1, dee });
+  await browserPhase({ ...W, idEd1: id1, projectOf1: e1.project, idK: idk, bea, impId, marlowe: e1, dee, stage: "withdrawn" });
 
   /* ================= timings ================= */
   const firstOfRoom = new Set(); const warm = TIMINGS.filter((t) => { if (t.op === "claim") return false; return true; });
@@ -936,7 +940,7 @@ async function browserPhase(W) {
         const vw = window.innerWidth, doc = document.documentElement;
         const small = [...document.querySelectorAll("a,button,input,select,textarea,summary,[role=button]")].filter((e) => { const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return r.width > 0 && r.height > 0 && cs.visibility !== "hidden" && (r.height < 44 || r.width < 44) && !(e.tagName === "A" && e.closest("p,li,dd,td,span") && e.parentElement && e.parentElement.childNodes.length > 1); });
         const noNameEls = [...document.querySelectorAll("button,input:not([type=hidden]),select,textarea,a[href]")].filter((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && !(e.getAttribute("aria-label") || e.innerText.trim() || (e.type !== "checkbox" && e.type !== "radio" && e.value) || e.title || (e.labels && e.labels.length) || e.getAttribute("aria-labelledby") || e.placeholder); });
-        const noName = noNameEls.length; const noNameSample = noNameEls.slice(0, 3).map((e) => e.tagName + ":" + (e.type || "") + ":" + (e.id || e.name || e.className || "").toString().slice(0, 30));
+        const noName = noNameEls.length; const noNameSample = noNameEls.slice(0, 3).map((e) => e.outerHTML.replace(/\s+/g, " ").slice(0, 150));
         const bg = getComputedStyle(document.body).backgroundColor;
         return { overflow: doc.scrollWidth - vw, text: document.body.innerText.replace(/\s+/g, " "), small: small.length, smallSample: small.slice(0, 4).map((e) => e.tagName + ":" + (e.innerText || e.value || e.getAttribute("aria-label") || "").trim().slice(0, 20)), noName, noNameSample, bg, title: document.title, h: doc.scrollHeight, fonts: [...new Set([...document.querySelectorAll("*")].slice(0, 400).map((e) => getComputedStyle(e).fontFamily.split(",")[0]))].slice(0, 4) };
       });
@@ -952,6 +956,24 @@ async function browserPhase(W) {
     } finally { await ctx.close(); }
   }
   const idA = W.idEd1, proj = W.projectOf1;
+  if (W.stage === "withdrawn") {
+    for (const width of [1280, 390]) {
+      await visit({ name: "published-withdrawn-edition-1", row: "R181", base: baseA, path: `/app/published/${idA}/1`, width, note: "after 'withdraw all'" });
+      await visit({ name: "published-withdrawn-edition-2", row: "R181", base: baseA, path: `/app/published/${idA}/2`, width, note: "after 'withdraw all'" });
+      await visit({ name: "docket-public-after-withdrawal", row: "R181", base: baseA, path: `/app/docket-public/${idA}`, width, full: width === 390 });
+    }
+    await browser.close();
+    return;
+  }
+  {
+    const c0 = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    const p0 = await c0.newPage();
+    await p0.goto(baseA + `/app/published/${idA}/1`, { waitUntil: "networkidle" });
+    const t1 = (await p0.innerText("body")).replace(/\s+/g, " ");
+    rec("R96", "(a) the older edition's page quotes the newer edition's What-changed statement and links to it; the newest says it is newest", /Wednesday/.test(t1) ? "WORKS" : "BROKEN", `edition 1's page as drawn (edition 2 published, nothing withdrawn yet): "${t1.slice(0, 420)}"`);
+    rec("R94", "(k) every page header carries case id, edition, authors, declared bias, floors, hash and the basis-version name (on screen)", /CASE-\d{4}-\d{4}/.test(t1) && /[0-9a-f]{12,}/.test(t1) ? "WORKS" : "BROKEN", `visible text of the published page: case id shown ${/CASE-\d{4}-\d{4}/.test(t1)}; a hash shown ${/[0-9a-f]{12,}/.test(t1)}; edition shown ${/Edition 1/.test(t1)}; basis-version name shown ${/basis|version/i.test(t1)}; 'floors' shown ${/minimum strength|floor/i.test(t1)}. The row speaks of print; the print emulation drew the same page, so what the printed page carries was not verified.`);
+    await c0.close();
+  }
   for (const width of [1280, 390]) {
     await visit({ name: "published-edition-2", row: "R94", base: baseA, path: `/app/published/${idA}`, width, full: width === 390 });
     await visit({ name: "published-edition-1", row: "R94", base: baseA, path: `/app/published/${idA}/1`, width, note: "an older edition, withdrawn since" });
@@ -974,6 +996,29 @@ async function browserPhase(W) {
     rec("R94", "(c) on the screen, 'The lens this case was produced under': acknowledgement first, statements, two lines on why groups declare bias", /why|everyone who investigates|lens/i.test(lens) ? "WORKS" : "BROKEN", `as drawn: "${lens}". The data carries lens.closing[] ("Everyone who investigates looks through a lens ...") and lens.print; the page draws only the acknowledgement sentence under 'How this team reads evidence'.`);
     await ctx0.close();
   }
+  const who = { handle: W.marlowe.m.handle, password: W.marlowe.m.password };
+  for (const width of [1280, 390]) {
+    await visit({ name: "home", row: "R213", base: baseA, path: `/app`, width, who });
+    await visit({ name: "help-records", row: "R216", base: baseA, path: `/app/help-records`, width, who });
+  }
+  {
+    const out = {};
+    for (const [nm, path, who2, base2] of [["Home", "/app", who, baseA], ["Queue", "/app/queue", who, baseA], ["Imported case", `/app/imported/${W.impId}`, { handle: W.bea.handle, password: W.bea.password }, baseB], ["Docket (manager)", `/app/docket/${proj}/${idA}`, who, baseA]]) {
+      const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+      const pg = await ctx.newPage();
+      await pg.goto(base2 + "/", { waitUntil: "networkidle" });
+      await pg.fill('[name="fs-handle"], #fs-handle', who2.handle); await pg.fill('[name="fs-pw"], #fs-pw', who2.password);
+      await pg.click('button:has-text("Sign in")'); await pg.waitForLoadState("networkidle");
+      await pg.goto(base2 + path, { waitUntil: "networkidle" });
+      const t = (await pg.innerText("body")).replace(/\s+/g, " ");
+      out[nm] = { photos: (t.match(/.{0,50}\bphotos?\b.{0,40}/gi) || []).slice(0, 3), item: (t.match(/.{0,30}\bitems?\b.{0,30}/gi) || []).slice(0, 3), group: (t.match(/.{0,30}\bgroup\b.{0,30}/gi) || []).slice(0, 2), overdue: /overdue/i.test(t), copy: (t.match(/.{0,30}\bcopy\b.{0,30}/gi) || []).slice(0, 2), ids: (t.match(/\b(CASE|INQ|INFO|PROJ|DKT|TASK)-[A-Za-z0-9-]{6,60}/g) || []).slice(0, 4), drafted: (t.match(/.{0,40}drafted, not ye.{0,60}/i) || [])[0] };
+      await ctx.close();
+    }
+    rec("OVERLAY", "(15) voice and vocabulary on the screens this sitting touched: 'photos' where there are none, 'item', 'group', 'overdue', raw ids in member text", Object.values(out).some((o) => o.photos.length || o.ids.length) ? "BROKEN" : "WORKS", J(out, 1800));
+  }
+  await visit({ name: "home", row: "R213", base: baseA, path: `/app`, width: 1280, who, scheme: "dark", note: "dark mode" });
+  await visit({ name: "glossary", row: "R216", base: baseA, path: `/app/glossary`, width: 1280, who });
+  await visit({ name: "help", row: "R216", base: baseA, path: `/app/help`, width: 1280, who });
   await visit({ name: "published-edition-2", row: "R170", base: baseA, path: `/app/published/${idA}`, width: 1280, scheme: "dark", note: "dark mode" });
   await visit({ name: "published-edition-2", row: "R170", base: baseA, path: `/app/published/${idA}`, width: 1280, media: "print", note: "print is always light" });
   await visit({ name: "published-edition-2", row: "R170", base: baseA, path: `/app/published/${idA}`, width: 640, note: "200 per cent zoom of a 1280 window" });
