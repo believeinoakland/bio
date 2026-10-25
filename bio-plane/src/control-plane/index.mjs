@@ -2351,9 +2351,11 @@ export function makeFetch(hooks = {}) {
        credential to the machine fences whatever its viewer stamp, and a member-scoped agent's stamp is its member's, so
        the door names the credential beside the viewer, `aiCred` (its token id and principal, never its value), for an
        agent caller alone; every other caller's is deleted with the stamps above. */
-    if (op === "publishpreflight" && cls === "ai")
+    /* (fix round 10; K5157; WALK-FINAL-11 L266) and the check of the ceremony (`publishcheck`, graded as publish with it) asks the same owner test of the same
+       `author` and holds the same credential, so it takes the same two stamps by the same expressions: not the declared stamp's positional identity. */
+    if ((op === "publishpreflight" || op === "publishcheck") && cls === "ai")
       inner.searchParams.set("aiCred", JSON.stringify({ tokenId: aiCred.tokenId, principal: aiCred.principal }));
-    if (op === "publishtensions" || op === "publishpreflight")
+    if (op === "publishtensions" || op === "publishpreflight" || op === "publishcheck")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     /* T6-13 (reevaluation R15, R16): the member who adopts a newer version, keeps the earlier one, or records a
        re-evaluation, stamped by the version acts' expression (`VERSION_ACTIONS`' author above), which reevaluation reads
