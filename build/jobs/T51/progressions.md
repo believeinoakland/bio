@@ -110,35 +110,6 @@ COMPLETE for B6: overdue.test.mjs:93 now compares through word('progressions.why
 
 ## J9 · COMPLETE
 
-COMPLETE for B7 (fix round 10, R49; K5186; SCREENS-INVESTIGATE #16 J29). Branch job/T51/progressions at the R49 commit (1ca4bc4130), tranche/T51 merged in (a9a1ee0a3f).
-
-Entries applied:
-- R49: a `missing_predecessor` finding carries `says: {key, vars, lead, words}` as R45's `overdue_successor` does. Change: `bio-plane/src/progressions/index.mjs:716-723` (`#assemble` now builds the instance as `assembled` and calls `#missingSays` before it returns) and `:1313-1320` (`#missingSays`, beside `#says`, reusing `#clocks` and R45's `#says`). Each missing finding gets `says` from its clock: the determined deadline day (`progression.expects`), or the undetermined form, or `null` where no clock can be counted.
-- Reading taken, for Bob to confirm (QUESTION, below): see "Decisions" below.
-
-Test (failing first, seen red: `Cannot read properties of undefined (reading 'key')`, 3 failures, then green): `bio-plane/test/m/progressions/says-missing.test.mjs`, three tests naming R49: a step not yet due with its predecessor's own date says `progression.expects` `{interval: "10 days", n: 1, date: "2026-01-20"}` and the words; the undetermined case says `progression.expects.undetermined`; the control: an unparsable interval and a step whose predecessor is not placed carry `says: null`.
-
-Decisions (this job's, for Bob to confirm; none is in `build/rulings.md`, which is not in this job's write set):
-- Undetermined form. R49 names the key `progression.expects`. Where the deadline is undetermined (the predecessor has no own date) the key is `progression.expects.undetermined` with `{interval, n}`, as R45 does. `progression.expects` needs a `date`, which the undetermined case does not have. If Bob wants the literal key there, it is a one-line change in `#missingSays`.
-- No clock: `says: null`. A missing step with no parsable interval, or whose predecessor is not placed, has no deadline to state; I did not give it a lead-only `says`, because the timeline (`screens-investigate/timeline-parts.mjs:45`) would then draw "No document threaded." twice. `null` is the case the screen already handles.
-
-Tests and checks (from the process repo, product root /home/user/bio):
-- module tests: 96 pass, 0 fail (`node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/progressions/*.test.mjs`; 93 before plus the 3 new).
-- users (impact named 83 of 178 modules, mostly through the shared-table flag on `index.mjs`; I ran the modules that read missing-predecessor findings): queue, queue-producers, calculations, intent, screens-investigate, screens-inquiry fr28-objective: 925 tests, 924 pass, 1 fail. The one failure, `screens-investigate/money.test.mjs` "R4 C8 (the figure)", passes 14 of 14 when its file runs alone and names no progressions, so it is a timing flake in the batch (it took 64 s); not mine.
-- format 178 modules, 0 failures; architecture progressions 25 files, 93 imports, 0 failures; coverage progressions 49 of 49 live ids named, 0 failures; fixtures progressions --list 0 failures; words progressions 0 failures; ownership progressions (merge-base a9a1ee0a3f..HEAD) 3 files changed, 0 failures.
-- checks/run.mjs /home/user/bio: no line names `src/progressions` or `test/m/progressions`. Its 1,572 lines are other modules' op-table and fixture answers (1,468 `answer`, 50 `stub`, 15 `inline`, 14 `code`, 8 `contract`, and a few more); none is caused by this change, which adds one field to one finding and changes no op, export or word. I did not run a before/after comparison of the whole report, so that is a stated reading, not a measured one. The words total is 19239, unchanged: no new sentence was written (the key already exists in `setup-words`).
-
-Met ids: R49 (BOB strikes the mark in `build/requirements/progressions.md`; not edited here).
-Markers: none added (no `fixtures-own`/`fixtures-generic`).
-Deferred: none.
-Found elsewhere, for BOB (not mine to change):
-- The run.mjs op-table `answer` findings above name other modules' fixtures (screens-inquiry fr28-document, fr28-objective; screens-investigate fixtures, timeline) for the `progressions`, `progression`, `instances`, `thread`, `discharge`, `captureprogressions` ops. They are in other modules' test files; I did not open them.
-- The money test flake above (screens-investigate `money.test.mjs`, 64 s in the batch) is worth a timeout look by its own module's job.
-
-Size (session_01NLaUSXWGbRhbKLCgko65Ys): test runs 5, module lines 2248 (index.mjs 1749, schema.mjs 323, checks.mjs 176).
-
-## J9 · COMPLETE
-
 COMPLETE for B7 (fix round 10, R49). Met: R49 (you strike the mark).
 
 Change: a missing_predecessor finding now carries says {key, vars, lead, words}, as overdue_successor does (R45). index.mjs:716-723 (#assemble calls #missingSays), :1313-1320 (#missingSays, beside #says). Commit 1ca4bc4130 (code), record J8 pushed.
