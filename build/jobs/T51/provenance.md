@@ -189,3 +189,12 @@ Size (session_01PLcYEHrnJ6MSU2YWXJwvkm): test runs 12, module lines 3279
 ## J11 · COMPLETE
 
 B9 applied (G127a/c/d/e): register key is the whole; register_parts; partsOf; repairParts; R74-R79 met, 9 new tests red then green; provenance 181 pass; checks clean. Other modules' fixtures on the old parts-only register now fail (retrieval-browse, case-disclosures, case-authoring, corpus-export): see J10.
+
+## Fix round 10, Wave A batch 1 (B10): work
+
+**Published** in `bio-plane/test/m/provenance/fixtures.mjs` (new), each made by provenance's real code at test time, none stored, each called by `fixtures.test.mjs` (10 tests, all comparing the real answer): `heldParts(wholeSha, parts)` → `{provenance, partsOf}`; `holdsOf({sha, registered, acquired, bundle})` (and `holdsWorld(states)`); `holdsRegister({registered, acquired})` → `{provenance, registerHolds, registeredFor, containerResolver}`; `homeOf({capture, bundleId, registered})`; `homeOfEmpty()`; `homeOfHomed({sha: bundleId})`; `homeOfWorld({sha, bundleId})` → `{provenance:{homeOf}, calls(), real}`; `provenanceOver({host, record, membership, promotion, now})`; `registeredHomes(own?)` → `{provenance, register(sha, {bundleId,path,bytes,encoding}), many(bundleId, captures), promotion, world}` (takes the user's own `{host, record, membership, promotion, now}`); `versionChainNoSuchVersion({addressNorm, at, viewer})`.
+**Marker added** (1): `testimony-slot.test.mjs:105` `// fixtures-generic: CONTENT_EXTENT_REFUSED` — the refusal is a stand-in row the test hands the slot to show the slot relays any refusal as it came; it is no answer of `content`.
+**Lines**: provenance lines in `checks/fixtures.mjs . provenance --list` are zero (the one finding is now `accepted(generic)`). Wave B / waiting / stay lines: none.
+**Tests/checks**: provenance folder + mk6: 189 pass, 0 fail. format 0 failures; architecture 0; coverage 64 of 64; ownership 1 file (the marker) + the new fixtures files within my tests path, 0 failures; setup-words --check clean; `impact.mjs origin/tranche/T51 HEAD`: 0 modules, 0 test files affected (new files and a comment only), so no users' tests to run.
+Deferred: none. Open QUESTION: none.
+Size (session_013AJsWwtb6GMtSPg9NTJgff): test runs 4, module lines 3280
