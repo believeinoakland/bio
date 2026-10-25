@@ -108,3 +108,7 @@ Merged `tranche/T51` (uses, R7, R26-R28 now there). `door-ops.test.mjs` brought 
 **Met: R25, R26, R27, R28.** Tests `47, pass 46, fail 0, todo 1` (R22). Checks: format 0; architecture `11 product files, 69 relative imports (1 naming no tracked file, not judged); 0 failures`; coverage `28 of 28 live requirement ids named by a test; 0 failures`; words 0 (inline 0); fixtures `answer 0, stub 0, code 0, contract 0, accepted 3; 0 failures`; ownership `0 failures`.
 
 Size (session_01JSu2f7vvcY4zxxgJ9E1EDS): test runs 47, module lines 545
+
+## J10 · COMPLETE
+
+STORE-REQUEST #2 COMPLETE (B5): fixtures check at the tranche's lines (0 failures), tranche merged, R25-R28 met. Tests 47 (46 pass, 1 todo R22); format, architecture, coverage, words, fixtures, ownership 0. One new sentence for the design stream's unreviewed list: store-request.door_ops.the_pack_could_not_be_rendered. Record J9.
