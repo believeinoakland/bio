@@ -209,6 +209,7 @@ test("R57 (T37; N669, K2201; instance-setup R67; agent-worker R68–R70): `trans
 });
 
 test("R57 (T37): a translation draft that ends without one (an ending agent-worker names, an unbound or silent member) is answered as given, its status kept, and nothing is recorded; the grant is never answered", async () => {
+  // fixtures-own: input the endings are the draft the object hands the door; the door must relay each as given, status kept
   for (const [drafted, status, reason] of [[{ ok: false, code: "stopped", detail: "the model stopped", grant: null }, 200, undefined],
                                            [{ ok: false, reason: "AGENT_WORKER_UNBOUND", detail: "none", grant: null }, 503, "AGENT_WORKER_UNBOUND"],
                                            [{ ok: false, reason: "AGENT_WORKER_SILENT", detail: "none", grant: "g-secret" }, 502, "AGENT_WORKER_SILENT"]]) {

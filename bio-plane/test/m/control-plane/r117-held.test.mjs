@@ -86,6 +86,8 @@ test("R117 (C5b, a capture of several parts): an `acquire` answered `existed: nu
 
 test("R117 (acquire, controls): a refusal or a silence of `readHeld`, and a throw, leave the kept capture's answer exactly as it was (a kept capture never becomes a failed one)", async () => {
   const held = { ok: true, existed: true, document: doc(), note: "n" };
+  // fixtures-generic: UNKNOWN_ROUTE (any refusal of readHeld is relayed past; the code is arbitrary here)
+  // fixtures-generic: NO (a made-up refusal code: the test is that no refusal turns a kept capture into a failed one)
   for (const [label, answer] of [["refused", () => bare({ ok: false, reason: "UNKNOWN_ROUTE" }, 404)], ["silent", () => new Response("<html>boom</html>", { status: 500 })],
                                  ["not ok", () => ok({ ok: false, reason: "NO" })], ["throws", () => { throw new Error("x"); }]]) {
     const w = world({ answer: (c) => (c.route === "readheldfor" ? answer() : null) });
@@ -142,6 +144,7 @@ test("R117 (bytes held with no home): an upload answered `existed: true` WITH it
   assert.equal(asked(h.env, "extractread").length, 0);
   assert.deepEqual(hr.json.result, landed());
   /* controls: a reading held, no whole object, a refusal and a silence of readHeld leave the answer unread */
+  // fixtures-generic: UNKNOWN_ROUTE (an arbitrary refusal of readHeld: the upload's answer stays unread whatever it says)
   for (const [label, held] of [["held", ok({ ok: true, read: false, why: "READING_HELD" })], ["no whole object", ok({ ok: true, read: false, why: "NO_WHOLE_OBJECT" })],
                                ["refused", bare({ ok: false, reason: "UNKNOWN_ROUTE" }, 404)], ["silent", new Response("x", { status: 500 })]]) {
     const c = world({ answer: (x) => (x.route === "captureupload" ? ok(landed()) : x.route === "readheldfor" ? held.clone() : x.route === "extractread" ? ok(READ) : null) });
@@ -161,6 +164,7 @@ test("R117 (bytes held with no home): an upload answered `existed: true` WITH it
 test("R117 (a failed read): the door's read of an `existed: true` upload with no home that fails is answered as the failed reading, as R100 answers one for a new upload — never an unread document the screen could promote; the upload stands (negative control: a new upload's failed reading is answered the same way)", async () => {
   const landed = (existed) => ({ ok: true, existed, capture: { sha256: SHA, bytes: 9 }, receipt: { address: `upload:${SHA}` }, document: doc() });
   for (const existed of [true, false]) {
+    // fixtures-generic: READ_FAILED (any failed reading of the store is the answer; the test does not depend on this code)
     const w = world({ answer: (c) => (c.route === "captureupload" ? ok(landed(existed)) : c.route === "readheldfor" ? ok({ ok: true, read: false, why: "NO_HOME" })
       : c.route === "extractread" ? bare({ ok: false, reason: "READ_FAILED", error: "the reading failed" }, 400) : null) });
     const r = await upload(w, { statement: "s", type: "text/plain" });
@@ -176,6 +180,7 @@ test("R117 (controls; R100): a new upload (`existed: false`) is read as R100 rea
   const r = await upload(w);
   assert.deepEqual(r.json.result.document.reading, READ.reading);
   assert.equal(asked(w.env, "readheldfor").length, 0);
+  // fixtures-generic: EMPTY (any refusal of the upload is relayed unread; the code is arbitrary here)
   const f = world({ answer: (c) => (c.route === "captureupload" ? ok({ ok: false, reason: "EMPTY", status: 400 }) : c.route === "readheldfor" ? ok({ ok: true, read: true }) : null) });
   assert.deepEqual((await upload(f)).json.result, { ok: false, reason: "EMPTY", status: 400 });
   assert.equal(asked(f.env, "readheldfor").length, 0);

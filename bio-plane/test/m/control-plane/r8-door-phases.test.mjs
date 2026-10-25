@@ -36,6 +36,7 @@ const hooksFor = (bound) => ({ ...defaultHooks(), ...(bound ? { acquireBoundMs: 
   if (ctx.op !== "acquire") return undefined;
   await ctx.stub.fetch("http://x/acquire", { method: "POST", body: "{}" });
   await later(10);
+  // fixtures-own: synthetic a gated op's body, only the door's phase timing is under test, not what the answer says
   return M.json({ ok: true, result: { ok: true, done: true } });
 } });
 

@@ -154,6 +154,7 @@ test("R127 (G114): the door does not pull the whole body of a words answer to ta
 
 test("R127 control (G114): a refusal this op gives is still read and tallied: a 200 `{ok: false}` body is counted by its code, and a non-200 too", async () => {
   const w = world();
+  // fixtures-generic: NO_SUCH_LANGUAGE (any code the owner refuses with: the door must tally whatever code it reads)
   const refusals = [["200", M.json({ ok: true, result: { ok: false, reason: "NO_SUCH_LANGUAGE" }, store: "bio", tokenClass: "member" }, 200)],
                     ["409", M.json({ ok: false, reason: "NO_SUCH_LANGUAGE", store: "bio", tokenClass: "member" }, 409)]];
   for (const [label, res] of refusals) {
