@@ -1,6 +1,6 @@
 # screens-entry (T51)
 
-**Status** · session_0143bTM29139UynmAYarEGQM · depth 2 · WORKING · handled B15
+**Status** · session_0143bTM29139UynmAYarEGQM · depth 2 · WAITING ON BOB (J19) · handled B15
 
 ## Completion (T51-114)
 
