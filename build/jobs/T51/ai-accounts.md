@@ -130,3 +130,44 @@ Size (session_012zC89ytoyYon28aQ3j1D4U): test runs 9, module lines 2188
 ## J6 · COMPLETE · re B6
 
 COMPLETE fix round 10 Wave A batch 2. 14 fixtures published (bio-plane/test/m/ai-accounts/fixtures.mjs, 14 tests in fixtures.test.mjs); 8 own lines re-pointed to record-core coreOver / tableDeclarationRefusals (tranche/T51 merged in first); fixtures check 0 failures. Marker added: fixture.mjs:68 'fixtures-own: harness' for claim() (world helper named like an op). No generic markers. Brief says NO_ACCOUNT check C-29.1; the module's real check is C-29.20 (fixture follows the code; users must not assert C-29.1). Module tests 145/145; impact users (affordances, translations, instance-setup) 71/71; format, architecture, coverage (37/37), ownership 0 failures. Record: build/jobs/T51/ai-accounts.md. Size (session_012zC89ytoyYon28aQ3j1D4U): test runs 9, module lines 2188.
+
+## J7 · COMPLETE
+
+**R38 met** (fix round 10; K5182). Pushed on `job/T51/ai-accounts`: `7568dc274a` (the route) and `1ab34e00ee` (the test at the ops map), on top of the tranche merge.
+
+**Changed**
+- `bio-plane/src/ai-accounts/index.mjs:1691-1692`: `accountreferenceset` takes `member` from the stamped `by` (`{...body, member: by(), by: by()}`); `accountreferenceremove` takes `{member: by(), by: by()}`. A `member` in the body is not read. The R35 declared fields (`kind`, `secret`) are unchanged.
+- `bio-plane/test/m/ai-accounts/member-stamp.test.mjs` (new): two R38 tests at the ops map.
+- `bio-plane/test/m/ai-accounts/account.test.mjs` (R2 test, not renamed): its sweep of every ops-map entry under `by=ann` now removes Ann's reference, which is the correct R38 result. I moved the schema check ahead of the sweep and the sweep with its secret checks to the test's end. Assertions unchanged.
+
+**Failing first.** Both R38 tests are red on the pre-fix route (`NOT_YOUR_ACCOUNT`, C-29.14) and green after. The door-level version (`storeWorld()`) was also red first, but it imports `store-request`, which is later in the order, and the architecture check refuses it. It is reported below for placement.
+
+**Machine control.** Through the door a machine credential is refused `CLASS_FORBIDDEN` (C-38.2) before the arm, because `accountreferenceset` admits no machine class. So `MACHINE_CANNOT_HOLD_ACCOUNT` is asserted at the arm with a `class:ai` stamp.
+
+**Tests**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/ai-accounts/`: tests 147, pass 147, fail 0.
+- `member-stamp.test.mjs`: 2 of 2 green after the fix; 2 of 2 red on the pre-fix route.
+- Other callers of the account-reference ops, run: `store-assembly/t47`, `capture-requests/plane`, `scheduler/plane`, `instance-setup/t47` green. `credentials/rows-ops.test.mjs` has one failing test (see report 2). 31 of 32 across the five files.
+- `screens-settings/connect.test.mjs` (the R5 and R76 tests you named): 27 of 27 fail at setup (report 1). The two named R76 tests, "R5, R76 the key the page sends…" and "…removes…", are among them. Neither reaches the route, so they are no evidence about R38 yet.
+
+**Checks**
+- `format`: 0 failures. `architecture ai-accounts`: 0 (23 files). `coverage ai-accounts`: 38 of 38 live ids named, 0 failures.
+- `fixtures --list ai-accounts`: 0 failures (one accepted own marker, `fixture.mjs:69`, existing).
+- `words ai-accounts`: 0 failures. `ownership` (merge-base to HEAD): 0 failures, 4 files.
+- Impact (`origin/tranche/T51` to HEAD): 114 of 178 modules, 2149 of 2966 test files, through the shared table. I ran the callers above rather than all of them.
+- Repo-wide `checks/run.mjs`: format 0, architecture 0, channels 0. No finding in any ai-accounts file. Coverage (3), fixtures (1712) and words (16) failures are all in other modules.
+- Met ids: R38. Marks are BOB's to strike. This job did not edit the requirements file.
+
+**Deferred:** none.
+
+**Reports about other modules (not changed here)**
+
+1. **`storeWorld()` default group throws `GROUP_ALREADY_RECORDED`** at `bio-plane/test/m/store-request/fixtures.mjs:34`. 45 tests in `store-request/`, `wizard-scripts/t47` and `affordances/t33` fail at setup with it, and none reaches an account op. `screens-settings/seed-connect.mjs:66` calls it with the default group, so all 27 `connect.test.mjs` tests fail at setup. I could not confirm this on a clean tranche-tip worktree: that command was refused by a permission check, and I did not retry it. The evidence is that the error is raised in `storeWorld()` setup, before any ai-accounts code runs, and my commit touches no fixture. Owners: store-request or store-assembly (default world), and screens-settings (its seed).
+2. **`credentials/rows-ops.test.mjs:149-150`** (credentials' own test) asserts `NOT_YOUR_ACCOUNT` for a body naming `ann` sent with `by=second`. Under R38 the stamp is the member, so `second` (an enrolled administrator, active) sets her own reference and gets `ok`. That expectation is the pre-R38 behaviour, so credentials' job must change it. The rest of that test passes.
+3. **Door case for R38, to place** (per K5138, store-request's test, not this module's). A member sets, reads and removes her own reference through the door with a body naming no member; control: a body naming another member acts on the caller's own reference only. It needs her disclosure shown first (R23) in a world that registers instance-setup. It is red on the pre-fix route.
+4. **Stale generated artifact:** `bio-plane/dist/bio-plane.bundled.mjs` carries this module's source. Rebuild with `npm run build` in `bio-plane/` at the layer close. I did not regenerate it. No words changed, so `setup-words` rows are unaffected.
+5. **Observed, not from this change:** repo-wide `run.mjs` reports op-table answers in `screens-entry` (`common.test.mjs:186`, `design.test.mjs:63-81`, `setup.test.mjs:23-313`) naming ai-accounts as provider for `aikeepawaystate` and `groupkeystate`. Neither op's arm is changed by this job. I did not check whether they predate this round.
+
+**Process note:** I read my inbox (read-only) before `mail start`, to learn my depth from `START`. The pre-start fetch and tranche merge ran before `mail start`, as the `START` asks.
+
+Size (session_01KopXm8kekeG6vTeWVbAtkx): test runs 16, module lines 2188
