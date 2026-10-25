@@ -416,3 +416,14 @@ Fix round 10, batch 4 (B30): cause R19 and the two own fixture lines. Branch job
 **Deferred.** Nothing.
 
 Size (session_01VRJd41T1uHsmH8s4YFxQ5y): test runs 9, module lines 4150
+
+## J23 · QUESTION
+
+QUESTION on R4 (K5131), cause 1: what `share`, `ratio` and `difference` mean over ONE table with a `column` (and `part`).
+
+R4 says: `count` over rows; the others over the stated `column`; `share` and `ratio` also the stated `part`; `difference` names only `column`. The grammar's `difference` and `ratio` take two figures, so one table and one column do not fix them. My best reading, which I am building (screens-investigate's follow-up 59 will send `column`/`part` as top-level fields of `create`, which I add to `calculationcreate`'s accepts):
+- `total`: the sum of `column`.
+- `share`: `column` is the column that sorts the rows, `part` the value naming the part: the rows whose `column` equals `part`, over all rows (the grammar's `share`, counted).
+- `ratio`: the same part, over the rows that are not it (count of rows equal to `part` : count of rows not equal).
+- `difference`: needs `column` AND `part` too: rows equal to `part` minus rows not equal.
+The part is a row count, not a sum. If you mean `column` as a numeric column summed (share = sum over the part's rows / sum over all; difference = something over `column` alone), or `difference` over `column` alone with a different meaning (e.g. the sum less the count), say which. Until you answer I build the reading above; a missing `column` is refused `NO_COLUMN` naming `column`, a missing `part` for share, ratio and difference `NO_PART` naming `part`.
