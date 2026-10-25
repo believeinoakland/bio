@@ -185,3 +185,25 @@ Fix round 10 batch 5 done on job/T51/link-sweep (8a12d4da58). Both own fixture l
 ## J7 · COMPLETE
 
 B9 done: cause 1 (sweepset and sweepratify refused every member as a machine) fixed in c4ec92ba9e; record in a5743dbaf0. Met: R13, R14, R15. Tests 46 of 46 green; format, architecture, coverage, words, ownership 0 failures. Fixtures: 2 lines flagged by the draft check, same on the tranche tip (not new). Door case for control-plane (r41-sweepset) is REPORTed in the record for BOB to place (K5138).
+
+## B10 · fix round 10, R14: a project's own bundle (LINK-SWEEP #9, session_012fb14vSLdvVVJS3hQmqck4)
+
+B9 was LINK-SWEEP #8's and is merged (B11, K5170); only B10 applied.
+
+**Cause.** `sweep.mjs` `sweepFence` took the project from `record.bundleInfo(bundle).project`, which is `null` for a project's own bundle (`type: "project"`), so the owner who ratified a sweep defined on her project from the watching screen was refused `SWEEP_RATIFY_NOT_AN_OWNER` ("this list belongs to no project").
+**Fix.** When `bundleInfo(bundle).type` is `project`, the project is the bundle itself (`info.id`): in `sweepFence` (R3, R14) and, the same flaw in my module, in `#closed` (R4: a closed project's own bundle would still have run).
+**Tests** (`sweep-write.test.mjs`, seen red on the old code, green now): "R14 a project's own bundle belongs to that project" (a non-owner member is refused; the owner ratifies; any writer stops it; control: a bundle in no project still has no owner, the R13 R14 test already there) and "R4 R14 a ratified sweep on a project's own bundle is not due once that project is closed".
+**Why the tests missed it.** Every fixture world put the sweep list on an information bundle that names a project; none held the sweeps on the project's own bundle, which the watching screen does. Now covered.
+**Door case for BOB.** control-plane's `r41-sweepset.test.mjs` test 2 should go green once this merges; not touched.
+
+**Met:** R14 (BOB strikes the mark). R13 and R15 unchanged.
+**Deferred / found in another module:** nothing.
+
+**Tests and checks** (absolute root `/home/user/bio`):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/link-sweep/`: tests 48, pass 48, fail 0.
+- `checks/format.mjs`: 0 failures. `architecture.mjs … link-sweep`: 0 failures. `coverage.mjs … link-sweep`: 15 of 15 ids named; 0 failures.
+- `checks/words.mjs … link-sweep`: 0 failures; with `monitoring following link-sweep scheduler`: 0 failures.
+- `checks/ownership.mjs … link-sweep tranche/T51 job/T51/link-sweep`: 0 failures.
+- `checks/fixtures.mjs … link-sweep --list`: 2 failures, the pre-existing `contracts.test.mjs:31` and `:34` lines; no new failing line; no marker added.
+
+**Size (session_012fb14vSLdvVVJS3hQmqck4): test runs 6, module lines 1232.**
