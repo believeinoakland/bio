@@ -73,6 +73,9 @@ const gradedAsPublish = (op) => op !== undefined && NEEDS[op] === "publish" && (
   && sameSpec(OPS[op], OPS.publish);
 const sameSpec = (a, b) => !!a && !!b && a.mutating === b.mutating && a.classes.join() === b.classes.join()
   && JSON.stringify(a.machineClasses) === JSON.stringify(b.machineClasses);
+/** R7: the translation family's acts, whose `by` is the bare member id. */
+export const TRANSLATION_ACTS = Object.freeze(["translationdraft", "translationgrant", "translationadopt", "translationconfirm",
+  "translationrevert", "translationmark"]);
 export const DO_PATH = Object.freeze({ inbox: "inboxlist", publish: "publishcase", inboxpull: "inboxpullfile" });
 /** R5: the internal headers a stamped session and an ask's grant travel in (`store-door` R9). */
 export const SESSION_HEADER = "x-bio-session";
@@ -253,6 +256,9 @@ function make({ op, url, method = "GET", body, caller, source = null, country = 
   if (op === "profilesset") put("by", M);
   if (MEMBERSHIP_ADMIN_ACTS.includes(op)) put("by", M);
   if (op === "handlechange") put("by", M);
+  /* R7 (J5): the translations module asks `membership` of the bare member id */
+  if (TRANSLATION_ACTS.includes(op)) put("by", M);
+  if (op === "translations") put("viewer", M);
   if (op === "captureupload") put("by", M);
   if (ROSTER_SELF_ACTIONS.includes(op)) put("by", M);
   if (OWN_KEY_ACTIONS.includes(op) || CAPTURE_MEMBER_ACTIONS.includes(op) || SOURCE_ACTIONS.includes(op)) put("by", M);
