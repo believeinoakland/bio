@@ -815,11 +815,11 @@ export class People {
              by: f.by_actor, at: f.at, withdrawn: f.withdrawn_at ? { by: f.withdrawn_by, at: f.withdrawn_at, reason: f.withdrawn_reason } : null,
              ...(contact ? { publishable: false } : {}) };
   }
-  /* R9, R10, R31: a person's unwithdrawn facts the viewer may see (each follows its citing capture). */
-  #factsOf(person, viewer) {
+  /* R9, R10, R31 (R44: `withdrawn` asks for the withdrawn ones instead): a person's unwithdrawn facts the viewer may see (each follows its citing capture). */
+  #factsOf(person, viewer, withdrawn = false) {
     const out = [];
     for (const [table, contact] of [["person_facts", false], ["person_contacts", true]])
-      for (const f of this.#rows(`SELECT * FROM ${table} WHERE person=? AND withdrawn_at IS NULL ORDER BY at, fact_id`, person))
+      for (const f of this.#rows(`SELECT * FROM ${table} WHERE person=? AND withdrawn_at IS ${withdrawn ? "NOT " : ""}NULL ORDER BY at, fact_id`, person))
         if (this.#seesCapture(f.capture_sha, viewer)) out.push(this.#factView(f, contact, viewer));
     return out;
   }
@@ -1046,13 +1046,15 @@ export class People {
     const u = bounded([...facts.undetermined, ...postsAt.undetermined, ...dutiesUnsettled]);
     const claims = this.#claimsOn(cluster.members, viewer);
     const gone = this.#removedOn(members);
+    /* R44 (K5186): the withdrawn facts the viewer may see, kept apart from the standing ones, each marked `withdrawn` (R11) */
+    const w = bounded(members.flatMap((m) => this.#factsOf(m, viewer, true)));
     return { ok: true, found: true, entity_id: entityId, at, cluster, claims: claims.items, claims_truncated: claims.truncated,
-             names: n.items, facts: f.items, posts: p.items, duties: d.items, undetermined: u.items, removed: gone.items,
-             truncated: { names: n.truncated, facts: f.truncated, posts: p.truncated, duties: d.truncated, undetermined: u.truncated, removed: gone.truncated },
+             names: n.items, facts: f.items, withdrawn_facts: w.items, posts: p.items, duties: d.items, undetermined: u.items, removed: gone.items,
+             truncated: { names: n.truncated, facts: f.truncated, posts: p.truncated, duties: d.truncated, undetermined: u.truncated, removed: gone.truncated, withdrawn_facts: w.truncated },
              limit: READ_LIST_MAX,
              detail: "each item is cited, dated and graded, and names the cluster member it is held on; an item whose validity does "
                + "not settle the date is listed as undetermined, never as current; each identity claim on the cluster is listed "
-               + "with its id, so it can be withdrawn by it" };
+               + "with its id and basis, so it can be withdrawn by it; withdrawn facts are listed apart, marked withdrawn" };
   }
 
   /* R39 (N1032, K3145): every unwithdrawn identity claim the viewer may see (R31) with an end among `members` (the
@@ -1063,12 +1065,12 @@ export class People {
     const ids = JSON.stringify(members);
     const items = [];
     let truncated = false;
-    for (const c of this.#sql.exec(`SELECT claim_id, a, b, kind, grade, why, project, by_actor, at FROM identity_claims
+    for (const c of this.#sql.exec(`SELECT claim_id, a, b, kind, basis, grade, why, project, by_actor, at FROM identity_claims
                                     WHERE withdrawn_at IS NULL AND (a IN (SELECT value FROM json_each(?)) OR b IN (SELECT value FROM json_each(?)))
                                     ORDER BY at, claim_id`, ids, ids)) {
       if (!this.#seesProject(c.project, viewer)) continue;
       if (items.length >= CLUSTER_CLAIMS_MAX) { truncated = true; break; }
-      items.push({ claim_id: c.claim_id, a: c.a, b: c.b, kind: c.kind, grade: c.grade, why: c.why, by: c.by_actor, at: c.at });
+      items.push({ claim_id: c.claim_id, a: c.a, b: c.b, kind: c.kind, basis: c.basis, grade: c.grade, why: c.why, by: c.by_actor, at: c.at });
     }
     return { items, truncated };
   }

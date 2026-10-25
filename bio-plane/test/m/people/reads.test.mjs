@@ -1,7 +1,7 @@
 /* people's reads at its interface: R13–R19, and M-P5 (a person read at 50,000 lines within the response budget). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, doc, ANN, OUT } from "./fixture.mjs";
+import { world, doc, ANN, OUT, BOSS } from "./fixture.mjs";
 import { READ_LIST_MAX, peopleOf } from "../../../src/people/index.mjs";
 import { BOUNDS } from "../../../src/connection-grammar/index.mjs";
 import { validAt } from "../../../src/civil-time/index.mjs";
@@ -274,8 +274,8 @@ test("R39 personAt answers claims: every unwithdrawn identity claim the viewer m
   assert.deepEqual(r.cluster.members, [a, b].sort());
   assert.deepEqual(r.claims.map((x) => x.claim_id), [same.claim_id, unsure.claim_id], "both, each with its id, in the order made");
   assert.equal(r.claims_truncated, false);
-  for (const x of r.claims) assert.deepEqual(Object.keys(x).sort(), ["a", "at", "b", "by", "claim_id", "grade", "kind", "why"]);
-  assert.deepEqual(r.claims[0], { claim_id: same.claim_id, a, b, kind: "same_as", grade: same.grade, why: same.why, by: ANN, at: same.at },
+  for (const x of r.claims) assert.deepEqual(Object.keys(x).sort(), ["a", "at", "b", "basis", "by", "claim_id", "grade", "kind", "why"]);
+  assert.deepEqual(r.claims[0], { claim_id: same.claim_id, a, b, kind: "same_as", basis: "testimony", grade: same.grade, why: same.why, by: ANN, at: same.at },
                    "as claimIdentity answered it (R1, R2)");
   assert.deepEqual([r.claims[1].kind, r.claims[1].by, r.claims[1].grade, r.claims[1].why], ["unsure", OUT, unsure.grade, unsure.why]);
   /* a member names the claim to withdraw from the page itself */
@@ -325,4 +325,51 @@ test("R39 personAt's claims are bounded at 1,000 (R5's bound) with claims_trunca
   assert.deepEqual([out.claims.length, out.claims_truncated], [1000, false], "the hidden claim is not counted");
   assert.deepEqual([ann.claims.length, ann.claims_truncated], [1000, true], "one past the bound is read");
   assert.deepEqual(ann.claims.map((c) => c.claim_id), whole.claims.map((c) => c.claim_id), "the first 1,000 in their order");
+});
+
+test("R43 each claim row personAt answers carries basis, as stored and as identityOf serves it, stored basis", () => {
+  const w = world();
+  const c = w.capture("c");
+  const a = w.person("Bea Roy"), b = w.person("Bea Roy");
+  const made = w.p.claimIdentity({ a, b, kind: "same_as", basis: "testimony", note: "I know her", by: ANN });
+  const other = w.person("Bea Roy");
+  const named = w.p.claimIdentity({ a, b: other, kind: "unsure", basis: "testimony", note: "maybe", by: OUT });
+  assert.equal(made.ok, true);
+  const r = w.p.personAt({ entityId: a, at: "2020-01-01", viewer: ANN });
+  const served = w.p.identityOf({ entityId: a, viewer: ANN });
+  const byId = new Map(r.claims.map((x) => [x.claim_id, x]));
+  assert.equal(byId.get(made.claim_id).basis, "testimony");
+  const theirs = [...served.links, ...served.unsure, ...served.not_same_as].map((x) => [x.claim_id, x.basis]);
+  assert.ok(theirs.length >= 1);
+  for (const [id, basis] of theirs) assert.equal(byId.get(id).basis, basis, "as identityOf serves it");
+  assert.equal(byId.get(named.claim_id).basis, "testimony");
+  for (const x of r.claims) assert.ok(["identifier", "corroborated_name", "name", "testimony"].includes(x.basis), x.claim_id);
+});
+
+test("R44 personAt answers the person's withdrawn facts the viewer may see, each marked withdrawn with who, when and why, apart from the facts not withdrawn, which are answered as before; control: a withdrawn fact on a capture the viewer may not see is absent, and an expunged fact is not listed", () => {
+  const w = world();
+  const p = w.person("Lea Ng");
+  const c = w.capture("c"), fenced = w.capture("d", { fenced: true });
+  const valid = { from: "1970-01-01", to: "2090-12-31", precision: "day", zone: "UTC" };
+  const keep = w.p.recordPersonFact({ person: p, kind: "name", value: "Lea Ng", valid, citation: doc(c), by: ANN });
+  const gone = w.p.recordPersonFact({ person: p, kind: "birth", value: "1970-01-01", valid, citation: doc(c), by: ANN });
+  const hidden = w.p.recordPersonFact({ person: p, kind: "locality", value: "Dock", valid, citation: doc(fenced), by: ANN });
+  const addr = w.p.recordPersonFact({ person: p, kind: "address", value: "2 Dock Rd", valid, citation: doc(c), by: ANN });
+  for (const [f, why] of [[gone, "misread the year"], [hidden, "wrong"], [addr, "old"]]) assert.equal(w.p.withdrawPersonFact({ factId: f.fact_id, reason: why, by: ANN }).ok, true);
+  const read = (viewer) => w.p.personAt({ entityId: p, at: "2024-01-01", viewer });
+  const ann = read(ANN), out = read(OUT);
+  assert.deepEqual(ann.facts.map((f) => f.fact_id), [keep.fact_id], "the facts not withdrawn are answered as before");
+  assert.deepEqual(ann.withdrawn_facts.map((f) => f.fact_id).sort(), [gone.fact_id, hidden.fact_id, addr.fact_id].sort());
+  const row = ann.withdrawn_facts.find((f) => f.fact_id === gone.fact_id);
+  assert.equal(row.withdrawn.by, ANN);
+  assert.equal(row.withdrawn.reason, "misread the year");
+  assert.ok(row.withdrawn.at);
+  assert.equal(row.kind, "birth");
+  assert.equal(ann.withdrawn_facts.find((f) => f.fact_id === addr.fact_id).publishable, false);
+  assert.equal(ann.truncated.withdrawn_facts, false);
+  assert.deepEqual(out.withdrawn_facts.map((f) => f.fact_id).sort(), [gone.fact_id, addr.fact_id].sort(), "control: the fenced capture's fact is absent");
+  assert.ok(!JSON.stringify(out).includes(hidden.fact_id));
+  /* an expunged fact is removed, not listed */
+  assert.equal(w.p.expunge({ id: gone.fact_id, ground: "unlawful", reason: "x", by: BOSS }).ok, true);
+  assert.ok(!read(ANN).withdrawn_facts.some((f) => f.fact_id === gone.fact_id));
 });
