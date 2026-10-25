@@ -105,7 +105,11 @@ function titleOf(cs, o) {
   const doc = o.doc && typeof o.doc === "object" ? o.doc : {};
   const own = clean(o.reading && o.reading.title) || clean(doc.title);
   if (own) return own.slice(0, 200);
-  const file = clean(o.fileName) || clean(doc.capture && doc.capture.file_name) || clean(doc.name_stated && doc.name_stated.text);
+  /* acquisition states `file_name` as the last segment of an address when the source states no name: that is the file part of the address, which never names a document (R54) */
+  let lastSegment = "";
+  try { lastSegment = decodeURIComponent(new URL(String(o.address || "")).pathname.split("/").pop() || ""); } catch (e) { lastSegment = ""; }
+  const stated = clean(doc.capture && doc.capture.file_name);
+  const file = clean(o.fileName) || (stated && stated !== lastSegment ? stated : "") || clean(doc.name_stated && doc.name_stated.text);
   if (file) return file.slice(0, 200);
   let host = "";
   try { host = new URL(String(o.address || "")).hostname; } catch (e) { host = ""; }
@@ -225,6 +229,8 @@ function renderCapture(cs, view) {
   const said = (k, f) => `<p class="mk-note" role="status">${cs.w(k, f)}</p>`;
   /* C94 (interface-shell R111): a member is named by the handle the shell knows for her id (the founder and a member with no handle by its
      fallback word) and linked by `memberHref`, never by the id; "" for no member */
+  /* who asked for a request: the owner's rows state it as `attribution.principals.plane` (capture-requests R10); a row carrying `principal_plane` itself is read the same */
+  const planeOf = (r) => (r && (r.principal_plane || (r.attribution && r.attribution.principals && r.attribution.principals.plane))) || "";
   const person = (id) => { const k = String(id || "").replace(/^member:/, ""); return k ? `<a class="cs-ref" href="${cs.esc(cs.memberHref(k))}" data-nav>${cs.esc(cs.memberName(k))}</a>` : ""; };
   /* C29: a name placed before a sentence's own full stop loses its one (a title or file name that ends in a full stop would double it);
      an ellipsis, or a name that ends in several, is left whole */
@@ -508,8 +514,8 @@ function renderCapture(cs, view) {
     const credSec = !turned.length ? "" : cs.sec("screen.capture.cred.head",
       `<p class="mk-small">${cs.w("screen.capture.cred.why1")} ${cs.w("screen.capture.cred.why2")}</p>`
         + cs.sheet(turned.map((r) => cs.row(cs.icon("refused"), `<b>${cs.w("screen.capture.cred.turned", { source: { html: `<span class="mk-data">${cs.esc(r.host || "")}</span>` } })}</b>`,
-          "", (r.principal_plane && r.requested_at ? cs.w("screen.capture.cred.askedby", { name: { html: person(r.principal_plane) }, date: { html: cs.date(r.requested_at) }, count: Number(r.attempts) || 0 })
-            : [person(r.principal_plane), r.requested_at ? cs.date(r.requested_at) : ""].filter(Boolean).join(" \u00b7 ")))).join(""))
+          "", (planeOf(r) && r.requested_at ? cs.w("screen.capture.cred.askedby", { name: { html: person(planeOf(r)) }, date: { html: cs.date(r.requested_at) }, count: Number(r.attempts) || 0 })
+            : [person(planeOf(r)), r.requested_at ? cs.date(r.requested_at) : ""].filter(Boolean).join(" \u00b7 ")))).join(""))
         + cs.field("cc-user", "screen.capture.cred.user", { autocomplete: "off" })
         + cs.field("cc-secret", "screen.capture.cred.secret", { type: "password", autocomplete: "off", help: ["screen.capture.cred.sealed1", "screen.capture.cred.sealed2"] })
         + turned.map((r) => `<div class="mk-acts">${cs.act("capturecredentialsupply", { tone: "primary", data: { request: r.request, host: r.host } })}${cs.act("capturerequestretry", { label: "screen.capture.cred.retry", data: { request: r.request } })}</div>`).join("")
@@ -546,7 +552,7 @@ function renderCapture(cs, view) {
        R47), each with where it stands: waiting to be fetched, captured, or turned away by its source. None to list draws no section. */
     const meId = view.me && view.me.member ? String(view.me.member) : "";
     const mineLater = R && R.state === "ok" && R.value && Array.isArray(R.value.requests) && meId
-      ? R.value.requests.filter((r) => r && String(r.principal_plane || "").replace(/^member:/, "") === meId && ["requested", "draining", "captured", "refused"].includes(r.state)) : [];
+      ? R.value.requests.filter((r) => r && String(planeOf(r)).replace(/^member:/, "") === meId && ["requested", "draining", "captured", "refused"].includes(r.state)) : [];
     /* N4: once the member has asked for the list, an empty one says so (`screen.capture.later.none`); before the ask, and with none, nothing is drawn */
     const noneLater = cs.w("screen.capture.later.none");
     const laterSec = !mineLater.length && !U.laterAsked ? "" : cs.sec("screen.capture.later.head", `<p class="mk-small">${cs.w("screen.capture.later.about")}</p>`
@@ -1220,7 +1226,7 @@ function readingOf(a, doc) {
  * declared type last: a file whose declared type is empty or wrong is still the picture the record says it is. */
 function pictureOf(doc, sent) {
   const p = doc && typeof doc.profile === "object" && doc.profile ? doc.profile : {};
-  const fmt = typeof p.format === "string" ? p.format : p.format && typeof p.format === "object" ? String(p.format.name || p.format.id || p.format.kind || "") : "";
+  const fmt = typeof p.format === "string" ? p.format : p.format && typeof p.format === "object" ? String(p.format.format || p.format.name || p.format.id || p.format.kind || "") : "";
   const kinds = /(^|[^a-z])(png|jpe?g|gif|webp|tiff?|heic|heif|bmp|avif|ico|jp2|jpx|svg|image)([^a-z]|$)/i;
   if (kinds.test(fmt)) return true;
   const types = [p.source_content_type, doc && doc.capture && doc.capture.content_type, sent && sent.type].filter((t) => typeof t === "string");
@@ -1389,6 +1395,7 @@ const CRED_REFUSALS = Object.freeze({
   CAPTURE_CREDENTIAL_NOT_A_MEMBER: function (refusal, cs) { return cs.w("screen.capture.cred.ref.machine1") + " " + cs.w("screen.capture.cred.ref.machine2"); },
   CAPTURE_CREDENTIAL_OWN_HOST: function (refusal, cs) { return cs.w("screen.capture.cred.ref.own1") + " " + cs.w("screen.capture.cred.ref.own2"); },
 });
+
 
 export const CAPTURE_SCREEN = Object.freeze({
   id: "capture",

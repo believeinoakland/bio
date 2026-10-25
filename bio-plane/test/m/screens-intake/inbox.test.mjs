@@ -202,10 +202,20 @@ test("R7 R12 sourcelink names the source read and a source chosen among the earl
   const p = await pulled(t);
   const [own, four, five] = [await t.srcOf(t.K3), await t.srcOf(t.K4), await t.srcOf(t.K5)];
   assert.equal(main(p).querySelector('input#cx-source, input#cx-to'), null, "no field to type a source id");
+  /* sources are one for each knocker's pseudonym (sources R1): K4, the same knocker's as the knock opened, is its own source, which is left out */
   const opts = p.doc.getElementById("cx-to").querySelectorAll("option");
-  assert.deepEqual(opts.map((o) => o.getAttribute("value")), [four, five], "the same knocker's source first, its own left out");
-  assert.equal(opts[0].textContent, word("screen.inbox.same.date", { date: day(t.K4) }), "R32: the same knocker's, by the day, no id drawn");
-  assert.equal(opts[1].textContent, `${word("screen.inbox.knock", { size: word("size.small") })} ${day(t.K5)}`);
+  assert.deepEqual(opts.map((o) => o.getAttribute("value")), [five], "its own left out, the same knocker's with it");
+  assert.equal(four, own, "the same knocker's source is this knock's own");
+  assert.equal(opts[0].textContent, `${word("screen.inbox.knock", { size: word("size.small") })} ${day(t.K5)}`);
+  /* a source of the same pseudonym that is not this knock's own cannot be made by a real act (one source for each pseudonym); the screen's "the same knocker's first" is kept on
+     the one scripted variation: the real `sourceof` answer for K4's capture with a source id that is not the knock's own */
+  const elsewhere = `${four}-elsewhere`;
+  const realOf = (req) => t.mai.read("sourceof", { query: { capture: req.query.capture } }).then(ok);
+  const v = await pulled(t, { sourceof: async (req) => (req.query.capture === t.K4.capture_sha ? ok({ ...(await t.mai.read("sourceof", { query: { capture: req.query.capture } })), sourceId: elsewhere }) : realOf(req)) });
+  const vopts = v.doc.getElementById("cx-to").querySelectorAll("option");
+  assert.deepEqual(vopts.map((o) => o.getAttribute("value")), [elsewhere, five], "the same knocker's source first");
+  assert.equal(vopts[0].textContent, word("screen.inbox.same.date", { date: day(t.K4) }), "R32: the same knocker's, by the day, no id drawn");
+  assert.equal(vopts[1].textContent, `${word("screen.inbox.knock", { size: word("size.small") })} ${day(t.K5)}`);
   fill(p, { "cx-to": five, "cx-evidence": "Same handwriting on the cover note." });
   await press(p, "sourcelink");
   assert.deepEqual(p.byOp("sourcelink")[0].body, { source: own, to: five, evidence: "Same handwriting on the cover note." });
@@ -222,10 +232,11 @@ test("R7 R12 sourcelink names the source read and a source chosen among the earl
   const r = await pulled(only);
   assert.equal(btn(r, "sourcelink"), null);
   assert.ok(says(r, "screen.inbox.link.none"));
-  /* control: a source sourceof refuses is not offered (the owner refuses a source the viewer may not see; the page cannot make that refusal by a real act, so this one answer is scripted) */
-  const real = (req) => t.mai.read("sourceof", { query: { capture: req.query.capture } }).then(ok);
-  const s = await pulled(t, { sourceof: (req) => (req.query.capture === t.K4.capture_sha ? refused("NO_SUCH_SOURCE", "No.") : real(req)) });
-  assert.deepEqual(s.doc.getElementById("cx-to").querySelectorAll("option").map((o) => o.getAttribute("value")), [five]);
+  /* control: a source sourceof refuses is not offered (the owner refuses a source the viewer may not see; the page cannot make that refusal by a real act, so this one answer is scripted,
+     beside the variation above that gives the other source) */
+  const s = await pulled(t, { sourceof: async (req) => (req.query.capture === t.K5.capture_sha ? refused("NO_SUCH_SOURCE", "No.")
+    : req.query.capture === t.K4.capture_sha ? ok({ ...(await t.mai.read("sourceof", { query: { capture: req.query.capture } })), sourceId: elsewhere }) : realOf(req)) });
+  assert.deepEqual(s.doc.getElementById("cx-to").querySelectorAll("option").map((o) => o.getAttribute("value")), [elsewhere]);
 });
 
 test("R26 every key the inbox screen reads is a word of the list, and its states draw word(key, vars)", async () => {

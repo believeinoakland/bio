@@ -50,7 +50,8 @@ test("R47 a request turned away for a login is drawn with the login form; only a
   assert.equal(p.doc.getElementById("cc-secret").getAttribute("type"), "password");
   assert.ok(says(p, "screen.capture.cred.sealed1") && says(p, "screen.capture.cred.sealed2"));
   /* last, so the rest is read first: the owner's request row names who asked under `attribution.principals.plane`, not `principal_plane` (reported) */
-  const tail = word("screen.capture.cred.askedby", { name: "N", date: "D", count: 0 }).split("D")[1];
+  const row = (await s.requests()).find((r) => r.source_reason === "login");
+  const tail = word("screen.capture.cred.askedby", { name: "N", date: "D", count: Number(row.attempts) || 0 }).split("D")[1];
   assert.ok(tail && text(p).includes(tail), "R47 asked for by the member, the day and the tries, by key");
 });
 

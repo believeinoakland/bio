@@ -1,5 +1,7 @@
 /* screens-intake R8, R9 and the screen contract (interface-shell R21, R5, R10, R12) over all five screens, on the real
- * served page: `interfacePage(SCREENS)` through interface-shell's harness. */
+ * served page: `interfacePage(SCREENS)` through interface-shell's harness, over the REAL store (fix round 10, K5054): the team holds a page, an archive, a captured
+ * address, a file the scanner held, a knock and a question, all made by the owners' own acts; the scanner is the environment's double (file-safety's own scripted
+ * `FILE_SCANNER`). A read that fails or never answers is a fault, the only scripted answer. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { interfacePage, interfaceScript, interfaceScriptHash, checkScreens, SHELL_OPS } from "../../../src/interface-shell/index.mjs";
@@ -8,39 +10,72 @@ import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
 import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { OPS, SESSION_OPS, NEEDS } from "../../../src/op-declarations/index.mjs";
 import { pending } from "../interface-shell/harness.mjs";
-import { open, html, text, main, ok, refused, MEMBER, rawKeys, fill, press, word, hasWord } from "./page.mjs";
+import { openWorld, members, html, text, main, refused, MEMBER, rawKeys, fill, press, word, hasWord } from "./page.mjs";
+import { scanner } from "../file-safety/fixture.mjs";
+import { makeZip } from "../../make-zip.mjs";
 
-const SHA = "a".repeat(64);
-const PATHS = { capture: ["/app/capture/address", "/app/capture/address/INQ-2026-0001-q", "/app/capture/file", "/app/capture/saw"], held: ["/app/held"], archive: [`/app/archive/${SHA}`],
-                "open-file": [`/app/open-file/${SHA}`], inbox: ["/app/inbox", "/app/inbox/KNOCK-2026-10-03-9c1f0a2b"] };
-const VALUES = {
-  heldcaptures: { ok: true, held: [{ bundle_id: "INFO-1", title: "T", project: "P", age_days: 1, eligible: false, class: "contested",
-                                     captured_for: { questions: [{ question: "Q", title: "Q?", asker: "Ana" }], withheld: "w" } }], truncated: true },
-  threatof: { ok: true, threat: "high", reasons: [{ code: "x", translation: "Why." }], scan_hold: { names: ["N"] } },
-  originalstate: { may_open: true, path: "warned" }, verdictnotes: { ok: true, notes: [{ tool: "t", engine: "e", result: "clean", scanned_at: "2026-10-01T00:00:00Z" }] },
-  scanfindings: { ok: true, findings: [{ captureSha: SHA, findings: ["N"] }] }, scanstatus: { queued: 1, overdue: 0, held: 1 },
-  inbox: { inbox: [{ knock_id: "KNOCK-2026-10-03-9c1f0a2b", bytes: 10, received: "2026-10-03T00:00:00Z", status: "new", note: "n", pseudonym: "p" }] },
-  inboxget: { ok: true, item: { knock_id: "KNOCK-2026-10-03-9c1f0a2b", bytes: 10, status: "pulled", note: "n", capture_sha: SHA } },
-  sourceof: { ok: true, captureSha: SHA, sourceId: "SRC-2026-0001", source: {}, history: [] },
-  sourcerung: { ok: true, source: "SRC-2026-0001", rung: "same_knocker" },
-  archivelist: { ok: true, archive: { sha256: SHA, grade: { grade: "B", determined: true }, bytes: 10, entries: 1, opened: true, refused: null },
-                 summary: { filed: 1, already_held: 0, not_filed: 0, folders: 0, waiting: 0 },
-                 entries: [{ index: 1, name: "a.pdf", state: "filed", sha256: SHA, bundle: "INFO-2026-0002-a" }] },
-  gradenote: { ok: true, note: "A note." },
-  opencaptures: { ok: true, captures: [{ session: "S-1", locator: "https://x.example/a", primary_sha: SHA, started: "2026-10-01T00:00:00Z", outstanding: 2 }], truncated: false },
-  search: { hits: [{ bundle_id: "INQ-2026-0001-q", title: "Q?" }] },
-  captureaccounts: { ok: true, captureSha: SHA, actors: [{ actor: "member:mai", at: "2026-10-01T00:00:00Z" }], accounts: [] },
-  projectlist: { projects: [{ id: "PROJ-1", name: "P" }] },
-  memberlist: { members: [{ member_id: "mai", handle: "mai-h", role: "member", status: "active" }] },
-  capturerequests: { ok: true, requests: [{ request: "CR-1", host: "records.example.gov", state: "refused", source_reason: "login", requested_at: "2026-10-01T00:00:00Z", principal_plane: "member:mai" }] },
-};
-const EMPTY = { heldcaptures: { ok: true, held: [] }, verdictnotes: { ok: true, notes: [] }, inbox: { inbox: [] }, opencaptures: { ok: true, captures: [] },
-                archivelist: { ok: true, archive: {}, summary: {}, entries: [] } };
-const READS = Object.keys(VALUES);
+const CAN = ["contribute", "create_projects"];
+/* the ops a screen reads: the four states are made by failing or holding them all */
+const READS = ["heldcaptures", "threatof", "originalstate", "verdictnotes", "scanfindings", "scanstatus", "inbox", "inboxget", "sourceof", "sourcerung", "archivelist", "gradenote",
+               "opencaptures", "search", "captureaccounts", "projectlist", "memberlist", "capturerequests"];
+const SHA = "a".repeat(64);   /* an address no team holds: the empty team's */
+
+/* The team's reach to its assistant (interface-shell R20): the administrator's real acts set and switch on the team's key. */
+async function reach(world) {
+  const admin = await world.signIn("admin");
+  await admin.act("reauth", { body: { password: admin.password } });
+  await admin.act("groupkeyset", { body: { key: "sk-ant-api03-" + "w".repeat(40) } });
+  await admin.act("groupkeyswitch", { body: { on: true } });
+  await admin.act("groupkeynoticeseen", { body: {} });
+  return admin;
+}
+const daemon = (world, op) => world.door({ url: `/api/?op=${op}`, init: { method: "POST", headers: { "content-type": "application/json" }, body: "{}" } }, { token: world.env.DAEMON_TOKEN });
+const ring = async (world, contentText, note) => (await world.door({ url: "/api/?op=knock", init: { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ contentText, note }) } })).json;
+
+/* A team that holds every kind of thing these screens show, made by real acts. `mai` reads and writes; `rosa` holds no capability at all. */
+async function team({ filled = true } = {}) {
+  const bad = new Set();
+  const t = await members({ mai: CAN, rosa: [] }, { ai: true, env: { FILE_SCANNER: scanner({ clamav: (sha) => (bad.has(sha) ? { result: "found", findings: ["Eicar-Test-Signature"] } : { result: "clean" }) }) } });
+  const admin = await reach(t.world);
+  await admin.act("membercaps", { body: { memberId: "rosa", capabilities: [] } });
+  const out = { ...t, admin, bad };
+  if (!filled) return out;
+  const w = t.world;
+  out.project = await w.recipes.project(t.mai, "The Coliseum lease");
+  await t.mai.act("projectinvite", { query: { projectId: out.project, handle: "rosa" } });
+  await t.rosa.act("projectjoin", { query: { projectId: out.project } });
+  out.question = (await w.recipes.question(t.mai, out.project, { title: "The garage", text: "Was the garage inspected?" })).id;
+  out.page = await w.recipes.page(t.mai, "The inspection report", { project: out.project });
+  out.archive = await w.recipes.hold(t.mai, "Inspection files", makeZip([{ name: "a.txt", data: "alpha text" }, { name: "b.txt", data: "beta text" }]), out.project, { type: "application/zip" });
+  out.warned = await w.recipes.hold(t.mai, "Handed-in sheet", "A sheet somebody handed in.\n", out.project);
+  out.held = await w.recipes.hold(t.mai, "Flagged sheet", "A sheet the scanner flags.\n", out.project);
+  bad.add(out.held.sha);
+  /* a document fetched from its address by the team's own capture request: the only kind the file-safety threat reads low */
+  const address = "https://records.example.gov/inspections/2019.html";
+  w.script(address, async () => new Response("<html><head><title>Inspections 2019</title></head><body><p>The garage was inspected.</p></body></html>", { status: 200, headers: { "content-type": "text/html" } }));
+  const asked = await t.mai.act("capturerequest", { body: { address, target: out.question } });
+  const drained = await daemon(w, "capturerequestdrain");
+  const done = ((drained.json.result || {}).captured || []).find((c) => c.request === asked.request);
+  assert.ok(done && done.promoted && done.promoted.ok, "the owner fetched the address and filed it");
+  out.fetched = { sha: done.sha, bundle: done.promoted.bundle_id };
+  const fresh = await ring(w, "The sheets they do not publish.", "Inspection sheets");
+  out.knock = fresh.knockId;
+  const pulled = await ring(w, "Another handed-in sheet.", "Pulled one");
+  await t.mai.act("inboxpull", { body: { knockId: pulled.knockId, reason: "It bears on our question." } });
+  await daemon(w, "scanbatch");
+  return out;
+}
+let TEAM;
+const full = () => (TEAM ||= team());
+const pathsOf = (F) => ({ capture: ["/app/capture/address", `/app/capture/address/${F.question || "INQ-2026-0001-q"}`, "/app/capture/file", "/app/capture/saw"], held: ["/app/held"],
+  archive: [`/app/archive/${F.archive ? F.archive.sha : SHA}`], "open-file": [`/app/open-file/${F.warned ? F.warned.sha : SHA}`],
+  inbox: ["/app/inbox", `/app/inbox/${F.knock || "KNOCK-2026-10-03-9c1f0a2b"}`] });
+const READ_FAULTS = (answer) => Object.fromEntries(READS.map((op) => [op, answer]));
 /* the ops a screen declares: its reads' and its acts' */
 const declared = (id) => { const s = SCREENS.find((x) => x.id === id); return [s, Object.values(s.reads({ subject: SHA, me: MEMBER, data: {}, ui: {} })).map((r) => r.op), s.acts.map((a) => a.op)]; };
 
-test("R8 R15 SCREENS meets interface-shell R21: eight registry screens, archive and the three of the T51 fix round among them, served by interfacePage without a throw", () => {
+test("R8 R15 SCREENS meets interface-shell R21: eight registry screens, archive and the three of the T51 fix round among them, served by interfacePage without a throw", async () => {
+  await full();   /* the world registers the owners' declarations the screens' acts are held to */
   assert.deepEqual(SCREENS.map((s) => s.id), ["capture", "held", "archive", "open-file", "inbox", "about-knocker", "leads", "watching"]);
   assert.ok(Object.isFrozen(SCREENS));
   assert.equal(checkScreens(SCREENS), true);
@@ -59,7 +94,8 @@ test("R8 R15 SCREENS meets interface-shell R21: eight registry screens, archive 
   }
 });
 
-test("R8 every act names one op OPS holds and a member's session reaches, the registry's for its screen or its re-point; every registry act is drawn", () => {
+test("R8 every act names one op OPS holds and a member's session reaches, the registry's for its screen or its re-point; every registry act is drawn", async () => {
+  await full();
   for (const s of SCREENS) {
     const reg = SCREEN_REGISTRY.find((r) => r.id === s.id);
     const listed = new Set([...(reg.acts || []).map((a) => (typeof a === "string" ? a : a.op)), ...(reg.owed || []).map((o) => o.op)]);
@@ -74,7 +110,8 @@ test("R8 every act names one op OPS holds and a member's session reaches, the re
   }
 });
 
-test("R8 after an act the screen reads again what it changed (every read, or none on a screen with none)", () => {
+test("R8 after an act the screen reads again what it changed (every read, or none on a screen with none)", async () => {
+  await full();
   for (const s of SCREENS) {
     const reads = Object.keys(s.reads({ subject: s.id === "capture" ? "address" : SHA, me: MEMBER, data: {}, ui: {} }));
     for (const a of s.acts) {
@@ -87,15 +124,14 @@ test("R8 after an act the screen reads again what it changed (every read, or non
 });
 
 test("R8 (interface-shell R5, R10) every screen in each read's four states draws only words, and failed never as empty", async () => {
-  const states = {
-    ok: Object.fromEntries(READS.map((op) => [op, ok(VALUES[op])])),
-    empty: Object.fromEntries(READS.map((op) => [op, ok(EMPTY[op] ?? VALUES[op])])),
-    failed: Object.fromEntries(READS.map((op) => [op, refused("STORE_SILENT", "store silent (test fixture)")])),
-    loading: Object.fromEntries(READS.map((op) => [op, pending])),
-  };
-  for (const [state, plane] of Object.entries(states)) for (const paths of Object.values(PATHS)) for (const path of paths) {
-    const p = await open(path, { plane, reachable: true });
+  const F = await full();
+  const E = await team({ filled: false });
+  /* ok: the team that holds each thing; empty: a team that holds nothing; failed and loading: the team's own reads failing, or never answering (faults) */
+  const states = { ok: [F, {}], empty: [E, {}], failed: [F, READ_FAULTS(refused("STORE_SILENT", "store silent (test fixture)"))], loading: [F, READ_FAULTS(pending)] };
+  for (const [state, [t, plane]] of Object.entries(states)) for (const paths of Object.values(pathsOf(t))) for (const path of paths) {
+    const p = await openWorld(path, { world: t.world, as: t.mai, plane });
     assert.deepEqual(rawKeys(p), [], `${path} ${state}`);
+    if (state === "ok" && path === "/app/held") assert.ok(text(p).includes("The inspection report"), "the team's held page is drawn, so the ok state is not an empty one");
     const marks = main(p).querySelectorAll("[data-state]").map((e) => e.getAttribute("data-state"));
     if (state === "failed") assert.ok(!marks.includes("empty"), `${path}: a failed read is never drawn empty`);
     if (state === "loading" && !path.startsWith("/app/capture")) assert.ok(marks.includes("loading"), `${path} loading`);
@@ -123,9 +159,13 @@ test("R26 word(key, vars): a missing placeholder and an unknown key throw their 
 });
 
 test("R8 (interface-shell R12) an act is drawn only when the session may do it: without contribute no act needing it appears", async () => {
-  const plane = Object.fromEntries(READS.map((op) => [op, ok(VALUES[op])]));
-  for (const path of Object.values(PATHS).flat()) {
-    const p = await open(path, { plane, me: { ...MEMBER, capabilities: [] }, reachable: true });
+  const F = await full();
+  assert.deepEqual((await F.rosa.read("whoami")).capabilities, [], "the member holds no capability");
+  const withIt = await openWorld("/app/capture/address", { world: F.world, as: F.mai });
+  assert.ok(Array.from(main(withIt).querySelectorAll("button[data-act]")).some((b) => NEEDS[b.getAttribute("data-act")]), "control: a member who may contribute is offered acts that need it");
+  for (const path of Object.values(pathsOf(F)).flat()) {
+    const p = await openWorld(path, { world: F.world, as: F.rosa });
+    if (path.startsWith("/app/open-file/")) assert.ok(main(p).querySelector("[data-risk]"), "control: she reads the file's risk, a participant of its project");
     for (const b of main(p).querySelectorAll("button[data-act]")) {
       const op = b.getAttribute("data-act");
       assert.ok(NEEDS[op] === null || NEEDS[op] === undefined, `${path}: ${op} needs ${NEEDS[op]}, drawn without it`);
@@ -134,31 +174,32 @@ test("R8 (interface-shell R12) an act is drawn only when the session may do it: 
 });
 
 test("R9 no act or read records which member opened which file: every request is an op naming no member, and the screens store nothing", async () => {
+  const F = await full();
   /* the shell's own frame reads, `bootstrap` among them (interface-shell R36: public, once, for the test-instance band), read from
      the shell's declaration of them (N1073) */
   const FRAME = new Set(SHELL_OPS);
-  const ours = new Set([...SCREENS.flatMap((s) => s.acts.map((a) => a.op)), ...READS, "allocid", "promote", "select", "image", "heldat", "projectquestions", "captureseenin"]);
-  const plane = { ...Object.fromEntries(READS.map((op) => [op, ok(VALUES[op])])),
-                  openoriginal: { status: 200, bytes: "b", type: "application/pdf" }, openwithwarning: { status: 200, bytes: "b", type: "application/pdf" } };
+  const ours = new Set([...SCREENS.flatMap((s) => s.acts.map((a) => a.op)), ...READS, "allocid", "promote", "select", "image", "heldat", "projectquestions", "captureseenin", "knocksof", "reading", "readheld"]);
   const pages = [];
+  const at = (path, t = F) => openWorld(path, { world: t.world, as: t.mai });
   /* the ops that name only the capture are open-file's own: the reads it asks for a capture, and its five acts (R5) */
   const [OF, ofReads, ofActs] = declared("open-file");
   const OF_OPS = new Set([...Object.values(OF.reads({ subject: SHA, me: MEMBER, data: {}, ui: {} })).filter((r) => r.query && r.query.capture).map((r) => r.op), ...ofActs]);
   assert.ok(OF_OPS.size >= 9 && ofReads.length >= 5);
-  /* open-file, every act pressed */
-  const f = await open(`/app/open-file/${SHA}`, { plane: { ...plane, threatof: ok({ ok: true, threat: "high", reasons: [], scan_hold: null }) } });
+  /* open-file, every act pressed: a handed-in file the scanner found nothing in is opened with the warning, a safe view and a deeper check are asked; a file fetched by the team is opened
+     as it is; the file the scanner held has its hold released */
+  const f = await at(`/app/open-file/${F.warned.sha}`);
   fill(f, { "co-device": true, "co-macros": true });
   await press(f, "openwithwarning");
   await press(f, "safeview", { reason: "r" });
   await press(f, "deepercheck", { reason: "r" });
   pages.push(f);
-  const l = await open(`/app/open-file/${SHA}`, { plane: { ...plane, threatof: ok({ ok: true, threat: "low", reasons: [] }) } });
+  const l = await at(`/app/open-file/${F.fetched.sha}`);
   await press(l, "openoriginal");
   pages.push(l);
-  const h = await open(`/app/open-file/${SHA}`, { plane });
+  const h = await at(`/app/open-file/${F.held.sha}`);
   await press(h, "releasescanhold", { reason: "r" });
   pages.push(h);
-  for (const path of [...PATHS.held, ...PATHS.archive, ...PATHS.inbox, ...PATHS.capture]) pages.push(await open(path, { plane, reachable: true }));
+  for (const path of [...pathsOf(F).held, ...pathsOf(F).archive, ...pathsOf(F).inbox, ...pathsOf(F).capture]) pages.push(await at(path));
   for (const p of pages) {
     for (const r of p.requests) {
       if (FRAME.has(r.op)) continue;

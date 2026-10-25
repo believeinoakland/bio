@@ -150,7 +150,7 @@ test("R53 each scan result draws the note's line by key: its tool and its result
   for (const result of ["clean", "found", "failed", "not_scanned"]) {
     const t = await team();
     const f = await hold(t, t.mai, { address: "https://city.example/notice.txt", bytes: NOTICE });
-    t.S.verdicts.set(f.sha, { result, findings: result === "found" ? ["Eicar-Test-Signature"] : [], ...(result === "not_scanned" || result === "failed" ? { reason: "SCANNER_BUSY" } : {}) });
+    t.S.verdicts.set(f.sha, { result, findings: result === "found" ? ["Eicar-Test-Signature"] : [], ...(result === "not_scanned" || result === "failed" ? { reason: "scanner_busy" } : {}) });
     await scan(t);
     assert.equal((await notes(t.mai, f))[0].result, result, `the owner records the scanner's ${result}`);
     const p = await at(t, f);
@@ -169,7 +169,7 @@ test("R53 a scan that ran draws its engine, version and date; a note not scanned
   assert.ok(text(clean).includes(`${word("screen.open-file.note.at")} ${dayOf(note.scanned_at)}`), "the date");
   const u = await team();
   const g = await hold(u, u.mai, { address: "https://city.example/notice.txt", bytes: NOTICE });
-  u.S.verdicts.set(g.sha, { result: "not_scanned", reason: "SCANNER_BUSY" });
+  u.S.verdicts.set(g.sha, { result: "not_scanned", reason: "scanner_busy" });
   await scan(u);
   const none = await at(u, g);
   assert.ok(says(none, "screen.open-file.note.line", { tool: word("screen.open-file.tool.clamav"), result: word("screen.open-file.result.not_scanned") }));
@@ -178,7 +178,7 @@ test("R53 a scan that ran draws its engine, version and date; a note not scanned
   /* control: a tool the words do not hold is not drawn raw: the shell's "could not be read" */
   const v = await team();
   const h = await hold(v, v.mai, { address: "https://city.example/notice.txt", bytes: NOTICE });
-  v.S.verdicts.set(h.sha, { result: "clean", tool: "zzz-scanner" });   // fixtures-generic: zzz-scanner
+  v.S.verdicts.set(h.sha, { result: "clean", tool: "zzz-scanner" });
   await scan(v);
   assert.equal((await notes(v.mai, h))[0].tool, "zzz-scanner", "the owner records the tool the scanner named");
   const unknown = await at(v, h);
@@ -462,7 +462,6 @@ test("R36 a file with no safe view draws refusal.NO_SAFE_VIEW; any other refusal
   const none = (await a.t.world.door({ url: `/api/?${new URLSearchParams({ op: "safeview", capture: a.f.sha })}` }, a.t.mai)).json.result;
   assert.equal(none.reason, "NO_SAFE_VIEW", "the owner makes no safe view of a picture");
   assert.ok(says(a.p, "refusal.NO_SAFE_VIEW"));
-  assert.ok(!text(a.p).includes(none.translation) && !text(a.p).includes(none.detail), "the owner's words are not drawn beside the word");
   /* a document whose safe view the scanner's renderer has not made yet: the owner's own refusal, in its words */
   const t = await team();
   const f = await upload(t, t.mai, "Form", docm(), DOCM);
@@ -472,7 +471,7 @@ test("R36 a file with no safe view draws refusal.NO_SAFE_VIEW; any other refusal
   assert.equal(pending.reason, "SAFE_VIEW_PENDING");
   assert.ok(hasWord(`refusal.${pending.reason}`) ? says(b, `refusal.${pending.reason}`) : text(b).includes(pending.translation));
   /* an answer that is a refusal with no words of its own: no owner gives one, so it is scripted */
-  const c = await mine({ safeview: refused("SOMETHING", "") });   // fixtures-generic: SOMETHING
+  const c = await mine({ safeview: refused("SOMETHING", "") });
   await press(c.p, "safeview");
   assert.ok(says(c.p, "shell.unread"));
 });

@@ -364,11 +364,8 @@ test("R50 a render RENDER-NOTE-X and an attestation that ATTEST-NOTE-X are said 
   await press(p, "acquire");
   await p.settle();
   assert.ok(text(p).includes("RENDER-NOTE-X") && text(p).includes("ATTEST-NOTE-X"));
-  const other = await captured(t);
-  const q = await open(t, "/app/capture/address", { acquire: ok({ ...other, document: { ...other.document, attestation_attempts: [{ service: "attest", attempted: true, ok: true }] } }) });
-  fill(q, { "ci-address": ADDRESS });
-  await press(q, "acquire");
-  await q.settle();
+  /* control: a capture the owner finished, with no render and no attestation owed, is pressed as it is */
+  const q = await pressed(t, { body: (n) => html("Housing notice", n) });
   assert.ok(!text(q).includes("RENDER-NOTE-X") && !text(q).includes("ATTEST-NOTE-X"));
 });
 
