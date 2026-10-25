@@ -1,6 +1,6 @@
 # screens-settings (T51)
 
-**Status** · session_0113BrTiSXZhcH7hGcpNfDSD · depth 2 · RUNNING until 2026-10-25T19:29:23Z (six workers re-pointing the settings tests to the world) · handled B47
+**Status** · session_0113BrTiSXZhcH7hGcpNfDSD · depth 2 · COMPLETE · handled B47
 
 ## J1 · QUESTION
 
