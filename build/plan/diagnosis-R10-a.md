@@ -159,3 +159,100 @@ None (pure reading). The 1,048,577-row CSV and the 300,000-paragraph DOCX on bio
 #### 5. Owner
 
 **reading-pipeline** (it decides the reading's figures; `csv-reader`/`ooxml` are `uses`, their guard already carries `metric`). Words: sentence stand-ins `reading-pipeline.index.too_large` (a code-origin row, "bytes" fixed in the English) and `.structure_over_bound` are the module's rows; the design's sentence for each unit is UX-DESIGN's (shared with R2a).
+
+---
+
+## R3. A `.doc` (text in a file called `.doc`) is not stated "legacy Word is not read yet"
+
+**Walker:** C4. `x.doc` holding plain text: the page said "This document is less than 1 KB, which is more than your team's Civicsmith can read" and the reading's reason was "the document was not read as text (non-textual or too large), so no reading was attempted". RTF and email (`x.rtf`, `x.eml`) were right.
+
+### 1. Root cause with evidence
+
+Three places, one chain:
+
+1. **The kind is decided by the bytes' signature alone.** `reading-pipeline/index.mjs:2517` `unreadKindOf(b, types)`: legacy Word is returned only inside `if (sig(b, 0, [0xd0,0xcf,0x11,0xe0,0xa1,0xb1,0x1a,0xe1]))` (`:2528-2529`), where the declared type and the name only choose *which* legacy kind. Bytes without the OLE signature never reach it. And the caller (`:2920`) hands it `types = [ct, profile.source_content_type, headers["content-type"]]`: the file's *name* is not among them, so `x.doc` with an empty type, or with `application/msword`, is not named at all.
+2. **The fall-through is the sentence the requirement forbids.** `:3270-3272`: a non-wireable, non-text-read document becomes `failed(..., localize("reading-pipeline.index.document_not_read_text", "the document was not read as text ({why}), so no reading was attempted", {why: ... "non-textual or too large"}), {failure: FAILURE_FINAL})`, with no `reason`. `reading-pipeline` R54: "never ... as 'non-textual or too large'".
+3. **"Read it" then removes the one place that names it.** `extraction/index.mjs:1945` marks a reading `repairable: true` while `notReadAsText(reading) && !#repairTried(sha)`. While it is `repairable`, the page falls back to the record's kind (`document.mjs:298-308`, `recordKind` from the profile, the declared type or the file's extension) and says "Legacy Word is not read yet" (run here with type `application/msword`: yes, first view). The ledger (R89 `migrateRepairs`, `extraction/index.mjs:2526`) reads it once more, gets the same bare statement, and `#repairTried` becomes true: `repairable` goes, `noReader` is empty (`document.mjs:308`: the record's kind is used only when `textState` is `unread` or `repairable`), and the page draws R1's size sentence (run here, both with type `""` and with `application/msword`). The walker saw this second state because the copy had been repaired.
+
+Run here: the same bytes uploaded as `x.doc` with type `application/msword`: first view "Legacy Word is not read yet."; after the repair attempt the size sentence. With type `""`: first view "An earlier attempt did not read this document... Press Read it", then the size sentence.
+
+### 2. Why the tests missed it
+
+`reading-pipeline/r10-refusals.test.mjs:20` tests legacy Word with the **OLE signature bytes** (`pad(u8([0xd0,0xcf,0x11,0xe0,0xa1,0xb1,0x1a,0xe1]))`, declared `application/msword`), a file that is a legacy Word file. The walker's file is not one: it is text with a name. The same test (`:49`) asserts "a plain text that merely mentions RTF or From: is read as text", which holds the opposite policy for content. `screens-inquiry` tests the legacy sentence only for a reading that states `UNSUPPORTED_FORMAT` (R130), and for `repairable` it scripts the flag.
+
+### 3. Failing-first test
+
+**reading-pipeline**, `test/m/reading-pipeline/r10-declared-kind.test.mjs`, in the module's fixtures (`evidenceStore`, `doc`, `read`): bytes `"legacy word text walk ".repeat(7)` with the document declared `application/msword` (case a) and with an empty type and `capture.file_name: "x.doc"` (case b). Asserts: `reading.reason === "UNSUPPORTED_FORMAT"` with `kind: "legacy_word"` (or the statement BOB rules, below), `failure: "final"`, the basis does not match `/non-textual|too large/`, and `reading` is not `repairable` (`notReadAsText` false). Through the real plane (screens-inquiry's `r10-stated.test.mjs` case 4): after `op=readheld` the page says the word held for `reading-pipeline.index.unsupported_legacy_word`, not the size sentence. **Seen red:** yes (both cases, probe).
+
+### 4. Platform check
+
+None (decided by bytes and names). On biosmoke8: C4's `x.doc` after the fix, both before and after the ledger's repair attempt.
+
+### 5. Owner and words
+
+**Owner: reading-pipeline** (the reading must say it; the page already draws `unsupported_<kind>` when the reading says `UNSUPPORTED_FORMAT`, `document.mjs:307`). Words: key `reading-pipeline.index.unsupported_legacy_word` ("Legacy Word is not read yet.") is held (code-origin) and right; no change to the sentence.
+
+**For BOB (requirement silent, and the policy is yours):** R54 says "A kind with no reader is named ("RTF is not read yet", email, legacy Word ...)" and says the kind is "named, by its bytes and the types it is declared as" (code comment `:2514`). It does not say what is true of **a text file whose name or type says Word**. Options: (1) name it by its declaration ("legacy Word is not read yet"), the walker's and the brief's expectation; (2) read it as text because its bytes are text (the policy `:49` already holds for RTF and email *content* that is text); (3) name it by its declaration but say the file did not look like one. **Recommendation: (3)**, because (1) tells a member a text file is a Word file and (2) reads a file the member called Word as prose without saying so. If BOB chooses (1) the test is as written; for (3) the words are UX-DESIGN's.
+
+---
+
+## R4. An archive's own page offers "Read it" and says nothing of its members
+
+**Walker:** C1. The Document page of `c1-3.zip` says "An earlier attempt did not read this document, but your team's Civicsmith can read it now. Press Read it to try again." with a "Read it" button that cannot succeed, and no "archive of 3 members, read separately". D7a and E5: after the ledger tries once, the ZIP page says the size sentence.
+
+### 1. Root cause with evidence
+
+- `extraction/index.mjs:1945`: `repairable: true` when `notReadAsText(reading) && !#repairTried(sha)`. A ZIP's reading is the bare "not read as text" (nothing in `reading-pipeline` names an archive; `unreadKindOf` has no ZIP), so every uploaded archive is `repairable` until the ledger's single attempt.
+- `document.mjs:292-308`: `UNREAD_KINDS` and `KIND_OF_TYPE`/`KIND_OF_EXT` list no `zip`/archive, so `recordKind` is `""`; `:623-626` offers `readheld` ("Read it") for `repairable`. Run here: ZIP of 2 text members uploaded as `application/zip`: page "An earlier attempt did not read this document ... Press Read it" with a Read it button; pressed (`op=readheld`), the page then says R1's size sentence for a 233-byte file.
+- The page already holds what it would need to say what the archive is, without a new read: `heldcaptures` (read at `document.mjs:196`) answers the archive's own row with `archive: {sha256, entries, filed, already_held, not_filed, waiting}` (run here for a ZIP of 2: `{"entries":2,"filed":0,"already_held":0,"not_filed":0,"waiting":2}`, in the `held` and the `held_and_vouched` list). `screens-intake` `held.mjs` (R37) already draws a row whose answer carries `archive` as "{parts}" and the door "Open its files". `document.mjs` has no archive branch.
+- There is no word for it: no row says "archive of N members, read separately" (searched `rows.mjs`); the sentence is the walk brief's. `capture` R110 says "each member ... filed at the archive's grade, read separately, and the archive's list shows each member's state"; no `screens-inquiry` requirement says what the archive's *own* Document page states.
+
+### 2. Why the tests missed it
+
+`screens-inquiry` R130's tests (`SCAN A2-A9 and DOCS R1-R3`) cover kinds a *reader* names. Nothing covers an archive: the page tests script `repairable` by a flag, never from a ZIP. `screens-intake/archive.test.mjs` and `held.test.mjs` test the archive screen and the Held row, not the Document page of the archive's own record.
+
+### 3. Failing-first test
+
+**screens-inquiry**, `r10-stated.test.mjs`: `makeZip` of three text members uploaded through the real `captureupload` (the walker's C1 recipe `m1.txt` to `m3.txt`), promoted with the screen's `promoteDocument`, the page booted over the real door. Asserts: no `readheld` act is drawn (`actsIn(main)` has no `readheld`), no `screen.document.reading.repairable` sentence; the page names the archive and its member count from `heldcaptures`' `archive.entries` (by a new key, `hasWord`-guarded until the row lands), and offers the archive screen (`archive` reference with the archive's sha, as `held.mjs` does). Second step: after the ledger's attempt (`op=readheld`), the page still says the same and not the size sentence (R1's assertion). **Seen red:** yes (the page offers "Read it", then the size sentence).
+
+### 4. Platform check
+
+None: the row's `archive` is the plane's. On biosmoke8: the walker's `c1-3.zip` and `c1-30.zip` Document pages, before and after the ledger's attempt.
+
+### 5. Owner and words
+
+**Owner: screens-inquiry** (it already reads the held row; the page must not offer a read that cannot succeed and must say what the file is). `extraction`'s `repairable` for an archive is a symptom the page need not wait for: with `row.archive` present, the page ignores it. **Words:** no key exists; the defect is the design's (UX-DESIGN supplies the archive sentence with `{n}`); the module's part is to stop choosing `reading.repairable` and `reading.stated` for an archive. **For BOB (requirement silent):** add to `screens-inquiry` a requirement that an archive's own Document page states that it is an archive with its member count, points to its members, and offers no read.
+
+---
+
+## R5. The Add screen says "Unread ... Check again soon" after a final statement
+
+**Walker:** A6b (a 70,000-px PNG), A7 (PNG, BMP), C9 (the 110 MB text, parted). The Add screen, after the reading had ended `final` (once, or at once), kept saying "Until a copy is read, its words can't be found or cited. Check again soon; if it stays unread, ask a team administrator." and, for the 110 MB file, "Captured" and "Unread: this copy has not been read yet" together.
+
+### 1. Root cause with evidence
+
+`screens-intake/capture.mjs`:
+
+- `:254-258` `pendingLine`: `(asked && jobLine(asked)) || <the pending sentence>`. `asked` is `U["job:" + sha]`, the answer to `op=reading` that `watchReading` keeps.
+- `:263-266` `jobLine` -> `jobStateOf` (`:1251`) returns null unless the answer's `state` is one of `queued`, `fetching`, `reading`, `partial`, `refused`, `finished`, `final`. The real `op=reading` for a reading that has ended `final` carries **no `state`** (the job row is gone; `owedwork` no longer lists it): run here, `op=reading` answered `{found:true, reading.failure:"final", completeness.state:"stated"}`, `state` undefined. `jobLine` returns `""`, and `pendingLine` falls back to the pending sentence.
+- `:831-843` `watchReading` asks again only while `state` is queued/fetching/reading, or `state === ""` and `n < 3`: four asks (about 60 s), then it stops. The answers are kept, never drawn.
+- The comment on `watchReading` says "an answer that states no state ... the line stays the stored reading's". The code does not do that: the line stays the **pending** sentence, not the stored reading's.
+- For C9 (the parted upload) the same function is reached by another door: `captureuploadcomplete` (`capture/index.mjs:1282`, completes the parts) answers the provenance document with no `reading` and no `reading_pending`; `doneUpload` (`:1174-1182`) then sets `follows` false (`reading_pending` absent), `readingOf` gives `{present:false}`, and `readLine` (`:307-312`) draws `screen.document.text.unread` + `.unread.next` ("Unread ... Check again soon") with no `watchReading` at all, though the plane has already stated the reading (`final TOO_LARGE`). I did not reproduce this one in-process (the harness's `File` of 70 MB did not start the parted upload); it is read from the code and matches the walker's C9 record.
+
+Reproduced here (the deferred shape): the real plane, the Add screen booted, an A7 PNG pressed through `captureupload`. The plane answered the small PNG with its reading inline in this run, whereas the live copy deferred it (`reading_pending`, the OCR member "not asked inside this request"). So the answer was reshaped by **one hand edit**: the `reading`, `text_units` fields removed and `reading_pending: true` set on the real `captureupload` answer (the plane's own deferred shape, `extraction/ops.mjs:125`). The page's own asks were real: `op=reading` answered `found:true`, `failure:"final"`, `completeness.state:"stated"` four times, and the line stayed "Until a copy is read, its words can't be found or cited. Check again soon..." at 6, 12, 18, 24, 30, 36, 42 and 48 seconds of the page clock.
+
+### 2. Why the tests missed it
+
+`screens-intake/r9-states.test.mjs:192-203` is a control test that **asserts the wrong line**: "R65 control: a digest with no row ... draws no state, and the stored reading's line is as before". It scripts the answer `row({state: null})` = `{ok:true, found:true, capture_sha}` with **no reading in it**, and asserts `screen.document.text.unread.next`. The real plane's answer for a digest with no row carries the stored reading. The states 143-180 script a `state` in every answer. `t51-pending.test.mjs` scripts the upload answer the same way. No test follows an upload from `captureupload` to a reading that ends `final` through the real plane.
+
+### 3. Failing-first test
+
+**screens-intake**, `test/m/screens-intake/r10-pending.test.mjs`, the real plane in Miniflare (as `screens-inquiry/fr6-seam.test.mjs`), the Add file tab booted over the real door (`boot` with the intake screens), the file `generate({kind:"png", seed:"rw9-A-7", size:{lines:3}})` picked in `ci-file` and `captureupload` pressed (the walker's A7 case); the OCR member real. Steps: edit the real answer to the plane's deferred shape (as above, named in the test), tick the page clock (`p.clock.tick(21000)`) until `op=reading` has been asked and answered final. Asserts: the line is the reading's stated sentence (`data-reading="refused"`/`"failed"`, from `readDrawn`) and `screen.document.text.unread.next` is not drawn. Second test (C9): a file over the parts threshold; asserts the same once the plane has stated it. **Seen red:** yes for the first (the line stayed pending at all 8 observations); the second is not run.
+
+### 4. Platform check
+
+Why live defers a small PNG and Miniflare does not is **not established** here: it is the plane's `deferReading`/OCR-budget decision at workerd (`extraction/ops.mjs:125`, `capture/ops.mjs:243-310`). The check at the real shape: one PNG upload on biosmoke8 through the Add screen with the answer's `reading_pending` read from the response; after the fix the line must change to the stated reading within one poll, and C9's 110 MB text must show the statement with "Captured" and never "Unread".
+
+### 5. Owner and words
+
+**Owner: screens-intake** (`capture.mjs`: `pendingLine`/`jobStateOf`/`watchReading`/`readLine`; the plane's answer is right). The rule: an answer to `op=reading` that holds a stored reading and states no job state draws the stored reading's line (`readDrawn(readingOf(ans))`); `readLine` for a parted upload asks `op=reading` once the promotion answers. Words: the key drawn, `screen.document.text.unread.next`, is the **module's choice** (a stand-in for a not-yet-held row, K4269); its sentence ("Check again soon") is right while a reading follows and wrong after it ended, so the fix is the key chosen, not the sentence. **For BOB:** `screens-intake` R65 says "a reading with no row draws the state of its stored reading as before"; "as before" is what the code and its control test took to mean the *pending* line. Rewrite it: "draws the stored reading's own line".
