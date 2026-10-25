@@ -1180,3 +1180,33 @@ Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 35, module lines 371
 ## J68 · COMPLETE
 
 COMPLETE (PLANE #63; B102). r10-lag-figure.test.mjs :95-97 asserts above 256 and at most 1,000 for the pass that wrote a tick's units and for the row's end figure (seen 290 and 612); both tests green alone; plane's whole directory green; ownership 0, coverage 37/37. Nothing open in plane. Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 35, module lines 371
+
+## Record (PLANE #64, fix round 10; B103, on the tranche merged at 315ca3677b)
+
+**Start:** `job/T51/plane` was behind origin by 1,301 commits and holds no work of its own: the stale local tip is kept as `stale/plane-local`, the job branch set to `origin/job/T51/plane`, `tranche/T51` merged into it (merge commit). `mail start` at depth 2; inbox read through B103 (B99 RESUME, B100 to B102 CHANGE: already answered by J66 to J68 of PLANE #63, nothing new).
+
+**Entries applied**
+- B103: `bio-plane/test/m/plane/r10-reading-ended.test.mjs` no longer hand-builds extraction's `readHeld` answers. The two answers are extraction's published fixture: `readHeldAnswer.read()` (read to its end: `finished`) and `readHeldAnswer.final()` (the reader refuses the cursor: `final`, `CURSOR_MISMATCH`), both made by its real code (`bio-plane/test/m/extraction/fixtures.mjs:93`). The override is a harness that routes the job table's asks by digest to those answers; it carries `// fixtures-own: harness` (the same form as `watchdog.test.mjs:127`).
+- Consequence in the assertions: the two final rows (`final`, and `unopened` with member null) now state `CURSOR_MISMATCH` as the reader's reason, in place of the stand-in's `PASSWORD_REQUIRED` and `NO_PROGRESS`. The assertions' meaning is unchanged: a final row's why is the reader's reason; a row no member opened names no one.
+- The `fixtures-run: notice-producers reading-ended` marker is unchanged (B101).
+
+**Published states not available (REPORT to BOB, for extraction):**
+- A final answer with `why: "NO_PROGRESS"` is not published. `NO_PROGRESS` is the job table's own stop when a tick progresses nothing (`pending.mjs:446`), so the test now takes the published `CURSOR_MISMATCH` final for the unopened row. If the seam should rest on a reader answer that carries NO_PROGRESS, extraction would publish it.
+- `readHeldAnswer` is keyed on no digest, so the job table's registrations take the digest-routed harness above; a published answer keyed by a registered digest would remove the harness.
+
+**Tests and checks**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/plane/r10-reading-ended.test.mjs`: 0 pass, 1 fail, before the change and after it: the store fails at import with `DECLARED_OP_DISAGREES: readtranslate description` (op-grades' stale hand row, not this module). Not run green yet; to run after OP-GRADES #30 merges (its CHANGE).
+- Failing-first: the test cannot reach the job table until that import passes, so the red is the import error; the green run is owed after the CHANGE.
+- `checks/fixtures.mjs /home/user/bio plane --list`: 0 failures (the first draft flagged the readHeld stand-in as `fail` at line 23; the `fixtures-own: harness` marker clears it; stub 0).
+- format 0 failures; architecture 0 failures; coverage 37 of 37; ownership (tranche/T51 → HEAD) 0 failures.
+- Not run: `build/plan/impact.mjs` and `checks/run.mjs` (the change is test-only and touches no service; both need the store to import, so they wait with the module tests).
+
+**Deferred:** none.
+
+**Found in other modules (REPORT)**
+- op-grades: `DECLARED_OP_DISAGREES: readtranslate description` (its hand row) makes every store in bio-plane fail at import on `tranche/T51` at 315ca3677b. Blocks every plane test run until OP-GRADES #30 merges.
+- extraction: the `NO_PROGRESS` final answer is not published (see above).
+
+**Deferred:** none in plane.
+
+Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 1, module lines 371

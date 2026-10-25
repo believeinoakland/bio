@@ -10,14 +10,18 @@ import { store } from "./fixture.mjs";
 import { pendingOf } from "../../../src/store-assembly/pending.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
 import { bucketStandIn } from "../case-carriage/fixture.mjs";
+import { readHeldAnswer } from "../extraction/fixtures.mjs";
 
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const KEYS = ["sha", "kind", "state", "why", "written", "skipped", "owed", "failed", "ended_at", "member"];
 
 async function ended() {
   const x = await store({ env: { CAPTURES: bucketStandIn() } });
-  const answers = { finished: { ok: true, read: true }, final: { final: true, why: "PASSWORD_REQUIRED" }, unopened: { final: true, why: "NO_PROGRESS" } };
-  extractionOf(x.ctx).readHeld = async (a) => (a.sha === sha("finished") ? answers.finished : a.sha === sha("final") ? answers.final : answers.unopened);
+  /* the reader's answers are extraction's published fixture (`readHeldAnswer`, made by its real `readHeld`): a read to its end, and a read in pieces the reader
+     refuses to go on with (`final`, CURSOR_MISMATCH). Both final rows, the one a member opened and the one none did, take the published final answer. */
+  const answers = { finished: await readHeldAnswer.read(), final: await readHeldAnswer.final() };
+  // fixtures-own: harness a router of the reader's asks by digest, answering extraction's published answers (`readHeldAnswer`): which digest is read to its end and which is refused the cursor is the test's own registration, the answers are the owner's
+  extractionOf(x.ctx).readHeld = async (a) => (a.sha === sha("finished") ? answers.finished : answers.final);
   const jobs = pendingOf(x.ctx);
   jobs.registerJob({ kind: "reading", sha: sha("refused"), member: "member:m1", verdict: { ok: false, bound_key: "pdf.bytes" } });
   jobs.registerJob({ kind: "reading", sha: sha("finished"), member: "member:m1" });
@@ -43,8 +47,8 @@ test("R1 (notice-producers R29, the reading-ended seam): the real job table answ
   const by = (name) => all.rows.find((r) => r.sha === sha(name));
   assert.deepEqual([by("refused").state, by("refused").why, by("refused").member], ["refused", "pdf.bytes", "member:m1"], "a refusal's why is its bound key");
   assert.deepEqual([by("finished").state, by("finished").why, by("finished").member], ["finished", null, "member:m1"]);
-  assert.deepEqual([by("final").state, by("final").why, by("final").member], ["final", "PASSWORD_REQUIRED", "member:m2"], "a final row's why is the reader's reason");
-  assert.deepEqual([by("unopened").state, by("unopened").why, by("unopened").member], ["final", "NO_PROGRESS", null], "a row no member opened names no one");
+  assert.deepEqual([by("final").state, by("final").why, by("final").member], ["final", "CURSOR_MISMATCH", "member:m2"], "a final row's why is the reader's reason");
+  assert.deepEqual([by("unopened").state, by("unopened").why, by("unopened").member], ["final", "CURSOR_MISMATCH", null], "a row no member opened names no one");
   assert.deepEqual(all.rows.map((r) => r.ended_at), [...all.rows.map((r) => r.ended_at)].sort((a, b) => a - b), "in the table's order: by when it ended");
 });
 
