@@ -418,3 +418,29 @@ COMPLETE for fix round 10 · review (BOB's B22, K5175: every bug found is fixed 
 **Deferred:** nothing.
 
 Size (session_01NYhxjj1BEgs71XesoJ5bcq): test runs 7, module lines 4932
+
+## J18 · COMPLETE
+
+COMPLETE for fix round 10 (B22, K5207; K5175: every bug found is fixed this round) · review. Branch job/T51/review @ 107f530dc8, pushed. `tranche/T51` merged in, not rebased. Record: build/jobs/T51/review.md, section "Completion record (fix round 10, K5207; START B22)".
+
+**Entries applied**
+- Published in bio-plane/test/m/review/fixtures.mjs (new), each made by the real ops over a world built per call, never stored: casedraft() (line 35, a draft over a concluded question), reviewcopy() (line 40, that copy as a member with the publish gates refused: gates "refused", one missing), reviewrevoke() (line 50, grant revoked by its maker), reviewcomment() (line 58, an outside reader's comment through a live grant at the reader's door).
+- Test bio-plane/test/m/review/fixtures-answers.test.mjs (new, 4 tests): each export's real shape and values.
+- No product change: the real ops make each state, so nothing is REPORTed as unreachable.
+
+**Failing-first:** broke reviewcopy()'s gate to { ok: true }: the reviewcopy test went red at its gates assertion; restored; green.
+
+**Markers:** none added (no fixtures-own, no fixtures-generic).
+
+**Tests and checks**
+- review suite: tests 106, pass 106, fail 0.
+- checks/fixtures.mjs review --list: 0 failures.
+- checks/ownership.mjs review (merge-base..HEAD): 0 failures.
+- checks/run.mjs: no finding in review's files. Its op-table findings naming review (screens-inquiry t51-dashproject.test.mjs:99,100,181; screens-publish drafts:85, fix2:233, fr30:12, fr30:224, style:57) are other modules' hand-built answers that these fixtures are for; reported for you to route. Words total unchanged.
+- impact HEAD~1..HEAD: 1 of 178 modules (review only).
+
+**Found outside my paths:** none new. The consumers above are yours to route to screens-inquiry and screens-publish.
+
+**Deferred:** nothing.
+
+Size (session_01NYhxjj1BEgs71XesoJ5bcq): test runs 7, module lines 4932
