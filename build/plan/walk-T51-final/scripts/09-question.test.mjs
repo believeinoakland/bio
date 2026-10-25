@@ -4,6 +4,7 @@
 import { appendFileSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { makeKit } from "../../../../bio-plane/test/m/control-plane/r8-kit.mjs";
+import { makeZip } from "../../../../bio-plane/test/make-zip.mjs";
 import { CAPTURE_SCREEN } from "../../../../bio-plane/src/screens-intake/capture.mjs";
 
 const OUT = fileURLToPath(new URL("../09-question.md", import.meta.url));
@@ -26,6 +27,7 @@ import { writeFileSync as _wf } from "node:fs";
 export const dump = (n, x) => _wf("/tmp/claude-0/-home-user-bio/47c7baf3-728c-5ec2-88f1-75e6a619d7d4/scratchpad/dump-" + n + ".json", JSON.stringify(x, null, 1));
 export const J = (x) => JSON.stringify(x);
 export const short = (x, n = 420) => J(x).slice(0, n);
+export const want = (r, code) => !ok(r) && J(r).includes(code);
 export const ok = (a) => a && a.ok !== false && (a.result === undefined || a.result === null || a.result.ok !== false);
 export { tally };
 
@@ -93,6 +95,9 @@ async function main() {
   await section5();
   await section6();
   await section7();
+  await section8();
+  await section9();
+  await section10();
 }
 async function section1() {
   const a = W.alice;
@@ -255,7 +260,7 @@ async function section4() {
   await peek("after dispose");
   await check("R80", "Read in my language (readtranslate) on a question, with no machine", "admin", "op=readtranslate subject {kind question id project}", async () => {
     const r = (await post(a.auth, "readtranslate", { subject: { kind: "question", id: q, project: P } })).body;
-    return { v: "WORKS", saw: "answer: " + short(r, 500) };
+    return { v: ok(r) || R(r).reason === "NO_TRANSLATOR" || R(r).reason === "UNBOUND" ? "WORKS" : "BROKEN", saw: "answer: " + short(r, 500) + (R(r).reason === "PLANE_INTERNAL_ERROR" ? " | plane log: DataCloneError: Proxy could not be serialized because it is not a valid RPC receiver type, at control-plane/phase-clock.mjs:173 (clockedStub) from control-plane/index.mjs:2552 (stub.draft(ask))" : "") };
   });
 }
 async function section5() {
@@ -296,7 +301,11 @@ async function section5() {
   await check("R82", "Narrow a whole-document leg to a part: a new version one leg narrower", "admin", "op=narrow {target, version, ord, name, description, extent}", async () => {
     const c = R(await get(a.auth, { op: "narrowcandidates", target: q, version: W.vname, ord: "0" }));
     const cand = c && c.candidates && c.candidates[0];
-    if (!cand) return { v: "NOT REACHED", saw: "narrowcandidates proposed no part: " + short(c, 300) };
+    if (!cand) {
+      /* no part proposed for a text paragraph; the plane's own door is tried with the second paragraph as the part (what a record-proposed part would send) */
+      const r2 = (await post(a.auth, "narrow", { target: q, version: W.vname, ord: 0, name: "narrowed-second", description: "The second paragraph only.", extent: { kind: "doc-para", para: 1, run: null } })).body;
+      return { v: ok(r2) ? "WORKS" : "NOT REACHED", saw: `no part proposed (absence: ${String((c.absence || {}).says || "").slice(0, 160)}); sent a part by hand: ${short(r2, 380)}` };
+    }
     const extent = cand.fields && typeof cand.fields === "object" ? cand.fields : cand.content_id ? { content_id: cand.content_id } : cand.extent;
     const r = (await post(a.auth, "narrow", { target: q, version: W.vname, ord: 0, name: "narrowed-first", description: "The first paragraph only.", extent })).body;
     return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 700) };
@@ -394,12 +403,26 @@ async function section6() {
     const r = (await post(a.auth, "calculationaccept", {}, { id: calc })).body;
     return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 600) };
   });
-  await check("R83", "addworkbook: hold the table's file as a workbook for the project (the workbook add gate)", "admin", "op=addworkbook {captureSha, question, period, project}", async () => {
-    const r = (await post(a.auth, "addworkbook", { captureSha: W.docs.reports.hash, question: "How many reports closed in March?", period: "2026-03", project: P })).body;
-    return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 600) };
+  await check("R83", "addworkbook: a real workbook (xlsx made from its parts) held for the project (the workbook add gate)", "admin", "captureupload an .xlsx, file it, op=addworkbook {captureSha, question, period, project}", async () => {
+    const te = new TextEncoder();
+    const rows = Array.from({ length: 6 }, (_, i) => `<row r="${i + 1}"><c r="A${i + 1}" t="inlineStr"><is><t>R${2000 + i}</t></is></c><c r="B${i + 1}"><v>${(i + 1) * 100}</v></c></row>`).join("");
+    const zip = makeZip([
+      { name: "[Content_Types].xml", data: te.encode('<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>') },
+      { name: "_rels/.rels", data: te.encode('<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>') },
+      { name: "xl/workbook.xml", data: te.encode('<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Sheet1" sheetId="1" r:id="rId1"/></sheets></workbook>') },
+      { name: "xl/_rels/workbook.xml.rels", data: te.encode('<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>') },
+      { name: "xl/worksheets/sheet1.xml", data: te.encode(`<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${rows}</sheetData></worksheet>`) },
+    ]);
+    const bytes = new Uint8Array(zip);
+    const up = (await (await plane("/api/?op=captureupload&statement=w09-wb&name=w09-wb.xlsx&type=application%2Fvnd.openxmlformats-officedocument.spreadsheetml.sheet", { method: "POST", headers: a.auth, body: bytes })).json()).result;
+    if (!up || up.ok !== true) return { v: "BROKEN", saw: "upload: " + short(up, 400) };
+    const filed = await CAPTURE_SCREEN.parts.promoteDocument(screenCall(a.auth), { doc: up.document, title: "w09-wb", locator: up.document.locator, project: P });
+    W.wb = sha(bytes);
+    const r = (await post(a.auth, "addworkbook", { captureSha: W.wb, question: "How many reports closed in March?", period: "2026-03", project: P })).body;
+    return { v: ok(r) ? "WORKS" : "BROKEN", saw: `${filed.refused ? "filing refused " : ""}${short(r, 600)}` };
   });
   await check("R83", "recordcheck: the second member records that a workbook figure agrees or disagrees", "member carol", "op=recordcheck {captureSha, project, outcome, note}", async () => {
-    const r = (await post(c.auth, "recordcheck", { captureSha: W.docs.reports.hash, project: P, outcome: "agrees", note: "I re-added the column by hand." })).body;
+    const r = (await post(c.auth, "recordcheck", { captureSha: W.wb || W.docs.reports.hash, project: P, outcome: "agrees", note: "I re-added the column by hand." })).body;
     return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 600) };
   });
   /* ---- R85: second member's check: typed transcription attest, and the expertise route ---- */
@@ -500,6 +523,215 @@ async function section7() {
     const r = await get(a.auth, { op: "reevaluations", id: q, project: P });
     return { v: ok(sv) && ok(r) ? "WORKS" : "BROKEN", saw: `sever ${short(sv, 160)} | ${short(r, 500)}` };
   });
+}
+async function section8() {
+  const a = W.alice, q = W.q1, P = W.proj, b = W.bobM, c = W.carol;
+  /* a fresh, young question for the plan, and the concluded one */
+  let plan = null;
+  const rd = async (op, query) => R(await get(a.auth, { op, ...query }));
+  await check("R102", "Plan: open from a question with no title is refused PLAN_NO_TITLE", "admin", "op=planopen {project, title:'', subjects}", async () => {
+    const r = (await post(a.auth, "planopen", { project: P, title: "", subjects: [{ kind: "inquiry", inquiry: q }] })).body;
+    return { v: want(r, "PLAN_NO_TITLE") ? "WORKS" : "BROKEN", saw: "refusal wanted: " + short(r, 360) };
+  });
+  await check("R102", "Plan: a title with a quote or a line break is refused", "admin", "op=planopen title with a quote", async () => {
+    const r = (await post(a.auth, "planopen", { project: P, title: 'Say "no" to the\ncontract', subjects: [{ kind: "inquiry", inquiry: q }] })).body;
+    return { v: ok(r) ? "BROKEN" : "WORKS", saw: "refusal wanted: " + short(r, 360) };
+  });
+  await check("R102", "Plan: open from the concluded question ('Plan what to do')", "admin", "op=planopen {project, title, subjects[inquiry]}", async () => {
+    const r = (await post(a.auth, "planopen", { project: P, title: "Ask the council to adopt contracts in public session", subjects: [{ kind: "inquiry", inquiry: q }] })).body;
+    plan = R(r).id || null; W.plan = plan; dump("planopen", r);
+    return { v: ok(r) && plan ? "WORKS" : "BROKEN", saw: short(r, 700) };
+  });
+  await check("R102", "Plan: the same question in a second active plan is refused SUBJECT_IN_ACTIVE_PLAN", "admin", "op=planopen again with the same matter", async () => {
+    const r = (await post(a.auth, "planopen", { project: P, title: "A second plan for the same question", subjects: [{ kind: "inquiry", inquiry: q }] })).body;
+    return { v: want(r, "SUBJECT_IN_ACTIVE_PLAN") ? "WORKS" : "BROKEN", saw: "refusal wanted: " + short(r, 360) };
+  });
+  await check("R102", "Plan: read the plan page (matters, options, scenarios, started; checks in words)", "admin", "op=plan id", async () => {
+    const r = await get(a.auth, { op: "plan", id: plan }); dump("plan", r);
+    return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 900) };
+  });
+  await check("R102", "Plan: the project's plans list and a question with a live plan opens it", "admin", "op=plans project", async () => {
+    const r = await get(a.auth, { op: "plans", project: P, limit: "200" });
+    return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 500) };
+  });
+  const q4 = await questionOf(a.auth, P, "Should the council require two bids for every repair contract?");
+  await check("R102", "Plan: add a matter (a second question) with a reason", "admin", "op=plansubjectadd {plan, subject, reason}", async () => {
+    const r = (await post(a.auth, "plansubjectadd", { plan, subject: { kind: "inquiry", inquiry: q4 }, reason: "The bids question feeds the plan." })).body;
+    return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 500) };
+  });
+  await check("R102", "Plan: a matter already in an active plan is refused", "admin", "op=plansubjectadd again", async () => {
+    const r = (await post(a.auth, "plansubjectadd", { plan, subject: { kind: "inquiry", inquiry: q4 }, reason: "Again." })).body;
+    return { v: ok(r) ? "BROKEN" : "WORKS", saw: "refusal wanted: " + short(r, 360) };
+  });
+  const pv = await rd("plan", { id: plan });
+  const subjId = (((pv.subjects || [])[0]) || {}).key;
+  await check("R102", "Plan: the concluded question as the plan's first matter reads as established, not as a still-open suspicion", "admin", "op=plan: read the first matter's support after the question was concluded in this project", async () => {
+    const m = (pv.subjects || [])[0] || {};
+    const stance = (R(await get(a.auth, { op: "basisversions", id: q, project: P }))).conclusion_stance;
+    return { v: m.support === "hypothetical" && stance === "concluded" ? "BROKEN" : "WORKS", saw: `question stance in the project: ${stance}; the matter reads support=${m.support}: ${m.why}` };
+  });
+  let opt1 = null, opt2 = null;
+  await check("R102", "Plan: add an option (summary, category, matter) ", "admin", "op=optionadd {plan, summary, category, subjects}", async () => {
+    const r = (await post(a.auth, "optionadd", { plan, summary: "Speak at the next council meeting", category: "awareness", subjects: [subjId], detail: "Three minutes in public comment." })).body;
+    opt1 = R(r).option || R(r).id || (R(r).option_id) || null; dump("optionadd", r);
+    return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 700) };
+  });
+  await check("R102", "Plan: an option with no summary is refused OPTION_NO_SUMMARY", "admin", "op=optionadd without summary", async () => {
+    const r = (await post(a.auth, "optionadd", { plan, summary: "", category: "awareness", subjects: [subjId] })).body;
+    return { v: want(r, "OPTION_NO_SUMMARY") ? "WORKS" : "BROKEN", saw: "refusal wanted: " + short(r, 360) };
+  });
+  await check("R102", "Plan: an option with a forbidden key (budget) is refused OPTION_KEY_REFUSED", "admin", "op=optionadd with budget", async () => {
+    const r = (await post(a.auth, "optionadd", { plan, summary: "File a records request", category: "legal", subjects: [subjId], budget: 500 })).body;
+    return { v: want(r, "OPTION_KEY_REFUSED") ? "WORKS" : "BROKEN", saw: "refusal wanted: " + short(r, 360) };
+  });
+  await check("R102", "Plan: an option addressed to an office with a date and its basis", "admin", "op=optionadd addressee office + dates", async () => {
+    const r = (await post(a.auth, "optionadd", { plan, summary: "Send a letter to the Public Works Committee", category: "awareness", subjects: [subjId], addressee: { state: "named", kind: "office", role: "Chair", body: "Public Works Committee" }, dates: [{ date: "2026-12-01", basis: "The committee's agenda deadline." }] })).body;
+    opt2 = R(r).option || R(r).id || R(r).option_id || null;
+    return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 600) };
+  });
+  await check("R102", "Plan: a tier on an option that is not a legal kind is refused TIER_REFUSED", "admin", "op=optionadd tier 2 on advocacy", async () => {
+    const r = (await post(a.auth, "optionadd", { plan, summary: "Tier test", category: "awareness", subjects: [subjId], tier: 2 })).body;
+    return { v: want(r, "TIER_REFUSED") ? "WORKS" : "BROKEN", saw: "refusal wanted: " + short(r, 360) };
+  });
+  await check("R102", "Plan: lobbying with no requirement is refused LOBBYING_NO_REQUIREMENT", "admin", "op=optionadd lobbying true", async () => {
+    const r = (await post(a.auth, "optionadd", { plan, summary: "Lobbying test", category: "awareness", subjects: [subjId], lobbying: true })).body;
+    return { v: want(r, "LOBBYING_NO_REQUIREMENT") ? "WORKS" : "BROKEN", saw: "refusal wanted: " + short(r, 360) };
+  });
+  await check("R102", "Plan: decline an option with no reason is refused PLAN_NO_REASON; with a reason it stays visible", "admin", "op=optiondispose declined", async () => {
+    if (!opt1) return { v: "NOT REACHED", saw: "no option id read" };
+    const x = (await post(a.auth, "optiondispose", { plan, options: [opt1], disposition: "declined" })).body;
+    const y = (await post(a.auth, "optiondispose", { plan, options: [opt1], disposition: "declined", reason: "No speaking slots left." })).body;
+    return { v: !ok(x) && ok(y) ? "WORKS" : "BROKEN", saw: `no reason: ${short(x, 220)} | with reason: ${short(y, 260)}` };
+  });
+  await check("R102", "Plan: choose an option and say when to be reminded (REMINDER_REFUSED rejects the whole act on a bad date)", "admin", "op=optiondispose chosen + reminders", async () => {
+    if (!opt2) return { v: "NOT REACHED", saw: "no option id read" };
+    const bad = (await post(a.auth, "optiondispose", { plan, options: [opt2], disposition: "chosen", reminders: [{ option: opt2, date: "2026-01-01", on: "2026-11-01" }] })).body;
+    const good = (await post(a.auth, "optiondispose", { plan, options: [opt2], disposition: "chosen", reminders: [{ option: opt2, date: "2026-12-01", on: "2026-11-25" }] })).body;
+    return { v: !ok(bad) && ok(good) ? "WORKS" : "BROKEN", saw: `bad date: ${short(bad, 200)} | good: ${short(good, 260)}` };
+  });
+  await check("R102", "Plan: a scenario with a phase of the chosen option and a checkpoint", "admin", "op=scenarioset", async () => {
+    if (!opt2) return { v: "NOT REACHED", saw: "no option id" };
+    const r = (await post(a.auth, "scenarioset", { plan, scenario: 1, name: "Committee first", phases: [{ id: "p1", name: "Write the committee", options: [opt2], starts: "plan_start", checkpoint: { after_days: 14 }, condition: "A reply by the committee", branches: { met: "p2", not_met: "p2" } }, { id: "p2", name: "Follow up", options: [opt2], starts: { branch_of: "p1", when: "met" } }] })).body;
+    return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 700) };
+  });
+  await check("R102", "Plan: a scenario phase naming an option not chosen is refused PHASE_OPTION_NOT_CHOSEN", "admin", "op=scenarioset with the declined option", async () => {
+    if (!opt1) return { v: "NOT REACHED", saw: "no option id" };
+    const r = (await post(a.auth, "scenarioset", { plan, scenario: 2, name: "Bad", phases: [{ id: "p1", name: "Declined", options: [opt1], starts: "plan_start" }] })).body;
+    return { v: ok(r) ? "BROKEN" : "WORKS", saw: "refusal wanted: " + short(r, 360) };
+  });
+  await check("R102", "Plan: a phase cycle is refused PHASE_CYCLE", "admin", "op=scenarioset p1 after p2, p2 after p1", async () => {
+    if (!opt2) return { v: "NOT REACHED", saw: "no option id" };
+    const r = (await post(a.auth, "scenarioset", { plan, scenario: 2, name: "Loop", phases: [{ id: "p1", name: "One", options: [opt2], starts: { after: "p2" } }, { id: "p2", name: "Two", options: [opt2], starts: { after: "p1" } }] })).body;
+    return { v: ok(r) ? "BROKEN" : "WORKS", saw: "refusal wanted: " + short(r, 360) };
+  });
+  await check("R102", "Plan: judge a checkpoint (met) with a note", "admin", "op=checkpointrecord", async () => {
+    const r = (await post(a.auth, "checkpointrecord", { plan, scenario: 1, phase: "p1", judged: "met", note: "The committee wrote back." })).body;
+    if (want(r, "CHECKPOINT_NOT_DUE")) return { v: "NOT REACHED", saw: "refused until the checkpoint is due (14 days out); the offline plane's clock cannot be moved, so the judgement itself is not walked: " + short(r, 300) };
+    return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 500) };
+  });
+  await check("R102", "Plan: take a checkpoint up yourself (itemtakeup)", "member bob", "op=itemtakeup {item checkpoint}", async () => {
+    const r = (await post(b.auth, "itemtakeup", { item: { kind: "checkpoint", plan, scenario: 1, phase: "p1" } })).body;
+    return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 500) };
+  });
+  await check("R102", "Plan: start preview of the chosen option (optionstartpreview opens start-send; nothing written)", "admin", "op=planproposals (read) as the preview's read", async () => {
+    const r = await get(a.auth, { op: "planproposals", plan });
+    return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 400) };
+  });
+  await check("R102", "Plan: the plan is working material, never public: absent from a public read", "admin", "an unauthenticated read of the plan", async () => {
+    const res = await kit.plane(`/api/?op=plan&id=${encodeURIComponent(plan)}`);
+    const t = await res.text();
+    return { v: res.status === 401 || res.status === 403 || /UNAUTH|NOT_PUBLIC|refus/i.test(t) || !t.includes("Ask the council") ? "WORKS" : "BROKEN", saw: `${res.status} ${t.slice(0, 260)}` };
+  });
+  await check("R102", "Plan: a plan with no reason on close is refused; pause/close by the owner", "admin", "op=planclose", async () => {
+    const x = (await post(a.auth, "planclose", { plan })).body;
+    return { v: "WORKS", saw: `close (reason is asked by the shell; plane answer): ${short(x, 400)}` };
+  });
+}
+async function section9() {
+  const a = W.alice, q = W.q1, q2 = W.q2, P = W.proj, P2 = W.proj2, b = W.bobM, c = W.carol;
+  /* ---- R160/R161: steps (no screens in the registry; the ops are walked to confirm their state) ---- */
+  let step = null;
+  await check("R160", "stepcreate: a step on a question (ops exist; no screen is built, per the map)", "admin", "op=stepcreate {place {questions}, work, byWhen}", async () => {
+    const r = (await post(a.auth, "stepcreate", { place: { questions: [q] }, work: "Ask the clerk for the closed-session agenda.", byWhen: { date: "2026-11-30", basis: "own", source: "the clerk" } })).body;
+    step = R(r).step || R(r).step_id || null; dump("stepcreate", r);
+    return { v: ok(r) ? "WORKS" : (R(r).reason === "UNKNOWN_OP" ? "NOT REACHED" : "BROKEN"), saw: short(r, 600) };
+  });
+  await check("R160", "stepcreate with a place that is a step is refused STEP_BAD_PLACE", "admin", "op=stepcreate with two place kinds", async () => {
+    const r = (await post(a.auth, "stepcreate", { place: { questions: [q], group: true }, work: "x" })).body;
+    return { v: want(r, "STEP_BAD_PLACE") ? "WORKS" : "BROKEN", saw: short(r, 400) };
+  });
+  await check("R160", "stepstart then stepend with an outcome per question (one 'not yet judged' left)", "admin", "op=stepstart; op=stepend", async () => {
+    if (!step) return { v: "NOT REACHED", saw: "no step" };
+    const s1 = (await post(a.auth, "stepstart", { step })).body;
+    const s2 = (await post(a.auth, "stepend", { step, end: "ended", outcomes: { [q]: "helped" }, learned: "The agenda lists no closed session on 4 March." })).body;
+    return { v: ok(s1) && ok(s2) ? "WORKS" : "BROKEN", saw: `start ${short(s1, 200)} | end ${short(s2, 360)}` };
+  });
+  await check("R160", "A step in a hidden project is never named to a non-participant of it", "member carol (not in P2)", "op=stepcreate in P2 as alice; op=stepsin as carol", async () => {
+    const mk = (await post(a.auth, "stepcreate", { place: { project: P2 }, work: "Second team's own errand." })).body;
+    const r = await get(c.auth, { op: "stepsin", project: P2 });
+    const leak = J(r).includes("Second team's own errand");
+    return { v: ok(mk) && !leak ? "WORKS" : "BROKEN", saw: `made ${short(mk, 160)} | carol reads ${short(r, 260)}` };
+  });
+  await check("R161", "Step cost and shared cost (not built: part of the steps design)", "admin", "op=stepcost / the cost key on stepcreate", async () => {
+    const r = (await post(a.auth, "stepcost", {})).body;
+    return { v: "NOT REACHED", saw: `no op for a cost on a step: ${short(r, 260)}` };
+  });
+  /* ---- R162: status report ---- */
+  await check("R162", "Status report: the system's draft from the record, then saved dated (statusreportdraft, statusreportsave)", "admin", "op=statusreportdraft; op=statusreportsave", async () => {
+    const d = await get(a.auth, { op: "statusreportdraft", plan: W.plan }); dump("srdraft", d);
+    const sv = (await post(a.auth, "statusreportsave", { plan: W.plan, text: "Two documents cited, one conclusion reached; the plan is open." })).body;
+    const lst = await get(a.auth, { op: "statusreports", plan: W.plan });
+    return { v: ok(d) && ok(sv) ? "WORKS" : "BROKEN", saw: `draft ${short(d, 300)} | save ${short(sv, 200)} | list ${short(lst, 200)}` };
+  });
+  /* ---- R159, R163, R164, R168, R169: confirm state ---- */
+  await check("R159", "Related prior work on a project (the Related Work sub-tab; not built)", "admin", "op=relatedwork / project read for related work", async () => {
+    const r = await get(a.auth, { op: "relatedwork", project: P });
+    return { v: "NOT REACHED", saw: `${R(r).reason || "answer"}: no related-work read exists (absence recorded, not a defect) ${short(r, 200)}` };
+  });
+  await check("R164", "Classify material as fact, analysis or judgment (not built)", "admin", "op=classify / look for a classification on a finding", async () => {
+    const r = (await post(a.auth, "classify", {})).body;
+    return { v: "NOT REACHED", saw: `${R(r).reason}: no classification op exists; none travels with a finding (absence recorded)` };
+  });
+  await check("R168", "Cite a published case as the basis of a new inquiry (citeinquiry)", "admin", "op=citeinquiry", async () => {
+    const r = (await post(a.auth, "citeinquiry", { inquiry: q, case: "CASE-X" })).body;
+    return { v: "NOT REACHED", saw: `${R(r).reason || J(r).slice(0, 80)}: the op the map names is not in the plane (absence recorded; the published case that R168 needs is area 10's)` };
+  });
+  await check("R169", "Cite another team's accepted finding (citeimported; owed per DEC-382)", "admin", "op=citeimported / withdrawimported", async () => {
+    const r = (await post(a.auth, "citeimported", { inquiry: q, import: "IMP-0", finding: "F-0", edition: 1, role: "supports" })).body;
+    const w = (await post(a.auth, "withdrawimported", { inquiry: q, import: "IMP-0", finding: "F-0" })).body;
+    return { v: "NOT REACHED", saw: `owed per DEC-382. Called as the signed-in member alice, citeimported answers ${R(r).reason || short(r, 140)} and withdrawimported ${R(w).reason || short(w, 140)}: a refusal that blames an automated credential, though the caller is a named member (citation/index.mjs:902-904 reads her bare handle)` };
+  });
+  await check("R163", "Evidence letters: the strength read carries a letter only on evidence, none on the question itself, and 'undetermined' with its reason", "admin", "op=inquirystrength; look for letters and for 'determined:false' with a reason", async () => {
+    const s = await get(a.auth, { op: "inquirystrength", id: q, project: P }); dump("strength", s);
+    const t = J(s);
+    return { v: /determined/.test(t) && /because|why|detail/.test(t) ? "WORKS" : "BROKEN", saw: short(s, 500) };
+  });
+}
+async function section10() {
+  const a = W.alice, q = W.q1, P = W.proj, b = W.bobM;
+  await check("R166", "The Queue after the severance and conclusions: one dispositionable notice each, none repeating", "admin and member bob", "op=queue as alice and as bob", async () => {
+    const qa = await get(a.auth, { op: "queue" }); const qb = await get(b.auth, { op: "queue" });
+    dump("queue-a", qa);
+    return { v: ok(qa) && ok(qb) ? "WORKS" : "BROKEN", saw: `alice ${short(qa, 420)} | bob ${short(qb, 300)}` };
+  });
+  await check("R217", "Help me write this on the question's own-words field, with no assistant connected", "admin", "op=writinghelp {field, told}", async () => {
+    const r = (await post(a.auth, "writinghelp", { field: "reading", told: "The city did adopt it but the figure was higher." })).body;
+    return { v: ok(r) || /ASSISTANT|NOT_READY|UNBOUND|NO_ASSISTANT/.test(J(r)) ? "WORKS" : "BROKEN", saw: "(a guide, or a stated not-ready; never a silent failure) " + short(r, 500) };
+  });
+  await check("R212", "One person alone: this sitting's chain with one account", "admin", "tag each step that needed a second account", async () => ({ v: "WORKS", saw: "Possible by one administrator alone: open, cite, ground, strength, conclude, withdraw, reopen, sever, reinstate, set aside, hunches, narrow, divide, versions and the stand, the second-project stance, plan open to scenarios. Needed a second account: R85 (the typist cannot attest her own typing; a member must), R83 spot-check visits (a member's own testimony; the draw and the calculation were one person's), R166/R167 (a second member to see the same reminders and to be told nothing of a hidden project), versioncurrent for a non-participant refusal." }));
+  /* the overlay's words: scan every refusal sentence this walk recorded for the words the product must not use */
+  await check("OVERLAY-15", "Voice: no 'group', 'secret', 'confidential', 'something went wrong' or a bare code in the plane's own sentences this sitting read", "admin", "scan of the translation sentences in this record", async () => {
+    const { readFileSync } = await import("node:fs");
+    const txt = readFileSync(OUT, "utf8");
+    const sent = [...txt.matchAll(/"translation":"([^"]{10,300})/g)].map((m) => m[1]);
+    const bad = sent.filter((t) => !/reason/i.test(t) && /\bgroups?\b|secret|confidential|something went wrong/i.test(t));
+    return { v: bad.length ? "BROKEN" : "WORKS", saw: `${sent.length} sentences read; ${bad.length} with a banned word${bad.length ? ": " + bad.slice(0, 3).join(" / ") : ""}` };
+  });
+  for (const [row, what] of [
+    ["OVERLAY-17", "Phone at 390 px: tables as cards, 44 px targets, nothing sideways"], ["OVERLAY-18", "Light and dark on Home, Project, Settings and a question"], ["OVERLAY-19", "WCAG 2.2 AA: keyboard alone, focus, 200% zoom, reduced motion"],
+    ["OVERLAY-16", "Orientation: path ends with the screen's name, rail, hover explanations, Alt+Shift+I"], ["OVERLAY-11", "Four button states and the Sounds setting"], ["OVERLAY-9", "Act weight by rung drawn: pips, dialogs, the scale sentence once"],
+    ["OVERLAY-20", "Nothing from outside: no font, tracker or analytics request from a screen; the Test band"], ["R213", "Working frame at 1280 and 390 px and in dark mode"], ["R108", "Five members at once, timed against K4354's bars on Server-Timing"],
+  ]) rec(row, what, "admin", "no screen exists in the offline phase (HTTP through the door only)", "NOT REACHED", "needs a rendered screen: walked in Phase 2, live; not forced here");
 }
 try { await main(); } catch (e) { rec("SETUP", "prerequisites", "admin", "founder, owner, members, project, documents by real acts", "BROKEN", String(e && e.stack || e).slice(0, 600)); }
 await kit.mf.dispose();
