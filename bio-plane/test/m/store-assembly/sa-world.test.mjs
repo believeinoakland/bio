@@ -175,3 +175,9 @@ test("R90 (K5149): a bare world records its producing team at its first boot, an
   const row = [...w.sql.exec("SELECT bundle_id, group_id FROM bundles WHERE bundle_id=?", "INFO-2026-0001-minutes")][0];
   assert.deepEqual(row, { bundle_id: "INFO-2026-0001-minutes", group_id: WORLD_INSTANCE_NAME }, "the bundle names the team");
 });
+
+test("R5 R92 (K5168): a pinned world's claim records the pin as `consumedAt`, not the wall clock: credentials takes the store's clock at its first construction", async () => {
+  const w = await storeWorld();
+  const consumed = credentialsOf(w.ctx).bootstrapState(null).consumedAt;
+  assert.equal(consumed, new Date(WORLD_NOW).toISOString());
+});
