@@ -312,3 +312,20 @@ Options (NEEDS BOB, P17):
 2. Give the sentence a new key, so the source default is its English, and it enters the design's unreviewed list. The old `words.json` entry becomes orphaned for the design stream to remove.
 
 Once Bob takes option 1 or 2 and the tranche carries it, I merge the tranche, run the test green and post COMPLETE.
+
+## J17 · COMPLETE
+
+COMPLETE for B16 (K5201), read against B17 (K5202, BOB's ANSWER).
+
+**Entries applied**
+- `bio-plane/src/inquiry/index.mjs:2545` (`inquiry.index.pass_grounds_an_array`) reworded without braces: "pass grounds[] — an array of groups, each naming its ground label, the legs it groups by ord, and an optional statement; one entry per group, where each ord is a leg's position in this question's basis. …". Commit `718ef59bde` on `job/T51/inquiry`; the tranche was merged in first (`cde59f77cd`). No source change beyond that line; `rows.mjs` not committed.
+
+**Tests and checks** (absolute root `/home/user/bio`)
+- `setup-words/word-list.test.mjs:236` (R13): red, by name, as B17 says. Its English comes from `words.json` (`docs/development/ux-substrate/screens/words.json`, key at line 81881), which still has the braces. UX-DESIGN's row lands with BOB's round-end regeneration.
+- `setup-words/build.mjs --check`: passes.
+- `--test bio-plane/test/m/inquiry/*.test.mjs`: 243 tests, 242 pass, 0 fail, 1 todo (R31, the existing `not yet met: MK-5`).
+- `format` 0 failures (178 modules); `architecture inquiry` 0 (151 relative imports); `coverage inquiry` 58 of 58, 0; `fixtures.mjs inquiry --list` 0 failures, answer 0; `ownership` 0 against `tranche/T51` (4 files: my two fixture files, my source line, my record).
+
+**Deferred.** None. **Flaws found in inquiry.** None. **Found in another module.** None new (the words table as above is UX-DESIGN's, already handed over by BOB).
+
+Size (session_01RuijnFp5KUgZxc7Koddggy): test runs 9, module lines 3849
