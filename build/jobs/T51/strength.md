@@ -240,3 +240,13 @@ Size (session_01QZu1kbM1Tfpcwi3si6nhVz): test runs 9, module lines 3048
 ## J14 · COMPLETE
 
 COMPLETE (B14, fix round 6, G12c provider): inquirystrength answers `ids` (at most 50; body list or comma-separated query) as {ok, results:{id: the single answer}}, each id gated as the single read (a hidden id keeps its NO_SUCH_BUNDLE result, never omitted); >50 / non-ids BAD_IDS, none NO_ID; DECLARED_OPS.inquirystrength added (K4208). New requirement R44 proposed in J13 for you to write; R41's list gains inquirystrength. Failing-first batch.test.mjs red then green; strength 182/0; op-declarations 149/0, op-grades 227/0, screens-inquiry 486/0; checks: ownership 0, coverage 0, words 0, architecture 0 (format 1 failure in build/plan/next.md:38, yours). For store-door: PROJECT_NAMING_READS.inquirystrength must name `ids` too. Nothing deferred. See J13.
+
+## Fix round 10, Wave A batch 3 (STRENGTH #22)
+
+Causes done: published `bio-plane/test/m/strength/fixtures.mjs` with four fixtures, each made by strength's real code at call time and checked by `fixtures.test.mjs` (4 tests): `gradingFactsUnread` (real `gradingFacts` over an unknown inquiry: NO_SUCH_BUNDLE naming the target; the NO_SUCH_INQUIRY the users' tests name is not a strength code, so their re-point takes the fixture's real code), `strengthBarSet` (real ok answer of `strengthBarSet`), `strengthOfNoId` (NO_ID), `testimonyCorroboration` (`{ok:true, legs:[]}`).
+
+Lines done (FIX-E, promotion's published fixtures): `fixture.mjs` promotion `fact` now `factUnavailable()`; `projectbar.test.mjs` `refusal = staleBaseRefusal()`. `fixtures.mjs --list` for strength: 1 line left, `fixture.mjs:140` money op-table (FIX-E, provider money not yet merged; arrives as a CHANGE). No `fixtures-own` or `fixtures-generic` marker added.
+
+Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/strength/`: 186 pass, 0 fail. Checks: format 0 failures; architecture 0; coverage 44 of 44 ids; ownership 5 files, 0 failures; `impact.mjs origin/tranche/T51 HEAD`: 0 affected modules. `checks/run.mjs`: no finding in strength other than the money line above.
+
+Size (session_01JmYPC9c3SBS7Z6uwYREAt2): test runs 5, module lines 3048
