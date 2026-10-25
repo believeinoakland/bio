@@ -6,7 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, boot } from "../interface-shell/harness.mjs";
-import { main, actsIn, fill, press, says, word, plane, READING, DOCUMENT_MD, provenanceOf, inquiryMd, SCREENS, P, Q, Q2, D, SHA } from "./fixtures.mjs";
+import { main, actsIn, fill, press, says, word, plane, storeWorld, READING, DOCUMENT_MD, provenanceOf, inquiryMd, SCREENS, P, Q, Q2, D, SHA } from "./fixtures.mjs";
 import { onPhone } from "./phone.mjs";
 
 process.env.TZ = "UTC";
@@ -25,43 +25,82 @@ async function choose(p, id, value) {
 }
 const heldRow = (extra = {}) => ({ bundle_id: D, title: "Pothole repair policy", project: P, collected_since: "2026-10-02T09:00:00Z", actor: "member:mai", standing: "collected",
   capture: { sha256: SHA, grade: { grade: "B" } }, captured_for: { questions: [{ question: Q2, title: "Does closed mean repaired?", asker: "mai" }], withheld: null }, ...extra });
+/* scripted: heldcaptures (the phone measurement below answers from a plane table only, `onPhone` taking no world door; and a held row naming no actor, which no act of the world makes) */
 const held = (row) => ({ heldcaptures: ok({ ok: true, held: row ? [row] : [] }) });
+/* the real world (store-assembly's store with the real door; the state is made by real acts, K5054): a page as `as` reads it over the world's door, `plane` scripting
+   only the ops it names; `answers(op)` are the door's own answers to that op, in order */
+const OWN = { capabilities: ["contribute", "create_projects"] };
+async function pageOn(world, as, path, o = {}) {
+  const { door, session } = world.boot(as);
+  const kept = [];
+  const p = await boot({ screens: SCREENS, door: async (req) => { const a = await door(req); kept.push([req.op, a]); return a; }, session, path, ...o });
+  await p.settle();
+  p.answers = (op) => kept.filter(([k]) => k === op).map(([, a]) => (a.json && a.json.result !== undefined ? a.json.result : a.json));
+  return p;
+}
+const MINUTES = "<html><head><title>Council minutes</title></head><body><p>The council met on Monday.</p></body></html>";
+/** A member `ann` with a project and, in it, a question `closed` and a question `seven`, and a copy of a page of the council's, held by her. With `forQuestion` the copy was captured from a public address
+ *  for `closed` (`acquire` with `for`, the address served by the world's network, `world.script`) and filed as held (`recipes.hold` of the same bytes), so its held row names that question;
+ *  with `vouch` she has also vouched for it (`select`, `release`). */
+async function member({ forQuestion = false, vouch = false } = {}) {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const project = await world.recipes.project(ann, "Pothole repairs");
+  const seven = (await world.recipes.question(ann, project, { title: "Seven days", text: "Is the city repairing reported potholes within seven days?", draw: true })).id;
+  const closed = (await world.recipes.question(ann, project, { title: "Closed", text: "Does closed mean repaired?", draw: true })).id;
+  if (forQuestion) {
+    const address = "https://records.example.org/minutes.html";
+    world.script(address, async () => new Response(MINUTES, { status: 200, headers: { "content-type": "text/html" } }));
+    await ann.act("acquire", { body: { locator: address, for: closed } });
+  }
+  const doc = await world.recipes.hold(ann, "Council minutes", MINUTES, project, { type: "text/html", read: true });
+  if (vouch) {
+    const sel = await ann.act("select", { body: { ids: [doc.bundle] } });
+    await ann.act("release", { query: { handle: sel.handle, acknowledgment: "Checked against the site", mitigation: "None needed" } });
+  }
+  return { world, ann, project, seven, closed, document: doc.bundle, sha: doc.sha, at: "/app/document/" + doc.bundle };
+}
 /** the document's record with a given profile, file name and title for its register document */
 const docWith = (md, reg = {}, sha = SHA) => ({ [D]: { "bundle.md": md, "data/provenance.json": JSON.stringify({ documents: [{ capture: { sha256: sha, ...(reg.capture || {}) }, ...Object.fromEntries(Object.entries(reg).filter(([k]) => k !== "capture")) }] }) } });
 const PDF_MD = DOCUMENT_MD.replace('title: "Pothole repair policy, Administrative Instruction 4.12"', 'title: "ai-4-12.pdf"');
 
 /* ---- C16 / R3: the reads ---- */
 test("R3 C16 the page reads heldcaptures once, for this copy's row alone (bundle_id), and never one projectquestions for each project", async () => {
-  const projects = Array.from({ length: 6 }, (_, i) => ({ id: "PROJ-2026-00" + (10 + i), name: "Project " + i }));
-  const p = await openWith(at, { plane: { projectlist: ok({ ok: true, projects: [{ id: P, name: "Pothole repairs" }, ...projects] }), ...held(heldRow()) } });
+  const w = await member();
+  for (let i = 0; i < 6; i++) await w.world.recipes.project(w.ann, "Project " + i);
+  /* a question resting on the copy, so it is cited */
+  await w.world.recipes.question(w.ann, w.project, { title: "Resting", text: "Is it so?", legs: [{ target: w.document, role: "supports" }], draw: true });
+  const p = await pageOn(w.world, w.ann, w.at);
   const h = p.byOp("heldcaptures");
   assert.equal(h.length, 1, "one heldcaptures read");
-  assert.equal(h[0].query.bundle_id, D, "for this copy's row");
+  assert.equal(h[0].query.bundle_id, w.document, "for this copy's row");
   assert.ok(!("member" in h[0].query) && !("project" in h[0].query), "not narrowed by member or project, and no list of 500");
   assert.ok(!("limit" in h[0].query), "a single row asks no limit");
   const pq = p.byOp("projectquestions");
-  assert.ok(pq.length <= 1 && pq.every((r) => r.query.project === P), "at most the document's own project's questions are read: " + pq.map((r) => r.query.project));
+  assert.ok(pq.length <= 1 && pq.every((r) => r.query.project === w.project), "at most the document's own project's questions are read: " + pq.map((r) => r.query.project));
   /* control: a page whose copy has no citations reads the same */
-  const q = await openWith(at, { plane: { backlinks: ok({ ok: true, target: D, backlinks: [] }), projectlist: ok({ ok: true, projects: [{ id: P, name: "Pothole repairs" }, ...projects] }), ...held(heldRow()) } });
+  const bare = await w.world.recipes.page(w.ann, "Uncited page", { project: w.project });
+  const q = await pageOn(w.world, w.ann, "/app/document/" + bare.bundle);
   assert.equal(q.byOp("heldcaptures").length, 1, "control: one heldcaptures read with no citations");
   assert.equal(q.byOp("projectquestions").length, pq.length, "control: the same projectquestions reads with no citations");
 });
 
 test("R3 R118 C16 C35 two questions of two projects with one title are told apart by their project, each read once; control: unique titles unchanged and read nothing more", async () => {
-  const P2 = "PROJ-2026-0042";
-  const QA = "INQ-2026-0010-a", QB = "INQ-2026-0011-b", QU = "INQ-2026-0012-u";
-  const qmd = (id, project) => inquiryMd(project);
-  const images = { [QA]: { "bundle.md": inquiryMd(P2).replace(Q, QA) }, [QB]: { "bundle.md": inquiryMd(P).replace(Q, QB) } };
+  const w = await member();
+  const elsewhere = await w.world.recipes.project(w.ann, "Elsewhere");
+  const QB = (await w.world.recipes.question(w.ann, w.project, { title: "Is it repaired?", text: "Is it repaired?", draw: true })).id;
+  const QA = (await w.world.recipes.question(w.ann, elsewhere, { title: "Is it repaired?", text: "Is it repaired?", draw: true })).id;
+  const QU = (await w.world.recipes.question(w.ann, null, { title: "A unique title", text: "A unique title" })).id;
+  /* the world's `list` states each row's project, so the page would need no read to tell them apart: the rows are scripted without it, over the real questions (R118) */
   const list = { bundles: [{ bundle_id: QA, title: "Is it repaired?" }, { bundle_id: QB, title: "Is it repaired?" }, { bundle_id: QU, title: "A unique title" }] };
-  const p = await openWith(at, { images, plane: { list: ok(list), projectlist: ok({ ok: true, projects: [{ id: P, name: "Pothole repairs" }, { id: P2, name: "Elsewhere" }] }), ...held(null),
-    projectquestions: ok({ ok: true, project: P, items: [{ inquiry: QB, title: "Is it repaired?" }], cursor: null }) } });
+  const p = await pageOn(w.world, w.ann, w.at, { plane: { list: ok(list) } });
   const options = p.doc.getElementById("document-cite-question").querySelectorAll("option");
   const label = (v) => text(options.find((o) => o.getAttribute("value") === v));
   assert.equal(label(QA), word("screen.document.cite.option", { question: "Is it repaired?", project: "Elsewhere" }), "the one in another project names it");
   assert.equal(label(QB), word("screen.document.cite.option", { question: "Is it repaired?", project: "Pothole repairs" }), "the one in this project names it");
   assert.equal(label(QU), "A unique title", "control: a unique title in no known project is its title alone");
   assert.deepEqual(p.byOp("image").filter((r) => [QA, QB, QU].includes(r.query.id)).map((r) => r.query.id).sort(), [QA].sort(), "only the questions the page cannot tell apart are read: " + p.byOp("image").map((r) => r.query.id));
-  assert.ok(p.byOp("projectquestions").every((r) => r.query.project === P), "no project's questions but this one's");
+  assert.ok(p.byOp("projectquestions").every((r) => r.query.project === w.project), "no project's questions but this one's");
 });
 
 /* ---- C17 / R96 / R3: an unread copy ---- */
@@ -94,13 +133,16 @@ test("R96 R3 C17 a picture is a picture by its record, whatever its reading stat
 });
 
 test("R96 R97 R3 C17 typed words are drawn without Nothing here; control: a reading with no words and nothing typed still says so", async () => {
-  const noWords = READING({ text_units: [], unread_pages: [0] });
-  const typed = { transcriptions: ok({ ok: true, bundle_id: D, transcriptions: [{ content_id: "CON-1", transcriber: "ben", extent: { kind: "pdf-page", page: 0 }, at: "2026-10-05T09:00:00Z" }], count: 1, truncated: false, cursor: null }),
-    transcription: ok({ ok: true, text: "Typed words of the first page." }) };
-  const p = await openWith(at, { plane: { reading: ok(noWords), ...typed } });
+  const w = await member();
+  /* the reading (a PDF with no words) is scripted over the world's copy; the typing is the member's own act, and its list and words the world's */
+  const noWords = READING({ capture_sha: w.sha, text_units: [], unread_pages: [0] });
+  await w.ann.act("transcribe", { body: { bundleId: w.document, extent: { kind: "pdf-page", page: 0 }, text: "Typed words of the first page." } });
+  const p = await pageOn(w.world, w.ann, w.at, { plane: { reading: ok(noWords) } });
   assert.ok(main(p).querySelector('[data-typed-text]'), "the typed words are drawn");
+  assert.ok(text(main(p).querySelector('[data-typed-text]')).includes("Typed words of the first page."), "the words she typed");
   assert.equal(main(p).querySelector('.cs-state[data-state="empty"]'), null, "and no Nothing here above them");
-  const q = await openWith(at, { plane: { reading: ok(noWords) } });
+  const other = await member();
+  const q = await pageOn(other.world, other.ann, other.at, { plane: { reading: ok(READING({ capture_sha: other.sha, text_units: [], unread_pages: [0] })) } });
   assert.ok(main(q).querySelector('.cs-state[data-state="empty"]'), "control: with nothing typed the reading says it holds nothing");
 });
 
@@ -130,39 +172,52 @@ test("R3 C25 the page is named by the record's one rule: the reading's title, el
 /* ---- C95 / R3: this page's question ---- */
 const optionValues = (p) => p.doc.getElementById("document-cite-question").querySelectorAll("option").map((o) => o.getAttribute("value"));
 test("R3 C95 the question the copy was held for is preselected and leads the list, held or vouched; control: with none, none is selected and the choose option leads", async () => {
-  const p = await openWith(at, { plane: held(heldRow()) });
-  assert.equal(p.doc.getElementById("document-cite-question").value, Q2, "preselected");
-  assert.equal(optionValues(p)[0], Q2, "and first in the list");
+  const w = await member({ forQuestion: true });
+  const p = await pageOn(w.world, w.ann, w.at);
+  assert.equal(p.doc.getElementById("document-cite-question").value, w.closed, "preselected");
+  assert.equal(optionValues(p)[0], w.closed, "and first in the list");
   assert.ok(!optionValues(p).includes(""), "no empty choose option when one is selected");
-  const vouched = await openWith(at, { plane: held(heldRow({ standing: "verified", vouched: { by: "mai", at: "2026-10-03T09:00:00Z" } })) });
-  assert.equal(vouched.doc.getElementById("document-cite-question").value, Q2, "a vouched copy keeps it");
+  assert.ok(optionValues(p).includes(w.seven), "the project's other question is still offered");
+  const v = await member({ forQuestion: true, vouch: true });
+  const vouched = await pageOn(v.world, v.ann, v.at);
+  assert.equal(vouched.doc.getElementById("document-cite-question").value, v.closed, "a vouched copy keeps it");
   assert.equal(vouched.byOp("heldcaptures")[0].query.state, "held_and_vouched", "the one read answers a vouched copy too");
-  const none = await openWith(at, { plane: held(heldRow({ captured_for: { questions: [], withheld: null } })) });
+  const n = await member();
+  const none = await pageOn(n.world, n.ann, n.at);
   assert.equal(none.doc.getElementById("document-cite-question").value, "", "control: none held for, none selected");
   assert.equal(optionValues(none)[0], "", "control: the choose option leads");
 });
 
 test("R55 C16 a held row of another member's capture draws no held banner and no vouch box; control: her own does", async () => {
-  const theirs = await openWith(at, { plane: held(heldRow({ actor: "member:rosa" })) });
+  /* rosa's project, which ann has joined, holds a copy rosa has not vouched for: it is rosa's held copy, and ann reads its page */
+  const w = await member();
+  const rosa = await w.world.signIn("rosa", OWN);
+  const hers = await w.world.recipes.project(rosa, "Rosa's project");
+  await rosa.act("projectinvite", { query: { projectId: hers, handle: "ann" }, body: {} });
+  await w.ann.act("projectjoin", { query: { projectId: hers }, body: {} });
+  const copy = await w.world.recipes.page(rosa, "Rosa's page", { project: hers });
+  const theirs = await pageOn(w.world, w.ann, "/app/document/" + copy.bundle);
   assert.equal(main(theirs).querySelector("[data-held]"), null, "not hers: no banner");
   assert.ok(!actsIn(main(theirs)).includes("release"), "no vouch box");
   const none = await openWith(at, { plane: held(heldRow({ actor: null })) });
   assert.equal(main(none).querySelector("[data-held]"), null, "a capture naming no actor is not hers");
-  const mine = await openWith(at, { plane: held(heldRow()) });
+  const mine = await pageOn(w.world, w.ann, w.at);
   assert.ok(main(mine).querySelector("[data-held]") && actsIn(main(mine)).includes("release"), "control: her own is held");
 });
 
 /* ---- N2 / R49 / R61: a cite with no question chosen ---- */
 test("R49 R61 N2 Cite this with no question chosen sends nothing and says so beside the act pressed; control: with a question chosen it sends", async () => {
-  const p = await openWith(at, { plane: held(heldRow({ captured_for: { questions: [], withheld: null } })) });
+  const w = await member();
+  const p = await pageOn(w.world, w.ann, w.at);
   assert.equal(p.doc.getElementById("document-cite-question").value, "", "none chosen");
   const slot = await press(p, "cite");
   assert.equal(p.byOp("cite").length, 0, "nothing sent");
   assert.ok(slot && says(slot, "screen.find-in.questionfirst"), "the sentence is said in the act's own place");
-  const q = await openWith(at, { plane: { ...held(heldRow({ captured_for: { questions: [], withheld: null } })), cite: ok({ ok: true, inquiry: Q, role: "supports", cited: ["x"], alreadyCited: [] }) } });
-  await choose(q, "document-cite-question", Q);
+  const q = await pageOn(w.world, w.ann, w.at);
+  await choose(q, "document-cite-question", w.seven);
   await press(q, "cite");
   assert.equal(q.byOp("cite").length, 1, "control: with a question chosen it sends");
+  assert.equal(q.answers("cite")[0].cited.length, 1, "and the world cites the passage");
 });
 
 /* ---- C81 / R5: the controls at 390 px ---- */
@@ -190,17 +245,24 @@ test("R3 R113 every act of the document screen declares what it re-reads, and a 
   for (const a of screen.acts.filter((x) => !["hashcopy", "revisioncompare", "linkopen"].includes(x.op))) {
     assert.ok(a.rereads === "all" || (Array.isArray(a.rereads) && a.rereads.every((n) => readNames.includes(n))), `${a.op} declares rereads: ${JSON.stringify(a.rereads)}`);
   }
-  const p = await openWith(at, { plane: { ...held(heldRow({ captured_for: { questions: [], withheld: null } })), cite: ok({ ok: true, inquiry: Q, role: "supports", cited: ["x"], alreadyCited: [] }) } });
-  await choose(p, "document-cite-question", Q);
-  const before = { image: p.byOp("image").filter((r) => r.query.id === D).length, backlinks: p.byOp("backlinks").length, list: p.byOp("list").length };
+  const w = await member();
+  const p = await pageOn(w.world, w.ann, w.at);
+  await choose(p, "document-cite-question", w.seven);
+  const before = { image: p.byOp("image").filter((r) => r.query.id === w.document).length, backlinks: p.byOp("backlinks").length, list: p.byOp("list").length };
   await press(p, "cite");
+  assert.equal(p.answers("cite")[0].cited.length, 1, "the world cited it");
   assert.equal(p.byOp("backlinks").length, before.backlinks + 1, "what cites it is read again");
-  assert.equal(p.byOp("image").filter((r) => r.query.id === D).length, before.image, "the capture is not");
+  assert.equal(p.byOp("image").filter((r) => r.query.id === w.document).length, before.image, "the capture is not");
   assert.equal(p.byOp("list").length, before.list, "nor the question list");
-  const r = await openWith(at, { plane: { ...held(heldRow({ captured_for: { questions: [], withheld: null } })), cite: ok({ ok: false, code: "BASIS_REFUSED", reason: "BASIS_REFUSED" }) } });
-  await choose(r, "document-cite-question", Q);
+  /* a refused cite: into a question of another member's project, which she cannot see (the world answers it as one that does not exist) */
+  const rosa = await w.world.signIn("rosa", OWN);
+  const hers = await w.world.recipes.project(rosa, "Rosa's project");
+  const foreign = (await w.world.recipes.question(rosa, hers, { title: "Rosa's", text: "Is it rosa's?", draw: true })).id;
+  const r = await pageOn(w.world, w.ann, w.at);
+  await choose(r, "document-cite-question", foreign);
   const b2 = { backlinks: r.byOp("backlinks").length, image: r.byOp("image").length };
   await press(r, "cite");
+  assert.equal(r.answers("cite")[0].ok, false, "the world refused it");
   assert.deepEqual([r.byOp("backlinks").length, r.byOp("image").length], [b2.backlinks, b2.image], "control: a refused cite re-reads nothing");
 });
 

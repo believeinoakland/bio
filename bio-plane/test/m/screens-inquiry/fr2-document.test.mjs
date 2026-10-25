@@ -6,7 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn, boot } from "../interface-shell/harness.mjs";
-import { main, actsIn, fill, press, says, word, plane, READING, DOCUMENT_MD, provenanceOf, SCREENS, P, Q, Q2, D, SHA, PROJECT_QUESTIONS } from "./fixtures.mjs";
+import { main, actsIn, fill, press, says, word, plane, storeWorld, READING, DOCUMENT_MD, provenanceOf, SCREENS, P, Q, Q2, D, SHA, PROJECT_QUESTIONS } from "./fixtures.mjs";
 
 process.env.TZ = "UTC";
 const at = "/app/document/" + D;
@@ -16,10 +16,28 @@ async function openWith(path, o = {}) {
   await p.settle();
   return p;
 }
-const P2 = "PROJ-2026-0009", Q3 = "INQ-2026-0009-lease";
-const MANY_PROJECTS = { projectlist: ok({ ok: true, projects: [{ id: P, name: "Pothole repairs", stage: "investigating" }, { id: P2, name: "The Coliseum lease", stage: "investigating" },
-    { id: "PROJ-2026-0011", name: "Third", stage: "investigating" }] }),
-  projectquestions: (r) => ok(r.query.project === P2 ? { ok: true, project: P2, items: [{ inquiry: Q3, title: "Did the lease go to a vote?" }], cursor: null } : PROJECT_QUESTIONS) };
+/* the real world (store-assembly's store with the real door; the state is made by real acts, K5054): a page as `as` reads it over the world's door, `plane` scripting
+   only the ops it names; `answers(op)` are the door's own answers to that op, in order */
+const OWN = { capabilities: ["contribute", "create_projects"] };
+async function pageOn(world, as, path, o = {}) {
+  const { door, session } = world.boot(as);
+  const kept = [];
+  const p = await boot({ screens: SCREENS, door: async (req) => { const a = await door(req); kept.push([req.op, a]); return a; }, session, path, ...o });
+  await p.settle();
+  p.answers = (op) => kept.filter(([k]) => k === op).map(([, a]) => (a.json && a.json.result !== undefined ? a.json.result : a.json));
+  return p;
+}
+/** A member with a PDF (or, `page`, a web page that is read) held in her project, and `others` other projects of hers. */
+async function member({ others = 0, page = false } = {}) {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const project = await world.recipes.project(ann, "Pothole repairs");
+  const pdf = page ? await world.recipes.page(ann, "Policy memo", { paragraphs: ["The Director shall repair each reported pothole within seven days."], project })
+                   : await world.recipes.pdf(ann, "Policy memo", { project });
+  const rest = [];
+  for (let i = 0; i < others; i++) rest.push(await world.recipes.project(ann, `Other project ${i + 1}`));
+  return { world, ann, project, rest, document: pdf.bundle, sha: pdf.sha, at: "/app/document/" + pdf.bundle };
+}
 const HELD_ROW = { bundle_id: D, title: "Pothole repair policy", project: P, collected_since: "2026-10-02T09:00:00Z", capture: { sha256: SHA, grade: { grade: "B" } },
   captured_for: { questions: [{ question: Q, title: "Seven days?", asker: "mai" }], withheld: null } };
 /* what the plane answers `heldcaptures` for a member filter: only that member's rows (capture R77) */
@@ -27,14 +45,19 @@ const heldOf = (rows) => (r) => ok({ ok: true, held: rows.filter((x) => !r.query
 
 /* ---- C16 ---- */
 test("R3 C16 the document page reads heldcaptures once and each project's questions once, however many projects the member is in", async () => {
-  const p = await openWith(at, { plane: { ...MANY_PROJECTS, heldcaptures: heldOf([{ ...HELD_ROW, actor: "member:mai" }]) } });
+  const w = await member({ others: 2, page: true });
+  /* the questions of this project (one resting on the document) and of another of hers */
+  const q1 = await w.world.recipes.question(w.ann, w.project, { title: "Seven days", text: "Is it repaired within seven days?", draw: true });
+  const q2 = await w.world.recipes.question(w.ann, w.project, { title: "Closed", text: "Does closed mean repaired?", draw: true });
+  await w.world.recipes.question(w.ann, w.rest[0], { title: "Lease", text: "Did the lease go to a vote?", draw: true });
+  const p = await pageOn(w.world, w.ann, w.at);
   assert.equal(p.byOp("heldcaptures").length, 1, "one heldcaptures");
   const asked = p.byOp("projectquestions").map((r) => r.query.project);
   assert.equal(new Set(asked).size, asked.length, "no project's questions read twice");
-  assert.equal(asked[0], P, "this project first");
+  assert.equal(asked[0], w.project, "this project first");
   /* control: the cite picker still lists the project's questions */
   const values = p.doc.getElementById("document-cite-question").querySelectorAll("option").map((o) => o.getAttribute("value")).filter(Boolean);
-  assert.ok(values.includes(Q) && values.includes(Q2), "this project's questions are still listed");
+  assert.ok(values.includes(q1.id) && values.includes(q2.id), "this project's questions are still listed");
 });
 
 /* ---- C27 ---- */
@@ -80,22 +103,26 @@ test("R96 R3 C17 a photograph offers no PDF re-read: its re-read sends the pictu
 });
 
 test("R96 R3 C17 control: a PDF keeps its OCR re-read and sends the PDF op", async () => {
-  const pdf = READING({ reading: { content_type: "application/pdf", found: true, text_chars: 100 }, unread_pages: [7, 8] });
-  const p = await openWith(at, { plane: { reading: ok(pdf), pdfstructure: ok({ ok: true, reextraction: { performed: true } }) } });
+  const w = await member();
+  /* the PDF is the world's own, held; its reading is scripted (the world reads no text from a generated PDF), with unread pages the re-read offers; the re-read itself is the world's */
+  const pdf = READING({ capture_sha: w.sha, reading: { content_type: "application/pdf", found: true, text_chars: 100 }, unread_pages: [7, 8] });
+  const p = await pageOn(w.world, w.ann, w.at, { plane: { reading: ok(pdf) } });
   assert.equal(acts(p, "pdfstructure"), 1);
   await press(p, "pdfstructure");
-  assert.deepEqual([p.byOp("pdfstructure")[0].query.sha256, p.byOp("pdfstructure")[0].query.ocr], [SHA, "1"]);
+  assert.deepEqual([p.byOp("pdfstructure")[0].query.sha256, p.byOp("pdfstructure")[0].query.ocr], [w.sha, "1"]);
+  assert.equal(p.answers("pdfstructure").length, 1, "the world answered the re-read");
 });
 
-const TYPING = (by, page) => ({ content_id: "c".repeat(64), transcriber: by, at: "2026-10-05T09:00:00Z", extent: { kind: "pdf-page", page } });
 test("R3 R97 C17 a page typed by hand is drawn as the page's reading: its words, read from the typing, under the page typed", async () => {
-  const p = await openWith(at, { plane: { transcriptions: ok({ ok: true, transcriptions: [TYPING("ben", 7)] }),
-    transcription: (r) => ok({ ok: true, content_id: r.query.id, text: "Eight repairs were closed in March.", transcriber: "ben" }) } });
-  assert.equal(p.byOp("transcription")[0].query.id, "c".repeat(64));
+  const w = await member();
+  const typed = await w.ann.act("transcribe", { body: { bundleId: w.document, extent: { kind: "pdf-page", page: 0 }, text: "Eight repairs were closed in March." } });
+  const p = await pageOn(w.world, w.ann, w.at);
+  assert.equal(p.byOp("transcription")[0].query.id, typed.content_id);
   const fold = main(p).querySelector("details[data-fold=typed]");
   assert.ok(fold && text(fold).includes("Eight repairs were closed in March."), "the typed words");
   /* control: no typing, no read of one */
-  const none = await openWith(at);
+  const other = await member();
+  const none = await pageOn(other.world, other.ann, other.at);
   assert.equal(none.byOp("transcription").length, 0);
   assert.equal(main(none).querySelector("details[data-fold=typed]"), null);
 });
@@ -130,6 +157,7 @@ test("R108 C20 control: a capture with no statement draws no empty heads; a stat
 const QUESTION_WITH_LEG = { images: { [Q]: { "bundle.md": ["---", `id: ${Q}`, "object_type: inquiry", 'title: "Seven days"', `project: ${P}`, "references:", `  - target: ${D}`, "    rel: cites", "    status: confirmed",
   "basis:", `  - target: ${D}`, "    role: supports", "    grade: B", "    extent_page: 2", "---", "", "## Question", "", "Is it?", ""].join("\n") } } };
 const REF = `${D}#x`;
+/* scripted below: the first cite's cite (an `alreadyCited` answer naming a page: needs a recipe that makes a question resting on a PDF page, which a world refuses without a reading chain) */
 test("R3 R49 C30 a cite answered alreadyCited says the question already rests on the document, at which passage, and links the question to narrow it; a cited answer says it is cited", async () => {
   const p = await openWith(at, { ...QUESTION_WITH_LEG, plane: { cite: ok({ ok: true, inquiry: Q, role: "supports", cited: [], alreadyCited: [REF] }) } });
   fill(p, { "document-cite-question": Q });
@@ -139,15 +167,19 @@ test("R3 R49 C30 a cite answered alreadyCited says the question already rests on
   assert.ok(says(m, "screen.document.passage.where", { page: 3 }), "the passage the question rests on, from one");
   const note = m.querySelector("[data-cite-done=already]");
   assert.ok(note && note.querySelector('a[href*="/app/question/"]'), "a way to narrow: the question");
-  /* a cited answer says so */
-  const q = await openWith(at, { ...QUESTION_WITH_LEG, plane: { cite: ok({ ok: true, inquiry: Q, role: "supports", cited: [REF], alreadyCited: [] }) } });
-  fill(q, { "document-cite-question": Q });
+  /* a cited answer says so (the world's own cite of the read page's passage into a question of her project) */
+  const w = await member({ page: true });
+  const asked = await w.world.recipes.question(w.ann, w.project, { title: "Seven days", text: "Is the city repairing reported potholes within seven days?", draw: true });
+  const q = await pageOn(w.world, w.ann, w.at);
+  fill(q, { "document-cite-question": asked.id });
   await press(q, "cite");
+  assert.equal(q.answers("cite")[0].cited.length, 1, "the world cited the passage");
   assert.ok(says(main(q), "screen.finder.cite.cited") && main(q).querySelector("[data-cite-done=cited]"));
   assert.equal(main(q).querySelector("[data-cite-done=already]"), null);
 });
 
 /* ---- C32 ---- */
+/* scripted: provenanceroute (needs a recipe that makes a document whose route cannot be shown: the world's own check finds a held copy's route PRESENT) */
 test("R98 C32 the route check sends bundleId in the query, as the arm reads it, and no body field", async () => {
   const p = await openWith(at, { plane: { provenanceroute: ok({ ok: true, bundleId: D, appended: true, route: { finding: "LOOKED_INDETERMINATE" } }) } });
   await press(p, "provenanceroute");
@@ -160,8 +192,17 @@ test("R98 C32 the route check sends bundleId in the query, as the arm reads it, 
 /* ---- C35 ---- */
 const UNWATCHED = DOCUMENT_MD.replace("\nsource:", "\nmonitoring:\n  enabled: false\n  frequency: none\nsource:");
 const unwatched = (extra = {}) => ({ images: { [D]: { "bundle.md": UNWATCHED, "data/provenance.json": provenanceOf(SHA) } }, ...extra });
+/** A copy captured from a public address and brought back from aside (`recipes.setAside`, `heldrestore`), unwatched: the world's network serves the address. */
+async function remoteCopy() {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const made = await world.recipes.setAside(ann);
+  await ann.act("heldrestore", { body: { ids: [made.document], reason: "brought back for the page" } });
+  return { world, ann, ...made, at: "/app/document/" + made.document };
+}
 test("R92 C35 Watch for changes shows the frequency it sends: Every day is first, chosen, and sent untouched", async () => {
-  const p = await openWith(at, unwatched({ plane: { monitorset: ok({ ok: true, bundleId: D, enabled: true }) } }));
+  const c = await remoteCopy();
+  const p = await pageOn(c.world, c.ann, c.at);
   const f = p.doc.getElementById("document-watch-freq");
   const opts = f.querySelectorAll("option");
   assert.deepEqual(opts.map((o) => o.getAttribute("value")), ["daily", "weekly", "monthly", "hourly", "per_meeting"], "no empty first option");
@@ -169,11 +210,14 @@ test("R92 C35 Watch for changes shows the frequency it sends: Every day is first
   assert.equal(f.value, "daily", "what is shown is chosen");
   await press(p, "monitorset");
   assert.equal(p.byOp("monitorset")[0].body.frequency, "daily", "and sent as shown");
+  assert.equal(p.answers("monitorset")[0].frequency, "daily", "the world watches it daily");
   /* control: another frequency chosen is sent */
-  const w = await openWith(at, unwatched({ plane: { monitorset: ok({ ok: true, bundleId: D, enabled: true }) } }));
+  const d = await remoteCopy();
+  const w = await pageOn(d.world, d.ann, d.at);
   fill(w, { "document-watch-freq": "weekly" });
   await press(w, "monitorset");
   assert.equal(w.byOp("monitorset")[0].body.frequency, "weekly");
+  assert.equal(w.answers("monitorset")[0].frequency, "weekly");
 });
 
 /* ---- C41 (document half: Adopt newer version) ---- */

@@ -8,7 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { hasWord } from "../../../src/setup-words/index.mjs";
 import { ok, refusedIn, boot } from "../interface-shell/harness.mjs";
-import { main, actsIn, fill, press, says, section, word, plane, READING, DOCUMENT_MD, provenanceOf, inquiryMd, INQUIRY_REFS, SCREENS, P, Q, Q2, D, SHA, NEWER } from "./fixtures.mjs";
+import { main, actsIn, fill, press, says, section, word, plane, storeWorld, WORLD_FOUNDER_HANDLE, READING, DOCUMENT_MD, provenanceOf, inquiryMd, INQUIRY_REFS, SCREENS, P, Q, Q2, D, SHA, NEWER } from "./fixtures.mjs";
 
 process.env.TZ = "UTC";
 const at = "/app/document/" + D;
@@ -26,56 +26,82 @@ async function choose(p, id, value) {
   await p.settle();
 }
 
-/* ---- C31 / R125 / R3: the cite act sends a body and marks the passage ---- */
-const LEG_ON_PAGE_3 = [{ target: D, role: "supports", grade: "B", extent_kind: "pdf-page", extent_page: 2 }];
-const REF = `${D}#x`;
-/** The plane where the question's bundle gains its leg once `cite` has answered (the page reads the question's image again). */
-function citingPlane() {
-  const base = plane();
-  const state = { cited: false };
-  return { state, plane: {
-    image: (r) => (r.query.id === Q ? ok({ "bundle.md": inquiryMd(P, INQUIRY_REFS, { legs: state.cited ? LEG_ON_PAGE_3 : [] }) }) : base.image(r)),
-    cite: () => { state.cited = true; return ok({ ok: true, inquiry: Q, role: "supports", cited: [REF], alreadyCited: [] }); } } };
+/* the real world (store-assembly's store with the real door; the state is made by real acts, K5054): a page as `as` reads it over the world's door, `plane` scripting
+   only the ops it names; `answers(op)` are the door's own answers to that op, in order */
+const OWN = { capabilities: ["contribute", "create_projects"] };
+async function pageOn(world, as, path, o = {}) {
+  const { door, session } = world.boot(as);
+  const kept = [];
+  const p = await boot({ screens: SCREENS, door: async (req) => { const a = await door(req); kept.push([req.op, a]); return a; }, session, path, ...o });
+  await p.settle();
+  p.answers = (op) => kept.filter(([k]) => k === op).map(([, a]) => (a.json && a.json.result !== undefined ? a.json.result : a.json));
+  return p;
+}
+const PARAGRAPHS = ["The Director shall repair each reported pothole within seven calendar days of the report.", "Repairs are recorded as closed when the crew reports the work complete."];
+const pageHtml = (paragraphs) => `<html><head><title>Council minutes</title></head><body>\n<h1>Council minutes</h1>\n${paragraphs.map((t) => `<p>${t}</p>`).join("\n")}\n</body></html>`;
+/** A member `ann` with a project, two questions in it (`seven`, `closed`) and a copy of a web page held by her (read: its passages are the two paragraphs). With `forQuestion` the copy was
+ *  captured from a public address for `closed` (`acquire` with `for`, the address served by the world's network, `world.script`) and filed as held (`recipes.hold` of the same bytes),
+ *  so its held row names that question; with `vouch` she has also vouched for it (`select`, `release`). `cites` are questions of the project made resting on the copy (their titles). */
+async function member({ forQuestion = false, vouch = false, cites = [] } = {}) {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const project = await world.recipes.project(ann, "Pothole repairs");
+  const seven = (await world.recipes.question(ann, project, { title: "Seven days", text: "Is the city repairing reported potholes within seven days?", draw: true })).id;
+  const closed = (await world.recipes.question(ann, project, { title: "Closed", text: "Does closed mean repaired?", draw: true })).id;
+  const html = pageHtml(PARAGRAPHS);
+  if (forQuestion) {
+    const address = "https://records.example.org/minutes.html";
+    world.script(address, async () => new Response(html, { status: 200, headers: { "content-type": "text/html" } }));
+    await ann.act("acquire", { body: { locator: address, for: closed } });
+  }
+  const doc = await world.recipes.hold(ann, "Council minutes", html, project, { type: "text/html", read: true });
+  if (vouch) {
+    const sel = await ann.act("select", { body: { ids: [doc.bundle] } });
+    await ann.act("release", { query: { handle: sel.handle, acknowledgment: "Checked against the site", mitigation: "None needed" } });
+  }
+  const citing = [];
+  for (const title of cites) citing.push((await world.recipes.question(ann, project, { title, text: title, legs: [{ target: doc.bundle, role: "supports" }], draw: true })).id);
+  const units = (await ann.read("reading", { query: { sha256: doc.sha } })).text_units;
+  return { world, ann, project, seven, closed, citing, document: doc.bundle, sha: doc.sha, units, at: "/app/document/" + doc.bundle };
 }
 
+/* ---- C31 / R125 / R3: the cite act sends a body and marks the passage ---- */
 test("R125 R3 C31 the cite act sends the project, role and passage in the request body and none of them in the address", async () => {
-  const { plane: pl } = citingPlane();
-  const p = await openWith(at, { plane: pl });
-  await choose(p, "document-cite-question", Q);
+  const w = await member();
+  const p = await pageOn(w.world, w.ann, w.at);
+  await choose(p, "document-cite-question", w.seven);
   fill(p, { "document-cite-role": "cuts_against" });
   await press(p, "cite");
   const r = p.byOp("cite")[0];
   const found = typeof r.body.found === "string" ? JSON.parse(r.body.found) : r.body.found;
-  assert.deepEqual([r.body.project, r.body.role, found], [Q, "cuts_against", { capture_sha: SHA, extent: { kind: "pdf-page", page: 2 }, kind: "passage" }], "the body carries the three fields");
+  assert.deepEqual([r.body.project, r.body.role, found], [w.seven, "cuts_against", { capture_sha: w.sha, extent: w.units[0].extent, kind: "passage" }], "the body carries the three fields");
   for (const f of ["project", "role", "found"]) assert.ok(!(f in r.query), `control: ${f} is not in the address`);
+  assert.equal(p.answers("cite")[0].cited.length, 1, "the world cited the passage");
 });
 
 test("R125 R3 C31 once cited, the passage is marked on the reading as cited by this question; control: a passage not cited, and a reading before any cite, draw no mark", async () => {
-  const { plane: pl } = citingPlane();
-  const p = await openWith(at, { plane: pl });
+  const w = await member();
+  const p = await pageOn(w.world, w.ann, w.at);
   assert.equal(main(p).querySelector("[data-passage-cited]"), null, "control: nothing cited, no mark");
-  await choose(p, "document-cite-question", Q);
+  await choose(p, "document-cite-question", w.seven);
   assert.equal(main(p).querySelector("[data-passage-cited]"), null, "control: the question chosen, the passage not cited in it, no mark");
   await press(p, "cite");
-  const mark = main(p).querySelector("[data-passage-cited]");
-  assert.ok(mark, "the passage cited is marked");
-  assert.equal(mark.getAttribute("data-passage-cited"), Q, "as cited by this question");
-  assert.ok(says(mark, "screen.finder.cite.cited") && mark.querySelector(`a.cs-ref[href="/app/question/${Q}"]`), "by its key, with the question as a reference");
-  /* the passage on the next page (page 4) was not cited: control */
-  const next = p.doc.getElementById("document-read-page").querySelectorAll("label").find((l) => l.textContent.includes(word("document.read.next"))).querySelector("input");
-  next.checked = true; p.fire(next, "change"); await p.settle();
-  assert.equal(main(p).querySelector("[data-passage-cited]"), null, "control: the other passage draws none");
+  const marks = main(p).querySelectorAll("[data-passage-cited]");
+  assert.equal(marks.length, 1, "the passage cited is marked, and the other passage draws none (control)");
+  const mark = marks[0];
+  assert.equal(mark.getAttribute("data-passage-cited"), w.seven, "as cited by this question");
+  assert.ok(says(mark, "screen.finder.cite.cited") && mark.querySelector(`a.cs-ref[href="/app/question/${w.seven}"]`), "by its key, with the question as a reference");
   /* a question that holds a leg on this document at that passage is marked without a cite at all (the question the copy was held for) */
-  const held = await openWith(at, { images: { [Q]: { "bundle.md": inquiryMd(P, INQUIRY_REFS, { legs: LEG_ON_PAGE_3 }) } },
-    plane: { heldcaptures: ok({ ok: true, held: [{ bundle_id: D, capture: { sha256: SHA }, captured_for: { questions: [{ question: Q, title: "Seven days?" }] } }] }) } });
-  assert.equal(held.doc.getElementById("document-cite-question").value, Q);
-  assert.equal(main(held).querySelector("[data-passage-cited]").getAttribute("data-passage-cited"), Q, "the question already holding a leg there marks the passage");
+  const h = await member({ forQuestion: true });
+  await h.ann.act("cite", { body: { project: h.closed, role: "supports", found: { capture_sha: h.sha, extent: h.units[0].extent, kind: "passage" } } });
+  const held = await pageOn(h.world, h.ann, h.at);
+  assert.equal(held.doc.getElementById("document-cite-question").value, h.closed);
+  assert.equal(main(held).querySelector("[data-passage-cited]").getAttribute("data-passage-cited"), h.closed, "the question already holding a leg there marks the passage");
 });
 
 /* ---- C33 / R123 / R55 / R113: retire, and a held copy ---- */
 const HELD_ROW = { bundle_id: D, title: "Pothole repair policy", project: P, collected_since: "2026-10-02T09:00:00Z", capture: { sha256: SHA, grade: { grade: "B" } },
   captured_for: { questions: [{ question: Q, title: "Seven days?", asker: "mai" }], withheld: null } };
-const HELD = ok({ ok: true, held: [HELD_ROW] });
 const dialog = (p) => p.root().querySelector('[role="dialog"]');
 const slotOf = (p, op) => p.root().querySelector(`[data-slot="${p.root().querySelector(`button[data-act="${op}"]`).getAttribute("data-ai")}"]`);
 /** Retire pressed and confirmed with a reason; the slot beside the act, where the answer is drawn. */
@@ -87,58 +113,62 @@ async function retireIt(p) {
   await p.settle();
   return slot;
 }
-const SELECT = { select: (r) => ok({ ok: true, handle: "SEL-9", items: r.body.ids }) };
 
 test("R123 R55 R113 C33 a held copy offers no retire; control: a vouched copy offers it, as does a copy of no held row", async () => {
-  const held = await openWith(at, { plane: { heldcaptures: HELD } });
+  const w = await member();
+  const held = await pageOn(w.world, w.ann, w.at);
   assert.ok(main(held).querySelector("[data-held]"), "the copy is held");
   assert.ok(!actsIn(main(held)).includes("retire"), "a held copy offers no retire");
   assert.equal(main(held).querySelector('[data-fold="retire"]'), null, "nor the fold that holds it");
   assert.ok(!actsIn(main(held)).includes("heldsetaside"), "and draws no set-aside act of its own");
   const door = main(held).querySelector("a[data-held-door]");
   assert.ok(door && door.getAttribute("href") === "/app/held" && door.hasAttribute("data-nav") && says(door, "screen.held.name"), "but a door to the Held screen, where it is set aside");
-  const vouched = await openWith(at, { plane: { heldcaptures: HELD, ...SELECT, release: ok({ ok: true, released: [D] }) } });
-  fill(vouched, { "document-release-ack": "Checked", "document-release-mitigation": "None needed" });
-  await press(vouched, "release");
-  assert.ok(main(vouched).querySelector("[data-vouched]"), "vouched for");
-  assert.ok(actsIn(main(vouched)).includes("retire"), "control: a vouched copy offers retire");
-  assert.equal(main(vouched).querySelector("a[data-held-door]"), null, "control: a vouched copy draws no door");
-  const plain = await openWith(at);
+  fill(held, { "document-release-ack": "Checked", "document-release-mitigation": "None needed" });
+  await press(held, "release");
+  assert.ok(main(held).querySelector("[data-vouched]"), "vouched for");
+  assert.ok(actsIn(main(held)).includes("retire"), "control: a vouched copy offers retire");
+  assert.equal(main(held).querySelector("a[data-held-door]"), null, "control: a vouched copy draws no door");
+  /* a copy of another member's, in a project she has joined, is no held row of hers */
+  const rosa = await w.world.signIn("rosa", OWN);
+  const hers = await w.world.recipes.project(rosa, "Rosa's project");
+  await rosa.act("projectinvite", { query: { projectId: hers, handle: "ann" }, body: {} });
+  await w.ann.act("projectjoin", { query: { projectId: hers }, body: {} });
+  const copy = await w.world.recipes.page(rosa, "Rosa's page", { project: hers });
+  const plain = await pageOn(w.world, w.ann, "/app/document/" + copy.bundle);
   assert.ok(actsIn(main(plain)).includes("retire"), "control: a copy that is no held row of hers offers retire");
 });
 
-const TWO_CITERS = { backlinks: ok({ ok: true, target: D, backlinks: [{ from: Q, from_type: "inquiry", from_title: "Seven days?", rel: "cites" },
-  { from: Q2, from_type: "inquiry", from_title: "Does closed mean repaired?", rel: "cites" }] }) };
 const cited = (extra = {}) => ({ status: 200, json: { ok: true, result: { ok: false, reason: "CITED", code: "CITED", translation: "This copy is cited.", offenders: [{ id: D, citedBy: [Q, Q2] }], ...extra } } });
 
 test("R123 R113 C33 retire answered CITED draws the questions that cite the copy as references and not the release act's sentence", async () => {
-  const p = await openWith(at, { plane: { ...SELECT, ...TWO_CITERS, retire: cited() } });
+  const w = await member({ vouch: true, cites: ["Seven days?", "Does closed mean repaired?"] });
+  const p = await pageOn(w.world, w.ann, w.at);
   const slot = await retireIt(p);
+  assert.equal(p.answers("retire")[0].reason, "CITED", "the world refuses it");
   const refs = slot.querySelectorAll("a.cs-ref");
-  assert.deepEqual(refs.map((a) => a.getAttribute("href")), ["/app/question/" + Q, "/app/question/" + Q2], "both questions, each a door to its page");
-  assert.deepEqual(refs.map(text), ["Seven days?", "Does closed mean repaired?"], "named by their titles");
+  assert.deepEqual(refs.map((a) => a.getAttribute("href")).sort(), w.citing.map((q) => "/app/question/" + q).sort(), "both questions, each a door to its page");
+  assert.deepEqual(refs.map(text).sort(), ["Does closed mean repaired?", "Seven days?"], "named by their titles");
   assert.ok(!says(slot, "refusal.ILLEGAL_TRANSITION"), "never the release act's sentence");
   assert.ok(text(slot).includes(word("screen.document.retire.refused.cited", { questions: "" }).split("{")[0].trim().slice(0, 20)), "the cited sentence is drawn by its key");
-  /* control: without the refusal's own list the page's questions that cite the copy are drawn */
-  const q = await openWith(at, { plane: { ...SELECT, ...TWO_CITERS, retire: cited({ offenders: undefined }) } });
+  /* control: without the refusal's own list the page's questions that cite the copy are drawn (scripted: the world's refusal always lists its offenders) */
+  const q = await pageOn(w.world, w.ann, w.at, { plane: { retire: cited({ offenders: undefined }) } });
   const slot2 = await retireIt(q);
   assert.equal(slot2.querySelectorAll("a.cs-ref").length, 2, "from the page's own backlinks");
 });
 
 test("R123 R113 C33 retire answered ILLEGAL_TRANSITION does not draw the release act's sentence", async () => {
   const illegal = { status: 200, json: { ok: true, result: { ok: false, reason: "ILLEGAL_TRANSITION", code: "ILLEGAL_TRANSITION", translation: word("refusal.ILLEGAL_TRANSITION"), to: "retired" } } };
-  const p = await openWith(at, { plane: { ...SELECT, retire: illegal } });
+  const w = await member({ vouch: true });
+  /* scripted: the retire's refusal (needs a recipe that brings a copy to a state the world refuses to retire it from) */
+  const p = await pageOn(w.world, w.ann, w.at, { plane: { retire: illegal } });
   const slot = await retireIt(p);
   assert.ok(!says(slot, "refusal.ILLEGAL_TRANSITION") && !text(slot).includes(word("refusal.ILLEGAL_TRANSITION")), "not the release sentence");
   assert.ok(says(slot, "screen.document.retire.refused.illegal"), "its own sentence, by key");
   assert.equal(p.byOp("retire").length, 1, "the retire was sent");
   /* control: a vouched, uncited copy retires as before */
-  const state = { retired: false };
-  const base = plane();
-  const RETIRED_MD = DOCUMENT_MD.replace("\nsource:", "\ncurrent_state: retired\nsource:");
-  const ok2 = await openWith(at, { plane: { ...SELECT, image: (r) => (r.query.id === D && state.retired ? ok({ "bundle.md": RETIRED_MD, "data/provenance.json": provenanceOf(SHA) }) : base.image(r)),
-    retire: () => { state.retired = true; return ok({ ok: true, retired: [D] }); } } });
+  const ok2 = await pageOn(w.world, w.ann, w.at);
   await retireIt(ok2);
+  assert.equal(ok2.answers("retire")[0].ok, true, "the world retired it");
   assert.ok(main(ok2).querySelector("[data-retired]"), "control: retired as before");
 });
 
@@ -158,10 +188,23 @@ const TESTIMONY_MD = ["---", `id: ${D}`, "object_type: information", "title: \"T
   "  retrieved: 2026-10-04T09:00:00Z", "---", "", "## Provenance Notes", "", "Authored through op=testify.", ""].join("\n");
 const withMd = (md) => ({ images: { [D]: { "bundle.md": md, "data/provenance.json": provenanceOf(SHA) } } });
 
+/** A copy captured from a public address for a question and brought back from aside (`recipes.setAside`, `heldrestore`): the world's network serves the address. */
+async function remoteCopy() {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const made = await world.recipes.setAside(ann);
+  await ann.act("heldrestore", { body: { ids: [made.document], reason: "brought back for the page" } });
+  const held = (await ann.read("heldcaptures", { query: { bundle_id: made.document } })).held[0];
+  return { world, ann, ...made, address: held.source.address, at: "/app/document/" + made.document };
+}
+
 test("R55 C40 attest sends the digest, the archive request and the document's public https address; a testimony, an http address and a local host send neither", async () => {
-  const p = await openWith(at, { plane: { attest: attestAnswer({ ok: true, attestation: TOKEN, archive: { service: "a", locator: "https://archive.example/1" } }) } });
+  const c = await remoteCopy();
+  const p = await pageOn(c.world, c.ann, c.at);
   await attestIt(p);
-  assert.deepEqual(p.byOp("attest")[0].body, { sha256: SHA, archive: true, locator: "https://example.org/ai-4-12.pdf" });
+  assert.deepEqual(p.byOp("attest")[0].body, { sha256: c.sha, archive: true, locator: c.address });
+  assert.equal(p.answers("attest").length, 1, "the world answered the attestation");
+  /* scripted below: attest (needs recipes that hold a copy of an http address, of a local host and of a testimony, whose public-address test the world's capture would refuse) */
   for (const md of [HTTP_MD, TESTIMONY_MD, WEB.replace("https://example.org/", "https://localhost/"), WEB.replace("https://example.org/", "https://10.0.0.5/")]) {
     const q = await openWith(at, { ...withMd(md), plane: { attest: attestAnswer({ ok: true, attestation: TOKEN }) } });
     await attestIt(q);
@@ -169,6 +212,7 @@ test("R55 C40 attest sends the digest, the archive request and the document's pu
   }
 });
 
+/* scripted: attest (needs a recipe that stands a time-stamping authority and an archive in the world's network, so the attestation obtains both, one or neither) */
 test("R55 C40 attest says which of the two is still missing, in words that exist; both obtained says done only; neither is refused as before", async () => {
   const both = await openWith(at, { plane: { attest: attestAnswer({ ok: true, attestation: TOKEN, archive: { service: "a", locator: "https://archive.example/1" } }) } });
   const s1 = await attestIt(both);
@@ -242,21 +286,25 @@ test("R3 C95 the cite picker has a search box: typing a word narrows the questio
 });
 
 /* ---- C94 / interface-shell R111: members named by handle ---- */
-const ROSTER = ok({ ok: true, members: [{ member_id: "admin", handle: "sparky" }, { member_id: "m-77", handle: "rosa" }] });
-const ORIGINS = ok({ ok: true, bundleId: D, origins: [
-  { seq: 1, system: "Portal", by: "admin", at: "2026-10-01T09:00:00Z" }, { seq: 2, system: "Email", by: "member:m-77", at: "2026-10-02T09:00:00Z" }, { seq: 3, system: "Paper", by: "m-99", at: "2026-10-03T09:00:00Z" }] });
-
 test("C94 R111 a member the record names is drawn by her handle, the founder's id included, never by the id; an id with no handle known draws the plain word", async () => {
-  const p = await openWith(at, { plane: { memberlist: ROSTER, origins: ORIGINS } });
+  const w = await member();
+  const founder = await w.world.signIn(WORLD_FOUNDER_HANDLE);
+  /* the founder's member id is `admin`, her handle is not; both declare where the copy came from (provenance R64) */
+  await founder.act("declareorigin", { body: { bundleId: w.document, system: "Portal" } });
+  await w.ann.act("declareorigin", { body: { bundleId: w.document, system: "Email" } });
+  const p = await pageOn(w.world, w.ann, w.at);
   const rows = section(p, "screen.document.origin.head").querySelectorAll("[data-origin]");
-  assert.ok(text(rows[0]).includes("sparky") && text(rows[1]).includes("rosa"), "each one's handle");
-  assert.ok(text(rows[2]).includes(word("shell.card.member")), "an unknown id draws the plain word");
+  assert.ok(text(rows[0]).includes(WORLD_FOUNDER_HANDLE) && text(rows[1]).includes("ann"), "each one's handle");
   const all = text(main(p));
-  for (const id of ["admin", "m-77", "m-99"]) assert.ok(!all.includes(id), `never the id ${id}`);
-  /* control: no roster answers; the founder is the unnamed founder and the others the plain word */
-  const none = await openWith(at, { plane: { memberlist: ok({ ok: true, members: [] }), origins: ORIGINS } });
+  assert.doesNotMatch(all, /\badmin\b/, "never the founder's id");
+  /* control: no roster answers (the world's roster always lists its members, so it is scripted empty over the real origins); the founder is the unnamed founder, the other keeps the handle she declared by */
+  const none = await pageOn(w.world, w.ann, w.at, { plane: { memberlist: ok({ ok: true, members: [] }) } });
   const r2 = section(none, "screen.document.origin.head").querySelectorAll("[data-origin]");
-  assert.ok(text(r2[0]).includes(word("member.founder.unnamed")) && text(r2[1]).includes(word("shell.card.member")), "control: no handle known draws the fallback word");
+  assert.ok(text(r2[0]).includes(word("member.founder.unnamed")) && text(r2[1]).includes("ann"), "control: no handle known draws the fallback word: " + r2.map(text).join(" | "));
+  /* an id the record names that no member of the roster holds draws the plain word (scripted: the origins, since the world's records name only members it holds) */
+  const stray = await pageOn(w.world, w.ann, w.at, { plane: { origins: ok({ ok: true, bundleId: w.document, origins: [{ seq: 1, system: "Paper", by: "m-99", at: "2026-10-03T09:00:00Z" }] }) } });
+  const r3 = section(stray, "screen.document.origin.head").querySelectorAll("[data-origin]");
+  assert.ok(text(r3[0]).includes(word("shell.card.member")) && !text(main(stray)).includes("m-99"), "an unknown id draws the plain word, never the id");
 });
 
 /* ---- C17 / R96: "read N of M words" ---- */
@@ -298,6 +346,7 @@ const UNMATCHED = [{ ref: "name:director-chen", label: "Director Chen", page: 3 
 const NAMES_FOR_TESTIFY = (extra = {}) => ok({ ok: true, names: [{ entity_id: "ENT-17", label: "L. Chen, Director of Public Works", kind: "person", grade: "A", matched_by: "identifier", mentions: 1 }], resolutions: [], ...extra });
 const testifyFold = (p) => main(p).querySelector('[data-fold="testify"]');
 
+/* scripted: resolvetestify and the names of `resolutions` (needs a recipe that reads a document whose person is named but matched to no registered subject, and registers the subject she is then said to be) */
 test("R126 DEC-394 resolvetestify: a name the record matched to no subject is listed with a field for who it is and how she knows; it sends the declared fields; no how, nothing is sent; control: no unmatched name, no fold", async () => {
   const p = await openWith(at, { plane: { resolutions: NAMES_FOR_TESTIFY({ unresolved: UNMATCHED }), resolvetestify: ok({ ok: true }) } });
   const fold = testifyFold(p);
@@ -316,39 +365,38 @@ test("R126 DEC-394 resolvetestify: a name the record matched to no subject is li
 });
 
 /* ---- DEC-394 (3e) R127: contradictionflag ---- */
-const OTHER = "INFO-2026-0011", OTHER_SHA = "5".repeat(64);
-const FLAG_PLANE = (extra = {}) => {
-  const base = plane();
-  return { list: (r) => (r.query.type === "information" ? ok({ bundles: [{ bundle_id: D, object_type: "information", title: "This one" }, { bundle_id: OTHER, object_type: "information", title: "Rent notice, October 2026" }] }) : ok({ bundles: [] })),
-    image: (r) => (r.query.id === OTHER ? ok({ "bundle.md": ["---", `id: ${OTHER}`, "object_type: information", "title: \"Rent notice, October 2026\"", "---", "", ""].join("\n"), "data/provenance.json": provenanceOf(OTHER_SHA) }) : base.image(r)),
-    reading: (r) => ok(r.query.sha256 === OTHER_SHA ? READING({ capture_sha: OTHER_SHA, text_units: [{ seq: 1, extent: { kind: "pdf-page", page: 0 }, text: "The rent rises on November 1." }], unread_pages: [] }) : READING()),
-    contradictionflag: ok({ ok: true, wrote: true, candidate: "c1" }), ...extra };
-};
 const flagFold = (p) => main(p).querySelector('[data-fold="contradict"]');
 
 test("R127 DEC-394 contradictionflag: a passage here and a passage in another document are chosen with how they disagree; it sends the declared fields; refusals by key; control: no other document, no fold", async () => {
-  const p = await openWith(at, { plane: FLAG_PLANE() });
+  const w = await member();
+  const other = await w.world.recipes.page(w.ann, "Rent notice, October 2026", { paragraphs: ["The rent rises on November 1."], project: w.project });
+  const there = (await w.ann.read("reading", { query: { sha256: other.sha } })).text_units[0].extent;
+  const p = await pageOn(w.world, w.ann, w.at);
   const fold = flagFold(p);
   assert.ok(fold && says(fold, "screen.document.contradict.head") && says(fold, "screen.document.contradict.note1"), "the fold and its note by key");
   assert.ok(says(await press(p, "contradictionflag"), "refusal.FLAG_NO_PASSAGE"), "no passage chosen: refused by its key, nothing sent");
-  await choose(p, "document-flag-other", OTHER);
-  assert.equal(p.byOp("reading").filter((r) => r.query.sha256 === OTHER_SHA).length, 1, "the other document's passages are read");
+  await choose(p, "document-flag-other", other.bundle);
+  assert.equal(p.byOp("reading").filter((r) => r.query.sha256 === other.sha).length, 1, "the other document's passages are read");
   fill(p, { "document-flag-here": "0", "document-flag-there": "0" });
   assert.ok(says(await press(p, "contradictionflag"), "refusal.FLAG_NO_REASON"), "no reason: refused by its key");
   assert.equal(p.byOp("contradictionflag").length, 0);
   fill(p, { "document-flag-why": "One says November, the other December." });
   await press(p, "contradictionflag");
-  assert.deepEqual(p.byOp("contradictionflag")[0].body, { here: { capture: SHA, extent: { kind: "pdf-page", page: 2 } }, other: { capture: OTHER_SHA, extent: { kind: "pdf-page", page: 0 } }, reason: "One says November, the other December." });
+  assert.deepEqual(p.byOp("contradictionflag")[0].body, { here: { capture: w.sha, extent: w.units[0].extent }, other: { capture: other.sha, extent: there }, reason: "One says November, the other December." });
+  assert.equal(p.answers("contradictionflag").length, 1, "the world answered it");
+  /* the owner's refusals drawn by their keys (scripted: the world's flag is refused for no passage only past the page's own checks) */
   for (const code of ["FLAG_SAME_DOCUMENT", "FLAG_NO_PASSAGE"]) {
-    const q = await openWith(at, { plane: FLAG_PLANE({ contradictionflag: refusedIn(code, "x") }) });
-    await choose(q, "document-flag-other", OTHER);
+    const q = await pageOn(w.world, w.ann, w.at, { plane: { contradictionflag: refusedIn(code, "x") } });
+    await choose(q, "document-flag-other", other.bundle);
     fill(q, { "document-flag-here": "0", "document-flag-there": "0", "document-flag-why": "x" });
     assert.ok(says(await press(q, "contradictionflag"), "refusal." + code), code);
   }
-  const alone = await openWith(at);
+  const lone = await member();
+  const alone = await pageOn(lone.world, lone.ann, lone.at);
   assert.equal(flagFold(alone), null, "control: no other document to set it beside, no fold");
 });
 
+/* scripted: heldcaptures (needs a recipe that holds a copy whose upload is not whole, `whole: false`) */
 test("R55 R123 capture R77 a held row that is not whole (whole: false) withholds the vouch box and the OCR re-read; whole: true and whole: null draw them", async () => {
   const row = (whole) => ok({ ok: true, held: [{ ...HELD_ROW, whole }] });
   const no = await openWith(at, { plane: { heldcaptures: row(false) } });
