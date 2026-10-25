@@ -1752,6 +1752,10 @@ async function acquireRun(cap, body0, opts0, t) {
     const w = await timed(t, "subresources", () => walkSubresources(cap, { ev, sha, total, multipart, ct, name, locator, base: resolvedUrl || locator,
                                              retrieved, resume: null, sessionId: null, own, openedBy: actor, owe: oweOf(cap, opts) }));
     subs = w.subs; subsSkipped = w.skipped; sessionId = w.sessionId;
+  } else if (!subsSkipped && !renderDeferred && !multipart && detectFormat(null, ct || null).format === "html") {
+    /* R123: the page's own links are filed whether or not supporting files are asked; nothing is fetched for them */
+    await timed(t, "subresources", () => walkSubresources(cap, { ev, sha, total, multipart, ct, name, locator, base: resolvedUrl || locator,
+                                                          retrieved, resume: null, sessionId: null, linksOnly: true }));
   }
 
   /* R108 (G19): what of the supporting files was kept, stated in the capture's facts and in the answer */
@@ -2218,10 +2222,20 @@ function snapshotOf(subs, sessionId, name, shellRecorded) {
   };
 }
 
+/** The page's links, handed to the store under the capture they were read from (capture R27). */
+function fileLinks(cap, { sha, retrieved, links }) {
+  if (!links || !links.length) return;
+  cap.recordLinks({ sourceCapture: sha, capturedAt: retrieved,
+    links: links.filter((l) => l.address).map((l) => ({
+      ref: l.ref, address: l.address, address_norm: normalizeAddress(l.address),
+      citation_norm: l.citation || normalizeCitation(l.address), fragment: l.fragment || null,
+      type: l.type, origin: l.origin, chrome: l.chrome === true, chrome_basis: l.chrome_basis || null })) });
+}
+
 /** R19: the walk of a page's supporting files, over the primary READ BACK from the store (the parser sees the bytes
  *  the record holds, never a copy in flight beside them). Every bookkeeping write after it is stated or ignored,
  *  never a failed capture. */
-async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, locator, base, retrieved, resume, sessionId, own = null, openedBy = null, owe = null }) {
+async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, locator, base, retrieved, resume, sessionId, own = null, openedBy = null, owe = null, linksOnly = false }) {
   const SUB_PARSE_MAX = 8 * 1024 * 1024;
   if (multipart || total > SUB_PARSE_MAX)
     return { subs: null, skipped: { reason: "TOO_LARGE_TO_PARSE", detail:
@@ -2233,6 +2247,20 @@ async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, loca
   try { obj = await ev.get(sha); } catch { obj = null; }
   if (!obj) return { subs: null, skipped: { reason: "PRIMARY_UNREADABLE", detail: localize("acquisition.index.the_primary_capture_did_not", "the primary capture did not read back") } };
   const primaryBytes = new Uint8Array(await obj.arrayBuffer());
+  /* R123: the page's links alone. The same parse and classification as the walk, with a fanout of none, so no reference is
+     fetched and nothing is stored (the companion is not kept); the links are filed as the walk files them. */
+  if (linksOnly) {
+    try {
+      const only = await captureSubresources({
+        cap: 0, html: (decodeAs(primaryBytes, ct, { kind: "html" }).text ?? ""), base, primarySha: sha, primaryFile: `snapshots/${name}`,
+        isPublic: isPublicHttpsLocator, sha256: sha256Hex,
+        put: async () => ({ existed: true }),
+        fetchOne: async () => { throw new Error("links alone fetch nothing"); },
+      });
+      fileLinks(cap, { sha, retrieved, links: only.links });
+    } catch { /* an unfiled link is not a failed capture */ }
+    return { subs: null, skipped: null, sessionId: null };
+  }
   /* capture R23: the platform's ceiling as last OBSERVED, discarded every so often (probeDue) to run to refusal again. */
   let limit = null;
   try { limit = cap.captureLimit("subrequests"); } catch { limit = null; }
@@ -2309,14 +2337,8 @@ async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, loca
       detail: localize("acquisition.index.work_calls_compute_calls_over", "{work_calls} compute calls over {work_bytes} bytes; {fetched} fetched, {discovered} discovered", { work_calls: String(subs.manifest.compute.work_calls), work_bytes: String(subs.manifest.compute.work_bytes), fetched: String(subs.manifest.counts.fetched), discovered: String(subs.manifest.discovered) }) });
   } catch { /* an unfiled measurement is not a failed capture */ }
   /* The links, anchors included (an in-page anchor is an element reference into this document). */
-  try {
-    if (subs.links && subs.links.length)
-      cap.recordLinks({ sourceCapture: sha, capturedAt: retrieved,
-        links: subs.links.filter((l) => l.address).map((l) => ({
-          ref: l.ref, address: l.address, address_norm: normalizeAddress(l.address),
-          citation_norm: l.citation || normalizeCitation(l.address), fragment: l.fragment || null,
-          type: l.type, origin: l.origin, chrome: l.chrome === true, chrome_basis: l.chrome_basis || null })) });
-  } catch { /* an unfiled link is not a failed capture */ }
+  try { fileLinks(cap, { sha, retrieved, links: subs.links }); }
+  catch { /* an unfiled link is not a failed capture */ }
   /* The change case matters most: different bytes at a known address put every earlier reuse into question. */
   if (baseHost && subs.siteObservations && subs.siteObservations.length) {
     try { subs.siteRecord = cap.recordSiteAssets({ host: baseHost, primarySha: sha, observations: subs.siteObservations }); }
