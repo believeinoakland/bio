@@ -29,6 +29,7 @@ const FAR = () => Date.now() + 30 * 86_400_000;   /* the alarm's instant, after 
 const alarm = (at = FAR()) => doAsk(`g54p/alarm?at=${at}`);
 const fin = (t) => (t.sweep ? t.sweep.finished : 0), asked = (t) => (t.sweep ? t.sweep.asked : 0);   /* the sweep is not in the answer of a tick that did not run it */
 const state = (s) => doAsk(`g54/state?case=${s.caseId}&edition=1`);
+const hold = (on) => doAsk(`g54p/hold?on=${on ? 1 : 0}`);   /* the runtime's own alarm does nothing while held: the ticks are the test's (`alarm`) */
 
 let nth = 0;
 async function seeded(extra = "") {
@@ -124,6 +125,7 @@ test("R87 G54 L: an edition whose caller disconnects after the commit is complet
 test("R87 G54 L (measure): an edition of about 500 files and 40 MB of material is built by one tick of the object's alarm at the real limits, without a memory kill; the bucket's counts are printed", { timeout: 480_000 }, async () => {
   await drain();
   const s = await seeded("&materials=250&kib=160");
+  await hold(true);
   await completed(s, { disarm: true });   /* the build is the tick asked for below, not one the runtime fires beside it (a 9 s sweep of 40 MB on a slow machine meets the next request and the tick's counts are the other tick's) */
   await doAsk("g54p/bucket?mode=count");
   const t = await alarm();
@@ -133,12 +135,14 @@ test("R87 G54 L (measure): an edition of about 500 files and 40 MB of material i
   assert.match(String(st.manifest_sha), /^[0-9a-f]{64}$/);
   assert.equal(st.ledger.state, "built");
   assert.ok(t.sweep.files >= 500, `every document and every text is a file (${t.sweep.files})`);
+  await hold(false);
 });
 
 test("R87 G54 L: the reader's `publishedcase` (the Worker's public door, the object's ledger) states the case file: being_prepared before, retrying with its code after a recorded failure, built after the sweep; it never carries a step, an error or a detail", { timeout: 240_000 }, async () => {
   await drain();
   const s = await seeded();
-  await completed(s, { disarm: true });   /* the states below are those of the ticks this test asks for: the alarm the completing act arms would fire beside them (at once, its first-attempt grace being past) and build the case file before the injected failure is met (4 of 4 whole-file runs under load) */
+  await hold(true);   /* the states below are those of the ticks this test asks for: the alarm the completing act arms (and any request re-arms, plane R102) would fire beside them, at once, its first-attempt grace being past, and build the case file before the injected failure is met (whole-file runs, every one) */
+  await completed(s, { disarm: true });
   const read = async () => { const r = await mf.dispatchFetch(`http://plane/api?op=publishedcase&id=${s.caseId}`); const t = await r.text(); assert.equal(r.status, 200, t); return JSON.parse(t); };
   const cf = async () => { const j = await read(); return j.result ? j.result.case_file ?? (j.result.verification && j.result.verification.case_file) : j.case_file; };
   const before = await cf();
@@ -156,4 +160,5 @@ test("R87 G54 L: the reader's `publishedcase` (the Worker's public door, the obj
   const builtNow = await cf();
   console.log(`# G54 L publishedcase after the sweep: ${JSON.stringify(builtNow)}`);
   assert.equal(builtNow.state, "built");
+  await hold(false);
 });
