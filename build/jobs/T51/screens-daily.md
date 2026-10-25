@@ -529,3 +529,8 @@ Size (session_01GykapzvyLDepprUbDPaXny): test runs 11, module lines 4264
 ## J27 · BLOCKED
 
 BLOCKED (cause: context-free, needs BOB's modules.json): R6's second half is done and pushed (ruleanswer drawn only while ruleservicesstate reads on; both states on answers' fixture, red first; module 297/297; format, coverage, ownership, words 0). Architecture fails once: answers.test.mjs imports bio-plane/test/m/answers/fixtures.mjs (ruleServicesState) and 'answers' is not in screens-daily's uses. Please add 'answers' to screens-daily's uses on the tranche (same as record-core in B37); then I merge, re-run architecture and post COMPLETE.
+
+## Completion (SCREENS-DAILY #21, B40)
+
+Merged `tranche/T51` (`answers` now in `uses`, K5142). architecture 0 failures (121 imports); ownership 0; format 0; coverage 101/101, 0; answers and contract tests 21 pass, 0 fail (the full module run, 297 pass, was before the merge, which changed no file of mine). B38's R6 first half and B39's second half are both done.
+Size (session_01GykapzvyLDepprUbDPaXny): test runs 13, module lines 4264
