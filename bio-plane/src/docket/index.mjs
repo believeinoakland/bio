@@ -454,7 +454,7 @@ export class Docket {
     }
     /* END DEC-49 REGION is-docket-form */
     return { fields: { edition: ed, from: fromRow, capture: cap, kind, proposed, reason, answers: answering, contests: yes(contests),
-                       outcome: outcomeRow, summary: outcomeRow ? summary.trim() : null } };
+                       outcome: outcomeRow, summary: outcomeRow || oneParagraph(summary, SUMMARY_MAX) ? summary.trim() : null } };
   }
 
   /** R1, R11, R13: files a record entry, or, with `takesBack`, takes an earlier record entry back with a reason. */
@@ -484,7 +484,7 @@ export class Docket {
     /* R13: a contesting filing is told to reevaluation after it commits; a throw there never undoes it. */
     if (x.contests) this.#call(() => this.reevaluation.docketActed({ kind: "contested", case: c.case, entry: id }));
     return { ok: true, entry: id, case: c.case, edition: x.edition, kind: x.kind, shelf: "record", found_by: x.capture.found_by,
-             contests: x.contests, filed_at: at, ...(x.outcome ? { outcome: x.outcome, summary: x.summary } : {}) };
+             contests: x.contests, filed_at: at, ...(x.outcome ? { outcome: x.outcome } : {}), ...(x.summary ? { summary: x.summary } : {}) };
   }
 
   /* R11: a record entry taken back by a later record act with a reason; it then reads `taken-back`. */
@@ -746,6 +746,8 @@ export class Docket {
     /* R4: the shelf is a function of the kind, so a caller that names none (the screens' prepare names a case, an entry and
        its kind) is answered the kind's own shelf; one that names another is still refused DOCKET_WRONG_SHELF. */
     const shelfOf = shelf === null || shelf === undefined || shelf === "" ? (kind === "reaction" ? "reactions" : "listed") : shelf;
+    /* R1, R4 (K5148): the summary filed with the entry is the default when the prepare names none. */
+    if (kind !== "outcome" && !str(summary) && rec && rec.summary) summary = rec.summary;
     const kr = this.#kindRefusal(c, kind, { shelf: shelfOf, edition, summary: kind === "outcome" ? null : summary, reason, holder, takesBack,
                                             candidate, grant }, rec, recFields);
     if (kr.refusal) return kr.refusal;
