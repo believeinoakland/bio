@@ -254,3 +254,15 @@ Tests and checks (run from the product root, absolute path)
 Deferred: none. Flaws found in inquiry: none. Found in another module: none new.
 
 Size (session_012iUyB6WHxSjhQz8p8rGanY): test runs 3, module lines 3849
+
+## J14 · REPORT
+
+Findings outside inquiry's paths (B15, plan item 99 (6)), each the day found:
+
+1. **control-plane `t50-door.test.mjs:175`.** Plan item 99 says this line hand-builds a `NOT_AN_INQUIRY`. At this tranche the line is the head of `acquireWorld`, and no `NOT_AN_INQUIRY` literal appears anywhere under `bio-plane/test/m/control-plane/`. The refusal that test relies on already comes from inquiry's published `readRefusals()` (`sight.notAnInquiry`, read through `seesOnlyQ1` at :178). So nothing is hand-built there now. The item may cite a stale line; CONTROL-PLANE should confirm it and re-point the `BAD_FOR` cases to `readRefusals`, which it already uses.
+
+2. **screens-inquiry, hand-built answers to inquiry's ops** (the seven `-> inquiry` lines of `checks/fixtures.mjs --list`): `fixtures.mjs:106` (questionwaits), `:118` (inquirypartition); `fr28-question-acts.test.mjs:116` (inquirydivide ok; the CHILD_EXISTS refusal at :127 via `refusedIn`); `fr3-question.test.mjs:122` and `question.test.mjs:83` (inquiryground `{act: "authored"}`); `question.test.mjs:120` (inquirypartition); `t48.test.mjs:133` (questionwaits). The published answers they should take now are in `bio-plane/test/m/inquiry/fixtures.mjs`: `divideAnswers()` (divided, childExists, noHome, noReason, notAnInquiry, absent, machine), `groundAnswers()` (authored, restructured, noPartition, notAnInquiry, absent, cutsAgainst, noReason), `readRefusals()` (inquirypartition), `questionWaitsNone()` and `questionWaitsSetAside()` (questionwaits).
+   The real answers carry more than the stand-ins: a real `questionwaits` answer also has `zone`, `document_waits`, `history` and `projects`. In a world without `capture`, `document_waits` is `null` with `document_waits_why` = `HELD_ACTS_UNREADABLE`, so a screen test should build its world with capture to see what the screen is shown.
+   The re-pointing is screens-inquiry's, in its next session (plan item 99 (6)).
+
+Also observed, not a finding in our paths: `checks/run.mjs /home/user/bio` exits 1 with 820 `FAIL` lines across other modules (none under `inquiry`); its words line reads 19247 words, 16 failures, and this job adds no user-facing string.
