@@ -72,8 +72,8 @@ test("R77 (N729): selectionRead answers what selectionResolve answers at weight 
   assert.notEqual(resolved.expires, s.expires, "resolve extends; read did not");
   const after = rows();
   assert.equal(w.retrieval.selectionRead({ handle: "sel-nope", owner: "o", viewer: V("vera") }).reason, "NO_SUCH_SELECTION");
-  assert.deepEqual(w.retrieval.selectionRead({ handle: s.handle, owner: "x", viewer: V("vera") }).reason, "NOT_YOURS");
-  assert.deepEqual(w.retrieval.selectionRead({ handle: s.handle, viewer: V("vera") }).reason, "NOT_YOURS");
+  assert.deepEqual(w.retrieval.selectionRead({ handle: s.handle, owner: "x", viewer: V("vera") }).reason, "SELECTION_NOT_YOURS");
+  assert.deepEqual(w.retrieval.selectionRead({ handle: s.handle, viewer: V("vera") }).reason, "SELECTION_NOT_YOURS");
   /* `old` expires (resolve renewed `s`): read answers NO_SUCH_SELECTION and leaves it in place, unswept. */
   w.clock.sel += SELECTION_TTL_MS;
   assert.deepEqual(w.retrieval.selectionRead({ handle: old.handle, owner: "o", viewer: V("vera") }),
@@ -100,7 +100,7 @@ test("R73, R77 (N729): findIn over a {selection} reads it through selectionRead:
   assert.deepEqual([ok.ok, ok.scope.captures], [true, 2]);
   assert.equal(rows(), before);
   assert.equal(find(w, { scope: { selection: s.handle }, kinds: ["vibes"] }).reason, "KIND_UNKNOWN");
-  assert.equal(find(w, { scope: { selection: s.handle }, kinds: ["money"], owner: V("ann") }).reason, "NOT_YOURS");
+  assert.equal(find(w, { scope: { selection: s.handle }, kinds: ["money"], owner: V("ann") }).reason, "SELECTION_NOT_YOURS");
   assert.equal(rows(), before, "a refused find writes nothing");
   w.clock.sel += SELECTION_TTL_MS;
   assert.equal(find(w, { scope: { selection: s.handle }, kinds: ["money"] }).reason, "NO_SUCH_SELECTION");
