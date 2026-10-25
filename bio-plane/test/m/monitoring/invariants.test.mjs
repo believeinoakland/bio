@@ -37,6 +37,7 @@ test("R37 detecting change is mechanical: a tick writes only monitor-tick's fiel
   const id = "INFO-2026-0810-mech";
   const b = w.monitored(id, LOC, "mech-v1");
   const before = w.text(id);
+  const baselineEntry = JSON.parse(w.record.readFile(id, "data/provenance.json").text).documents[0];
   w.net.routes[LOC] = serve("mech-v2");
   const r = await tick(w, id);
   assert.equal(r.body.status, "modified");
@@ -54,9 +55,11 @@ test("R37 detecting change is mechanical: a tick writes only monitor-tick's fiel
   walk(fb, fa, "");
   assert.ok(moved.length > 0);
   for (const m of moved) assert.ok(allowed.includes(m), `${m} is not in monitor-tick's field set (${allowed.join(", ")})`);
-  /* the register still names the baseline as the document's capture: the new bytes are a snapshot, not the current hash */
+  /* the register still names the baseline as the document's capture, first and unchanged: the new bytes are a later copy filed beside
+     it with its own entry (R79), not the current hash */
   const reg = JSON.parse(w.record.readFile(id, "data/provenance.json").text);
-  assert.deepEqual(reg.documents.map((d) => d.capture.sha256), [b.cap]);
+  assert.deepEqual(reg.documents.map((d) => d.capture.sha256), [b.cap, sha("mech-v2")]);
+  assert.deepEqual(reg.documents[0], baselineEntry);
   assert.equal(fa.reeval_pending.flag, true, "a change raises a flag for a member");
   assert.equal(w.manifest(id).at(-1).writer, "mechanical");
 });
