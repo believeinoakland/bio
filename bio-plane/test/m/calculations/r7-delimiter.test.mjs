@@ -35,7 +35,8 @@ test("R1 G64: a tab-delimited source (the walker's shape, 18,098 data rows) is t
   assert.equal(tab.sha, comma.sha, "the canonical bytes are comma RFC 4180 whichever delimiter the source used");
   const page = await w.c.readTable({ sha: tab.sha, viewer: V("bob"), limit: 3 });
   assert.deepEqual(page.page.rows[0], ["P001", "P002", "10"], "row 0 is the first data row");
-  assert.equal(page.table.rows.length, 18098);
+  assert.equal(page.table.rows.length, 3, "R48: the answer holds the page asked, three rows");
+  assert.equal((await w.c.readTable({ sha: tab.sha, viewer: V("bob"), limit: 3, rows: "all" })).table.rows.length, 18098, "every row only when asked for");
 });
 
 test("R1 G64: a semicolon- and a pipe-delimited source likewise; a quoted delimiter inside a cell stays in its cell", async () => {

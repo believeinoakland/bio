@@ -1,6 +1,6 @@
 # T51 walk coverage map: index
 
-This folder is the map `build/plan/walk-coverage-T51.md` split mechanically by sitting (mechanics §17 step 2, P20), nothing lost. Each area file holds, verbatim, the map's Status line and §1, that area's line of §3, that area's part of §4 (its sitting text, its table header and every row placed there) and that area's part of §6. This README holds the rest: §2 counts, §3 whole, the §4 heading, §5 whole, the general part of §6. The map itself is the source; these files are regenerated from it.
+This folder is the map `build/plan/walk-coverage-T51.md` split mechanically by sitting (mechanics §17 step 2, P20), nothing lost. Each area file holds, verbatim, the map's Status line and §1, that area's line of §3, that area's part of §4 (its sitting text, its table header and every row placed there) and that area's part of §6. This README holds the rest: §2 counts, §3 whole, the §4 heading, §5 whole, the general part of §6. The map itself is the source; these files are regenerated from it. Five area files were over 50 KB and are split again (K5012, K5021): `<area>-part2.md` holds the rest of the area (the Files table below names which); a walker reads every part of its area, each part's first line names its siblings.
 
 ## Status and how to read it (from the map)
 
@@ -14,7 +14,7 @@ The map scopes K4781's final pass and every later targeted walk (K4782): one wal
 
 - **Status**, applied strictly. WALKED-CURRENT: a T51 walk exercised all the row's main acts after the last change that touched it. STALE: walked, but a later change touched it, or only some of its main acts were walked. NEVER: no walk record shows its main act exercised. Canon, rulings, plans and helpers' judgement are never evidence; a screen seen in a sweep, a timing of a screen, or a refusal read is not an exercise. Because the completed rows now carry every main act the canon, the registry and the rulings give them, a row walked only in its earlier, narrower form is STALE. Where a helper proposed a higher status than the walk records support (S33 proposed WALKED-CURRENT for R30, R31, R36, R62, R92 and kept R06, R07, R13, R17, R46, R48, R80, R84, R90, R91, R93, R94, R101, R106), the records were followed.
 - **Evidence keys** (all under `build/plan/` unless stated). LIVE = `walk-T51-live/` (2026-10-20, 0.86.0, before any fix round). BUILD = `walk-T51-build/` (2026-10-21, after round 1; its `CAUSES.md` holds S-22..S-48, E24..E61, CA31..CA70). RW2 = `walk-T51-rewalk/`. RW3 = `archive/walk-T51-rewalk3/`. RW4, RW5, RW6 = `walk-T51-rewalk4/`, `-rewalk5/`, `-rewalk6/`. **RW7 = `walk-T51-rewalk7/` (complete and recorded, K4791/K4793; it walked the round-7 redeploy 2496ff995b; counted here).** LANE = `lane-journeys/` (0.85.0, HTTP only; STALE evidence at best). `walk-T51-findings.md` and `walk-T51-run.txt` (the local journey-check run) count for no row.
-- **Fix rounds.** Round 1 (`fix-round-T51.md`, C1-C85, L1-L30; 0.86.0). Round 2 (`archive/fix-round-2-T51.md`, C1-C96; e1367d2a2c). Round 3 (`archive/fix-round-3-T51.md`; 753ea4db8a). Rounds 4 and 4b (86792d1179). Round 5 (5ff8b5e01b). Round 6 (`fix-round-6-T51.md`, G1-G57; 6351c8fb14). Round 7 (`fix-round-7-T51.md` G58-G82 and its section 8, `-added.md` G83/G84, `-G88.md` G88; 2496ff995b). Round-1 C-numbers collide with round 2's: a C-number is always given with its round. **G90 did not ship in redeploy 2496ff995b**: it is cut in signed release 0.87.0 after the final pass (`fix-round-7-T51.md`:389,400), so install and update rows stay NEVER until then. G87 is a load measurement, not a defect. Causes shipped only as logging or a best-reading fix (G62, G63, G66, G68, G70, G72, G75, G78, G79, G82) do not make a row current by shipping. Global changes touching every screen (the shell: rounds 2-6 C14, C76, C81, E12, G12b; round 7 G81; G83's room location; G84's start-up margin) are not repeated per row.
+- **Fix rounds.** Round 1 (`archive/fix-round-T51.md`, C1-C85, L1-L30; 0.86.0). Round 2 (`archive/fix-round-2-T51.md`, C1-C96; e1367d2a2c). Round 3 (`archive/fix-round-3-T51.md`; 753ea4db8a). Rounds 4 and 4b (86792d1179). Round 5 (5ff8b5e01b). Round 6 (`archive/fix-round-6-T51.md`, G1-G57; 6351c8fb14). Round 7 (`archive/fix-round-7-T51-s1-s5.md` G58-G82 and `fix-round-7-T51.md` section 8, `-added.md` G83/G84, `-G88.md` G88; 2496ff995b). Round-1 C-numbers collide with round 2's: a C-number is always given with its round. **G90 did not ship in redeploy 2496ff995b**: it is cut in signed release 0.87.0 after the final pass (`fix-round-7-T51.md` §7 item 4 and §8 G90), so install and update rows stay NEVER until then. G87 is a load measurement, not a defect. Causes shipped only as logging or a best-reading fix (G62, G63, G66, G68, G70, G72, G75, G78, G79, G82) do not make a row current by shipping. Global changes touching every screen (the shell: rounds 2-6 C14, C76, C81, E12, G12b; round 7 G81; G83's room location; G84's start-up margin) are not repeated per row.
 - **Columns.** "Screens and ops" uses the registry's ids (`docs/development/ux-substrate/screens/registry.json`); an op the registry marks owed is "(owed)": a walker records its absence, which is not a defect of the walk. "(not built: …)" marks an act the sources say is designed but not built; such a row is walked to confirm its state and its absence is recorded, never logged as a defect of the build. Citations in brackets use short forms: S01-S36 are the reading helpers of section 5; FR1/FR6/FR7 the fix-round plans; DEC-n Bob's rulings in `docs/development/DECISIONS.md`; UC-n the use cases and openQuestions[n] the questions of `ux-experience.json`; registry `<id>` a screen.
 - **Ids.** R01-R108 keep their draft ids; rows added by this completion are R110 onward, numbered in area order. Rows proposed by several helpers were merged into one row; a row the draft had in one area may now sit in another (founder order).
 
@@ -113,8 +113,8 @@ K4784's completion, by COVERAGE #1 (mechanics §17, P20). Thirty-six reading hel
 | source | read whole by |
 | --- | --- |
 | `build/plan/fix-round-6-T51.md` lines 1-204 / 205-417 / 418-635 | S28 / S29 / S30 |
-| `build/plan/fix-round-7-T51.md` (G58-G90 and its section 8) | S31 |
-| `build/plan/fix-round-7-T51-added.md`, `fix-round-7-G88.md`, `fix-round-T51.md` (round 1), `fix-round-T51-pass.md` | S32 |
+| `build/plan/archive/fix-round-7-T51-s1-s5.md` (G58-G82) and `build/plan/fix-round-7-T51.md` (G83-G90, its section 8) | S31 |
+| `build/plan/fix-round-7-T51-added.md`, `fix-round-7-G88.md`, `archive/fix-round-T51.md` (round 1), `fix-round-T51-pass.md` | S32 |
 | `build/plan/walk-T51-rewalk7/BRIEF.md`, `A.md`, `B.md`; `rewalk7-found.md`; `lane-journeys/PLAN.md`, `CHARTER.md`; `walk-T51-live/CAUSES-live.md` (all, past L30) | S33 |
 | rounds 2, 3, 4, 4b, 5 and round 6 §§0-2a, G1-G13; the walk records LIVE, BUILD, RW2-RW6, `walk-T51-findings.md`, `redeploy-walk-T51.md`, `lane-journeys/HANDOFF.md`, `FINDINGS.md` | the draft's worker |
 
@@ -130,17 +130,17 @@ What the writers and reconcilers could not settle, contradictions between source
 
 | file | map area | sitting |
 | --- | --- | --- |
-| `01-install.md` | Area 1 Install, claim, set up the room | sitting 1 |
+| `01-install.md` and `01-install-part2.md` (its §6 notes) | Area 1 Install, claim, set up the room | sitting 1 |
 | `02-people.md` | Area 2 The team's people and accounts | sitting 2 |
 | `03-projects.md` | Area 3 Projects and the daily rhythm | sitting 3 |
-| `04-documents.md` | Area 4 Bring documents in (4a and 4b) | sitting 4 |
+| `04-documents.md` and `04-documents-part2.md` (rows R135 to R146 and its §6 notes) | Area 4 Bring documents in (4a and 4b) | sitting 4 |
 | `05-vouch.md` | Area 5 Vouch; people, organizations, ties | sitting 5 |
 | `06-read-cite.md` | Area 6 Read, find, cite into a question | sitting 6 |
 | `07-money-time.md` | Area 7 Money, time, connections, registers | sitting 7 |
 | `08-law.md` | Area 8 Law and courts | sitting 8 |
 | `09-question.md` | Area 9 Question to conclusion (and the plan opened) | sitting 9 |
-| `10-case.md` | Area 10 Case to publication (10a and 10b) | sitting 10 |
-| `11-act.md` | Area 11 Act | sitting 11 |
+| `10-case.md` and `10-case-part2.md` (rows R98 to R185 and its §6 notes) | Area 10 Case to publication (10a and 10b) | sitting 10 |
+| `11-act.md` and `11-act-part2.md` (its §6 notes) | Area 11 Act | sitting 11 |
 | `12-after-alpha.md` | Area 12 After the alpha (not walked in the alpha) | not walked in the alpha |
-| `overlay.md` | Overlay for every walker | every walker, in every area |
+| `overlay.md` and `overlay-part2.md` (its §6 notes) | Overlay for every walker | every walker, in every area |
 | `README.md` | this index | |

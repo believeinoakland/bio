@@ -179,9 +179,10 @@ function rounded(expr, num, den, places, mode) {
 /**
  * The workbook for a calculation: `calc` as `calculations.read` answers it (`{question, period, recipe, method_version,
  * result_key, inputs: [{name, kind, sha?, figure?, content_id?}], results}`), `tables` the input tables by name
- * (`{sha, fields, rows}`, from `calculations.readTable`). Answers `{bytes, sheets, formulas, labelled}`.
+ * (`{sha, fields, rows}`, from `calculations.readTable`). Answers `{bytes, sheets, formulas, labelled, cells}`, `cells`
+ * the cells the sheets lay out (R22); more than `maxCells` of them answers `{cells, tooLarge: true}` and writes no file.
  */
-export function buildExport(calc, tables) {
+export function buildExport(calc, tables, { maxCells = Infinity } = {}) {
   const recipe = calc.recipe;
   const taken = new Set(["results", "method"]);
   const bound = {};
@@ -266,5 +267,7 @@ export function buildExport(calc, tables) {
     method.push([S(inp.name), S(inp.kind), S(inp.kind === "table" ? inp.sha : inp.sha || sha256HexSync(canonicalJson(inp.figure ?? null)))]);
   method.push([S("results"), S(word("workbooks.result_count_sum", { computed_label: String(COMPUTED_LABEL) }))]);
   sheets.push({ name: "method", rows: method });
-  return { bytes: writeXlsx(sheets), sheets: sheets.map((s) => s.name), formulas, labelled };
+  const cells = sheets.reduce((n, s) => n + s.rows.reduce((m, r) => m + r.length, 0), 0);
+  if (cells > maxCells) return { cells, tooLarge: true };
+  return { bytes: writeXlsx(sheets), sheets: sheets.map((s) => s.name), formulas, labelled, cells };
 }

@@ -1,6 +1,6 @@
 # Reading files: the decisions that are Bob's (READING-ARCHITECTURE, deliverable 5)
 
-**Status** · Written by READING-ARCHITECTURE #2, 2026-10-23, from `OPTIONS.md`, `REQUIREMENTS.md` §6, `CHALLENGES.md` §6, and the questions in SHEET #1's report (`envelope-sheets-T51.md` §4.3, B-1 to B-8) and DOCS #1's report (`envelope-docs-T51.md` §4.3, Q1 to Q11), which K4815 queued. It holds only what is Bob's under P17: the architecture at its high level, money, what members experience, and what a requirement means. Nothing here repeats a question his rulings already answer (K4628, K4630, K4632, K4803, K4809). The lane decides nothing. BOB renders this for Bob and records his answers as rulings.
+**Status** · Written by READING-ARCHITECTURE #2, 2026-10-23, from `OPTIONS.md`, `REQUIREMENTS.md` §6, `CHALLENGES.md` §6, and the questions in SHEET #1's report (`envelope-sheets-T51.md` §4.3, B-1 to B-8) and DOCS #1's report (`envelope-docs-T51-s4.md` §4.3, Q1 to Q11), which K4815 queued. It holds only what is Bob's under P17: the architecture at its high level, money, what members experience, and what a requirement means. Nothing here repeats a question his rulings already answer (K4628, K4630, K4632, K4803, K4809). The lane decides nothing. BOB renders this for Bob and records his answers as rulings.
 
 ---
 

@@ -20,4 +20,4 @@
 ## Context for the successor
 
 - `options-brief.md` is the design record behind `OPTIONS.md`; the draft is deleted.
-- The questions in `FOR-BOB.md` were sorted from REQUIREMENTS §6, CHALLENGES §6, SHEET #1's B-1 to B-8 (`build/plan/envelope-sheets-T51.md` §4.3) and DOCS #1's Q1 to Q11 (`build/plan/envelope-docs-T51.md` §4.3); its last section says where each one not asked went.
+- The questions in `FOR-BOB.md` were sorted from REQUIREMENTS §6, CHALLENGES §6, SHEET #1's B-1 to B-8 (`build/plan/envelope-sheets-T51.md` §4.3) and DOCS #1's Q1 to Q11 (`build/plan/envelope-docs-T51-s4.md` §4.3); its last section says where each one not asked went.

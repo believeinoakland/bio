@@ -100,13 +100,30 @@ test("R95 (fix round 4, C5a): a call that throws in `read` answers a refusal wit
   assert.equal(t.running, "read", "the stage the throw cut is reported as running");
   assert.ok(whole(t.stages.read));
   assert.equal(Object.values(t.stages).reduce((a, b) => a + b, 0) <= t.total_ms, true);
-  /* the stage the throw cut is read at two moments (the answer's, then the caller's): it may differ by a millisecond, no other stage may */
+  /* R95 (G177): the cut and the close are one clock reading, so the caller's own object ends exactly as the answer says, the cut stage included */
   const later = stageTimes(handed);
-  for (const [stage, ms] of Object.entries(t.stages)) {
-    if (stage === "read") assert.ok(Math.abs(later.stages.read - ms) <= 1, "the cut stage reads the same to the millisecond");
-    else assert.equal(later.stages[stage], ms, `${stage}: the caller's own timings object reads the same`);
-  }
+  assert.deepEqual(later.stages, t.stages);
+  assert.equal(later.total_ms, t.total_ms);
   const ok = await run(world(), { [url]: pdf }, { locator: url });
   assert.equal(ok.status, 200);
   assert.equal(ok.body.timings.running, undefined);
+});
+
+test("R95 (fix round 9, G177): a clock that moves 1.5 ms between reads leaves a thrown call's answer and the caller's timings object equal, exactly", async () => {
+  const w = world();
+  const url = "https://oakland.example/throws-clock.pdf";
+  let moving = false;
+  w.b.put = async () => { moving = true; throw new Error("bucket exploded"); };
+  const real = performance.now.bind(performance);
+  let drift = 0;
+  performance.now = () => { if (moving) drift += 1.5; return real() + drift; };
+  try {
+    const handed = {};
+    const r = await run(w, { [url]: pdf }, { locator: url }, { timings: handed });
+    assert.equal(r.body.reason, "ACQUIRE_FAILED");
+    const later = stageTimes(handed);
+    assert.deepEqual(later.stages, r.body.timings.stages, "the answer's stages are the object's");
+    assert.equal(later.total_ms, r.body.timings.total_ms);
+    assert.equal(r.body.timings.running, "read", "the stage the throw cut is still reported as running");
+  } finally { performance.now = real; }
 });

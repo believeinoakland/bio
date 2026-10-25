@@ -310,3 +310,18 @@ Mail with `--module office-readers`; record `build/jobs/T51/office-readers.md` (
 ## B20 · CHANGE
 
 CHANGE re J13 (BOB #282, K4987): your flag is right to check. R38's amendment now also covers pptx (on the tranche: merge it first). In this job, reproduce first: a PPTX slide with a text box whose words a slide-shape unit already carries and a text_box part also carries (pptx.mjs about 946). If they are duplicated, give that text_box part what makes reading-pipeline drop the duplicate (the indices of the shapes or paragraphs it holds, named the same way as docx's paras, or emit the words once), red then green; if not duplicated, your test proves it and you say so. ODT is odf-reader's job 98. Then COMPLETE again.
+
+## B21 · START
+
+START (job 105, K5006; depth 2; P10, P19: found in this round, done in it). Read roles/JOB.md whole; your branch is at the tranche tip. office-readers R46 is new (not yet met: T51); plan §2i G178 and §3c row 105 give the four fields; the evidence is `build/plan/diagnosis-R9-load-reds.md` §4 and §8 P1.
+
+G178: `bio-plane/src/formats-xlsx.mjs` `xlsxEntry` builds each sheet's whole text (`lines.join("\n")`, about :1315) and then the document (`outSheets.map(...).join("\n")`, about :1360) while the unpacked parts and shared strings are still held; the shape harness's 150,000-row xlsx peaks at 199.3 MB against `capFor(128)` 202 MB, and 3 of 7 runs under L-PIN died out of memory. Lower the peak so the case sits at most 85 % of the cap (release what the text no longer needs before joining, or build the text without a second whole copy); the answer is unchanged. Failing-first: in `bio-plane/test/m/plane/g41-shape.test.mjs` (plane's test file: you may add the margin assertion to the xlsx case; say so in your record) the peak at most 85 % of `capFor` (red now), then five runs under L-PIN with no out-of-memory. Also run plane's `g44-shape`, `g123f-cells` and `r9-memory`.
+Run your suite (and the files named above); checks (format, architecture, coverage, words, ownership); RUNNING never more than 30 minutes ahead (K4976). Workers: haiku low for mechanical, sonnet medium for reading; never a refused act worked around (K4696). Model claude-sonnet-5-5, medium effort. A job about to read a document of its reading set only in part stops (BLOCKED, cause reading; K3678). Before any test run: every directory with a tracked package-lock.json has node_modules (K4113). Load runs: `taskset` and CPU burners are as `build/plan/diagnosis-R9-load-reds.md` names them (L-PIN, L-4B); never a red passed by running alone (K4966). Record completion with a Size line, then COMPLETE.
+
+## B22 · CHANGE
+
+CHANGE (job 105 extended, K5011). Merge tranche/T51 into your branch. Add office-readers R47 (G185; S-15 to S-18 of `build/plan/envelope-sheets-T51.md` §3.3, read whole: shared-formula dependents, a row or cell with no `r`, styled empty cells extending the used range, `mergeCells`). Reproduce each first on the tip, then fix; tests red first. Then COMPLETE as before.
+
+## B23 · CHANGE
+
+CHANGE (K5020, G186). Merge the tranche branch: your requirements gained R48. A workbook whose rows and cells carry no `r` is read whole: `formats-xlsx.mjs:764-768` takes the used range from `r` alone, so `usedSheetRange` is null and the reading has no sheet unit (CORPUS #1's F1, `build/plan/corpus-1-T51.md` §5). Failing-first tests already on the tranche, red: plane's `bio-plane/test/m/plane/g124f-bounds.test.mjs` "G124f finding F1", C07 and C08 (run with `node --import ./test/platform-sqlite.mjs --test` from `bio-plane/`). Make them green; add your own R48 test at your interface. Deal with it in this job (P8).

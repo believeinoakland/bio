@@ -334,9 +334,9 @@ function openTimings(given) {
   return t;
 }
 function stageBegin(t, name) { stageEnd(t); t.running = { name, since: clockNow() }; }
-function stageEnd(t) {
+function stageEnd(t, at = clockNow()) {
   if (!t.running) return;
-  t.stages[t.running.name] = (t.stages[t.running.name] || 0) + (clockNow() - t.running.since);
+  t.stages[t.running.name] = (t.stages[t.running.name] || 0) + (at - t.running.since);
   t.running = null;
 }
 async function timed(t, name, work) {
@@ -353,9 +353,9 @@ async function splitTimed(t, part, work) {
 /** R95: `{total_ms, stages: {<stage>: ms}}` of an `acquire`, read at any moment: whole milliseconds, every stage floored and
  *  the total ceiled, so the stages sum to no more than the whole; a stage still running names itself as `running`. R103: once the
  *  body is being read, `read_split` states, within `read`, the milliseconds of `download`, `hash` and `store`. */
-export function stageTimes(t) {
+export function stageTimes(t, at = undefined) {
   if (!t || typeof t !== "object" || !t.stages) return { total_ms: 0, stages: {} };
-  const now = clockNow(), stages = {};
+  const now = at ?? clockNow(), stages = {};
   for (const [k, v] of Object.entries(t.stages)) stages[k] = Math.floor(v);
   if (t.running) stages[t.running.name] = Math.floor((t.stages[t.running.name] || 0) + (now - t.running.since));
   const split = t.split ? { download: Math.floor(t.split.download), hash: Math.floor(t.split.hash), store: Math.floor(t.split.store) } : null;
@@ -401,12 +401,16 @@ const registrarOf = (cap, opts) => (cap && typeof cap.registerJob === "function"
   : opts && typeof opts.registerJob === "function" ? opts.registerJob : null);
 /* what a call could not register, for the answer: `[{kind, reason}]`, one per kind */
 const noteJob = (opts, kind, reason) => { const n = opts && opts.jobNotes; if (Array.isArray(n) && !n.some((x) => x.kind === kind)) n.push({ kind, reason: String(reason).slice(0, 80) }); };
+/* R116 (fix round 9, G175; K5005): a row the registrar accepts is followed, once it is written, by the plane's `armJobs` (the store handed in's, else `opts.armJobs`), as capture
+   and extraction arm theirs, so owed work is due at once and not at an alarm set for later. An alarm not armed is the backstop's, never a failed capture. */
+const armerOf = (cap, opts) => (cap && typeof cap.armJobs === "function" ? () => cap.armJobs() : opts && typeof opts.armJobs === "function" ? opts.armJobs : null);
+const armAfter = async (cap, opts) => { const f = armerOf(cap, opts); if (f) { try { await f(); } catch { /* the next alarm arms it */ } } };
 const oweOf = (cap, opts) => {
   const reg = registrarOf(cap, opts);
   if (reg) return async (entry) => {
     let r;
     try { r = reg(entry); } catch (e) { r = { ok: false, reason: "REGISTRAR_THREW" }; }
-    if (r && r.ok === true) return true;
+    if (r && r.ok === true) { await armAfter(cap, opts); return true; }
     noteJob(opts, entry && entry.kind, (r && r.reason) || "REGISTRAR_REFUSED");
     return false;
   };
@@ -417,8 +421,8 @@ const oweOf = (cap, opts) => {
 /* R116: the `keep` hand-off, `keepLater({sha, parts}) -> {ok}`: the registrar's row of kind `keep` keyed by the whole's digest, else the older hook */
 const keepLaterOf = (cap, opts) => {
   const reg = registrarOf(cap, opts);
-  if (reg) return (k) => { let r; try { r = reg({ kind: "keep", sha: k.sha, parts: k.parts }); } catch { r = { ok: false, reason: "REGISTRAR_THREW" }; }
-    if (!(r && r.ok === true)) noteJob(opts, "keep", (r && r.reason) || "REGISTRAR_REFUSED"); return { ok: !!(r && r.ok === true) }; };
+  if (reg) return async (k) => { let r; try { r = reg({ kind: "keep", sha: k.sha, parts: k.parts }); } catch { r = { ok: false, reason: "REGISTRAR_THREW" }; }
+    if (!(r && r.ok === true)) noteJob(opts, "keep", (r && r.reason) || "REGISTRAR_REFUSED"); else await armAfter(cap, opts); return { ok: !!(r && r.ok === true) }; };
   return opts && typeof opts.keepLater === "function" ? opts.keepLater : undefined;
 };
 
@@ -967,12 +971,14 @@ export async function acquire(cap, body0, opts = {}) {
   try { out = await acquireRun(cap, body0, opts || {}, t); }
   catch (e) {
     /* R95 (fix round 4, C5a): a throw is an answer too, with the times the stages had when it was thrown: the stage it cut is `running`. */
-    const cut = stageTimes(t);
-    t.end = clockNow();
+    /* R95 (fix round 9, G177): the cut and the close are ONE clock reading, so the answer's stages are the object's, exactly */
+    const at = clockNow();
+    const cut = stageTimes(t, at);
+    stageEnd(t, at); t.end = at;
     return { status: 500, body: { ok: false, reason: "ACQUIRE_FAILED", op: "acquire", timings: cut,
       detail: localize("acquisition.index.acquire_failed", "the capture stopped on an error ({detail}); nothing is known to have been filed", { detail: String(e && e.message || e).slice(0, 200) }) } };
   }
-  finally { stageEnd(t); t.end = t.end ?? clockNow(); }
+  finally { const at = clockNow(); stageEnd(t, at); t.end = t.end ?? at; }
   /* R95: on every outcome, a refusal included, the answer carries the times of the stages that ran. */
   return out && out.body && typeof out.body === "object" && !Array.isArray(out.body)
     ? { ...out, body: { ...out.body, timings: stageTimes(t) } } : out;

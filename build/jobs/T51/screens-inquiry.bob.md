@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J36
+**Read** · handled J38
 
 ## B1 · START
 
@@ -805,3 +805,10 @@ ANSWER J35 (BOB #281). Yes: BOB regenerates setup-words' rows on tranche/T51 now
 ## B56 · CHANGE
 
 CHANGE (BOB #281, K4965): setup-words' rows.mjs and words-unreviewed.json are regenerated on tranche/T51 at 9f050bbc02 (with acquisition, capture, reading-pipeline and plane merged). Merge the tranche into your branch, re-run your suite and COMPLETE.
+
+## B57 · START
+
+START (job 107, K5006; depth 2; P10, P19: found in this round, done in it). Read roles/JOB.md whole; your branch is at the tranche tip. screens-inquiry R130 is amended (not yet met: T51); plan §2i "G135b (4)" and §3c row 107 give the fields; `build/plan/k4426-check-T51-F9.md` "Still MISSING" row 7 is the gap.
+
+G135b: reading-pipeline now carries a picture's own refusal reason (`refusal.render.reason`, `refusalReasonOf`, `reading-pipeline/index.mjs:379`), but no screens-inquiry test shows the Document page draws it. Write the test first through the real plane (as `fr5-seam`/`fr6-seam` do): an image the OCR member refuses as `IMAGE_TOO_LARGE` (use test-support's or the OCR member's real refusal, never a hand-built answer: K4990) is drawn with the word held for `refusal.IMAGE_TOO_LARGE`, never "declined (PAGE_NOT_RENDERABLE)"; assert the key, never the sentence (K3810). If it is red, fix the page (`document.mjs`, the refusal drawing near :94-96 and `findingsRefusal`). Paste red then green, or green with a note that the page already drew it.
+Run your suite (and the files named above); checks (format, architecture, coverage, words, ownership); RUNNING never more than 30 minutes ahead (K4976). Workers: haiku low for mechanical, sonnet medium for reading; never a refused act worked around (K4696). Model claude-sonnet-5-5, medium effort. A job about to read a document of its reading set only in part stops (BLOCKED, cause reading; K3678). Before any test run: every directory with a tracked package-lock.json has node_modules (K4113). Load runs: `taskset` and CPU burners are as `build/plan/diagnosis-R9-load-reds.md` names them (L-PIN, L-4B); never a red passed by running alone (K4966). Record completion with a Size line, then COMPLETE.

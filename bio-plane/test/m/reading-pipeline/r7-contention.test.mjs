@@ -104,7 +104,10 @@ test("G88 residual: a 24 MiB text - the longest wait is printed (stated, not bui
   const max = Math.max(...m.waits);
   console.log(`# G88 L residual a 24 MiB text: longest cheap-read wait ${max.toFixed(0)} ms, control max ${m.controlMax.toFixed(0)} ms, difference ${(max - m.controlMax).toFixed(0)} ms (p95 ${pct(m.waits, .95).toFixed(0)})`);
 });
-test("G82 L: a 21 MB PDF (1,300 pages)", { timeout: 900_000 }, async () => {
+/* the PDF's bar is 150 ms times `slow`: pdf-reader R45 (G179) yields within its compute, so its stretch is no longer a whole open (K5013) */
+const PDF_BAR_MS = 150;
+test("G82 L, G179: a 21 MB PDF (1,300 pages) - the p95 under 150 ms", { timeout: 900_000 }, async () => {
   const m = await measure("a 21 MB PDF", "pdf", Buffer.from(synthPdf({ pages: 1300, linesPerPage: 120, targetBytes: 21_000_000 })));
-  assert.ok(pct(m.waits, .95) < barOf(m), `p95 ${pct(m.waits, .95).toFixed(0)} ms, bar ${barOf(m).toFixed(0)} ms (slow x${m.slow.toFixed(2)})`);
+  const bar = PDF_BAR_MS * m.slow;
+  assert.ok(pct(m.waits, .95) < bar, `p95 ${pct(m.waits, .95).toFixed(0)} ms, bar ${bar.toFixed(0)} ms (slow x${m.slow.toFixed(2)})`);
 });
