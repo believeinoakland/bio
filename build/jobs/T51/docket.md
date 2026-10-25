@@ -143,3 +143,19 @@ Size (session_01XN4PpTaXJFq2tHmnnK6J94): test runs 5, module lines 0
 - `checks/ownership.mjs /home/user/bio docket tranche/T51`: 0 failures.
 
 Size (session_01AfpNQasnQVjYv36UwxUmau): test runs 3, module lines 1657
+
+## J5 · COMPLETE
+
+COMPLETE, follow-up 43 (fix round 10). Test files only; no product code changed. Commit e192f002bf on job/T51/docket.
+
+Added to coreDueKinds() (bio-plane/test/m/docket/fixtures.mjs), keeping every answer it gives now:
+- (a) a case of a project whose owner is not the viewer: CASE-2026-0303 (caseR), project R managed by hank (a new member). Real acts: edition 1 and edition 2 ratified ("Dropped a date."), an open tension CAND-4 on INQ-2026-0004-hall. New returned fields: hankDue (hank's real coreDue: edition:2, tension:CAND-4) and unseenDue (alice's real coreDue for caseR: empty, wrote false).
+- (b) a case with no project: NOT made. Real schema forbids it: publication's cases.project_id is NOT NULL (bio-plane/src/publication/schema.mjs). A new test asserts the constraint, so the state is not faked.
+
+Test: fixtures.test.mjs new test "R9 fixtures: coreDueKinds: a case of a project alice cannot see ...". Markers added: none.
+
+Ran: docket suite and queue-producers docket.test.mjs 94 pass, 0 fail; checks fixtures (docket) 0 failures, format 0, architecture 0, coverage 31/31, words 0, ownership 0. setup-words --check: stale rows.mjs from basis-version-grammar, not docket's.
+
+Deferred: none. Found in other modules: none caused by this job.
+
+Size (session_01AfpNQasnQVjYv36UwxUmau): test runs 3, module lines 1657
