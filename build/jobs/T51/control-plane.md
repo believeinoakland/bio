@@ -1,6 +1,6 @@
 # control-plane (T51)
 
-**Status** · session_01PGF97oMkoZ7cr2NcZU1T3u · depth 2 · RUNNING until 2026-10-25T18:55:39Z (two workers writing door cases (batches A, B); no suite of mine running) · handled B88
+**Status** · session_01PGF97oMkoZ7cr2NcZU1T3u · depth 2 · WORKING · handled B88
 
 ## J1 · QUESTION
 
