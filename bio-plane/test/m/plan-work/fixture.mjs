@@ -9,6 +9,16 @@ import { createHash } from "node:crypto";
 import { planWorkOf } from "../../../src/plan-work/index.mjs";
 import { actionHoldsOf } from "../../../src/action-holds/index.mjs";
 import { actionRepliesOf } from "../../../src/action-replies/index.mjs";
+import { curesOf as publishedCuresOf } from "../conformance/fixtures.mjs";
+import { actionRead as publishedActionRead } from "../actions/fixtures.mjs";
+
+/* the refusals the providers' own fixtures show, made once by their real code: conformance's R37 `NO_SUCH_DETERMINATION`
+   for a determination the viewer does not see, and actions' R43 refusal (naming the id asked) for an action the viewer
+   may not see */
+let noSuchDeterminationShape = null, noSuchActionShape = null;
+const noSuchDetermination = () => noSuchDeterminationShape ??= (({ conformance, determination, outsider }) =>
+  conformance.curesOf({ determination, viewer: outsider }))(publishedCuresOf());
+const noSuchAction = (id) => ({ ...(noSuchActionShape ??= publishedActionRead().unseenAnswer), action: id });
 
 export { V, MACHINE, by, OFFICE, ms, DAY, NOW, option, choose };
 
@@ -21,7 +31,7 @@ export function world(opts = {}) {
   const cures = new Map();          // `${determination}#${standard}` -> the standing link, in conformance R37's shape
   /* conformance R37's answer (K2852): per standard of the determination (or the one named), the standing link or null */
   const conformance = { curesOf: ({ determination, standard, viewer }) => {
-    if (viewer === V("outsider")) return { ok: false, reason: "NO_SUCH_DETERMINATION" };
+    if (viewer === V("outsider")) return noSuchDetermination();
     const d = w.determinations.get(determination);
     const stds = (d ? d.outcomes.map((o) => o.standard) : []).filter((x) => !standard || x === standard);
     return { ok: true, determination, standards: stds.map((x) => ({ standard: x, link: cures.get(`${determination}#${x}`) || null, ended: [] })), cures: [] };
@@ -29,9 +39,9 @@ export function world(opts = {}) {
   const drafts = new Map();         // action -> [{filing, purpose, approval, sending}]
   const filings = { filingsFor: ({ action }) => ({ ok: true, action, drafts: drafts.get(action) || [] }) };
   /* action-holds, real (T45-26 merged, K2856), over the same host; its doorbell and ratification readers not registered */
-  /* its docket arm a stand-in in docket R27's shape (no docket marks), so no read here builds the docket and publication
+  /* its docket arm a stand-in in docket R27's shape (no docket marks, and no entry read: no test here holds on a docket entry), so no read here builds the docket and publication
      modules, whose promotion steps need tables this world does not hold */
-  const docket = { docketPressureMarks: () => ({ ok: true, marks: [] }), docketPressureOf: () => ({ ok: false, reason: "NO_SUCH_ENTRY" }) };
+  const docket = { docketPressureMarks: () => ({ ok: true, marks: [] }) };
   const actionHolds = actionHoldsOf(w.host, { record: w.record, membership: w.membership, now: () => ms(w.clock.now),
                                               doorbell: null, ratification: null, docket });
   /* action-replies, real (T45-29 merged, K2862): its arose_from links and their two reads */
@@ -53,7 +63,7 @@ export function world(opts = {}) {
   const hidden = new Set(), hide = w.hide;
   w.hide = (viewer, id) => { hidden.add(`${viewer}|${id}`); hide(viewer, id); };
   const actions = new Proxy(w.actions, { get: (t, k) => {
-    if (k === "actionRead") return (a) => (a && hidden.has(`${a.viewer}|${a.id}`) ? { ok: false, reason: "NO_SUCH_BUNDLE", target: a.id } : t.actionRead(a));
+    if (k === "actionRead") return (a) => (a && hidden.has(`${a.viewer}|${a.id}`) ? noSuchAction(a.id) : t.actionRead(a));
     return typeof t[k] === "function" ? t[k].bind(t) : t[k];
   } });
   const pw = planWorkOf(w.host, { record: w.record, membership: w.membership, actionPlans: ap, actions,
