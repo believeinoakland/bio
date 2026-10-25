@@ -480,3 +480,21 @@ Size (session_01DQq5SUCuskyyd5iwgeuLR7): test runs 8, module lines 3376
 ## J19 · COMPLETE
 
 COMPLETE · FILE-SAFETY #22 · job 99, batch D (G171): R39 renderWake now for a view queued with no back-off; R12 5xx with no class is SCANNER_UNREACHABLE; R4 sibling fixed (queued_at to the millisecond). Red first seen for all three; file-safety 137/137; control-plane seam §16 5/5 alone; format, architecture, coverage, words, ownership 0 failures. Platform check L is yours. Plane bundle stale (regenerate). Details in my record.
+
+## Completion (fix round 10, Wave A batch 1, B22)
+
+**Cause R39a (G7; walk D5), done.** Root cause: `scanStatus` (`index.mjs`, the `scanner`/`renderer` objects of its answer) copied `version`, `clamav_version` and `signatures` from the scanner's `/version` but not its `bounds` (`file-scanner/src/handler.mjs:28`), and the plane's own `GET /version` is a plain string by design, so no administrator could read the bounds. Why the tests missed it: the scripted scanner answered `bounds: {}` and no test asked `scanStatus` for them (R58 was unmet). Fix: both objects carry `bounds`, the object `/version` states (null when it states none; an unreachable or unbound scanner states none). Failing-first test `r58-bounds.test.mjs`, seen red first on the real `BOUNDS` (imported from `file-scanner/src/limits.mjs`) and green after; control: a member, a machine credential, no viewer are refused with no bound in the answer, no scanner bound and an unreachable one state none. `fixture.mjs` gains a `bounds` script key (default `{}`). Platform check L (the bound scanner's `/version`): not run, I never contact a live deployment; for the redeploy, BOB reads `GET /scanstatus` as an administrator and finds `scanner.bounds` and `renderer.bounds` holding `SAFE_VIEW_PAGES_MAX` and the rest.
+
+**Fixtures published** in `bio-plane/test/m/file-safety/fixtures.mjs` (new), each an async function made by the real code when called, with `fixtures.test.mjs` calling each and checking the real answer: `batchTickAnswers`, `declaredRefusals` (SCANNER_ABSENT, RENDERER_ABSENT, DEEPER_CHECKS_UNREADABLE, RENDER_QUEUE_UNREADABLE, FORWARD_PERIOD_INVALID, LIMIT_INVALID: every declared `*_ABSENT/*_UNREADABLE/*_INVALID` code, none made up), `scannerAbsent`, `toolTestFailed`, `toolTested`. Note for the scheduler's re-point: the real `forwardSecurityCounts({})` on an empty store answers `record: {period, counts}` (the period since the last whole hour), not `record: null`, and `renderBatch` copies carry `queued`; their hand-built answers differ from the real ones.
+
+**Own fixture lines.** Done: `r1-registrar.test.mjs` (the `jobRegistrarStub` import and the `registerJob` stand-in) carry `// fixtures-contract: plane job-registrar`; they show `contract-no-run` until `plane`'s run is merged (waits for: plane). Left, FIX-E waiting on file-scanner (arrive as a CHANGE): `tools.test.mjs:412` and `wakes.test.mjs:163` (the refresh refusal answers). No `fixtures-own` or `fixtures-generic` marker added.
+
+**Deferred.** None. **Found in another module.** None.
+
+**Tests and checks run.**
+- `node --test … bio-plane/test/m/file-safety/*.test.mjs`: "tests 143, pass 143, fail 0".
+- `checks/words.mjs file-safety`: "0 failures"; `format`: "0 failures"; `architecture file-safety`: "0 failures"; `coverage file-safety`: "58 of 58 live requirement ids named by a test; 0 failures"; `ownership`: "7 files changed by file-safety …; 0 failures".
+- `checks/fixtures.mjs . file-safety --list`: 4 lines (2 `contract-no-run` waiting for plane, 2 FIX-E waiting for file-scanner).
+- `impact.mjs origin/tranche/T51 HEAD`: affected 11 modules (file-safety, scheduler, affordances, notice-producers, queue, op-declarations, store-door, screens-settings, control-plane, plane, journey-check); users' tests: see the COMPLETE.
+
+Size (session_01YBRdy1ssgabFSCE7bRoS1Y): test runs 4, module lines 2336
