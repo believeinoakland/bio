@@ -35,7 +35,7 @@ import { validAt, fiscalPeriod, isCalendarDate, localDay, reasonText } from "../
 import { recognise } from "../idspaces.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, listenerRefusal, notAnAdmin, MODULE_ORDER, viewerPredicate, Membership } from "../membership/index.mjs";
-import { contentOf, canonicalExtent } from "../content/index.mjs";
+import { contentOf, canonicalExtent, checkContentExtent } from "../content/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { combine as combineProfiles, SPACES } from "../../../jurisdictions/index.mjs";
 import { CALCULATIONS_TABLES, migrateCalculations } from "./schema.mjs";
@@ -667,17 +667,30 @@ export class Calculations {
     } catch (e) { log({ phase: "end", outcome: "thrown", error: String((e && e.name) || "Error").slice(0, 80) }); return { text: null, transient: true }; }
   }
 
-  /** R1–R3: `declareTable({source, schema, header, roles?, vintage?, by})`. `source` is a content id (a CSV
-   *  capture's document, a passage, a workbook range or a portal export). Async: the bytes go to the evidence store. */
+  /** R1–R3, R51: `declareTable({source, schema, header, roles?, vintage?, by})`. `source` is a content id (a CSV
+   *  capture's document, a passage, a workbook range or a portal export), or a found passage `{capture_sha, extent}`
+   *  nobody has cited yet, whose content row is minted as money's source is. Async: the bytes go to the evidence store. */
   async declareTable({ source = null, schema = null, header = null, roles = null, vintage = null, by = null } = {}) {
     if (!stamped(by) || isMachine(by))
       return no("MEMBER_ACT_ONLY", localize("calculations.index.a_table_is_declared_by", "a table is declared by a member; a machine may not declare one (K1468). Nothing was written."));
-    const contentId = typeof source === "string" ? source.trim() : plain(source) ? str(source.content) : "";
-    if (!contentId) return no("NO_SOURCE", "a table names its captured source: the content id of a CSV, a workbook range or a portal export. Nothing was written.");
-    const row = this.content.contentRow(contentId);
-    if (!row || !this.#sees(row.bundle_id, by))
+    let contentId = typeof source === "string" ? source.trim() : plain(source) ? str(source.content) : "";
+    /* R51: a found passage, the shape every other recording act takes (money R2). Its content row is minted once the rest of the act is
+       judged (below), so an act refused before the bytes are read mints nothing; here only its capture and extent are checked. */
+    let found = null;
+    if (!contentId && plain(source) && source.capture_sha !== undefined) {
+      const sha = str(source.capture_sha).toLowerCase();
+      const home = /^[0-9a-f]{64}$/.test(sha) && this.provenance ? this.provenance.homeOf(sha) : null;
+      if (!home || !this.#sees(home.bundleId, by))
+        return no("NO_SUCH_CONTENT", localize("calculations.declare.no_capture_is_held_here", "no capture is addressed by this sha in this record, or it is not one you may see. Nothing was written."), { capture_sha: sha });
+      const extent = source.extent === undefined || source.extent === null ? { kind: "document" } : source.extent;
+      const bad = plain(extent) ? checkContentExtent(extent, this.content.contentContextFor(sha, { searched: false })) : { code: "CONTENT_EXTENT_UNREADABLE" };
+      if (bad) return no("NO_SUCH_CONTENT", localize("calculations.declare.the_found_passage_names_no", "the found passage names no part of that capture. Nothing was written."), { capture_sha: sha, extent_code: bad.code ?? null });
+      found = { bundleId: home.bundleId, captureSha: sha, extent };
+    } else if (!contentId) return no("NO_SOURCE", "a table names its captured source: the content id of a CSV, a workbook range or a portal export. Nothing was written.");
+    const row0 = found ? null : this.content.contentRow(contentId);
+    if (!found && (!row0 || !this.#sees(row0.bundle_id, by)))
       return no("NO_SUCH_CONTENT", "no content row is addressed by this id in this record, or it is not one you may see. Nothing was written.", { content_id: contentId });
-    if (row.stale) return no("CONTENT_STALE", "the passage was cited under an earlier reading of its document; cite it again under the current one. Nothing was written.", { content_id: contentId });
+    if (row0 && row0.stale) return no("CONTENT_STALE", "the passage was cited under an earlier reading of its document; cite it again under the current one. Nothing was written.", { content_id: contentId });
     const names = readHeader(header);
     if (!names) return no("NO_HEADER", "a table declares its header: a list of distinct, non-empty column names. Nothing was written.");
     const sf = schemaFault(schema, names);
@@ -695,6 +708,13 @@ export class Calculations {
       const has = (role, c) => cr.some(([k, v]) => k === c && v.role === role);
       if (!has("crosswalk_from", r.crosswalk.from) || !has("crosswalk_to", r.crosswalk.to))
         return no("BAD_SCHEMA", `the crosswalk "${col}" names is not a declared crosswalk with those two ends. Nothing was written.`, { field: col });
+    }
+    let row = row0;
+    if (found) {
+      const m = this.record.transact(() => this.content.mint({ ...found, mintedBy: by }));
+      if (!m || m.ok === false || !m.content_id) return no("NO_SUCH_CONTENT", localize("calculations.declare.the_found_passage_names_no", "the found passage names no part of that capture. Nothing was written."), { capture_sha: found.captureSha });
+      contentId = m.content_id;
+      row = this.content.contentRow(contentId);
     }
     const src = await this.#sourceRows(row, names);
     if (src.tooLarge) return this.#tooLarge(src.tooLarge);
