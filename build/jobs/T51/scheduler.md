@@ -284,3 +284,7 @@ Batch 6 (J14): my 14 fixture lines are re-pointed and 'checks/fixtures.mjs /home
 **Completion (batch 6).** BOB's B14 added `acquisition` to scheduler's `uses`; `tranche/T51` merged into the branch. After the merge: architecture 22 product files, 96 imports, 0 failures; format 178 modules, 0; coverage 33 of 33, 0; ownership 6 files, 0; words 3528 literals, 0; fixtures (scheduler) 0 failures; scheduler suite ℹ tests 185, ℹ pass 185, ℹ fail 0. Markers added: none (`fixtures-own` 0, `fixtures-generic` 0). Lines left: none. Deferred: none. Other modules: none. Generated artifacts made stale: none (test files only).
 
 Size (session_018cr32nWucL2LEJyJ5hyu4F): test runs 7, module lines 1048
+
+## J15 · COMPLETE
+
+Batch 6 done: 14 fixture lines re-pointed to the providers' published fixtures (acquisition, case-carriage, file-safety incl. K5070's forward record, monitoring, duties, people, money-checks); fixtures check for scheduler 0; suite 185/185; format, architecture (after B14 and the tranche merge), coverage, ownership, words all 0 failures; impact names scheduler only. Markers added: none (no fixtures-own, no fixtures-generic). Lines left: none. Record has the details.
