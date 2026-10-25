@@ -36,7 +36,7 @@ test("R8 R85 two supporting legs, one named in a ground and one not, is the same
   assert.deepEqual([p.grouped, p.groups.map((g) => g.legs), p.ungrouped], [true, [[1]], [0]]);
 });
 
-test("R8 R85 a saved partition with no ground is held as grounds: [] and reads back as answered, distinct from a question never partitioned", () => {
+test("R8 R85 R65 a saved partition with no ground is held as grounds: [] and reads back as answered, distinct from a question never partitioned", () => {
   const w = twoLegs();
   const never = w.k.partitionOf({ id: Q, viewer: "admin" });
   assert.deepEqual([never.grouped, never.groups, never.ungrouped, never.answered], [false, [], [0, 1], false]);
@@ -60,3 +60,5 @@ test("R8 R85 a saved partition with no ground is held as grounds: [] and reads b
   assert.deepEqual(w.fm(Q).grounds, []);
   assert.deepEqual(w.k.partitionOf({ id: Q, viewer: "admin" }).changes.map((c) => c.act), ["authored", "restructured", "restructured"]);
 });
+
+test.todo("R85 conclude on an own reading with no affirmed is ok through basis-versions for a question with one unlabelled necessary leg beside one labelled ground (needs basis-version-grammar R3 as amended; basis-versions' own job runs the walker's case)");
