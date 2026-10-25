@@ -42,3 +42,7 @@ B3 (K3997) processed: merged tranche/T51; lines tests 35 pass, 0 fail; coverage 
 - **Refused by architecture** (1 failure): `bio-plane/test/m/lines/fixture.mjs` imports promotion's `fixtures.mjs`, and `promotion` is not in lines' `uses` in `build/modules.json` (not my file). Needs BOB: add `promotion` to lines' `uses` (a test-only use), or rule otherwise.
 - Tests: lines 37 pass, 0 fail. Checks: format 0 failures; coverage 25 of 25 ids, 0 failures; architecture 1 failure (above). `impact.mjs`: 0 affected modules.
 - Size (session_019gxu97eKA9S3uaxE9npToS): test runs 3, module lines 0 (test files only: fixtures.mjs 23, fixtures.test.mjs 14, fixture.mjs net -3)
+
+## J5 · BLOCKED
+
+BLOCKED (cause: needs BOB, a file outside my paths). Done and pushed: linesWorld published with its test (37 lines tests pass); promotion stub in fixture.mjs:57 replaced by makePromotion() (fixtures check: 0 failures for lines). Refused: checks/architecture.mjs lines fails once, because lines/fixture.mjs imports ../promotion/fixtures.mjs and 'promotion' is not in lines' uses in build/modules.json. Please add promotion to lines' uses (test-only) and say CHANGE/RESUME; I then re-run the check and post COMPLETE. No fixtures-own/generic markers added.
