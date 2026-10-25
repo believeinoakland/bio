@@ -52,3 +52,31 @@ Size (session_01Gx1GGFXhPpCujJ5Uapct8j): test runs 2, module lines 1907
 ## J2 · COMPLETE
 
 T51-191 applied: the eleven plain findings in src/bias/index.mjs read through localize (bias.index.*), wording unchanged; the ten test copies in dec149 and adopt-manifest compare with word(), localize() or the constants, never the text. Tests: 73 pass, 0 fail, 1 todo (R26, deferred K102). Checks: words 0 for bias, format 0, architecture 0, coverage 49 of 49, ownership 0 (1 file). Tree-wide words and coverage findings are in other modules. Record: build/jobs/T51/bias.md (Completion T51-191). Commit bd29805fe6.
+
+## Completion (fix round 10, Wave A batch 4, B3)
+
+**Causes done.** The fixture for screens-settings' refusal of a malformed bias set (FIX-E `biasRefusedPromote`, plan `build/plan/fixtures-T51/part-4.md:69`): `bio-plane/test/m/bias/fixtures.mjs` (new), the real `promotionCheck` over a bias set whose statements break R2–R7, returning `{ok:false, reason:"BIAS_REFUSED", check, findings}`. Its test `bio-plane/test/m/bias/fixtures.test.mjs` (new, names R9) calls it and checks the real answer: BIAS_REFUSED, C-26.11, three findings by check and code.
+
+**Lines done and left.** Done: the one bias line in the live list. Left, not mine: screens-settings' hand-built bias answers (its `fixtures.mjs:473-479`, `bias.test.mjs:61`, `:140`) re-point to `biasRefusedPromote` in screens-settings' own job, per the plan. The `fixtures.mjs` checker reports 0 failures for bias.
+
+**Markers added.** None: no `fixtures-own` or `fixtures-generic`. No `fixtures-contract` either: bias (70) is earlier than screens-settings (164) in `build/modules.json`, so the user's job uses the published fixture.
+
+**Deferred.** None.
+
+**Other modules.** None found by this job. The `bias` call sites in screens-settings (above) are that module's to re-point.
+
+**Tests.**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/bias/fixtures.test.mjs`: 1 test, 1 pass.
+- Whole bias suite (`bio-plane/test/m/bias/*.test.mjs`): 80 tests, 79 pass, 0 fail, 1 todo (R26, deferred by K102, as before).
+- `node impact.mjs origin/tranche/T51 HEAD`: affected modules bias only (1 of 178); no other user's test is named.
+
+**Checks.**
+- `checks/fixtures.mjs . bias --list`: 0 failures.
+- `checks/format.mjs`: 0 failures.
+- `checks/words.mjs /home/user/bio bias`: 0 failures for bias.
+- `checks/architecture.mjs` (repo-wide, via `checks/run.mjs`): 0 failures.
+- `checks/ownership.mjs /home/user/bio bias tranche/T51 job/T51/bias`: 0 failures.
+- `checks/run.mjs /home/user/bio`: coverage 9 failures and fixtures 2634 failures tree-wide, all in other modules' jobs; none names a bias file except the screens-settings call sites above.
+- `bio-plane/src/setup-words/build.mjs --check`: a stale-rows note for `rows.mjs`, expected; no refusal naming bias.
+
+Commit `d16c6d15f7` (the two files). Size (session_011rb4tKh8PQJkPQoMa9Dzgp): test runs 3, module lines 1922
