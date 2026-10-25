@@ -133,4 +133,4 @@ COMPLETE · ADMISSION #18 · R27b: the door window counts in memory, written at 
 - `checks/format.mjs /home/user/bio`: 0 failures. `checks/architecture.mjs`: 0. `checks/coverage.mjs`: 33 of 33 ids, 0. `checks/words.mjs`: 0. `checks/fixtures.mjs admission --list`: 0. `checks/ownership.mjs admission tranche/T51`: 0.
 - Note for BOB: control-plane's `r10-caseratify-chain.test.mjs` should now read one hop less (14 to 13) from this change; it is control-plane's and public-read's to bring to 11.
 
-Size (session_01CC79ZymUBLp7z7wZPzLMwE): test runs 7, module lines 1176
+Size (session_01CC79ZymUBLp7z7wZPzLMwE): test runs 7, module lines 1653
