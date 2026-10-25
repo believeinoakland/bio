@@ -162,13 +162,14 @@ const through = (w, as, f) => counted(async (req) => {
 
 test("R87 (C14, P2.2): the drafts shared for review are read only for the projects whose row says one is shared; a null or zero summary reads none", timeout, async () => {
   const { w, rosa, coliseum, until } = await shared();
-  // The store names a draft's case only once a case is published (a ratification no test of this screen can sign), so the case the draft is of, and its two
-  // editions, are the real answers of `casedrafts` and `publishedlist` / `publishedcase` with the case named; the draft, its grant and its roster row are real.
+  // The store names a draft's case, and gives its review copy, only once a case is published (a ratification no test of this screen can sign), so the case the draft
+  // is of, its two editions and its copy are the real answers of `casedrafts`, `publishedlist`, `publishedcase` and `reviewcopy` with the case named; the project, its
+  // questions, the draft, the grant and the roster row that says a draft is shared are real.
   const CASE = "CASE-1";
   const named = through(w, rosa, (r) => { for (const l of Object.values(r.lists)) for (const d of l.drafts || []) d.case = { case_id: CASE, edition: 3, identity: "x" }; return r; });
-  const plane = { casedrafts: named,
+  const plane = { casedrafts: named, reviewcopy: through(w, rosa, () => ({ comments: [], grants: [{ live: true, until }] })),
     publishedlist: through(w, rosa, (r) => ({ ...r, cases: [{ case_id: CASE, edition: 1, published_at: "2026-09-01T10:00:00Z" }, { case_id: CASE, edition: 2, published_at: "2026-09-18T10:00:00Z" }] })),
-    publishedcase: through(w, rosa, (r, req) => ({ ...(r || {}), ok: true, caseId: req.query.caseId, edition: Number(req.query.edition), scope: "The Coliseum lease" })) };
+    publishedcase: through(w, rosa, (r, req) => ({ ...(r || {}), caseId: req.query.caseId, edition: Number(req.query.edition), scope: "The Coliseum lease" })) };
   const p = await open(w, rosa, "/app", plane);
   await settle();
   assert.deepEqual(p.byOp("casedrafts").map((r) => r.query.projects), [coliseum], "only the project with a draft shared is asked");

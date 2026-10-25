@@ -227,9 +227,7 @@ test("R3: forwarding, a project key and a question from a hint, each with its ow
   // are shown with the options the page draws these fields by.
   await mai.act("reauth", { body: { password: mai.password } });   // a project's key asks for the password again
   const offered = (items) => items.map((i) => (i.id === fwdItem.id ? { ...i, options: [{ id: "taskforward" }], disposition: {} } : i.id === keyItem.id ? { ...i, options: [{ id: "projectkeyset" }, { id: "promote" }], disposition: {} } : i));
-  // The question is promoted by the page's own package, which names no `bundleId` (R81) where the store's `promote` requires one (MALFORMED, "bundleId, files and meta
-  // are required"): the real store cannot take this act as the page sends it, so only its answer is the plane's, to see the page go on to the question.
-  const p = await openW(w, mai, "/app/queue", { queue: queueAs(w, mai, offered), promote: ok({ ok: true, bundleId: "INQ-3" }) });
+  const p = await openW(w, mai, "/app/queue", { queue: queueAs(w, mai, offered) });
   const fwd = await press(p, "taskforward");
   assert.equal(p.byOp("taskforward").length, 0);
   assert.equal(beside(p, fwd), word("screen.queue.fieldfirst"));
@@ -242,13 +240,14 @@ test("R3: forwarding, a project key and a question from a hint, each with its ow
   const r = last(p, "promote");
   // R81: the guard (the owner's declaration) takes the package fields only; the project is the file's own line.
   assert.equal(r.query.project, undefined);
-  assert.deepEqual(Object.keys(r.body).sort(), ["base", "files", "meta", "register", "snapKey"]);
+  assert.deepEqual(Object.keys(r.body).sort(), ["base", "bundleId", "files", "meta", "snapKey"]);
+  assert.match(r.body.bundleId, /^INQ-\d{4}-\d+/, "the id comes from the store (allocid)");
   assert.match(r.body.files[0].text, new RegExp("\\nproject: " + p1 + "\\n"));
   assert.equal(r.body.meta.object_type, "inquiry");
   assert.equal(r.body.meta.title, "Did the council vote?");
-  assert.match(r.body.files[0].text, /question: "Did the council vote\?"/);
+  assert.match(r.body.files[0].text, /## Question\n\nDid the council vote\?\n/);
   assert.ok(r.body.files[0].text.includes("Trigger: " + word("file.trigger.queue", { item: keyItem.id }) + "\n"), "the session log's trigger is the keyed word, as text");
-  assert.equal(p.location.pathname, "/app/question/INQ-3");
+  assert.equal(p.location.pathname, "/app/question/" + r.body.bundleId, "the real store took the package and the page went on to the question");
 });
 
 test("R2, R3 (interface-shell R10, R13): the queue's four states; a refusal beside its act; an item resolved or muted leaves the list on the re-read", timeout, async () => {
@@ -313,10 +312,7 @@ test("R13: \"Drop the request\" sends actionmove to abandoned with the member's 
   const real = await itemsOf(rosa);
   const unsentOf = (x) => real.find((i) => i.kind === "request-unsent" && i.subject.id === x.action);
   assert.ok(unsentOf(a) && unsentOf(b), "the real queue holds both unsent requests");
-  // The page sends actionmove's fields in the body where the store reads them from the query (without them it answers ACTION_MOVE_NO_REASON), so the act is the
-  // store's own with the page's fields also put in the query.
-  const moved = (req) => w.boot(rosa).door({ ...req, url: req.url + "&" + new URLSearchParams(JSON.parse(req.init.body)).toString() });
-  const p = await openW(w, rosa, "/app/queue", { actionmove: moved });
+  const p = await openW(w, rosa, "/app/queue");
   const snooze = button(p, "queuesnooze");
   const bt = await press(p, "queuesnooze");
   assert.equal(p.byOp("queuesnooze").length, 0, "control: no day, nothing sent");
@@ -325,7 +321,7 @@ test("R13: \"Drop the request\" sends actionmove to abandoned with the member's 
   const dropped = button(p, "actionmove").dataset.item;
   const gone = real.find((i) => i.id === dropped);
   await press(p, "actionmove", { reason: "We found the logs online" });
-  assert.deepEqual(last(p, "actionmove").body, { target: gone.subject.id, to: "abandoned", reason: "We found the logs online" });
+  assert.deepEqual({ ...last(p, "actionmove").query, op: undefined }, { op: undefined, target: gone.subject.id, to: "abandoned", reason: "We found the logs online" }, "the store reads actionmove's fields from the query");
   assert.ok(!itemOf(p, dropped), "re-read after the act: the dropped request leaves the list");
   assert.ok((await itemsOf(rosa)).every((i) => i.id !== dropped), "the real action is abandoned");
   assert.ok(snooze);
