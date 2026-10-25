@@ -196,7 +196,7 @@ export async function rest(kit, ctx, net) {
     const one = q[0] || {};
     const parts = R(await kit.get(auth, { op: "projectparticipants", projectId: project }));
     const owners = (parts.participants || []).filter((x) => Number(x.owner)).map((x) => x.handle);
-    const routed = q.filter((i) => i.assignee || i.assignee_role !== "group-admin").length;
+    const routed = q.filter((i) => i.assignee && i.assignee !== "unassigned" && i.assignee_role !== "group-admin").length;
     return [q.length && dupes === 0 && routed > 0 ? "WORKS" : "BROKEN", `${q.length} authority task(s) for ${new Set(subjects).size} documents (duplicates ${dupes}); tasks counts ${J(t0.counts)} -> ${J(t1.counts)} after pressing the same address again (${J({ ok: R(again.body).ok, existed: R(again.body).existed })}); the project's owner(s): ${J(owners)}; tasks routed to an owner or a named member: ${routed} of ${q.length} (the row says a task is routed to the project's manager or owner, and to a group administrator only when the project has none); first item: summary "${one.summary}", detail "${String(one.detail).slice(0, 160)}", assignee ${one.assignee}, role ${one.assignee_role}, options ${J((one.options || []).map((o) => o.id))}`];
   });
   await check("R146", "forward it to a better-placed member; the original assignment stays in the task's history; an obligation is never muted", "as the member and a second member", "taskforward; read both Queues; queuemute the task", async () => {
