@@ -39,7 +39,6 @@ async function ask(member, bytes, page = 0) {
   return await res.json();
 }
 
-// fixtures-own: harness the engine seam of this member's own makeMember (src/member.mjs takes the engine as an argument)
 const engineOf = (transcribeFrame) => ({ name: "tesseract-wasm", version: "0.11.0", model: "tessdata_fast/eng", check: () => null, transcribeFrame });
 const SEEN = () => ({ ok: true, regions: [{ text: "word word word", rect: [0, 0, 10, 10], confidence: 0.1 }], grain: "line", boxCount: 1,
                       words: [{ confidence: 0.1 }, { confidence: 0.1 }, { confidence: 0.1 }], orientation: { rotation: 0 } });

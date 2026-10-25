@@ -24,6 +24,7 @@
 import "../../bio-plane/test/sandbox.mjs";  /* test-support: owns $TMPDIR, synchronous stdio */
 
 import { Miniflare } from "miniflare";
+import { renderedPage, pixelRefusal } from "../../pdf-worker/test/pdf-pixels-fixtures.mjs";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
@@ -216,6 +217,7 @@ function stubEngine({ regions = [], check = null, frame = null, boxCount, words,
   };
   return e;
 }
+// fixtures-own: harness a spy on the renderer seam of this member's own makeMember; the answers it serves are pdf-pixels' published fixture (RENDERED, pixelRefusal)
 /** A stand-in renderer answering `answer` (a function of the page, or a value), recording every call. */
 function stubRender(answer) {
   const r = async (bytes, page, opts) => { r.calls.push({ page, opts, bytes: bytes.length ?? bytes.size });
@@ -223,9 +225,10 @@ function stubRender(answer) {
   r.calls = [];
   return r;
 }
+/* pdf-pixels' real answer for a rendered page (its published fixture), the frame and the digest being the case's own */
+const RENDERED = await renderedPage("pdf");
 const pngPage = (bytes, width, height, extra = {}) => ({
-  ok: true, route: "stub-route", mediaType: "image/png", bytes, width, height, upright: true, rotate_deg: 0,
-  pixels_sha256: "f".repeat(64), page_geometry: { dpi: 300 }, ...extra });
+  ...RENDERED, bytes, width, height, pixels_sha256: "f".repeat(64), ...extra });
 
 /** A bucket that records every property touched on it, and answers `.get` from `objects`. */
 function recordingBucket(objects = new Map()) {
@@ -530,7 +533,7 @@ console.log("\n--- A6 · R8, R9, R10, R17, R18: the successful answer, its regio
   t("R8 measured_by is the one measurement's citation, read through its key", body.measured_by, MEASURED_BY);
   t("R8 grain is line; deferred as R6; notes an array", [body.grain, body.deferred, Array.isArray(body.notes)], ["line", [8], true]);
   t("R8 image carries exactly the rendered frame's facts",
-    body.image, { width: 4, height: 3, frame_bytes: 48, route: "stub-route", upright: true, rotate_deg: 90, dpi: 300,
+    body.image, { width: 4, height: 3, frame_bytes: 48, route: RENDERED.route, upright: true, rotate_deg: 90, dpi: RENDERED.page_geometry.dpi,
                   pixels_sha256: "f".repeat(64), turned_deg: 0 });
   t("R8 pages is exactly one {page, regions}", [body.pages.length, keys(body.pages[0]), body.pages[0].page],
     [1, ["page", "regions"], 6]);
@@ -550,7 +553,7 @@ console.log("\n--- A6 · R8, R9, R10, R17, R18: the successful answer, its regio
     ["confidence,source,text"]);
   t("R9 the source is a pdf-page anchor in image pixels, with the image it indexes",
     got[1].source, { kind: "pdf-page", ref: "p6", page: 6, rect: [10.5, 41, 280.25, 60], space: "image-px",
-                     image: { width: 4, height: 3, route: "stub-route", upright: true, rotate_deg: 90,
+                     image: { width: 4, height: 3, route: RENDERED.route, upright: true, rotate_deg: 90,
                               pixels_sha256: "f".repeat(64) } });
   t("R9 the PLANE's own anchor check accepts every region", got.filter((r) => checkAnchor(r.source) != null).length, 0);
   t("R9 R17 an engine-rated value in 0..1 is carried unchanged, basis engine",
@@ -980,7 +983,7 @@ console.log("\n--- A13 · R26: the engine's orientation is asked of every frame;
     [unread.r.body.reason, unread.r.body.notes.length], ["PAGE_NOT_LEGIBLE", 2]);
 
   /* a turn the renderer refuses leaves the page read as it lies, and says so */
-  const refusing = stubRender((page, opts) => (opts.turn ? { ok: false, reason: "PIXELS_UNDETERMINED" } : pngPage(GREY4x3, 4, 3, { pixels_sha256: SIDE_SHA })));
+  const refusing = stubRender((page, opts) => (opts.turn ? pixelRefusal("PIXELS_UNDETERMINED") : pngPage(GREY4x3, 4, 3, { pixels_sha256: SIDE_SHA })));
   const rf = await run({ kind: "pdf", claim: { rotation: 90 }, side: partial, up: clear, render: refusing });
   t("R26 a turn the renderer refuses leaves the page read as it lies, with the statement that its orientation could not be determined",
     [rf.r.body.ok, rf.turns, rf.r.body.image.turned_deg, rf.r.body.notes.length], [true, [0, 270], 0, 2]);
