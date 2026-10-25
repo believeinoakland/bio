@@ -30,12 +30,6 @@ export const DECLARED_OPS = Object.freeze({
   subscriptionsignin: { classes: ["admin", "member"], machineClasses: [], mutating: true, stamps: ["viewer", "by"], needs: null,
     weight: "credential", description: localize("control-plane.declared.subscriptionsignin", "credential: a member's own sign-in to their own Claude subscription, in their own runner; no login held here; moves no bundle"),
     fields: { accepts: ["step", "code", "attempt"], requires: ["step"] } },
-  /* R116 (fix round 2, C15; K4317): `interfacewords` is `translations`' arm (R66), which declares the screens' four acts and not this
-     read; the shell sends it with `v`, the release version the door keys the answer's cache on (R116). `viewer` is the door's stamp,
-     never a field a caller sends; with no `language` the viewer's own is read, so nothing is required. */
-  interfacewords: { classes: ["admin", "member"], machineClasses: [], mutating: false, stamps: ["viewer"], needs: null,
-    weight: "read", description: localize("control-plane.declared.interfacewords", "read: every interface word in a language, the group's shown translation or the English, never blank, with the English beside it; writes nothing"),
-    fields: { accepts: ["language", "v"], requires: [] } },
 });
 
 /* The `by` stamp is the actor in the viewer's form (`member:<id>`, the founder's `admin`, a machine `class:<cls>`); the
