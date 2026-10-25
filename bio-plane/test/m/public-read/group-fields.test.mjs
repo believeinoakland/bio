@@ -16,8 +16,7 @@ const KEYS = ["group", "name", "domain", "domain_verified_at", "stake", "detail"
 const IDENTITY = { ok: true, group: "parks-group", display_name: "Friends of the Parks", domain: "parks.example",
                    domain_verified_at: "2026-10-01T00:00:00Z" };
 // fixtures-contract: instance-setup group-identity-public
-const NO_SLUG = { ok: true, group: null, display_name: null, domain: null, domain_verified_at: null,
-                  detail: "no group is recorded for this instance" };
+const NO_SLUG = { ok: true, group: null, display_name: null, domain: null, domain_verified_at: null, logo: false };
 /* A record-core stand-in answering `getSetting` from `settings`, logging every name asked; `fail` makes it throw. */
 const recordOn = (settings = {}, { fail = false } = {}) => {
   const asked = [];
@@ -61,8 +60,7 @@ test("R34 groupFields answers {group, name, domain, domain_verified_at, stake, d
   const n = bare(recordOn());
   n.registerGroupIdentity({ identity: () => NO_SLUG });
   assert.deepEqual([n.groupFields().group, n.groupFields().name], [null, null]);
-  assert.match(n.groupFields().detail, /no group is recorded/);
-  assert.doesNotMatch(n.groupFields().detail, /undetermined/, "an answered absence is not an undetermined identity");
+  assert.equal(n.groupFields().detail.includes(GROUP_IDENTITY_UNDETERMINED_SENTENCE), false, "an answered absence is not an undetermined identity");
   /* negative control: the answer moves with the source */
   let name = "Friends of the Parks";
   const m = bare(recordOn());
