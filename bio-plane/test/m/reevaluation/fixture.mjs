@@ -22,6 +22,7 @@ import { reevaluationOf } from "../../../src/reevaluation/index.mjs";
 import { eventsOf } from "../../../src/events/index.mjs";
 import { calculationsOf } from "../../../src/calculations/index.mjs";
 import { standardsOf } from "../../../src/standards/index.mjs";
+import { standardsEmptyReads } from "../standards/fixtures.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
@@ -97,9 +98,8 @@ export function quietUpstreams() {
     events: { onEventChanged: (m, fn) => (reg.events.push({ m, fn }), { ok: true }), eventForAct: () => ({ ok: true, found: false }),
               readEvent: () => ({ ok: true, found: false }) },
     calculations: { onInputChanged: (m, fn) => (reg.calculations.push({ m, fn }), { ok: true }) },
-    standards: { standardsAt: () => ({ ok: true, items: [], truncated: false }),
-                 standardsWithPortion: () => ({ ok: true, items: [], truncated: false }),
-                 addressesOf: () => ({ ok: true, addresses: [], truncated: false }) },
+    standards: (({ standardsAt, standardsWithPortion, addressesOf }) =>
+      ({ standardsAt: () => standardsAt, standardsWithPortion: () => standardsWithPortion, addressesOf: () => addressesOf }))(standardsEmptyReads()),
   };
 }
 
