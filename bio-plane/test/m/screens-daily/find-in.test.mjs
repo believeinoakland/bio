@@ -9,6 +9,7 @@ import "../../sandbox.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { storeWorld } from "../store-request/fixtures.mjs";
+import { generate } from "../../docgen.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 import { open as openRaw, ok, text, ops, acts, button, press, beside, last, main, screen, word, hasWord, settle } from "./page.mjs";
 
@@ -19,7 +20,7 @@ const KINDS = [
   { kind: "money", items: [], count: 0, nothing: true, not_read: [] },
   { kind: "dates", items: [{ kind: "dates", words: "within seven calendar days", capture_sha: SHA, title: "Housing code", extent: { passage: 3 }, date: "2023-01-01", recorded: [] },
     { kind: "dates", words: "Reported", capture_sha: "c2", title: "Work orders", extent: {}, table: true, content_id: "CNT-4", recorded: [] }], count: 2, nothing: false, not_read: [] },
-  { kind: "requirements", items: [{ kind: "requirements", words: "shall repair each reported pothole", capture_sha: SHA, title: "Housing code", extent: { passage: 3 }, content_id: "CNT-1", recorded: [{ by: "Mai", at: "2026-10-03" }] }], count: 1, nothing: false, not_read: [] },
+  { kind: "requirements", items: [{ kind: "requirements", words: "shall repair each reported pothole", capture_sha: SHA, title: "Housing code", extent: { passage: 3 }, content_id: "CNT-1", recorded: [{ by: "mai", at: "2026-10-03" }] }], count: 1, nothing: false, not_read: [] },
   { kind: "events", items: [], count: 0, nothing: false, not_read: [{ capture: "c7", why: "scan queued" }] },
   { kind: "term", items: [{ kind: "term", words: "closed", capture_sha: SHA, title: "Housing code", extent: { paragraph: 5 }, recorded: [] }], count: 37, truncated: true, nothing: false, not_read: [] },
 ];
@@ -36,7 +37,7 @@ const lab = (fresh = false) => {
     const q = await w.recipes.question(rosa, project, { title: Q_TITLE, text: Q_TITLE, draw: true });
     const doc = await w.recipes.hold(rosa, "Housing code", "The Director shall repair each reported pothole.", project);
     const quiet = await w.recipes.project(rosa, "Library hours");
-    await w.signIn("Mai");   // who recorded a find in the stand-in readings below: a member of the team
+    await w.signIn("mai");   // who recorded a find in the stand-in readings below: a member of the team
     return { w, rosa, project, q: q.id, doc, quiet };
   };
   return fresh ? make() : (shared ||= make());
@@ -136,7 +137,8 @@ test("R48 (7), C35: with no project scope the questions are listed with their pr
   const lone = await open(bare, "/app/find-in/sel-abc");
   const loneOptions = lone.doc.getElementById("findin-question").querySelectorAll("option").filter((o) => o.getAttribute("value")).map((o) => o.textContent);
   assert.ok(loneOptions.includes("Who keeps the keys?") && loneOptions.filter((t) => t === "Who keeps the keys?").length === 1, "its title alone, once: " + JSON.stringify(loneOptions));
-  const inProject = await open(L, "/app/find-in/" + L.project);
+  const own = await lab();
+  const inProject = await open(own, "/app/find-in/" + own.project);
   assert.deepEqual(inProject.doc.getElementById("findin-question").querySelectorAll("option").map((o) => o.textContent), [word("findin.question.choose"), "Is the city repairing reported potholes within seven days?"]);
 });
 
@@ -165,7 +167,7 @@ test("R5: each result offers only the recording act of its kind; one already rec
   const p = await shown();
   const recs = acts(p).filter(([, d]) => d.k !== undefined).map(([op, d]) => `${d.k}.${d.i}:${op}`);
   assert.deepEqual(recs, ["0.0:recordpersonfact", "2.0:recorddatedfact", "2.1:tabledeclare", "3.0:standarddeclare", "5.0:cite"], "R48 (5): a recorded passage keeps its act");
-  assert.ok(text(p, sections(p)[3]).includes(word("screen.find-in.recorded", { who: "Mai" })));
+  assert.ok(text(p, sections(p)[3]).includes(word("screen.find-in.recorded", { who: "mai" })));
   assert.ok(sections(p)[3].querySelector('.cs-origin[data-origin="accepted"]'));
   const more = await open(L, "/app/find-in/" + L.project, { findin: ok({ kinds: [
     { kind: "money", items: [{ words: "$4.2 million", capture_sha: "c", extent: {}, recorded: [] }] },
@@ -301,12 +303,12 @@ test("R38 (K3562): opened from a document by its record id, the search is scoped
 test("R39 (K3562): after a search with a question chosen, a passage result draws the cite act for that question; the chosen question stays chosen", async () => {
   const L = await lab();
   const recorded = ok({ ok: true, scope: { form: "project", project: L.project, captures: 14 }, kinds: [
-    { kind: "term", items: [{ kind: "term", words: "closed", capture_sha: SHA, title: "Housing code", extent: { paragraph: 5 }, recorded: [{ by: "Mai" }] }], count: 1, nothing: false, not_read: [] }] });
+    { kind: "term", items: [{ kind: "term", words: "closed", capture_sha: SHA, title: "Housing code", extent: { paragraph: 5 }, recorded: [{ by: "mai" }] }], count: 1, nothing: false, not_read: [] }] });
   const p = await open(L, "/app/find-in/" + L.project + "/" + L.q, { findin: recorded });
   await press(p, "findin", { values: { ...ALL_KINDS, "findin-question": L.q }, reason: R });
   const cite = button(p, "cite");
   assert.ok(cite, "a passage result draws Cite in the question, though recorded");
-  assert.ok(text(p, sections(p)[0]).includes(word("screen.find-in.recorded", { who: "Mai" })), "and shows who recorded it");
+  assert.ok(text(p, sections(p)[0]).includes(word("screen.find-in.recorded", { who: "mai" })), "and shows who recorded it");
   await press(p, "cite", { values: { [cite.dataset.f + "-role-supports"]: true } });
   assert.equal(last(p, "cite").query.question, L.q, "for the question chosen");
   // Control: a question the list does not name is still drawn as chosen, not as "None yet".
@@ -327,4 +329,26 @@ test("R5, R26, R103 (R17a, fix round 10, G3): a term item says which part of the
   assert.deepEqual(named, [["footnote"], [], [], ["header"], []], "the footnote and the header say so; a body hit, an unkeyed item and an unknown kind say none");
   assert.ok(text(p, rows[0]).includes(word(PART_KIND + "footnote")) && text(p, rows[3]).includes(word(PART_KIND + "header")));
   assert.ok(!text(p, rows[1]).includes(word(PART_KIND + "body")), "control: a body hit is not told as a part");
+});
+
+test("R5, R26, R103 (R17a), over a real reading: a docx held and read by the real acts, its footnote's and header's hits say which part they lie in, and its body hits say none", async () => {
+  const L = await lab(true);
+  const made = generate({ kind: "docx", seed: "lease", size: { units: 3 }, parts: ["footnote", "header"] });
+  await L.w.recipes.hold(L.rosa, "Lease file", await made.bytes(), L.project, { type: made.type, read: true });
+  const PART_KIND = "content.part_kind.";
+  const real = await L.rosa.act("findin", { body: { scope: { project: L.project }, kinds: ["term"], term: "lease" } });
+  const items = real.kinds[0].items;
+  assert.deepEqual([...new Set(items.map((i) => i.part))].sort(), ["body", "footnote", "header"], "the store reads the three parts");
+  // the page asks the store itself (no findin stand-in): the term, over the project
+  const p = await openRaw("/app/find-in/" + L.project, {}, L.w.boot(L.rosa));
+  await press(p, "findin", { values: { "findin-kind-people": false, "findin-kind-money": false, "findin-kind-dates": false, "findin-kind-requirements": false, "findin-kind-events": false, "findin-term": "lease", "findin-question": L.q }, reason: R });
+  const rows = main(p).querySelectorAll(".cs-row").filter((r) => r.querySelector("[data-part-kind]") || /lease-u\d/.test(text(p, r)));
+  assert.equal(rows.length, items.length);
+  for (const item of items) {
+    const row = rows.find((r) => text(p, r).includes(item.words));
+    assert.ok(row, item.words);
+    assert.deepEqual(row.querySelectorAll("[data-part-kind]").map((e) => e.getAttribute("data-part-kind")), item.part === "body" ? [] : [item.part], item.words);
+    if (item.part !== "body") assert.ok(text(p, row).includes(word(PART_KIND + item.part)), "the part named by its word");
+    else assert.ok(!text(p, row).includes(word(PART_KIND + "body")), "control: a body hit is not told as a part");
+  }
 });

@@ -29,12 +29,16 @@ async function heldAt(w, as, address, title, body) {
 
 const raw = (w, as, op, body, query = {}) => w.door({ url: `/api/?${new URLSearchParams({ op, ...query })}`, init: body === undefined ? { method: "GET" } : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } }, as);
 
+
 test("probe", { timeout: 120000 }, async () => {
   const w = await storeWorld({ group: null });
   const rosa = await w.signIn("rosa", { admin: true });
-  const dev = await w.signIn("dev");
-  const proj = await w.recipes.project(rosa, "Coliseum");
-  await dev.act("projectrequest", { query: { projectId: proj, comment: "I live next door" } });
-  const q = await rosa.read("queue");
-  console.log(JSON.stringify(q.items.map((i) => ({ id: i.id, kind: i.kind, summary: i.summary, case: i.case, subject: i.subject, age: i.age, due: i.due, options: i.options.map((x) => x.id), door: i.door }))));
+  const founder = await w.signIn("founder");
+  await founder.act("reauth", { body: { password: founder.password } });
+  console.log(JSON.stringify(resultOf(await raw(w, founder, "memberadd", { memberId: "ana", cover: "ana", role: "admin" }))).slice(0, 200));
+  await rosa.act("reauth", { body: { password: rosa.password } });
+  console.log(JSON.stringify(resultOf(await raw(w, rosa, "adminendorse", { memberId: "ana" }))).slice(0, 300));
+  console.log(JSON.stringify(resultOf(await raw(w, rosa, "adminendorse", { memberId: "ana" }))).slice(0, 400));
+  console.log(JSON.stringify(resultOf(await raw(w, founder, "adminendorse", { memberId: "ana" }))).slice(0, 400));
 });
+const resultOf = (a) => (a && a.json && a.json.result !== undefined ? a.json.result : a && a.json);

@@ -201,7 +201,9 @@ for (const where of screens) {
     await cy.act("reauth", { body: { password: cy.password } });
     await raw(w, cy, "adminendorse", { memberId: "ana" });
     await rosa.act("reauth", { body: { password: rosa.password } });   // changing administrators asks her password again
-    const p = await open(w, rosa, at[where]);
+    // The page's answers to adminendorse are the world's own, kept as they pass (the invitation the last endorsement makes is in them).
+    const door = w.boot(rosa).door, answers = [];
+    const p = await open(w, rosa, at[where], { adminendorse: async (req) => { const a = await door(req); answers.push(resultOf(a)); return a; } });
     await settle();
     const buttonFor = (who) => {
       const row = main(p).querySelectorAll(".cs-row").find((r) => r.querySelector('button[data-act="adminendorse"]') && text(p, r).includes(who));
@@ -209,15 +211,15 @@ for (const where of screens) {
     };
     assert.ok(!text(p).includes("#invite="), "control: nothing is drawn before the act");
     await press(p, "adminendorse", { nth: buttonFor("ana"), reason: "I know her work" });
-    const codes = main(p).querySelectorAll("code").filter((c) => c.textContent.includes("#invite="));
-    assert.equal(codes.length, 1, "the link is drawn once");
-    const token = decodeURIComponent(codes[0].textContent.split("#invite=")[1]);
-    const looked = resultOf(await raw(w, null, "invitelook", { invite: token }));
-    assert.equal(looked.ok, true, "the link carries the real invitation");
+    const answer = answers.at(-1);
+    assert.ok(answer.invite && answer.memberId === "ana", "the last endorsement makes the invitation");
+    const link = "/#invite=" + encodeURIComponent(answer.invite);
+    assert.equal(main(p).querySelectorAll("code").filter((c) => c.textContent.endsWith(link)).length, 1, "the link is drawn once");
     assert.ok(text(p).includes(word("screen.members.invite.noemail")), "with the sentence that the group's Civicsmith sends no email");
-    assert.ok(text(p).includes(word("screen.members.invite.shown", { handle: "ana", expires: dmy(String(looked.expires).slice(0, 10)) })), "and who it is for and when it expires");
+    assert.ok(text(p).includes(word("screen.members.invite.shown", { handle: "ana", expires: dmy(String(answer.expires).slice(0, 10)) })), "and who it is for and when it expires");
     // the next endorsement answers with no invitation (bo still awaits cy): the link is not drawn any more
     await press(p, "adminendorse", { reason: "I know him too" });
+    assert.ok(!answers.at(-1).invite, "the next answer carries no invitation");
     assert.equal(main(p).querySelectorAll("code").filter((c) => c.textContent.includes("#invite=")).length, 0, "control: an answer with no invite draws none, and the earlier one is gone");
     assert.ok(!text(p).includes(word("screen.members.invite.noemail")));
   });
