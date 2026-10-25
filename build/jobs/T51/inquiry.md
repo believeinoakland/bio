@@ -156,3 +156,7 @@ COMPLETE: fix round 10 batch 3 for inquiry; see the record section 'Fix round 10
 Merged tranche/T51 (capture's `fixtures.mjs`). `document-waits.test.mjs` lines 115 and 124 now take `heldActsUnreadable()` from `bio-plane/test/m/capture/fixtures.mjs`. `checks/fixtures.mjs /home/user/bio inquiry --list`: 0 findings. inquiry tests 235, pass 233, fail 0, todo 2; format, architecture, coverage, ownership, words 0 failures. No fixtures-own or fixtures-generic marker added. The earlier "left" line (capture) is closed.
 
 Size (session_011Jyr771vUcNgdkLV7aQq1C): test runs 16, module lines 3860
+
+## J8 · COMPLETE
+
+COMPLETE after B10: document-waits.test.mjs:115,124 re-pointed to capture's heldActsUnreadable; fixtures check for inquiry at 0; tests 235/233 pass/0 fail/2 todo; format, architecture, coverage, ownership, words 0.
