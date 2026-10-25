@@ -83,3 +83,37 @@ Cause found outside my paths (K5192 R17; STORE-REQUEST #5), with file:line. The 
 - `bio-plane/src/plane/store.mjs:932` and `bio-plane/src/store-assembly/assemble.mjs:841`: `...aiUseOps(aiUseOf(ctx), url, body),` should pass the environment in scope there (the next line already uses `env`): `...aiUseOps(aiUseOf(ctx), url, body, env),`.
 
 Until these land, R17 is met at the module's interface (the tests in `bio-plane/test/m/ai-use/r17-clock.test.mjs`), not yet in the running store. Bob or the owner of those two files places it.
+
+## J5 · COMPLETE
+
+R17 (fix round 10, plan item 94; K5192, K5132, K5148). Met at the module's interface; the running store needs the composition change in REPORT (plane/store.mjs:270, :932; store-assembly/assemble.mjs:288, :841).
+
+**What changed (file:line, bio-plane/src/ai-use/index.mjs)**
+- Constructor (~l.83–88): `this.clock` from `deps.now`, `this.env` from `deps.env`, both read by `#nowMs`.
+- New `#nowMs()` (~l.258–272): a handed `now` first; else `env.BIO_NOW_MS`; else the wall clock. The same order as credentials' `#nowMs`. No duration is measured in this module, so nothing stays on the wall clock.
+- `#ms(at)` is now an instance method on `#nowMs()` (was static on `Date.now()`); its seven call sites (`#dayOf`, `countUsage`, `aiLimitSet`, `useCheck`, `aiUsageMine`, `exploreAsk`, `exploreApprove`) read it.
+- `#carryCeilingsOnce` (l.136) stamps `this.#nowMs()`, not `Date.now()`.
+- `aiUseOps(use, url, body, env = null)`: sets `use.env` when given, as `credentialsOps` does.
+
+**Test (new, `bio-plane/test/m/ai-use/r17-clock.test.mjs`, three tests, all name R17)**
+1. A limit set through `aiUseOps` under `BIO_NOW_MS` reads that clock (`set_at` and history `at`); control in a fresh world with no environment reads the wall clock.
+2. A handed `now` beats `BIO_NOW_MS`: the limit's `set_at`, the counter's day and `first_at` read the handed clock; `useCheck` judges that day (AI_LIMIT_REACHED); control: the wall clock's `useCheck` is null.
+3. With only `BIO_NOW_MS` handed: the counter's day and `first_at` read the pinned clock.
+
+Failing-first: with the module at HEAD (stashed), the three tests fail (`set_at` not the pinned instant; the handed clock does not beat the environment; the pinned day not read). With the fix, they pass.
+
+**Lines done and left:** none; no `fixtures-*` marker added or left. Markers: none (`fixtures-own`, `fixtures-generic`: none).
+
+**Met ids:** R17.
+
+**Tests and checks**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/ai-use/*.test.mjs`: 90 pass, 0 fail, 0 skipped (the 87 before, plus three).
+- `checks/format.mjs /home/user/bio`: 178 modules, 0 failures.
+- `checks/architecture.mjs /home/user/bio ai-use`: 0 failures.
+- `checks/coverage.mjs /home/user/bio ai-use`: 17 of 17 live ids named by a test, 0 failures.
+- `checks/fixtures.mjs /home/user/bio ai-use --list`: 0 failures.
+- `checks/ownership.mjs /home/user/bio ai-use <merge-base> HEAD`: 3 files, 0 failures.
+- `checks/run.mjs /home/user/bio`: the failure list is the same as at the base except the R17 coverage line, which is now gone; words 19,239 as before, 16 failures as before (none in ai-use's files).
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules affected, 0 of 2,976 test files.
+
+Size (session_012pQPh7QQptB92PrassaGET): test runs 7, module lines 1022
