@@ -5,6 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, realWorld, SIGNIN_TOKEN } from "./fixture.mjs";
+import { tableDeclarationRefusals } from "../record-core/fixtures.mjs";
 import { aiAccountsOf, AI_ACCOUNTS_TABLES, AI_ACCOUNTS_PROJECT_TABLES, AI_ACCOUNTS_HISTORY_TABLE }
   from "../../../src/ai-accounts/index.mjs";
 
@@ -65,9 +66,10 @@ test("R28 R29 (credentials R18's, R30's and R34's shares): the declaration: ever
   /* a refusal is a fault: thrown, never silently left purgeable or exportable */
   const sqlStub = { exec() { return []; } };
   const membership = { onRevoked() { return { ok: true }; } };
-  const held = { declareTable() { return { ok: false, reason: "TABLE_DECLARED", table: "group_key", declaredBy: "membership" }; } };
+  const refused = tableDeclarationRefusals("group_key", { by: "membership" });
+  const held = { declareTable() { return refused.declaredAgainByTable; } };
   assert.throws(() => aiAccountsOf({ storage: { sql: sqlStub } }, { record: held, membership }).declareTables(),
     /refused its table declaration: TABLE_DECLARED \(group_key\)/);
-  const bad = { declareTable() { return { ok: false, reason: "TABLE_CLASS_UNKNOWN", table: "x" }; } };
+  const bad = { declareTable() { return refused.unknownClass; } };
   assert.throws(() => aiAccountsOf({ storage: { sql: sqlStub } }, { record: bad, membership }).declareTables(), /TABLE_CLASS_UNKNOWN/);
 });
