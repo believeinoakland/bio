@@ -29,7 +29,11 @@ test("R26: agentpack asks the untargeted affordances handler with the door's sta
 });
 
 test("R26: a refusal or an answer that is not ok is answered as the handler gives it; no hook or no answer is the store's silence", async () => {
-  const refused = jsonRes({ ok: false, reason: "NOT_CAPABLE" }, 403);
+  const w = await storeWorld();
+  const ruth = await w.signIn("ruth", { capabilities: ["contribute"] });
+  const real = await w.door({ url: "/api/?op=publishcheck", init: { method: "POST", headers: { "content-type": "application/json" }, body: "{}" } }, ruth);
+  assert.equal(real.status, 403);
+  const refused = jsonRes(real.json, real.status);   /* the real refusal of the world's door, as the hook gives it */
   const got = await agentPackOp({ url: "http://h/?op=agentpack", headers: new Headers(), gatedOp: async () => refused, stamps: STAMPS });
   assert.equal(got, refused);
   for (const gatedOp of [undefined, async () => undefined]) {
@@ -68,12 +72,12 @@ test("R27: airundispatch hands run, by, viewer, at, trace and memberRef to the o
   assert.deepEqual([unbound.status, unbound.json.reason, unbound.json.detail], [503, "AGENT_WORKER_UNBOUND", word("refusal.AGENT_WORKER_UNBOUND")]);
 });
 
-test("R27: through the world, a member's airundispatch of an absent run is the owner's own answer, never WORLD_NO_DOOR_ARM", async () => {
+test("R27: through the world, a member's airundispatch of an absent run is the owner's own answer (no such run)", async () => {
   const w = await storeWorld();
   const f = await w.signIn("admin");
   const r = await w.door({ url: "/api/?op=airundispatch", init: { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ run: "RUN-none" }) } }, f);
-  assert.notEqual(r.json.reason, "WORLD_NO_DOOR_ARM");
-  assert.notEqual(r.status, 501);
+  assert.equal(r.status, 200);
+  assert.deepEqual([r.json.ok, r.json.result.run, r.json.result.found], [true, "RUN-none", false]);
 });
 
 const drafter = (answer, status = 200) => { const seen = { drafts: [], usage: [] };
@@ -101,11 +105,10 @@ test("R28: readtranslate asks with subject and language alone and answers the pl
 });
 
 test("R28: a refusal of the object is answered as given at its status (a status under 400 is 502), grant dropped, nothing counted; an unreadable answer is silence; a caller with no session, or a store with no draft, is unbound", async () => {
-  // fixtures-generic: PLANE_REFUSED (a made-up code of the double's, to show the answer passes as given)
-  const d = drafter({ ok: false, reason: "PLANE_REFUSED", grant: "G" }, 403);
+  const d = drafter({ ok: false, reason: "AI_PART_NOT_DEPLOYED", grant: "G" }, 403);
   const r = await draftAsk(TEXT_CHECK, d);
-  assert.deepEqual([r.status, r.json.ok, r.json.reason, "grant" in r.json, d.seen.usage.length], [403, false, "PLANE_REFUSED", false, 0]);
-  assert.equal((await draftAsk(TEXT_CHECK, drafter({ ok: false, reason: "PLANE_REFUSED" }, 200))).status, 502);
+  assert.deepEqual([r.status, r.json.ok, r.json.reason, "grant" in r.json, d.seen.usage.length], [403, false, "AI_PART_NOT_DEPLOYED", false, 0]);
+  assert.equal((await draftAsk(TEXT_CHECK, drafter({ ok: false, reason: "AI_PART_NOT_DEPLOYED" }, 200))).status, 502);
   const mute = { draft: async () => new Response("not json", { status: 200 }) };
   assert.equal((await draftAsk(TEXT_CHECK, { stub: mute, seen: {} })).json.ok, false);
   for (const over of [{ viaSession: false }, { stub: {} }]) {
@@ -119,7 +122,8 @@ test("R28: through the world, textcheck and readtranslate reach the plane's draf
   const f = await w.signIn("admin");
   for (const [op, b] of [["textcheck", { text: "a sentence" }], ["readtranslate", { subject: "S-1", language: "es" }]]) {
     const r = await w.door({ url: `/api/?op=${op}`, init: { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) } }, f);
-    assert.notEqual(r.status, 501, op); assert.notEqual(r.json.reason, "WORLD_NO_DOOR_ARM", op);
-    assert.equal(typeof (r.json.reason ?? r.json.code ?? r.json.result?.reason), "string", op);
+    assert.equal(r.status, 403, op);
+    assert.equal(r.json.ok, false, op);
+    assert.match(r.json.reason ?? r.json.code, /^AI_(PART|RUN_MODE)_NOT_DEPLOYED$/, `${op}: the plane's draft door is not switched on in a world`);
   }
 });
