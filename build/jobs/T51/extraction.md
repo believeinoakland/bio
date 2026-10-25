@@ -883,3 +883,13 @@ Size (session_01VLArEXuqRCiEGE52grGAFk): test runs 30, module lines 4980
 ## J45 · COMPLETE
 
 COMPLETE after CHANGE B59: merged tranche/T51; relays storageAbsent from capture's storageNotConfigured; ai-use's AI_LIMIT_REACHED is the contract literal (t43, t50) with fixtures-contract: ai-use use-check, since ai-use is after extraction and architecture refuses its fixtures import. Module 390/390; format, architecture, coverage 87/87, ownership 0 failures. Fixtures list 23, all waiting on providers' runs or ocr-worker's stray run line.
+
+## Fix round 10, follow-up 28 (B60)
+
+- (1) `t46`: the "six codes" table is five (`TRANSCRIBE_NEEDS_API_KEY` dropped; R75); `workerRefusal` carries the worker's real extra keys (`NO_ACCOUNT` `capability`, `BAD_ACCOUNT` `field`). `t44`, `t50` named "six" only in comments: now "five".
+- (3) `MODEL_SILENT`/`MODEL_REFUSED` (t44) carry status 502 and the real `model_error`/`model_status`; t50's two invented `busy` answers became agent-worker's real `MODEL_REFUSED` (`DECLINED`, 502, `ending: refused`, `overloaded_error`, 529). `SOME_OTHER_CODE` and `busy` stay only in t44:166 and t46:154, under `fixtures-generic` markers with their reason (the `transcribe-refusal` contract marker there is removed: nothing real stands there).
+- (2) **Not done, with why (QUESTION J-next):** `AGENT_WORKER_UNBOUND`, `EVIDENCE_ABSENT`, `NO_PAGE_RENDERED` are not extraction's own codes: `plane/transcribe.mjs` (lines 104-131) answers them to the transcriber extraction is handed, and extraction reads them in `unfilledOutcome`. Extraction cannot produce them with no answer handed in, so there is no "own refusal through its real entry" to test. The marker `fixtures-contract: agent-worker transcribe-not-sent` stays at t44:92, and agent-worker's `fixtures-run` for it only checks that its answers never equal the three. The true provider is plane (later in the order): wanted is a plane `fixtures-run: extraction transcribe-not-sent` over `plane/transcribe.mjs`'s real answers, then the marker re-pointed to `plane`.
+- For BOB (agent-worker's file): `agent-worker/test/fixtures-contracts.test.mjs:84` `fixtures-run: extraction transcribe-declined` is now an orphan-run (extraction's declined cases use the literal real answer; the check no longer sees a candidate). `:101` `transcribe-not-sent` stays paired until (2) is decided.
+- Fixtures list: failing only `t48.test.mjs:30`, plus that orphan-run line. Tests: module `ℹ tests 391`, `ℹ pass 391`, `ℹ fail 0`. Checks: format 0, architecture 0, coverage 87 of 87, words 0, ownership 0.
+
+Size (session_01Jvm3Svfx7hGZ595k1aGkp6): test runs 5, module lines 4980
