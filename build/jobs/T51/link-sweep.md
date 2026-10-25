@@ -211,3 +211,22 @@ B9 was LINK-SWEEP #8's and is merged (B11, K5170); only B10 applied.
 ## J8 · COMPLETE
 
 B10 done (commit d4f95d29c3, pushed): R14 met. A project's own bundle (bundleInfo type project) is its own project in sweepFence and in the closed test (R4). Tests 48 of 48 green (2 new, seen red on the old code); format, architecture, coverage, words (also with monitoring following link-sweep scheduler), ownership 0 failures; fixtures --list shows only the 2 old contracts.test.mjs lines. Door case: control-plane r41-sweepset test 2 should go green on merge, untouched. Nothing deferred, nothing found elsewhere.
+
+## Completion (fix round 10, the two fixture lines; LINK-SWEEP #10, B12, session_01UkFgnSip697B4cSDmc7tSS)
+
+**Entries applied.** B12's one job: `bio-plane/test/m/link-sweep/contracts.test.mjs:31` (`SWEEP_SCOPE.unknown`) and `:34` (`SWEEP_SCOPE.out_of_scope`) each marked `fixtures-own: harness`, with the reason that these are link-sweep's own published contract values, run against its code at :65. Marker comments only: no test, value or string changed.
+
+**Met:** nothing new (no requirement changed; BOB strikes the fixture marks).
+**Deferred:** nothing.
+**Found in another module:** three `answer` findings in `bio-plane/test/m/screens-intake/t51-watching-named.test.mjs` (lines :76, :89, :104). They hand-build the `sweepset` and `sweepratify` answers where the provider is link-sweep (earlier), and link-sweep publishes no fixture file for those two ops. Reported to BOB in a REPORT entry for placement; not touched.
+
+**Tests and checks** (absolute root `/home/user/bio`):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/link-sweep/*.test.mjs`: tests 48, pass 48, fail 0 (exited by itself, no force-exit; no shortfall).
+- `checks/format.mjs`: 0 failures. `architecture.mjs … link-sweep`: 0 failures. `coverage.mjs … link-sweep`: 15 of 15 ids named, 0 failures.
+- `checks/words.mjs … link-sweep`: 0 failures; with `monitoring`: 0 failures.
+- `checks/ownership.mjs … link-sweep 7915a4d54b HEAD`: 0 failures.
+- `checks/fixtures.mjs … link-sweep --list`: 0 failures; the two `accepted(own)` lines are the two marks above.
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178, affected test files 0 of 2981.
+- `checks/run.mjs /home/user/bio`: no finding in link-sweep's own files; its 3 findings are the screens-intake lines above.
+
+**Size (session_01UkFgnSip697B4cSDmc7tSS): test runs 1, module lines 1232.**
