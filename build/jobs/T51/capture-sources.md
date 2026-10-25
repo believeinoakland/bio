@@ -341,3 +341,7 @@ Fix round 10, follow-up 31 (SUITE #2): the browserrender timing red. Code commit
 Deferred: none. Found in another module: none.
 
 Size (session_015NNE8YXK9B29MQ2FEJGQ2N): test runs 12, module lines 2897
+
+## J11 · COMPLETE
+
+Follow-up 31 done: cause = the product timed a body phase that did no work on the tests' 20x clock (instrumented: bodies 20, no requests, nothing in flight). Fixed in browserrender.mjs (bodies is the time waited, 0 when none) and the two clock-dependent test assertions (R68 control, R69 refused/closing). Browserrender tests 18/18, 20 runs in a row green under 8 busy loops on 4 cores; module 129/129, users 363/363; format, architecture, coverage, words, fixtures, ownership 0. Record J10.
