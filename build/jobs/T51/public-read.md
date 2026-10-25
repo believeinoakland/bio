@@ -432,3 +432,28 @@ Size (session_01BEeDNCorrpjXyGB6RpWrrB): test runs 6, module lines 2956
 - fixtures `--list`: 1 failure, `group-fields.test.mjs:18` `contract` `idle`: the provider's run (`instance-setup/fixtures.test.mjs`, `fixtures-run: public-read group-identity-public`) is on `job/T51/instance-setup`, not yet on `tranche/T51`. Waits for instance-setup's merge; named here as the one line left.
 
 Size (session_01Xm9gZFkkLPpKbxESgv347q): test runs 6, module lines 13869 (public-read `src/` and `test/m/public-read/` lines, `wc -l`)
+
+## J31 · COMPLETE
+
+**COMPLETE (B33: fix round 10, the final pass's causes 1 and 2).** Met: **R28** (the amended text of K5148, both added sentences). BOB strikes the mark.
+
+**1. A removal order for one case withheld another case's zip** (`diag2-10b.md` C2).
+- Fix: `withheldOf(shas, zip)` (`public-read/index.mjs`) takes the zip's manifest hash; the Worker's zip route (`publication/worker.mjs`, `withheldOf(stub, listedShas, shaParam)`) passes it as `&zip=`. A hash an edition holds only as scaffolding counts under that case's own orders and no other case's (`#withheldIndex` returns `scaffoldBy`); material (a finding, a capture, a document) counts under any case's order, as before. The single-hash route (`publishedbytes` without `format=zip`) is unchanged: it names no case.
+- **Reading to confirm:** scaffolding is the kinds `criteria`, `grading_facts` and `passages`. The facts files are included because a finding with no rows writes the same empty bytes as the default `criteria.json` (in the fixtures, all three are one object), so listing `criteria` alone would still refuse the second case's zip. A finding's non-empty facts differ per finding; the same finding in two cases is still caught by its own `finding.md`.
+- Tests (`court-orders.test.mjs`, R28, all red on the old code, green now): two cases with the default criteria, `remove` on the first: the second's zip 200, the first's 451, the criteria bytes shown identical; control: a finding both pin, sealed by the first's order, refuses the second's zip naming that finding only; control: the first case's own order on its `criteria.json` refuses its own zip and not the second's.
+- Why the tests missed it: no fixture had two cases with the same `criteria.json`, and no test fetched a second case's zip while another was under an order.
+
+**2. A removed edition's finding rows kept the case document's text** (`diag2-10b.md` C3).
+- Fix: the withheld-finding row (`index.mjs`, the `withheldBy` branch) sets `case_excludes`, `strength`, `grounds` and `required` to null; hash, signer, attestor, role, edition stay.
+- Tests: in one test, a `seal` naming a finding nulls that finding's four fields and leaves the other finding's strength; a `remove` nulls all rows' four fields, identity facts stay, and the signed exclusion sentence appears nowhere outside `court_orders`/`withheld`. Control: before any order the exclusion is served. The old code failed on `case_excludes`.
+- Why the tests missed it: the earlier assertions listed only title, `withheld` and `bundle_sha` per row.
+- **Left as it is (for BOB):** a seal of the case document alone (no finding named) still serves the rows' `strength` pair and `case_excludes`, since no finding's bytes are withheld; R28's text names whole and finding-level orders. If a document-level seal should null them too, say so and I add it.
+
+**Deferred:** none. **Found in other modules:** none. **Markers added:** none.
+
+**Tests and checks** (absolute root `/home/user/bio`):
+- `bio-plane/test/m/public-read/`: 314 pass, 0 fail (was 310; four new tests). Users run: network-notices 78 pass, docket 92 pass, filings 164 pass; screens-publish 282 pass, 2 fail (R24 words and R22 G54), which fail identically on the tranche code before my commit, so not mine.
+- format 0 failures; architecture 0; coverage public-read 44 of 44; words: no finding in public-read (16 failures elsewhere, store-assembly and others); ownership vs `tranche/T51`: 0 failures.
+- fixtures `--list`: 1 failure, `group-fields.test.mjs:18` `contract` (waits for instance-setup's `fixtures-run`, J30), no new line.
+
+Size (session_01ML8hpkf2vrUZPMLJcMVCtD): test runs 8, module lines 4205 (public-read `src/`, `worker.mjs`, `container.mjs`, `inband.mjs`, `wc -l`)
