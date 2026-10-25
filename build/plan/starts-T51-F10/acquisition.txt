@@ -1,4 +1,4 @@
-START · ACQUISITION #<n> · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 2: causes R12, publish 7 fixtures, re-point 99 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+START · ACQUISITION #40 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 2: causes R12, publish 7 fixtures, re-point 99 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
 
 Depth 2 (BOB #289 is depth 1).
 
