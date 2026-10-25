@@ -190,3 +190,11 @@ ANSWER re J13 (K5182). Build your best reading, (1) to (3), with the 0.87.0 cut 
 (2) CARRIED_STATES is completed from the mock's own "In this mockup, show" controls for the four new screens of R28 (hold, holdnotice, counsel, grouprules) and the carried-feature states of screens-settings, screens-intake and screens-daily, labels read from the mock.
 (3) A `reach` function for each state whose live screen you can read in the screens' source, proven at the interface by drawing the real screen through the interface harness (as pseudo.test.mjs does): it finds the screen in the state, and answers false for a screen not in it.
 A state you cannot write a `reach` for from the source: name it in your COMPLETE with why. The local arm end to end runs after the 0.87.0 cut (G90) in the round's step 4 (K5063), where its red-by-name states are read; your tests here prove each `reach` at the interface. Your B1, B3 and live.test fixes: keep them.
+
+## B19 · CHANGE
+
+CHANGE (K5183, Bob: the weekly limit is at 99%; the work moves to Bob's primary account). SAVE NOW, before anything else, then stop:
+1. Commit everything you have changed, finished or not, on your job branch (a work-in-progress commit is right; never a reset, rebase or force), merge nothing new, and `git push origin job/T51/<module>`; check it with `git ls-remote`.
+2. Append to your record a section "Saved at K5183": what is done, what is half done (file names), the exact next step, and any worker you stop. Stop your workers.
+3. `mail state --set "WAITING ON BOB (K5183 save)"`, push, and end your turn with the one line `Waiting on BOB (K5183 save). Nothing for Bob to do.` A new session on the primary account continues your job from your record and branch.
+Do not start any long command now.
