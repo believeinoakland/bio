@@ -592,3 +592,26 @@ COMPLETE (CHANGE B32). Merged tranche/T51; preflight.test.mjs:409 now takes the 
 **Workers stopped.** None were running.
 
 **Open for BOB.** Pushing this branch publishes its whole ancestry, including the 2,260 local commits (other modules' mail commits and tranche history, already on `origin/tranche/T51`), because the job branch had diverged from them. Confirm that this base is acceptable.
+
+## Completion record for B33 (CHANGE, resumed by B37, session_01PkeaPY8AiQwGQmpx2xoXoy)
+
+**Entries applied.** B33's R31 chain test, at the interface, in `bio-plane/test/m/case-authoring/r31-chain.test.mjs`: two tests on one chain (two grounded legs, one citation severed, concluded by the project, prepared). The severed test is red (below); its control, the same with the citation live, is green and asserts that the part 2 ground's row is frozen in the case document. The fixture (`fixture.mjs`) gains one option, `severed`, on `finding` and `inqMd`, which sets the named targets' `cites` status to `severed`; unset, the markup is unchanged.
+
+**Red, and where it sits (not this module).** The severed chain is refused at the gate. `publishPreflight` carries a `GATE_REFUSED` blocker with C-2.8: "published_strength_grounds names no row for ground 'part 2'". The same refusal comes from ratification's `caseRatifyPreflight` over the stored document text. I also ran the chain with the pre-fix `bio-plane/src/case-catalogue/checks.mjs` (`302c1d7319^`) swapped in; the refusal is identical, so the R31 fix does not reach this path. The swapped file was restored (`git checkout`), and the tree is clean.
+
+Root, by reading (no change made here): `case-catalogue/checks.mjs` lines 920–928, the case document's member arm, builds `memberFm` from `edition`, `completeness`, `published_strength`, `published_strength_grounds` and `basis` (the last is ratification's `memberBasis`, `#memberBasisAtPins`, `ratification/index.mjs` ~1096). It does not carry the member's `references`. The live-leg filter at `checks.mjs` 382–388 reads `fm.references`, so on this arm no leg is ever severed: the label `part 2` is asked for a row, and strength froze none because its only leg is severed. The control passes because nothing is severed there.
+
+Proposed fix, for BOB to assign (it crosses case-catalogue and ratification): the member's `references` from its pinned bytes reach the case document's member arm beside `basis` (ratification's member basis carries them, or a `memberReferences` context is added), and `memberFm` carries `references`. Then the severed test goes green with its control unchanged. The coverage of R31 by the case-catalogue unit test passes only because that test sets `references` on the member directly.
+
+**Deferred.** None of this module's code changed. Nothing else in case-authoring is deferred.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/case-authoring/`: 259 tests, 258 pass, 1 fail (the severed R31 chain, the only failure).
+- `node checks/format.mjs /home/user/bio`: 178 modules, 0 failures.
+- `node checks/architecture.mjs /home/user/bio case-authoring`: 0 failures.
+- `node checks/coverage.mjs /home/user/bio case-authoring`: 58 of 58 live ids named by a test.
+- `node checks/ownership.mjs /home/user/bio case-authoring tranche/T51`: run after the commit (see the BLOCKED entry).
+
+**Not complete.** COMPLETE is not posted: the chain test, which B33 asks for, is red on a cause outside this module. BLOCKED (cause: tests) is posted instead, with the root and the proposed fix above. I did not skip or weaken the test.
+
+**Size (session_01PkeaPY8AiQwGQmpx2xoXoy): test runs 13, module lines 3102** (`bio-plane/src/case-authoring/*.mjs`; this job changed no source).

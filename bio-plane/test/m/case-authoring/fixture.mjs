@@ -410,10 +410,10 @@ export function world({ group = "test-group", provider = true, now = null, recor
     },
     /** An inquiry whose basis is `legs` (each `{target, …leg fields}`), in `state`; `concluded` carries its own
      *  conclusion and falsifier (the no-project relationship's conclusion, §7.1 item 5). */
-    finding(id, legs, { state = "concluded", lines = [] } = {}) {
+    finding(id, legs, { state = "concluded", lines = [], severed = [] } = {}) {
       const head = record.head(id);
       const r = promotion.promote({ bundleId: id, base: head ? head.bundleSha : null, snapKey: `k${++n}`,
-        author: V("alice"), files: [{ path: "bundle.md", text: inqMd(id, legs, { state, lines }) }],
+        author: V("alice"), files: [{ path: "bundle.md", text: inqMd(id, legs, { state, lines, severed }) }],
         meta: { object_type: "inquiry" } });
       if (!r.ok) throw new Error(`fixture finding refused: ${JSON.stringify(r).slice(0, 600)}`);
       return r;
@@ -562,14 +562,16 @@ export function infoMd(id) {
           "---", "", "## Summary", "", "A document.", ""].join("\n");
 }
 
-/** An inquiry document: `legs` its basis (each cited by a confirmed `cites` reference); concluded in its own bytes. */
-export function inqMd(id, legs = [], { state = "concluded", lines = [] } = {}) {
+/** An inquiry document: `legs` its basis (each cited by a `cites` reference, confirmed unless its target is in `severed`);
+ *  concluded in its own bytes. */
+export function inqMd(id, legs = [], { state = "concluded", lines = [], severed = [] } = {}) {
   const val = (v) => (typeof v === "number" ? String(v) : `${v}`);
   /* a leg on another group's finding is not a reference (inquiry-grammar R11) */
   const refs = [...new Set(legs.map((l) => l.target).filter((t) => !/^(imported:|CALC-)/.test(String(t))))];
   return ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1", `title: "Question ${id}"`,
     `current_state: ${state}`, "prior_state: open", `created: "${T0}"`, `last_updated: "${T0}"`, "surfaced_by: human",
-    ...(refs.length ? ["references:", ...refs.flatMap((t) => ["  - rel: cites", `    target: ${t}`, "    status: confirmed",
+    ...(refs.length ? ["references:", ...refs.flatMap((t) => ["  - rel: cites", `    target: ${t}`,
+                                                              `    status: ${severed.includes(t) ? "severed" : "confirmed"}`,
                                                               '    note: ""'])] : ["references: []"]),
     "state_history: []",
     ...(legs.length ? ["basis:", ...legs.flatMap((l) => Object.entries({ role: "supports", ...l })
