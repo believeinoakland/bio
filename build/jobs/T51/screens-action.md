@@ -423,3 +423,9 @@ Merged `tranche/T51` @ d6363abb4c. architecture, format, coverage, words, owners
 ## J32 · BLOCKED
 
 BLOCKED (cause: tests, a provider; not my module). After merging tranche/T51 @ d6363abb4c my checks are all 0 (architecture, format, coverage, words, ownership), but the suite is 243/48 (295/0 before the merge). store-assembly 38536482fc now records the producing team at the world's first boot (INSTANCE_NAME), and store-request's storeWorld() (bio-plane/test/m/store-request/fixtures.mjs:26-31) still calls instancegroupseed, which answers GROUP_ALREADY_RECORDED, so storeWorld() throws for every caller: interface-shell r129-door and store-request world.test fail the same way (10 fail in those two files). Needs store-request's job to stop seeding when the team is already recorded. I post COMPLETE when the tranche carries that fix and my suite is green again.
+
+## Saved at K5183 (SCREENS-ACTION #19)
+
+Done: causes 1 to 5 (by #18) and item 6, the op tables (Round 11 above), all pushed on `job/T51/screens-action`; `tranche/T51` @ d6363abb4c merged. architecture, format, coverage, words, ownership 0. Nothing half done; no worker running (all four finished).
+Open: the suite is 243 pass, 48 fail on the merged tranche, only because `storeWorld()` seeds the team a second time (J32, B37): STORE-REQUEST #4 fixes it (B8), BOB merges that alone and sends a CHANGE.
+Exact next step: when the tranche carries that fix, `git merge origin/tranche/T51`, run the module suite (`node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/screens-action/*.test.mjs`, expect 295/0), the checks of the process repository (format, architecture, coverage, words, ownership, `fixtures.mjs <abs root> screens-action`: 7 lines kept as listed in Round 11), then `node checks/run.mjs /home/user/bio` and `setup-words/build.mjs --check`, then post COMPLETE naming the met ids R3, R5, R6, R18, R32, R50 and the REPORTs of Round 11.
