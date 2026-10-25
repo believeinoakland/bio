@@ -125,7 +125,7 @@ import {
 import { mceSkipper, withMetadata, activeContent, withActive, detectByContentType } from "./docx.mjs";
 import { boundOf } from "./read-bounds.mjs";
 import {
-  Scanner, scanWhole, scanSync, parseAttrs, unescape, readText, scanNotes, collectElements, TAG_MAX, memberIdentities, addressParts,
+  Scanner, scanWhole, scanSync, parseAttrs, unescape, readText, scanNotes, collectElements, TAG_MAX, memberIdentities, addressParts, countObjects, precountFloor, owned,
 } from "./office-xml.mjs";
 
 /* R44: what the walk may retain, paragraphs, cells and links together (the table's figure, never a literal here). */
@@ -208,6 +208,9 @@ function rootShow(xml) {
 
 /** What a deck's walks retain, paragraphs, cells and links, and the characters they hold (R44): one meter for the
  *  deck. `exceeded` is the first bound the walks went past. */
+/* R44: the elements a slide walk counts as a retained object, one for each open of one (paragraphs, cells, links); `countObjects` counts the same. */
+const SLIDE_COUNTED = new Set(["p", "tc", "hlinkClick"]);
+
 function createMeter({ retainedMax = OFFICE_RETAINED_MAX, charsMax = OFFICE_DECODED_CHARS_MAX } = {}) {
   const m = { objects: 0, chars: 0, exceeded: null, retainedMax, charsMax };
   m.count = () => { if (++m.objects > retainedMax && !m.exceeded) m.exceeded = { why: "TOO_MANY_OBJECTS", n: m.objects, bound: retainedMax, final: true }; };
@@ -498,7 +501,14 @@ async function pptxParts(bytes) {
     if (plan.read === "whole") into.set(n, r.text);
     if (root && declaresNotShown(rootShow(r.text))) hiddenParts.add(n);
   };
-  if (plan.read !== "none") {
+  /* R44 (fix round 10, cause 11a): a deck that could hold more objects than the figure is counted part by part, in pieces, BEFORE its parts are held, so a deck past it is refused having held no more than a piece. */
+  let refused = null, precounted = 0;
+  if (plan.read === "whole" && declaredTextBytes >= precountFloor(OFFICE_RETAINED_MAX)) {
+    const c = await countObjects(b, container, [...slideParts, ...notesParts, ...masterParts], SLIDE_COUNTED, { skipper: mceSkipper, max: OFFICE_RETAINED_MAX });
+    precounted = c.scanned;
+    if (c.exceeded) refused = c.exceeded;
+  }
+  if (plan.read !== "none" && !refused) {
     for (const n of slideParts) await readHere(n, slideXml, true);
     if (plan.read === "whole") {
       for (const n of notesParts) await readHere(n, notesXml, false);
@@ -534,7 +544,7 @@ async function pptxParts(bytes) {
   return {
     ok: true, format: "pptx", variant: d.variant ?? null, bytes: b, container, mainPart, presentationXml,
     order, slideParts, notesParts, masterParts, slideXml, notesXml, masterXml, notesOf, hiddenParts,
-    rels, core, active, guard, piecewise, stream: plan.read === "pieces", partials, undetermined,
+    rels, core, active, guard, piecewise, stream: plan.read === "pieces", partials, undetermined, refused, precounted,
   };
 }
 
@@ -629,6 +639,7 @@ async function pptxStructure(parts, opts) {
   }
   const yieldNow = opts?.yieldNow;
   const meter = createMeter();
+  if (parts.refused) meter.exceeded = parts.refused;
   const notes = [];
   const links = [];
   const deck = deckOf(parts);
@@ -911,11 +922,20 @@ async function pptxText(parts, opts) {
   }
   const yieldNow = opts?.yieldNow;
   const meter = createMeter();
+  /* R44: refused before its parts were held, by the count parts() made in pieces; the answer the walk gives. */
+  if (parts.refused) {
+    return {
+      ok: true, container: "pptx", document: null, slides: [], speakerNotes: [],
+      deckLength: deckLengthOf(parts),
+      undetermined: [{ part: GUARDED_PARTS, ...parts.refused }],
+      counts: { chars: 0, notesChars: 0, undetermined: 1, scanned_bytes: parts.precounted ?? 0 },
+    };
+  }
   const deck = deckOf(parts);
   const slides = [];
   const speakerNotes = [];
   const undetermined = [...parts.partials];
-  const units = { body: [], speaker_note: [], master_text: [] };
+  const units = { speaker_note: [], master_text: [] };
   const boxes = [];
   let scanned = 0;
   /* One part walked: its walk, or the statement of why it was not (R40, R44). */
@@ -945,8 +965,7 @@ async function pptxText(parts, opts) {
           /* R38 (K4987): with a text box holding words, the slide's text without them; the box's piece is where they are found. */
           ...(walked.boxes.some((b) => b.text) ? { bodyText: walked.bodyText } : {}) });
         const at = (shape) => (slide != null ? slideShapeRef(slide, shape) : null);
-        /* R38: a hidden slide's text is a unit marked hidden; a text box is its own unit. */
-        if (hidden && walked.bodyText) units.body.push({ kind: "body", ref: at(null), part, text: walked.bodyText, hidden: true });
+        /* R38 (fix round 10, cause 16): a hidden slide's text is held once, as its slide unit (`hidden: true` on the slide), not also as a second body piece; a text box is its own unit. */
         for (const b of walked.boxes) if (b.text) boxes.push({ kind: "text_box", ref: at(b.shape), part, text: b.text, shapes: [b.shape], ...(hidden ? { hidden: true } : {}) });
         /* R39: a slide whose only content is a picture lists it (`images`) and states it unread; no OCR is called. */
         if (!walked.text) for (const shape of walked.pics) undetermined.push({ part, why: "image_unread", ref: at(shape) });
@@ -1023,7 +1042,7 @@ async function pptxText(parts, opts) {
   const notesChars = speakerNotes.reduce((n, s) => n + s.text.length, 0);
   return {
     ok: true, container: "pptx", document, slides, speakerNotes,
-    parts: addressParts([...units.body, ...boxes, ...units.speaker_note, ...units.master_text]),
+    parts: addressParts([...boxes, ...units.speaker_note, ...units.master_text]),
     deckLength: deckLengthOf(parts),
     undetermined,
     counts: { chars: document.length, notesChars, undetermined: undetermined.length, scanned_bytes: scanned },
