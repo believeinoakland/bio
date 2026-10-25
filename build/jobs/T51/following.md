@@ -191,3 +191,23 @@ Tests only; no source file, no requirement line changed.
 **Checks.** `fixtures.mjs . following`: 1 failure (the monitoring line above); `format`: 178 modules, 0 failures; `architecture following`: 0 failures; `coverage following`: 36 of 36 ids, 0 failures; `words following`: 0 failures; `ownership following tranche/T51 job/T51/following`: 0 failures. `run.mjs`: no finding in following but the monitoring line; other modules' fixture findings are theirs.
 
 Size (session_017RAWf5wK7x8JvjByQ7CkS3): test runs 6, module lines 2210
+
+## J8 · COMPLETE
+
+Follow-up 26 (K5097; FOLLOWING #14 J7) applied: test files only; no source file, no requirement line changed.
+
+**Re-pointed.** `bio-plane/test/m/following/fixture.mjs:179`, the `monitor` op table, now returns monitoring's real answer from its published fixture `monitorAnswer()` (`bio-plane/test/m/monitoring/fixtures.mjs`, imported at the top of the fixture). The nth call returns the nth tick's answer (`kind: "modified"`), so each call carries its own capture digest, as the old stand-in did. `w.monitored` keeps the record of each call's `bundleId` and instant around it. `monitoring` is already in following's `uses` (earlier in `build/modules.json`), so no edge to report.
+
+**Markers.** None added (no `fixtures-own`, `fixtures-generic` or `fixtures-contract`).
+
+**Product defects.** None seen; the real answer's shape (`ok`, `status`, `capture.sha256`) is what `#readMeeting` reads.
+
+**Deferred.** None.
+
+**Tests.** `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/following/*.test.mjs` (run from `bio-plane`): 128 pass, 0 fail.
+
+**Checks** (process repo, absolute product root `/home/user/bio`): `fixtures.mjs /home/user/bio following --list`: 0 failures (the one line that was open now clears; 3331 test files read); `format.mjs`: 178 modules, 0 failures; `architecture.mjs following`: 0 failures; `coverage.mjs following`: 36 of 36 live ids named, 0 failures; `words.mjs following`: 0 failures; `ownership.mjs following tranche/T51`: 0 failures.
+
+Commit `d3a978461f` on `job/T51/following` (merged `tranche/T51` first, as B6 asked, before the start).
+
+Size (session_01RAuQCKb8e8dyhQw1hnFGQR): test runs 3, module lines 5592 (wc -l over `bio-plane/src/following/*.mjs` and `bio-plane/test/m/following/*.mjs`)
