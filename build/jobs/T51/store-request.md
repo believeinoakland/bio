@@ -1,6 +1,6 @@
 # store-request (T51)
 
-**Status** · session_01YAznjnRHhLsjKXBKS2Q9hy · depth 2 · WORKING · handled B16
+**Status** · session_01YAznjnRHhLsjKXBKS2Q9hy · depth 2 · COMPLETE · handled B16
 
 ## J1 · QUESTION
 
