@@ -6,8 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { hasWord } from "../../../src/setup-words/index.mjs";
-import { ok } from "../interface-shell/harness.mjs";
-import { open, main, press, word, D, SHA, DOCUMENT_MD, section } from "./fixtures.mjs";
+import { open, main, press, word, D, SHA, DOCUMENT_MD, section, storeWorld } from "./fixtures.mjs";
 
 process.env.TZ = "UTC";
 const at = "/app/document/" + D;
@@ -22,9 +21,16 @@ const COPY = "capture-sources.render.copy_first_load_not_scrolled";
 const mb = (n) => word("size.mb", { n: (n / 1048576).toFixed(1) });
 
 test("R35a R96 a copy no read grades: pressing 'Read the grade note' draws a heading that says it is not graded, never 'Why undetermined, because ?'", async () => {
-  const p = await open(at, { plane: { capturegrade: ok({ ok: true, captureSha: SHA, grade: null }) } });
+  /* a file a member brought in, held by the real acts: capture answers `capturegrade` for it with no grade (it was never fetched) */
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", { capabilities: ["contribute"] });
+  const { sha, bundle } = await world.recipes.hold(ann, "Minutes", "The council met on Monday.");
+  const { door, session } = world.boot(ann);
+  const held = await ann.read("capturegrade", { query: { capture: sha } });
+  assert.equal(held.grade.grade, null, "the real answer: no grade");
+  const p = await open("/app/document/" + bundle, { images: { [bundle]: await ann.read("image", { query: { id: bundle } }) }, boot: { door, session }, plane: { capturegrade: undefined } });
   await press(p, "gradenote", { reason: "to see why" });
-  assert.equal(p.byOp("gradenote").at(-1).query.capture, SHA);
+  assert.equal(p.byOp("gradenote").at(-1).query.capture, sha);
   const because = word("state.undetermined", { reason: "@@" }).split("@@")[0].trim();
   const heads = main(p).querySelectorAll("section").map((s) => text(s.querySelector("h2")));
   const head = heads.find((h) => h === (said(NOT_GRADED) || word("mark.gap.unrated.means")));

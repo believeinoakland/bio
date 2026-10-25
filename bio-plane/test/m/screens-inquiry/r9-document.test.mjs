@@ -79,7 +79,7 @@ test("R130 R129 controls: a PDF stored with no reading and a DOCX stored unread 
   for (const [name, reg] of [["a PDF", { profile: { format: { format: "pdf" }, source_content_type: "application/pdf" } }],
     ["a DOCX", { profile: { format: { format: "docx" }, source_content_type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }, file: "memo.docx" }],
     ["a document with no type stated", {}]]) {
-    const p = await openWith(at, { images: docWith(reg), plane: { ...UNREAD, readheld: ok({ ok: true, read: true }) } });
+    const p = await openWith(at, { images: docWith(reg), plane: UNREAD });
     assert.ok(actsIn(main(p)).includes("readheld"), `${name}: Read it now is offered`);
     assert.equal(main(p).querySelector('[data-reading="unsupported"]'), null, `${name}: and no kind is named`);
   }
