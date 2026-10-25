@@ -1,6 +1,6 @@
 # standards (T51)
 
-**Status** · session_01AttFwdpMk7hg2XJoF6Y7AX · depth 2 · RUNNING until 2026-10-25T22:28:51Z (control-plane and plane tests) · handled B8
+**Status** · session_01AttFwdpMk7hg2XJoF6Y7AX · depth 2 · RUNNING until 2026-10-25T23:13:46Z (plane tests with per-test timeout) · handled B8
 
 ## J1 · COMPLETE
 
