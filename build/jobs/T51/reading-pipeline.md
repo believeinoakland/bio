@@ -1,6 +1,6 @@
 # reading-pipeline (T51)
 
-**Status** · session_01SjVUXZtrnCWzhmEbrvVDzh · depth 2 · COMPLETE · handled B54
+**Status** · session_01NNvA213u4YaYMybJVG2Epk · depth 2 · COMPLETE · handled B56
 
 ## J1 · COMPLETE
 
@@ -889,3 +889,31 @@ Merged `tranche/T51` (it does not carry job 89 yet; coded against the hand-made 
 ## J49 · COMPLETE
 
 COMPLETE: B54 done. A slide's body unit is slide.bodyText when it is a string ('' = none), else slide.text; box words are the text_box part's alone. Red-first test R47 (G166, pptx). reading-pipeline + extraction 788/789 pass (1 existing todo), 0 fail; format, architecture, coverage, ownership 0 failures. Record section B54. Size (session_01SjVUXZtrnCWzhmEbrvVDzh): test runs 9, module lines 4,285
+
+## J50 · QUESTION
+
+QUESTION (cause R9, `xref_reconstructed` / `pages_missing`): the notes cannot reach the reading on the page-range path from this module alone. Measured on the real code at HEAD (a 30-page PDF with `startxref` damaged, and the same cut at 70 percent): `extractPdfStructure` (the whole read, what `read()` does with no cursor) answers `notes: ["xref_reconstructed"]` (the cut one adds `page_order_by_object_number_fallback`, `structure_reconstructed`; `pages_missing:<n>/<of>` when pages are lost), but `extractPdfRange` and `openPdfRange(...).range()` (what every read with `cursor` passed uses, so every ledger tick, so every upload and fetch the walker made) answer NO `notes` key: `readRange` begins `doc.notes.length = 0` (`pdfstructure.mjs:5173`, and R44's text "its notes ... no answer carries them"), which also erases the notes the open itself made (`pdfstructure.mjs:848`, `:1257`).
+
+My best reading, and what I do now: I carry `notes` from whichever structure answer I get (the whole read's today; the range's the day it has them) onto the reading as `recovery_notes` (only `xref_reconstructed`, `pages_missing` with `{missing, of}`, and tier 2's `pdf_truncated`), and test the whole-read path through `read()` with no cursor on the real code. The ranged path (walker A9) stays unmet until `pdf-reader` R43/R44 say that `openPdfRange`'s answer and each `range` answer carry `notes` (the open's notes kept, not cleared per range; the range's own added). That is another module's interface: please amend pdf-reader R43/R44 and give pdf-reader a job; then I add the ranged test (a `fixtures-contract: pdf-reader` line). I am not blocked on it: the rest of the job goes on.
+
+## J51 · COMPLETE
+
+COMPLETE: fix round 10, Wave A batch 3 (B55). Every cause red first, then green; no bound raised or lowered.
+
+**Causes (root, why missed, red-first test, platform N for all; R-OLD: new data only, nothing stored is repaired)**
+- R2b / R60: `guardRefusalOf` dropped csv-reader's `metric`; `refusalSentence` always said bytes (`index.mjs` guardRefusalOf, refusalSentence, unitWordOf). Now `metric` rides on the refusal and the sentence names rows/columns/objects (DOCX objects: `n` 250,001, bound 250,000). Missed: r10-refusals pinned hand-made guards. Test `r10-bound-unit.test.mjs` (CSV 1,048,577 rows; objects; bytes control).
+- R3 / R61: `unreadKindOf` knew Word only inside the OLE branch and was handed no name. Now takes `capture.file_name`; a file declared `application/msword`, or named `.doc` under no non-text type, with non-OLE bytes is final `UNSUPPORTED_FORMAT` `legacy_word`, plus a clause "does not look like one". Test `r10-declared-kind.test.mjs` (text declared, name only, octet-stream, OLE control, .docx / pdf-named-.doc controls).
+- R9 / R62: `st.notes` and tier 2's notes were read by no one. `recovery_notes` on the reading (`xref_reconstructed`, `pages_missing {missing, of}`, `pdf_truncated`, each once, absent when none), exported `recoveryNotesOf`. pdf-worker R10: the cut file's `truncated` pages are `truncated_pages`, counted skipped, so completeness is partial. Test `r10-recovery-notes.test.mjs` (A9 damaged and no xref, A5b with the real pdf-worker, 8 of 30, sound control). Whole-read path only: the range answer carries no notes until pdf-reader R50 (PDF-READER #18); the ranged test is the later CHANGE (B56).
+- R11b: `Math.max(...)` over units (and two other spreads) replaced by loops. Test `r10-many-units.test.mjs` (130,000-paragraph DOCX + footnote, whole and in pieces; was "Maximum call stack size exceeded").
+- R18b / R51: a block inside a cell is a word gap, not a row end (`html.mjs`). Tests appended to `r10-html.test.mjs` (a / b row, two p in a cell, 500 x 20 of p cells, controls).
+- Hidden slide (office-readers R38): `hidden` copied into the unit. Test `r10-hidden-slide.test.mjs`.
+
+**Fixtures.** Published `storeFailedTransient` (fixtures.mjs + fixtures.test.mjs). NOTE for BOB: it is `read()`'s real answer for a failing store (a transient failed reading, counters.failed 1), not `{ok:false, transient:true, reason:'STORE_FAILED'}`; that shape is extraction's `readHeld`, so plane r9-jobs:318 should take extraction's fixture. Lines re-pointed: d606 (ocr-worker memberWorker), convert-ocr x2, picture, r10-refusals (pageNotRenderable; the real renderer's reason is NOT_A_PDF for both of its inputs), r37 (NOT_FOUND), r9-reader (the real pdf-worker over the bucket), text-units 525/528 and transcribe 264 (real ai-accounts), tier2-wire 315 (pdf-worker tier2Answer). Left, waiting: contract-no-run text-units:533,540,540,541 and transcribe:327 (content transcribe-answer run), transcribe:176 (ai-use use-check run); orphan-run ocr-worker/test/fixtures.test.mjs:24,37 (those are ocr-worker's lines).
+Markers (K5060): fixtures-own synthetic classify-once:69, g41-held:329 (plug-in format entries through my own withEntry seam); fixtures-generic busy read:194, text-units:508, transcribe:322, no text-units:509,538 (made-up reason words); fixtures-own harness transcribe:351 (recording wrapper delegating to the real accountFor).
+
+**Words owed (stand-ins via localize):** reading-pipeline.index.too_large_units, .structure_over_bound_units, .unsupported_legacy_word_not_word (new); UX-DESIGN's R2b/R3 rows replace them. The sentence for recovery_notes is screens-inquiry's.
+
+**Found in another module:** csv-reader: a one-line CSV of 16,385 columns ("c0,c1,...") is not refused (usedCols 1, no guard), so the columns refusal I could not reach from a CSV; pdf-reader as above.
+
+**Ran:** module (51 files, concurrency 2) + extraction + content + events suites: `tests 1078, pass 1077, fail 0, todo 1`; memory 4/4, pdf-pieces 1/1, r7-contention 6/6 alone; d606-perpage-ocr 26 passed 0 failed; tier2-wire 46 pass 0 fail; system/pdf-worker-binding 12 passed 0 failed. format 0, architecture 0, coverage 61 of 61, words 0, ownership (23 files) 0 failures. fixtures --list: only the waiting lines above.
+Size (session_01NNvA213u4YaYMybJVG2Epk): test runs 12, module lines 4,266

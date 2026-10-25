@@ -108,7 +108,7 @@ test("R37 (F4): tier 2 says `transient` when the PDF member answers 5xx or its b
   const ask = (fetch) => tier2Escalate({ PDF_WORKER: { fetch } }, { sha: "a".repeat(64), storeName: "bio", text });
   assert.equal((await ask(async () => new Response("down", { status: 503 }))).transient, true);
   assert.equal((await ask(async () => { throw new Error("binding down"); })).transient, true);
-  const declined = await ask(async () => Response.json({ ok: false, reason: "OVER_ENVELOPE" }));
+  const declined = await ask(async () => Response.json({ ok: false, reason: "NOT_FOUND" }));
   assert.equal(declined.outcome, "no_improvement");
   assert.ok(!declined.transient);
 });

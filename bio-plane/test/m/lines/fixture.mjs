@@ -16,6 +16,7 @@ import { eventsOf } from "../../../src/events/index.mjs";
 import { createRegistry } from "../../../src/connection-grammar/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { Lines } from "../../../src/lines/index.mjs";
+import { makePromotion } from "../promotion/fixtures.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
 export const MACHINE = "class:admin";
@@ -54,10 +55,6 @@ export function storage() {
   };
 }
 
-function promotionStub() {
-  return { registerStep() { return { ok: true }; }, registerFact() { return { ok: true }; }, onCommitted() { return { ok: true }; } };
-}
-
 /* The test profile's view with one organisation scheme added as test data: `test_org`, numeric, for offices, bodies
    and institutions (a register's own body and office ids, R4). */
 function testView() {
@@ -79,7 +76,7 @@ export function world({ profiles = ["test-port-ellery"] } = {}) {
   if (profiles) record.setSetting("jurisdiction_profiles", profiles, "test");
   const membership = membershipOf(host, { record });
   membership.migrate();
-  const promotion = promotionStub();
+  const promotion = makePromotion().p;
   const prov = provenanceOf(host, { record, membership, promotion, now: () => "2026-09-27T00:00:00Z" });
   prov.migrate();
   const content = contentOf(host, { record, membership, provenance: prov });
