@@ -180,3 +180,17 @@ COMPLETE · T51, fix round 10, Wave A batch 2 (B7).
 **Tests and checks.** Module: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/contradiction/*.test.mjs`: 152 tests, 144 pass, 0 fail, 8 todo (was 150). `impact.mjs origin/tranche/T51 HEAD` (after merging tranche/T51): names contradiction and affordances; affordances suite 281 tests, 281 pass. `checks/fixtures.mjs . contradiction --list`: 1 failure (the left line). words: 0 failures. format: 0 failures. coverage: 61 of 61 ids named, 0 failures. ownership (contradiction tranche/T51 job/T51/contradiction): 4 files, 0 failures. architecture: 1 failure, the `uses` edge above.
 
 Size (session_01BbdQRceygyZcNQyMeGu19c): test runs 6, module lines 3786 (source unchanged; test files only, +88 lines).
+
+## J10 · QUESTION
+
+B8 (fix round 10, the `conclude` re-point) is done in part and pushed as 66c36e9e2d on job/T51/contradiction.
+
+**Done.** `bio-plane/test/m/contradiction/fixture.mjs`: the `conclude` stand-in now answers its `no_conclusion`, `bad_reading` and concluded arms with basis-versions' published `concludeAct` (`bio-plane/test/m/basis-versions/fixtures.mjs`), with the question as the target. Promotion in contradiction's own record is unchanged. Results: the contradiction module's tests 144 pass, 0 fail, 8 todo; format 0, architecture 0, coverage 61 of 61 named and 0 failures, words 0, ownership 0 (only fixture.mjs changed). No `fixtures-own` or `fixtures-generic` marker added.
+
+**Still open.** `checks/fixtures.mjs … contradiction --list` still reports `fixture.mjs:120` (op-table `conclude`) as failing. The cause is the named-version arm: when a version is named and no reading is given, the stand-in answers `NO_CLAIM` by hand, and it adopts a named accepted version (the R36 test in `acts.test.mjs`). basis-versions publishes no fixture for that arm (its published kinds are `concluded`, `no_conclusion`, `bad_reading`), so the code cannot be taken from a provider's answer yet. `NO_CLAIM` is basis-versions' own code (`bio-plane/src/basis-versions/checks.mjs:321`).
+
+**Options, for your ruling:**
+1. (Recommended.) basis-versions publishes a further `concludeAct` kind for its no-claim refusal and for adopting an accepted named version. That is a CHANGE to basis-versions; contradiction re-points to it afterwards. K4990 asks users to take the provider's fixture.
+2. Accept this one arm as a documented exception, with a marker. I do not recommend it, since the code is real and a provider gives it.
+
+Nothing else in B8's scope is open. I am waiting on your ruling and have made no further change.
