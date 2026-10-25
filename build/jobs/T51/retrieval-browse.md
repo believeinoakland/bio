@@ -147,4 +147,4 @@ COMPLETE (G41, retrieval-browse). Providers merged in; all six g41-findin tests 
 
 **Tests and checks.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/retrieval-browse/`: 66 tests, 66 pass, 0 fail. format 0 failures; architecture 17 files, 0 failures; coverage 20 of 20 ids, 0 failures; words 0 failures; fixtures: the six lines above (two contract-no-run, four FIX-E not in this job); ownership 0 failures. `impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178 (no other module imports a changed file). Nothing found in other modules; no generated artifact made stale.
 
-Size (session_01QPk5CHNKGRuomEEUu9w4Zn): test runs 7, module lines 1419
+Size (session_01QPk5CHNKGRuomEEUu9w4Zn): test runs 7, module lines 1427
