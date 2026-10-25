@@ -29,7 +29,7 @@ async function moneyWorld() {
   const day = (await me.act("recorddatedfact", { body: { captureSha: lease.sha, extent: { kind: "document" }, kind: "entered", value: "2022-06-30", method: "stated in the document" } })).dated_fact.dated_fact_id;
   const payment = (await me.act("createevent", { body: { kind: "other", attestations: [{ datedFactId: day }] } })).event_id;
   const F = {
-    adopted: await read({ amount: "4200000.00", as_read: "4,200,000", kind: "transfer", phase: "adopted", basis: "budgetary", from: { as_written: "Sewer Fund 3100" }, to: { as_written: "General Fund 1010" } }),
+    adopted: await read({ period: { from: "2021-07-01", to: "2022-06-30", fiscal: "FY2021-22" }, amount: "4200000.00", as_read: "4,200,000", kind: "transfer", phase: "adopted", basis: "budgetary", from: { as_written: "Sewer Fund 3100" }, to: { as_written: "General Fund 1010" } }),
     paid: await read({ concerns: [payment], amount: "4750000.00", as_read: "4,750,000", kind: "transfer", phase: "actual", stage: "paid", basis: "cash", from: { as_written: "Sewer Fund 3100" }, to: { as_written: "General Fund 1010" } }),
     other: await read({ amount: "310000.00", as_read: "310,000", kind: "allocation", phase: "actual", stage: "paid", basis: "undetermined", from: { as_written: "Sewer Fund 3100" } }),
   };
@@ -84,14 +84,16 @@ test("R4 reads the trail (moneyset) and each of its figures (moneyof's fact, by 
   assert.ok(r2[5].includes(word("screen.money.stage", { phase: word("screen.money.phase.actual"), stage: word("screen.money.stage." + b.stage) })));
   drew(rowOf(p, F.other), "screen.money.excluded", { reason: "a different transfer" });
   assert.match(p.root().querySelector(".cs-crumbs").textContent, /Pothole repairs/);
-  /* a grade and a fiscal year the live copy holds on a figure (a measured capture, a profile that names its fiscal year): this build makes neither, so the
-     world's own answer is changed there and the rest is the world's */
+  /* a grade the live copy holds on a figure (a measured capture): an upload is never graded, so the world's own answer is changed there and the rest is the world's;
+     the fiscal year is the profile's (the figure was recorded with it) */
   const graded = changing(world, me, "money", (r) => (r.fact && r.fact.fact_id === F.adopted
-    ? { ...r, fact: { ...r.fact, grade: { ...r.fact.grade, reading: "B" }, period: { ...r.fact.period, fiscal: "FY2021-22" } } } : r));
+    ? { ...r, fact: { ...r.fact, grade: { ...r.fact.grade, reading: "B" } } } : r));
   const q = await openAs(world, me, "/app/money/" + trail, { plane: { money: graded } });
   const g = rowOf(q, F.adopted).querySelectorAll("td").map((d) => d.textContent);
   assert.ok(g[8].endsWith(word("mark.scale.capture.name") + "B"), "the source and its grade");
-  assert.equal(g[6], "FY2021-22", "the fiscal year, as the store names it");
+  const held = (await me.read("money", { query: { id: F.adopted } })).fact;
+  assert.equal(held.period.fiscal, "FY2021-22", "the store holds the figure's fiscal year");
+  assert.equal(g[6], held.period.fiscal, "the fiscal year, as the store names it");
 });
 
 test("R4 a value its source does not state is drawn undetermined and opens the row's panel at that item, with the evidence that would help", async () => {
