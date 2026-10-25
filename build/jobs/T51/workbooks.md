@@ -180,3 +180,19 @@ R22: exportRecipe refuses EXPORT_TOO_LARGE {cells, bound_cells, limit} above wor
 NOT YET PROVEN against job 109: calculations' readTable still returns the whole table at the tip I merged (cec275b674), so R23 runs green; send a CHANGE when 109 merges and I re-run.
 Rows owed to UX-DESIGN: refusal.EXPORT_TOO_LARGE ({cells},{bound_cells}), refusal.EXPORT_TOO_WIDE ({columns},{bound_columns}). Stale for BOB to regenerate: setup-words rows.mjs, the plane bundle. Found in other modules: none new.
 Size (session_01XG3wEDwRsPvJ8ZMf1es3qF): test runs 7, module lines 1732
+
+## G186 · WORKBOOKS #8 (session_01A8uYztGp9qatq9Wz5yfrRC) · fix round 9, job 114 START
+
+**Entry applied.** R21 amended (G186; K5025): a row or cell with no `r` is held at its position, never dropped; only an unreadable or repeated reference is dropped and counted.
+
+**What changed.**
+- `bio-plane/src/workbooks/index.mjs` (`addWorkbook`, `droppedStatement`): office-readers R48 now gives every no-`r` cell its position as `source.cell` (checked: a four-row fixture yields A1, B1, A2, A4, B4), so the add holds them with no change of mine; the `no_reference` count is gone, a cell with no usable reference falls under `unreadable`. The `dropped` answer is `{count, unreadable, repeated, statement}`, present only when something was dropped.
+- `bio-plane/test/m/workbooks/g137e.test.mjs`: "R21 SHEET X12" now asserts the no-`r` book holds the same five cells (`cell, r, c, type, value`) as its referenced copy, no `dropped`, reads with 5 cells, and a repeat answers `already`. Seen RED on the tip first: `Cannot read properties of undefined (reading 'count')`. The repeated and unreadable test lost its `no_reference` line; the control is unchanged.
+
+**Row owed to UX-DESIGN (changed).** The stand-in id is now `workbooks.cells_not_kept` ({count}, {unreadable}, {repeated}); the old `workbooks.dropped_cells` (with `{no_reference}`) is no longer used by this module. I changed the id because the stale `rows.mjs` row for the old id wins over `en` and still needs `{no_reference}`; BOB regenerates `rows.mjs` and may drop the orphan row.
+
+**Tests and checks.** From `bio-plane/`: workbooks `tests 50, pass 50, fail 0`; plane `g124f-bounds.test.mjs` `tests 16, pass 16, fail 0` (reached through the real reading, including F1). Nothing outside this module reads `dropped.no_reference` (grep). `checks/format.mjs`: 0 failures. `architecture workbooks`: 0 failures. `coverage workbooks`: 23 of 23, 0 failures. `words workbooks`: inline 0, plain 0, testcopy 0, missingkey 0; 0 failures. `ownership workbooks tranche/T51 job/T51/workbooks`: 1 file changed besides tests... 0 failures.
+
+**Stale generated artifacts I make:** `setup-words/rows.mjs` (new key above), the plane bundle `dist/bio-plane.bundled.mjs`. **Found in other modules:** none. **Deferred:** none.
+
+Size (session_01A8uYztGp9qatq9Wz5yfrRC): test runs 5, module lines 1738

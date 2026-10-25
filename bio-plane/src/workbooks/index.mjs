@@ -78,11 +78,12 @@ const cellsTooLarge = (cells, condition, bound = WORKBOOK_CELLS_MAX) => refusal(
   localize("refusal.WORKBOOK_TOO_LARGE", "This workbook has {cells} cells, more than the {bound_cells} that can be held and read here.",
            { cells: String(cells), bound_cells: String(bound) }),
   { cells, bound_cells: bound, condition, limit: { ...statement("workbook", "cells", cells), bound } });
-/* R21: the cells the add did not keep, how many and why (a `<c>` with no reference, one whose reference cannot be read, a
-   repeat of an earlier cell's reference); present only when something was dropped. */
+/* R21: the cells the add did not keep, how many and why (one whose reference cannot be read, a repeat of an earlier cell's
+   reference); present only when something was dropped. A row or cell with no `r` is placed by its position by the reader
+   (office-readers R48) and held, so it is never counted here. */
 const droppedStatement = (by, count) => ({ count, ...by,
-  statement: localize("workbooks.dropped_cells", "{count} cells were not kept: {no_reference} with no cell reference, {unreadable} with a reference that cannot be read, {repeated} repeating an earlier cell's reference.",
-                      { count: String(count), no_reference: String(by.no_reference), unreadable: String(by.unreadable), repeated: String(by.repeated) }) });
+  statement: localize("workbooks.cells_not_kept", "{count} cells were not kept: {unreadable} with a reference that cannot be read, {repeated} repeating an earlier cell's reference.",
+                      { count: String(count), unreadable: String(by.unreadable), repeated: String(by.repeated) }) });
 /* R22: a recipe whose export would lay out more cells than the workbook bound, or a table wider than a sheet (XFD). */
 const exportTooLarge = (cells) => refusal("EXPORT_TOO_LARGE",
   localize("refusal.EXPORT_TOO_LARGE", "This calculation's tables would make a workbook of {cells} cells, more than the {bound_cells} that can be exported.",
@@ -309,7 +310,7 @@ export class Workbooks {
     try { origin.system = this.provenance.originOf(home.bundleId)?.system ?? null; } catch { /* stated as null */ }
     const facts = { sheets: sheets.map((s) => ({ name: s.name, hidden: !!s.hidden })), hidden_rows, hidden_cols, names };
     const at = this.now();
-    const dropped = { no_reference: 0, unreadable: 0, repeated: 0 };
+    const dropped = { unreadable: 0, repeated: 0 };
     return this.record.transact(() => {
       this.sql.exec(`INSERT INTO workbooks (capture_sha, project, question, period, origin, author, at, facts) VALUES (?,?,?,?,?,?,?,?)`,
                     sha, p, str(question), json(period), json(origin), by, at, json(facts));
@@ -318,7 +319,6 @@ export class Workbooks {
         for (const c of s.cells) {
           const ref = c && c.source && typeof c.source.cell === "string" ? c.source.cell : null;
           const pos = ref ? cellAt(ref) : null;
-          if (!ref) { dropped.no_reference++; continue; }
           if (!pos) { dropped.unreadable++; continue; }
           const key = pos.row * 4294967296 + pos.col;
           if (placed.has(key)) { dropped.repeated++; continue; }
@@ -328,7 +328,7 @@ export class Workbooks {
                        c.value ?? null, c.formula ?? null, c.cached ?? null);
         }
       }
-      const lost = dropped.no_reference + dropped.unreadable + dropped.repeated;
+      const lost = dropped.unreadable + dropped.repeated;
       return { ok: true, already: false, capture_sha: sha, project: p, question: str(question), period, origin, author: by, at,
                sheets: facts.sheets, ...(lost ? { dropped: droppedStatement(dropped, lost) } : {}) };
     });
