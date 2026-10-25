@@ -7,6 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 const { storeWorld, WORLD_NOW } = await import("./world.mjs");
+const { assembleStore } = await import("../../../src/store-assembly/index.mjs");
 const { aiUseOf } = await import("../../../src/ai-use/index.mjs");
 const { captureOf } = await import("../../../src/capture/index.mjs");
 const { actionClocksOf } = await import("../../../src/action-clocks/index.mjs");
@@ -105,4 +106,14 @@ test("R5 (K5200; diagnosis A3): action-plans and filings take the store's clock:
   await w.tick(60_000);
   assert.equal(actionPlansOf(w.ctx).now(), second(WORLD_NOW + 60_000), "action-plans: moved by tick, so a second plan's `opened_at` is later");
   assert.equal(filingsOf(w.ctx).now(), second(WORLD_NOW + 60_000), "filings: moved by tick");
+});
+
+test("R1 R5 (K5200): a second assembly over one storage hands capture the same clock: capture refuses a different `now` (its R58), so the assembly refuses nothing and builds nothing twice, and capture's clock stays the store's", async () => {
+  const w = await storeWorld();
+  assert.equal(captureOf(w.ctx).clock(), WORLD_NOW, "capture reads the pin");
+  const again = assembleStore(w.ctx, w.env);   /* the Durable Object class's construction over a storage the world already assembled */
+  assert.equal(typeof again.dispatch, "function");
+  assert.equal(captureOf(w.ctx).clock(), WORLD_NOW, "and it still does");
+  w.env.BIO_NOW_MS = WORLD_NOW + 1_000;
+  assert.equal(captureOf(w.ctx).clock(), WORLD_NOW + 1_000, "the latest environment given is the clock's: a tick moves it");
 });

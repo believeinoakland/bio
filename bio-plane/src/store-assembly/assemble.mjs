@@ -180,6 +180,16 @@ export function clockOf(env) {
   };
 }
 
+/* R1, R5: the clock handed to `capture`, one function for each storage and reading the latest environment given: `captureOf` refuses a
+   caller's different `now` for a storage whose capture holds another (its R58), and a second assembly over one storage must build nothing twice. */
+const CAPTURE_CLOCKS = new WeakMap();
+const captureClockOf = (ctx, env) => {
+  let held = CAPTURE_CLOCKS.get(ctx.storage);
+  if (!held) { held = { env, now: () => clockOf(held.env)(null) }; CAPTURE_CLOCKS.set(ctx.storage, held); }
+  held.env = env;
+  return held.now;
+};
+
 /** R1: every module of the record store built on `ctx`'s storage, migrated and started; answers the assembled store
  *  `{routes, dispatch, namespace, nowMs, read}`. `deliver`, optional, is `control-plane`'s owed-render delivery
  *  (`deliverOwedRender`), handed to the owed-work ledger: absent, a ledger row that needs it stays owed (R67). `releaseKeys`,
@@ -450,7 +460,7 @@ export function assembleStore(ctx, env, { deliver = null, releaseKeys = null } =
      actions R95), once each. following's watch reader is registered with it when following is built (below). */
   planWorkOf(ctx, { actionHolds, aiRuns: aiRunsOf(ctx, env) });
   /* the acquisition act signs its receipt through `cap.attestation`; R5 (K5200): handed the store's clock, so a session and a receipt read it */
-  const capture = captureOf(ctx, { env, attestation, now: () => nowMs(null) });
+  const capture = captureOf(ctx, { env, attestation, now: captureClockOf(ctx, env) });
   /* R75 (T51 fix round 4; C5c; K4429; acquisition R96, control-plane R120): what a request left pending, finished by this object's
      own alarm. `keeps_pending` and `acquire_stages` are the plane's two operational tables, declared to purge as a whole-store
      clear (record-core K23). Acquisition reads `cap.keepLater` as it reads `cap.waitUntil`: a keep that will not end inside the

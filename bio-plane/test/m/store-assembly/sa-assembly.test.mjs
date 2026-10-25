@@ -78,7 +78,6 @@ test("R1: a module that fails to build answers no store; a migration that throws
   if (a !== null) await assert.rejects(Promise.all(st.blocked), /migration refused/);
 });
 
-test.todo("R1: the Durable Object class (plane R1) calls assembleStore once per construction and holds no construction of its own (Wave B, plane's job; K5125)");
 
 /* ---- R4 ---- */
 
