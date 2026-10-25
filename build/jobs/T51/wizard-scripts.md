@@ -507,3 +507,7 @@ COMPLETE · G53 (fix round 6): registry re-taken at f72b2f8a4c (84 screens, 609 
 - Fixtures: 1 line left (`LIMITS_UNREADABLE`, FIX-E, provider `answers`); no `fixtures-own` / `fixtures-generic` markers added.
 
 Size (session_019XFUSYv3eS4JuzAcTX5AsX): test runs 9, module lines 2900
+
+## J23 · REPORT
+
+REPORT · other modules. (1) wizard-scripts t52g53 R50 fails on tranche/T51 as merged: the design's registry.json now has owed installregion K4746 and installaddress K4937 that the carried source/registry.json lacks; re-take (build-data.mjs, counts, pin sites) is not in my entry, left for your call. (2) plane R24 (DEC-149 T34-87) fails on tranche/T51 too, likely the same stale registry. (3) plane R87 G54 L failed once in a full-directory run, passes alone; not reproduced.
