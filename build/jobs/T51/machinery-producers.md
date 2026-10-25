@@ -82,3 +82,11 @@ T51 fix round 10, Wave B, batch 6 (BOB #292; B3 START): the 10 fixture lines re-
 Deferred: none.
 
 Size (session_012Guji6Q9psWn5A5A16kTPi): test runs 6, module lines 1192
+
+## J4 · COMPLETE
+
+Answer to CHANGE (K5101): `whole-rows.test.mjs` R16 done, and J3's COMPLETE stands with this correction.
+
+Seen red first: at the branch point the test was red (37 pass, 1 fail), the part rows being `register` rows. Its fixture now takes provenance's published `heldParts` (the whole in `register`, the parts in `register_parts`, promoted by provenance's real code); the world's `registeredFor` is that instance's real answer (`world().registered`), and the one thing the module also reads itself (the `register` table, which finds the machine-finished bundle) is filled row for row from what `registeredFor` answers, not hand-written parts. The dead `.filter((r) => !r.part_of)` is removed from `#gradeNotes` and its comment updated. The control test's request-digest half uses a plain whole row (a part's digest is no register row since R74). Green: machinery-producers 38 of 38. `checks/fixtures.mjs . machinery-producers --list`: 0 failures (1 accepted, the `fixtures-own: synthetic` at producers.test.mjs:88 named in J3); format, architecture, words, coverage (16 of 16) and ownership (7 files) 0 failures. Commits pushed: 0083dab06e, then the heldParts one.
+
+Size (session_012Guji6Q9psWn5A5A16kTPi): test runs 9, module lines 1192
