@@ -26,6 +26,8 @@ async function choose(p, id, value) {
 const heldRow = (extra = {}) => ({ bundle_id: D, title: "Pothole repair policy", project: P, collected_since: "2026-10-02T09:00:00Z", actor: "member:mai", standing: "collected",
   capture: { sha256: SHA, grade: { grade: "B" } }, captured_for: { questions: [{ question: Q2, title: "Does closed mean repaired?", asker: "mai" }], withheld: null }, ...extra });
 /* scripted: heldcaptures (the phone measurement below answers from a plane table only, `onPhone` taking no world door; and a held row naming no actor, which no act of the world makes) */
+/** the page's reads of heldcaptures that carry bundle_id: this copy's row (R137's picker reads the team's documents besides) */
+const copyReads = (p) => p.byOp("heldcaptures").filter((r) => r.query.bundle_id !== undefined);
 const held = (row) => ({ heldcaptures: ok({ ok: true, held: row ? [row] : [] }) });
 /* the real world (store-assembly's store with the real door; the state is made by real acts, K5054): a page as `as` reads it over the world's door, `plane` scripting
    only the ops it names; `answers(op)` are the door's own answers to that op, in order */
@@ -71,7 +73,7 @@ test("R3 C16 the page reads heldcaptures once, for this copy's row alone (bundle
   /* a question resting on the copy, so it is cited */
   await w.world.recipes.question(w.ann, w.project, { title: "Resting", text: "Is it so?", legs: [{ target: w.document, role: "supports" }], draw: true });
   const p = await pageOn(w.world, w.ann, w.at);
-  const h = p.byOp("heldcaptures");
+  const h = copyReads(p);
   assert.equal(h.length, 1, "one heldcaptures read");
   assert.equal(h[0].query.bundle_id, w.document, "for this copy's row");
   assert.ok(!("member" in h[0].query) && !("project" in h[0].query), "not narrowed by member or project, and no list of 500");
@@ -81,7 +83,7 @@ test("R3 C16 the page reads heldcaptures once, for this copy's row alone (bundle
   /* control: a page whose copy has no citations reads the same */
   const bare = await w.world.recipes.page(w.ann, "Uncited page", { project: w.project });
   const q = await pageOn(w.world, w.ann, "/app/document/" + bare.bundle);
-  assert.equal(q.byOp("heldcaptures").length, 1, "control: one heldcaptures read with no citations");
+  assert.equal(copyReads(q).length, 1, "control: one heldcaptures read with no citations");
   assert.equal(q.byOp("projectquestions").length, pq.length, "control: the same projectquestions reads with no citations");
 });
 

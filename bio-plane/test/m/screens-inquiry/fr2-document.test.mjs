@@ -41,6 +41,8 @@ async function member({ others = 0, page = false } = {}) {
 const HELD_ROW = { bundle_id: D, title: "Pothole repair policy", project: P, collected_since: "2026-10-02T09:00:00Z", capture: { sha256: SHA, grade: { grade: "B" } },
   captured_for: { questions: [{ question: Q, title: "Seven days?", asker: "mai" }], withheld: null } };
 /* what the plane answers `heldcaptures` for a member filter: only that member's rows (capture R77) */
+/** the page's reads of heldcaptures that carry bundle_id: this copy's row (R137's picker reads the team's documents besides) */
+const copyReads = (p) => p.byOp("heldcaptures").filter((r) => r.query.bundle_id !== undefined);
 const heldOf = (rows) => (r) => ok({ ok: true, held: rows.filter((x) => !r.query.member || String(x.actor).replace(/^member:/, "") === r.query.member) });
 
 /* ---- C16 ---- */
@@ -51,7 +53,7 @@ test("R3 C16 the document page reads heldcaptures once and each project's questi
   const q2 = await w.world.recipes.question(w.ann, w.project, { title: "Closed", text: "Does closed mean repaired?", draw: true });
   await w.world.recipes.question(w.ann, w.rest[0], { title: "Lease", text: "Did the lease go to a vote?", draw: true });
   const p = await pageOn(w.world, w.ann, w.at);
-  assert.equal(p.byOp("heldcaptures").length, 1, "one heldcaptures");
+  assert.equal(copyReads(p).length, 1, "one heldcaptures");
   const asked = p.byOp("projectquestions").map((r) => r.query.project);
   assert.equal(new Set(asked).size, asked.length, "no project's questions read twice");
   assert.equal(asked[0], w.project, "this project first");
@@ -66,8 +68,8 @@ const noProject = { images: { [D]: { "bundle.md": NO_PROJECT_MD, "data/provenanc
 test("R55 R111 C27 a held copy outside any project draws the vouch box for the member whose id the plane records, though her handle differs", async () => {
   const row = { ...HELD_ROW, project: null, actor: "member:admin" };
   const p = await openWith(at, { ...noProject, plane: { heldcaptures: heldOf([row]), whoami: ok({ tokenClass: "member", session: true, member: "admin", handle: "sparky", administer: true, capabilities: ["contribute"], vocabulary: ["contribute"] }) } });
-  assert.equal(p.byOp("heldcaptures").length, 1, "one read");
-  assert.equal(p.byOp("heldcaptures")[0].query.bundle_id, D, "this copy's row, matched on its capture's actor, the member id");
+  assert.equal(copyReads(p).length, 1, "one read");
+  assert.equal(copyReads(p)[0].query.bundle_id, D, "this copy's row, matched on its capture's actor, the member id");
   const box = main(p).querySelector("[data-held]");
   assert.ok(box && says(box, "document.held.says"), "the vouch box");
   assert.ok(actsIn(box).includes("release"));

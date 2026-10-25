@@ -365,6 +365,13 @@ test("R126 DEC-394 resolvetestify: a name the record matched to no subject is li
 });
 
 /* ---- DEC-394 (3e) R127: contradictionflag ---- */
+/** choose the other document in the R137 picker (one radio of the fold `kind`, not one of its page controls) */
+async function pickDoc(p, kind, value) {
+  const picker = main(p).querySelector(`[data-picker="${kind}"]`);
+  const r = picker && picker.querySelectorAll("input").find((i) => i.getAttribute("type") === "radio" && i.getAttribute("value") === value && !i.closest("[data-pick-pages]"));
+  assert.ok(r, `${value} is offered in the ${kind} picker`);
+  r.checked = true; p.fire(r, "change"); await p.settle();
+}
 const flagFold = (p) => main(p).querySelector('[data-fold="contradict"]');
 
 test("R127 DEC-394 contradictionflag: a passage here and a passage in another document are chosen with how they disagree; it sends the declared fields; refusals by key; control: no other document, no fold", async () => {
@@ -375,7 +382,7 @@ test("R127 DEC-394 contradictionflag: a passage here and a passage in another do
   const fold = flagFold(p);
   assert.ok(fold && says(fold, "screen.document.contradict.head") && says(fold, "screen.document.contradict.note1"), "the fold and its note by key");
   assert.ok(says(await press(p, "contradictionflag"), "refusal.FLAG_NO_PASSAGE"), "no passage chosen: refused by its key, nothing sent");
-  await choose(p, "document-flag-other", other.bundle);
+  await pickDoc(p, "flag", other.bundle);
   assert.equal(p.byOp("reading").filter((r) => r.query.sha256 === other.sha).length, 1, "the other document's passages are read");
   fill(p, { "document-flag-here": "0", "document-flag-there": "0" });
   assert.ok(says(await press(p, "contradictionflag"), "refusal.FLAG_NO_REASON"), "no reason: refused by its key");
@@ -387,7 +394,7 @@ test("R127 DEC-394 contradictionflag: a passage here and a passage in another do
   /* the owner's refusals drawn by their keys (scripted: the world's flag is refused for no passage only past the page's own checks) */
   for (const code of ["FLAG_SAME_DOCUMENT", "FLAG_NO_PASSAGE"]) {
     const q = await pageOn(w.world, w.ann, w.at, { plane: { contradictionflag: refusedIn(code, "x") } });
-    await choose(q, "document-flag-other", other.bundle);
+    await pickDoc(q, "flag", other.bundle);
     fill(q, { "document-flag-here": "0", "document-flag-there": "0", "document-flag-why": "x" });
     assert.ok(says(await press(q, "contradictionflag"), "refusal." + code), code);
   }
