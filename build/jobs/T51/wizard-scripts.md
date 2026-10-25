@@ -573,3 +573,20 @@ Other modules, found this round (none changed by this job):
 (b) A full run of the modules that consume wizardsat (30 modules, 820 test files) in one process was cut by the 1700 s limit with 488 tests cancelled and 195 failures, spread over plane, store-assembly, screens-inquiry, screens-intake, queue, screens-daily, screens-action, screens-publish, screens-settings, journey-check and others (for example G81 R124 in a screens file, journey-check group.test.mjs). The files that reference wizardsat or wizardsAt all pass when run alone: screens-wizards, store-assembly/wizards.test.mjs and plane/wizards.test.mjs, 85 of 85. I have not verified the other failures against the pre-change commit; they look like load or timeout effects of one long process, but that is unproven. Owners should confirm.
 
 (c) Fixtures: `answer wizard-scripts writing-help.test.mjs:217` [refusal] LIMITS_UNREADABLE, still open as in FIX-E. Its provider sits in `answers` or `store-door`, not in this module, so this module cannot add the marker without an edit it may not make. Needs BOB's placement.
+
+## J29 · COMPLETE
+
+R52 done. wizardsAt now answers each row with `required` (bio-plane/src/wizard-scripts/index.mjs:1322-1326 area, in the R11 map): a library or group script carries its own `required`, and a caller's own draft carries `required: false`. Commit 800e55f934 on job/T51/wizard-scripts.
+
+Failing-first: bio-plane/test/m/wizard-scripts/r52.test.mjs (three tests, each names R52). Red before the change (3 assertions: required undefined on a required library script, on an optional one, and a row without the key). Green after.
+
+Also changed: bio-plane/test/m/wizard-scripts/reads.test.mjs R11 row shape gains `required: false` (the exact-shape assertion amended by R52).
+
+Suite: module tests 143/143 (140 before, plus three R52 tests).
+Checks (absolute root /home/user/bio): format 0 failures; architecture 0; coverage 52 of 52 live ids named; ownership 0 (e9b1be9938..HEAD); words: no wizard-scripts finding (16 failures are in store-assembly and other modules); run.mjs: one finding in my files, the open fixture below.
+impact (origin/tranche/T51 HEAD): 30 modules, 788 test files. The consumers' tests (screens-wizards, store-assembly/wizards, plane/wizards) pass alone, 85/85. Other failures reported in REPORT.
+fixtures wizard-scripts --list: 1 open, writing-help.test.mjs:217 LIMITS_UNREADABLE (FIX-E). Not zeroed: its provider is in another module. Cause and owner in REPORT (c).
+
+Met ids this round: R52. No fixtures-own or fixtures-generic markers added. No deferrals in wizard-scripts. Nothing else of mine changed.
+
+Size (session_0143XBw7eSFoV4QcZny2VQ3i): test runs 9, module lines 2903
