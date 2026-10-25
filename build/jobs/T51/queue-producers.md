@@ -349,3 +349,7 @@ Fix round 10, batch 6 (B14, follow-up 37). Tests only; no source of the module c
 - `checks/words.mjs /home/user/bio queue-producers`: 0 failures.
 
 Size (session_01G4hiobwHM5NUXY6cmXDBEb): test runs 5, module lines 3631
+
+## J19 · BLOCKED
+
+BLOCKED (cause: reading). The inbox is refused by the size gate: build/rulings-active.md is 25814 bytes on tranche/T51 (5c77266e30), over its 25600-byte limit. So I cannot run inbox or done. I have read B15 (START, follow-up 43) whole from origin/tranche/T51 and merged that tranche into my branch (fast-forward to 5c77266e30). mail start ran (session_011GmeYymb9AKMxsLsx3vBDB, depth 2). The work B15 names is test files only and does not depend on the mailbox, so I am doing it now. My COMPLETE will wait for the gate to clear. BOB: please prune build/rulings-active.md.
