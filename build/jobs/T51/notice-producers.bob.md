@@ -1,6 +1,6 @@
 # BOB to notice-producers (T51)
 
-**Read** · handled J8
+**Read** · handled J10
 
 ## B1 · START
 
@@ -254,3 +254,34 @@ The PDF plan's I1-I14, re-cut for a sheet. Each is a sentence for the module nam
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE.
 
 **Added by BOB #279 (K4930; P9, P10; depth 2, BOB #279 at depth 1).** Merged since this START was written: content (job 29: `searched`, `part_kind`, `heldTextAt` R61, `cellsAt(contentId, {fromRow})` R52), extraction (job 41: R107's unit `kind`, `lineRows`, `read_through`, `total`; R108 `progressOf(shas)` -> `{state, read_through, total, owed}`, never `whole` while anything is owed), retrieval (job 30: hits carry the unit's kind; "searched so far" from `progressOf`; its hit kinds wait on query-language R34 `snippet_unit`, job 66), calculations (job 31: a range read on by `next_row`; `table.bytes`, `table.cells` quoted from `READ_BOUNDS`), runtime-limits rows `text.request_bytes`, `content.*`, `table.*`. Not merged (code against the text, R-SEAM): plane's job row and `jobrow` (plane R107, job 37) and control-plane's `op=reading` (R135, job 38). Read the requirement lines named here whole before relying on them.
+
+## B8 · START
+
+START · NOTICE-PRODUCERS #18 · tranche T51 · product believeinoakland/bio · fix round 10, Wave B job, batch 6: re-point 10 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #292 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/notice-producers tranche/T51 && git branch -m job/T51/notice-producers stale/notice-producers-local && git checkout -b job/T51/notice-producers origin/job/T51/notice-producers`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module notice-producers`; record `build/jobs/T51/notice-producers.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Your own fixture lines, done in this job** (10; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- credentials/securityMapRefusal (2 mechanical): fixture.mjs:20; security.test.mjs:177
+- standards/standardReadWorld (1 mechanical/1 judgment): fixture.mjs:27; policy.test.mjs:41
+- provenance/homeOfEmpty (1 mechanical): fixture.mjs:31
+- steps/stepsWorld (1 judgment): investigation.test.mjs:262
+- steps/stepRead (1 judgment): investigation.test.mjs:289
+- provenance/homeOfHomed (1 judgment): read.test.mjs:50
+- retrieval-browse/browseViewerMissing (1 mechanical): watched.test.mjs:132
+- following/watchedByRefusal (1 mechanical): watched.test.mjs:134
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . notice-producers --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/notice-producers.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B9 · ANSWER · re J9
+
+ANSWER (re J9; K5105). Your reading stands: `retrieval-browse` (73) precedes `notice-producers` (149) and `watched.test.mjs:132` imports its published `browseViewerMissing`: the edge is on `tranche/T51` (`order.mjs --check` clean). Merge `origin/tranche/T51` (never a rebase), re-run the architecture check, then COMPLETE.

@@ -1,6 +1,6 @@
 # review (T51)
 
-**Status** · session_016SWyQAUyjKySSg7jMkWWY1 · depth 2 · COMPLETE · handled B17
+**Status** · session_01QnDe6zFwq9Dr5SvYgBwJnE · depth 2 · COMPLETE · handled B19
 
 ## Completion record (fix round 4, B13 START, K4429; REVIEW #22)
 
@@ -285,3 +285,43 @@ Size (session_016SWyQAUyjKySSg7jMkWWY1): test runs 9, module lines 1703
 ## J13 · COMPLETE
 
 COMPLETE for fix round 6 (G12c, provider). casedrafts takes projects (at most 50) and reviewcopy takes drafts (at most 20), each answering one single-read answer per id, a hidden or unknown id the same dead answer byte for byte; an over-long list is refused whole, REVIEW_BATCH_TOO_LARGE (C-87.18, stand-in words, row owed refusal.REVIEW_BATCH_TOO_LARGE). Both ops declared (K4208). Failing-first batch.test.mjs 8 tests (red: unchanged source ignores the keys), review suite 95/95, users 1143/1144 (plane release R24, accepted by name), checks and ownership clean for review (format failure next.md:38 inherited). Requirement lines R44, R45 and the R23/R42 amendments are proposed in my record, with the parameters control-plane and store-door must forward. No QUESTION open, nothing deferred.
+
+## Completion record (fix round 10, Wave A batch 5, B18 START; REVIEW #25, session_01MSRpgw82aZM18FqtkcrU26)
+
+`tranche/T51` merged at the start. Causes done:
+
+1. **Own fixture lines (2):** `case-account/reviewCommentsRegistrar` (fixture.mjs:130, 131): the test world's `caseAccount.registerReviewComments` no longer hand-builds MALFORMED or REVIEW_COMMENTS_DECLARED; it takes `malformed`, `declared` and the first registration's `{ok: true}` from case-account's published `reviewCommentsRegistrar()` (`bio-plane/test/m/case-account/fixtures.mjs`, FIX-E, provider earlier in the order). Import added at the top of `fixture.mjs`.
+2. **Contracts run (new `bio-plane/test/m/review/fixtures.test.mjs`):** `// fixtures-run: case-account review-copy-read` (R33: the registered reader answers ok false / NO_REVIEW_COPY, the dead answer whole, for no door, no viewer, case not held; writes nothing) and, from the found-before note, `// fixtures-run: case-inputs no-review-copy` (R10: ok false, reason and code NO_REVIEW_COPY, check C-87.1, member's words and detail, stable bytes).
+
+Markers added: no `fixtures-own`, no `fixtures-generic`. The two `fixtures-run` lines wait for their users' markers only if those are not merged yet (case-account `comments.test.mjs:51` and case-inputs `fixtures.mjs:41` carry them already on this branch).
+
+**Found in another module (for BOB):** case-inputs' stand-in `DEAD` (`bio-plane/test/m/case-inputs/fixture.mjs:61`) has `translation: "(the review copy's dead answer)"` and no `detail`; the real `noReviewCopy()` answers the full member's words in `translation` and a `detail` sentence. Same `ok`/`reason`/`code`/`check`. The real one wins; case-inputs changes its stand-in (or takes the shape from this run).
+
+Checks: `fixtures.mjs . review --list` 0 failures (both lines at zero); module tests 97 pass, 0 fail; `format` 0 failures; `architecture` 0; `coverage` 45 of 45; `ownership` 0; `impact.mjs origin/tranche/T51 HEAD`: 0 affected modules (tests only), so no user tests to run.
+
+Size (session_01MSRpgw82aZM18FqtkcrU26): test runs 3, module lines 0
+
+## J14 · COMPLETE
+
+Fix round 10 batch 5 done: 2 own fixture lines at zero (case-account registrar fixture taken), fixtures-run added for case-account review-copy-read and case-inputs no-review-copy; tests 97/97, all checks 0. Found: case-inputs' DEAD stand-in lacks the real translation/detail (see record). Record: build/jobs/T51/review.md.
+
+## Completion record (fix round 10, follow-up 53, B19 START; REVIEW #26, session_01QnDe6zFwq9Dr5SvYgBwJnE)
+
+`tranche/T51` merged at the start (my local branch was behind origin; moved to `stale/review-local` per B19, then `origin/job/T51/review` checked out). Marked requirement met: **R16** (`*(not yet met: T51)*`; BOB strikes the mark).
+
+**Cause (WALK-FINAL-10A row R171 (h), K5130), K4426's four fields**
+
+1. **Root cause (certain, reproduced):** `copy()` read the observations at `draftIdentity(d)`, which reads only the draft's own `case_id`; for a draft that asked for a new case that is `{caseId: null, edition: 1}` however far the draft has got, so `#observations` never asked `attributionInForce` and every author read unchosen ("names no case yet"), though the draft's list row already used the prepared case (`draftEditions`). Evidence: the new test fails at the first prepared read with the "names no case yet" sentence.
+2. **Fix:** a private `#observedIdentity(draft, ident)` in `bio-plane/src/review/index.mjs` used only for `observations`: a draft naming a case keeps its next edition (R5); a draft naming none asks `case-authoring`'s `draftEditions` (R83, which finds the preparation by the draft's own id) and, when it holds a preparation (`case` and `prepared`), stands at that case and edition. Not prepared (or `draftEditions` cannot answer): as before, unchosen with its reason. **`draftIdentity`, `liveGrant`, `grantAdmitsCaseEdition`, the grant rows and every other answer are unchanged**, so R8 is correct for both kinds of draft with no code: a grant is bound to the draft's own identity (NULL, 1) at issue, before or after the preparation, and stays live under it (tested). I did not require `newCase` of the draft: a derived-case draft that prepared is read at its preparation the same way (`draftEditions` finds it by `draft_id`); the requirement's words ("asked for a new case") are met, and the superset is the same correct read.
+3. **Why the tests missed it:** no test prepared a new-case draft and then read `observations`; `copy.test.mjs` R16 uses a stand-in `caseAuthoring` and only the unprepared new-case draft. **Gap fixed:** new `bio-plane/test/m/review/prepared.test.mjs`, three tests over case-authoring's real fixture and the real acts (review `casedraft`, case-authoring `publishCase` as the preparation, case-tensions `attributeObservation` as the author's choice, then `reviewcopy`): unprepared draft unchosen with its reason; prepared, nobody chose, unchosen naming the prepared case and edition; writer-b chose cover then name: chosen true for b, false for a, at the member door and a recipient's, the two alike, no level in the answer; control: an unprepared sibling stays unchosen though another draft prepared and chose; R8: a grant bound before the preparation and one after both live, same copy, revoke one leaves the other, dead answer unchanged.
+4. **Seen failing then passing:** 0 of 3 passed before the change (the prepared reads answered "names no case yet"); 3 of 3 after. Platform check: none.
+
+**For `screens-publish` (follow-up 54):** `case-editor.mjs:416-422` reads `draft.case.case_id`, which stays null for a new-case draft: the copy's `case` is the draft's own identity and I left it so. The prepared case is carried by `casedrafts`' draft rows, `editions.case` (the case id) beside `editions.prepared` (the edition) (R19, as `case-authoring` R83 states them), so the editor sends `attribute` with `caseId: editions.case` and `edition: editions.prepared`. The copy answer has no field for it; if the editor must read it from the copy, BOB amends R11/R19 first and I add it.
+
+**Checks and tests (absolute root /home/user/bio):** module tests 100 pass, 0 fail (97 before, +3); `format` 0 failures; `architecture` 0; `coverage` 45 of 45; `words` 0; `ownership` 0; `fixtures.mjs … review --list` 0 failures; `impact.mjs origin/tranche/T51 HEAD`: 0 affected modules, so no user tests to run. No `fixtures-own`/`fixtures-generic` marker added. Deferred: none.
+
+Size (session_01QnDe6zFwq9Dr5SvYgBwJnE): test runs 5, module lines 13
+
+## J15 · COMPLETE
+
+Follow-up 53 (R171 (h), K5130) done: R16 met. The review copy's observations of a draft that has prepared its new case are read at the prepared case and edition (case-authoring draftEditions); draftIdentity and R8 untouched (grants before and after preparation both stay live, tested). New prepared.test.mjs through the real acts, red 0/3 then green 3/3; module tests 100/100; format, architecture, coverage 45/45, words, ownership, fixtures 0. For screens-publish (follow-up 54): the prepared case is casedrafts rows' editions.case with editions.prepared; the copy's case.case_id stays null. Record: build/jobs/T51/review.md.

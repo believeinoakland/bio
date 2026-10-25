@@ -194,6 +194,15 @@ function withoutStatement(rec, c) {
 /* A cursor is opaque (R40): the record keeps which pieces had one, not its text, which G68 changed for a CSV and a text (a window
    cursor in place of the offset's); what the cursor must still do is tested in `r7-window.test.mjs` and `text-pieces.test.mjs`. */
 const opaque = (rec) => (rec && typeof rec.cursor === "string" ? { ...rec, cursor: "<a cursor>" } : rec);
+/* R63 (final pass): a text reading states its paragraph count in `container_extent`, which the recorded answers (taken before it) lack;
+   it is taken off by name after checking its shape, every other byte as recorded */
+const withoutExtent = (rec) => {
+  if (!rec || !rec.reading || !("container_extent" in rec.reading)) return rec;
+  const { container_extent: e, ...reading } = rec.reading;
+  if (!e || !Array.isArray(e.levels) || e.levels.join() !== "paragraphs") return rec;   /* a reading whose entry itemised its container keeps its recorded extent */
+  assert.deepEqual([e.levels, e.sheets, e.slides, Number.isInteger(e.paragraphs) && e.paragraphs > 0], [["paragraphs"], null, null, true]);
+  return { ...rec, reading };
+};
 for (const c of CASES) {
   test(`R40/R41 (G48) control: ${c.name} - the first tick, every later piece and the units are as recorded before the change`, async () => {
     const want = RECORD.cases[c.name];
@@ -202,14 +211,14 @@ for (const c of CASES) {
     assert.equal(asks.length, want.pieces.length, "the same number of pieces");
     asks.forEach((a, k) => {
       assert.equal(a.ask === null, want.pieces[k].ask === null, `piece ${k}: asked by a cursor or not`);
-      assert.deepEqual(opaque(withoutStatement(a.record, c)), opaque(want.pieces[k].answer), `piece ${k}`);
+      assert.deepEqual(opaque(withoutExtent(withoutStatement(a.record, c))), opaque(want.pieces[k].answer), `piece ${k}`);
     });
   });
   test(`R-OLD (G48) control: ${c.name} - each piece asked by the cursor the old code made answers as recorded`, async () => {
     const want = RECORD.cases[c.name];
     for (let k = 1; k < want.pieces.length; k++) {
       const out = await readAsk(c, want.pieces[k].ask);
-      assert.deepEqual(opaque(recordOf(out, false)), opaque(want.pieces[k].answer), `piece ${k}`);
+      assert.deepEqual(opaque(withoutExtent(recordOf(out, false))), opaque(want.pieces[k].answer), `piece ${k}`);
     }
   });
 }

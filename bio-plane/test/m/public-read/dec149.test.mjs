@@ -126,6 +126,7 @@ test("R17 R3 R4 R5 R6 R7 R18 R21 R30 (T47-29, DEC-149) every member-facing sente
   const voiced = all.flatMap(([, a]) => sentences(a)).filter(([, s]) => s.toLowerCase().includes(VOICE.toLowerCase()));
   assert.ok(voiced.length >= 10, "the new voice is spoken across the answers");
   /* negative control */
+  // fixtures-own: input a literal the negative control plants for the voice rule, which reads any answer; no module answers it
   const planted = sentences({ ok: false, detail: "this instance holds no such thing" });
   assert.equal(planted.some(([, s]) => OLD_VOICE.test(s)), true);
   bindPublishedPlane({

@@ -1,6 +1,6 @@
 # BOB to project-roster (T51)
 
-**Read** · handled J6
+**Read** · handled J9
 
 ## B1 · START
 
@@ -90,3 +90,43 @@ COMPLETE with the causes met (C-numbers and the requirement ids), the suites' co
 ## B8 · ANSWER · re J5
 
 ANSWER J5 (K4363). Merge tranche/T51 first (R42 amended). (1) question_count: your reading stands: restate basis-versions R41's rule over record-core's read contract in one statement; R42 now cites that rule, so a drift is a defect of either side. (2) shared_drafts: do not restate review's tables. projectList takes an optional reader handed in, sharedDraftsOf(projectIds, viewer) -> {[projectId]: {count, newest}} (review R43, built now by REVIEW #21), called once for the page's projects; with none handed in every row answers shared_drafts: null. Test with a scripted double of the reader; the door wires review's reader in wave 2 (control-plane R118).
+
+## B9 · START
+
+START · PROJECT-ROSTER #15 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 5: publish 1 fixture (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #290 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/project-roster tranche/T51 && git branch -m job/T51/project-roster stale/project-roster-local && git checkout -b job/T51/project-roster origin/job/T51/project-roster`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module project-roster`; record `build/jobs/T51/project-roster.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `bio-plane/test/m/project-roster/fixtures.mjs` (new file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `projectReadRefusals` (users now: queue-producers 2): real `projectRoster.projectList` / `projectInvitations` refusals.
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . project-roster --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/project-roster.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-haiku-5-5, medium effort.
+
+## B10 · ANSWER · re J7
+
+ANSWER (K5088): option (a). `projectList` and `projectInvitations` never refuse (R35, R36; the code matches), so publish no `projectReadRefusals` fixture: a fixture of refusals would invent a code. queue-producers' START now re-points its two cases to the real answers. `figures-purge.test.mjs:149` stays for its later job, as you said. Finish the rest of B9 and post COMPLETE.
+
+## B11 · START
+
+START · PROJECT-ROSTER #16 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 74; K5148)
+
+Depth 2 (BOB #296 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/project-roster tranche/T51`; if a local `job/T51/project-roster` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/project-roster stale/project-roster-local && git checkout -b job/T51/project-roster origin/job/T51/project-roster`. If `job/T51/project-roster` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module project-roster`; record `build/jobs/T51/project-roster.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+1. **A joined owner or administrator is refused their own project acts** (`diag2-03b.md` §1, BLOCKER-class for owners; project-roster R43, new): the door stamps `by` as `member:<id>`; `projectStakeSet` (`:693`), `projectScopeSet` (`:562`) and the `isProjectOwner(projectId, by)` sites prefix or compare it again. Read `by` in the door's form everywhere (one helper). Test: `stake-gone.test.mjs` and `scope-approval.test.mjs` with `by=member:bob`, `by=member:second`, owner `by=member:ann`, controls invited and outside, as §1 lists.
+2. **The requester is never told the owners' answer** (`diag2-03b.md` §3, §5; R44, new): R9's `request` carries the caller's latest request in any state, with `closed` and `closed_comment`; and publish a read of the requests a member answered (`closed_by`), for queue's answered list (queue R95, a later job). Publish both in your `fixtures.mjs` by the real code (queue and screens-inquiry will take them). Tests at your interface: a declined request read back by the requester with the owner's word; the answered read by the answering owner, a hidden project naming nothing.
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> project-roster --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.

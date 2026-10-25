@@ -6,6 +6,7 @@ import { world, V, projMd, inqMd, biasMd, NOW } from "./fixture.mjs";
 import { Citation, CITE_CHECKS, CITE_EXTENT_CHECKS, EXTENT_PARAMS } from "../../../src/citation/index.mjs";
 import { INLINE_MAX } from "../../../src/promotion/index.mjs";
 import { noSuchProject } from "../../../src/membership/index.mjs";
+import { basisRefusals } from "../inquiry/fixtures.mjs";
 
 const ANN = { viewer: V("ann"), owner: "o", author: "member:ann", identity: V("ann") };
 
@@ -31,7 +32,7 @@ test("R1: the selection is asked first, at weight report (retrieval R19): an unk
   const r = w.cit.cite({ project: "PROJ-2026-0000-nothing", handle: "sel-000000000000000000000000", ...ANN, note: "x\"y" });
   assert.equal(r.reason, "NO_SUCH_SELECTION");
   const h = await w.select(["INFO-2026-0001"], { owner: "someone-else" });
-  assert.equal(w.cit.cite({ project: "nope", handle: h, ...ANN }).reason, "NOT_YOURS");
+  assert.equal(w.cit.cite({ project: "nope", handle: h, ...ANN }).reason, "SELECTION_NOT_YOURS");
 });
 
 test("R1, R9: an absent citing object and a project the viewer may not see answer the same NO_SUCH_PROJECT, membership's own answer (its R78) byte for byte; existence-only sight answers membership's C-70.1", async () => {
@@ -210,9 +211,12 @@ test("R1, R11: the part — UNKNOWN_EXTENT_FIELD (C-45.7) listing the fields tak
     carries(r, CITE_EXTENT_CHECKS, "BAD_EXTENT_VALUE");
     assert.equal(r.field, "extent_ref");
   }
-  /* A part on many members is fine once all but one are already cited (the count is of NEW members). */
+  /* A part on many members is fine once all but one are already cited under that same part (the count is of NEW legs, R22). */
+  const page0 = { extent_kind: "pdf-page", extent_page: "0" };
   assert.equal(w.cit.cite({ project: q, handle: one, ...ANN, role: "supports" }).ok, true);
-  assert.equal(w.cit.cite({ project: q, handle: two, ...ANN, role: "supports", extent: { extent_kind: "pdf-page", extent_page: "0" } }).ok, true);
+  carries(w.cit.cite({ project: q, handle: two, ...ANN, role: "supports", extent: page0 }), CITE_EXTENT_CHECKS, "EXTENT_ON_MANY");
+  assert.equal(w.cit.cite({ project: q, handle: one, ...ANN, role: "supports", extent: page0 }).ok, true);
+  assert.equal(w.cit.cite({ project: q, handle: two, ...ANN, role: "supports", extent: page0 }).ok, true);
 });
 
 test("R1: a part the leg grammar refuses (inquiry.checkLegExtentGrammar) is BASIS_REFUSED with each finding, before anything is written", async () => {
@@ -267,11 +271,14 @@ test("R1: a refusal from the write (inquiry R11: BASIS_REFUSED, SELF_BASIS, BASI
   let refusal = null;
   w.promotion.registerStep("inquiry", { check: (c) => (c.bundleId === q ? refusal : null) });
   const h = await w.select(["INFO-2026-0001"]);
-  for (const [reason, extra] of [["BASIS_REFUSED", { findings: [{ check: "C-2.8", detail: "d" }] }],
-                                 ["SELF_BASIS", { check: "C-33.22" }], ["BASIS_CYCLE", { path: [q, "INQ-2026-0002", q] }],
-                                 ["PROPOSAL_NOT_TAKEN_UP", { check: "C-104.32", legs: [{ ord: 0, target: "INFO-2026-0001" }] }],
-                                 ["MACHINE_PASSAGE_UNCHECKED", { check: "C-2.20" }]]) {
-    refusal = { ok: false, reason, code: reason, ...extra, detail: `refused: ${reason}` };
+  /* The four inquiry's step gives are the answers of its real promotion of a bad basis (inquiry's published fixture); the
+     fifth is run-productions' (a later module, no fixture gives it): a code the relay must pass on whatever it is. */
+  const real = basisRefusals();
+  const proposalNotTakenUp = { ok: false, reason: "PROPOSAL_NOT_TAKEN_UP", code: "PROPOSAL_NOT_TAKEN_UP", check: "C-104.32",
+    legs: [{ ord: 0, target: "INFO-2026-0001" }], detail: "refused: PROPOSAL_NOT_TAKEN_UP" };
+  for (const answer of [real.basisRefused, real.selfBasis, real.basisCycle, proposalNotTakenUp, real.machinePassageUnchecked]) {
+    refusal = answer;
+    const reason = answer.reason;
     const before = w.md(q);
     const r = w.cit.cite({ project: q, handle: h, ...ANN, role: "supports" });
     /* R21: a BASIS_REFUSED also states its repairs, none here (the basis is not grouped) */

@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso, untimed } from "./world.mjs";
 import { Queue } from "../../../src/queue/index.mjs";
+import { disposeProposalOk } from "../progressions/fixtures.mjs";
 
 const FACTS = { objective_gap: { bound: 50, truncated: false }, unattributed: { count: 0, inquiries: [] },
                 contradiction: { bound: 50, truncated: false }, dispositions: [] };
@@ -140,8 +141,7 @@ test("R15 (d266scope): an instance-scope decision is published with no project, 
 
 test("R27 (peritem): a set mixing {project, finding}, {key} and a CONDITION: each item by its own identity group; a shared project and version reach only the shape they belong to", () => {
   const calls = [];
-  const w = world({ progressions: { disposeProposal: (a) => { calls.push(a);
-    return { ok: true, key: `${a.progressionKey}::${a.stageKey}`, progression_key: a.progressionKey, definition_version: a.definitionVersion }; } } });
+  const w = world({ progressions: { disposeProposal: (a) => { calls.push(a); return disposeProposalOk(a); } } });
   w.member("iris"); for (const p of ["PRJ-A", "PRJ-B"]) { w.bundle(p, "project"); w.join(p, "iris"); }
   const SA = "FINDING::stance-changed-here-not-elsewhere::INQ::PRJ-A", SB = "FINDING::stance-changed-here-not-elsewhere::INQ::PRJ-B";
   const pd = (a) => w.q.proposeDispose({ decidedBy: "iris", viewer: "member:iris", identity: "member:iris", ...a });

@@ -5169,8 +5169,8 @@ function refusalOf(bytes) {
  * the same for the same arguments. What the opened document holds is what one `extractPdfRange` holds while it reads: the
  * object table (typed arrays), the bounded caches of R41 (parsed objects, decoded object streams) and the bytes the
  * caller passed in. Nothing a `range` call builds is kept: its fonts and its pages' structures are the call's own, and
- * its notes (informational, no answer carries them) are dropped at the call's start, so fourteen calls leave the document
- * as one left it. A caller that holds the opened document between calls (reading-pipeline, per digest) holds that. Bytes
+ * its notes are the open's again at the call's start (R50: the open's, kept and never cleared, then the range's own), so
+ * fourteen calls leave the document as one left it. A caller that holds the opened document between calls (reading-pipeline, per digest) holds that. Bytes
  * that are not a PDF answer as `extractPdfRange` does, with no `range`.
  *
  * R45 (G82; K4743): `openPdfRange(bytes, {yieldNow})` with a function `yieldNow` awaits it between the opening's phases and
@@ -5183,12 +5183,22 @@ export async function openPdfRange(bytes, opts) {
   if (refused) return refused;
   const yieldNow = opts && typeof opts.yieldNow === "function" ? opts.yieldNow : null;
   const doc = yieldNow ? await loadPdfYielding(bytes, yieldNow) : await loadPdf(bytes);
-  return { ok: true, pages: doc.pageCount, range: (range) => readRange(doc, bytes, range, yieldNow ? slicerOf(yieldNow) : null) };
+  openedNotes(doc);
+  return { ok: true, pages: doc.pageCount, notes: [...new Set(doc.notes)], range: (range) => readRange(doc, bytes, range, yieldNow ? slicerOf(yieldNow) : null) };
+}
+
+/** The notes (and the streams already noted) the open left on `doc`, taken once, at the open. */
+function openedNotes(doc) {
+  return doc._opened ||= { notes: doc.notes.slice(), noted: new Set(doc._trailingNoted) };
 }
 
 /** R43's reading of an opened document's pages; the one body of `extractPdfRange` and of an opened document's `range`. */
 async function readRange(doc, bytes, range, sl = null) {
+  /* R50: the notes the open made stay; a range adds its own to them, each once */
+  const opened = openedNotes(doc);
   doc.notes.length = 0;
+  doc.notes.push(...opened.notes);
+  doc._trailingNoted = new Set(opened.noted);
   const total = doc.pageCount;
   const from = Math.max(0, Math.floor(Number(range && range.from)) || 0);
   const asked = range && range.count !== undefined ? Math.floor(Number(range.count)) : total;
@@ -5201,6 +5211,7 @@ async function readRange(doc, bytes, range, sl = null) {
   const out = (pages, undetermined, chars) => ({
     ok: true, container: "pdf", pages: total, from, count: pages.length,
     text: { pages, undetermined, counts: { chars, undetermined: undetermined.length } },
+    notes: [...new Set(doc.notes)],
   });
   if (count <= 0) return out([], [], 0);
   if (doc.isEncrypted()) {
@@ -5250,13 +5261,17 @@ async function readRange(doc, bytes, range, sl = null) {
   }
   if (walked) { markImageContent(doc, result.text, painted); markImagesUnread(doc, result.text, painted); }
   /* R46: what a reading stores of the document and not of its text, so that the union of the ranges loses none of it */
+  const levelFrom = doc.notes.length;
   if (!doc._level) {
     let boxes;
     if (sl) { const steps = pageBoxSteps(doc); for (let r = steps.next(); ; r = steps.next()) { if (r.done) { boxes = r.value; break; } await sl.go(); } }
     else boxes = extractPageBoxes(doc);
     doc._level ||= { metadata: extractMetadata(doc), pageBoxes: boxes };
+    doc._level.notes = doc.notes.slice(levelFrom);
   }
   const level = doc._level;
+  for (const n of level.notes) doc.note(n);   /* a title that cannot be decoded is the document's, in every range */
+  result.notes = [...new Set(doc.notes)];
   result.metadata = level.metadata;
   result.pageBoxes = level.pageBoxes;
   result.images = walked ? painted : null;

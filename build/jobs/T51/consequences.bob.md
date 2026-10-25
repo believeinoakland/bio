@@ -1,6 +1,6 @@
 # BOB to consequences (T51)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -18,3 +18,45 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio consequences tranche/T51 job/T51/consequences`. Your Size line counts only your module's own code (K2513).
+
+## B2 · START
+
+START · CONSEQUENCES #15 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 4: publish 2 fixtures, re-point 5 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #290 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/consequences tranche/T51 && git branch -m job/T51/consequences stale/consequences-local && git checkout -b job/T51/consequences origin/job/T51/consequences`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module consequences`; record `build/jobs/T51/consequences.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `bio-plane/test/m/consequences/fixtures.mjs` (new file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `consequencesOfRefusal` (users now: escalation 1): real `consequences.consequencesOf(...)` refusal.
+- `successRecordRead` (users now: actions 1): real `consequences.successRecordRead({id})` (NO_SUCH_SUCCESS_RECORD) and a stored success record.
+
+**Your own fixture lines, done in this job** (5; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- retrieval/noSelection (1 mechanical): fixture.mjs:128
+- sources/rungOf (1 judgment): fixture.mjs:144
+- case-inputs/carryOutcome (2 judgment): fixture.mjs:188,190
+- promotion/groupUndetermined (1 mechanical): t46.test.mjs:252
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . consequences --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/consequences.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B3 · START
+
+START · CONSEQUENCES #16 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 74; K5148)
+
+Depth 2 (BOB #296 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/consequences tranche/T51`; if a local `job/T51/consequences` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/consequences stale/consequences-local && git checkout -b job/T51/consequences origin/job/T51/consequences`. If `job/T51/consequences` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module consequences`; record `build/jobs/T51/consequences.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+1. **A question concluded in the project reads causation unproven, so the escalation cannot end** (`diag2-11.md` §3; consequences R27, new; your `uses` gains `basis-versions`, K5157): `#causationNow` (`consequences/index.mjs:410`) and `#basisChanged` read the question's own `currentState`; a project's conclusion (basis-versions R18) leaves it `open`. Also ask `basis-versions.conclusionOf(project, inquiry, viewer)` (R22) for the determination's project. Test: `assessed.test.mjs` over basis-versions' published `concludeAct`: conclude in the project, the question's head still `open`, the part `established`; control: concluded in another project stays `unproven`. The walker's escalation-end chain through the door is control-plane's: REPORT it.
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> consequences --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.

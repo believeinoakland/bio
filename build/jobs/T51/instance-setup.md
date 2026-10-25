@@ -1,6 +1,6 @@
 # instance-setup (T51)
 
-**Status** · session_0163P54gLUEcmDWPVLMFfvL7 · depth 2 · COMPLETE · handled B15
+**Status** · session_01Krcj2LG7HmHfw9eDsAuwvm · depth 2 · COMPLETE · handled B19
 
 ## J1 · REPORT · re B1
 
@@ -243,3 +243,99 @@ COMPLETE (re B13, B14, B15; fix round 9, G118b). R104 is met as amended below; n
 **Tests and checks.** instance-setup 234 pass, 0 fail. Users named by `impact.mjs` that touch `bootstrap`/`bootstrapfacts`, run with mine: control-plane `r8-bootstrap-fanout`, `r8-hops`, `t51-bootstrap`, `t51-hops`, `r8-phase-clock`; plane `door`, `r8-timing-hook`, `worker`; op-declarations `t47`; credentials `t51`; answer-envelope and store-door suites: 377 pass, 0 fail. format 1 (not mine); architecture 0; coverage 76 of 76, 0; words 0; ownership 4 files, 0 failures.
 
 Size (session_0163P54gLUEcmDWPVLMFfvL7): test runs 17, module lines 3845
+
+## J21 · COMPLETE
+
+COMPLETE (re B16; fix round 10, Wave A batch 5: the fixture round). Test files only; no product code changed.
+
+**Causes done.** Fixtures I publish, lines I re-pointed, contracts I run. Lines left, each named below.
+
+**Published, `bio-plane/test/m/instance-setup/fixtures.mjs` (new), each made by the real code at test time, each called by a test in `fixtures.test.mjs` that checks the real answer:**
+- `assistantState()` → `{notKept, kept}`: the real `assistantstate` answer over the real ai-accounts (`{ok:true, on:true, set_by/set_at/reason null}`; `on:false` with the setting's who, when and reason). Users now: screens-settings 1.
+- `instanceGroupAnswer()` → `{recorded: {ok:true, group}, none: {ok:true, group:null, detail: NO_GROUP_RECORDED}}`. Users now: installer 2.
+- `selftestAnswer()` → the real `selftest` body of a copy with its store binding unbound, with `status` (500): `ok:false`, `bindings.STORE:false`, `bindingsAllPresent:false`, `store: "ERR …"`. Users now: installer-steps 1.
+- `fleetReports()` (K5071, installer R66's lag cases): the real `bootstrapReport` body, status included, for `serving`, `silent` (a member answering 500 and one that throws), `misnamed`, `unbound`, `storeVersionAbsent` (the store's answer carries no `storeVersion`) and `withoutMembers` (no `members=1`, so no `memberVersions`). Every case answers 200 with the real `memberVersions` states.
+- Contract `group-identity-public`, run in `fixtures.test.mjs` (`// fixtures-run: public-read group-identity-public`): `groupIdentityPublic()` with no group recorded is `{ok:true, group:null, display_name:null, domain:null, domain_verified_at:null, logo:false, detail: NO_GROUP_RECORDED}`. **The real answer carries `logo: false`, which the START's value omits: the real one wins, public-read's hand-built value changes (REPORT below).**
+
+**Own lines re-pointed (fixture.mjs, 21 listed → 3 left):**
+- promotion/registrars (79, 82): `providers().promotion` is the real `registrars().p`; the stand-in `facts` map is gone. `group.test.mjs` R1 now reads the fact's module from promotion's own STEP_DECLARED on a second registration.
+- entities/entitiesWorld (249–266) and lines/linesWorld (275–283): `registryOver` is now the real `Entities` and `Lines` of lines' published `linesWorld().w`; `ents`, `idents` and `lines` read their own tables back for the assertions (the world's own entities and lines are left out). Findings in the real code that changed the tests, not the product: the id spaces are a closed list (`idspaces`), so the seeds test's invented spaces `org`, `lb`, `lp`, `lo`, `court`, `docket` are now the real `institution`, `body`, `person`, `office` with a form of their own per scheme (`TEST_SPACES`); the test profile no longer repeats the held test profile's `ellery_body` and `ellery_office`-like scheme names (the module and the registry must read the same scheme); a line's source capture must be held by the record (`registryOver(view, captures)` holds them); real line ids are random (`noIds` in the N756 test); one assertion compared object identity and now compares the body's id. All 13 seeds tests pass unchanged in what they assert.
+- translations/memberLanguageRead (`r8-parts-report.test.mjs`:161, and the same stand-in at :118): `registerMemberLanguageRead` answers translations' own `registered`.
+
+**Lines left (`checks/fixtures.mjs … instance-setup --list`, 3 + 1):**
+- `fixture.mjs:113` public-read/groupIdentityRegistrar: waits for public-read. Its `fixtures.mjs` (`groupIdentityRegistrar`) is on `job/T51/instance-setup`'s sibling branch `origin/job/T51/public-read` and not yet on `tranche/T51`; I merge it as a CHANGE and re-point.
+- `fixture.mjs:186`, `:197` (`contract-no-run`, store-door's `store-replies`): `// fixtures-contract: store-door store-replies` placed on the line above each; waits for store-door's `fixtures-run: instance-setup store-replies`.
+- `fixtures.test.mjs:49` `orphan-run` for public-read `group-identity-public`: waits for public-read's marker on its hand-built value.
+- No `fixtures-own` or `fixtures-generic` marker added.
+
+**Found in other modules (REPORT):** (1) public-read: its hand-built `groupIdentityPublic` no-group value lacks `logo: false` (real answer above). (2) lines' `linesWorld()` registers four entities and some lines before it hands the world over (a user counting entities or lines must subtract them; mine does). Neither blocks.
+
+**Tests and checks (from /home/user/bio, process checks at civicos-process main):** instance-setup 239 pass, 0 fail (234 before, +5 fixtures); screens-action `join-seam-t51` and `seam-t51` (the only other importers of `instance-setup/fixture.mjs`) 4 pass. `checks/format.mjs`: 178 modules, 0 failures. `checks/architecture.mjs instance-setup`: 0 failures. `checks/coverage.mjs instance-setup`: 76 of 76 live requirement ids named, 0 failures. `checks/words.mjs instance-setup`: 0 failures (inline 0, plain 0, testcopy 0). `checks/ownership.mjs … instance-setup origin/tranche/T51 job/T51/instance-setup`: 7 files, 0 failures. `setup-words/build.mjs --check`: only the expected stale-rows note, none naming my module. `checks/fixtures.mjs instance-setup`: 21 → 3 answer lines + 1 orphan-run, all waiting as above.
+
+Size (session_01Qqt8fVgM4Tk1A5Lz73WMQG): test runs 6, module lines 3846
+
+## J22 · COMPLETE
+
+COMPLETE (re B17). Merged origin/tranche/T51 (merge commit, no rebase) and re-pointed fixture.mjs:113: the stand-in public-read registration now answers with public-read's own `groupIdentityRegistrar()` results (malformed, first, declared), still recording the identity for the tests.
+
+`checks/fixtures.mjs /home/user/bio instance-setup --list`: 0 failures; two lines listed as `accepted(store-replies)` (fixture.mjs:190, :201, store-door's run now on the tranche); the orphan-run at fixtures.test.mjs:49 cleared. No line left.
+
+Tests: instance-setup 239 pass, 0 fail. format 0 failures; architecture, coverage (76 of 76), words, ownership 0 failures.
+
+Size (session_01Qqt8fVgM4Tk1A5Lz73WMQG): test runs 8, module lines 3846
+
+## J23 · COMPLETE
+
+COMPLETE (re B18; follow-up 36, K5108). Published `bootstrapFacts` in `bio-plane/test/m/instance-setup/fixtures.mjs` (new export, test files only), with two tests in `fixtures.test.mjs`.
+
+Signature: `bootstrapFacts({ team = "River Town", members = 3, projects = 2, documents = 5, published = 1 } = {})`, async, returns the real `m.bootstrapFacts()` answer (R95): the seven keys of `BOOTSTRAP_FACT_KEYS`, each a real read.
+
+Set up by real acts: the team named by `groupNameSet`; the running release first seen at the boot clock (`installed_at` 2026-10-10T08:00:00Z); three held sessions, the newest the last use (`last_used_at` 2026-10-14T17:45:00Z); the counts the caller states. The other modules' counts (members, register, published cases) are stand-ins, as in t51's `copy`; the answer's shape and each count are the module's real read.
+
+Markers: no `fixtures-own` or `fixtures-generic` marker added.
+
+Tests: `fixtures.test.mjs` 7 of 7 pass (2 new); the instance-setup module 241 of 241 pass, 0 fail. Checks, absolute root `/home/user/bio`: format 0 failures; architecture 0; coverage 76 of 76; words 0; ownership 0 (3 files, the record included); `checks/fixtures.mjs … instance-setup --list` 0 failures, accepted 2 (fixture.mjs:190, :201, store-door's `store-replies`, unchanged from B17).
+
+Found in other modules: none. Deferred: none. Installer's t50 (`newgroup/test/t50.test.mjs:272`) is its re-point to make.
+
+Size (session_01EuQtSZAq5UjiGxgEKWZHMP): test runs 2, module lines 3846
+
+## J24 · COMPLETE
+
+COMPLETE. Re B19 (fix round 10, the final pass's causes; plan item 71 (3); K5148). B18 (follow-up 36) is superseded: it was merged at K5110, so I took no further action on it.
+
+**Cause 1: the team's seed instant kept the wall clock under a pinned clock.** Applied in full.
+
+1. **Root cause, with evidence.** `instanceGroupSeed` records `recorded_at` through `#iso()`, which read `#now()`: the injected clock, else `Date.now()`. `env.BIO_NOW_MS` was never read, so a world pinned by it recorded the wall time. Failing run: `actual: '2026-10-25T16:53:32.949Z', expected: '2031-03-04T05:06:07.000Z'`. The diagnosis is STORE-REQUEST #1 J3 (3) and K5132's rule; the `diag2-*` files do not cover it.
+2. **Why the module tests missed it.** The R4 test boots with `env: {}`, so the pinned path never ran. Tests that pin a clock inject `now` through `boot({now})`, which bypasses `env`. No test read `recorded_at` against a pinned `BIO_NOW_MS`.
+3. **Failing-first test.** `bio-plane/test/m/instance-setup/group.test.mjs`, the last test: "R4 instanceGroupSeed records its instant on the instance clock: pinned by env.BIO_NOW_MS it is that instant; unpinned, the wall clock". Red on today's code (above); green after the fix. Its control (unpinned) asserts the wall clock within a second.
+4. **Owning module.** instance-setup (`bio-plane/src/setup.mjs`, `bio-plane/src/livefire.mjs`).
+
+**Fix (commit `4815d2418f` on `job/T51/instance-setup`).**
+- `setup.mjs`: new `#instant()`: the injected clock, else `env.BIO_NOW_MS` (an absent value falls through, never the epoch), else `Date.now()`. `#iso()` records through it. `#now()` is unchanged and stays the duration clock.
+- `setup.mjs` update deadline (`updateLater`'s `now`, near `:2865`) moved to `#instant()`: it is a recorded date the schedule uses, not a duration.
+- `livefire.mjs`: `instantOf(env)` (the same rule). Its `last_updated` (a stored canary row) and `ranAt` (the answer's instant) read it. `totalMs` and the timing reads stay on `Date.now()`.
+
+**Every other recorded instant from the wall clock, listed as the cause asks.**
+- Changed (they follow `#iso()` or `#instant()`): every `this.#iso()` call in `setup.mjs`, about twenty (the seed `recorded_at`, the profiles boot note, the lines and entity writes, the rows at `:1236`, `:1257`, `:1287`, `:1431`, `:1468`, `:1579`, `:1660`, `:1750`, `:1762`, `:1803`, `:1813`, `:2183`, `:2260`, `:2305`, `:2346`, `:2391`, `:2566`); the `:2588` fallback; the update deadline `:2865`; livefire `last_updated` and `ranAt`.
+- Not changed, with why: `keptFleetParts` age and its stamp (`#now()`, `:2729`, `:2735`: a measured duration); `partsReport` and `bootstrapReport`'s default `now` parameters (report clocks, injected by their callers); the health answer's `time` (`:3353`: an answer, not a stored instant); the selftest scratch key (`:3387`: a key); the cpu-probe run id stamp (`:3437`: an identifier); livefire's `totalMs` and timing reads (durations).
+- `BIO_NOW_MS` is read as the instance clock by about twenty modules already, and no deployment config sets it, so the fix matches the rest of the product.
+
+**Checks and tests (with summary lines).**
+- Module suite, `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/instance-setup/*.test.mjs` (run to its own exit, no force-exit): `tests 242, pass 242, fail 0, cancelled 0, skipped 0`.
+- Neighbouring pinned-clock tests (store-assembly, plane, tasks, intent, progressions files that read `BIO_NOW_MS`), since they seed a group: `tests 101, pass 99, fail 0, todo 2` (the two todo are pre-existing `test.todo`s).
+- `checks/format.mjs /home/user/bio`: 178 modules, 0 failures.
+- `checks/architecture.mjs /home/user/bio instance-setup`: 34 product files, 0 failures.
+- `checks/coverage.mjs /home/user/bio instance-setup`: 76 of 76 live requirement ids named by a test, 0 failures.
+- `checks/ownership.mjs /home/user/bio instance-setup origin/tranche/T51`: 0 failures.
+- `checks/words.mjs /home/user/bio instance-setup`: 0 failures (no new sentence).
+- `checks/fixtures.mjs /home/user/bio instance-setup --list`: 0 failures. Its two `accepted` lines (`fixture.mjs:190`, `:201`) are pre-existing; I touched no fixture.
+- No new fixture export and no `fixtures-own` or `fixtures-generic` marker added.
+
+**Requirement ids met.** R4 (the seed's recorded instant is the instance clock's). The rule the cause rests on is R-CLOCK (fix-round-7 §0) with K5132; no requirement in `build/requirements/instance-setup.md` carries the `not yet met: T51` mark, so I struck nothing. BOB: if the instant should be written into R4's text, say so and I will fold it.
+
+**For BOB (REPORT, not blocking).**
+- The bundles that include `setup.mjs` or `livefire.mjs` are now stale. The plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`, and the copy in `release/bio-plane.bundled.mjs`) is one; I did not regenerate it (`bio-plane`'s `npm run build` at layer close).
+- Two other modules have a pinned-world instant of their own, in their paths, not mine: credentials' claim `consumedAt` (STORE-REQUEST J3 (3)). Not touched.
+
+Size (session_01Krcj2LG7HmHfw9eDsAuwvm): test runs 4, module lines 3860

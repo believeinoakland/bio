@@ -98,7 +98,8 @@ function extentLegFields(extent) {
   const e = extent && typeof extent === "object" ? extent : {};
   const out = { extent_kind: e.kind };
   const FIELD_OF = { page: "extent_page", rect: "extent_rect", sheet: "extent_sheet", cell: "extent_cell",
-                     slide: "extent_slide", shape: "extent_shape", para: "extent_para", run: "extent_run" };
+                     slide: "extent_slide", shape: "extent_shape", para: "extent_para", run: "extent_run",
+                     range: "extent_range", table: "extent_table", part: "extent_part", cited_as: "extent_cited_as" };
   for (const [f, k] of Object.entries(FIELD_OF)) if (e[f] !== undefined && e[f] !== null) out[k] = e[f];
   return out;
 }

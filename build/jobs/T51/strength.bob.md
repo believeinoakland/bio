@@ -1,6 +1,6 @@
 # BOB to strength (T51)
 
-**Read** · handled J14
+**Read** · handled J17
 
 ## B1 · START
 
@@ -136,3 +136,51 @@ Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD`
 ## B15 · ANSWER · re J14
 
 ANSWER (BOB #253): J13/J14 read. R44 and R41's amendment are written at your merge. SCREENS-INQUIRY #21 is told the shape (`ids`, `results`), STORE-DOOR #16 already fences `ids`, CONTROL-PLANE #48 forwards it. Stay available until the layer closes.
+
+## B16 · START
+
+START · STRENGTH #22 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 3: publish 4 fixtures, re-point 2 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #289 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/strength tranche/T51 && git branch -m job/T51/strength stale/strength-local && git checkout -b job/T51/strength origin/job/T51/strength`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module strength`; record `build/jobs/T51/strength.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `bio-plane/test/m/strength/fixtures.mjs` (new file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `gradingFactsUnread` (users now: case-disclosures 1): real `strength.gradingFacts(<unknown inquiry>)`; NOTE tests name NO_SUCH_INQUIRY, which strength does not give (it gives NO_ID / NO_SUCH_BUNDLE / NOT_AN_INQUIRY).
+- `strengthBarSet` (users now: screens-settings 1): `strengthbarset` ok answer `{group, capture, connection, author, at, reason}` from the real call.
+- `strengthOfNoId` (users now: case-import 1): real `strength.strengthOf("")` (NO_ID).
+- `testimonyCorroboration` (users now: ratification 1): the real `testimonyCorroboration` over no testimony (`{ok, legs:[]}`).
+
+**Your own fixture lines, done in this job** (2; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- promotion/makePromotion (1 judgment): fixture.mjs:153
+- promotion/staleBaseRefusal (1 mechanical): projectbar.test.mjs:272
+
+**Fixture lines NOT done in this job** (1; their providers merge in your batch or after): FIX-E 1; FIX-E providers: money. They stay in your list and arrive as a CHANGE.
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . strength --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/strength.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B17 · CHANGE
+
+re J15 (K5077): money is merged on the tranche with its published fixtures (`bio-plane/test/m/money/fixtures.mjs`: `readFactOf`, `readFactNotFound`). Merge `origin/tranche/T51`, re-point your one money line to `readFactOf` (or whichever is money's real answer for it), check `checks/fixtures.mjs /home/user/bio strength --list` at zero, then post COMPLETE.
+
+## B18 · START
+
+START · STRENGTH #23 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 74; K5148)
+
+Depth 2 (BOB #296 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/strength tranche/T51`; if a local `job/T51/strength` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/strength stale/strength-local && git checkout -b job/T51/strength origin/job/T51/strength`. If `job/T51/strength` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module strength`; record `build/jobs/T51/strength.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+1. **A second owner's bar save silently overwrites the first** (`diag2-03b.md` §8; strength R45, new): `projectBarSet` (`strength/index.mjs`, `base: head.bundleSha` read at write time) takes no bar the writer saw. Take `expected` (`{capture, connection}`, each null for none); a changed bar writes nothing and answers `BAR_STALE` with `previous` (a catalogue row, its sentence a `localize` stand-in); `expected` absent keeps today's behaviour. Publish the stale answer in your `fixtures.mjs` (screens-inquiry will draw it). Test: `projectbar.test.mjs` as §8 lists.
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> strength --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.

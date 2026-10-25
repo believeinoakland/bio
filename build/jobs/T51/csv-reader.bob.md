@@ -1,6 +1,6 @@
 # BOB to csv-reader (T51)
 
-**Read** · handled J7
+**Read** · handled J11
 
 ## B1 · START
 
@@ -265,3 +265,33 @@ Rules of fix-round-9 §0 that bind: R-FOUR (root cause with file:line, why the t
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** each cause above fixed with its failing-first test green (seen red first) and its platform check done or named for the redeploy; module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/csv-reader.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B13 · START
+
+START · CSV-READER #7 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 11 (plan build/plan/fix-round-10-T51.md §3; K5078)
+
+Depth 2 (BOB #290 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/csv-reader tranche/T51 && git branch -m job/T51/csv-reader stale/csv-reader-local && git checkout -b job/T51/csv-reader origin/job/T51/csv-reader`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module csv-reader`; record `build/jobs/T51/csv-reader.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` from the process repository (K5078).
+
+**Follow-up 11 (found by READING-PIPELINE #37 J51).** A one-line CSV of 16,385 columns (`c0,c1,...,c16384`) is not refused: `usedCols` is 1 and no guard fires, so csv-reader R22's column bound (the standard's figure, K4630) is not met on a one-line file. Root cause with file:line, why the tests missed it (no test has a single line wider than the bound), a failing-first test on that exact file through the real entry path, seen red first; the refusal carries the count and the limit as R22 states (the `metric: "columns"` marker reading-pipeline R60 carries). Control: 16,384 columns on one line is read; a many-line file past the bound is refused as before. Platform N. Run the tests of every module `node build/plan/impact.mjs origin/tranche/T51 HEAD` names (reading-pipeline among them).
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE (K5060).
+
+**Done:** the cause fixed, its test green (seen red first); module tests, words, fixtures, coverage, architecture, format green by failure count; record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5.
+
+## B14 · START
+
+START · CSV-READER #8 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 74; K5148)
+
+Depth 2 (BOB #296 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/csv-reader tranche/T51`; if a local `job/T51/csv-reader` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/csv-reader stale/csv-reader-local && git checkout -b job/T51/csv-reader origin/job/T51/csv-reader`. If `job/T51/csv-reader` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module csv-reader`; record `build/jobs/T51/csv-reader.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+1. **Prose with commas on most lines is read as a CSV table** (`diag2-06.md` §6; csv-reader R26, new, K5157): `scanDialect`'s majority-presence rule (`csv-reader/index.mjs`, `present * 2 > lines`) makes a `.txt`/`text/plain` file of minutes a table. For a declared plain-text file the delimiter's most common non-zero count per line must hold on the majority of lines; `.csv`/`.tsv` and declared CSV types keep presence (cause 20's ragged CSV with a title block stays a table). Test: `delimited.test.mjs`, the walker's four paragraphs as `minutes.txt` answer false; controls as §6 lists.
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> csv-reader --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.

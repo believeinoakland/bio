@@ -1,6 +1,6 @@
 # case-inputs (T51)
 
-**Status** · session_01QBHmyVdK3F9mLRdReuQNVZ · depth 2 · COMPLETE · handled B9
+**Status** · session_01CP6548xUsizHesCu8wGwzp · depth 2 · COMPLETE · handled B12
 
 ## J1 · QUESTION
 
@@ -176,3 +176,79 @@ Merged `tranche/T51` (PUBLICATION #36 in). `g47-splice.test.mjs` seam test was r
 Seam reds remaining: none. Proposed R2 line: as in J9.
 
 Size (session_01QBHmyVdK3F9mLRdReuQNVZ): test runs 9, module lines 1604
+
+## J11 · COMPLETE
+
+COMPLETE for B10 (fix round 10, Wave A batch 3: publish 2 fixtures).
+
+**Done.** Pushed `ba75a5a180` on `job/T51/case-inputs`.
+- `bio-plane/test/m/case-inputs/fixtures.mjs` (new): `carryOutcome()` and `statementAck()`. Each builds a fresh real world (fixture.mjs) when called and returns the real answers, never stored.
+  - `carryOutcome()` (R9): `noSuchCase` (unpublished case, NO_SUCH_CASE), `badCarriedOutcome` (blank text, BAD_CARRIED_OUTCOME naming `text`), `ok` (`{ok:true, outcome}` for a joined participant).
+  - `statementAck()` (R1, R12): `noReviewCopy` (viewer with no door; the real NO_REVIEW_COPY from review's `noReviewCopy()`), `noReason` (STATEMENT_ACK_NO_REASON), `ok` (the reasoned acknowledgement by joined `bo`).
+- `bio-plane/test/m/case-inputs/fixtures.test.mjs` (new): 4 tests, each calling the fixtures and checking the answers against this module's refusal tables and review's real code.
+- `bio-plane/test/m/case-inputs/fixture.mjs`: `reviewProvider` is now exported (one word). Only case-inputs' own tests import this harness.
+
+**Lines done.** Nothing of mine is listed as a user: case-inputs is a provider in this batch. `checks/fixtures.mjs /home/user/bio case-inputs --list` (absolute root) reports 0 failures. The relative root `.` reports 0 without reading any file (K5066), so I used the absolute path.
+
+**Lines left.** Users re-point in their own jobs: consequences (carryOutcome, 2 lines) and control-plane (statementack, 1 line).
+
+**Markers added.** None (no `fixtures-own`, no `fixtures-generic`).
+
+**Deferred.** None.
+
+**Found in another module (for BOB; nothing changed by this job):**
+1. control-plane's stand-in for statementack (`bio-plane/test/m/control-plane/statementack.test.mjs`, the stand-in at lines 14-27) answers `{ok:true, acknowledged:true, reason}`. The product's real success answer is `{ok:true, existed, acknowledgement:{kind, by, recipient, grant_id, at, reason, project, case_id, edition}, ...}`, so `acknowledged` is not a product field. The part-4 spec's `{acknowledged:true, reason}` follows the stand-in, not the product. control-plane's re-point should take the real shape from `statementAck().ok`.
+2. The harness's `DEAD` constant (fixture.mjs) is a stand-in with a placeholder translation, not review's real `noReviewCopy()` answer. It is used by many of this module's tests, so I left it as it is and the fixture takes the real answer from review directly.
+3. `checks/fixtures.mjs` with a relative root reports 0 failures without reading files (K5066). The START's `node checks/fixtures.mjs . case-inputs --list` gives a false zero; it needs the absolute root.
+
+**Checks run** (on the committed tree, root `/home/user/bio`):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/case-inputs/*.test.mjs`: 77 pass, 0 fail.
+- `checks/format.mjs /home/user/bio`: 178 modules, 178 requirements files; 0 failures.
+- `checks/architecture.mjs /home/user/bio case-inputs`: 17 product files, 66 relative imports; 0 failures.
+- `checks/coverage.mjs /home/user/bio case-inputs`: 29 of 29 live requirement ids named by a test; 0 failures.
+- `checks/words.mjs /home/user/bio case-inputs`: 0 failures.
+- `checks/fixtures.mjs /home/user/bio case-inputs`: 0 failures (see above).
+- `checks/ownership.mjs /home/user/bio case-inputs tranche/T51 job/T51/case-inputs`: 4 files changed by case-inputs (the record, the three fixture files); 0 failures.
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD` lists the affected modules. Its pass/total lines for other modules (for example control-plane 93/108, plane 74/89, pdf-worker 7/16, acquisition 52/53) are not caused by this job: my diff touches no product source and only this module's test folder, and nothing outside case-inputs imports the changed harness. I did not re-run those modules on a clean worktree of `origin/tranche/T51`, so that attribution rests on the diff, not on a clean run.
+
+Size (session_01HuoienLKeDjonTgFdKvMxF): test runs 4, module lines 1602
+
+## J12 · COMPLETE
+
+COMPLETE again after B11 (CHANGE, K5079).
+
+Pushed `14b585cd62` on `job/T51/case-inputs`.
+- `fixtures.mjs` and `fixtures.test.mjs` no longer import `review`. `statementAck().noReviewCopy` is now the test world's dead answer (`DEAD`), and the line above it carries `// fixtures-contract: review no-review-copy` for review's job to run.
+- `fixture.mjs` is back to its tranche text (`git diff origin/tranche/T51 -- fixture.mjs` is empty).
+
+Checks (root `/home/user/bio`, absolute):
+- case-inputs tests: 77 pass, 0 fail.
+- architecture: 19 product files, 71 relative imports; 0 failures.
+- format: 178 modules, 178 requirements files; 0 failures.
+- coverage: 29 of 29 live requirement ids named by a test; 0 failures.
+- words: 0 failures.
+- fixtures: 1 failure, the expected `idle` contract `fixtures-contract: review no-review-copy` (tag `idle`) until review's `fixtures-run` lands.
+
+Lines done: unchanged from J11 (no own user lines). Lines left: consequences (carryOutcome, 2) and control-plane (statementack, 1) re-point in their own jobs; review's `fixtures-run` for `no-review-copy` in review's job.
+Markers added: none. Deferred: none. Found in another module: as J11 (control-plane's statementack stand-in shape).
+
+Size (session_01HuoienLKeDjonTgFdKvMxF): test runs 3, module lines 1602
+
+## J13 · COMPLETE
+
+Follow-up 25 done (B12, test files only), pushed `e8cbf00ccd` on `job/T51/case-inputs`.
+- `fixture.mjs`: `DEAD` (the stand-in review provider's NO_REVIEW_COPY answer) now carries `detail` as well as `translation`, the shape review's `refusal` builds. Both sentences stay placeholders, never copied (K3810).
+- `fixtures.test.mjs`: `statementAck().noReviewCopy` is checked to have exactly the keys `check, code, detail, ok, reason, translation`, with `translation` and `detail` strings.
+
+Checks (root `/home/user/bio`, absolute):
+- case-inputs tests: 77 pass, 0 fail.
+- format: 178 modules, 178 requirements files; 0 failures.
+- architecture: 19 product files, 71 relative imports; 0 failures.
+- coverage: 29 of 29 live requirement ids named by a test; 0 failures.
+- words: 0 failures.
+- ownership: changed files are this module's test folder and the record; 0 failures.
+- fixtures: 1 remaining, `fixtures-contract: review no-review-copy` at `bio-plane/test/m/case-inputs/fixtures.mjs:41` (state `idle`). It is named with why: the answer is review's, and it is checked by review's `fixtures-run`, which lands in review's job. Nothing in this module can close it.
+
+Markers added: none. Deferred: none. Found in another module: none new.
+
+Size (session_01CP6548xUsizHesCu8wGwzp): test runs 1, module lines 1602

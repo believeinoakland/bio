@@ -1,6 +1,6 @@
 # case-import (T51)
 
-**Status** · session_01Y65ywSzJiY7GTSetJFTW7y · depth 2 · COMPLETE · handled B9
+**Status** · session_01JD7L1vW9GM6iWcpLj3beF4 · depth 2 · COMPLETE · handled B11
 
 ## J1 · COMPLETE
 
@@ -154,3 +154,39 @@ B9 (K4711) applied: tranche/T51 merged (case-grammar, public-read G50, case-chec
 **Checks.** case-import suite: 158 pass, 0 fail (all 17 files). format 0; architecture (case-import) 0; coverage 33 of 33; words: no failure names case-import (the failures are other modules', inline 6 / missingkey 5 among them, installer-steps and case-checker); ownership: 1 failure, `build/requirements/case-import.md` (accepted at the merge, B4). Declarations: no op changed. No new word ids.
 
 Size (session_01Y65ywSzJiY7GTSetJFTW7y): test runs 36, module lines 2689
+
+## J10 · COMPLETE
+
+B10 (fix round 10, Wave A batch 2): three fixtures published in `bio-plane/test/m/case-import/fixtures.mjs` (new), each made by the module's real code at test time, never stored; commit pushed on job/T51/case-import (tranche/T51 merged first).
+
+**Causes / lines done.**
+- `importedWorld({imports})`: real `importCaseFile`, `acceptImported`, `flagImported`, `clearFlag`, `withdrawAcceptance` over seeded editions; answers `{w, ci, imports:[{group, case, import, editions:{n:{flags}}}]}`. Replaces the users' hand-built `imports` (case-disclosures, case-authoring, conformance).
+- `openFlagsUnread()`: the real `openFlagsOn` and `acceptanceOf` over a store that cannot be read (the world's database closed): `{flags:[],complete:false}` and `null`. (No code NO_SUCH_IMPORT exists; `openFlagsOn` never refuses.)
+- `watchedImports({publishers, unwatched})`: real `watchImport` on one import per publisher, `watchedImports` pages, the real `recordDocketRead` refusal IMPORT_NOT_WATCHED for an unwatched import, and `watchItems` with nothing read.
+- Test `r10-fixtures.test.mjs` (3 tests) calls each and checks the real answer, with controls (cleared flag not open; withdrawn acceptance reads null; readable store complete; no publishers: no watches).
+
+**Lines left.** FIX-E 1 (`fixture.mjs:192`, `strength.strengthOf` scripted): waits for strength's provider; arrives as a CHANGE. Users re-point in their own jobs.
+
+**Markers added.** `fixtures-own`: 0. `fixtures-generic`: 0.
+
+**Product code changed.** None. Declarations unchanged. No new word ids. Generated artifacts made stale: none.
+
+**Checks.** case-import suite: 162 pass, 0 fail (was 158 + 3 new + 1 earlier). format 0 failures; architecture 0; coverage 33 of 33; words 0 failures (dev 1, inherited); fixtures: 1 failure, the FIX-E line above; ownership 0 failures; `impact.mjs origin/tranche/T51 HEAD`: 0 modules affected (test-only files).
+
+Size (session_01NT1x92ZN1kdow5LA1zD2mQ): test runs 3, module lines 2689
+
+## J11 · COMPLETE
+
+B11 item 1 (C6, diag2-10b): done. R4 met: `importedCases` (per import, the latest edition's) and `importedCase` (the edition shown) answer `scope`, the `case_scope` of the edition's case document (null where none, never the id); each finding of `#editionView` answers `title` from `#findingTitle` (R31's rule; null where none). Product code: `bio-plane/src/case-import/index.mjs` (`#scopeOf`, two answers, one finding field).
+
+**Tests.** New `names.test.mjs` (5 tests, R4): scope and titles on both reads; null scope and null title as controls; latest vs named edition; a non-member answered with no scope; the published fixture. Seen red on the old code (3 of 4 then failed), green after. `reads.test.mjs` pins the list row whole, so its expected row gained `scope: null` (R4's new field, no assertion weakened). `fixture.mjs` `caseFile`/`caseDocText` take `scope`. Published for screens-publish: `importedNamed()` in `fixtures.mjs`, made by the real reads at test time.
+
+**Why the tests missed it.** R4 named no title or scope, so no case-import test asked for one, and screens-publish's fake plane hand-wrote titles the real answer never carried.
+
+**Met ids for BOB to strike:** R4.
+
+**Checks.** case-import suite 166 pass, 0 fail. format 0; architecture 0; coverage case-import 33 of 33; ownership 0; words: no finding names case-import. `fixtures.mjs case-import --list`: the one inherited line (`fixture.mjs:193`, `strength.strengthOf` scripted, FIX-E, waiting on strength's provider); no marker added. `checks/run.mjs`: other modules' coverage and fixture lines only. Declarations unchanged; no new word ids; generated artifacts made stale: `bio-plane/dist/bio-plane.bundled.mjs` (carries this module's source), not regenerated (§14).
+
+**For screens-publish (BOB):** `imported.mjs` should read `c.scope` and `f.title` (diag2-10b C6 item 4); its fake plane should take `importedNamed()`.
+
+Size (session_01JD7L1vW9GM6iWcpLj3beF4): test runs 6, module lines 2700

@@ -5,6 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, serve, sweepShare, TERM_ROW, DAEMON, V, NOW_MS, infoMd } from "./fixture.mjs";
+import { projectActNotParticipant } from "../promotion/fixtures.mjs";
 import { monitoringOps, NAMED_REQUEST_CHECKS, GATHERING_CHECKS, MONITORING_CHECKS } from "../../../src/monitoring/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
@@ -197,7 +198,7 @@ test("R75 refusals, in order, each writing nothing: required bundle, ABSENT for 
   assert.equal(w.net.seen.length, 0);
   /* 6: promotion's refusals relayed as it gives them, nothing written; asked last */
   const real = w.promotion.promote;
-  const refusal = { ok: false, reason: "PROJECT_ACT_NOT_A_PARTICIPANT", check: "C-x", translation: "t", detail: "d" };
+  const refusal = projectActNotParticipant();
   const seen = [];
   w.promotion.promote = (pkg) => { seen.push(pkg); return refusal; };
   try {
@@ -406,6 +407,7 @@ test("R77 the write relays the sweep fence's and promotion's refusals unchanged,
   const gr = await call((g) => { g.requests = [{ id: "GATH-bad" }]; return g; });
   assert.deepEqual([gr.ok, gr.reason, gr.code, gr.check], [false, "GATHERING_REFUSED", "GATHERING_REFUSED", "C-18.10"]);
   /* a refusal of mutate's own is relayed as it gives it */
+  // fixtures-contract: link-sweep sweep-mutate
   const mine = { ok: false, reason: "NO_SUCH_SWEEP", detail: "no such sweep" };
   assert.deepEqual(await call(() => mine), mine);
   assert.equal(untouched(w), before);

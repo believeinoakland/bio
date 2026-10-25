@@ -5,9 +5,9 @@
    the fixture registers, projecting from the document as retrieval does into retrieval's own table
    (`bundle_projection`, created by retrieval's `PROJECTION_SCHEMA`, the statements its `migrate()` runs; R61, N283); the host governor records every call and
    refuses the hosts a test names; the network is a scripted `fetch` the test controls; the evidence bucket is an
-   in-memory R2 stand-in; credentials is the real module, made after membership as the composition root makes it; intent, action-clocks, escalation and publication are stand-ins in their Provides' shapes unless
-   a test passes the real one; case-import is the real module (no watch in force) unless a test passes `stubCaseImport`, its R18 in
-   its Provides' shape (`realActions`: the real actions and action-clocks modules); the tables other modules'
+   in-memory R2 stand-in; credentials is the real module, made after membership as the composition root makes it; action-clocks and escalation are stand-ins in their Provides' shapes unless a test passes the real one;
+   intent and publication are absent unless a test passes one (the providers' published fixtures, follow-up 27); case-import is the real module (no watch in force) unless a test passes one (`docket.test.mjs` passes
+   the real module holding watches, seen through a spy); `realActions` makes the real actions and action-clocks modules; the tables other modules'
    promotion steps read once a wake has reached them on this host (`refs`, connections'; `inquiry_bundle_facts`,
    inquiry's) are created as the plane creates them (N506's tail, K1164: SCHEDULER #25 found a promotion after a wake
    failing on them here), their statements copied, since this module uses neither. Every test drives `monitoring` at its
@@ -198,24 +198,21 @@ export function world({ profiles = ["test-port-ellery"], env = null, evidence = 
       actionFacts(md && md.text, clock.ms).clock_next, c.bundleId);
     return null;
   } });
-  /* the real actions module (its clock rule, the R33 bound) and action-clocks (`pendingClocks`, its R1), with conformance
-     in its R9 shape */
-  const conformance = { determinationRead: () => ({ ok: false, reason: "NO_SUCH_DETERMINATION" }), registerStep: () => ({ ok: true }) };
-  const act = realActions ? actionsOf(host, { record, membership, promotion, retrieval: null, env: {}, now: () => clock.ms,
-    conformance }) : undefined;
-  const clocks = realActions ? actionClocksOf(host, { record, membership, actions: act, conformance, env: {}, now: () => clock.ms })
+  /* the real actions module (its clock rule, the R33 bound) and action-clocks (`pendingClocks`, its R1); conformance, which
+     they reach on the same host as production does, is the real module with no determination held */
+  const act = realActions ? actionsOf(host, { record, membership, promotion, retrieval: null, env: {}, now: () => clock.ms }) : undefined;
+  const clocks = realActions ? actionClocksOf(host, { record, membership, actions: act, env: {}, now: () => clock.ms })
     : undefined;
   const net = network();
-  const intentStub = intent === undefined ? stubIntent() : intent;
-  const publicationStub = publication === undefined ? stubPublication() : publication;
+  /* an absent intent or publication is null: undefined would have monitoring build the real module on this host */
   const m = monitoringOf(host, { record, membership, promotion, provenance: prov, observationLog: obs, capture,
-    governor: gov, env: env || {}, now: () => clock.ms, fetch: net.fetch, intent: intentStub, publication: publicationStub,
+    governor: gov, env: env || {}, now: () => clock.ms, fetch: net.fetch, intent: intent ?? null, publication: publication ?? null,
     ...(actionClocks !== undefined ? { actionClocks } : clocks ? { actionClocks: clocks } : {}), ...(escalation !== undefined ? { escalation } : {}),
     ...(caseImport !== undefined ? { caseImport } : {}) });
   let n = 0;
   const w = {
-    st, host, record, membership, credentials, promotion, prov, obs, capture, gov, net, bkt, m, clock, intent: intentStub, act, clocks,
-    publication: publicationStub,
+    st, host, record, membership, credentials, promotion, prov, obs, capture, gov, net, bkt, m, clock, intent, act, clocks,
+    publication,
     rows: (q, ...x) => [...st.sql.exec(q, ...x)],
     row: (q, ...x) => [...st.sql.exec(q, ...x)][0] ?? null,
     text: (id) => { const f = record.readFile(id, "bundle.md"); return f ? (typeof f === "string" ? f : f.text ?? null) : null; },
@@ -267,6 +264,7 @@ export function world({ profiles = ["test-port-ellery"], env = null, evidence = 
  *  contract (R14's daily default) registers this stand-in through docprofile's seam: a meeting calendar, recognised
  *  (CERTAIN) by an ASP.NET calendar page's markers, `__VIEWSTATE` and `MeetingDetail.aspx`. Registration is for the
  *  test file's process; a document it does not recognise stays docprofile's no-type answer (contract `substance`). */
+// fixtures-own: synthetic a content type of the test's own, registered through docprofile's seam (registerDoctype); no module's answer
 export function registerCalendarStub() {
   return registerDoctype({
     key: "stub_meeting_calendar", label: "stub meeting calendar", version: 1, contract: CONTRACT.MEMBERSHIP,
@@ -308,6 +306,7 @@ export function sweepShare() {
         if (t === "/(?=x)/") bad(`terms[${j}]`, `terms[${j}] SWEEP_TERM_REFUSED: a lookahead`, { code: "SWEEP_TERM_REFUSED", refusal: this.row });
       return out;
     },
+    // fixtures-contract: link-sweep sweep-fence
     fence(c, nextText) {
       calls.push(["fence", c.bundleId]);
       return sweepsOf(nextText).some((x) => x && x.title === "fenced")
@@ -318,64 +317,3 @@ export function sweepShare() {
   };
 }
 
-/** intent's R7 and R15 as monitoring reaches them. `watch` maps a project to the capture shas its condition reads. */
-export function stubIntent(watch = {}) {
-  const sources = [];
-  return {
-    sources, watch, calls: [],
-    watchSet({ project, after = null, limit = null } = {}) {
-      this.calls.push({ project, after });
-      const all = this.watch[project] || [];
-      const start = after ? all.indexOf(after) + 1 : 0;
-      const page = all.slice(start, start + 2);
-      const more = start + 2 < all.length;
-      return { entities: [], progressions: [], captures: page, limit: 2, truncated: more,
-               cursor: more ? page[page.length - 1] : null };
-    },
-    registerSource(kind, reader) { sources.push({ kind, reader }); return { ok: true }; },
-  };
-}
-
-/** publication's R42 (`restingCapturesOf`) as monitoring reaches it. `resting` is `[{capture_sha, findings: [{bundle_id,
- *  projects}]}]` in capture order; pages of two, with the cursor the last capture answered. */
-export function stubPublication(resting = []) {
-  return {
-    resting, calls: [],
-    restingCapturesOf({ after = null, limit = null } = {}) {
-      this.calls.push({ after, limit });
-      const all = [...this.resting].sort((a, b) => (a.capture_sha < b.capture_sha ? -1 : 1));
-      const rest = all.filter((x) => after == null || x.capture_sha > after);
-      const page = rest.slice(0, 2);
-      const more = rest.length > 2;
-      return { ok: true, captures: page, limit: 2, truncated: more, cursor: more ? page[page.length - 1].capture_sha : null };
-    },
-  };
-}
-
-/** case-import's R18 as monitoring reaches it (R67, R68): `watches` are `{import, group, case, docket, set_by, set_at,
- *  last_read}`, answered by `watchedImports` in import order in pages of two with the cursor the last import answered;
- *  `recordDocketRead` records each call in `reads` and sets the watch's `last_read`, answering `{ok: true, outcome,
- *  new_entries, new_moves, new_refused}`, or `refuse` (an answer) or `fail` (an Error) when set. */
-export function stubCaseImport(watches = []) {
-  return {
-    watches, reads: [], pages: [], refuse: null, fail: null,
-    watchedImports({ after = null, limit = null } = {}) {
-      this.pages.push({ after, limit });
-      const all = [...this.watches].sort((a, b) => (a.import < b.import ? -1 : 1)).filter((w) => after == null || w.import > after);
-      const page = all.slice(0, 2);
-      return { watches: page.map((w) => ({ ...w })), cursor: all.length > 2 ? page[page.length - 1].import : null };
-    },
-    async recordDocketRead(q) {
-      this.reads.push(JSON.parse(JSON.stringify(q)));
-      if (this.fail) throw this.fail;
-      if (this.refuse) return this.refuse;
-      const w = this.watches.find((x) => x.import === q.import);
-      if (w) w.last_read = { at: q.at, outcome: q.outcome, reason: q.reason ?? null };
-      const n = q.answer && Array.isArray(q.answer.entries) ? q.answer.entries.length : 0;
-      return { ok: true, outcome: q.outcome, new_entries: n, new_moves: 0, new_refused: 0 };
-    },
-  };
-}
-/** A watch in case-import R18's shape: import `imp`, its docket at `docket`, last read at `at` (null: never). */
-export const watchOf = (imp, docket, at = null) => ({ import: imp, group: "source-group", case: "CASE-2026-0101", docket,
-  set_by: "carol", set_at: "2026-09-20T00:00:00Z", last_read: at ? { at, outcome: "read", reason: null } : null });

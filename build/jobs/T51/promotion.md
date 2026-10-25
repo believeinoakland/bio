@@ -1,6 +1,6 @@
 # promotion (T51)
 
-**Status** · session_01FjnskQoMLcMGgXpteLNQ1m · depth 2 · COMPLETE · handled B9
+**Status** · session_01S23cDmLAXaM3ApftGXzWGJ · depth 2 · COMPLETE · handled B10
 
 ## J1 · QUESTION
 
@@ -135,3 +135,28 @@ Size (session_01FjnskQoMLcMGgXpteLNQ1m): test runs 7, module lines 3987
 ## J10 · COMPLETE
 
 Fix round 10, Wave A batch 2 done. Published in bio-plane/test/m/promotion/fixtures.mjs, each made by the real code and tested in fixtures.test.mjs (8 tests): factUnavailable, groupUndetermined, promotionOver + registeredSteps, registrars, projectActNotParticipant, snapKeyTaken, retireCited, promoteControlled (verdicts succeed/stale/snapkey/outsider/fail; promote never throws out, a failing record is PROMOTE_FAILED, so the plan's 'throw stays a fault' is not needed for it). makePromotion and staleBaseRefusal already published. Markers added: converts.test.mjs:39 fixtures-generic BIAS_FENCE (fence the test registers itself); test/system/row-census.test.mjs:482 fixtures-generic CONTROL_ARRIVAL (row made up for the negative control). Lines left: 2 FIX-E (fixtures.mjs:163,166, provider membership projectActRefusals), arriving as a CHANGE. promotion 170 pass; users (ratification, monitoring, store-door, control-plane) 103 pass; format, architecture, coverage 61/61, words, ownership 0 failures; system/row-census has its accepted R50 red (other modules' rows await the stamp). Pushed.
+
+## Fix round 10 · B10 applied (PROMOTION #54)
+
+`makeMembership`'s `projectAuthority` and `visibilitySettingRefusal` now return membership's own answers from its published `projectActRefusals` (`test/m/membership/fixtures.mjs`, taken once at load; membership is in my uses): the invented literals at `fixtures.mjs:163,166` are gone. `checks/fixtures.mjs /home/user/bio promotion --list`: 0 failures (2 accepted generic markers). `test/m/promotion/` + `d526-refusal-order`: 170 pass, 0 fail. format, architecture, coverage (61/61), words: 0 failures. Markers I added, unchanged: `converts.test.mjs:39` BIAS_FENCE, `row-census.test.mjs:482` CONTROL_ARRIVAL. Nothing left or deferred.
+
+Size (session_01FjnskQoMLcMGgXpteLNQ1m): test runs 9, module lines 3987
+
+## J11 · COMPLETE
+
+B10 applied: the membership double's projectAuthority and visibilitySettingRefusal now return membership's real answers from its projectActRefusals fixture; fixtures check (absolute path) 0 failures; promotion 170 pass; format, architecture, coverage 61/61, words, ownership 0 failures. Pushed.
+
+## Fix round 10 · follow-up 51 · B11 applied (PROMOTION #54, session_01S23cDmLAXaM3ApftGXzWGJ)
+
+**Root cause (K5130, with evidence).** `runGate` (`bio-plane/src/gate.mjs`, the register loop) asked only `hasCapture` for each register row and turned `present: false` into `PLANE_MISSING_BYTES` without looking at the image. A member's own testified observation (`provenance` `testify`) is held only as the inline file `snapshots/observation-<sha16>.txt` in the bundle, registered with that `capture_sha`, so signing a case reaching it was refused `GATE_REFUSED`/`PLANE_MISSING_BYTES` though the image held the very bytes.
+**Fix (R28 amended).** When the bucket answers absent, a register row whose `path` in `image` is an inline string hashing (SHA-256 of its UTF-8) to `capture_sha` is present, with the string's UTF-8 length as its size, so the existing size check still yields `PLANE_SIZE` against `bytes`. A differing byte, a blob reference, a path the image lacks: the bucket's answer stands (`PLANE_MISSING_BYTES`). An unanswered probe still rejects; the probe is asked first.
+**Why the tests missed it.** Every gate test gave every register row a bucket answer and no row whose path the image held; the image-held case was never built. Gap fixed: the new test in `gate.test.mjs`.
+**Test.** `gate.test.mjs` "R28 (K5130) ...": an image whose register row names an inline file with matching bytes and a `hasCapture` answering absent is admitted (`ok` equals the same image with no register); the same with the text changed (same length) is `PLANE_MISSING_BYTES`; right hash with a wrong registered size is `PLANE_SIZE`; a blob reference, a path the image lacks, and a rejecting probe behave as before. Seen failing with `gate.mjs` stashed (1 fail), passing with it (9/9).
+**Platform check.** None. **Deferred.** None. **Found in other modules.** None. Ids met: R28 (BOB strikes the mark). The case through the real door (testify, then caseratify) is ratification's seam test (follow-up 52).
+**Tests and checks.** `test/m/promotion/` + `d526-refusal-order` + `system/row-census`: 171 pass, 1 fail: `row-census`, the R50 pin against rows other modules added (CENSUS MOVED), awaiting the stamp (follow-up 32, a later session); it fails identically without my change. `format` 0, `architecture promotion` 0, `coverage promotion` 61 of 61, `words` 0, `fixtures` 0 failures, `ownership` 0.
+
+Size (session_01S23cDmLAXaM3ApftGXzWGJ): test runs 6, module lines 3987
+
+## J12 · COMPLETE
+
+B11 applied: R28 met. runGate admits a register row whose path in the image holds bytes hashing to its capture_sha, of its registered size, when the bucket answers absent; changed bytes, blob refs and absent paths stay refused; a rejecting probe still rejects. New R28 test seen red then green; promotion tests 171 pass, row-census the one inherited stamp red (follow-up 32). format, architecture, coverage 61/61, words, fixtures, ownership 0 failures. Pushed.

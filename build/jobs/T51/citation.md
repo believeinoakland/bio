@@ -1,6 +1,6 @@
 # citation (T51)
 
-**Status** · session_01451wdDHycJMRsEDd4jwBN5 · depth 2 · COMPLETE · handled B11
+**Status** · session_017x6zvkp2XqM6D6hY1cnUkA · depth 2 · COMPLETE · handled B17
 
 ## J1 · REPORT
 
@@ -230,3 +230,129 @@ Suites: citation 132 pass, 0 fail (was 127); affordances 282/282; screens-inquir
 No open QUESTION requires an answer; none held back.
 
 Size (session_01451wdDHycJMRsEDd4jwBN5): test runs 6, module lines 1760
+
+## J15 · COMPLETE
+
+Fix round 10, Wave B batch 6 (B12). Tests only; no product file of citation changed.
+
+**Fixture lines (2, both done):**
+- `cite-refusals.test.mjs` (R1, the write's refusals relayed): four of the five refusals now come from inquiry's published `basisRefusals()` (`basisRefused`, `selfBasis`, `basisCycle`, `machinePassageUnchecked`), each made by inquiry's real promotion. The fifth, `PROPOSAL_NOT_TAKEN_UP`, is run-productions' (a later module) and no published fixture gives it; it stays a literal beside the loop, relayed unchanged. The fixtures check does not flag it, so I added no marker.
+- `draw.test.mjs` (R14): the invented `SOME_STEP_REFUSED` is replaced by inquiry's real `BASIS_REFUSED` (`basisRefusals().basisRefused`).
+- Markers added: no `fixtures-own`, no `fixtures-generic`. `checks/fixtures.mjs . citation --list` is at zero.
+
+**Inherited reds (R21) and K5090:** the three red tests (`cite-repairs.test.mjs`) asserted the old half-labelled refusal. Seen red first (3 failures), then rewritten. After inquiry-grammar R68 no cite onto a grouped basis is refused for its grouping:
+- a second passage cited beside a grouped one is clean and carries no `repairs` (new test);
+- the one C-2.8 grouping finding a cite still reaches is a cutting passage named into a group (`role: cuts_against` with `ground: "part 1"`): `BASIS_REFUSED` with its findings, `repairs: []` (the member named the group; `cite` offers repairs only when none was named), nothing written; the same cite without the group lands (new test);
+- the repairs arm is kept under test by the write refusing a grouped document with the real C-2.8 answer from inquiry's fixture: two repairs (add to the group, take the grouping off), each done lets the cite land (the three amended tests). The control (`repairs: []` for a refusal that is not a grouping; none on success) is unchanged.
+REPORT to BOB (K5090): no cite reaches a grouping refusal whose stated repairs clear it any more, so R21's C-2.8 arm (`#groupingRepairs`: one `cite` repair per group and one `inquiryground`) is unreachable through a real basis. I struck nothing; BOB retires the arm, or has the cutting-with-ground case carry a "cite it without the group" repair.
+
+**Runs:** citation tests 134 of 134 pass (`node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/citation/*.test.mjs`). Checks: fixtures 0 failures; words 0 failures; format 0 failures; architecture 0 failures; coverage 21 of 21 ids named, 0 failures; ownership 0 failures. `impact.mjs origin/tranche/T51 HEAD`: no affected module (test files only), so no user's tests to run.
+
+Size (session_01KjtAFrtxEtLHsjBFVS3Bgd): test runs 3, module lines 0
+
+## J16 · COMPLETE
+
+Fix round 10, Wave B batch 6 (B12). Tests only; no product file of citation changed.
+
+**Fixture lines (2, both done):**
+- `cite-refusals.test.mjs` (R1, the write's refusals relayed): four of the five refusals now come from inquiry's published `basisRefusals()` (`basisRefused`, `selfBasis`, `basisCycle`, `machinePassageUnchecked`), each made by inquiry's real promotion. The fifth, `PROPOSAL_NOT_TAKEN_UP`, is run-productions' (a later module) and no published fixture gives it; it stays a literal beside the loop, relayed unchanged. The fixtures check does not flag it, so I added no marker.
+- `draw.test.mjs` (R14): the invented `SOME_STEP_REFUSED` is replaced by inquiry's real `BASIS_REFUSED` (`basisRefusals().basisRefused`).
+- Markers added: no `fixtures-own`, no `fixtures-generic`. `checks/fixtures.mjs . citation --list` is at zero.
+
+**Inherited reds (R21) and K5090:** the three red tests (`cite-repairs.test.mjs`) asserted the old half-labelled refusal. Seen red first (3 failures), then rewritten. After inquiry-grammar R68 no cite onto a grouped basis is refused for its grouping:
+- a second passage cited beside a grouped one is clean and carries no `repairs` (new test);
+- the one C-2.8 grouping finding a cite still reaches is a cutting passage named into a group (`role: cuts_against` with `ground: "part 1"`): `BASIS_REFUSED` with its findings, `repairs: []` (the member named the group; `cite` offers repairs only when none was named), nothing written; the same cite without the group lands (new test);
+- the repairs arm is kept under test by the write refusing a grouped document with the real C-2.8 answer from inquiry's fixture: two repairs (add to the group, take the grouping off), each done lets the cite land (the three amended tests). The control (`repairs: []` for a refusal that is not a grouping; none on success) is unchanged.
+REPORT to BOB (K5090): no cite reaches a grouping refusal whose stated repairs clear it any more, so R21's C-2.8 arm (`#groupingRepairs`: one `cite` repair per group and one `inquiryground`) is unreachable through a real basis. I struck nothing; BOB retires the arm, or has the cutting-with-ground case carry a "cite it without the group" repair.
+
+**Runs:** citation tests 134 of 134 pass (`node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/citation/*.test.mjs`). Checks: fixtures 0 failures; words 0 failures; format 0 failures; architecture 0 failures; coverage 21 of 21 ids named, 0 failures; ownership 0 failures. `impact.mjs origin/tranche/T51 HEAD`: no affected module (test files only), so no user's tests to run.
+
+Size (session_01KjtAFrtxEtLHsjBFVS3Bgd): test runs 3, module lines 0
+
+## J17 · COMPLETE
+
+B13 (K5101) applied: R21's C-2.8 repairs arm is removed. Merged `origin/tranche/T51` (R21 amended) first.
+- `#groupingRepairs` removed from `citation/index.mjs`; every `BASIS_REFUSED` a cite gives from the write states `repairs: []`. `#declaredGrounds` stays (BAD_GROUND uses it). The word ids `citation.index.repair_add_to_group` and `repair_remove_grouping` have no user in citation now (generated rows are BOB's to regenerate).
+- `cite-repairs.test.mjs`: the three tests driving the arm through inquiry's fixture answer are removed, with their helper and imports. Kept, naming R21: the second passage beside a grouped one is clean; the cutting-with-ground cite is `BASIS_REFUSED` with `repairs: []`, nothing written, and lands without the group; the `repairs: []` control; BAD_GROUND.
+- Met ids: R21 (and every other live id, 21 of 21 named).
+- REPORT: other modules read citation's `repairs`: `screens-inquiry/document.mjs:601-603` (`ui.citeRepair`, `x.act === "inquiryground"`) builds its repair control from them. It now gets `[]`; screens-inquiry's job should drop that control. `case-checker/program.mjs` and `setup-words` rows/unreviewed.json carry the removed words (generated).
+- Runs: citation tests 131 of 131 pass; fixtures, words, format, architecture, coverage, ownership 0 failures. No fixtures markers added.
+
+Size (session_01KjtAFrtxEtLHsjBFVS3Bgd): test runs 5, module lines 0 added (17 removed)
+
+## J18 · COMPLETE
+
+B13 (K5101) applied: R21's C-2.8 repairs arm is removed. Merged `origin/tranche/T51` (R21 amended) first.
+- `#groupingRepairs` removed from `citation/index.mjs`; every `BASIS_REFUSED` a cite gives from the write states `repairs: []`. `#declaredGrounds` stays (BAD_GROUND uses it). The word ids `citation.index.repair_add_to_group` and `repair_remove_grouping` have no user in citation now (generated rows are BOB's to regenerate).
+- `cite-repairs.test.mjs`: the three tests driving the arm through inquiry's fixture answer are removed, with their helper and imports. Kept, naming R21: the second passage beside a grouped one is clean; the cutting-with-ground cite is `BASIS_REFUSED` with `repairs: []`, nothing written, and lands without the group; the `repairs: []` control; BAD_GROUND.
+- Met ids: R21 (and every other live id, 21 of 21 named).
+- REPORT: other modules read citation's `repairs`: `screens-inquiry/document.mjs:601-603` (`ui.citeRepair`, `x.act === "inquiryground"`) builds its repair control from them. It now gets `[]`; screens-inquiry's job should drop that control. `case-checker/program.mjs` and `setup-words` rows/unreviewed.json carry the removed words (generated).
+- Runs: citation tests 131 of 131 pass; fixtures, words, format, architecture, coverage, ownership 0 failures. No fixtures markers added.
+
+Size (session_01KjtAFrtxEtLHsjBFVS3Bgd): test runs 5, module lines 0 added (17 removed)
+
+## Fix round 10, follow-up 62 (B14; CITATION #20, session_01JfJyUVCuHWfqyMFpbcucb8)
+
+Met: citation R18 (amended K5131) as far as this module can; R16, R17 unchanged and still met.
+
+1. Root cause, with evidence. `citeimported` and `withdrawimported` (`bio-plane/src/citation/index.mjs`, `DECLARED_OPS`) declared no `stamps`, so `op-declarations` `stampsOf` gave them `["viewer"]` alone. The door (`control-plane/index.mjs`, the `OP_STAMPS[op]` loop) therefore deleted the caller's `author` and never set one; the handler read `author = null` and `#importedMemberRefusal` answered `MACHINE_CANNOT_CITE_IMPORTED` to a joined member. Seen through the real door before the fix: `ann`, a member with `contribute`, sending `citeimported` got `{"reason":"MACHINE_CANNOT_CITE_IMPORTED","inquiry":null}`. Fix: both rows now declare `stamps: ["author", "viewer"]`; with them the door sets `author` to the session's identity and the act reaches the op.
+2. Why the tests missed it, gap fixed. `declared-ops.test.mjs` checked fields only, and the module tests passed `author` straight to the handler, so no test ran the op as the door runs it. Fixed: `declared-ops.test.mjs` now holds both rows' `stamps`, and the new `imported-door.test.mjs` runs both ops through the real plane (control-plane's seam kit `r8-kit.mjs`: a member made by `memberadd`, `enroll` and `login`, her project and question by the screens' own acts).
+3. The walker's exact case through its real entry, seen red then green: `imported-door.test.mjs`, two tests named R18: `citeimported` as a joined member answers `BASIS_REFUSED` (this team has not accepted the edition, the op's own next refusal) and `withdrawimported` answers `NOT_CITED`; neither answers `MACHINE_CANNOT_CITE_IMPORTED`. Without the `stamps` change both fail (0 pass, 2 fail); with it both pass.
+4. Platform check: none needed here; the stamp is the door's own (`stampOf.author`).
+
+Not done, and why: R18 as amended also names `identity`. `op-declarations`' registered stamp list (`declared.mjs` STAMPS: author, bodyBy, by, country, member, owner, principal, proposer, session, source, viewer) has no `identity`, so a row that declared it would be refused `BAD_STAMPS` at registration. The positional `identity` stamp is set only for ops in `op-declarations`' `POSITIONAL_ACTS` (control-plane `index.mjs`, `if (POSITIONAL_ACTS.includes(op))`), a list that module owns; adding `citeimported` and `withdrawimported` to it, or letting a declared row ask for it, is op-declarations' change. Neither handler reads `identity` (both take it as a parameter and ignore it), so the walker's case does not need it; it is reported to BOB in the REPORT/COMPLETE.
+
+Tests and checks:
+- node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/citation/: tests 134, pass 134, fail 0.
+- checks/format.mjs /home/user/bio: 178 modules, 0 failures.
+- checks/architecture.mjs /home/user/bio citation: 21 product files, 0 failures.
+- checks/coverage.mjs /home/user/bio citation: 21 of 21 live ids named, 0 failures.
+- checks/words.mjs /home/user/bio citation: 0 failures.
+- checks/ownership.mjs /home/user/bio citation tranche/T51 job/T51/citation: 0 failures.
+- checks/fixtures.mjs /home/user/bio citation --list: 0 failures.
+
+Size (session_01JfJyUVCuHWfqyMFpbcucb8): test runs 8, module lines 1731
+
+## J19 · COMPLETE
+
+COMPLETE B14 (follow-up 62, K5131): R18 met as far as citation can; pushed on job/T51/citation.
+
+1. Root cause: `citeimported` and `withdrawimported` declared no `stamps`, so op-declarations stamped `viewer` alone; the door deleted the caller's `author` and set none, the handler saw `author = null`, and `#importedMemberRefusal` answered MACHINE_CANNOT_CITE_IMPORTED. Seen through the real door: member `ann` got that refusal with `inquiry: null`. Fix: both rows declare `stamps: ["author", "viewer"]` (citation/index.mjs).
+2. Why missed: declared-ops.test.mjs checked fields only and module tests passed `author` straight to the handler. Gap fixed: declared-ops.test.mjs holds both rows' stamps; new imported-door.test.mjs runs both ops through the real plane (r8 kit).
+3. Walker's case: imported-door.test.mjs, two R18 tests. citeimported as a joined member answers BASIS_REFUSED (edition not accepted, the op's own refusal); withdrawimported answers NOT_CITED. Seen red first (0 pass, 2 fail with the stamps change reverted), then green.
+4. Platform check: none.
+
+NOT DONE, for BOB: R18 as amended names `identity` too. op-declarations' registered stamps (declared.mjs STAMPS) have no `identity`, so a row declaring it is refused BAD_STAMPS. The positional identity is set only for ops in op-declarations' POSITIONAL_ACTS. Neither imported handler reads `identity`, so the walker's case needs none; if you want it stamped (as cite's is), op-declarations must list the two ops in POSITIONAL_ACTS, or R18's wording drop `identity`.
+
+Checks (absolute root): citation tests 134/134; format 178 modules 0; architecture 0; coverage 21 of 21; words 0; ownership 0; fixtures --list 0 failing.
+Size (session_01JfJyUVCuHWfqyMFpbcucb8): test runs 8, module lines 1731
+
+## B15 (CHANGE, K5138)
+
+1. `imported-door.test.mjs` removed (`git rm`): it imported control-plane's seam kit, later than citation in the order; CONTROL-PLANE #60 adopts the through-the-door test. R18 stays named by `declared-ops.test.mjs` (the rows' stamps).
+2. `identity`: R18 is now worded to `author` and `viewer`; merged `tranche/T51`, no change to the rows.
+
+Checks (absolute root): citation tests 132, fail 0; architecture 0 failures; coverage 21 of 21, 0 failures; format 0; ownership 0; fixtures --list 0.
+Size (session_01JfJyUVCuHWfqyMFpbcucb8): test runs 10, module lines 1731
+
+## J20 · COMPLETE
+
+COMPLETE B15 (K5138): imported-door.test.mjs removed from citation (control-plane #60 adopts it); tranche/T51 merged (R18 worded to author and viewer, rows unchanged). Citation tests 132/132; architecture 0, coverage 21 of 21, format 0, ownership 0, fixtures --list 0. Size (session_01JfJyUVCuHWfqyMFpbcucb8): test runs 10, module lines 1731
+
+## J21 · QUESTION
+
+B16 item 1 (citation R22), asked before writing as the entry requires. I measured strength's own fixture (bio-plane/test/m/strength/fixture.mjs, `inquiryStrength` over one question with two supporting legs on the same INFO document, grades B and C, capture axis): strength does NOT count the document once. The capture axis answers `grade: C` (the weakest leg, so a second passage can only lower a grade, never raise it: no inflation), but `load_bearing: 2` and `population: 2` (one per leg); only `ungraded` is distinct by target (R6). inquiry-grammar R68 groups legs for grounds and does not itself dedupe by document.
+So the R22 sentence "Strength counts that document once" does not hold for the counts today. Strength is outside my paths.
+My best reading: the strength arithmetic is safe (a second passage never strengthens a pair), so R22's cite behaviour can be built now, and the "counts once" clause is either (a) a strength change BOB assigns to that module (distinct by target in load_bearing/population), or (b) dropped from R22 as only the pair is meant. QUESTION: build R22 as written now and report the counts as a strength finding (my recommendation), or wait? I will wait for your answer before writing.
+
+## B16 item 1 · record (CITATION #21)
+
+R22 met. `cite` on a question now keys "already cited" by target AND part (`partKey`: content_id plus the extent fields; none = the whole document): a different part is a new leg, the same part or the whole document again stays `alreadyCited`, whatever the role. `EXTENT_ON_MANY` is judged again on the new-leg count after this. Strength measured first (J21, B17): counts are per leg, the grade the weakest leg, so a second passage never raises a pair; R22's last sentence was reworded by BOB.
+Tests: new `second-passage.test.mjs` (red on the old code, 2 of 2; green now; controls: same page again in both doors, differing role, whole document twice). Two older tests held the old R2 behaviour and are updated to R22 (`cite-write` R2: a named part on a cited document is a new leg, the same part again says "written nowhere"; `cite-refusals` R1/R11: the part is counted on new legs). Why the tests missed it: R2 said it did not happen, so no test cited two parts.
+Citation tests 134/134. format 0, architecture 0, coverage 22 of 22, words 0, ownership 0, fixtures --list 0 (no marker added).
+Met ids: R22.
+Size (session_017x6zvkp2XqM6D6hY1cnUkA): test runs 8, module lines 1750
+
+## J22 · COMPLETE
+
+COMPLETE B16 item 1: citation R22 met (a different part of a cited document is a new leg; same part stays alreadyCited). Citation tests 134/134; format, architecture, coverage 22/22, words, ownership, fixtures --list all 0. Two older tests that held the old R2 behaviour updated; see record. Size (session_017x6zvkp2XqM6D6hY1cnUkA): test runs 8, module lines 1750.

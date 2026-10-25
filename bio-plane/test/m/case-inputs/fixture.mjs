@@ -57,9 +57,11 @@ const CASE_DRAFTS = `CREATE TABLE IF NOT EXISTS case_drafts (draft_id TEXT PRIMA
   case_id TEXT, params TEXT NOT NULL, created_by TEXT NOT NULL, created_at TEXT NOT NULL, updated_by TEXT NOT NULL,
   updated_at TEXT NOT NULL, statement_by TEXT)`;
 
-/** The dead answer of the stand-in review provider, C-87.1's code, as `review` builds it from no argument. */
+/** The dead answer of the stand-in review provider, C-87.1's code, in the shape `review` builds it (its `refusal`): the
+ *  canned `translation` and the `detail` sentence, both strings. The stand-in holds placeholders for the two sentences
+ *  and never copies them (K3810); fixtures.test.mjs checks their presence and type against the real answer's shape. */
 export const DEAD = Object.freeze({ ok: false, reason: "NO_REVIEW_COPY", code: "NO_REVIEW_COPY", check: "C-87.1",
-  translation: "(the review copy's dead answer)" });
+  translation: "(the review copy's dead answer)", detail: "(the review copy's dead detail)" });
 
 /* The review provider `review` fills (publication R23), over its own tables as the test holds them. `grants` maps a
    secret fingerprint to `{grant_id, draft_id, case_id, edition, recipient, revoked}`. */

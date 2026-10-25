@@ -1,6 +1,6 @@
 # pdf-reader (T51)
 
-**Status** · session_01RNBm7pmRk2YDU7VtxCuH3U · depth 2 · COMPLETE · handled B20
+**Status** · session_01HRJxJCDxgaoWS3f4CW9K9k · depth 2 · COMPLETE · handled B20
 
 ## Completion (T51-7, R39)
 
@@ -421,3 +421,29 @@ COMPLETE, fix round 10 wave A batch 2 (B20: publish 1 fixture, 1 marker line). C
 **Markers for BOB to read at the merge (K5060):** `pagesource.test.mjs:177` fixtures-own, reason above.
 
 Size (session_01RNBm7pmRk2YDU7VtxCuH3U): test runs 6, module lines 5750
+
+## Completion (fix round 10, cause R9, K5074: R50, notes on ranged reads; PDF-READER #18, session_01HRJxJCDxgaoWS3f4CW9K9k)
+
+**Entries applied.** R50 met. `openPdfRange`'s answer carries `notes` (the parse's, deduplicated); every `range(...)` answer and every `extractPdfRange` answer carries `notes`: the open's notes, restored at the start of each range instead of cleared (`readRange` no longer does `doc.notes.length = 0`), then the range's own, each once. The open's `_trailingNoted` set is restored too, so a range's `flate_trailing_bytes:<n>` does not depend on which range ran before. A note made while computing the document-level `metadata`/`pageBoxes` (R46, cached once: `title_undecodable`) is kept with the cached value and carried by every range, not the first alone. An intact PDF carries `notes: []`. Code: `bio-plane/src/pdfstructure.mjs` (`openedNotes`, `openPdfRange`, `readRange`). Header comment of R44 updated (it said no answer carries notes).
+
+**Failing-first.** `bio-plane/test/m/pdf-reader/ranged-notes.test.mjs` (6 tests, all R50): run against the source before the change, 6 of 6 red (`notes` undefined on the open and on every range); after, 6 of 6 green. Cases: the 30-page file with `startxref` damaged and the same file cut at 70 % (the open and ranges 0-9, 10-19, 20-29 and `extractPdfRange` carry the notes `extractPdfStructure` gives, the cut one with `xref_reconstructed`, `structure_reconstructed`, `pages_missing:5/30`); control: the intact file, `notes: []` on the open and on five ranges (past the end and the whole included); a range's own note (`content_stream_undecodable`) after the open's, once however often read, absent from a range that does not read that page; an empty range; `title_undecodable` on every range; an encrypted document (`encrypted` once). Published fixture: `rangedNotes()` in `bio-plane/test/m/pdf-reader/fixtures.mjs` (the real open, range, direct and whole answers' `notes` for the damaged, cut and intact files; `rangedNotesFiles()` makes the three files), its test in `fixtures.test.mjs`. I added no `fixtures-own` or `fixtures-generic` marker. `range.test.mjs` R43 test: its exact expected answer for a range past the end gains `notes` (taken from `extractPdfStructure`, as R50 states); that is R50 amending R43, not a weakening.
+
+**Reading note.** Read whole: the requirements, `pdfstructure.mjs` lines 1235-1270, 4895-5280 (page index notes, `loadPdf*`, `extractPdfRange`, `openPdfRange`, `readRange`), `fixtures.mjs`, `fixtures.test.mjs`, `pdf.mjs`. I read the first 60 lines of `opened-range.test.mjs`, `revisions.test.mjs` and `indexed.mjs`, and the R8 cut-file test, not whole; I ran the other pdf-reader tests without reading them. I did not read `build/layers.md`.
+
+**Deferred.** None.
+
+**Found in other modules / stale artifacts.**
+- `pdf-worker/dist/pdf-worker.bundled.mjs` (+ `.bundle.json`) is stale (manifest §14): it embeds `pdfstructure.mjs`. `node pdf-worker/test/structure.test.mjs` fails 2 of 98 (`R7 every other field is pdf-reader's own for the range, unchanged`; `R10 the range's fields are kept`) only because the bundle's range answer has no `notes`; at `origin/tranche/T51` the same file passes 98/0. BOB regenerates (`pdf-worker/`: `npm run build`); I did not. The same applies to `bio-plane/dist/bio-plane.bundled.mjs` and `agent-worker/dist/agent-worker.bundled.mjs` if they embed it.
+- reading-pipeline: its ranged path can now read `notes` from the open and each range (the job's reason); that is its own change.
+
+**Tests and checks.**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/pdf-reader/ bio-plane/test/pdfstructure.test.mjs`: 201 tests, 201 pass, 0 fail.
+- Users of the service (`format-registry`, `doctypes`, `budget-doctypes`, `doc-clean`, `acquisition`, `file-safety`, `reading-pipeline` tests and `bio-plane/test/fixtures/d460/`): 1,142 tests, 1,140 pass, 0 fail, 1 skipped (pre-existing). `pdf-worker/test/`: 88 tests, 87 pass, 1 fail (`structure.test.mjs`, the stale bundle above).
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: 118 of 178 modules, 2,094 of 2,747 test files (pdfstructure.mjs is imported widely); I ran the direct users above, not the transitive set.
+- format 0 failures; architecture 0 failures; coverage 50 of 50 live ids named, 0 failures; ownership (`tranche/T51`): 6 files changed, 0 failures; `checks/fixtures.mjs /home/user/bio`: 2,742 failures before and after my change, none in a pdf-reader file.
+
+Size (session_01HRJxJCDxgaoWS3f4CW9K9k): test runs 9, module lines 5765
+
+## J16 · COMPLETE
+
+R50 met (fix round 10, cause R9, K5074). openPdfRange and every range / extractPdfRange answer carry notes: the open's, kept, then the range's own, each once; intact => []. Failing-first ranged-notes.test.mjs (6 tests, red before, green after); fixture rangedNotes published in fixtures.mjs with its test; no fixtures-own/generic markers added. pdf-reader tests 201/201; users 1142 tests 0 fail; format/architecture/coverage/ownership 0 failures. FOR BOB: pdf-worker/dist bundle is stale (embeds pdfstructure.mjs): pdf-worker structure.test.mjs R7/R10 range checks fail 2 of 98 until regenerated (npm run build in pdf-worker); passes 98/0 at tranche tip. Details in my record.

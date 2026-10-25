@@ -3,6 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, ANN, doc } from "./fixture.mjs";
+import { sequenceUndetermined } from "../events/fixtures.mjs";
 import { BOUNDS } from "../../../src/connection-grammar/index.mjs";
 import { validAt } from "../../../src/civil-time/index.mjs";
 import { hasWord, word } from "../../../src/setup-words/index.mjs";
@@ -103,11 +104,12 @@ test("R40 a cluster with a not_same_as claim answers people.why.claim_joins_two 
 
 test("R40 a duty whose in-force answer is unsettled with no reason is answered people.why.whether_source_force; a pair statementsOf cannot order is answered people.why.record_settle_order, or the owner's reason exactly when it gives one", () => {
   let w;
+  const seq = sequenceUndetermined();
   const owner = { why: undefined };
   w = world({ deps: {
     duties: () => ({ dutiesOf: (a) => { const r = w.duties.dutiesOf(a); return { ...r, duties: (r.duties || r.items || []).map((d) => ({ ...d, in_force: { state: "unsettled" } })) }; } }),
     events: () => ({ statementsOf: (a) => w.ev.statementsOf(a), eventsFor: (a) => w.ev.eventsFor(a),
-                     sequence: () => ({ ok: true, answer: "undetermined", ...(owner.why ? { why: owner.why } : {}) }) }) } });
+                     sequence: () => (owner.why ? { ...seq.withoutWhy, why: owner.why } : seq.withoutWhy) }) } });
   const p = w.person("Una Vale");
   w.duty(p);
   const du = w.p.personAt({ entityId: p, at: "2024-06-01", viewer: ANN }).undetermined.find((x) => x.duty_id);

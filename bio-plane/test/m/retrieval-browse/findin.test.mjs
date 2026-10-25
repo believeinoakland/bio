@@ -258,8 +258,26 @@ test("R2 money, dates, requirements over fixed English fixtures: each match with
     [["5 March 2026", "2026-03-05", null, "undefined"], ["2026-02-31", null, null, "string"], ["3/4/2026", null, null, "string"],
      ["June 2026", null, null, "string"], ["within thirty (30) days", null, { amount: 30, units: "days" }, "undefined"],
      ["no later than 10 business days", null, { amount: 10, units: "business days" }, "undefined"]]);
-  const r = matchRequirements("Staff may not enter. The board may meet. Applicants are required to file; the fee must be paid!", EN);
+  const r = matchRequirements("Staff may not enter. The board may meet. Applicants are required to file; The fee must be paid!", EN);
   assert.deepEqual(r.map((x) => x.requirement_word), ["may not", "are required to", "must"]);
+});
+
+test("R2 (K5148, WALK-FINAL-08 D5): a stop ends a sentence only before whitespace and a capital or at the end, never inside a number, a citation or after a known abbreviation; a line break always ends one", () => {
+  const text = "Section 8.22.050 No landlord shall increase the rent above the limit the board sets.\nSection 8.22.020 No landlord shall retaliate against a tenant.";
+  const got = matchRequirements(text, EN);
+  assert.deepEqual(got.map((x) => x.sentence), [
+    "Section 8.22.050 No landlord shall increase the rent above the limit the board sets.",
+    "Section 8.22.020 No landlord shall retaliate against a tenant."]);
+  for (const g of got) assert.equal(text.slice(g.index, g.end), g.sentence, "index and end span the sentence as written");
+  assert.equal(got[0].index, 0);
+  /* Without a heading and on one line: the stop before a capital still ends the first, the dots in the number do not. */
+  assert.deepEqual(matchRequirements("The Clerk shall publish it. The budget is $4.2 million.", EN).map((x) => x.sentence), ["The Clerk shall publish it."]);
+  assert.deepEqual(matchRequirements("Under Sec. 8.22.050 a landlord shall give notice. Mr. Lee must appeal (see Cal. Civ. Code 1946.1).", EN).map((x) => x.sentence),
+    ["Under Sec. 8.22.050 a landlord shall give notice.", "Mr. Lee must appeal (see Cal. Civ. Code 1946.1)."]);
+  assert.deepEqual(matchRequirements("Smith v. Jones holds that a tenant shall not be evicted without cause.", EN).map((x) => x.sentence),
+    ["Smith v. Jones holds that a tenant shall not be evicted without cause."]);
+  assert.deepEqual(matchRequirements("The fee must be paid.", EN).map((x) => x.sentence), ["The fee must be paid."], "a stop at the end of the text ends it");
+  assert.deepEqual(matchRequirements("Applicants are required to file; the fee must be paid!", EN).map((x) => x.requirement_word), ["are required to"], "a semicolon before a lower-case word does not end it");
 });
 
 test("R3 (DEC-99): the matchers' words are held per language in FIND_MATCHERS, frozen, English held; a capture whose language has no set is in not_read for money, dates and requirements with 'no matcher for <language> yet', never matched with English; with no language stated none is assumed", () => {
@@ -402,4 +420,21 @@ test("R21 (R17a, fix round 10, G3; retrieval R95) a term hit names the part it l
   assert.deepEqual(partOf("zebra"), [["term", "footnote"]]);
   assert.deepEqual(partOf("ordinance"), [["term", "body"]]);
   assert.deepEqual(partOf("quokka"), [["term", null]], "a unit stored before the kind is undetermined, never read as body");
+});
+
+// fixtures-run: screens-daily findin-term-part
+test("R21, R17a (fix round 10, follow-up 22) a find over a held document whose term hit lies in a footnote part answers a term item carrying that part, as screens-daily draws it", () => {
+  const w = find();
+  const c = w.cap("memo.docx", "m");
+  w.doc("INFO-M", {}, { captures: [c] });
+  w.read(c, "INFO-M");
+  w.unit(c.sha, "INFO-M", 0, "The levy is set out in the notes.", { kind: "doc-para", paragraph: 1 }, "body");
+  w.unit(c.sha, "INFO-M", 1, "The notes state the zebra levy was $5,000.", { kind: "doc-part", part: "word/footnotes.xml", ref: "footnote 2" }, "footnote");
+  const answer = run(w, { scope: { capture: c.sha }, kinds: ["term"], term: "zebra" });
+  assert.equal(answer.ok, true);
+  const items = kindOf(answer, "term").items;
+  assert.equal(items.length, 1, "one hit: the term sits once, in the footnote");
+  assert.equal(items[0].kind, "term");
+  assert.equal(items[0].part, "footnote", "the hit names the part it lies in (R21)");
+  assert.equal(items[0].term, "zebra");
 });

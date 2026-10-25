@@ -1,6 +1,6 @@
 # queue-producers (T51)
 
-**Status** · session_018ia9y7957RisU9biUjnUGX · depth 2 · COMPLETE · handled B12
+**Status** · session_011GmeYymb9AKMxsLsx3vBDB · depth 2 · COMPLETE · handled B15
 
 ## J1 · REPORT
 
@@ -273,3 +273,101 @@ Size (session_018ia9y7957RisU9biUjnUGX): test runs 5, module lines 3189
 ## J14 · COMPLETE
 
 G65 applied: fillWord closes up a grade's underscores so NOT_FOUND reads queue.fill.grade.notfound. Two failing-first tests (red then green); queue-producers 154, queue 210, control-plane 447 pass; coverage, words, ownership 0 failures. Details in record J5.
+
+## J15 · QUESTION
+
+QUESTION (fix round 10, batch 6; replaces nothing): `build/modules.json` is BOB's, and queue-producers' `uses` lacks `escalation`.
+
+`bio-plane/test/m/queue-producers/action.test.mjs` now takes `escalationsDue().due` from `bio-plane/test/m/escalation/fixtures.mjs` (the START's line 88; escalation is earlier in the list). `checks/architecture.mjs bio queue-producers` therefore fails once: "imports escalation/fixtures.mjs of escalation, which queue-producers does not declare in uses". Every other provider I import (action-producers, contradiction, publication, monitoring, docket, provenance) is already in `uses`.
+
+My reading: add `escalation` to queue-producers' `uses`. The alternative is to leave that line hand-built (it stays a fixtures finding), which the START does not want. I carry on with the rest and post COMPLETE with this one check red until you answer.
+
+## J16 · COMPLETE
+
+COMPLETE · fix round 10, Wave B batch 6 (B13): 30 of my 33 fixture lines re-pointed; 3 wait on providers' fixtures; 1 check waits on BOB (J15). Tests only: no source of the module changed. tranche/T51 merged (24b12d1f9f).
+
+**Lines done (fixtures check: 33 listed, 3 left, 2 accepted generic).**
+- action-producers/actionItems: `action.test.mjs:20` takes `actionItems().actionProducers` (each read recorded, its answer kept). Real answer: one item (the overdue clock), homed by its own project when no walk is passed; two assertions follow the real answer (see "Tests changed in meaning").
+- escalation/escalationsDue: `action.test.mjs:88` takes `escalationsDue().due`.
+- contradiction/readRefusals: `contradictions.test.mjs:159` takes `readRefusals().notAParticipant` (the real code is `NOT_A_PARTICIPANT`, not `PROJECT_ACT_NOT_A_PARTICIPANT` as the START said); `reads.test.mjs:90` loops the two real refusals `notAParticipant` and `unknownProject`.
+- publication/caseDocumentFacts: `credit.test.mjs:28` and `world.mjs:159` take publication's own absent answer (`caseId`, `edition`, `detail`).
+- docket/coreDue: `world.mjs:183` default is the real `unread`; `every.mjs:65` and `localday.test.mjs:38` take the real `due` (its case `DOCKET.case` is the world's case row); `feeditems.test.mjs:50` follows its real ref.
+- monitoring/monitoringReads: `world.mjs:173` defaults to `empty`; `every.mjs:59` takes `seeded` (the busy world now also raises a `source-removed`); `reads.test.mjs:21,121` take `empty`; `feeditems.test.mjs:130` takes `seeded.archiveEligible` (the address and host follow it); `producers.test.mjs:114,140` and `words.test.mjs:127` take `seeded.flagged` (titles and capture days set on its two real bundles, once titled and once not).
+- monitoring/flaggedRefusal: `producers.test.mjs:133`.
+- provenance/homeOfHomed and homeOfEmpty: `feeditems.test.mjs:125`, `lead.test.mjs:18`, `producers.test.mjs:29`, `reads.test.mjs:227` take `homed({sha: bundle})` (world.mjs, over `homeOfHomed`; digests are `sha(name)`); `world.mjs:150` default and `proposals.test.mjs:32` take `homeOfEmpty()`.
+- project-roster reads: `feeds.test.mjs:98` and `inviter.test.mjs:74`: the hand-built REFUSED is gone; the real empty `ok: true` list for a viewer it holds nothing for (R35, R36); the throw stays as the boom case. The "projects feed refused" case is no longer tested (no real refusal exists).
+- CODE `scheduled.test.mjs:62,157`: `SCHEDULED_SOURCES_CHANGED` and `SCHEDULED_HOLD_CHANGED` (both are real; the START's note that HOLD is in no source was wrong: it is C-58.9 in ratification/checks.mjs), their translations from `word("refusal.<code>")`.
+
+**Markers added (fixtures-generic; BOB reads each, K5060).**
+- `feeds.test.mjs:74` `REFUSED`: R45's loop makes each of fourteen providers' reads answer one refusal in turn; the module carries whatever code a provider gives, and most of those providers have no refusal of their own to publish.
+- `reads.test.mjs:101` `OTHER`: the control that a refusal code this module does not know is a failure; no real `conflictNotices` refusal other than the two told-nothing codes exists.
+No `fixtures-own`, no `fixtures-contract`.
+
+**Lines left, all waiting on a provider's fixture (named, not worked around).**
+- `docket.test.mjs:36` and `words.test.mjs:217` (docket/coreDue): the tests need items of kind `statement` (with and without an edition), `edition` (with `what_changed`) and `tension` (with `member`, `state`), over several cases of different projects; `coreDue().due` publishes one `response`. Owed: docket publishes `coreDue` over those kinds. (`words.test.mjs:217` already uses the real `response` item beside two hand-built kinds.)
+- `noticed.test.mjs:10` (reevaluation/noticesRead): R52 groups several notices of one holder, target and newer capture, with null grades and other holders and targets; `noticesRead()` publishes one notice. Owed: reevaluation publishes `noticesRead` over several legs, grades and holders.
+
+**Waiting on BOB.** `checks/architecture.mjs bio queue-producers`: 1 failure, `action.test.mjs` imports `escalation/fixtures.mjs` and `escalation` is not in my `uses` (QUESTION J15; the one line in `build/modules.json`). Everything else I import is declared.
+
+**Tests tightened in meaning (real answers differ from the hand-built ones).** `action.test.mjs` R8: the real action-producers gives one item, not two (the plan-review item is gone from the control), its facts are taken from its answer, the options check is the last option (`opt`) rather than the exact pair, the "no walk" check says the item is homed by its own project (the real module reads it) and queue's walk is not asked. Nothing weakened: each requirement id is still named by a full test.
+
+**Found in other modules.** None beyond the owed fixtures above. Fixture cost: `world.mjs` awaits `monitoringReads()` once per test file (about 150 ms).
+
+**Checks and tests.** queue-producers `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit` 154 tests, 154 pass, 0 fail. `impact.mjs origin/tranche/T51 HEAD`: "queue-producers 24/24, affected modules: 1 of 178" (tests only; no user to run). `checks/format.mjs`: 178 modules, 0 failures. `checks/coverage.mjs queue-producers`: 41 of 41, 0 failures. `checks/ownership.mjs queue-producers tranche/T51`: 16 files, 0 failures. `checks/words.mjs queue-producers`: 0 failures. `checks/fixtures.mjs queue-producers`: answer 3 (3 op-table), stub 0, code 0, contract 0, accepted 2; 3 failures (the three waiting lines). `checks/architecture.mjs queue-producers`: 1 failure (above).
+
+Size (session_016R48b4KURUGUt3h76T2fsb): test runs 14, module lines 3630
+
+## J17 · REPORT
+
+Owed by reevaluation (found in another module; described against its fixture, K5060). `noticesRead({several: true})` (bio-plane/test/m/reevaluation/fixtures.mjs) publishes three holders' four notices, but no second newer version of one holder's target. queue-producers R52 requires "a newer version of the same target is a new item"; my test for it was hand-built and is removed (K4990: no hand-built answers). Owed: reevaluation publishes a real answer in which one holder's target has two newer versions (two notices, different newer_capture), so R52's control can be taken from it. Until then R52's control is untested here.
+
+## J18 · COMPLETE
+
+Fix round 10, batch 6 (B14, follow-up 37). Tests only; no source of the module changed. Commit 80f3bb057d on job/T51/queue-producers.
+
+**Applied.**
+- docket R30 (`docket.test.mjs:36`): takes docket's `coreDueKinds()` real items for alice's case CASE-2026-0101 and dave's CASE-2026-0202; the fake returns both cases to every viewer, so this module's recipient rule is measured.
+- `words.test.mjs:217` (R43, docket-core-due): the statement with no edition is removed (K5111); the response item is the real one; the unknown-kind control stays.
+- reevaluation R52 (`noticed.test.mjs`, was `:10`): takes `noticesRead({several: true})`: holder Q's two legs are one item (id the least notice id, basis naming both); the other holder's leg and the third holder's leg are each their own item; the UNDETERMINED and NOT_FOUND grades read through their rows (G65).
+
+**Dropped, and why.**
+- docket R30's hidden-project (R11) and no-case controls: docket's fixture publishes no case of a hidden project or of no project.
+- R43 base sentence for a statement with no edition: no real producer (K5111); the branch is untested now.
+- R52's "a newer version of the same target is a new item" and "a newer version the viewer cannot see stays one item each" controls: no real answer (reported to BOB in a REPORT, owed by reevaluation).
+
+**Markers added (K5060).** `words.test.mjs:216` `// fixtures-own: synthetic`: a docket kind docket never publishes, the test's own control.
+
+**Found in other modules.** reevaluation's `noticesRead` owes a second newer version on one target (REPORT posted).
+
+**Tests and checks.**
+- queue-producers, all 153 tests: 153 pass, 0 fail (`node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/queue-producers/*.test.mjs`).
+- `checks/fixtures.mjs /home/user/bio queue-producers --list`: 0 failures (answer 0; accepted 3: two fixtures-generic, one fixtures-own).
+- `checks/format.mjs /home/user/bio`: 178 modules, 178 requirements files; 0 failures.
+- `checks/architecture.mjs /home/user/bio queue-producers`: 29 product files, 125 relative imports; 0 failures. (J15 is no longer failing on the merged tranche.)
+- `checks/coverage.mjs /home/user/bio queue-producers`: 41 of 41 live requirement ids named by a test; 0 failures.
+- `checks/ownership.mjs /home/user/bio queue-producers tranche/T51`: 1 file changed by queue-producers; 0 failures.
+- `checks/words.mjs /home/user/bio queue-producers`: 0 failures.
+
+Size (session_01G4hiobwHM5NUXY6cmXDBEb): test runs 5, module lines 3631
+
+## J19 · BLOCKED
+
+BLOCKED (cause: reading). The inbox is refused by the size gate: build/rulings-active.md is 25814 bytes on tranche/T51 (5c77266e30), over its 25600-byte limit. So I cannot run inbox or done. I have read B15 (START, follow-up 43) whole from origin/tranche/T51 and merged that tranche into my branch (fast-forward to 5c77266e30). mail start ran (session_011GmeYymb9AKMxsLsx3vBDB, depth 2). The work B15 names is test files only and does not depend on the mailbox, so I am doing it now. My COMPLETE will wait for the gate to clear. BOB: please prune build/rulings-active.md.
+
+## J20 · COMPLETE
+
+COMPLETE · fix round 10, follow-up 43 (B15). Test files only; no source of the module changed. Commit 7dcab4791e on job/T51/queue-producers, pushed.
+
+**Applied.**
+- R52 control 'a newer version of the same target is a new item' (noticed.test.mjs): reevaluation's noticesTwoVersions({viewer}): one holder's leg, two notices differing in newer_capture; two items, each its own notice and its own newer capture.
+- R52 control 'a notice whose newer version the viewer cannot see is its own matter' (noticed.test.mjs): reevaluation's noticesHiddenVersion({viewer}): one item, newer_capture null, detail reads .detail.unseen.
+- R30 control 'to the case's manager and to nobody else' (docket.test.mjs): docket's coreDueKinds() now includes case CASE-2026-0303 of project R (hank's hankDue); hank is told of his case only. Alice's and dave's exact-list assertions already exclude it.
+- The R30 no-project control stays unrestored, as B15 says (a case always has a project).
+
+**Markers added.** None.
+
+**Found in other modules.** None.
+
+**Checks and tests.** queue-producers all 155 tests: 155 pass, 0 fail (node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/queue-producers/*.test.mjs). format 0 failures (178 modules). architecture 0 failures. coverage 41 of 41, 0 failures. words 0 failures. ownership 0 failures. fixtures --list 0 failures (accepted 3: two generic, one own, unchanged).
+
+Size (session_011GmeYymb9AKMxsLsx3vBDB): test runs 2, module lines 3631

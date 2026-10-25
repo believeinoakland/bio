@@ -1,6 +1,6 @@
 # project-roster (T51)
 
-**Status** · session_01JJFFx78szBRC4XdLzNQ25z · depth 2 · COMPLETE · handled B8
+**Status** · session_018j5CDMc121YVpjDc6UHMC8 · depth 2 · COMPLETE · handled B11
 
 ## J1 · QUESTION
 
@@ -68,3 +68,43 @@ QUESTION (R42, RC-2): the two facts live above my layer, so I need your ruling o
 ## J6 · COMPLETE
 
 COMPLETE (fix round 3, C14 P2.2): R42 met. projectList rows carry question_count (basis-versions R41's rule over record-core's read contract, 2 statements per page) and shared_drafts (from the sharedDraftsOf reader the caller hands in, review R43, asked once per page; null when none handed in; EXISTENCE rows null for both). 112 module tests pass; users green; architecture, coverage 42/42, words, ownership 0 failures; format's one failure is build/rulings.md:4346 on the tranche tip. TO PLACE: control-plane R118 must put review's sharedDraftsByProject on the env projectRosterOps receives as env.sharedDraftsOf (or pass it to projectList as sharedDraftsOf); until then shared_drafts is null. R42's marker can go. Details in my record.
+
+## J7 · QUESTION
+
+QUESTION (START B9, fixture `projectReadRefusals`): I cannot publish it honestly, because neither read gives a refusal.
+
+- Evidence: `projectList` and `projectInvitations` (src/project-roster/index.mjs) have no `ok: false` return. `projectInvitations` answers `ok: true` with an empty list in its catch. I called both on the module's real test world: a null viewer and an unknown viewer each return `{ok: true, projects: []}` or `{ok: true, invitations: []}`.
+- Requirements R35 and R36 say a viewer with no active member gets an empty list, and the read never throws. The code matches them.
+- The two users, queue-producers `feeds.test.mjs:98` and `inviter.test.mjs:74`, build `{ok: false, reason: "REFUSED"}` by hand. No provider gives that code. The fixture rule (K4426, K5044 (5)) replaces such a code with the real one, and a real path that gives none is a product cause for you.
+
+My best reading: queue-producers re-points its refusal cases to the real answers. A throw is already covered by its `boom` case, and an empty `ok: true` list is the real answer for an unknown viewer. In that case I publish no fixture, since a fixture of refusals would invent a code.
+
+Options, for you to decide:
+(a) Recommended: queue-producers re-points its two cases to the real answers; project-roster publishes nothing for this.
+(b) Amend R35 and R36 so that these reads refuse with a named code. I would then build the refusal and publish the fixture.
+
+Also noted, not done in this job: `bio-plane/test/m/project-roster/figures-purge.test.mjs:149` re-points to record-core's `tableDeclarationRefusals` (mechanical; the fixture exists). It is for a later Wave B job, not this batch.
+
+## J8 · COMPLETE
+
+COMPLETE (START B9, fix round 10, Wave A batch 5; ANSWER B10 = option (a)).
+
+- **Entries applied:** none. No fixture is published: `projectList` and `projectInvitations` never refuse (R35, R36), so `projectReadRefusals` would invent a code (J7). No file in my paths changed; `git status` clean.
+- **Deferred:** `projectReadRefusals` (not built, per B10). `figures-purge.test.mjs:149` re-points to record-core's `tableDeclarationRefusals` in its later job, as B10 says.
+- **Found in other modules:** queue-producers `feeds.test.mjs:98` and `inviter.test.mjs:74` build `{ok:false, reason:"REFUSED"}`; their START now re-points them to the real answers (B10). Nothing else.
+- **Tests and checks:** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/project-roster/*.test.mjs`: 112 pass, 0 fail. `checks/fixtures.mjs /home/user/bio project-roster --list`: 0 failures. `checks/format.mjs /home/user/bio`: see the line above.
+- Size (session_01PA4fPaBXX6FugXp76aucBs): test runs 2, module lines 0
+
+## Completion record (fix round 10, final pass 03 §1, §3, §5; START B11; PROJECT-ROSTER #16, session_018j5CDMc121YVpjDc6UHMC8)
+
+- **Entries applied:** item 1, **R43 met**: `actorOf(by)` (exported) reads `member:<id>` as `<id>` and leaves a bare id, the founder's `admin` and a machine `class:<cls>` as they came; applied at the entry of every act that takes `by` (`projectStakeSet`, `projectScopeSet`, `projectApprovalSet`, `projectOwnerAdd`, `projectOwnerRemove`, `projectOwnerRescue`, `projectRequestAnswer`, `projectRequests`, `projectParticipants`, and `#requester` for `projectRequest`, `projectRequestWithdraw`), so the `member:${by}` prefix and `isProjectOwner`/`participation`/`isAdministrator` always get the member id; the recorded `set_by`/`by` is the id, never `member:<id>`. Item 2, **R44 met**: R9's `request` is the latest in any state and gains `closed_comment` (null until answered); `projectRequestsAnswered({by, viewer, limit})` lists the requests a member answered (`closed_by`, state `granted` or `declined`, newest first, `{projectId, name, requester: {member, handle}, answer, comment, closed}`, only for projects she sees at FULL, capped as R14). Met ids for BOB to strike: R43, R44.
+- **Causes, why the tests missed them:** (1) the module's tests (`stake-gone`, `scope-approval`, `requests`, `ownership`) always passed `by` as the bare id, the form of the legacy stamp; only the declared acts (`op-declarations` `OP_STAMPS` = `viewer`, `by`) arrive in viewer form, and no test in any module sent one of those acts through the door's form to this module. The new tests send every act as the door sends it (`by=member:<id>`, `admin` for the founder) with invited and outside controls (`t51-final-door-form.test.mjs`). (2) The directory test pinned the `request` key list and tested a declined request's stored closing fields (`requests.test.mjs`), but no test read a declined request back as the requester; and no read listed requests by who answered, so `queue` had nothing to publish (`t51-final-answered.test.mjs`).
+- **Tests:** new `t51-final-door-form.test.mjs` (6) and `t51-final-answered.test.mjs` (5), red on the earlier code (10 of 11 failed; the eleventh is a control), then green; `fixtures.mjs` publishes `declinedRequest`, `answeredRequests`, `answeredRequestsHidden` (by the real code), checked by `fixtures.test.mjs` (3). `visibility-directory.test.mjs:85` pins `request`'s keys: `closed_comment` added (R44 amends R9). `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/project-roster/`: 126 pass, 0 fail. The test files of the modules that read the directory or the roster (store-assembly roster, plane roster, screens-daily join/home/contract, op-declarations t47/t51): 85 pass, 0 fail.
+- **Checks (absolute root):** format 0 failures; architecture 0; coverage project-roster 44 of 44; words 0; ownership 0; `checks/fixtures.mjs /home/user/bio project-roster --list`: 0 failures, no marker added.
+- **Deferred:** none.
+- **For BOB (other modules):** (a) `projectRequestsAnswered` is a service, not an op: `queue` (R95, a later job) reads it in process with `{by, viewer}`; if a screen needs it through the door, `op-declarations` and `op-grades` need a spec (the module has no `DECLARED_OPS` row for it, to keep "each T45 owner's map is served whole by the tables" green). (b) screens-inquiry R60 can now draw the declined state from the directory row's `request` (`state`, `closed`, `closed_comment`); the project page still draws only an open one (diag2-03b §3). (c) `closed` is the instant; the screen draws the day. (d) The door should stamp the declared acts as it does; no change is needed there, the module now reads either form.
+- Size (session_018j5CDMc121YVpjDc6UHMC8): test runs 12, module lines 1,718
+
+## J9 · COMPLETE
+
+COMPLETE (fix round 10, START B11): R43 and R44 met, for BOB to strike. R43: by is read in the door's form (actorOf) at every act. R44: R9's request carries closed_comment; projectRequestsAnswered published as a service and by fixtures.mjs (declinedRequest, answeredRequests, answeredRequestsHidden). 126 module tests pass; format, architecture, coverage 44/44, words, ownership and fixtures show 0 failures. For BOB: projectRequestsAnswered is a service for queue R95, not an op (no op-declarations/op-grades spec); screens-inquiry can now draw the declined state. Details in the record.

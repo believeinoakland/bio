@@ -5,10 +5,10 @@
    merged. Each test names the requirement ids it checks. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, bucket, doc, sha, docx, wp, wr, i2, withEntry } from "./fixture.mjs";
+import { fresh, bundle, bucket, doc, sha, docx, wp, wr, i2, withEntry, homesOver } from "./fixture.mjs";
 import { extractionOps } from "../../../src/extraction/index.mjs";
 
-const register = (rows) => ({ homeOf: (s) => rows.get(s) ?? null, onTestimony: () => ({ ok: true }) });
+const register = (rows) => homesOver(rows);
 const LINES = 120000;
 const lineOf = (i) => `line ${String(i).padStart(6, "0")} ` + "council-minutes ".repeat(5).padEnd(87, ".");
 const longLog = () => Array.from({ length: LINES }, (_, i) => lineOf(i)).concat(["ENDMARKER" + " ".repeat(51)]).join("\n");

@@ -8,6 +8,7 @@ import { world, V, T0, sha } from "./fixture.mjs";
 import { CASE_DISCLOSURE_CHECKS, PERSON_BASES, PERSON_PLACES, TIE_LINE_KINDS, peopleLines, memberTieLines, peopleOf,
          memberTiesOf } from "../../../src/case-disclosures/index.mjs";
 import { PEOPLE_KINDS } from "../../../src/lines/index.mjs";
+import { tiesConcerningRefusal } from "../people/fixtures.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
 const PHONE = "510-555-0101", HOME = "12 Quiet Lane";
@@ -313,10 +314,14 @@ test("R27 (C-120.16): each signer attests to no undeclared tie; a signer without
     const r = w.cd.tieAttestationJudged(args[0], named, [], args[1], V("alice"));
     assert.deepEqual(r.refusals.map((y) => [y.reason, y.field]), [["BAD_COMPLETENESS", field]]);
   }
-  /* a ties read that fails is stated undetermined, never filled */
-  const z = world({ deps: { people: { tiesConcerning: () => ({ ok: false, reason: "down" }) } } });
+  /* a ties read that throws is stated undetermined, never filled */
+  const z = world({ deps: { people: { tiesConcerning: () => { throw new Error("down"); } } } });
   assert.deepEqual(z.cd.tieAttestationJudged(["alice"], { entities: ["ENT-2026-0001"] }, [], [{ signer: "alice", at: AT }], V("alice")).undetermined,
     [{ signer: "alice", why: "down" }]);
+  /* people's tiesConcerning never refuses (its R20): handed no member it answers an empty list, which is no ties, not an undetermined read */
+  const e = world({ deps: { people: { tiesConcerning: (a) => tiesConcerningRefusal({ ...a, member: null }) } } })
+    .cd.tieAttestationJudged(["alice"], { entities: ["ENT-2026-0001"] }, [], [{ signer: "alice", at: AT }], V("alice"));
+  assert.deepEqual([e.undetermined, e.rows.filter((r) => r.row === "tie")], [[], []]);
 });
 
 test("R28: peopleLines and memberTieLines spell the people: and member_ties: blocks flat, and peopleOf and memberTiesOf read them back exactly; a document without them reads as empty lists; a quote, backslash or line break in a value is made safe", () => {

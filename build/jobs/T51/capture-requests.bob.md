@@ -1,6 +1,6 @@
 # BOB to capture-requests (T51)
 
-**Read** · handled J6
+**Read** · handled J9
 
 ## B1 · START
 
@@ -61,3 +61,73 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B6 · CHANGE
 
 Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B7 · START
+
+START · CAPTURE-REQUESTS #24 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 3: publish 1 fixture, re-point 7 own lines, 2 marker lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #290 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/capture-requests tranche/T51 && git branch -m job/T51/capture-requests stale/capture-requests-local && git checkout -b job/T51/capture-requests origin/job/T51/capture-requests`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module capture-requests`; record `build/jobs/T51/capture-requests.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `bio-plane/test/m/capture-requests/fixtures.mjs` (new file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `sweepScopeRegistrar` (users now: link-sweep 1): real capture-requests R45 `registerSweepScope` (LISTENER_DECLARED).
+
+**Your own fixture lines, done in this job** (7; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- capture/captureArm (1 judgment): fixture.mjs:74
+- capture/acquireRefusal (1 judgment): fixture.mjs:113
+- FIX-L link-sweep/sweep-scope: sweep.test.mjs:21,22,23,24
+- standards/standardRead (1 judgment): t35.test.mjs:232
+
+**Fixture lines NOT done in this job** (1; their providers merge in your batch or after): FIX-E 1; FIX-E providers: steps. They stay in your list and arrive as a CHANGE.
+
+**Markers owed (K5044 (2), K5060; the audit read each line and found it no module's answer):** write on the line or up to eight lines above:
+- `// fixtures-own: platform <why>` (a platform or fake-network double): drain.test.mjs:286
+- `// fixtures-generic: <the made-up word the line carries>`: reads.test.mjs:106
+
+A `fixtures-run` you write shows `orphan-run` in your list until its user module's marker is merged, and a marker you place shows `contract-no-run` until its provider's run is merged: these are the only lines you may leave at done, each named in your record with the module it waits for.
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . capture-requests --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/capture-requests.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+**Found before this job (K5077; CAPTURE #60 J39):** capture's real render refusals are 429 (`RENDER_DEFERRED`, `RENDER_HOST_COOLING_OFF`) and 501 (`RENDER_NO_RENDERER`), not the 409 your hand-built `renderRefusal` has: take them from capture's published fixtures (`bio-plane/test/m/capture/fixtures.mjs`: `acquireRefusal` and the rest), never hand-built.
+
+## B8 · CHANGE
+
+re J7 (K5079): steps is already merged on the tranche with its published fixtures (`bio-plane/test/m/steps/fixtures.mjs`: `stepRead`, `stepsWorld`; the real read is `step({step, viewer})`). Merge `origin/tranche/T51`, re-point `t41.test.mjs:148`, then COMPLETE. Markers read and accepted (`drain:286` platform, `reads:105` NOT_A_CODE). The standards project-confidential option and capture's three render codes: noted, nothing for you.
+
+## B9 · START
+
+START · CAPTURE-REQUESTS #25 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 71; K5148)
+
+Depth 2 (BOB #295 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/capture-requests tranche/T51`; if a local `job/T51/capture-requests` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/capture-requests stale/capture-requests-local && git checkout -b job/T51/capture-requests origin/job/T51/capture-requests`. If `job/T51/capture-requests` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module capture-requests`; record `build/jobs/T51/capture-requests.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+1. **A member can never mark a host a login-gated platform** (plan item 71 (1); STORE-REQUEST #1 J3 (1), K5151; capture-requests R46, which reads "a host a member has marked a platform"): `markPlatform`, `unmarkPlatform` and `platformHosts` exist and are tested at the module (`member-only.test.mjs`), and op-declarations declares `capturerequestplatformmark`, `capturerequestplatformunmark` and `capturerequestplatformhosts` (`op-declarations/index.mjs:427`), but `captureRequestsOps` (`capture-requests/index.mjs:1909` onward) routes none of them, so no request reaches them. Route the three (the viewer from the query as the module's other ops take it; read each method's signature first). Test: through `captureRequestsOps(c, url, body)`, each op answers as its method does (mark, a second mark `already: true`, unmark, the hosts list), and a mark by no member is refused; control: a host not marked is not listed. No requirement wording changes (R46 already requires the mark).
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> capture-requests --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B10 · START
+
+START · CAPTURE-REQUESTS #26 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 71 (1); K5148)
+
+Depth 2 (BOB #297 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/capture-requests tranche/T51`; if a local `job/T51/capture-requests` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/capture-requests stale/capture-requests-local && git checkout -b job/T51/capture-requests origin/job/T51/capture-requests`. If `job/T51/capture-requests` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module capture-requests`; record `build/jobs/T51/capture-requests.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+1. **Route the three platform ops** (STORE-REQUEST #1 J3; K5151): `capturerequestplatformmark`, `capturerequestplatformunmark` and `capturerequestplatformhosts` are declared and graded, and your module holds their code (`markPlatform`, `unmarkPlatform`, `platformHosts`, tested at the module), but your route map wires none, so a member can never make the mark R46 reads. Wire the three in the route map as the module's other ops are wired; test each through your route map (failing first: today each answers as an unknown op), with the refusal of a non-member as a control. Which screen offers the mark is UX-DESIGN's: draw nothing.
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> capture-requests --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.

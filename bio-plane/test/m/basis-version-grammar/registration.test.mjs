@@ -48,22 +48,24 @@ test("R6: the registrant is the `module` argument — new at T51-148 — and a r
     "inquiry-grammar's own registration first is idempotent");
 });
 
-/* The golden findings are the catalogue's, from before R11 added `legs` to the partition finding (R6 compares check,
-   severity, message, repairs and code); `legs` is dropped here, and only the partition finding may carry it. */
-const golden = (list) => JSON.parse(JSON.stringify(list, (k, v) => (k === "legs" ? undefined : v)));
-const legsOnlyOnPartition = (list) => list.every((f) => f.legs === undefined || f.code === "VERSION_PARTITION_INCOMPLETE");
+/* The golden findings are the catalogue's, from before the partition finding was retired (R3, fix round 10, cause 30b;
+   K5077: a supporting leg that names no ground is a necessary leg, and no finding). R6 compares check, severity, message,
+   repairs and code, so that finding is left out of the golden; it is the one difference, and no finding carries `legs`. */
+const retired = (f) => f.code === "VERSION_PARTITION_INCOMPLETE";
+const golden = (list) => JSON.parse(JSON.stringify(list.filter((f) => !retired(f)), (k, v) => (k === "legs" ? undefined : v)));
+const legsOnlyOnPartition = (list) => list.every((f) => f.legs === undefined);
 
 test("R6: for every bundle of the corpus under every registry variant, checkBundle given record.grammars() answers the catalogue's findings before the move, identical in content and in order; each version finding is the one the catalogue's call added", async () => {
   const record = fresh();
   registerBasisVersionGrammar(record);
   let versions = 0, bundles = 0, direct = 0;
   for (const id of Object.keys(BUNDLE_CASES)) {
-    const want = GOLDEN.bundles[id].versions;
+    const want = golden(GOLDEN.bundles[id].versions);
     const md = bundleFiles(id).get("bundle.md");
     const fm = parseFrontmatter(typeof md === "string" ? md : new TextDecoder().decode(md)).data;
     for (const v of VARIANTS) {
       const got = await judge(id, v, record.grammars());
-      assert.deepEqual(golden(got), GOLDEN.bundles[id][v], `${id} (${v})`);
+      assert.deepEqual(golden(got), golden(GOLDEN.bundles[id][v]), `${id} (${v})`);
       for (const x of want) assert.ok(golden(got).some((y) => JSON.stringify(y) === JSON.stringify(x)), `${id}: ${x.message}`);
       assert.ok(legsOnlyOnPartition(got), `${id}: legs only on the partition finding`);
       bundles++;

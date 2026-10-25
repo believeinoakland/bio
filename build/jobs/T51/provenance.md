@@ -1,6 +1,6 @@
 # provenance (T51)
 
-**Status** · session_013AJsWwtb6GMtSPg9NTJgff · depth 2 · COMPLETE · handled B9
+**Status** · session_0177JBZkD5i4LMCHS2gFnjNU · depth 2 · COMPLETE · handled B9
 
 ## J1 · REPORT
 
@@ -202,3 +202,45 @@ Size (session_013AJsWwtb6GMtSPg9NTJgff): test runs 4, module lines 3280
 ## J12 · COMPLETE · re B10
 
 B10 done. Published bio-plane/test/m/provenance/fixtures.mjs: heldParts, holdsOf (+holdsWorld), holdsRegister, homeOf, homeOfEmpty, homeOfHomed, homeOfWorld, provenanceOver, registeredHomes (takes the user's own {host,record,membership,promotion,now}; register/many), versionChainNoSuchVersion; each made by the real code and checked by fixtures.test.mjs (10 tests). Marker added (1): testimony-slot.test.mjs:105 fixtures-generic: CONTENT_EXTENT_REFUSED (a stand-in refusal handed to the slot to show it relays any refusal as it came). fixtures --list provenance lines: zero. provenance 189 pass 0 fail; format/architecture/coverage/ownership 0; impact: 0 modules affected. Record: build/jobs/T51/provenance.md. Size (session_013AJsWwtb6GMtSPg9NTJgff): test runs 4, module lines 3280
+
+## J13 · COMPLETE
+
+B11 done (follow-up 30, the project-homing fixture). Test files only, as B11 asked.
+
+**Published** in `bio-plane/test/m/provenance/fixtures.mjs`: `homeOfProject(captures = [], { owner = "ann", title = "Fixture Project" } = {})` → `{ provenance, projectId, homeOf, made }`. It promotes a project with no chosen id (`base: null`, `ownerMemberId: owner`, `meta: {}`, a `bundle.md` with `object_type: project`), so the record mints its `PROJ-` id and writes it into the document. Each capture (a digest, or a string to digest) is registered in that project by the real register act. `projectId` is the minted id the creation returned, `homeOf(sha)` is the real `provenance.homeOf` answer (`{bundleId: projectId, path, encoding, bytes, registered, authored}`), null for any capture not registered there, and `made` is the promotion's answer. With `[]` it is an empty project. Tasks can re-point its `world.mjs` `PROJ-` map to this (follow-up 30's next step).
+
+**Test** in `bio-plane/test/m/provenance/fixtures.test.mjs`: "fixtures homeOfProject: a project created with no chosen id mints its PROJ- id; its captures are homed there" (two captures, minted id matched, owner ann, unnamed capture null, empty project homes nothing). Commit 80862db992.
+
+**Markers**: none added. `checks/fixtures.mjs /home/user/bio provenance --list`: 0 failures; the one `accepted(generic)` line is B10's testimony-slot marker.
+
+**Tests and checks** (from the process repository, absolute root):
+- provenance folder (`bio-plane/test/m/provenance/*.test.mjs`): 189 pass, 0 fail.
+- format 0 failures; architecture 0; coverage 64 of 64 live ids; words 0 failures; ownership 3 files, 0 failures.
+
+**Impact** (`build/plan/impact.mjs origin/tranche/T51 HEAD`): 36 modules, 412 test files import the provenance fixtures. I ran all 412 in one process: 3,263 tests, 3,260 pass, 3 fail. None is in my change's path:
+- `agent-worker/test/requirements.test.mjs` (R45 static check, and byte-identity of a fresh build with the committed `dist/agent-worker.bundled.mjs`): the committed bundle is stale against `agent-worker/src` (run alone, the same two assertions fail). Agent-worker's generated artifact, not mine; REPORT to BOB.
+- `control-plane/r9-seam-reading.mjs` §1: alone it runs out of the default 2 GB heap (OOM, a 40 s scanner test); in the combined run it failed the `alarm_at was null while a firing was in progress` check under load. Control-plane's test, not mine; REPORT to BOB.
+- `control-plane/r9-seam-limits.mjs` §14: red by design until the quoting jobs merge. Its one case is case-carriage's `NATIVE_DIGEST_MIN_BYTES = 1024 * 1024` (follow-up 14, not mine).
+
+**Other modules, for BOB:** the two control-plane and agent-worker failures above. Nothing in provenance's `src` changed (`bio-plane/src/provenance/` untouched).
+
+**Deferred:** none. **Open QUESTION:** none.
+
+Size (session_01NHZHzUiPvoHYG7rYqLUJhb): test runs 6, module lines 3280
+
+## Fix round 10, final pass (B13): work
+
+**(1) A decided authority reaches no member read** (diag2-04 §7; provenance R66). I re-read the cited lines: the write works (`declareAuthority`, `authorityOf`); only `containerResolver().authority` (C-18.9) and `register-checks` read the decision; every member read (`op=image`/`document`, the grade note, screens-inquiry's `document.mjs` lines 133, 908, 1145, 1666, 1765) reads the bundle's own `data/provenance.json`, which states the acquisition-time `undetermined` for ever because a decision lives in `authority_decisions` and never rewrites the bundle's bytes. **Root cause:** no read of the standing value existed for a member's screen to ask. **Fix (in my module):** new op `authority {bundleId, capture?}` (`authoritiesOf`, R80, amends R53/R66/R68): for each register capture of the document (or the one named) exactly what `authorityOf` answers (state, issuer, dated basis, `by`, `at`, `reviewed`, history); sight-gated and refused as R64's (`NO_BUNDLE`, `NO_SUCH_BUNDLE` alike for absent/unseen, `AUTHORITY_NOT_A_DOCUMENT`); writes nothing. Declared in `DECLARED_OPS` (read, `viewer` stamp, `needs` null, accepts `bundleId`,`capture`, requires `bundleId`). **Why the tests missed it:** `authority.test.mjs` proved `authorityOf` and the C-18.9 check; tasks' tests prove one transaction; nothing read the document as a member after a decision. **Failing first:** `authority-read.test.mjs` (5 tests): first run 5 fail (`ops(...).authority is not a function`), then 5 pass; control: no decision answers the register's value alone.
+**Not in my paths, for BOB (REPORT):** (a) `screens-inquiry` (`document.mjs`, the document's source line and the grade note) must ask `authority` through its `later(...)` as it asks `origins` (line 1306) and draw the answer; until it does, the member's page still draws the bundle's own entry. The image/`document` ops of the control plane serve the bundle's bytes and are unchanged by design. (b) `affordances` `act-help.mjs`: `authority` is a new member-session op and `t36.test.mjs` R34 (affordances R48) now names it ("member ops with no text and no ground: authority,ruleservicesstate"; `ruleservicesstate` was red before): it must be explained in ACT_HELP or named in ACT_HELP_ABSENT as `origins` is. (c) hand rows: none to remove; `authority` has no hand row in op-declarations/op-grades (a new op, as `origins`).
+
+**(2) Follow-up 65's provider half.** Published in `bio-plane/test/m/provenance/fixtures.mjs`: **`homeOfOver({ host, record, membership?, promotion?, now? })` → `{ provenance, homeOf }`**. `host` is the caller's `ctx` (`{storage}`), `record` its record-core; it runs the real `provenanceOf` over the caller's storage and answers the real `homeOf(sha)` (`{bundleId, path, encoding, bytes, registered, authored}` while the register row's bundle exists, else null). A `register` table the caller made with the contract's columns alone (as capture's fixture does) is first given the columns the real schema has beyond them (read from a real migrated store); no row is written. Tested in `fixtures.test.mjs` ("fixtures homeOfOver"), a caller's own store with raw contract rows, an absent capture, a vanished bundle, a fully shaped store left as it is. Doorbell re-points `held.test.mjs:14` to `homeOfOver({ host: f.ctx, record: f.core })` (its `f.ctx` is `{storage: f.s}`, `f.core` capture's record-core).
+**Markers added:** none.
+
+**Requirements:** R80 new (written in `build/requirements/provenance.md`, the one file outside my paths that K4210 accepts), R53 and R68 amended (nine ops; four declared). **Met ids to strike:** R66 (its K5148 sentence), R80; R53 and R68 as amended.
+**Tests/checks:** provenance folder 196 pass, 0 fail; format 0; architecture 0; coverage 65 of 65; words 0; `fixtures provenance --list` 0 (one accepted marker, B10's); ownership: 9 files, 1 failure that is the requirements file K4210 accepts. Users: op-declarations/op-grades/test-support/interface-shell/store-assembly tests 1261 pass, 4 fail: `t33` R19/R6 and `t36` R34 each name `ruleservicesstate` (red before my change), `t36` R34 also `authority` (item (b) above), `R23` words (not mine).
+Deferred: none. Open QUESTION: none.
+Size (session_0177JBZkD5i4LMCHS2gFnjNU): test runs 9, module lines 3311
+
+## J14 · COMPLETE
+
+B13 done (K5148). (1) R66/R80: new read op authority {bundleId, capture?} (authoritiesOf) states the standing authority (state, issuer, dated basis, reviewed, history) of each capture of a document; after a decision it is stated, with no decision the register's value alone; authority-read.test.mjs 5 red then green; R53, R68 amended; DECLARED_OPS has authority. NOT in my paths, for BOB: screens-inquiry must ask it through later() as it asks origins and draw it (the bundle's own data/provenance.json entry stays as acquired by design); affordances act-help.mjs must explain or name authority (t36 R34 now names it; ruleservicesstate was red before). (2) Fixture: homeOfOver({host, record, membership?, promotion?, now?}) -> {provenance, homeOf} in provenance/fixtures.mjs, tested; doorbell re-points held.test.mjs:14 to homeOfOver({host: f.ctx, record: f.core}). Met ids to strike: R66, R80 (R53, R68 amended). Markers added: none. provenance folder 196 pass 0 fail; format, architecture, coverage 65/65, words, fixtures 0; ownership 1 failure = the requirements file K4210 accepts. Record: build/jobs/T51/provenance.md. Size (session_0177JBZkD5i4LMCHS2gFnjNU): test runs 9, module lines 3311

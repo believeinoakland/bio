@@ -162,6 +162,7 @@ test("R1 R21 R23 R24 (N747) an answer without promoted is promoted as an informa
   await g.settle();
   assert.ok(says(g, "refusal.GATE_REFUSED"));
   assert.doesNotMatch(text(g), /builder detail/);
+  // fixtures-generic: NO_WORD_NO_TRANSLATION
   const bare = await open("/app/capture", { plane: { acquire: ok({ ok: true, document: DOC }), allocid: ok({ ok: true, id: "INFO-2026-0010" }),
     promote: { status: 409, json: { ok: false, reason: "NO_WORD_NO_TRANSLATION", detail: "builder detail that is never drawn" } } } });
   fill(bare, { "ci-address": ADDRESS });

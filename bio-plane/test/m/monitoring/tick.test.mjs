@@ -3,6 +3,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, serve, sha, DAEMON, V, infoMd } from "./fixture.mjs";
+// fixtures-contract: plane job-registrar
+import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 import { staleBaseRefusal } from "../promotion/fixtures.mjs";
 import { monitorOp, monitoringOps, MONITOR_AUTHOR, DRIVE_TICK_CHECKS } from "../../../src/monitoring/index.mjs";
 import { identify } from "../../../../docprofile/registry.mjs";
@@ -258,6 +260,8 @@ test("R4 removed, unreachable, and the Drive shell refusals (C-48.8, C-48.9), ea
     const loc = `https://records.example.org/gone${n}`;
     w.monitored(id, loc, `v1-gone-${n}`);
     w.net.routes[loc] = serve("gone", "text/plain", st);
+    assert.equal((await tick(w, id)).body.status, null, "R4: the first 404 or 410 is unconfirmed (outcomes.test.mjs)");
+    w.clock.ms += 24 * 3600e3;
     const r = await tick(w, id);
     assert.equal(r.body.status, "removed");
     assert.equal(w.looks().at(-1).state, "LOOKED_ABSENT");
@@ -425,6 +429,8 @@ test("R7 a shell captured as the document grades no change: the status withdrawn
   assert.equal(w.looks().at(-1).state, "LOOKED_INDETERMINATE");
   assert.match(w.looks().at(-1).detail, /^unmonitorable;/);
   w.net.routes[loc] = serve(shellPage("cccc"), "text/html", 404);
+  await tick(w, id);                                /* R4: the first 404 is unconfirmed; a look a day on confirms it */
+  w.clock.ms += 24 * 3600e3;
   const g = await tick(w, id);
   assert.equal(g.body.status, "removed");
   assert.equal(g.body.reeval_raised, true);
@@ -550,6 +556,62 @@ test("R9 a non-rendered modified tick captures what it fetched, files it with a 
   const r4 = await tick(x, "INFO-2026-0083-nostore");
   assert.deepEqual([r4.body.capture.held, r4.body.capture.registered], [false, false]);
   assert.equal(r4.body.capture.why, "R2 is not configured on this instance, so the served bytes could not be held");
+});
+
+test("R79 a copy the tick files carries its provenance document entry and owes a reading through the capture's registrar", async () => {
+  const w = world();
+  // fixtures-contract: plane job-registrar
+  const jobs = jobRegistrarStub();
+  w.capture.registerJob = jobs.registerJob;
+  w.capture.armJobs = jobs.armJobs;
+  const owed = { get length() { return jobs.rows().length; } };
+  const docsOf = (id) => JSON.parse(w.record.readFile(id, "data/provenance.json").text).documents;
+  const id = "INFO-2026-0090-owes";
+  w.monitored(id, LOC, "v1 bytes");
+  w.net.routes[LOC] = serve("v2 bytes");
+  const r = await tick(w, id);
+  const s2 = sha("v2 bytes"), file = r.body.capture.file;
+  assert.equal(r.body.capture.registered, true);
+  assert.deepEqual(jobs.rows().map((j) => [j.kind, j.sha, j.carrier]), [["reading", s2, file]], "one reading job, for the new digest");
+  assert.equal(jobs.armed(), true, "the alarm is armed after the row is written");
+  /* the provenance names the new digest: locator, content type, digest, and the file that holds it */
+  const docs = docsOf(id);
+  assert.equal(docs.length, 2, "the baseline's entry stays");
+  const mine = docs.filter((d) => d.capture.sha256 === s2);
+  assert.equal(mine.length, 1);
+  assert.deepEqual([mine[0].locator, mine[0].file, mine[0].capture.content_type, mine[0].capture.bytes], [LOC, file, "text/plain", 8]);
+  assert.equal(docs.filter((d) => d.capture.sha256 === sha("v1 bytes")).length, 1);
+  /* what a read of that digest looks up: the register's home is this bundle and the bundle's entry names the digest */
+  assert.equal(w.prov.homeOf(s2).bundleId, id);
+  /* the same new bytes seen again file nothing twice and owe nothing twice */
+  w.clock.ms += 3600000;
+  await tick(w, id);
+  assert.equal(owed.length, 1);
+  assert.equal(docsOf(id).length, 2);
+  /* an unregistered copy (one capture, one home: the promotion is refused with it) owes nothing and files no entry */
+  const id3 = "INFO-2026-0091-refused";
+  w.monitored(id3, "https://records.example.org/third.txt", "t1");
+  w.net.routes["https://records.example.org/third.txt"] = serve("v2 bytes");
+  const r3 = await tick(w, id3);
+  assert.equal(r3.body.capture.registered, false);
+  assert.equal(owed.length, 1);
+  assert.equal(docsOf(id3).filter((d) => d.capture.sha256 === s2).length, 0);
+  /* a tick that found nothing new owes nothing */
+  const id4 = "INFO-2026-0092-same";
+  w.monitored(id4, "https://records.example.org/same.txt", "same");
+  w.net.routes["https://records.example.org/same.txt"] = serve("same");
+  await tick(w, id4);
+  assert.equal(owed.length, 1);
+  /* a registrar that refuses is stated in the answer, never swallowed */
+  // fixtures-contract: plane job-registrar
+  w.capture.registerJob = () => ({ ok: false, reason: "REGISTRAR_REFUSED" });
+  const id5 = "INFO-2026-0093-refuses";
+  w.monitored(id5, "https://records.example.org/fifth.txt", "f1");
+  w.net.routes["https://records.example.org/fifth.txt"] = serve("f2");
+  const r5 = await tick(w, id5);
+  assert.equal(r5.body.capture.registered, true, "the copy is still filed");
+  assert.match(r5.body.note, /reading/);
+  assert.match(r5.body.note, /REGISTRAR_REFUSED/);
 });
 
 test("R10 the answer's fields, and a promotion that does not answer is named as silent, never reported as recorded", async () => {

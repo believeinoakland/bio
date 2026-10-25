@@ -842,12 +842,16 @@ export class People {
     const why = clean(reason);
     if (!why) return refuse("NO_REASON", "a removal states its reason");
     const target = this.#expungeTarget(id);
-    if (!target) return refuse("NO_SUCH_ITEM", "no person fact, identity claim, member tie or source link answers to that id", { id: id ?? null });
+    if (!target) return refuse("PERSON_ITEM_NOT_HELD", localize("people.index.person_item_not_held", "No person fact, identity claim, member tie or source link here answers to that id. Nothing was removed."), { id: id ?? null });
     return this.#record.transact(() => {
+      /* R12 (K5148): the person a removed fact was on, kept apart from its value so the person read can show the marker */
+      const onPerson = target.table === "person_facts" || target.table === "person_contacts"
+        ? this.#one(`SELECT person FROM ${target.table} WHERE fact_id=?`, target.key.fact_id) : null;
       const r = this.#record.expunge({ module: MODULE, table: target.table, key: target.key, ground,
                                        ...(ground === "court_order" ? { order } : {}), ...(ground === "lawful_demand" ? { demandKind } : {}), by: who });
       if (!r || r.ok === false) return r;
       if (target.table === "identity_claims") this.#rebuildCluster();
+      if (onPerson) this.#sql.exec(`INSERT OR REPLACE INTO person_removals (fact_id, person, tbl) VALUES (?,?,?)`, target.key.fact_id, onPerson.person, target.table);
       /* N617: the link's replaced versions hold the same value, so they go with it, under the same ground */
       let removed = r.removed;
       if (target.table === "source_person_links"
@@ -859,6 +863,26 @@ export class People {
       }
       return { ok: true, removed, tombstone: r.tombstone, reason: why };
     });
+  }
+  /* R12 (K5148): a tombstone {ground, at, by} for each fact removed from any of `members`, never the value, in the order
+     removed. The tombstones are record-core's (R79); `person_removals` says whose they were. */
+  #removedOn(members) {
+    const ids = JSON.stringify(members);
+    const own = new Map(this.#rows(`SELECT fact_id, tbl FROM person_removals WHERE person IN (SELECT value FROM json_each(?))`, ids)
+      .map((r) => [r.fact_id, r.tbl]));
+    const out = [];
+    if (!own.size) return { items: out, truncated: false };
+    for (const table of ["person_facts", "person_contacts"]) {
+      for (let after = 0; ;) {
+        const page = this.#record.tombstones({ table, after, limit: 200 });
+        for (const t of page.tombstones) if (t.key && own.get(t.key.fact_id) === table) out.push({ ground: t.ground, at: t.at, by: t.by, seq: t.seq, table });
+        if (!page.cursor || page.tombstones.length < 200) break;
+        after = page.cursor;
+      }
+    }
+    out.sort((x, y) => (x.at < y.at ? -1 : x.at > y.at ? 1 : x.table.localeCompare(y.table) || x.seq - y.seq));
+    const r = bounded(out.map(({ ground, at, by }) => ({ ground, at, by })));
+    return { items: r.items, truncated: r.truncated };
   }
   #expungeTarget(id) {
     if (isObj(id) && filled(id.source) && filled(id.person)) {
@@ -1021,9 +1045,10 @@ export class People {
     const d = bounded(duties, READ_LIST_MAX, dutiesTruncated);
     const u = bounded([...facts.undetermined, ...postsAt.undetermined, ...dutiesUnsettled]);
     const claims = this.#claimsOn(cluster.members, viewer);
+    const gone = this.#removedOn(members);
     return { ok: true, found: true, entity_id: entityId, at, cluster, claims: claims.items, claims_truncated: claims.truncated,
-             names: n.items, facts: f.items, posts: p.items, duties: d.items, undetermined: u.items,
-             truncated: { names: n.truncated, facts: f.truncated, posts: p.truncated, duties: d.truncated, undetermined: u.truncated },
+             names: n.items, facts: f.items, posts: p.items, duties: d.items, undetermined: u.items, removed: gone.items,
+             truncated: { names: n.truncated, facts: f.truncated, posts: p.truncated, duties: d.truncated, undetermined: u.truncated, removed: gone.truncated },
              limit: READ_LIST_MAX,
              detail: "each item is cited, dated and graded, and names the cluster member it is held on; an item whose validity does "
                + "not settle the date is listed as undetermined, never as current; each identity claim on the cluster is listed "
@@ -1494,6 +1519,8 @@ export class People {
 
   /** R21: the links on a source or a person, to a listed member only; to anyone else exactly as if none were held. */
   sourceLinksOf({ source = null, person = null, viewer = null } = {}) {
+    if (!filled(source) && !filled(person))
+      return refuse("NO_LINK_SUBJECT", localize("people.index.link_read_names_source_or_person", "A source link is read for one source (source_id) or one person (person); this read names neither."));
     const v = viewerMember(viewer);
     const rows = filled(source) ? this.#rows(`SELECT * FROM source_person_links WHERE source=? ORDER BY person`, source)
       : filled(person) ? this.#rows(`SELECT * FROM source_person_links WHERE person=? ORDER BY source`, person) : [];
@@ -1840,7 +1867,7 @@ export function peopleOps(p, url, body) {
     membertiewithdraw: () => p.withdrawTie(b()),
     memberties: () => p.tiesOf({ member: q("member"), viewer: q("viewer") }),
     sourcepersonlink: () => p.linkSourceToPerson(b()),
-    sourcepersonlinks: () => p.sourceLinksOf({ source: q("source"), person: q("person"), viewer: q("viewer") }),
+    sourcepersonlinks: () => p.sourceLinksOf({ source: q("source_id"), person: q("person"), viewer: q("viewer") }),
     interestcheckdefine: () => p.defineCheck(b()),
     interestcheckswitch: () => p.switchCheck(b()),
     interestchecks: () => p.checkResults({ project: q("project"), check: q("check"), viewer: q("viewer") }),

@@ -108,6 +108,13 @@ async function caseCeremony(req, stub, ctx, later) {
                     detail: "members, when given, is a list of {id, sha, signature}, each a bundle once: the finding or "
                           + "evidence id, the sha it was signed at, and the armored SSH signature over it" }, 400);
 
+    /* R60 (fix round 10, cause 27a; K5057): the reads of a sitting's members depend on nothing the case's facts answer (a member's gate
+       facts, image and known ids ask only its id and the viewer, its gate only those), so they are issued now, beside the case's own
+       facts and the three reads after them, and weighed below in the old order by `weighFinding`. Reads only: a refusal that comes
+       first leaves them to finish, writing nothing. */
+    const sittingList = sitting.length ? doAnswer(stub.fetch(`http://do/list?viewer=${encodeURIComponent(sessViewer)}`)) : null;
+    if (sittingList) sittingList.catch(() => {});
+    const memberReads = sitting.map((m) => readFinding({ bundleId: m.id }, stub, ctx, { viewer: sessViewer, list: sittingList }));
     const factsOut = await doAnswer(stub.fetch(
       `http://do/casedocfacts?case=${encodeURIComponent(body.caseId)}`
       + `&edition=${encodeURIComponent(String(body.edition))}`
@@ -136,9 +143,6 @@ async function caseCeremony(req, stub, ctx, later) {
        issued together, and their answers weighed below in the order the refusals have always had: R35 (C-58.5), CASE_RATIFY_STALE, R49
        (APPROVAL_MISSING), NO_SIGNERS, the signature, and then the gate. Each is a read; nothing is written by any of them, so a refusal
        that comes before another's answer leaves nothing behind. */
-    /* R60 (G120b): the list of known ids depends only on the viewer, so a sitting reads it once, here, beside those three, and every member's
-       gate weighs that one answer. */
-    const sittingList = sitting.length ? doAnswer(stub.fetch(`http://do/list?viewer=${encodeURIComponent(sessViewer)}`)) : null;
     const [anonOut, apprOut, gateOut] = await Promise.all([
       doAnswer(stub.fetch("http://do/casetestimony", { method: "POST",
         body: JSON.stringify({ caseId: facts.doc.case_id, edition: Number(facts.doc.edition) }) })),
@@ -201,9 +205,9 @@ async function caseCeremony(req, stub, ctx, later) {
        sight, against the one key the case's signature verified against (the same signer), C-92.12 counting the
        statements of the document being signed. The first refusal is answered naming its member; nothing is written. */
     /* R60 (G120): the members are prepared together (reads only); the first refusal in the sitting's order is the one answered. */
-    const preps = await Promise.all(sitting.map((m) =>
-      prepareFinding({ bundleId: m.id, expectedSha: m.sha, sig: m.signature }, stub, ctx,
-        { viewer: sessViewer, keys: [sv.keyB64], statedInSitting: statedIn(attr), tag: { member: m.id }, list: sittingList })));
+    const preps = await Promise.all(sitting.map((m, i) =>
+      weighFinding({ bundleId: m.id, expectedSha: m.sha, sig: m.signature }, ctx,
+        { keys: [sv.keyB64], statedInSitting: statedIn(attr), tag: { member: m.id } }, memberReads[i])));
     const refused = preps.find((prep) => prep.response);
     if (refused) return refused.response;
     const members = preps.map((prep) => prep.prepared);
@@ -258,6 +262,13 @@ async function caseCeremony(req, stub, ctx, later) {
     const tCopy = Date.now();
     /* R60 (G120): the materials' copy and each member's copy touch different keys and run together. */
     const commits = Array.isArray(memberCommits) ? memberCommits : [];
+    /* R60 (G120b; fix round 10, cause 27a): the members' reuse checks are reads of different bundles that need neither the copy nor the
+       assembly (the verdicts they record are the finding's own), so they start with the copy and are awaited after the assembly; the
+       answers stay in the sitting's order. A check still running when the copy throws is left to finish. */
+    const tReuse = Date.now();
+    const reuseAsk = Promise.all(commits.map((c) => reuseCheck({ env, ask: askOf(stub, doAnswer), bundleId: c.bundleId,
+                                             silentReason: ctx.STORE_SILENT_REASON, silentDetail: ctx.STORE_SILENT_DETAIL })));
+    reuseAsk.catch(() => {});
     let copyError = null;
     const [{ absent: materialsAbsent, ...materialsCopied }, copies] = await Promise.all([
       copyMaterialsDetailed(env, storeName, Array.isArray(evidenceMaterials) ? evidenceMaterials : []),
@@ -281,10 +292,7 @@ async function caseCeremony(req, stub, ctx, later) {
       containers.set(`${cs.case_id ?? cs.caseId ?? ""}#${cs.edition}`, container);
     }
     stated("assemble", tAssemble);
-    const tReuse = Date.now();
-    /* R60 (G120b): the members' reuse checks are reads of different bundles, asked together; the answers stay in the sitting's order. */
-    const reuseReports = await Promise.all(commits.map((c) => reuseCheck({ env, ask: askOf(stub, doAnswer), bundleId: c.bundleId,
-                                             silentReason: ctx.STORE_SILENT_REASON, silentDetail: ctx.STORE_SILENT_DETAIL })));
+    const reuseReports = await reuseAsk;
     const memberAnswers = commits.map((c, i) => {
       const own = c.pub.case ? containers.get(`${c.pub.case.case_id ?? c.pub.caseId ?? ""}#${c.pub.case.edition}`) : null;
       return findingAnswer({ bundleId: c.bundleId, expectedSha: members[i].expectedSha, pub: c.pub,
@@ -506,26 +514,51 @@ function publishRefusalStatus(pub) {
           || pub.reason === "RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE") ? 409 : 500;
 }
 
-/** R4 (and R52, for each member of a sitting): every read and check `op=ratify` makes before its commit, after the
- *  credential's fences and the payload's MALFORMED, in its order: the gate facts at the ratifier's scope (R7: a hidden
- *  bundle answers as one never minted), C-58.1, C-53.10, C-53.11, C-92.12, RATIFY_STALE, NO_SIGNERS, SIG_<reason>
- *  against `keys` (every active signer's, or, in a sitting, the one key the case verified against), the image, the
- *  known ids, the store-half gate with its register, bias and case-member arms. Answers `{response}` (a refusal, a store
- *  relay or a silence, `tag` added to a refusal of the finding's own) or `{prepared}` for `findingPublishArgs`,
- *  `copyFinding` and `findingAnswer`. Writes nothing. */
-export async function prepareFinding({ bundleId, expectedSha, sig }, stub, ctx,
-                                     { viewer, keys = null, statedInSitting = null, tag = {}, list = null } = {}) {
-  const { json, doAnswer, storeSilent, storeRefusal, storeName, cls, withBiasChecks } = ctx;
-  const relay = { json, storeRefusal };
-  const refuse = (b, status) => ({ response: json({ ...b, ...tag, store: storeName, tokenClass: cls }, status) });
+/** R4 (and R52, for each member of a sitting): the reads `op=ratify` makes before its commit for one finding, issued together
+ *  and at once (fix round 10, cause 27a; K5057): its gate facts at the ratifier's scope, its image and the list of known ids
+ *  (`list`: a sitting's one shared read), and, as soon as those three are in, the store-half gate over them (N417: it reads and
+ *  writes nothing). Answers the asks; `weighFinding` weighs them in the act's order. A read still in flight when the act stops at
+ *  an earlier refusal is left to finish: it writes nothing. */
+export function readFinding({ bundleId }, stub, ctx, { viewer, list = null }) {
+  const { doAnswer } = ctx;
   const v = encodeURIComponent(viewer);
-  /* R60 (G120b): the gate facts, the image and the list of known ids are three independent reads of the store, asked together and weighed
-     below in the old order (facts, signature, image, list); `list` is a sitting's one shared read (`caseCeremony` starts it), else asked here.
-     A read still in flight when the act stops at an earlier refusal is left to finish: it writes nothing. */
   const factsAsk = doAnswer(stub.fetch(`http://do/gatefacts?id=${encodeURIComponent(bundleId)}&viewer=${v}`));
   const imgAsk = doAnswer(stub.fetch(`http://do/image?id=${encodeURIComponent(bundleId)}&viewer=${v}`));
   const listAsk = list || doAnswer(stub.fetch(`http://do/list?viewer=${v}`));
-  for (const pending of [factsAsk, imgAsk, listAsk]) pending.catch(() => {});
+  const readable = (out) => out && !out.refused && out.answered;
+  /* the gate is asked only over answers the act would hand it; any other answer is weighed (refused or silent) before the gate's */
+  const gateAsk = (async () => {
+    const [factsOut, imgOut, listOut] = await Promise.all([factsAsk, imgAsk, listAsk]);
+    if (!readable(factsOut) || !readable(imgOut) || !readable(listOut) || !factsOut.result?.ok) return null;
+    const facts = factsOut.result;
+    return doAnswer(stub.fetch(new Request("http://do/ratifygate", {
+      method: "POST", body: JSON.stringify({
+        bundleId, image: imgOut.result, knownIds: [...new Set((listOut.result || []).map((b) => b.bundle_id))],
+        registers: facts.registers,
+        /* REC-14, REC-44, REC-18: what THIS case asserted at its previous EDITION (C-21.1), what the cases beneath it
+           FROZE (C-21.2), and what each basis target EARNS, from the store with the rest of the gate facts, so the gate
+           and the write path judge against the same published record. Passing nothing here would blind the gate. */
+        publishedRegistry: facts.publishedRegistry,
+        publishedCaseRegistry: facts.publishedCaseRegistry,
+        earnedRegistry: facts.earnedRegistry,
+      }) })));
+  })();
+  for (const pending of [factsAsk, imgAsk, listAsk, gateAsk]) pending.catch(() => {});
+  return { factsAsk, imgAsk, listAsk, gateAsk };
+}
+
+/** R4 (and R52, for each member of a sitting): every check `op=ratify` makes before its commit, after the credential's fences
+ *  and the payload's MALFORMED, in its order, over the reads `readFinding` started: the gate facts (R7: a hidden bundle
+ *  answers as one never minted), C-58.1, C-53.10, C-53.11, C-92.12, RATIFY_STALE, NO_SIGNERS, SIG_<reason> against `keys`
+ *  (every active signer's, or, in a sitting, the one key the case verified against), the image, the known ids, the store-half
+ *  gate with its register, bias and case-member arms. Answers `{response}` (a refusal, a store relay or a silence, `tag` added to
+ *  a refusal of the finding's own) or `{prepared}` for `findingPublishArgs`, `copyFinding` and `findingAnswer`. Writes nothing. */
+export async function weighFinding({ bundleId, expectedSha, sig }, ctx,
+                                   { keys = null, statedInSitting = null, tag = {} } = {}, reads) {
+  const { json, storeSilent, storeRefusal, storeName, cls, withBiasChecks } = ctx;
+  const relay = { json, storeRefusal };
+  const refuse = (b, status) => ({ response: json({ ...b, ...tag, store: storeName, tokenClass: cls }, status) });
+  const { factsAsk, imgAsk, listAsk, gateAsk } = reads;
   const factsOut = await factsAsk;
   /* A silence here once threw a TypeError on `facts.ok`; what this read answers is the GATE'S OWN FACTS, and a gate
      that cannot see the record cannot confirm anything. */
@@ -554,23 +587,12 @@ export async function prepareFinding({ bundleId, expectedSha, sig }, stub, ctx,
      silence is refused, never handed to the gate as an empty set; once `answered`, an empty list is a real answer. */
   if (listOut.refused) return { response: storeRefused(listOut, relay) };
   if (!listOut.answered) return { response: storeSilent("ratify/list", listOut.correlation) };
-  const known = new Set((listOut.result || []).map((b) => b.bundle_id));
   /* N417 (K691): THE GATE RUNS IN THE STORE HALF (`ratifygate`), on this host's promotion instance, so the type
      grammars later modules registered with record-core (C-2.7 among them) reach it as they reach promote's. What the
-     gate reads is what this act read above under the ratifier's scope, handed over whole. A store refused or silent
+     gate reads is what this act read under the ratifier's scope, handed over whole. A store refused or silent
      here is R17's relay, never a finding about the bytes (N354, K477).
      D-556: `parted` names the parts of each whole-hash row the gate admitted as HELD IN PARTS. */
-  const gateOut = await doAnswer(stub.fetch(new Request("http://do/ratifygate", {
-    method: "POST", body: JSON.stringify({
-      bundleId, image, knownIds: [...known],
-      registers: facts.registers,
-      /* REC-14, REC-44, REC-18: what THIS case asserted at its previous EDITION (C-21.1), what the cases beneath it
-         FROZE (C-21.2), and what each basis target EARNS, from the store with the rest of the gate facts, so the gate
-         and the write path judge against the same published record. Passing nothing here would blind the gate. */
-      publishedRegistry: facts.publishedRegistry,
-      publishedCaseRegistry: facts.publishedCaseRegistry,
-      earnedRegistry: facts.earnedRegistry,
-    }) })));
+  const gateOut = await gateAsk;
   if (gateOut.refused) return { response: storeRefused(gateOut, relay) };
   if (!gateOut.answered) return { response: storeSilent("ratify/gate", gateOut.correlation) };
   const { parted, ...registerGate } = gateOut.result || {};
@@ -583,4 +605,9 @@ export async function prepareFinding({ bundleId, expectedSha, sig }, stub, ctx,
   const { shas, partShaSet } = await findingShas(image, partedRows, facts.registers);
   return { prepared: { bundleId, expectedSha, sig, keyB64: sv.keyB64, attestorMember: attestor?.member_id ?? null,
                        gateVersion: gate.gateVersion, image, shas, partShaSet, partedRows } };
+}
+
+/** R4: `op=ratify`'s reads and checks for one finding, in its order (`readFinding`, then `weighFinding`). */
+export function prepareFinding(args, stub, ctx, { viewer, keys = null, statedInSitting = null, tag = {}, list = null } = {}) {
+  return weighFinding(args, ctx, { keys, statedInSitting, tag }, readFinding(args, stub, ctx, { viewer, list }));
 }

@@ -1,0 +1,100 @@
+/* store-assembly's own test fixture: the assembled store (`assembleStore`, R1) built for real over a Durable Object storage at
+   the platform's shape (node:sqlite behind `sql.exec` answering a cursor, as workerd's does), every module it builds real;
+   nothing is stubbed. It answers the surface `plane`'s fixture answered for the tests copied from plane (K624: by copy), so a
+   copied test reads the same: `store({db, env, before})` builds one assembled store over `db` (a fresh database by default),
+   so two constructions can share one storage; `s.ask` and `s.draft` are the Store's RPC bodies (`askOnObject`,
+   `draftOnObject` handed the assembled `read`, R8), and `fetch` is the store's dispatch with `acquire`'s trace stamped as
+   the class stamps it (`traceStamped`, R99), without the class's headers. Other modules' tests take `storeWorld()`
+   (`world.mjs`, R90), not this. */
+import { DatabaseSync } from "node:sqlite";
+import { assembleStore, askOnObject, draftOnObject, traceStamped } from "../../../src/store-assembly/index.mjs";
+
+export { assembleStore, STEP_ORDER, stepOrderFrom, FIRST_LAYER_11, namespaceOf } from "../../../src/store-assembly/index.mjs";
+
+const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
+function cursor(rows) {
+  let i = 0;
+  const c = {
+    next() { return i < rows.length ? { done: false, value: rows[i++] } : { done: true, value: undefined }; },
+    [Symbol.iterator]() { return c; },
+    toArray() { const out = rows.slice(i); i = rows.length; return out; },
+    one() { const rest = c.toArray(); if (rest.length !== 1) throw new Error(`expected one row, got ${rest.length}`); return rest[0]; },
+  };
+  return c;
+}
+
+/** A storage over `db`: `sql.exec`, a synchronous transaction, the alarm calls, and the blocked work recorded. */
+export function storage(db = new DatabaseSync(":memory:")) {
+  const sql = {
+    exec(q, ...args) {
+      const st = db.prepare(q);
+      return cursor(st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []));
+    },
+    get databaseSize() { return 0; },
+  };
+  let alarm = null, n = 0;
+  const blocked = [];
+  const ctx = {
+    storage: { sql, transactionSync: (fn) => {   /* as workerd's: a savepoint, rolled back and rethrown when the callback throws; nests */
+      const sp = `sp${n++}`;
+      db.exec(`SAVEPOINT ${sp}`);
+      try { const r = fn(); db.exec(`RELEASE ${sp}`); return r; }
+      catch (e) { db.exec(`ROLLBACK TO ${sp}`); db.exec(`RELEASE ${sp}`); throw e; }
+    }, getAlarm: async () => alarm, setAlarm: async (t) => { alarm = t; },
+               deleteAlarm: async () => { alarm = null; } },
+    id: { equals: () => false, toString: () => "do" },
+    blockConcurrencyWhile(fn) { const p = fn(); blocked.push(p); return p; },
+    waitUntil() {},
+  };
+  return { db, ctx, blocked };
+}
+
+/** R50 (K2853): the doors' deploy flags all on and a one-matter test set, for a module test (`assistantGateOf`); the
+ *  bar is then held by `deployed(ctx)`, which records a passed R75 record for every part on that set. */
+export const GATE_SET = Object.freeze({ id: "plane-t45-set", version: 1, matters: Object.freeze([{ id: "m1" }]) });
+export const GATE_FLAGS = Object.freeze({ ask: true, draft: true, action_drafts: true });
+export const GATE_PARTS = Object.freeze(["ask", "draft:own_words", "draft:translation", "draft:textcheck", "draft:infractiondraft",
+                                         "draft:bearingdraft", "draft:statusreport", "draft:reading"]);
+export async function deployed(ctx, parts = GATE_PARTS) {
+  const { aiRunsOf } = await import("../../../src/ai-runs/index.mjs");
+  for (const part of parts) {
+    const r = aiRunsOf(ctx).testBarRecord({ part, set: GATE_SET.id, set_version: GATE_SET.version, false_alarm_rate: 0,
+                                            passed: true, graded_by: "harness", at: "2026-10-01T00:00:00Z" });
+    if (!r || r.ok !== true) throw new Error(`the bar for ${part} was not recorded: ${JSON.stringify(r)}`);
+  }
+}
+
+/** One assembled store, built and settled (its migration and starts run). `routes(path, body)` answers its route map;
+ *  `call(path, body)` the route the path names, awaited, as the frame does; `fetch(path, init)` the store's own door. */
+export async function store({ db, env: extra, before = null, deliver = null } = {}) {
+  const st = storage(db);
+  const env = { STORE: { idFromName: (n) => n }, ...(extra || {}) };
+  /* a test's own deps for a factory read on its first call only (K61), handed before construction */
+  if (typeof before === "function") before(st.ctx, env);
+  const a = assembleStore(st.ctx, env, { deliver });
+  for (const p of st.blocked) await p;
+  const s = {
+    ...a,
+    routes: (url, body = null, grant = null) => a.routes(url, body, grant),
+    ask: (args) => askOnObject(st.ctx, env, args || {}),
+    draft: (args) => draftOnObject(st.ctx, env, args || {}, { read: (op, params) => a.read(op, params) }),
+    fetch: async (req) => a.dispatch(await traceStamped(req)),
+  };
+  const routes = (path, body = null) => s.routes(new URL("http://do" + path), body);
+  const call = async (path, body = null) => {
+    const op = new URL("http://do" + path).pathname.slice(1), map = routes(path, body);
+    if (!Object.hasOwn(map, op)) throw new Error(`no route ${op}`);
+    return JSON.parse(JSON.stringify(await map[op]() ?? null));
+  };
+  const fetch = async (path, init) => s.fetch(new Request("http://do" + path, init));
+  return { s, ctx: st.ctx, db: st.db, env, routes, call, fetch };
+}
+
+/** R35 (credentials R64): the assistant's disclosure recorded as shown to `member`, by that member, as the assembled store
+ *  asks before it sets her API-key reference (`accountreferenceset` is refused DISCLOSURE_DUE until then). */
+export async function disclosed(ctx, member = "member:ann") {
+  const { instanceSetupOf, ASSISTANT_DISCLOSURE } = await import("../../../src/setup.mjs");
+  const r = instanceSetupOf(ctx).disclosureShown({ member, version: ASSISTANT_DISCLOSURE.version, by: member });
+  if (!r || r.ok !== true) throw new Error(`the disclosure was not recorded: ${JSON.stringify(r)}`);
+  return r;
+}

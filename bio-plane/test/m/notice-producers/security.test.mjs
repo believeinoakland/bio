@@ -5,6 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world } from "../credentials/fixture.mjs";
+import { securityMapRefusal } from "../credentials/fixtures.mjs";
 import { fresh, reader, ofKind, texts, notHintFailures, JUDGMENT } from "./fixture.mjs";
 import { HINT_MARK, NOTICE_KINDS, SECURITY_LEVELS } from "../../../src/notice-producers/index.mjs";
 import { SECURITY_DAYS } from "../../../src/credentials/index.mjs";
@@ -174,7 +175,8 @@ test("R12: a securityLevel or securityMap that throws or does not answer contrib
     assert.deepEqual(r.facts.failed, ["credentials"], String(securityLevel));
   }
   assert.deepEqual([...SECURITY_LEVELS], ["Ordinary", "Raised", "High"]);
-  for (const securityMap of [boom, () => ({ ok: false, reason: "SECURITY_PERIOD_INVALID" }), () => null]) {
+  const refusals = await securityMapRefusal();
+  for (const securityMap of [boom, () => refusals.invalidPeriod, () => null]) {
     const { read } = await setup({ credentials: { securityLevel: () => ({ level: "High", levelAt: iso(NOW) }), securityMap } });
     const r = at(NOW, () => read("admin", { now: NOW }));
     assert.deepEqual(ofKind(r, KIND), []);

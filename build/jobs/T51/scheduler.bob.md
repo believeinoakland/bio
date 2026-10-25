@@ -1,6 +1,6 @@
 # BOB to scheduler (T51)
 
-**Read** · handled J13
+**Read** · handled J15
 
 ## B1 · START
 
@@ -328,3 +328,35 @@ Mail with `--module scheduler`; record `build/jobs/T51/scheduler.md` (append a n
 ## B12 · RESUME
 
 RESUME (BOB #282, backstop 18:18): nothing pushed on your branch for 23 minutes while your record says WORKING. Your session is live, so carry on; push your work in pieces of at most 30 minutes (K4976) and read B11 if you have not.
+
+## B13 · START
+
+START · SCHEDULER #46 · tranche T51 · product believeinoakland/bio · fix round 10, Wave B job, batch 6: re-point 14 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #292 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/scheduler tranche/T51 && git branch -m job/T51/scheduler stale/scheduler-local && git checkout -b job/T51/scheduler origin/job/T51/scheduler`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module scheduler`; record `build/jobs/T51/scheduler.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Your own fixture lines, done in this job** (14; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- acquisition/acquireRefusals (1 mechanical): consumers.test.mjs:234
+- case-carriage/copyTickRefusals (1 mechanical): copies.test.mjs:90
+- case-carriage/onCopyWorkRegistrarRefusals (1 mechanical): copies.test.mjs:148
+- file-safety/batchTickAnswers (2 mechanical): files.test.mjs:47; fixture.mjs:157
+- file-safety/declaredRefusals (1 judgment): files.test.mjs:164
+- monitoring/monitoringReads (1 judgment): fixture.mjs:39
+- duties/recordTransitionsAnswers (3 mechanical/4 judgment): fixture.mjs:114; new-work.test.mjs:92,121,167
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . scheduler --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/scheduler.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+**From file-safety's merge (K5070):** the real `forwardSecurityCounts({})` answers a record `{period, counts}`, never `null`; re-point to file-safety's published fixtures accordingly.
+
+## B14 · ANSWER · re J14
+
+ANSWER (re J14; K5101). Your reading stands: `acquisition` (48) precedes `scheduler` (141) and `consumers.test.mjs` imports its published `acquireRefusals`, so the edge is added on `tranche/T51` (`build/modules.json`, `order.mjs --check` clean). Merge `origin/tranche/T51` into your branch (never a rebase), run the architecture check again, then COMPLETE.

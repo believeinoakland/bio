@@ -9,6 +9,7 @@ import { Citation, CITE_CHECKS, citationOps } from "../../../src/citation/index.
 import { noSuchProject } from "../../../src/membership/index.mjs";
 import { INLINE_MAX } from "../../../src/promotion/index.mjs";
 import { localize } from "../../../src/setup-words/index.mjs";
+import { basisRefusals } from "../inquiry/fixtures.mjs";
 
 const ANN = { viewer: V("ann"), author: "member:ann", identity: V("ann") };
 const VERA = { viewer: V("vera"), author: "member:vera", identity: V("vera") };
@@ -194,7 +195,7 @@ test("R14: NO_BUNDLE_MD, UNPARSEABLE_FRONTMATTER, UNSPLICEABLE_REFERENCES and CI
 
 test("R14: a refusal from the write is answered unchanged, with handle null and drift false, nothing written; the write refusing nothing, the edge lands", () => {
   const { w, p } = setup();
-  let refusal = { ok: false, reason: "SOME_STEP_REFUSED", code: "SOME_STEP_REFUSED", detail: "refused" };
+  let refusal = basisRefusals().basisRefused;
   w.promotion.registerStep("citation-test", { check: (c) => (c.bundleId === p ? refusal : null) });
   const before = w.md(p);
   assert.deepEqual(w.cit.drawQuestion({ project: p, inquiry: Q, ...ANN }), { ...refusal, project: p, handle: null, drift: false });

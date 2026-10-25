@@ -1,6 +1,6 @@
 # action-replies (T51)
 
-**Status** · session_01NcxvJ1PpGvLHtvFLzKS8Qy · depth 2 · COMPLETE · handled B1
+**Status** · session_014bgUSo7CFss8G3KkUwUuZE · depth 2 · COMPLETE · handled B2
 
 ## J1 · REPORT
 
@@ -33,3 +33,16 @@ Tests and checks (summary lines):
 - `setup-words/build.mjs --check`: the stale-rows note only (expected; it names this module's new `arising_form` row, which BOB regenerates at the layer close), no refusal.
 
 Size (session_01NcxvJ1PpGvLHtvFLzKS8Qy): test runs 3, module lines 690 (`index.mjs` 549, `checks.mjs` 74, `schema.mjs` 67).
+
+## Fix round 10, Wave B, batch 6 (ACTION-REPLIES #7, session_014bgUSo7CFss8G3KkUwUuZE)
+
+Causes done: actions/actionsForRefusal, 3 lines (open.test.mjs:97, 98, 107), now at zero in `checks/fixtures.mjs action-replies --list`.
+- :97 and :107: the hand-built `{ ok: false, reason: "BROKEN" }` from `actionsFor` is now `actionsForRefusal().unknownRead` (actions' real NO_SUCH_ACTION refusal); the asserted throw (`could not be read`) still holds.
+- :98: the `actionRead` refusal in the third case could not be re-pointed. This module skips a NO_SUCH_ACTION from `actionRead` by design, and actions gives no other refusal for it, so the case would stop testing the throw. It stays a made-up code, marked `// fixtures-generic: BROKEN` (open.test.mjs:100). **For BOB's merge read (K5060):** one `fixtures-generic` marker, open.test.mjs:100, standing for "an actionRead that refuses with a code other than NO_SUCH_ACTION". No `fixtures-own` markers.
+Lines left: none (no waiting, stay or Wave B lines).
+Tests: action-replies 31 pass, 0 fail. Checks: format 0 failures; architecture 0; coverage 11 of 11 ids; ownership 0; fixtures 0 failures (accepted 1). `impact.mjs origin/tranche/T51 HEAD`: 0 affected modules, so no user tests to run.
+Size (session_014bgUSo7CFss8G3KkUwUuZE): test runs 4, module lines 0
+
+## J3 · COMPLETE
+
+COMPLETE. Fix round 10 batch 6: the 3 actions/actionsForRefusal lines (open.test.mjs:97,98,107) are at zero. :97 and :107 take actions' real unknownRead refusal; :98's actionRead case keeps a made-up BROKEN code, marked 'fixtures-generic: BROKEN' at open.test.mjs:100, because this module skips NO_SUCH_ACTION by design and actions gives no other actionRead refusal (your K5060 read; no fixtures-own markers). Module tests 31 pass, 0 fail; format, architecture, coverage, ownership, fixtures all 0 failures; impact: 0 affected modules. Record: build/jobs/T51/action-replies.md.

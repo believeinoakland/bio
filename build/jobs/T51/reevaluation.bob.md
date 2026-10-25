@@ -1,6 +1,6 @@
 # BOB to reevaluation (T51)
 
-**Read** · handled J6
+**Read** · handled J11
 
 ## B1 · START
 
@@ -111,3 +111,65 @@ First: `git fetch origin tranche/T51 job/T51/reevaluation`, work on `job/T51/ree
 ## B6 · ANSWER · re J5
 
 ANSWER (G89, R41) re J5: (b). A member must see the corrected grade without waiting on an unrelated receipt, so the sweep's pending state covers it. R41 now carries the sentence (on the tranche, merge it): "The sweep is pending (R25) while an open UNDETERMINED notice's copy has been read and its candidate now grades otherwise, and rests once that notice is re-graded; a copy never read is not polled." Restore your `#regradeOwed` patch. `plane/round6-reevaluation.test.mjs:103` pins the old rest rule: it is plane's file, so leave it; BOB fixes it at your merge (test-only, K4297 (2): one tick before "rests"). Report in your record the exact change that line needs (the assertion and why), and name every other test of another module your change turns red, with the same detail. K4774.
+
+## B7 · START
+
+START · REEVALUATION #27 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 5: publish 1 fixture, re-point 3 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #290 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/reevaluation tranche/T51 && git branch -m job/T51/reevaluation stale/reevaluation-local && git checkout -b job/T51/reevaluation origin/job/T51/reevaluation`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module reevaluation`; record `build/jobs/T51/reevaluation.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `bio-plane/test/m/reevaluation/fixtures.mjs` (new file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `noticesRead` (users now: queue-producers 1): the real `reevaluation.notices` over raised notices (`{ok, limit, truncated, notices}`).
+
+**Your own fixture lines, done in this job** (3; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- CODE (NO_CASE_EDITION is in no product file. Fix: use NO_SUCH_CASE_EDITION (publication, public-read); the stand-in is also FIX-L publication/case-cited-parts): caseparts.test.mjs:30
+- standards/standardsEmptyReads (1 mechanical): fixture.mjs:100
+- retrieval/selectionResolve (1 judgment): fixture.mjs:160
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . reevaluation --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/reevaluation.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B8 · ANSWER · re J7
+
+ANSWER (K5088): `retrieval` is now in reevaluation's `uses` on the tranche (retrieval 73 precedes reevaluation 103; `order.mjs --check` clean). Merge `tranche/T51` into your branch, re-point `fixture.mjs:160` to retrieval's published `noSelection` fixture, run your tests and checks, and post COMPLETE. `caseparts:31` may stay listed for publication's run, as your record says.
+
+## B9 · START
+
+START · REEVALUATION #28 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 37, a published fixture (plan build/plan/fix-round-10-T51.md §3; K5108)
+
+Depth 2 (BOB #293 is depth 1).
+
+FIRST, before `mail start`: `git fetch origin job/T51/reevaluation tranche/T51`; if a local `job/T51/reevaluation` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/reevaluation stale/reevaluation-local && git checkout -b job/T51/reevaluation origin/job/T51/reevaluation`. If `job/T51/reevaluation` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module reevaluation`; record `build/jobs/T51/reevaluation.md` (append a new section). Model claude-haiku-5-5; workers haiku low, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` (K5078). A fixture is made by your real code when the test runs, never stored (K4990, K4993).
+
+**Follow-up 37 (test files only; QUEUE-PRODUCERS #25 J16).** Your published `noticesRead()` gives one notice. queue-producers' `noticed.test.mjs:10` (its R52) groups several notices of one holder, target and newer capture, with null grades among them, and other holders and targets. Publish `noticesRead` over several legs, grades (null among them) and holders, made by real acts (a new export, or the existing one parameterised without changing its existing answer).
+
+**Done:** the fixture exported from `bio-plane/test/m/reevaluation/fixtures.mjs` with a test in your `fixtures.test.mjs` that calls it and checks the real answer; `checks/fixtures.mjs <absolute root> reevaluation --list` 0; your module's tests green; format, architecture, coverage, words, ownership 0. Name each new export and its signature in your COMPLETE (its user re-points next). List every `fixtures-own`/`fixtures-generic` marker you add (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only: if the real answer shows a product defect, REPORT it to BOB and change no product code.
+
+## B10 · START
+
+START · REEVALUATION #29 · tranche T51 · product believeinoakland/bio · fix round 10, a re-point to a published fixture (plan build/plan/fix-round-10-T51.md §3; K5115)
+
+Depth 2 (BOB #293 is depth 1).
+
+FIRST, before `mail start`: `git fetch origin job/T51/reevaluation tranche/T51`; if a local `job/T51/reevaluation` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/reevaluation stale/reevaluation-local && git checkout -b job/T51/reevaluation origin/job/T51/reevaluation`. If `job/T51/reevaluation` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module reevaluation`; record `build/jobs/T51/reevaluation.md` (append a new section). Model claude-haiku-5-5; workers haiku low, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993).
+
+**Follow-up 41 (test files only; PUBLICATION #41 J15).** publication now runs your contract `case-cited-parts` (`bio-plane/test/m/publication/contract-case-parts.test.mjs`, read it whole) and shows the real answers are wider than the value your `caseparts.test.mjs:30-31` keeps: a ratified case answers `{ok: true, case, edition, project, parts: [{bundle_id, capture_sha}], limit, truncated}` (R41's bound), and a case with no edition answers `{ok: false, reason: "NO_SUCH_CASE_EDITION", case, edition, detail}`. Your contract value takes the real shape: every key publication's run states, except the refusal's `detail` sentence, which a test never copies (K3810; as K5099 ruled for public-read): leave `detail` out of the value. Keep the `// fixtures-contract: publication case-cited-parts` marker.
+
+
+**Done:** `checks/fixtures.mjs <absolute root> reevaluation --list` 0; your module's tests green; format, architecture, coverage, words, ownership 0 (a new test import of a module you do not declare in `uses`: QUESTION to BOB for the edge). List every marker you add (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only.
+
+## B11 · CHANGE
+
+CHANGE · follow-up 43 (K5116), in this job beside B10, test files only.
+
+queue-producers' R52 (one item per (holder, target, newer version); "a notice whose newer version the viewer cannot see is its own matter") has two controls with no real answer: your `noticesRead({several: true})` holds no target with two newer versions. Extend `noticesRead({several: true})` (keeping every notice it answers now) or add a sibling export, made by real acts: (a) one holder's target with two newer versions (two notices differing in `newer_capture`), and (b) a notice whose newer version the viewer may not see (its `newer_capture` and grade null, as your J9 states the real form). Test each in `fixtures.test.mjs` against the real read. Name what you added in your COMPLETE.

@@ -395,14 +395,24 @@ function decideDelimiter(text, first) {
   DELIMITERS.forEach((d, j) => {
     const seen = new Map();
     for (const r of recs) seen.set(r[j], (seen.get(r[j]) ?? 0) + 1);
-    let best = 0, bestN = 0;
-    for (const [count, times] of seen) if (times > bestN || (times === bestN && count > best)) { best = count; bestN = times; }
+    let best = 0, bestN = 0, present = 0;
+    for (const [count, times] of seen) {
+      if (count < 1) continue;
+      present += times;
+      if (times > bestN || (times === bestN && count > best)) { best = count; bestN = times; }
+    }
     modal[d.name] = best;
-    if (best >= 1 && bestN * 2 > lines) consistent.push({ ...d, times: bestN });
+    // consistent: present (at least once) on the majority of the lines, whatever its count on each (R7); the modal count breaks a tie
+    if (present * 2 > lines) consistent.push({ ...d, times: present, modalLines: bestN });
   });
+  if (consistent.length > 1) {
+    const top = Math.max(...consistent.map((d) => d.modalLines));
+    const lead = consistent.filter((d) => d.modalLines === top);
+    if (lead.length === 1) consistent.splice(0, consistent.length, lead[0]);
+  }
   if (consistent.length === 1) {
     const d = consistent[0];
-    return { delimiter: d.ch, name: d.name, confidence: "certain", lines,
+    return { delimiter: d.ch, name: d.name, confidence: "certain", lines, modalLines: d.modalLines,
       signals: [d.times === lines
         ? localize("office-readers.csv.name_occurs_v1_time_s", "{name} occurs {v1} time(s) outside quotes on every one of the first {length} complete lines", { name: String(d.name), v1: String(modal[d.name]), length: String(lines) })
         : localize("office-readers.csv.delimiter_in_the_majority_of_the_records", "{name} occurs {v1} time(s) outside quotes on {times} of the {length} complete lines read, a majority", { name: String(d.name), v1: String(modal[d.name]), times: String(d.times), length: String(lines) })],
@@ -453,12 +463,15 @@ export function walkRecords(text, delimiter) {
  *  `info` is `{ end, skipLF, cols, over, open }`: `end` is the number of characters consumed up to and including the
  *  record's terminator (so a walk can resume there; `skipLF` says a CR ended the record and a LF that follows is its own),
  *  `cols` the record's field count, `over` the `[column, length]` of each field longer than `CELL_CHARS_MAX` (the field is
- *  kept to `CELL_KEPT_CHARS`), `open` `{col, chars}` for a quote still open at the end of the text (that field is `""`).
+ *  kept to `CELL_KEPT_CHARS`), `open` `{col, chars}` for a quote still open at the end of the text (that field is `""`),
+ *  `wide` the most fields the record would have under any one of the four delimiters, counted outside quotes while no delimiter
+ *  is decided (`0` when one is), so the column bound (R22) judges a record whose delimiter R7 could not decide.
  *  `limits.maxColumns` stops a record keeping fields past it (`cols` still counts them). */
 export function createRecordWalk(delimiter, onRecord, limits = {}) {
   const maxColumns = limits.maxColumns ?? Infinity;
   let delim = delimiter ? delimiter.charCodeAt(0) : -1;
   let row = [], cols = 0, field = "", fieldLen = 0, over = null;
+  const candidates = [0, 0, 0, 0];
   let inQuotes = false, atStart = true, started = false;
   /* The last piece ended on a `"` inside quotes: the next character says whether it was one half of a doubled `""`. */
   let quoteOpen = false;
@@ -479,8 +492,9 @@ export function createRecordWalk(delimiter, onRecord, limits = {}) {
   };
   const endRecord = (end, crEnd, open) => {
     endField();
-    const info = { end, skipLF: crEnd, cols, over, open: open ?? null };
+    const info = { end, skipLF: crEnd, cols, over, open: open ?? null, wide: delim < 0 ? Math.max(...candidates) + 1 : 0 };
     const record = row;
+    candidates.fill(0);
     row = []; cols = 0; over = null; started = false; atStart = true;
     onRecord(record, info);
   };
@@ -512,6 +526,10 @@ export function createRecordWalk(delimiter, onRecord, limits = {}) {
           continue;
         }
         if (c === 34 && atStart) { inQuotes = true; atStart = false; started = true; run = i + 1; continue; }
+        if (delim < 0) {
+          const k = c === 44 ? 0 : c === 59 ? 1 : c === 9 ? 2 : c === 124 ? 3 : -1;
+          if (k >= 0) candidates[k]++;
+        }
         if (c === delim) { append(text.slice(run, i)); endField(); run = i + 1; atStart = true; started = true; continue; }
         if (c === 13) {
           append(text.slice(run, i));
@@ -665,7 +683,7 @@ function fileDialect(ctx) {
   } else {
     for (const w of windows) if (w.dec.lines > pick.dec.lines) pick = w;
   }
-  const delimiter = { ...pick.dec, lines: windows.reduce((n, w) => n + w.dec.lines, 0) };
+  const delimiter = { ...pick.dec, lines: windows.reduce((n, w) => n + w.dec.lines, 0), records: pick.dec.lines };
   const delim = delimiter.delimiter;
   const disagree = [];
   for (const w of windows) {
@@ -794,7 +812,8 @@ async function csvParts(bytes, opts) {
   const onRecord = (record, info) => {
     if (guard) return;
     rows++;
-    if (info.cols > CSV_COLUMNS_MAX) { guard = sizeMarker("columns", info.cols, CSV_COLUMNS_MAX, "SHEET_COLUMNS_MAX", encodingOf); return; }
+    const columns = Math.max(info.cols, info.wide);
+    if (columns > CSV_COLUMNS_MAX) { guard = sizeMarker("columns", columns, CSV_COLUMNS_MAX, "SHEET_COLUMNS_MAX", encodingOf); return; }
     if (rows > CSV_ROWS_MAX) { guard = sizeMarker("rows", rows, CSV_ROWS_MAX, "MEASURED_CSV_ROWS_BOUND", encodingOf); return; }
     if (records) {
       if (info.over || info.open) recInfo.set(records.length, info);
@@ -1202,6 +1221,15 @@ const BINARY_SIGNATURES = [
 const hasBinarySignature = (h) => BINARY_SIGNATURES.some((sig) => h.length >= sig.length && sig.every((v, i) => h[i] === v))
   || (h.length >= 12 && h[0] === 0x52 && h[1] === 0x49 && h[2] === 0x46 && h[3] === 0x46 && h[8] === 0x57 && h[9] === 0x45 && h[10] === 0x42 && h[11] === 0x50);   // WebP
 
+/** R26: a file declared plain text (type `text/plain` or a `.txt` name) that no declared CSV or TSV (its type, or a `.csv`/`.tsv`
+ *  name) overrides: its delimiter must repeat with one count on the majority of its lines, not merely appear on them. */
+function isDeclaredPlainText(lowerName, type) {
+  const t = type.split(";")[0].trim().toLowerCase();
+  if (t === CSV_CONTENT_TYPE || CSV_CONTENT_TYPE_SYNONYMS.includes(t) || t === TSV_CONTENT_TYPE) return false;
+  if (lowerName.endsWith(".csv") || lowerName.endsWith(".tsv")) return false;
+  return t === "text/plain" || lowerName.endsWith(".txt");
+}
+
 /** True exactly when `type` names a CSV, TSV or plain or opaque type, `name` ends in `.csv`, `.tsv`, `.tab` or `.txt`, and
  *  `head` (the first bytes of the file, up to 1 MiB) is delimited text: no binary signature, no NUL in an 8-bit head, an
  *  encoding R7 reads and one consistent delimiter. Never throws. */
@@ -1218,6 +1246,7 @@ export function isDelimitedText(name, type, head) {
     if (hasBinarySignature(h)) return false;
     const s = scanDialect(h, undefined);
     if (!s.ok || s.encoding.encoding == null || s.delimiter.delimiter == null) return false;
+    if (isDeclaredPlainText(lower, type) && !(s.delimiter.modalLines * 2 > s.delimiter.records)) return false;
     if (!s.utf16 && s.windows.some((w) => w.scan && w.scan.nul > 0)) return false;
     return true;
   } catch {

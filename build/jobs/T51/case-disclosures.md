@@ -1,6 +1,6 @@
 # case-disclosures (T51)
 
-**Status** · session_01XeesuXwbodLb8B9vNN8tcd · depth 2 · COMPLETE · handled B10
+**Status** · session_01Jh7vJfztCtrsN747UW4pTj · depth 2 · COMPLETE · handled B12
 
 ## J1 · QUESTION
 
@@ -190,3 +190,49 @@ Size (session_01XeesuXwbodLb8B9vNN8tcd): test runs 7, module lines 2447
 COMPLETE · B10. tranche/T51 merged; g50-acts.test.mjs is green against the real merged providers (both variants). case-disclosures 115/115; users case-authoring 244, case-account 48, case-inputs 73, case-tensions 26 all pass. checks: format/architecture/coverage/channels 0; the words failures are other modules' (installer-steps logsunconfirmed, case-checker spec inline), none in mine; ownership 0. No code change.
 
 Size (session_01XeesuXwbodLb8B9vNN8tcd): test runs 7, module lines 2447
+
+## J13 · COMPLETE
+
+COMPLETE · B11. Fix round 10, Wave A batch 5. Branch job/T51/case-disclosures @ 8f6a9278ba (tranche/T51 merged first). Test files only; no product code changed.
+
+**Published** `bio-plane/test/m/case-disclosures/fixtures.mjs` with `gateRefusal`: the four real pre-flight gate refusals (DOCUMENT_COPY_PENDING + `document`, PHOTO_UNCHECKED + `photo`, CO_ATTESTATION_UNACKNOWLEDGED, TENSION_NOT_DISCLOSED), each raised by the module's own judging methods over its test world at call time, nothing stored. `fixtures.test.mjs` (R1, R2, R6, R22) checks reason, code, check, translation and the named fields against CASE_DISCLOSURE_CHECKS.
+
+**Own lines re-pointed (16, all done):**
+- account.test:103 and seam.test:158 → case-checker/checkAccountMalformed (MALFORMED; ACCOUNT_MALFORMED removed).
+- captures.test:275 → sources/sourceOfReads (NO_SUCH_SOURCE for `none`/`fetched`). The made-up `{ok:false, reason:"X"}` case is removed: sources gives no other refusal to sourcesStated; the null and throwing reads still cover the Withheld branch.
+- carries.test:172 → promotion/factUnavailable (FACT_UNAVAILABLE; NO_SUCH_FACT dropped). carries.test:295 → strength/gradingFactsUnread (NO_SUCH_INQUIRY dropped).
+- documents.test:154 → case-carriage/copyReadStates (real `undetermined`); the made-up NO_SUCH_CAPTURE refusal removed (case-carriage never refuses a read). documents.test:295 → doc-clean/encryptedRefusal.
+- fixture.mjs:130 → retrieval/noSelection; fixture.mjs:397 → real `importedCase` from case-import/importedWorld (IMPORT_NO_SUCH_EDITION).
+- hunch.test:34 → inquiry/basisForUnread.noId. imported.test:99 → case-import/openFlagsUnread.acceptance (null); imported.test:126 → openFlagsUnread.flags (`{flags:[],complete:false}`; NO_SUCH_IMPORT dropped).
+- people.test:317 → people/tiesConcerningRefusal: the made-up refusal "down" removed; a throwing read stays undetermined, and the real empty answer (member null, ties []) is tested as no ties, not undetermined (K5077).
+- tensions.test:135 → contradiction/candidateReads.noSubject.
+- g50-acts.test:24,25 (FIX-L) → one marker `// fixtures-contract: answer-envelope door-helpers`; the provider's `fixtures-run: case-disclosures door-helpers` is already in answer-envelope/door-helpers.test.mjs:15, so nothing waits.
+
+**Markers added:** 1 `fixtures-contract` (g50-acts.test.mjs, above `storeSilent`, covers both lines). No `fixtures-own`, no `fixtures-generic`.
+
+**Checks:** `checks/fixtures.mjs . case-disclosures --list`: answer 0, stub 0, code 0, contract 0, accepted 2, 0 failures. case-disclosures suite 116 pass / 0 fail (115 + the fixture test). coverage 34 of 34 ids, 0 failures; format 0; architecture 0; words 0 (testcopy 0); ownership 0. `impact.mjs origin/tranche/T51 HEAD`: 0 affected modules (tests only).
+Fixture users of gateRefusal still hand-building it: screens-publish ceremony.test:253,254, fix2:53, fix3:33, fix4:14, fr30:225, fr30b:80 (their job).
+
+Size (session_0137mVoPheg67hT8zpcCsqQL): test runs 6, module lines 2447
+
+## Work record · B12 (fix round 10, final pass, item 70; K5148)
+
+**Met:** case-disclosures **R15** (BOB strikes the mark).
+
+**C1 (BLOCKER):** `findingFacts` (`src/case-disclosures/index.mjs:646-651`) now `JSON.parse`s the `content` row's `extent` and its `chain` (null stays null), so each `passages` row carries the canonical extent object and the chain value, and `contentIdFor(capture_sha, extent, chain)` recomputes `content_id`. Re-read the cited lines first: the cause is where the diagnosis says. The `quoted` lookup still compares against the stored text (line 649), unchanged.
+
+**Failing-first test:** `test/m/case-disclosures/carries.test.mjs`, the R15 `findingFacts` test. Its content ids are now real (`contentIdFor`, not `sha("…")`), one row carries a chain (set through the content table); every `passages` row asserts `typeof extent === "object"`, `chain` null or an array, and `contentIdFor(...) === content_id`; the former line-291 expectation takes the object. Seen red on the string (extent `'{"kind":"doc-para","para":1}'`), green after the fix.
+
+**Why the tests missed it:** the test built its content row from a string and pinned the string back in its expectation (the producer's output was never fed to the checker's rule), and the checker's own tests use hand-built object rows. No test of the producer asked whether its rows recompute their own ids.
+
+**REPORT for BOB:**
+1. Door case, yours to place (K5138, K5148): publish, then the served checker recreates the finding, and `caseimport` recreates it (diag2-10b C1 item 3: control-plane `walk10b-recreate.test.mjs`, with the k = 2 form for R182).
+2. Another module's test pins the same string: `bio-plane/test/m/case-authoring/carries.test.mjs:157` (R55, "grading_facts: and passages: are written at the act") expects `extent: canonicalJson({ kind: "doc-para", para: 1 })`; it now fails (1 of 257) on `extent` object vs string, and its content row at line 135 builds the string too. Not my module: `case-authoring` must take the object (and a real content id) in its test.
+3. `case-authoring/index.mjs`, `ratification/finding.mjs`, `ratification/ops.mjs` and `case-import/index.mjs` consume the rows; ratification (335) and case-import (162) suites pass unchanged.
+
+**Tests and checks:** case-disclosures 116 pass / 0 fail; ratification 335 pass; case-import 162 pass; case-authoring 256 pass / 1 fail (item 2). `checks/fixtures.mjs … case-disclosures --list`: no new line (accepted 2 as before; no marker added), 0 failures; coverage 34 of 34, 0 failures; format 0; architecture 0; ownership 0; words: no finding in my module (the run's other failures are store-assembly's, control-plane, interface-shell, store-request and actions').
+Size (session_01Jh7vJfztCtrsN747UW4pTj): test runs 9, module lines 2
+
+## J14 · COMPLETE
+
+COMPLETE · B12. R15 met (passages rows carry the extent object and parsed chain; recompute test red then green; branch pushed). REPORT: (1) door case (publish, served checker recreates, caseimport recreates) is BOB's to place; (2) bio-plane/test/m/case-authoring/carries.test.mjs:157 (R55) pins the string extent and now fails 1 of 257, case-authoring must take the object; details in my record.

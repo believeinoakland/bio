@@ -88,6 +88,28 @@ test("R4 K4557 a prepare that names no shelf (the screens' own call: case, entry
   rowOk(prepare(w, { kind: "reaction", entry: r, shelf: "listed", summary: "x" }), "DOCKET_WRONG_SHELF");
 });
 
+test("R1 R4 K5148 the summary filed with an entry is kept, and a prepare that names none uses it (the screens' own call: case, entry, kind)", () => {
+  const w = seeded();
+  const from = { kind: "other", name: "The Daily Example" };
+  const filed = file(w, { kind: "reaction", from, summary: "A column." });
+  assert.equal(filed.ok, true, JSON.stringify(filed).slice(0, 200));
+  assert.equal(filed.summary, "A column.", "the filing answers the summary it kept");
+  const bare = prepare(w, { kind: "reaction", entry: filed.entry, shelf: undefined, summary: undefined });
+  assert.equal(bare.ok, true, JSON.stringify(bare).slice(0, 200));
+  assert.equal(fields(bare).summary, "A column.", "the statement carries the filed summary");
+  /* a summary the prepare names is the manager's own words and wins */
+  const named = prepare(w, { kind: "reaction", entry: filed.entry, shelf: undefined, summary: "The manager's words." });
+  assert.equal(fields(named).summary, "The manager's words.");
+  /* control: a reaction filed with none is still DOCKET_NO_SUMMARY on a bare prepare */
+  const none = file(w, { kind: "reaction", from }).entry;
+  rowOk(prepare(w, { kind: "reaction", entry: none, shelf: undefined, summary: undefined }), "DOCKET_NO_SUMMARY");
+  /* every kind that has a summary keeps it: a response filed with one carries it to its statement */
+  const resp = file(w, { summary: "The office's answer." });
+  assert.equal(resp.summary, "The office's answer.");
+  assert.equal(fields(prepare(w, { kind: "response", entry: resp.entry, shelf: undefined })).summary, "The office's answer.");
+  assert.equal(file(w).summary, undefined, "no summary filed, none answered");
+});
+
 test("R4 the shelf, a reaction's summary and its archive copy", () => {
   const w = seeded();
   const react = (x = {}) => file(w, { kind: "reaction", from: { kind: "other", name: "The Daily Example" }, ...x }).entry;

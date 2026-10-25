@@ -25,7 +25,7 @@ test("R122 (G154 (4)) on workerd: an `archive_entries` table made without `offer
   assert.equal(cols.before.includes("offers"), false, "the table was made without the column");
   assert.equal(cols.after.includes("offers"), true, "migrate added it (PRAGMA table_info, then ALTER TABLE ADD COLUMN)");
   const first = await ask(`act=unpack&who=member&sha=${sha}`);
-  assert.deepEqual([first.ok, first.documents], [true, [0, 1]]);
+  assert.deepEqual([first.ok, first.documents], [true, [0, 1]], JSON.stringify(first));
   const filed = (await ask("act=columns")).rows;
   assert.deepEqual(filed.map((r) => r.state), ["filed", "filed"]);
   const again = await ask(`act=unpack&who=daemon&sha=${sha}`);

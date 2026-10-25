@@ -1,6 +1,6 @@
 # BOB to queue (T51)
 
-**Read** · handled J15
+**Read** · handled J18
 
 ## B1 · START
 
@@ -267,3 +267,69 @@ Mail with `--module queue`; record `build/jobs/T51/queue.md` (append a new secti
 ## B18 · CHANGE
 
 CHANGE (BOB #280, K4939): tranche/T51 no longer tracks seven node_modules symlinks my merge c156abe97d added by mistake. Merge origin/tranche/T51 into your branch now (never a rebase); if a node_modules path in your checkout is a symlink afterwards, delete the link and run K4113's npm ci loop. Your diff must not add or keep any node_modules entry.
+
+## B19 · START
+
+START · QUEUE #36 · tranche T51 · product believeinoakland/bio · fix round 10, Wave B job, batch 6: re-point 8 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #292 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/queue tranche/T51 && git branch -m job/T51/queue stale/queue-local && git checkout -b job/T51/queue origin/job/T51/queue`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module queue`; record `build/jobs/T51/queue.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Your own fixture lines, done in this job** (8; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- progressions/disposeProposalOk (2 judgment): converts.test.mjs:143; dispose.test.mjs:11
+- people/checkResults (1 mechanical): noticed.test.mjs:290
+- CODE (STEP_GONE: no product file gives it; wizard-scripts has WIZARD_STEP_REFUSED and the other WIZARD_* codes (C-131.x). Use a real one, from wizard-scripts/brokenScripts): watched.test.mjs:38
+- provenance/homeOfEmpty (1 mechanical): world.mjs:121
+- progressions/disposeProposalRefusal (1 mechanical): world.mjs:132
+- monitoring/monitoringReads (1 mechanical): world.mjs:152
+- docket/coreDue (1 mechanical): world.mjs:171
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . queue --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/queue.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+**Found before this job (K5077):** `noticed.test.mjs:290` takes its `moneyChecks.noticed` answer from money-checks' published fixture (`noticed`, money-checks batch 5) and the people half from people's `fixtures.mjs` (`checkResults`, `evaluateChecksAnswers`).
+
+## B20 · ANSWER · re J16
+
+ANSWER (re J16; K5103). (1) The five edges are on `tranche/T51`: queue now uses provenance, money-checks, people, docket and monitoring (each earlier in the order, each imported for its published fixture; `order.mjs --check` clean). Merge `origin/tranche/T51` (never a rebase) and re-run the architecture check. (2) `noticed.test.mjs:292` does not wait past this round: in your COMPLETE name exactly which ops of that table are duties', answers' and inquiry's, and the answer each returns there (its shape and when the test needs it), so each provider publishes that fixture by its real code in a follow-up and your line is re-pointed then. Then COMPLETE.
+
+## B21 · START
+
+START · QUEUE #37 · tranche T51 · product believeinoakland/bio · fix round 10, a re-point to a published fixture (plan build/plan/fix-round-10-T51.md §3; K5113)
+
+Depth 2 (BOB #293 is depth 1).
+
+FIRST, before `mail start`: `git fetch origin job/T51/queue tranche/T51`; if a local `job/T51/queue` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/queue stale/queue-local && git checkout -b job/T51/queue origin/job/T51/queue`. If `job/T51/queue` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module queue`; record `build/jobs/T51/queue.md` (append a new section). Model claude-haiku-5-5; workers haiku low, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993).
+
+**Follow-up 38 (test files only; your J16/J17 left line).** `noticed.test.mjs:292`, the `notices:` table, still hand-builds three providers' answers. Each has merged its fixture (read each and its test whole):
+- duties `dutiesForViewer()` (`bio-plane/test/m/duties/fixtures.mjs`): `none` is the real `dutiesOf` for an entity holding no duty (`{ok: true, duties: []}`). A viewer holding no duty has no duty id, so the real `occurrencesOf` for an absent id is `NO_SUCH_DUTY`, never an empty list: take `heldOccurrences` (a real duty's window with no trigger, `{ok: true, occurrences: []}`) or `noneOccurrences` as your test's case truly needs.
+- answers `standingAnswersHeldBack({member, finds})` (`bio-plane/test/m/answers/fixtures.mjs`, async): the real held-back run. Its `held_back` is the object `{condition: "switch_off", switch: "copy"}`, never the string `"ai_off"` (K5111); your item and its assertions follow the real answer.
+- inquiry `datedWaitOf({viewer, date, asOf})` (`bio-plane/test/m/inquiry/fixtures.mjs`): the real `datedWaits` with one due wait (`answer`), its question id in `inquiry`; your world's question and expected key take that id.
+
+**Done:** `checks/fixtures.mjs <absolute root> queue --list` 0; your module's tests green; format, architecture, coverage, words, ownership 0 (a new test import of a module you do not declare in `uses`: QUESTION to BOB for the edge). List every marker you add (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only.
+
+## B22 · START
+
+START · QUEUE #38 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 75, 78 (1); K5148)
+
+Depth 2 (BOB #297 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/queue tranche/T51`; if a local `job/T51/queue` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/queue stale/queue-local && git checkout -b job/T51/queue origin/job/T51/queue`. If `job/T51/queue` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module queue`; record `build/jobs/T51/queue.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+Start only once project-roster's R44 (its read of answered join requests by `closed_by`) is merged on the tranche; if it is not, post BLOCKED naming it.
+
+1. **"What you answered" gains the join answer** (`diag2-03b.md` §5; queue R95, marked): `#answeredList` (`queue/index.mjs:1893-1954`) builds four row kinds; a join request the member answered (Grant or Decline) is none of them, so the page is empty after answering. Add the fifth kind `join_answer` from project-roster's published read by `closed_by` (R44): project, requester, answer, day; a project the viewer can no longer see names nothing (R33). Test `t51.test.mjs`: project-roster's real closed request (`declined`, `closed_by` the member) appears as `{act: "join_answer", ...}`; control: another owner's answer is not hers; a hidden project names nothing. Red today. The screen's draw is screens-daily's (its START).
+2. **The kind `project-leave`** (queue-producers R54, QUEUE-PRODUCERS #29 J22, plan item 78 (1)): queue-producers now mints an OBLIGATION of kind `project-leave` (keyed `OBLIGATION::project-leave::<project>::<handle>`, act `projectremove`, recipients the project's owners), which `classOfKind` (`queuestate.mjs`, beside `project-request` at about `:205`) refuses `NO_SUCH_KIND`. Register it as an OBLIGATION wherever the two project kinds are named in your paths (`queuestate.mjs`'s lists, `index.mjs:729` kind to act, `:791` its note, queue R57's list as the code reads it), so the item mints. Its words are screens-daily's. Test failing first: queue-producers' branch `job/T51/queue-producers` is merged into the tranche by BOB together with yours: write your test over a `project-leave` item of that shape (mint accepted, class OBLIGATION, act `projectremove`); after merging `origin/job/T51/queue-producers` into your branch locally to run queue-producers' `projects.test.mjs` against your change once (do not push that merge: BOB merges it), state the result in your COMPLETE.
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> queue --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.

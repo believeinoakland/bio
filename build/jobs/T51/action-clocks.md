@@ -1,6 +1,6 @@
 # action-clocks (T51)
 
-**Status** · session_019moQM11yaAcc7xfvrEDnxX · depth 2 · COMPLETE · handled B4
+**Status** · session_01BbaZvVVyVvTx28XGJdeNbi · depth 2 · COMPLETE · handled B4
 
 ## Completion (T51-238)
 
@@ -102,3 +102,28 @@ Size (session_019moQM11yaAcc7xfvrEDnxX): test runs 5, module lines 2162
 ## J4 · COMPLETE
 
 C53 met: action-clocks R26. op=remindersfor (read, member and admin) answers remindersFor({action, viewer}) or actions.noSuchAction; declared in DECLARED_OPS as remindersfor (mutating false, weight read, accepts/requires action). Tests (written first, seen failing): t51 R26 through the op with controls (invisible, absent, viewer from stamp only), declared-ops R25 R26, pinned op list updated. Module suite 86/86; format, architecture, coverage (26/26), words, ownership 0 failures. Impact suites: 8 reds (pdf-worker, scheduler, affordances, queue, screens-wizards, control-plane, plane, journey-check) identical on the tranche tip, inherited. op-declarations/op-grades rows for remindersfor are theirs. Details in the record.
+
+## Completion (fix round 10, Wave A batch 4, B5; ACTION-CLOCKS #18, session_01BbaZvVVyVvTx28XGJdeNbi)
+
+**Causes done.**
+- Published `pendingClocksRefusal({before})` in `bio-plane/test/m/action-clocks/fixtures.mjs` (new): the real `pendingClocks` refusal PENDING_CLOCKS_BAD_BEFORE (C-117.5) over `world()`. Its test, `fixtures.test.mjs` (R1), checks code, check, `before` echoed, and the translation of `ACTION_CLOCK_CHECKS`. Its one user (monitoring, `understanding.test.mjs:479`) re-points in its own job.
+- `fixture.mjs:116` (retrieval stand-in): now retrieval's published `actionRegistrar()`; each registration is also kept in `reg` for the projection step, as `actions`' fixture does.
+- `fixture.mjs:133` (conformance stand-in): conformance is earlier than this module in `build/modules.json` (124 < 130), so FIX-E, not a contract marker. The stand-in and `w.determinations` are gone. `world({conformance})` takes conformance's published `determinationRead` fixture, through the new `determinations(viewers)` helper (the named members join the fixture's real project through its own `member`/`join`); a test naming none gets the real conformance over an empty store (`noDeterminations`), made on first read.
+- Tests re-pointed: `calendar.test.mjs` (R11), `lateness.test.mjs` (R15), `overdue.test.mjs` (R3 R5) now use the fixture's real ids (`live`, `unclear`, `superseded`, `supersededBy`) and its real `project`.
+
+**Markers added.** No `fixtures-own`, `fixtures-generic` or `fixtures-contract` marker.
+
+**One limit, for BOB.** conformance's fixture holds one project, so the old calendar/overdue assertions that told two projects apart (PROJ-2026-0001 against -0002, and "the first determination the viewer sees" among determinations of different projects) now tell *seen* from *unseen* (a member who has not joined the project reads `project: null`) but not one project from another. Each requirement still holds: the leg kinds passed over (advances, a document) and the unseen determination are still asserted. If BOB wants the ordering among projects back, conformance would publish a fixture with two projects visible to different members; I have not asked for it.
+
+**Lines left.** None: `checks/fixtures.mjs . action-clocks --list`: answer 0, stub 0, code 0, contract 0, 0 failures.
+
+**Tests and checks.**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/action-clocks/*.test.mjs`: tests 87, pass 87, fail 0.
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 4 (action-clocks, affordances, action-producers, control-plane); the tests of the three users that import this fixture (`affordances/t46`, `action-producers/stamps`, `control-plane/declared-ops`): tests 17, pass 17, fail 0.
+- `checks/format.mjs .`: 0 failures. `architecture`: 0. `coverage`: 26 of 26 live ids, 0. `words`: 0. `fixtures`: 0. `ownership . action-clocks origin/tranche/T51`: 0 failures.
+
+Size (session_01BbaZvVVyVvTx28XGJdeNbi): test runs 8, module lines 2116
+
+## J5 · COMPLETE · re B5
+
+B5 done. pendingClocksRefusal published (fixtures.mjs + fixtures.test.mjs, R1). fixture.mjs:116 now retrieval's actionRegistrar; fixture.mjs:133 now conformance's determinationRead (conformance is earlier, so FIX-E; no markers added). Calendar, lateness and overdue tests re-pointed to its real ids and project. Limit: the fixture has one project, so those tests now tell seen from unseen but not project from project (record). Module tests 87/87; users' tests 17/17; format, architecture, coverage 26/26, words, fixtures, ownership 0 failures. Details in the record.

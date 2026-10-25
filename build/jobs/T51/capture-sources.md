@@ -1,6 +1,6 @@
 # capture-sources (T51)
 
-**Status** · session_01YENRH2Y3YDuYBqxX65xUfX · depth 2 · COMPLETE · handled B9
+**Status** · session_015NNE8YXK9B29MQ2FEJGQ2N · depth 2 · COMPLETE · handled B9
 
 ## J1 · REPORT
 
@@ -325,3 +325,23 @@ Tests
 - Impact: `node build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 1 of 178 (capture-sources only), affected test files 1 of 2710 (its own new test). No user module is named, so no user's tests were run; the change adds test files and no product code.
 
 Size (session_01YENRH2Y3YDuYBqxX65xUfX): test runs 3, module lines 2894
+
+## J10 · COMPLETE
+
+Fix round 10, follow-up 31 (SUITE #2): the browserrender timing red. Code commit on job/T51/capture-sources (tranche/T51 merged in, never rebased).
+
+**Cause.** The R68 control (`phases_ms.bodies` 20 where 0 is asserted) is a clock artefact, not load on the collector. The tests' clock (`scaled()`) runs 20 times the wall. `browserrender.mjs` read `now()` either side of `collector.finish()` and reported the difference even when `finish` had nothing to wait for (a page with no sub-resources); whenever one real millisecond fell between the two reads the phase read 20. Instrumented under load (8 busy loops on 4 cores, the R68 control alone, 40 runs): the one trigger printed `bodies 20, sawNetwork true, requests 0, []`, so no entry was in flight; the 25 ms ticks of `finish` were not involved. The same class of assertion was the whole-suite R69 red: the refused-address case asserted `elapsed_ms` 0 on the 20x clock (old product, same test file: actual 20).
+
+**Fix (product).** `finish()` answers whether it had to wait at all; the render states `phases_ms.bodies` as the time it waited, and 0 when it did not wait (R68: "what the render waited for bodies"; no requirement change). **Fix (tests).** New R68 test on a clock that moves 20 ms at every read (deterministic): no sub-resources states bodies 0 (seen failing on the old source, 40 where 0); a page with slow bodies states bodies > 0 (control). The R69 refused-address case now uses a clock that does not move (elapsed 0 exactly), and the R69 closing-time case a stepping clock (1 ms per read plus the 1,500 ms jump) in place of the 20x clock, so its upper bound counts reads, not wall time. Nothing skipped or weakened.
+
+**Evidence.** Before: the R68 control red in 1 of 40 runs under the load, and the new R68 test and the R69 test red on the old source. After: `browserrender.test.mjs` 18/18, 20 runs in a row green under the same load (8 busy `while :` loops on 4 cores); `bio-plane/test/m/capture-sources/` 129/129; with the users that name browserrender or phases_ms (acquisition, screens-intake r8-supporting): 363/363. `impact.mjs` names 113 modules (the plane's closure); the users' tests above are the ones that read the changed behaviour.
+
+**Checks (absolute product root).** format 178 modules, 0 failures; architecture capture-sources 0; coverage 71 of 71 ids, 0; words 0 failures; fixtures 0 failures; ownership 3 files changed by capture-sources, 0 failures.
+
+Deferred: none. Found in another module: none.
+
+Size (session_015NNE8YXK9B29MQ2FEJGQ2N): test runs 12, module lines 2897
+
+## J11 · COMPLETE
+
+Follow-up 31 done: cause = the product timed a body phase that did no work on the tests' 20x clock (instrumented: bodies 20, no requests, nothing in flight). Fixed in browserrender.mjs (bodies is the time waited, 0 when none) and the two clock-dependent test assertions (R68 control, R69 refused/closing). Browserrender tests 18/18, 20 runs in a row green under 8 busy loops on 4 cores; module 129/129, users 363/363; format, architecture, coverage, words, fixtures, ownership 0. Record J10.

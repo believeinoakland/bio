@@ -48,6 +48,7 @@ test("R7: reviewCommentsChosen — with no reader registered no comment travels 
   read = () => ({ comments: [ROWS[0]], truncated: true });
   assert.deepEqual(chosen(w, { included: ["RVC-1"] }), answer([{ reviewer: "bo", text: "The dates hold.", at: "2026-09-27T10:00:00Z" }], null),
                    "cut at its bound: undetermined");
+  // fixtures-contract: review review-copy-read
   for (const unread of [() => { throw new Error("down"); }, () => null, () => ({ ok: false, reason: "NO_REVIEW_COPY" })]) {
     read = unread;
     assert.deepEqual(chosen(w, { included: [] }), answer([], null), "unread with nothing chosen");

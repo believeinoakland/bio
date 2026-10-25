@@ -1,6 +1,6 @@
 # reevaluation (T51)
 
-**Status** · session_01XcvJkCvweiQ8KgQqV3UTdh · depth 2 · COMPLETE · handled B6
+**Status** · session_018qdj8PzS6Dm7AAErJ82iZx · depth 2 · COMPLETE · handled B11
 
 ## J1 · COMPLETE
 
@@ -122,3 +122,76 @@ Size (session_01XcvJkCvweiQ8KgQqV3UTdh): test runs 14, module lines 3452
 ## J6 · COMPLETE
 
 COMPLETE (G89, R41): see the record's G89 section. Re-grade in raiseNotices, sweep pending via #regradeOwed (B6 b). 163/163 module, users 344/345: plane/round6-reevaluation.test.mjs:103 needs 'r.noticeSweep(Date.now());' before it (verified 3/3). Checks 0 (words 13, none mine).
+
+## Fix round 10, Wave A batch 5 (REEVALUATION #27, session_01Ed3McYsoc4pJynhHKAnecp)
+
+- **Published** `noticesRead` in `bio-plane/test/m/reevaluation/fixtures.mjs` (new): the real `raiseNotices` then `notices` over a question whose cited passage has a newer capture; test `fixtures.test.mjs` (R14) calls it and checks the real answer.
+- **caseparts.test.mjs:30 (FIX-L publication/case-cited-parts):** code changed to `NO_SUCH_CASE_EDITION`; marker `// fixtures-contract: publication case-cited-parts` added. Left: the line reads `contract-no-run` until publication's job carries `fixtures-run` (waiting, not mine).
+- **standards/standardsEmptyReads (fixture.mjs:100):** done; `quietUpstreams().standards` now answers from the provider's `standardsEmptyReads()`.
+- **retrieval/selectionResolve (fixture.mjs:160): NOT done.** Re-pointing to retrieval's `noSelection` fixture makes `checks/architecture.mjs` fail (`fixture.mjs imports bio-plane/test/m/retrieval/fixtures.mjs of retrieval, which reevaluation does not declare in uses`). `build/modules.json` is BOB's. The line is the original hand-built refusal. Posted QUESTION J-next.
+- No `fixtures-own` or `fixtures-generic` marker added; one `fixtures-contract` marker (caseparts.test.mjs:30).
+- Tests: reevaluation module tests 164 pass, 0 fail. Checks: format 0 failures; architecture 0 failures (with line 160 as original); coverage 41 of 41 ids, 0; ownership 0; words 0; fixtures --list: 2 left (caseparts:31 waiting on publication; fixture.mjs:160 awaiting BOB). impact.mjs: 0 affected modules.
+- Size (session_01Ed3McYsoc4pJynhHKAnecp): test runs 6, module lines 0 changed in src; test lines ~60
+
+## J7 · QUESTION
+
+QUESTION: one line of the batch is not doable under the rules as they stand. fixture.mjs:160 (retrieval/selectionResolve) should take retrieval's noSelection fixture, but reevaluation's uses (build/modules.json) does not include retrieval, so checks/architecture.mjs fails on the import ('which reevaluation does not declare in uses'). reevaluation reaches retrieval only as the stand-in inquiry is built with. My best reading: add retrieval to reevaluation's uses (your file), then I re-point the line in one more step. Alternative: accept the line as a stand-in (fixtures-own) with your ruling. Everything else is done and pushed (noticesRead published, standardsEmptyReads re-pointed, caseparts code fixed and contract marker added; caseparts:31 awaits publication's fixtures-run). Details in my record.
+
+### After B8 (K5088)
+- Merged `tranche/T51`; `fixture.mjs:160` now takes retrieval's published `noSelection` (`.answer`). Done: `fixtures --list` for reevaluation left with `caseparts.test.mjs:31` only (contract-no-run, waits for publication's `fixtures-run`).
+- No `fixtures-own` or `fixtures-generic` marker added; one `fixtures-contract` (caseparts.test.mjs:30, publication case-cited-parts).
+- Tests: module 164/164. Checks: format, architecture, coverage (41/41), ownership, words: 0 failures.
+- Size (session_01Ed3McYsoc4pJynhHKAnecp): test runs 8, module lines 0 changed in src
+
+## J8 · COMPLETE
+
+COMPLETE (fix round 10, Wave A batch 5): noticesRead published with its test; standardsEmptyReads and noSelection fixtures taken (fixture.mjs:100, :160); caseparts code now NO_SUCH_CASE_EDITION with fixtures-contract publication case-cited-parts (caseparts:31 stays listed until publication's fixtures-run). No fixtures-own or fixtures-generic markers added. Module 164/164; format, architecture, coverage 41/41, ownership, words 0 failures. See record.
+
+## J9 · COMPLETE
+
+COMPLETE (fix round 10, follow-up 37, test files only): `noticesRead` takes `{ viewer, several }`. The default call is unchanged; `several: true` returns `{ world, viewer, holder, raised, ok, limit, truncated, notices, count, cursor, state }` over four notices raised by real acts: two legs of `INQ-2026-0001-q` on `INFO-2026-0001-old` waiting on one newer capture, one leg of `INQ-2026-0002-q` on that target, and one leg of `INQ-2026-0003-q` on `INFO-2026-0004-old2` (NOT_FOUND, affected). Test `fixtures.test.mjs` "noticesRead (R14), several" checks the real answer and calls the real read again.
+
+Deferred, for queue-producers (its `noticed.test.mjs`): its `grade: null` has no reevaluation counterpart. The real grades are `UNDETERMINED` (affects `undetermined`) and `NOT_FOUND` (affects `affected`); reevaluation's notice carries a null grade only where a viewer may not see the newer capture, and then `newer_capture` is null too. So the several scene holds no null grade. Queue-producers should decide whether its null case means UNDETERMINED.
+
+Markers added: none (no fixtures-own, fixtures-generic or fixtures-contract).
+
+Still listed by `fixtures --list`: `caseparts.test.mjs:31` (contract-no-run, publication case-cited-parts), waiting on publication's `fixtures-run`; unchanged from J8, not mine to clear.
+
+Checks (absolute root /home/user/bio): format 0 failures; architecture 0 failures; coverage 41 of 41 ids, 0 failures; words 0 failures; ownership 0 failures; fixtures --list: 1 failure (caseparts:31, above).
+Tests: reevaluation module `bio-plane/test/m/reevaluation/*.test.mjs` 165 pass, 0 fail.
+Commit f27aaa0792 pushed to job/T51/reevaluation.
+
+Size (session_014QYiuArevRHEaH98AGpvCi): test runs 4, module lines 0 in src, 44 added in tests
+
+## J10 · COMPLETE
+
+COMPLETE (fix round 10, follow-up 41, test file only): `caseparts.test.mjs:30-36` (the contract stand-in for publication's `case-cited-parts`) now answers the real shape publication's run pins. A ratified case answers `{ok: true, case, edition, project, parts, limit: 1000, truncated: false}` (`limit` is publication's `CITED_PARTS_MAX`). A case with no ratified edition answers `{ok: false, reason: "NO_SUCH_CASE_EDITION", case, edition: null}`, the real answer for a call that names no edition. The value leaves out the refusal's `detail` sentence, as B10 says. The marker `// fixtures-contract: publication case-cited-parts` stays on line 30. Reevaluation's consumers (`index.mjs:514`, `:2539`) read `ok === false` and `project`, so the fuller shape changes nothing for them.
+
+Markers added: none; the existing `fixtures-contract` marker is kept.
+
+Tests: `caseparts.test.mjs` 7 of 7; `bio-plane/test/m/reevaluation/` 165 of 165 (`node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/reevaluation/`).
+
+Checks (absolute root `/home/user/bio`): `fixtures.mjs --list` 0 failures (`caseparts.test.mjs:31` is now `accepted(case-cited-parts)`, so the `contract-no-run` line from J8 is gone; publication's `fixtures-run` is no longer needed for it to pass the check); `format` 0 failures; `architecture` 0 failures; `coverage` 41 of 41 live ids, 0 failures; `words` 0 failures; `ownership` 0 failures (against `origin/tranche/T51`).
+
+Commit `25585b3bfb` on `job/T51/reevaluation`, pushed. The branch first took `origin/job/T51/reevaluation` (fast-forward) and then `origin/tranche/T51` (merged, no conflicts) at this START.
+
+Size (session_018qdj8PzS6Dm7AAErJ82iZx): test runs 4, module lines 3469
+
+## J11 · COMPLETE
+
+COMPLETE (fix round 10, follow-up 43, B11 CHANGE; test files only). Commit `6aa339c393`, pushed on `job/T51/reevaluation`.
+
+Added two sibling exports in `bio-plane/test/m/reevaluation/fixtures.mjs`, made by the real code when the test runs. `noticesRead` and its `several` scene are unchanged, so queue-producers' existing users keep their answer.
+
+- `noticesTwoVersions({ viewer = "class:admin" })`: one holder's leg (`INQ-2026-0004-q`) cites passage of `INFO-2026-0007-old3` at capture a. Two newer captures of that address, both read and changed, come in turn: a first `raiseNotices` raises one notice for the first, then the second is filed and a second `raiseNotices` raises one for it. Returns `{ world, viewer, holder, raised, newer_captures: [sha, sha], ok, limit, truncated, notices, count, cursor, state }`. Its two notices share holder and target and differ in `newer_capture`; both grade `NOT_FOUND`, `affects` `affected`.
+- `noticesHiddenVersion({ viewer = V("owen") })`: one leg (`INQ-2026-0005-q`, filed in no project) cites `INFO-2026-0010-old4` at a. Its newer capture is filed in project "Elsewhere" (owner ann), which owen does not participate in. Returns `{ world, viewer, holder, raised, newer_capture: sha, ok, limit, truncated, notices, count, cursor, state }`. Owen's one notice keeps its holder and target, with `newer_capture`, `grade` and `affects` null; the admin read of the same notice gives the sha and `affects` `affected`.
+
+Note for queue-producers (its `noticed.test.mjs`, R52): a single `raiseNotices` pass raises one notice per leg for the newest copy it can see at that time. Two notices on one leg come from two passes, one after each newer copy is filed; `noticesTwoVersions` does that by real acts.
+
+Tests: `fixtures.test.mjs` has four tests, all green. Each of the two new ones calls its export and checks the real answer and that a second `notices` read gives the same rows (the hidden one checks the admin's view too). Module suite `bio-plane/test/m/reevaluation/`: 167 of 167 pass.
+
+Checks (absolute root `/home/user/bio`): `fixtures.mjs --list` 0 failures; `format` 0; `architecture` 0; `coverage` 41 of 41 ids, 0; `words` 0 failures; `ownership` 0 failures against `origin/tranche/T51`.
+
+Markers added: none (no `fixtures-own`, `fixtures-generic` or `fixtures-contract`).
+
+Size (session_018qdj8PzS6Dm7AAErJ82iZx): test runs 6, module lines 3469

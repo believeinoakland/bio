@@ -3,7 +3,8 @@
    from its provider's published fact, gated by the viewer and homed through the walk queue passes in (queue R7). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, byId, NOW, iso, said, dayWord } from "./world.mjs";
+import { world, byId, NOW, iso, said, dayWord, sha, homed, MONITORING } from "./world.mjs";
+import { flaggedRefusal } from "../monitoring/fixtures.mjs";
 
 const drawing = (list) => Object.assign(list, { bound: 32, truncated: false });
 
@@ -24,9 +25,9 @@ test("R2: proposals are one FINDING per open proposal, keyed <progression>::<sta
 
 test("R2: out-of-inquiry-lead per captured lead, homed under the inquiry it bears on, never the run's", () => {
   const w = world({ captureRequests: { leads: () => ({ requests: [{ request: "CR-1", run: "r", target: "INQ-A", lead_inquiry: "INQ-B",
-    address: "https://x.example/d", host: "x.example", purpose: "investigate", ua_mode: "civicos", capture_sha: "s1",
+    address: "https://x.example/d", host: "x.example", purpose: "investigate", ua_mode: "civicos", capture_sha: sha("s1"),
     captured_at: iso(NOW - 5), attribution: { ok: true, statement: "the daemon captured this" } }] }) },
-    provenance: { homeOf: (sha) => (sha === "s1" ? { bundleId: "INF-D" } : null) } });
+    provenance: homed({ [sha("s1")]: "INF-D" }) });
   w.bundle("INQ-A", "inquiry"); w.bundle("INQ-B", "inquiry"); w.bundle("INF-D");
   w.bundle("PRJ-A", "project"); w.cite("PRJ-A", "INQ-A"); w.bundle("PRJ-B", "project"); w.cite("PRJ-B", "INQ-B");
   const it = byId(w.read(null, "class:admin"))["FINDING::out-of-inquiry-lead::CR-1"];
@@ -110,55 +111,55 @@ test("R2 (N172): objective-gap per gap of each visible project the member partic
 });
 
 test("R2 (N229, N330): source-modified and source-removed per document monitoring.flagged answers the viewer, homed under its ancestors", () => {
+  /* monitoring's own reads over real monitors (its published fixture): one document found modified, one found removed */
+  const F = MONITORING.seeded, MOD = F.bundles.modified, REM = F.bundles.removed, X = "INFO-2026-0699-unreadable";
+  const LATER = F.now + 100000;
   let asked = null;
-  const w = world({ monitoring: { flagged: (a) => { asked = a; return { ok: true, limit: 200, truncated: true, items: [
-    { bundleId: "INF-M", source_status: "modified", since: iso(NOW - 100000) },
-    { bundleId: "INF-R", source_status: "removed", since: iso(NOW - 200000) },
-    { bundleId: "INF-X", source_status: "modified", since: "not an instant" }] }; } } });
+  const w = world({ monitoring: { flagged: (a) => { asked = a; return F.flagged; } } });
   w.member("alice");
-  for (const b of ["INF-M", "INF-R", "INF-X"]) w.bundle(b);
-  w.bundle("INQ-1", "inquiry"); w.leg("INQ-1", "INF-M");
-  const m = byId(w.read("alice"));
+  for (const b of [MOD, REM]) w.bundle(b);
+  w.bundle("INQ-1", "inquiry"); w.leg("INQ-1", MOD);
+  const m = byId(w.read("alice", "member:alice", { now: LATER }));
   assert.deepEqual(asked, { viewer: "member:alice" }, "the viewer is monitoring's to gate by (its R48)");
-  const mod = m["FINDING::source-modified::INF-M"];
-  assert.equal(mod.kind, "source-modified"); assert.deepEqual(mod.subject, { kind: "bundle", id: "INF-M" });
+  const mod = m[`FINDING::source-modified::${MOD}`];
+  assert.equal(mod.kind, "source-modified"); assert.deepEqual(mod.subject, { kind: "bundle", id: MOD });
   assert.deepEqual(mod.case.ancestors.map((a) => a.id), ["INQ-1"]);
-  assert.deepEqual([mod.basis.source, mod.basis.source_status, mod.basis.since], ["monitoring.flagged", "modified", iso(NOW - 100000)]);
-  assert.deepEqual(mod.basis.bound, { limit: 200, truncated: true });
+  assert.deepEqual([mod.basis.source, mod.basis.source_status, mod.basis.since], ["monitoring.flagged", "modified", F.flagged.items[0].since]);
+  assert.deepEqual(mod.basis.bound, { limit: F.flagged.limit, truncated: false });
   assert.deepEqual([mod.age.state, mod.age.ms], ["determined", 100000]);
-  assert.equal(m["FINDING::source-removed::INF-R"].kind, "source-removed");
-  assert.equal(m["FINDING::source-modified::INF-X"].age.state, "undetermined");
-  assert.equal(Object.keys(m).filter((id) => /^FINDING::source-(modified|removed)::/.test(id)).length, 3);
+  assert.equal(m[`FINDING::source-removed::${REM}`].kind, "source-removed");
+  assert.equal(Object.keys(m).filter((id) => /^FINDING::source-(modified|removed)::/.test(id)).length, 2);
+  /* an answer cut at its limit says so; a row whose instant cannot be read has its age undetermined (monitoring gives neither here: the real answer, varied) */
+  w.bundle(X);
+  w.fakes.monitoring.flagged = () => ({ ...F.flagged, truncated: true, items: [...F.flagged.items, { ...F.flagged.items[0], bundleId: X, since: "not an instant" }] });
+  const t = byId(w.read("alice", "member:alice", { now: LATER }));
+  assert.deepEqual(t[`FINDING::source-modified::${MOD}`].basis.bound, { limit: F.flagged.limit, truncated: true });
+  assert.equal(t[`FINDING::source-modified::${X}`].age.state, "undetermined");
+  assert.equal(Object.keys(t).filter((id) => /^FINDING::source-(modified|removed)::/.test(id)).length, 3);
   // a read monitoring could not make mints nothing
-  const w2 = world({ monitoring: { flagged: () => ({ ok: false, items: [], limit: 200, truncated: false, detail: "x" }) } });
+  const w2 = world({ monitoring: { flagged: () => flaggedRefusal() } });
   assert.ok(!w2.read(null, "class:admin").items.some((i) => /^source-/.test(i.kind)));
   // nothing here reads front matter or the reachability table any more (N330)
   assert.ok(!w.statements.some((q) => /source_reachability|FROM files/.test(q)));
 });
 
 test("R40 (T48): source-modified and source-removed carry title; an untitled document's item has title null and no B- id, a titled one's summary names the title; no id or mechanism in summary or detail", () => {
-  const w = world({ monitoring: { flagged: () => ({ ok: true, limit: 200, truncated: false, items: [
-    { bundleId: "B-UNTITLED", source_status: "modified", since: iso(NOW) },
-    { bundleId: "B-GONE", source_status: "removed", since: iso(NOW) },
-    { bundleId: "B-TITLED", source_status: "modified", since: iso(NOW) },
-    { bundleId: "B-TITLED-GONE", source_status: "removed", since: iso(NOW) }] }) } });
-  w.member("alice");
-  w.bundle("B-UNTITLED", "information", { title: null }); w.bundle("B-GONE", "information", { title: null });
-  w.bundle("B-TITLED", "information", { title: "Water Quality Report" });
-  w.bundle("B-TITLED-GONE", "information", { title: "Zoning Memo" });
-  const m = byId(w.read("alice"));
-  const un = m["FINDING::source-modified::B-UNTITLED"], gone = m["FINDING::source-removed::B-GONE"];
-  assert.equal(un.title, null); assert.equal(gone.title, null);
-  assert.equal(m["FINDING::source-modified::B-TITLED"].title, "Water Quality Report");
-  assert.equal(m["FINDING::source-removed::B-TITLED-GONE"].title, "Zoning Memo");
-  assert.ok(m["FINDING::source-modified::B-TITLED"].summary.includes("Water Quality Report"), "control: a titled summary names the title");
-  assert.ok(m["FINDING::source-removed::B-TITLED-GONE"].summary.includes("Zoning Memo"));
-  for (const it of [un, gone, m["FINDING::source-modified::B-TITLED"], m["FINDING::source-removed::B-TITLED-GONE"]]) {
-    for (const text of [it.summary, it.detail]) {
-      assert.ok(!/B-[A-Z]/.test(text), `no bundle id: ${text}`);
-      assert.ok(!/\b(404|410|HTTP|monitoring)\b/i.test(text), `no status or mechanism: ${text}`);
-    }
-    assert.equal(it.basis.bundle_id, it.subject.id, "basis keeps the facts for the record");
+  const F = MONITORING.seeded, ids = [F.bundles.modified, F.bundles.removed];
+  for (const titles of [[null, null], ["Water Quality Report", "Zoning Memo"]]) {
+    const w = world({ monitoring: { flagged: () => F.flagged } });
+    w.member("alice");
+    ids.forEach((id, i) => w.bundle(id, "information", { title: titles[i] }));
+    const m = byId(w.read("alice", "member:alice", { now: F.now }));
+    const items = [m[`FINDING::source-modified::${ids[0]}`], m[`FINDING::source-removed::${ids[1]}`]];
+    items.forEach((it, i) => {
+      assert.equal(it.title, titles[i]);
+      if (titles[i]) assert.ok(it.summary.includes(titles[i]), `control: a titled summary names the title (${titles[i]})`);
+      for (const text of [it.summary, it.detail]) {
+        assert.ok(!/\bB-[A-Z]/.test(text) && !text.includes("INFO-2026"), `no bundle id: ${text}`);
+        assert.ok(!/\b(404|410|HTTP|monitoring)\b/i.test(text), `no status or mechanism: ${text}`);
+      }
+      assert.equal(it.basis.bundle_id, it.subject.id, "basis keeps the facts for the record");
+    });
   }
 });
 

@@ -5,6 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd, V } from "./fixture.mjs";
+import { occurrencesOf } from "../duties/fixtures.mjs";
 
 const Q = "INQ-2026-0801-q";
 const setup = () => { const w = world({ standards: true }); w.member("alice"); w.member("bob"); return w; };
@@ -112,24 +113,22 @@ test("R11 the grammar judges a calculation leg's shape first (CALCULATION_LEG_MA
 
 /* An occurrence leg (inquiry-grammar R15) is judged through leg-earning's earned (its R9), over duties' `occurrencesOf`
    as duties states it (its R9: `{ok, occurrences: [{key, state, why, derivation}], from, to, as_of}`, or NO_SUCH_DUTY);
-   duties is a stand-in here so the test controls which duty and occurrences the record holds. */
-const DUTY = "DUT-2026-0001", KEY = `OCC-${"a".repeat(32)}`, UKEY = `OCC-${"b".repeat(32)}`;
-const occDuties = { occurrencesOf: ({ dutyId, asOf }) => (dutyId !== DUTY
-  ? { ok: false, reason: "NO_SUCH_DUTY", detail: "no obligation you can see answers to that id." }
-  : { ok: true, duty_id: DUTY, as_of: asOf, from: "2026-01-01", to: "2026-12-31", occurrences: [
-      { key: KEY, state: "met", why: "posted on time", trigger: "2026-09-01", due: "2026-09-04", derivation: { level_searched: "meaning" } },
-      { key: UKEY, state: "undetermined", why: "no due rule is held", trigger: "2026-09-02", due: null, derivation: null }] }) };
+   the duty and its occurrences are duties' published fixture (K4990), made by its real code. */
+const OCC = occurrencesOf();
+const DUTY = OCC.dutyId, KEY = OCC.met.occurrences.find((o) => o.state === "met").key;
+const UDUTY = OCC.undeterminedId, UKEY = OCC.undetermined.occurrences[0].key;
+const occDuties = OCC.duties;
 
 test("R11 an occurrence leg whose duty duties does not hold, or which the duty does not derive, is NO_SUCH_OCCURRENCE naming the leg; one held stands, and so does one duties answers undetermined; never in references[]", () => {
   const w = world({ duties: occDuties }); w.member("alice");
   const at = (ref) => w.promote(Q, inquiryMd(Q, { legs: [{ target: ref }], refs: [] }), null, { author: V("alice") });
-  for (const ref of [`occurrence:DUT-2026-0099/${KEY}`, `occurrence:${DUTY}/OCC-${"c".repeat(32)}`]) {
+  for (const ref of [`occurrence:${OCC.absentId}/${KEY}`, `occurrence:${DUTY}/OCC-${"c".repeat(32)}`]) {
     const r = at(ref);
     assert.deepEqual([r.reason, codes(r)], ["BASIS_REFUSED", ["NO_SUCH_OCCURRENCE"]], ref);
     assert.match(r.findings[0].detail, /basis\[0\]/);
     assert.equal(w.record.head(Q), null);
   }
-  assert.equal(at(`occurrence:${DUTY}/${UKEY}`).ok, true, "an occurrence duties answers undetermined is held");
+  assert.equal(at(`occurrence:${UDUTY}/${UKEY}`).ok, true, "an occurrence duties answers undetermined is held");
   const w2 = world({ duties: occDuties }); w2.member("alice");
   const ok = w2.promote(Q, inquiryMd(Q, { legs: [{ target: `occurrence:${DUTY}/${KEY}` }], refs: [] }), null, { author: V("alice") });
   assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));

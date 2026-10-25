@@ -1,6 +1,6 @@
 # BOB to installer (T51)
 
-**Read** · handled J30
+**Read** · handled J34
 
 ## B1 · START
 
@@ -234,3 +234,45 @@ ANSWER J29 (BOB #281). Both go to INSTALLER-STEPS #11 (job 82, running): (2) is 
 ## B31 · CHANGE
 
 CHANGE (BOB #281, K4971): job 82 is merged on tranche/T51 (failureOf carries Cloudflare's code on a 401; a taken prefix 403/10031 is taken). Merge origin/tranche/T51, re-run r84 and your suite, and COMPLETE.
+
+## B32 · START
+
+START · INSTALLER #28 · tranche T51 · product believeinoakland/bio · fix round 10, Wave B job, batch 6: re-point 12 own lines, 5 marker lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #292 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/installer tranche/T51 && git branch -m job/T51/installer stale/installer-local && git checkout -b job/T51/installer origin/job/T51/installer`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module installer`; record `build/jobs/T51/installer.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Your own fixture lines, done in this job** (12; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- instance-setup/instanceGroupAnswer (2 mechanical): fixture.mjs:549; wizard.test.mjs:1115
+- credentials/bootstrapVersions (10 judgment): requirements.test.mjs:554,555,556,557,558,559,560,561; t50.test.mjs:272,401
+
+**Markers owed (K5044 (2), K5060; the audit read each line and found it no module's answer):** write on the line or up to eight lines above:
+- `// fixtures-own: platform <why>` (a platform or fake-network double): corpus.test.mjs:70; requirements.test.mjs:520,615,1750; t47.test.mjs:192
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . installer --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/installer.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+**From credentials' merge (K5071):** take R66's lag cases from instance-setup's published fixture (`bootstrapReport`/`memberVersions`) and the store's part from credentials' `bootstrapVersions`; never hand-build either.
+
+## B33 · CHANGE
+
+CHANGE (K5101; SUITE #2, `build/plan/suite-T51-r9.md` and its diagnosis `build/plan/suite-T51-r9-diagnosis.md` §Cluster A, read both whole; merge `origin/tranche/T51` first, never a rebase). One more item in this job, test files only: `newgroup/test/wizard.test.mjs` has 15 reds (and a TypeError at `:232` via `sourceOf`, called at `:552`). Two causes: (1) the built-in release is the signed 0.86.0, which predates installer-steps R39's `bio-plane-crons/1` statement, so an install from the built-in is refused; that is G90 (K4777), cured by the 0.87.0 cut at this round's end, not by you; (2) yours: the test's `FALLBACK` (`:174`) has no rule for `PUT .../workers/scripts/<slug>/schedules` (and its GET), so an install from a repository release carrying the statement (`curSrc`, `:254`) makes unscripted fetches; and the synthetic release sources of the requirements, t50, t51 and realsize arms state no `bio-plane-crons/1` line. `newgroup/test/fixture.mjs` already has both: take them from there (one definition, imported), never a second copy. After the fix, every red that remains must be one whose arm installs from the built-in 0.86.0: name each in your COMPLETE as waiting on the 0.87.0 cut (G90), with the assertion it fails on. Seen red first, then green where (2) was the cause.
+
+## B34 · ANSWER · re J31
+
+ANSWER (re J31; K5105). The edge is on `tranche/T51`: installer now uses `credentials` (`order.mjs --check` clean). Merge `origin/tranche/T51` (never a rebase) and re-run the architecture check. Your `t50.test.mjs:272` `bootstrapFacts` line is follow-up 36 (instance-setup publishes the fixture first): name it as waiting on that. Then finish CHANGE B33 (the `wizard.test.mjs` schedules rule and cron statement from `fixture.mjs`; every red left named as waiting on the 0.87.0 cut, G90) and COMPLETE once with both.
+
+## B35 · CHANGE
+
+CHANGE · follow-up 36 (K5110), test files only.
+
+(1) The `credentials` edge you asked for is on `tranche/T51` (K5105, ANSWER B34): merge `origin/tranche/T51` into your branch (never a rebase); `checks/architecture.mjs <absolute root> installer` then reads 0.
+(2) instance-setup has merged its published `bootstrapFacts({team, members, projects, documents, published})` (`bio-plane/test/m/instance-setup/fixtures.mjs`, async; the real `bootstrapFacts()` answer, the seven `BOOTSTRAP_FACT_KEYS`). Re-point `newgroup/test/t50.test.mjs:272`'s hand-built `TEAM` facts to it, stating the team name and counts your test needs.
+Then your checks by failure count, the reds you named in J32 unchanged (they wait on the 0.87.0 cut, G90), and COMPLETE. Your five `fixtures-own: platform` markers (J31) are read and accepted.

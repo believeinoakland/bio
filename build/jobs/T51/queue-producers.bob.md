@@ -1,6 +1,6 @@
 # BOB to queue-producers (T51)
 
-**Read** · handled J14
+**Read** · handled J22
 
 ## B1 · START
 
@@ -181,3 +181,92 @@ K4269 basis, stated: a sentence with a hole in it is a code bug in the owning mo
 **Run:** your suites, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio queue-producers tranche/T51 job/T51/queue-producers`.
 
 **Record and COMPLETE:** what changed (file:line), each failing-first test red then green, the platform figures, suites and checks, the requirement lines you propose (BOB writes `build/requirements/`), census ops, the rows owed to UX-DESIGN, and `Size (<session id>): test runs <n>, module lines <n>`. Then `mail state --set COMPLETE`, post COMPLETE, and ring BOB (a one-time routine into BOB's session, `run_once_at` the next whole minute; `mail addr --bob`).
+
+## B13 · START
+
+START · QUEUE-PRODUCERS #25 · tranche T51 · product believeinoakland/bio · fix round 10, Wave B job, batch 6: re-point 33 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #292 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/queue-producers tranche/T51 && git branch -m job/T51/queue-producers stale/queue-producers-local && git checkout -b job/T51/queue-producers origin/job/T51/queue-producers`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module queue-producers`; record `build/jobs/T51/queue-producers.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Your own fixture lines, done in this job** (33; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- action-producers/actionItems (1 judgment): action.test.mjs:20
+- escalation/escalationsDue (1 judgment): action.test.mjs:88
+- CODE (PROJECT_NOT_PARTICIPANT: no product file gives it; contradiction `conflictNotices` answers membership `notAParticipant` = PROJECT_ACT_NOT_A_PARTICIPANT. Use that, from contradiction/readRefusals): contradictions.test.mjs:159
+- publication/caseDocumentFacts (1 judgment/1 mechanical): credit.test.mjs:28; world.mjs:159
+- docket/coreDue (4 judgment/1 mechanical): docket.test.mjs:36; every.mjs:65; localday.test.mjs:38; words.test.mjs:214; world.mjs:183
+- monitoring/monitoringReads (5 judgment/3 mechanical): every.mjs:59; feeditems.test.mjs:130; producers.test.mjs:114,140; reads.test.mjs:21,121; words.test.mjs:127; world.mjs:173
+- provenance/homeOfHomed (4 judgment): feeditems.test.mjs:125; lead.test.mjs:18; producers.test.mjs:29; reads.test.mjs:227
+- FIX-E (per-feed provider reads, see the part): feeds.test.mjs:74
+- project-roster reads (2 judgment): feeds.test.mjs:98; inviter.test.mjs:74: no `projectReadRefusals` fixture exists (K5088: `projectList` and `projectInvitations` never refuse, R35, R36); re-point each case to the real answer (an empty `ok: true` list for an unknown viewer; the throw is the `boom` case), no hand-built `REFUSED`
+- reevaluation/noticesRead (1 judgment): noticed.test.mjs:10
+- monitoring/flaggedRefusal (1 judgment): producers.test.mjs:133
+- provenance/homeOfEmpty (2 mechanical): proposals.test.mjs:32; world.mjs:150
+- contradiction/readRefusals (2 judgment): reads.test.mjs:90,98
+- CODE (SCHEDULED_SOURCE_CHANGED and SCHEDULED_HOLD_CHANGED are in no source; ratification gives SCHEDULED_SOURCES_CHANGED and SCHEDULED_TIES_CHANGED, use those): scheduled.test.mjs:62,157
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . queue-producers --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/queue-producers.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B14 · START
+
+START · QUEUE-PRODUCERS #26 · tranche T51 · product believeinoakland/bio · fix round 10, a re-point to a published fixture (plan build/plan/fix-round-10-T51.md §3; K5111)
+
+Depth 2 (BOB #293 is depth 1).
+
+FIRST, before `mail start`: `git fetch origin job/T51/queue-producers tranche/T51`; if a local `job/T51/queue-producers` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/queue-producers stale/queue-producers-local && git checkout -b job/T51/queue-producers origin/job/T51/queue-producers`. If `job/T51/queue-producers` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module queue-producers`; record `build/jobs/T51/queue-producers.md` (append a new section). Model claude-haiku-5-5; workers haiku low, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993).
+
+**Follow-up 37 (test files only; your J16's three waiting lines).** Both providers have merged their fixtures:
+- docket's `coreDueKinds()` (`bio-plane/test/m/docket/fixtures.mjs`): two cases of two projects (P managed by alice, Q by dave), `due` (alice: response, statement, edition 2 with "What changed", tension CAND-1) and `otherDue` (dave: statement, edition 2, tension CAND-3). Re-point `docket.test.mjs:36` and `words.test.mjs:217` to it. A `statement` with no edition has no real producer (`docket_record.edition` is NOT NULL; `docketFile` refuses `DOCKET_NO_EDITION`): that case is not a real answer, so remove it (K5111); your other words assertions stay.
+- reevaluation's `noticesRead({viewer, several: true})` (`bio-plane/test/m/reevaluation/fixtures.mjs`): four notices raised by real acts (two legs of one question on one target waiting on one newer capture, a leg of a second question on that target, a leg of a third on another target, `NOT_FOUND`). Re-point `noticed.test.mjs:10` (R52) to it. The real grades are `UNDETERMINED` and `NOT_FOUND`; a null grade occurs only where the viewer may not see the newer capture, and then `newer_capture` is null too: test a null grade only in that real form, or not at all if the fixture gives none.
+Read each fixture and its test whole first.
+
+**Done:** `checks/fixtures.mjs <absolute root> queue-producers --list` 0 (your two accepted `fixtures-generic` markers stay); your module's tests green; format, architecture, coverage, words, ownership 0 (a new test import of a module you do not declare in `uses`: QUESTION to BOB for the edge). List every marker you add (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only.
+
+## B15 · START
+
+START · QUEUE-PRODUCERS #27 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 43, three controls restored (plan build/plan/fix-round-10-T51.md §3; K5119)
+
+Depth 2 (BOB #293 is depth 1).
+
+FIRST, before `mail start`: `git fetch origin job/T51/queue-producers tranche/T51`; if a local `job/T51/queue-producers` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/queue-producers stale/queue-producers-local && git checkout -b job/T51/queue-producers origin/job/T51/queue-producers`. If `job/T51/queue-producers` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module queue-producers`; record `build/jobs/T51/queue-producers.md` (append a new section). Model claude-haiku-5-5; workers haiku low, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993).
+
+**Follow-up 43 (test files only; your J17, J18).** Your re-point dropped three controls for want of a real answer (K5116: no requirement goes partly untested). The providers have merged them (read each and its test whole):
+- R52 "a newer version of the same target is a new item": reevaluation's `noticesTwoVersions({viewer})` (one holder's leg, two notices differing in `newer_capture`).
+- R52 "a notice whose newer version the viewer cannot see is its own matter": reevaluation's `noticesHiddenVersion({viewer})` (owen's notice with `newer_capture`, `grade` and `affects` null; the admin's view has them).
+- R30 "to the case's manager and to nobody else": docket's `coreDueKinds()` now also gives case CASE-2026-0303 of project R managed by hank: `hankDue` (hank's real `coreDue`) and `unseenDue` (alice's, empty).
+Restore each control on those real answers. R30's no-project control is not restored: a case always has a project (publication's `cases.project_id` NOT NULL), so it is no real answer (K5119).
+
+**Done:** `checks/fixtures.mjs <absolute root> queue-producers --list` 0 (your three accepted markers stay); your module's tests green; format, architecture, coverage, words, ownership 0 (a new test import of a module you do not declare in `uses`: QUESTION to BOB). List every marker you add (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only.
+
+## B16 · START
+
+START · QUEUE-PRODUCERS #28 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 70; K5148)
+
+Depth 2 (BOB #295 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/queue-producers tranche/T51`; if a local `job/T51/queue-producers` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/queue-producers stale/queue-producers-local && git checkout -b job/T51/queue-producers origin/job/T51/queue-producers`. If `job/T51/queue-producers` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module queue-producers`; record `build/jobs/T51/queue-producers.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+1. **A notice names a case by its raw id on Home and the Queue** (`diag2-10b.md` C7; queue-producers R43 as amended): `#nameOf` (`queue-producers/index.mjs:233`) finds titles only of bundles (`#titlesOf`, `:210-218`), so a published case holder is drawn `CASE-…`. Name a case holder by its scope (the store's case rows, as the publication reads name a case). Test: `words.test.mjs`, a notice whose holder is a published case gives a summary with the case's scope and no `CASE-` id; control: a question holder still by its title.
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> queue-producers --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B17 · RESUME
+
+RESUME (BOB #296, §5.3 (5)): QUEUE-PRODUCERS #28 never confirmed its start (its local branch held a stray commit; its reset was refused), so it is archived and you are QUEUE-PRODUCERS #29. Your session's clone is fresh: follow B16's FIRST block (never `reset --hard`; rename a differing local branch), `mail start`, then do B16's cause.
+
+## B18 · CHANGE
+
+CHANGE (K5157; plan item 75): merge origin/tranche/T51 into your branch, then add one cause: queue-producers R54 (new; `diag2-03b.md` §6): a participant's request to leave a project (membership R35's state `leaving`) is an item for that project's owners, as a join request is (R42, `#obligationsProjectRequest`), naming the participant and any note; it leaves when an owner removes the participant or the participant withdraws (rejoins). Words at use as `localize`. Test at your interface over membership's published fixture: a `leaving` participant gives one item to each owner and none to others; control: after removal or withdrawal no item; a hidden project names nothing to a non-owner. Name R54 met in your COMPLETE.

@@ -3,6 +3,7 @@
    help, its run and refusals, the plan's titles, its picked references and its categories. Every sentence is asserted by
    its key through `setup-words` (R19): no test here holds a sentence's English. */
 import test from "node:test";
+import { storeSilentParsed } from "../answer-envelope/fixtures.mjs";
 import assert from "node:assert/strict";
 import { open, main, text, ops, press, last, ok, button, fill, refusedIn, beside, W, D, PAGE, hasWord, DATA_PLANE, ROUTES, PLAN, PLAN_ID, PROPOSALS, ESC, DET, PROJECT,
   QUESTION, QUESTION_TITLE, PROJECT_QUESTIONS, DETERMINATIONS } from "./page.mjs";
@@ -229,6 +230,7 @@ test("R13: a closed plan offers no ask; the ask is drawn only while the assistan
 test("R18 (D5, D29): an answer of ok: true that carries started: false (no run already asked), dispatched: false or withheld is drawn as its refusal, never as a run looking for options", async () => {
   const carried = [
     ["started: false", { ok: true, plan: PLAN_ID, run: RUN, started: false, code: "AI_RUN_MODE_NOT_DEPLOYED", translation: "Planning runs are not deployed." }, W("refusal.AI_RUN_MODE_NOT_DEPLOYED")],
+    // fixtures-generic: CODE_NO_ONE_HAS_A_WORD_FOR (a code the design has no word for, on purpose)
     ["started: false, a code with no design word", { ok: true, plan: PLAN_ID, run: RUN, started: false, code: "CODE_NO_ONE_HAS_A_WORD_FOR", translation: "Planning runs are not deployed." }, "Planning runs are not deployed."],
     ["dispatched: false", { ok: true, plan: PLAN_ID, run: RUN, started: true, dispatched: false, code: "AI_NO_ACCOUNT", translation: "No account pays for this run." }, W("refusal.AI_NO_ACCOUNT")],
     ["withheld", { ok: true, plan: PLAN_ID, run: RUN, started: true, withheld: "AGENT_WORKER_UNBOUND", translation: "The worker is not bound." }, W("refusal.AGENT_WORKER_UNBOUND")],
@@ -257,7 +259,8 @@ test("R18: 'looking for options' is drawn only while airun answers the run as ru
   await press(ended, "planask", { reason: "ask" });
   unsaid(ended, "screen.plan.ask.running");
   said(ended, "screen.plan.ask.ended");
-  const unanswered = await open(ROUTES.plan, asking({ status: "running" }, { more: { airun: { status: 502, json: { ok: false, reason: "STORE_DID_NOT_ANSWER" } } } }));
+  const silent = async (op) => { const { status, body } = await storeSilentParsed(op); return { status, json: body }; };
+  const unanswered = await open(ROUTES.plan, asking({ status: "running" }, { more: { airun: await silent("airun") } }));
   await press(unanswered, "planask", { reason: "ask" });
   unsaid(unanswered, "screen.plan.ask.running");
   unsaid(unanswered, "screen.plan.ask.ended");

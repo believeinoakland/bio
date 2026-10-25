@@ -8,11 +8,13 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, run, network, HTML, page } from "./fixture.mjs";
 import { acquire, owedRun, openCaptures } from "../../../src/acquisition/index.mjs";
+import { renderFailure } from "../capture-sources/fixtures.mjs";
 
 const SHELL = HTML("<div id=app>the served shell, a page's own text</div>");
 const PG = "https://r.example/acadia";
 const member = { cls: "member", member: true, sessMember: "m1", storeName: "bio" };
-const WHY = "the browser binding had no session free after 40 s";
+const FAILED = await renderFailure({ class: "no_session" });   /* the answer the real render driver gives (capture-sources) */
+const WHY = FAILED.error;
 const OK_ANSWER = (url) => ({ ok: true, html: HTML("<p>rendered</p>"), elapsed_ms: 12, engine: "Chrome", engine_version: "1", viewport: { width: 1280, height: 800 },
   dpr: 1, locale: "en-US", timezone: "UTC", navigated_to: url, status: 200, requests: [], scripts: [], wait: { asked: { until: "networkidle", timeout_ms: 15000 }, fired: "networkidle" } });
 
@@ -21,6 +23,7 @@ function pending(answer) {
   let open; const gate = new Promise((r) => (open = r));
   const w = world({ env: { RENDERER: { fetch: async (u, init) => { await gate; return new Response(JSON.stringify(typeof answer === "function" ? answer(JSON.parse(init.body).url) : answer)); } } } });
   const entries = new Map();
+  // fixtures-contract: plane owed-ledger
   w.store.owedLater = async (e) => { entries.set(e.session, e); return { ok: true }; };
   return { w, entries, open };
 }
@@ -29,6 +32,7 @@ const begin = async (p) => {
   return first.body.document.render_pending.session;
 };
 /* the alarm's run, over the scripted network the owed finish fetches the served page from */
+// fixtures-contract: control-plane deliver-owed
 async function alarm(p, sid, opts = { deliver: async () => ({ ok: true }) }) {
   const net = network({ [PG]: () => page(SHELL) });
   try { return await owedRun(p.w.store, p.entries.get(sid), opts); } finally { net.restore(); }
@@ -42,7 +46,7 @@ async function logged(fn) {
 const events = (lines, name) => lines.map((l) => { try { return JSON.parse(l); } catch { return null; } }).filter((x) => x && x.event === name);
 
 test("R100 (G72): an owed visitor view whose render fails ends the entry final with the render's problem as `detail` (cut to a bound, no page text), and logs one structured render_failed line", async () => {
-  const p = pending({ ok: false, error: WHY });
+  const p = pending(FAILED);
   const sid = await begin(p);
   p.open();
   await new Promise((r) => setTimeout(r, 50));
@@ -63,7 +67,7 @@ test("R100 (G72): an owed visitor view whose render fails ends the entry final w
 });
 
 test("R46 (G72, 3b): after the entry ended final the session is dropped, so the member's open captures no longer list it, and \"Finish it\" on it answers 404 NO_SUCH_SESSION", async () => {
-  const p = pending({ ok: false, error: WHY });
+  const p = pending(FAILED);
   const sid = await begin(p);
   assert.equal(openCaptures(p.w.store, { by: "m1" }).captures.some((c) => c.session === sid), true, "listed while the render is owed");
   p.open();

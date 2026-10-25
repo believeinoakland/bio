@@ -1,6 +1,6 @@
 # BOB to inquiry (T51)
 
-**Read** · handled J5
+**Read** · handled J12
 
 ## B1 · START
 
@@ -58,3 +58,92 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B7 · ANSWER · re J4
 
 ANSWER J4 (K4213): `inquiry-grammar` R68 is merged on tranche/T51 (K4214; its text as its J3 gives, which is your one-line rule: cutting legs are not counted as unlabelled): merge the tranche, rerun, COMPLETE. Write R85 and R86 yourself in build/requirements/inquiry.md (K4210) with the ids the START gave (ids never reused; the gap is fine), and amend R34 as you say. The strength finding is confirmed and routed: `strength`'s arithmetic leaves `cuts_against` legs out of the supporting answer's population (Case Making §3, invariant 7: a cutting finding has the same computation, on its own; K4194 L9: a cutting leg is not a reason for): a CHANGE to strength's job. Your requirement text need not claim it.
+
+## B8 · START
+
+START · INQUIRY #24 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 3: causes R30b, publish 5 fixtures, re-point 5 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #289 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/inquiry tranche/T51 && git branch -m job/T51/inquiry stale/inquiry-local && git checkout -b job/T51/inquiry origin/job/T51/inquiry`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module inquiry`; record `build/jobs/T51/inquiry.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Causes (fix-round-10-T51.md §1; each with K4426's four: root cause, why the tests missed it, a failing-first test on the walker's exact case seen red first, the platform check). The requirement amendments quoted are already on the tranche.**
+**R30b, the record half** (G6; walk E1a), after `inquiry-grammar` has merged: `inquiry` R8/R85 (`ground` covers every supporting leg) accepts an unlabelled necessary leg beside labelled grounds, as the amended grammar allows and `strength` already computes (`strength/arithmetic.mjs:86-101`). BOB amended inquiry R8 and R85 (not yet met: T51): a supporting leg without a ground label is a necessary leg beside the grounds; a saved partition with no ground (`grounds: []`) is held as such and read back as answered. Failing-first: a question with one unlabelled necessary leg and one labelled ground is stored by `inquiry.ground`, strength reads it, `conclude` with `reading` and no `affirmed` is `ok` through `basis-versions` `world()`. Platform N.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `bio-plane/test/m/inquiry/fixtures.mjs` (new file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `basisForUnread` (users now: case-disclosures 1): real `inquiry.basisFor(<unknown id>)` (NO_ID).
+- `basisRefusals` (users now: citation 1): the promotion step check of a real inquiry refusing a project: BASIS_REFUSED (with findings), SELF_BASIS, BASIS_CYCLE (path), MACHINE_PASSAGE_UNCHECKED; each from a real promote of a bad basis.
+- `disposeAct` (users now: intent 1): `inquiry.dispose({handle, to, reason, viewer, owner, author})` over the real selection and promotion, in place of the test's hand-written dispose.
+- `migratedSurfacing` (users now: ai-runs 1): inquiry.migratedSurfacing(id) (R49): null for a question not migrated, the surfacing record for one that is.
+- `readRefusals` (users now: control-plane 1): the real inquiry read refusals NOT_AN_INQUIRY and NO_SUCH_BUNDLE by viewer.
+
+**Your own fixture lines, done in this job** (5; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- capture/heldActsUnreadable (2 judgment): document-waits.test.mjs:115,124
+- retrieval/selectionResolve (2 judgment): fixture.mjs:102,103
+- duties/occurrencesOf (1 judgment): held-legs.test.mjs:118
+
+Rules of fix-round-9 §0 that bind: R-FOUR (root cause with file:line, why the tests missed it, a failing-first test on the walker's exact case through the real entry path seen red first, the platform check); R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** each cause above fixed with its failing-first test green (seen red first) and its platform check done or named for the redeploy; your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . inquiry --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/inquiry.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+**Inherited reds (K5068, from inquiry-grammar's merge of cause 30b):** five inquiry tests still assert the old partition refusal and are red on the tranche: R8 "grounds: every leg labelled or none", R8 "the default is AND ... half-labelled basis is refused", R27/R30 "refusals in order" (partition step), R65 "an ungrouped question answers grouped false", R85 control "a partition leaving a supporting leg out is still refused", and `case-grammar.test.mjs`'s R8 test. Bring each in line with inquiry-grammar R68 as amended (an unlabelled supporting leg beside labelled grounds is a necessary leg, no finding) and with R8/R85 as amended; never weaken a control that still holds.
+
+## B9 · ANSWER · re J6
+
+re J6 (K5077). (1) `duties` added to inquiry's `uses` (duties 67 precedes inquiry 79; `order.mjs --check` clean): merge `origin/tranche/T51`. (2) Agreed, the version half is basis-version-grammar's: its R3 is amended on the tranche (not yet met: T51) and BASIS-VERSION-GRAMMAR #2 starts now; basis-versions' own job (batch 4) runs the walker's `conclude({reading})` case. In your module, write R85's `conclude`-with-`reading` half as a `test.todo` naming R85 (K208), not a red test, and complete the rest; R85 is struck when both of those have merged. (3) `answered` accepted as you built it (a field added, K2008); `grouped` unchanged. R65 is amended on the tranche with `answered` and its test: name it R65. NO_PARTITION's detail is a word-table row: it goes to UX-DESIGN in the round's words HANDOFF (`fix-round-10-words.md`), not yours.
+
+## B10 · CHANGE
+
+re J7 (K5078): capture is merged on the tranche with its published fixtures (`bio-plane/test/m/capture/fixtures.mjs`, `heldActsUnreadable` among them). Merge `origin/tranche/T51`, re-point `document-waits.test.mjs:115` and `:124` to it, `checks/fixtures.mjs /home/user/bio inquiry --list` at zero, then COMPLETE.
+
+## B11 · START
+
+START · INQUIRY #28 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 38, a published fixture (plan build/plan/fix-round-10-T51.md §3; K5108)
+
+Depth 2 (BOB #293 is depth 1).
+
+FIRST, before `mail start`: `git fetch origin job/T51/inquiry tranche/T51`; if a local `job/T51/inquiry` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/inquiry stale/inquiry-local && git checkout -b job/T51/inquiry origin/job/T51/inquiry`. If `job/T51/inquiry` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module inquiry`; record `build/jobs/T51/inquiry.md` (append a new section). Model claude-haiku-5-5; workers haiku low, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` (K5078). A fixture is made by your real code when the test runs, never stored (K4990, K4993).
+
+**Follow-up 38 (test files only; QUEUE #36, its record's last section).** queue's `noticed.test.mjs:292` needs your real `datedWaits({viewer, ...})` answering one dated wait on a stated question (`{ok, zone, waits: [{inquiry, index, text, description, date, state: "due", set_by, set_at}]}`), due before a given instant, set by that viewer. Publish it by your real acts (the question stated, the wait set), parameterised by viewer, date and the instant, so the user's world can also hold the question.
+
+**Done:** the fixture exported from `bio-plane/test/m/inquiry/fixtures.mjs` with a test in your `fixtures.test.mjs` that calls it and checks the real answer; `checks/fixtures.mjs <absolute root> inquiry --list` 0; your module's tests green; format, architecture, coverage, words, ownership 0. Name each new export and its signature in your COMPLETE (its user re-points next). List every `fixtures-own`/`fixtures-generic` marker you add (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only: if the real answer shows a product defect, REPORT it to BOB and change no product code.
+
+## B12 · CHANGE
+
+CHANGE · follow-up 9 (K5109), in this job beside B11, test files only.
+
+basis-versions has merged (K5109): its `own-reading.test.mjs` "R51, R3 (K5077)" concludes, through the real `conclude({reading})`, a question of one labelled ground and one unlabelled supporting (necessary) leg. That is the half of R85 your `necessary-leg.test.mjs:64` holds as a `test.todo`; inquiry cannot import basis-versions (later in the order), so the arm is proven there. Remove that `test.todo` and leave a one-line comment citing basis-versions' test by name. Your other R85 tests stay. Merge `origin/tranche/T51` first. Report in your COMPLETE that `necessary-leg.test.mjs` holds no R85 todo; BOB strikes R85 at your merge.
+
+## B13 · START
+
+START · INQUIRY #29 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 55, a cause the final pass found (plan build/plan/fix-round-10-T51.md §3; K5130)
+
+Depth 2 (BOB #294 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/inquiry tranche/T51`; if a local `job/T51/inquiry` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/inquiry stale/inquiry-local && git checkout -b job/T51/inquiry origin/job/T51/inquiry`. If `job/T51/inquiry` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module inquiry`; record `build/jobs/T51/inquiry.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993). Each cause carries K4426's four fields in your COMPLETE: root cause with evidence, why the tests missed it (that gap fixed), a test of the walker's exact case through its real entry seen failing then passing, and any platform check.
+
+**The cause (WALK-FINAL-05 row R38, both rows; K5130).** A document an open question waits on is set aside; the asker's question screen reads `op=questionwaits` (`screens-inquiry/question.mjs:31`, its R2: "what it waits on, with who set a document aside and their reason"), but `questionWaits` (`bio-plane/src/inquiry/index.mjs:1372`) answers only dated waits; R58's `documentWaits` (the set-aside wait and its `history`) is reached by no op (only `investigation` calls it). R55's `questionWaits` amendment is extended (K5130: read the new first bullet under R55, and R58, whole): `questionWaits`'s answer also carries `document_waits` and `history` for that question, exactly as `documentWaits({questions: [question], viewer})` gives them (an unreadable capture read answered `undetermined` as R58 says). Why missed: the screen's tests use a hand-built `questionwaits` fixture (`screens-inquiry/fixtures.mjs:115`) of a shape the real op never gave. Test, through the real acts (a question; a document cited to it; another member sets it aside with a reason; `questionWaits` as the asker reads the wait with by and reason; a restore ends it, both in `history`; a viewer who may not see the document gets neither); seen red first. Publish a fixture of this answer made by your real code (`questionWaitsSetAside(...)`) in your tests' `fixtures.mjs`, for screens-inquiry's re-point (follow-up 35's CHANGE).
+
+**Done:** the marked requirement met (name the ids; BOB strikes the marks); `node /home/user/civicos-process/checks/fixtures.mjs <absolute root> inquiry --list` 0 failing; module tests green; format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B14 · START
+
+START · INQUIRY #30 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 78 (5); K5148)
+
+Depth 2 (BOB #297 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/inquiry tranche/T51`; if a local `job/T51/inquiry` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/inquiry stale/inquiry-local && git checkout -b job/T51/inquiry origin/job/T51/inquiry`. If `job/T51/inquiry` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module inquiry`; record `build/jobs/T51/inquiry.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+1. **Test files only** (RETRIEVAL #29 J16; retrieval R99 merged): another member's selection is now refused by retrieval `SELECTION_NOT_YOURS` (C-33.59), not `NOT_YOURS`. inquiry's tests hand-build that refusal (`bio-plane/test/m/inquiry/fixtures.test.mjs:36` and any other site `--list` names): take it from retrieval's published fixtures (`bio-plane/test/m/retrieval/fixtures.mjs`, its `selectionResolve` fixture with a viewer other than the owner) by its real code. If retrieval publishes no fixture that gives the refusal, REPORT it and leave the line as it is.
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> inquiry --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.

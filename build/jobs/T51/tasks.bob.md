@@ -1,6 +1,6 @@
 # BOB to tasks (T51)
 
-**Read** · handled J7
+**Read** · handled J12
 
 ## B1 · START
 
@@ -78,3 +78,66 @@ ANSWER to J4 (BOB #247; K4488). Neither (A) nor (B): (C), which is D2's rule app
 ## B8 · ANSWER · re J5
 
 ANSWER to J5 (BOB #247; K4491). (A): in tasks' suite, against the real provenance and capture (both already in your `uses`), composed as the plane composes them (test-support's helpers where they serve), red by name until PROVENANCE #27 merges; then COMPLETE naming it. BOB re-runs it at provenance's merge and CHANGEs you only if it stays red.
+
+## B9 · START
+
+START · TASKS #18 · tranche T51 · product believeinoakland/bio · fix round 10, Wave B job, batch 6: re-point 5 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #292 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/tasks tranche/T51 && git branch -m job/T51/tasks stale/tasks-local && git checkout -b job/T51/tasks origin/job/T51/tasks`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module tasks`; record `build/jobs/T51/tasks.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Your own fixture lines, done in this job** (5; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- provenance/homeOfHomed (4 judgment): inbox.test.mjs:188; ledger.test.mjs:55,78; world.mjs:124
+- provenance/homeOfEmpty (1 mechanical): world.mjs:99
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . tasks --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/tasks.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B10 · START
+
+START · TASKS #19 · tranche T51 · product believeinoakland/bio · fix round 10, a re-point to a published fixture (plan build/plan/fix-round-10-T51.md §3; K5115)
+
+Depth 2 (BOB #293 is depth 1).
+
+FIRST, before `mail start`: `git fetch origin job/T51/tasks tranche/T51`; if a local `job/T51/tasks` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/tasks stale/tasks-local && git checkout -b job/T51/tasks origin/job/T51/tasks`. If `job/T51/tasks` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module tasks`; record `build/jobs/T51/tasks.md` (append a new section). Model claude-haiku-5-5; workers haiku low, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993).
+
+**Follow-up 30, the re-point (test files only; TASKS #18 J8).** Your `world.mjs` answers `homeOf` for a capture homed in a project from a hand map (`PROJ-` ids), because provenance's `homeOfHomed` homes only information bundles. provenance has merged `homeOfProject(captures, {owner, title})` (`bio-plane/test/m/provenance/fixtures.mjs`; read it and its test whole): it promotes a project with no chosen id, registers each capture there by the real act, and answers `{provenance, projectId, homeOf, made}`, `projectId` the minted `PROJ-` id. Replace the map with it; your tests take the project id from `projectId` where they named their own.
+
+
+**Done:** `checks/fixtures.mjs <absolute root> tasks --list` 0; your module's tests green; format, architecture, coverage, words, ownership 0 (a new test import of a module you do not declare in `uses`: QUESTION to BOB for the edge). List every marker you add (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only.
+
+## B11 · START
+
+START · TASKS #20 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 44, an unstable suite run (plan build/plan/fix-round-10-T51.md §3; K5117)
+
+Depth 2 (BOB #293 is depth 1).
+
+FIRST, before `mail start`: `git fetch origin job/T51/tasks tranche/T51`; if a local `job/T51/tasks` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/tasks stale/tasks-local && git checkout -b job/T51/tasks origin/job/T51/tasks`. If `job/T51/tasks` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module tasks`; record `build/jobs/T51/tasks.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993).
+
+**Follow-up 44 (TASKS #19 J9).** Your suite run in one process, `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/tasks/*.test.mjs`, reported 109 to 134 tests across runs, while each file run alone gives 134 in all (check 23, decide 8, declared-ops 7, grammar 45, inbox 30, ledger 5, reads 6, seam-r25 2, sign 8). A run that silently drops tests is a defect (P7, K4787). Reproduce it (state the runs and counts), find which file's tests go missing and why (a file whose work outlives its tests and is cut by `--test-force-exit`, a shared global, an unawaited promise, a port or a temporary path reused, or the machine's load: name the load), fix it in your tests (or, if the cause is in your product code, fix it there with a test that fails first), and prove the one-process run reports 134 every time over at least 10 runs, also under named load (8 busy loops on 4 cores), K4966. If the cause lies in another module (test-support, the platform shim), REPORT it to BOB with the evidence and change nothing there.
+
+**Done:** the one-process count stable at the full total over 10 runs and under the named load; `checks/fixtures.mjs <absolute root> tasks --list` 0; format, architecture, coverage, words, ownership 0. Record the runs, the cause with evidence, and a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B12 · START
+
+START · TASKS #21 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 70; K5148)
+
+Depth 2 (BOB #295 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/tasks tranche/T51`; if a local `job/T51/tasks` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/tasks stale/tasks-local && git checkout -b job/T51/tasks origin/job/T51/tasks`. If `job/T51/tasks` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module tasks`; record `build/jobs/T51/tasks.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+1. **Every authority task reads "unassigned" though the project has an owner** (`diag2-04.md` §6; tasks R1 as amended): `#routeTask` (`tasks/index.mjs:189-238`) never reads the project a document is filed in (`record-core`'s `bundleInfo().project`). Route there after the bundle-is-a-project arm and before the `cites` arm. Test: `inbox.test.mjs`, a document committed with `project: P` and no `cites` edge routes its `authority-undetermined` task to P's active owner; control: no project and no edge still routes by the administrator rule. (Its sub-point, the task row's missing basis on the Queue, is words: not yours.)
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> tasks --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.

@@ -18,6 +18,7 @@ const doAnswer = async (res) => {
   if (out.ok === false && reply.status < 500) return { answered: false, refused: true, result: undefined, reply };
   return { answered: false, result: undefined };
 };
+// fixtures-contract: answer-envelope door-helpers
 const storeSilent = (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER", op }, 502);
 const storageAbsent = (op) => json({ ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", op }, 503);
 const env = { CAPTURES: { put() {}, get() {} } };

@@ -1,6 +1,6 @@
 # control-plane (T51)
 
-**Status** · session_019S55YpubfG7GsCPNPQm4VN · depth 2 · COMPLETE · handled B85
+**Status** · session_01CCU5PERV9DBgQStnjK7jSm · depth 2 · COMPLETE · handled B88
 
 ## J1 · QUESTION
 
@@ -975,3 +975,26 @@ Size (session_019S55YpubfG7GsCPNPQm4VN): test runs 8, module lines 5247
 ## J57 · COMPLETE · re B85
 
 control-plane fix round 10 wave A batch 1 complete and pushed: ask-wire, unknown-op (fixtures-contracts.test.mjs) and deliver-owed (r124-owed-render.test.mjs) stated as data and run against the real code; no product source changed; module suite 683/683; words, format, architecture, ownership 0 failures; coverage 94/96 (R136, R137 are Wave B). One line left: orphan-run acquisition deliver-owed, waiting on acquisition's marker. Real answers differ from users' hand-built ones (403 body extra keys, 502 STORE_DID_NOT_ANSWER, UNKNOWN_OP is 400 with error 'unknown op'): listed in the record. No fixtures-own/generic markers added.
+
+## Re-completion (B86)
+
+declared-ops.test.mjs (R116, R112) now reads interfacewords' declaration from translations' `DECLARED_OPS` (no hand row; asserts control-plane's owner map holds none). Merged `tranche/T51`. Ran the six interfacewords files (t37-door, r8-words-door, r9-words-no-language, declared-ops, r8-words-cache, t51-interfacewords): 36 pass, 0 fail; whole suite: 683 pass, 0 fail. The 70 own lines wait for store-request.
+
+Size (session_019S55YpubfG7GsCPNPQm4VN): test runs 12, module lines unchanged
+
+## J58 · COMPLETE · re B86
+
+B86 done and pushed: declared-ops.test.mjs reads interfacewords from translations' DECLARED_OPS; the six interfacewords files 36/36, whole suite 683/683.
+
+## Fix round 10, follow-up 60 (B87, B88): K5131
+
+**Root cause.** `phase-clock.mjs` wrapped every non-`fetch` method of a clocked stub, and every method of the STORE namespace, as `(...a) => v.apply(target, a)`. On a workerd RPC stub `v` is a stub and `.apply` a remote property, so the call became an RPC named `apply`: `The RPC receiver does not implement the method "apply"`, answered by the door as `PLANE_INTERNAL_ERROR` (seen: `index.mjs:2552`, `stub.draft`). Callers that went through it: `readtranslate` and `textcheck` (`stub.draft`), the status-report drafts, `dispatchMemberRun`, `groupFields`, and every other RPC method the door calls on a store stub (`clockedStub` wraps all of them); the namespace's own `get` also went through `.apply`.
+**Fix (R128 amended, met).** `target[key](...a)` for stub methods and namespace methods, `target.get(...a)` for `get`; `fetch` unchanged.
+**Why missed.** the suites' bindings were plain objects. Gap fixed: `bio-plane/test/m/control-plane/r128-rpc-stub.test.mjs` runs a real Miniflare Durable Object with RPC methods through `clockedEnv` (red on the old wrapping with the `apply` error, green now) and the door itself in workerd: `op=readtranslate` red on the old code (`PLANE_INTERNAL_ERROR`), green now.
+**B88.** Adopted `t51-round10-seam-imported.test.mjs` (citation R18, WALK-FINAL-09 R169) and `t51-round10-seam-observation.test.mjs` (ratification R2, WALK-FINAL-10A R92, R171 (5)). The observation tests (2) are green. The imported tests (2) are red only on `MACHINE_CANNOT_CITE_IMPORTED`: citation's stamps are not in `tranche/T51` yet (citation J20 just completed); BOB merges citation first.
+**Ran.** Module suite 685 (before B88's two files): 682 pass, 3 fail, none caused by this change (the plane's `r8-headofline` alarm_at test fails identically with the old `phase-clock.mjs`; R112 `subscriptionsignin` is interfacewords' declaration with no fields; §14 READ_BOUNDS is marked red until the quoting jobs merge). format 0, architecture 0, words 0, ownership 0. Coverage: R136, R137 unnamed (Wave B, waits on `store-request`). Fixtures: 68 failures, all in older tests (hand-built answers), none in the new file.
+Size (session_01CCU5PERV9DBgQStnjK7jSm): test runs 9, module lines 5238
+
+## J59 · COMPLETE
+
+K5131 done: R128 met (phase clock calls stub methods on the stub, never .apply); walker's readtranslate red on old code (PLANE_INTERNAL_ERROR) then green through the door in workerd; B88 tests adopted (observation green; imported red only until citation's stamps merge — merge citation first). NOT clean: 3 suite failures not caused by this change (plane r8-headofline alarm_at, R112 subscriptionsignin declaration, READ_BOUNDS §14), fixtures 68 old failures, coverage R136/R137 (Wave B). Detail in record.

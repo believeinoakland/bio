@@ -78,7 +78,7 @@ test("R71 connections declares connect: an entity by id or entityId is required,
 });
 
 test("R71 connections declares connectionassert: both documents and the basis are required", async () => {
-  await holds("connectionassert", MEMBER, { a: ["NO_SUCH_BUNDLE"], b: ["NO_SUCH_BUNDLE"], basis: ["CONNECTION_ASSERT_NO_BASIS"] },
+  await holds("connectionassert", MEMBER, { a: ["NO_SUCH_DOCUMENT"], b: ["NO_SUCH_DOCUMENT"], basis: ["CONNECTION_ASSERT_NO_BASIS"] },
               { a: A, b: B, basis: "both are about the same ordinance" });
 });
 

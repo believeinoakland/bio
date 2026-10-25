@@ -6,6 +6,7 @@ import { WORD_ROWS, word } from "../../../src/setup-words/index.mjs";
 import { wordsOf } from "../../../src/interface-shell/index.mjs";
 import { boot, ok, refused, refusedIn, httpError, silent, pending, textNodes } from "./harness.mjs";
 import { ALL, FIXTURE_WORDS } from "./screens.fixture.mjs";
+import { inWorld, bootAs, translated } from "./world.mjs";
 
 const DATA = ["A lease", "3 pages", "B", "withheld", "Pothole repairs", "Closed", "Minutes", "Budget", "River Town", "Pothole", "2 questions", "M", "mai", "R"];
 const IMAGE = ok({ title: "A lease", pages: 3, grade: "B", why: "withheld", project: { id: "P1", title: "Pothole repairs" }, passages: [{ n: 1, text: "Closed" }] });
@@ -52,8 +53,11 @@ test("R5 a key no list holds fails the check (control), and is drawn as its key"
 });
 
 test("R5 after whoami the shell reads op=interfacewords: the group's shown translation where held, the English of WORD_ROWS or SCREEN_WORDS for a key it does not answer or when the read fails", async () => {
-  const p = await boot({ screens: ALL, plane: { ...PLANE, interfacewords: ok({ ok: true, language: "es", words: [
-    { key: "rail.queue.name", text: "Cola", en: "Queue", fallback: false }, { key: "rail.home.name", text: "Home", en: "Home", fallback: true }] }) } });
+  /* the team keeps "Cola" for the Queue place in es; the Home place it keeps nothing for */
+  const { world, me } = await inWorld({ founder: true });
+  const held = await translated(me, "es", [["rail.queue.name", "Cola"]]);
+  assert.deepEqual(held.map((x) => x.key), ["rail.queue.name"], "the store shows the one adopted word");
+  const p = await bootAs(world, me, { screens: ALL, plane: PLANE });
   const ops = p.requests.map((r) => r.op);
   assert.ok(ops.indexOf("interfacewords") > ops.indexOf("whoami"));
   const rail = p.root().querySelector(".cs-rail").textContent;

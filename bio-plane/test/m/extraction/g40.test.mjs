@@ -4,14 +4,14 @@
    COUNTED at the module's real entry: the operations over 1 MB made by one `readHeld`, and when they are made. Each test names the requirement id it checks. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, bucket, doc, sha } from "./fixture.mjs";
+import { fresh, bundle, bucket, doc, sha, homesOver } from "./fixture.mjs";
 import { sha256HexSync } from "../../../src/record-grammar/sha256.mjs";
 import { ReadHooks } from "../../../src/reading-pipeline/index.mjs";
 import { MODULE_ORDER } from "../../../src/membership/index.mjs";
 
 /* (G41) a reading is kept under 1 MiB, and a sheet over 512 KiB of cells holds them, so the largest reading a CSV makes is some 700 KB: "large" is 400,000 characters here */
 const BIG = 400_000;
-const register = (rows) => ({ homeOf: (s) => rows.get(s) ?? null, onTestimony: () => ({ ok: true }) });
+const register = (rows) => homesOver(rows);
 const csv = (bytes) => {
   const rows = ["id,name,amount,note"];
   for (let n = 20, i = 0; n < bytes; i++) { const r = `${i},"name ${i}",${(i * 37) % 9973}.${i % 100},"council note ${i} budget line"`; rows.push(r); n += r.length + 1; }

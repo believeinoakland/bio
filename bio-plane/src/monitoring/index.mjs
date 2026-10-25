@@ -76,7 +76,7 @@ import { identify, doctypeFor, assess, CONTRACT } from "../../../docprofile/regi
 import { combine } from "../../../jurisdictions/index.mjs";
 import { localDay, dayRange, isCalendarDate, bounds } from "../civil-time/index.mjs";
 import { parseFrontmatter, isPublicHttpsLocator, createSha256, MACHINE_CLASS_PREFIX, MACHINE_AUTHOR_PREFIX,
-         isMachineIdentity } from "../record-grammar/index.mjs";
+         isMachineIdentity, EARNED_CAPTURE_CEILING } from "../record-grammar/index.mjs";
 import { checkGatheringGrammar, DRIVE_TICK_CHECKS, GATHERING_CHECKS, frequencyRefusal } from "./checks.mjs";
 import { MONITORING_TABLES, migrateMonitoring } from "./schema.mjs";
 import { namedRequestSet, namedRequests, writeGathering } from "./named-requests.mjs";
@@ -264,6 +264,8 @@ export const MONITORING_READ_MAX = 1000;
 /** R48: the most flagged documents one read answers (and its default), and the documents read per page to find them. */
 export const FLAGGED_LIMIT_MAX = 200;
 const FLAGGED_PAGE = 200;
+/* R4 (K5148): a 404 or 410 confirms a removal only when a look at least this long after the first of the run still answers it. */
+const REMOVAL_WINDOW_MS = 24 * 3600e3;
 /** R30: the due slate's fixed framing. Nothing between the markers is instruction: each line is one quoted JSON item. */
 export const SLATE_FRAMING_OPEN = "This is the due slate of a Civicsmith instance: the documents, named requests and "
   + "sweeps its daemon would check or gather now. Run it by hand: for each item, fetch or check what it names and "
@@ -579,6 +581,31 @@ export class Monitoring {
   get publication() { return this.#deps.publication === undefined ? null : (this.#deps.publication ||= publicationOf(this.#deps.host)); }
   get caseImport() { return this.#deps.caseImport ||= caseImportOf(this.#deps.host); }
   get investigation() { return this.#deps.investigation ||= investigationOf(this.#deps.host); }
+  /** R79: the register file `file` with a document entry for the copy the tick filed (`cap`): its locator (the baseline entry's, else
+   *  `locator`), file, retrieval instant, authority as the baseline entry states it, origin, and the capture block with the content type
+   *  and digest. An entry already naming the digest is left as it is. Never throws: an unreadable register is returned unchanged. */
+  async #withCopyEntry(file, cap, base, locator) {
+    let reg;
+    try { reg = JSON.parse(file.text); } catch { return file; }
+    if (!reg || !Array.isArray(reg.documents) || reg.documents.some((d) => d && d.capture && d.capture.sha256 === cap.sha256)) return file;
+    const kind = base && base.origin && typeof base.origin === "object" ? base.origin.kind : null;
+    const entry = {
+      file: cap.file, locator: base && typeof base.locator === "string" ? base.locator : locator, retrieved: cap.retrieved,
+      ...(base && base.authority ? { authority: base.authority } : {}),
+      authority_state: base && base.authority ? "determined" : "undetermined",
+      authority_basis: base && base.authority
+        ? localize("monitoring.index.authority_basis_baseline", "the authority the baseline capture of this address states, carried to its later copy ({retrieved})", { retrieved: String(cap.retrieved) })
+        : localize("monitoring.index.authority_basis_none", "no authority was asserted when the monitor tick filed this copy ({retrieved})", { retrieved: String(cap.retrieved) }),
+      origin: kind === "named_request" || kind === "sweep" ? base.origin : { kind: "named_request" },
+      attestation_attempts: [],
+      capture: { method: localize("monitoring.index.copy_method", "bio-plane monitor tick, https fetch, hashed at receipt"),
+                 grade: EARNED_CAPTURE_CEILING, actor_class: "daemon", actor: MONITOR_AUTHOR, sha256: cap.sha256, encoding: "binary",
+                 bytes: cap.bytes, ...(cap.content_type ? { content_type: cap.content_type } : {}) },
+    };
+    const text = JSON.stringify({ ...reg, documents: [...reg.documents, entry] }, null, 2);
+    return { path: file.path, text, bytes: new TextEncoder().encode(text).length, sha256: await sha256Hex(text) };
+  }
+
   #fetch(u, init) { return (this.#deps.fetch || globalThis.fetch)(u, init); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -766,7 +793,7 @@ export class Monitoring {
     /* The baseline is whatever the provenance register says was captured from
        this locator (R3). Without one there is nothing to compare against, and the
        tick says so rather than guessing at a status. */
-    let baseline = null, baselineProfile = null, baselineAt = null, renderTick = false;
+    let baseline = null, baselineProfile = null, baselineAt = null, baselineRow = null, renderTick = false;
     try {
       const reg = JSON.parse(img["data/provenance.json"] || "{}");
       const rows = (reg.documents || []).filter((d) => d && typeof d.locator === "string");
@@ -815,6 +842,7 @@ export class Monitoring {
         baseline = typeof shellSha === "string" && /^[0-9a-f]{64}$/.test(shellSha) ? shellSha : null;
       } else baseline = match?.capture?.sha256 || null;
       baselineAt = typeof match?.retrieved === "string" ? match.retrieved : null;
+      baselineRow = match || null;
       baselineProfile = !renderTick && match && match.profile && typeof match.profile === "object" ? match.profile : null;
     } catch { /* C-14.3 reports unparsable JSON; monitoring just has no baseline */ }
 
@@ -823,6 +851,9 @@ export class Monitoring {
     let status = null, note = null, seen = null, compared = null, comparedBasis = null, frame = null;
     /* D-65 — what `assess` said, the type the fetched document reads as, and the look. */
     let httpStatus = null, fetchedBytes = null, fetchedCtx = null, unreachable = null, outcomeRecorded = false;
+    /* R4 (K5148): what this look was beyond answered or not: `unconfirmed_removal`, `removed`, `moved` or `refused`, with
+       its facts, kept at the address (monitor_address_look) and stated on the answer as `look`. */
+    let look = null, unconfirmed = null, movedTo = null;
     const monitorLook = (o) => this.recordLook({ bundleId, address: addressNorm, locator,
       baseline, seen, httpStatus, ...(renderTick ? { scope: "frame" } : {}), ...o, actorClass, actor });
     try {
@@ -849,6 +880,9 @@ export class Monitoring {
       }
       const res = g.res;
       httpStatus = res.status;
+      /* R4: a redirect that ended at another address. `governedFetch` follows redirects, so the answer's own `url` is where
+         it ended; a redirect that ends at the address fetched (or an answer that names none) is no move. */
+      if (res.ok && typeof res.url === "string" && res.url && normalizeAddress(res.url) !== normalizeAddress(tickAddress)) movedTo = res.url;
       /* R25: what the source did, recorded against the document address as acquire records it, once per tick. A
          harvestable Drive export that answers is recorded once its answer is known to be the document: one that
          serves the application shell instead is `source_refused`, as acquire records the same answer. */
@@ -905,8 +939,22 @@ export class Monitoring {
         }
       }
       /* END DEC-49 REGION is-drive-tick-export */
-      if (res.status === 404 || res.status === 410) { status = "removed"; note = answered; }
-      else if (!res.ok) { note = answered; unreachable = note; }
+      if (res.status === 404 || res.status === 410) {
+        /* R4: one 404 or 410 is not a removal. It is confirmed only by a look at least REMOVAL_WINDOW_MS after the first of
+           the run still unanswered; a look the source answered clears the run (below). */
+        const held = this.#one(`SELECT absent_since FROM monitor_address_look WHERE address_norm = ?`, addressNorm);
+        const since = held && held.absent_since ? held.absent_since : checked;
+        if (Date.parse(checked) - Date.parse(since) >= REMOVAL_WINDOW_MS) {
+          status = "removed";
+          look = { outcome: "removed", since };
+          note = localize("monitoring.index.removal_confirmed", "{answered}; it first answered 404 or 410 at {since} and still does, so the removal is confirmed and may be concealment", { answered: String(answered), since: String(since) });
+        } else {
+          look = { outcome: "unconfirmed_removal", since };
+          note = localize("monitoring.index.removal_unconfirmed", "{answered}; this is not yet a removal: it is confirmed only if a look 24 hours or more after {since} still answers 404 or 410", { answered: String(answered), since: String(since) });
+          unconfirmed = note;
+        }
+      }
+      else if (!res.ok) { note = answered; unreachable = note; look = { outcome: "refused", reason: note }; }
       else {
         const bytes = new Uint8Array(await res.arrayBuffer());
         /* DEC-49 REGION is-drive-tick-bytes
@@ -1025,6 +1073,10 @@ export class Monitoring {
          was recorded is not a second outcome; a Drive export whose bytes could not be read is a failed fetch. */
       if (!outcomeRecorded) await this.#recordOutcome(addressNorm, "fetch_failed", httpStatus, checked);
     }
+    if (movedTo) {
+      look = { outcome: "moved", address: movedTo };
+      if (note) note = localize("monitoring.index.moved_note", "{note}; the address now redirects to {address}", { note: String(note), address: String(movedTo) });
+    }
 
     /* D-65 — ASK `assess` (BIO_Content_Framework §6, "One public function") THROUGH THE
        CAPTURE'S HANDLER AND CONTENT TYPE, with the baseline's OWN BYTES read back from the capture store
@@ -1094,11 +1146,19 @@ export class Monitoring {
     const lookArgs = {
       outcome: unmonitorable ? "unmonitorable"
              : status === "unchanged" || frame === "unchanged" ? "unchanged" : status === "modified" ? "changed"
-             : status === "removed" ? "removed" : unreachable ? "unreachable" : "unbaselined",
-      reason: unreachable,
+             : status === "removed" ? "removed" : unreachable || unconfirmed ? "unreachable" : "unbaselined",
+      reason: unreachable || unconfirmed,
       /* REC-191: only a look that READ a document says what the document is; an
          unreachable or gone source leaves the address's reading as it was. */
       ...(fetchedBytes ? { content: graded.content, contentBasis: graded.basis } : {}) };
+    /* R4, R32: the look's outcome kept at the address; a look the source answered at the address itself clears it, a fetch
+       that failed outright leaves what was held (it neither confirms a removal nor answers). */
+    if (look) this.sql.exec(`INSERT INTO monitor_address_look (address_norm, outcome, at, absent_since, final_address, reason)
+                              VALUES (?, ?, ?, ?, ?, ?)
+                              ON CONFLICT(address_norm) DO UPDATE SET outcome=excluded.outcome, at=excluded.at,
+                                absent_since=excluded.absent_since, final_address=excluded.final_address, reason=excluded.reason`,
+      addressNorm, look.outcome, checked, look.since ?? null, look.address ?? null, look.reason ?? null);
+    else if (httpStatus != null && !unreachable) this.sql.exec(`DELETE FROM monitor_address_look WHERE address_norm = ?`, addressNorm);
     /* D-455: a look that captured is written AFTER the promotion that registers the capture, so
        the look can check the register rather than take the tick's word for it. */
     const lookAfterPromote = !!(monCap && monCap.held);
@@ -1167,11 +1227,15 @@ export class Monitoring {
        unless the image already carries those bytes (a later tick seeing the same new bytes), in
        which case the bundle already holds and registers them and nothing is added twice. */
     const capCarried = !!(lookAfterPromote && carried.some((f) => f.sha256 === monCap.sha256));
+    const copyFiled = (withCap) => withCap && !capCarried;
     const promoteWith = async (withCap) => {
       const text2 = withEntry(!monCap ? null
         : withCap ? `the served bytes were captured as ${monCap.file} (sha256 ${monCap.sha256})`
         : `the served bytes (sha256 ${monCap.sha256}) were not filed: ${monCap.why}`);
-      const addCap = withCap && !capCarried;
+      const addCap = copyFiled(withCap);
+      /* R79: the copy is filed with its provenance document entry, so a read of its digest finds the document */
+      const filedFiles = addCap ? await Promise.all(carried.map((f) => (f.path === "data/provenance.json" && typeof f.text === "string"
+        ? this.#withCopyEntry(f, monCap, baselineRow, locator) : f))) : carried;
       return await this.promotion.promote({
         bundleId, base: liveSha, snapKey: stamp, author: MONITOR_AUTHOR,
         writer: "mechanical", operation: "monitor-tick",
@@ -1188,7 +1252,7 @@ export class Monitoring {
            DEFAULT behaviour of a careless caller. */
         files: [
           { path: "bundle.md", text: text2, bytes: new TextEncoder().encode(text2).length, sha256: await sha256Hex(text2) },
-          ...carried,
+          ...filedFiles,
           ...(addCap ? [{ path: monCap.file, blobSha: monCap.sha256, sha256: monCap.sha256, bytes: monCap.bytes }] : []),
         ],
         register: addCap ? [{ sha256: monCap.sha256, path: monCap.file, encoding: "binary", bytes: monCap.bytes }] : [],
@@ -1205,7 +1269,24 @@ export class Monitoring {
       if (first && first.ok === false) {
         monCap.why = localize("monitoring.why.promotion_filing_refused", "the promotion filing them was refused ({reason}{detail})", { reason: String(first.reason || first.code || word("monitoring.reason_given")), detail: String(first.detail ? `: ${String(first.detail).slice(0, 160)}` : "") });
         promoted = await promoteWith(false);
-      } else if (first?.ok) monCap.registered = true;
+      } else if (first?.ok) {
+        monCap.registered = true;
+        /* R79: a copy filed now owes a reading, through the capture's registrar as an entry by `promote` does (control-plane R123); a row
+           the registrar will not take is stated in the note, never swallowed */
+        if (!capCarried) {
+          const reg = this.capture;
+          let owed;
+          /* a host with no owed-work ledger (no registrar) has no job to owe */
+          try { owed = typeof reg.registerJob === "function" ? reg.registerJob({ kind: "reading", sha: monCap.sha256, carrier: monCap.file }) : null; }
+          catch { owed = { ok: false, reason: "REGISTRAR_THREW" }; }
+          if (owed && owed.ok === true) { try { if (typeof reg.armJobs === "function") await reg.armJobs(); } catch { /* the next alarm arms it */ } }
+          else if (owed) {
+            const why = String((owed && owed.reason) || "REGISTRAR_REFUSED").slice(0, 80);
+            note = note ? localize("monitoring.note.reading_not_owed", "{note}; the reading this copy owes could not be registered ({reason})", { note: String(note), reason: why })
+                        : localize("monitoring.note.reading_not_owed_alone", "the reading this copy owes could not be registered ({reason})", { reason: why });
+          }
+        }
+      }
       observation = monitorLook(monCap.registered
         ? { ...lookArgs, captured: { sha256: monCap.sha256, retrieved: monCap.retrieved,
                                      retrievalLocator: monCap.fetched_address } }
@@ -1258,6 +1339,9 @@ export class Monitoring {
             fetched_address: tickAddress }
         : {}),
       reeval_raised: flags,
+      /* R4: `{outcome: unconfirmed_removal | removed, since}`, `{outcome: moved, address}` or `{outcome: refused, reason}`;
+         null when the source answered at the address itself. */
+      look,
       /* R70: the watched projects this change tick was reported to; null on a tick whose look recorded no change. */
       arrivals,
       ...(promoted?.ok ? { revision: promoted.bundleSha } : { reason: promoted?.reason, detail: promoted?.detail }),
@@ -1661,7 +1745,18 @@ export class Monitoring {
        zone is held, and then no address reads as ended (its end is stated undetermined). */
     const zone = this.#zone();
     const today = zone ? localDayOf(Number.isFinite(Number(now)) ? Number(now) : this.now(), zone) : null;
+    /* R32 (K5148): each address's last look when it was not simply answered, keyed on the normalised address. */
+    const looks = new Map(this.#rows(`SELECT * FROM monitor_address_look`).map((l) => [l.address_norm, l]));
+    const lastLook = (r) => {
+      const l = r.setting_address ? looks.get(r.setting_address) : null;
+      if (!l) return null;
+      return { outcome: l.outcome, at: l.at,
+               ...(l.absent_since ? { since: l.absent_since } : {}),
+               ...(l.final_address ? { address: l.final_address } : {}),
+               ...(l.reason ? { reason: l.reason } : {}) };
+    };
     const about = (r) => ({ address: r.address, versions: r.versions, frequency_source: r.frequency_source,
+      ...(lastLook(r) ? { last_look: lastLook(r) } : {}),
       ...(r.contract ? { contract: r.contract, content_type: r.content_type } : {}),
       ...(r.address_basis ? { address_basis: r.address_basis } : {}),
       ...(r.newer_unmonitored ? { newer_unmonitored: r.newer_unmonitored } : {}),
@@ -1710,7 +1805,12 @@ export class Monitoring {
          is the strongest case for asking rather than the weakest. */
       const last = r.monitor_last_checked ? Date.parse(r.monitor_last_checked) : NaN;
       const at = Number.isFinite(last) ? last + iv : 0;
-      if (at <= now) due.push({ bundle: r.bundle_id, frequency: r.monitor_frequency, due_at: at, interval_ms: iv, ...about(r),
+      /* R32: a look the source refused, or whose removal is not yet confirmed, leaves the watch due: it is not pushed an
+         interval away by a look that settled nothing. */
+      const ll = lastLook(r);
+      const unsettled = ll && (ll.outcome === "refused" || ll.outcome === "unconfirmed_removal");
+      if (unsettled || at <= now) due.push({ bundle: r.bundle_id, frequency: r.monitor_frequency,
+                                due_at: unsettled ? Math.min(at, Date.parse(ll.at)) : at, interval_ms: iv, ...about(r),
                                 ...undeterminedEnd });
       else {
         scheduled.push({ bundle: r.bundle_id, frequency: r.monitor_frequency, next_at: at, interval_ms: iv,

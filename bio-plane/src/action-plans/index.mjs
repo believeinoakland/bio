@@ -59,6 +59,7 @@ import { membershipOf, noSuchProject, listenerRefusal } from "../membership/inde
 import { promotionOf } from "../promotion/index.mjs";
 import { legEarningOf } from "../leg-earning/index.mjs";
 import { strengthOf } from "../strength/index.mjs";
+import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { conformanceOf, noSuchDetermination } from "../conformance/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
 import { actionsOf, contactNotAMember, contactId, zoneOf } from "../actions/index.mjs";
@@ -144,6 +145,7 @@ export class ActionPlans {
   /* The providers, reached when first needed (layers 5–9). */
   get legEarning() { return this.#dep("legEarning"); }
   get strength() { return this.#dep("strength"); }
+  get basisVersions() { return this.#dep("basisVersions"); }
   get conformance() { return this.#dep("conformance"); }
   get standards() { return this.#dep("standards"); }
   get actions() { return this.#dep("actions"); }
@@ -236,7 +238,11 @@ export class ActionPlans {
   /** Terms: a subject's support, with why. `established` and `short` for a determined subject (each finding's frozen
    *  pair against the project's bar, per declared axis); `hypothetical` for a suspected one. */
   #support(s, project, viewer) {
-    if (s.kind === "inquiry") return { support: "hypothetical", why: localize("action-plans.why.suspected_matter_inquiry", "a suspected matter: an inquiry still open, not a determination") };
+    /* K5131: a question the plan's project has concluded (its stance there, basis-versions R18, R22; its own state stays open) is still a
+       suspected matter, but it is not described as open. */
+    if (s.kind === "inquiry") return this.basisVersions.conclusionOf(project, s.inquiry, viewer)
+      ? { support: "hypothetical", why: localize("action-plans.why.suspected_matter_concluded", "a suspected matter: a question concluded in this project, not yet a determination") }
+      : { support: "hypothetical", why: localize("action-plans.why.suspected_matter_inquiry", "a suspected matter: an inquiry still open, not a determination") };
     const d = this.#determination(s.determination, viewer);
     if (!d) return { support: "undetermined", why: localize("escalation.determination_answer_reader", "the determination does not answer to this reader") };
     /* R35: what conformance withheld (its R24) is not measured by its absence; support is never computed over the
@@ -2367,6 +2373,7 @@ export function actionPlansOf(host, deps) {
     i = new ActionPlans({ ...d, storage, record, membership, promotion,
       legEarning: lazy("legEarning", () => legEarningOf(host, base)),
       strength: lazy("strength", () => strengthOf(host, base)),
+      basisVersions: lazy("basisVersions", () => basisVersionsOf(host, base)),
       conformance: lazy("conformance", () => conformanceOf(host, base)),
       standards: lazy("standards", () => standardsOf(host, base)),
       actions: lazy("actions", () => actionsOf(host, base)),

@@ -1,6 +1,6 @@
 # BOB to capture-sources (T51)
 
-**Read** · handled J9
+**Read** · handled J11
 
 ## B1 · START
 
@@ -273,3 +273,16 @@ Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . capture-sources --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/capture-sources.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-haiku-5-5, medium effort.
+
+## B10 · START
+
+START · CAPTURE-SOURCES #19 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 31, the browserrender timing red (plan build/plan/fix-round-10-T51.md §3; K5097)
+
+Depth 2 (BOB #292 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/capture-sources tranche/T51 && git branch -m job/T51/capture-sources stale/capture-sources-local && git checkout -b job/T51/capture-sources origin/job/T51/capture-sources`, then re-run `mail start`. If `job/T51/capture-sources` is behind `tranche/T51`, merge `origin/tranche/T51` into it first (never a rebase). A refused step: post BLOCKED naming it.
+Mail with `--module capture-sources`; record `build/jobs/T51/capture-sources.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` from the process repository (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993); a later provider's answer is kept under `// fixtures-contract: <provider> <id>` (K4995).
+
+**Follow-up 31 (SUITE #2; `build/plan/fix-round-10-T51.md` §3 item 31 and `build/plan/suite-T51-r9-diagnosis.md`'s row, read whole).** `bio-plane/test/m/capture-sources/browserrender.test.mjs` is red one run in three when run alone (the R68 control at `:416`: `phases_ms.bodies` 20 where 0 is asserted; `browserrender.mjs:672-674` times `collector.finish()` by the wall clock and finish waits in 25 ms ticks, `:264`) and was red in the whole-suite run on R69 (`elapsed_ms`). Bob's rules (K4787, K4966): no load-dependent test; a pass alone never clears a red seen under load. Reproduce it consistently (alone in a loop, then under named load: e.g. `stress`-like CPU load on all cores), instrument until you know which collector entry is in flight and why, then fix the cause: a test asserting work or a same-run control instead of a wall-clock zero, and, if the product times a phase that did no work, the product measuring only real work (within your requirements; a requirement change is BOB's: QUESTION). Prove it green 20 runs in a row under the same named load. This may touch product code: run `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the users' tests it names.
+
+**Done:** the red fixed with its cause stated (evidence, the load used, the 20 runs); module tests green; format, architecture, coverage, words, fixtures, ownership 0. Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.

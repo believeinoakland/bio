@@ -3,6 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, serve, DAEMON, V, NOW_MS, infoMd } from "./fixture.mjs";
+import { projectActNotParticipant } from "../promotion/fixtures.mjs";
 import { monitoringOps, MONITOR_SET_CHECKS, MONITOR_AUTHOR } from "../../../src/monitoring/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
@@ -164,7 +165,7 @@ test("R74 promotion's refusal of the member's revision is answered as promotion 
   w.monitored(id, LOC, "p-v1", { enabled: false });
   const before = untouched(w, id);
   const real = w.promotion.promote;
-  const refusal = { ok: false, reason: "PROJECT_ACT_NOT_A_PARTICIPANT", check: "C-x", translation: "t", detail: "d" };
+  const refusal = projectActNotParticipant();
   const seen = [];
   w.promotion.promote = (pkg) => { seen.push(pkg); return refusal; };
   try {

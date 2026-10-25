@@ -11,6 +11,7 @@ import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
 import { reviewOf } from "../../../src/review/index.mjs";
+import { reviewCommentsRegistrar } from "../case-account/fixtures.mjs";
 import { approvalSubjectSha, reviewCommentsOf } from "../../../src/case-grammar/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -122,15 +123,16 @@ export function world({ now = NOW, injectClock = true, localFacts, combine = () 
                                           reason: r.reason ?? null })) };
     },
   };
-  /* case-account's side: the one review-comments reader (its R7), taken once; a second registration is
-     REVIEW_COMMENTS_DECLARED and one that is not a function MALFORMED, each changing nothing. */
+  /* case-account's side: the one review-comments reader (its R7), taken once; the three answers are case-account's own
+     published fixture (`reviewCommentsRegistrar`, made by its real code), never written here. */
+  const registrar = reviewCommentsRegistrar();
   const caseAccount = {
     reviewComments: [],
     registerReviewComments(fn) {
-      if (typeof fn !== "function") return { ok: false, reason: "MALFORMED" };
-      if (this.reviewComments.length) return { ok: false, reason: "REVIEW_COMMENTS_DECLARED" };
+      if (typeof fn !== "function") return registrar.malformed;
+      if (this.reviewComments.length) return registrar.declared;
       this.reviewComments.push(fn);
-      return { ok: true };
+      return registrar.register(fn);
     },
   };
   /* case-tensions' side: the attribution level in force (its R6). */

@@ -115,8 +115,8 @@ const wire = (res) => JSON.stringify(res.body);
 test("R17 (N339, N354): each of the nine relays answers the store's own refusal (ok false below 500) with the store's status, code and sentence, never STORE_DID_NOT_ANSWER, with or without storeRefusal handed; nothing is committed or copied", async () => {
   const refusals = [
     [{ ok: false, reason: "BAD_JSON", error: "the body is not JSON" }, 400],
-    [{ ok: false, reason: "UNKNOWN_OP", code: "UNKNOWN_OP", error: "unknown op: x", translation: "t" }, 404],
-    [{ ok: false, error: "unknown op: publish" }, 404],
+    [{ ok: false, reason: "UNKNOWN_OP", code: "UNKNOWN_OP", error: "unknown op: x", translation: "t" }, 404], // fixtures-contract: control-plane unknown-op
+    [{ ok: false, error: "unknown op: publish" }, 404], // fixtures-contract: store-door store-replies
   ];
   for (const relay of RELAYS)
     for (const [label, handed] of Object.entries(HANDED))
@@ -156,11 +156,11 @@ test("R17 (N349): a reply that is no answer is 502 STORE_DID_NOT_ANSWER naming t
       assert.ok(!wire(stack).includes("Store.fetch") && !("error" in stack.body), `${relay.name} ${label}: no stack`);
       assert.equal(stack.body.correlation, undefined, `${relay.name} ${label}: no correlation where the store gave none`);
       assert.equal("correlation" in JSON.parse(wire(stack)), false, `${relay.name} ${label}: no correlation key on the wire`);
-      const withId = await drive(relay, () => reply({ ok: false, reason: "STORE_INTERNAL_ERROR", correlation: CORRELATION }, 500), handed);
+      const withId = await drive(relay, () => reply({ ok: false, reason: "STORE_INTERNAL_ERROR", correlation: CORRELATION }, 500), handed); // fixtures-contract: store-door store-replies
       assert.deepEqual([withId.res.status, withId.res.body.reason, withId.res.body.op, withId.res.body.correlation],
         [502, "STORE_DID_NOT_ANSWER", relay.name, CORRELATION], `${relay.name} ${label}: the store's correlation`);
       assert.equal(committed(withId.w), 0);
-      const noId = (await drive(relay, () => reply({ ok: false, reason: "STORE_INTERNAL_ERROR" }, 500), handed)).res;
+      const noId = (await drive(relay, () => reply({ ok: false, reason: "STORE_INTERNAL_ERROR" }, 500), handed)).res; // fixtures-contract: store-door store-replies
       assert.deepEqual([noId.status, "correlation" in JSON.parse(wire(noId))], [502, false], `${relay.name} ${label}: no key without an id`);
       for (const bad of [() => new Response("not json", { status: 200 }), () => { throw new Error("down"); },
                          () => reply({ ok: false, reason: "BAD_JSON" }, 503), () => SILENT]) {
@@ -185,7 +185,7 @@ test("R17: an answer is the handler's own to read — every relay answered, each
 test("R17 (N354, N417): the gate's silence or refusal (`ratifygate`, where the register probe runs) is never a finding about the record; an answered gate whose probe finds nothing held is PLANE_MISSING_BYTES, and a receipt still reads as held in parts", async () => {
   for (const [label, handed] of Object.entries(HANDED)) {
     const relay = RELAYS.find((r) => r.op === "ratifygate");
-    for (const answer of [() => SILENT, () => reply({ ok: false, reason: "STORE_INTERNAL_ERROR", correlation: CORRELATION }, 500),
+    for (const answer of [() => SILENT, () => reply({ ok: false, reason: "STORE_INTERNAL_ERROR", correlation: CORRELATION }, 500), // fixtures-contract: store-door store-replies
                           () => reply({ ok: false, reason: "BAD_JSON", error: "the body is not JSON" }, 400)]) {
       const { res } = await drive(relay, answer, handed);
       assert.notEqual(res.body.reason, "GATE_REFUSED", label);

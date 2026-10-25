@@ -56,10 +56,10 @@ test("R8, R9: op=registeraudit probes each unresolved row in the working bucket 
 const ops = (w, query = "", body = null, opts) => provenanceOps(w.prov, new URL(`http://do/?${query}`), body, opts);
 const qs = (o) => new URLSearchParams(o).toString();
 
-test("R53: eight route arms, each a function of no arguments, keyed by op name; the route arms and op=attest are not this module's", () => {
+test("R53: nine route arms, each a function of no arguments, keyed by op name; the route arms and op=attest are not this module's", () => {
   const w = world();
   const map = ops(w);
-  assert.deepEqual(Object.keys(map).sort(), ["declareorigin", "homecensus", "origins", "recordcapturedlocator", "registeraudit", "registerholds",
+  assert.deepEqual(Object.keys(map).sort(), ["authority", "declareorigin", "homecensus", "origins", "recordcapturedlocator", "registeraudit", "registerholds",
     "testify", "versionchain"]);
   /* N512: `provenancechain`, `provenanceroute` and `provenanceroutes` are provenance-routes' map, and op=attest's
      Worker arm attestation's; this module's ops export the map and op=registeraudit's arm (the attestOp copy was

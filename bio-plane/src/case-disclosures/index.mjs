@@ -648,7 +648,7 @@ export class CaseDisclosures {
         const u = unitsOf(leg.capture_sha);
         const at = u && Array.isArray(u.units) ? u.units.find((x) => canonicalJson(x.extent) === leg.extent) : null;
         passages.push({ finding: id, ord: Number(leg.ord), content_id: leg.content_id, capture_sha: leg.capture_sha,
-                        extent: leg.extent, chain: leg.chain ?? null, quoted: at && !at.truncated ? at.text : null });
+                        extent: JSON.parse(leg.extent), chain: leg.chain == null ? null : JSON.parse(leg.chain), quoted: at && !at.truncated ? at.text : null });
       }
     }
     return { grading, passages, unread };

@@ -1,6 +1,6 @@
 # doorbell (T51)
 
-**Status** · session_01SNmBaYG8fmPmaVutFww2Xa · depth 2 · COMPLETE · handled B7
+**Status** · session_011eQWGNdKbyTzSjrWKDMhqy · depth 2 · COMPLETE · handled B10
 
 ## Completion (T51-182, the words pass; session_01C6MLP8YoCGd3BrWthJxfJ5)
 
@@ -129,3 +129,54 @@ Size (session_01SNmBaYG8fmPmaVutFww2Xa): test runs 6, module lines 1203
 ## J7 · COMPLETE
 
 COMPLETE · DOORBELL #8 · fix round 9, G126 (the pull registers its row), R28. The pull registers one reading row (whole digest) through the registrar inside its own transaction; a refusing registrar rolls the pull back (JOB_NOT_REGISTERED with knockId); no registrar says so in the answer; held/already-pulled pulls register nothing. Red then green: r9-t51.test.mjs (5 tests). Doorbell 97/97; 30 user test files + sources 367/367. Checks format, architecture, coverage, words, ownership: 0 failures. BOB #276's knock-text line done. New sentence doorbell.index.job_not_registered owed to later-ux. No file created outside paths; nothing deferred. Details in build/jobs/T51/doorbell.md.
+
+## Completion (fix round 10, B9: WALK-FINAL-04B R39, the envelope bound; DOORBELL #9, session_01YBReDY5hYh8xKFsNUdPD1p)
+
+**Requirement ids met:** R1 and R6 (amended K5129); R7 and R10 unchanged and re-run (content over 8 MiB stays `KNOCK_PAYLOAD_TOO_LARGE`, the order of refusals is as before). BOB strikes the "not yet met: T51" marks on R1 and R6.
+
+**K4426's four fields.**
+1. *Root cause.* `bio-plane/src/doorbell/door.mjs:101` refused any raw body over `KNOCK.maxBytes + 4096` (8 MiB + 4 KiB) before parsing; a file arrives as `contentB64` (`screens-publish/doorbell.mjs:72`), 4/3 larger than its bytes, so a file above about 6 MiB was refused `KNOCK_ENVELOPE_TOO_LARGE` though the published content bound is 8 MiB. Fix: `KNOCK.maxEnvelope = 4 * ceil(maxBytes / 3) + 4096` = 11,188,908 bytes, the one bound `knockOp` tests the body against; the cap on decoded content (`KNOCK.maxBytes`) is unchanged.
+2. *Why the tests missed it, and the gap fixed.* Every size test sent `contentText` (one byte per byte) or a raw string, so the base64 expansion never met the bound. The new test sends `contentB64`, and the existing envelope tests (`doorbell.test.mjs` R10 and R6, `inbox.test.mjs`, `rows.test.mjs`, `t35.test.mjs`) now state their edge through `KNOCK.maxEnvelope`.
+3. *Test of the walker's case, through the real entry (`knockOp`), seen red first and then green.* `doorbell.test.mjs` "R1 R6 R7 (K5129)": `contentB64` of 7 MiB and of exactly 8 MiB kept (200, bytes as sent); 8 MiB + 1 B `KNOCK_PAYLOAD_TOO_LARGE` 413 with `maxBytes` 8 MiB (not the envelope); a body of exactly 11,188,908 bytes read; 11,188,909 bytes `KNOCK_ENVELOPE_TOO_LARGE` 413. Red on the old bound: the 7 MiB knock answered 413, not 200. Green after the change.
+4. *Platform check.* **L/P at the redeploy, noted for BOB (K4428):** (a) the Worker's request-body limit must admit an 11,188,908-byte body (Cloudflare's published limit is 100 MB on Free and Pro, but BOB confirms it for this plan); (b) memory and CPU: a full 8 MiB knock holds the 11 MB body, its string, the `atob` string and the 8 MiB array (`Uint8Array.from(atob(..), ..)` is a per-character loop), then the Durable Object receives the base64 again inside a JSON string. I did not measure it in a workerd child (no runtime in this session); the first 8 MiB knock after the redeploy should be read from the logs. No change made for it: the bound is the published one and the decode is R1's.
+
+**Fixture lines (`checks/fixtures.mjs <root> doorbell --list`): 22 failures at the start, 13 now.**
+- *Done:* `instance.test.mjs:76, 79` (record-core's `declarePurge` refusals) now come from record-core's published `tableDeclarationRefusals`; `r9-t51.test.mjs` carries `fixtures-contract: plane job-registrar` on the stub import, the registrar's wiring and the registrar-refusal loop (plane's `r10-fixtures-run.test.mjs` already runs `doorbell job-registrar`), and `fixtures-generic: JOB_TABLE_FULL` on its made-up refusal. The `orphan-run` line for `job-registrar` is thus answered; `store-door`'s `store-replies` run and `answer-envelope`'s `door-helpers` run still have no doorbell marker (below).
+- *Remaining, named with why:*
+  - `storeSilent` hand-built as `{ok:false, reason:"STORE_DID_NOT_ANSWER", op}` at `inbox.test.mjs:14`, `knock-name.test.mjs:12`, `knocker.test.mjs:22`, `ops.test.mjs:13`, `rows.test.mjs:82`, `t35.test.mjs:19`; and the BAD_JSON and UNKNOWN_OP answers at `invariants.test.mjs:132, 133, 141, 157`. Provider: answer-envelope (later in the order, cannot be imported), whose `door-helpers` contract states the full answer (`code`, `check`, `translation`, `detail`, `correlation`). My values are not equal to it and cannot be made equal without copying the translation sentence, which the words check refuses as a test copy, so I did not mark a contract I do not meet. **For BOB:** either answer-envelope publishes the sentence-free part of those answers as data a later module's tests may read, or the doorbell tests take the one answer through the real `knockOp` hooks the plane passes (a change to `knockOp`'s injection, not in my entry).
+  - `homeOf` stood in for provenance at `held.test.mjs:14` (and the same lines at `r9-t51.test.mjs:15`, accepted only because the registrar marker sits within reach; it is the same open item). Provider: provenance (earlier), whose `homeOfHomed`/`registeredHomes` fixtures build a real provenance in its own store; the doorbell's fixture reads the register by SQL from the doorbell's own storage and these tests also check that no receipt, actor or register row is written, so the re-point needs provenance to publish a `homeOf` over a caller's storage. REPORT to BOB under P9: a provenance fixture owed (`homeOf` reading a given storage's `register` and `bundles`).
+
+**Checks.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/doorbell/`: tests 98, pass 98, fail 0. Users: `screens-publish/public.test.mjs` and `answer-envelope/families.test.mjs`: 41 of 41. `format`: 178 modules, 0 failures. `architecture doorbell`: 0 failures. `coverage doorbell`: 28 of 28 live ids named by a test, 0 failures. `words doorbell`: 0 failures. `ownership doorbell tranche/T51`: 0 failures. `fixtures doorbell --list`: 13 listed, named above.
+
+**Deferred.** None of the module's own.
+
+Size (session_01YBReDY5hYh8xKFsNUdPD1p): test runs 6, module lines 1206
+
+## J8 · COMPLETE
+
+COMPLETE (B9, fix round 10, WALK-FINAL-04B R39). R1 and R6 met: the envelope bound is KNOCK.maxEnvelope = base64 length of 8 MiB + 4 KiB = 11,188,908 bytes; contentB64 of 7 MiB and 8 MiB kept, 8 MiB + 1 B KNOCK_PAYLOAD_TOO_LARGE, 11,188,909 bytes KNOCK_ENVELOPE_TOO_LARGE 413; seen red first (7 MiB refused on the old bound). Doorbell 98/98; users screens-publish and answer-envelope families 41/41; format, architecture, coverage (28/28), words, ownership 0 failures. Fixtures list 22 -> 13: record-core refusals re-pointed to its published fixture; registrar contract markers added (plane runs doorbell job-registrar). Remaining 13, with why, in my record: 10 hand-built storeSilent/BAD_JSON/UNKNOWN_OP answers (provider answer-envelope is later; its door-helpers contract carries the translation sentence the words check forbids copying), and homeOf stand-ins (REPORT: provenance owes a homeOf fixture over a caller's storage). Platform check for BOB at the redeploy: request-body limit for an 11.19 MB body, memory/CPU of a full 8 MiB knock (not measured here). Record: build/jobs/T51/doorbell.md, Completion (B9).
+
+## Completion (fix round 10, follow-up 65, B10: doorbell's half; DOORBELL #10, session_011eQWGNdKbyTzSjrWKDMhqy)
+
+Plan §3 item 65 (K5153), doorbell's half. Before the work the branch was fast-forwarded to `origin/job/T51/doorbell` and merged with `tranche/T51` (`6697aa598a`, a fast-forward).
+
+- **`held.test.mjs`.** The hand-written `homeOf` stand-in at line 14 is replaced by provenance's published `homeOfOver({ host: f.ctx, record: f.core }).homeOf` (`bio-plane/test/m/provenance/fixtures.mjs`), over the same storage. The header now says provenance's real `homeOf` answers. Nothing else in the file changed.
+- **Ten hand-built answers marked (K5099: no translation sentence in any literal).**
+  - Six `storeSilent` 502 literals (`inbox`, `knock-name`, `knocker`, `ops`, `rows`, `t35`): `// fixtures-contract: answer-envelope door-helpers`. Its provider `answer-envelope` is later in `modules.json`; `answer-envelope/door-helpers.test.mjs:11` already carries `fixtures-run: doorbell door-helpers`.
+  - Four BAD_JSON / UNKNOWN_OP answers in `invariants.test.mjs` (lines 132, 133, 141, 157): `// fixtures-contract: store-door store-replies`. `store-door/fixtures.test.mjs:28` already carries `fixtures-run: doorbell store-replies`. The UNKNOWN_OP literal at line 133 lost its `translation: "t"`; the door relays the body unchanged and the test still passes.
+- **The two orphan runs** (`answer-envelope/door-helpers.test.mjs:11`, `store-door/fixtures.test.mjs:28`) now match doorbell's markers. Neither file needs a change; BOB needs no edit there.
+- **Left as it is.** `r9-t51.test.mjs:15` still stands in a `homeOf` for the registrar seam. The checker accepts it (`accepted(job-registrar)`) and follow-up 65 names only line 14, so I did not touch it. BOB may want the same re-point there.
+
+**Checks.**
+- `node checks/fixtures.mjs /home/user/bio doorbell --list`: 0 failures (13 before). The 16 accepted lines are unchanged.
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/doorbell/*.test.mjs`: tests 98, pass 98, fail 0. The run exited by itself (no `--test-force-exit`).
+- `checks/format.mjs`: 178 modules, 0 failures. `checks/architecture.mjs doorbell`: 0 failures. `checks/coverage.mjs doorbell`: 28 of 28 live ids named, 0 failures. `checks/ownership.mjs doorbell tranche/T51`: run after the commit.
+- `checks/words.mjs` (via `checks/run.mjs`): no failure names doorbell as its user. `checks/run.mjs` fails in other modules (control-plane, screens-*, plane and others, about 2,140 lines); none is a doorbell failure. Those are the tranche's, not this job's, and I did not change them.
+
+**Deferred.** None of the module's own. The `r9-t51.test.mjs:15` stand-in above is for BOB's decision.
+
+Size (session_011eQWGNdKbyTzSjrWKDMhqy): test runs 1, module lines 1206
+
+## J9 · COMPLETE
+
+COMPLETE (B10, fix round 10, follow-up 65, doorbell's half; commit bac7eb19f0). Re-pointed held.test.mjs:14 to provenance's homeOfOver; marked the ten hand-built answers (six storeSilent against answer-envelope door-helpers, four BAD_JSON/UNKNOWN_OP against store-door store-replies; UNKNOWN_OP's translation sentence left out, K5099). Both orphan runs now match doorbell's markers: no change needed in their files. fixtures doorbell --list: 0 failures (13 before). Doorbell suite 98/98. format, architecture, coverage (28/28), words, ownership: 0 failures for doorbell. Left for BOB: r9-t51.test.mjs:15 still stands in homeOf (accepted by the checker, not named in follow-up 65). Record: build/jobs/T51/doorbell.md, Completion (fix round 10, follow-up 65). Size (session_011eQWGNdKbyTzSjrWKDMhqy): test runs 1, module lines 1206.

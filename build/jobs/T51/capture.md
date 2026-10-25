@@ -1,6 +1,6 @@
 # capture (T51)
 
-**Status** · session_012fgH9vTfzdHdBqQC1UfCpA · depth 2 · COMPLETE · handled B39
+**Status** · session_01HsvPvAFoM9DaMzZURAeCPZ · depth 2 · COMPLETE · handled B41
 
 ## J1 · COMPLETE
 
@@ -894,3 +894,75 @@ FOR YOU: control-plane's test/m/control-plane/r72-parted.test.mjs line 156 asser
 - `checks/format.mjs /home/user/bio`: 176 modules, 0 failures. `checks/architecture.mjs /home/user/bio capture`: 0 failures. `checks/coverage.mjs /home/user/bio capture`: 67 of 67 live ids named, 0 failures. `checks/words.mjs /home/user/bio capture`: 0 failures (missingkey 0, inline 0, testcopy 0). `checks/ownership.mjs /home/user/bio capture tranche/T51 job/T51/capture`: 6 files changed by capture, 0 failures.
 
 Size (session_012fgH9vTfzdHdBqQC1UfCpA): test runs 4, module lines 5011
+
+## J39 · COMPLETE
+
+**COMPLETE**, B40 (CAPTURE #60, fix round 10, Wave A batch 2). Merged `tranche/T51` first.
+
+**Cause R29 (R113 amended, K5056).** Root: `capture/index.mjs` DECLARED_OPS rows for the four parted ops had `classes: ["member"]` while `captureupload` is `["admin","member"]`, so the door refused the founder's `admin` session CLASS_FORBIDDEN. Fix: the four rows now `["admin","member"]` (`needs: contribute` and the member-session fence kept; `machineClasses` left as it was so an `ai` credential reaches the fence as before). Why tests missed it: no capture test read the rows' classes or drove the founder's stamp through a parted upload (control-plane's r72-parted drives the member and an `ai` credential only). Failing-first: `g127f-t51.test.mjs` "fix round 10, cause 29" (declared classes + founder stamp `admin` begin/2 parts/complete/abort, receipt names `admin`, machine stamp still refused), seen red on the classes assertion, green after. Platform P: `g127f-plane.test.mjs` same test under Miniflare over real R2 multipart (11 MiB, 5 MiB parts), 8/8. Platform L (the 84 MB TIFF of A11) is for the redeploy. R-PATH: all four ops covered; one-part and multi-part. R33 capture half: `archive.test.mjs` 60 held rows, limit 50: `truncated`, `next` returns exactly the other 10, no repeats (green; no defect on capture's side).
+
+**Fixtures published** (`bio-plane/test/m/capture/fixtures.mjs`, checked by `fixtures.test.mjs`, 7 tests): `acquireRefusal`, `storageNotConfigured`, `captureArm`, `heldActsUnreadable`, `heldSetAside`, `partRefusal`, `recordReuseVerdicts`.
+
+**Product/user findings for BOB (REPORT-worthy):** (1) the real render refusals are 429 (RENDER_DEFERRED, RENDER_HOST_COOLING_OFF) and 501 (RENDER_NO_RENDERER), not 409 as capture-requests' hand-built `renderRefusal` has them. (2) the real `setAside` answer names each document by `document` with `waiting: {questions, withheld}`, not `{id, waiting:[...]}` as screens-intake's held.test.mjs:156 builds it. (3) `partRefusal` gives the real 409 codes PART_CONFLICT, PART_OUT_OF_ORDER, UPLOAD_LOST and UPLOAD_UNKNOWN is 404, UPLOAD_EXPIRED 410. (4) control-plane's `r72-parted.test.mjs` needs the founder case (Wave B).
+
+**Own fixture lines:** provenance/holdsOf lines (fixture.mjs, g127f-t51, g127f-worker now over the REAL provenance, held, r9-t51 x4, upload) re-pointed to `provenance/fixtures.mjs`; record-core `evidencePartsRefusal` at r103-t51; CODE NO_ROOM/JOB_TABLE_FULL replaced by plane's JOB_NOT_KEPT. FIX-L lines carry `// fixtures-contract:` markers: `plane job-registrar` (g127f-t51, r9-t51), `plane keep-later` (r103-t51, r7-upload-t51), `answer-envelope door-helpers` (g27-reset.probe, g27-t51, ops, r6-t51, t35, trace, relays), `store-door store-replies` (relays). All 26 remaining lines in `checks/fixtures.mjs . capture` are `contract-no-run`, waiting for those providers' `fixtures-run`. Markers added: `fixtures-own: harness` g127f-worker.mjs:46 (the probe Worker's own UNKNOWN_COMMAND reply); no `fixtures-generic`.
+
+**Tests/checks:** capture module 355+ pass 0 fail (before fixtures.test: 355/355; fixtures.test 7/7, g127f-t51 25/25, g127f-plane 8/8, archive 10/10). Impact users (op-declarations, admission, control-plane, affordances, op-grades, screens-intake, store-door, plane r9-jobs): 1909 tests, 1907 pass; the 2 failures (op-grades g55 moneyingestread, owners "every op T33 publishes is graded") fail identically on `origin/tranche/T51`, not mine. format 0 failures; architecture 0; coverage 67/67; words 0; ownership 0.
+
+Size (session_0156pHGtfAvwRXABsnFAHq8o): test runs 14, module lines 5013
+
+## J40 · COMPLETE
+
+COMPLETE B40: R29 fixed (four parted ops admit admin+member; red-first test, Miniflare P green; L at redeploy), R33 capture half green, 7 fixtures published, own fixture lines re-pointed or marked; remaining 26 lines are contract-no-run (plane job-registrar/keep-later, answer-envelope door-helpers, store-door store-replies). Findings for users: real render refusals are 429/501 not 409; real setAside names documents by 'document' with waiting.{questions,withheld}. control-plane r72-parted needs the founder case. Details in my record J39.
+
+## Fix round 10 · CAPTURE #61 (B41: cause 1, the upload's provenance document)
+
+**Cause 1 (case-carriage photo test, CASE-CARRIAGE #19 J9; diagnosis `build/plan/walk-T51-final/diagnosis/diag2-0910a.md` §1).**
+- **Root cause (file:line).** `capture/index.mjs` `#uploadedDocument` (about line 1361) writes the upload's provenance document with no `capture.content_type`, as R86 and `upload.test.mjs:140` require, and capture publishes that document to no other module. case-carriage's `#isPhoto` and `#photo` (`case-carriage/index.mjs:743-750`, `:807-825`) read only `capture.content_type`, so an uploaded PNG is "not an image". The document does hold the answer (`profile.format.format` `png`, `profile.source_content_type`), but nothing outside capture had the real document to read.
+- **Why the tests missed it.** `upload.test.mjs:138-155` pinned the upload's document shape and asserted no `content_type`, but no test gave another module the document an upload actually writes. case-carriage's tests built it by hand with `content_type: "image/png"` (`obscured.test.mjs:50`, `fixture.mjs:142,162`, `marker.test.mjs:63`), so the hand-built answer and the real one never met.
+- **Fix in my module.** Publish the real document as a fixture in capture's own `fixtures.mjs`. Capture's code is unchanged: the document it writes is the one R86 states. The consumer-side fix (case-carriage's `#isPhoto`, `#photo` and the wording of R1/R8/R9/R13 that BOB amended) is case-carriage's and goes in its own job.
+- **Failing-first test.** `fixtures.test.mjs`, "fixture uploadProvenance …". Seen red first on today's tree as the export not existing (`SyntaxError: … does not provide an export named 'UPLOAD_PNG'`), which is the fixture's own absence, then green once it was made. It pins the document to what `upload.test.mjs:138-155` pins: `capture` (method `uploaded`, grade `null`, `grade_basis` `CAPTURE_RECEIVED_NOT_FETCHED`, `actor_class` `member`, `actor` `m1`, `sha256`, `encoding` `binary`, `bytes`), no `content_type`, `file` `snapshots/upload-<sha>`, `locator` `upload:<sha>`, `source`, `origin`, `origin_statement`, `name_stated`, `attestation_attempts` `[]`, no `parts`, a one-hop `provenance_chain` (`via` `upload`, unbound), `authority_state` `undetermined`, and `profile.format.format` `png` with `profile.source_content_type` `null`.
+- **Control.** The same fixture over a text named `notes.png` answers a profile whose `format` is not `png` and no `content_type`: the bytes decide what the file is, not its name.
+- **Platform check.** None needed: the diagnosis records no dependence on the platform. Run in-process under `platform-sqlite`.
+
+**Fixture published** (`bio-plane/test/m/capture/fixtures.mjs`; checked by `fixtures.test.mjs`):
+- `uploadProvenance({ bytes = UPLOAD_PNG, name = "street.png", statement, by = "m1", at = "2026-10-09T12:00:00Z" })` → `Promise<document>`. Makes a fresh instance with a bucket evidence store, runs the real `uploadCapture` with no declared type, and answers `r.document` of the new upload. It throws if the upload is refused, so a fixture never answers a refusal as a document.
+- `UPLOAD_PNG`: the bytes of a 1 x 1 PNG (exported constant, so a consumer can compute the digest).
+- Users: case-carriage (`obscured.test.mjs`, `fixture.mjs`, `marker.test.mjs`) re-point in a later CHANGE or new session, as the plan's item 72 says.
+
+**Markers added this job:** `// fixtures-generic: RENDER_MADE_UP` at `bio-plane/test/m/capture/fixtures.test.mjs:14`, the control that `acquireRefusal` refuses a code no render refusal gives. The check had been reporting this line as a code no source gives (`code 1`, one failure) since J39; the marker makes it a made-up control, as K5044 requires. Now `checks/fixtures.mjs /home/user/bio capture`: 0 failures.
+
+**Other modules.** Nothing new found. The `OPTS`/`ENV` constants and the rest of `fixtures.mjs` are unchanged.
+
+**Requirements met.** None named: no capture requirement is marked not yet met for this cause. R86 is met, and its text is what the document follows.
+
+**Inbox.** B40 (CAPTURE #60, fix round 10 Wave A batch 2) was still unread at this start, but its work is complete by J39 and J40 above. `done` through B41 covers it.
+
+**Deferred:** none.
+
+**Tests and checks**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/capture/*.test.mjs` (from the repository root; 51 files, the same set as the directory): 363 tests, 363 pass, 0 fail, 0 skipped, exit 0 without force-exit.
+- `bio-plane/test/cap13-reuse-pages.test.mjs`, `bio-plane/test/d57selflink.test.mjs` (the module's other tests path): 2 of 2 pass.
+- `fixtures.test.mjs` on its own: 8 of 8 pass (7 earlier fixtures and the new `uploadProvenance`).
+- `checks/format.mjs /home/user/bio`: 178 modules, 0 failures. `checks/architecture.mjs /home/user/bio capture`: 0 failures. `checks/coverage.mjs /home/user/bio capture`: 67 of 67 live ids named, 0 failures. `checks/words.mjs /home/user/bio capture`: 0 failures (inline 0, testcopy 0, missingkey 0). `checks/fixtures.mjs /home/user/bio capture`: 0 failures (one failure before this job's marker; see above). `checks/ownership.mjs /home/user/bio capture tranche/T51 job/T51/capture`: 3 files changed by capture (`fixtures.mjs`, `fixtures.test.mjs`, this record), 0 failures.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules affected, 0 of 2910 test files affected.
+
+Size (session_01HsvPvAFoM9DaMzZURAeCPZ): test runs 6, module lines 5011
+
+## J41 · COMPLETE
+
+**COMPLETE**, B41 (CAPTURE #61, fix round 10, the final pass's cause 1). Record: `build/jobs/T51/capture.md`, section "Fix round 10 · CAPTURE #61".
+
+**Cause 1 (case-carriage photo test).** Root: `capture/index.mjs` `#uploadedDocument` writes the upload's document with no `content_type` (R86 and `upload.test.mjs:140`), and nothing outside capture had the real document, so case-carriage hand-built it with `content_type` (`obscured.test.mjs:50`, `fixture.mjs:142,162`, `marker.test.mjs:63`). Why the tests missed it: `upload.test.mjs:138-155` pinned the shape, but no consumer got the real answer. The consumer fix is case-carriage's, not mine.
+
+**Fixture published** (`bio-plane/test/m/capture/fixtures.mjs`, checked by `fixtures.test.mjs`): `uploadProvenance({ bytes = UPLOAD_PNG, name = "street.png", statement, by = "m1", at = "2026-10-09T12:00:00Z" })` → `Promise<document>`. It runs the real `uploadCapture` with no declared type and answers `r.document`; it throws on a refusal. Also exports `UPLOAD_PNG` (a 1x1 PNG). Test: pinned to `upload.test.mjs:138-155`'s shape; failing first on the missing export, green after. Control: a text named `notes.png` is profiled by its bytes, not its name. Platform: none needed (diagnosis).
+
+**Markers added:** `// fixtures-generic: RENDER_MADE_UP` at `bio-plane/test/m/capture/fixtures.test.mjs:14` (a control code; the check had been reporting it since J39). Now `checks/fixtures.mjs /home/user/bio capture`: 0 failures.
+
+**Met ids:** none named; no capture requirement is marked not yet met for this cause. **Deferred:** none. **Found in other modules:** nothing new. **Users to re-point** (later CHANGE or new session): case-carriage.
+
+**Inbox:** B40 was unread at start, but its work is complete by J39 and J40; `done` through B41 covers it.
+
+**Tests and checks:** capture suite (51 files, 363 tests) 363 pass, 0 fail, exit 0; `cap13-reuse-pages` and `d57selflink` 2 of 2; `fixtures.test.mjs` 8 of 8. format, architecture (0), coverage (67 of 67), words (0), fixtures (0), ownership (0; 3 files: fixtures.mjs, fixtures.test.mjs, the record). `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 modules affected.
+
+Size (session_01HsvPvAFoM9DaMzZURAeCPZ): test runs 6, module lines 5011

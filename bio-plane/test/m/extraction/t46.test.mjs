@@ -1,12 +1,12 @@
 /* extraction, T46-8 at the module's interface: N897 (2) (R74, a transcription on the test-instance exception records the
-   label the plane hands in, kept by every later reading over it) and N886 (R75, agent-worker R72's six refusals answered
+   label the plane hands in, kept by every later reading over it) and N886 (R75, agent-worker R72's five refusals the worker answers answered
    as refusals with DEC-193's reasons), each with a negative control (K874). Words are read by key from `words.json`
    (`./words.mjs`); a key the list lacks fails the test. The transcriber is a stub of the composition root's (plane R36's
    shape); the label is run-rules R29's `untestedLabel("transcribe")` shape, restated as data (no edge to run-rules,
    K2872). Each test names its ids. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, member, withEntry, i2, noText, ocrAnswer, pageUnits, pressThenPass } from "./fixture.mjs";
+import { fresh, bundle, hold, member, withEntry, i2, noText, ocrAnswer, pageUnits, pressThenPass, payingAccount } from "./fixture.mjs";
 import { TRANSCRIBE_WORDS } from "../../../src/extraction/index.mjs";
 import { WORD } from "./words.mjs";
 
@@ -25,7 +25,7 @@ function transcriber({ untested, answer = (pages) => ({ ok: true, engine: "claud
     keptAway: () => null,
     transcription: ({ member: m, project, at }) => ({ member: m, project, at, act: `transcribe:t46:${at}`,
       ...(state.untested !== undefined ? { untested: state.untested } : {}),
-      accounts: { accountFor: async () => ({ ok: true, kind: "apikey", level: "member", key: "k" }) },
+      accounts: { accountFor: payingAccount() },
       useCheck: async () => null,
       transcribe: async (q) => { calls.transcribe.push(q); return state.answer(q.pages, q); } }),
   };
@@ -107,18 +107,20 @@ test("R74: a later unlabelled transcription of the remaining pages keeps the ear
   assert.equal("untested" in v.w.x.readingOf(v.d).reading, false);
 });
 
-/* ---- R75: agent-worker R72's six refusals ---- */
+/* ---- R75: agent-worker R72's five refusals the worker answers ---- */
 
 /* agent-worker's refusal as plane R36 relays it (its body spread, the worker's status once T46-62 relays it). */
+const WORKER_EXTRA = { NO_ACCOUNT: { capability: "unavailable" }, BAD_ACCOUNT: { field: "account" } };
 const workerRefusal = (code, status, extra = {}) => ({ ok: false, reason: code, code, detail: "d", worker: "agent-worker",
-  ...(status ? { status } : {}), ...extra });
-const SIX = [["BAD_BODY", 400, "transcribe.reason.requestfault"], ["BAD_SHA", 400, "transcribe.reason.requestfault"],
+  ...(WORKER_EXTRA[code] || {}), ...(status ? { status } : {}), ...extra });
+const FIVE = [["BAD_BODY", 400, "transcribe.reason.requestfault"], ["BAD_SHA", 400, "transcribe.reason.requestfault"],
              ["BAD_PAGES", 400, "transcribe.reason.requestfault"], ["NO_ACCOUNT", 409, "transcribe.reason.noaccount"],
-             ["BAD_ACCOUNT", 400, "transcribe.reason.badaccount"], ["TRANSCRIBE_NEEDS_API_KEY", 409, "transcribe.reason.needsapikey"]];
+             ["BAD_ACCOUNT", 400, "transcribe.reason.badaccount"]];
 
-test("R75 (T46; N886; DEC-193): each of agent-worker R72's six codes answered after the post is that refusal: its code as answered, the worker's status (a refusal's status when none is relayed), DEC-193's reason by key as its translation, says transcribe.refused filled with it, no check of its own, nothing written", async () => {
-  for (const [code, status, key] of SIX)
+test("R75 (T46; N886; DEC-193): each of agent-worker R72's five codes answered after the post is that refusal: its code as answered, the worker's status (a refusal's status when none is relayed), DEC-193's reason by key as its translation, says transcribe.refused filled with it, no check of its own, nothing written", async () => {
+  for (const [code, status, key] of FIVE)
     for (const relayed of [status, null]) {
+      // fixtures-contract: agent-worker transcribe-refusal
       const { w, tr, run } = await heldScan({ answer: () => workerRefusal(code, relayed) });
       const before = writes(w);
       const r = await run();
@@ -146,6 +148,9 @@ test("R75 (controls): a refusal carrying its own row's translation keeps it; ano
   const r = await run();
   assert.equal(r.status, 409);
   assert.deepEqual(r.body, { ...OWN, says: WORD("transcribe.refused").replace("{reason}", OWN.translation) });
+  /* a code outside the five, made up on purpose: it names no row of agent-worker's */
+  // fixtures-generic: SOME_OTHER_CODE (invented: tests this module's handling of a code no row and none of agent-worker's five names)
+  // fixtures-generic: busy (invented: an answer of no worker at all, a bare reason)
   for (const answer of [workerRefusal("SOME_OTHER_CODE", 400), { ok: false, reason: "busy" }]) {
     const v = await heldScan({ answer: () => answer });
     const x = await v.run();

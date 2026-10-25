@@ -380,9 +380,10 @@ function* pass(html0, G) {
     return /^skip to/i.test(decodeReferences(said).replace(/\s+/g, " ").trim());
   };
   ord = yield* dropStage(D, ord, m, match, isSkip, G); m = ord.length;
-  /* the text: a block tag ends a paragraph, a break a line, a row's cells are told apart by a tab */
+  /* the text: a block tag ends a paragraph, a break a line, a row's cells are told apart by a tab. R51 (fix round 10, cause 18b): a block inside a
+     table cell (a `p`, a `div`, a list item) does not end the row; it is a gap between the cell's words, so a row stays one paragraph. */
   const out = [];
-  let run = "", cells = 0;
+  let run = "", cells = 0, inCell = 0, cellWords = false;
   const flush = () => { if (run) { out.push(run.replace(/\s+/g, " ")); run = ""; } };
   for (let i = 0; i < m; i++) {
     G.tick(1); if (G.due()) yield;
@@ -390,12 +391,15 @@ function* pass(html0, G) {
     if (id === GAP) { run += " "; continue; }
     if (id === HR) { flush(); out.push("\n\n"); continue; }
     const k = D.k[id];
-    if (k === K_TEXT) { run += D.html.slice(D.s[id], D.e[id]); continue; }
+    if (k === K_TEXT) { const chunk = D.html.slice(D.s[id], D.e[id]); if (inCell > 0 && !cellWords && /\S/.test(chunk)) cellWords = true; run += chunk; continue; }
     if (k === K_GAP) { run += " "; continue; }
-    flush();
     const nm = D.nm[id], name = D.names[nm];
-    if (D.block[nm]) { out.push("\n\n"); if (name === "tr" || name === "table") cells = 0; }
-    else if (k === K_START && D.cell[nm]) { if (cells++ > 0) out.push("\t"); }
+    const rowPart = name === "table" || name === "tr" || name === "thead" || name === "tbody" || name === "tfoot";
+    if (inCell > 0 && D.block[nm] && !rowPart) { if (cellWords && run && !/\s$/.test(run)) run += " "; else if (cellWords && !run) run = " "; continue; }
+    if (D.cell[nm]) run = run.replace(/\s+$/, "");
+    flush();
+    if (D.block[nm]) { out.push("\n\n"); if (name === "tr" || name === "table") { cells = 0; inCell = 0; } }
+    else if (D.cell[nm]) { if (k === K_START) { inCell++; cellWords = false; if (cells++ > 0) out.push("\t"); } else if (inCell > 0) inCell--; }
     else if (k === K_START && name === "br") out.push("\n");
   }
   flush();

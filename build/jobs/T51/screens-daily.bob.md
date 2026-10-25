@@ -1,6 +1,6 @@
 # BOB to screens-daily (T51)
 
-**Read** · handled J23
+**Read** · handled J28
 
 ## B1 · START
 
@@ -352,3 +352,56 @@ CHANGE (BOB #253): review's batch (`casedrafts` `projects` -> `lists`) and store
 ## B35 · CHANGE
 
 CHANGE (BOB #254, K4598): control-plane is merged into tranche/T51 (casedrafts projects forwarded). Merge tranche/T51, run casedrafts-seam through the real door; green: COMPLETE again (answers your J22).
+
+## B36 · START
+
+START · SCREENS-DAILY #20 · tranche T51 · product believeinoakland/bio · fix round 10, cause job, batch 4: causes R17a, re-point 2 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #290 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/screens-daily tranche/T51 && git branch -m job/T51/screens-daily stale/screens-daily-local && git checkout -b job/T51/screens-daily origin/job/T51/screens-daily`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module screens-daily`; record `build/jobs/T51/screens-daily.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Causes (fix-round-10-T51.md §1; each with K4426's four: root cause, why the tests missed it, a failing-first test on the walker's exact case seen red first, the platform check). The requirement amendments quoted are already on the tranche.**
+**R17a, the draw** (G3; walk C3). After `retrieval-browse` carries the part kind on the Find-in term item (its job, an earlier batch), `find-in.mjs:159-163` draws it. The key is yours (stand-in via `localize`); the sentence is UX-DESIGN's (`fix-round-10-words.md`). Failing-first: a Find-in item with a footnote kind draws the kind word; an item with none draws none. Platform N. R-WORDS.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Words owed to UX-DESIGN (R-WORDS)** for R17a: the keys are listed in `build/plan/fix-round-10-words.md`; you write a stand-in via `localize` and the row goes in this round's one HANDOFF.
+
+**Your own fixture lines, done in this job** (2; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- record-core/perItemRetained (1 judgment/1 mechanical): queue-states.test.mjs:48,93
+
+**Op tables (248 entries; by file: queue-foot.test.mjs 37, home.test.mjs 35, partial.test.mjs 21, projects.test.mjs 18, fix3.test.mjs 17, join.test.mjs 16, fix2.test.mjs 10, queue-states.test.mjs 10, and 15 more files).** They are re-pointed to `storeWorld()` (op-tables.md §5.3, §5.5) in a following entry that arrives as a CHANGE once `store-request` (batch 3) and interface-shell's `boot({door})` (batch 6) have merged; nothing to do now.
+
+Rules of fix-round-9 §0 that bind: R-FOUR (root cause with file:line, why the tests missed it, a failing-first test on the walker's exact case through the real entry path seen red first, the platform check); R-SEAM / R-ONE; R-WORDS (every sentence a member reads is a stand-in keyed through `localize`; its row goes to UX-DESIGN in the one HANDOFF); R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** each cause above fixed with its failing-first test green (seen red first) and its platform check done or named for the redeploy; your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . screens-daily --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/screens-daily.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B37 · ANSWER · re J24
+
+ANSWER (K5090): `record-core` is now in screens-daily's `uses` on the tranche (37 precedes 167; `order.mjs --check` clean). Merge `tranche/T51` into your branch, run architecture and your tests, and post COMPLETE. Your `find-in.test.mjs` `fixtures-contract: retrieval-browse findin-term-part` marker may stay listed `contract-no-run`: retrieval-browse publishes the run in follow-up 22.
+
+## B38 · START
+
+START · SCREENS-DAILY #21 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 57, a cause the final pass found (plan build/plan/fix-round-10-T51.md §3; K5131)
+
+Depth 2 (BOB #294 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/screens-daily tranche/T51`; if a local `job/T51/screens-daily` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/screens-daily stale/screens-daily-local && git checkout -b job/T51/screens-daily origin/job/T51/screens-daily`. If `job/T51/screens-daily` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module screens-daily`; record `build/jobs/T51/screens-daily.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993). Each cause carries K4426's four fields in your COMPLETE: root cause with evidence, why the tests missed it (that gap fixed), a test of the walker's exact case through its real entry seen failing then passing, and any platform check.
+
+**The cause (WALK-FINAL-09 row R84 "Ask as search", D1; K5131).** `bio-plane/src/screens-daily/answers.mjs:21` and `:225` turn plain words into `(w) OR (passage:w)`, which `retrieval` R88 refuses `ROUTES_CROSSED` (an `OR` joining a passage route to a fields route), so Ask-as-search finds nothing. Your R6 is amended (read it whole): send a search retrieval admits (your R56 already changed Find this way: follow it). Why missed: `answers.test.mjs:123` asserts the crossed string against a stub. Test with the real search (retrieval's published fixture or the seam kit): words the documents hold are found; seen red first.
+Then (a CHANGE after ANSWERS #15 merges, follow-up 57): "Show how this was counted" drawn only while `answers`' `ruleservicesstate` reads `on` (R6 as amended), on answers' published fixture.
+
+**Done:** the marked requirement met (name the ids; BOB strikes the marks); `node /home/user/civicos-process/checks/fixtures.mjs <absolute root> screens-daily --list` 0 failing; module tests green; format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B39 · CHANGE
+
+CHANGE (K5138): ANSWERS #15 is merged on the tranche: `ruleservicesstate` → `{ok: true, on}` and its fixture `ruleServicesState({on})` in `bio-plane/test/m/answers/fixtures.mjs`. Merge `origin/tranche/T51`, then R6's second half: "Show how this was counted" (`ruleanswer`) is drawn only while `ruleservicesstate` reads `on`; while off it is not drawn. Test on answers' fixture (both states), seen red first. Then COMPLETE (R6's mark is struck at that merge).
+
+## B40 · CHANGE
+
+J27: `answers` is now in screens-daily's `uses` on tranche/T51 (K5142). Merge origin/tranche/T51, re-run architecture, then post COMPLETE.

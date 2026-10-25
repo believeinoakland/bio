@@ -103,6 +103,9 @@ export const RECOVERY_CODE_COUNT = 10;
 export const SESSION_DEVICES = Object.freeze(["own", "shared"]);
 export const SESSION_LIMITS = Object.freeze({ sharedIdle: 15 * 60e3, ownLock: 30 * 60e3, ownEndAfterLock: 12 * 3600e3,
   ownMax: 30 * 24 * 3600e3 });
+/* R65 (fix round 10, cause 24 (a); K5057): `last_active` is kept at this grain, in ms: a foreground read writes it only when the
+   stored value is older, so a read is not a write on every request and an idle ending moves by at most one grain. */
+export const ACTIVITY_GRAIN_MS = 60e3;
 /* R66 (T47; K3061 D3): the window the password asked again opens, in ms (BOB's, P17). */
 export const REAUTH_WINDOW_MS = 5 * 60e3;
 /* R69 (T47; K3060 D4): an administrator's reset link lives this many days. */
@@ -124,10 +127,23 @@ export class Credentials {
     this.core = core;
     this.membership = membership;
     this.accounts = accounts;
+    this.env = null;   /* K5132: the store's environment, set by `credentialsOps` (`#nowMs`) */
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
+
+  /* K5132 (fix round 10, cause 1; R-CLOCK): the instance clock, read as the other modules read it: the store's environment
+     (`env.BIO_NOW_MS`, handed in by `credentialsOps`), else the wall clock. Every instant this module records, and every
+     judgement of one, reads it; a duration measured for a reply (R9's `timings`) stays on the wall clock. */
+  #nowMs() {
+    const raw = this.env ? this.env.BIO_NOW_MS : undefined;
+    if (raw !== undefined && raw !== null && raw !== "") {
+      const v = Number(raw);
+      if (Number.isFinite(v) && v >= 0) return v;
+    }
+    return Date.now();
+  }
 
   /* ===== START: the seam with membership (K637) =====
    *
@@ -162,19 +178,19 @@ export class Credentials {
     this.sql.exec(`DELETE FROM ai_grants WHERE member_id=?`, memberId);   /* R27: their grants end with their sessions */
     /* R16 (T35): their unspent recovery codes are spent (R46), in the same act. (T48; K3101) Their connected sign-in
        is cleared by `ai-accounts`' own listener (its R27), earlier in the module order. */
-    this.sql.exec(`UPDATE recovery_codes SET spent_at=? WHERE role=? AND spent_at IS NULL`, Credentials.#instant(at),
+    this.sql.exec(`UPDATE recovery_codes SET spent_at=? WHERE role=? AND spent_at IS NULL`, this.#instant(at),
       `member:${memberId}`);
     /* R69 (T47): their live reset links end with them */
     this.sql.exec(`UPDATE password_reset_links SET ended_at=? WHERE member_id=? AND spent_at IS NULL AND ended_at IS NULL`,
-      stampSecond(), memberId);
+      stampSecond(this.#nowMs()), memberId);
     /* R63: her run segments' credentials are revoked with her (a cleared sign-in revokes them too, R73) */
-    this.#revokeRunCredentials(`principal=?`, [`member:${memberId}`], stampSecond(), Credentials.#memberOf(by));
+    this.#revokeRunCredentials(`principal=?`, [`member:${memberId}`], stampSecond(this.#nowMs()), Credentials.#memberOf(by));
     /* REC-159: the cascade is the revoking act's, so the keys it revokes name its actor. R21: a key it revokes takes
        the act's own time (the notice's `at`) as `status_at`; a key already revoked keeps its own. */
     this.sql.exec(
       `UPDATE signers SET status='revoked', status_by=?,
          status_at=CASE WHEN status<>'revoked' THEN ? ELSE status_at END WHERE member_id=?`,
-      by ?? null, Credentials.#instant(at), memberId);
+      by ?? null, this.#instant(at), memberId);
   }
 
   /* R17: true exactly when the founder's credential is held, which R1's claim writes and a re-armed claim replaces.
@@ -212,9 +228,9 @@ export class Credentials {
     /* R42 (K1934 (5)): a credential minted before expiry was recorded is given 90 days from this migration. Only such a
        row has no `expires_at`, since every mint records one, so a later boot finds none to give. */
     this.sql.exec(`UPDATE ai_credentials SET expires_at=? WHERE expires_at IS NULL`,
-      stampSecond(Date.now() + AI_CREDENTIAL_EXPIRY_DAYS.default * DAY_MS));
+      stampSecond(this.#nowMs() + AI_CREDENTIAL_EXPIRY_DAYS.default * DAY_MS));
     /* R65: a session made before activity was recorded is counted active from this boot */
-    this.sql.exec(`UPDATE sessions SET last_active=? WHERE last_active IS NULL`, Date.now());
+    this.sql.exec(`UPDATE sessions SET last_active=? WHERE last_active IS NULL`, this.#nowMs());
     this.declareTables();
   }
 
@@ -350,7 +366,7 @@ export class Credentials {
       const chosen = this.#founderHandleChosen(handle);
       if (chosen.ok !== true) return chosen;   /* nothing written yet: the handle is judged before the password */
       this.#storePassword(ROOT, hashed);
-      const now = new Date().toISOString();
+      const now = this.#instant();
       this.sql.exec(`INSERT INTO bootstrap (id, consumed_at, token_fp) VALUES (1, ?, ?)
                      ON CONFLICT(id) DO UPDATE SET consumed_at=excluded.consumed_at,
                        token_fp=excluded.token_fp`, now, typeof tokenFp === "string" && tokenFp !== "" ? tokenFp : null);
@@ -429,7 +445,7 @@ export class Credentials {
       const live = this.#liveSession(session);
       if (!live || live.role !== role) return null;
       this.#storePassword(role, hashed);
-      const now = Date.now();
+      const now = this.#nowMs();
       const others = this.#rows(`SELECT token_sha, expires FROM sessions WHERE role=? AND token_sha<>?`, role,
         live.token_sha);
       this.#endSessions(others.map((r) => r.token_sha));
@@ -450,7 +466,7 @@ export class Credentials {
       `INSERT INTO credentials (role, salt, hash, iterations, updated) VALUES (?,?,?,?,?)
        ON CONFLICT(role) DO UPDATE SET salt=excluded.salt, hash=excluded.hash,
          iterations=excluded.iterations, updated=excluded.updated`,
-      role, salt, hash, iterations, new Date().toISOString());
+      role, salt, hash, iterations, this.#instant());
   }
 
   /* R4 (REC-39, REC-41): THE WORDS A REFUSED SIGN-IN IS GIVEN, in one place, because one refusal answers every arm: no
@@ -495,7 +511,7 @@ export class Credentials {
     }
     if (!(await this.#passwordMatches(role, password))) return refuse();
     const token = Credentials.#rand(32);
-    const now = Date.now();
+    const now = this.#nowMs();
     const own = device === "own";
     const expires = now + (own ? SESSION_LIMITS.ownMax : ttlSeconds * 1000);
     this.sql.exec(`DELETE FROM sessions WHERE expires < ?`, now);
@@ -558,11 +574,14 @@ export class Credentials {
     const s = this.#one(`SELECT role, expires, created, device, last_active, reauth_until FROM sessions WHERE token_sha=?`,
       sha);
     if (!s) return null;
-    const now = Date.now();
+    const now = this.#nowMs();
     const state = Credentials.#stateOf(s, now);
     if (state === "ended") { this.#tx(() => this.#endSessions([sha])); return null; }
     const locked = state === "locked";
-    if (!locked && background !== true) this.sql.exec(`UPDATE sessions SET last_active=? WHERE token_sha=?`, now, sha);
+    /* R65 (fix round 10): written only once the stored value is older than the grain (or none is recorded). */
+    const stored = s.last_active === null || s.last_active === undefined ? NaN : Number(s.last_active);
+    if (!locked && background !== true && !(now - stored < ACTIVITY_GRAIN_MS))
+      this.sql.exec(`UPDATE sessions SET last_active=? WHERE token_sha=?`, now, sha);
     const r = this.membership.sessionRights(s.role) || {};
     return { role: s.role, expires: s.expires, capabilities: locked ? [] : r.capabilities ?? [],
              administer: !locked && r.administer === true, member: r.member ?? null, handle: r.handle ?? null,
@@ -577,7 +596,7 @@ export class Credentials {
     const s = this.#one(`SELECT token_sha, role, expires, created, device, last_active, reauth_until FROM sessions
                          WHERE token_sha=?`, Credentials.#tokenSha(token));
     if (!s) return null;
-    const state = Credentials.#stateOf(s, Date.now());
+    const state = Credentials.#stateOf(s, this.#nowMs());
     return state === "live" || (state === "locked" && locked) ? { ...s, state } : null;
   }
 
@@ -601,7 +620,7 @@ export class Credentials {
       this.#refusedAttempt(gate, country);
       return Credentials.#refused();
     }
-    const now = Date.now();
+    const now = this.#nowMs();
     const done = this.#tx(() => {
       if (!this.#liveSession(token, { locked: true })) return null;
       this.sql.exec(`UPDATE sessions SET last_active=?${reauth ? ", reauth_until=?" : ""} WHERE token_sha=?`, now,
@@ -630,7 +649,7 @@ export class Credentials {
   reauthDue({ token = null } = {}) {
     try {
       const s = this.#liveSession(token);
-      if (s && Number(s.reauth_until) > Date.now()) return null;
+      if (s && Number(s.reauth_until) > this.#nowMs()) return null;
     } catch { /* due */ }
     /* DEC-49 REGION is-reauth-window */
     return Credentials.#row(ACCOUNT_CHECKS, "REAUTH_DUE", localize("credentials.index.this_act_asks_for", "this act asks for the password again, and it was not given in the last {minutes} minutes. Nothing was changed.", { minutes: String(REAUTH_WINDOW_MS / 60e3) }));
@@ -667,7 +686,7 @@ export class Credentials {
   signOutEverywhere({ token = null } = {}) {
     const s = this.#liveSession(token, { locked: true });
     if (!s) return Credentials.#notSignedIn();
-    const now = Date.now();
+    const now = this.#nowMs();
     const all = this.#rows(`SELECT token_sha, expires FROM sessions WHERE role=?`, s.role);
     this.#tx(() => this.#endSessions(all.map((r) => r.token_sha)));
     return { ok: true, ended: all.filter((r) => r.expires >= now).length };
@@ -688,7 +707,7 @@ export class Credentials {
     let r = this.#one(`SELECT key_hex FROM security_key WHERE id=1`);
     if (!r) {
       this.sql.exec(`INSERT OR IGNORE INTO security_key (id, key_hex, created) VALUES (1, ?, ?)`, Credentials.#rand(32),
-        stampSecond());
+        stampSecond(this.#nowMs()));
       r = this.#one(`SELECT key_hex FROM security_key WHERE id=1`);
     }
     return r.key_hex;
@@ -729,7 +748,7 @@ export class Credentials {
   async #gate({ role, source, country, password }) {
     const roleKey = await this.#keyed(`role\u0000${String(role ?? "")}`);
     const sourceKey = typeof source === "string" && source !== "" ? await this.#keyed(`source\u0000${source}`) : "none";
-    const now = Date.now();
+    const now = this.#nowMs();
     if (this.#estimate("source", sourceKey, now) >= SIGN_IN_WINDOW.perSource
         || this.#estimate("role", roleKey, now) >= SIGN_IN_WINDOW.perRole) {
       await Credentials.#payLoginCost(password);
@@ -745,7 +764,7 @@ export class Credentials {
     try {
       this.#tx(() => {
         const W = SIGN_IN_WINDOW.windowMs;
-        const win = Math.floor(Date.now() / W);
+        const win = Math.floor(this.#nowMs() / W);
         for (const [kind, key] of [["source", sourceKey], ["role", roleKey]])
           this.sql.exec(`INSERT INTO signin_window (kind, key, win, count) VALUES (?,?,?,1)
                          ON CONFLICT(kind, key, win) DO UPDATE SET count=count+1`, kind, key, win);
@@ -761,7 +780,7 @@ export class Credentials {
   #succeeded({ roleKey }) {
     try {
       this.#tx(() => {
-        const now = Date.now();
+        const now = this.#nowMs();
         this.#settle(now);
         if (this.#one(`SELECT seq FROM security_pending WHERE role=? AND kind='rate' AND at > ? LIMIT 1`, roleKey,
                       now - HOUR_MS))
@@ -805,7 +824,7 @@ export class Credentials {
 
   /* R21: the instant an act changes a key's status, in `added`'s spelling (ISO 8601 with milliseconds): the act's own
      time when its caller states one (membership's revocation notice, R16), else now. */
-  static #instant(at = null) { return typeof at === "string" && at !== "" ? at : new Date().toISOString(); }
+  #instant(at = null) { return typeof at === "string" && at !== "" ? at : new Date(this.#nowMs()).toISOString(); }
 
   /* R8, R11, R19 (D-158) — ONE PREDICATE, AND IT IS WHAT KEEPS THE ROSTER AND THE GATE FROM DISAGREEING. A key attests
    * exactly when the key is `active` and its member is `active`; `origin` is never read (R19). `signerList` projects it
@@ -858,7 +877,7 @@ export class Credentials {
     /* END DEC-49 REGION is-signer-key-shape */
     const barAdd = this.#signerMemberBar(memberId);
     if (barAdd) return barAdd;
-    const now = Credentials.#instant();
+    const now = this.#instant();
     this.sql.exec(
       `INSERT INTO signers (key_b64,member_id,comment,status,added,status_by,origin,registered_by,status_at)
        VALUES (?,?,?,'active',?,?,'admin',?,?)
@@ -921,7 +940,7 @@ export class Credentials {
     }
     /* END DEC-49 REGION is-signer-key-revoked */
     if (!held) timed("write", () => {
-      const now = Credentials.#instant();   /* R21: a new key's status_at is its registration's instant */
+      const now = this.#instant();   /* R21: a new key's status_at is its registration's instant */
       this.sql.exec(
         `INSERT INTO signers (key_b64,member_id,comment,status,added,status_by,origin,registered_by,status_at)
          VALUES (?,?,?,'active',?,?,'self',?,?)`, keyB64, by, comment ?? null, now, by, by, now);
@@ -946,7 +965,7 @@ export class Credentials {
     const already = row.status === "revoked";
     if (!already)   /* R21: a real change, so status_at moves; revoking twice leaves it */
       this.sql.exec(`UPDATE signers SET status='revoked', status_by=?, status_at=? WHERE key_b64=?`,
-        by, Credentials.#instant(), keyB64);
+        by, this.#instant(), keyB64);
     return { ok: true, keyB64, status: "revoked", by, already };
   }
 
@@ -1000,7 +1019,7 @@ export class Credentials {
     }
     this.sql.exec(
       `UPDATE signers SET status=?, status_by=?, status_at=CASE WHEN status<>? THEN ? ELSE status_at END
-       WHERE key_b64=?`, status, by || null, status, Credentials.#instant(), keyB64);
+       WHERE key_b64=?`, status, by || null, status, this.#instant(), keyB64);
     return { ok: true, keyB64, status, by: Credentials.#statusBy(by) };
   }
 
@@ -1036,7 +1055,7 @@ export class Credentials {
       return { ok: false, reason: code, code, check: row.check,
                translation: row.translation, detail, ...(extra || {}) };
     };
-    const now = at || stampSecond();
+    const now = at || stampSecond(this.#nowMs());
     const id = String(tokenId ?? "").trim();
     const kind = String(principalKind ?? "").trim().toLowerCase();
 
@@ -1095,7 +1114,7 @@ export class Credentials {
         localize("credentials.index.no_digest_of_the", "no digest of the credential's secret was handed in (64 lowercase hexadecimal characters, made from the value generated when the credential was asked for), so there is nothing a lookup could ever find this credential by. Nothing was written."));
     /* END DEC-49 REGION is-ai-credential-digest */
     const base = Date.parse(now);
-    const expiresAt = stampSecond((Number.isFinite(base) ? base : Date.now()) + days * DAY_MS);
+    const expiresAt = stampSecond((Number.isFinite(base) ? base : this.#nowMs()) + days * DAY_MS);
 
     const declared = (Array.isArray(writes) ? writes : []).map((w) => String(w)).sort();
     /* D-463: it stores 'scratch' or it stores NULL, and nothing between. */
@@ -1118,7 +1137,7 @@ export class Credentials {
       return { ok: false, reason: code, code, check: row.check,
                translation: row.translation, detail, ...(extra || {}) };
     };
-    const now = at || stampSecond();
+    const now = at || stampSecond(this.#nowMs());
     const id = String(tokenId ?? "").trim();
 
     /* DEC-49 REGION is-ai-credential-revoke */
@@ -1198,7 +1217,7 @@ export class Credentials {
              confinedTo: row.confined_to || null,
              /* R42: when it expires, and whether it has, from `expiresAt` on; never renewed. */
              expiresAt: row.expires_at || null,
-             expired: typeof row.expires_at === "string" && row.expires_at !== "" && Date.now() >= Date.parse(row.expires_at),
+             expired: typeof row.expires_at === "string" && row.expires_at !== "" && this.#nowMs() >= Date.parse(row.expires_at),
              /* R63: the run a segment's credential is bound to, null for every credential R12 mints */
              run: row.run || null };
   }
@@ -1237,7 +1256,7 @@ export class Credentials {
     if (away) return away;
     const token = `aik-${Credentials.#rand(32)}`;
     const tokenId = `run-${Credentials.#rand(12)}`;
-    const nowMs = Date.now();
+    const nowMs = this.#nowMs();
     const now = stampSecond(nowMs);
     const expiresAt = stampSecond(nowMs + AI_RUN_CREDENTIAL_TTL_SECONDS * 1000);
     const declared = AI_RUN_WRITES.filter((w) => writes.includes(w));
@@ -1313,7 +1332,7 @@ export class Credentials {
   aiRunCredentialsEnd({ run = null } = {}) {
     if (typeof run !== "string" || run.trim() === "") return { ok: true, revoked: 0 };
     try {
-      return { ok: true, revoked: this.#tx(() => this.#revokeRunCredentials(`run=?`, [run], stampSecond())) };
+      return { ok: true, revoked: this.#tx(() => this.#revokeRunCredentials(`run=?`, [run], stampSecond(this.#nowMs()))) };
     } catch { return { ok: false, revoked: 0, unreadable: true }; }
   }
 
@@ -1346,7 +1365,7 @@ export class Credentials {
     const id = Credentials.#memberOf(member);
     if (id === null || (account !== "reference" && account !== "signin")) return;
     if (account === "signin")
-      this.#revokeRunCredentials(`principal=?`, [`member:${id}`], stampSecond(), Credentials.#memberOf(by));
+      this.#revokeRunCredentials(`principal=?`, [`member:${id}`], stampSecond(this.#nowMs()), Credentials.#memberOf(by));
     if (account === "reference" || reference_held !== true)
       this.sql.exec(`DELETE FROM ai_grants WHERE member_id=? AND kind='standing'`, id);
   }
@@ -1366,7 +1385,7 @@ export class Credentials {
 
   async #mintGrant(id, session, expires, kind, project = null) {
     const token = Credentials.#rand(32);
-    this.sql.exec(`DELETE FROM ai_grants WHERE expires < ?`, Date.now());
+    this.sql.exec(`DELETE FROM ai_grants WHERE expires < ?`, this.#nowMs());
     this.sql.exec(`INSERT INTO ai_grants (grant_sha, member_id, session, expires, kind, project) VALUES (?,?,?,?,?,?)`,
       await Credentials.#sha256(token), id, session, expires, kind, project);
     return { ok: true, token, expires };
@@ -1397,7 +1416,7 @@ export class Credentials {
     const named = typeof project === "string" && project !== "" ? project : null;
     if (named !== null && Credentials.#viewerOf(`member:${id}`, named) === null)
       return noSuchProject(named);   /* membership R149 cannot be asked: nothing is minted rather than a wider grant */
-    return this.#mintGrant(id, sessionSha, Math.min(Date.now() + AI_GRANT_TTL_SECONDS * 1000, s.expires), "ask", named);
+    return this.#mintGrant(id, sessionSha, Math.min(this.#nowMs() + AI_GRANT_TTL_SECONDS * 1000, s.expires), "ask", named);
   }
 
   /* R32: a standing question's grant, for `answers` R19 only (not routed): shaped as R27's, minted with no session.
@@ -1421,7 +1440,7 @@ export class Credentials {
     if (typeof question !== "string" || question.trim() === "")
       return refuse("NO_QUESTION", localize("credentials.index.no_standing_question_was", "no standing question was named. Nothing was minted."));
     /* END DEC-49 REGION is-standing-grant */
-    return this.#mintGrant(id, "", Date.now() + AI_GRANT_TTL_SECONDS * 1000, "standing");
+    return this.#mintGrant(id, "", this.#nowMs() + AI_GRANT_TTL_SECONDS * 1000, "standing");
   }
 
   /* R76 (T49; D2, K3320; amends R27): whether the live session of role `role` is `id`'s own: a member's session is
@@ -1447,7 +1466,7 @@ export class Credentials {
     const g = typeof token === "string" && token !== ""
       ? this.#one(`SELECT member_id, session, expires, kind, project FROM ai_grants WHERE grant_sha=?`, await Credentials.#sha256(token))
       : null;
-    const now = Date.now();
+    const now = this.#nowMs();
     if (!g || g.expires < now) return null;
     if (g.kind === "standing") return { ...g, viewer: `member:${g.member_id}` };
     const s = this.#one(`SELECT role, expires, created, device, last_active FROM sessions WHERE token_sha=?`, g.session);   /* R40: the digest */
@@ -1513,7 +1532,7 @@ export class Credentials {
   }
 
   /* The waiting places an hour old are placed and dropped, and counts older than the days kept are dropped. */
-  #settle(now = Date.now()) {
+  #settle(now = this.#nowMs()) {
     for (const p of this.#rows(`SELECT seq, kind, hour, country FROM security_pending WHERE at <= ?`, now - HOUR_MS)) {
       if (p.country && this.#one(`SELECT count FROM security_counts WHERE kind=? AND hour=? AND country='' AND count > 0`,
                                   p.kind, p.hour)) {
@@ -1530,7 +1549,7 @@ export class Credentials {
      one is due. */
   #settleSoon() {
     try {
-      const now = Date.now();
+      const now = this.#nowMs();
       if (this.#one(`SELECT seq FROM security_pending WHERE at <= ? LIMIT 1`, now - HOUR_MS)) this.#tx(() => this.#settle(now));
     } catch { /* dropped */ }
   }
@@ -1539,7 +1558,7 @@ export class Credentials {
   #tallyOwn(kind, country, roleKey) {
     try {
       this.#tx(() => {
-        const now = Date.now();
+        const now = this.#nowMs();
         this.#settle(now);
         const hour = Math.floor(now / HOUR_MS);
         this.#bump(kind, hour, "");
@@ -1562,7 +1581,7 @@ export class Credentials {
     /* END DEC-49 REGION is-security-kind */
     try {
       this.#tx(() => {
-        const now = Date.now();
+        const now = this.#nowMs();
         this.#settle(now);
         this.#bump(kind, Math.floor(now / HOUR_MS), Credentials.#country(country));
       });
@@ -1646,7 +1665,7 @@ export class Credentials {
   securityMap({ from = null, to = null, by = null } = {}) {
     const bar = this.#adminBar(by, "reading the security map");
     if (bar) return bar;
-    const now = Date.now();
+    const now = this.#nowMs();
     const fromMs = Credentials.#instantOf(from), toMs = Credentials.#instantOf(to);
     const fault = Credentials.#periodFault(fromMs, toMs, now);
     if (fault) return Credentials.#periodRefusal(fault, localize("credentials.index.the_period_is_from", "The period is from an earlier instant to a later one, at most {days} days long and inside the last {days} days.", { days: SECURITY_DAYS }));
@@ -1690,7 +1709,7 @@ export class Credentials {
      counts cannot be read the failure is answered as one, `{level: null, levelAt: null}`, never `Ordinary`. */
   securityLevel() {
     try {
-      const now = Date.now();
+      const now = this.#nowMs();
       const { level, levelAt } = this.#figures(now - DAY_MS, now, now);
       return { level, levelAt };
     } catch { return { level: null, levelAt: null }; }
@@ -1760,7 +1779,7 @@ export class Credentials {
       return Credentials.#row(SIGN_IN_CHECKS, "RECOVERY_CODES_NOT_A_MEMBER", localize("credentials.index.recovery_codes_are_issued", "recovery codes are issued to an active member for their own account, from their own signed-in session. Nothing was issued."), { by: by ?? null });
     /* END DEC-49 REGION is-recovery-codes-member */
     const role = Credentials.#roleFor(who);
-    const issuedAt = stampSecond();
+    const issuedAt = stampSecond(this.#nowMs());
     const codes = Array.from({ length: RECOVERY_CODE_COUNT }, () => Credentials.#newCode());
     this.#tx(() => {
       this.sql.exec(`UPDATE recovery_codes SET spent_at=? WHERE role=? AND spent_at IS NULL`, issuedAt, role);
@@ -1819,7 +1838,7 @@ export class Credentials {
     const done = this.#tx(() => {
       const hit = matches();
       if (hit === null || !this.#roleIsActive(asked)) return null;
-      const at = stampSecond();
+      const at = stampSecond(this.#nowMs());
       this.#storePassword(asked, hashed);
       this.sql.exec(`UPDATE recovery_codes SET spent_at=? WHERE code_sha=?`, at, hit);
       this.#endSessions(this.#rows(`SELECT token_sha FROM sessions WHERE role=?`, asked).map((r) => r.token_sha));
@@ -1844,7 +1863,7 @@ export class Credentials {
     if (typeof link !== "string" || link === "") return null;
     const r = this.#one(`SELECT link_sha, member_id, expires_at FROM password_reset_links
                          WHERE link_sha=? AND spent_at IS NULL AND ended_at IS NULL`, sha256HexSync(link));
-    return r && r.expires_at > Date.now() && this.#holderActive(r.member_id) ? r : null;
+    return r && r.expires_at > this.#nowMs() && this.#holderActive(r.member_id) ? r : null;
   }
 
   static #resetLinkDead() {
@@ -1863,7 +1882,7 @@ export class Credentials {
       return Credentials.#row(ACCOUNT_CHECKS, "RESET_LINK_MEMBER_NOT_ACTIVE", localize("credentials.index.a_reset_link_is_made", "a reset link is made only for an active member of the team. Nothing was made."), { member: id });
     /* END DEC-49 REGION is-reset-link-member */
     const link = `rl-${Credentials.#rand(32)}`;
-    const now = Date.now();
+    const now = this.#nowMs();
     const expiresAt = now + RESET_LINK_DAYS * DAY_MS;
     this.#tx(() => {
       this.sql.exec(`UPDATE password_reset_links SET ended_at=? WHERE member_id=? AND spent_at IS NULL AND ended_at IS NULL`,
@@ -1895,7 +1914,7 @@ export class Credentials {
       if (!live) return null;
       const role = `member:${live.member_id}`;
       this.#storePassword(role, hashed);
-      this.sql.exec(`UPDATE password_reset_links SET spent_at=? WHERE link_sha=?`, stampSecond(), live.link_sha);
+      this.sql.exec(`UPDATE password_reset_links SET spent_at=? WHERE link_sha=?`, stampSecond(this.#nowMs()), live.link_sha);
       const all = this.#rows(`SELECT token_sha FROM sessions WHERE role=?`, role).map((r) => r.token_sha);
       this.#endSessions(all);
       return { ok: true, member: live.member_id, ended: all.length };
@@ -1965,7 +1984,7 @@ export class Credentials {
     const s = await this.accounts.sealText({ owner: `group:${service}`, kind: k.form, text: k.text });
     if (!s || s.ok === false) return s;
     const { sealed, iv } = s;
-    const setAt = stampSecond();
+    const setAt = stampSecond(this.#nowMs());
     this.sql.exec(
       `INSERT INTO keyed_services (service, sealed, iv, is_on, set_by, set_at, form) VALUES (?,?,?,0,?,?,?)
        ON CONFLICT(service) DO UPDATE SET sealed=excluded.sealed, iv=excluded.iv, set_by=excluded.set_by,
@@ -2061,6 +2080,8 @@ for (const name of MOVED_TO_AI_ACCOUNTS)
    plane's stamps (`by`, `who`) in its query, read AFTER the body is spread, so a caller's own copy never wins (D-136);
    `body` is the parsed body; `env` the store's environment. */
 export function credentialsOps(c, url, body, env) {
+  /* K5132: the store's environment is the instance clock's source (`#nowMs`), so every op this map answers reads it */
+  if (env && typeof env === "object") c.env = env;
   const doorStamps = (u) => ({ source: u.searchParams.get("source"), country: u.searchParams.get("country") });
   const bodyField = (k) => (body && typeof body === "object" && !Array.isArray(body) && typeof body[k] === "string" ? body[k] : null);
   const by = () => url.searchParams.get("by");

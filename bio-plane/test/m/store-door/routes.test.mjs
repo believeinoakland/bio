@@ -381,6 +381,7 @@ test("R12: no place is named in this module's behaviour or outward text — ever
   const PLACES = /\b(oakland|alameda|berkeley|california|san francisco|bay area|emeryville|contra costa)\b/i;
   assert.match("Oakland", PLACES);
   const texts = [];
+// fixtures-own: input a route map handed to the door under test; its routes throw or answer as the test states
   const s = { routes: () => ({ boom: () => { throw new Error("x"); }, purge: () => ({ ok: true }) }), membership: () => null,
               namespace: () => "bio", purgeHeld: () => true };
   texts.push((await go(s, "x", { method: "POST", body: "{" })).json, (await go(s, "nosuch")).json,

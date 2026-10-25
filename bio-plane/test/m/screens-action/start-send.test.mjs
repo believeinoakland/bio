@@ -2,6 +2,7 @@
    and nothing run before the member's confirm; Step 2, prepare, approve, the second approval, and record the sending.
    Every sentence is asserted by its key through `setup-words` (R19). */
 const said = (p, key, vars) => assert.ok(text(p).includes(W(key, vars)), key);
+import * as actionsFixture from "../actions/fixture.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { SCREENS, open, main, text, ops, press, last, ok, refused, refusedIn, button, beside, fill, W, D, hasWord, DATA_PLANE, PREVIEW, PLAN_ID, ACTION_ID, FILING, FILINGS, READ, STAKE, draft } from "./page.mjs";
@@ -21,12 +22,15 @@ test("R2: Step 1 reads optionstartpreview first and draws the kind, the office b
 });
 
 test("R2 (v0.2 rules 1–3): a refusal starting would meet is drawn first; the member resolves it in place: the breach unticked, or a reason to proceed anyway, which the preview then states", async () => {
-  const refusal = { ok: false, reason: "BREACH_ON_HYPOTHESIS", code: "BREACH_ON_HYPOTHESIS", translation: "A breach claim rests on an established matter." };
+  const actionsWorld = actionsFixture.world(), ACTN = "ACTN-2026-0001-a";
+  /* the refusal actions gives for a breach action naming no determination (the real `promote`, so the shape is the owner's) */
+  const refusal = actionsWorld.promote(ACTN, actionsFixture.actionMd(ACTN, [...actionsFixture.CP, "action_kind: other", "breach: true"]));
+  assert.equal(refusal.code, "ACTION_NO_DETERMINATION");
   const p = await open(STEP1, { ...DATA_PLANE, optionstartpreview: (req) => ok(req.body.premise_override
     ? { ...PREVIEW, action: { ...PREVIEW.action, breach: true, premise_override: req.body.premise_override } }
     : { ...PREVIEW, would_start: false, refusal, action: { ...PREVIEW.action, breach: req.body.breach } }) });
   const first = main(p).querySelector(".cs-gap");
-  assert.ok(first && first.textContent.includes(W("screen.start-send.wouldrefuse")) && first.textContent.includes("A breach claim rests on an established matter"));
+  assert.ok(first && first.textContent.includes(W("screen.start-send.wouldrefuse")) && first.textContent.includes(W("refusal.ACTION_NO_DETERMINATION")));
   assert.ok(first.textContent.includes(W("screen.start-send.resolve")));
   assert.ok(main(p).innerHTML.indexOf("cs-gap") < main(p).innerHTML.indexOf("mk-dl"), "the refusal comes first");
   await press(p, "optionstartpreview", { values: { "start-breach-0": true, "start-override": "the logs are public already" } });

@@ -1,6 +1,6 @@
 # BOB to review (T51)
 
-**Read** · handled J13
+**Read** · handled J15
 
 ## B1 · START
 
@@ -195,3 +195,58 @@ Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD`
 ## B17 · ANSWER · re J13
 
 ANSWER (BOB #253): J13 read. R44, R45 and the R23/R42 amendments are written at your merge. SCREENS-DAILY #19 and SCREENS-PUBLISH #18 are told your shapes; CONTROL-PLANE #48 forwards `projects`/`drafts` and treats the batch answer as a read answer. Stay available until the layer closes.
+
+## B18 · START
+
+START · REVIEW #25 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 5: run 1 contract, re-point 2 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #291 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/review tranche/T51 && git branch -m job/T51/review stale/review-local && git checkout -b job/T51/review origin/job/T51/review`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module review`; record `build/jobs/T51/review.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Contracts to run** (FIX-L: your module is later in the order than the users, who cannot import you). State each value as data in a test of yours and run it against your real code; the users' hand-built values must equal it, and where the real answer differs the real one wins and the user changes. One `// fixtures-run: <user> <id>` per user module named:
+- `review-copy-read` (users now: case-account 1): `reviewCopy`/comments read answering NO_REVIEW_COPY. Lines: `// fixtures-run: case-account review-copy-read`.
+
+**Your own fixture lines, done in this job** (2; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- case-account/reviewCommentsRegistrar (2 judgment): fixture.mjs:130,131
+
+A `fixtures-run` you write shows `orphan-run` in your list until its user module's marker is merged, and a marker you place shows `contract-no-run` until its provider's run is merged: these are the only lines you may leave at done, each named in your record with the module it waits for.
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . review --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/review.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+**Found before this job (K5081; CASE-INPUTS #9 J12):** case-inputs (earlier in the order) keeps review's `NO_REVIEW_COPY` answer in `bio-plane/test/m/case-inputs/fixtures.mjs` (`statementAck().noReviewCopy`) under `// fixtures-contract: review no-review-copy`: add the `// fixtures-run: case-inputs no-review-copy` test that runs that answer against your real `noReviewCopy()` (mechanics §8.7).
+
+## B19 · START
+
+START · REVIEW #26 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 53, a cause the final pass found (plan build/plan/fix-round-10-T51.md §3; K5130)
+
+Depth 2 (BOB #294 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/review tranche/T51`; if a local `job/T51/review` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/review stale/review-local && git checkout -b job/T51/review origin/job/T51/review`. If `job/T51/review` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module review`; record `build/jobs/T51/review.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993). Each cause carries K4426's four fields in your COMPLETE: root cause with evidence, why the tests missed it (that gap fixed), a test of the walker's exact case through its real entry seen failing then passing, and any platform check.
+
+**The cause (WALK-FINAL-10A row R171 (h), MAJOR; K5130).** On a draft that asked for a new case and has prepared edition 1 of it (`case-authoring` R83's `prepared`), the review copy's `observations` reads every author unchosen, though writer-b chose cover then name. `review`'s `draftIdentity` (`bio-plane/src/review/index.mjs:515-519`) reads only the draft's own `case_id`, null for a new-case draft, so the prepared case's choices are never asked; the draft's list row already uses the prepared case (`draftEditions`). Your R16 is amended (read it whole): a draft that has prepared its new case stands at that case and edition. Keep R8's live-grant predicate correct for both kinds of draft (a grant bound before the preparation; one after). Why missed: no test prepares a new-case draft and then reads `observations`. Test: through the real acts (draft asking a new case, prepare, the author's `attribute` choice, `reviewcopy`): the author's level read; a draft not yet prepared: unchosen with its reason; seen red first. If `screens-publish`'s editor needs a field it lacks to send `attribute` for such a draft (its `case-editor.mjs:416-422` reads `draft.case.case_id`, null here), say in your COMPLETE which field of which answer carries the prepared case; screens-publish's own job draws it (follow-up 54).
+
+**Done:** the marked requirement met (name the ids; BOB strikes the marks); `node /home/user/civicos-process/checks/fixtures.mjs <absolute root> review --list` 0 failing; module tests green; format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B20 · START
+
+START · REVIEW #27 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 78 (5); K5148)
+
+Depth 2 (BOB #297 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/review tranche/T51`; if a local `job/T51/review` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/review stale/review-local && git checkout -b job/T51/review origin/job/T51/review`. If `job/T51/review` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module review`; record `build/jobs/T51/review.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+1. **`sharedDraftsByProject` binds over the plane's 100 variables** (RETRIEVAL #29 J16; `diag2-06.md` §2): `review/index.mjs:1052` `CHUNK = 200` binds up to 200 project ids in one statement, past workerd's limit of 100 bound variables (retrieval's `PLANE_VARIABLE_CEILING`). Chunk so no statement binds more than the ceiling, counting the viewer gate's own arguments. Test failing first: open review's test database with `{ limits: { variableNumber: 100 } }` (as retrieval's `fixture.mjs` does) and call it with 150 project ids: red today, green after; run your whole suite under that bound if your fixture allows, and fix any other statement it reveals.
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> review --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.

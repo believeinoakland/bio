@@ -6,8 +6,9 @@
    Each test names its ids. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, withEntry, i2, noText, pageUnits } from "./fixture.mjs";
+import { fresh, bundle, hold, withEntry, i2, noText, pageUnits, payingAccount } from "./fixture.mjs";
 import { WORD } from "./words.mjs";
+import { noAccount, keptAwayProject } from "../ai-accounts/fixtures.mjs";
 
 const member1 = { cls: "member", session: true, caps: ["contribute"], viewer: "class:admin", by: "member:m1" };
 const writes = (w) => JSON.stringify([w.rows(`SELECT * FROM readings`), w.rows(`SELECT * FROM capture_text`), w.rows(`SELECT * FROM reading_history`)]);
@@ -52,7 +53,7 @@ function transcriber({ answer, account = null, limit = null, away = null }) {
     deployable: () => true,
     keptAway: () => away,
     transcription: ({ member, project, at }) => ({ member, project, at, act: `transcribe:t44:${at}`,
-      accounts: { accountFor: async () => account ?? { ok: true, kind: "apikey", level: "member", key: "k" } },
+      accounts: { accountFor: payingAccount({ answer: account }) },
       useCheck: async () => limit,
       transcribe: async (q) => { calls.transcribe.push(q); return typeof answer === "function" ? answer(q) : answer; } }),
   };
@@ -88,6 +89,7 @@ const unfilled = (r) => [r.status, r.body.ok, r.body.transcription.performed, r.
 test("R71 (T44; N869; DEC-191 (4)): nothing sent (AGENT_WORKER_UNBOUND, EVIDENCE_ABSENT, NO_PAGE_RENDERED) stays 200 performed false, nothing written, and says transcribe.notsent with {why} from transcribe.why.*, by key; control: a post agent-worker answered ok filling nothing says transcribe.none", async () => {
   for (const [reason, why] of [["AGENT_WORKER_UNBOUND", "transcribe.why.unbound"], ["EVIDENCE_ABSENT", "transcribe.why.evidenceabsent"],
                                ["NO_PAGE_RENDERED", "transcribe.why.norender"]]) {
+    // fixtures-contract: plane transcribe-not-sent
     const { r, written, asked } = await act({ answer: { ok: false, reason } });
     assert.deepEqual(asked, [[1, 2]], reason);
     assert.deepEqual(unfilled(r), [200, true, false, false], reason);
@@ -128,8 +130,9 @@ test("R71 (T44; N869; DEC-191 (5)): a photo whose page plane R36's refused names
 test("R71 (T44; N876; DEC-192 (2)): sent and nothing back: AGENT_WORKER_SILENT says transcribe.failed with transcribe.why.silent; agent-worker R74's ending (MODEL_SILENT, MODEL_REFUSED) transcribe.failed with transcribe.why.ended; 200 performed false, nothing written; never transcribe.none", async () => {
   for (const [answer, why] of [
     [{ ok: false, reason: "AGENT_WORKER_SILENT" }, "transcribe.why.silent"],
-    [{ ok: false, reason: "MODEL_SILENT", code: "MODEL_SILENT", ending: "silent", detail: "d", worker: "agent-worker", usage: {} }, "transcribe.why.ended"],
-    [{ ok: false, reason: "MODEL_REFUSED", code: "MODEL_REFUSED", ending: "refused", detail: "d", worker: "agent-worker" }, "transcribe.why.ended"],
+    [{ ok: false, reason: "MODEL_SILENT", code: "MODEL_SILENT", ending: "silent", detail: "d", worker: "agent-worker", status: 502, usage: {} }, "transcribe.why.ended"],
+    [{ ok: false, reason: "MODEL_REFUSED", code: "MODEL_REFUSED", ending: "refused", detail: "d", worker: "agent-worker", status: 502,
+       model_error: "overloaded_error", model_status: 529 }, "transcribe.why.ended"],
   ]) {
     const { r, written } = await act({ answer });
     assert.deepEqual(unfilled(r), [200, true, false, false], answer.reason);
@@ -140,11 +143,10 @@ test("R71 (T44; N876; DEC-192 (2)): sent and nothing back: AGENT_WORKER_SILENT s
 });
 
 test("R71 (T44; N869, N876; DEC-192 (1); K2713): a refusal (tier 4's aiRefusal, the keep-away refusal, agent-worker's after the post with its row) keeps its envelope, ok false with its code, check, translation and a refusal's status, nothing written, and gains says transcribe.refused with {reason} its translation exactly as relayed, its placeholders left for the screen; controls: agent-worker's refusal with no row (BAD_PAGES) says nothing of this module's own, and a declining AI with no row is 200 performed false", async () => {
-  const NO_ACCOUNT = { ok: false, reason: "NO_ACCOUNT", code: "NO_ACCOUNT", check: "C-29.20", translation: "No Claude account serves you here.", detail: "none" };
-  const KEPT = { ok: false, reason: "PROJECT_AI_KEPT_AWAY", code: "PROJECT_AI_KEPT_AWAY", check: "C-29.38",
-                 translation: WORD("ai.refused.projectkeptaway"),
-                 keep_away: { reason: "privacy", set_by: "member:m2", set_at: "2026-10-01" }, project: "P", use: "transcribe" };
-  const WORKER = { ok: false, reason: "SOME_REFUSAL", code: "SOME_REFUSAL", check: "C-1.1", translation: "A refusal of {who}.", worker: "agent-worker" };
+  const NO_ACCOUNT = await noAccount();
+  const KEPT = (await keptAwayProject({ project: "P", use: "transcribe" })).aiKeptAway;
+  /* agent-worker's refusal after the post, one of its five codes carrying its own row's translation (R72, R75) */
+  const WORKER = { ok: false, reason: "BAD_PAGES", code: "BAD_PAGES", check: "C-1.1", translation: "A refusal of {who}.", worker: "agent-worker" };
   for (const [opts, refusal, sent] of [[{ account: NO_ACCOUNT, answer: null }, NO_ACCOUNT, false], [{ away: KEPT, answer: null }, KEPT, false],
                                        [{ answer: WORKER }, WORKER, true]]) {
     const { r, written, asked } = await act(opts);
@@ -156,7 +158,10 @@ test("R71 (T44; N869, N876; DEC-192 (1); K2713): a refusal (tier 4's aiRefusal, 
     assert.equal(written, false);
   }
   assert.equal((await act({ away: KEPT, answer: null })).r.body.says, WORD("transcribe.refused").replace("{reason}", KEPT.translation), "placeholders kept");
-  /* (T46) BAD_PAGES is one of agent-worker R72's six codes, answered with DEC-193's reason (R75: t46.test.mjs) */
+  /* (T46) BAD_PAGES is one of agent-worker R72's five codes, answered with DEC-193's reason (R75: t46.test.mjs) */
+  /* a code outside the five, made up on purpose: it names no row of agent-worker's, and the answer for it is not this module's own sentence */
+  // fixtures-generic: SOME_OTHER_CODE (invented: tests this module's handling of a code no row and none of agent-worker's five names)
+  // fixtures-generic: busy (invented: an answer of no worker at all, a bare reason)
   for (const answer of [{ ok: false, reason: "SOME_OTHER_CODE", code: "SOME_OTHER_CODE", detail: "d", worker: "agent-worker" }, { ok: false, reason: "busy" }]) {
     const { r, written } = await act({ answer });
     assert.deepEqual(unfilled(r), [200, true, false, false], answer.reason);

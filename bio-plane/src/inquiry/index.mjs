@@ -1366,8 +1366,9 @@ export class Inquiry {
    *  (`waiting`, `due`, `ended` or `undetermined` as R55 states them; a look is the setter's own and is not answered
    *  here), the setter's handle (`members.handle`, membership R120; null for a setter with none, a machine), and the
    *  project it was set in, `{id, name}`, only while that project is discoverable (membership R85) and the viewer's
-   *  sight of it is not NONE (R44): otherwise no `set_in`, exactly as for a wait set in no project. The answer carries
-   *  `projects` (R60, leg-earning R14). R55's due notice and R56's look stay the setter's alone. Writes nothing; never
+   *  sight of it is not NONE (R44): otherwise no `set_in`, exactly as for a wait set in no project. The answer also
+   *  carries R58's for that question, `document_waits` and `history`, as `documentWaits` gives them (`null` both, with
+   *  `document_waits_why`, when capture's read cannot be read), and `projects` (R60, leg-earning R14). R55's due notice and R56's look stay the setter's alone. Writes nothing; never
    *  throws. */
   questionWaits(args = {}) {
     const { question = null, viewer = null, asOf = null } = args && typeof args === "object" ? args : {};
@@ -1390,7 +1391,11 @@ export class Inquiry {
                    set_by_handle: typeof w.handle === "string" && w.handle ? w.handle : null, set_at: w.set_at,
                    ...(shown ? { set_in: shown } : {}), ...(ended ? { inquiry_state: b.current_state } : {}) };
         });
-      return { ok: true, question, zone, waits, ...this.#projectsField(question, viewer) };
+      const set = this.documentWaits({ questions: [question], viewer }).questions?.[0] ?? null;
+      return { ok: true, question, zone, waits,
+               document_waits: set ? set.waits : [], history: set ? set.history : [],
+               ...(set && set.state === "undetermined" ? { document_waits_why: set.why } : {}),
+               ...this.#projectsField(question, viewer) };
     } catch { return absent; }
   }
 
@@ -2223,10 +2228,11 @@ export class Inquiry {
          part, so it carries no partition at all: the ungrouped reading, no stronger than its weakest leg, which the
          child's own members may restructure (op=inquiryground). */
       const grouped = ordGround.some((g) => g !== null);
-      /* R85: a leg that cuts against names no ground, so it never stops a child carrying the groups its supporting legs
-         belong to whole; a labelled one (a document written before R85) is held to the same whole-group rule. */
+      /* R85, `inquiry-grammar` R68: a leg with no ground label is a cutting leg or a necessary supporting leg beside the
+         grounds, so it never stops a child carrying the groups its other legs belong to whole; a labelled cutting leg
+         (a document written before R85) is held to the same whole-group rule. */
       const keepGroups = grouped && !!rawGrounds && mine.some((ord) => ordGround[ord] !== null)
-        && mine.every((ord) => (ordGround[ord] === null ? legs[ord].role === "cuts_against"
+        && mine.every((ord) => (ordGround[ord] === null ? true
           : groupOrds.get(ordGround[ord]).every((o) => mine.includes(o))
             && rawGrounds.some((r) => r.label === ordGround[ord])));
       const legLines = (ord) => {
@@ -2238,6 +2244,10 @@ export class Inquiry {
       if (keepGroups) {
         const labels = new Set(mine.map((ord) => ordGround[ord]));
         text = setOrAddBlock(text, "grounds", rawGrounds.filter((r) => labels.has(r.label)).flatMap((r) => r.lines));
+      } else if (!grouped && Array.isArray(fm.grounds) && fm.grounds.length === 0) {
+        /* R85: a parent answered with no ground at all (`grounds: []`) passes that answer on; the child does not read as
+           never partitioned */
+        text = setOrAddScalar(removeBlock(text, "grounds"), "grounds", "[]");
       } else text = removeBlock(text, "grounds");
       /* The parent's division block is the PARENT's, never the child's: a child
          carrying one would claim to have been divided itself. */
@@ -2681,7 +2691,9 @@ export class Inquiry {
        it that never happened. */
     if (same(nextLabel.map((g) => String(g)), standingLabel.map((g) => String(g)))
         && rowsOut.every((r) => r.carried_forward)
-        && standingByLabel.size === rowsOut.length)
+        && standingByLabel.size === rowsOut.length
+        /* R85: an empty partition is an answer the document holds (`grounds: []`), so it changes a question that holds none */
+        && (rowsOut.length > 0 || Array.isArray(fm.grounds)))
       return { ok: false, reason: "PARTITION_UNCHANGED", target,
                detail: localize("inquiry.index.this_is_the_structure_this", "this is the structure this question already carries, leg for leg. Nothing was written: a revision that changes nothing would put a restructuring in the record that did not happen.") };
 
@@ -2698,9 +2710,10 @@ export class Inquiry {
         if (nextLabel[i] === null) { const { ground, ...rest } = l; return rest; }
         return { ...l, ground: nextLabel[i] };
       }) };
-    if (grounds.length) candidate.grounds = rowsOut.map((r) => ({ ground: r.ground,
+    /* R85: no ground is still an answer (DEC-32 clause 4): every supporting leg is necessary, and the document holds it as
+       `grounds: []`, distinct from a question never partitioned */
+    candidate.grounds = rowsOut.map((r) => ({ ground: r.ground,
       asserted_by: r.asserted_by, at: r.at, ...(r.statement === null ? {} : { statement: r.statement }) }));
-    else delete candidate.grounds;
     const bf = [];
     checkInquiryBasis(candidate, bf, this.#publishedRegistry(target,
       legs.map((l) => l.target).filter((t) => typeof t === "string")),
@@ -2725,10 +2738,9 @@ export class Inquiry {
           `    asserted_by: ${r.asserted_by}`,
           `    at: "${r.at}"`,
           ...(r.statement === null ? [] : [`    statement: "${r.statement}"`])]))
-      /* REMOVED, not emptied. An unstructured basis must read BYTE-IDENTICALLY
-         to one that was never grouped (REC-42's clause 2), and a document left
-         wearing an empty `grounds:` key is not that document. */
-      : removeBlock(text, "grounds");
+      /* HELD EMPTY, not removed (R85, K5059). A question answered with no ground at all is not a question nobody has
+         answered: the document wears `grounds: []`, and a basis never partitioned wears no such key. */
+      : setOrAddScalar(removeBlock(text, "grounds"), "grounds", "[]");
     text = setScalar(text, "last_updated", `"${when}"`);
     /* C-13.2: last_updated moving requires a Session Log entry, and it is where
        DEC-32 clause 6's RECORD lives — this act moves no state, so there is no
@@ -2749,7 +2761,7 @@ export class Inquiry {
       + `Trigger: op=inquiryground on ${target}\n`
       + `Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(s) — `
           + rowsOut.map((r) => `${r.ground}: ${r.legs.join(", ")}`).join("; ")
-          : `grouping removed; ${legs.length} leg(s) read as necessary again`}.\n`
+          : `no ground; ${legs.length} leg(s) read as necessary`}.\n`
       + (restructure ? `Reason: ${why}\n` : localize("inquiry.index.first_grouping_no_earlier", "First grouping: no earlier structure to revise.\n"))
       + (before ? `Strength before: ${w(before)}.\n` : localize("inquiry.index.strength_before_not_stated", "Strength before: not stated (no module answers it here).\n")));
 

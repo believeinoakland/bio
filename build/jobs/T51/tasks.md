@@ -1,6 +1,6 @@
 # tasks (T51)
 
-**Status** · session_01GozQuvJKa9gKZzheDC1C7d · depth 2 · WAITING ON BOB (J7) · handled B8
+**Status** · session_01XHqSWAYfTVFiPw8iMY9K7P · depth 2 · COMPLETE · handled B12
 
 ## J1 · COMPLETE
 
@@ -158,3 +158,95 @@ My COMPLETE gave counts from combined runs. Those totals change between runs (th
 - The earlier R17 result (passing alone, failing in batch) is the same test in a different file. I was wrong to call it a concurrency artifact; it fails on the parent commit too.
 
 Nothing else in J6 changes. The Size line (test runs 13, module lines 1702) still stands; the test-run count is the count of my `node --test` invocations, which is approximate.
+
+## Fix round 10, batch 6 (B9): TASKS #18
+
+Merged `tranche/T51`; re-pointed the five `homeOf` lines (see COMPLETE below, J8).
+
+## J8 · COMPLETE
+
+**COMPLETE: TASKS #18, fix round 10, batch 6 (B9): re-point 5 own fixture lines.** Branch `job/T51/tasks`, tranche merged first.
+
+**Causes done.** The five hand-built `provenance.homeOf` answers are now provenance's own fixtures (`bio-plane/test/m/provenance/fixtures.mjs`, FIX-E, merged): `inbox.test.mjs:188` and `ledger.test.mjs:55,78` use `homeOfHomed`; `world.mjs:99` uses `homeOfEmpty`; `world.mjs:124` (the `inbox()` helper) homes each capture by the provider's `registeredHomes().many`. `checks/fixtures.mjs . tasks --list`: **0 failures** (was 5 stubs).
+
+**What changed (tests and world only, no module code).**
+- `world.mjs`: `defaultFakes` takes `homeOfEmpty()`; `inbox(events, homes)` registers each home through the real promotion (captures sharing a bundle promoted together) and exposes `w.home(label, bundleId)` / `w.homes(map)` to file a capture later; `world()` keeps a real module instance whole instead of spreading it (a plain object still fills the default's keys).
+- The tests name a capture by a label (`a1`, `a3`), and the real `homeOf` answers by digest, so `inbox()` asks the real provider for `sha(label)`. In `inbox.test.mjs:188` and `ledger.test.mjs` the events carry `sha(...)` digests directly.
+- `inbox.test.mjs` R25 test: `homes.a3 = DOC2` became `w.home("a3", DOC2)` (a real promotion at the moment the capture is filed).
+
+**One exception, for BOB (the only judgment call).** A capture homed in a project (`HOMES.a2 → PROJ-2026-0001-team`, which R1's "an active owner of the bundle when it is a project" tests) cannot be made by the real chain: promotion refuses a chosen PROJ id (`PROJECT_ID_SUPPLIED`, `promotion/index.mjs:488`) and provenance's fixture homes only information bundles. For ids starting `PROJ-`, `world.mjs` (`w.homes`) answers `{bundleId}` from a map, beside the real `homeOf`. The fixtures checker does not flag it and I added **no `fixtures-own` or `fixtures-generic` marker**. If you want it real, provenance's `homeOfHomed` would need to home in a project (create the project through promotion with no id, use the minted id); say so and I will re-point.
+
+**Lines done / left.** Done: all 5. Left: none (no waiting, `stay` or Wave B lines of mine).
+
+**Checks.** `checks/run.mjs`: format 0, architecture 0, words 0 (tasks), coverage tasks 25 of 25 named, 0 failures; fixtures `tasks` 0. The run's remaining FAIL lines belong to other users of `taskresolve`/`taskforward`/`taskdecide`/`homeOf` (queue-producers, screens-*, interface-shell and others), not tasks. `checks/ownership.mjs tasks`: 0 failures. Impact (`build/plan/impact.mjs origin/tranche/T51 HEAD`): tasks only, 8 test files, all in my run.
+
+**Tests.** Tasks suite, each file run alone: 134 tests, 134 pass, 0 fail (the R25 seam test, red in J6, now passes: provenance R72 is merged).
+
+Size (session_014XtwY7rHcgXEW5Z93bYUjK): test runs 14, module lines 1702
+
+## J9 · COMPLETE · re B10
+
+**COMPLETE: TASKS #19, fix round 10, follow-up 30 (B10): the re-point to provenance's published fixture.** Branch `job/T51/tasks` at `89089ef839`; tranche `tranche/T51` (9c09ef1c89) merged first; `mail start` run at depth 2.
+
+**Entries applied.** Follow-up 30 (test files only). `world.mjs` no longer answers `homeOf` from a hand map of `PROJ-` ids: a project is made by provenance's real `homeOfProject` (promoted with no chosen id; the record mints its `PROJ-` id), and `w.homes({label: project})` takes that project's own real `homeOf` answer for the capture. `projectOf(title, labels)` is the one helper. Every project id a test names now comes from `projectOf(...).projectId`, not a literal: `authority.mjs`, `check.test.mjs`, `declared-ops.test.mjs`, `reads.test.mjs`, `sign.test.mjs`, `inbox.test.mjs` (the `HOMES` project a2 is the minted one), `ledger.test.mjs` (`PRJ-H`, `PRJ-A` too). In the citing-edge test the withdrawn and the live project are the two minted ids in sort order, so "the withdrawn one sorts first by id" still holds.
+
+**No markers added (K5060).** No `fixtures-own` or `fixtures-generic` marker; the fixtures checker is clean.
+
+**Deferred.** Nothing in my module. No module code, no requirements, no test removed or weakened.
+
+**Found in other modules.** None new.
+
+**Checks and tests.**
+- Tasks suite, each file run alone (the glob run in one process reports an unstable count, 109 to 134 across runs, so I summed per file): 134 tests, 134 pass, 0 fail. Per file: check 23, decide 8, declared-ops 7, grammar 45, inbox 30, ledger 5, reads 6, seam-r25 2, sign 8.
+- `checks/fixtures.mjs /home/user/bio tasks --list`: 0 failures.
+- `checks/format.mjs /home/user/bio`: 0 failures.
+- `checks/architecture.mjs /home/user/bio tasks`: 0 failures.
+- `checks/coverage.mjs /home/user/bio tasks`: 25 of 25 live requirement ids named, 0 failures.
+- `checks/words.mjs /home/user/bio tasks`: 0 failures.
+- `checks/ownership.mjs /home/user/bio tasks tranche/T51 job/T51/tasks`: 0 failures (`bio-plane/test/m/tasks/`).
+
+Size (session_014SW3dszWfYfXnSrCtVu4CS): test runs 27, module lines 1702
+
+## J8 · COMPLETE
+
+**TASKS #20, fix round 10, follow-up 44 (K5117): an unstable one-process suite run — fixed.**
+
+**Reproduced** (`node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/tasks/*.test.mjs`, Node v26.10.0, 4 cores). Before: 33 runs idle and 10 under load (8 busy loops) gave 103, 104, 106, 121 … 134 tests, in about 40% of runs, never a failure or a cancelled test: 134 only when nothing was lost.
+
+**Cause, with evidence.** The tests are not skipped; their *reports* are lost.
+- Probe (temporary, removed): each `grammar.test.mjs` test appended a line to a scratch file as it ran. A run reported 46 tests for grammar+sign (53 expected) while the file held all 45 grammar lines: every test ran, 7 reports were missing.
+- Always `grammar.test.mjs`: across 14 captured runs the missing lines were only its tests (12 to 28 of its N367 per-bound tests and the last R12 ones), none from another file. That file is the only one that registers a burst of ~36 sub-millisecond synchronous tests, and it is not the slowest file (inbox is), so it is not a tail loss at the end.
+- Only with `--test-force-exit`: without it, 8 runs gave 134 each; with `--test-isolation=none` and force-exit, 8 gave 134 each. With force-exit and one concurrency, 1 run in 8 still lost reports; two files (grammar, sign) lost reports in 2 of 16 runs. Other suites sampled (queue, 3 files, 10 runs) did not lose any.
+- So the cause is Node's runner dropping reports of a burst of synchronous tests when `--test-force-exit` ends the process. Not product code, not test-support, not the sqlite shim. I did not find the line inside Node; the evidence above is behavioural.
+
+**Fix (my tests).** `bio-plane/test/m/tasks/grammar.test.mjs`: a root `afterEach(() => new Promise((done) => setImmediate(done)))` (with a comment) gives the reporter a turn of the event loop between tests. No test was added, removed or weakened.
+
+**Proof.** After the fix, the one-process run of `bio-plane/test/m/tasks/*.test.mjs`: 20 runs idle, 134 each; 15 runs under 8 busy loops on 4 cores, 134 each; 0 fail, 0 cancelled. Plus 30 runs of grammar+sign alone, 53 each (before: 2 of 16 lost reports).
+
+**Checks** (absolute root): `fixtures.mjs … tasks --list` 0 failures; format 0; architecture 0; coverage 25 of 25 live ids, 0; words 0; ownership 1 file, 0 failures.
+
+**Other modules:** none to report. Any other module with a large burst of synchronous tests may show the same under `--test-force-exit`; I sampled queue only (clean).
+
+Size (session_018khTeR7Ftw2mCC35fSYLYA): test runs 130, module lines 1702
+
+## J10 · COMPLETE
+
+COMPLETE (TASKS #20, follow-up 44, K5117). Cause: reports of tasks/grammar.test.mjs's burst of sync tests are lost under --test-force-exit (all tests run; probe showed 45 of 45 ran while 46 of 53 reported); one-process run gave 103-134. Fix: root afterEach yielding one event-loop turn in grammar.test.mjs (tests only). Proof: 20 idle + 15 under 8 busy loops, 134 each, 0 fail. Checks fixtures/format/architecture/coverage/words/ownership all 0. Details in build/jobs/T51/tasks.md J8. Nothing for other modules.
+
+## J11 · COMPLETE
+
+**TASKS #21, fix round 10, item 70 (K5148; WALK-FINAL-04B R146, `diag2-04.md` §6): authority tasks now route to the owner of the project the document is filed in.**
+
+1. **Failing-first test** (`inbox.test.mjs`, "R1 (K5148, WALK-FINAL-04B R146) …"), seen red on the old code (the task read `unassigned`, group-admin), green after: a document with `project: P` in its record row and no `cites` edge routes to P's first active owner (a revoked owner before them is skipped), basis `tasks.why.owner_referred_project`; the filed-in project comes before a citing project; a filed-in project with no active owner falls through to the citing one; control: no project and no edge still routes by the administrator rule. `world.mjs` gained a `project` option on `bundle()` (the project column record-core R34 reads).
+2. **Fix** (`tasks/index.mjs`, `#routeTask`): a new arm after the bundle-is-a-project arm and before the `cites` arm, reading `bundleInfo().project` (which the function already held as `info`) and taking its first active owner by the same `ownerOf`. No new sentence.
+3. **Why the tests missed it:** `inbox.test.mjs` built its only project route through a `cites` edge from the project (`word("tasks.why.owner_cites_record")`), the one way the old code could reach a project; no test filed a document with the project in its record row. The world fixture had no way to set that column.
+
+**Met:** tasks R1 (its filed-in-project clause, K5148); BOB may strike its `not yet met: T51` mark. Door case (acquire into a project, promote, drain, `op=tasks` shows the owner) belongs to control-plane's door tests (K5138): REPORT to BOB to place; I added none.
+
+**Runs.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/tasks/*.test.mjs` (no force-exit, exits by itself): 135 tests (134 + 1), 0 fail, 0 cancelled. Checks with the absolute root: format 0; architecture 0; coverage 25 of 25, 0; words 0 (no new strings); `fixtures.mjs … tasks --list` 0 failures, no marker added; ownership 0.
+
+Size (session_01XHqSWAYfTVFiPw8iMY9K7P): test runs 4, module lines 1710
+
+## J12 · COMPLETE
+
+COMPLETE (TASKS #21, item 70, K5148). #routeTask now routes to the first active owner of the project the document is filed in (bundleInfo().project), after the bundle-is-a-project arm, before cites. Failing-first test in inbox.test.mjs seen red then green; suite 135 (134+1), 0 fail. Met: tasks R1 (filed-in-project clause). Checks format/architecture/coverage/words/fixtures/ownership all 0. REPORT: the through-the-door case (acquire into project, promote, drain, op=tasks shows owner) belongs to control-plane's door tests; I added none (K5138). Details: build/jobs/T51/tasks.md J11.

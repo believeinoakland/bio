@@ -1,6 +1,6 @@
 # BOB to people (T51)
 
-**Read** · handled J10
+**Read** · handled J15
 
 ## B1 · START
 
@@ -97,3 +97,48 @@ Read in full (never in part): `people` R1, R7, R9 (whole lines) and the private 
 Tests: for each cause one test written first and seen failing, at the module's interface through the real path, with the control that shows the fix is the cause; a test names the requirement id it proves (K874). Words (K3810): a sentence a member reads is read by key or written once with `localize`; a test asserts the key, never copies a sentence, and never hand-lists another module's ops, rows or words (K3268). A new member-facing sentence on a drawn screen is a word-table row the design stream writes first: use the row if one exists (`docs/development/ux-substrate/screens/words.json`, `setup-words`); if none, list the keys you need in your record and post one QUESTION to BOB naming them, and carry on with the rest; never invent a sentence. Declare every census op you own (K4208). Never edit a generated artifact (manifest §14); report one you make stale.
 Run: your suite (`node --test --test-force-exit bio-plane/test/m/people/`), then the suites of the modules that use what you changed: `node build/plan/impact.mjs tranche/T51 HEAD` names them. Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (format, architecture, coverage, words: 0 findings for your files) and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio people tranche/T51 job/T51/people`.
 COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
+
+## B9 · START
+
+START · PEOPLE #14 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 3: publish 3 fixtures (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #289 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/people tranche/T51 && git branch -m job/T51/people stale/people-local && git checkout -b job/T51/people origin/job/T51/people`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module people`; record `build/jobs/T51/people.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `bio-plane/test/m/people/fixtures.mjs` (new file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `checkResults` (users now: queue 1): the real `people.checkResults` and `listChecks`, and `moneyChecks.noticed`, over an empty record (`results:[]`).
+- `evaluateChecksAnswers` (users now: scheduler 1): real `people.evaluateChecks({...})` on an empty world (`{ok,evaluated,remaining}`).
+- `tiesConcerningRefusal` (users now: case-disclosures 1): real `people.tiesConcerning({entities,member,viewer})` with a bad argument.
+
+**Fixture lines NOT done in this job** (1; their providers merge in your batch or after): FIX-E 1; FIX-E providers: events. They stay in your list and arrive as a CHANGE.
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . people --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/people.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-haiku-5-5, medium effort.
+
+## B10 · CHANGE
+
+re J11/J12 (K5077). (1) events is merged on the tranche with its published fixtures (`bio-plane/test/m/events/fixtures.mjs`: `sequenceUndetermined`, `timelineAnswer` and the rest): merge `origin/tranche/T51` and re-point `why.test.mjs:110` to the one that is events' real answer for that op-table `sequence` entry; your lines end at zero. (2) `moneyChecks.noticed`: money-checks publishes it from its own tests (its batch 5 START now says so); queue re-points to both providers; nothing for you. (3) `tiesConcerning` never refuses (your R20): your `tiesConcerningRefusal` stands as the real answer; case-disclosures' START now says to re-point to it and drop the made-up refusal. Then post COMPLETE.
+
+## B11 · START
+
+START · PEOPLE #15 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 70; K5148)
+
+Depth 2 (BOB #295 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/people tranche/T51`; if a local `job/T51/people` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/people stale/people-local && git checkout -b job/T51/people origin/job/T51/people`. If `job/T51/people` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module people`; record `build/jobs/T51/people.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+1. **The removal marker is on no page** (`diag2-020305.md` §6; people R12): `expunge` leaves a tombstone but no read returns it. The `person` read answers `removed: [{ground, at, by}]` for that person's tombstones, to every viewer who may read the person, never the value. Test: `facts.test.mjs`, after `expunge` (court order, by an administrator) the person read carries the row; a viewer who may not see the person gets none; a withdrawn (not expunged) fact is not in `removed`. Publish the answer as a fixture for screens-investigate.
+2. **`personexpunge` of an unknown id answers in plan-work's words** (`diag2-020305.md` §8; R12): refuse `PERSON_ITEM_NOT_HELD`, your own code, with its member sentence written at its use (`localize`). Test: the code and its `refusal.` row.
+3. **`sourcepersonlinks` by source always answers none** (`diag2-04.md` §2; people R21): `index.mjs:1843` reads `q("source")`, a door stamp deleted from every query. Read `source_id` (declare the field), and refuse a read naming neither. Test at your interface: `source_id` reads the link; a call with neither is refused. REPORT the door case for BOB.
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> people --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.

@@ -1,6 +1,6 @@
 # ratification (T51)
 
-**Status** · session_01V7rHxcZteb1q3kLiGE9C2N · depth 2 · COMPLETE · handled B16
+**Status** · session_016UGXAT7b4bSBYAh8LnmNAf · depth 2 · COMPLETE · handled B20
 
 ## J1 · REPORT
 
@@ -302,3 +302,107 @@ Size (session_01V7rHxcZteb1q3kLiGE9C2N): test runs 9, module lines 4040
 ## J17 · COMPLETE
 
 COMPLETE (START B16, G120b). A sitting now reads the list of known ids once (not once a member); each member's gatefacts, image and list are asked together (gate phase 5 -> 4 object levels, refusal order unchanged); the members' reuse checks run together. Red first on a sitting of 7 (list 7 times, depth 5, reusedparts in flight 1), green after. Counting door (r8-caseratify-calls, unchanged): chain 25 -> 23, 61 -> 60 calls. ratification 329/329, 41 user files 389/389; architecture, coverage 59/59, words, ownership 0; format has one failure not mine (modules.json office-readers path office-xml.mjs, same before my change). Finding for BOB: gatefacts, image and ratifygate remain per member (different bundles); a batch route is plane/control-plane's. Two tests pinning the old call order restated as invariants. Record section 'Fix round 9' pushed.
+
+## J18 · REPORT
+
+REPORT (START B17, cause 27a): the lines that are other modules'.
+1. **control-plane** (Wave B job): (a) fold `session` and `reauthdue` into one hop (the first two events of the door's chain; one saved). (b) the counting test `bio-plane/test/m/control-plane/r10-caseratify-chain.test.mjs` (ratification R60 names it) is control-plane's: its helpers (`r8-kit.mjs`, `wrap-entry.mjs`) are control-plane's and import screens modules, so this module cannot import them without an architecture edge. Text for it: the G59 case of `r8-caseratify-calls.test.mjs` through the counting door, `depth(events, worker) <= 10`, with controls `GOLDEN_KEYS`, `materials_copied`, `container` unchanged; the bar derived: 10 = 1 (admission, folded) + 6 (this module's own, below) + 3 (public-read's assembly, folded). Measured through the door today on this branch: 47 calls, longest chain 15 (the START says 18 before): session, reauthdue, the facts and the sitting's reads, the three reads and the gate, the commit, head, get, put, then the assembly's 5 (recordcasefile with casefilefacts, PUBLISHED.get, the puts, recordcasemanifest, recordcasefile).
+2. **public-read** (the assembly, `publication/worker.mjs assembleCaseContainer`): its 5 sequential hops must be 3: fold `recordcasefile`, `casefilefacts` and the final `recordcasemanifest` + `recordcasefile` into fewer store hops, and issue the bucket gets and puts of the case file in one group of 8 with the heads. Until then the door's chain cannot reach 10, whatever this module does.
+3. The counting test of this module (`r10-chain.test.mjs`) counts only its own calls (the assembly stand-in is no call): bar 6, and it is the same bar the door's test derives for this module's share.
+
+## J19 · COMPLETE
+
+COMPLETE (START B17, fix round 10, Wave A batch 3).
+
+**Cause R27a (G5, E2, `caseratify` 2.8-3.5 s).**
+- Root cause (`ratification/ops.mjs`, `caseCeremony` as the START cites: gate, commit, copy, assembly, reuse): the act's own chain was 10 awaited calls in series before the assembly: the case's facts (1), the three reads (2), then each member's gate facts (3) and gate (4), the commit (5), the copy's head and put (6-7, a get between for a capture), then the members' reuse checks after the assembly (reusedparts, capturelimit, recordreuseverdicts: 3 more). None of the member reads depended on the case's facts, and the reuse checks depend on neither the copy nor the assembly.
+- Fix (ops.mjs): `readFinding` starts a sitting's member reads (gate facts, image, the shared list, and the store-half gate as soon as the three are in) at once, beside `casedocfacts`; `weighFinding` weighs them in the old order (R4's refusals, NO_SIGNERS, the signature, the image, the list, the gate), so every refusal keeps its place; `prepareFinding` (op=ratify) is `readFinding` then `weighFinding`, unchanged for its caller. The members' reuse checks start with the commit's answer and are awaited after the assembly; the phases are still stated once each, in order (`reuse;dur` now spans the overlap). Reads only run early; nothing is written by any of them. What the member is told is unchanged: the answer, its keys, `materials_copied`, `container`, each member's reuse report.
+- Why the tests missed it: `r8-chain.test.mjs` proved that independent reads overlap, never counted a chain; `r8-caseratify-calls.test.mjs` (control-plane) bounds the chain at 25, a figure derived from that day's chain; nothing derived a bound from the 2 s bar.
+- Failing-first test: `r10-chain.test.mjs` (new): a sitting (the case, two findings, one evidence document, a reused part to re-fetch) over a store and buckets that answer after a real wait; the longest chain of calls each beginning after the one before ended, counted by logical sequence, never by time. Bar 6, derived (10 less admission's 1 less the assembly's 3 folded). Seen red at 10 on the unchanged code, green at the bar after. Controls: the answer's golden keys, `materials_copied`, `container`, each member's reuse report and the phases in order; the refusals unchanged (a case that does not exist, a stale sha, a bad member signature, nothing committed, the commit hop never made); `op=publishat` within the same bar.
+- Platform check P (for the redeploy): E2's own sequence on the copy, `Server-Timing` `object-calls;dur`: chain 10 or less, total under 2 s. It needs control-plane's fold and public-read's assembly cut (REPORT above); this module's share is 6.
+
+**Fixtures published** (`bio-plane/test/m/ratification/fixtures.mjs`, made by the real code at test time; `fixtures.test.mjs` calls each and checks the real answer, with a control):
+- `preflightRefusal`: R18's pre-flight for a signer with no attesting key (`NO_ATTESTING_KEY`), and the same pre-flight for the owner as the control.
+- `noCaseDocument`: publication's real `caseDocument` read of an unsigned case document: a stranger, a wrong secret and a missing case alike `NO_CASE_DOCUMENT`; a member and a live grant holder read the document. One stand-in: review's grant (review is later in the order).
+
+**Own fixture lines (19 in the START).** Done: contested.test.mjs:108 (contradiction `candidateReads`), converted-c.test.mjs:415 (capture `recordReuseVerdicts`; the record read back), fixture.mjs:145 (provenance `holdsRegister`), schedule.test.mjs:127 (publish-schedule `scheduleRefusals`), relays.test.mjs:118 (marker control-plane `unknown-op`, accepted). g54-entry.mjs:103 is accepted by a marker, not re-pointed: the entry is bundled into the Miniflare script and runs on workerd, where provenance's fixture (node SQLite worlds) cannot load; re-pointing it made g54-l and g57-l fail "Illegal constructor", so it was undone.
+- `fixtures-own` markers (K5060): `g54-entry.mjs:98` (platform, the reason above).
+- `fixtures-contract` markers (waiting for the provider's `fixtures-run`, `contract-no-run`): answer-envelope `door-helpers` at fixture.mjs:424, g54-entry.mjs:40, g54-paths.test.mjs:448, g57-heal.test.mjs:47; store-door `store-replies` at relays.test.mjs:119, :159, :163, :188; control-plane `unknown-op` at relays.test.mjs:118 (its run is merged: accepted). No `fixtures-generic` marker.
+- Left, named: g54-paths.test.mjs:310, :455 and g57-heal.test.mjs:426 (public-read `assembleCaseContainerRefusal`, K5074: public-read merges after; arrive as a CHANGE); g54-entry.mjs:111 strength and :113 money (FIX-E, their providers merge after); and **g54-paths.test.mjs:109 and :114**: the START names publication's `caseFileLedger`, but those two lines are the stand-in assembly's own refusal answers (`{ok:false, reason: code, code}` for the build's `MATERIAL_MISSING` / `BUCKET_FAILED`), which `caseFileLedger`'s doc itself gives to public-read; the ledger half (owed, next-at, record) is the hand model beside them and re-pointing it to the real ledger would change the time rules these tests pin (grace 120 s, backoff 15 s doubling) in eight tests without removing the two lines. So they wait for public-read's `assembleCaseContainerRefusal` with the three above, and arrive as a CHANGE; BOB may rule otherwise.
+
+**Tests and checks** (from the repository root unless said): ratification suite 335 of 335 green (`node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/ratification/*.test.mjs`); g54-l and g57-l (Miniflare) 17 of 17; control-plane `r8-caseratify-calls.test.mjs` 2 of 2 (chain 15 through the door); the tests of the other modules that name caseratify/ratify (case-authoring, public-read, publication, publish-schedule, plane, op-declarations, screens-publish, affordances, action-holds, case-inputs, screens-action): 496 of 499, the three reds (op-grades `owners`, screens-publish `common` R24, `g54-page` R22) are red at the tranche tip too (inherited, none mine). Process checks: format 178 modules 0 failures; architecture ratification 0 failures; coverage ratification 59 of 59 live ids named, 0 failures; ownership 0 failures (13 files changed); words: no finding in this module; `setup-words/build.mjs --check`: the stale-rows note only (control-plane's rows), no refusal naming this module; fixtures: 15 lines left in this module, all named above as waiting.
+
+Size (session_0187Lt3bgcnMcXFPx6HVxqC5): test runs 14, module lines 4054
+
+## J20 · COMPLETE
+
+COMPLETE (START B18, fix round 10, follow-up 16: test files only). Commit `b2c066da8e` on `job/T51/ratification`, pushed.
+
+**Entries applied.** Follow-up 16, the re-points:
+- `g54-paths.test.mjs`: the ledger's refusal answers (`assemble`, the `next` path and the MATERIAL_MISSING / BUCKET_FAILED path, :109 and :114) now return public-read's real refusals from `assembleCaseContainerRefusal()` (`CASE_FILE_NOT_BUILT`, codes MATERIAL_MISSING and BUCKET_FAILED). Read whole first: its `materialMissing`, `bucketFailed` and `notAssembled` answers are the real ones; they replace the hand-built `{ok:false, reason: code, code}`. The fixture is called once, at import (`REFUSALS`).
+- `g54-paths.test.mjs` :310 and :455 (the sitting refusal, `CASE_FILE_NOT_ASSEMBLED`) take the real `notAssembled` answer.
+- `g57-heal.test.mjs:426` takes the same real `notAssembled` answer (the import is at module load, `NOT_ASSEMBLED`).
+- `g54-entry.mjs:111` (strength) and `:113` (money): not re-pointed; see Deferred.
+
+**Deferred, and why.** `g54-entry.mjs:111` and `:113` keep their stand-ins, marked `// fixtures-own: platform` (the marker is on :111, and covers :113 in the check). The entry is bundled into the Miniflare script and runs on workerd. strength's and money's published fixtures build node:sqlite worlds (`node:sqlite` imports), which cannot load there; the same reason as the existing marker at :98 (provenance). The stand-ins answer only the ok shape the sweep reads (testimony with no legs; a fact not found). Each of those two answers is a real provider's shape, so this is a REPORT, not a silent change: if BOB wants them on the fixtures, the entry needs a node-side variant, which is a change to g54-l's composition, not to this module's tests.
+
+**Findings in another module.** None.
+
+**Fixture markers (K5060).** Added: `g54-entry.mjs:111` (`fixtures-own: platform`, above, covering :111 and :113). No `fixtures-contract` or `fixtures-generic` marker added. No marker removed.
+
+**Tests and checks** (from the repository root unless said):
+- Two edited files: `g54-paths.test.mjs` and `g57-heal.test.mjs`: 33 of 33 green (`node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>`).
+- Ratification suite, all 33 files including g54-l and g57-l: 335 of 335 green, 0 fail, 0 skipped.
+- `checks/fixtures.mjs /home/user/bio ratification --list`: 0 failures (12 accepted; the six that were failing are re-pointed or marked).
+- format: 0 failures (178 modules). architecture: 0 failures. coverage: 59 of 59 live ids named, 0 failures. words: 0 failures. ownership (`tranche/T51`): 4 files changed by ratification (3 tests and this record), 0 failures.
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 1 of 178 (ratification only), affected test files 2 of 2815 (the two I changed, both green above).
+
+**Requirements.** None changed; no requirement id struck. Note for BOB: follow-up 16's R60 point stands (not struck here; control-plane's fold owns it).
+
+Size (session_01GJy1fny8QM6KzhgqNmKu8v): test runs 3, module lines 4054
+
+## J21 · COMPLETE
+
+**Follow-up 52 (B19), the walker's case through the door: done.** Entries applied: the new test file `bio-plane/test/m/ratification/t51-walker-observation.test.mjs` (commit 2e811302a8, on `job/T51/ratification` after the merge of `tranche/T51` at 4277811c00). Product code unchanged. Marked requirement met: **R2** (`op=caseratify`, the gate's `GATE_REFUSED` with `runCaseGate`'s findings; BOB strikes the mark). B18 (a START for RATIFICATION #37) is superseded by B19 and was not applied.
+
+**Cause (one), with K4426's four fields.**
+1. *Root cause, with evidence.* A member's own testified observation holds its bytes only inline in her image (`snapshots/observation-<sha>.txt`), not in the evidence bucket. `ratifyGate`'s `hasCapture` (`bio-plane/src/ratification/index.mjs:514-530`) heads only the bucket. On `ff7c96831e` the signing of the walker's case answered `409 GATE_REFUSED`, finding `PLANE_MISSING_BYTES` ("registered capture is absent from the working bucket") at `snapshots/observation-d8581ad3b21ad93a.txt`, member `INFO-2026-0001-observation`. The fix that makes the gate accept the inline bytes is promotion R28 (`bio-plane/src/gate.mjs`, the register-row probe, K5130), already merged on the tranche. The gate reads `image[r.path]` after `hasCapture`, so the signing passes on the tranche.
+2. *Why the tests missed it.* The sitting fixture (`fixture.mjs`) stubs provenance with no register rows, and the observation case stubs the reach on a clean information document, so no test ever held a register row whose bytes lived in the image. Gap fixed: the new test drives the real plane under Miniflare (the seam kit `control-plane/r8-kit.mjs`): `testify` writes the bytes, a finding of a case draft reaches them, the owner prepares, the author chooses cover then name, and the owner signs with `caseratify` after the password again.
+3. *The walker's exact case, seen failing, then passing.* Red on `ff7c96831e` (worktree of that commit, the new file copied in): both tests fail, the signing with `GATE_REFUSED` / `PLANE_MISSING_BYTES` as above. Green on the job branch (tranche merged): both pass.
+4. *Platform check.* The walker's case runs on the Miniflare plane (the workerd entry `src/plane/index.mjs`, the in-process object and R2 bindings), at the shape the walker used. No live deployment was contacted. Whether the live R2 bucket answers the same way is the redeploy's check (K4428).
+
+**R93 (6) owner-c, re-run.** The second test: owner-c (joined, publish capability, not an owner) signs with her own key after the password again. On the tranche: `CASE_SIGNER_NOT_AN_OWNER` at the commit (membership's `caseAuthority`, `ratification/index.mjs:1234`), as the code intends. On `ff7c96831e`: refused earlier, `GATE_REFUSED` `PLANE_MISSING_BYTES`, so the owner check was never reached. I did not re-run the walker's writer-b or admin-two rows.
+
+**REPORT to BOB (not changed, per B19).** `hasCapture` still answers the bucket only, so for the observation it says `present: false` while the gate's own image probe (gate.mjs R28) says present. The signing is correct, but the two probes disagree. Should `hasCapture` also answer the image's bytes, so both agree? I lean yes, a small change in `ratifyGate`, but it is your ruling; I have not made it.
+
+**Deferred.** None.
+
+**Findings in other modules.** None new. Promotion R28 is the fix and is already merged.
+
+**Process note.** `mail start` first failed: my local `job/T51/ratification` was 1467 commits behind origin, and its pull-rebase conflicted on the Status line of a local-only commit (`737251379e`, not on origin). I kept that commit on a local backup branch, `backup/ratification-start-local-737251379e` (not pushed), reset the job branch to origin, and re-ran `mail start` (027f14bdb6), which succeeded. The START's first-step instructions cover this case; I note it in case the local branch matters.
+
+**Tests and checks** (absolute root `/home/user/bio`, from the process repository):
+- New file, `t51-walker-observation.test.mjs`: 2 of 2 pass on the job branch; 2 of 2 fail on `ff7c96831e` (reasons above).
+- Ratification suite, 34 files (`node --import ./bio-plane/test/platform-sqlite.mjs --test`): 337 of 337 pass, 0 fail, 0 skipped.
+- `checks/format.mjs`: 0 failures (178 modules, 178 requirements files).
+- `checks/architecture.mjs ratification`: 0 failures (46 product files, 248 relative imports).
+- `checks/coverage.mjs ratification`: 59 of 59 live ids named by a test, 0 failures.
+- `checks/words.mjs ratification`: 0 failures (inline 0, plain 0, testcopy 0, missingkey 0, handlist 0).
+- `checks/ownership.mjs ratification tranche/T51`: 1 file changed by ratification, 0 failures.
+- `checks/fixtures.mjs ratification --list`: 0 failures (12 accepted, no invented answer, no stub). No `fixtures-own`/`fixtures-generic`/`fixtures-contract` marker added.
+- Product code unchanged, so `impact.mjs` was not needed.
+
+Size (session_016UGXAT7b4bSBYAh8LnmNAf): test runs 5, module lines 0 (the new test file is 89 lines)
+
+## J22 · COMPLETE
+
+**CHANGE B20 done.** The walker-case test is removed from this branch (commit "ratification: remove the walker-case test", pushed); CONTROL-PLANE #60 adopts it with the red-then-green evidence from J21. No product or test change is left in ratification.
+
+**Correction to J21.** I reported architecture at 0 failures, but the test file was already in the tree when I ran it. Re-run with the file present: 2 failures (imports of `screens-publish/parts.mjs` and control-plane's `r8-kit.mjs`), as B20 said. The file is gone now.
+
+**Checks, after removal** (absolute root `/home/user/bio`):
+- `checks/architecture.mjs ratification`: 0 failures (46 product files, 248 relative imports).
+- `checks/ownership.mjs ratification tranche/T51`: 0 failures (1 file changed by ratification, the job record).
+- `checks/format.mjs`: 0 failures (178 modules). `checks/coverage.mjs ratification`: 59 of 59 live ids named, 0 failures. `checks/words.mjs ratification`: 0 failures.
+
+Size (session_016UGXAT7b4bSBYAh8LnmNAf): test runs 5, module lines 0

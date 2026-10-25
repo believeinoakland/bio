@@ -1,6 +1,6 @@
 # docket (T51)
 
-**Status** · session_01SMUewbpPXf2emYuG2aQvxY · depth 2 · COMPLETE · handled B2
+**Status** · session_01LYRnnKMee8tichiXQJP812 · depth 2 · COMPLETE · handled B4
 
 ## Completion (T51-162, R8)
 
@@ -53,3 +53,132 @@ Size (session_01SMUewbpPXf2emYuG2aQvxY): test runs 9, module lines 1657
 ## J2 · COMPLETE
 
 K4557 (E9) applied in docket: docketpressure asks membership.projectAuthority 'joined' after sight, before any write (docket/index.mjs:538); docketfile answers membership's PROJECT_ACT_NOT_A_PARTICIPANT (:387), one condition one code (K231). Failing-first through the ops map as the invited member: red (mark accepted; old code answered), green after; controls: joined, joining, leaving, unseen, absent entry, nothing written. Also: declared docketpressure and docketprepare (K4208); docketprepare now answers the kind's shelf when none is named (the screens' own call, screens-publish/docket.mjs:44,185, was refused DOCKET_WRONG_SHELF; own-module flaw, requirement line proposed in my record). Docket suite 87/87; users (53 modules, 931 files): 7593/7598, the 3 failures not docket's (R24 plane/release inherited; two flaky, pass alone). Checks 0 failures. No screen reads the old code. Requirement lines to write (R1, R2, R4, R28 wording, R31, Uses) and Size line are in build/jobs/T51/docket.md.
+
+## Fix round 10, Wave A batch 4 (B3)
+
+**Causes done.** Published `bio-plane/test/m/docket/fixtures.mjs` (new), each export made by the real code at test time and called by a test of mine in `fixtures.test.mjs` (R9 / R27 titles) that checks the real answer:
+- `coreDue`: R9, the manager's owed response (`due`), and the empty `{ok:true, items:[], count:0, wrote:false}` read by no viewer (`unread`), a non-manager and a machine.
+- `docketEntryRead`: R27, `docketPressureOf` over marks: a marked entry, one with `pressure: null`, and `NO_SUCH_DOCKET_ENTRY` for an absent and an unseen entry (alike but for the id). The plan names `docketEntry`; the module has no such read, so it is `docketPressureOf` alone.
+- `pressureMarks`: R27, `docketPressureMarks` empty (`marks: []`), with a mark, a refused kind (`DOCKET_PRESSURE_REFUSED`), and unreadable (`DOCKET_UNREADABLE`, no `marks` key). Note for BOB: the plan's "a docket not asked" (filings' `docket: {}`) has no real answer, since a module that is not wired answers nothing; filings keeps `docket: {}` as a module not wired, not as an answer of docket. I made the "refused kind" answer the third real shape.
+
+**Own line done.** publication/stampEditionRefusal: `fixture.mjs:137` now returns the refusal as given; `court.test.mjs` R25 sets `w.stamps.refuse = stampEditionRefusal().noEdition` from `../publication/fixtures.mjs` (FIX-E, merged). No `fixtures-own` or `fixtures-generic` marker added. `checks/fixtures.mjs . docket --list`: 0 failures (was 1).
+
+**Lines left:** none. **Deferred:** none. **Found in other modules:** none.
+
+**Ran.** Docket suite `bio-plane/test/m/docket/`: 90 tests, 90 pass, 0 fail. `impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178, test files 0 of 2775 (test-only change). Checks: fixtures 0 failures; format 0 failures; architecture 15 files, 0 failures; coverage 31 of 31 ids, 0 failures; ownership 0 failures.
+
+Size (session_01CnYEEbvuMRb9yWAomBsnUW): test runs 3, module lines 0
+
+## J3 · COMPLETE
+
+COMPLETE fix round 10 Wave A batch 4. Published docket/fixtures.mjs: coreDue, docketEntryRead, pressureMarks (real code, each tested in fixtures.test.mjs). Re-pointed fixture.mjs:137 to publication's stampEditionRefusal (court.test.mjs R25). No fixtures-own/fixtures-generic markers added. fixtures --list docket: 0 failures. Docket 90/90; impact 0 modules; format, architecture, coverage (31/31), ownership 0 failures. Notes: plan's 'docketEntry' is docketPressureOf (no docketEntry exists); 'a docket not asked' (filings docket:{}) has no real answer, so pressureMarks gives a refused-kind answer instead. Details in build/jobs/T51/docket.md.
+
+## Fix round 10, follow-up 37 (B4, DOCKET #13, session_01XN4PpTaXJFq2tHmnnK6J94)
+
+**Done.** Test files only; no product code changed. Published `coreDueKinds()` in `bio-plane/test/m/docket/fixtures.mjs` (new export): the real `coreDue` answer over real acts in two cases of two projects. Case `CASE-2026-0101` (project P, alice manages) holds a subject's response and a subject's statement (both edition 1), edition 2 ratified with its "What changed" statement ("Corrected the totals."), and a tension on load-bearing finding `INQ-2026-0001-transfers` (candidate `CAND-1`, state `open`). Case `CASE-2026-0202` (project Q, dave manages) holds a subject's statement (edition 1, from `OTHER_SUBJECT`), edition 2 ratified with "What changed" ("Added a permit."), and a tension on load-bearing `INQ-2026-0003-permits` (`CAND-3`, `open`). Returns `{world, case, caseQ, manager, other, response, statementP, statementQ, due, otherDue}`: `due` is alice's real `coreDue({viewer})` (4 items), `otherDue` dave's (3 items). Test: `fixtures.test.mjs`, "R9 fixtures: coreDueKinds ...", which checks kinds, refs, `since`, each statement's `edition`, each edition's `what_changed`, each tension's `member` and `state`, that each manager is told of her own case alone, and that `coreDue({case: caseQ, viewer: alice})` is empty and `one case when named` equals `otherDue`.
+
+**Markers.** None added (`fixtures-own`, `fixtures-generic`): every answer comes from docket's real code at test time.
+
+**Note for the user's re-point (queue-producers, its own job).** Every `statement` item the real code answers carries its `edition`: `docket_record.edition` is NOT NULL and `docketFile` refuses a missing edition (`DOCKET_NO_EDITION`), so no real act yields a statement without one. queue-producers' `words.test.mjs:217` ("a statement stated with no edition") therefore has no real producer. BOB to decide (K4426): the no-edition branch is tested by a stand-in there, or the requirement is read as always carrying an edition.
+The two lines still hand-built on `coreDue` are queue-producers' `docket.test.mjs:36` and `words.test.mjs:217` (op-table); they re-point to `coreDueKinds` in that module's job.
+
+**Deferred:** none.
+
+**Found in other modules:** none caused by this job. `checks/run.mjs` lists failing fixture lines in other modules (2,248 fixture failures, 2,255 `FAIL` lines product-wide); none names a file under `bio-plane/test/m/docket/` or `bio-plane/src/docket/`.
+
+**Ran.**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/docket/fixtures.test.mjs`: 4 pass, 0 fail.
+- Docket suite, `bio-plane/test/m/docket/*.test.mjs`: 91 pass, 0 fail.
+- Users named by `node build/plan/impact.mjs origin/tranche/T51 HEAD` (docket, action-holds, filings, queue-producers, queue; 58 test files): 388 pass, 0 fail.
+- `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio docket --list`: 0 failures.
+- `checks/format.mjs /home/user/bio`: 178 modules, 0 failures.
+- `checks/architecture.mjs /home/user/bio docket`: 17 product files, 0 failures.
+- `checks/coverage.mjs /home/user/bio docket`: 31 of 31 live requirement ids named by a test, 0 failures.
+- `checks/words.mjs /home/user/bio docket`: inline 0, plain 0, testcopy 0, missingkey 0, handlist 0; 0 failures.
+- `checks/ownership.mjs /home/user/bio docket tranche/T51 job/T51/docket`: 3 files changed by docket, 0 failures.
+- `checks/run.mjs /home/user/bio`: exit 1 for the product-wide fixture failures above (none in docket's files); words 0 failures.
+- `bio-plane/src/setup-words/build.mjs --check`: stale `rows.mjs` note only, as expected; no refusal names docket.
+
+Size (session_01XN4PpTaXJFq2tHmnnK6J94): test runs 5, module lines 0
+
+## J4 · COMPLETE
+
+COMPLETE, follow-up 37 (fix round 10). Test files only; no product code changed.
+
+Published `coreDueKinds()` (new export, `bio-plane/test/m/docket/fixtures.mjs`): returns `{world, case, caseQ, manager, other, response, statementP, statementQ, due, otherDue}`. Real acts in two cases of two projects (P managed by alice, Q by dave): a subject's response and statement, edition 2 with "What changed", and a load-bearing tension on P; a subject's statement, edition 2 with "What changed", and a load-bearing tension on Q. `due` (alice, 4 items: response, statement, edition 2, tension CAND-1), `otherDue` (dave, 3 items: statement, edition 2, tension CAND-3). Test in `fixtures.test.mjs`, "R9 fixtures: coreDueKinds ...".
+
+Markers added: none.
+
+Note for BOB (K4426): every real `statement` item carries its edition (`docket_record.edition` NOT NULL; `docketFile` refuses no edition, `DOCKET_NO_EDITION`). queue-producers' `words.test.mjs:217` ("a statement stated with no edition") has no real producer; the decision is yours. queue-producers `docket.test.mjs:36` and `words.test.mjs:217` still hand-build the answer and re-point to `coreDueKinds` in that module's job.
+
+Checks: docket suite 91 pass / 0 fail; fixtures.test 4 / 0; users named by impact (58 files) 388 / 0; checks fixtures (docket) 0, format 0, architecture 0, coverage 31 of 31, words 0, ownership 0; run.mjs: product-wide fixture failures in other modules only (none in docket's files); setup-words stale-rows note only.
+
+Size (session_01XN4PpTaXJFq2tHmnnK6J94): test runs 5, module lines 0
+
+## Fix round 10, follow-up 43 (B5, DOCKET #14, session_01AfpNQasnQVjYv36UwxUmau)
+
+**Done.** Test files only; no product code changed. `coreDueKinds()` (`bio-plane/test/m/docket/fixtures.mjs`) gains a third project R, managed by `hank` (a new member, who is no member of P or Q), with case `CASE-2026-0303` (`caseR`): edition 1 and edition 2 ratified with its "What changed" statement ("Dropped a date."), and an open tension on its load-bearing finding `INQ-2026-0004-hall` (`CAND-4`). Every row is written by publication's `publish` as before; the tension list gains `CAND-4`. Its answers are added as `hankDue` (hank's real `coreDue({viewer})`, edition:2 and tension:CAND-4) and `unseenDue` (alice's real `coreDue({case: caseR, viewer})`, empty). The existing `due`, `otherDue` and `caseQ`/`CASE` answers are unchanged (the old fixture tests pass as before).
+
+**Added to the fixture (for queue-producers' R30 controls):**
+- (a) a case of a project whose owner is not the viewer: `caseR`, read by alice (`unseenDue`: `{ok: true, items: [], count: 0, wrote: false}`), by dave (no item of it), and by its manager hank (`hankDue`).
+- (b) a case with no project: **not made**. The real schema forbids it: publication's `cases.project_id` is `NOT NULL` (`bio-plane/src/publication/schema.mjs`, the `cases` table). The new test asserts the constraint (`INSERT ... NULL` throws `NOT NULL`), so the state is not a real answer and nothing in the fixture fakes it.
+
+**Markers.** None added.
+
+**Tests.** `fixtures.test.mjs`: the existing four plus one new test, `R9 fixtures: coreDueKinds: a case of a project alice cannot see is told to its manager alone …`.
+
+**Note for queue-producers (its own job).** `fixtures.mjs` returns `hankDue` and `unseenDue` for its controls; its `real` list (`due` + `otherDue`) is unchanged, so its current assertions are unaffected by this addition.
+
+**Deferred:** none.
+
+**Found in other modules:** none caused by this job. `setup-words/build.mjs --check` reports a stale `rows.mjs` (its first mismatch is `basis-version-grammar.grammar.name_one_of_the_five`), not docket's.
+
+**Ran.**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/docket/` and `bio-plane/test/m/queue-producers/docket.test.mjs`: 94 pass, 0 fail.
+- `checks/fixtures.mjs /home/user/bio docket --list`: 3336 test files read; 0 failures.
+- `checks/format.mjs /home/user/bio`: 178 modules, 0 failures.
+- `checks/architecture.mjs /home/user/bio docket`: 17 product files, 0 failures.
+- `checks/coverage.mjs /home/user/bio docket`: 31 of 31 live requirement ids named by a test, 0 failures.
+- `checks/words.mjs /home/user/bio docket`: inline 0, plain 0, testcopy 0, missingkey 0, handlist 0; 0 failures.
+- `checks/ownership.mjs /home/user/bio docket tranche/T51`: 0 failures.
+
+Size (session_01AfpNQasnQVjYv36UwxUmau): test runs 3, module lines 1657
+
+## J5 · COMPLETE
+
+COMPLETE, follow-up 43 (fix round 10). Test files only; no product code changed. Commit e192f002bf on job/T51/docket.
+
+Added to coreDueKinds() (bio-plane/test/m/docket/fixtures.mjs), keeping every answer it gives now:
+- (a) a case of a project whose owner is not the viewer: CASE-2026-0303 (caseR), project R managed by hank (a new member). Real acts: edition 1 and edition 2 ratified ("Dropped a date."), an open tension CAND-4 on INQ-2026-0004-hall. New returned fields: hankDue (hank's real coreDue: edition:2, tension:CAND-4) and unseenDue (alice's real coreDue for caseR: empty, wrote false).
+- (b) a case with no project: NOT made. Real schema forbids it: publication's cases.project_id is NOT NULL (bio-plane/src/publication/schema.mjs). A new test asserts the constraint, so the state is not faked.
+
+Test: fixtures.test.mjs new test "R9 fixtures: coreDueKinds: a case of a project alice cannot see ...". Markers added: none.
+
+Ran: docket suite and queue-producers docket.test.mjs 94 pass, 0 fail; checks fixtures (docket) 0 failures, format 0, architecture 0, coverage 31/31, words 0, ownership 0. setup-words --check: stale rows.mjs from basis-version-grammar, not docket's.
+
+Deferred: none. Found in other modules: none caused by this job.
+
+Size (session_01AfpNQasnQVjYv36UwxUmau): test runs 3, module lines 1657
+
+## Fix round 10, final pass cause 1 (B6, DOCKET #15, session_01LYRnnKMee8tichiXQJP812)
+
+**Entries applied (K5148; diag2-10b C4)**
+- R1: `docketFile` keeps the filed `summary` for every kind that has one (one paragraph of at most 600 characters, trimmed); an unusable summary on a kind other than outcome is still not refused and is not kept (`#formRefusal` returns it in `fields.summary`; the filing answers `summary` whenever one was kept, `outcome` still for an outcome only).
+- R4: `docketPrepare` uses the filed summary (`rec.summary`) when the prepare names none, for every kind but outcome (which reads its own from the record); a summary the prepare names is the manager's words and wins. A reaction filed with none, prepared with none, is still `DOCKET_NO_SUMMARY`; `DOCKET_NO_ARCHIVE_COPY` unchanged (specified).
+- Met ids for BOB to strike: R1, R4.
+
+**Tests.** `place.test.mjs` "R1 R4 K5148 …" (red on the earlier code at `filed.summary`, green now): a reaction filed with a summary, then the screen's bare prepare is ok and the statement carries it; a named summary wins; the no-summary control stays `DOCKET_NO_SUMMARY`; a response keeps its summary to the statement. `t45.test.mjs` asserted the old behaviour (a summary on another kind "neither refused nor recorded"); updated to the amended R1: kept when usable, absent when not.
+
+**Why the tests missed it:** `place.test.mjs` and `formats.test.mjs` always passed `summary` to `docketPrepare` directly, and `screens-publish`'s fixture stubs `docketprepare`, so neither side ran the other; `t45.test.mjs` pinned the discard as intended.
+
+**Deferred:** none. **Door case for BOB (K5138):** the through-the-door walk (summary at filing, then prepare as the screen sends it) belongs to control-plane `walk10b-docket.test.mjs`; I added none.
+
+**Found in other modules:** `screens-publish` tests `R24 the module holds no English…` and `R22 G54 …` fail on the tranche with and without my change (inherited).
+
+**Ran:** docket tests 93 pass, 0 fail; dependents public-read 310/0, network-notices 78/0, filings 164/0, case-import 162/0, action-holds 50/0, queue-producers 155/0. Checks (absolute root): format 0 failures, architecture 0, coverage 31 of 31 ids, ownership 0, words 0, `fixtures docket --list` 0 failures, no marker added.
+
+Size (session_01LYRnnKMee8tichiXQJP812): test runs 10, module lines 1657
+
+## J6 · COMPLETE
+
+COMPLETE: B6 cause 1 (diag2-10b C4). docketFile keeps the filed summary for every kind; docketPrepare uses it when none named. Met: R1, R4 (BOB strikes marks). docket 93/0; dependents green; screens-publish R24, R22 G54 fail inherited. Checks all 0. Door case (K5138) for control-plane walk10b-docket: not added by me. Record: build/jobs/T51/docket.md.

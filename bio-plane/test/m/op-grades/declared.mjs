@@ -118,3 +118,10 @@ export async function declaredAliases() {
   const path = join(new URL("../../../../", import.meta.url).pathname, "bio-plane", "src", "op-declarations", "index.mjs");
   return (await import(pathToFileURL(path).href)).OP_ALIASES;
 }
+
+/** The ops of a NON_ACTS table that their owner declares a read (`weight: "read"`), in table order, each with its owner. A read
+ *  its owner words without the "read: " lead holds the owner's sentence (K4168), so it is found by the declaration, not the lead. */
+export async function ownerReads(table) {
+  const { ops, owners } = await collectDeclaredOps(new URL("../../../../", import.meta.url).pathname);
+  return Object.keys(table).filter((op) => ops[op]?.weight === "read").map((op) => ({ op, owner: owners[op], sentence: ops[op].description }));
+}

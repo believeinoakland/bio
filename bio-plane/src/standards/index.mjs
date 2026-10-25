@@ -812,8 +812,10 @@ export class Standards {
     try {
       const c = this.capture;
       const r = c && typeof c.captureAccountsOf === "function" ? c.captureAccountsOf(captureSha, { viewer: INTERNAL_READER }) : null;
+      /* capture records the bare id or `member:<id>` (its R69 reads both as one member); a machine identity is neither */
       return !!r && Array.isArray(r.actors)
-        && r.actors.some((x) => typeof x.actor === "string" && /^member:./.test(x.actor) && !isMachineIdentity(x.actor));
+        && r.actors.some((x) => typeof x.actor === "string" && x.actor.replace(/^member:/, "") !== ""
+          && !isMachineIdentity(x.actor) && !isMachineIdentity(x.actor.replace(/^member:/, "")));
     } catch { return false; }
   }
 
@@ -1367,7 +1369,7 @@ export class Standards {
     if (!r) return null;
     const source = sourceWords(r.capture_sha, safeJson(r.extent_json));
     return { record: r.record_id, through: r.through, source, by: r.author,
-             says: inForceKnownWords({ through: r.through, source, author: r.author }) };
+             says: inForceKnownWords({ through: r.through, source, author: String(r.author ?? "").replace(/^member:/, "") }) };
   }
 
   /** R20: `inForceAt({key | standard, portion?, date, viewer?})` → `{state, why, standard, version}`. With a standard,

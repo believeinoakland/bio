@@ -1,6 +1,6 @@
 # actions (T51)
 
-**Status** · session_01TXuP7EMXudAZjVe2WhZZQT · depth 2 · COMPLETE · handled B4
+**Status** · session_01PKkGxxBeG3fsZEM17Gs4pa · depth 2 · COMPLETE · handled B5
 
 ## Completion (T51-89)
 
@@ -60,3 +60,55 @@ Size (session_01TXuP7EMXudAZjVe2WhZZQT): test runs 17, module lines 3520
 ## J4 · COMPLETE
 
 B3/B4 done on job/T51/actions: tranche/T51 merged; region is-minutes drawn; MINUTES_NOT_PUBLIC_COMMENT (C-117.59) and BAD_MINUTES (C-117.60) raised through their rows, asserted in t51. actions tests 142/142; action-grammar tests (R28 census arm) 80/80 on my branch; words, architecture, coverage, format, ownership 0 failures.
+
+## Fix round 10, Wave A batch 2 (B5)
+
+**Fixtures published** (`bio-plane/test/m/actions/fixtures.mjs`, tested by `fixtures.test.mjs`): `actionRead` and `actionsForRefusal`, each made by the real module at test time. Note for BOB: the plan's line says `actionRead` answers `NO_SUCH_BUNDLE`/`NOT_AN_ACTION`; since R106 (T50) the real `actionRead` answers all three (unknown, unseen, no action) as R43's `NO_SUCH_ACTION`; `NO_SUCH_BUNDLE`/`NOT_AN_ACTION` come from `addresseeSuggest`. The fixtures publish what the code answers; users hand-building `NO_SUCH_BUNDLE` from `actionRead` (escalation `fixture.mjs`:162-165, `draft.test.mjs`:143) copy a shape the module no longer gives.
+
+**Own lines done (4 of 6, plus the retrieval one):** `fixture.mjs`:111 now takes retrieval's `actionRegistrar` (delegating wrapper that also keeps each registration in `reg`); `t12`, `t18`, `write.test.mjs` take conformance's `determinationRead` fixture (viewer `pat`, as the fixture publishes).
+**Left (3 lines in 2 files + 1 inherited):** `t45.test.mjs`:40 and `t50.test.mjs`:27 need determinations with findings' bases (`checked_held`, `accepted` with `matter_stake`, `published`), a compliant outcome, a void determination with causes, and a live superseded one: conformance's `determinationRead` fixture publishes none of these (FIX-E, conformance is earlier; needs a conformance fixture, a product cause for BOB). `t12.test.mjs`:55 is one arm (non-live, no successor, `superseded_by` null) conformance's fixture cannot reach; I kept it as its own test rather than drop it. `t45.test.mjs`:45 is consequences' (not done in this job, as B5 says).
+**Markers added:** none (`fixtures-own` 0, `fixtures-generic` 0).
+
+**Checks:** module tests 151/151; fixtures `--list` 4 failures left (above); words 0 failures; format 0; architecture 0; coverage 76/76; ownership 0. `impact.mjs` lists no source change of mine (tests only).
+
+Size (session_01JVxfm6Xv26CMbdeCJgfGt4): test runs 9, module lines 0
+
+## J5 · COMPLETE
+
+COMPLETE (B5). Published fixtures actionRead, actionsForRefusal (fixtures.mjs, tested). Own lines: fixture.mjs:111, t12:16, t18:16, write:153 re-pointed to retrieval/conformance fixtures. Left: t45:40 and t50:27 need conformance fixture variants (finding bases, void, compliant, live-superseded): product cause for BOB; t12:55 one arm (superseded_by null) unreachable by conformance's fixture, kept as own test; t45:45 is consequences'. Note: real actionRead answers NO_SUCH_ACTION (R106), not NO_SUCH_BUNDLE/NOT_AN_ACTION as the plan says; escalation fixture.mjs:162-165 and draft.test.mjs:143 copy a stale shape. No fixtures-own/generic markers added. Tests 151/151; words, format, architecture, coverage, ownership 0 failures. Details in record.
+
+## Completion of B6 (item 1: actioncreate for a member outside the project)
+
+**Cause** (diag2-04 §10), re-read at `index.mjs` (actionCreate's promote): it passed no `actorMemberId`, so promotion R53's participant check (`filer` null) never ran. **Fix:** `actionCreate` now stamps `actorIdentity`, `actorViewer` and `actorMemberId` (`membership.positionalMember(viewer ?? author, author)`, null for a machine credential), as `intent` does. **Met:** actions R47 (with promotion R53).
+
+**Test** `create-participant.test.mjs`: a stranger's `actionCreate` into a project is refused `PROMOTE_NOT_A_PARTICIPANT` and no action is written (red on the earlier code: accepted); controls: a joined member, an invited member and the owner succeed; the machine path (`class:daemon`) is unchanged.
+
+**Why the tests missed it:** promotion's tests drive `promote` with `actorMemberId` stamped, and actions' tests called `actionCreate({document, author})` with only members of no project or with no non-member case, so the unstamped path was never asked.
+
+**Other promote calls** (`#revise` at 615 and its callers, the calls at ~1607, 1943, 2206, 2323, 2406): these revise an action already filed; I left them unstamped. Stamping them would make promotion's R53 refuse a reader who is not in the project from corresponding on a public action, a policy question, not this cause. REPORT for BOB: say if R53 should also fence revisions by non-participants.
+
+**Checks:** actions tests 154/154 (+3); format, architecture, coverage (76/76), words, ownership 0 failures; `fixtures.mjs actions --list` 4 failing lines, the same as before (t12:55, t45:40, t45:45, t50:27); no marker added.
+
+Size (session_019WFFDn8nuGumB6cnvbuWah): test runs 5, module lines 3525
+
+## J6 · COMPLETE
+
+B6 item 1 done: actionCreate now stamps actorIdentity/actorViewer/actorMemberId, so a stranger is refused PROMOTE_NOT_A_PARTICIPANT, nothing written (create-participant.test.mjs; controls: joined, invited, owner, machine). Met: actions R47. Tests 154/154; format, architecture, coverage 76/76, words, ownership 0; fixtures list unchanged (4). REPORT: other promote calls (revisions of filed actions) left unstamped; stamping them would fence non-participant readers from corresponding: BOB's policy call (see record).
+
+## Completion of B7 (item 1: an entry stored overdue keeps the overdue flag)
+
+**Cause** (diag2-11 §5), re-read at `index.mjs`: `actionOverdue` returned false when `actionClockNext` found no pending entry, and judged only the entries dated `next`, so an entry monitoring's recheck had stored `overdue` (R33) dropped out. **Fix:** `actionOverdue` answers true first when any clock entry is stored `overdue` (no zone needed); `actionClockNext` is unchanged. Every reader (`actionRead`, the derivation for the projection, `openItems`' `overdue_replies`, `derived`) goes through `actionOverdue`, so all follow. **Met:** actions R110 (with R12, R33).
+
+**Test** `t46.test.mjs` (R110): one pending plus one stored overdue gives `clock_next` the pending date and `clock_overdue` true (red on the earlier code: false); only an overdue entry gives `[null, true]`; controls: both pending and the first passed, a met entry (false), a pending entry not yet due (false).
+
+**Why the tests missed it:** `read.test.mjs` tested `clock_overdue` over pending entries only; `t33`/`t46` moved an entry to `overdue` and asserted the write was allowed, never read the flag afterwards.
+
+**For BOB:** escalation's branch order (`clock_overdue` before `!clock_next`) is escalation's own job (its R39), as B7 says.
+
+**Checks:** actions tests 155/155; escalation, action-holds, action-clocks tests 239/239; format 0, architecture 0, coverage 77/77, words 0, ownership 0 failures; `fixtures.mjs actions --list` the same 4 failing lines as before (t12:55, t45:40, t45:45, t50:27); no marker added.
+
+Size (session_01PKkGxxBeG3fsZEM17Gs4pa): test runs 6, module lines 3535
+
+## J7 · COMPLETE
+
+B7 item 1 done: actionOverdue is true when any clock entry is stored overdue; clock_next unchanged. Met: actions R110. t46 test (red before: false; green), controls pending/met/not-yet-due. Actions tests 155/155; escalation, action-holds, action-clocks tests 239/239; format, architecture, coverage 77/77, words, ownership 0 failures; fixtures list unchanged (4 lines). Escalation's branch order is its own job (R39).

@@ -96,3 +96,21 @@ test("R28 op=moneysets is served by the ops map as a read, from the query, and d
   const d = DECLARED_OPS.moneysets;
   assert.deepEqual([d.mutating, d.weight, d.fields.requires, d.fields.accepts], [false, "read", ["concerns"], ["concerns", "purpose", "limit", "after"]]);
 });
+
+test("R12 a trail in a project the viewer cannot see is read exactly as an absent set; the member with sight reads it", () => {
+  const s = world();
+  const f = s.rec();
+  s.m.include({ setId: s.trails[0], factId: f, reason: "follows the transfer", by: BOB });
+  const hidden = s.m.readSet({ setId: s.trails[0], viewer: OUTSIDER });
+  const absent = s.m.readSet({ setId: "MSR-2026-9999", viewer: OUTSIDER });
+  assert.deepEqual(Object.keys(hidden).sort(), Object.keys(absent).sort());
+  assert.deepEqual([hidden.ok, hidden.found, hidden.set_id], [true, false, s.trails[0]]);
+  assert.deepEqual({ ...hidden, set_id: null }, { ...absent, set_id: null });
+  const text = JSON.stringify(hidden);
+  for (const leak of ["PROJ-1", "one", f]) assert.equal(text.includes(`"${leak}"`), false);
+  assert.equal(s.m.readSet({ setId: s.trails[0], viewer: "" }).found, false);
+  const seen = s.m.readSet({ setId: s.trails[0], viewer: BOB });
+  assert.deepEqual([seen.found, seen.set.concerns, seen.set.label, seen.inclusions.map((i) => i.fact_id)], [true, "PROJ-1", "one", [f]]);
+  const bare = s.m.createSet({ purpose: "trail", label: "no project", by: ANN }).set_id;
+  assert.equal(s.m.readSet({ setId: bare, viewer: OUTSIDER }).found, true);
+});

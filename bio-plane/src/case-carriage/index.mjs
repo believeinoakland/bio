@@ -100,10 +100,14 @@ export const obscuredKey = (store, sha) => `${store}/obscured/${sha}`;
 export const DOCUMENT_COPY_BATCH_MAX = 10;
 /** R15 (T51; K4570 G9): the most `copyNow` reads of one document, 2 MiB; a larger one is the alarm's. */
 export const COPY_NOW_MAX_BYTES = boundOf("case", "copy_now_bytes");
+/** R15 (T51; fix round 10, R24 b2; K5057): the size above which a document's bytes are digested by the platform's native
+ *  SHA-256, not the one-shot pure-JS hash that holds the object's thread for the length of a large file. */
+export const NATIVE_DIGEST_MIN_BYTES = 1024 * 1024;
 /** R15: how long after a failed read of the evidence store a queued document is tried again. */
 export const DOCUMENT_COPY_RETRY_MS = 300000;
 
 /* R9, R10: a photo is told by the type recorded with its capture, else its register path's extension (synchronous). */
+const IMAGE_FORMATS = new Set(["jpeg", "jpg", "png", "gif", "webp", "heic", "heif", "avif", "tiff", "tif", "bmp"]);
 const IMAGE_EXT = /\.(jpe?g|jfif|png|gif|webp|heic|heif|avif|tiff?|bmp)$/i;
 /* R8 (K2291 (2)): an entry of an archive's listing that is itself an archive never opened. */
 const ARCHIVE_EXT = /\.zip$/i;
@@ -154,6 +158,12 @@ const HEX64 = /^[0-9a-f]{64}$/;
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : "");
 const te = new TextEncoder();
 const digestOf = (v) => String(v ?? "").trim().replace(/^sha256:/i, "").toLowerCase();
+/* R15 (T51; R24 b2): the platform's SHA-256 of `bytes` as lower-case hex; the same digest the pure-JS hash answers. */
+const nativeSha256 = async (bytes) => {
+  const d = await globalThis.crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(d), (b) => b.toString(16).padStart(2, "0")).join("");
+};
+const jsSha256 = (bytes) => createSha256().update(bytes).hex();
 const shaOf = (text) => createSha256().update(te.encode(String(text))).hex();
 /* R1, R13 (case-grammar R12): the `obscured` a row states, `{copy}` with the copy's digest read lower-case, or null. */
 const obscuredOf = (m) => {
@@ -170,13 +180,15 @@ export class CaseCarriage {
 
   constructor({ storage, record, membership = null, promotion = null, host = null, extraction = null, sources = null,
                 acceptedWork = null, now = null, bucket = null, store = null, cover = null, provenance = null,
-                clean = null } = {}) {
+                clean = null, nativeDigest = null, jsDigest = null } = {}) {
     this.storage = storage;
     this.sql = storage.sql;
     this.bucket = bucket && typeof bucket.put === "function" ? bucket : null;
     this.store = store;
     this.cover = typeof cover === "function" ? cover : coverAreas;
     this.clean = typeof clean === "function" ? clean : cleanDocument;
+    this.nativeDigest = typeof nativeDigest === "function" ? nativeDigest : nativeSha256;   // R15: a test counts the work
+    this.jsDigest = typeof jsDigest === "function" ? jsDigest : jsSha256;
     this.provenance = provenance;
     this.record = record;
     this.membership = membership;
@@ -733,9 +745,25 @@ export class CaseCarriage {
      any home's register path has an image's extension. */
   #isPhoto(sha) {
     const homes = this.#homes(sha);
-    const types = homes.flatMap((h) => this.#entriesFor(h, sha)).map((d) => str(d.capture.content_type).toLowerCase()).filter(Boolean);
+    return this.#judgePhoto(homes.flatMap((h) => this.#entriesFor(h, sha)), homes.map((h) => h.path));
+  }
+
+  /* R1 (K5148): the one rule for a photo, over the provenance documents of a capture and its register paths. An image
+     when a document's `capture.content_type` is an image type; else when its `profile.format.format` names an image
+     (an upload records no content type, only the profile of its bytes), or, with no format, its
+     `profile.source_content_type` is an image type; else, when nothing states a type or a format, by the path's
+     extension. A format or a type that is not an image wins over the extension. */
+  #judgePhoto(docs, paths) {
+    const types = docs.map((d) => str(d.capture?.content_type).toLowerCase()).filter(Boolean);
     if (types.some((t) => t.startsWith("image/"))) return true;
-    return !types.length && homes.some((h) => IMAGE_EXT.test(String(h.path || "")));
+    let stated = types.length > 0;
+    for (const d of docs) {
+      const fmt = str(d.profile?.format?.format).toLowerCase(), declared = str(d.profile?.source_content_type).toLowerCase();
+      if (IMAGE_FORMATS.has(fmt)) return true;
+      if (fmt && fmt !== "undetermined") stated = true;
+      else if (declared) { if (declared.startsWith("image/")) return true; stated = true; }
+    }
+    return !stated && paths.some((x) => IMAGE_EXT.test(String(x || "")));
   }
 
   /* R1, R8: every register row homing a capture on a bundle that exists (provenance R48, record-core R37). */
@@ -791,7 +819,7 @@ export class CaseCarriage {
 
   /* R9, R10: the photo `sha` as `viewer` may see it: `{ok: true, sha, photo}` or NO_SUCH_PHOTO. Held means a register
      row homes it on a bundle that exists; seen means membership's sight admits `viewer` to one such bundle. A photo is
-     told by the `capture.content_type` its home's provenance records, else its register path's extension. */
+     told as R1 tells it (`#judgePhoto`). */
   #photo(captureSha, viewer) {
     const sha = digestOf(captureSha);
     const none = () => refusal("NO_SUCH_PHOTO", localize("case-carriage.index.no_photo_you_can_see", "no photo you can see is held under that digest"), { capture: HEX64.test(sha) ? sha : null });
@@ -808,8 +836,7 @@ export class CaseCarriage {
       if (ok) { seen = h; break; }
     }
     if (!seen) return none();
-    const types = this.#entriesFor(seen, sha).map((d) => str(d.capture.content_type).toLowerCase()).filter(Boolean);
-    const photo = types.length ? types[0].startsWith("image/") : IMAGE_EXT.test(String(seen.path || ""));
+    const photo = this.#judgePhoto(this.#entriesFor(seen, sha), [seen.path]);
     return { ok: true, sha, photo };
   }
 
@@ -983,7 +1010,7 @@ export class CaseCarriage {
         row.refused_code = c.code;
         row.refused_detail = typeof c.detail === "string" ? c.detail : null;
       } else if (c && c.ok === true && c.bytes instanceof Uint8Array) {
-        const copySha = createSha256().update(c.bytes).hex();
+        const copySha = await this.#digest(c.bytes);
         if (await this.#holdCopyBytes(copySha, c.bytes, sha, rects.length > 0))
           Object.assign(row, { sha256: copySha, bytes: c.bytes.length, covered: c.covered, width: c.width, height: c.height });
       }
@@ -1011,7 +1038,7 @@ export class CaseCarriage {
       if (!o || typeof o.arrayBuffer !== "function") return null;
       const bytes = new Uint8Array(await o.arrayBuffer());
       if (bytes.length > COVER_MAX_BYTES) return { tooLarge: true, size: bytes.length };
-      return createSha256().update(bytes).hex() === sha ? { bytes } : null;
+      return (await this.#digest(bytes)) === sha ? { bytes } : null;
     } catch { return null; }
   }
 
@@ -1031,6 +1058,16 @@ export class CaseCarriage {
       await this.bucket.put(obscuredKey(ns, copySha), bytes, { sha256: copySha, customMetadata });
       return true;
     } catch { return false; }
+  }
+
+  /* R11, R15 (T51; R24 b2, K5057): the SHA-256 of a read file's bytes: the platform's native digest over
+     NATIVE_DIGEST_MIN_BYTES, the pure-JS hash for a smaller input or when the native digest fails or answers no digest.
+     Both answer the same lower-case hex; an identifier, so nothing stored changes. */
+  async #digest(bytes) {
+    if (bytes.length > NATIVE_DIGEST_MIN_BYTES) {
+      try { const h = await this.nativeDigest(bytes); if (typeof h === "string" && HEX64.test(h)) return h; } catch { /* the JS hash decides */ }
+    }
+    return this.jsDigest(bytes);
   }
 
   /* R9: record-core's instant, from the module's clock. */
@@ -1350,7 +1387,7 @@ export class CaseCarriage {
       const o = await ev.get(sha);
       if (o && typeof o.arrayBuffer === "function") bytes = new Uint8Array(await o.arrayBuffer());
     } catch { bytes = null; }
-    if (!bytes || createSha256().update(bytes).hex() !== sha) return { failed: true };
+    if (!bytes || (await this.#digest(bytes)) !== sha) return { failed: true };
     if (bytes.length > maxBytes) return { skipped: true };
     if (bytes.length > CLEAN_MAX_BYTES) return tooLarge(bytes.length);
     /* G136c (X21): the attempt is stamped BEFORE the clean, so a cleaner that dies mid-clean is not re-run on every wake;
@@ -1363,7 +1400,7 @@ export class CaseCarriage {
     const format = typeof c.format === "string" ? c.format : null;
     if (c.ok === true && c.clean === true) return { state: "clean", format };
     if (!(c.ok === true && c.bytes instanceof Uint8Array)) return { failed: true };
-    const copySha = createSha256().update(c.bytes).hex();
+    const copySha = await this.#digest(c.bytes);
     if (!(await this.#putDerived(copySha, c.bytes, { derived: "cleaned", original: sha, label: COPY_CLEANED_LABEL })))
       return { failed: true };
     return { state: "copy", sha256: copySha, bytes: c.bytes.length, format };

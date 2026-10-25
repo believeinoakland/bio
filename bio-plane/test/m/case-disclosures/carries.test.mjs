@@ -12,9 +12,12 @@ import { CASE_DISCLOSURE_CHECKS, carriesBodyLines, chainsOf, materialHeld, mater
 import { GRADING_METHOD_VERSION, DEPTH_BOUND, recomputePair } from "../../../src/strength/index.mjs";
 import { CATALOG_VERSION } from "../../../src/promotion/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/index.mjs";
+import { contentIdFor } from "../../../src/content/index.mjs";
 import { CASE_DOCUMENT_FORMAT, extractedTextOf, materialBlockLines, methodBlockLines, materialsOf, methodOf, GRADING_FACT_FIELDS,
          gradingFactsLines, passagesLines, gradingFactsOf, passagesOf } from "../../../src/case-grammar/index.mjs";
 import { word, localize } from "../../../src/setup-words/index.mjs";
+import { factUnavailable } from "../promotion/fixtures.mjs";
+import { gradingFactsUnread } from "../strength/fixtures.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q", Q3 = "INQ-2026-0003-q";
@@ -169,7 +172,7 @@ test("R7: material_attestations states, per material, the attesting member's sig
                              word("case-disclosures.with_their_signature")].join(", "))])
     assert.ok(body.includes(s), s);
   /* no producing group: the group row names none, and the words say "the group" */
-  const g = world({ deps: { promotion: { fact: () => ({ ok: false, reason: "NO_SUCH_FACT" }) } } });
+  const g = world({ deps: { promotion: { fact: () => factUnavailable() } } });
   g.member("alice"); g.doc(DOC); g.finding(Q, [{ target: DOC }]);
   const og = blocks(g, [Q]).out;
   assert.deepEqual([og.group, og.materials.attestations.at(-1).by], [null, null]);
@@ -263,10 +266,12 @@ test("R15: findingFacts answers one grading_facts row per leg of each finding re
   const w = setup();
   const a = w.doc(DOC, {}, { receipt: true });
   w.doc(DOC2);
-  const cid = sha("passage of DOC");
+  const cid = contentIdFor(a, { kind: "doc-para", para: 1 }, null);
   w.content(cid, a, DOC, "paragraph 1", canonicalJson({ kind: "doc-para", para: 1 }));
-  const gone = sha("passage nobody indexed");
+  const chain = [{ kind: "doc-para", para: 2 }];
+  const gone = contentIdFor(sha("unindexed"), { kind: "doc-para", para: 9 }, chain);
   w.content(gone, sha("unindexed"), DOC2, "paragraph 9", canonicalJson({ kind: "doc-para", para: 9 }));
+  w.st.sql.exec("UPDATE content SET chain = ? WHERE content_id = ?", canonicalJson(chain), gone);
   w.finding(Q2, [{ target: DOC2, grade: "C", grade_axis: "capture", grade_source: "capture" }]);
   w.finding(Q, [{ target: DOC, content_id: cid, grade: "B", grade_axis: "capture", grade_source: "capture" },
                 { target: Q2 }, { target: DOC2, content_id: gone }]);
@@ -287,12 +292,19 @@ test("R15: findingFacts answers one grading_facts row per leg of each finding re
   assert.ok(GRADING_FACT_FIELDS.length > 2);
   const p = f.passages.filter((x) => x.finding === Q);
   assert.deepEqual(p.find((x) => x.content_id === cid), { finding: Q, ord: 0, content_id: cid, capture_sha: a,
-    extent: canonicalJson({ kind: "doc-para", para: 1 }), chain: null, quoted: `the text of ${DOC}` });
+    extent: { kind: "doc-para", para: 1 }, chain: null, quoted: `the text of ${DOC}` });
+  /* R15 (K5148): the extent is the canonical extent object and the chain its value or null, so the checker recomputes each content id */
+  for (const row of f.passages) {
+    assert.equal(typeof row.extent, "object", `${row.content_id} extent`);
+    assert.ok(row.chain === null || Array.isArray(row.chain), `${row.content_id} chain`);
+    assert.equal(contentIdFor(row.capture_sha, row.extent, row.chain), row.content_id, `${row.content_id} recomputes`);
+  }
   assert.equal(p.find((x) => x.content_id === gone).quoted, null, "none held there: null, never filled");
+  assert.deepEqual(p.find((x) => x.content_id === gone).chain, chain, "a held chain is its value, parsed");
   assert.deepEqual(passagesOf(fm)[Q].map((x) => x.content_id).sort(), p.map((x) => x.content_id).sort());
   assert.ok(extractedTextOf(w.extraction.unitsOf(a).units).includes(JSON.stringify(`the text of ${DOC}`)));
   /* a refusing or throwing gradingFacts: no row, answered in unread */
-  for (const gf of [() => ({ ok: false, reason: "NO_SUCH_INQUIRY" }), () => { throw new Error("down"); }]) {
+  for (const gf of [() => gradingFactsUnread(), () => { throw new Error("down"); }]) {
     const x = world({ deps: { strength: { gradingFacts: gf } } });
     const out = x.cd.findingFacts([{ id: Q, member: Q }, { id: Q, member: Q2 }], V("alice"));
     assert.deepEqual([out.grading, out.passages, out.unread.map((u) => u.finding)], [[], [], [Q]]);

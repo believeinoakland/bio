@@ -802,8 +802,8 @@ export class Retrieval {
      too. The rows came through the viewer's gate (R28), so the ids read here are ones the viewer may see. */
   #documentsOf(ids, withConclusion) {
     const out = new Map(), uniq = [...new Set(ids.filter((i) => typeof i === "string" && i))];
-    for (let i = 0; i < uniq.length; i += 200) {
-      const part = uniq.slice(i, i + 200), marks = part.map(() => "?").join(",");
+    for (let i = 0; i < uniq.length; i += SELECTION_ID_CHUNK) {   /* R98: within the plane's 100-variable bound (D-36) */
+      const part = uniq.slice(i, i + SELECTION_ID_CHUNK), marks = part.map(() => "?").join(",");
       const sel = withConclusion ? ", bp.fm_json AS fm" : "", join = withConclusion
         ? ` LEFT JOIN ${PROJECTION_TABLE} bp ON bp.bundle_id = b.bundle_id` : "";
       for (const r of this.#rows(`SELECT b.bundle_id, b.title${sel} FROM bundles b${join} WHERE b.bundle_id IN (${marks})`, ...part)) {
@@ -1414,8 +1414,10 @@ export class Retrieval {
     if (!sel) return { ok: false, reason: "NO_SUCH_SELECTION", detail: "unknown, released, or expired" };
     /* END DEC-49 REGION is-selection-known */
     /* Ownership is enforced, not inferred from the handle being hard to guess. */
+    /* DEC-49 REGION is-selection-yours — C-33.59. */
     if (!owner || sel.owner !== owner)
-      return { ok: false, reason: "NOT_YOURS", detail: localize("retrieval.index.selection_readable_by_credential", "a selection is readable only by the credential that made it") };
+      return { ok: false, reason: "SELECTION_NOT_YOURS", detail: localize("retrieval.index.selection_readable_by_credential", "a selection is readable only by the credential that made it") };
+    /* END DEC-49 REGION is-selection-yours */
     const now = new Date(this.#selNowMs());
     const expires = new Date(now.getTime() + SELECTION_TTL_MS).toISOString();
     this.#sql.exec(`UPDATE selections SET touched=?, expires=? WHERE handle=?`, now.toISOString(), expires, handle);
@@ -1423,7 +1425,7 @@ export class Retrieval {
   }
 
   /** R77 (N729; K1991, K2092): what `selectionResolve` answers at `weight: "report"` — the members re-resolved under
-   *  the current viewer, with the drift; NO_SUCH_SELECTION for an unknown, released or expired handle, NOT_YOURS for
+   *  the current viewer, with the drift; NO_SUCH_SELECTION for an unknown, released or expired handle, SELECTION_NOT_YOURS (R99) for
    *  another owner's — and it writes nothing: no sweep, no extended life, no column of any selection row changed, so an
    *  expired selection not yet swept answers NO_SUCH_SELECTION and stays as it was. `expires` is the selection's own.
    *  Never throws: a selection that cannot be read answers as one not held. Not an op (`answers` R28 reads it). */
@@ -1434,7 +1436,7 @@ export class Retrieval {
       const sel = typeof handle === "string" && handle ? this.#one(`SELECT * FROM selections WHERE handle=?`, handle) : null;
       if (!sel || sel.expires < this.#nowIso()) return none;
       if (!owner || sel.owner !== owner)
-        return { ok: false, reason: "NOT_YOURS", detail: localize("retrieval.index.selection_readable_by_credential", "a selection is readable only by the credential that made it") };
+        return { ok: false, reason: "SELECTION_NOT_YOURS", detail: localize("retrieval.index.selection_readable_by_credential", "a selection is readable only by the credential that made it") };
       return this.#selectionAnswer(sel, viewer, "report", sel.expires);
     } catch { return { ...none, detail: localize("retrieval.index.selection_not_read_not_held", "the selection could not be read, so it is answered as one not held") }; }
   }
@@ -1531,7 +1533,7 @@ export class Retrieval {
   selectionRelease({ handle = null, owner = null } = {}) {
     if (!owner) return { ok: false, reason: "NO_OWNER" };
     const sel = handle ? this.#one(`SELECT owner FROM selections WHERE handle=?`, handle) : null;
-    if (handle && (!sel || sel.owner !== owner)) return { ok: false, reason: "NOT_YOURS" };
+    if (handle && (!sel || sel.owner !== owner)) return { ok: false, reason: "SELECTION_NOT_YOURS" };
     const before = this.#one(`SELECT count(*) c FROM selections WHERE owner=?`, owner).c;
     this.record.transact(() => {
       if (handle) {

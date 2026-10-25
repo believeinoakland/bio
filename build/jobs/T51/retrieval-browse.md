@@ -1,6 +1,6 @@
 # retrieval-browse (T51)
 
-**Status** · session_01QPk5CHNKGRuomEEUu9w4Zn · depth 2 · COMPLETE · handled B12
+**Status** · session_01DZGdo16CETLocZnm2PWpbh · depth 2 · COMPLETE · handled B14
 
 ## Completion (T51-29)
 
@@ -162,3 +162,36 @@ Size (session_01QPk5CHNKGRuomEEUu9w4Zn): test runs 3, module lines 1427
 ## J8 · COMPLETE · re B12
 
 B12 done: R17a test renamed to R21; g41-findin.test.mjs re-pointed to provenance's homeOfHomed. Tests 66/66, coverage 21/21, format 0 failures; fixtures list: only t36:139, t37:172, words:60 left (events, entities). Size (session_01QPk5CHNKGRuomEEUu9w4Zn): test runs 3, module lines 1427
+
+## Completion (follow-up 22, B13)
+
+**Entries applied.** Follow-up 22 (test files only): `bio-plane/test/m/retrieval-browse/findin.test.mjs` gains a test under the marker `// fixtures-run: screens-daily findin-term-part`, titled R21 and R17a: a find over a held document whose term hit lies in a footnote part answers a term item with `part` `footnote`. It runs the real find-in code (the same world and `run` helper as the R21 test above it). No source changed: `bio-plane/src/retrieval-browse/` is untouched (1427 lines).
+
+**Not found, reported to BOB.** The START puts screens-daily's hand-built answer at `bio-plane/test/m/screens-daily/find-in.test.mjs:278` with the marker `fixtures-contract: retrieval-browse findin-term-part`. On `origin/tranche/T51` and on the origin branches whose names carry screens-daily, nothing carries `findin-term-part`, and the file at line 278 has no such marker. So I could not compare the real answer with the hand-built one: the test uses R21's shape and the real code, and reports no difference. The fixtures check now lists my marker as `orphan-run` (`findin.test.mjs:407`) until screens-daily's marker merges. Once it does, the pair should read accepted; if it does not, the marker needs a BOB ruling.
+
+**Fixtures.** `checks/fixtures.mjs /home/user/bio retrieval-browse --list` now: `contract screens-daily findin.test.mjs:407 fail [orphan-run]` (above); `fixture.mjs:175,176` accepted(selection-read); still left, waiting on events and entities (named in the earlier completions): `t36.test.mjs:139`, `t37.test.mjs:172`, `words.test.mjs:60`. No `fixtures-own` or `fixtures-generic` marker added.
+
+**Tests and checks.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/retrieval-browse/*.test.mjs` (from the repository root): 67 tests, 67 pass, 0 fail (the two R21 tests green on the first run; the new test is the second). Checks from the process repository with the absolute root: format 0 failures (178 modules); architecture 0 failures (20 product files); coverage 0 failures (21 of 21 live ids named); words 0 failures (3291 literals); ownership 0 failures (1 file changed by retrieval-browse since tranche/T51, the test file). Root `npm ci` failed only because the repository has no root `package.json`; the tests run from the existing `bio-plane/node_modules`.
+
+Size (session_016H9ARBfQmEpWFFdjSd6HHm): test runs 2, module lines 1427
+
+## J9 · COMPLETE · re B13
+
+Follow-up 22 done on job/T51/retrieval-browse (6ac1fd45c3). findin.test.mjs gains the test marked fixtures-run: screens-daily findin-term-part (R21, R17a): a footnote part's term hit answers part footnote, by the real find-in code. No source changed. Checks: format, architecture, coverage (21/21), words, ownership 0 failures; module tests 67/67. Not found: the screens-daily marker fixtures-contract: retrieval-browse findin-term-part (find-in.test.mjs:278) is on neither origin/tranche/T51 nor any origin branch I searched, so the comparison with its hand-built answer is not made; the check lists my marker as orphan-run until it merges. Left, waiting on events and entities: t36:139, t37:172, words:60. Full detail: build/jobs/T51/retrieval-browse.md, 'Completion (follow-up 22, B13)'. Size (session_016H9ARBfQmEpWFFdjSd6HHm): test runs 2, module lines 1427
+
+## Completion (fix round 10, final pass; B14)
+
+**Met:** R2's amended text (K5148; WALK-FINAL-08 D5): `matchRequirements` (`findin.mjs`) now cuts sentences with `sentencesOf`: a stop (`.` `!` `?` `;`) ends a sentence only before whitespace and a capital (a closing quote or bracket may come between) or at the end of the text; a `.` after a known abbreviation (Mr, Sec, No, Cal, Civ, v and the like) does not end one; a line break always does. So "Section 8.22.050 No landlord shall ..." is found whole from "Section", and "The Clerk shall publish it. The budget is $4.2 million." still gives one requirement sentence.
+
+**Cause 1 (root cause, why missed).** Root cause: `findin.mjs` (was :200) `/[^.!?;\n]+[.!?;]?/g` cut at any stop. Missed because every requirement fixture was plain prose with a final stop only.
+**Failing-first:** `findin.test.mjs:265` (R2, K5148), seen red on the old splitter (it answered `'050 No landlord shall increase the rent.'` for "Section 8.22.050 No landlord ..."), green on the new. A first draft of the fix looped forever at the end of the text (`"".includes` is true); caught by the module run, fixed (`findin.mjs` `sentencesOf`, the stop-run scan is bounded by the text length).
+**Existing test changed to the amended R2:** `findin.test.mjs` R2 fixture "file; the fee must be paid!" became "file; The fee must be paid!" (a `;` before a lower-case word no longer ends a sentence under R2's text); the lower-case case is now asserted as one sentence in the new test.
+**Other splitters:** grep `[^.!?;` across `bio-plane/src/` finds only this one (the generated `case-checker/program.mjs` holds none; `reading-pipeline/html.mjs:80` already requires whitespace after a stop and is a different purpose). Nothing to report.
+
+**Tests and checks.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/retrieval-browse/*.test.mjs`: 68 tests, 68 pass, 0 fail (it did not exit by itself without `--test-force-exit` in the first, looping run; the final run is with it, its count equals the files' sum). format 0 failures; architecture 0 (20 files); coverage 0 (21 of 21 ids named); ownership 0 (3 files: source, test, record); the words check lists findings only in other modules (control-plane, host-governor). `checks/fixtures.mjs /home/user/bio retrieval-browse --list`: no new line; the earlier `orphan-run` is gone; left, as before and waiting on events and entities: `t36.test.mjs:139`, `t37.test.mjs:172`, `words.test.mjs:60`. No marker added. Impact: `findin.mjs` `matchRequirements` is an internal export; `retrieval` still holds its own copy until T51-42.
+
+Size (session_01DZGdo16CETLocZnm2PWpbh): test runs 4, module lines 1449
+
+## J10 · COMPLETE
+
+B14 done on job/T51/retrieval-browse. R2 (K5148, D5) met: a stop ends a sentence only before whitespace and a capital or at the end, not inside a number/citation/after a known abbreviation; line break always ends one (findin.mjs sentencesOf). Failing-first findin.test.mjs:265 red on old splitter ('050 No landlord...'), green now. One existing R2 fixture changed to the amended text ('; the fee' -> '; The fee'). No other splitter in src/ to report. Tests 68/68 under the shim; format, architecture, coverage (21/21), ownership 0 failures; words findings only in other modules; fixtures: no new line (t36:139, t37:172, words:60 still wait on events/entities); no marker added. Size (session_01DZGdo16CETLocZnm2PWpbh): test runs 4, module lines 1449

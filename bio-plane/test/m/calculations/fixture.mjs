@@ -22,6 +22,7 @@ import { observationLogOf } from "../../../src/observation-log/index.mjs";
 import { calculationsOf } from "../../../src/calculations/index.mjs";
 import { dayRange } from "../../../src/civil-time/index.mjs";
 import { localize } from "../../../src/setup-words/index.mjs";
+import * as eventsFixtures from "../events/fixtures.mjs";
 
 export const sha = (s) => createHash("sha256").update(s, "utf8").digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -93,6 +94,7 @@ export function progressionsProvider() {
  *  every other read is the real module's. `hide(eventId, viewer)` keeps a use from one viewer (R40's sight). */
 export function usesProvider(w) {
   const uses = [];
+  let kindRefusal = null;
   const hidden = new Map();
   const seen = (e, viewer) => !(hidden.get(e.event_id) || new Set()).has(viewer);
   let n = 0;
@@ -120,7 +122,7 @@ export function usesProvider(w) {
     },
     usesOf({ provision = null, decider = null, subject = null, kinds = null, after = null, limit = 100, viewer = null } = {}) {
       if (Array.isArray(kinds) && kinds.some((k) => !["discretion", "waiver", "assessment"].includes(k)))
-        return { ok: false, reason: "KIND_NOT_DISCRETION", detail: "a use is of kind discretion, waiver or assessment" };
+        return (kindRefusal ??= eventsFixtures.usesOf().refused);   /* events' own refusal, made by its real code (K5044) */
       const has = (e, role, id) => e.participants.some((p) => p.role === role && p.entity_id === id);
       const pv = (e) => e.use.provision;
       let list = uses.filter((e) => seen(e, viewer) && (!kinds || kinds.includes(e.kind))
@@ -233,6 +235,8 @@ export function world({ now = NOW, construct = true, profiles = [PROFILE], evide
     onFactChanged: (m, fn) => realMoney.onFactChanged(m, fn),
     withdrawFact: (a) => realMoney.withdrawFact(a),
     markIngest: (k, open) => realMoney.markIngest(k, open),
+    checkConstant: (a) => realMoney.checkConstant(a),
+    factBySource: (a) => realMoney.factBySource(a),
   };
   const duties = dutiesOf(host, { record, membership, entities, standards, events, money: realMoney, provenance: prov, content, now: () => clock.now });
   if (typeof duties.migrate === "function") duties.migrate();

@@ -1,6 +1,6 @@
 # strength (T51)
 
-**Status** · session_01QZu1kbM1Tfpcwi3si6nhVz · depth 2 · COMPLETE · handled B15
+**Status** · session_01KLPsZDDduC4727bYshWARJ · depth 2 · COMPLETE · handled B18
 
 ## J1 · REPORT
 
@@ -240,3 +240,43 @@ Size (session_01QZu1kbM1Tfpcwi3si6nhVz): test runs 9, module lines 3048
 ## J14 · COMPLETE
 
 COMPLETE (B14, fix round 6, G12c provider): inquirystrength answers `ids` (at most 50; body list or comma-separated query) as {ok, results:{id: the single answer}}, each id gated as the single read (a hidden id keeps its NO_SUCH_BUNDLE result, never omitted); >50 / non-ids BAD_IDS, none NO_ID; DECLARED_OPS.inquirystrength added (K4208). New requirement R44 proposed in J13 for you to write; R41's list gains inquirystrength. Failing-first batch.test.mjs red then green; strength 182/0; op-declarations 149/0, op-grades 227/0, screens-inquiry 486/0; checks: ownership 0, coverage 0, words 0, architecture 0 (format 1 failure in build/plan/next.md:38, yours). For store-door: PROJECT_NAMING_READS.inquirystrength must name `ids` too. Nothing deferred. See J13.
+
+## Fix round 10, Wave A batch 3 (STRENGTH #22)
+
+Causes done: published `bio-plane/test/m/strength/fixtures.mjs` with four fixtures, each made by strength's real code at call time and checked by `fixtures.test.mjs` (4 tests): `gradingFactsUnread` (real `gradingFacts` over an unknown inquiry: NO_SUCH_BUNDLE naming the target; the NO_SUCH_INQUIRY the users' tests name is not a strength code, so their re-point takes the fixture's real code), `strengthBarSet` (real ok answer of `strengthBarSet`), `strengthOfNoId` (NO_ID), `testimonyCorroboration` (`{ok:true, legs:[]}`).
+
+Lines done (FIX-E, promotion's published fixtures): `fixture.mjs` promotion `fact` now `factUnavailable()`; `projectbar.test.mjs` `refusal = staleBaseRefusal()`. `fixtures.mjs --list` for strength: 1 line left, `fixture.mjs:140` money op-table (FIX-E, provider money not yet merged; arrives as a CHANGE). No `fixtures-own` or `fixtures-generic` marker added.
+
+Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/strength/`: 186 pass, 0 fail. Checks: format 0 failures; architecture 0; coverage 44 of 44 ids; ownership 5 files, 0 failures; `impact.mjs origin/tranche/T51 HEAD`: 0 affected modules. `checks/run.mjs`: no finding in strength other than the money line above.
+
+Size (session_01JmYPC9c3SBS7Z6uwYREAt2): test runs 5, module lines 3048
+
+## J15 · COMPLETE
+
+Wave A batch 3 done: fixtures.mjs published (gradingFactsUnread, strengthBarSet, strengthOfNoId, testimonyCorroboration; note the unknown-inquiry code is NO_SUCH_BUNDLE), 2 promotion lines re-pointed; 1 line left (money op-table, awaits money). Module tests 186 pass; checks green. See record.
+
+### B17 CHANGE (money line)
+
+Merged `origin/tranche/T51`. `fixture.mjs` money `readFact` now answers with money's published fixtures: `readFactNotFound()` for an unheld id, and `readFactOf()`'s real envelope carrying the fact the test holds. `fixtures.mjs --list` for strength: 0 failures. Strength tests 186 pass; format, architecture, coverage (44 of 44), ownership: 0 failures. No `fixtures-own` or `fixtures-generic` marker added.
+
+Size (session_01JmYPC9c3SBS7Z6uwYREAt2): test runs 7, module lines 3048
+
+## J16 · COMPLETE · re B17
+
+B17 done: money readFact re-pointed to readFactNotFound/readFactOf; fixtures.mjs --list for strength at 0; strength tests 186 pass; format, architecture, coverage, ownership 0 failures; no fixtures-own/generic markers.
+
+## J17 · COMPLETE · re B18
+
+B18 done (fix round 10, item 74): strength R45 is met.
+
+- `projectBarSet` takes `expected` (`{capture, connection}`, each null for none). It is compared axis by axis with R14's answer for the bar now held, after every other refusal and before anything is written. A changed bar writes nothing and answers `BAR_STALE` (new row C-107.5, `checks.mjs`; sentence a `localize("refusal.BAR_STALE", …)` stand-in for the design list) with `previous` (the bar now held) and `project`. `expected` absent or null keeps R40's last-writer behaviour. An `expected` that is not a pair of grades-or-null is `BAD_GRADE` with `axis: "expected"`. The sentence names the bar, never who changed it. The DEC-49 region `is-project-bar-fresh` is added. `projectbarset`'s declared `fields.accepts` gains `expected` (R41).
+- Fixture published: `projectBarStale()` in `fixtures.mjs` (screens-inquiry draws it), checked in `fixtures.test.mjs`. The project world the bar tests used moved to `projectbar-world.mjs`, so the fixture and `projectbar.test.mjs` share one world.
+- Met ids for BOB to strike: R45.
+- Failing-first: seven R45 tests in `projectbar.test.mjs`; five were red on the old code (the second set succeeded), green now. Two older row-count assertions (`reads.test.mjs` C-107.3, `vocabulary.test.mjs` R28) now count the new row.
+- Why the tests missed it: `projectbar.test.mjs` and `strengthbarset.test.mjs` set the bar in sequence by one writer; no test held two views, and promotion's CAS tests use an explicit `base`, while `projectBarSet` read its base at write time so the CAS always passed.
+- Tests: strength 194 pass (the files run alone sum to 194). The users of `projectbarset` (op-declarations, op-grades, affordances, screens-inquiry project, control-plane, store-request): 92 of 94 pass; the two failures are credentials `R83` tests in control-plane `t47-door.test.mjs` and `store-request/inner-request.test.mjs`, which fail identically on `tranche/T51` (not mine).
+- Checks (absolute root): format 0; architecture 0; coverage 45 of 45; ownership 0 (9 files); words 0; `fixtures --list` strength: no failing line, no marker added.
+- REPORT, row census: C-107.5 `BAR_STALE` is a new refusal row, so `row-census.test.mjs` is red until the layer-2 stamp (current.md rule); `bio-plane/test/fixtures/row-census-*.jsonl` and the AWAITING_STAMP list are promotion's.
+- Deferred: nothing.
+
+Size (session_01KLPsZDDduC4727bYshWARJ): test runs 12, module lines 3081

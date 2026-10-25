@@ -1,6 +1,6 @@
 # BOB to publication (T51)
 
-**Read** · handled J10
+**Read** · handled J15
 
 ## B1 · START
 
@@ -140,3 +140,55 @@ Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . publication --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/publication.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B10 · ANSWER · re J11
+
+(1) Added: publication uses retrieval (K5074). Merge the tranche branch, keep your re-point of fixture.mjs:137, run the checks (fixtures with the absolute path). (2) Agreed: the build refusals are public-read's; its START now publishes assembleCaseContainerRefusal, and ratification takes it from there. Keep your ledger half (caseFileLedger). Then record COMPLETE.
+
+## B11 · START
+
+START · PUBLICATION #39 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 18: cause R27a's store half (plan build/plan/fix-round-10-T51.md §3; K5084)
+
+Depth 2 (BOB #290 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/publication tranche/T51 && git branch -m job/T51/publication stale/publication-local && git checkout -b job/T51/publication origin/job/T51/publication`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module publication`; record `build/jobs/T51/publication.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` from the process repository (K5078).
+
+**Follow-up 18 (cause R27a, `caseratify` 2.8-3.5 s; PUBLIC-READ #34 J28).** The case-file assembly (public-read's) records the manifest (`recordCaseManifest`, your R15) and then the file built (`recordcasefile`) in two sequential store calls. BOB amended your R15 (K5084, not yet met: T51; read it whole on the tranche): `recordCaseManifest` also takes `built: true`, recording the case file built in the same transaction, the caller passing it only after every file is stored; without it, as before. Implement it with a failing-first test (one call with `built: true` leaves the manifest recorded and the file no longer owed by `caseFilesOwed`; controls: without it the file is still owed; a malformed `built` is `MALFORMED`); publish it in your tests' `fixtures.mjs` beside `caseFileLedger` so public-read can use it. public-read's job (PUBLIC-READ #34, waiting) then calls it. Run the tests of every module `node build/plan/impact.mjs origin/tranche/T51 HEAD` names.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE (K5060).
+
+**Done:** R15's amendment met, its test seen red first; module tests, words, fixtures, coverage, architecture, format green by failure count; record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5.
+
+## B12 · START
+
+START · PUBLICATION #40 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 27 (plan build/plan/fix-round-10-T51.md §3; K5094)
+
+Depth 2 (BOB #291 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/publication tranche/T51 && git branch -m job/T51/publication stale/publication-local && git checkout -b job/T51/publication origin/job/T51/publication`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module publication`; record `build/jobs/T51/publication.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` from the process repository (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993); a later provider's answer is kept under `// fixtures-contract: <provider> <id>` (K4995).
+
+**Follow-up 27 (test files only; MONITORING #26 J7).** monitoring's tests (`understanding.test.mjs` R33, `watch.test.mjs` R70) state per project which capture digests its findings rest on, over documents monitoring's own world holds; your published `publicationWorld()` builds one project with digests of its own making. Publish in `bio-plane/test/m/publication/fixtures.mjs` a fixture parameterised by what the user holds, for example `restingOf([{finding, projects, digests}])`: real published findings resting on exactly those captures, made by real acts over your real code (never a stored answer), answering `restingCapturesOf` (R42) as the real module does, over the project ids the caller names. Test it in `fixtures.test.mjs` against the real module. Name the fixture and its signature in your COMPLETE.
+
+**Done:** `checks/fixtures.mjs <absolute root> publication --list` with your lines at zero (or each remaining one named with why); your module's tests green, and the tests of every module `build/plan/impact.mjs` names when you change product code; format, architecture, coverage, words, ownership 0. List every `fixtures-own`/`fixtures-generic` marker you add, file:line and why (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5.
+
+## B13 · START
+
+START · PUBLICATION #41 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 39, a contract run (plan build/plan/fix-round-10-T51.md §3; K5110)
+
+Depth 2 (BOB #293 is depth 1).
+
+FIRST, before `mail start`: `git fetch origin job/T51/publication tranche/T51`; if a local `job/T51/publication` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/publication stale/publication-local && git checkout -b job/T51/publication origin/job/T51/publication`. If `job/T51/publication` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module publication`; record `build/jobs/T51/publication.md` (append a new section). Model claude-haiku-5-5; workers haiku low, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993).
+
+**Re-point (test files only; BASIS-VERSIONS #22 J7).** `fixture.mjs:119`, the `conclude` op-table entry, takes basis-versions' published `concludeAct({kind, target})` (`bio-plane/test/m/basis-versions/fixtures.mjs`: `concluded`, `no_conclusion`, `bad_reading`; read it and its test whole) in place of the hand-built answer.
+
+**Done:** `checks/fixtures.mjs <absolute root> publication --list` 0; your module's tests green; format, architecture, coverage, words, ownership 0 (a new test import of a module you do not declare in `uses`: ask BOB, QUESTION, for the edge). List every `fixtures-own`/`fixtures-generic` marker you add, file:line and why (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only: if a real answer shows a product defect, REPORT it to BOB and change no product code.
+**Follow-up 39 (test files only; REEVALUATION #28 J9).** reevaluation's `caseparts.test.mjs:30-31` keeps, under `// fixtures-contract: publication case-cited-parts`, the answer it registers as your case-parts listener: `parts({case})` answering `{case, edition, project, parts: [{bundle_id, capture_sha}]}` for a ratified case, and `{ok: false, reason: "NO_SUCH_CASE_EDITION"}` for none; `cases({after, limit})` answering `{cases, cursor}`. reevaluation precedes you, so it cannot import you; you run its contract: add a test carrying `// fixtures-run: reevaluation case-cited-parts` that calls your real case-parts read (the function you hand reevaluation's `registerCaseParts`) for a ratified case made by real acts and for a case with no edition, and asserts each answer has exactly the shape above (every key, the refusal's real code). If your real answer differs from the contract, REPORT it to BOB naming the difference (reevaluation's line then follows yours); change no product code.
+
+**Done:** `checks/fixtures.mjs <absolute root> publication --list` 0 and `checks/fixtures.mjs <absolute root> reevaluation --list` 0 (the contract run found); your module's tests green; format, architecture, coverage, words, ownership 0. List every marker you add (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only.
+
+## B14 · CHANGE
+
+CHANGE · correction to START B13 (K5110). B13 carries by mistake a paragraph beginning "**Re-point (test files only; BASIS-VERSIONS #22 J7)**" and the "**Done:**" line after it: both belong to another job; ignore them. Your work is follow-up 39 only, and its own "**Done:**" line (the one naming reevaluation's list). The corrected START is `build/plan/starts-T51-F10/publication-3.txt`.

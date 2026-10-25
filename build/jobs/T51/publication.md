@@ -1,6 +1,6 @@
 # publication (T51)
 
-**Status** · session_01B2MtWpS48XnZkx7Fbo2FBa · depth 2 · COMPLETE · handled B7
+**Status** · session_01B3sty8GH9yv5VdR2zqwU5D · depth 2 · COMPLETE · handled B14
 
 ## J1 · COMPLETE
 
@@ -185,3 +185,88 @@ Size (session_01B2MtWpS48XnZkx7Fbo2FBa): test runs 9, module lines 4645 (physica
 ## J10 · COMPLETE
 
 G54 (publication) complete: four casefile_* columns on published_cases, recordCaseFileAttempt (hop recordcasefile), caseFilesOwed, caseFileNextAt. g54-casefile.test.mjs 9/9 (red on old tree), L Miniflare test green; publication 175 (174 pass, 0 fail, 1 todo); checks 0 failures except inherited words inline 1. FOUND IN OTHER MODULE: op-declarations t33.test.mjs IN_PROCESS.publication must gain 'recordcasefile' (R19/R6 red by name). journey-check pseudo R29 red is environment (playwright-core missing). Record section 'G54 · completion' holds R15/R40 lines. Size (session_01B2MtWpS48XnZkx7Fbo2FBa): test runs 9, module lines 4645.
+
+## J11 · QUESTION
+
+Two things decide whether I can reach zero on my lines; the rest of the job is done and green (publication suite 179 pass, 0 fail, 1 todo).
+
+1. `modules.json`: add `retrieval` to publication's `uses`. My own line `fixture.mjs:137` (the hand-built `NO_SUCH_SELECTION`) is FIX-E: retrieval is earlier and publishes `noSelection` in `test/m/retrieval/fixtures.mjs`. I re-pointed it, but `checks/architecture.mjs` then fails: "bio-plane/test/m/publication/fixture.mjs imports retrieval/fixtures.mjs of retrieval, which publication does not declare in uses". Without the import the line stays hand-built; letting `inquiry` build its own lazy `retrievalOf(host)` instead fails 18 tests (the host has no retrieval tables). Please add `retrieval` (as you added `setup-words` at B3) and post a CHANGE; I will then run the check and COMPLETE.
+
+2. `assembleCaseContainerRefusal` (and the build refusals of `caseFileLedger`: MATERIAL_MISSING, BUCKET_FAILED, CASE_FILE_NOT_ASSEMBLED) cannot be published by publication: `modules.json` gives `bio-plane/src/publication/worker.mjs` (`assembleCaseContainer`, `recordCaseFileFailure`) and `public-read/casefile.mjs` to `public-read` (112, after me at 109), and a publication test may not import it. The fixtures check agrees: it names `public-read (earlier)` as the provider of the three ratification lines (g54-paths:310, :455, g57-heal:426). So `public-read` should publish it. I published the ledger half that is mine (`caseFileLedger`: the real `recordCaseFileAttempt` hop, `caseFilesOwed`, `caseFileNextAt`, `recordCaseManifest`, and the writer's own refusals MALFORMED / NO_SUCH_CASE_EDITION / NO_MANIFEST). Please move that fixture to public-read's START.
+
+## J12 · COMPLETE
+
+Fix round 10, Wave A batch 2: publication complete (only test files of my module changed; no product code).
+
+**Fixtures published** (`bio-plane/test/m/publication/fixtures.mjs`, new; each made by real code at call time; checked by `fixtures.test.mjs`, 5 tests): `caseDocumentFacts` (NO_CASE_DOCUMENT for none and for a viewer without standing; the stored unsigned and signed document), `caseFileLedger` (real `recordcasefile` hop, `caseFilesOwed`, `caseFileNextAt`, `recordCaseManifest`; the writer's own refusals MALFORMED / NO_SUCH_CASE_EDITION / NO_MANIFEST), `publicationWorld` (real `restingCapturesOf` over findings made to rest on documents by the real acts), `stampEditionRefusal` (NO_SUCH_CASE_EDITION, STAMP_NO_ORDER), `storeCaseDocumentRefusal` (MALFORMED).
+**Not mine (B10):** `assembleCaseContainerRefusal` and the build refusals: public-read publishes them.
+
+**Own lines:** fixture.mjs:137 now takes retrieval's `noSelection`; t35.test.mjs (:37, :245), t37.test.mjs:32, t47.test.mjs:24 take standards' real answer through `absentStandard` (fixture.mjs, over `standardReadWorld`). door.test.mjs:95 carries `// fixtures-contract: store-door store-replies`: the one line left, `contract-no-run`, waiting for store-door's `fixtures-run`. No `fixtures-own` or `fixtures-generic` marker added.
+
+**Runs:** publication suite under the preload: tests 180, pass 179, fail 0, todo 1 (the old one). Checks: format 0 failures; architecture 0; publication coverage 48 of 48 (the whole-tree coverage's 13 failures are other modules'); words 0; ownership 0; fixtures for publication: 1 line, the one above. Impact: the diff touches only publication's tests, so no other module's behaviour changed; I did not run the impact users' 123 test files.
+Deferred: none. Found in other modules: none.
+
+Size (session_01XbERoEwBuhJPVYwb5wJ3HY): test runs 5, module lines 190
+
+## Follow-up 18 · completion (PUBLICATION #39, session_01Cz7XXhRgKLEhdaMNQ5hG3Y; fix round 10, cause R27a's store half; START B11)
+
+**Entry applied.** R15's amendment (K5084): `recordCaseManifest({caseId, edition, manifest, manifestSha, bytes?, built?})`. With `built: true` the case file is recorded built (`casefile_state='built'`, why cleared, attempts unchanged) in the same transaction as the manifest, so `caseFilesOwed` no longer lists it; also on the same-hash retry (a manifest recorded without `built`, then called again with it, builds the file). Without `built`, or `built: false`, the act is as before. `built` that is not absent, null or a boolean is `MALFORMED`, nothing written. The hop `recordcasemanifest` passes the body whole, so the Worker can send `built`. `recordCaseFileAttempt` is unchanged.
+
+**Test, seen red first.** `g54-casefile.test.mjs`, "R15 recordCaseManifest built:true": failed before the change (`casefile_state` null after the call, expected `built`), 16/16 with `fixtures.test.mjs` after. Controls: without `built` the ledger is left alone; a failed ledger with a manifest stays owed without it and is built by the retry with it; six malformed values write nothing; `NO_SUCH_CASE_EDITION` and `MANIFEST_EXISTS` keep their reasons.
+
+**Fixture.** `bio-plane/test/m/publication/fixtures.mjs`: `caseFileLedger(...).manifest(caseId, edition, {built})` passes `built` to the real `recordCaseManifest`; `fixtures.test.mjs` has one new test for it. No `fixtures-own` or `fixtures-generic` marker added.
+
+**Deferred.** None. **Found in other modules.** None. `public-read` can now call it (its job waits).
+
+**Tests and checks.**
+- Publication suite under the preload: tests 181, pass 180, fail 0, todo 1 (R30, before).
+- Impact set (`impact.mjs origin/tranche/T51 HEAD`: 56 modules): the only caller of the hop is `public-read`; I ran the modules that use publication's manifest or ledger: public-read 307/307, ratification 335/335, publish-schedule 34/34, docket 90/90. The change is an added optional field, so I did not run the other 50 modules' 1,100 test files.
+- format 0 failures; architecture 0; coverage 48 of 48, 0 failures; ownership 0 (5 files); words 0 failures; fixtures for publication: 1 line, `door.test.mjs:95` `contract-no-run`, waiting for store-door's `fixtures-run` (before this job).
+
+Size (session_01Cz7XXhRgKLEhdaMNQ5hG3Y): test runs 8, module lines 4790
+
+## J13 · COMPLETE
+
+Follow-up 18 complete: R15's amendment (K5084) met. recordCaseManifest takes built:true, recording the case file built in the same transaction (also on a same-hash retry); absent/false as before; a malformed built is MALFORMED. Test seen red first (g54-casefile.test.mjs); fixture caseFileLedger(...).manifest(case, edition, {built}) published in fixtures.mjs with a fixtures.test.mjs test. Publication suite 180 pass, 0 fail, 1 todo (R30); public-read 307, ratification 335, publish-schedule 34, docket 90, all pass. format, architecture, coverage (48/48), ownership, words 0 failures; fixtures: only the old door.test.mjs:95 contract-no-run. No fixtures-own or fixtures-generic marker added. Deferred none; nothing found in other modules. public-read (#34) may now call it. Size (session_01Cz7XXhRgKLEhdaMNQ5hG3Y): test runs 8, module lines 4790.
+
+## Follow-up 27 · completion (PUBLICATION #40, session_016A5pnT8yWBYi5ogyJCNRvX; fix round 10, START B12; K5094)
+
+**Entry applied (test files only).** New fixture in `bio-plane/test/m/publication/fixtures.mjs`: **`restingOf(held)`**, `held = [{finding, projects, digests}]`. Each finding is a real published finding (its inquiry, one case per named project pinning it, its signature with a `serve` edge to each document) resting on exactly the captures `digests` names (each a real register document holding that sha; a digest two findings name is one capture). Answers `{world, publication, restingCapturesOf(q)}`; `restingCapturesOf` is the real module's (R42): its paging, cursor, caps, and project ids are the ones the caller names. Throws if a finding is named twice or names no project. To state the digests, `fixture.mjs`'s `doc(id, {digest})` takes an optional capture sha (default unchanged: the sha of its own text); `provDoc` takes it too.
+Test: `fixtures.test.mjs`, "R42 fixtures: restingOf …", against the real module (captures in order, findings and projects per capture, paging by `limit` and `after`, empty). No product code changed.
+
+**fixtures-own / fixtures-generic markers added:** none. `checks/fixtures.mjs … publication --list`: `answer 0 … stub 0, code 0, contract 0, accepted 1; 0 failures` (the one accepted line, `door.test.mjs:95`, was already there).
+
+**Deferred.** None. **Found in another module.** Nothing. monitoring's `stubPublication` (`fixture.mjs:339`) can now be re-pointed to `restingOf(...).publication` (a monitoring session).
+
+**Checks.** publication suite under the preload: `tests 183, pass 182, fail 0, todo 1`; format `0 failures`; architecture `0 failures`; coverage `48 of 48 … 0 failures`; ownership run after commit.
+
+Size (session_016A5pnT8yWBYi5ogyJCNRvX): test runs 3, module lines 2503
+
+## J14 · COMPLETE
+
+Follow-up 27 (B12, K5094): complete. New fixture restingOf(held) in bio-plane/test/m/publication/fixtures.mjs, held = [{finding, projects, digests}]: real published findings (real inquiry, a case per named project, real signature with serve edges) resting on exactly the named capture digests; answers {world, publication, restingCapturesOf(q)}, restingCapturesOf the real R42 over the project ids named. fixture.mjs doc() takes an optional digest. Tested in fixtures.test.mjs against the real module. No marker added; fixtures.mjs --list: 0 failures (1 accepted, door.test.mjs:95, pre-existing). Suite 183 (182 pass, 0 fail, 1 todo); format/architecture/coverage/words/ownership 0 failures. monitoring can re-point stubPublication to restingOf(...).publication. Record: build/jobs/T51/publication.md.
+
+## J15 · COMPLETE
+
+**Follow-up 39 applied (test files only).** New file `bio-plane/test/m/publication/contract-case-parts.test.mjs` (commit `6057c635be`), carrying `// fixtures-run: reevaluation case-cited-parts` (line 12). Two tests call the real `caseCitedParts`, the function publication hands to reevaluation's `registerCaseParts`, against reevaluation's contract: a ratified case built by the ratification acts (prepare, signCase, signFinding, as `cases.test.mjs` plays them), and a case with no ratified edition. No hand-built answer. No `fixtures-own` or `fixtures-generic` marker added.
+
+**Difference from the contract, for BOB (no product code changed).** The contract names `{case, edition, project, parts}` for a ratified case and `{ok: false, reason: "NO_SUCH_CASE_EDITION"}` for none. The real answers carry more:
+- success: also `ok: true`, `limit`, `truncated` (`limit` and `truncated` are R41's bound, CITED_PARTS_MAX)
+- refusal: also `case`, `edition`, `detail`
+
+The refusal code matches the contract, and each part is exactly `{bundle_id, capture_sha}`. The test pins the extra keys, with a comment naming them, so it stays green and the difference is visible. Reevaluation's line `caseparts.test.mjs:31` is now accepted by the checker. Whether the contract or the real shape should move is BOB's call; reevaluation's line follows his ruling.
+
+**Checks** (absolute root `/home/user/bio`):
+- `fixtures.mjs … publication --list`: 0 failures (accepted 1: `door.test.mjs:95`, already there)
+- `fixtures.mjs … reevaluation --list`: 0 failures (accepted `case-cited-parts`; before this job, `caseparts.test.mjs:31` failed `contract-no-run`)
+- `format`, `architecture` (40 product files), `coverage` (48 of 48), `words`, `ownership` (1 file): 0 failures
+
+**Tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/publication/*.test.mjs`: `tests 185, pass 184, fail 0, todo 1` (the todo was already there). The new file alone: 2 pass.
+
+**Merged.** `tranche/T51` merged into the job branch at takeover (8 commits, merge commit `d646f8e67f`, no conflicts).
+
+**Deferred:** none. **Found in another module:** none.
+
+START B13 carried another job's "Re-point" paragraph and its "Done" line; CHANGE B14 said to ignore them, and I did.
+
+**Size (session_01B3sty8GH9yv5VdR2zqwU5D): test runs 4, module lines 2645** (code lines, comments and blanks excluded, across `deliverer.mjs` and `publication/`).

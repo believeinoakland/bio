@@ -1,4 +1,4 @@
-START · EXTRACTION #<n> · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 3: causes R10, R24 (b), R39b, publish 5 fixtures, re-point 73 own lines, 2 marker lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+START · EXTRACTION #46 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 3: causes R10, R24 (b), R39b, publish 5 fixtures, re-point 73 own lines, 2 marker lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
 
 Depth 2 (BOB #289 is depth 1).
 

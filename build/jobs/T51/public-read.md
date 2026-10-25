@@ -1,6 +1,6 @@
 # public-read (T51)
 
-**Status** · session_0184YebVjUHZmj4s1SrMEH85 · depth 2 · COMPLETE · handled B27
+**Status** · session_01ML8hpkf2vrUZPMLJcMVCtD · depth 2 · COMPLETE · handled B34
 
 ## J1 · QUESTION
 
@@ -347,3 +347,121 @@ Chain now: one level of reads, one of writes (files and manifest together), for 
 **Tests and checks.** public-read: 308 tests, 308 pass, 0 fail. Users (`impact.mjs origin/tranche/T51 HEAD` names 52 modules; run: ratification, publication, plane `g54-sweep`, control-plane `r8-caseratify-calls` and `t51-round7-seam`, screens-publish, case-authoring `editions`, case-disclosures `g50-acts`): 526 + 295 tests, 0 fail. format: 176 modules, 1 failure (`office-readers`' path `bio-plane/src/office-xml.mjs`, not mine, on the tranche already); architecture public-read: 0 failures; coverage public-read: 44 of 44 ids named, 0 failures; ownership: 4 files, 0 failures; words: no finding in my module (19 failures round-wide, none mine).
 
 Size (session_0184YebVjUHZmj4s1SrMEH85): test runs 9, module lines 3910
+
+## J27 · COMPLETE
+
+**COMPLETE (fix round 10, Wave A batch 4, public-read).** START B28 applied, commit 124baaaa6a on job/T51/public-read.
+
+**Fixtures published** (`bio-plane/test/m/public-read/fixtures.mjs`, new; each made by the real code at call time, never stored; checked against the real answer in `fixtures.test.mjs`, new):
+- `groupIdentityRegistrar` (R34): PROVIDER_MALFORMED, the first registration, PROVIDER_DECLARED. User: instance-setup (re-points in its job).
+- `assembleCaseContainerRefusal` (K5074; R6, R23): MATERIAL_MISSING at materials, BUCKET_FAILED at bucket_put, CASE_FILE_NOT_ASSEMBLED naming the finding. Users: ratification g54-paths, g57-heal (re-pointed in ratification's job).
+
+**Own fixture lines** (10 FIX-L contract markers, each on its own line directly above the value, `// fixtures-contract: <provider> <id>`): docket-real:21 and public-path:30, sampling:30, served:29 and relay:31 and door:29 (`answer-envelope door-helpers`); door:82, relay:40, relay:42 (`store-door store-replies`); group-fields:19 (`instance-setup group-identity-public`). The line numbers moved by the inserted marker lines.
+
+**Markers added** (for the merge, K5060):
+- `dec149.test.mjs` above line 130: `// fixtures-own: input` (a literal the negative control plants for the voice rule, which reads any answer; no module answers it).
+- `g54-attempt.test.mjs` above line 220: `// fixtures-generic: SOMETHING_ELSE` (an invented code, on purpose, to prove a code outside the closed set reads UNKNOWN).
+
+**Left at done** (`contract-no-run`, waiting on the providers' `fixtures-run`): answer-envelope door-helpers (6 lines above), store-door store-replies (3), instance-setup group-identity-public (1). Each provider's job runs its contract.
+
+**Deferred:** none. **Found in other modules:** `screens-publish/g54-page.test.mjs:114` fails (the sentence "couldn't be built yet" is drawn HTML-escaped as `couldn&#39;t`). It fails identically on the base commit before this job, so it is not from this change: screens-publish's job, or the words/escaping path, to settle. The op-table entries and the three public-read FIX-E users re-point in their own jobs. The two `owner-ops.mjs` rows are not touched here.
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/public-read/*.test.mjs`: 309 pass, 0 fail.
+- touched files and fixtures.test: 61 pass, 0 fail.
+- user modules named by impact that import the changed files (case-disclosures g50-acts, op-declarations t35, screens-publish c47-seam and g54-page, control-plane r45/r48/r49 routes and case-inputs-public): 34 pass, 1 fail (the escaping above; it fails on the base too).
+- `checks/fixtures.mjs /home/user/bio public-read --list`: 0 failures; 10 `contract-no-run` (listed above), 2 `accepted` (the markers).
+- format 0 failures (178 modules); architecture 0; coverage 44 of 44 live ids named; ownership 0 (12 files); words 0 failures.
+- `impact.mjs origin/tranche/T51 HEAD`: 51 modules; the changed files are imported only by the user modules listed above.
+
+Size (session_01BEeDNCorrpjXyGB6RpWrrB): test runs 4, module lines 2956
+
+## J28 · QUESTION
+
+**QUESTION (CHANGE B29: the case-file assembly to three hops).** I cannot reach three inside public-read's paths without changing a requirement. Decision for you.
+
+**Measured.** `bio-plane/test/m/public-read/chain.test.mjs` (committed red, as the failing-first step) counts the logical chain: casefilefacts, then one bucket get, then seven puts (in parallel), then recordcasemanifest, then recordcasefile (built). The chain is 5, as the CHANGE says.
+
+**Why each hop is there.** (1) The facts. (2) The reads: the files' bytes must be read before anything can be built or put. (3) The puts: they need the built content. (4) recordcasemanifest: G54 says a manifest is recorded once its files are in. (5) recordcasefile built: G54 says `built` is recorded only after the manifest's own bytes are stored.
+
+**What is reachable.**
+- Folding recordcasemanifest and recordcasefile(built) into one store op: chain 4. That op is in publication's index.mjs, outside my paths, so it needs publication's job or BOB's edit.
+- Chain 3 needs also the reads folded into casefilefacts (the store returns the bytes), a large store change, or recording the manifest before its bytes are stored, which G54 forbids.
+
+**Options.**
+(a) Amend G54 so `built` may be recorded by the manifest's own record op, fold the two store calls (publication's op), and take chain 4. Ratification's own chain then has to be at most 5, not 6, for R60's bar of 10.
+(b) Keep the requirements; the bar of 3 is unreachable, so ratification's own chain goes to 7.
+(c) Fold the reads into casefilefacts (store-side, large): chain 3.
+
+**Recommendation: (a).** Nothing else of the CHANGE is done. I did not change the assembly, since any change to it now would break G54. The module's tests are green apart from the red chain test. Waiting on BOB (J28).
+
+## J29 · COMPLETE
+
+**COMPLETE (CHANGE B31: the case-file chain to 4).** Merged `tranche/T51` (publication #39, R15) and applied the change in `bio-plane/src/publication/worker.mjs`.
+
+**Entries applied.** The case file's own record (`recordcasemanifest`) now carries `built: manifestStored`, true only when the manifest's own bytes are stored (G54's order kept). `assembleCaseContainer` skips its separate built write for those results (a WeakSet marks them, so the answer's shape is unchanged). The legacy container path still writes built itself.
+
+**Test changes.**
+- `chain.test.mjs`: bar 4, seen red at 5 first. It now passes at 4 (`CHAIN_DEBUG` shows: recordcasefile, casefilefacts, bucket.get, seven puts, recordcasemanifest).
+- `g54-attempt.test.mjs`: the success-order test asserted a separate `ledger:built` write after the manifest's bytes. It now asserts the folded `manifest:built=true` comes after the manifest's bytes and that no separate built write is made. The claim is the same.
+
+**Deferred:** none. **Found in other modules:** none new. The ratification chain bar (R60's door bar of 11) is BOB's, as stated in B30.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/public-read/*.test.mjs`: 310 pass, 0 fail.
+- `publication/*.test.mjs` plus ratification `g54-paths` and `g57-heal`: 214 pass, 0 fail.
+- format 0 failures (178 modules); architecture 0; coverage 44 of 44; words 0; ownership 0 (13 files).
+- fixtures `--list`: 4 `contract-no-run` remain, waiting on providers' `fixtures-run` (answer-envelope door-helpers, store-door store-replies, instance-setup group-identity-public). The rest are accepted.
+
+Size (session_01BEeDNCorrpjXyGB6RpWrrB): test runs 6, module lines 2956
+
+## J30 · COMPLETE
+
+**COMPLETE (B32: follow-up 29, group-fields `NO_SLUG`).** Test file only; no product code changed. Commit `78aa603b4e` on `job/T51/public-read` (tranche/T51 merged in first, `a426f5e82c`).
+
+**Entries applied.**
+- `group-fields.test.mjs:18` `NO_SLUG` (`fixtures-contract: instance-setup group-identity-public`) now has the real key `logo: false`.
+- **Deviation, for your ruling:** the value has no `detail` key. The real answer's `detail` is instance-setup's `NO_GROUP_RECORDED`. Three ways to carry it all failed: copying the sentence (K3810 forbids it); importing it from `src/setup.mjs` (architecture check: instance-setup is later in the order, FAIL); `word("instance-setup.setup.no_producing_team_is_recorded")` (words check: missingkey, the key is not in `words.json`). Ruling asked: add that key to the design's `words.json` so the test can read it by key, or accept the value without `detail`. Until then it stays as it is.
+- The assertion that the answered absence carries the source's detail is removed (it compared the sentence). The negative control stays: the detail does not include `GROUP_IDENTITY_UNDETERMINED_SENTENCE`. No other test uses `NO_SLUG`.
+
+**Deferred:** none. **Found in other modules:** none. **Markers added this job:** none (`fixtures-own` and `fixtures-generic` lines unchanged; `g54-attempt.test.mjs:222` `SOMETHING_ELSE` is J27's, accepted).
+
+**Tests and checks** (run from `/home/user/bio`, absolute root):
+- `node --test` over `bio-plane/test/m/public-read/*.test.mjs`: 310 pass, 0 fail. `group-fields.test.mjs` alone: 9 pass, 0 fail.
+- format: 178 modules, 0 failures. architecture public-read: 0 failures (after the setup.mjs import was removed; with it, 1 failure). coverage: 44 of 44 ids named, 0 failures. words public-read: 0 failures (missingkey 0). ownership vs `tranche/T51`: 1 file, 0 failures.
+- fixtures `--list`: 1 failure, `group-fields.test.mjs:18` `contract` `idle`: the provider's run (`instance-setup/fixtures.test.mjs`, `fixtures-run: public-read group-identity-public`) is on `job/T51/instance-setup`, not yet on `tranche/T51`. Waits for instance-setup's merge; named here as the one line left.
+
+Size (session_01Xm9gZFkkLPpKbxESgv347q): test runs 6, module lines 13869 (public-read `src/` and `test/m/public-read/` lines, `wc -l`)
+
+## J31 · COMPLETE
+
+**COMPLETE (B33: fix round 10, the final pass's causes 1 and 2).** Met: **R28** (the amended text of K5148, both added sentences). BOB strikes the mark.
+
+**1. A removal order for one case withheld another case's zip** (`diag2-10b.md` C2).
+- Fix: `withheldOf(shas, zip)` (`public-read/index.mjs`) takes the zip's manifest hash; the Worker's zip route (`publication/worker.mjs`, `withheldOf(stub, listedShas, shaParam)`) passes it as `&zip=`. A hash an edition holds only as scaffolding counts under that case's own orders and no other case's (`#withheldIndex` returns `scaffoldBy`); material (a finding, a capture, a document) counts under any case's order, as before. The single-hash route (`publishedbytes` without `format=zip`) is unchanged: it names no case.
+- **Reading to confirm:** scaffolding is the kinds `criteria`, `grading_facts` and `passages`. The facts files are included because a finding with no rows writes the same empty bytes as the default `criteria.json` (in the fixtures, all three are one object), so listing `criteria` alone would still refuse the second case's zip. A finding's non-empty facts differ per finding; the same finding in two cases is still caught by its own `finding.md`.
+- Tests (`court-orders.test.mjs`, R28, all red on the old code, green now): two cases with the default criteria, `remove` on the first: the second's zip 200, the first's 451, the criteria bytes shown identical; control: a finding both pin, sealed by the first's order, refuses the second's zip naming that finding only; control: the first case's own order on its `criteria.json` refuses its own zip and not the second's.
+- Why the tests missed it: no fixture had two cases with the same `criteria.json`, and no test fetched a second case's zip while another was under an order.
+
+**2. A removed edition's finding rows kept the case document's text** (`diag2-10b.md` C3).
+- Fix: the withheld-finding row (`index.mjs`, the `withheldBy` branch) sets `case_excludes`, `strength`, `grounds` and `required` to null; hash, signer, attestor, role, edition stay.
+- Tests: in one test, a `seal` naming a finding nulls that finding's four fields and leaves the other finding's strength; a `remove` nulls all rows' four fields, identity facts stay, and the signed exclusion sentence appears nowhere outside `court_orders`/`withheld`. Control: before any order the exclusion is served. The old code failed on `case_excludes`.
+- Why the tests missed it: the earlier assertions listed only title, `withheld` and `bundle_sha` per row.
+- **Left as it is (for BOB):** a seal of the case document alone (no finding named) still serves the rows' `strength` pair and `case_excludes`, since no finding's bytes are withheld; R28's text names whole and finding-level orders. If a document-level seal should null them too, say so and I add it.
+
+**Deferred:** none. **Found in other modules:** none. **Markers added:** none.
+
+**Tests and checks** (absolute root `/home/user/bio`):
+- `bio-plane/test/m/public-read/`: 314 pass, 0 fail (was 310; four new tests). Users run: network-notices 78 pass, docket 92 pass, filings 164 pass; screens-publish 282 pass, 2 fail (R24 words and R22 G54), which fail identically on the tranche code before my commit, so not mine.
+- format 0 failures; architecture 0; coverage public-read 44 of 44; words: no finding in public-read (16 failures elsewhere, store-assembly and others); ownership vs `tranche/T51`: 0 failures.
+- fixtures `--list`: 1 failure, `group-fields.test.mjs:18` `contract` (waits for instance-setup's `fixtures-run`, J30), no new line.
+
+Size (session_01ML8hpkf2vrUZPMLJcMVCtD): test runs 8, module lines 4205 (public-read `src/`, `worker.mjs`, `container.mjs`, `inband.mjs`, `wc -l`)
+
+## J32 · COMPLETE
+
+**COMPLETE (B34: K5153, a seal of the case document alone).** R28 met in full. When `docWithheld` (a seal of the case document without naming a finding), every finding row not already withheld now has `case_excludes`, `strength`, `grounds` and `required` null (`index.mjs`, the served-row return); identity facts stay.
+Test (`court-orders.test.mjs`, R28, red on the prior code at `case_excludes`, green now): a `seal` naming the document's hash nulls the four fields of every row, identity facts stay, and the exclusion sentence is served nowhere outside `court_orders`/`withheld`; control: before the order every row serves its strength.
+Checks: `bio-plane/test/m/public-read/` 315 pass, 0 fail; format 0; architecture 0; coverage 44 of 44; words none in public-read; ownership 0; fixtures: only the known `group-fields.test.mjs:18` contract line (waits for instance-setup). Deferred: none. Other modules: none.
+
+Size (session_01ML8hpkf2vrUZPMLJcMVCtD): test runs 5, module lines 4207

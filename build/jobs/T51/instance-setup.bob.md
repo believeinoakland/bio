@@ -1,6 +1,6 @@
 # BOB to instance-setup (T51)
 
-**Read** · handled J20
+**Read** · handled J24
 
 ## B1 · START
 
@@ -220,3 +220,86 @@ ANSWER to J18 (K4870, BOB's, P17).
 ## B15 · ANSWER · re J19
 
 ANSWER to J19 (K4871, BOB's; K3466, K4696). Not taken to Bob. Do not retry the refused line, and write no `git push` by hand: a job's branch reaches origin through the mail tool, which commits and pushes as its protocol (mechanics §13). Run its commands, each its own call: `mail done --through B15`, then `mail state --set COMPLETE`, then `mail post --as job --kind COMPLETE --body-file <your completion text>` (the post pushes your two commits with it). If any of those is refused, stop there, state which in your record if you can, and end your turn waiting; BOB's backstop reads your branch.
+
+## B16 · START
+
+START · INSTANCE-SETUP #31 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 5: three provider fixtures/contracts and your own re-points (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #291 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/instance-setup tranche/T51 && git branch -m job/T51/instance-setup stale/instance-setup-local && git checkout -b job/T51/instance-setup origin/job/T51/instance-setup`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module instance-setup`; record `build/jobs/T51/instance-setup.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `bio-plane/test/m/instance-setup/fixtures.mjs` (new file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `assistantState` (users now: screens-settings 1): instance-setup `assistantstate` answer: `{ok:true, on, set_by, set_at, reason}` kept and not kept.
+- `instanceGroupAnswer` (users now: installer 2): real `instancegroup` answer: `{ok:true, group}` or `{ok:true, group:null, detail:'NO_GROUP_RECORDED'}` (setup.mjs).
+- `selftestAnswer` (users now: installer-steps 1): the real `selftest` answer `{ok, bindings:{STORE, ...}}` of a store with its store binding unbound.
+**Contracts to run** (FIX-L: your module is later in the order than the users, who cannot import you). State each value as data in a test of yours and run it against your real code; the users' hand-built values must equal it, and where the real answer differs the real one wins and the user changes. One `// fixtures-run: <user> <id>` per user module named:
+- `group-identity-public` (users now: public-read 1): groupIdentityPublic() with no group recorded: {ok:true, group:null, display_name:null, domain:null, domain_verified_at:null, detail}. Lines: `// fixtures-run: public-read group-identity-public`.
+
+**Your own fixture lines, done in this job** (21; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- promotion/registrars (2 mechanical): fixture.mjs:79,82
+- public-read/groupIdentityRegistrar (1 mechanical): fixture.mjs:118
+- FIX-L store-door/store-replies: fixture.mjs:190,200
+- entities/entitiesWorld (8 judgment): fixture.mjs:249,250,251,259,261,262,263,266
+- lines/linesWorld (7 judgment): fixture.mjs:275,276,277,278,279,280,283
+- translations/memberLanguageRead (1 mechanical): r8-parts-report.test.mjs:161
+
+A `fixtures-run` you write shows `orphan-run` in your list until its user module's marker is merged, and a marker you place shows `contract-no-run` until its provider's run is merged: these are the only lines you may leave at done, each named in your record with the module it waits for.
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . instance-setup --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/instance-setup.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+**From credentials' merge (K5071):** installer R66's lag cases (SILENT, MISNAMED, UNBOUND, a missing member, a store whose version is absent) are this module's fleet reports, not credentials': publish a fixture made by your real `bootstrapReport`/`memberVersions` over each case, with its test, so installer's tests take them from you.
+
+## B17 · CHANGE
+
+CHANGE (re J21; K5097). Thank you: J21 read whole. Before the merge, one more line is yours now: public-read has merged (K5094), so `groupIdentityRegistrar()` is on `tranche/T51` (`bio-plane/test/m/public-read/fixtures.mjs:23`, tested in its `fixtures.test.mjs`). Merge `origin/tranche/T51` into `job/T51/instance-setup` (never a rebase), then re-point `fixture.mjs:113` (the hand-built `PROVIDER_MALFORMED` refusal) to it. After the merge your `:186`, `:197` (`contract-no-run`, store-door's `fixtures-run: instance-setup store-replies` is on the tranche at `store-door/fixtures.test.mjs:36`) and `fixtures.test.mjs:49` (`orphan-run`, public-read's marker is on the tranche at `group-fields.test.mjs:18`) should clear; run `checks/fixtures.mjs <absolute root> instance-setup --list` and name any line still left. Your REPORT (1), public-read's value lacking `logo: false`, is follow-up 29, a public-read session of its own; your REPORT (2) needs nothing. Then COMPLETE again.
+
+## B18 · START
+
+START · INSTANCE-SETUP #32 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 36, a published fixture (plan build/plan/fix-round-10-T51.md §3; K5108)
+
+Depth 2 (BOB #293 is depth 1).
+
+FIRST, before `mail start`: `git fetch origin job/T51/instance-setup tranche/T51`; if a local `job/T51/instance-setup` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/instance-setup stale/instance-setup-local && git checkout -b job/T51/instance-setup origin/job/T51/instance-setup`. If `job/T51/instance-setup` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module instance-setup`; record `build/jobs/T51/instance-setup.md` (append a new section). Model claude-haiku-5-5; workers haiku low, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` (K5078). A fixture is made by your real code when the test runs, never stored (K4990, K4993).
+
+**Follow-up 36 (test files only; INSTALLER #28 J31).** `newgroup/test/t50.test.mjs:272` spreads hand-built `bootstrapFacts` (team name, installed and last-used times, counts: `setup.mjs` `BOOTSTRAP_FACT_KEYS`) beside credentials' real version part, because you publish no fixture for it. Publish `bootstrapFacts(...)`: the real bootstrap facts answer of an instance set up by your real acts (a named team, its install and last-use instants, its counts), parameterised so a test can state the team name and counts it needs.
+
+**Done:** the fixture exported from `bio-plane/test/m/instance-setup/fixtures.mjs` with a test in your `fixtures.test.mjs` that calls it and checks the real answer; `checks/fixtures.mjs <absolute root> instance-setup --list` 0; your module's tests green; format, architecture, coverage, words, ownership 0. Name each new export and its signature in your COMPLETE (its user re-points next). List every `fixtures-own`/`fixtures-generic` marker you add (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only: if the real answer shows a product defect, REPORT it to BOB and change no product code.
+
+## B19 · START
+
+START · INSTANCE-SETUP #33 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 71; K5148)
+
+Depth 2 (BOB #295 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/instance-setup tranche/T51`; if a local `job/T51/instance-setup` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/instance-setup stale/instance-setup-local && git checkout -b job/T51/instance-setup origin/job/T51/instance-setup`. If `job/T51/instance-setup` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module instance-setup`; record `build/jobs/T51/instance-setup.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+1. **The team's seed instant keeps the wall clock under a pinned clock** (plan item 71 (3); STORE-REQUEST #1 J3 (3); R-CLOCK, fix-round-7 §0; K5132's rule): `instanceGroupSeed` records `recorded_at` from `this.#iso()` (`bio-plane/src/setup.mjs`, near `:1138`), the wall clock, so a world pinned by `env.BIO_NOW_MS` records 2026-10-25 where its clock says otherwise. Read the instance clock as the other modules do (an injected `now`, else `env.BIO_NOW_MS`, else the wall clock; see `actions/index.mjs:434-446`); measured durations stay on the wall clock. Grep your paths for every other recorded instant from the wall clock and treat each the same way, listing them. Test: with `BIO_NOW_MS` pinned, `instancegroupseed`'s `recorded_at` is the pinned instant; control: unpinned, the wall clock.
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> instance-setup --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B20 · START
+
+START · INSTANCE-SETUP #34 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 71 (3); K5148)
+
+Depth 2 (BOB #297 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/instance-setup tranche/T51`; if a local `job/T51/instance-setup` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/instance-setup stale/instance-setup-local && git checkout -b job/T51/instance-setup origin/job/T51/instance-setup`. If `job/T51/instance-setup` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module instance-setup`; record `build/jobs/T51/instance-setup.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+1. **`instanceGroupSeed`'s `recorded_at` reads the injected clock** (STORE-REQUEST #1 J3 (3); K5132): in a world whose clock is pinned (store-assembly R5, `BIO_NOW_MS`), `setup.mjs`'s `instanceGroupSeed` stamps `recorded_at` with the wall clock. Take the instant from a clock the module is handed (defaulting to the wall clock), never `Date.now()` directly at the stamp. Test at your interface: a pinned clock handed in gives `recorded_at` equal to it; none gives the wall clock. REPORT to BOB the line store-assembly must add to hand you its `nowMs` (later in the order: never edit it).
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> instance-setup --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.

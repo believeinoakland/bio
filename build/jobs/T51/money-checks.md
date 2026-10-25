@@ -1,6 +1,6 @@
 # money-checks (T51)
 
-**Status** · session_012QuJX65WtkVnXz5QCbL2e4 · depth 2 · COMPLETE · handled B1
+**Status** · session_013XfJkU8YrnVAJey2y1U6if · depth 2 · COMPLETE · handled B2
 
 ## J1 · REPORT
 
@@ -35,3 +35,34 @@ T51-199 (money-checks, the words check after the conversion) is applied: the one
 **Size (session_012QuJX65WtkVnXz5QCbL2e4): test runs 3, module lines 1026** (the three test runs: the module suite once, and `checks/run.mjs` twice; `1026` is `bio-plane/src/money-checks/*.mjs`).
 
 **Commits on `job/T51/money-checks`:** `425352f925` (the two fixes), `a734dd6a8d` (merge of `origin/tranche/T51`), then this record.
+
+## J3 · COMPLETE
+
+**Fix round 10, Wave A batch 5 (START B2): publish 1 fixture. Done.**
+
+**Entries applied**
+- Fixtures published in `bio-plane/test/m/money-checks/fixtures.mjs` (new file), each made by the module's real code when called:
+  - `runDetectorsAnswers({budgetMs})`: the real `runDetectors` over an empty world (`world()`), no detector switched on. Users now: scheduler 1 (re-pointed in scheduler's own job).
+  - `noticed()`: the real `noticed({project, viewer})` for a project the viewer takes part in, over an empty record. Added per K5077 (queue `noticed.test.mjs:290` uses it; re-pointed in queue's own job).
+- Tests in `bio-plane/test/m/money-checks/fixtures.test.mjs` (3 tests) call each fixture and check the real answer: R6 (both `runDetectorsAnswers` tests), R9 and R17 (`noticed`).
+- No `fixtures-own` or `fixtures-generic` marker added (no line of mine needed one).
+
+**Lines left in money-checks:** none. The fixtures check (`node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio money-checks --list`) reports 0 failures.
+
+**Deferred:** nothing. **Found in another module:** nothing new. The repo-wide `checks/run.mjs` output has no line naming money-checks.
+
+**Tests and checks**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/money-checks/fixtures.test.mjs`: tests 3, pass 3, fail 0.
+- `node ... bio-plane/test/m/money-checks/*.test.mjs`: tests 51, pass 51, fail 0.
+- `node /home/user/civicos-process/checks/format.mjs /home/user/bio`: 178 modules, 178 requirements files; 0 failures.
+- `node /home/user/civicos-process/checks/architecture.mjs /home/user/bio money-checks`: 12 product files, 40 relative imports; 0 failures.
+- `node /home/user/civicos-process/checks/coverage.mjs /home/user/bio money-checks`: 17 of 17 live requirement ids named by a test; 0 failures.
+- `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio money-checks tranche/T51 job/T51/money-checks`: 3 files changed by money-checks; 0 failures.
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: money-checks 1/9; affected modules 1 of 178; affected test files 1 of 2790 (my own). No user's test is named, so none was run.
+- `node bio-plane/src/setup-words/build.mjs --check`: one stale-rows note, in `calculations` (`rows.mjs` is setup-words' generated artifact, not mine); no refusal names money-checks.
+- `node /home/user/civicos-process/checks/run.mjs /home/user/bio`: exit 1 from repo-wide fixtures failures in other modules (2,572 failures across the product; the stubs in test-support and the users' lines). The words check: 0 failures. `grep -i money-checks` on the output: 0 lines.
+
+**Commits on `job/T51/money-checks`:** `b754397694` (the fixtures and test), `2552f8d4ff` (merge of `origin/tranche/T51`, which had moved to `52dbcf51d2`), then this record. Pushed.
+
+**Size (session_013XfJkU8YrnVAJey2y1U6if): test runs 2, module lines 1026**
+(two test runs: the module suite once, the fixtures test file once; `1026` is `bio-plane/src/money-checks/*.mjs`, unchanged in this job.)

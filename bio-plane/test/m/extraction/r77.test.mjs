@@ -3,14 +3,12 @@
    the requirement ids it checks. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, bucket } from "./fixture.mjs";
+import { fresh, bundle, hold, bucket, homesOver } from "./fixture.mjs";
 
 const READING = { basis: "R77 capture", entities: [] };
 
-/* provenance's R4 `homeOf` stand-in: a register row per capture digest, answered as provenance answers it. */
-function register(rows) {
-  return { homeOf: (sha) => rows.get(sha) ?? null, onTestimony: () => ({ ok: true }) };
-}
+/* provenance's R4 register: a row per capture digest, answered by provenance's real instance (its published fixture). */
+const register = (rows) => homesOver(rows);
 
 async function seeded(provenance) {
   const evidence = bucket();

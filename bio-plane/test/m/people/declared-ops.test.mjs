@@ -61,7 +61,7 @@ test("R42 people declares recordpersonfact: its requires alone raise no refusal 
 
 test("R42 people declares personexpunge: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
   await declaredOpHolds({ op: "personexpunge", declaration: DECLARED_OPS["personexpunge"], call: mk("personexpunge", {}, null, null, (fields, env) => (held(BOSS)(fields, env))),
-    refusedNaming: named({"id":["NO_SUCH_ITEM"],"ground":["EXPUNGE_GROUND_REFUSED"],"reason":["NO_REASON"]}, true), values: {"ground":"confidential","reason":"the document was handed over in confidence"}, same: sameCode });
+    refusedNaming: named({"id":["PERSON_ITEM_NOT_HELD"],"ground":["EXPUNGE_GROUND_REFUSED"],"reason":["NO_REASON"]}, true), values: {"ground":"confidential","reason":"the document was handed over in confidence"}, same: sameCode });
 });
 
 test("R42 people declares declaretie: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {

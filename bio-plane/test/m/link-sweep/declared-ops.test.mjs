@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { declaredOpHolds } from "../../declared-ops.mjs";
 import { DECLARED_OPS, linkSweepOps } from "../../../src/link-sweep/index.mjs";
-import { listWorld, sweepDef, SEED } from "./fixture.mjs";
+import { listWorld, sweepDef, SEED, doorQuery } from "./fixture.mjs";
 
 const LIST = "INFO-2026-0992-list", PROJ = "PROJ-2026-0992-decl";
 /* a refusal names a field by its argument, or by a finding of the grammar it relays, or as a whole word of its code or detail */
@@ -18,7 +18,7 @@ const named = (answer, field) => {
 /* the call as the door runs it, on a fresh world holding one unratified sweep */
 const mk = (op, adapt = (f) => f) => async (given) => {
   const { w } = listWorld({ list: LIST, project: PROJ, sweeps: [sweepDef({ id: "minutes", ratified: false })] });
-  const q = new URLSearchParams({ op, author: "member:alice", viewer: "member:alice" });
+  const q = doorQuery(op, "member:alice");
   return await linkSweepOps(w.s, new URL("http://do/?" + q), adapt(given))[op]();
 };
 const FIELDS = { title: "Council minutes", sources: ["https://records.example.org/council"], seeds: [SEED], match: { terms: ["minutes"] },
@@ -42,6 +42,24 @@ test("R15 link-sweep declares sweepset: its requires alone raise no refusal nami
 test("R15 link-sweep declares sweepratify: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
   await declaredOpHolds({ op: "sweepratify", declaration: DECLARED_OPS.sweepratify, refusedNaming: named, same: sameKind,
     call: mk("sweepratify"), values: { sweep: `${LIST}#minutes`, ratified: true } });
+});
+
+/* K5148 (B9): the door sets on the query the stamps a row declares, and no other. A member's define or ratify carries the
+   member's `author` only when the row names it; without it the arm reads no member and refuses the act as an automated
+   credential, so the test that the row names both stamps is the one that catches it. */
+test("R13, R14 link-sweep's sweepset and sweepratify declare the stamps a member's act needs: author and viewer", () => {
+  assert.deepEqual(DECLARED_OPS.sweepset.stamps, ["author", "viewer"]);
+  assert.deepEqual(DECLARED_OPS.sweepratify.stamps, ["author", "viewer"]);
+});
+
+test("R13 a member's sweepset is admitted when the door stamps the author its row declares, and refused as a machine when it does not", async () => {
+  const { w } = listWorld({ list: LIST, project: PROJ, sweeps: [] });
+  const body = { bundle: LIST, ...FIELDS };
+  const admitted = await linkSweepOps(w.s, new URL("http://do/?" + doorQuery("sweepset", "member:alice")), body).sweepset();
+  assert.equal(admitted.ok, true, JSON.stringify(admitted));
+  /* control: the same act with no stamps from the door is the machine refusal, so the stamps are the cause */
+  const bare = await linkSweepOps(w.s, new URL("http://do/?" + new URLSearchParams({ op: "sweepset" })), body).sweepset();
+  assert.equal(bare.code, "MACHINE_CANNOT_SET_SWEEP");
 });
 
 /* K4230: op-declarations refuses a mutating row with no `needs` (NEEDS_MISSING, its R80); this module's own check, not imported

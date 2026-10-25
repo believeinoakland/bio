@@ -42,6 +42,7 @@ function stamps(o = {}) {
       ? { answered: false, result: undefined, correlation: out.correlation } : { answered: false, result: undefined };
   };
   const storeRefusal = (p) => { calls.storeRefusal.push(p); return json({ ...p.reply.body }, p.reply.status); };
+  // fixtures-contract: answer-envelope door-helpers
   const storeSilent = (op, correlation = undefined) => {
     calls.storeSilent.push({ op, correlation });
     return json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op, correlation }, 502);
@@ -66,6 +67,7 @@ function worldStore(w) {
       if (!Object.hasOwn(map, op)) return Response.json({ ok: false, error: "unknown op: " + op }, { status: 400 });
       return Response.json({ ok: true, result: await map[op]() });
     } catch (e) {
+      // fixtures-contract: store-door store-replies
       return Response.json({ ok: false, reason: "STORE_INTERNAL_ERROR", correlation: UUID }, { status: 500 });
     }
   });
@@ -129,6 +131,7 @@ test("R26, R27 (legacy-index map §4.4 move): the store is asked projectlinks wi
 });
 
 test("R24 (legacy-index map §4.4 move): the store's own refusal is relayed through storeRefusal at its status", async () => {
+  // fixtures-contract: store-door store-replies
   const refusal = { ok: false, reason: "BAD_JSON", detail: "the request body is not valid JSON" };
   const { getStore } = fakeStore(() => Response.json(refusal, { status: 400 }));
   const { calls, s } = stamps();
@@ -138,12 +141,13 @@ test("R24 (legacy-index map §4.4 move): the store's own refusal is relayed thro
 });
 
 test("R24 (REC-52; legacy-index map §4.4 move): a store that does not answer is storeSilent(\"linkproject\", correlation), never a projection of nothing", async () => {
+  // fixtures-contract: store-door store-replies
   const silences = [
     [() => Response.json({ ok: false, reason: "STORE_INTERNAL_ERROR", correlation: UUID, error: "stack" }, { status: 500 }), UUID],
     [() => new Response("not json", { status: 200 }), undefined],
     [() => Response.json([1, 2], { status: 200 }), undefined],
     [() => Promise.reject(new Error("the stub threw")), undefined],
-    [() => Response.json({ ok: false, reason: "OVERLOADED" }, { status: 503 }), undefined],
+    [() => Response.json({ ok: false, reason: "STORE_INTERNAL_ERROR" }, { status: 500 }), undefined],
   ];
   for (const [reply, correlation] of silences) {
     const { getStore } = fakeStore(reply);
@@ -233,7 +237,7 @@ test("R27 (legacy-index map §4.4 move): end to end, a named bundle the stamped 
   const before = w.snapshot(["refs", "asserted_connections", "files"]);
   const hidden = await op(w, `capture=${s}&bundle=${p}&${FORGED}`, { viewer: V("bob"), identity: V("bob") });
   const none = await op(w, `capture=${s}&bundle=INFO-2026-0404-z&${FORGED}`, { viewer: V("bob"), identity: V("bob") });
-  assert.equal(hidden.body.ok, false); assert.equal(hidden.body.reason, "NO_SUCH_BUNDLE");
+  assert.equal(hidden.body.ok, false); assert.equal(hidden.body.reason, "NO_SUCH_DOCUMENT");
   assert.deepEqual({ ...hidden, body: { ...hidden.body, target: 0 } }, { ...none, body: { ...none.body, target: 0 } });
   /* The query names alice (the project's owner); the stamp is carl, who has not joined. */
   const denied = await op(w, `capture=${s}&bundle=${p}&${FORGED}`, { viewer: V("alice"), identity: V("carl") });

@@ -1,6 +1,6 @@
 # jurisdictions (T51)
 
-**Status** · session_018n2VPXYoQnwCMwqn3JaZHt · depth 2 · COMPLETE · handled B6
+**Status** · session_01AfTJJunnDTjUWKse11VPbW · depth 2 · COMPLETE · handled B6
 
 ## J1 · REPORT
 
@@ -120,3 +120,18 @@ Failing-first: `jurisdictions/test/t51-fiscal.test.mjs` (2 tests, R49) red befor
 
 Suite: jurisdictions 165/165; coverage 97/97; format, architecture, ownership 0 failures; words 0 for jurisdictions (the repo's one testcopy is screens-publish's). Users: money 92/92, calculations 62/62, following 100/100, screens-investigate 236/236. QUESTION open: none.
 Size (session_018n2VPXYoQnwCMwqn3JaZHt): test runs 8, module lines 3760
+
+## Fix round 10 (START B7, item 70): C1 no proceeding can be registered; C14 the records help contradicts itself
+
+**C1 (R51, D1 BLOCKER).** (1) Root cause as diagnosed, re-read: `oakland-alameda.mjs` had no `proceeding_kinds`, `proceeding_flows` or `forums`; `entities` read `[]` and refused every kind. (2) Why the tests missed it: every test that registers a proceeding, and `t50.test.mjs`'s own first-profile test, used the test profile or tolerated an absent block (`for (const x of f.forums || [])`). (3) Failing-first: `jurisdictions/test/t51-proceedings.test.mjs` (5 tests, naming R51 and R93), red 0/5 on the old profile, green 5/5. Fix: four kinds (civil, writ, appeal, complaint; labels are DEC-301's words), a flow each, five forums (Superior Court of Alameda County; Court of Appeal, First Appellate District; Supreme Court of California; U.S. District Court, N.D. Cal.; Oakland Public Ethics Commission, the body a complaint goes to). Sources read 2026-10-25: Code Civ. Proc. §§ 411.10, 904.1, 1085, 1094.5 from the Legislature's own bulk download (K3658; leginfo's site is behind a bot challenge, not worked around); the Superior Court's civil page, the First District's About page (twelve counties, Alameda named), the Supreme Court's home page, N.D. Cal.'s jurisdiction map (Alameda named), and the Commission's complaint page. Stages are only those a source states: the Commission's page names no hearing, nor do the pages read for a civil action or an appeal, so those flows have `filed` and `decided`; a writ has `heard` (§ 1094.5(a)). `reached_by` uses events' kinds `filing`, `hearing`, `order`.
+
+**C14 (R93, D15).** (1) Root cause as diagnosed: no `records_help` on the first profile. (2) Missed because screens-action's tests use the test profile's block, and the "none" case an empty view. (3) Test above. Fix: the block, read 2026-10-25 from the Legislature's text (Gov. Code §§ 7921.300, 7922.525, .530, .535 as amended by Stats. 2025 ch. 34 effective 2026-01-01 — six unusual circumstances, not four —, .540, .570, .575, .600), the City's portal as OPD's General Order M-9.1 on the City's PowerDMS names it (`https://oaklandca.nextrequest.com/`), and the Sunshine Ordinance's "three business days" (OMC 2.20.230(A)) from the 2026-10-11 read in `fixtures/actions-law.mjs` (municode and oaklandca.gov answer a bot challenge today; not worked around). The existing `jurisdictions.test.mjs` R22 test now lists `records_help` among the facts two profiles hold differently (R93/R84: withheld in `combine`) and asserts exactly that one conflict.
+
+Deferred: none. Found in another module: none. For BOB: `screens-action`'s "notheld" sentence is now reachable only for a profile with no block; `controlplane`'s door case (item 1's through-the-door test) is BOB's to place (K5138).
+
+Met ids: R51 and R93 (first-profile halves). Tests and checks: jurisdictions suite 178/178; users loading the first profile (28 files): 185 pass, 7 fail, all in `journey-check/pseudo.test.mjs`, identical without my change; format, architecture, coverage (97/97) and fixtures (0 failures, no new marker) clean; words: no failure names jurisdictions (the 16 are store-assembly's and plane's).
+Size (session_01AfTJJunnDTjUWKse11VPbW): test runs 8, module lines 3815
+
+## J9 · COMPLETE
+
+COMPLETE (fix round 10, item 70): C1 and C14 built, data only. R51 met: oakland-alameda now holds proceeding_kinds (civil, writ, appeal, complaint), a flow each and five forums (Alameda Superior Court, First District Court of Appeal, Supreme Court, N.D. Cal., Public Ethics Commission), each sourced 2026-10-25. R93 met: records_help (CPRA from the Legislature's own text as amended eff. 2026-01-01, six unusual circumstances; City portal per OPD DGO M-9.1; OMC 2.20.230(A) window from the 2026-10-11 read). Failing-first jurisdictions/test/t51-proceedings.test.mjs red 0/5, green 5/5; suite 178/178; the existing R22 test now expects the records_help conflict between the two profiles (R93/R84). Checks: format, architecture, coverage 97/97, fixtures 0 failures, ownership 0; words none for jurisdictions. Consumers loading the first profile: 185 pass, 7 fail all in journey-check/pseudo.test.mjs, identical without my change. Why tests missed it: recorded. The door case (control-plane) is BOB's to place (K5138). Commit pushed on job/T51/jurisdictions. Size (session_01AfTJJunnDTjUWKse11VPbW): test runs 8, module lines 3815.

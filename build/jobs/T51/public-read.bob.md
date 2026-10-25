@@ -1,6 +1,6 @@
 # BOB to public-read (T51)
 
-**Read** · handled J26
+**Read** · handled J32
 
 ## B1 · START
 
@@ -333,3 +333,81 @@ Mail with `--module public-read`; record `build/jobs/T51/public-read.md` (append
 **Before COMPLETE:** your module's tests, `node build/plan/impact.mjs tranche/T51 HEAD` and the users it names that your change touches, then format, architecture, coverage, words and ownership (civicos-process `checks/`), each read by its failure count. Record completion (mechanics section 6 step 7) with `Size (<session id>): test runs <n>, module lines <n>` and each cause's four fields; state COMPLETE; post COMPLETE.
 
 **G121b · The case file's assembly still awaits a chain of 11 levels, 7 of them R2** (re-walk 8 B: STILL, `assemble;dur` 1.7-2.3 s, the largest phase; diagnosis item 3, Certain). (1) `publication/worker.mjs` `assembleCaseFile` makes 26 R2 calls (2 get, 12 head, 10 put, the manifest's head and put) and 4 object calls: concurrent within a step, but two group barriers, a `head` before every `put`, and the manifest's head and put after `recordcasemanifest` stay serial. (2) Missed: round 8's test counted the calls, not the awaited chain. (3) Red, by counts (R-CLOCK): an in-memory R2 that records each call's start and the promise it awaited, on the walker's one-finding case: the longest awaited chain of R2 calls (11 levels, 7 R2 today) falls to what the data dependencies require; a `head` before a `put` only where the put's correctness needs it (content-addressed keys may put unconditionally, or with R2's own conditional put), and the manifest's work overlapped where nothing depends on it. Every file of the case file is still written and verified as R-old requires. (4) **L**; **P** the re-walk's `assemble;dur` (BOB's).
+
+## B28 · START
+
+START · PUBLIC-READ #34 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 4: publish 1 fixture, re-point 10 own lines, 2 marker lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #290 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/public-read tranche/T51 && git branch -m job/T51/public-read stale/public-read-local && git checkout -b job/T51/public-read origin/job/T51/public-read`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module public-read`; record `build/jobs/T51/public-read.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `bio-plane/test/m/public-read/fixtures.mjs` (new file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `groupIdentityRegistrar` (users now: instance-setup 1): real `publicReadOf(...).registerGroupIdentity` (PROVIDER_MALFORMED, PROVIDER_DECLARED).
+
+**Your own fixture lines, done in this job** (10; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- FIX-L answer-envelope/door-helpers: docket-real.test.mjs:20; door.test.mjs:28; public-path.test.mjs:29; relay.test.mjs:30; sampling.test.mjs:29; served.mjs:28
+- FIX-L store-door/store-replies: door.test.mjs:80; relay.test.mjs:38,39
+- FIX-L instance-setup/group-identity-public: group-fields.test.mjs:18
+
+**Markers owed (K5044 (2), K5060; the audit read each line and found it no module's answer):** write on the line or up to eight lines above:
+- `// fixtures-own: input <why>` (a literal handed to your own export, a route map handed to your own dispatch, an input the module reads opaquely): dec149.test.mjs:129
+- `// fixtures-generic: <the made-up word the line carries>`: g54-attempt.test.mjs:219
+
+A `fixtures-run` you write shows `orphan-run` in your list until its user module's marker is merged, and a marker you place shows `contract-no-run` until its provider's run is merged: these are the only lines you may leave at done, each named in your record with the module it waits for.
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . public-read --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/public-read.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-haiku-5-5, medium effort.
+
+**From publication's job (K5074):** `assembleCaseContainer` and `recordCaseFileFailure` (`bio-plane/src/publication/worker.mjs`) and `public-read/casefile.mjs` are this module's paths, so publish `assembleCaseContainerRefusal`: the real build refusals MATERIAL_MISSING, BUCKET_FAILED and CASE_FILE_NOT_ASSEMBLED, made by your real code, with its test. Users: ratification `g54-paths:310`, `:455`, `g57-heal:426` (re-pointed in ratification's job). publication publishes the ledger half (`caseFileLedger`).
+
+## B29 · CHANGE
+
+Added to your START (K5083; RATIFICATION #36 J18 (2), cause R27a): the case-file assembly (`publication/worker.mjs assembleCaseContainer`, in your paths) makes 5 sequential store hops; it must make 3: fold `recordcasefile` with `casefilefacts`, and the final `recordcasemanifest` + `recordcasefile` into one, and issue the case file's bucket gets and puts in one group with the heads. Failing-first test that counts the longest chain of calls by logical sequence, never by time (K4787): red at 5, green at 3; controls: the container's bytes, the manifest and every refusal unchanged. ratification R60 needs it (the door's chain at most 10). Merge `origin/tranche/T51` first (ratification merged, its `r10-chain.test.mjs` shows the counting pattern).
+
+## B30 · ANSWER · re J28
+
+re J28 (K5084): option (a), BOB's (a field added, K2008; the bar is a derived figure, BOB's). publication R15 now takes `built: true` (one store call records the manifest and the file built, only after every file is stored: G54's order kept); your R44 is amended: the assembly's chain is 4; ratification R60's door bar is 11 (1 + 6 + 4), the live bar stays 2 s. PUBLICATION #39 starts now on R15; when it merges you get a CHANGE to call it and bring `chain.test.mjs` to 4. Until then keep your session; set `WAITING ON BOB (J28)` as you have. Your J27 work (fixtures, markers `dec149:130` input and `g54-attempt:220` SOMETHING_ELSE) is read and accepted; it merges with the chain change.
+
+## B31 · CHANGE
+
+CHANGE (B30 follow-up; K5084, K5088): PUBLICATION #39 is merged into `tranche/T51` (publication R15: `recordCaseManifest` takes `built: true`, recording the case file built in the same transaction; fixture `caseFileLedger(...).manifest(caseId, edition, {built})`). Merge `tranche/T51` into your branch, have the assembly call `recordCaseManifest({..., built: true})` once every file is stored (G54's order kept) so its chain is 4 (R44), bring `chain.test.mjs` to 4 (seen red first), run your tests and checks with your J27 work, and post COMPLETE.
+
+## B32 · START
+
+START · PUBLIC-READ #35 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 29 (plan build/plan/fix-round-10-T51.md §3; K5097)
+
+Depth 2 (BOB #292 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/public-read tranche/T51 && git branch -m job/T51/public-read stale/public-read-local && git checkout -b job/T51/public-read origin/job/T51/public-read`, then re-run `mail start`. If `job/T51/public-read` is behind `tranche/T51`, merge `origin/tranche/T51` into it first (never a rebase). A refused step: post BLOCKED naming it.
+Mail with `--module public-read`; record `build/jobs/T51/public-read.md` (append a new section). Model claude-haiku-5-5; workers haiku low, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` from the process repository (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993); a later provider's answer is kept under `// fixtures-contract: <provider> <id>` (K4995).
+
+**Follow-up 29 (test files only; INSTANCE-SETUP #31 J21).** `bio-plane/test/m/public-read/group-fields.test.mjs:18` keeps instance-setup's no-group answer as a `fixtures-contract: instance-setup group-identity-public` value (`NO_SLUG`). instance-setup's run (`bio-plane/test/m/instance-setup/fixtures.test.mjs`, `fixtures-run: public-read group-identity-public`) shows the real answer is `{ ok: true, group: null, display_name: null, domain: null, domain_verified_at: null, logo: false, detail: NO_GROUP_RECORDED }`: `NO_SLUG` lacks `logo: false`, and its `detail` copies a sentence where the real one is instance-setup's `NO_GROUP_RECORDED` value. Read the run whole; make `NO_SLUG` the real shape (a sentence is never copied into a test: the `detail` follows the run, read by key or left out of what the test compares, K3810), and check the tests that use it still assert what they did.
+
+**Done:** `checks/fixtures.mjs <absolute root> public-read --list` with your lines at zero (or each remaining one named with why and the module it waits for); your module's tests green; format, architecture, coverage, words, ownership 0. List every `fixtures-own`/`fixtures-generic` marker you add, file:line and why (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only: if the real answer shows a product defect, REPORT it to BOB and change no product code.
+
+## B33 · START
+
+START · PUBLIC-READ #36 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 70; K5148)
+
+Depth 2 (BOB #295 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/public-read tranche/T51`; if a local `job/T51/public-read` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/public-read stale/public-read-local && git checkout -b job/T51/public-read origin/job/T51/public-read`. If `job/T51/public-read` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module public-read`; record `build/jobs/T51/public-read.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+1. **A removal order for one case withholds another case's zip** (`diag2-10b.md` C2; public-read R28 as amended, BOB's reading of the order's reach, K5148): the default `criteria.json` is byte-identical across cases, so `#withheldIndex` (`index.mjs:1760-1782`) and the zip route (`publication/worker.mjs:722-728`) refuse every other case's zip. Count in a case's zip only files an order of that case withholds, and material (a finding, a capture, a document) withheld by any case's order; scaffolding with no member material counts only under its own case. Test: `court-orders.test.mjs`, two cases with default criteria, `remove` on the first, the second's zip 200; a finding both pin stays withheld in both.
+2. **A removed edition's finding rows keep the case document's text** (`diag2-10b.md` C3; R28): the `{...fnd}` spread (`index.mjs:1187` and around) keeps `case_excludes`, `strength`, `grounds`, `required`. Null them under a whole or finding-level order; identity facts stay. Test: in the `remove` and `seal` tests, every finding row's `case_excludes` is null and no sentence of the signed document appears outside `court_orders`/`withheld`.
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> public-read --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B34 · CHANGE
+
+CHANGE (K5153; your J31's question). Merged at K5153. A seal of the case document alone (no finding named) withholds the document's content, and `case_excludes` and the strength pair are the document's own text: null `case_excludes`, `strength`, `grounds` and `required` of every finding row under such a seal too, identity facts kept. R28 is worded on the tranche (merge `origin/tranche/T51` first). Test: a document-level seal nulls the four fields of every row and the exclusion sentence appears nowhere outside `court_orders`/`withheld`; control: no order serves them. Then COMPLETE again.

@@ -1,6 +1,6 @@
 # inquiry (T51)
 
-**Status** · session_01CYcxZgZhrDnqWKu6J5KF4X · depth 2 · COMPLETE · handled B7
+**Status** · session_019Sucssuvy7GkW7YhXyGe5i · depth 2 · COMPLETE · handled B13
 
 ## J1 · COMPLETE
 
@@ -119,3 +119,108 @@ Tests and checks
 - `checks/run.mjs` whole: format and architecture 0 failures; words inline 0, plain 0, missingkey 0 (nothing for inquiry); the 7 coverage failures (agent-harness, agent-runner, citation, installer-steps, journey-check, link-sweep, monitoring) and 7 testcopy failures (op-grades) are other modules', none in my files.
 
 Size (session_01CYcxZgZhrDnqWKu6J5KF4X): test runs 4, module lines 3835
+
+## J6 · QUESTION
+
+QUESTION (best reading given; I carry on). Three things for BOB, none decided by me.
+
+1. **modules.json: `inquiry` does not declare `duties` in `uses`.** FIX-E for held-legs.test.mjs:118 (duties/occurrencesOf) means importing `bio-plane/test/m/duties/fixtures.mjs`; `checks/architecture.mjs` refuses it ("duties, which inquiry does not declare in uses"). inquiry's source reaches duties only through leg-earning, so this is the first direct use. Please add `duties` to inquiry's `uses` (build/modules.json is not mine). Until then architecture shows that one failure; my re-point stands.
+
+2. **R8/R85 half "conclude with `reading` and no `affirmed` is ok through basis-versions `world()`" is not met by inquiry alone.** I stored the walker's case with `ground` (one labelled ground, one unlabelled supporting leg: lands, projection holds the label on the grounded leg only). The version block that `conclude` writes copies the question's legs with their labels into a version, and basis-version-grammar R3 (C-25.5 `VERSION_PARTITION_INCOMPLETE`, "labelled all or none") still refuses it: `{basis: [A ground "the minutes", B unlabelled], grounds: [the minutes]}` through basis-versions `world()`+`conclude({reading})` answers BASIS_VERSION_REFUSED / VERSION_PARTITION_INCOMPLETE. That is basis-version-grammar's (and basis-versions' R51 copy), not inquiry's: it needs the same amendment inquiry-grammar R68 got (an unlabelled supporting leg beside labelled grounds is a necessary leg in a version too). I did not write a test for it in my module.
+
+3. **R85's "read back as answered" (inquiry R65).** `ground` with `grounds: []` now holds `grounds: []` in the document (no longer removes the key), every supporting leg necessary; `divide` passes it to the children. To read it back I added one field to `partitionOf`: `answered` (true when any leg names a ground or the document holds a `grounds` array, even empty); `grouped` keeps its meaning (a leg names a ground). So all-"No" reads `{grouped: false, answered: true, groups: [], ungrouped: [all]}`; never partitioned reads `answered: false`. If you want `grouped` itself to be true for it, say so (a one-line change). R65's text needs the field.
+
+Also for your record: the Session Log line of an emptied partition now reads "no ground; N leg(s) read as necessary" (was "grouping removed"; `loggedChanges` parses both alike). NO_PARTITION's localized detail still says "Pass an EMPTY array to remove the grouping"; changing it is a setup-words row (not mine), left.
+
+## Fix round 10, Wave A batch 3 (INQUIRY #24, session_011Jyr771vUcNgdkLV7aQq1C) · completion notes
+
+**Cause 30b, the record half (R8, R85, R65).** Root cause: `ground` (index.mjs `#ground`) removed the `grounds` key for an empty partition (so "no ground" read as never partitioned) and `divide`'s `keepGroups` refused a child holding any unlabelled supporting leg; the tests asserted the old whole-partition refusal. Now: an unlabelled supporting leg beside labelled grounds lands as a necessary leg; `grounds: []` is held (`setOrAddScalar`), `PARTITION_UNCHANGED` is judged with the key's presence, `divide` keeps a group whole for a child with other unlabelled legs and passes `grounds: []` on; `partitionOf` adds `answered` (B9: accepted, `grouped` unchanged). Failing-first: `necessary-leg.test.mjs`' empty-partition test was seen red on the old source (stash), the other two pass on both (the first case already lands under inquiry-grammar R68). Platform: N.
+- `conclude` with `reading` through basis-versions: not inquiry's (B9); `test.todo` naming R85 in `necessary-leg.test.mjs`; R85 struck when basis-version-grammar and basis-versions have merged.
+- The five inherited reds (grammar R8; case-grammar R8 default-AND; ground R27/R30 order; partition R65; cutting-legs R85 control) are brought in line; `ground.test.mjs` R28 emptying now asserts `grounds: []` and the log line "no ground; N leg(s) read as necessary". Controls kept: a cutting leg naming a ground is still refused (grammar, case-grammar, cutting-legs).
+- Deferred: NO_PARTITION's detail still says "remove the grouping" (word-table row, UX-DESIGN, B9).
+
+**Fixtures.** Published in `bio-plane/test/m/inquiry/fixtures.mjs` with `fixtures.test.mjs`: basisForUnread, basisRefusals, disposeAct, migratedSurfacing, readRefusals. Own lines: retrieval/selectionResolve re-pointed (the test world now uses the real retrieval over its host, `w.select` makes real selections; two tests take a fresh selection after the act moved the set, as a real selection does); duties/occurrencesOf re-pointed to duties' `occurrencesOf()` fixture (B9 added `duties` to `uses`). **Left: capture/heldActsUnreadable (document-waits.test.mjs:115,124), waiting for capture's published fixture (no `fixtures.mjs` in capture's tests yet).** No `fixtures-own` or `fixtures-generic` marker added.
+
+**Other modules.** citation's R21 (3 tests) is red identically on tranche/T51 (their repair texts for a grouped basis); not mine.
+
+**Tests and checks.** inquiry: tests 235, pass 233, fail 0, todo 2. format 0 failures; architecture inquiry 0; coverage 58 of 58, 0; ownership 0; words 0 (unkeyed 12, the design's list); fixtures inquiry: 2 failures (capture, above). Users named by `impact.mjs` run (hypotheses, citation, basis-versions, strength, contradiction, ai-runs, run-productions, capture-requests, question-explorer, intent, investigation, reevaluation, publication, docket, project-stage, ratification, case-disclosures, case-account, case-authoring, conformance, consequences, actions, action-plans, scheduler, affordances, queue-producers, notice-producers, queue, op-declarations, answer-envelope, store-door): 0 failures each except citation's 3 above.
+
+Size (session_011Jyr771vUcNgdkLV7aQq1C): test runs 14, module lines 3860
+
+## J7 · COMPLETE
+
+COMPLETE: fix round 10 batch 3 for inquiry; see the record section 'Fix round 10, Wave A batch 3'. Cause 30b record half done (conclude half is a test.todo per B9); five fixtures published; own lines done but capture/heldActsUnreadable (2, waiting for capture's fixture). Tests 235/233 pass/0 fail/2 todo; checks clean but fixtures 2 (capture). No fixtures-own/generic markers.
+
+## B10 (CHANGE) applied
+
+Merged tranche/T51 (capture's `fixtures.mjs`). `document-waits.test.mjs` lines 115 and 124 now take `heldActsUnreadable()` from `bio-plane/test/m/capture/fixtures.mjs`. `checks/fixtures.mjs /home/user/bio inquiry --list`: 0 findings. inquiry tests 235, pass 233, fail 0, todo 2; format, architecture, coverage, ownership, words 0 failures. No fixtures-own or fixtures-generic marker added. The earlier "left" line (capture) is closed.
+
+Size (session_011Jyr771vUcNgdkLV7aQq1C): test runs 16, module lines 3860
+
+## J8 · COMPLETE
+
+COMPLETE after B10: document-waits.test.mjs:115,124 re-pointed to capture's heldActsUnreadable; fixtures check for inquiry at 0; tests 235/233 pass/0 fail/2 todo; format, architecture, coverage, ownership, words 0.
+
+## J9 · COMPLETE
+
+COMPLETE: fix round 10, follow-up 38, the inquiry share (test files only; K5077, plan build/plan/fix-round-10-T51.md §3).
+
+**Applied.** Published `datedWaitOf({ viewer = V("alice"), date = "2026-10-10", asOf = `${date}T07:00:00Z` })` in `bio-plane/test/m/inquiry/fixtures.mjs`, made by the real code each call (a question stated by the viewer's promotion, the wait set by that promotion, the real `datedWaits` read). Returns `{ inquiry, question, viewer, date, asOf, answer, before, none }`:
+- `answer`: the real `datedWaits({ member: viewer, asOf, viewer })`, `{ ok, member, as_of, zone: "America/Los_Angeles", waits: [{ inquiry, index: 0, text: "the auditor's reply", description: "from the City", date, state: "due", set_by: viewer, set_at, set_in: null }] }`.
+- `before`: the same read at `${date}T06:59:59Z`, state `waiting`.
+- `none`: the same read by `admin`, `waits: []`.
+- The test `R55: datedWaitOf …` in `fixtures.test.mjs` checks these, and parameterises the viewer and date (`member:bob`, 2026-10-20).
+
+**For queue (follow-up 38, its `noticed.test.mjs:292`).** Its `datedWaits` stand-in takes `answer`'s shape: `{ ok, zone, waits: [...] }` with `set_by` and `set_at`. Queue's re-point is queue's new session.
+
+**Limit.** The default instant is 07:00Z, the local midnight in Los Angeles while daylight time holds (March to the first Sunday of November). A `date` outside that season needs its `asOf` passed explicitly.
+
+**Deferred.** None. **Found in another module.** None. **Markers.** No `fixtures-own` or `fixtures-generic` marker added.
+
+**Tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/inquiry/*.test.mjs` (absolute root): 236 tests, 234 pass, 0 fail, 2 todo (both already there).
+
+**Checks** (`/home/user/bio` as the root): format 0 failures; architecture inquiry 0; coverage 58 of 58 named, 0; ownership against `origin/tranche/T51` 0; words 0 failures (the 12 unkeyed are the design's list, as before); `fixtures.mjs /home/user/bio inquiry --list`: 0 findings.
+
+Commit `4d33ca45d6` on `job/T51/inquiry`, pushed.
+
+Size (session_01JMyjNSQDBNMdgULeA9Az7a): test runs 3, module lines 3844
+
+## J10 · COMPLETE
+
+COMPLETE after CHANGE B12 (follow-up 9, K5109). Commit `1d109a5008` on `job/T51/inquiry`, pushed.
+
+**Applied.** Merged `origin/tranche/T51` first. In `bio-plane/test/m/inquiry/necessary-leg.test.mjs`, the R85 `test.todo` (one labelled ground beside one unlabelled necessary leg, concluded on its own reading) is replaced by a one-line comment citing basis-versions' test "R51, R3 (K5077): a question of one labelled ground and one unlabelled supporting leg concludes on its own reading". **`necessary-leg.test.mjs` holds no R85 todo**; BOB may strike R85 at the merge. Other R85 tests stay.
+
+**Still owed from B11.** The datedWaitOf fixture from J9 is unchanged.
+
+**Tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/inquiry/*.test.mjs` (absolute root): 235 tests, 234 pass, 0 fail, 1 todo (an existing todo, not the R85 one).
+
+**Checks** (`/home/user/bio` as root): format 0 failures; architecture inquiry 0; coverage 58 of 58, 0; ownership against `origin/tranche/T51` 0 (3 files: the two fixture files and necessary-leg); words 0 failures; fixtures inquiry `--list` 0 failures.
+
+**Deferred.** None. **Found in another module.** None. **Markers.** None added.
+
+Size (session_01JMyjNSQDBNMdgULeA9Az7a): test runs 4, module lines 3844
+
+## J11 · COMPLETE
+
+B13 (follow-up 55, WALK-FINAL-05 row R38; K5130) applied. Requirement met: **R55's T51 amendment** (the extended `questionWaits`, with R58's answer); the *(not yet met: T51)* mark on it is BOB's to strike. R58 is unchanged.
+
+**Root cause, with evidence.** `questionWaits` (`bio-plane/src/inquiry/index.mjs`) read only `inquiry_dated_waits`; R58's `documentWaits` was reached by no op (only `investigation` called it), so `op=questionwaits`, which `screens-inquiry/question.mjs:31` reads for the question screen, never answered a set-aside wait or its history. Seen red: the new test's first assertion read `document_waits` as `undefined`.
+
+**Fix.** `questionWaits` now also answers `document_waits` (R58's `waits`: `{document, by, reason, at}`) and `history` for that question, taken from `documentWaits({questions: [question], viewer})` itself, so a viewer who may not see a document gets neither, and an ending state answers the history and no wait. An unreadable capture read answers both `null` with `document_waits_why` (R58's `undetermined` reason), never as no wait. An absent or invisible question is answered as before.
+
+**Why the tests missed it.** The screen's tests use a hand-built `questionwaits` fixture (`screens-inquiry/fixtures.mjs:115`) of a shape the real op never gave. Gap fixed: the fixture `questionWaitsSetAside` below is made by the real capture module's set-aside and restore, for screens-inquiry's re-point.
+
+**Tests (the walker's case through the real entry, seen red, then green).** `document-waits.test.mjs`, two tests named R55 R58 (K5130): a question, a document cited to it, another member sets it aside with a reason, `questionWaits` as the asker reads the wait with by and reason; a restore ends it, both in `history`, equal to `documentWaits`' own; a viewer who may not see the document gets neither; an ending state answers the history and no wait; an unreadable capture read answers `null`/`null` with the reason; control: an invisible question is answered as an absent one.
+
+**Published fixture.** `questionWaitsSetAside({asker = "member:alice", setter = "member:bob", reason = "Not needed yet.", restoreReason = "The question needs it after all."})` in `bio-plane/test/m/inquiry/fixtures.mjs` returns `{inquiry, question, document, asker, setter, reason, restoreReason, answer, hiddenFrom, restored}`: `answer` is the real `questionWaits` answer to the asker after the set-aside, `hiddenFrom` the answer when the document is hidden from the viewer, `restored` the answer after the asker's restore. Its test is in `fixtures.test.mjs`. No `fixtures-own`/`fixtures-generic` markers added.
+
+**Tests and checks** (absolute root `/home/user/bio`). `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/inquiry/*.test.mjs`: tests 238, pass 237, fail 0, todo 1 (the existing one). format 0 failures; architecture inquiry 0; coverage 58 of 58, 0; words inquiry 0; `fixtures.mjs inquiry --list` 0 failures; ownership 0 (see the commit below). **Platform check:** none needed (no storage or deployment change).
+
+**Deferred.** None. **Found in another module.** None. The requirements file is unchanged by me (R55's mark is BOB's to strike).
+
+Size (session_019Sucssuvy7GkW7YhXyGe5i): test runs 6, module lines 3848
+
+## J12 · COMPLETE
+
+COMPLETE B13 (follow-up 55, K5130): R55's amendment met. questionWaits now carries document_waits and history as documentWaits gives them (undetermined: null/null with document_waits_why). Published fixture questionWaitsSetAside({asker, setter, reason, restoreReason}) in test/m/inquiry/fixtures.mjs. Checks all 0; tests 238, 237 pass, 1 todo. Details in record J11.

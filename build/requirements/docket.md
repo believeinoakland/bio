@@ -21,7 +21,7 @@ Terms.
 - A **record entry** is a member's filing on `record`. A **public entry** is a manager's signed entry on `listed` or `reactions`.
 
 **Filing to the record: docketFile({case, edition, kind, from, capture, contests?, proposed, reason, author, viewer})** (`op=docketfile`; member session; mutating)
-- **R1** Any joined member of the case's project files a record entry. Refusals, in order, each writing nothing and carrying a catalogue row (DEC-49):
+- **R1** Any joined member of the case's project files a record entry. Refusals, in order, each writing nothing and carrying a catalogue row (DEC-49): (K5148; WALK-FINAL-10B R177) The summary filed with an entry is kept for every kind that has one, and `docketPrepare` uses it when the prepare names none (R4).
   - a machine or AI credential, or an operator token, is `MACHINE_CANNOT_FILE_DOCKET`;
   - a case that is absent, has no ratified edition, or whose project `viewer` does not see in full (`membership.sight`, its R44) is `NO_SUCH_CASE`, the same answer for each;
   - `author` not a joined participant of the project (`membership.projectAuthority`'s "joined", its R55) is `PROJECT_ACT_NOT_A_PARTICIPANT`, membership's row and words, relayed (K4557, K231; T51, K4568); `DOCKET_NOT_A_PARTICIPANT` (C-129.2) is no longer answered;

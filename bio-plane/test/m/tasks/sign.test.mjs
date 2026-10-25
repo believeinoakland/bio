@@ -5,12 +5,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { world, NOW, iso } from "./world.mjs";
+import { world, NOW, iso, projectOf } from "./world.mjs";
 import { CHECK_REQUEST_CHECKS, TASK_ACTOR_CHECKS, TASKS_TABLES, SIGN_TASK_KIND, tasksOps } from "../../../src/tasks/index.mjs";
 import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
-const PRJ = "PROJ-2026-0001-team", PRJ2 = "PROJ-2026-0002-other", INFO = "INFO-2026-0001-loose";
+const PRJ = projectOf("Team").projectId, PRJ2 = projectOf("Other").projectId, INFO = "INFO-2026-0001-loose";
 const CASE = "CASE-2026-0001-a", CASE2 = "CASE-2026-0002-b", FRESH = "CASE-2026-0003-new";
 const MACHINE = `${MACHINE_CLASS_PREFIX}daemon`;
 

@@ -20,6 +20,8 @@ export function answersOps(a, url, body) {
     answercheck: () => a.check({ answer: b.answer ?? null, grant, viewer, mode: "ask" }),
     /* R13 */
     asktallies: () => a.tallies({ viewer, from: q(url, "from") ?? b.from ?? null, to: q(url, "to") ?? b.to ?? null }),
+    /* R7 (K5131): the switch's state, a read any signed-in member may make */
+    ruleservicesstate: () => a.ruleServicesState(),
     ruleservicesswitch: () => a.ruleServicesSwitch({ on: b.on === true, by: viewer }),
     /* R15–R20, R34 */
     /* R15, R28: a saved query or a find (`{scope, kinds, term?}`, as `retrieval.findIn` takes them) */
@@ -42,6 +44,8 @@ export function answersOps(a, url, body) {
 export const DECLARED_OPS = Object.freeze({
   ruleanswer: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("answers.declared.ruleanswer", "read: one rule service's value with its basis, grade and label, or not held; writes nothing"),
     fields: { accepts: ["service","args","at"], requires: ["service"] } },
+  ruleservicesstate: { classes: ["admin","member"], mutating: false, weight: "read", description: localize("answers.declared.ruleservicesstate", "read: whether the rule services are switched on, so a screen draws their control only while on; writes nothing"),
+    fields: { accepts: [], requires: [] } },
   standingquestionset: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "caller-owned", description: localize("answers.declared.standingquestionset", "personal state, keyed (member, STQ- id): a member's own standing question, seen only by them"),
     fields: { accepts: ["owner","question","query","find","cadence","ends"], requires: [["query","find"],"cadence","ends"] } },
   standingquestionend: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "caller-owned", description: localize("answers.declared.standingquestionend", "personal state, keyed (member, STQ- id): a member ends their own standing question"),

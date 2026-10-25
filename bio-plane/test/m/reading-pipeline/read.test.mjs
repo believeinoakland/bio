@@ -191,6 +191,7 @@ test("R4 R16: tier 3 selects pages with a routing marker and no encryption; each
 test("R4: a page after a call that throws, a declined page, one under another engine build and one not asked for are not merged, and the note names them", async () => {
   const w = fresh();
   const pages = [0, 1, 2, 3, 4].map((i) => ({ page: i, text: "", undetermined: [noText(i)] }));
+  // fixtures-generic: busy
   const ocr = member((body, n) => {
     if (n === 1) return { ...ocrAnswer([0]), deferred: [1, 2, 3, 4] };
     if (n === 2) return { ok: false, reason: "busy" };                          // page 1 declined
@@ -358,7 +359,7 @@ test("R12 R21: page_count is the structure's count when positive, else null, nev
     async () => { const d = await hold(w.evidence, "t13 bytes"); return (await w.read(doc({ digest: d, format: "t13" }))).reading; });
   assert.equal(noneAnswered.container_extent, null, "present and null: an entry answered and itemised nothing");
   const html = (await readHtml(w, "<html><body>x</body></html>", { headers: [] })).reading;
-  assert.equal("container_extent" in html, false, "absent when no entry answered");
+  assert.deepEqual(html.container_extent, { container: "html", levels: ["paragraphs"], sheets: null, paragraphs: 1, slides: null }, "no entry answered: only the paragraph count (R63)");
   const deck = await withEntry({ format: "pptx", text: async () => ({ ok: true, document: "s1", slides: [{ slide: 1, text: "s1", shapes: 3 }, { slide: 3, text: "s3", shapes: "x" }],
       deckLength: 4, tables: [], counts: { chars: 2, undetermined: 0 }, undetermined: [] }) },
     async () => { const d = await hold(w.evidence, "pptx bytes"); return w.read(doc({ digest: d, format: "pptx", ct: "application/x" })); });

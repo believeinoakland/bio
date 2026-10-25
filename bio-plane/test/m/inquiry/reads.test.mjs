@@ -47,7 +47,7 @@ test("R19 stateHistory answers each transition with who took it and when, so a r
   const w = world(); w.member("alice");
   w.inquiry("INQ-2026-0001-q");
   w.select("h1", ["INQ-2026-0001-q"]);
-  assert.equal(w.k.dispose({ handle: "h1", to: "deferred", reason: "later", viewer: "admin", author: V("alice") }).ok, true);
+  assert.equal(w.k.dispose({ handle: "h1", to: "deferred", reason: "later", viewer: "admin", owner: "o", author: V("alice") }).ok, true);
   const re = w.promotion.reopen({ target: "INQ-2026-0001-q", reason: "new facts", viewer: "admin", author: V("carol") });
   assert.equal(re.ok, true, JSON.stringify(re).slice(0, 300));
   const h = w.k.stateHistory("INQ-2026-0001-q");

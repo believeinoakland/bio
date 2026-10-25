@@ -1,6 +1,6 @@
 # BOB to connections (T51)
 
-**Read** · handled J3
+**Read** · handled J7
 
 ## B1 · START
 
@@ -57,3 +57,47 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B6 · CHANGE
 
 Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B7 · START
+
+START · CONNECTIONS #18 · tranche T51 · product believeinoakland/bio · fix round 10, Wave B job, batch 6: re-point 6 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #292 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/connections tranche/T51 && git branch -m job/T51/connections stale/connections-local && git checkout -b job/T51/connections origin/job/T51/connections`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module connections`; record `build/jobs/T51/connections.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Your own fixture lines, done in this job** (6; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- FIX-L answer-envelope/door-helpers: converts-links.test.mjs:47
+- FIX-L store-door/store-replies: converts-links.test.mjs:69,132,142
+- CODE (OVERLOADED is in no product file. Fix: use STORE_INTERNAL_ERROR (500) the product has no overload refusal; REPORT to BOB if a 503 is wanted): converts-links.test.mjs:146
+- extraction/unheldStructure (1 judgment): fixture.mjs:95
+
+A `fixtures-run` you write shows `orphan-run` in your list until its user module's marker is merged, and a marker you place shows `contract-no-run` until its provider's run is merged: these are the only lines you may leave at done, each named in your record with the module it waits for.
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . connections --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/connections.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B8 · START
+
+START · CONNECTIONS #19 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 74; K5148)
+
+Depth 2 (BOB #296 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/connections tranche/T51`; if a local `job/T51/connections` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/connections stale/connections-local && git checkout -b job/T51/connections origin/job/T51/connections`. If `job/T51/connections` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module connections`; record `build/jobs/T51/connections.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+1. **A document's citers read with an inquiry's refusal sentence** (`diag2-06.md` §12; connections R72, new): `backlinks` (and the other `NO_SUCH_BUNDLE` sites of this module, `:884`, `:938`, `:1085`) answer hypotheses' code, so the door decorates them "There is no inquiry here by that id". Mint connections' own code and catalogue row (as tasks' `TASK_NOT_YOURS`), its sentence a `localize` stand-in about a document or record. Test at your interface: the refusal carries your code and its row's check; control: a visible target answers as before. Name the code in R20 and R72 in your COMPLETE (BOB words them).
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> connections --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B9 · CHANGE
+
+CHANGE (K5161, plan item 78 (2)). Not merged yet: architecture fails on your branch: `bio-plane/test/m/connections/no-such-document.test.mjs` imports `bio-plane/src/answer-envelope/families.mjs`, a module later in the order than connections (P4). Take what that test needs without the import (connections own catalogue row and code, read through your own `checks.mjs`; the family decoration is answer-envelope s to test, not yours). Merge `origin/tranche/T51` first: R20 is now worded `NO_SUCH_DOCUMENT` (R72) by BOB. Then `checks/architecture.mjs <absolute root> connections` 0 and the other checks as before; COMPLETE. Your other findings are placed (screens-inquiry document.mjs:95; answer-envelope s 16 reds diagnosed by BOB).

@@ -1,6 +1,6 @@
 # events (T51)
 
-**Status** · session_011EKDRCfuAzrqpjUU7nEv36 · depth 2 · COMPLETE · handled B2
+**Status** · session_01DQzTUD8weDGve6uNRAcm2V · depth 2 · COMPLETE · handled B6
 
 ## Completion (CR-7, events)
 
@@ -39,3 +39,57 @@ Size (session_011EKDRCfuAzrqpjUU7nEv36): test runs 9, module lines 2795
 ## J3 · COMPLETE
 
 EVENTS #10 B3 complete on job/T51/events: C54, C6 met, events R53 as amended by K4310. timeline({captures}) now answers in the world lane the events whose event attestation (extent or dated fact) cites one of the captures, under R40 sight, R30 audience, R27 limit; set-found events not repeated; items found only by a capture carry of: []. Three tests naming R53 (written first, seen failing), controls included; one old R53 assertion (alone.world.items == []) changed with the requirement. events 93/93; explore, filings, actions, docket green as on base; op-declarations t50 has 1 inherited red identical on tranche/T51. checks/run.mjs: events 0 failures; ownership 0. Nothing to report in other modules. SCREENS-INVESTIGATE-2 and CAUSE-ACTION-T51 may read it after your merge.
+
+## Completion after B4 (START, fix round 10, Wave A batch 3)
+
+**Fixtures published** (`bio-plane/test/m/events/fixtures.mjs`, made by events' real code at call time over a fresh `world()`, never stored; each checked by a test naming a requirement in `fixtures.test.mjs`): `recordedByMalformedExtent` (R49, EXTENT_MALFORMED), `sequenceUndetermined` (R31/R51: `withWhy`, `withoutWhy` = the real answer with `why` taken off, `disagree` = cited orders disagree), `timelineAnswer` (R28, empty world), `timelineRefusal` (R28: NO_SET, BAD_DATE), `usesOf` (R46: one discretion, waiver and assessment through the real acts; `refused` = KIND_NOT_DISCRETION).
+
+**Own line done.** fixture.mjs:48 `promotionStub` removed; `world()` takes `promotionOver({record, membership, host})` from `../promotion/fixtures.mjs` (promotion's real code). `fixtures.mjs --list` for events: 0 failures. Markers added: no `fixtures-own`, no `fixtures-generic`, no `fixtures-contract`. Lines left: none.
+
+**Needs BOB.** `checks/architecture.mjs` fails one file: `bio-plane/test/m/events/fixture.mjs` imports promotion's fixtures, which `events` does not list in `uses` in `build/modules.json`. The line is BOB's, not mine: add `"promotion"` to events' `uses`. Nothing else in architecture fails for events.
+
+**Tests and checks.** events: 98 pass, 0 fail (93 before, 5 new). format 0 failures; fixtures 0 failures; words: no events finding; coverage: no events failure (other modules' ids listed unnamed are not mine); ownership 0 failures; `impact.mjs origin/tranche/T51 HEAD`: 0 affected modules (test files only).
+
+Size (session_01DAv9PSDWrsm3wEZhdCb73f): test runs 4, module lines 2807
+
+## J4 · COMPLETE
+
+EVENTS #12 B4 complete on job/T51/events: five fixtures published in bio-plane/test/m/events/fixtures.mjs (recordedByMalformedExtent, sequenceUndetermined, timelineAnswer, timelineRefusal, usesOf), each with a test naming its requirement; own line fixture.mjs:48 re-pointed to promotion's promotionOver. fixtures check for events at 0; events 98/98; format, words, ownership 0 failures; no fixtures-own/generic/contract markers added. NEEDS BOB: architecture fails 1 file (events/fixture.mjs imports promotion's fixtures; add "promotion" to events' uses in build/modules.json, your file). Record: build/jobs/T51/events.md.
+
+## Fix round 10 · cause 1 (B5; events R50)
+
+**Applied.** `grade_why` (timeline items placed nowhere) and the event view's `why` for an event with no dated attestation are now `{key, vars}` via `reason()` (`events.why.grade_placed_nowhere`, `events.why.grade_time_unread`, `events.why.placed_nowhere_attestation`), not `word()` strings; `reasons.mjs` `reasonText` carries all three keys so English callers still get the sentence. R50 is met; the mark may be struck.
+
+**Tests (red on old source, green now).** `drawn.test.mjs` R50 and `reasons.test.mjs` R54 assert `{key, vars}` (and `reasonText` English); `events.test.mjs` R9 asserts the view's `why`; new fixture `timelineUndated` in `fixtures.mjs` (made by the real code) with `fixtures.test.mjs` R50 test, for screens-investigate's timeline test.
+
+**Why the tests missed it.** Each half was green against its own stub: events asserted the finished string and screens-investigate a hand-made `{key, vars}`; no test drew the screen over events' real answer. The published fixture now closes that.
+
+**Found, not changed.** `#eventView` still gives `word("events.why.dated_attestation_see")` as a string `why` (index.mjs:1065, event with a dated attestation the viewer cannot see); R54 says no `why` is a string. No key is named in R50/R54 for it, so left for BOB. Also `following/checks.test.mjs` R1 C-137 fails identically with and without my change (pre-existing, not events').
+
+**Ran.** events tests 99 pass 0 fail; screens-investigate + following 377 tests, 376 pass, the 1 above pre-existing. format 0, architecture 0, coverage 55/55, words 0 failures, ownership 0, fixtures --list 0 failures (no marker added).
+
+Size (session_014vh9swNghbuHGzUzM6v8bp): test runs 6, module lines 2809
+
+## J5 · COMPLETE
+
+EVENTS #13 B5 complete on job/T51/events: cause 1 done. R50 met (grade_why and the undated event view's why are {key, vars}; strike the mark). Fixture timelineUndated published for screens-investigate. Module tests 99/99; format, architecture, coverage, words, ownership, fixtures 0 failures. Found: #eventView still gives string why events.why.dated_attestation_see (index.mjs:1065), no key named in R50/R54, left for BOB. following/checks.test.mjs R1 C-137 fails without my change too. Record: build/jobs/T51/events.md.
+
+## Completion after B6 (START, fix round 10, cause 1 of EVENTS #14)
+
+**Causes met.** R50 (K5152 extension): `#eventView`'s `why` for a dated attestation the viewer cannot see is `reason("events.why.dated_attestation_see")`, `{key, vars}`, not `word(...)` (index.mjs:1065). The vote-value reason `vote_value_why` in the participant view (index.mjs:1047) is also `{key, vars}`, since it is a `why` the event view answers (R50: "every other `why` the event view answers"); `reasons.mjs` keeps English for both keys. Strike the R50 mark.
+
+**Failing first.** `drawn.test.mjs` R50 (new): the view for an outsider whose governing dated attestation is hidden has `when` null and `why` `{key: "events.why.dated_attestation_see", vars: {}}`; control: the member's view has no `why`. Seen red on the old code ("no dated attestation you can see governs this event"), green after. `participants.test.mjs` R54-era assertion on `vote_value_why` changed from the word to `{key, vars}`; that assertion was a string by construction, so it could not hold on the new form and was not run red separately.
+
+**Fixture published.** `timelineDatedHidden()` in `fixtures.mjs`: the real `readEvent` view for the outsider and the member, made by events' real code; `fixtures.test.mjs` R50 test checks both.
+
+**Why the tests missed it.** The R50 drawn test asserted the timeline's items (`grade_why`), never the event view's own `why` for the same hidden dated attestation; `timelineUndated` covered only the undated (placed nowhere) view. No test drew the view for a dated event the viewer cannot see, so the string went unseen.
+
+**Other `word(` whys, grepped (`bio-plane/src/events`).** Not changed, and not views' `why`: `follow.mjs` import reports (`unresolved`/`skipped` `why`, lines 100–295: the import's own diagnostic sentences, read by the import screen, not an event view); `index.mjs:377,379` `afterRead`'s `why` (the capture-class opt-in answer, not `undetermined`, not an event view); `checks.mjs` refusal `translation`s (refusal sentences, R54 names no key for them). Deferred to BOB as a REPORT if these should follow R54: the import reports.
+
+**Tests and checks.** events: 101 pass, 0 fail (99 before, 2 new). `checks/format.mjs`: 0 failures; `architecture.mjs events`: 0; `coverage.mjs events`: 55 of 55, 0 failures; `words.mjs events`: 0 failures; `fixtures.mjs events --list`: 0 failures, no marker added; `ownership.mjs events tranche/T51`: 0 failures (run before this commit; rerun at COMPLETE).
+
+Size (session_01DQzTUD8weDGve6uNRAcm2V): test runs 7, module lines 2812
+
+## J6 · COMPLETE
+
+EVENTS #14 B6 complete on job/T51/events (839ded5c9e). R50 met (K5152): the event view's dated-attestation why and vote_value_why are {key, vars}; drawn and fixtures tests added (red first for the view's why). Events 101/101; format, architecture, coverage 55/55, words, fixtures, ownership 0 failures. Other word() whys in the module are import diagnostics and refusal sentences, not views' undetermined whys (listed in the record). Record: build/jobs/T51/events.md.

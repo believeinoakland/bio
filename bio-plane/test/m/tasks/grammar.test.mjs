@@ -2,7 +2,7 @@
    R59) and at the drain; and N367, the grammar itself tested both ways: a conformant task passes, and every bound is
    asserted by a fixture that breaks that bound alone (the retired `test/inbox.test.mjs`'s 31 per-bound arms, carried and
    widened to every finding the function can make). */
-import { test } from "node:test";
+import { test, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { inbox, ev, NOW, iso } from "./world.mjs";
@@ -251,3 +251,8 @@ test("R12: every id valid before T33 stays valid, and every finding on an inbox 
     ["C-19.1", "error", "inbox.json tasks[3].id 'task-2026-0002-c' does not match the TASK grammar"],
     ["C-19.1", "error", "inbox.json tasks[3].kind 'x' must be one of: authority-undetermined"]]);
 });
+
+/* Under `--test --test-force-exit` the runner lost reports of this file's tests (the burst of sub-millisecond synchronous
+   ones above): all ran, but a one-process run of the module reported 103 to 134 of 134. A turn of the event loop after each test
+   lets the reporter drain; K5117, build/jobs/T51/tasks.md. */
+afterEach(() => new Promise((done) => setImmediate(done)));

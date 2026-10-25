@@ -21,6 +21,7 @@ bindPublishedPlane({
   json, STORE_SILENT_REASON: "STORE_DID_NOT_ANSWER", STORE_SILENT_DETAIL: "silent", PUBLISHED_STORE: "bio",
   doAnswer: async (res) => { let out = null; try { out = await (await res).json(); } catch { out = null; }
                              return out && out.ok === true ? { answered: true, result: out.result } : { answered: false }; },
+  // fixtures-contract: answer-envelope door-helpers
   storeSilent: (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }, 502),
   requiredArgument: (op, argument, shape, error) => ({ ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error }),
 });

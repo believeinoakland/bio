@@ -35,7 +35,7 @@ import { validAt, fiscalPeriod, isCalendarDate, localDay, reasonText } from "../
 import { recognise } from "../idspaces.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, listenerRefusal, notAnAdmin, MODULE_ORDER, viewerPredicate, Membership } from "../membership/index.mjs";
-import { contentOf, canonicalExtent } from "../content/index.mjs";
+import { contentOf, canonicalExtent, checkContentExtent } from "../content/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { combine as combineProfiles, SPACES } from "../../../jurisdictions/index.mjs";
 import { CALCULATIONS_TABLES, migrateCalculations } from "./schema.mjs";
@@ -96,9 +96,11 @@ const LINK_KIND_FIELDS = Object.freeze(["kind", "link_kind", "relation", "relati
 const GRADES = Object.freeze(["A", "B", "C", "D"]);
 const TESTIMONY = "D";
 const SHA = /^[0-9a-f]{64}$/;
+const BARE_HANDLE = /^[A-Za-z0-9._-]{1,128}$/;   /* a member id spelled bare, as `testify` stamps an author (K5131) */
 const CALC_RE = idPattern("CALC");
 const MONEY_RE = idPattern("MNY");
 const READ_LIMIT_MAX = 1000;
+const BUILT_IN_KINDS = Object.freeze(["count", "total", "share", "ratio", "difference"]);   /* R4 (K5131): kinds that compose a default recipe */
 const TABLE_CACHE_CHARS = 24 * 1024 * 1024;   /* the held tables' text kept at hand, at most (R1: one 20 MiB table fits) */
 /** R14 (G45): a value of an ingest's record (`rows`, `written`, `not_written`) stays in `calc_ingests` while its UTF-8 length is at most
  *  this; above it the column holds the marker `{parts, bytes, count}` and the text is in `calc_ingest_parts`, in chunks of at most
@@ -164,8 +166,11 @@ export function memberOf(stamp) {
   if (p.member) return p.member;
   return stamp === Membership.ROOT_ADMIN ? Membership.ROOT_ADMIN : null;
 }
+/* K5131: the member a stamp names in a comparison of authors: `testify` stamps a testimony's author as the bare handle (`bob`), which names member
+   `bob` as `member:bob` does; a machine identity (it carries a colon) is no handle. Sight (`memberOf`) stays closed to a bare handle. */
+const stampMember = (stamp) => memberOf(stamp) ?? (typeof stamp === "string" && BARE_HANDLE.test(stamp) && !isMachineIdentity(stamp) ? stamp : null);
 /** R41: whether two stamps name the one same member (a machine, or no member, matches nothing). */
-const sameMember = (a, b) => { const m = memberOf(a); return m !== null && m === memberOf(b); };
+const sameMember = (a, b) => { const m = stampMember(a); return m !== null && m === stampMember(b); };
 const isMachine = (by) => typeof by === "string" && isMachineIdentity(by);
 const stamped = (by) => typeof by === "string" && by.trim() !== "";
 
@@ -333,6 +338,14 @@ function extentBox(row) {
 function delimiterWindow(text) {
   const s = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
   return s.length > DELIMITER_WINDOW_CHARS ? s.slice(0, DELIMITER_WINDOW_CHARS) : s.endsWith("\n") ? s : `${s}\n`;
+}
+
+/* R45 (fix round 10, cause 19): a reading's own text of a spreadsheet or an ODS is its cells joined by a tab (`odf.mjs`, `formats-xlsx.mjs`), so
+   the tab is its delimiter whatever commas its cells hold ($69,268.31): a tab on the majority of the window's lines. */
+function tabJoined(window) {
+  let lines = 0, tabbed = 0;
+  for (const l of window.split("\n")) { if (l.trim() === "") continue; lines++; if (l.includes("\t")) tabbed++; }
+  return tabbed > 0 && tabbed * 2 > lines;
 }
 
 export class Calculations {
@@ -598,6 +611,7 @@ export class Calculations {
     const csv = row.extent_kind === "document" && this.#isCsv(row.capture_sha);
     let text = null;
     if (!csv) { try { text = this.content.passageText(row.content_id); } catch { text = null; } }
+    const own = typeof text === "string";   /* the reading's own text, not the file's bytes (R45, cause 19) */
     if (typeof text !== "string" && row.extent_kind === "document") {
       const stored = await this.#storedText(row.capture_sha);
       if (stored.tooLarge) return { tooLarge: stored.tooLarge };
@@ -608,7 +622,7 @@ export class Calculations {
     if (typeof text !== "string")
       return { fault: csv ? localize("calculations.index.the_csv_files_own_bytes", "the CSV file's own bytes are not held, and a table is made from the file, never from the index of its reading") : word("calculations.source_text_held") };
     if (text.length > TABLE_MAX_BYTES * 2) return { tooLarge: { bound: "bytes", max: TABLE_MAX_BYTES, got: text.length } };
-    return { text };
+    return { text, own };
   }
 
   /* R1 (R44; fix round 9, G131d follow-up, K4850): a document's stored bytes as text. `{text}`; `{text: null}` for a file that is not held (the store
@@ -653,17 +667,30 @@ export class Calculations {
     } catch (e) { log({ phase: "end", outcome: "thrown", error: String((e && e.name) || "Error").slice(0, 80) }); return { text: null, transient: true }; }
   }
 
-  /** R1–R3: `declareTable({source, schema, header, roles?, vintage?, by})`. `source` is a content id (a CSV
-   *  capture's document, a passage, a workbook range or a portal export). Async: the bytes go to the evidence store. */
+  /** R1–R3, R51: `declareTable({source, schema, header, roles?, vintage?, by})`. `source` is a content id (a CSV
+   *  capture's document, a passage, a workbook range or a portal export), or a found passage `{capture_sha, extent}`
+   *  nobody has cited yet, whose content row is minted as money's source is. Async: the bytes go to the evidence store. */
   async declareTable({ source = null, schema = null, header = null, roles = null, vintage = null, by = null } = {}) {
     if (!stamped(by) || isMachine(by))
       return no("MEMBER_ACT_ONLY", localize("calculations.index.a_table_is_declared_by", "a table is declared by a member; a machine may not declare one (K1468). Nothing was written."));
-    const contentId = typeof source === "string" ? source.trim() : plain(source) ? str(source.content) : "";
-    if (!contentId) return no("NO_SOURCE", "a table names its captured source: the content id of a CSV, a workbook range or a portal export. Nothing was written.");
-    const row = this.content.contentRow(contentId);
-    if (!row || !this.#sees(row.bundle_id, by))
+    let contentId = typeof source === "string" ? source.trim() : plain(source) ? str(source.content) : "";
+    /* R51: a found passage, the shape every other recording act takes (money R2). Its content row is minted once the rest of the act is
+       judged (below), so an act refused before the bytes are read mints nothing; here only its capture and extent are checked. */
+    let found = null;
+    if (!contentId && plain(source) && source.capture_sha !== undefined) {
+      const sha = str(source.capture_sha).toLowerCase();
+      const home = /^[0-9a-f]{64}$/.test(sha) && this.provenance ? this.provenance.homeOf(sha) : null;
+      if (!home || !this.#sees(home.bundleId, by))
+        return no("NO_SUCH_CONTENT", localize("calculations.declare.no_capture_is_held_here", "no capture is addressed by this sha in this record, or it is not one you may see. Nothing was written."), { capture_sha: sha });
+      const extent = source.extent === undefined || source.extent === null ? { kind: "document" } : source.extent;
+      const bad = plain(extent) ? checkContentExtent(extent, this.content.contentContextFor(sha, { searched: false })) : { code: "CONTENT_EXTENT_UNREADABLE" };
+      if (bad) return no("NO_SUCH_CONTENT", localize("calculations.declare.the_found_passage_names_no", "the found passage names no part of that capture. Nothing was written."), { capture_sha: sha, extent_code: bad.code ?? null });
+      found = { bundleId: home.bundleId, captureSha: sha, extent };
+    } else if (!contentId) return no("NO_SOURCE", "a table names its captured source: the content id of a CSV, a workbook range or a portal export. Nothing was written.");
+    const row0 = found ? null : this.content.contentRow(contentId);
+    if (!found && (!row0 || !this.#sees(row0.bundle_id, by)))
       return no("NO_SUCH_CONTENT", "no content row is addressed by this id in this record, or it is not one you may see. Nothing was written.", { content_id: contentId });
-    if (row.stale) return no("CONTENT_STALE", "the passage was cited under an earlier reading of its document; cite it again under the current one. Nothing was written.", { content_id: contentId });
+    if (row0 && row0.stale) return no("CONTENT_STALE", "the passage was cited under an earlier reading of its document; cite it again under the current one. Nothing was written.", { content_id: contentId });
     const names = readHeader(header);
     if (!names) return no("NO_HEADER", "a table declares its header: a list of distinct, non-empty column names. Nothing was written.");
     const sf = schemaFault(schema, names);
@@ -682,6 +709,13 @@ export class Calculations {
       if (!has("crosswalk_from", r.crosswalk.from) || !has("crosswalk_to", r.crosswalk.to))
         return no("BAD_SCHEMA", `the crosswalk "${col}" names is not a declared crosswalk with those two ends. Nothing was written.`, { field: col });
     }
+    let row = row0;
+    if (found) {
+      const m = this.record.transact(() => this.content.mint({ ...found, mintedBy: by }));
+      if (!m || m.ok === false || !m.content_id) return no("NO_SUCH_CONTENT", localize("calculations.declare.the_found_passage_names_no", "the found passage names no part of that capture. Nothing was written."), { capture_sha: found.captureSha });
+      contentId = m.content_id;
+      row = this.content.contentRow(contentId);
+    }
     const src = await this.#sourceRows(row, names);
     if (src.tooLarge) return this.#tooLarge(src.tooLarge);
     if (src.fault) return no("SOURCE_NOT_READ", `${src.fault}. Nothing was written.`, { content_id: contentId, ...(src.transient ? { transient: true } : {}) });
@@ -690,25 +724,51 @@ export class Calculations {
     else {
       /* G64 (R1): the delimiter is the document's own reader's (csv-reader's signature over the head of the text): a comma, semicolon, tab
          or pipe; none found reads as a comma, as before. The canonical bytes stay comma RFC 4180, so one table has one sha. */
-      const sig = delimiterSignature(delimiterWindow(src.text));
-      const delimiter = sig.delimiter || ",";
+      const win = delimiterWindow(src.text);
+      const sig = delimiterSignature(win);
+      /* R45 (cause 19): a reading's own tab-joined text is cut at tabs; any other text whose delimiter is tied is refused, never read as a comma */
+      const tab = src.own && tabJoined(win);
+      if (!tab && !sig.delimiter && sig.undetermined === "delimiter_undetermined_tied" && names.length > 1)
+        return no("SOURCE_NOT_READ", localize("calculations.index.the_delimiter_is_tied", "the source's delimiter could not be told ({tied} fit its lines equally), so it is not read as a table. Nothing was written.", { tied: sig.tied.join(", ") }),
+          { content_id: contentId, delimiter: null, tied: sig.tied, columns_expected: names.length });
+      const delimiter = tab ? "\t" : sig.delimiter || ",";
       let widest = 0;
       const sc = scanCsv(src.text, (r) => { if (r.length > widest) widest = r.length; tb.push(r); }, delimiter);
       src.text = null;
       if (sc.error) return no("SOURCE_NOT_READ", `the source does not read as CSV: ${sc.error}. Nothing was written.`, { content_id: contentId });
-      /* a source that is one cell per line against a wider header does not split into the declared columns under any delimiter found:
-         held as a table of whole lines, every value the whole line, it would be accepted silently; it is refused instead */
+      /* a source no line of which splits into the declared columns under any delimiter found (one cell per line, or every line short) would be
+         held as a table of undetermined cells, accepted silently; it is refused instead. A short row among full ones is R45's, padded. */
+      const delimiterName = tab ? "tab" : sig.name ?? null;
       if (names.length > 1 && widest === 1)
-        return no("SOURCE_NOT_READ", localize("calculations.index.the_source_reads_as_one", "the source reads as one cell per line (delimiter found: {delimiter}), and the declared header has {columns} columns; check the file's separator or the header you declared. Nothing was written.", { delimiter: String(sig.name || "none"), columns: String(names.length) }),
-          { content_id: contentId, delimiter: sig.name ?? null, columns_expected: names.length });
+        return no("SOURCE_NOT_READ", localize("calculations.index.the_source_reads_as_one", "the source reads as one cell per line (delimiter found: {delimiter}), and the declared header has {columns} columns; check the file's separator or the header you declared. Nothing was written.", { delimiter: String(delimiterName || "none"), columns: String(names.length) }),
+          { content_id: contentId, delimiter: delimiterName, columns_expected: names.length });
+      if (names.length > 1 && widest < names.length)
+        return no("SOURCE_NOT_READ", localize("calculations.index.no_line_splits_into", "no line of the source splits into the {columns} declared columns (delimiter found: {delimiter}; the widest line has {widest}); check the file's separator or the header you declared. Nothing was written.", { delimiter: String(delimiterName || "none"), columns: String(names.length), widest: String(widest) }),
+          { content_id: contentId, delimiter: delimiterName, columns_expected: names.length });
     }
     const built = tb.finish();
     if (built.fault) return no("BAD_SCHEMA", `the source does not fit the declared header: ${built.fault.why}. Nothing was written.`, { field: built.fault.field });
     if (built.tooLarge) return this.#tooLarge(built.tooLarge);
     const bytes = built.bytes;
     const tableSha = built.sha;
-    const held = this.#one(`SELECT sha FROM calc_tables WHERE sha=?`, tableSha);
-    if (held) return { ok: true, already: true, ...this.#tableAnswer(this.#one(`SELECT * FROM calc_tables WHERE sha=?`, tableSha)) };
+    const held = this.#one(`SELECT sha, roles_json, schema_json FROM calc_tables WHERE sha=?`, tableSha);
+    if (held) {
+      /* R1 (K5148): the key is the bytes; a declaration of held bytes with other roles or schema replaces the held ones and says so, facts
+         already written staying. Roles left out ask for no change. */
+      const replaced = [];
+      if (roles && canonicalJson(parse(held.roles_json)) !== canonicalJson(roles)) replaced.push("roles");
+      if (canonicalJson(parse(held.schema_json)) !== canonicalJson(schema)) replaced.push("schema");
+      if (!replaced.length) return { ok: true, already: true, ...this.#tableAnswer(this.#one(`SELECT * FROM calc_tables WHERE sha=?`, tableSha)) };
+      const out = this.record.transact(() => {
+        this.sql.exec(`UPDATE calc_tables SET roles_json=?, schema_json=?, undetermined_json=?, undetermined_count=? WHERE sha=?`,
+          roles ? json(roles) : held.roles_json, json(schema), json(built.undetermined), built.count, tableSha);
+        if (replaced.includes("schema")) this.#stale(tableSha, "table_replaced");
+        return { ok: true };
+      });
+      if (!out.ok) return out;
+      this.#tableCache.delete(tableSha);   /* its typed rows were read under the schema just replaced */
+      return { ok: true, replaced, ...this.#tableAnswer(this.#one(`SELECT * FROM calc_tables WHERE sha=?`, tableSha)) };
+    }
     const ev = this.record.evidenceStore();
     if (!ev) return no("NO_EVIDENCE_STORE", localize("calculations.index.your_teams_civicsmith_has_no", "your team's Civicsmith has no evidence store set up, so a table's bytes cannot be held. Nothing was written."));
     try { await ev.put(tableSha, bytes); } catch (e) { return no("EVIDENCE_WRITE_FAILED", `the table's bytes could not be stored: ${String(e && e.message || e).slice(0, 200)}. Nothing was written.`); }
@@ -1108,7 +1168,7 @@ export class Calculations {
   }
 
   /* R16–R18: a kind's own conditions over the recipe and its inputs, and the recipe it composes when none is given. */
-  #kindPlan(kind, recipe, terms, described, bound) {
+  #kindPlan(kind, recipe, terms, described, bound, { column = null, part = null } = {}) {
     if (!CALCULATION_KINDS.includes(kind)) return no("UNKNOWN_KIND", `a calculation's kind is one of ${CALCULATION_KINDS.join(", ")}. Nothing was written.`);
     const money = described.filter((d) => d.kind === "money");
     if (kind === "estimate") {
@@ -1178,7 +1238,33 @@ export class Calculations {
       if (!last || last.op !== "sort") return no("NOT_A_RANKING", "a ranking's answer is a sort by its one stated quantity. Nothing was written.");
       return { ok: true, recipe, ranking: { quantity: str(quantity), scope: str(terms.scope), period: terms.period } };
     }
+    if (BUILT_IN_KINDS.includes(kind) && (recipe === null || recipe === undefined)) return this.#defaultRecipe(kind, described, bound, column, part);
     return recipe ? { ok: true, recipe } : null;
+  }
+
+  /* R4 (K5131): the recipe a built-in kind composes when none is given, in the closed grammar, over its one input table: `count` over its rows;
+     `total` the sum of the stated `column`; `share`, `ratio` and `difference` over the rows whose `column` equals the stated `part` and the rows that
+     do not (a share of the rows, a ratio of the first to the second, their difference). A column (or a part) not stated is refused naming it. */
+  #defaultRecipe(kind, described, bound, column, part) {
+    const t = described.length === 1 ? bound[described[0].name] : null;
+    if (!plain(t) || !Array.isArray(t.fields))
+      return no("KIND_INPUTS", localize("calculations.index.a_kind_without_a_recipe", "a {kind} calculation without a recipe is worked out over one table; the input given is not one. Nothing was written.", { kind: String(kind) }));
+    const name = described[0].name;
+    const input = { name, kind: "table" };
+    if (kind === "count") return { ok: true, recipe: { method: METHOD, inputs: [input], steps: [{ op: "count", from: name, as: "count" }], output: "count" } };
+    const col = str(column);
+    if (!col) return no("NO_COLUMN", localize("calculations.index.the_column_is_not_stated", "a {kind} is worked out over a column of the table, and none is stated; name the column. Nothing was written.", { kind: String(kind) }), { field: "column" });
+    if (!t.fields.some((f) => f.name === col))
+      return no("NO_SUCH_COLUMN", localize("calculations.index.the_table_has_no_such_column", "the table has no column \"{column}\". Nothing was written.", { column: col }), { field: "column" });
+    if (kind === "total") return { ok: true, recipe: { method: METHOD, inputs: [input], steps: [{ op: "sum", from: name, field: col, as: "total" }], output: "total" } };
+    const value = typeof part === "string" ? part.trim() : Number.isSafeInteger(part) ? part : "";
+    if (value === "") return no("NO_PART", localize("calculations.index.the_part_is_not_stated", "a {kind} is of the rows whose {column} is one value, and none is stated; name the part. Nothing was written.", { kind: String(kind), column: col }), { field: "part" });
+    const rows = (test, as) => ({ op: "select", from: name, where: [{ field: col, test, value }], as });
+    if (kind === "share") return { ok: true, recipe: { method: METHOD, inputs: [input], steps: [rows("eq", "part_rows"), { op: "share", part: "part_rows", whole: name, as: "share" }], output: "share" } };
+    return { ok: true, recipe: { method: METHOD, inputs: [input], steps: [rows("eq", "part_rows"), rows("ne", "other_rows"),
+      { op: "count", from: "part_rows", as: "part_count" }, { op: "count", from: "other_rows", as: "other_count" },
+      kind === "ratio" ? { op: "ratio", numerator: "part_count", denominator: "other_count", as: "ratio" }
+        : { op: "difference", a: "part_count", b: "other_count", as: "difference" }], output: kind } };
   }
 
   /* R33–R36: what a recipe of application reads beside its inputs (a change's date, a target, a provision), then its
@@ -1290,14 +1376,14 @@ export class Calculations {
 
   /* The whole computation of R4–R7, R12, R15–R18, for `create` and `evaluate`: refusals in R4's order, else what
      `create` stores. */
-  async #compute({ kind = null, recipe = null, inputs = null, threshold = null, period = null, terms = null, viewer, requireKind = true }) {
+  async #compute({ kind = null, recipe = null, inputs = null, threshold = null, period = null, terms = null, column = null, part = null, viewer, requireKind = true }) {
     if (!Array.isArray(inputs) || !inputs.length) return no("NO_INPUTS", "a calculation names its inputs: declared tables, money facts, cited figures, other calculations or frozen sets. Nothing was written.");
     const b = await this.#bind(inputs, viewer, { threshold });
     if (!b.ok) return b;
     const th = this.#threshold(threshold, period || {}, viewer);
     if (!th.ok) return th;
     const plan = kind === null && !requireKind ? null : APPLICATION_KINDS.includes(kind)
-      ? this.#applicationPlan(kind, recipe, terms, b, viewer, period || {}) : this.#kindPlan(kind, recipe, terms, b.inputs, b.bound);
+      ? this.#applicationPlan(kind, recipe, terms, b, viewer, period || {}) : this.#kindPlan(kind, recipe, terms, b.inputs, b.bound, { column, part });
     if (plan && !plan.ok) return plan;
     const r = plan && plan.recipe ? plan.recipe : recipe;
     if (plain(r)) {
@@ -1418,12 +1504,12 @@ export class Calculations {
   /** R4: `create({question, terms, period, inputs, recipe, kind, threshold?, methodNote?, evidences?, project, by})`.
    *  Async (inputs may be read from the evidence store). */
   async create({ question = null, terms = null, period = null, inputs = null, recipe = null, kind = null, threshold = null,
-                 methodNote = null, evidences = null, project = null, by = null } = {}) {
+                 methodNote = null, evidences = null, project = null, column = null, part = null, by = null } = {}) {
     if (!stamped(by)) return no("NO_AUTHOR", "a calculation is recorded under the control plane's stamp. Nothing was written.");
     if (!str(question)) return no("NO_QUESTION", "a calculation states the question it answers. Nothing was written.");
     const p = periodOf(period);
     if (!p) return no("NO_PERIOD", "a calculation states its period: {from, to}, each a date YYYY-MM-DD or null (not both), or a period key. Nothing was written.");
-    const c = await this.#compute({ kind, recipe, inputs, threshold, period: p, terms, viewer: by });
+    const c = await this.#compute({ kind, recipe, inputs, threshold, period: p, terms, column, part, viewer: by });
     if (!c.ok) return c;
     /* after R4's ordered refusals, the fields it adds: */
     if (project !== null && project !== undefined && (!str(project) || !this.#sees(project, by)))
@@ -1470,10 +1556,10 @@ export class Calculations {
 
   /** R7: `evaluate({recipe, inputs, viewer, kind?, threshold?, period?, terms?})`: what `create` would store, writing
    *  nothing. */
-  async evaluate({ recipe = null, inputs = null, viewer = null, kind = null, threshold = null, period = null, terms = null } = {}) {
+  async evaluate({ recipe = null, inputs = null, viewer = null, kind = null, threshold = null, period = null, terms = null, column = null, part = null } = {}) {
     if (!stamped(viewer)) return no("NO_VIEWER", "an evaluation is asked under the control plane's stamp.");
     const p = period === null || period === undefined ? {} : periodOf(period) || {};
-    const c = await this.#compute({ kind, recipe, inputs, threshold, period: p, terms, viewer, requireKind: false });
+    const c = await this.#compute({ kind, recipe, inputs, threshold, period: p, terms, column, part, viewer, requireKind: false });
     if (!c.ok) return { ...c, detail: String(c.detail || "").replace(/ Nothing was written\.$/, "") };
     return { ok: true, writes: "nothing", result_key: c.result_key, results: c.results, method_version: METHOD, recipe: c.recipe };
   }
@@ -1791,6 +1877,18 @@ export class Calculations {
       if (roles[role] === undefined) return no("BINDING_ROLES", `a binding names the role ${role}. Nothing was written.`, { role });
     for (const role of ["amount", "payer", "payee"])
       if (typeof roles[role] !== "string") return no("BINDING_ROLES", `the role ${role} maps to a column. Nothing was written.`, { role });
+    /* R14 (K5148): each constant is asked of money, which reads it when a fact is recorded, so an unreadable one is stated here and not once per row.
+       `money_code` is money's own code for it (`reason` is this refusal's). */
+    const money = this.dep("money");
+    if (money && typeof money.checkConstant === "function")
+      for (const [role, v] of Object.entries(roles)) {
+        if (typeof v === "string") continue;
+        let c = null;
+        try { c = money.checkConstant({ role, value: role === "period" ? moneyPeriod(v.value) : v.value.trim() }); } catch { c = null; }
+        if (c && c.ok === false)
+          return no("BINDING_UNREADABLE", localize("calculations.index.money_cannot_read_the_value", "money cannot read the value given for the role {role} ({why}). Nothing was written.", { role: String(role), why: String(c.detail || c.reason) }),
+            { role, money_code: c.reason ?? c.code ?? null });
+      }
     const key = sha({ table: t.sha, roles });
     if (this.#one(`SELECT 1 AS x FROM calc_bindings WHERE binding_key=?`, key)) return { ok: true, already: true, binding: key, table: t.sha, roles };
     const at = this.now();
@@ -1850,6 +1948,16 @@ export class Calculations {
       return out;
     }
     return { why: localize("calculations.index.an_id_space_normalises", "an id space normalises a value but names no entity; declare the column's entity scheme or a captured crosswalk") };
+  }
+
+  /* R14 (K5148): a row whose live fact money already holds (`factBySource`, an indexed read) is not written again: `{notWritten}` naming the held
+     fact, or null. A withdrawn fact is none, so it never blocks its row. */
+  #alreadyWritten(money, ctx, i) {
+    if (typeof money.factBySource !== "function") return null;
+    const held = money.factBySource({ table: ctx.b.table_sha, row: ctx.firstRow === null ? i : ctx.firstRow + i, binding: ctx.b.binding_key });
+    if (!held || held.found !== true || !held.fact_id) return null;
+    return { notWritten: { row: i, reason: "ROW_ALREADY_WRITTEN", fact_id: held.fact_id,
+      detail: localize("calculations.ingest.row_already_written", "this row's money fact {fact} is already held, so a repeat does not write it again", { fact: String(held.fact_id) }) } };
   }
 
   /* R14: what one row asks of money, or why it is not written: `{notWritten}` or `{fact}` (a fact money has not yet recorded). */
@@ -1947,7 +2055,7 @@ export class Calculations {
     for (const i of picked) {
       const row = rowAt.get(i);
       if (!row) { notWritten.push({ row: i, reason: "NO_SUCH_ROW", detail: "the table holds no such row" }); continue; }
-      const j = this.#judgeRow(ctx, i, row);
+      const j = this.#alreadyWritten(money, ctx, i) || this.#judgeRow(ctx, i, row);
       if (j.notWritten) { notWritten.push(j.notWritten); continue; }
       let r;
       try { r = await money.recordFact(j.fact); } catch (e) { r = { ok: false, reason: "MONEY_THREW", detail: String(e && e.message || e).slice(0, 200) }; }
@@ -2066,7 +2174,7 @@ export class Calculations {
           if (written.length >= INGEST_SLICE_FACTS) break;
           const i = at(p), row = rowAt.get(i);
           if (!row) { notWritten.push({ row: i, reason: "NO_SUCH_ROW", detail: "the table holds no such row" }); continue; }
-          const j = this.#judgeRow(ctx, i, row, tagged);
+          const j = this.#alreadyWritten(money, ctx, i) || this.#judgeRow(ctx, i, row, tagged);
           if (j.notWritten) { notWritten.push(j.notWritten); continue; }
           const m = money.recordFact(j.fact);   /* a throw leaves the slice: it is not a property of the row */
           if (m && typeof m.then === "function") throw new Error("money answered a fact asynchronously");
@@ -2807,7 +2915,7 @@ export const DECLARED_OPS = Object.freeze({
   tabledeclare: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("calculations.declared.tabledeclare", "table-directed: keyed by a table's digest; writes calculations' rows and moves no bundle"),
     fields: { accepts: ["source","schema","header","roles","vintage"], requires: ["source","schema","header"] } },
   calculationcreate: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("calculations.declared.calculationcreate", "calculation-directed: keyed by a new CALC- id; writes calculations' rows and moves no bundle"),
-    fields: { accepts: ["question","terms","period","inputs","recipe","kind","threshold","methodNote","evidences","project"], requires: ["question","period","inputs","kind"] } },
+    fields: { accepts: ["question","terms","period","inputs","recipe","kind","threshold","methodNote","evidences","project","column","part"], requires: ["question","period","inputs","kind"] } },
   moneyingestread: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("calculations.declared.moneyingestread", "read: a money ingest's stored lists, a page at a time, with true counts and whether the ingest is complete (`calculations` R14); writes nothing"),
     fields: { accepts: ["ingest","kind","after","limit"], requires: ["ingest"] } },
   calculationaccept: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("calculations.declared.calculationaccept", "calculation-directed: keyed by calculation; a member's acceptance after an agreeing recompute"),

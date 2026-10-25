@@ -6,6 +6,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { readRefusals } from "../contradiction/fixtures.mjs";
+
+/* contradiction's own refusal of a viewer who holds no place in the project (its published fixture) */
+const NOT_A_PARTICIPANT = readRefusals().notAParticipant;
 
 const claim = (inquiry, text) => ({ kind: "claim", inquiry, version: "v1", claim: text, text, source: { inquiry, title: inquiry } });
 const cand = (id, weight, state, a, b, extra = {}) => ({ candidate: id, key: "K2", why: word("contradiction.name.subject_two_held"), a, b,
@@ -156,7 +160,7 @@ test("R7, R11: two projects hidden from each other on two sides of one duty: eac
       return { ok: true, truncated: false, cursor: null, notices: [notice("PRJ-A2", claim("INQ-A", "x is 3"), false, state.optedA || state.optedB)] };
     if (project === "PRJ-B" && viewer === "member:bob")
       return { ok: true, truncated: false, cursor: null, notices: [notice("PRJ-B", claim("INQ-B", "x is 4"), state.optedB, state.optedA)] };
-    return { ok: false, reason: "PROJECT_NOT_PARTICIPANT" }; } } });
+    return NOT_A_PARTICIPANT; } } });
   w.member("alice"); w.member("bob");
   w.bundle("INQ-A", "inquiry"); w.bundle("INQ-B", "inquiry");
   for (const p of ["PRJ-A", "PRJ-A2", "PRJ-B"]) w.bundle(p, "project");

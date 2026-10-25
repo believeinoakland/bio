@@ -1,6 +1,6 @@
 # people (T51)
 
-**Status** · session_01ECyVAGFG2gSJzC9b78r7qH · depth 2 · COMPLETE · handled B8
+**Status** · session_019AxS4iGwSHPNGPFzWXjziz · depth 2 · COMPLETE · handled B8
 
 ## J1 · QUESTION
 
@@ -162,3 +162,93 @@ Deferred: none. Found elsewhere: `build/rulings.md` K4301 lacks the standing-lis
 Note: an earlier commit on this branch (3976b9f286) carries a model-naming Co-Authored-By line; this round's commit has none.
 
 Size (session_01ECyVAGFG2gSJzC9b78r7qH): test runs 8, module lines 1868
+
+## J11 · REPORT
+
+Fixture round 10, Wave A batch 3 (people): three fixtures published in bio-plane/test/m/people/fixtures.mjs, each checked by fixtures.test.mjs at the interface (R20, R22, R23, R24). Commit 0b2c72995a on job/T51/people.
+
+Published, with the real answer each hands on:
+- checkResults (R22, R24): { checkResults, listChecks }, the real people methods over an empty record. Shipped revolving-door check only, gated, no result shown; no viewer refused NO_VIEWER.
+- evaluateChecksAnswers (R23): people.evaluateChecks; over the empty record the one person the test world registers: {ok, evaluated: 1, remaining: false}.
+- tiesConcerningRefusal (R20): people.tiesConcerning with a bad argument (member named none): {ok: true, member: null, ties: []}. Decision for BOB: tiesConcerning has no refusal at all (it answers ok with an empty list for every argument), so the user's refusal branch (case-disclosures people.test.mjs:317, a reason "down") has no real answer to copy. The fixture gives the real answer and says so in its comment; the user re-points to it and tests its empty branch, or the refusal is raised as a product change (not mine).
+
+Not published, needs BOB: moneyChecks.noticed (listed under this fixture by the plan, used by queue noticed.test.mjs:290). It is money-checks' real code. people does not declare money-checks in uses, and the architecture check would fail an import from people's tests. Best reading: money-checks publishes its own fixture from its own tests (a later money-checks job), and queue's re-point takes both halves from the two providers. The alternative is a uses change in build/modules.json (your file). Please decide.
+
+Markers: none added (no fixtures-own, no fixtures-generic). Users of these fixtures are later in modules.json than people, so no fixtures-contract or fixtures-run markers are needed.
+
+Lines of the list: the people fixture lines are done except the one FIX-E events line you named (why.test.mjs:110, op-table sequence; events' fixture, left for the CHANGE). checks/fixtures.mjs people: 1 failure, that line.
+
+## J12 · COMPLETE
+
+**Fixture round 10, Wave A batch 3 (people): COMPLETE.** Three fixtures published (commit 0b2c72995a, job/T51/people); the REPORT (J11) carries the decisions.
+
+Applied
+- checkResults (R22, R24), evaluateChecksAnswers (R23), tiesConcerningRefusal (R20): published in bio-plane/test/m/people/fixtures.mjs, each made by the real people code when a test runs; fixtures.test.mjs calls each and asserts the real answer.
+- moneyChecks.noticed: not published here (money-checks' code; see J11, a decision for BOB).
+
+Fixtures-own / fixtures-generic markers added: none.
+
+Lines left: the one FIX-E events line (why.test.mjs:110, op-table sequence), named in your START as left for the events CHANGE.
+
+Deferred: none in the module.
+
+Checks (process repository e8…, product job/T51/people at 0b2c72995a)
+- node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/people/: tests 82, pass 82, fail 0.
+- node build/plan/impact.mjs origin/tranche/T51 HEAD: 0 modules affected (this batch adds test files only, no product change).
+- checks/format.mjs: 0 failures. checks/architecture.mjs people: 0 failures. checks/coverage.mjs people: 42 of 42. checks/words.mjs people: 0 failures.
+- checks/ownership.mjs people origin/tranche/T51 job/T51/people: 3 files, 0 failures.
+- checks/fixtures.mjs people: 1 failure (the events line above).
+
+Size (session_014qiZzWUT5rWTceixKQwyba): test runs 3, module lines 2281
+
+## J13 · REPORT
+
+Correction to COMPLETE (J12): the process repository commit I cited is not e8…. The checks ran at civicos-process b5531c09f8 (the clone's HEAD, the checkout I read the mechanics and tools from). Nothing else in J12 changes.
+
+## J14 · COMPLETE
+
+**Fixture round 10, Wave A batch 3 (people): COMPLETE after CHANGE B10 (K5077).**
+
+Applied
+- Merged tranche/T51 into job/T51/people (CHANGE B10 (1)).
+- why.test.mjs (R40): the hand-built events `sequence` op-table entry (the one line left, FIX-E events) now takes events' published `sequenceUndetermined` (bio-plane/test/m/events/fixtures.mjs); the owner's `why` is still passed on exactly when given. Commit a29a99d0cb.
+- Items (2) and (3) of B10 need nothing from people: moneyChecks.noticed is money-checks' to publish, and tiesConcerningRefusal stands as published (commit 0b2c72995a).
+
+Fixtures-own / fixtures-generic markers added: none.
+
+Lines of the list: zero. `checks/fixtures.mjs people`: 0 failures (3224 test files read).
+
+Deferred: none.
+
+Checks (process repository b5531c09f8; product job/T51/people at a29a99d0cb)
+- node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/people/: tests 82, pass 82, fail 0.
+- node build/plan/impact.mjs origin/tranche/T51 HEAD: 1 module affected (people), 1 test file.
+- checks/format.mjs: 0 failures. checks/architecture.mjs people: 0 failures. checks/coverage.mjs people: 42 of 42. checks/words.mjs people: 0 failures.
+- checks/ownership.mjs people origin/tranche/T51 job/T51/people: 4 files, 0 failures.
+
+Size (session_014qiZzWUT5rWTceixKQwyba): test runs 4, module lines 2281
+
+## PEOPLE #15 · fix round 10, the final pass's causes (B11)
+
+**Causes met** (ids: R12, R21; BOB strikes the marks)
+1. Removal marker (R12): `personAt` (`op=person`) answers `removed: [{ground, at, by}]`, one per tombstone of a fact removed from any member of the person's cluster, never the value or the order; `truncated.removed` beside. record-core's tombstone keeps the fact id but not the person, so `expunge` writes a link row `person_removals {fact_id, person, tbl}` in its transaction (new table, export `never`, declared in `PEOPLE_TABLES`); ground, instant and administrator are read from `record.tombstones`. A withdrawn fact is not removed. Published as fixture `personRemoved` (`bio-plane/test/m/people/fixtures.mjs`) for screens-investigate; a fixtures.test.mjs test calls it.
+2. `expunge` of an unknown id is refused `PERSON_ITEM_NOT_HELD`, its sentence `localize("people.index.person_item_not_held", …)` in `detail`. Test: facts.test.mjs (code, own sentence differs from `refusal.NO_SUCH_ITEM`); declared-ops.test.mjs follows the new code.
+3. `sourcepersonlinks` reads `source_id`; `sourceLinksOf` naming neither source nor person is refused `NO_LINK_SUBJECT` (`localize("people.index.link_read_names_source_or_person", …)`). Test: sight.test.mjs through `peopleOps` (source_id reads the link to a listed member, none to another; `source=` alone and no argument refused).
+
+**Why the tests missed them:** (1) R12's test proved the value gone and a tombstone left but no requirement asked a read to return it; (2) no test read the refusal of an unknown id beyond its code, and the member sentence is looked up by code alone; (3) tests called `sourceLinksOf({source})` directly; the door's stamp deletion lives above the module.
+
+**Deferred / for BOB (REPORT)**
+- Door cases (K5138), control-plane's to place: `personexpunge` then `person` as Ana and Ben answers `removed`; `GET op=sourcepersonlinks&source_id=…` as listed vs unlisted member.
+- `refusal.PERSON_ITEM_NOT_HELD` and `refusal.NO_LINK_SUBJECT` have no word-table row yet: the door reads a member's sentence by code, so the design stream owes both rows; until then `detail` carries the `localize` sentence.
+- op-declarations: the read `sourcepersonlinks` declares no fields (reads carry none in R42's seven, all mutating); I added none. screens-investigate draws `removed` (marker `screen.person.expunge.marker`, new row).
+- Inherited, not mine: 3 failures in op-declarations (R19/R6, R34, R47) identical on `tranche/T51` without my commit.
+
+**Markers added:** none.
+
+**Ran:** people suite 86/86; screens-investigate 249/249; corpus-export 35/35; entities 164/164; op-declarations 245/248 (3 inherited). Checks (people): format 0, architecture 0, coverage 0 (42 of 42), words 0, fixtures 0, ownership 0 (8 files).
+
+Size (session_019AxS4iGwSHPNGPFzWXjziz): test runs 10, module lines 1895
+
+## J15 · COMPLETE
+
+People #15 COMPLETE (B11): R12 met (person read answers removed [{ground, at, by}] via a person_removals link table; PERSON_ITEM_NOT_HELD for an unknown id) and R21 met (sourcepersonlinks reads source_id; neither source_id nor person refused NO_LINK_SUBJECT). Fixture personRemoved published for screens-investigate. People suite 86/86; format, architecture, coverage, words, fixtures, ownership 0 for people. REPORT: door cases for control-plane (K5138); word rows refusal.PERSON_ITEM_NOT_HELD and refusal.NO_LINK_SUBJECT owed by the design stream; op-declarations has 3 inherited failures. Details in build/jobs/T51/people.md.

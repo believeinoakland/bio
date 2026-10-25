@@ -1,6 +1,6 @@
 # inquiry-grammar (T51)
 
-**Status** · session_01P41YDS2bqnyp2PVY6un4MQ · depth 2 · COMPLETE · handled B8
+**Status** · session_011JT8beX7mv7RWXrkz2inzX · depth 2 · COMPLETE · handled B10
 
 ## Completion (CR-8)
 
@@ -121,3 +121,47 @@ Size (session_01P41YDS2bqnyp2PVY6un4MQ): test runs 9, module lines 2037
 ## J6 · COMPLETE
 
 Cause 30b (grammar half) done: checkGrounds no longer refuses an unlabelled supporting leg beside labelled grounds (R1/R68); ground accounting (declared once, none empty, undeclared label) still refused. Red first seen; module 89/89; format, architecture, coverage 20/20, words, fixtures, ownership 0 failures. Golden: only INQ-2026-0127-grounds and grounds.partial changed. Red tests of other modules holding the old refusal (for their jobs): inquiry 5 (R8 x2, R27/R30, R65, R85 control, plus case-grammar R8), citation R21 x3, screens-inquiry R129 R3. See my record.
+
+## Completion (fix round 10, follow-up 24: the golden follows the real grammar)
+
+**Entry applied** (START B9, follow-up 24; K5077 R3, K5090): `INQ-2026-0129-versions` in `golden.json` no longer records the C-25.5 `VERSION_PARTITION_INCOMPLETE` finding: four objects removed, from `versions`, `both`, `nosubject` and `none`. Its `both-none`, `nosubject-none` and `none-none` keys carried none. The remaining finding is C-25.1 `VERSION_NO_DESCRIPTION`, unchanged. Only that case changed: no code, no test file.
+
+**Seen failing before, green after.** A scratch comparison outside the repository registers the real `inquiry-grammar` and `basis-version-grammar` (`registerBasisVersionGrammar`) and judges every corpus bundle under the three registry variants against `golden.json`. Before the edit, INQ-2026-0129-versions differed under `both`, `nosubject` and `none`, by exactly the one C-25.5 finding. After the edit it matches under all three, and every other case still matches. No committed test compares the golden with the real `basis-version-grammar`: this module's `uses` do not include it, and a test import would need a `uses` edge in `build/modules.json`, which is BOB's.
+
+**Found, not changed (for BOB).** The same stale C-25.5 finding sits in two other golden cases, which the START did not name ("edit that case only"): `INQ-2026-0130-versions-entry` and `INQ-2026-0134-version-name-twice`, in `versions`, `both`, `nosubject` and `none`. The real grammar gives the same findings without it. Each is the same four-object removal; I can make it in my next CHANGE if BOB wants it.
+
+**Tests and checks run**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/inquiry-grammar/*.test.mjs`: tests 88, pass 88, fail 0.
+- `checks/fixtures.mjs /home/user/bio inquiry-grammar --list`: 0 failures, no line of mine; no `fixtures-own` or `fixtures-generic` marker added.
+- `checks/format.mjs /home/user/bio`: 178 modules, 178 requirements files; 0 failures.
+- `checks/architecture.mjs /home/user/bio inquiry-grammar`: 13 product files, 53 relative imports; 0 failures.
+- `checks/coverage.mjs /home/user/bio inquiry-grammar`: 20 of 20 live requirement ids named by a test; 0 failures.
+- `checks/words.mjs /home/user/bio inquiry-grammar`: inline 0, plain 0, testcopy 0, missingkey 0, handlist 0, marker 0; 0 failures.
+- `checks/ownership.mjs /home/user/bio inquiry-grammar tranche/T51 job/T51/inquiry-grammar`: 1 file changed (`golden.json`); 0 failures.
+
+**Deferred**: the two golden cases above, to BOB.
+
+Size (session_011JT8beX7mv7RWXrkz2inzX): test runs 1, module lines 2039
+
+## J7 · COMPLETE
+
+Follow-up 24 applied (test files only): INQ-2026-0129-versions in golden.json no longer records the C-25.5 finding (four objects: versions, both, nosubject, none), which basis-version-grammar R3 no longer raises. Red first against the merged grammar (scratch comparison of the real grammars with golden.json), green after; module tests 88/88; format, architecture, coverage, words, fixtures, ownership 0 failures.
+Found, not changed: the same stale C-25.5 finding is in INQ-2026-0130-versions-entry and INQ-2026-0134-version-name-twice (the START named only 0129). Same four-object removal; say if you want it in my next CHANGE.
+Details in my record, Completion (follow-up 24).
+
+## Completion (CHANGE B10, K5095: the stale C-25.5 finding in the other two golden cases)
+
+**Entry applied**: the same four-object removal of `VERSION_PARTITION_INCOMPLETE` (C-25.5) from `INQ-2026-0130-versions-entry` and `INQ-2026-0134-version-name-twice` in `golden.json`: `versions`, `both`, `nosubject` and `none` in each. No other golden case records C-25.5 (the sweep over every bundle found only these two plus 0129, already done). Only `golden.json` changed.
+
+**Red first, green after.** A scratch comparison outside the repository registers the real `inquiry-grammar` and `basis-version-grammar` and judges every corpus bundle under the three registry variants against `golden.json`. Before this change: 6 differences (0130 and 0134 under `both`, `nosubject`, `none`), each the one C-25.5 finding. After: 0 differences across all cases. A first attempt at the edit removed two C-2.8 findings from 0130 too; I restored the file from the commit and redid the removal with the object boundaries checked, so the final diff is 88 deletions (two cases x four objects x 11 lines).
+
+**Tests and checks run**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/inquiry-grammar/*.test.mjs`: tests 88, pass 88, fail 0.
+- `grep -c '"C-25.5"' golden.json`: 0.
+- `checks/fixtures.mjs /home/user/bio inquiry-grammar --list`: 0 failures. `format`: 178 modules, 0 failures. `architecture inquiry-grammar`: 0 failures. `coverage inquiry-grammar`: 20 of 20, 0 failures. `words inquiry-grammar`: 0 failures. `ownership inquiry-grammar tranche/T51 job/T51/inquiry-grammar`: 2 files changed (`golden.json` and this record), 0 failures.
+
+Size (session_011JT8beX7mv7RWXrkz2inzX): test runs 1, module lines 2039
+
+## J8 · COMPLETE
+
+CHANGE B10 applied (K5095; test files only): the stale C-25.5 finding is removed from INQ-2026-0130-versions-entry and INQ-2026-0134-version-name-twice, the same four objects each (versions, both, nosubject, none), in golden.json. Red first: 6 differences between golden and the real merged grammars; green after: 0. Module tests 88/88; format, architecture, coverage, words, fixtures and ownership 0 failures. A first attempt over-deleted two C-2.8 findings; caught by the real-grammar comparison, redone, committed. No C-25.5 remains in golden.json. Details in my record, Completion (CHANGE B10).

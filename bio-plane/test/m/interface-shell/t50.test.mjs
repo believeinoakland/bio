@@ -3,7 +3,6 @@
    pages, `cs.checks` over record data, more doors, explanations by the design's keys, a refusal in its own words, the look
    rows, the first load, a Reasoned act's reason, the public frame's cards, the phone layout. Every sentence is read through
    `setup-words`' `word` (R70); a test holds no English. */
-import "./register.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { interfacePage, interfaceScript, checkScreens, RE_POINTS, REF_SCREENS, SHELL_OPS } from "../../../src/interface-shell/index.mjs";
@@ -13,6 +12,7 @@ import { RUNGS, RUNG_ABSENT, IRREVERSIBLE_WEIGHT } from "../../../src/op-grades/
 import { OPS, NEEDS } from "../../../src/op-declarations/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { fitSend, boot, ok, refused, httpError, ndjson, pending, settle, MEMBER, ADMIN, SESSION, STORE_KEY, served, scriptOf } from "./harness.mjs";
+import { inWorld, bootAs, doorAs } from "./world.mjs";
 import { ALL, HOME, HELD, DOORBELL, PUBLISHED } from "./screens.fixture.mjs";
 
 const h = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -193,10 +193,11 @@ test("R75 the member's initial opens Your menu by the design's keys: who is sign
   const other = await boot({ screens: [...ALL, ACCOUNT], path: "/app/account", local: first });
   assert.equal(other.root().querySelector('[data-level-note]'), null, "no other screen asks");
   /* the dialog: headed session.reauth.head, says session.reauth, Go on and Cancel explained; a wrong password resends nothing */
-  let wrong = true;
-  const r = await boot({ screens: ALL, plane: { projectdirectory: ok({ projects: [] }), promote: refused("REAUTH_DUE", null, 403), reauth: () => (wrong ? refused("BAD_PASSWORD", null, 403) : ok({ ok: true })) } });
-  r.doc.getElementById("home-title").value = "T";
-  await r.click(btn(r, "promote"));
+  /* the store's own REAUTH_DUE (adding an administrator always asks the password again) and its own refusal of a wrong password */
+  const { world, me } = await inWorld();
+  const adding = { ...ALL.find((x) => x.id === "members"), acts: [{ op: "memberadd", send: new Function("view", "el", "cs", 'return { body: { memberId: "new-admin", cover: "The new administrator", role: "admin" } };') }] };
+  const r = await bootAs(world, me, { screens: [adding], path: "/app/members" });
+  await r.click(btn(r, "memberadd"));
   const reason = r.root().querySelector('[data-slot="m:0"] textarea');
   if (reason) { reason.value = "because"; await r.click('[data-shell="reason-send"]'); }
   const dlg = r.root().querySelector('[data-overlay="reauth"]');
@@ -208,10 +209,10 @@ test("R75 the member's initial opens Your menu by the design's keys: who is sign
   r.doc.getElementById("cs-reauth-pw").value = "wrong";
   await r.click('[data-shell="reauth"]');
   assert.equal(r.root().querySelector("[data-overlay-refusal]").textContent, word("session.reauth.wrong"));
-  assert.equal(r.byOp("promote").length, 1, "a wrong password resends nothing");
+  assert.equal(r.byOp("memberadd").length, 1, "a wrong password resends nothing");
   await r.click('[data-shell="reauth-cancel"]');
   assert.equal(r.root().querySelector('[data-overlay="reauth"]'), null);
-  assert.equal(r.byOp("promote").length, 1, "Cancel sends nothing");
+  assert.equal(r.byOp("memberadd").length, 1, "Cancel sends nothing");
   assert.equal(r.byOp("reauth").length, 1);
 });
 
@@ -219,7 +220,9 @@ test("R75 the member's initial opens Your menu by the design's keys: who is sign
 
 test("R76 the masthead's explanations button names itself and its setting (shell.level.button.prompt / .pause); at the phone width every masthead icon keeps its accessible name, shown on a tap, and the team's name wraps whole; a button's explanation never repeats its label or the sentence beside it; control: at 1280 px the labels are drawn", async () => {
   const LONG = "The Neighbourhood Association of the River Town Flats";
-  const p = await boot({ screens: ALL, phone: true, plane: { groupidentity: ok({ ok: true, display_name: LONG }), assistantstate: ok({ on: true }), accountreference: ok({ held: true }) } });
+  const { world, me } = await inWorld();
+  await me.act("groupnameset", { body: { name: LONG } });
+  const p = await bootAs(world, me, { screens: ALL, phone: true, plane: { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) } });
   const mast = p.root().querySelector(".cs-mast");
   assert.equal(mast.querySelector(".mk-grp").textContent, LONG, "the name complete, never cut");
   const lvl = mast.querySelector('[data-shell="level"]');
@@ -315,6 +318,7 @@ test("R78 a streamed answer is handed on as it arrives: onEvent is called with e
   /* control: an ok:false last line is a refusal drawn beside the act (R13) */
   const q = await boot({ screens: [ASKER], path: "/app/answers" });
   const realQ = q.win.fetch;
+  // fixtures-generic: ZZ_STOP
   q.win.fetch = (url, init) => (new URL(url, "https://x").searchParams.get("op") === "ask" ? streamed(q, [{ event: "a" }, { ok: false, code: "ZZ_STOP", translation: "Stopped." }])() : realQ(url, init));
   q.doc.getElementById("question").value = "why";
   await q.click(btn(q, "ask"));
@@ -452,6 +456,7 @@ test("R83 a refusal is drawn in its own words and shell.unread is for no refusal
   assert.equal(await words(refused("NOT_AN_ADMIN", "ignored")), word("refusal.NOT_AN_ADMIN"));
   assert.equal(await words(refused("UNHELD_CODE", "Its own words.")), "Its own words.");
   assert.equal(await words(httpError(500)), word("shell.unread"));
+  // fixtures-generic: ZZ_REASON
   assert.equal(await words({ status: 200, json: { ok: false, reason: "ZZ_REASON" } }), word("refusal.uncatalogued") + " ZZ_REASON", "a reason as well as a code");
   const p = await boot({ screens: ALL, plane: { projectdirectory: ok({ projects: [] }), promote: refused("UNHELD_CODE", null, 400) } });
   p.doc.getElementById("home-title").value = "Typed";
@@ -496,10 +501,12 @@ test("R84 look: the tab's title is page.title ({screen}, {team}) and on a public
 test("R86 a first load settles quickly: the working frame is drawn before the first answer; the shell's independent requests are in flight together and with the screen's own reads, sent on whoami's answer (M-T50-6: before, the screen's first read left after two round trips; now after one); control: with the session record absent no read is sent", async () => {
   const times = {};
   let p;
-  const slow = (op, value) => async () => { times[op] = p.clock.at(); await new Promise((r) => p.clock.setTimeout(r, 500)); return ok(value); };
-  const answers = { whoami: MEMBER, interfacewords: { ok: true, language: null, words: [] }, groupidentity: { ok: true, display_name: "River Town" }, queue: { items: [] }, infolevel: { level: "prompt" },
-    assistantstate: { on: false }, accountreference: { held: false }, subscriptionsignin: { connected: false }, groupkeystate: { on: false }, bootstrap: { test_instance: false }, projectdirectory: { projects: [] } };
-  p = await boot({ screens: ALL, run: false, plane: Object.fromEntries(Object.entries(answers).map(([op, v]) => [op, slow(op, v)])) });
+  const { world, me } = await inWorld();
+  const door = doorAs(world, me).door;
+  /* each op the page asks is held 500 ms on the page's fake clock, then answered by the world's door */
+  const slow = (op) => async (req) => { times[op] = p.clock.at(); await new Promise((r) => p.clock.setTimeout(r, 500)); return door(req); };
+  const ops = [...SHELL_OPS, "bootstrap", "projectdirectory"];
+  p = await bootAs(world, me, { screens: ALL, run: false, plane: Object.fromEntries(ops.map((op) => [op, slow(op)])) });
   const base = Date.now();
   const FakeDate = class extends Date { static now() { return base + p.clock.at(); } };
   new Function("window", "setTimeout", "clearTimeout", "Date", scriptOf(p.html, ALL))(p.win, p.clock.setTimeout, p.clock.clearTimeout, FakeDate);

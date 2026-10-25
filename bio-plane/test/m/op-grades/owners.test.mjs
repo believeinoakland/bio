@@ -8,7 +8,7 @@ import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS,
          aliased, phoneOf } from "../../../src/op-grades/index.mjs";
 import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "../../../src/op-grades/t33.mjs";
 import { T34_RUNGS, T34_RUNG_ABSENT, T34_NON_ACTS } from "../../../src/op-grades/t34.mjs";
-import { readRows, declaredSentence, doesSentence, declaredAliases } from "./declared.mjs";
+import { readRows, declaredSentence, doesSentence, declaredAliases, ownerReads, collectDeclaredOps, reqText, tickedAll } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 const isRead = (op) => typeof NON_ACTS[op] === "string" && NON_ACTS[op].startsWith("read: ");
@@ -160,8 +160,10 @@ const T33_WRITES = {
   officesseed: "substrate", seatsseed: "substrate", disclosureshown: "caller-owned",
   ask: "caller-owned", askusage: "observational",
 };
-/* T33's reads (R13): every row of T33's table that is a read */
-const T33_READS = readRows(T33_NON_ACTS);
+/* T33's reads (R13): every row of T33's table that is a read, by its "read: " lead or by its owner's declared weight `read`
+   (a read its owner words without the lead holds the owner's sentence, K4168; `ownerReads` finds it from the declarations) */
+const OWNER_READS = await ownerReads(T33_NON_ACTS);
+const T33_READS = [...new Set([...readRows(T33_NON_ACTS), ...OWNER_READS.map(({ op }) => op)])];
 /* `reversible`: the published act of the owner that takes each result back */
 const TAKEN_BACK_BY = {
   eventgovern: "eventgovern", eventrelate: "eventrelationwithdraw", linerecord: "linewithdraw", moneyrecord: "moneywithdraw",
@@ -192,14 +194,16 @@ const REASON_CODE = {
 const UNGATED_WRITES = ["askusage"];
 const ACTS_NOW = ["clockadopt"];
 
-test("R13 R3: every op T33 publishes is graded — each write its rung or one ground, each read a `read:` NON_ACT, every "
+test("R13 R3: every op T33 publishes is graded — each write its rung or one ground, each read a NON_ACT with its sentence, every "
    + "gated op its reason; each `reversible` taken back by a graded act and each `reasoned` backed by a code of the family; "
    + "none a machine refusal", () => {
   assert.deepEqual(grades(T33_WRITES), T33_WRITES);
   assert.deepEqual([...Object.keys(T33_RUNGS), ...Object.keys(T33_RUNG_ABSENT)].sort(), Object.keys(T33_WRITES).sort());
   assert.deepEqual(Object.keys(T33_NON_ACTS).sort(),
     [...Object.keys(T33_WRITES).filter((op) => !UNGATED_WRITES.includes(op) && !ACTS_NOW.includes(op)), ...T33_READS].sort());
-  for (const op of T33_READS) { assert.ok(isRead(op), op); assert.equal(gradeOf(op), null, op); }
+  for (const op of T33_READS) { assert.ok(isRead(op) || OWNER_READS.some((r) => r.op === op), op); assert.equal(gradeOf(op), null, op); }
+  /* the owner's declared sentence as its row holds it (K5157: a sentence whose key rows.mjs has not yet got is the owner's en, not a missing word) */
+  for (const { op, sentence } of OWNER_READS) assert.equal(NON_ACTS[op], sentence, op);
   for (const op of Object.keys(T33_WRITES).filter((op) => !UNGATED_WRITES.includes(op) && !ACTS_NOW.includes(op)))
     assert.ok(!isRead(op) && NON_ACTS[op].length > 20, op);
   for (const op of ACTS_NOW) assert.ok(!Object.hasOwn(NON_ACTS, op) && Object.hasOwn(MACHINE_REFUSALS, op), op);
@@ -216,6 +220,24 @@ test("R13 R3: every op T33 publishes is graded — each write its rung or one gr
   notMachine([...Object.keys(T33_WRITES).filter((op) => !ACTS_NOW.includes(op)), ...T33_READS]);
   /* negative control */
   assert.notDeepEqual(grades({ ...T33_WRITES, notewrite: "x" }), { ...T33_WRITES, notewrite: "undetermined" });
+});
+
+/* K5159 (fix round 10): `ownerReads` above looks only at T33's own keys, so a declared read with no row in T33 was never looked
+   for (OP-GRADES #27 J29). Here every read its owner declares is looked for, over the owners R13 names (read from its text, not
+   typed here): each must be a NON_ACT, so a missing row fails. */
+const DECLARED = await collectDeclaredOps(new URL("../../../../", import.meta.url).pathname);
+const R13_OWNERS = new Set(tickedAll(reqText(13)).filter((m) => Object.values(DECLARED.owners).includes(m)));
+const R13_DECLARED_READS = Object.keys(DECLARED.ops).filter((op) => DECLARED.ops[op].weight === "read" && R13_OWNERS.has(DECLARED.owners[op]));
+
+test("R13 (K5159): every read an owner R13 names declares is a NON_ACT, with no rung or ground; a declared read with no row fails "
+   + "here; control: the same owners' writes are graded, not read", () => {
+  assert.ok(R13_OWNERS.has("answers") && R13_DECLARED_READS.length >= 10, "the reads of R13's owners are found");
+  assert.deepEqual(R13_DECLARED_READS.filter((op) => !Object.hasOwn(NON_ACTS, op)), [], "every declared read holds its NON_ACTS row");
+  for (const op of R13_DECLARED_READS) assert.equal(gradeOf(op), null, op);
+  /* control: a write of an owner R13 names is not a read: answers declares standingquestionset as a mutating act */
+  assert.equal(DECLARED.owners.standingquestionset, "answers");
+  assert.equal(DECLARED.ops.standingquestionset.mutating, true);
+  assert.notEqual(DECLARED.ops.standingquestionset.weight, "read");
 });
 
 /* ---- R14 ----------------------------------------------------------------------------------------------------------- */

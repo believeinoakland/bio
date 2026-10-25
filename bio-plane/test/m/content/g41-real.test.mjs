@@ -6,6 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bundle, bucket, doc, sha } from "../extraction/fixture.mjs";
+import { registeredHomes } from "../provenance/fixtures.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 
 const csv = (bytes) => {
@@ -20,10 +21,13 @@ const COLS = "ABCD";
 
 async function home(lines) {
   const evidence = bucket(), text = lines.join("\n") + "\n";
-  const w = fresh({ evidence, provenance: { homeOf: (s) => (s === d ? { bundleId: "INFO-1", path: "table.csv", encoding: "binary", bytes: bytes.length, registered: "t", authored: false } : null),
-                                          onTestimony: () => ({ ok: true }) } });
-  bundle(w.s, "INFO-1");
   const bytes = new TextEncoder().encode(text), d = sha(bytes);
+  /* the capture's home is provenance's own: really promoted (its published fixture, K5044) */
+  const homes = registeredHomes();
+  const promoted = homes.register(d, { bundleId: "INFO-1", path: "table.csv", bytes: bytes.length, encoding: "binary" });
+  assert.equal(promoted.ok, true, JSON.stringify(promoted).slice(0, 300));
+  const w = fresh({ evidence, provenance: homes.provenance });
+  bundle(w.s, "INFO-1");
   await evidence.put(`bio/captures/${d}`, bytes);
   const document = doc({ digest: d, bytes: bytes.length, ct: "text/csv", format: "csv", fromText: true });
   w.core.readFile = (b, p) => (b === "INFO-1" && p === "data/provenance.json" ? { text: JSON.stringify({ documents: [document] }) } : null);

@@ -10,6 +10,7 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { progressionsOf } from "../../../src/progressions/index.mjs";
 import { proposalFindingItems, CARDINALITY_EXCEEDED } from "../../../src/queue-producers/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { homeOfEmpty } from "../provenance/fixtures.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 const NOW = "2026-09-01T00:00:00.000Z";
@@ -29,7 +30,7 @@ function world() {
     readEntity: ({ entityId }) => (ents.has(entityId) ? { ok: true, found: true, entity: { ...ents.get(entityId), aliases: [], relations: [] } } : { ok: true, found: false, entity: null }),
     strongestByCapture: (id) => new Map(res.get(id) || []),
   };
-  const p = progressionsOf(host, { record, extraction: { readingOf: () => null }, provenance: { homeOf: () => null },
+  const p = progressionsOf(host, { record, extraction: { readingOf: () => null }, provenance: homeOfEmpty(),
                                    entities, now: () => NOW, nowMs: null });
   p.migrate();
   const w = {

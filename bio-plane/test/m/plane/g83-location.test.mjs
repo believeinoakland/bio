@@ -73,7 +73,7 @@ test("R95 (G83) G1: inside the room `scratch~g2` the object's own namespace is t
   assert.equal(await recordOf(x.ctx).evidenceStore().head(d), null, "the prefix never follows the room's generation");
 });
 
-test("R95 (G83) T-retired: a room of another generation (`bio`, generation 1, after the deploy sets generation 2) is inert: it builds no module, writes no table, deletes its alarm when it fires, refuses every request and RPC, and leaves its data", async () => {
+test("R95, R111, R114 (G83) T-retired: a room of another generation (`bio`, generation 1, after the deploy sets generation 2) is inert: it builds no module, writes no table, deletes its alarm when it fires, refuses every request and RPC, and leaves its data", async () => {
   const x = await roomWorld("bio", "2");
   const tables = [...x.ctx.storage.sql.exec(`SELECT name FROM sqlite_master WHERE type='table'`)];
   assert.deepEqual(tables, [], "nothing was migrated: no table, no row written");

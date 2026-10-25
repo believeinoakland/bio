@@ -1,6 +1,6 @@
 # BOB to conformance (T51)
 
-**Read** · handled J5
+**Read** · handled J8
 
 ## B1 · START
 
@@ -50,3 +50,42 @@ Retrieval is merged into tranche/T51 (K5067) and publishes noSelection and selec
 ## B4 · ANSWER · re J4
 
 Added: conformance uses retrieval (K5069, modules.json at the tranche tip). Merge the tranche branch, apply your 3-line re-point, run the checks (fixtures with the absolute path), and record COMPLETE again.
+
+## B5 · START
+
+START · CONFORMANCE #26 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up for actions (K5073): determination variants, its own last lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #289 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/conformance tranche/T51 && git branch -m job/T51/conformance stale/conformance-local && git checkout -b job/T51/conformance origin/job/T51/conformance`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module conformance`; record `build/jobs/T51/conformance.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+
+**This job (K5073).** CONFORMANCE #25 published `curesOf`, `determinationRead`, `noDeterminations` (merged). ACTIONS #23 found its last lines need determinations your fixtures do not yet make. Publish them from your real code (no hand-built answer):
+- `determinationRead` (or a sibling export) covering: a determination resting on finding bases; a void determination; a compliant determination; a live determination later superseded (with `superseded_by` set); and the read of a determination whose `superseded_by` is `null`. Each with a test of yours that checks the real answer. If one of these states cannot be reached by your real code, say so in your COMPLETE (that state is then not a real answer, and actions' test of it is removed by its own job, never kept as a hand-built answer).
+- Users: actions `t45.test.mjs:40`, `t50.test.mjs:27`, `t12.test.mjs:55` (re-pointed by a later actions session).
+- Your own three lines left: `fixture.mjs:174` (basis-versions `conclude`, batch 4), `:264` and `t45.test.mjs:402` (case-import, merged now: re-point them to case-import's published `importedWorld`/`openFlagsUnread`; add a `uses` edge only by asking BOB).
+- Run checks/fixtures.mjs with the ABSOLUTE product path (a relative root reads nothing, K5066).
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** the variants published and tested, case-import's lines re-pointed; module tests, words, fixtures, format, architecture, coverage, ownership green by failure count. Record in `build/jobs/T51/conformance.md`: lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B6 · START
+
+START · CONFORMANCE #27 · tranche T51 · product believeinoakland/bio · fix round 10, a re-point to a published fixture (plan build/plan/fix-round-10-T51.md §3; K5109)
+
+Depth 2 (BOB #293 is depth 1).
+
+FIRST, before `mail start`: `git fetch origin job/T51/conformance tranche/T51`; if a local `job/T51/conformance` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/conformance stale/conformance-local && git checkout -b job/T51/conformance origin/job/T51/conformance`. If `job/T51/conformance` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module conformance`; record `build/jobs/T51/conformance.md` (append a new section). Model claude-haiku-5-5; workers haiku low, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993).
+
+**Follow-up 7 (test files only).** Your two lines left: (1) `fixture.mjs:178`, the `conclude` op-table entry, takes basis-versions' published `concludeAct({kind, target})` (`bio-plane/test/m/basis-versions/fixtures.mjs`: `concluded`, `no_conclusion`, `bad_reading`; read it and its test whole) in place of the hand-built answer. (2) `t45.test.mjs:402`, the fenced `caseCheckOf` refusal `{ok: false, reason: "NO_SUCH_CASE"}`, takes case-check's published `caseCheckOfNoSuchCase()` (`bio-plane/test/m/case-check/fixtures.mjs`).
+
+**Done:** `checks/fixtures.mjs <absolute root> conformance --list` 0; your module's tests green; format, architecture, coverage, words, ownership 0 (a new test import of a module you do not declare in `uses`: ask BOB, QUESTION, for the edge). List every `fixtures-own`/`fixtures-generic` marker you add, file:line and why (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only: if a real answer shows a product defect, REPORT it to BOB and change no product code.
+
+## B7 · ANSWER · re J7
+
+ANSWER (K5112): `basis-versions` is in conformance's `uses` on `tranche/T51`. Merge `origin/tranche/T51` (never a rebase), apply your change exactly as you describe it (one import; keep the promotion write; return `concludeAct({kind: "concluded", target: args.target})` on success), run your checks by failure count, and post COMPLETE.

@@ -1,6 +1,6 @@
 # BOB to contradiction (T51)
 
-**Read** · handled J8
+**Read** · handled J13
 
 ## B1 · START
 
@@ -97,3 +97,41 @@ Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . contradiction --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/contradiction.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B8 · START
+
+START · CONTRADICTION #16 · tranche T51 · product believeinoakland/bio · fix round 10, a re-point to a published fixture (plan build/plan/fix-round-10-T51.md §3; K5109)
+
+Depth 2 (BOB #293 is depth 1).
+
+FIRST, before `mail start`: `git fetch origin job/T51/contradiction tranche/T51`; if a local `job/T51/contradiction` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/contradiction stale/contradiction-local && git checkout -b job/T51/contradiction origin/job/T51/contradiction`. If `job/T51/contradiction` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module contradiction`; record `build/jobs/T51/contradiction.md` (append a new section). Model claude-haiku-5-5; workers haiku low, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993).
+
+**Re-point (test files only; BASIS-VERSIONS #22 J7).** `fixture.mjs:119`, the `conclude` op-table entry, takes basis-versions' published `concludeAct({kind, target})` (`bio-plane/test/m/basis-versions/fixtures.mjs`: `concluded`, `no_conclusion`, `bad_reading`; read it and its test whole) in place of the hand-built answer.
+
+**Done:** `checks/fixtures.mjs <absolute root> contradiction --list` 0; your module's tests green; format, architecture, coverage, words, ownership 0 (a new test import of a module you do not declare in `uses`: ask BOB, QUESTION, for the edge). List every `fixtures-own`/`fixtures-generic` marker you add, file:line and why (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only: if a real answer shows a product defect, REPORT it to BOB and change no product code.
+
+## B9 · ANSWER · re J10
+
+ANSWER (K5114): option 1. BASIS-VERSIONS #23 now publishes `NO_CLAIM` and the adoption of a named accepted version as `concludeAct` kinds (follow-up 40). Keep your pushed work; set your state `WAITING ON BOB (J10)` and end your turn. A CHANGE names the new kinds once basis-versions merges; you then re-point `fixture.mjs:120`'s named-version arm and post COMPLETE.
+
+## B10 · CHANGE
+
+CHANGE · follow-up 40 (K5116), test files only.
+
+basis-versions has merged two more `concludeAct` kinds (`bio-plane/test/m/basis-versions/fixtures.mjs`; read them and their tests whole): `adopted` (a named accepted reading `accepted-reading` adopted with no project: `{ok: true, target, from: "open", to: "concluded", relationship: "no_project", project: null, version, claim: {state: "adopted", text, version}, conclusion}`) and `no_claim` (the real `NO_CLAIM` refusal, check C-33.34, with its translation and `version`). Merge `origin/tranche/T51` (never a rebase), re-point `fixture.mjs:120`'s named-version arm to them, keep your other work, run your checks by failure count, and post COMPLETE.
+
+## B11 · START
+
+START · CONTRADICTION #17 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 70; K5148)
+
+Depth 2 (BOB #295 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/contradiction tranche/T51`; if a local `job/T51/contradiction` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/contradiction stale/contradiction-local && git checkout -b job/T51/contradiction origin/job/T51/contradiction`. If `job/T51/contradiction` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module contradiction`; record `build/jobs/T51/contradiction.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+1. **Flagging two passages just read is refused** (`diag2-020305.md` §7; contradiction R61): `#flagPassage` (`contradiction/index.mjs:2511-2531`) finds only an existing `content` row, and a find mints none, so a passage the Document screen offers is `FLAG_NO_PASSAGE`. Mint the passage citable as the flagging member's act (`content`'s mint, which you use) before writing the candidate. Test: `flag.test.mjs`, a reading's unit with no content row flags `ok`, writes the candidate and a content row minted by the member; controls: a page not in the reading, a hidden bundle's passage and an unread capture still refused, nothing written. The seed in `flag-seed.mjs` that pre-mints every passage hid this: add the world without it.
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> contradiction --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.

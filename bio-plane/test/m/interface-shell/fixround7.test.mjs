@@ -1,7 +1,6 @@
 /* interface-shell, fix round 7 (T51; plan fix-round-7-T51.md): G77 (a radio group that steps, R80 R90 R109) and G81 (the frame's two constants, R124).
    Each test was seen failing first. The browser's radio-group semantics live in the harness (`fire` unchecks a chosen radio's siblings of its name;
    `choose` is a click that fires nothing on a box already checked). */
-import "./register.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { boot } from "./harness.mjs";
@@ -93,14 +92,20 @@ test("G77 L (real Chromium): pressing \"Next page\" with the mouse steps the pag
 
 /* ---- G81 (R124): a second page load in the tab asks only the four reads that can change under the member ---- */
 import { ok, STORE_KEY, MEMBER, settle } from "./harness.mjs";
+import { inWorld, bootAs } from "./world.mjs";
 
 const KEY = STORE_KEY + ":frame";
 const TEAM = ["groupidentity", "infolevel"], REACH = ["assistantstate", "accountreference", "subscriptionsignin", "groupkeystate"];
 const HELD = { id: "held", words: [], reads: () => ({ h: { op: "heldcaptures", query: { limit: "5" } } }), acts: [],
   render: (cs, view) => cs.state("h", view, () => '<p id="seen">held</p>') };
 const plane = (more = {}) => ({ whoami: ok({ ...MEMBER, capabilities: ["contribute"] }), heldcaptures: ok({ items: [{ id: "h1" }] }), wizardsat: ok({ scripts: [] }), assistantstate: ok({ on: true }), accountreference: ok({ held: true }), ...more });
-const load = (o = {}) => boot({ screens: [HELD], path: "/app/held", plane: plane(), ...o });
-const again = (a, more = {}, o = {}) => boot({ screens: [HELD], path: "/app/held", tabStore: a.store, local: Object.fromEntries(a.local), plane: plane(more), ...o });
+/* the team's name and level are the world's: its administrator names the team by the real act, and a later load reads what the world then holds */
+const load = async (o = {}) => {
+  const { world, me } = await inWorld();
+  await me.act("groupnameset", { body: { name: "River Town" } });
+  return Object.assign(await bootAs(world, me, { screens: [HELD], path: "/app/held", plane: plane(), ...o }), { world, me });
+};
+const again = async (a, more = {}, o = {}) => Object.assign(await bootAs(a.world, a.me, { screens: [HELD], path: "/app/held", tabStore: a.store, local: Object.fromEntries(a.local), plane: plane(more), ...o }), { world: a.world, me: a.me });
 const dock = (p) => !!p.root().querySelector('.cs-mast [data-shell="dock"]');
 /* the stored answer's time moved back by `ms`, as a load some time earlier would have left it */
 const aged = (a, ms) => { const o = JSON.parse(a.store.get(KEY)); for (const n of Object.keys(o.at)) o.at[n] -= ms; return new Map([[KEY, JSON.stringify(o)]]); };
@@ -126,11 +131,12 @@ test("G81 R124 control: the store keeps when each constant was answered, and no 
 for (const [name, age] of [["a day old", 24 * 3600 * 1000 + 1000], ["two days old", 48 * 3600 * 1000]]) {
   test(`G81 R124 a constant kept ${name} is asked again once, and the frame follows a changed answer`, async () => {
     const a = await load();
-    const p = await again(a, { groupidentity: ok({ ok: true, display_name: "New Name" }) }, { tabStore: aged(a, age) });
+    const renamed = (await a.me.act("groupnameset", { body: { name: "New Name" } })).display_name;
+    const p = await again(a, {}, { tabStore: aged(a, age) });
     await settle();
     for (const op of TEAM) assert.equal(p.byOp(op).length, 1, op + ": asked once after the screen settles");
-    assert.equal(p.root().querySelector(".cs-mast .mk-grp").textContent, "New Name");
-    assert.equal(JSON.parse(p.store.get(KEY)).reads.groupidentity.display_name, "New Name");
+    assert.equal(p.root().querySelector(".cs-mast .mk-grp").textContent, renamed);
+    assert.equal(JSON.parse(p.store.get(KEY)).reads.groupidentity.display_name, renamed);
   });
 }
 
