@@ -100,8 +100,7 @@ const IN_PROCESS = { inquiry: ["basis", "restson"], entities: ["readingnameplan"
 /* The family ops whose arm another L11 job serves (R6's other half holds at the layer's close): the control plane
    routes these to their owner's in-process services (K1601; action-clocks R2's `clockpropose`, capture-requests R46,
    answers' `ask`), instance-setup builds its two (T33-87). */
-const SERVED_ELSEWHERE = { clockpropose: "control-plane (T33-89)", capturerequestplatformmark: "control-plane (T33-89)",
-  capturerequestplatformunmark: "control-plane (T33-89)", capturerequestplatformhosts: "control-plane (T33-89)",
+const SERVED_ELSEWHERE = { clockpropose: "control-plane (T33-89)",
   ask: "control-plane (T33-89)", officesseed: "instance-setup (T33-87)", seatsseed: "instance-setup (T33-87)",
   assistantstate: "instance-setup (T33-87)",
   disclosureshown: "instance-setup (T33-87)", disclosureof: "instance-setup (T33-87)",
@@ -303,7 +302,9 @@ test("R19, R6: each new module's ops map and each family's share of an earlier m
       /* a new module's whole map is its family, but for the ops another job serves */
       const unserved = Object.keys(fam.kinds).filter((op) => !served.includes(op));
       assert.deepEqual(unserved, unserved.filter((op) => Object.hasOwn(SERVED_ELSEWHERE, op)), owner);
-      assert.deepEqual(served.filter((op) => !Object.hasOwn(fam.kinds, op)).sort(),
+      /* an op the owner declares itself (R80) is served by its own row, not by the family, so it is no family op */
+      const declared = REGISTERED[owner] ?? {};
+      assert.deepEqual(served.filter((op) => !Object.hasOwn(fam.kinds, op) && !Object.hasOwn(declared, op)).sort(),
                        owner === "money-checks" ? ["moneydetectorsrun"] : [], owner);
     }
     if (fam) for (const op of Object.keys(fam.kinds))
