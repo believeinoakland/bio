@@ -63,3 +63,80 @@ Markers added (K5060):
 - `t36.test.mjs:55`: NOT_HERE, the fetch double's fall-through for an unscripted path.
 
 No `fixtures-own`.
+
+## J5 · COMPLETE
+
+**STORE-ASSEMBLY #1 COMPLETE: entry (a) and K5046 (g) built and tested.**
+
+**Built (K5046 (a), K5052; by copy, K624).**
+- `bio-plane/src/store-assembly/`:
+  - `assemble.mjs`: `assembleStore(ctx, env, {deliver})`. It is the constructor body of plane's `Store`, `#migrate`, `routes`, `#dispatch`, `#nowMs` (as `clockOf`) and `#ownNamespace` (as `namespaceOf`).
+  - plane's Worker-free files, copied: pending, ask, wiring, owners, stats, unpack, transcribe, casesweep, acquire-timings, register, declarations, declared, wizards.
+  - control-plane's `owner-ops.mjs`, its export renamed `ownerOps`.
+  - `index.mjs`, which exports R99's names.
+- The only import changes are `deliver` as a parameter, the owner map from here, and `ADMIN_ACTS`/`ADMIN_SCREENS` from wizard-scripts. No platform import; the module runs in plain node.
+- Copy window (K5125): no `export const DECLARED_OPS`. The rows are `ASSEMBLY_DECLARED_OPS` and `OWNER_MAP_DECLARED_OPS`, registered under `store-assembly` in `OWNERS`.
+- Changes against plane's copy, each tested:
+  - the ledger's five tables are declared to purge under `store-assembly`, and the stats source is registered under that name (R97, R100);
+  - the ledger's instants are on R5's clock and its durations on a clock of their own (K5132).
+- Plane and control-plane are untouched.
+
+**The fixture published (for store-request).** `storeWorld({claimed?, now?, env?})` in `bio-plane/test/m/store-assembly/world.mjs`, with `WORLD_NOW`, `WORLD_PASSWORD`, `WORLD_FOUNDER_HANDLE` and `memoryBucket`.
+- It is the migrated store over node:sqlite: `store`, `ctx`, `sql`, `env`, `claim`, `send`, `tick`, `script`.
+- Each base (claimed, unclaimed) is built once per file and copied per test (`serialize`/`deserialize`), never shared.
+- Measured (K5046 (g)): `storeWorld: base 587–776 ms, copy 129–170 ms`.
+- Copy speed was not traced further, so whether password hashing dominates is unmeasured. The claim is in the base, so a copy pays no hash.
+- `test/m/store-assembly/fixture.mjs` is this module's own harness for the tests copied from plane.
+
+**Tests.** 62 files: plane's and control-plane's node tests copied (K624; class-only, Worker-only and workerd tests stay with plane), plus new ones:
+- `sa-assembly`: R1, R4, R5, R7, R8, R96, R97, R99, and `test.todo` for R1's class clause and R98 (K5125);
+- `sa-world`: R90–R94, R71 (K5132);
+- `sa-parity`: the route keys equal plane's `Store.routes` over the same fixture ctx, plane built in a child process;
+- `sa-gaps`: R33, R52, R58, R63;
+- `owner-map-spread`: R88, R89;
+- `cp-*`: R85–R87.
+
+The copies take the providers' published fixtures and real codes.
+
+Run: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/store-assembly/*.test.mjs` gives tests 377, pass 374, fail 1, todo 2. The fail is `release.test.mjs` R23 (`screen.objective.purpose`), inherited and accepted by name (K5139 (3)).
+
+Plane and control-plane suites (`bio-plane/test/m/plane/*.test.mjs`, `bio-plane/test/m/control-plane/*.test.mjs`): tests 1305, pass 1296, fail 9, none caused here:
+- `r8-heal-door` (2), `r8-headofline` (1) and `r10-lag-figure` (1) fail identically on a clean checkout of `tranche/T51`;
+- `declared-ops` `subscriptionsignin` and `release` R24 predate this job;
+- the three `t51-round9-seam` reds are §14, red by its own name, and §1 and §9, heavy and timing-bound.
+
+The parity run of the round-9 seam on the clean tranche is still going. I will REPORT only if it differs.
+
+**Checks** (all run over my uncommitted local `modules.json` listing `paths` and `tests`, as K5125 says; the file is restored, never committed):
+- format: 0 failures.
+- coverage: 99 of 99, 0 failures.
+- ownership: 0 failures.
+- architecture: 8 failures, all test-only edges to earlier modules:
+  - `case-grammar`, `answer-envelope` (two through its published fixtures), `connection-grammar` and `signatures` (two), which K5139 (1) counts as added;
+  - one more found since: `reading-pipeline`, from `r9-jobs.test.mjs` taking its published `storeFailedTransient`. Please add it with the four.
+- words: 15 failures, the copied unkeyed strings, accepted by name until the round-end regeneration (K5139 (2)). By file and line:
+  - `ask.mjs`: `:60`, `:62`, `:86`, `:88` (the malformed-request details) and `:368`, `:388`, `:389`, `:502`-derived BAD_TASK details at `:526`, `:531`, `:535`, `:540`;
+  - `wiring.mjs`: `:49`, `:78`, `:103`;
+  - `wizards.mjs`: `:51`.
+
+  This is plane's `unkeyed` set; the check's own list is authoritative.
+- fixtures: 11 failures, extraction's provider gap, left red by name for a CHANGE once EXTRACTION #47's fixtures merge (K5139 J4). They are `r9-jobs.test.mjs` `:90`, `:92`, `:113` ×2, `:302` ×2, `:345`, `:378`, `:389`, `:439`, and `fix6-pending.test.mjs:182`.
+
+**Markers added (K5060):** `fixtures-generic` only, all read and accepted (K5139):
+- `r7-keephome.test.mjs:40` STORE_DOWN;
+- `r7-lastmem.test.mjs:25` AGAIN, `:63` SLOW;
+- `r7-lastms.test.mjs:41` SLOW;
+- `r9-jobs.test.mjs:91` STORE_BUSY, `:303` R2_HICCUP;
+- `t36.test.mjs:55` NOT_HERE.
+
+No `fixtures-own`.
+
+**Deferred.** R1's class clause and R98 go to Wave B (plane's and control-plane's jobs, K5125); `test.todo` covers each.
+
+**Found in other modules (all reported, J3; placed by K5139):**
+- the case-file sweep needs plane's `bindPublishedPlane` in a world: placed in store-request's START;
+- the users' `fixtures-contract: plane` contracts stay plane's until Wave B, so plane keeps `r10-fixtures-run.test.mjs`;
+- extraction's fixtures gap: EXTRACTION #47.
+- The ledger's wall clock exists in plane's copy too; it is left as is for Wave B (K5132).
+
+Size (session_01PFCJP5a6GVyjzzsxKD2a53): test runs 52, module lines 3735
