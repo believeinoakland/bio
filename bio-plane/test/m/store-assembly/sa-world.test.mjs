@@ -119,3 +119,21 @@ test("R94: the network refuses every outbound address as an unreachable network 
   assert.equal([...w.sql.exec("SELECT count(*) c FROM keeps_last")][0].c, 1);
   assert.equal([...v.sql.exec("SELECT count(*) c FROM keeps_last")][0].c, 0);
 });
+
+test("R93: an owed row comes due by the passage of the world's time: registered at the pinned instant, backed off from it, asked again only once tick has moved past its due", async () => {
+  const w = await storeWorld();
+  const sha = "d".repeat(64);
+  const added = await answer(await w.send({ url: `http://x/pendingadd?kind=reading&sha=${sha}`, method: "POST", body: {} }));
+  assert.equal(added.json.ok, true, JSON.stringify(added.json));
+  const rowOf = () => [...w.sql.exec("SELECT registered_at, due_at, attempts, last_why FROM keeps_pending WHERE sha=? AND kind='reading'", sha)][0];
+  assert.equal(rowOf().registered_at, WORLD_NOW, "stamped with the world's clock");
+  await w.tick(0);
+  const after = rowOf();
+  assert.equal(after.attempts, 1, "asked at the first firing");
+  assert.ok(after.due_at > WORLD_NOW, "backed off from the pinned instant");
+  const wait = after.due_at - w.now();
+  await w.tick(wait - 1);
+  assert.equal(rowOf().attempts, 1, "not asked before its due");
+  await w.tick(1);
+  assert.equal(rowOf().attempts, 2, "asked again once the clock reaches its due");
+});

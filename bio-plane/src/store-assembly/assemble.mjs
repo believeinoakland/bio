@@ -451,7 +451,9 @@ export function assembleStore(ctx, env, { deliver = null } = {}) {
      own alarm. `keeps_pending` and `acquire_stages` are the plane's two operational tables, declared to purge as a whole-store
      clear (record-core K23). Acquisition reads `cap.keepLater` as it reads `cap.waitUntil`: a keep that will not end inside the
      door's bound is written down here and put by the alarm, never left to a promise nothing keeps alive. */
-  const pending = pendingOf(ctx, { env, store: () => namespace(), deliver });
+  /* R5, R64 (R-CLOCK): the ledger stamps its rows with the assembly's clock, so a pinned clock (`BIO_NOW_MS`) that the scheduler's
+     firing is asked at also decides when a row is due; unpinned, it is the wall clock, as before */
+  const pending = pendingOf(ctx, { env, store: () => namespace(), deliver, now: () => nowMs(null) });
   recordOf(ctx).declarePurge("store-assembly", ["keeps_pending", "keeps_last", "acquire_stages", "job_unit_attempts", "job_batches"]);   /* R97, R72: the owed-work ledger's tables, this module's own */
   capture.keepLater = (a) => pending.keepLater(a);
   capture.owedLater = (a) => pending.owedLater(a);   /* R77, acquisition R100: the ledger's `subresources` and `unpack` entries, registered the same way */
