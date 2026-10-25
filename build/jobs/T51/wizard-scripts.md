@@ -503,3 +503,7 @@ COMPLETE · G53 (fix round 6): registry re-taken at f72b2f8a4c (84 screens, 609 
 - Module suite: 141 tests, 140 pass, 1 fail (the t52g53 R50 failure above, not mine); r51: 4/4.
 - format: 178 modules, 0 failures. architecture: 98 relative imports, 0 failures. coverage: 51 of 51 live ids named, 0 failures. ownership (tranche/T51..HEAD): 1 file changed by the module before my commit counted, 0 failures.
 - impact (`impact.mjs origin/tranche/T51 HEAD`): 26 of 178 modules; the change adds exports only, so I ran the direct users' tests (see below).
+- Direct users' suites on my head: interface-shell 369/369, screens-wizards 75/75, queue-producers 154/154, translations 42/42, plane 599/601. The two plane reds are not mine: `R24 (DEC-149; T34-87…)` fails identically on `origin/tranche/T51` (clean worktree); `R87 G54 L` (`g54-l.test.mjs`) passes alone on my head (0 fail) and failed only in the full-directory run (not reproduced; likely load/timing).
+- Fixtures: 1 line left (`LIMITS_UNREADABLE`, FIX-E, provider `answers`); no `fixtures-own` / `fixtures-generic` markers added.
+
+Size (session_019XFUSYv3eS4JuzAcTX5AsX): test runs 9, module lines 2900
