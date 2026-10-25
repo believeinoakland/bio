@@ -19,11 +19,13 @@ const reply = (body, status = 200) => new Response(JSON.stringify(body), { statu
  *  `signin(step, payload)` and `ask(payload)`, which a test replaces; `sent` lists what reached it. `/version` says its runner is bound
  *  (`runner: true`, instance-setup R17), as an installed runner does. An ask it answers makes the call it reports to the store's `askusage`
  *  (the model's own count, for the member the ask's account names), as the real agent-worker does under the ask's grant. */
-export function agentWorker({ runner = true } = {}) {
+export function agentWorker(opts = {}) {
+  const runner = "runner" in opts ? opts.runner : true, version = opts.version || {};
   const aw = {
     world: null,
     sent: [],
     runner,
+    version,
     usage: CALL,
     signin: (step) => (step === "start" ? { ok: true, address: SIGNIN_ADDRESS }
       : step === "code" ? { ok: true, connected: true, token: SIGNIN_TOKEN, valid_for: "1 year" } : { ok: true }),
@@ -33,11 +35,11 @@ export function agentWorker({ runner = true } = {}) {
       headers: { "content-type": "application/json" }, body: JSON.stringify({ mode: "ask", ...aw.usage }) })),
     async fetch(url, init) {
       const path = new URL(url).pathname;
-      if (path === "/version") return reply({ name: "agent-worker", version: "a-1", ...(aw.runner === undefined ? {} : { runner: aw.runner }) });
+      if (path === "/version") return reply({ name: "agent-worker", version: "a-1", ...(aw.runner === undefined ? {} : { runner: aw.runner }), ...aw.version });
       const body = JSON.parse(init.body);
       aw.sent.push({ path, body });
       if (path === "/signin") {
-        const out = aw.signin(body.step, body);
+        const out = await aw.signin(body.step, body);
         if (out instanceof Error) throw out;
         return reply(out, out.ok === false ? out.status || 409 : 200);
       }
@@ -53,9 +55,9 @@ export function agentWorker({ runner = true } = {}) {
 }
 
 /** A team: the founder (its one active administrator) and `dev` (a member), over a world whose platform holds the seal, the agent-worker
- *  (`worker: false` binds none) and, when `model`, the test-instance mark that lets an ask reach the model (ai-runs R29, R40). */
-export async function team({ worker = agentWorker(), model = false, env = {} } = {}) {
-  const w = await storeWorld({ env: { ACCOUNT_SEAL_SECRET: SEAL, ...(model ? { CIVICSMITH_TEST_INSTANCE: "test", INSTANCE_NAME: "test" } : {}),
+ *  (`worker: false` binds none) and, when `testInstance`, the test-instance mark that lets an ask reach the model (ai-runs R29, R40) and keeps the sign-in door's trace (signin-door R5). */
+export async function team({ worker = agentWorker(), testInstance = false, env = {} } = {}) {
+  const w = await storeWorld({ env: { ACCOUNT_SEAL_SECRET: SEAL, ...(testInstance ? { CIVICSMITH_TEST_INSTANCE: "test", INSTANCE_NAME: "test" } : {}),
     ...(worker ? { AGENT_WORKER: worker } : {}), ...env } });
   if (worker) worker.world = w;
   const founder = await w.signIn("founder");
@@ -118,3 +120,33 @@ export async function counted(t, as, n = 1) {
 
 /** Faults a test lays on a read a world cannot make fail (a read that answers nothing). */
 export const SILENT = Object.freeze({ aikeepawaystate: "none", assistantstate: "none" });
+
+/** A team whose member has read what connecting means and given the password again: ready to sign in, or to set a key, from the page. */
+export async function connecting(opts) {
+  const t = await team(opts);
+  await disclose(t.dev);
+  await reauth(t.dev);
+  return t;
+}
+
+/** The reference the sign-in door put on its last answer (signin-door R3), read from the trace a test instance keeps (R5), by an administrator. */
+export async function lastTrace(t) {
+  const lines = (await t.founder.read("signintrace")).lines;
+  return lines[lines.length - 1].trace;
+}
+
+/** The one thing a world cannot give: what a member has used of a limit that binds them. `ai-use` R4's `aiUsageMine` answers each limit's `scope`, `unit`,
+ *  `period`, `amount` and `reached` and no `used`, which the screen reads (screens-settings R37, R49, R50). This is `as`'s own real answer
+ *  to `aiusage`, with `used` added to each limit of the payers, as the screen's table of reads (`table`) answers it; the read of an owner
+ *  (`aiusage` with `owner`) is the world's real answer unchanged. Reported to the lead as a world gap. */
+export const withUsed = (t, as, used) => async (q) => {
+  const answered = await t.w.door({ url: "/api/?" + new URLSearchParams({ op: "aiusage", ...q }) }, as);
+  const r = answered.json && answered.json.result;
+  return q.owner || !r || !r.payers ? answered.json
+    : { ...answered.json, result: { ...r, payers: r.payers.map((p) => ({ ...p, limits: p.limits.map((l) => ({ ...l, used })) })) } };
+};
+
+/** A fault at the page's edge: the sign-in door's answer to `steps` never comes (`"pending"`); its other steps (the state read) are the world's own
+ *  answers. A runner that never answers cannot be a double, for the page's harness waits for the door while it works. */
+export const unanswered = (t, as, ...steps) => async (q, b) => (steps.includes(b.step) ? "pending"
+  : (await t.w.door({ url: "/api/?op=subscriptionsignin", init: { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) } }, as)).json);

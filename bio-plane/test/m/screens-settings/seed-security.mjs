@@ -81,3 +81,79 @@ export function measured(w, rows) {
   for (const r of rows) w.sql.exec("INSERT INTO runtime_observations (metric, peak_ms, peak_at, peak_detail, last_ms, last_at, samples, total_ms, unit) VALUES (?, ?, ?, NULL, ?, ?, ?, ?, ?)",
     r.metric, r.peak, r.peak_at, r.last, r.last_at, r.samples, r.total, r.unit);
 }
+
+/** The subrequest ceiling the platform taught by refusing (WORLD GAP: only a refused subrequest of the platform records it). */
+export function ceiling(w, observed) {
+  w.sql.exec("INSERT INTO capture_limits (runtime, observed, observed_at, first_seen, samples, since_probe) VALUES ('subrequests', ?, ?, ?, 1, 0)",
+             observed, new Date(w.now()).toISOString(), new Date(w.now()).toISOString());
+}
+
+/* ---- Security ---- */
+import { WORLD_NOW } from "../store-request/fixtures.mjs";
+import { handle as scannerHandle } from "../../../../file-scanner/src/handler.mjs";
+import { memoryBucket, depsWith, json, mirrorTestSet } from "../../../../file-scanner/test/helpers.mjs";
+import { vendorNet } from "../../../../file-scanner/test/vendors.mjs";
+
+const hang = () => new Promise(() => {});
+/** freshclam, as the image's updater answers a run: refused with its lines, or never answering (a download that outlasts the invocation).
+ *  The image's updater has no egress in a test: the one stand-in, at the platform's edge. */
+export const refusing = (detail) => async (path, init = {}) => ((init.method || "GET") === "POST" ? json({ ok: false, code: "MIRROR_REFUSED", detail }) : json({ ok: true }));
+export const stuck = async (path, init = {}) => ((init.method || "GET") === "POST" ? hang() : json({ ok: true }));
+
+/** A team (founder signed in) whose `FILE_SCANNER` binding is the real file-scanner handler over one bucket (every request its own
+ *  invocation, the asynchronous mirror's cut `cutAfterMs` after its response, as the platform cuts `waitUntil`), the vendors' APIs it
+ *  calls answered by `net` (a fetch; the outside world), and the clock the world's, pinned at the real present (the page reads
+ *  `Date.now()`, so a period it asks is one the store's clock admits). `state(now)` is the mirror's record as the bucket holds it;
+ *  `signatures` the age in ms of the signature set the mirror holds, if any. `scanner`: "bound", "unreachable" (a binding that does not
+ *  answer) or "absent" (no binding). The scanner is a platform binding: the real handler is the double (as `file-safety`'s tests give it). */
+export async function scannerTeam({ state = null, cutAfterMs = 20, env = {}, signatures = null, scanner = "bound", net = vendorNet(), now = Date.now() } = {}) {
+  let world = null;
+  const bucket = memoryBucket();
+  const env0 = { updater: stuck };
+  const deps = (over = {}) => depsWith({ bucket, now: () => world.now(), updater: env0.updater, ...(net ? { fetch: net.fetch } : {}), ...over });
+  const bound = {
+    async fetch(input, init) {
+      const request = input instanceof Request ? input : new Request(input, init);
+      const url = new URL(request.url);
+      if (!(url.pathname === "/mirror" && url.searchParams.get("async") === "1")) return scannerHandle(request, deps());
+      let cut = false;
+      const guard = (fn) => (...a) => (cut ? hang() : fn(...a));
+      const b = deps().bucket;
+      const d = deps({ bucket: { ...b, head: guard(b.head), get: guard(b.get), put: guard(b.put), delete: guard(b.delete), list: guard(b.list) },
+        updater: guard(env0.updater), waitUntil: () => {} });
+      const res = await scannerHandle(request, d);
+      setTimeout(() => { cut = true; }, cutAfterMs);
+      return res;
+    },
+  };
+  const FILE_SCANNER = scanner === "bound" ? bound : scanner === "unreachable" ? { fetch: async () => { throw new Error("the scanner did not answer"); } } : undefined;
+  world = await storeWorld({ now, env: { ACCOUNT_SEAL_SECRET: SEAL, ...(FILE_SCANNER ? { FILE_SCANNER } : {}), ...env } });
+  if (state) await bucket.put("clamav/state.json", JSON.stringify(state(world.now())));
+  if (signatures !== null) mirrorTestSet(bucket, { published: new Date(world.now() - signatures).toISOString() });
+  const founder = await world.signIn("founder");
+  const sigs = async () => (await scannerHandle(new Request("https://file-scanner/version"), deps()).then((r) => r.json())).signatures;
+  return { w: world, founder, bucket, env0, deps, sigs, bound, tick: (ms) => world.tick(ms), settle: (ms = 60) => new Promise((r) => setTimeout(r, ms)) };
+}
+
+/** Hard tries at signing in: `n` sign-ins with a wrong password, as strangers make them (the real `login` refusing each), counted by
+ *  the credentials module as the security map's `signin`. `country` is the stamp the edge gives. */
+export async function hardTries(w, n, { country = null } = {}) {
+  for (let i = 0; i < n; i++)
+    await w.door({ url: "/api/?op=login", init: { method: "POST", headers: { "content-type": "application/json", ...(country ? { "cf-ipcountry": country } : {}) },
+      body: JSON.stringify({ handle: "founder", password: "not-the-password-" + i, device: "own" }) } });
+}
+
+/** A team whose usual for an hour is not nothing, then a burst of `n` hard tries that hour (real `login`s refused), and the clock on to the
+ *  present: the period asked by default then holds an unusual hour that is over. The days before are seeded (WORLD GAP: a day lived in a
+ *  world costs the daily update check's several seconds of the host governor's spacing, so sixteen days are not lived): one counted hard
+ *  try at that hour on each of `days` days, as `security_counts` holds a day's. */
+export async function burstTeam({ days = 16, n = 12, ...o } = {}) {
+  const HOUR = 3600000, DAY = 24 * HOUR;
+  const s = await scannerTeam({ ...o, now: Date.now() - 3 * HOUR });
+  const hour = Math.floor(s.w.now() / HOUR);
+  for (let i = 1; i <= days; i++) s.w.sql.exec("INSERT INTO security_counts (kind, hour, country, count) VALUES ('signin', ?, '', 1)", hour - 24 * i);
+  await hardTries(s.w, n);
+  await s.w.tick(3 * HOUR);
+  s.founder = await s.w.signIn("founder");
+  return s;
+}

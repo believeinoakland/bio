@@ -4,9 +4,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { acts, all, day, has, lacks, open, said, textOf } from "./kit.mjs";
-import { env } from "./fixtures.mjs";
+import { env, refuse } from "./fixtures.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
-import { SEAL, team, unnamedTeam, handleOf, notesOf, shipped, deployed, holdsHosting, aDayLater, serving, gone, measured } from "./seed-security.mjs";
+import { team, unnamedTeam, handleOf, notesOf, shipped, deployed, holdsHosting, aDayLater, serving, gone, measured, ceiling } from "./seed-security.mjs";
 
 const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].sort();
 const section = (o, key) => all(o.tree, (e) => e.tag === "section" && all(e, (h) => h.tag === "h2")[0] && textOf(all(e, (h) => h.tag === "h2")[0]) === said(key))[0];
@@ -274,7 +274,9 @@ test("R73 a release with no member behind it that was not the setup is drawn by 
 });
 
 test("R68 How your copy is doing: the check (selftest) draws what it found from its answer; a problem is drawn in its fold; the optional part is said not set up", async () => {
-  const a = await open("updates", { me: ADMIN, table: updatesTable() });
+  const { w, founder } = await team();
+  w.env.CAPTURES = undefined;   // the optional storage is not bound (a platform binding)
+  const a = await open("updates", { world: w, as: founder });
   const sec = part(a, "screen.updates.health.head");
   assert.ok(sec, "the section");
   has(a, "screen.updates.health.check.note"); has(a, "screen.updates.health.check.next");
@@ -289,65 +291,86 @@ test("R68 How your copy is doing: the check (selftest) draws what it found from 
   has(a, "screen.updates.health.captures.off");
   lacks(a, "screen.updates.health.refused.head");
   // the captures bucket set up and read back: nothing said of it, no "not set up"
-  const on = await open("updates", { me: ADMIN, table: updatesTable({}, { selftest: { ok: true, version: "0.83.0", bindings: { STORE: true }, captures: "read-write ok", bindingsAllPresent: true } }) });
+  const both = await team();
+  both.w.env.PUBLISHED = both.w.env.CAPTURES;   // the optional storage is bound as a pair (a platform binding)
+  const on = await open("updates", { world: both.w, as: both.founder });
   await on.press("selftest", {});
   has(on, "screen.updates.health.store");
   lacks(on, "screen.updates.health.captures.off");
   has(on, "screen.updates.health.file.test");
   lacks(a, "screen.updates.health.file.test");
-  // the check finds a problem: the answer refused, drawn in its fold beside the act, the store not said to answer
-  const bad = await open("updates", { me: ADMIN, table: updatesTable({}, { selftest: { ok: false, status: 500, store: "ERR the store did not answer /stats", bindingsAllPresent: false } }) });
+  // the check finds a problem: one bucket bound without the other, the owner answers it refused, drawn in its fold beside the act
+  const half = await team();
+  await assert.rejects(half.founder.read("selftest"), /selftest was refused/, "the owner refuses a half-bound storage");
+  const bad = await open("updates", { world: half.w, as: half.founder });
   await bad.press("selftest", {});
   has(bad, "screen.updates.health.refused.head"); has(bad, "screen.updates.health.refused.store"); has(bad, "screen.updates.health.refused.next");
   lacks(bad, "screen.updates.health.store");
   assert.ok(all(bad.tree, (e) => e.tag === "details" && e.attrs.open !== undefined).length, "the fold is open when drawn");
   // an answer that never comes is drawn failed, never as a healthy copy
-  const silent = await open("updates", { me: ADMIN, table: updatesTable({}, { selftest: "none" }) });
+  const silent = await open("updates", { world: half.w, as: half.founder, table: { selftest: "none" } });
   await silent.press("selftest", {});
   lacks(silent, "screen.updates.health.store");
 });
 
 test("R68 What each part runs (bootstrap with members): each part named as the answer names it with its release; a silent part is said silent; the others show their state; a failed answer is drawn failed", async () => {
-  const a = await open("updates", { me: ADMIN, table: updatesTable() });
+  // the parts are platform service bindings: each answers `GET /version` as its own build does (or does not)
+  const { w, founder } = await team({ AGENT_WORKER: serving("agent-worker", "0.83.0", { runner: false }), PDF_WORKER: serving("pdf-worker", "0.83.0"),
+    OCR_WORKER: gone("timed out"), SHEET_WORKER: serving("other-worker", "0.83.0"), FILE_SCANNER: serving("file-scanner", "0.82.0") });
+  const a = await open("updates", { world: w, as: founder });
   const r = await a.press("bootstrap", {});
   assert.deepEqual([r.sent[0].op, r.sent[0].query], ["bootstrap", { members: "1" }]);
+  const owner = (await founder.read("bootstrap", { query: { members: "1" } })).memberVersions;
+  assert.deepEqual([owner["pdf-worker"].state, owner["ocr-worker"].state, owner["sheet-worker"].state, owner["agent-runner"].state, owner["file-scanner"].version], ["SERVING", "SILENT", "MISNAMED", "UNBOUND", "0.82.0"], "what the owner answers");
   const sheet = part(a, "screen.updates.health.head");
   const rows = all(sheet, (e) => /cs-row/.test(e.attrs.class || ""));
   const rowOf2 = (name) => rows.find((x) => textOf(x).includes(name));
   const P = "screen.updates.health.part.";
   const pdf = textOf(rowOf2(said(P + "pdf-worker")));
-  assert.ok(pdf.includes(said(P + "state.answering")) && pdf.includes(said(P + "release", { version: "0.83.0" })), "a serving part is named by the design's words and shows its release");
-  assert.ok(textOf(rowOf2(said(P + "file-scanner"))).includes(said(P + "release", { version: "0.82.0" })), "a part on another release shows that one");
+  assert.ok(pdf.includes(said(P + "state.answering")) && pdf.includes(said(P + "release", { version: owner["pdf-worker"].version })), "a serving part is named by the design's words and shows its release");
+  assert.ok(textOf(rowOf2(said(P + "file-scanner"))).includes(said(P + "release", { version: owner["file-scanner"].version })), "a part on another release shows that one");
   const ocr = textOf(rowOf2(said(P + "ocr-worker")));
   assert.ok(ocr.includes(said(P + "silent")), "a silent part is said silent");
-  assert.ok(!ocr.includes("timed out"), "no reason the owner gave beyond the word");
+  assert.ok(!ocr.includes(owner["ocr-worker"].why), "no reason the owner gave beyond the word");
   assert.ok(textOf(rowOf2(said(P + "agent-runner"))).includes(said(P + "state.unbound")), "an unbound part");
   const sheetW = textOf(rowOf2(said(P + "sheet-worker")));
-  assert.ok(sheetW.includes(said(P + "state.misnamed")) && sheetW.includes("other-worker"), "a part answering under another name, as the answer names it");
+  assert.ok(sheetW.includes(said(P + "state.misnamed")) && sheetW.includes(owner["sheet-worker"].name), "a part answering under another name, as the answer names it");
   assert.ok(!rows.some((x) => /agent-worker|pdf-worker|ocr-worker/.test(textOf(x))), "never the module id");
   has(a, "screen.updates.health.parts.note"); has(a, "screen.updates.health.parts.next");
-  // a failed answer is drawn failed, no part listed
-  const bad = await open("updates", { me: ADMIN, table: updatesTable({}, { bootstrap: (q) => (q.members === "1" ? refuse("STORE_DID_NOT_ANSWER") : { ok: true, installed_at: "2026-09-02T10:00:00Z" }) }) });
+  // a failed answer is drawn failed, no part listed (WORLD GAP: the owner's refusal for the members' read is the store's silence, which the world cannot make)
+  const facts = await founder.read("bootstrap");
+  const bad = await open("updates", { world: w, as: founder, table: { bootstrap: (q) => (q.members === "1" ? refuse("STORE_DID_NOT_ANSWER") : { ok: true, installed_at: facts.installed_at }) } });
   await bad.press("bootstrap", {});
   lacks(bad, "screen.updates.health.parts.note");
   assert.ok(bad.refused && bad.refused.text.length > 0, "the refusal is drawn beside the act");
 });
 
 test("R68 What running costs (runtime): the measured work as the answer gives it, the two limits explained, and the note; a failed answer is drawn failed", async () => {
-  const a = await open("updates", { me: ADMIN, table: updatesTable() });
+  const { w, founder } = await team();
+  measured(w, [
+    { metric: "capture_work_bytes", unit: "bytes", peak: 800000, peak_at: "2026-10-12T00:00:00Z", last: 1200, last_at: "2026-10-13T00:00:00Z", samples: 40, total: 2000000 },
+    { metric: "request_work", unit: "ms", peak: 1840, peak_at: "2026-10-12T00:00:00Z", last: 90, last_at: "2026-10-13T00:00:00Z", samples: 5200, total: 1612000 }]);
+  ceiling(w, 50);
+  const a = await open("updates", { world: w, as: founder });
   lacks(a, "screen.updates.health.runtime.note");
   const r = await a.press("runtime", {});
   assert.deepEqual(r.sent.map((x) => x.op), ["runtime"]);
-  has(a, "screen.updates.health.runtime.limits", { ceiling: "50" }); has(a, "screen.updates.health.runtime.cpu"); has(a, "screen.updates.health.runtime.note");
+  const owner = await founder.read("runtime"), by = (m) => owner.measured.metrics.find((x) => x.metric === m);
+  has(a, "screen.updates.health.runtime.limits", { ceiling: String(owner.subrequests.observed) }); has(a, "screen.updates.health.runtime.cpu"); has(a, "screen.updates.health.runtime.note");
   const t = textOf(part(a, "screen.updates.health.head"));
   const R = "screen.updates.health.runtime.";
-  assert.ok(t.includes("request_work") && t.includes(said(R + "heaviest", { peak: "1840", unit: said(R + "unit.ms") })) && t.includes(said(R + "average", { mean: "310", unit: said(R + "unit.ms") })) && t.includes(said(R + "samples", { samples: "5200" })), "a measurement in ms is drawn in ms");
-  assert.ok(t.includes("capture_work_bytes") && t.includes(said(R + "heaviest", { peak: "800000", unit: said(R + "unit.bytes") })) && !t.includes("800000 ms"), "a count of work is never drawn as a time");
+  const ms = by("request_work"), bytes = by("capture_work_bytes");
+  assert.ok(t.includes("request_work") && t.includes(said(R + "heaviest", { peak: String(ms.peak), unit: said(R + "unit.ms") })) && t.includes(said(R + "average", { mean: String(Math.round(ms.mean * 100) / 100), unit: said(R + "unit.ms") })) && t.includes(said(R + "samples", { samples: String(ms.samples) })), "a measurement in ms is drawn in ms");
+  assert.ok(t.includes("capture_work_bytes") && t.includes(said(R + "heaviest", { peak: String(bytes.peak), unit: said(R + "unit.bytes") })) && !t.includes(bytes.peak + " ms"), "a count of work is never drawn as a time");
   // control: a ceiling no refusal has taught yet is not drawn
-  const none = await open("updates", { me: ADMIN, table: updatesTable({}, { runtime: env({ ok: true, measured: { metrics: [] }, subrequests: { runtime: "subrequests", observed: null, probeDue: true, probeEvery: 20 } }) }) });
+  const fresh = await team();
+  const none = await open("updates", { world: fresh.w, as: fresh.founder });
   await none.press("runtime", {});
+  assert.equal((await fresh.founder.read("runtime")).subrequests.observed, null, "the owner holds no ceiling");
   assert.ok(!none.text.includes(said("screen.updates.health.runtime.limits", { ceiling: "@" }).split("@")[0]), "no ceiling sentence"); has(none, "screen.updates.health.runtime.cpu");
-  const bad = await open("updates", { me: ADMIN, table: updatesTable({}, { runtime: refuse("STORE_DID_NOT_ANSWER") }) });
+  // a runtime read the store cannot answer is drawn failed (the world's own refusal: its record of the measurements cannot be read)
+  w.sql.exec("DROP TABLE runtime_observations");
+  const bad = await open("updates", { world: w, as: founder });
   await bad.press("runtime", {});
   lacks(bad, "screen.updates.health.runtime.note");
   assert.ok(bad.refused && bad.refused.text.length > 0);
@@ -355,20 +378,27 @@ test("R68 What running costs (runtime): the measured work as the answer gives it
 
 test("R68 units (DEC-389): a runtime figure is said with its unit by key (unit.ms, unit.bytes); a unit with no key is never drawn as its raw token", async () => {
   const R = "screen.updates.health.runtime.";
-  const metric = (unit) => ({ metric: "request_work", unit, peak: 1840, peak_at: "2026-10-12T00:00:00Z", peak_detail: null, last: 310, last_at: "2026-10-13T00:00:00Z", samples: 5200, total: 1612000, mean: 310 });
-  const ms = await open("updates", { me: ADMIN, table: updatesTable({}, { runtime: env({ ok: true, measured: { metrics: [metric("ms")] } }) }) });
+  const metric = (unit) => ({ metric: "request_work", unit, peak: 1840, peak_at: "2026-10-12T00:00:00Z", last: 310, last_at: "2026-10-13T00:00:00Z", samples: 5200, total: 1612000 });
+  const { w, founder } = await team();
+  measured(w, [metric("ms")]);
+  const ms = await open("updates", { world: w, as: founder });
   await ms.press("runtime", {});
   assert.ok(ms.text.includes(said(R + "heaviest", { peak: "1840", unit: said(R + "unit.ms") })), "milliseconds, by key");
-  // control: a unit with no key is not drawn as its token; its figures are not drawn either
-  const odd = await open("updates", { me: ADMIN, table: updatesTable({}, { runtime: env({ ok: true, measured: { metrics: [metric("joules")] } }) }) });
-  await odd.press("runtime", {});
-  assert.ok(!odd.text.includes("joules"), "the raw unit token is never drawn");
-  assert.ok(!odd.text.includes(said(R + "heaviest", { peak: "1840", unit: "" })), "a figure with no unit is not drawn");
-  has(odd, R + "cpu");
+  // control: a unit with no key is not drawn as its token; its figures are not drawn either (WORLD GAP: the owner writes only ms and bytes; a recorded unit of another word is seeded)
+  const odd = await team();
+  measured(odd.w, [metric("joules")]);
+  assert.equal((await odd.founder.read("runtime")).measured.metrics[0].unit, "joules", "the owner answers the unit it holds");
+  const o = await open("updates", { world: odd.w, as: odd.founder });
+  await o.press("runtime", {});
+  assert.ok(!o.text.includes("joules"), "the raw unit token is never drawn");
+  assert.ok(!o.text.includes(said(R + "heaviest", { peak: "1840", unit: "" })), "a figure with no unit is not drawn");
+  has(o, R + "cpu");
 });
 
 test("R68 control: the section is an administrator's only; a member reads that the screen is administrators' and none of the three reads is sent", async () => {
-  const m = await open("updates", { me: MEMBER, table: updatesTable() });
+  const { w } = await team();
+  const dev = await w.signIn("dev");
+  const m = await open("updates", { world: w, as: dev });
   lacks(m, "screen.updates.health.head");
   assert.deepEqual(acts(m.tree), []);
   for (const op of ["selftest", "bootstrap", "runtime", "updatenotice"]) assert.ok(!m.p.requests.some((r) => r.op === op), op);

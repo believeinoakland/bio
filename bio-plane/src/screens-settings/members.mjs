@@ -85,7 +85,8 @@ export const members = {
       const isFounder = (m) => m.founder === true || m.member_id === "admin";
       const expOf = (m) => {
         const ex = okv(data.expertise);
-        return isSubject(m) && ex ? ex.expertise || [] : m.expertise || [];
+        // the read answers for the member it was asked about: opened by a handle, the owner answers an empty list for that name, which is not this member's (R71)
+        return isSubject(m) && ex && ex.memberId === m.member_id ? ex.expertise || [] : m.expertise || [];
       };
       // the member by handle (their reference); the founder by hers, else `member.founder.unnamed` with its explanation, never by her id (R51)
       const nameOf = (m) => (isFounder(m) ? E(founderName()) : m.handle ? cs.ref("member", m.handle, m.handle) : E(T(S + "nohandle")));

@@ -91,10 +91,12 @@ export async function keyed(t) {
   await own(t.rosa, KEYS.rosa, "laptop");
   // a day passes and the sessions are made again (a session does not outlive it)
   w.tick(DAY);
+  delete w.__founderSession;   // `signIn` keeps the founder's session it made for adding members; a day has made it stale
   const rosa = await w.signIn("rosa"), dev = await w.signIn("dev");
   await rosa.act("signeradd", { body: { memberId: "lu", keyB64: KEYS.lu } });
   await own(dev, KEYS.dev);
   w.tick(DAY);
+  delete w.__founderSession;   // `signIn` keeps the founder's session it made for adding members; a day has made it stale
   const again = await w.signIn("rosa");
   await again.act("signerset", { body: { keyB64: KEYS.devOld, status: "revoked" } });
   return refreshed(t);
@@ -102,7 +104,8 @@ export async function keyed(t) {
 /** The team's sessions made again, after the clock moved. */
 async function refreshed(t) {
   const out = { w: t.w };
-  for (const h of ["founder", "rosa", "lu", "dev", "ana"]) out[h] = await t.w.signIn(h);
+  out.founder = await t.w.signIn(t.founder.handle);
+  for (const h of ["rosa", "lu", "dev", "ana"]) out[h] = await t.w.signIn(h);
   return out;
 }
 
@@ -125,15 +128,12 @@ export async function admins(n, { named = false } = {}) {
 
 /* ---- what no act makes ---- */
 
-/** A roster the owner would not list (an empty one; a claimed team without its founder's row; the founder holding no handle): the real
+/** A roster the owner would not list (an empty one; a claimed team without its founder's row; fewer administrators than are counted): the real
  *  rows `rows`, as the screen reads them from `memberlist`. */
 export const rosterOf = (rows) => ({ memberlist: env({ members: rows }) });
 export const EMPTY_ROSTER = rosterOf([]);
 /** The same roster as the owner answered it, without the founder's row (an unclaimed team lists none). */
 export const withoutFounder = (rows) => rows.filter((m) => !(m.member_id === "admin" || m.founder === true));
-/** The same roster with the founder holding no handle (membership R144: until she chooses one). */
-export const founderNameless = (rows) => rows.map((m) => (m.member_id === "admin" || m.founder === true ? { ...m, handle: null } : m));
-
 /** The faults: a read that never answers, one the store did not answer, and the arithmetic an administrator is refused. */
 export const WAITING = (op) => ({ [op]: "pending" });
 export const SILENT = (op) => ({ [op]: "none" });
