@@ -559,3 +559,7 @@ Module suite after B45: 375 of 375 (with the `idleFor` fix).
 **COMPLETE summary.** Met: R129 (door), R130, R131, R132, R108's `.cs-wizmark`; R12, R47, R50, R101, R107's lists are wizard-scripts' now. R33 fixed (a 401 `SESSION_LOCKED` locks). R34 (SCREENS-ENTRY) not reproduced; characterization test added. Lines left on the fixtures list: harness 88, 89, 91, 97 (B46), 22, 23 (stay). Markers added: `t50.test.mjs` `ZZ_STOP` (a model stream's closing line) and `ZZ_REASON` (made-up reason for the uncatalogued path). Checks: format 0, architecture 0, coverage 127 of 127, words 0, ownership 0. Module suite 375/375.
 
 Size (session_01EL8FdFvDxMz2KBJrjWn936): test runs 62, module lines 3376
+
+## J31 · COMPLETE
+
+COMPLETE for `interface-shell`, fix round 10 (B44, B45; B46 applied). Met: R129 (boot door), R130 (Enter presses the section's primary act), R131 (44 px refs in rows), R132 (rail double-click), R108's `.cs-wizmark`; ADMIN_ACTS/ADMIN_SCREENS now wizard-scripts'. 52 op-table lines re-pointed to storeWorld; harness 88/89/91/97 stay per B46, 22/23 stay. Found and fixed through the real door: a locked session answered 401 SESSION_LOCKED ended the page instead of locking (R33). R34 not reproduced (characterization test). Markers added: t50 ZZ_STOP, ZZ_REASON. Checks 0 failures (architecture, coverage 127/127, words, format, ownership); module suite 375/375; users' suites equal the tranche tip (screens-settings 1, screens-publish 3 fail there too). Details, reports and Size line in the record.
