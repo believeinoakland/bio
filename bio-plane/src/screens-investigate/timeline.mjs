@@ -102,7 +102,7 @@ function render(cs, view) {
   const precisions = ["day", "minute", "second", "edtf"];
   const datedRow = (f) => cs.row("", `<span class="mk-date">${P.when(cs, f.upper_bound ? { precision: "upper_bound", end: f.value } : { value: f.value, precision: f.precision })}</span>`
     + (kinds.includes(f.kind) ? ` <b>${cs.w(S + "datekind." + f.kind)}</b>` : ""), "",
-  cs.w(S + "dated.meta", { precision: precisions.includes(f.precision) ? cs.w("label.timeprecisions." + f.precision) : "", document: titleOf(f.capture_sha) || P.plain(cs, S + "source"), grade: String(f.grade || "") }));
+  cs.w(S + "dated.meta", { precision: precisions.includes(f.precision) ? cs.w("label.timeprecisions." + f.precision) : "", document: titleOf(f.capture_sha) || P.plain(cs, S + "source"), grade: f.grade ? String(f.grade) : { html: cs.mark("gap", "unrated") } }));
   if (!proj || proj.state !== "ok") out.push(cs.state("project", view, () => ""));
   else if (!tl) out.push(`<p>${cs.w(S + "noset")}</p>`);
   else out.push(cs.state(tl, (v) => {
@@ -160,17 +160,29 @@ function render(cs, view) {
     + cs.choice("tl-question", S + "question", qChoice, qChoice.length ? { value: qChoice[0].value } : {}) + cs.field("tl-hunch", S + "hunch", { area: true, rec: true })
     + cs.act("hypothesishold", { label: "act.hypothesishold.label.timeline" })
     + cs.act("findin", { label: "act.findin.label.timeline" })));
+  if (view.ui.dateRefusal) out.push(P.said(cs, view.ui.dateRefusal));
   if (view.ui.said) out.push(`<p class="mk-note">${cs.w(view.ui.said)}</p>`);
   return out.join("");
 }
 
 const acts = rereading([
   { op: "createevent", label: "act.createevent.label.timeline",
-    send(view, el, cs) {
+    async send(view, el, cs) {
       const at = view.parts.chosen(cs, "tl-doc", "tl-passage");
       if (!at) return { refuse: "screen.timeline.passage.empty" };
+      const kind = String(cs.value("tl-kind") || "other"), date = String(cs.value("tl-date") || "").trim();
       /* C54: the event is attested by the passage chosen; the timeline finds it again by that capture, so it is tied to no person the page guessed */
-      return { body: { kind: String(cs.value("tl-kind") || "other"), attestations: [at] } };
+      if (!date) return { body: { kind, attestations: [at] } };
+      /* R33 (K5148; WALK-FINAL-07 R60): an event is dated only by an attestation that carries a date, so a date on the form is recorded as the
+         dated fact (`recorddatedfact`, as that act sends it) and that fact is the event's attestation: the event lies on its lane with its date */
+      if (!/^\d{4}-\d{2}(-\d{2})?$/.test(date)) return { refuse: "screen.timeline.date.empty" };
+      view.ui.dateRefusal = null;
+      const made = await cs.call("recorddatedfact", { body: { captureSha: at.captureSha, extent: at.extent, kind: String(cs.value("tl-datekind") || "adopted"),
+        value: date.length === 7 ? { value: date, precision: "edtf" } : date, method: view.parts.plain(cs, "screen.timeline.method.member") } });
+      const r = made && made.result !== undefined ? made.result : made;
+      const id = r && r.ok !== false && r.dated_fact && typeof r.dated_fact.dated_fact_id === "string" ? r.dated_fact.dated_fact_id : "";
+      if (!id) { cs.set("dateRefusal", { code: String((r && (r.code || r.reason)) || ""), translation: r && typeof r.translation === "string" ? r.translation : null }); return null; }
+      return { body: { kind, attestations: [{ datedFactId: id }] } };
     },
     done(view) { view.ui.later = {}; } },
   { op: "addparticipant", label: "act.addparticipant.label.timeline",

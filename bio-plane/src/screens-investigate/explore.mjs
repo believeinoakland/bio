@@ -5,7 +5,7 @@
  * weakest hop's. A step declared and not evidenced is a lead, never a finding. No score, rank or "most connected". */
 
 import { PARTS } from "./parts.mjs";
-import { GRAPH_SHARED } from "./graphwords.mjs";
+import { GRAPH_SHARED, FORM_SHARED } from "./graphwords.mjs";
 import { WHY_KEYS } from "./whywords.mjs";
 
 const S = "screen.explore.";
@@ -17,6 +17,8 @@ function reads() {
       || !Array.isArray(v.vocabularies.connection_kinds.values) || !v.vocabularies.connection_kinds.values.length },
     people: { op: "peopledirectory", query: { limit: "200" } },
     presets: { op: "explorepreset", body: { preset: "presets" }, empty: (v) => !Array.isArray(v) || !v.length },
+    /* R34 (K5148): the viewer's visible documents, for the form that attaches a source to a declared step */
+    docs: { op: "heldcaptures", query: { limit: "200", state: "held_and_vouched", fields: "picker" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
   };
 }
 
@@ -111,7 +113,7 @@ function render(cs, view) {
   if (ui.promoted) out.push(`<p class="mk-note">${cs.w(S + "promoted")}</p>`);
   /* R17: "Attach a source to a declared step": the passage that states it, and the member's words on what it shows */
   if (a && (a.paths || []).some((p) => (p.hops || []).some((h) => h.label === "declared, not evidenced" || (p.marks || []).some((m) => m.hop === h.id && m.mark === "declared, not evidenced"))))
-    out.push(cs.sec(S + "assert.head", cs.field("explore-assert-sha", S + "assert.sha", { help: S + "assert.sha.help" }) + cs.field("explore-assert-page", S + "assert.page", {})
+    out.push(cs.sec(S + "assert.head", P.docChoice(cs, view, "explore-assert-doc", { passage: false, drive: true, newest: true }) + P.passagePick(cs, view, "explore-assert-doc", "explore-assert-passage", P.later)
       + cs.field("explore-assert-basis", S + "assert.basis", { area: true, rec: true })));
   return out.join("");
 }
@@ -194,7 +196,7 @@ const acts = [
   { op: "stepsource", label: "act.stepsource.label.explore", reasonField: "basis",
     send(view, el, cs) {
       const relation = String((el && el.dataset && el.dataset.relation) || "");
-      const at = view.parts.passage(cs.value("explore-assert-sha"), cs.value("explore-assert-page"));
+      const at = view.parts.chosen(cs, "explore-assert-doc", "explore-assert-passage");
       const basis = String(cs.value("explore-assert-basis") || "").trim();
       if (!relation || !at || !basis) return { refuse: "screen.explore.assert.empty" };
       return { body: { relation, captureSha: at.captureSha, extent: at.extent, basis } };
@@ -254,7 +256,7 @@ const EXPLORE_KEYS = [
   "screen.explore.chains.holds", "screen.explore.lead", "screen.explore.evidenced", "screen.explore.declared", "screen.explore.cited",
   "screen.explore.page", "screen.explore.testimony", "screen.explore.nosource", "screen.explore.atdate", "screen.explore.nochains",
   "screen.explore.noscore", "screen.explore.stopped", "screen.explore.verify.matches", "screen.explore.verify.differs", "screen.explore.promoted",
-  "screen.explore.assert.head", "screen.explore.assert.sha", "screen.explore.assert.sha.help", "screen.explore.assert.page",
+  "screen.explore.assert.head",
   "screen.explore.graph", "screen.explore.graph.holds", "screen.explore.groups.empty", "screen.explore.hop", "screen.explore.hop.unnamed",
   "screen.explore.hunch", "screen.explore.verify.lead", "screen.explore.verify.cited", "screen.explore.verify.hop.holds",
   "screen.explore.verify.hop.differs", "screen.explore.assert.basis", "screen.explore.assert.empty",
@@ -262,7 +264,7 @@ const EXPLORE_KEYS = [
 
 const words = ["screen.explore.name", "screen.explore.purpose",
   ...["explore", "explorepreset", "exploreverify", "stepsource", "promote"].flatMap((op) => ["act." + op + ".label.explore", "act." + op + ".does"]),
-  ...GRAPH_SHARED, ...WHY_KEYS,
+  ...GRAPH_SHARED, ...FORM_SHARED, ...WHY_KEYS,
   "file.chain.title", "file.chain.question", "file.chain.rests", "file.recheck.chain", "file.recheck.chain.why", "screen.explore.nocentre",
   "mark.scale.connection.name", "mark.scale.connection.means", "mark.grade.reading", "mark.hunch.means",
   "mark.gap.undetermined.name", "mark.gap.undetermined.means", "mark.gap.unrated.name", "mark.gap.unrated.means",

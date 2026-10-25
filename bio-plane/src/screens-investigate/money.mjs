@@ -87,6 +87,12 @@ function render(cs, view) {
     if (f && f.period && !f.period.to && !f.period.fiscal) g.push("period");
     return g;
   };
+  const heldDocs = P.docsAll(cs, view).rows;
+  const sourceLabel = (s) => {
+    const r = heldDocs.find((x) => x && x.capture && x.capture.sha256 === s.capture_sha);
+    const title = (r && r.title) || P.plain(cs, S + "source");
+    return s.row !== undefined && s.row !== null ? P.plain(cs, "contradiction.text.row_table", { source_row: String(s.row), source_table: title }) : title;
+  };
   const cells = (e) => {
     const L = fact(e);
     if (L.state !== "ok") return [cs.state(L, () => ""), "", "", "", "", "", "", "", ""];
@@ -101,7 +107,9 @@ function render(cs, view) {
     const amount = typeof f.amount === "object" && f.amount
       ? cs.w(S + "range", { low: f.amount.low, high: f.amount.high, currency: f.currency || "" })
       : cs.w(S + "amount", { sign: f.sign === "-" ? "−" : "", amount: String(f.amount || ""), currency: f.currency || "" });
-    const src = f.source && f.source.capture_sha ? P.refOf(cs, f.source.capture_sha, f.citation || cs.w(S + "source"), [f.as_read || ""], "capture") : "";
+    /* R33 (K5148; WALK-FINAL-07 R61): the source is the document by its title and, for a row read from a table, its row; the plane's `citation` names
+       the capture and the binding by their fingerprints, which a member never reads */
+    const src = f.source && f.source.capture_sha ? P.refOf(cs, f.source.capture_sha, sourceLabel(f.source), [f.as_read || ""], "capture") : "";
     const grade = f.grade && /^[A-D]$/.test(f.grade.reading || "") ? cs.grade("capture", f.grade.reading) : cs.mark("gap", "unrated");
     const inTrail = e.state === "included" ? cs.w(S + "included", { reason: e.reason || "" }) : e.state === "excluded" ? cs.w(S + "excluded", { reason: e.reason || "" })
       : e.state === "proposed" ? cs.w(/^(class|machine|agent):/.test(String(e.by || "")) ? S + "proposed" : S + "proposed.member") : cs.w(S + "notyet");
@@ -369,7 +377,7 @@ const MONEY_KEYS = [
   "screen.money.g.hunch", "screen.money.g.nosource",
 ];
 
-const words = ["screen.money.name", "screen.money.purpose", "refusal.BAD_VALIDITY",
+const words = ["screen.money.name", "screen.money.purpose", "refusal.BAD_VALIDITY", "contradiction.text.row_table",
   ...["recordfact", "createset", "include", "exclude", "reconcile", "committedagainstpaid", "authoritychain", "findin", "actioncreate", "createevent", "gradenote", "acquire", "checkrequest", "hypothesishold"]
     .flatMap((op) => ["act." + op + ".label.money", "act." + op + ".does"]),
   ...["figure", "from", "to-where-it-went", "when-it-moved", "stage", "period", "amount", "source", "in-this-trail"].flatMap((c) => ["column.money." + c + ".name", "column.money." + c + ".shows"]),

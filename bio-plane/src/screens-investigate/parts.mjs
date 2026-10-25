@@ -64,14 +64,6 @@ export const PARTS = Object.freeze({
   today(cs) {
     return new Date(cs.now()).toISOString().slice(0, 10);
   },
-  /** A passage the member names: a capture's SHA-256 and, optionally, its page (counted from 1), in content's extent
-   *  grammar (a PDF page counted from 0, else the whole document). */
-  passage(sha, page) {
-    const s = String(sha || "").trim().toLowerCase();
-    if (!/^[0-9a-f]{64}$/.test(s)) return null;
-    const n = Number(String(page || "").trim());
-    return { captureSha: s, extent: Number.isInteger(n) && n > 0 ? { kind: "pdf-page", page: n - 1 } : { kind: "document" } };
-  },
   /** R52, G20 (K4571): the documents `heldcaptures` answers for a picker, read on past the page the screen first asks. The first page is the
    *  screen's own read (`view.data.docs`); while it says `truncated` with a `next`, the following page is read by that cursor (1000 rows,
    *  `extra` being the screen's own filter, e.g. `{project}`), twice at most, each kept in `view.ui.later` and drawn on arrival. Answers
@@ -118,7 +110,9 @@ export const PARTS = Object.freeze({
     if (d && d.state === "failed") return cs.state("docs", view, () => "");
     const plain = (t) => String(t).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: "\"", "#39": "'" }[e]));
     const all = this.docsAll(cs, view, o.query);
-    const rows = all.rows.filter((r) => r && r.capture && typeof r.capture.sha256 === "string" && r.capture.sha256);
+    const held = all.rows.filter((r) => r && r.capture && typeof r.capture.sha256 === "string" && r.capture.sha256);
+    /* R34 (K5148): `newest` lists the documents newest first (a screen with no project of its own, Explore); a stable sort keeps the owner's order within a day */
+    const rows = o.newest ? held.map((r, i) => [r, i]).sort((a, b) => String(b[0].collected_since || "").localeCompare(String(a[0].collected_since || "")) || a[1] - b[1]).map((x) => x[0]) : held;
     const here = typeof o.project === "string" ? o.project : "";
     const ordered = here ? rows.filter((r) => r.project === here).concat(rows.filter((r) => r.project !== here)) : rows;
     const titleOf = (r) => (typeof r.title === "string" && r.title ? r.title : plain(cs.w("screen.held.untitled")));
@@ -137,6 +131,23 @@ export const PARTS = Object.freeze({
     return search + cs.choice(id, o.label || "form.choose.document", options, o.drive ? { acts: {} } : {}) + `<p class="mk-small">${cs.w(o.help || "form.choose.document.help")}</p>`
       + (all.more ? `<p class="mk-small" data-docs-more>${cs.w("screen.people.more", { n: String(all.rows.length) })}</p>` : "")
       + (o.passage === false ? "" : `<p class="mk-small">${cs.w("form.choose.passage")}</p>`);
+  },
+  /** R8, R34 (K5148; WALK-FINAL-08 D3): the passages a standard rests on (`texts`, each `{content_id}`) as the options of a choice, each by its
+   *  words (the reading of its capture, from `content` and `reading`, read once each by `later`), else its document's title, never its content
+   *  id; the value of an option is the content id the plane takes as the passage that says so. Options only: no blank one. */
+  textOptions(cs, view, texts) {
+    const held = this.docsAll(cs, view).rows;
+    const same = (a, b) => JSON.stringify(Object.keys(a || {}).sort().map((k) => [k, a[k]])) === JSON.stringify(Object.keys(b || {}).sort().map((k) => [k, b[k]]));
+    return (Array.isArray(texts) ? texts : []).filter((x) => x && x.content_id).map((x) => {
+      const cq = this.later(cs, view, "content:" + x.content_id, "content", { query: { id: x.content_id } });
+      const c = cq.state === "ok" && cq.value && typeof cq.value.capture_sha === "string" ? cq.value : null;
+      const rd = c ? this.later(cs, view, "reading:" + c.capture_sha, "reading", { query: { sha256: c.capture_sha } }) : null;
+      const units = rd && rd.state === "ok" && rd.value && Array.isArray(rd.value.text_units) ? rd.value.text_units.filter((u) => u && String(u.text || "").trim()) : [];
+      const hit = c && c.extent && c.extent.kind !== "document" ? units.filter((u) => same(u.extent, c.extent)) : units.slice(0, 1);
+      const words = hit.map((u) => String(u.text).trim()).join(" ").slice(0, 160);
+      const row = c ? held.find((r) => r && r.capture && r.capture.sha256 === c.capture_sha) : null;
+      return { value: x.content_id, text: words || (row && row.title) || this.plain(cs, "screen.person.source") };
+    });
   },
   /** R23, R34, C59: a choice with nothing to choose from (none held), drawn under its own label in a slot of its own, so the empty state is never taken for
    *  the sentence of the control before it. Answers HTML. */
