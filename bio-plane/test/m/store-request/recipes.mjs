@@ -294,3 +294,18 @@ export async function writingHelp(world, as, { op = "contradictionclarify", fiel
   const answer = await world.door({ url: "/api/?op=writinghelp", init: { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ op, field, told }) } }, as);
   return resultOf(answer);
 }
+
+/** What one model call costs, as agent-worker reports it to `askusage` (ai-use R1). */
+const CALL_USAGE = Object.freeze({ input_tokens: 1000, output_tokens: 200, cache_read_input_tokens: 0, cache_creation_input_tokens: 0, total_cost_usd: 0.8 });
+
+/** R19 (STORE-REQUEST #5, B9 2 (c); SCREENS-SETTINGS #19 J36): the model's own call counted under an ask's grant, as the agent-worker does it. `as` (a member signed in, the team's
+ *  Claude account set up by `recipes.assistant`) mints the ask's grant (`aigrantmint`, under the member's own live session), and the model, holding only that grant, posts the usage of
+ *  `calls` calls to `askusage` through the door, which admits it as the Worker's door does (control-plane R53). Answers `{grant, counted}`: the grant's token and the owner's answer
+ *  to the count. A refusal of the grant's mint or of the count throws, naming the op. */
+export async function grantAdmit(world, as, { calls = 1, mode = "ask", usage = CALL_USAGE } = {}) {
+  const grant = await as.act("aigrantmint");
+  const counted = resultOf(await world.door({ url: "/api/?op=askusage", init: { method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ mode, usage, calls }) } }, { token: grant.token }));
+  if (!counted || counted.ok !== true) throw refusedAct("askusage", { status: 200, json: { ok: true, result: counted } });
+  return { grant: grant.token, counted };
+}

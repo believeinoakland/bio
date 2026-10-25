@@ -3,7 +3,7 @@
    the real store, the real claim and sign-in, the page's door, recipes of real acts and a pinned clock. */
 import { storeWorld as assemblyWorld, WORLD_NOW, WORLD_PASSWORD, WORLD_FOUNDER_HANDLE, WORLD_INSTANCE_NAME, memoryBucket } from "../store-assembly/world.mjs";
 import { doorOf, bootOf, routeOf, signIn, admittedAs, hold, project, trail, profiles, queue, WORLD_UNREACHED, WORLD_ORIGIN } from "./door.mjs";
-import { page, pdf, question, questions, contradiction, conflict, setAside, finding, signer, published, imported, cited, rerun, assistant, writingHelp } from "./recipes.mjs";
+import { page, pdf, question, questions, contradiction, conflict, setAside, finding, signer, published, imported, cited, rerun, assistant, writingHelp, grantAdmit } from "./recipes.mjs";
 
 export { WORLD_NOW, WORLD_PASSWORD, WORLD_FOUNDER_HANDLE, WORLD_UNREACHED, WORLD_ORIGIN, doorOf, bootOf, routeOf, signIn, admittedAs };
 
@@ -57,6 +57,7 @@ export async function storeWorld({ env = {}, ai = false, ...opts } = {}) {
       rerun: (as, o) => rerun(world, as, o, make),
       assistant: (as, o) => assistant(world, as, o),
       writingHelp: (as, o) => writingHelp(world, as, o),
+      grantAdmit: (as, o) => grantAdmit(world, as, o),
     },
   });
 }
