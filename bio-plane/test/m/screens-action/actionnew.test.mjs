@@ -2,12 +2,23 @@
    from `request`; no template before an action exists. Every sentence is asserted by its key (R19). */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { actionWorld, profiledWorld, question, entityOf, officeFor, suggestingFor, actionsOf, openIn } from "./world-C.mjs";
 import { open, main, text, ops, press, last, ok, refusedIn, button, choose, W, hasWord, DATA_PLANE, ROUTES, ACTION, ACTION_ID, PROJECT, QUESTION, QUESTION_TITLE, AFFORDANCES,
   OFFICES, KINDS, PREVIEW, STAKE, READ, FILINGS, draft, READER, RO } from "./page.mjs";
 
 const said = (p, key, vars) => assert.ok(text(p).includes(W(key, vars)), key);
 const unsaid = (p, key, vars) => assert.ok(!text(p).includes(W(key, vars)), key);
-const PLANE = { ...DATA_PLANE, actioncreate: ok({ ok: true, id: ACTION_ID }), addresseesuggest: ok(OFFICES) };
+const PLANE = { ...DATA_PLANE, addresseesuggest: ok(OFFICES) };
+/** The composer over the real store: a project with a question it draws on, an office the record holds for a subject, the Oakland profile active. */
+async function composer() {
+  const w = await profiledWorld();
+  const asked = await question(w.world, w.me, w.project);
+  const subject = await entityOf(w.me, "person", "Pothole repair program");
+  await officeFor(w.me, subject, "City Clerk", "Office of the City Clerk");
+  const offered = (await w.me.read("addresseesuggest", { query: { subject } })).offices[0].addressee;
+  const path = `/app/actionnew/${w.project}`;
+  return { ...w, asked, offered, path, page: (plane = {}) => openIn(w.world, w.me, path, { addresseesuggest: suggestingFor(w.world, w.me, subject), ...plane }) };
+}
 const optionsOf = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => [o.value, o.textContent.trim()]);
 
 test("R24, R28: the kinds offered are the vocabulary's, each in its words (the drawing's last as `screen.actionnew.kind.other`), a profile's own by its label; one with neither is not offered", async () => {
@@ -63,25 +74,31 @@ test("R24, R29: choosing 'Records request' draws the door to `request` and no co
 });
 
 test("R24: 'Start the action' for a kind with an addressee, a leg and a dated entry sends one actioncreate carrying exactly those, and the action opens", async () => {
-  const p = await open(ROUTES.actionnew, PLANE);
+  const { me, project, asked, offered, page } = await composer();
+  const p = await page();
   await choose(p, "an-kind", "grand_jury");
-  await choose(p, "an-leg", QUESTION);
+  await choose(p, "an-leg", asked);
   await press(p, "addresseesuggest");
-  assert.equal(last(p, "addresseesuggest").query.subject, QUESTION, "the office is suggested for what the action rests on");
+  assert.equal(last(p, "addresseesuggest").query.subject, asked, "the office is suggested for what the action rests on");
   await press(p, "actioncreate", { values: { "an-office": "0", "an-ask": "Refer the closures to the grand jury", "an-tier": "2", "an-legk": "rests_on",
     "an-due-text": "Referral filed", "an-due-date": "2026-11-15", "an-due-because": "the notice of the draft standard" }, reason: "x" });
   const sent = p.byOp("actioncreate");
   assert.equal(sent.length, 1);
   const doc = sent[0].body.document;
-  for (const piece of ['action_kind: "grand_jury"', 'title: "Refer the closures to the grand jury"', "risk_tier: 2", "project: " + PROJECT, "current_state: planned", '  role: "City Clerk"',
-    '  body: "Office of the City Clerk"', "  - target: " + JSON.stringify(QUESTION), '    kind: "rests_on"', "    date: 2026-11-15", '    basis: "the notice of the draft standard"', "    status: pending"])
+  for (const piece of ['action_kind: "grand_jury"', 'title: "Refer the closures to the grand jury"', "risk_tier: 2", "project: " + project, "current_state: planned", "  role: " + JSON.stringify(offered.role),
+    "  body: " + JSON.stringify(offered.body), "  - target: " + JSON.stringify(asked), '    kind: "rests_on"', "    date: 2026-11-15", '    basis: "the notice of the draft standard"', "    status: pending"])
     assert.ok(doc.includes(piece), piece);
   assert.ok(!/author/.test(doc), "the author is set by the door and never the body");
-  assert.equal(p.location.pathname, `/app/action/${ACTION_ID}`, "the action opens");
+  const made = (await actionsOf(me)).filter((a) => a.kind === "grand_jury");
+  assert.equal(made.length, 1, "the store holds the one action");
+  assert.equal(p.location.pathname, `/app/action/${made[0].id}`, "the action opens");
+  const held = await me.read("action", { query: { id: made[0].id } });
+  assert.deepEqual([held.project, held.title, held.risk_tier], [project, "Refer the closures to the grand jury", 2], "as the record holds it");
 });
 
 test("R24: refusals in place send nothing: an undetermined addressee with no basis, a date with no basis, a request for comment with no advancing leg", async () => {
-  const p = await open(ROUTES.actionnew, PLANE);
+  const { me, page } = await composer();
+  const p = await page();
   await choose(p, "an-kind", "media");
   await choose(p, "an-to", "undetermined");
   said(p, "screen.actionnew.to.unsent");
@@ -91,26 +108,32 @@ test("R24: refusals in place send nothing: an undetermined addressee with no bas
   assert.ok(text(p, p.root().querySelector(`[data-slot="${a.getAttribute("data-ai")}"]`)).includes(W("refusal.COUNTERPARTY_REFUSED")));
   await press(p, "actioncreate", { values: { "an-basis": "A reporter, not yet chosen", "an-due-text": "Story runs", "an-due-date": "2026-11-01" }, reason: "x" });
   assert.equal(p.byOp("actioncreate").length, 0, "a date with no basis is refused in place");
+  assert.deepEqual((await actionsOf(me)).filter((x) => x.kind === "media"), [], "control: the store holds none");
   await press(p, "actioncreate", { values: { "an-due-because": "the editor's schedule" }, reason: "x" });
   const doc = last(p, "actioncreate").body.document;
   assert.ok(doc.includes('state: "undetermined"') && doc.includes('basis: "A reporter, not yet chosen"'), "undetermined, with what is known");
-  const q = await open(ROUTES.actionnew, PLANE);
+  assert.equal((await actionsOf(me)).filter((x) => x.kind === "media").length, 1, "and the store took it");
+  const q = await page();
   await choose(q, "an-kind", "request_for_comment");
   await press(q, "actioncreate", { values: { "an-who": "The auditor", "an-ask": "Comment on the standard" }, reason: "x" });
   assert.equal(q.byOp("actioncreate").length, 0, "a request for comment with no advances leg is refused in place");
 });
 
 test("R24: control: no tier is preselected and nothing is filled from the project's questions without her choice; the machine sets no tier; a refusal is drawn by its words", async () => {
-  const p = await open(ROUTES.actionnew, { ...PLANE, actioncreate: refusedIn("CLOCK_REFUSED", "the owner's own sentence") });
+  /* the owner's own refusal: `public_comment` is no kind of the product's and no profile is active, so `actions` refuses `ACTION_KIND_UNKNOWN` */
+  const { world, me, project } = await actionWorld();
+  const asked = await question(world, me, project);
+  const p = await openIn(world, me, `/app/actionnew/${project}`);
   assert.equal(p.doc.getElementById("an-tier").value, "", "no tier chosen for her");
   assert.equal(p.doc.getElementById("an-leg").value, "", "no question chosen for her");
-  assert.ok(optionsOf(p, "an-leg").some(([v, t]) => v === QUESTION && t === QUESTION_TITLE), "the questions are picked from, as titled");
+  assert.ok(optionsOf(p, "an-leg").some(([v, t]) => v === asked && t === "Is closed the same as repaired?"), "the questions are picked from, as titled");
   const b = await press(p, "actioncreate", { values: { "an-kind": "public_comment", "an-who": "The council", "an-ask": "Comment by October 30" }, reason: "x" });
   const doc = last(p, "actioncreate").body.document;
   assert.ok(!/risk_tier/.test(doc), "no tier is sent unless she sets one");
   assert.ok(doc.includes("action_basis: []") && doc.includes("clock: []"), "nothing from the questions");
   assert.ok(doc.includes('state: "audience"') && doc.includes('description: "The council"'), "a described audience, never a bare string");
-  assert.ok(text(p, p.root().querySelector(`[data-slot="${b.getAttribute("data-ai")}"]`)).includes(W("refusal.CLOCK_REFUSED")));
+  assert.ok(text(p, p.root().querySelector(`[data-slot="${b.getAttribute("data-ai")}"]`)).includes(W("refusal.ACTION_KIND_UNKNOWN")));
+  assert.equal((await actionsOf(me)).filter((a) => a.kind === "public_comment").length, 0, "control: the owner refused it, the store holds none");
 });
 
 test("R24, R35: the composer offers no template or kind as a suggestion before an action exists; it says when templates are offered", async () => {

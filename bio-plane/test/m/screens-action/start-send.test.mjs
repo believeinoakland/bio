@@ -3,6 +3,7 @@
    Every sentence is asserted by its key through `setup-words` (R19). */
 const said = (p, key, vars) => assert.ok(text(p).includes(W(key, vars)), key);
 import * as actionsFixture from "../actions/fixture.mjs";
+import { actionWorld, filingIn, openIn } from "./world-C.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { SCREENS, open, main, text, ops, press, last, ok, refused, refusedIn, button, beside, fill, W, D, hasWord, DATA_PLANE, PREVIEW, PLAN_ID, ACTION_ID, FILING, FILINGS, READ, STAKE, draft, QUESTION_TITLE } from "./page.mjs";
@@ -215,18 +216,23 @@ test("R21: a Tier 2 action asks the question above the approval, with its says a
 
 test("R21: saving a stake sends actionstake with the action and the stake, and the lines are read again; an empty save clears the action's own and sends nothing where it has none", async () => {
   if (!DECLARED) return assert.ok(!SCREENS_ACTS().includes("actionstake"), "not declared: the act is not registered");
-  let stake = TIER2();
-  const p = await open(STEP2, { ...ASK(), stakeatpreparation: () => stake, actionstake: () => { stake = ok(STAKE({ higher_stakes: true, governing_tier: 2,
-    matter_stake: { stake: "A member is a party.", set_by: "member:mai", set_at: "2026-10-12T09:00:00Z", source: "action" } })); return ok({ ok: true }); } });
+  const { world, me, action } = await actionWorld();
+  await me.act("actionrisktier", { body: { target: action, tier: 2, reason: "the office has fought requests before" } });
+  await filingIn(me, action);
+  const p = await openIn(world, me, `/app/start-send/${action}`);
+  assert.equal((await me.read("stakeatpreparation", { query: { action } })).matter_stake, null, "the action holds none yet");
   const none = await press(p, "actionstake", { reason: "x" });
   assert.equal(p.byOp("actionstake").length, 0, "nothing to save: nothing sent");
   assert.ok(none);
   await press(p, "actionstake", { values: { "action-stake": "  A member is a party.  " }, reason: "she is" });
-  assert.deepEqual({ ...last(p, "actionstake").body, reason: undefined }, { target: ACTION_ID, stake: "A member is a party.", reason: undefined });
+  assert.deepEqual({ ...last(p, "actionstake").body, reason: undefined }, { target: action, stake: "A member is a party.", reason: undefined });
+  const held = (await me.read("stakeatpreparation", { query: { action } })).matter_stake;
+  assert.equal(held.stake, "A member is a party.", "the store holds it");
   assert.ok(text(p).includes("A member is a party."), "read again and drawn");
-  said(p, "stake.source.action", { who: "mai", date: D("2026-10-12") });
+  said(p, "stake.source.action", { who: me.handle, date: D(held.set_at) });
   await press(p, "actionstake", { values: { "action-stake": "" }, reason: "clear it" });
   assert.equal(last(p, "actionstake").body.stake, null, "empty clears it");
+  assert.equal((await me.read("stakeatpreparation", { query: { action } })).matter_stake, null, "the store holds none");
 });
 
 test("R21: nothing waits on the question: approving, preparing and recording the sending are drawn and work unanswered; no stake is recorded unless she saves one", async () => {

@@ -4,6 +4,7 @@
 const said = (p, key, vars) => assert.ok(text(p).includes(W(key, vars)), key);
 import test from "node:test";
 import assert from "node:assert/strict";
+import { actionWorld, filingIn, openIn } from "./world-C.mjs";
 import { open, main, text, ops, press, last, ok, refused, button, beside, W, D, DATA_PLANE, ACTION, ACTION_ID, PROJECT, FILING, FILINGS, READ, STAKE, ADMIN, draft } from "./page.mjs";
 
 const NEW = `/app/request/${PROJECT}`;
@@ -110,9 +111,9 @@ test("R4, R8: 'Prepare the text' sends communicationprepare with the period, the
 });
 
 test("R8: the outward warning names that the portal shows the text to anyone; 'I have sent it' takes the portal's request number; control: a malformed number is refused in words", async () => {
-  const sent = draft({ approval: { approved_by: "member:mai", at: "x", sha: "s" } });
-  const p = await open(AT, { ...DATA_PLANE, filingsfor: ok(FILINGS([sent])), filingrecordsent: (req) => (String(req.body.reference).length > 100
-    ? ok({ ok: false, reason: "SENT_REFERENCE_MALFORMED" }) : ok({})) });
+  const { world, me, action } = await actionWorld();
+  const filing = await filingIn(me, action, { approve: true });
+  const p = await openIn(world, me, `/app/request/${action}`);
   said(p, "screen.request.outward");
   said(p, "screen.request.howsend");
   // the portal's address and button and the department are the place's data the record does not give: those two steps are not drawn
@@ -120,10 +121,14 @@ test("R8: the outward warning names that the portal shows the text to anyone; 'I
   said(p, "screen.request.howsend.4");
   assert.doesNotMatch(text(p), /\{\w+\}/, "no placeholder is drawn");
   said(p, "screen.request.reference");
-  await press(p, "filingrecordsent", { values: { "send-at": "2026-10-10", "send-account": "on the portal", "send-reference": "26-11902" }, reason: "sent" });
-  assert.equal(last(p, "filingrecordsent").body.reference, "26-11902");
   const b = await press(p, "filingrecordsent", { values: { "send-at": "2026-10-10", "send-account": "on the portal", "send-reference": "x".repeat(101) }, reason: "sent" });
   assert.ok(beside(p, b).includes(W("screen.request.reference.malformed")));
+  assert.equal((await me.read("filingsfor", { query: { action } })).drafts[0].sending, null, "the owner took no sending");
+  await press(p, "filingrecordsent", { values: { "send-at": "2026-10-10", "send-account": "on the portal", "send-reference": "26-11902" }, reason: "sent" });
+  assert.equal(last(p, "filingrecordsent").body.reference, "26-11902");
+  assert.equal(last(p, "filingrecordsent").body.filing, filing);
+  const [held] = (await me.read("filingsfor", { query: { action } })).drafts;
+  assert.equal(held.sending.reference, "26-11902", "the store holds the number she gave");
 });
 
 test("R10 (DEC-212): an action opened at its address opens at the step it has reached: approved and not sent opens at the send; control: nothing prepared opens at the text", async () => {
