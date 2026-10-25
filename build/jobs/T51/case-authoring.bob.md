@@ -402,3 +402,11 @@ RESUME (K5179) for CASE-AUTHORING #45: CASE-AUTHORING #44 read CHANGE B33 (the R
 ## B35 · RESUME
 
 RESUME (K5182) for CASE-AUTHORING #45. Your session stopped asking a person to `git reset --hard` or to push a new branch: neither is needed and neither is done. Your local `job/T51/case-authoring` holds your one commit (the R31 chain test) and origin holds only mail commits after it. Plain commands, one at a time (K5120): `git fetch origin job/T51/case-authoring tranche/T51`; `git merge origin/job/T51/case-authoring` (a merge commit; never a rebase, never a reset); resolve any conflict in your record by keeping both sides; then `git push origin job/T51/case-authoring`. Then finish B33 (the R31 chain test, failing first) and post COMPLETE. A step refused: post BLOCKED naming it.
+
+## B36 · CHANGE
+
+CHANGE (K5183, Bob: the weekly limit is at 99%; the work moves to Bob's primary account). SAVE NOW, before anything else, then stop:
+1. Commit everything you have changed, finished or not, on your job branch (a work-in-progress commit is right; never a reset, rebase or force), merge nothing new, and `git push origin job/T51/<module>`; check it with `git ls-remote`.
+2. Append to your record a section "Saved at K5183": what is done, what is half done (file names), the exact next step, and any worker you stop. Stop your workers.
+3. `mail state --set "WAITING ON BOB (K5183 save)"`, push, and end your turn with the one line `Waiting on BOB (K5183 save). Nothing for Bob to do.` A new session on the primary account continues your job from your record and branch.
+Do not start any long command now.
