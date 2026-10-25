@@ -167,3 +167,16 @@ Size (session_01HPMiWGM9dDovp7swY1STgF): test runs 9, module lines 3740
 ## J7 · COMPLETE
 
 COMPLETE (J6 in my record, pushed): B5, B6 and B8 applied; suite 379 tests, 1 fail (R23, accepted), 2 todo; format, architecture, coverage, ownership 0; words 15 (accepted). One fixtures finding is left red for you: r9-jobs.test.mjs:356 (R76 G129c, the 300-page OCR scan scripting next_page): no provider publishes it, extraction's real OCR path never emits next_page. See J6.
+
+## J8 · COMPLETE
+
+**STORE-ASSEMBLY #3 COMPLETE: B9 (K5171) and B10 applied.**
+
+- **B9.** `assemble.mjs:596` hands `now: () => nowMs(null)` to `instanceSetupOf`. Test `sa-world` "R5 R92 (K5171)": a pinned world's producing team is recorded at the pin (`recorded_at`). It passes as a control: reverted, it still passes, because instance-setup's env fallback (`BIO_NOW_MS`) already gives the pin and a world's env carries it. Note: instance-setup's `deps.now` also feeds its measured durations (`#now()`), which read 0 under a pin; that is instance-setup's, not changed here.
+- **B10.** Grep of every module's source (extraction, reading-pipeline, readers first, then the rest outside plane): **no producer answers `next_page`** (the only hits are wrangler/workerd node_modules and plane/store-assembly's own copies). Removed: the answer-side read in `pending.mjs:447` (`r.detail.next_page` in the cursor chain) and the test R76 G129c (`r9-jobs`), whose scripted answers were its only user. **Kept, and why:** `unitOf` (`pending.mjs:139`) reads `next_page`/`page` from the ROW's detail, and `transcribe.mjs:111` (this module) registers `ocr` rows with `detail: {pages, next_page}`, so that read is live. Two tests still script an answer `detail.next_page` (`r9-jobs.test.mjs` the R74 jobCounters test ~`:302` under the R2_HICCUP marker, and the R76 member-kill test ~`:333`); they pass and the fixtures check accepts them, but they script an answer no producer gives: BOB's call whether to rewrite them. **Plane's Wave B:** plane's `pending.mjs:139,447` and `transcribe.mjs` carry the same; its `:447` read is dead the same way. Also found: nothing in the real OCR tick answers `more` with a page detail, so a multi-window OCR row advances only through its row's registration (extraction's, for BOB to confirm).
+
+**Tests and checks** (HEAD after merging `origin/tranche/T51`): suite `--test-force-exit`: tests 379, pass 376, fail 1 (`release.test.mjs` R23, accepted K5139), todo 2. format 0; architecture 0; coverage 99 of 99, 0; ownership 0; **fixtures 0 failures** (accepted 8); words 15 (accepted K5144).
+
+**Markers added:** none. Previous `fixtures-generic` (7) stand.
+
+Size (session_01HPMiWGM9dDovp7swY1STgF): test runs 14, module lines 3705
