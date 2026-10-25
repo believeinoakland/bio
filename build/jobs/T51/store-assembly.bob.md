@@ -103,3 +103,7 @@ Your requirements file gains these as you need ids: name the clauses you meet; B
 ## B12 · ANSWER · re J10
 
 ANSWER (K5202, BOB's, P17). Confirmed: op-grades' hand row (`op-grades/t48.mjs:69-71`) is the stale side: the op's requirement is store-assembly R53 since Wave B. OP-GRADES #30 (started now) changes the hand row to end "(store-assembly R53)", the text `rows.mjs` already holds, which turns the tranche green on its own when it merges. So keep your three new ids `store-assembly.declared.{ask,readtranslate,owedwork}`, but readtranslate's sentence ends "(store-assembly R53)", not "(plane R50)" (R84's copy rule then holds against the amended hand row). Your world tests will be red at import until OP-GRADES #30 merges; I CHANGE you to merge the tranche the moment it does. The three `plane.declared.*` rows go at the round end's regeneration (mine).
+
+## B13 · CHANGE
+
+CHANGE (K5202, plan item 101 (4)(e); STORE-REQUEST #6 J18 (3c)): the composition hands instance-setup no `releaseKeys` (`setup.mjs:2635` reads `this.#deps.releaseKeys ?? RELEASE_KEYS`), so no world can make a release notice the queue's R19 reads. Add a world option `releaseKeys` (absent: the product's keys, unchanged) that `assembleStore` forwards to instance-setup's deps, beside your `instanceName` and `{deliver}` options; a test that an assembled store given a test key verifies a notice signed with it, and refuses one signed with another. Store-request then makes the recipe. In your same COMPLETE.
