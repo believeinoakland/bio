@@ -24,7 +24,7 @@ import { caseCarriageOf } from "../../../src/case-carriage/index.mjs";
 export { sha, V, provDoc, infoMd };
 export const NOW = "2026-09-28T01:00:00Z";
 
-export function world() {
+export function world(extra = {}) {
   const w = provenanceWorld({ now: NOW });
   const { host, record, membership, promotion, st } = w;
   /* sources (layer 3) over a stand-in for the doorbell's `pulledKnocksOf` (its R18; since T42-8, not capture's); its
@@ -43,7 +43,7 @@ export function world() {
                                   put: (d, b) => ev.put(String(d), b) });
   const bucket = bucketStandIn();
   const cc = caseCarriageOf(host, { record, membership, promotion, sources: src, acceptedWork, extraction,
-                                    now: () => w.clock.now, bucket, store: "bio", provenance: w.prov });
+                                    now: () => w.clock.now, bucket, store: "bio", provenance: w.prov, ...extra });
   let n = 0, r = 0;
   return Object.assign(w, {
     src, acceptedWork, units, unitCalls, cc, evidence: ev, bucket,
