@@ -237,7 +237,7 @@ test("R3: forwarding, a project key and a question from a hint, each with its ow
   assert.deepEqual(last(p, "projectkeyset").body, { project: p1, key: "sk-ant-x" });
   assert.equal(last(p, "projectkeyset").url.includes("sk-ant"), false, "the key travels in the body only");
   await press(p, "promote", { values: { [button(p, "promote").dataset.f + "-question"]: "Did the council vote?" } });
-  const r = last(p, "promote");
+  const r = last(p, "promote"); console.log("PRM", JSON.stringify(Object.keys(r)), JSON.stringify(r.answer || r.response || null).slice(0,500), text(p).slice(-300));
   // R81: the guard (the owner's declaration) takes the package fields only; the project is the file's own line.
   assert.equal(r.query.project, undefined);
   assert.deepEqual(Object.keys(r.body).sort(), ["base", "files", "meta", "register", "snapKey"]);
