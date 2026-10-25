@@ -210,3 +210,7 @@ B14 done on job/T51/retrieval-browse. R2 (K5148, D5) met: a stop ends a sentence
 **Left.** Nothing in this cause. `build/plan/fix-round-10-T51.md` §3 item 78 (5) also names `inquiry` and the stand-ins in other modules; those are theirs, not this job's.
 
 Size (session_01U8jhGJwnvMNeN9MrE5jZt6): test runs 3, module lines 1449
+
+## J11 · COMPLETE
+
+B15 done on job/T51/retrieval-browse (7608542add, then the size correction). Cause 1 (retrieval R99): findin.test.mjs:115 and the find-in stand-in (fixture.mjs:176, under the fixtures-contract selection-read marker) now refuse with SELECTION_NOT_YOURS; red first on the old code, green now. Deviation for BOB: I tried importing retrieval's fixtures.mjs into the stand-in, but checks/architecture.mjs refuses a test importing a later module, so the stand-in keeps the literal value under its marker, and retrieval's fixtures-run (retrieval/fixtures.test.mjs:53) checks it against real code. Tests 68/68. format, architecture, coverage (21/21), ownership 0 failures; fixtures: no new failing line (t36:139, t37:172, words:60 still wait on events and entities). No marker added. Met ids: none new. The product passes retrieval's reason and detail through (find.mjs:97-98), so no member sentence changes. Size (session_01U8jhGJwnvMNeN9MrE5jZt6): test runs 3, module lines 1449
