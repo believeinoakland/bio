@@ -41,6 +41,7 @@ const STAND_IN = {
       + cs.strip([{ n: 1, label: { text: long } }, { n: 22, label: { text: "two" } }, { n: 3, label: { text: "three" } }, { n: 4, label: { text: "four" } }])
       + '<div role="tablist">' + ["one", "two", "three", "four", "five", "six"].map(function (t) { return '<button type="button" role="tab" class="cs-btn" data-tone="quiet">' + t + ' tab with words</button>'; }).join("") + '</div>'
       + cs.field("f1", "screen.question.name") + cs.checks("c1", { text: "legend" }, [{ value: "a", text: long }, { value: "b", text: "short", on: true }])
+      + '<div data-guide-marks><button type="button" class="cs-wizmark" data-guide="chip" aria-expanded="false" data-level="2">Show me how</button></div>'
       + '<details class="cs-part"><summary>' + cs.esc(long) + '</summary><p>' + cs.esc(long) + '</p></details>'
       + '<div class="tw"><table class="mk-table"><thead><tr><th>a</th><th>b</th></tr></thead><tbody><tr><td>' + cs.esc(long) + '</td><td>2</td></tr></tbody></table></div>';
   `),
