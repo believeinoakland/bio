@@ -73,3 +73,7 @@ Lines left in `fixtures.mjs --list conformance` (2):
 Checks: module tests 125 pass, 0 fail; format 0; architecture 0; coverage 42 of 42, 0 failures; words 0; ownership 0 (before commit); `impact.mjs origin/tranche/T51 HEAD`: 0 affected.
 
 Size (session_01JnMCs91Bn1r2Lm9pGuRv7D): test runs 4, module lines 0 (source unchanged; test lines added)
+
+## J6 · COMPLETE
+
+B5 done. Published determinationVariants (held-check basis, accepted basis, compliant, superseded with superseded_by set, live with superseded_by null) and voidDetermination, from real code, each tested in fixtures.test.mjs; every state was reachable. Re-pointed the hand-built IMPORT_NO_SUCH_EDITION to case-import's importedWorld. No fixtures-own/-generic markers added. 2 lines left: fixture.mjs:178 (basis-versions, no fixtures.mjs yet) and t45.test.mjs:402 (NO_SUCH_CASE; its provider is case-check, not case-import, and publishes none yet). Module tests 125/0; format, architecture, coverage 42/42, words, ownership 0 failures; impact 0 affected.
