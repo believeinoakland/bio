@@ -1090,3 +1090,22 @@ Fix round 10, batch 1 done (PLANE #61); details, numbers and the four fields in 
 ## J63 · BLOCKED
 
 Cause: context (reading). 'mail inbox --as job' is refused by the size gate: build/plan/audit-r10.md is 79435 bytes > 51200 bytes (my reading set under build/plan/). I cannot read BOB's START, so I have not begun. BOB: prune or archive build/plan/audit-r10.md (move to build/plan/archive/ or add to size-exempt.txt), then RESUME me.
+
+## J64 · REPORT
+
+REPORT 1 (PLANE #62, Wave B, step 3 and step 2): deletions are made in my working tree (not yet pushed); what lies outside my paths, for BOB.
+
+A. Imports of the deleted plane paths outside plane's paths (grep over bio-plane/, newgroup/, the worker directories, scripts):
+1. bio-plane/test/m/following/checks.test.mjs:152 `await import(join(REPO, "bio-plane/src/plane/register.mjs"))` -> `bio-plane/src/store-assembly/register.mjs` (FOLLOWING; and :157 the skip of `bio-plane/src/store-assembly/` goes: one root remains).
+2. bio-plane/test/m/answer-envelope/families.test.mjs:20-28 the walk skips `bio-plane/src/store-assembly/` (K5164): the remaining root is `bio-plane/src/store-assembly/register.mjs`; the skip goes, the walk imports that file first (ANSWER-ENVELOPE). The remaining ROOT after my merge: store-assembly (plane/register.mjs, declarations.mjs, declared.mjs are gone).
+3. bio-plane/src/setup-words/words-unreviewed.json:39956, 39963, 39970 `"file": "bio-plane/src/plane/declared.mjs"` (generated; the round-end regeneration, item 77 (6)): the three sentences are `store-assembly/declared.mjs`'.
+No other file imports a deleted path (src, newgroup/, scripts/, worker directories, release/ is generated).
+
+B. STORE-ASSEMBLY (CHANGE to STORE-ASSEMBLY #3):
+4. `store-assembly/declared.mjs` still exports `ASSEMBLY_DECLARED_OPS` ("Wave B names this export `DECLARED_OPS`", its header); plane's `declared.mjs` is deleted now, so `test-support`'s collector finds none from it and R83's start still takes the rows through `ASSEMBLY_DECLARED_OPS`. Rename is store-assembly's (not in my paths).
+5. Tests of store-assembly's code with NO twin in `bio-plane/test/m/store-assembly/` (plane's t42 and t46 hold them): `t42.test.mjs` (R35-R38, R57, R106: doorbell/case-account composition, the transcriber `transcriberOf`, `renderPages`, the 24 MiB and 300-page press) and `t46.test.mjs` (R40 gate of the ask, the drafts and the transcriber; R47 sign-in; R36 relayed refusal; R114 RPCs). I kept both in plane, re-pointed by path to `store-assembly/{ask,transcribe,pending}.mjs`, so no coverage is lost; BOB places the store-assembly-owned tests in store-assembly and the files shrink to R112-R114.
+6. Item 23 / fixtures: `r10-fixtures-run.test.mjs` (the four FIX-L contracts job-registrar, keep-later, owed-later, owed-ledger run through the real Store, 8 tests) is deleted from plane (its provider code, `pending.mjs`, is store-assembly's): `git show origin/tranche/T51:bio-plane/test/m/plane/r10-fixtures-run.test.mjs` is the file BOB places in store-assembly, same day, with these `fixtures-run:` lines (the users): test-support job-registrar; acquisition job-registrar; capture job-registrar; doorbell job-registrar; file-safety job-registrar; extraction job-registrar; control-plane job-registrar; monitoring job-registrar; acquisition keep-later; capture keep-later; screens-intake owed-later; acquisition owed-ledger; control-plane owed-ledger. The users' markers read `fixtures-contract: plane <id>` (acquisition: r9-failed-ends, r8-render-bar, r7-render-failed, r7-fetchdone, g27-g32-t51, r9-ceilings, fix6-t51, fix3-t51, r8-fetch-refused, r7-t51, fixtures.mjs:59 ...) and become `store-assembly <id>` with the move. Until then those users read `contract-no-run`.
+   The `transcribe-answer` runs (item 23): plane never held a `fixtures-run` for it; the markers `fixtures-contract: plane transcribe-answer` are in reading-pipeline and extraction's tests only after the section 5.10 pass; its value is `store-assembly/transcribe.mjs`' `aiPath` answer, so the run belongs in store-assembly (t42/t46 above hold the cases).
+7. Item 12: the line `r9-jobs.test.mjs:318` is no longer in plane: it is in store-assembly's `r9-jobs.test.mjs:313` (which already takes `storeFailedTransient` from reading-pipeline's fixtures; extraction's published `readHeld` failure is the item's other half). STORE-ASSEMBLY's, not plane's.
+
+C. Found, outside my paths: none beyond the above.
