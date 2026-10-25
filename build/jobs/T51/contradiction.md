@@ -1,6 +1,6 @@
 # contradiction (T51)
 
-**Status** · session_01BbdQRceygyZcNQyMeGu19c · depth 2 · COMPLETE · handled B7
+**Status** · session_01H1kEAWw53A5hmDc6bvvHAe · depth 2 · COMPLETE · handled B10
 
 ## J1 · COMPLETE
 
@@ -180,3 +180,38 @@ COMPLETE · T51, fix round 10, Wave A batch 2 (B7).
 **Tests and checks.** Module: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/contradiction/*.test.mjs`: 152 tests, 144 pass, 0 fail, 8 todo (was 150). `impact.mjs origin/tranche/T51 HEAD` (after merging tranche/T51): names contradiction and affordances; affordances suite 281 tests, 281 pass. `checks/fixtures.mjs . contradiction --list`: 1 failure (the left line). words: 0 failures. format: 0 failures. coverage: 61 of 61 ids named, 0 failures. ownership (contradiction tranche/T51 job/T51/contradiction): 4 files, 0 failures. architecture: 1 failure, the `uses` edge above.
 
 Size (session_01BbdQRceygyZcNQyMeGu19c): test runs 6, module lines 3786 (source unchanged; test files only, +88 lines).
+
+## J10 · QUESTION
+
+B8 (fix round 10, the `conclude` re-point) is done in part and pushed as 66c36e9e2d on job/T51/contradiction.
+
+**Done.** `bio-plane/test/m/contradiction/fixture.mjs`: the `conclude` stand-in now answers its `no_conclusion`, `bad_reading` and concluded arms with basis-versions' published `concludeAct` (`bio-plane/test/m/basis-versions/fixtures.mjs`), with the question as the target. Promotion in contradiction's own record is unchanged. Results: the contradiction module's tests 144 pass, 0 fail, 8 todo; format 0, architecture 0, coverage 61 of 61 named and 0 failures, words 0, ownership 0 (only fixture.mjs changed). No `fixtures-own` or `fixtures-generic` marker added.
+
+**Still open.** `checks/fixtures.mjs … contradiction --list` still reports `fixture.mjs:120` (op-table `conclude`) as failing. The cause is the named-version arm: when a version is named and no reading is given, the stand-in answers `NO_CLAIM` by hand, and it adopts a named accepted version (the R36 test in `acts.test.mjs`). basis-versions publishes no fixture for that arm (its published kinds are `concluded`, `no_conclusion`, `bad_reading`), so the code cannot be taken from a provider's answer yet. `NO_CLAIM` is basis-versions' own code (`bio-plane/src/basis-versions/checks.mjs:321`).
+
+**Options, for your ruling:**
+1. (Recommended.) basis-versions publishes a further `concludeAct` kind for its no-claim refusal and for adopting an accepted named version. That is a CHANGE to basis-versions; contradiction re-points to it afterwards. K4990 asks users to take the provider's fixture.
+2. Accept this one arm as a documented exception, with a marker. I do not recommend it, since the code is real and a provider gives it.
+
+Nothing else in B8's scope is open. I am waiting on your ruling and have made no further change.
+
+## J11 · COMPLETE
+
+COMPLETE for B8 (fix round 10, the `conclude` re-point) and B10 (follow-up 40).
+
+**Entries applied.** B8: the `conclude` stand-in in `bio-plane/test/m/contradiction/fixture.mjs` takes basis-versions' published `concludeAct` for its `no_conclusion`, `bad_reading` and concluded arms (commit 66c36e9e2d). B10: the named-version arms take the published `adopted` (an accepted named reading) and `no_claim` (a named version not accepted, refused NO_CLAIM) kinds, in place of the hand-built refusal (commit 57668ad35f). Promotion in contradiction's own record is unchanged. The tranche is merged into the job branch, not rebased.
+
+**Deferred.** Nothing.
+
+**Found in other modules.** Nothing.
+
+**Tests and checks** (run from the product root with its absolute path):
+- Module tests `bio-plane/test/m/contradiction/*.test.mjs`: 152 tests, 144 pass, 0 fail, 8 todo, 0 cancelled.
+- `checks/fixtures.mjs /home/user/bio contradiction --list`: answer 0, 0 failures (was 1 failure at fixture.mjs:120 before B10).
+- `checks/format.mjs`: 178 modules, 0 failures.
+- `checks/architecture.mjs … contradiction`: 29 product files, 0 failures.
+- `checks/coverage.mjs … contradiction`: 61 of 61 live requirement ids named by a test, 0 failures.
+- `checks/words.mjs … contradiction`: 6201 literals, 0 failures.
+- `checks/ownership.mjs … contradiction tranche/T51`: 0 failures. The two files changed are `bio-plane/test/m/contradiction/fixture.mjs` and my job record `build/jobs/T51/contradiction.md`.
+
+Size (session_01H1kEAWw53A5hmDc6bvvHAe): test runs 2, module lines 3786
