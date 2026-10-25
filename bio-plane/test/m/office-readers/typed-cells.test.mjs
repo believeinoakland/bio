@@ -46,7 +46,7 @@ test("R30 xlsx cells: every cell holding a value or formula, typed only from `t`
   assert.equal(t.sheets[0].text, "zero!\nTRUE\tzero\t0.1\t1E+21\n45200\t2026-10-05T00:00:00\tinline\t#DIV/0!");
 });
 
-test("R30 xlsx cells: an unresolved shared string keeps its entry with value null and stays undetermined; an undeclared type token is named; a cell with no address has source null; an empty sheet has []", async () => {
+test("R30 xlsx cells: an unresolved shared string keeps its entry with value null and stays undetermined; an undeclared type token is named; a cell with no address is placed by its position (R48: the column after the last); an empty sheet has []", async () => {
   const xml = `<?xml version="1.0"?><worksheet ${NS}><sheetData>`
     + `<row r="1"><c r="A1" t="s"><v>9</v></c><c r="B1" t="zz"><v>q</v></c><c t="inlineStr"><is><t>loose</t></is></c></row>`
     + `</sheetData></worksheet>`;
@@ -54,7 +54,7 @@ test("R30 xlsx cells: an unresolved shared string keeps its entry with value nul
   assert.deepEqual(t.sheets[0].cells, [
     cellOf("S", "A1", null, "text", "s"),
     cellOf("S", "B1", "q", null, "zz"),
-    { source: null, value: "loose", type: "text", declared: "inlineStr", cached: null, formula: null },
+    cellOf("S", "C1", "loose", "text", "inlineStr"),
   ]);
   assert.deepEqual(t.sheets[0].undetermined, [
     { sheet: 0, cell: "A1", reason: "shared_string_index_out_of_range" },
