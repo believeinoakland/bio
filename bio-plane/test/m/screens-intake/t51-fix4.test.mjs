@@ -194,7 +194,6 @@ function heldPlane(n, extra = {}) {
     const q = req.query;
     if (q.state === "set_aside") return ok({ ok: true, held: [], truncated: false });
     /* fix round 10, cause 33: a page of `limit` rows from `after`, with `truncated` and the `next` cursor that continues it, as capture R77 pages */
-    // fixtures-contract: capture held-page
     const from = q.after ? Number(q.after) : 0, page = rows.slice(from, from + (Number(q.limit) || 200)), more = from + page.length < n;
     if (q.bundle_ids) { const want = String(q.bundle_ids).split(","); return ok({ ok: true, truncated: false, held: want.map((id) => fullRow(Number(id.slice(-4)) - 1000)) }); }
     return ok({ ok: true, truncated: more, next: more ? String(from + page.length) : null, held: page.map(q.fields === "picker" ? pickerRow : fullRow) });

@@ -10,11 +10,15 @@ import { createHash, randomBytes } from "node:crypto";
 import { open as openPage, main, text, fill, press, idle, ok, says, DOCUMENT_STUB } from "./page.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
+import { partRefusal } from "../capture/fixtures.mjs";
 
 const MIB = 1048576;
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 const NOT_HELD = { ok: true, held: false, copy: null, versions: 0, truncated: false, changed: { state: "undetermined" } };
 const refusal = (status, code, more = {}) => ({ status, json: { ok: false, reason: code, code, ...more } });
+/* capture's real refusals of its part upload (its published fixture, K5077): produced by uploading a wrong, repeated, early or lost part, as the door answers them */
+const REAL = await partRefusal();
+const real = (r, more = {}) => ({ status: r.status, json: { ...r, code: r.reason, ...more } });
 
 test("R2 the incremental SHA-256 the page hashes a file with equals the platform's, whatever the chunks", () => {
   const { sha256Hasher } = CAPTURE_SCREEN.parts;
@@ -137,7 +141,8 @@ test("R2 (capture R113) UPLOAD_LOST (the object was restarted) begins again once
     const w = world();
     let lost = false;
     const p = await open({ ...w.plane, captureuploadpart: async (req) => {
-      if (!lost && Number(req.query.index) === 1) { lost = true; return refusal(409, code); }
+      /* the lost upload is capture's real answer; an expired one is that answer under the expiry's code and status (410) */
+      if (!lost && Number(req.query.index) === 1) { lost = true; return code === "UPLOAD_LOST" ? real(REAL.UPLOAD_LOST) : real(REAL.UPLOAD_LOST, { reason: code, code, status: 410 }); }
       return w.plane.captureuploadpart(req);
     } });
     fill(p, FILLED(w.file));
@@ -151,7 +156,7 @@ test("R2 (capture R113) UPLOAD_LOST (the object was restarted) begins again once
 
 test("R2 (capture R113) a part refused for another cause ends the upload: it is aborted, the refusal is drawn, nothing is completed or filed", async () => {
   const w = world();
-  const p = await open({ ...w.plane, captureuploadpart: (req) => (Number(req.query.index) === 1 ? refusal(400, "PART_DIGEST_MISMATCH", { expected: "a".repeat(64), got: "b".repeat(64), translation: "That part did not match its fingerprint." }) : w.plane.captureuploadpart(req)) });
+  const p = await open({ ...w.plane, captureuploadpart: (req) => (Number(req.query.index) === 1 ? real(REAL.PART_DIGEST_MISMATCH) : w.plane.captureuploadpart(req)) });
   fill(p, FILLED(w.file));
   await press(p, "captureupload");
   await drive(p, () => failedLine(p) !== null);

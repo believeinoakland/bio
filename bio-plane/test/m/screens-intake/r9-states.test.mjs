@@ -110,6 +110,7 @@ test("R64 each refusal is its own sentence with its own figures: STRUCTURE_OVER_
   }
   assert.equal(seen.size, cases.length, "five causes, five sentences");
   /* control: a cause with no sentence of its own is the nearest 'could not be read', not another cause's figures */
+  // fixtures-generic: SOMETHING_ELSE
   const p = await drawn(upload({ reading: { failure: "final", reason: "SOMETHING_ELSE" } }));
   assert.equal(marks(p, "refused"), 1);
   assert.ok(says(p, "shell.unread"));
@@ -132,7 +133,6 @@ test("R64 the door's 413 for an upload carries its figure and is drawn with it; 
 
 /* `op=reading` answers the stored reading beside `job`, the job row's state (control-plane R135, `job-state.mjs`: `state`, the counters, `failed_why`, the cursor, `verdict`); a
    test names the row's fields and the stored reading's flat, and they are put where the owner puts them */
-// fixtures-contract: control-plane job-state
 const JOB_FIELDS = ["state", "written", "skipped", "owed", "failed", "failed_why", "cursor", "last_progress_at", "priority", "verdict", "rate_per_s"];
 const row = (more) => ok({ ok: true, found: true, capture_sha: SHA,
   ...Object.fromEntries(Object.entries(more).filter(([k]) => !JOB_FIELDS.includes(k))),

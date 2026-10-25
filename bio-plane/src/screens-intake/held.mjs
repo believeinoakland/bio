@@ -243,9 +243,12 @@ function doneSetAside(view, answer, cs) {
   const waiting = [];
   /* the question waits for the capture set aside: its title, as the Held list drew it, else its id */
   const rows = view.data && view.data.held && view.data.held.state === "ok" && Array.isArray(view.data.held.value.held) ? view.data.held.value.held : [];
+  /* capture R79 as the op answers it (fix round 10, K5077): each document by `document`, the questions waiting on it in `waiting.questions` */
   for (const d of (Array.isArray(a.documents) ? a.documents : [])) {
-    const row = rows.find((x) => x && x.bundle_id === (d && d.id));
-    for (const q of (d && Array.isArray(d.waiting) ? d.waiting : [])) waiting.push({ asker: q.asker || "", capture: (row && row.title) || (d && d.id) || "" });
+    const id = d && typeof d.document === "string" ? d.document : d && typeof d.id === "string" ? d.id : "";
+    const row = rows.find((x) => x && x.bundle_id === id);
+    const qs = d && d.waiting && typeof d.waiting === "object" && Array.isArray(d.waiting.questions) ? d.waiting.questions : d && Array.isArray(d.waiting) ? d.waiting : [];
+    for (const q of qs) waiting.push({ asker: q.asker || "", capture: (row && row.title) || id || "" });
   }
   cs.set("setAside", Array.isArray(a.ids) ? a.ids.length : 0);
   cs.set("waiting", waiting);
