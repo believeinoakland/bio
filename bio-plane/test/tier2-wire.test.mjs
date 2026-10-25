@@ -66,6 +66,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { tier2Answer } from "../../pdf-worker/test/fixtures.mjs";
 import { extractPdfStructure } from "../src/pdfstructure.mjs";
 import { mergeTier2Text, perPageTierWinner } from "../src/textchain.mjs";
 
@@ -294,32 +295,33 @@ console.log("\n--- OVER-STRICTNESS: one tier throughout, and the answer is uncha
  * ================================================================= */
 console.log("\n--- THE DEGRADATION CLASS through the op: tier 2 flags fewer, decodes LESS, and is REFUSED ---");
 {
-  /* A STUB member, and it is a stub for one reason only: the relationship the 23
+  /* A member FRONT, and it fronts for one reason only: the relationship the 23
      census pages have — tier 1 flagged the page AND decoded more of it — needs
      both sides controlled, and the real member cannot be asked to decode worse
      on demand. Everything else here is the real plane at the real call site
      through the real op: the capture, tier 1, `needsTier2`, the merge, the
-     answer. The stub returns THE MEMBER'S OWN RECORDED DECODE of these exact
-     bytes (`tier2-recorded.json`, CPDF-20's recording) with ONE page — page 5 —
+     answer. The front returns THE MEMBER'S OWN REAL DECODE of these exact
+     bytes (pdf-worker's `tier2Answer` fixture, CPDF-20's file decoded by its real code) with ONE page — page 5 —
      cut down and its markers cleared, which is exactly the shape §5.2-as-written
      rewards. So six of the seven pages are the real member's real output and
      only the arm's own page is constructed.
 
-     CORRECTED ON THE FIRST RUN, AND RECORDED RATHER THAN SMOOTHED. This stub
+     CORRECTED ON THE FIRST RUN, AND RECORDED RATHER THAN SMOOTHED. This front
      first returned tier 1's own text on every page, and the whole document came
      back tier 1 — a GREEN-looking "page 5 kept" that proved nothing, because no
      page had anything to win with. The arm was measuring its own fixture. The
      "nothing is left behind" assertion below is what caught it. */
   const t1 = TIER1.mixed;
-  const recordedMixed = JSON.parse(readFileSync(FIX + "tier2-recorded.json", "utf8"))["legistar-73545"];
-  const stubPages = recordedMixed.pages.map((p) => p.page === 5
+  /* pdf-worker's published fixture `tier2Answer`: the member's real tier-2 answer for these exact bytes, made by its real code when this runs */
+  const realMixed = (await tier2Answer()).text;
+  const cutPages = realMixed.pages.map((p) => p.page === 5
     ? { page: 5, text: t1.pages[5].text.slice(0, 100), undetermined: [] }
     : { page: p.page, text: p.text, undetermined: p.undetermined || [] });
   const answer = { ok: true, tier: 2, notes: [], links: [], structure: {},
-                   text: { document: stubPages.map((p) => p.text).join("\n"), pages: stubPages,
+                   text: { document: cutPages.map((p) => p.text).join("\n"), pages: cutPages,
                            undetermined: [],
-                           counts: { chars: stubPages.reduce((n, p) => n + p.text.length, 0), undetermined: 0 } } };
-  const stub = {
+                           counts: { chars: cutPages.reduce((n, p) => n + p.text.length, 0), undetermined: 0 } } };
+  const memberFront = {
     name: "pdf-worker", modules: true, modulesRoot: "/",
     script: `export default { fetch: () => new Response(${JSON.stringify(JSON.stringify(answer))},`
           + ` { headers: { "content-type": "application/json" } }) };`,
@@ -329,7 +331,7 @@ console.log("\n--- THE DEGRADATION CLASS through the op: tier 2 flags fewer, dec
   /* THE ARM IS DISCRIMINATING, AND THAT IS ASSERTED RATHER THAN ASSUMED: §5.2 AS
      WRITTEN AWARDS THIS PAGE TO TIER 2. Without this line the assertion below
      would pass for a page no rule was ever going to move. */
-  const p1 = t1.pages[5], p2 = stubPages[5];
+  const p1 = t1.pages[5], p2 = cutPages[5];
   const uch = (p) => (p.undetermined || []).reduce((n, m) => n + (Number.isFinite(m.count) ? m.count : 0), 0);
   t("the arm is real: §5.2 AS WRITTEN (fewer undetermined wins) hands page 5 to tier 2",
     uch(p2) < uch(p1), true);
@@ -338,7 +340,7 @@ console.log("\n--- THE DEGRADATION CLASS through the op: tier 2 flags fewer, dec
   t("the SHIPPED rule's one-directional guard refuses that award",
     perPageTierWinner(p1, p2), "tier1");
 
-  const mf = new Miniflare({ workers: [plane(), stub] });
+  const mf = new Miniflare({ workers: [plane(), memberFront] });
   await put(mf, "mixed");
   const out = await structure(mf, "mixed");
   t("THROUGH THE OP: page 5 is kept at tier 1 — a character count never PROMOTES "

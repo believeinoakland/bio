@@ -10,6 +10,7 @@ import { fresh, hold, doc, member, evidenceStore, withEntry, bucket, ocrAnswer }
 import * as rp from "../../../src/reading-pipeline/index.mjs";
 import { boundOf } from "../../../src/read-bounds.mjs";
 import { scanPdf, chunked } from "./scans.mjs";
+import { BUNDLE as PDF_WORKER_BUNDLE } from "../../../../pdf-worker/test/subject.mjs";
 
 /* the module's names, read off its namespace so a name not yet exported fails its own test, not the file */
 const { read, WHOLE_READ_MAX, MULTIPART_READ_MAX, CAPTURE_TEXT_UNIT_CAP } = rp;
@@ -399,9 +400,16 @@ test("R3 R40 (K4861, R-PATH): every piece of a PDF read in ranges that escalates
   const f = generate({ kind: "pdf", seed: "K4861", size: { pages: 5, lines: 3 } });   /* winansi with no ToUnicode: tier 1 reads nothing, so it escalates */
   const bytes = await f.bytes();
   const asked = [];
-  const pdfWorker = member((body) => { asked.push({ from: body.from, count: body.count });
-    return { ok: false, reason: "OVER_ENVELOPE" }; });
-  const w = fresh({ env: { PDF_WORKER: pdfWorker } });
+  /* the member is the real pdf-worker (a fresh build of its source, `pdf-worker/test/subject.mjs`), answering from the bucket `read` reads; the front only records the range asked */
+  const { pathToFileURL } = await import("node:url");
+  const realWorker = (await import(pathToFileURL(PDF_WORKER_BUNDLE).href)).default;
+  const evidence = bucket();
+  const pdfWorker = { async fetch(url, init) {
+    const body = JSON.parse(init.body);
+    asked.push({ from: body.from, count: body.count });
+    return realWorker.fetch(new Request(url, init), { CAPTURES: { get: async (key) => { const o = await evidence.get(key); return o ? { size: o.size, arrayBuffer: o.arrayBuffer } : null; } } });
+  } };
+  const w = fresh({ evidence, env: { PDF_WORKER: pdfWorker } });
   const d = await hold(w.evidence, bytes);
   const document = docOf(d, bytes.length, "pdf", "application/pdf");
   let cursor = null;
