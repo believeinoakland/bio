@@ -1011,3 +1011,6 @@ session_01NNvA213u4YaYMybJVG2Epk,job,reading-pipeline,46614861,363381,844,109897
 session_011Jyr771vUcNgdkLV7aQq1C,job,inquiry,29518920,269491,1265,64177,,16,3860
 session_01UFnpNcKqgfLJ5Ee7BwZ3WN,job,entities,2747661,74653,54,11770,,4,0
 session_01HuoienLKeDjonTgFdKvMxF,job,case-inputs,8524519,163815,104,51476,,7,1602
+session_01VLArEXuqRCiEGE52grGAFk,job,extraction,48655699,429061,320,133689,,30,4980
+session_01KK3V2itArCQimGgpgdg95M,job,csv-reader,3452086,72210,66,13853,,12,1314
+session_017ZmLdEK9H7TnpXz4LEe9eG,job,member-roster,5584172,109434,88,26481,,7,2926
