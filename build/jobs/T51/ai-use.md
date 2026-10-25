@@ -74,3 +74,12 @@ Size (session_01PuyDahdpv1J5bkAgBw2hpw): test runs 5, module lines 1279
 **Git:** `tranche/T51` merged into the branch (c05fc01f09), never rebased; the fixture and contract commit is e4207b43e3; pushed to `job/T51/ai-use`.
 
 Size (session_01VeDBEyQuMEPBYRrcEb8xgS): test runs 5, module lines 1288
+
+## J4 · REPORT
+
+Cause found outside my paths (K5192 R17; STORE-REQUEST #5), with file:line. The module now reads the clock it is handed (a `now`, else `env.BIO_NOW_MS`, else the wall clock), and `aiUseOps` takes the store's environment as its fourth argument. But no composition hands either in yet, so the running store still records instants on the wall clock until these lines change (none is in ai-use's paths):
+
+- `bio-plane/src/plane/store.mjs:270` and `bio-plane/src/store-assembly/assemble.mjs:288`: `aiUseOf(ctx);` is the first construction (it fixes the instance, its migration and its ceiling carry). It should pass the store's clock and environment, as `credentialsOf` does at `assemble.mjs:203` (`{ ..., now: () => nowMs(null) }`): e.g. `aiUseOf(ctx, { env, now: () => nowMs(null) })`.
+- `bio-plane/src/plane/store.mjs:932` and `bio-plane/src/store-assembly/assemble.mjs:841`: `...aiUseOps(aiUseOf(ctx), url, body),` should pass the environment in scope there (the next line already uses `env`): `...aiUseOps(aiUseOf(ctx), url, body, env),`.
+
+Until these land, R17 is met at the module's interface (the tests in `bio-plane/test/m/ai-use/r17-clock.test.mjs`), not yet in the running store. Bob or the owner of those two files places it.
