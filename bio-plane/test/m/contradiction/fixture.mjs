@@ -122,8 +122,8 @@ export function world({ gate = true, now = null, strictConclude = false } = {}) 
       if (bv.concludeRefusal) return bv.concludeRefusal;
       /* With `strictConclude`: R16's no-project arms in its order, and R51's one-act path (a `reading` takes the place of a
          named `version`, 12 to 500 characters), as basis-versions answers them. Off, it concludes whatever it is given
-         (the stand-in other modules' tests were written against). The reading arms and the concluded receipt are
-         basis-versions' published answers (`concludeAct`), the target this question's. */
+         (the stand-in other modules' tests were written against). Every answer is basis-versions' published one
+         (`concludeAct`: concluded, no_conclusion, bad_reading, adopted, no_claim), the target this question's. */
       const concl = String(args.conclusion ?? "").trim(), vname = String(args.version ?? "").trim();
       const hasReading = args.reading !== undefined && args.reading !== null;
       const own = hasReading ? String(args.reading).trim() : "";
@@ -132,7 +132,7 @@ export function world({ gate = true, now = null, strictConclude = false } = {}) 
         if (hasReading && (own.length < 12 || own.length > 500 || vname))
           return concludeAct({ kind: "bad_reading", target: args.target });
         if (!hasReading && (!vname || !bv.accepted.has(`${args.target}|${vname}`)))
-          return { ok: false, reason: "NO_CLAIM", code: "NO_CLAIM" };
+          return concludeAct({ kind: "no_claim", target: args.target });
       }
       const md = record.readFile(args.target, "bundle.md");
       const head = record.head(args.target);
@@ -141,7 +141,8 @@ export function world({ gate = true, now = null, strictConclude = false } = {}) 
       text = text.replace(/\n---\n/, `\nconclusion: "${concl || own}"\nfalsifier: "${args.falsifier || "a record showing otherwise"}"\n---\n`);
       const r = promotion.promote({ bundleId: args.target, base: head.bundleSha, snapKey: `conclude${++n}`,
         author: args.author, files: [{ path: "bundle.md", text }], meta: { object_type: "inquiry" } });
-      return r.ok ? { ...concludeAct({ kind: "concluded", target: args.target }), version: hasReading ? "reading-1" : vname } : r;
+      if (!r.ok) return r;
+      return concludeAct({ kind: hasReading ? "concluded" : "adopted", target: args.target });
     },
   };
   let n = 0;
