@@ -85,3 +85,27 @@ Checks run (all with absolute root /home/user/bio):
 
 Merged origin/tranche/T51 (53 commits, fast-forward) before starting, as START asked.
 Nothing deferred. Nothing found in another module.
+
+## J4 · COMPLETE · re B4
+
+COMPLETE · fix round 10 (plan item 95, K5195; answer K5198) on job/T51/law-relations at ec3f4eb7a0, after merging origin/tranche/T51 (never a rebase).
+
+Applied (the code change is d6d30fa235, unchanged by the merge):
+- bio-plane/test/m/law-relations/fixture.mjs:15: imports keyedServiceOff from ../acquisition/fixtures.mjs (acquisition is now in uses, per K5198).
+- fixture.mjs:136: citationLookup's default returns acquisition's published keyedServiceOff() instead of a hand-built KEYED_SERVICE_OFF literal.
+- fixture.mjs:143, 144, 147, 149, 150, 151, 152, 153: each hostRefusal builder line carries `// fixtures-contract: standards host-refusals` (standards, a later module, runs it at fixtures.test.mjs:83; the orphan run clears).
+- No fixtures-own or fixtures-generic marker added. Met ids: none changed (BOB strikes the marks).
+- Failing first: before the change, checks/fixtures.mjs law-relations reported 10 failures (1 answer refusal at :136, 8 builder lines, 1 orphan contract at standards fixtures.test.mjs:83). Architecture then failed on the acquisition import until uses named it.
+
+Deferred: nothing in my module. Found in another module: nothing.
+
+Tests and checks (absolute root /home/user/bio):
+- node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/law-relations/*.test.mjs: tests 26, pass 26, fail 0. Per file: courts 5, host 5, reads 8, relations 8 (sum 26).
+- checks/fixtures.mjs law-relations --list: 0 failures, accepted 8, 0 answer findings.
+- checks/architecture.mjs law-relations: 0 failures.
+- checks/format.mjs: 0 failures (178 modules).
+- checks/coverage.mjs law-relations: 21 of 21 live ids named, 0 failures.
+- checks/words.mjs law-relations: 0 failures; no string literal changed.
+- checks/ownership.mjs law-relations origin/tranche/T51 HEAD: 0 failures (the module's test file and this job record).
+
+Size (session_018WDm7E3VEq77FEdczJFfnV): test runs 6, module lines 933
