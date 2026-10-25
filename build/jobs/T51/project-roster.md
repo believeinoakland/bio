@@ -84,3 +84,13 @@ Options, for you to decide:
 (b) Amend R35 and R36 so that these reads refuse with a named code. I would then build the refusal and publish the fixture.
 
 Also noted, not done in this job: `bio-plane/test/m/project-roster/figures-purge.test.mjs:149` re-points to record-core's `tableDeclarationRefusals` (mechanical; the fixture exists). It is for a later Wave B job, not this batch.
+
+## J8 · COMPLETE
+
+COMPLETE (START B9, fix round 10, Wave A batch 5; ANSWER B10 = option (a)).
+
+- **Entries applied:** none. No fixture is published: `projectList` and `projectInvitations` never refuse (R35, R36), so `projectReadRefusals` would invent a code (J7). No file in my paths changed; `git status` clean.
+- **Deferred:** `projectReadRefusals` (not built, per B10). `figures-purge.test.mjs:149` re-points to record-core's `tableDeclarationRefusals` in its later job, as B10 says.
+- **Found in other modules:** queue-producers `feeds.test.mjs:98` and `inviter.test.mjs:74` build `{ok:false, reason:"REFUSED"}`; their START now re-points them to the real answers (B10). Nothing else.
+- **Tests and checks:** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/project-roster/*.test.mjs`: 112 pass, 0 fail. `checks/fixtures.mjs /home/user/bio project-roster --list`: 0 failures. `checks/format.mjs /home/user/bio`: see the line above.
+- Size (session_01PA4fPaBXX6FugXp76aucBs): test runs 2, module lines 0
