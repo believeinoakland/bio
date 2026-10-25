@@ -1,31 +1,17 @@
 /* T51 fix round (FR-47; L27 / T-02; DEC-384): a step on a subject screen never navigates without its subject (R20). The walk
-   of the whole library in the real page is `walk.test.mjs` (R21). */
+   of the whole library in the real page is `walk.test.mjs` (R21). Answered by the real store through the world's door (K5175;
+   `world.mjs`): the questions and documents a member holds are held by the recipes, the clock moved on between them. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { standIn, unhtml, said } from "./standin.mjs";
-import { WELCOME_SCRIPT } from "./fixtures.mjs";
+import { team, authored, withSubjects, listed, WELCOME_SCRIPT } from "./world.mjs";
 
-const okr = (result) => ({ ok: true, result });
 const STEP4 = "wizard." + WELCOME_SCRIPT.id + ".step4";
-const readWelcome = (q) => q.script !== WELCOME_SCRIPT.id ? { ok: false, code: "NO_SUCH_WIZARD" } : okr({ ok: true, script: { id: WELCOME_SCRIPT.id, name: said("wizard." + WELCOME_SCRIPT.id + ".name"), origin: "civicsmith" },
-  version: { id: WELCOME_SCRIPT.id + "@1", state: "approved", steps: WELCOME_SCRIPT.steps } });
-const GROUP_ID = "WIZ-00000000000000f1";
-const readGroup = (steps) => () => okr({ ok: true, script: { id: GROUP_ID, name: "Walk it", origin: "group" }, version: { id: GROUP_ID + "@1", state: "approved", steps } });
-const PROJECTS = okr({ ok: true, projects: [{ id: "P1", name: "Pothole repairs" }, { id: "P2", name: "The Coliseum lease" }] });
-const QUESTIONS = okr({ ok: true, bundles: [
-  { bundle_id: "INQ-1", title: "Are potholes repaired?", last_updated: "2026-09-01T10:00:00Z" },
-  { bundle_id: "INQ-2", title: "Who pays for the lease?", last_updated: "2026-10-12T09:30:00Z" }] });
-const DOCUMENTS = okr({ ok: true, bundles: [
-  { bundle_id: "DOC-9", title: "The lease", last_updated: "2026-10-14T08:00:00Z" },
-  { bundle_id: "DOC-3", title: "Council minutes", last_updated: "2026-08-20T08:00:00Z" }] });
-const list = (inq, doc) => (q) => (q.type === "inquiry" ? inq : doc);
-const plane = (steps, over = {}) => ({ wizardread: readGroup(steps), startfrom: okr({ ok: true, doors: [] }), wizardprogress: okr({ ok: true }),
-  projectlist: PROJECTS, list: list(okr({ ok: true, bundles: [] }), okr({ ok: true, bundles: [] })), ...over });
-const welcome = (over = {}) => ({ wizardread: readWelcome, startfrom: okr({ ok: true, doors: [] }), wizardprogress: okr({ ok: true }), projectlist: PROJECTS,
-  list: list(okr({ ok: true, bundles: [] }), okr({ ok: true, bundles: [] })), ...over });
+const stepsOn = (...screens) => screens.map((screen) => ({ screen, act: null, what: "a", why: "b" }));
 
 test("R20 the welcome's step 4 with no question held draws its three none keys in place, navigates nowhere, and the door opens the project choice, then project with Open a question rung", async () => {
-  const g = standIn({ plane: welcome(), values: { "wz-subject": "P2" } });
+  const t = await team();
+  const g = standIn({ team: t, as: t.rosa, values: { "wz-subject": t.P2 } });
   await g.enter("wizards");
   await g.start({ script: WELCOME_SCRIPT.id, at: 4 });
   assert.deepEqual(g.nav, [], "step 4 opens no screen on a null subject");
@@ -43,21 +29,23 @@ test("R20 the welcome's step 4 with no question held draws its three none keys i
   await g.control("door");
   assert.deepEqual(g.nav, [], "the choice is made before anything opens");
   assert.equal(g.requests.filter((r) => r.op === "projectlist").length, 1);
-  assert.ok(g.render().includes('id="wz-subject"') && g.render().includes("Pothole repairs") && g.render().includes("The Coliseum lease"));
+  const mine = (await t.rosa.read("projectlist")).projects;
+  assert.ok(g.render().includes('id="wz-subject"') && mine.every((x) => g.render().includes(x.name)));
   // then a new question: project on the chosen project, "Open a question" (promote) rung, nothing pressed
   g.cs.ring = (op) => { g.rings.push(op); return true; };
   await g.control("subjectgo");
-  assert.deepEqual(g.nav, [["project", "P2"]]);
+  assert.deepEqual(g.nav, [["project", t.P2]]);
   assert.deepEqual(g.rings, ["promote"], "the guide rings Open a question and presses nothing");
   assert.ok(g.requests.every((r) => ["wizardread", "startfrom", "wizardprogress", "wizardsat", "list", "projectlist"].includes(r.op)), "no act is sent");
   // the ring is once: a later step on another screen rings its own act, not promote
   const rung = g.rings.length;
-  await g.enter("project", "P2");
+  await g.enter("project", t.P2);
   assert.equal(g.rings.length, rung, "promote is not rung again");
 });
 
 test("R20 the door with no project to choose says wizard.subject.none.project in its fold and opens nothing", async () => {
-  const g = standIn({ plane: welcome({ projectlist: okr({ ok: true, projects: [] }) }) });
+  const t = await team();
+  const g = standIn({ team: t, as: t.ivy });
   await g.enter("wizards");
   await g.start({ script: WELCOME_SCRIPT.id, at: 4 });
   await g.control("door");
@@ -69,38 +57,45 @@ test("R20 the door with no project to choose says wizard.subject.none.project in
 });
 
 test("R20 the welcome's step 4 with two questions opens the most recent, asks nothing, and keeps it for the run", async () => {
-  const g = standIn({ plane: welcome({ list: list(QUESTIONS, DOCUMENTS) }) });
+  const t = await team();
+  const subj = await withSubjects(t, { questions: 2 });
+  const g = standIn({ team: t, as: t.mai });
   await g.enter("wizards");
   await g.start({ script: WELCOME_SCRIPT.id, at: 4 });
-  assert.deepEqual(g.nav, [["question", "INQ-2"]], "the most recently updated, not the first listed");
+  const latest = (await listed(t.mai, "inquiry")).reduce((a, b) => (String(b.last_updated) > String(a.last_updated) ? b : a)).bundle_id;
+  assert.equal(latest, subj.questions[1], "the store gives the later one the later update");
+  assert.deepEqual(g.nav, [["question", latest]], "the most recently updated, not the first listed");
   assert.ok(!g.render().includes('id="wz-subject"') && !g.render().includes("data-guide-nosubject"), "no choice asked, no none state");
   assert.ok(unhtml(g.render()).includes(said(STEP4 + ".what")), "the step's own words");
   // a later step on a question screen opens the same one
   await g.control("next");
   await g.control("next");
-  assert.ok(g.nav.every(([s, id]) => s !== "question" || id === "INQ-2"));
+  assert.ok(g.nav.every(([s, id]) => s !== "question" || id === latest));
   assert.equal(g.requests.filter((r) => r.op === "list" && r.query.type === "inquiry").length, 1, "read once for the run");
 });
 
 test("R20 the most recent is taken by last_updated, the list's order for equals", async () => {
-  const same = okr({ ok: true, bundles: [{ bundle_id: "A", title: "a", last_updated: "2026-10-01" }, { bundle_id: "B", title: "b", last_updated: "2026-10-01" }] });
-  const g = standIn({ plane: plane([{ screen: "question", act: null, what: "a", why: "b" }], { list: list(same, same) }) });
-  await g.start({ script: GROUP_ID });
-  assert.deepEqual(g.nav, [["question", "A"]]);
+  const t = await team();
+  /* two questions held in the same instant (the clock is not moved between them) */
+  const a = (await t.world.recipes.question(t.mai, t.P1, { title: "A question", text: "Is it A?" })).id;
+  const b = (await t.world.recipes.question(t.mai, t.P1, { title: "B question", text: "Is it B?" })).id;
+  const rows = await listed(t.mai, "inquiry");
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].last_updated, rows[1].last_updated, "equal instants");
+  const s = await authored(t, { name: "Read the question", steps: stepsOn("question") });
+  const g = standIn({ team: t, as: t.mai });
+  await g.start({ script: s.script });
+  assert.deepEqual(g.nav, [["question", rows[0].bundle_id]]);
+  assert.ok([a, b].includes(rows[0].bundle_id));
 });
 
 test("R20 a document step: with documents it opens the most recent and asks nothing; with none it stays on the card with its own words and Next", async () => {
-  const steps = [{ screen: "document", act: "cite", what: "Cite it", why: "Because" }, { screen: "finder", act: null, what: "Then look", why: "Elsewhere" }];
-  const g = standIn({ plane: plane(steps, { list: list(QUESTIONS, DOCUMENTS) }) });
-  await g.enter("home");
-  await g.start({ script: GROUP_ID });
-  assert.deepEqual(g.nav, [["document", "DOC-9"]]);
-  assert.deepEqual(g.requests.filter((r) => r.op === "list").map((r) => r.query), [{ type: "information", limit: "500" }]);
-  assert.ok(!g.render().includes('id="wz-subject"'));
+  const t = await team();
+  const s = await authored(t, { name: "Cite then look", steps: [{ screen: "document", act: "cite", what: "Cite it", why: "Because" }, { screen: "finder", act: null, what: "Then look", why: "Elsewhere" }] });
   // none: the screen is not opened
-  const h = standIn({ plane: plane(steps) });
+  const h = standIn({ team: t, as: t.mai });
   await h.enter("home");
-  await h.start({ script: GROUP_ID });
+  await h.start({ script: s.script });
   assert.deepEqual(h.nav, [], "a document step never opens `Nothing is here`");
   assert.equal(h.view.screen, "home");
   const text = unhtml(h.render());
@@ -109,36 +104,50 @@ test("R20 a document step: with documents it opens the most recent and asks noth
   assert.ok(h.render().includes('data-guide="next"'));
   await h.control("next");
   assert.deepEqual(h.nav, [["finder", null]], "Next goes on to the next step");
+  // with documents: the most recent
+  const subj = await withSubjects(t, { documents: 2 });
+  const g = standIn({ team: t, as: t.mai });
+  await g.enter("home");
+  await g.start({ script: s.script });
+  assert.deepEqual(g.nav, [["document", subj.documents[1]]]);
+  assert.deepEqual(g.requests.filter((r) => r.op === "list").map((r) => r.query), [{ type: "information", limit: "500" }]);
+  assert.ok(!g.render().includes('id="wz-subject"'));
 });
 
 test("R20 the unopened step is counted once, and Back to it opens nothing either", async () => {
-  const g = standIn({ plane: welcome() });
+  const t = await team();
+  const g = standIn({ team: t, as: t.mai });
   await g.enter("wizards");
   await g.start({ script: WELCOME_SCRIPT.id, at: 4 });
   await g.control("next");
   await g.control("back");
   assert.deepEqual(g.nav.filter(([s]) => s === "question"), []);
-  assert.deepEqual(g.progress().filter((b) => b.event === "step").map((b) => b.step), [4, 5]);
+  assert.deepEqual(g.progress().filter((b) => b.script === WELCOME_SCRIPT.id && b.event === "step").map((b) => b.step), [4, 5]);
 });
 
 test("R20 a question the member last held opens at once, reads no list; a step on a screen with no subject opens at once", async () => {
-  const g = standIn({ plane: welcome({ list: list(QUESTIONS, DOCUMENTS) }) });
-  await g.enter("question", "INQ-1");
+  const t = await team();
+  const subj = await withSubjects(t, { questions: 2 });
+  const g = standIn({ team: t, as: t.mai });
+  await g.enter("question", subj.questions[0]);
   await g.enter("home");
   await g.start({ script: WELCOME_SCRIPT.id, at: 4 });
-  assert.deepEqual(g.nav, [["question", "INQ-1"]]);
+  assert.deepEqual(g.nav, [["question", subj.questions[0]]]);
   assert.equal(g.requests.filter((r) => r.op === "list").length, 0, "nothing to read");
-  const f = standIn({ plane: plane([{ screen: "finder", act: null, what: "a", why: "b" }]) });
-  await f.start({ script: GROUP_ID });
+  const s = await authored(t, { name: "Look", steps: stepsOn("finder") });
+  const f = standIn({ team: t, as: t.mai });
+  await f.start({ script: s.script });
   assert.deepEqual(f.nav, [["finder", null]]);
   assert.equal(f.requests.filter((r) => r.op === "list" || r.op === "projectlist").length, 0);
 });
 
 test("R20 a project step still asks, or says it has none (R17, R18 unchanged)", async () => {
-  const g = standIn({ plane: plane([{ screen: "timeline", act: null, what: "a", why: "b" }]), values: { "wz-subject": "P1" } });
-  await g.start({ script: GROUP_ID });
+  const t = await team();
+  const s = await authored(t, { name: "Time it", steps: stepsOn("timeline") });
+  const g = standIn({ team: t, as: t.mai, values: { "wz-subject": t.P1 } });
+  await g.start({ script: s.script });
   assert.deepEqual(g.nav, []);
   assert.ok(g.render().includes('id="wz-subject"'));
   await g.control("subjectgo");
-  assert.deepEqual(g.nav, [["timeline", "P1"]]);
+  assert.deepEqual(g.nav, [["timeline", t.P1]]);
 });
