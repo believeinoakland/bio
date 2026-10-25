@@ -16,8 +16,8 @@ const get = async (m, path) => doAnswer(stubOver(m).fetch(`http://do/${path}`));
 test("R1 producingGroup: the recorded slug or null, registered with promotion as the fact producingGroup, read from the store only", async () => {
   const w = await boot({ env: { INSTANCE_NAME: "river-town" } });
   assert.equal(w.m.producingGroup(), "river-town");
-  const f = w.prov.facts.get("producingGroup");
-  assert.equal(f.module, "instance-setup");
+  /* a second registration of the fact is promotion's STEP_DECLARED, naming the module that provides it */
+  assert.equal(w.prov.promotion.registerFact("producingGroup", "another-module", () => null).module, "instance-setup");
   assert.equal(w.prov.promotion.fact("producingGroup").value, "river-town");
   /* the store only, never the binding: a later boot with the binding moved still reads the recorded slug */
   const again = await boot({ st: w.st, env: { INSTANCE_NAME: "other-town" } });
