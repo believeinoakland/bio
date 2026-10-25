@@ -1952,3 +1952,11 @@ RESUME (K5180) for CONTROL-PLANE #63. CONTROL-PLANE #62's J63 work (R136, R137, 
 ## B96 · CHANGE
 
 CHANGE (K5182): admission is merged (ADMISSION #20 J7, R33: the session read and the `reauthdue` question are issued together). Merge `origin/tranche/T51` into your branch. Its record says `r10-caseratify-chain.test.mjs` should read one hop less (14 to 13). Ratification R60's bar is 11 (K5084: ratification 6, control-plane's session+reauthdue one hop, public-read 4). Within B94/B95: run the chain test after the merge and state the count; for each hop above 11, name its call and the module that owns it (file:line) in your COMPLETE, fixing those in your paths; one outside them is a REPORT the same day. Admission's offered alternative (one store route `sessionreauth` answering `{session, due}`, store-door) is not ordered unless your count shows the pair is still two hops.
+
+## B97 · CHANGE
+
+CHANGE (K5183, Bob: the weekly limit is at 99%; the work moves to Bob's primary account). SAVE NOW, before anything else, then stop:
+1. Commit everything you have changed, finished or not, on your job branch (a work-in-progress commit is right; never a reset, rebase or force), merge nothing new, and `git push origin job/T51/<module>`; check it with `git ls-remote`.
+2. Append to your record a section "Saved at K5183": what is done, what is half done (file names), the exact next step, and any worker you stop. Stop your workers.
+3. `mail state --set "WAITING ON BOB (K5183 save)"`, push, and end your turn with the one line `Waiting on BOB (K5183 save). Nothing for Bob to do.` A new session on the primary account continues your job from your record and branch.
+Do not start any long command now.
