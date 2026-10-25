@@ -13,7 +13,7 @@ import { ok, refusedIn, boot } from "../interface-shell/harness.mjs";
 import { documentScreen } from "../../../src/screens-inquiry/document.mjs";
 import { checkOutcome } from "../../../src/screens-intake/index.mjs";
 import { COMMON } from "../../../src/screens-inquiry/common.mjs";
-import { main, actsIn, fill, press, says, section, word, day, plane, READING, DOCUMENT_MD, provenanceOf, SCREENS, P, Q, Q2, D, SHA, NEWER, PROJECT_QUESTIONS } from "./fixtures.mjs";
+import { main, actsIn, fill, press, says, section, word, day, plane, storeWorld, READING, DOCUMENT_MD, provenanceOf, SCREENS, P, Q, D, SHA, NEWER } from "./fixtures.mjs";
 
 process.env.TZ = "UTC";
 const at = "/app/document/" + D;
@@ -26,6 +26,40 @@ async function openWith(path, o = {}) {
   const p = await boot({ screens: [...SCREENS, PERSON], plane: plane(o), path, ...(o.boot || {}) });
   await p.settle();
   return p;
+}
+/* the real world (store-assembly's store with the real door; the state is made by real acts, K5054): a page as `as` reads it, over the world's door,
+   the `plane` it is given scripting only the ops the world cannot answer as the test needs */
+const OWN = { capabilities: ["contribute", "create_projects"] };
+async function pageOn(world, as, path, o = {}) {
+  const { door, session } = world.boot(as);
+  const p = await boot({ screens: [...SCREENS, PERSON], door, session, path, ...o });
+  await p.settle();
+  return p;
+}
+/** A copy captured from a public address for a question, then brought back from aside (`recipes.setAside`, `heldrestore`): the copy of a page the world's network serves
+ *  (`world.script`), its locator that address, so it can be watched; `watched` also has her set it watching weekly (`monitorset`). */
+async function remoteCopy({ watched = false } = {}) {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const made = await world.recipes.setAside(ann);
+  await ann.act("heldrestore", { body: { ids: [made.document], reason: "brought back for the page" } });
+  if (watched) await ann.act("monitorset", { body: { bundleId: made.document, enabled: true, frequency: "weekly" } });
+  const held = (await ann.read("heldcaptures", { query: { bundle_id: made.document, state: "held_and_vouched" } })).held[0];
+  return { world, ann, ...made, title: held.title, address: held.source.address, at: "/app/document/" + made.document };
+}
+const MINUTES = "<html><head><title>Council minutes</title></head><body><p>The council met on Monday.</p></body></html>";
+/** A copy a member captured from a public address for a question of her project (`acquire` with `for`, the address served by the world's network, `world.script`), then filed in the
+ *  project as held (`recipes.hold` of the same bytes): its held row is hers, names the question it was captured for, and is eligible to be vouched for. */
+async function heldCopy() {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const project = await world.recipes.project(ann, "Pothole repairs");
+  const q = await world.recipes.question(ann, project, { title: "Seven days", text: "Is the city repairing reported potholes within seven days?", draw: true });
+  const address = "https://records.example.org/minutes.html";
+  world.script(address, async () => new Response(MINUTES, { status: 200, headers: { "content-type": "text/html" } }));
+  await ann.act("acquire", { body: { locator: address, for: q.id } });
+  const held = await world.recipes.hold(ann, "Council minutes", MINUTES, project, { type: "text/html", read: true });
+  return { world, ann, project, question: q.id, document: held.bundle, sha: held.sha, at: "/app/document/" + held.bundle };
 }
 const withMd = (md, extra = {}) => ({ images: { [D]: { "bundle.md": md, "data/provenance.json": provenanceOf(SHA) } }, ...extra });
 const WATCHED = DOCUMENT_MD.replace("\nsource:", "\nmonitoring:\n  enabled: true\n  frequency: weekly\nsource:");
@@ -113,19 +147,24 @@ test("R86 control: a version the record holds no document for is a date alone", 
 
 /* ---- R92 ---- */
 test("R92 Watch for changes sends the frequency chosen; the page says it is watched only after the answer; the guard accepts it", async () => {
-  const p = await openWith(at, withMd(UNWATCHED, { plane: { monitorset: ok({ ok: true, bundleId: D, enabled: true }) } }));
+  const c = await remoteCopy();
+  const p = await pageOn(c.world, c.ann, c.at);
   const f = p.doc.getElementById("document-watch-freq");
   assert.deepEqual(f.querySelectorAll("option").map((o) => o.getAttribute("value")), ["daily", "weekly", "monthly", "hourly", "per_meeting"], "the frequencies the plane takes, the first shown and chosen (C35)");
   assert.equal(f.value, "daily", "what is shown is chosen");
   fill(p, { "document-watch-freq": "weekly" });
   assert.ok(!says(main(p), "screen.document.monitorset.done"), "nothing is said before the answer");
   await press(p, "monitorset");
-  assert.deepEqual(p.byOp("monitorset")[0].body, { bundleId: D, enabled: true, frequency: "weekly" });
+  assert.deepEqual(p.byOp("monitorset")[0].body, { bundleId: c.document, enabled: true, frequency: "weekly" });
   assert.ok(says(main(p), "screen.document.monitorset.done"), "said once answered");
+  const image = await c.ann.read("image", { query: { id: c.document } });
+  assert.ok(image["bundle.md"].includes("monitoring:\n  enabled: true\n  frequency: weekly"), "and the record now holds the copy as watched, weekly");
 });
 
 test("R92 control: none chosen sends nothing and refuses in place, naming the missing frequency; a refused answer says nothing of watching", async () => {
-  const p = await openWith(at, withMd(UNWATCHED, { plane: { monitorset: refusedIn("SOME_UNHELD_CODE", "Say how often.") } }));
+  const c = await remoteCopy();
+  /* the refusal's code is one no word is held for (the world's own refusals of this act have a word): scripted over the real copy */
+  const p = await pageOn(c.world, c.ann, c.at, { plane: { monitorset: refusedIn("SOME_UNHELD_CODE", "Say how often.") } });
   fill(p, { "document-watch-freq": "" });
   const slot = await press(p, "monitorset");
   assert.equal(p.byOp("monitorset").length, 0);
@@ -139,21 +178,34 @@ test("R92 control: none chosen sends nothing and refuses in place, naming the mi
 
 /* ---- R93 ---- */
 /** What `screens-intake`'s drawing gives for an answer: its word where the table holds one, else the key it draws (the module owns both). */
-const outcomeWords = (status, note) => {
+const outcomeWords = (status, note, title = "Pothole repair policy, Administrative Instruction 4.12") => {
   const key = "screen.capture.address.checked." + (status || "unknown");
-  const fills = status ? { title: "Pothole repair policy, Administrative Instruction 4.12" } : { title: "Pothole repair policy, Administrative Instruction 4.12", note };
+  const fills = status ? { title } : { title, note };
   return hasWord(key) ? word(key, fills) : key;
 };
 test("R93 Check now draws what the check found: four answers draw four different outcomes through the drawing screens-intake owns", async () => {
-  const answers = [["modified"], ["removed"], ["unchanged"], [undefined, "The site did not answer."]];
+  const page = (body) => async () => new Response(`<html><head><title>Council minutes</title></head><body>${body}</body></html>`, { status: 200, headers: { "content-type": "text/html" } });
+  /* each answer is the address's own, as the real check finds it: the bytes it captured, other bytes, a 404 again a day after the first (a removal is confirmed only by a second look), no answer at all */
+  const answers = [["unchanged", async (c) => c.world.script(c.address, page("<p>The council met.</p>"))],
+    ["modified", async (c) => c.world.script(c.address, page("<p>The council met and voted.</p>"))],
+    ["removed", async (c) => {
+      c.world.script(c.address, async () => new Response("gone", { status: 404 }));
+      await c.ann.act("monitor", { body: { bundleId: c.document } });
+      await c.world.tick(25 * 3600 * 1000);
+      c.ann = await c.world.signIn("ann", OWN);   /* a day on, her session has run out: she signs in again */
+    }],
+    [undefined, async (c) => c.world.script(c.address, async () => { throw new Error("The site did not answer."); })]];
   const seen = new Set();
-  for (const [status, note] of answers) {
-    const p = await openWith(at, withMd(WATCHED, { plane: { monitor: ok({ ok: true, ...(status ? { status } : {}), ...(note ? { note } : {}) }) } }));
+  for (const [status, setup] of answers) {
+    const c = await remoteCopy({ watched: true });
+    await setup(c);
+    const p = await pageOn(c.world, c.ann, c.at);
     await press(p, "monitor");
-    assert.deepEqual(p.byOp("monitor")[0].body, { bundleId: D });
+    assert.deepEqual(p.byOp("monitor")[0].body, { bundleId: c.document });
     const said = text(main(p).querySelector('[data-outcome="monitor"]'));
     seen.add(said);
-    assert.ok(said.includes(outcomeWords(status, note).split("{")[0].slice(0, 20)), `${status || "unknown"} drawn by the imported drawing's key`);
+    const note = status ? undefined : "The site did not answer.";
+    assert.ok(said.includes(outcomeWords(status, note, c.title).split("{")[0].slice(0, 20)), `${status || "unknown"} drawn by the imported drawing's key`);
     assert.ok(!says(main(p), "screen.document.monitor.done"), "never 'Checked just now' for every outcome");
   }
   assert.equal(seen.size, 4, "four different sentences");
@@ -184,22 +236,31 @@ test("R95 control: without the page serving person, the name is the kit's card, 
 });
 
 /* ---- R111 ---- */
+/* the row of a held capture, handed back as the plane's answer for another document (the world, filtering by bundle, never gives one) */
 const HELD_ROW = { bundle_id: D, title: "Pothole repair policy", project: P, collected_since: "2026-10-02T09:00:00Z", capture: { sha256: SHA, grade: { grade: "B" } },
   captured_for: { questions: [{ question: Q, title: "Seven days?", asker: "mai" }], withheld: null } };
 test("R111 a held capture, read as the plane answers it ({held: rows}), draws the two release fields and the act, and its question is preselected", async () => {
-  const p = await openWith(at, { plane: { heldcaptures: (r) => ok({ ok: true, held: [HELD_ROW], state: "held", limit: Number(r.query.limit), truncated: false, next: null }) } });
-  assert.ok(p.byOp("heldcaptures").some((r) => r.query.bundle_id === D), "this copy's held row is read");
+  const c = await heldCopy();
+  const p = await pageOn(c.world, c.ann, c.at);
+  assert.ok(p.byOp("heldcaptures").some((r) => r.query.bundle_id === c.document), "this copy's held row is read");
   const box = main(p).querySelector("[data-held]");
   assert.ok(box && says(box, "document.held.says"));
   assert.ok(p.doc.getElementById("document-release-ack") && p.doc.getElementById("document-release-mitigation"), "the two fields");
   assert.ok(actsIn(box).includes("release"), "and the act");
-  assert.equal(p.doc.getElementById("document-cite-question").value, Q, "the row's captured_for question is preselected");
+  assert.equal(p.doc.getElementById("document-cite-question").value, c.question, "the row's captured_for question is preselected");
 });
 
 test("R111 control: a document she vouched for draws the vouched note and no release; a held row of another document draws no banner", async () => {
-  const other = await openWith(at, { plane: { heldcaptures: ok({ ok: true, held: [{ ...HELD_ROW, bundle_id: "INFO-2026-0077", capture: { sha256: "6".repeat(64) } }] }) } });
+  /* the world answers a held read for this document alone (its `bundle_id`), so a row of another document is the plane's own to give: scripted over a real copy (needs no recipe: no act makes the plane answer another document's row) */
+  const o = await remoteCopy();
+  const other = await pageOn(o.world, o.ann, o.at, { plane: { heldcaptures: ok({ ok: true, held: [{ ...HELD_ROW, bundle_id: "INFO-2026-0077", capture: { sha256: "6".repeat(64) } }] }) } });
   assert.equal(main(other).querySelector("[data-held]"), null);
-  const p = await openWith(at, { plane: { heldcaptures: ok({ ok: true, held: [HELD_ROW] }), select: ok({ ok: true, handle: "SEL-1" }), release: ok({ ok: true }) } });
+  /* a copy held by her own upload is released by the page's own acts (`select`, then `release`) */
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const held = await world.recipes.hold(ann, "Policy memo", "The Director shall repair each reported pothole within seven days.");
+  const p = await pageOn(world, ann, "/app/document/" + held.bundle);
+  assert.ok(main(p).querySelector("[data-held]"), "held before");
   fill(p, { "document-release-ack": "Checked", "document-release-mitigation": "None needed" });
   await press(p, "release");
   assert.ok(main(p).querySelector("[data-vouched]"), "the vouched note");
@@ -234,38 +295,43 @@ test("R112 control: a short reading draws no page bar; a PDF reading pages by it
 });
 
 /* ---- R113 ---- */
-const RETIRED_MD = DOCUMENT_MD.replace("\nsource:", "\ncurrent_state: retired\nsource:");
-const retirePlane = (state) => {
-  const base = plane();
-  return { image: (r) => (r.query.id === D && state.retired ? ok({ "bundle.md": RETIRED_MD, "data/provenance.json": provenanceOf(SHA) }) : base.image(r)),
-    select: (r) => ok({ ok: true, handle: "SEL-9", items: r.body.ids }), retire: () => { state.retired = true; return ok({ ok: true, retired: [D] }); } };
-};
 const dialog = (p) => p.root().querySelector('[role="dialog"]');
+/** A copy she holds and has vouched for (`select`, then `release` with her acknowledgment and the mitigation), so it is hers to stop using. */
+async function vouchedCopy() {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const held = await world.recipes.hold(ann, "Policy memo", "The Director shall repair each reported pothole within seven days.");
+  const sel = await ann.act("select", { body: { ids: [held.bundle] } });
+  await ann.act("release", { query: { handle: sel.handle, acknowledgment: "Checked", mitigation: "None needed" } });
+  return { world, ann, ...held, at: "/app/document/" + held.bundle };
+}
 test("R113 Stop using this copy, confirmed with a reason, sends select then retire with the handle, says the copy is retired by key and reads the document again", async () => {
-  const state = { retired: false };
-  const p = await openWith(at, { plane: retirePlane(state) });
+  const c = await vouchedCopy();
+  const p = await pageOn(c.world, c.ann, c.at);
   assert.equal(main(p).querySelector("[data-retired]"), null, "not retired before");
   await press(p, "retire");
   dialog(p).querySelector("textarea").value = "mistaken capture, wrong page";
   await p.click(dialog(p).querySelector('[data-shell="confirm"]'));
-  assert.deepEqual(p.byOp("select")[0].body, { ids: [D] });
+  assert.deepEqual(p.byOp("select")[0].body, { ids: [c.bundle] });
   assert.deepEqual([p.requests.findIndex((r) => r.op === "select") < p.requests.findIndex((r) => r.op === "retire")], [true], "select first");
   const r = p.byOp("retire")[0].query;
-  assert.deepEqual([r.handle, r.reason], ["SEL-9", "mistaken capture, wrong page"]);
-  assert.ok(p.byOp("image").filter((q) => q.query.id === D).length >= 2, "the document is read again");
+  assert.deepEqual([typeof r.handle, r.handle !== "", r.reason], ["string", true, "mistaken capture, wrong page"], "the handle the select made");
+  assert.ok(p.byOp("image").filter((q) => q.query.id === c.bundle).length >= 2, "the document is read again");
   const note = main(p).querySelector("[data-retired]");
   assert.ok(note && says(note, "state.item.retired.name") && says(note, "state.item.retired.means"), "the retired state, by key");
   assert.ok(!actsIn(main(p)).includes("retire"), "and no second retirement is offered");
 });
 
 test("R113 a select that fails draws its refusal; control: Confirm with no reason is refused in place and nothing is sent", async () => {
-  const p = await openWith(at, { plane: { select: refusedIn("SOME_UNHELD_CODE", "That copy could not be selected just now."), retire: ok({ ok: true }) } });
+  const c = await vouchedCopy();
+  /* the select's refusal is one no word is held for and no act makes (a select of a copy she may use is never refused): scripted over the real copy */
+  const p = await pageOn(c.world, c.ann, c.at, { plane: { select: refusedIn("SOME_UNHELD_CODE", "That copy could not be selected just now.") } });
   await press(p, "retire");
   dialog(p).querySelector("textarea").value = "wrong page";
   await p.click(dialog(p).querySelector('[data-shell="confirm"]'));
   assert.equal(p.byOp("retire").length, 0, "the retire is not sent after a failed select");
   assert.ok(text(main(p)).includes("That copy could not be selected just now."));
-  const q = await openWith(at, { plane: { select: ok({ ok: true, handle: "SEL-9" }), retire: ok({ ok: true }) } });
+  const q = await pageOn(c.world, c.ann, c.at);
   await press(q, "retire");
   dialog(q).querySelector("textarea").value = "   ";
   await q.click(dialog(q).querySelector('[data-shell="confirm"]'));
@@ -298,33 +364,47 @@ test("R117 control: a refusal without findings draws the code's generic sentence
 });
 
 /* ---- R118 ---- */
-const P2 = "PROJ-2026-0009", Q3 = "INQ-2026-0009-lease";
-const TWO_PROJECTS = { projectlist: ok({ ok: true, projects: [{ id: P, name: "Pothole repairs", stage: "investigating" }, { id: P2, name: "The Coliseum lease", stage: "investigating" }] }),
-  projectquestions: (r) => ok(r.query.project === P2 ? { ok: true, project: P2, items: [{ inquiry: Q3, title: "Did the lease go to a vote?" }], cursor: null } : PROJECT_QUESTIONS),
-  list: ok({ bundles: [{ bundle_id: Q, title: "Is the city repairing reported potholes within seven days?" }, { bundle_id: Q2, title: "Does closed mean repaired?" }, { bundle_id: Q3, title: "Did the lease go to a vote?" }] }) };
+/** A copy held in the project "Pothole repairs", whose two questions rest on nothing yet, a third question in another project, "The Coliseum lease", and a fourth in none: all by real acts. */
+async function twoProjects() {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const mine = await world.recipes.project(ann, "Pothole repairs");
+  const other = await world.recipes.project(ann, "The Coliseum lease");
+  const held = await world.recipes.page(ann, "Policy memo", { paragraphs: ["The Director shall repair each reported pothole within seven days."], project: mine });
+  const q1 = await world.recipes.question(ann, mine, { title: "Seven days", text: "Is the city repairing reported potholes within seven days?", draw: true });
+  const q2 = await world.recipes.question(ann, mine, { title: "Closed", text: "Does closed mean repaired?", draw: true });
+  const q3 = await world.recipes.question(ann, other, { title: "Lease", text: "Did the lease go to a vote?", draw: true });
+  const q4 = await world.recipes.question(ann, "", { title: "Unfiled", text: "Who signed the lease?" });   /* a question of no project: its list row states none */
+  return { world, ann, mine, other, held, q: [q1.id, q2.id, q3.id, q4.id], at: "/app/document/" + held.bundle };
+}
 const options = (p) => p.doc.getElementById("document-cite-question").querySelectorAll("option");
 test("R118 Cite in which question lists each question with its project by the key, and the choose option first when nothing is preselected", async () => {
-  const p = await openWith(at, { plane: TWO_PROJECTS });
+  const t = await twoProjects();
+  const p = await pageOn(t.world, t.ann, t.at);
   const o = options(p);
   assert.equal(text(o[0]), word("screen.document.cite.choose"), "never starts blank");
   assert.equal(o[0].getAttribute("value"), "");
   assert.equal(text(o[1]), word("screen.document.cite.option", { question: "Is the city repairing reported potholes within seven days?", project: "Pothole repairs" }));
-  /* fix round 3 (C16): a project's questions are not read one project at a time, so a question of another project, whose title no other
-     question shares, is named by its title alone (the list row states no project); fr4-document names the project where titles collide */
-  assert.equal(text(o[3]), "Did the lease go to a vote?", "a question of another project whose project is not known is its title alone");
-  assert.deepEqual(p.byOp("projectquestions").map((r) => r.query.project), [P], "only this project's questions are read");
-  assert.deepEqual(o.slice(1).map((x) => x.getAttribute("value")), [Q, Q2, Q3], "this project's questions first");
+  /* fix round 3 (C16): a project's questions are not read one project at a time, so a question of another project is named by the project its list row states, else by its title alone;
+     fr4-document names the project where titles collide */
+  assert.equal(text(o[3]), word("screen.document.cite.option", { question: "Did the lease go to a vote?", project: "The Coliseum lease" }), "a question of another project, by the project its list row states");
+  assert.equal(text(o[4]), "Who signed the lease?", "a question whose project is not known is its title alone");
+  assert.deepEqual(p.byOp("projectquestions").map((r) => r.query.project), [t.mine], "only this project's questions are read");
+  assert.deepEqual(o.slice(1).map((x) => x.getAttribute("value")), t.q, "this project's questions first");
 });
 
 test("R118 control: with a question preselected the choose option is not drawn and the list starts at it", async () => {
-  const p = await openWith(at, { plane: { ...TWO_PROJECTS, heldcaptures: ok({ ok: true, held: [HELD_ROW] }) } });
-  assert.equal(p.doc.getElementById("document-cite-question").value, Q);
+  const c = await heldCopy();
+  const p = await pageOn(c.world, c.ann, c.at);
+  assert.equal(p.doc.getElementById("document-cite-question").value, c.question);
   assert.ok(!options(p).some((x) => text(x) === word("screen.document.cite.choose")));
 });
 
 test("R118 the screen puts no weight mark of its own on Ask whether a newer copy exists, Check now or Watch for changes (the shell draws marks by key, B17)", async () => {
-  const q2 = { backlinks: ok({ ok: true, target: D, backlinks: [{ from: Q, from_type: "inquiry", from_title: "Seven days?", rel: "cites" }] }), versionchain: ok({ ok: true, versions: [{ capture_sha: SHA }] }) };
-  const p = await openWith(at, withMd(WATCHED, { plane: q2 }));
+  /* a watched copy of a page, one question resting on it, and its address's one version: the real records */
+  const c = await remoteCopy({ watched: true });
+  await c.world.recipes.question(c.ann, c.project, { title: "Rests on it", text: "What did the council decide?", legs: [{ target: c.document, role: "supports" }], draw: true });
+  const p = await pageOn(c.world, c.ann, c.at);
   for (const op of ["monitor", "monitorset"]) {
     const b = main(p).querySelector(`button[data-act="${op}"]`);
     assert.ok(b, op);
