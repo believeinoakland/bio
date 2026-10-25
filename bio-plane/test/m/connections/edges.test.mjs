@@ -102,7 +102,7 @@ test("R20: NO_TARGET; a target the viewer cannot see answers as an absent one; e
   const absent = w.k.backlinks({ target: "INFO-2026-0404-z", viewer: V("bob") });
   const unseen = w.k.backlinks({ target: p, viewer: V("bob") });
   assert.deepEqual({ ...absent, target: null }, { ...unseen, target: null });
-  assert.equal(absent.reason, "NO_SUCH_BUNDLE");
+  assert.equal(absent.reason, "NO_SUCH_DOCUMENT");
   /* An unreadable citing document, or an unrecorded entry, reads confirmed. */
   w.st.sql.exec(`INSERT INTO refs (bundle_id, target_id, kind) VALUES (?, ?, 'relates_to')`, B, A);
   assert.equal(w.k.backlinks({ target: A, viewer: MACHINE }).backlinks.find((x) => x.rel === "relates_to").status, "confirmed");
@@ -213,7 +213,7 @@ test("R27, R33: it writes exactly the edges its answer names; a bundle the viewe
   const p = w.project("Carol's work", "alice");
   const refusedHidden = w.k.projectLinks({ sourceCapture: s, sourceBundle: p, viewer: V("bob"), identity: V("bob") });
   const refusedNone = w.k.projectLinks({ sourceCapture: s, sourceBundle: "INFO-2026-0404-z", viewer: V("bob"), identity: V("bob") });
-  assert.equal(refusedHidden.reason, "NO_SUCH_BUNDLE"); assert.equal(refusedNone.reason, "NO_SUCH_BUNDLE");
+  assert.equal(refusedHidden.reason, "NO_SUCH_DOCUMENT"); assert.equal(refusedNone.reason, "NO_SUCH_DOCUMENT");
   assert.deepEqual({ ...refusedHidden, target: 0 }, { ...refusedNone, target: 0 });
   assert.equal(w.count("refs"), 0);
   /* A project source needs the actor to have joined it (REC-134). */

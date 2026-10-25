@@ -17,7 +17,7 @@ test("R31, R53, R54: a member asserts a connection between two held documents wi
   assert.equal(w.k.assert({ a: A, b: B, basis: "x", member: "", viewer: V("alice") }).reason, "CONNECTION_ASSERT_NOT_A_MEMBER");
   assert.equal(w.k.assert({ a: A, b: B, basis: "  ", member: "alice", viewer: V("alice") }).reason, "CONNECTION_ASSERT_NO_BASIS");
   assert.equal(w.k.assert({ a: A, b: B, basis: "x".repeat(4001), member: "alice", viewer: V("alice") }).reason, "CONNECTION_ASSERT_BASIS_TOO_LONG");
-  assert.equal(w.k.assert({ a: A, b: "INFO-2026-0404-z", basis: "x", member: "alice", viewer: V("alice") }).reason, "NO_SUCH_BUNDLE");
+  assert.equal(w.k.assert({ a: A, b: "INFO-2026-0404-z", basis: "x", member: "alice", viewer: V("alice") }).reason, "NO_SUCH_DOCUMENT");
   assert.equal(w.k.assert({ a: A, b: A, basis: "x", member: "alice", viewer: V("alice") }).reason, "CONNECTION_ASSERT_SELF");
   const r = w.k.assert({ a: B, b: A, basis: "the same contract, by its number", member: "alice", viewer: V("alice") });
   assert.equal(r.ok, true); assert.equal(r.wrote, true);
@@ -35,7 +35,7 @@ test("R31, R53, R54: a member asserts a connection between two held documents wi
   /* A hidden end: refused as not held, and a row whose other end is hidden omitted. */
   w.st.sql.exec(`UPDATE bundles SET object_type='project' WHERE bundle_id=?`, B);
   assert.equal(w.k.asserted({ bundleId: A, viewer: V("bob") }).member.length, 0);
-  assert.equal(w.k.assert({ a: A, b: B, basis: "x", member: "carl", viewer: V("bob") }).reason, "NO_SUCH_BUNDLE");
+  assert.equal(w.k.assert({ a: A, b: B, basis: "x", member: "carl", viewer: V("bob") }).reason, "NO_SUCH_DOCUMENT");
 });
 
 /* An agenda (one capture, fetched from its address) whose links are items and files of one stated system. */
