@@ -1,6 +1,6 @@
 # PERFORMANCE lane: state (PERFORMANCE #3, updated 2026-10-24 03:10Z; before that PERFORMANCE #2, 2026-10-23 15:05Z; first written at the hand-off from PERFORMANCE #1)
 
-Read in this order: `CHARTER.md` (the job and the bar, K4354: screen/act within 2 s at 1280 px, web capture within 15 s), this file, the end of `HANDOFF.md` (P11-P15), `BASELINE.md`. Nothing is held only in a session: tools are in `tools/`, raw numbers in `data/`, findings in `HANDOFF.md`.
+Read in this order: `CHARTER.md` (the job and the bar, K4354: screen/act within 2 s at 1280 px, web capture within 15 s), this file, the end of `HANDOFF.md` (open entries) and the archive of P1-P26 (`build/plan/archive/lane-performance-HANDOFF-P1-P26.md`), `BASELINE.md`. Nothing is held only in a session: tools are in `tools/`, raw numbers in `data/`, findings in `HANDOFF.md`.
 
 ## What is done (all pushed on tranche/T51)
 - P1-P6 (causes of C12-C16 and the acts, fix round 3), re-measured after round 3 (P7-P10) and after rounds 4/4b (P11-P14, `BASELINE.md`), and P15 (in-app navigation vs full load; hop price; estimates for (a) one combined read and (b) object location) for BOB #254's fix round 6 question. BOB placed P1-P10 in rounds 3-4; P11-P15 are with BOB, who brings (a) and (b) to Bob.
