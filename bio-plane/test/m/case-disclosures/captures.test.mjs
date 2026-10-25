@@ -11,6 +11,7 @@ import { unnamedSourceStatement, sourceStatement } from "../../../src/publicatio
 import { ARCHIVE_VIA, ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
 import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
 import { word, localize } from "../../../src/setup-words/index.mjs";
+import { sourceOfReads } from "../sources/fixtures.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-0003-c";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q", Q4 = "INQ-2026-0004-d";
@@ -270,9 +271,9 @@ test("R4: sourcesStated states, for a capture given to the group, only what sour
   assert.ok(captureBodyLines([], []).join("\n").includes(word("case-disclosures.document_case_rests")));
 });
 
-test("R4, R18, R23: a source read that fails or throws states the Withheld row — less, never more — and never throws", () => {
+test("R4, R18, R23: a source read that fails or throws states the Withheld row — less, never more — and never throws", async () => {
   const k = "e".repeat(64);
-  for (const sources of [{ sourceOf: () => { throw new Error("down"); } }, { sourceOf: () => ({ ok: false, reason: "X" }) },
+  for (const sources of [{ sourceOf: () => { throw new Error("down"); } },
                          { sourceOf: () => null },
                          { sourceOf: () => ({ ok: true, sourceId: "S1", source: { receipt: { sha256: "r".repeat(64), received: T0 } } }),
                            publishableAt: () => { throw new Error("down"); } }]) {
@@ -284,8 +285,11 @@ test("R4, R18, R23: a source read that fails or throws states the Withheld row �
     assert.deepEqual([...w.cd.withheldOf(rows)], [k]);
   }
   /* NO_SUCH_SOURCE is a fetched capture: nothing stated */
-  const w = world({ deps: { sources: { sourceOf: () => ({ ok: false, reason: "NO_SUCH_SOURCE" }) } } });
-  assert.deepEqual(w.cd.sourcesStated([k], V("alice")), []);
+  const real = await sourceOfReads();
+  for (const none of [real.none, real.fetched]) {
+    const w = world({ deps: { sources: { sourceOf: () => none } } });
+    assert.deepEqual(w.cd.sourcesStated([k], V("alice")), []);
+  }
 });
 
 test("R11: a capture a named member made, a load-bearing self-attested Grade B one included, is governed by R2 and R3 unchanged — its account names its member and carries the signature", () => {

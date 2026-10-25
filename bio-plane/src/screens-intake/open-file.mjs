@@ -45,7 +45,13 @@ function renderOpenFile(cs, view) {
       + (engine ? `<span class="meta">${cs.esc(engine)}</span>` : "")
       + (scanned && n.scanned_at ? `<span class="meta">${cs.w("screen.open-file.note.at")} ${cs.date(n.scanned_at)}</span>` : "");
   };
-  const notes = cs.state(D.notes, (v) => `<div class="cs-sheet">${v.notes.map((n) => `<div class="cs-row">${noteLine(n)}</div>`).join("")}</div>`,
+  /* a sentence by its own key where the words table holds it, else `alt()`: the nearest held rows stand in until the design's rows reach the table (K4269); the rows
+     owed are named in the job record and in `fix-round-10-words.md`. A drawn-screen module holds no English and adds no marker of its own (K4640). */
+  const keyedW = (k, f, alt) => { const t = cs.w(k, f); return t === k ? alt() : t; };
+  /* R14 (G3): beside a scanner's "Clean" on a file whose inside was not examined, the design's line `screen.open-file.check.inside` ("its inside could not be
+     checked"); until its row is held the reasons' own words (the plane's translation of `encrypted`, `unread`, ...) say it, in the "why" line above, and nothing is invented */
+  const notesFor = (inside) => cs.state(D.notes, (v) => `<div class="cs-sheet">${v.notes.map((n) => `<div class="cs-row">${noteLine(n)}</div>`).join("")}</div>`
+    + (inside && keyedW("screen.open-file.check.inside", {}, () => "") ? `<p class="mk-small" data-unexamined="1">${keyedW("screen.open-file.check.inside", {}, () => "")}</p>` : ""),
     { empty: addedBy ? "screen.open-file.check.notyet" : "screen.open-file.checks.none" });
   const safeDrawn = (s) => {
     if (!s) return "";
@@ -73,14 +79,32 @@ function renderOpenFile(cs, view) {
     return said("screen.open-file.safe.ready")
       + (Number.isFinite(s.pages) ? said(s.truncated ? "screen.open-file.safe.truncated" : "screen.open-file.safe.pages", { pages: s.pages, total: s.source_pages ?? s.pages }) : "");
   };
+  /* R68 (G7; file-safety R56): the unread picture type is said by the design's `screen.open-file.image.unread`; until its row is held, by the sentence the reading's
+     owner holds for the type (`reading-pipeline.index.unsupported_<type>`: "BMP is not read yet.") */
+  const imageUnread = (type) => {
+    const kind = String(type || "").toLowerCase().replace(/[^a-z0-9_]/g, "");
+    return keyedW("screen.open-file.image.unread", { type: kind }, () => {
+      const own = "reading-pipeline.index.unsupported_" + kind, general = "reading-pipeline.index.unsupported_kind";
+      return kind && cs.w(own) !== own ? cs.w(own) : kind && cs.w(general, { kind }) !== general ? cs.w(general, { kind }) : cs.w("shell.unread");
+    });
+  };
   const body = cs.state(D.threat, (t) => cs.state(D.state, (o) => {
     const held = !!t.scan_hold || o.why === "SCAN_HOLD";
     const kind = held ? "held" : t.threat === "low" ? "low" : "high";
-    const reasons = (Array.isArray(t.reasons) ? t.reasons : []).map((r) => r && (r.translation || r.code)).filter(Boolean);
-    const yours = kind === "high" && addedBy && (Array.isArray(t.reasons) ? t.reasons : []).some((r) => r && r.code === "source_not_fetched");
+    const listed = (Array.isArray(t.reasons) ? t.reasons : []).filter((r) => r && (r.translation || r.code));
+    const yours = kind === "high" && addedBy && listed.some((r) => r.code === "source_not_fetched");
+    /* R14 (G3): for a file she added, `yours` says why the file is high (nobody fetched it); every other reason is still said in its own words,
+       and none is said as an empty line */
+    const reasons = (yours ? listed.filter((r) => r.code !== "source_not_fetched") : listed).map((r) => r.translation || r.code);
+    /* R14: a reason that says the file's inside was not examined (an encrypted file or member, a macro container, a format nothing checked, a file
+       left unread or unscannable) is said beside the checks, so a scanner's "Clean" is not taken to cover it */
+    const unexamined = listed.some((r) => /^(encrypted|format_unchecked|unread|unscannable|active:vba-project)$/.test(String(r.code)));
+    /* R68 (G7; file-safety R56): a TIFF, HEIC or BMP is not read, and its structure was not examined */
+    const unreadImage = !!(t.image && typeof t.image === "object" && t.image.read === false);
     let out = `<div class="row"><span class="cs-risk" data-risk="${kind}" tabindex="0">${cs.w(`screen.open-file.risk.${kind}`)}</span>`
       + `<span class="mk-small">${cs.w(yours ? "screen.open-file.high.yours" : `screen.open-file.risk.${kind}.means`)}</span></div>`
-      + (reasons.length && !yours ? `<p class="mk-small">${cs.w("screen.open-file.why", { reasons: reasons.join("; ") })}</p>` : "");
+      + (reasons.length ? `<p class="mk-small">${cs.w("screen.open-file.why", { reasons: reasons.join("; ") })}</p>` : "")
+      + (unreadImage ? `<p class="mk-small" data-unread-image="1">${imageUnread(t.image.type)}</p>` : "");
     const safe = cs.sec("screen.open-file.safe", `<p class="mk-small">${cs.w("screen.open-file.safe.about")} `
       + `${cs.mark("origin", "machine")} ${cs.w("screen.open-file.safe.origin")}. ${cs.w("screen.open-file.safe.cite")}</p>`
       + `<div class="mk-acts">${cs.act("safeview", { tone: kind === "low" ? undefined : "primary" })}</div>`
@@ -92,12 +116,12 @@ function renderOpenFile(cs, view) {
       + `<div class="mk-acts">${cs.act("deepercheck")}</div>`);
     if (kind === "low") {
       out += `<div class="mk-acts">${cs.act("openoriginal", { tone: "primary" })}</div>` + refused
-        + cs.sec("screen.open-file.checks", notes) + `<p class="mk-note">${cs.w("screen.open-file.weekly")}</p>`;
+        + cs.sec("screen.open-file.checks", notesFor(unexamined)) + `<p class="mk-note">${cs.w("screen.open-file.weekly")}</p>`;
     } else if (kind === "high") {
       const warned = o.may_open === true && o.path === "warned";
       out += (o.may_open === true && o.path === "deeper" ? `<div class="mk-acts">${cs.act("openoriginal", { tone: "primary", data: { override: "1" } })}</div>` : "")
         + (yours ? `<h2>${cs.w("screen.open-file.next.head")}</h2><p class="mk-note">${cs.w("screen.open-file.next.yours")}</p>` : "")
-        + safe + deeper + cs.sec("screen.open-file.checks", notes)
+        + safe + deeper + cs.sec("screen.open-file.checks", notesFor(unexamined))
         + (warned ? cs.sec("screen.open-file.warn", `<div class="cs-dialog"><b>${cs.w("screen.open-file.warn.title")}</b>`
           + `<p class="ends">${cs.w("screen.open-file.warn.ends")}</p>`
           + `<fieldset class="mk-checks"><legend>${cs.w("screen.open-file.warn.confirm")}</legend>`
@@ -116,7 +140,7 @@ function renderOpenFile(cs, view) {
         + safe + deeper + refused
         + cs.sec("screen.open-file.risk.held", `<p class="mk-small">${cs.w("screen.open-file.held.about")}</p>`
           + (t.scan_hold ? `<div class="mk-acts">${cs.act("releasescanhold", { tone: "primary" })}</div>` : ""))
-        + cs.sec("screen.open-file.checks", notes);
+        + cs.sec("screen.open-file.checks", notesFor(unexamined));
     }
     /* R39: the original was checked against the record's fingerprint before it was handed over, and the sentence says so */
     if (U.opened) out += said("screen.open-file.digest.checked") + said("screen.open-file.opened");

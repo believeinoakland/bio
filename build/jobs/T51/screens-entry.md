@@ -1,6 +1,6 @@
 # screens-entry (T51)
 
-**Status** · session_0174THkG52z2ZaHHouaMb9q7 · depth 2 · COMPLETE · handled B10
+**Status** · session_01Uwcy7zezKuV2SK7J8enJ5J · depth 2 · COMPLETE · handled B11
 
 ## Completion (T51-114)
 
@@ -157,3 +157,17 @@ C83 (R33): the true scanner state is drawn on Setup step 7 (since when, why, fro
 ## J9 · COMPLETE
 
 B10 applied: C82 (R32) reset fills {name} (the team's name from groupidentity, else the unnamed-team word; no '{' on the live, set or dead page); C83 (R33, my part) Setup step 7 reads scanstatus and draws the checked sentence only when signatures are held, else since when and why from the answer's keys, nothing when unread or unreachable. R32 and R33 written by me in build/requirements/screens-entry.md (K4210; the ownership check lists that one file, accepted at merge as at J7). Module tests 96/96; journey-check pseudo 7/7 and the other users green; architecture, coverage (30 of 30), words, ownership (requirements file only): as stated. Not mine: checks/format.mjs fails at build/rulings.md:4298 (K4301 lacks a standing-list decision, BOB's file). One QUESTION open: the word row for what the administrator can do (above). Details: build/jobs/T51/screens-entry.md (Completion B10).
+
+## Fix round 10 (B11 · START, batch 5)
+
+**R34 (minor, first-load `whoami` 401 draws no `session.ended`): not fixable in screens-entry; needs `interface-shell`.** Root cause: `front.mjs:77` draws `session.ended` when `view.session.state === "ended"`, and it would. On a first load with a stored record, `whoami`'s 401 reaches `call` (`interface-shell/browser.mjs:161`), which runs `over("ended")` and sets `ENTRY = { state: "ended" }`. `whoami()` then returns `"none"` (`browser.mjs:1637`, `!S`), and the caller at `browser.mjs:1600` runs `ENTRY = { state: null, handle: null }` before `showFront()`, overwriting the state. So `front` receives `state: "none"` and draws no sentence. Why the tests missed it: front's tests set the session state directly; no test loads a page with a stored record whose `whoami` answers 401. The fix is at `browser.mjs:1600` (keep the `ended` state `over` set; an unknown token, which holds no record, stays null). No change to this module's code is needed; its `ended` branch is already tested. Reported to BOB (REPORT). The requirement line R34 is not in `build/requirements/screens-entry.md` (the file ends at R33); asked in the REPORT.
+
+**Fixture lines done (2).** `setup.test.mjs`:542 `MEMBER_EXISTS` -> `EXISTS` (member-roster `memberAdd`, checks.mjs:234, index.mjs:926); `setup.test.mjs`:573 `NOT_ALLOWED` -> `NOT_AN_ADMIN` (member-roster checks.mjs:25). member-roster publishes no fixture for either refusal, so the real code replaces the invented one (K5044 (5)). The `checks/fixtures.mjs . screens-entry --list` lines at :542 and :573 remain as `op-table` answers; they are re-pointed by the later CHANGE (store-request, interface-shell `boot({door})`), as B11 says. No `fixtures-own` or `fixtures-generic` marker added.
+
+**Tests and checks.** `node --test` on `bio-plane/test/m/screens-entry/`: tests 96, pass 96, fail 0. format 0 failures; architecture 0; coverage 30 of 30; words 0; ownership 0 failures.
+
+Size (session_01Uwcy7zezKuV2SK7J8enJ5J): test runs 3, module lines 1158
+
+## J10 · COMPLETE
+
+Fix round 10 (B11): the 2 fixture lines done (setup.test.mjs:542 EXISTS, :573 NOT_AN_ADMIN: real member-roster codes, no provider fixture exists for either); module tests 96/96; format, architecture, coverage (30 of 30), words, ownership 0 failures. R34 is NOT fixable in screens-entry and needs interface-shell (for BOB): front.mjs:77 already draws session.ended for state ended; on first load whoami's 401 makes call() run over('ended') (browser.mjs:161) setting ENTRY ended, then browser.mjs:1600 (got === 'none') overwrites ENTRY with {state:null}, so front gets 'none' and draws no sentence. Fix there: keep the ended state set by over(); an unknown token (no record) stays null. Failing-first test belongs in interface-shell (page loaded with stored record whose whoami is 401 draws session.ended; control: unknown token draws none). Also: R34 is not in build/requirements/screens-entry.md (ends at R33); BOB to add it. The two op-table lines at :542/:573 wait for the storeWorld CHANGE. Details in the record.

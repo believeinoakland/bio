@@ -52,6 +52,7 @@ export const findIn = Object.freeze({
     if (ui.question === undefined && routed) ui.question = routed;
     const form = !s ? "" : s.indexOf("PROJ-") === 0 ? "project" : s.indexOf("sel-") === 0 ? "held" : "document";
     const KINDS = ["people", "money", "dates", "requirements", "events", "term"];
+    const PARTS = ["footnote", "endnote", "header", "footer", "comment", "tracked_deletion", "text_box", "speaker_note", "master_text", "cell_note"];
     const RECORD = { people: "recordpersonfact", money: "recordfact", dates: "recorddatedfact", events: "recorddatedfact", requirements: "standarddeclare", term: "cite" };
     // The forms each recording act asks the member (R47, R48), drawn in place in a disclosure with the act and read by its `send`.
     const recordAct = function (op, ki, ii, it) {
@@ -159,8 +160,13 @@ export const findIn = Object.freeze({
           const p = extent.passage !== undefined ? extent.passage : extent.paragraph;
           // R26, R49: the result by its document's title and its place in it; a document the answer does not title is not named by its digest.
           const dt = typeof it.title === "string" && it.title.trim() ? it.title : it.document && typeof it.document.title === "string" && it.document.title.trim() ? it.document.title : null;
+          // R17a (retrieval-browse R21): a term item lying outside the document's body says which part: its kind, by the held word
+          // (`content.part_kind.<kind>`, the nearest row until the design gives its own). `body`, a unit stored without a kind (null) and a kind
+          // outside the closed list draw none, and a kind is never guessed.
+          const part = typeof it.part === "string" && it.part !== "body" && PARTS.indexOf(it.part) >= 0 && cs.w("content.part_kind." + it.part) !== "content.part_kind." + it.part
+            ? ' <span class="mk-small" data-part-kind="' + it.part + '">' + cs.w("content.part_kind." + it.part) + "</span>" : "";
           const where = (dt && it.capture_sha ? cs.ref("document", String(it.capture_sha), dt, []) + " " : "")
-            + (p !== undefined ? "<span>" + cs.w("screen.find-in.passage", { n: String(p) }) + "</span>" : "");
+            + (p !== undefined ? "<span>" + cs.w("screen.find-in.passage", { n: String(p) }) + "</span>" : "") + part;
           // R48 (8): a match in a sheet says its sheet and row and draws its cells apart; a formula the file never calculated says so;
           // a person named in the passage by a held alias says so.
           // R62: the row is the match's own `row` (retrieval-browse R8), never parsed from its extent; a match answering none (a

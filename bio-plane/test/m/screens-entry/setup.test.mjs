@@ -539,7 +539,7 @@ test("R23 part 8's act is setup.admin.invite, explained by setup.admin.invite_do
   const r = await o.press("memberadd", { values: { "su-adm-id": "dev", "su-adm-cover": "Dev" } });
   assert.deepEqual(r.sent.filter((x) => x.op === "memberadd").map((x) => x.body), [{ memberId: "dev", cover: "Dev", role: "admin" }]);
   // control: refused, the step is kept and nothing more is sent
-  const n = await claimed({ memberadd: { ok: false, code: "MEMBER_EXISTS" } });
+  const n = await claimed({ memberadd: { ok: false, code: "EXISTS" } });
   const before = n.requests.length;
   await n.press("memberadd", { values: { "su-adm-id": "dev", "su-adm-cover": "Dev" } });
   assert.deepEqual(n.requests.slice(before).map((x) => x.op), ["memberadd"]);
@@ -570,7 +570,7 @@ test("R25 a skipped part shows screen.setup.state.skipped with its help in the p
   assert.equal(all(partOf(o, "claim"), (e) => e.attrs["data-skip"]).length, 0);
   assert.equal(partOf(o, "claim").attrs["data-skipped"], undefined);
   // control: a refused part keeps its step
-  const n = await claimed({ courtnoticeset: { ok: false, code: "NOT_ALLOWED" } });
+  const n = await claimed({ courtnoticeset: { ok: false, code: "NOT_AN_ADMIN" } });
   const b = n.requests.length;
   await n.press("courtnoticeset", { values: { "su-court-0": true } });
   assert.deepEqual(n.requests.slice(b).map((x) => x.op), ["courtnoticeset"]);

@@ -119,6 +119,7 @@ test("R6 G54 a success records building, then built only after the manifest's by
   const stub = { fetch: async (req, init) => {
     const r = typeof req === "string" ? new Request(req, init) : req;
     if (new URL(r.url).pathname === "/recordcasefile") order.push(`ledger:${JSON.parse(await r.clone().text()).state}`);
+    if (new URL(r.url).pathname === "/recordcasemanifest") order.push(`manifest:built=${JSON.parse(await r.clone().text()).built}`);
     return real.fetch(req, init);
   } };
   s.env.PUBLISHED.put = async (k, v) => { order.push(`put:${k.slice(-8)}`); return put(k, v); };
@@ -126,7 +127,8 @@ test("R6 G54 a success records building, then built only after the manifest's by
   assert.equal(typeof result.manifest_sha, "string");
   assert.equal(result.case_file, "built");
   const mKey = `put:${result.manifest_sha.slice(-8)}`;
-  assert.ok(order.indexOf(mKey) >= 0 && order.indexOf("ledger:built") > order.indexOf(mKey), `built after the manifest's bytes: ${order.join(" ")}`);
+  /* K5084: the built state is written by the manifest's own record, after its bytes are in the bucket (no separate built write) */
+  assert.ok(order.indexOf(mKey) >= 0 && order.indexOf("manifest:built=true") > order.indexOf(mKey) && !order.includes("ledger:built"), `built after the manifest's bytes: ${order.join(" ")}`);
   assert.equal(order[0], "ledger:building");
   const l = attempts(out);
   assert.equal(l.length, 1);
@@ -216,6 +218,7 @@ test("R23 G54 a building older than two minutes is being_prepared with code INTE
 
 test("R23 G54 the closed set maps in one place: a stored code outside it reads UNKNOWN, every state is one the page has a sentence for, and a loose ratified bundle has no case_file", async () => {
   const base = { complete: true, manifest_sha: null, attempts: 2, attempted_at: NOW };
+  // fixtures-generic: SOMETHING_ELSE
   assert.equal(caseFileStateOf({ ...base, state: "failed", why: JSON.stringify({ code: "SOMETHING_ELSE", step: "build" }) }).code, "UNKNOWN");
   assert.equal(caseFileStateOf({ ...base, state: "failed", why: "not json" }).code, "UNKNOWN");
   for (const code of CASEFILE_CODES) assert.equal(caseFileStateOf({ ...base, state: "failed", why: { code, step: "build" } }).code, code);

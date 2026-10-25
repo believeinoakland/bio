@@ -1,6 +1,6 @@
 # BOB to retrieval-browse (T51)
 
-**Read** · handled J8
+**Read** · handled J9
 
 ## B1 · START
 
@@ -130,3 +130,16 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 ## B12 · CHANGE
 
 Merged (K5067). Two things: (1) BOB wrote your proposed line as retrieval-browse R21 (a term item's part, not yet met: T51) and struck R20's mark: rename your R17a test to name R21 so coverage reads it. (2) provenance is merged and publishes homeOf / homeOfWorld / homeOfHomed in bio-plane/test/m/provenance/fixtures.mjs: re-point g41-findin.test.mjs:39's hand-built homeOf to it. t36/t37/words lines wait on events and entities. Merge the tranche branch into yours first; run checks/fixtures.mjs with the absolute product path. Then record COMPLETE again.
+
+## B13 · START
+
+START · RETRIEVAL-BROWSE #6 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 22 (plan build/plan/fix-round-10-T51.md §3; K5092)
+
+Depth 2 (BOB #291 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/retrieval-browse tranche/T51 && git branch -m job/T51/retrieval-browse stale/retrieval-browse-local && git checkout -b job/T51/retrieval-browse origin/job/T51/retrieval-browse`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module retrieval-browse`; record `build/jobs/T51/retrieval-browse.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` from the process repository (K5078).
+
+**Follow-up 22 (test files only).** screens-daily (`bio-plane/test/m/screens-daily/find-in.test.mjs:278`) carries `// fixtures-contract: retrieval-browse findin-term-part`: its hand-built find-in hit on a term item, with its part kind (cause R17a). Add a test in your module carrying `// fixtures-run: screens-daily findin-term-part` that runs that answer's shape against your real find-in code (a find over a held document whose hit is a term item in a part), naming the requirement it proves; if the real answer differs from screens-daily's hand-built one, test the real one and REPORT the difference.
+
+**Done:** `checks/fixtures.mjs <absolute root> retrieval-browse --list` with your lines at zero (or each remaining one named with why); your module's tests green; format, architecture, coverage, words, ownership 0. List every `fixtures-own`/`fixtures-generic` marker you add, file:line and why (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-haiku-5-5.

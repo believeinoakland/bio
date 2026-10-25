@@ -33,6 +33,7 @@ test("R59 (G110) the renderer's own words are never drawn: the counts and a sent
 });
 
 test("R59 (G110) codes that share a sentence add their counts; an unknown code is the unavailable sentence", async () => {
+  // fixtures-generic: SOMETHING_NEW
   const line = await drawn({ kept: 10, skipped: 7, total: 17, reasons: [{ reason: "BUDGET_EXHAUSTED", count: 2 }, { reason: "TOO_LARGE", count: 1 }, { reason: "SOMETHING_NEW", count: 3 }, { reason: "UNRESOLVABLE", count: 1 }] });
   assert.deepEqual(whys(line), [["toolarge", word("screen.capture.supporting.toolarge", { n: "3" })], ["unavailable", word("screen.capture.supporting.unavailable", { n: "4" })]]);
 });
