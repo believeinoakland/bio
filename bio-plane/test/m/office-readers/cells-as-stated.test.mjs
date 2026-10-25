@@ -49,9 +49,10 @@ test("R47 R48 a row or cell with no `r` is placed by its position: a row is the 
   assert.equal(t.document, "a\tb\nx\t9\t10\nfar\nz\tw");
   const st = await xlsxEntry.structure(book(sheet(body)));
   assert.deepEqual(st.evidentiary.items.filter((i) => i.kind === "hidden-rows").map((i) => i.rows), [[5]]);
-  /* a position past the format's grid is stated, never read as an address */
+  /* a position past the format's columns is not read as an address: the sheet is refused whole with the count and the limit (R49) */
   const wide = await xlsxEntry.text(book(sheet(`<row r="1"><c r="XFD1"><v>1</v></c><c><v>2</v></c></row>`)));
-  assert.ok(wide.sheets[0].undetermined.some((u) => u.reason === "outside_grid" && u.usedCols === 16385));
+  assert.equal(wide.document, null);
+  assert.ok(wide.undetermined.some((u) => u.why === "over_size_bound" && u.metric === "columns" && u.size === 16385 && u.bound === 16384 && u.final === true));
 });
 
 test("R48 a workbook whose rows and cells carry no `r` reads exactly as its referenced copy does: the text, the cells and their sources, the used range and the sheet unit", async () => {

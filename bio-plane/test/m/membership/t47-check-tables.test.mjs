@@ -83,5 +83,5 @@ test("R133 the refusals the module-level functions mint carry their one row, che
      from its row, and a code with no row, are each refused */
   assert.throws(() => carriesItsRow({ ...minted[0], translation: "forged" }));
   assert.throws(() => carriesItsRow({ ...minted[1], check: "C-0.0" }));
-  assert.throws(() => carriesItsRow({ ...minted[2], code: "NO_SUCH_CODE" }));
+  assert.throws(() => carriesItsRow({ ...minted[2], code: "NO_SUCH_CODE" })); // fixtures-generic: NO_SUCH_CODE
 });

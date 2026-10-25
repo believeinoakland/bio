@@ -830,4 +830,8 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["language","key"], requires: ["language","key"] } },
   translationrevert: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("translations.declared.translationrevert", "translation-directed: keyed by a language and an interface word; the group's own wording of Civicsmith's words, shown to members reading that language; moves no bundle"),
     fields: { accepts: ["language","key"], requires: ["language","key"] } },
+  /* R21 (fix round 10; K5046 (c)): the read of R8, declared here, no longer in `control-plane`'s owner map. `viewer` is the door's stamp,
+     never a field a caller sends; `v` is the release version the door keys the answer's cache on; with no `language` the viewer's own is read. */
+  interfacewords: { classes: ["admin","member"], machineClasses: [], mutating: false, stamps: ["viewer"], needs: null, weight: "read", description: localize("translations.declared.interfacewords", "read: every interface word in a language, the group's shown translation or the English, never blank, with the English beside it; writes nothing"),
+    fields: { accepts: ["language","v"], requires: [] } },
 });

@@ -1,6 +1,7 @@
 /* file-safety R39, R40 (N762; K2129, K2153): its own cadences, each batch's instant read from its own kept state, and the
    arming notice a later module registers for. At the module's interface, over the scripted scanner (fixture.mjs) and a
    clock the test moves; an instant is epoch milliseconds, as the scheduler's own `due(now)` reads it. */
+import { reputationRefresh } from "../../../../file-scanner/test/fixtures.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { filedWorld as world, pdf, sha, T0, DAY } from "./fixture.mjs";
@@ -160,7 +161,8 @@ test("R39: forwardWake answers null while no log tool is on, else the start of t
   assert.equal(restarted(w).reputationWake(w.clock.now), ok + REPUTATION_REFRESH_MS, "kept across a restart");
   /* a failed refresh: due (ok + 6 h has passed), but no sooner than a poll after the failed try */
   w.tick(REPUTATION_REFRESH_MS + 1);
-  gwr = () => ({ ok: false, error: "LIST_UNREADABLE" });
+  const unreadable = await reputationRefresh("unreadable");
+  gwr = () => unreadable;
   await w.fs.refreshReputationLists({});
   const tried = w.clock.now;
   assert.equal(w.fs.reputationWake(tried), tried + POLL);

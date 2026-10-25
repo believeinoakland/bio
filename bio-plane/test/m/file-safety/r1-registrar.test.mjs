@@ -4,6 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, pdf, enc, sha } from "./fixture.mjs";
+// fixtures-contract: plane job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 import { PNG } from "./r9-kit.mjs";
 
@@ -40,6 +41,7 @@ test("R1: a registration that answers {ok:false} (or throws) is stated in this m
   console.log = (x) => { try { lines.push(JSON.parse(x)); } catch { /* not ours */ } };
   let w, ans, ans2, s, s2;
   try {
+    // fixtures-contract: plane job-registrar
     w = world({ registerJob: (e) => (e.kind === "grade" ? { ok: false, reason: "JOB_KIND_UNKNOWN" } : e.kind === "safe_view" ? (() => { throw new Error("down"); })() : { ok: true, existed: false, state: "queued" }) });
     s = sha("refused one");
     ans = answer(w, s);

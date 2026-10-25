@@ -437,7 +437,7 @@ function xlsxRangeUnits(parts) {
  * so, which is undetermined-is-first-class at this construct and not a gap in
  * that reader. */
 const XLSX_GRID_ROWS = 1048576;
-const XLSX_GRID_COLS = 16384;
+const XLSX_GRID_COLS = boundOf("sheet", "columns");
 
 /** The 1-based column number of an A1 reference, or null — `a1Corner`'s
  *  reading, the one there is. `$B$14` and `B14` both answer 2 — the absolute
@@ -1443,7 +1443,17 @@ async function xlsxText(parts, opts) {
     scanned += walked.scanner?.scanned ?? 0;
     if (walked.scanner) allUndetermined.push(...scanNotes(sheet.part, walked.scanner));
     /* R48 / R22: a row or column a positional reading puts past the format's grid is stated, never read as if it were an address of the sheet */
-    if (walked.usedRows > XLSX_GRID_ROWS || walked.usedCols > XLSX_GRID_COLS)
+    /* R49 (K4630; as csv-reader R22): a sheet wider than the format's columns is refused whole, with its count and the limit; exactly the limit is read */
+    if (walked.usedCols > XLSX_GRID_COLS) {
+      return {
+        ok: true, container: "xlsx", document: null, sheets: [],
+        ...xlsxRangeUnits(parts),
+        undetermined: [{ part: sheet.part, why: "over_size_bound", size: walked.usedCols, bound: XLSX_GRID_COLS, boundName: "SHEET_COLUMNS_MAX", metric: "columns", final: true,
+          statement: localize("office-readers.formats-xlsx.sheet_columns_over_bound", "This sheet is {size} columns wide; a sheet may have at most {bound}, so the workbook is not read.", { size: String(walked.usedCols), bound: String(XLSX_GRID_COLS) }) }],
+        counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1, scanned_bytes: scanned },
+      };
+    }
+    if (walked.usedRows > XLSX_GRID_ROWS)
       undetermined.push({ sheet: sheet.index, cell: null, reason: "outside_grid", usedRows: walked.usedRows, usedCols: walked.usedCols });
     cellCount += sheetCells;
     formulaCount += sheetFormulas;

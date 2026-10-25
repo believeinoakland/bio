@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J56
+**Read** · handled J57
 
 ## B1 · START
 
@@ -1871,3 +1871,7 @@ Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-NOLOAD; R-LAYER; R-PROXY.
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . control-plane --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/control-plane.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B86 · CHANGE
+
+Merged (K5070). translations now declares interfacewords, so BOB removed its row and the R116 comment from bio-plane/src/control-plane/owner-ops.mjs (K5052 (4)). Your declared-ops.test.mjs:122 (R116, R112) reads that row and is red. Merge the tranche branch, make the test read interfacewords' declaration from translations' DECLARED_OPS through the declared registry (no hand row), run the interfacewords files (t37-door, r8-words-door, r9-words-no-language, declared-ops, r8-words-cache, t51-interfacewords) and your suite, then record COMPLETE again. Your 70 remaining own lines wait for store-request (a later job).

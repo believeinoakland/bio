@@ -1429,11 +1429,13 @@ export class FileSafety {
       if (ver && ver.signatures && typeof ver.signatures.published === "string" && Number.isFinite(published)) this.#keep("sig", { published: ver.signatures.published });
       const lists = ver && Array.isArray(ver.reputation_lists) ? ver.reputation_lists.map((l) => Date.parse(l.fetched_at)).filter(Number.isFinite) : [];
       const due = this.#due(now);
+      /* R58: the bounds the scanner (and its renderer) state in their own /version, for an administrator to read */
+      const bounds = ver && ver.bounds && typeof ver.bounds === "object" && !Array.isArray(ver.bounds) ? ver.bounds : null;
       return { ok: true,
         ...(ver && !Number.isFinite(published) ? { no_signatures: this.#noSignatures(ver.signatures, now) } : {}),
-        scanner: ver ? { bound: true, version: ver.version, clamav_version: ver.clamav_version, signatures: ver.signatures }
+        scanner: ver ? { bound: true, version: ver.version, clamav_version: ver.clamav_version, signatures: ver.signatures, bounds }
           : { bound: !!this.#scannerBinding(), version: null, ...(this.#scannerBinding() ? { unreachable: true } : {}) },
-        renderer: ver ? { bound: true, version: ver.renderer_version } : { bound: !!this.#scannerBinding(), version: null },
+        renderer: ver ? { bound: true, version: ver.renderer_version, bounds } : { bound: !!this.#scannerBinding(), version: null },
         signatures_age_ms: Number.isFinite(published) ? Math.max(0, now - published) : null,
         queued: due.length, overdue: due.filter((d) => Number.isFinite(d.since) && now - d.since > OVERDUE_MS).length,
         held: Number(this.#one(`SELECT COUNT(DISTINCT capture_sha) AS n FROM fs_holds WHERE state <> 'released'`).n),

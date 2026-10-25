@@ -230,3 +230,41 @@ test("R124 (P25 control): `existed: true` with no document the opener sees promo
   assert.deepEqual([refused.capture_sha, refused.kind, refused.holder], [other.capture.sha256, "whole", null], JSON.stringify(refused));
   assert.deepEqual(refused.detail, { capture_sha: other.capture.sha256, kind: "whole", holder: null }, "and the plane's row finds them in `detail`");
 });
+
+/* ---- THE CONTRACT `deliver-owed` (FIX-L; K4995, K5044 (5)). acquisition's tests hand its `owedRun` a `deliver` that answers by hand (`{ok: true}`, `{ok: false}`,
+   a throw). This is what the real delivery answers, as data; each hand-built answer of theirs equals the shape here, and where the real one differs the real
+   one wins. Run below against the real code: a delivery that completes, one that throws, one promotion refuses as held. */
+// fixtures-run: acquisition deliver-owed
+const DELIVER_OWED = {
+  completes: { ok: true, keys: ["bundleId", "ok"], bundleId: "string" },
+  throws: { ok: false, reason: "DELIVERY_FAILED", keys: ["detail", "ok", "reason"] },
+  heldByAnother: { ok: false, reason: "CAPTURE_HELD_BY_ANOTHER_BUNDLE", keys: ["capture_sha", "detail", "holder", "kind", "ok", "reason"], kind: "whole", holder: null },
+};
+const shapeOf = (a) => Object.keys(a).sort();
+
+test("R124 (contract deliver-owed, acquisition): a delivery that completes answers {ok: true, bundleId}; one that throws answers {ok: false, reason: DELIVERY_FAILED, detail} and throws nothing; one promotion refuses as held relays CAPTURE_HELD_BY_ANOTHER_BUNDLE with kind, capture_sha and holder (null where not named) at the top and in detail", async () => {
+  const c = DELIVER_OWED.completes;
+  const r = await owing();
+  const done = await deliverOwedRender({ ctx: r.ctx, env: r.env, storeName: "bio", answer: { ok: true, document: rendered(r) }, session: r.session });
+  assert.deepEqual([done.ok, shapeOf(done), typeof done.bundleId], [c.ok, c.keys, c.bundleId], JSON.stringify(done));
+  /* reading_pending is the one optional key, and only when true (the read was written down) */
+  const big = await owing();
+  const bigDoc = rendered(big);
+  bigDoc.capture.bytes = 40 * MB;
+  const pending = await deliverOwedRender({ ctx: big.ctx, env: big.env, storeName: "bio", answer: { ok: true, document: bigDoc }, session: big.session });
+  assert.ok(pending.ok === true && (pending.reading_pending === undefined || pending.reading_pending === true), JSON.stringify(pending));
+  /* a throw inside the delivery is caught: the answer is a refusal, the render stays owed */
+  const t = DELIVER_OWED.throws;
+  const bad = await deliverOwedRender({ ctx: { get storage() { throw new Error("the record is gone"); } }, env: r.env, storeName: "bio", answer: { ok: true, document: rendered(r) }, session: r.session });
+  assert.deepEqual([bad.ok, bad.reason, shapeOf(bad)], [t.ok, t.reason, t.keys], JSON.stringify(bad));
+  assert.equal(typeof bad.detail, "string");
+  /* promotion refuses the bytes as held by another bundle (the case of the test above, driven as the contract's data) */
+  const h = DELIVER_OWED.heldByAnother;
+  const f = await owingFetch();
+  const other = fetched(f, 100);
+  f.ctx.storage.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated) VALUES (?, ?, 'active', 0, '2026-10-22T00:00:00Z', '2026-10-22T00:00:00Z')`, "INQ-2026-0009", "bea");
+  await heldBefore(f, other, { project: "INQ-2026-0009", who: { author: "bea", actorMemberId: "bea", actorIdentity: "member:bea", actorViewer: "member:bea" } });
+  const held = await deliverOwedRender({ ctx: f.ctx, env: f.env, storeName: "bio", answer: { ok: true, existed: true, document: other }, session: f.session });
+  assert.deepEqual([held.ok, held.reason, shapeOf(held), held.kind, held.holder, held.capture_sha], [h.ok, h.reason, h.keys, h.kind, h.holder, other.capture.sha256], JSON.stringify(held));
+  assert.deepEqual(held.detail, { capture_sha: held.capture_sha, kind: h.kind, holder: h.holder });
+});

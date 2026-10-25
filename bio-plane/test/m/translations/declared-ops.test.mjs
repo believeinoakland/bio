@@ -61,3 +61,10 @@ test("R18 translations declares translationrevert: its requires alone raise no r
   await declaredOpHolds({ op: "translationrevert", declaration: DECLARED_OPS["translationrevert"], call: mk("translationrevert", {"by":"admin"}, async () => (mkWorld({ adopted: true })), null),
     refusedNaming: named({"language":["LANGUAGE_MALFORMED"],"key":["NO_SUCH_WORD"]}, true), values: { language: "es", key: ORDINARY.key }, same: sameCode });
 });
+
+test("R21 translations declares interfacewords: no field is required, so the call with none raises no refusal naming a declared field, and a field outside accepts (language and v are the two it takes) is dropped or refused", async () => {
+  const d = DECLARED_OPS["interfacewords"];
+  assert.deepEqual([d.fields.requires, d.fields.accepts, d.stamps, d.mutating, d.weight, d.classes, d.machineClasses], [[], ["language", "v"], ["viewer"], false, "read", ["admin", "member"], []]);
+  await declaredOpHolds({ op: "interfacewords", declaration: d, call: mk("interfacewords", { viewer: "ruth" }),
+    refusedNaming: named({ language: ["LANGUAGE_MALFORMED"] }, true), values: {}, same: sameCode });
+});

@@ -1,6 +1,6 @@
 # translations (T51)
 
-**Status** · session_0127cgdteY6TNWkhQcKQFfuz · depth 2 · COMPLETE · handled B4
+**Status** · session_0125wgcLMbmJWHkUpq5Duamc · depth 2 · COMPLETE · handled B4
 
 ## Change B4 (K4822, from control-plane J47)
 
@@ -100,3 +100,23 @@ Round 8 G113/G114 applied. R19: interfacewords with no language named answers on
 ## J4 · COMPLETE
 
 B4 applied: every ok answer of interfacewords (both arms and the error answer) carries words_version beside language; test R20 added. translations 42/42, users green; format, architecture, coverage, words, ownership 0 failures. Record: build/jobs/T51/translations.md.
+
+## Fix round 10, Wave A batch 1 (B5)
+
+Entries applied: (1) `interfacewords` declared in `DECLARED_OPS` (`translations/index.mjs`, R21): `classes` admin/member, `machineClasses` [], `mutating` false, `stamps` viewer, `needs` null, `weight` read, `fields` accepts `language`, `v`, requires none, the description keyed `translations.declared.interfacewords` through `localize`, English as control-plane's. (2) Both `store-replies` lines of `fixture.mjs` carry `// fixtures-contract: store-door store-replies`.
+
+Fixture published: `memberLanguageRead` in `bio-plane/test/m/translations/fixtures.mjs`, made by the real `registerMemberLanguageRead` and `wordsVersion` when the test runs; its test `fixtures.test.mjs` (R11 R20) calls it and checks the real answers, with a control that the stamp moves at an adoption. New R21 test in `declared-ops.test.mjs`.
+
+Lines done and left: `fixtures.mjs … translations --list` shows only the two `fixture.mjs` lines, now `contract-no-run`, waiting for `store-door`'s `fixtures-run: translations store-replies`. No `fixtures-own` or `fixtures-generic` marker added.
+
+**For BOB at the merge:** delete from `bio-plane/src/control-plane/owner-ops.mjs` the `interfacewords` row, lines 33–38 on this branch point (the R116 comment, lines 33–35, and the row itself): `interfacewords: { classes: ["admin", "member"], machineClasses: [], mutating: false, stamps: ["viewer"], needs: null, weight: "read", description: localize("control-plane.declared.interfacewords", "read: every interface word in a language, the group's shown translation or the English, never blank, with the English beside it; writes nothing"), fields: { accepts: ["language", "v"], requires: [] } },` — an op declared by two modules stops the plane's start (`plane/declarations.mjs:182-186`). R-WORDS for UX-DESIGN's HANDOFF: the word `translations.declared.interfacewords` has no row in `setup-words` (the English falls back from `localize`); it needs one, same English.
+
+Tests and checks: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/translations/*.test.mjs`: 44 pass, 0 fail. `checks/format.mjs`: 0 failures. `checks/architecture.mjs … translations`: 0 failures. `checks/coverage.mjs … translations`: 21 of 21 ids named, 0 failures. `checks/ownership.mjs … translations tranche/T51`: 0 failures. `impact.mjs origin/tranche/T51 HEAD`: 8 modules, 200 test files (translations, instance-setup, answer-envelope, store-door, signin-door, screens-action, control-plane, plane). Run as is, 150 files fail, all from `op-declarations: interfacewords: declared by two owners, translations and control-plane (R81)` (answer-envelope, control-plane, plane, 2 instance-setup report files): the row BOB deletes at the merge. With that one row deleted in a scratch edit (reverted, never committed), those files run 941 tests, 924 pass, 2 fail: control-plane's R116/R112 interfacewords test (it asserts the row in control-plane's map; control-plane's to re-point) and an R24 screens-words test (not about this module); plane's g83-location, t42, t44–t47 files fail as files (g83 after 135 s), cause not examined by me. Words check run beyond the module's own words test: none.
+
+Size (session_0125wgcLMbmJWHkUpq5Duamc): test runs 9, module lines 1023
+
+## J5 · COMPLETE · re B5
+
+B5 applied. (1) `interfacewords` declared in translations `DECLARED_OPS` (R21; same classes, weight read, stamps viewer, accepts language+v, requires none, description keyed `translations.declared.interfacewords`, same English; that key has no setup-words row yet, for UX-DESIGN's HANDOFF). (2) Both `store-replies` lines (fixture.mjs) marked `fixtures-contract: store-door store-replies`; they show contract-no-run until store-door's run is merged. Fixture `memberLanguageRead` published (fixtures.mjs, tested). No fixtures-own/generic marker added.
+MUST LEAVE control-plane/owner-ops.mjs in the same merge: lines 33-38 on this branch point, the R116 comment (33-35) and the row `interfacewords: { classes: ["admin","member"], machineClasses: [], mutating: false, stamps: ["viewer"], needs: null, weight: "read", description: localize("control-plane.declared.interfacewords", ...), fields: { accepts: ["language","v"], requires: [] } },`. Until then 150 impacted files fail on R81 (declared by two owners); with it deleted: 924 of 941 pass; 2 fail, control-plane's own R116/R112 test (asserts the row there) and an R24 screens-words test; plane g83-location/t42/t44-t47 fail as files, cause not examined.
+Module tests 44/44; format, architecture, coverage (21 of 21), ownership 0 failures. Record: build/jobs/T51/translations.md.
