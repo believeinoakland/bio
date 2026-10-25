@@ -28,3 +28,8 @@ test("R40 public-read declares verify: its requires alone raise no refusal namin
   await declaredOpHolds({ op: "verify", declaration: DECLARED_OPS["verify"], call: mk("verify", {}),
     refusedNaming: named({}, true), same: sameCode });
 });
+
+test("R40 public-read declares publishedcase (K5195): its requires alone raise no refusal naming a field, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "publishedcase", declaration: DECLARED_OPS["publishedcase"], call: mk("publishedcase", {}),
+    refusedNaming: named({}, true), same: sameCode, outside: ["undeclared_field_publishedcase"] });
+});
