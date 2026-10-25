@@ -123,3 +123,7 @@ C53 met: action-clocks R26. op=remindersfor (read, member and admin) answers rem
 - `checks/format.mjs .`: 0 failures. `architecture`: 0. `coverage`: 26 of 26 live ids, 0. `words`: 0. `fixtures`: 0. `ownership . action-clocks origin/tranche/T51`: 0 failures.
 
 Size (session_01BbaZvVVyVvTx28XGJdeNbi): test runs 8, module lines 2116
+
+## J5 · COMPLETE · re B5
+
+B5 done. pendingClocksRefusal published (fixtures.mjs + fixtures.test.mjs, R1). fixture.mjs:116 now retrieval's actionRegistrar; fixture.mjs:133 now conformance's determinationRead (conformance is earlier, so FIX-E; no markers added). Calendar, lateness and overdue tests re-pointed to its real ids and project. Limit: the fixture has one project, so those tests now tell seen from unseen but not project from project (record). Module tests 87/87; users' tests 17/17; format, architecture, coverage 26/26, words, fixtures, ownership 0 failures. Details in the record.
