@@ -501,3 +501,7 @@ COMPLETE · screens-inquiry #26 · re START B57 (job 107, G135b (4), R130 amende
 **For BOB:** the test boots the OCR member by a recipe stated in the test (a copy of ocr-worker/test/memberworker.mjs's), because ocr-worker is not in screens-inquiry's `uses` and the architecture check refuses the import. Adding `ocr-worker` to the module's uses would let it import the helper (BOB's call). Not covered: a partly read document (`partial`/`cut`) with refused pages still draws pages-unread, not the reasons. Generated artifacts made stale: none.
 
 Size (session_017ynA4AjG9xoWDjtf4KG27R): test runs 5, module lines 6727
+
+## J38 · COMPLETE
+
+COMPLETE (job 107, J37): R130 picture refusal reason drawn on the Document page (G135b (4)); failing-first seam through the real plane and real OCR member, red then green. screens-inquiry 537/537; format, architecture, coverage, words, ownership 0 failures. One request: ocr-worker is not in my uses, so the test states the member's boot recipe itself; add it to uses if you want the shared helper. Details in J37.
