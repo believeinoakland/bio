@@ -51,6 +51,7 @@ import { biasOf } from "../bias/index.mjs";
 import { schedulerOf, viewZone } from "../scheduler/index.mjs";
 import { localDay, dayRange, isCalendarDate } from "../civil-time/index.mjs";
 import { tasksOf } from "../tasks/index.mjs";
+import { projectRosterOf } from "../project-roster/index.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 import { queueProducersOf } from "../queue-producers/index.mjs";
 import { noticeProducersOf } from "../notice-producers/index.mjs";
@@ -120,6 +121,7 @@ export class Queue {
   get #record() { return this.#dep("record", () => recordOf(this.#host)); }
   get #membership() { return this.#dep("membership", () => membershipOf(this.#host)); }
   get #tasks() { return this.#dep("tasks", () => tasksOf(this.#host)); }
+  get #projectRoster() { return this.#dep("projectRoster", () => projectRosterOf(this.#host)); }
   get #connections() { return this.#dep("connections", () => connectionsOf(this.#host)); }
   get #progressions() { return this.#dep("progressions", () => progressionsOf(this.#host)); }
   get #bias() { return this.#dep("bias", () => biasOf(this.#host)); }
@@ -727,6 +729,8 @@ export class Queue {
     /* R57 (T50; N1091, N1204; queue-producers R41, R42): an invitation is answered by joining the project (leaving it is the
        other answer, a member's own on the project), a request by the owners' answer. */
     "project-invitation": "projectjoin", "project-request": "projectrequestanswer",
+    /* Fix round 10 (queue-producers R54; K5157): a request to leave a project is answered by an owner's removal of her. */
+    "project-leave": "projectremove",
     "docket-core-due": Object.freeze(["docketprepare", "docketdecline"]),
     "contradiction-duty": Object.freeze(["contradictionclarify", "contradictiontakeup"]),
     "contradiction-duty-unseen": Object.freeze(["contradictionoptin"]) });
@@ -788,6 +792,7 @@ export class Queue {
     "update-ready": localize("queue.index.this_one_is_a_release", " This one is a release of your team's Civicsmith that is ready to install, one to-do for every administrator, keyed by the release rather than by a task: it leaves every administrator's list when any of them updates, skips the release or puts it aside until a date (op=updatelater), and when the running version is that release or newer. A newer release replaces it."),
     /* R57 (queue-producers R41, R42; membership's project acts). */
     "project-invitation": localize("queue.index.this_one_is_an_invitation", " This one is an invitation to a project, keyed by the invitation and by you rather than by a task: it leaves when you join the project (op=projectjoin) or leave it, or when the invitation is withdrawn."),
+    "project-leave": localize("queue.index.this_one_is_a_participants", " This one is a participant's request to leave a project you own, keyed by the project and the participant rather than by a task: it leaves when an owner removes them (op=projectremove), or when they withdraw the request."),
     "project-request": localize("queue.index.this_one_is_a_members", " This one is a member's request to join a project you own, keyed by the request rather than by a task: it leaves when an owner grants or declines it (op=projectrequestanswer), or when it is withdrawn."),
     /* T34-53 (tasks R3, R14, R15; DEC-135): a task like any other, so its door is taskresolve, which closes only this
        member's own; taking it and recording the check are its other ways out. */
@@ -1895,7 +1900,9 @@ export class Queue {
    *  her or unassigned or resolved by her, and its settled bias debts; `by` the member who resolved it, null when none did,
    *  `by_you` true when she did), `forwarded` (a to-do she forwarded, from the task's own history: `to` is the task's
    *  assignee now when the entry is its latest forward, else null), `snoozed` (each case she snoozed whose snooze is still in
-   *  the future) and `set_aside` (each finding she dismissed or deferred in the window). Only `resolved` rows are about other
+   *  the future), `set_aside` (each finding she dismissed or deferred in the window) and, from R95, `join_answer` (each join
+   *  request she answered in the window, from project-roster's read by `closed_by` (its R44): `{act: "join_answer", project,
+   *  title, requester: {member, handle}, answer: "granted" | "declined", at}`). Only `resolved` rows are about other
    *  members' acts; the rest are the asker's own. A caller with no member gets `resolved` rows only. A row names no subject
    *  or case the viewer may not see (R33). Reads only; never throws on stored text. */
   #answeredList(member, viewer, now) {
@@ -1948,8 +1955,19 @@ export class Queue {
       for (const d of Array.isArray(feed.dispositions) ? feed.dispositions : [])
         if (d && d.decided_by === member && (d.state === "dismissed" || d.state === "deferred") && inWindow(d.at))
           rows.push({ act: "set_aside", scope: "instance", project: null, finding: `FINDING::${d.key}`, state: d.state, at: d.at });
+      /* R95: the join requests she answered; project-roster already leaves out a project she cannot see in full (its R44), and
+         the gate here is the same R33 rule, so a project she is out of names nothing whichever reads it. */
+      let joins = null;
+      try { joins = this.#projectRoster.projectRequestsAnswered({ by: member, viewer, limit: cap }); } catch { joins = null; }
+      for (const j of joins && joins.ok === true && Array.isArray(joins.answered) ? joins.answered : []) {
+        if (!j || typeof j.projectId !== "string" || !inWindow(j.closed)) continue;
+        const p = this.#one(`SELECT b.title FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, j.projectId, ...gate.args);
+        if (!p) continue;
+        rows.push({ act: "join_answer", project: j.projectId, title: typeof p.title === "string" && p.title.trim() ? p.title : null,
+                    requester: j.requester ?? null, answer: j.answer, at: j.closed });
+      }
     }
-    rows.sort(Queue.#newestFirst((x) => `${x.act}\u0000${x.id ?? x.finding ?? x.case.id}\u0000${x.project ?? ""}`));
+    rows.sort(Queue.#newestFirst((x) => `${x.act}\u0000${x.id ?? x.finding ?? x.case?.id ?? x.project}\u0000${x.project ?? ""}\u0000${x.requester?.handle ?? ""}`));
     const page = rows.slice(0, cap);
     return { ok: true, answered: page, count: page.length, window_days: days, bound: cap, truncated: rows.length > cap };
   }
