@@ -1248,3 +1248,11 @@ RESUME (K5179): the oversized `build/plan/audit-r10.md` was split on the tranche
 ## B97 · CHANGE
 
 CHANGE (K5180; CONTROL-PLANE #62 J63, items 42, 69): 'alarm_at was null while a firing was in progress' is workerd's behaviour (getAlarm() answers null while alarm() runs), not a product defect; control-plane fixed its test to read the alarm the way the platform states it. Your `r8-headofline.test.mjs:124` fails identically: fix it the same way (read control-plane's change in `bio-plane/test/m/control-plane/` on the tranche), seen red then green, beside your Wave B.
+
+## B98 · CHANGE
+
+CHANGE (K5183, Bob: the weekly limit is at 99%; the work moves to Bob's primary account). SAVE NOW, before anything else, then stop:
+1. Commit everything you have changed, finished or not, on your job branch (a work-in-progress commit is right; never a reset, rebase or force), merge nothing new, and `git push origin job/T51/<module>`; check it with `git ls-remote`.
+2. Append to your record a section "Saved at K5183": what is done, what is half done (file names), the exact next step, and any worker you stop. Stop your workers.
+3. `mail state --set "WAITING ON BOB (K5183 save)"`, push, and end your turn with the one line `Waiting on BOB (K5183 save). Nothing for Bob to do.` A new session on the primary account continues your job from your record and branch.
+Do not start any long command now.
