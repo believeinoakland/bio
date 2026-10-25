@@ -133,3 +133,7 @@ Size (session_01QNmwftmFAVAy2K1WHsTW8M): test runs 9, module lines 3366
 Merged `tranche/T51` (basis-versions is in action-plans' `uses`). `concluded.test.mjs` no longer holds the two sentences (words `testcopy` flagged them): the still-open `why` is read from the module's own answer for a question nobody concluded, and the concluded one is asserted different from it. Checks (absolute root `/home/user/bio`): module suite 105 of 105; `format` 0; `architecture` 0; `coverage` 53 of 53; `words` 0; `fixtures --list` 0 failures; `ownership` 0. No `fixtures-own` or `fixtures-generic` marker added.
 
 Size (session_01QNmwftmFAVAy2K1WHsTW8M): test runs 14, module lines 3364
+
+## J6 · COMPLETE
+
+B6 (K5131) complete on job/T51/action-plans: a question concluded in the plan's project keeps support hypothetical and its why is the new sentence action-plans.why.suspected_matter_concluded (needs UX-DESIGN review; no words.json row yet). Marked requirement: the Purpose sentence (no R id); BOB strikes the mark. 105 of 105 module tests; users plan-work, following, action-producers, answer-envelope pass; format, architecture, coverage, words, fixtures, ownership 0 failures. No fixtures markers added. Record: section B6 and Change B7/B8.
