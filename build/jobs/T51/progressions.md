@@ -100,3 +100,6 @@ Size (session_011v5ZCTD2aqsukHM8utVFpG): test runs 12, module lines 2228.
 ## J6 · COMPLETE
 
 COMPLETE for B5: fixtures definitionRead, disposeProposalOk, disposeProposalRefusal published (fixtures.mjs + fixtures.test.mjs); own lines provenance/registeredHomes and promotion/makePromotion re-pointed; fixtures list for progressions at 0; progressions tests 90 pass; format, architecture, coverage (48/48), ownership 0 failures. No markers added. Detail in record J5.
+
+## Note on B6 (K5082)
+overdue.test.mjs:93 no longer copies the sentence: it asserts the `why` contains `word("progressions.why.captured_bound_date", {from: "registered", at})`, the `at` read from provenance. `checks/words.mjs /home/user/bio progressions`: 0 failures. Progressions tests 93 pass, 0 fail (tranche merged).
