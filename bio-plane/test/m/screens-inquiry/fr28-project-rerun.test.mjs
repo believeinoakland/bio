@@ -32,7 +32,7 @@ const rowOf = (p, finding) => compare(p).querySelector(`[data-source-finding="${
 const tab = async (p) => { await press(p, "rerunread"); return compare(p); };
 
 test("R107 a rerun project draws its tab; pressing it draws the source's findings, the two grades side by side, the pairing and the lens difference as two lists with their count", async () => {
-  const p = await open(at, { plane: { rerunread: ok(RERUN()), rerunpair: ok({ ok: true }) } });
+  const p = await open(at, { plane: { rerunread: ok(RERUN()) } });
   assert.equal(p.byOp("rerunread")[0].query.project, P);
   assert.ok(says(button(p, "rerunread"), "act.owed_rerunread.label.project"), "the tab");
   assert.ok(says(main(p).querySelector('[data-rerun="head"]'), "screen.project.cmp_head", { title: "port-lease-revenue", edition: "2", team: "west-oakland" })
