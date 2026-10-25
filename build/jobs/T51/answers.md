@@ -141,3 +141,7 @@ T51 fix round 10, follow-up 57 (B5): the state read for R7 (K5131), WALK-FINAL-0
 - `node bio-plane/src/setup-words/build.mjs --check`: only the expected stale-rows note, naming `answers.declared.ruleservicesstate`.
 
 Size (session_01NMnEkwehTCokR9MqCgrgY7): test runs 7, module lines 1930
+
+## J6 · COMPLETE
+
+COMPLETE · ANSWERS #15 · follow-up 57 (K5131). R7 amended: `ruleservicesstate` → {ok: true, on} (arm in answersOps, `Answers.ruleServicesState`), declared in DECLARED_OPS (read, admin+member, no fields). Fixture `ruleServicesState({on = false})` exported from bio-plane/test/m/answers/fixtures.mjs for screens-daily (no fixtures-own/generic markers). Answers tests 75/75; format, architecture, coverage, ownership, fixtures 0; words: only the expected stale rows.mjs note (answers.declared.ruleservicesstate). Record J5 holds the four K4426 fields. For you: op-grades/op-declarations hand tables hold no row for the new op; whether op-grades R49 needs one is theirs. Commit 14a162ecbb pushed.
