@@ -93,3 +93,22 @@ Please add `basis-versions` to conformance's `uses` in `build/modules.json` at t
 `concludeAct` takes only `kind` and `target`, so the returned claim text is the fixture's own wording, not the caller's conclusion. The stand-in's result is used only for its `ok` flag and passed on by `resolve`, so no test in this module reads the wording.
 
 Until the ruling the fixtures check lists one line, `fixture.mjs:178`. Nothing else is open.
+
+## J8 · COMPLETE
+
+Follow-up 7 done (B6, B7). Both lines re-pointed; no fixtures-own or fixtures-generic markers added.
+
+Applied:
+- t45.test.mjs:402: the fenced caseCheckOf refusal takes case-check's published caseCheckOfNoSuchCase().refusal (commit 19fc12e3fe).
+- fixture.mjs:178: the conclude stand-in keeps its promotion write (contradiction's R21 test reads the concluded question through it) and returns basis-versions' concludeAct({kind: "concluded", target}) on success, in place of the hand-built answer. basis-versions is in conformance's uses on tranche/T51 (B7). Commit b49ab14265, after merging origin/tranche/T51 (never a rebase).
+
+Checks by failure count (absolute root /home/user/bio):
+- checks/fixtures.mjs /home/user/bio conformance --list: 0 failures (answer 0)
+- checks/architecture.mjs: 0 failures
+- checks/format.mjs: 0 failures
+- checks/coverage.mjs conformance: 42 of 42 live ids, 0 failures
+- checks/words.mjs conformance: 0 failures
+- checks/ownership.mjs /home/user/bio conformance tranche/T51 job/T51/conformance: 0 failures
+- module tests (bio-plane/test/m/conformance/*.test.mjs): 125 pass, 0 fail
+
+Size (session_01H6qaqGGdsgsJYq9QcBswrD): test runs 4, module lines 0 (source unchanged; test and stand-in lines only)
