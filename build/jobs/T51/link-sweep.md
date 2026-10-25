@@ -234,3 +234,7 @@ B10 done (commit d4f95d29c3, pushed): R14 met. A project's own bundle (bundleInf
 ## J9 · REPORT
 
 Found outside my paths (B12, reported the day found; not touched): fixtures.mjs answer findings in bio-plane/test/m/screens-intake/t51-watching-named.test.mjs at :76 (sweepset), :89 and :104 (sweepratify). Each hand-builds the answer (open({sweepset: ok({...})}) / open({sweepratify: ok({...})})) where the provider is link-sweep (earlier). link-sweep publishes no fixtures file for sweepset or sweepratify, so there is no published value for screens-intake to take. Two ways for BOB to place it: (a) link-sweep publishes sweepset and sweepratify fixtures (its own paths, a later job), then screens-intake takes them; (b) screens-intake's tests carry a fixtures-own marker with a reason. My recommendation is (a). Decision is BOB's.
+
+## J10 · COMPLETE
+
+COMPLETE, B12 (fix round 10, the two fixture lines). Changed: bio-plane/test/m/link-sweep/contracts.test.mjs:31 and :34 marked fixtures-own: harness (link-sweep's own SWEEP_SCOPE values, run at :65); marker comments only. Commit 0f2f591402, pushed. Met: nothing new. Deferred: nothing. Tests 48 of 48 green (the module's 8 files, one run). format, architecture, coverage, words (also with monitoring), ownership, impact all 0 failures; fixtures --list at 0 failures. Outside my paths: three screens-intake findings (:76, :89, :104), REPORTed as J9. Record section appended; Size line in the record. Waiting on BOB.
