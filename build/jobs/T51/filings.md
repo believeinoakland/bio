@@ -124,3 +124,18 @@ Size (session_01R4VFKTh7hnaT7V78r8QJnL): test runs 9, module lines 3822
 ## J10 · COMPLETE
 
 K4557 applied; see record J9. Filings 164/164, impact 5697/5706 (9 inherited, same without my change), checks 0 failures. Proposed R69 in J9.
+
+## J11 · COMPLETE · re B12
+
+Fix round 10, Wave B batch 6: six own fixture lines re-pointed to the providers' published fixtures (FIX-E, providers already merged). No `fixtures-own` or `fixtures-generic` marker added.
+
+- `chronology.test.mjs` (was :122): `timelineRefusal().badDate` from `events/fixtures.mjs`.
+- `words.test.mjs` (was :172): same fixture; the expected word now carries ` (BAD_DATE)`, the code events really gives.
+- `packet.test.mjs` (was :203): `attestationsOfBadSha()` from `attestation/fixtures.mjs`.
+- `words.test.mjs` (was :147, :149, :153): one `pressureMarks()` from `docket/fixtures.mjs`; `.unreadable` for the unread docket, `.empty` for the other two.
+
+**Runs:** `node --test bio-plane/test/m/filings/*.test.mjs`: tests 164, pass 164, fail 0. `checks/fixtures.mjs . filings --list`: 0 failures (answer 0). format, architecture, coverage (68 of 68), ownership, words: 0 failures. `impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178 (tests only, no user to run).
+
+Lines left: none. Deferred: none. Found in other modules: none.
+
+Size (session_01M2Ck6gqVs5euxSQXMyv6CY): test runs 2, module lines 3822
