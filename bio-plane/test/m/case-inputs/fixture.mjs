@@ -63,7 +63,7 @@ export const DEAD = Object.freeze({ ok: false, reason: "NO_REVIEW_COPY", code: "
 
 /* The review provider `review` fills (publication R23), over its own tables as the test holds them. `grants` maps a
    secret fingerprint to `{grant_id, draft_id, case_id, edition, recipient, revoked}`. */
-function reviewProvider(w) {
+export function reviewProvider(w) {
   const identity = (d) => {
     const named = d && d.case_id ? String(d.case_id) : null;
     if (!named) return { caseId: null, edition: 1 };
