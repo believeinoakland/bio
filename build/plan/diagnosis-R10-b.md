@@ -196,3 +196,50 @@ None (arithmetic). Live copy after the fix: `readheld` on a 300-page scan must a
 ### 5. Owner
 
 **`extraction`** (what it publishes: `owedAnswer`/`#ocrEntry`). Requirement for BOB: `extraction` R102 says the row is `{kind:"ocr", sha, cursor, pages_left}` "from each continuation piece" without saying whether `pages_left` is the piece's or the document's; `reading-pipeline` R37 says `ocr_left` is "the first page owed and how many". Silent: the word. MINOR (A10): no member sees the key unless a screen draws it.
+
+---
+
+# G3 · office and archives (R11-R18)
+
+## R11 · a DOCX of 100,000+ objects kills the reader three times; no `TOO_MANY_OBJECTS`; safe view `NOT_RENDERABLE` (A12, C7)
+
+R11 is **three roots**, not one: a memory root and a stack root in the reading, and a safe-view root I could not reproduce. They have different owners (K4427), so they are placed apart below.
+
+### 1. Root cause with evidence
+
+**R11a · memory (the reader is killed before its bound answers).** The recipes (rebuilt exactly): C7 `{kind:"docx", seed:"rw9-C-7c", ladder:"one-cell-tables", size:{partBytes: 19*1024*1024, units:100000}}` = **413,857 B, 100,000 tables, `word/document.xml` 19,922,944 B** (the walker's figures); A12 `{kind:"docx", seed:"rw9-A-12", size:{units:200000}}` = **761,434 B, 200,000 paragraphs, part 16,699,394 B** (the walker's 761 KB).
+
+- `bio-plane/src/ooxml.mjs:210`-`:213` (`textPlan`): a declared text part of at most `MEASURED_OOXML_TEXT_BOUND_BYTES` (20 MiB, `read-bounds.mjs:127`) is read **whole**; both parts (19.9 MB, 16.7 MB) qualify. `docx.mjs:632` reads it as one string (`readText`), then `createDocWalk` walks it (`docx.mjs:413`-`:431`).
+- `docx.mjs:419` counts retained objects and stops at `retainedMax` = 250,000 (`read-bounds.mjs:125`, R44). For C7 the walk reaches **n = 250,001 and stops with `TOO_MANY_OBJECTS`** (I ran `docxEntry.text()` in Node: `undetermined: [{part:"word/document.xml", why:"TOO_MANY_OBJECTS", n:250001, bound:250000, final:true}]`), so the code path that would state the refusal exists. What is wrong is **what the object has spent by the time it gets there.**
+- Measured in Node (`process.memoryUsage()` heap + external, sampled every 2 ms; `--expose-gc` first): `docxEntry.text()` on C7 goes from **49 MB to a peak of 136 MB**; on A12 from **46 MB to 136 MB** (`structure()` peaks at 89-92 MB). The plane's object limit is 128 MB, the same limit `bio-plane/test/m/reading-pipeline/memory.test.mjs` states ("the whole read with its bytes under 96 MB (the object's limit is 128)"). Under a V8 heap limit, the same reads: pass at `--max-old-space-size=128`, **die with V8 out-of-memory at 96 and at 64** (both files). The live copy is the 128 MB case with the plane's own state beside the read, which is why the ledger saw `OBJECT_STOPPED`, `attempts` 1, 2, 3, then `final` with `PAGE_KILLED_READER` (A12, C7) and no refusal.
+- The memory is the string of the part (a vocabulary with CJK makes it a two-byte string, so 16.7-19.9 M characters are 33-40 MB), the inflated buffer, and the walk's per-object records for up to 250,000 objects. R44 says the body is refused "**before the walk**" (`build/requirements/office-readers.md` R44); the code counts **during** the walk, and 250,000 objects of these shapes cost about 90 MB.
+
+**R11b · stack (a reading of 120,000+ paragraphs with parts throws).** `bio-plane/src/reading-pipeline/index.mjs:1020`: `let seq = out.length ? Math.max(...out.map((u) => u.seq)) + 1 : 0;` in `allUnitsOf`, reached from `textUnitsFor` (`:1081`, `readInner` `:3210`). A spread of 200,000 arguments overflows the call stack. In Node, at a 128 MB heap, A12 passes the entry and then fails here: `reading` `failure: final`, "the docx entry could not read these bytes (Maximum call stack size exceeded)", 0 units (I hooked the catch at `:3262` to print the stack: `RangeError ... at allUnitsOf (index.mjs:1020:31)`, `at textUnitsFor (:1081)`). It needs `i2text.parts` set (a docx with notes, headers or a table part). V8's limit is stack-size bound, so workerd's threshold is at or below Node's about 120,000; any DOCX of that many paragraphs and one part would hit it **after** R11a is fixed. This is a second, independent defect that R11a's fix will uncover.
+
+**R11c · the safe view (NOT reproduced).** `file-scanner/container/renderer.mjs:209`/`:216`-`:223`: for a DOCX the container gates on `officeInfo` (entries, directory: both pass for A12 and C7; I ran `officeInfo` on both: `{app:"writer", pages:null}`, no limit), then asks LibreOffice for pages `1-(max+1)`; a failed conversion or an unreadable page count answers `NOT_RENDERABLE`. The Worker (`file-scanner/src/render.mjs`, the `message` branch) passes a `message` **only for `RENDER_FAILED`**, so a `NOT_RENDERABLE` reaches the plane with `renderer_detail` null. That is exactly the walk's row (`SAFE_VIEW_FAILED`, `renderer_reason NOT_RENDERABLE`, `renderer_detail null`), and it is why the member sees the generic sentence. **Why LibreOffice produced no PDF I did not observe**: `soffice` is installed here, but the environment refused my run of it (`--convert-to pdf:writer_pdf_Export` on the A12 file), and I did not try another route. K4428's "unknown only with a reproduction" therefore applies: **R11c is UNKNOWN as to the cause inside the container**; the reproduction owed is stated in 4.
+
+### 2. Why the tests missed it
+
+- `bio-plane/test/m/office-readers/scan-bounds.test.mjs:111`-`:155` (R44) builds its over-bound bodies as **small strings** (`"<w:p/>".repeat(250001)` is 1.5 MB; `"<w:tbl><w:tr><w:tc><w:p/></w:tc></w:tr></w:tbl>"` repeated is 3.6 MB) and asserts the refusal. It never builds the walker's equal-bytes rungs (a 19-20 MB part); the generator's `ladder` option exists for exactly that (`docgen.mjs:10`, `:58`) and no office-readers test uses it.
+- `r46-memory.test.mjs` (the memory discipline) is for **workbooks** (R46 "A workbook is read within its memory"); no requirement or test gives a DOCX the 85 %-of-cap margin.
+- `reading-pipeline/memory.test.mjs` has the 64/96 MB convention but only for PDFs.
+- `Math.max(...)` at `index.mjs:1020` is exercised only with a handful of parts and a few hundred units.
+- file-scanner `render.test.mjs:105`-`:123` asserts `NOT_RENDERABLE` for **a text file given as office** (the not-a-document case), never an over-long real document.
+
+### 3. Failing-first tests
+
+- **R11a, `office-readers`:** new `bio-plane/test/m/office-readers/r47-docx-memory.test.mjs` using the child-process pattern of `r46-peak-child.mjs`: `generate(C7 recipe)` and `generate(A12 recipe)` (above), `docxEntry.text(bytes)` in a child with `--max-old-space-size` set so heap + external may not pass `capFor(128)` x 0.85 (the module's own margin, `runtime-limits`). Asserts: the child ends normally, and `undetermined` carries `TOO_MANY_OBJECTS {n, bound}` for C7 (a 250,000-object stop), and for A12 a **full read** (200,000 < 250,000) with the peak under the margin. **Seen red:** yes, as V8 OOM at 96 MB heap for both (above) and a 136 MB peak.
+- **R11b, `reading-pipeline`:** a `read()` of the A12 DOCX through `fresh()` (the fixture used above), asserting `found`/units: 200,000 text units are produced (or the piece budget applies) and `failure` is absent. **Seen red:** yes (RangeError at 1020).
+- **R11c, `file-scanner`:** (i) a Worker test that a container `NOT_RENDERABLE` carrying a `message` reaches the answer's `message` (a two-line change to the table at `render.mjs`, seen red by reading: the branch exists only for `RENDER_FAILED`); (ii) the real conversion of the A12 DOCX in the image: not run.
+
+### 4. Platform check
+
+- R11a: the real shape is the 128 MB object with the store in it. The check: the plane's `g41-shape.test.mjs` (G41, "the whole case at the platform's shape") run with the C7 and A12 DOCX in place of the xlsx, on `capFor(128)` and the 85 % margin; and on the live copy the `ledger` row must end `final` with `TOO_MANY_OBJECTS {n}` (C7) or `whole` (A12) with `attempts` 1.
+- R11c: owed. On the live renderer container (`SafeViewRenderer`): `curl` the A12 DOCX through `/render?route=office` with the container's log open, or run `renderer.mjs`'s `convert()` on a machine where LibreOffice may run; record the converter's own stderr and the peak memory. Until then the cause of the container's refusal is unknown.
+
+### 5. Owner
+
+- R11a: **`office-readers`**. Requirement for BOB: **R44** says "refused **before the walk**", and its bound is a count (250,000 objects) with no memory figure; R46 gives the 85 % margin to workbooks only. The requirement is silent on a DOCX's memory and wrong in that a count of 250,000 of these objects already costs more than the object has. Options for BOB (his call): a bytes-per-object cost in the pre-walk check (the part's declared size and the tags counted by a cheap pre-scan), or an R46-like peak margin for DOCX/PPTX with the bound lowered to what that margin allows.
+- R11b: **`reading-pipeline`** (a code defect; the spread at `:1020`, and I did not search the module for others: `grep -n "Math.max(\.\.\." bio-plane/src/reading-pipeline/index.mjs` is the job's first step).
+- R11c: **`file-safety`/`file-scanner`** (K4427: the renderer's module is `file-scanner`): the message loss is certain; the cause inside the container is not.
+- The sentence the member reads ("The renderer refused the file", A12; "Unread" with a Read it button, C7) is G1/R1 and the Document page's.
