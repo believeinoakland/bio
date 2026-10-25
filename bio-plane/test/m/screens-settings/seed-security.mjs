@@ -23,9 +23,6 @@ export async function holdKey(as, w, key = "sk-ant-api03-SENTINELKEY") {
   return key;
 }
 
-/** The faults a world cannot make: a read that never answers. */
-export const SILENT = Object.freeze({ projectlist: "none" });
-
 /** The team's spend, as a counter row of the day (WORLD GAP: only a model call's recording makes one, and the model is a platform the
  *  world does not hold; nothing else is seeded). `day` defaults to the first of the month the world's clock stands in. */
 export function spend(w, dollars, day = new Date(w.now()).toISOString().slice(0, 8) + "01") {
@@ -89,7 +86,6 @@ export function ceiling(w, observed) {
 }
 
 /* ---- Security ---- */
-import { WORLD_NOW } from "../store-request/fixtures.mjs";
 import { handle as scannerHandle } from "../../../../file-scanner/src/handler.mjs";
 import { memoryBucket, depsWith, json, mirrorTestSet } from "../../../../file-scanner/test/helpers.mjs";
 import { vendorNet } from "../../../../file-scanner/test/vendors.mjs";

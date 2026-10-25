@@ -148,3 +148,20 @@ export const PLACES = (a, b) => ({
   factstatus: { ok: true, result: { ok: true, facts: [zoneFact("us-ca-oakland", a), zoneFact("us-ca-sf", b)] } },
 });
 export const OFFICE_ZONE = (zone) => ({ factstatus: { ok: true, result: { ok: true, facts: [zoneFact(PROFILE, zone, "clerk")] } } });
+
+/** WORLD GAP: the interface's word list is the 26,000 words of setup-words, and the answer of `translations` lists every one; the page draws a row for
+ *  each, which the test's document stand-in cannot draw in a test's time. The same real answer with only the words the test is about. */
+export const onlyWords = (as, keys) => async (q) => {
+  const r = await as.read("translations", { query: q });
+  return { ok: true, result: { ...r, words: r.words.filter((w) => keys.includes(w.key)) } };
+};
+
+/** SEED, no act makes it (the assistant's draft is asked by the door, which the world's does not do): a draft of the word `key` in `language` as
+ *  the assistant kept it, asked by `by` (translation_drafts). Answers the draft's id as the owner then lists it. */
+export function draftOf(w, language, key, text, by, byName = by) {
+  return w.sql.exec("INSERT INTO translation_drafts (language, key, en, text, label, asked_by, asked_name, at) VALUES (?, ?, ?, ?, 'Draft', ?, ?, ?) RETURNING seq", language, key, "", text, "member:" + by, byName, iso(w)).toArray()[0].seq;
+}
+/** SEED, no act makes it (the English is the release's, and a release does not change in a test): the English a kept translation was made from. */
+export function englishWas(w, language, key, was) {
+  w.sql.exec("UPDATE translation_adoptions SET en = ? WHERE language = ? AND key = ?", was, language, key);
+}

@@ -5,7 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { acts, all, ancestor, day, has, lacks, open, panelOf, said, textOf, SCREENS } from "./kit.mjs";
 import { env } from "./fixtures.mjs";
-import { scannerTeam, burstTeam, hardTries, handleOf } from "./seed-security.mjs";
+import { scannerTeam, burstTeam, handleOf } from "./seed-security.mjs";
 
 const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].sort();
 const HOUR = 3600000;
