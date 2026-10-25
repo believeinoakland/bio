@@ -8,6 +8,7 @@ import { createHash } from "node:crypto";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf, credentialsOps } from "../../../src/credentials/index.mjs";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
+import { coreOver } from "../record-core/fixtures.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
@@ -29,39 +30,14 @@ export const FOUNDER_HANDLE = "founder";
 /* (T47; R70) the sign-in token a member's Claude Code `setup-token` would print, one per member, a sentinel. */
 export const SIGNIN_TOKEN = (id) => `sk-ant-oat01-sentinel-${id}-0123456789`;
 
-/* A record-core stub whose `declarePurge` and `declareTable` answer as record-core's R21 does: a table declared twice,
-   or by two modules, is refused naming its holder; an entry missing a class, or with a value outside R21's, is
-   refused naming the table and the class; a refused declaration declares nothing. */
-const TABLE_CLASSES = { purge: ["clear", "exempt"], expunge: ["tombstone", "none"], export: ["yes", "admin-only", "never"],
-  sight: ["group", "bundle", "source", "owner"], derive: ["stored", "derived-rebuildable"], version_chain: [true, false] };
-function stubCore(db) {
-  const declared = new Map();
-  return {
-    declared,
-    bundleInfo(id) {
-      const r = db.prepare(`SELECT bundle_id, object_type, title, project FROM bundles WHERE bundle_id=?`).get(bind(id));
-      return r ? { id: r.bundle_id, type: r.object_type, title: r.title, project: r.project ?? null } : null;
-    },
-    declarePurge(module, tables = [], { exempt = [] } = {}) {
-      const names = [...tables.map((t) => (typeof t === "string" ? t : t.name)), ...exempt];
-      for (const n of names)
-        if (declared.has(n)) return { ok: false, reason: "TABLE_DECLARED", table: n, module, declaredBy: declared.get(n).module };
-      for (const n of tables) declared.set(typeof n === "string" ? n : n.name, { module, exempt: false });
-      for (const n of exempt) declared.set(n, { module, exempt: true });
-      return { ok: true };
-    },
-    declareTable(module, entries = []) {
-      for (const e of entries) {
-        if (declared.has(e.name)) return { ok: false, reason: "TABLE_DECLARED", table: e.name, module, declaredBy: declared.get(e.name).module };
-        for (const [cls, values] of Object.entries(TABLE_CLASSES)) {
-          if (!(cls in e)) return { ok: false, reason: "TABLE_CLASS_MISSING", table: e.name, class: cls };
-          if (!values.includes(e[cls])) return { ok: false, reason: "TABLE_CLASS_UNKNOWN", table: e.name, class: cls };
-        }
-      }
-      for (const e of entries) declared.set(e.name, { module, exempt: e.purge === "exempt", classes: { ...e } });
-      return { ok: true };
-    },
-  };
+/* record-core over the test's own database, as record-core publishes it (`coreOver`, its fixtures.mjs): its real
+   `declarePurge`, `declareTable` and `bundleInfo`. `declared` reads the declarations back from record-core, keyed by
+   table, as `{module, exempt, classes}`. */
+function coreWithDeclared(db) {
+  const core = coreOver(db);
+  Object.defineProperty(core, "declared", { get: () => new Map(core.rc.declaredTables().map((d) => [d.name,
+    { module: d.module, exempt: d.purge === "exempt", classes: d }])) });
+  return core;
 }
 
 /* The seal secret the composition root hands in (R23, R29); a test world binds one unless told not to. */
@@ -69,8 +45,7 @@ export const SEAL = "test-seal-secret-0123456789";
 
 export function world({ sealSecret = SEAL } = {}) {
   const db = new DatabaseSync(":memory:");
-  db.exec(`CREATE TABLE bundles (bundle_id TEXT PRIMARY KEY, object_type TEXT NOT NULL, title TEXT, project TEXT)`);
-  const core = stubCore(db);
+  const core = coreWithDeclared(db);
   const sql = sqlOver(db);
   const ctx = { storage: { sql } };
   const m = membershipOf(ctx, { record: core });
@@ -105,7 +80,7 @@ export function world({ sealSecret = SEAL } = {}) {
     },
     /* (T40) A project bundle created by `owner` through membership's own act (its R71), with its visibility. */
     project(id, owner, visibility = "hidden") {
-      db.prepare(`INSERT INTO bundles (bundle_id, object_type, title) VALUES (?, 'project', ?)`).run(id, `Project ${id}`);
+      core.addBundle(id, "project", `Project ${id}`);
       m.projectCreated({ projectId: id, ownerId: owner, visibility, by: owner });
       return id;
     },
