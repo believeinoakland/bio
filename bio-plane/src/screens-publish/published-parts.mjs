@@ -120,6 +120,9 @@ export const PUBLISHED_PARTS = Object.freeze({
     const docs = o && (o.link || o.open) ? P.legs(f).map(function (l) { return P.docLine(cs, l); }).filter(Boolean) : [];
     return '<article class="mk-finding" data-finding="' + cs.esc(id) + '">' + head + '<p class="rec mk-fbody">' + cs.esc(P.claimOf(view, f) || body.question || f.title || "")
       + "</p><p>" + line + "</p>"
+      // 10B C5 (R94 a): an axis the frozen pair does not grade says so, in the plane's own sentence (`strength[].detail`)
+      + (Array.isArray(f.strength) ? f.strength.filter(function (x) { return x && (x.state === "unrated" || x.state === "undetermined") && typeof x.detail === "string" && x.detail.trim(); })
+        .map(function (x) { return '<p class="mk-small" data-ungraded="' + cs.esc(String(x.axis || "")) + '">' + cs.esc(x.detail) + "</p>"; }).join("") : "")
       + (why ? '<p class="mk-small" data-falsifier><b>' + cs.w("screen.published.what.would.overturn.it") + '</b> <span class="rec">' + cs.esc(why) + "</span></p>" : "")
       + (docs.length ? '<p class="mk-small"><b>' + cs.w("screen.published.evidence") + '</b></p><ul class="mk-list" data-evidence-names>'
         + docs.map(function (d) { return "<li>" + d + "</li>"; }).join("") + "</ul>" : "")

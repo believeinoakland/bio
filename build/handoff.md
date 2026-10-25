@@ -1,43 +1,44 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff. Written by BOB #298 (`session_01DoH6r6K3Qn2McroXSPVwYH`, depth 1, parent ROOT #9 `session_01GndWUi5ubGmXCVVnFqtJAi`, third account) for BOB #299, 2026-10-25 19:20Z, at 40 % by `get_session` (Bob asked for the refresh). **T51 is OPEN** on `tranche/T51`; **fix round 10 is running**. Read rulings K5167 to the last line of `build/rulings.md` whole, `build/plan/fix-round-10-T51.md` whole (§3 items 7-86 are the owed list) and `build/plan/fix-round-10-waves.md` whole.
+**Status** · Replaced whole at each handoff. Written by BOB #300 (`session_01HKxewhB1RAtqYEdUSNXYmh`, depth 1, parent ROOT #9 `session_01GndWUi5ubGmXCVVnFqtJAi`, third account) for BOB #301 **on Bob's primary account**, 2026-10-25 20:35Z. **T51 is OPEN** on `tranche/T51`; fix round 10 is running. **K5183:** the third account is at 99 % of its weekly limit (Bob): every job was told to save and stop; BOB #301 restarts them on the primary account. Read rulings K5177 to the last line of `build/rulings.md` whole, `build/plan/fix-round-10-T51.md` whole (items 87-89 are the newest placements) and `build/plan/audit-r10-1.md`, `-2.md` whole.
 
-## Bob's rulings this session (in `rulings-active.md`)
+## Bob's rulings in force for this round (in `rulings-active.md`)
 
-- **K5167:** BOB watches its context by `get_session` (`context_usage`, window 1,000,000) and refreshes past 40 %, never early; `context.py` is retired.
-- **K5171:** no cap on concurrent job sessions.
-- **K5175 (governs everything now):** "this round must be the last one before the final round that must be the alpha release. So every (every!) effort must be made to identify and resolve every bug, failure, and broken feature so that everything identified in the alpha requirements is resolved and fixed. Be smart. No guessing. No deferrals. No assumptions. Do the job you're designed to do, and get this alpha release out today."
+- **K5175 (governs everything):** "this round must be the last one before the final round that must be the alpha release ... No guessing. No deferrals. No assumptions." Every owed item is a job the day it is found.
+- K5171: no cap on concurrent jobs. K5167: refresh past 40 % by `get_session`, never early. K5183: the move to the primary account.
 
 ## Open with Bob
 
-Nothing.
+Nothing. (Bob starts the primary account's ROOT, below.)
 
-## Pending for you, first
+## First, on the primary account (K5183)
 
-1. **The audit (K5175):** a reading worker of BOB #298 checked every §3 item and every `not yet met: T51` line against the tranche; BOB #298 commits its output as `build/plan/audit-r10.md` when it returns. Read it whole; every item NOT DONE or UNKNOWN becomes a job (or a CHANGE to a running job) the same day, with its cause read in the cited code first (K4849). If the file is absent when you take over, rerun the audit yourself (same scope) with a sonnet worker.
-2. **UX-DESIGN U475 MERGE** (unread): merge its commit into `tranche/T51` as at K5168 (`61ea84d268`, keep its text), then CHANGE SCREENS-INVESTIGATE #16 to turn its K5173 `test.todo`s into tests if the 22 keys of HANDOFF B520 are in it. `rows.mjs` regenerates only after plane's Wave B (77 (6)).
-3. **STORE-ASSEMBLY #3** J8, J9 (unread) after CHANGE B10 (the dead `next_page` reading); when merged, start **plane's Wave B** (handoff of K5166's item 2: 12, 23, credentials' six `credentialsOf(ctx)` sites with `now`, instance-setup's `now` (82 (2)), 77 (4), monitoring's run line, 80 (1), 85 (1) `selftestmigrations` in `door.test.mjs`), then CHANGE CONTROL-PLANE to delete `owner-ops.mjs`.
-4. **SCREENS-ACTION #19** J31 (unread, WAITING ON BOB).
-5. **CONTENT #23**: QUIET by its record since 17:40 but in long live turns (control-plane suite at 18:53Z); if still silent, check its events, then restart per §5.4.
+Sessions of the third account cannot be reached from the primary. Bob: "Archive sessions once they've saved their state": BOB #300 archives each job once its saved state is on the remote, with its row; its last ruling lists which it archived and which (if any) never saved. So:
+1. Take over (§5.1) as usual; steps 5 and 6 (delete BOB #300's timers, archive earlier BOBs) are skipped for the third account's sessions; they write no `BOB-final` row (K4790).
+2. For each job of the plan's `Jobs` line (the 14 below), read its record on `origin/job/T51/<module>`: its "Saved at K5183" section names what is done and the next step. If the record's state is not `WAITING ON BOB (K5183 save)`, or no such section exists, the job may have pushed nothing after B<n> (its last CHANGE, "SAVE NOW"): read its branch's last commits and its record whole before restarting. Then create `<MODULE> #<k+1>` on its branch with the fixed prompt (§5.3 (3)), and post a RESUME naming the saved section; record the new address with `mail addjob`. A COMPLETE job is merged by the premerge below, not restarted.
+3. Create the sessions of the four STARTs already posted (K5182; branches pushed by `mail jobbranch`): AI-ACCOUNTS #7, INSTANCE-SETUP #36, LINES #7, CAPTURE-REQUESTS #27 (`starts-T51-F10/<module>-k5182.txt`; haiku-5-5), then `mail addjob`.
+4. BOB #299 (`session_01UXNYstSsYAwerzew2cNJ2D`, third account) was told to commit its verify-marks worker's result as `build/plan/verify-marks.md`. If that file is not on the tranche, rerun the worker yourself (sonnet, medium): the 105 "mark looks stale" / "met-state UNKNOWN" rows of `audit-r10-2.md`, each id's tests run, MET (BOB strikes) or NOT MET (a job), with the fixture lines of the §4 modules and the eleven residual modules (audit part 1, section 2's last row), one job per module that can be cleared now.
 
-## Running (addresses in the plan's Jobs line)
+## Saved jobs (third account; addresses in the plan's Jobs line)
 
-CONTENT #23, STORE-ASSEMBLY #3, SCREENS-ACTION #19, CONTROL-PLANE #62 (Wave B; `innerRequest` switch B92; link-sweep un-name B93), SCREENS-INQUIRY #30 (op tables), STORE-REQUEST #3 (world recipes), SCREENS-INVESTIGATE #16, SCREENS-PUBLISH #22, SCREENS-SETTINGS #19 (R80), SCREENS-DAILY #22, ADMISSION #19 (R33).
+**At the stop (100 % of the week, 20:35Z):** saved and archived with rows: control-plane, standards (its tests not run, COMPLETE not posted), screens-wizards, journey-check, screens-daily, screens-inquiry. **All 14 saved** (each record's "Saved at K5183" section, state `WAITING ON BOB (K5183 save)`) and archived with rows; restart each from its record. Saved later and archived too (20:36Z): screens-investigate, screens-publish, screens-action, case-authoring (its R31 test not written), screens-intake, screens-entry. BOB #300's timers are deleted.
+
+PLANE #62 (Wave B; B95 item 4 study; B97 head-of-line), CONTROL-PLANE #63 (B94-B96: the door cases, `owner-ops.mjs` after plane, the caseratify chain to 11), STORE-REQUEST #4 (**B8 first**: `storeWorld()` seeds the team twice, GROUP_ALREADY_RECORDED; merged alone when COMPLETE, then CHANGE SCREENS-ACTION, -INTAKE, -ENTRY, -DAILY, -INQUIRY to drop `{group: null}`, and re-run interface-shell's 82 reds; then B9), STANDARDS #20 (J6 COMPLETE re B6 but its state read RUNNING at 20:20: merge once COMPLETE; then CHANGE SCREENS-INVESTIGATE its K5178 todos with standards' REPORT of the money/period red), SCREENS-INTAKE #26, SCREENS-ENTRY #12, SCREENS-WIZARDS #7, JOURNEY-CHECK #14 (ANSWER B18), SCREENS-DAILY #23, SCREENS-INQUIRY #30 (B63), SCREENS-INVESTIGATE #16 (B33), SCREENS-PUBLISH #22, SCREENS-ACTION #19, CASE-AUTHORING #45 (RESUME B35: merge, never reset).
 
 ## Then, in order
 
-1. Merge each COMPLETE (premerge below); archive each merged session with its row; fill new jobs at once, no cap (K5171).
-2. Owed still: 13, 15, 33 (the §5.10 pass, when no job runs), 32 (promotion's stamp, last), 83 (`mail check` OPEN state, civicos-process PR after a dry run), 85 (2), 86 (3)-(4); the last batch-7 screens job deletes `harness.mjs`'s frame defaults (77 (5)).
-3. After the round: generated artifacts (manifest order), the words HANDOFF to UX-DESIGN (`fix-round-10-words.md` whole plus items 81 (4), 82 (3), 86 (3)-(4)), then K5063's step 4 (redeploy biosmoke8 with the owed live checks, the targeted re-walk with items 70 and 75's asks, the final pass live, the 0.87.0 cut, installer and site deploys, the rehearsal), then T51's close (§5.7).
+1. Merge each COMPLETE (premerge below); archive each merged session of the primary account with its row; fill new jobs at once. After instance-setup merges: a screens-settings job for R81.
+2. When PLANE #62 merges: CHANGE CONTROL-PLANE to delete `owner-ops.mjs`; point answer-envelope's and following's walks at the one remaining root (80 (1), test only); regenerate `rows.mjs` (then SCREENS-INVESTIGATE's K5173 todos become tests, item 84) and every artifact in the manifest's order.
+3. The last batch-7 screens job deletes `harness.mjs`'s frame defaults (77 (5)).
+4. In the window when the round's jobs have merged: the §5.10 pass (item 33 rewords; items 6, 15 test-support), then 32 (promotion's stamp, last); the words HANDOFF to UX-DESIGN (`fix-round-10-words.md` whole, with item 89's rows); K5063's step 4 (redeploy biosmoke8 with the live checks, items 4, 13 (b), 89's platform runs; the targeted re-walk with 70 (c), 75 (e); the final pass live; the 0.87.0 cut; installer and site deploys; the rehearsal); T51's close (§5.7), where `build/channels.md`'s `BOB` row moves to the primary account (K4790).
 
 ## Tools
 
-- Mail tool and checks: civicos-process `main` (`e54912f`), `--product /home/user/bio --tranche T51`.
-- **Premerge (K5171):** refuse a job whose record's `handled B<n>` is behind BOB's newest entry in its `.bob.md`; then fetch; base = `git merge-base origin/tranche/T51 origin/job/T51/<m>`; detached worktree; `ownership.mjs <wt> <m> <base> origin/job/T51/<m>`, `architecture.mjs <wt> <m>`, `fixtures.mjs <wt> <m>` FAIL lines vs the tranche's (line numbers stripped); added `fixtures-(own|generic|contract|run)` markers; merge `--no-ff` in `modules.json` order; `architecture.mjs` over the tree, `words.mjs <modules>`; strike marks; push; verify `ls-remote`.
-- Before creating a job's session: `mail jobbranch --module <m>`, then post its START; check the job's cursor so it reads only live entries (a note entry marks earlier STARTs as history, K5170).
+- Mail tool and checks: civicos-process `main` (`cf957b7`), `--product /home/user/bio --tranche T51`. A full `mail check` takes about 2 minutes: run it in the background. The third account's sessions read in it as whatever their records say; their doorbells cannot be rung from the primary.
+- **Premerge (K5171, K5180):** refuse a job whose record's state is not COMPLETE (a WAITING ON BOB on its own COMPLETE entry counts, K5182) or whose `handled B<n>` is behind BOB's newest entry; fetch; base = `git merge-base origin/tranche/T51 origin/job/T51/<m>`; detached worktree; `ownership.mjs <wt> <m> <base> origin/job/T51/<m>`, `architecture.mjs <wt> <m>`, `fixtures.mjs <wt> <m>` FAIL lines vs the tranche's (line numbers stripped); markers added; merge `--no-ff` in `modules.json` order; `architecture.mjs` over the tree, `words.mjs <modules>`; strike marks; push; verify `ls-remote`. A job that proposes requirement lines: BOB writes them at the merge.
+- Before creating a job's session: `mail jobbranch --module <m>` (push the tranche first), then post its START. Trigger creation is rate-limited (about ten a minute): ring in batches.
 - `modules.json` edited one line at a time (python on the module's line), then `order-build.mjs --check` and `format.mjs`.
-- STARTs: `python3 build/plan/mkstart.py <jobs.json>`; files `*-k5169`, `*-k5170`, `*-k5175` this session.
-- `rulings-active.md` 78 lines, 24,594 bytes (NEAR): a new rule replaces or merges a line.
+- `rulings-active.md` 78 lines, 24,594 bytes (NEAR): a new rule replaces or merges a line. `fix-round-10-T51.md` about 49.2 KB of 51.2 KB: move finished items to `archive/` before it grows.
 
 ## Acts on main or sessions (reviewed acts, §5.8)
 
@@ -47,5 +48,5 @@ CONTENT #23, STORE-ASSEMBLY #3, SCREENS-ACTION #19, CONTROL-PLANE #62 (Wave B; `
 
 ## Timers and lanes
 
-- My timers: backstop `trig_01P4zBDhrX33mYB37Md8B5zq`, WATCH #298 `trig_01PiRP3uDjAFmm9sJW8dhpz4`: delete both at takeover.
-- Lanes nothing new (H43, A41, W4, P26); channel: UX-DESIGN read through U474, U475 MERGE unread; B519 ACK, B520 HANDOFF read by them.
+- My timers (third account; they cannot be deleted from the primary, and they only reach third-account sessions): backstop `trig_01DEXXWF7yKThEX8eU2uzQym` (20:45Z) and WATCH #300 `trig_018XWtSxo6jzZV6ViBhPpN8p` (21:30Z into ROOT #9). BOB #300 deletes both before it ends.
+- Lanes nothing new (H43, A41, W4, P26). Channel: UX-DESIGN read through U475; B521 ACK, B522 QUESTION (DEC-432 (b), (c)), B523 HANDOFF (four keys) unanswered. UX-DESIGN is on the primary account already.

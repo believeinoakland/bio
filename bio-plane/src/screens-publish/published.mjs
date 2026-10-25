@@ -62,10 +62,19 @@ export const PUBLISHED = Object.freeze({
     // R39: the print layout, drawn for the printout and put back by `printed`; R38: the reader's own filtered view
     if (ui.print) return P.printLayout(cs, view, e, caseId, head, group);
     if (P.floorOf(view)) return P.filtered(cs, view, e, caseId, head);
+    // 10B C5 (R94 k): the case's id and its manifest's hash, as the answer states them, beside the title
+    const mani = /^[0-9a-f]{64}$/.test(String(e.manifest_sha || "")) ? String(e.manifest_sha) : "";
+    out.push('<p class="mk-small" data-case-head><span class="id" data-case-id>' + cs.esc(caseId) + "</span>"
+      + (mani ? ' · <span class="id" data-manifest style="overflow-wrap:anywhere">' + cs.esc(mani) + "</span>" : "") + "</p>");
+    // R96 (a): beside the pointer to the next edition, its What-changed as that edition states it; a successor an order withholds is pointed to,
+    // with the plane's detail and no statement
+    const next = e.successor && typeof e.successor === "object" ? e.successor : null;
     out.push(dated
       + editions.filter(function (x) { return String(x.edition !== undefined ? x.edition : x) !== String(e.edition); }).map(function (x) {
         const n = String(x.edition !== undefined ? x.edition : x);
-        return ' · <a href="/app/published/' + encodeURIComponent(caseId + "/" + n) + '" data-nav>' + cs.w("screen.published.edition", { n: n }) + "</a>";
+        const said = next && String(next.edition) === n ? (typeof next.statement === "string" && next.statement.trim() ? next.statement.trim() : next.withheld && typeof next.detail === "string" ? next.detail : "") : "";
+        return ' · <a href="/app/published/' + encodeURIComponent(caseId + "/" + n) + '" data-nav>' + cs.w("screen.published.edition", { n: n }) + "</a>"
+          + (said ? ' <span class="rec" data-successor="' + cs.esc(n) + '">' + cs.esc(said) + "</span>" : "");
       }).join("") + "</p>");
     if (e.withdrawn) out.push('<p role="status">' + cs.w("screen.published.withdrawn") + "</p>");
 
@@ -75,7 +84,10 @@ export const PUBLISHED = Object.freeze({
     // The findings: each with its two strengths and whether it meets the project's bar.
     const findings = Array.isArray(e.findings) ? e.findings : [];
     // R37: each finding is the way to its own page; R38 and R39 come after the case's acts
-    out.push(P.sec(cs, "screen.published.findings", findings.map(function (f, i) { return P.card(cs, view, f, i + 1, e, caseId, { link: true }); }).join("")));
+    // 10B C5 (R94 a): a case that declared no bar says so, in the plane's own sentence (`bar_detail`); null here is no standard, not a bar of zero
+    const bare = !e.bar || typeof e.bar !== "object" || e.bar.declared === false || (!e.bar.capture && !e.bar.connection);
+    out.push(P.sec(cs, "screen.published.findings", findings.map(function (f, i) { return P.card(cs, view, f, i + 1, e, caseId, { link: true }); }).join("")
+      + (findings.length && bare && typeof e.bar_detail === "string" && e.bar_detail.trim() ? '<p class="mk-note" data-bar-none>' + cs.esc(e.bar_detail) + "</p>" : "")));
 
     // Its timeline, the people it names and its evidence, as the edition carries them.
     const timeline = e.method && Array.isArray(e.method.timeline) ? e.method.timeline : Array.isArray(e.timeline) ? e.timeline : [];
@@ -127,8 +139,20 @@ export const PUBLISHED = Object.freeze({
       }).join("")) : ts ? '<p class="mk-note" data-none>' + cs.w("screen.published.the_team_disclosed_no_contradictions") + "</p>"
         : '<p class="mk-note" data-before>' + cs.w("screen.published.this_edition_was_signed_before") + "</p>"));
     }
-    if (typeof e.bias_acknowledgement === "string" && e.bias_acknowledgement.trim()) {
-      out.push(cs.sec("screen.published.the_lens_this_team_read", '<p class="rec" data-bias>' + cs.esc(e.bias_acknowledgement) + "</p>", { help: "screen.published.the_lens_this_team_read2" }));
+    // 10B C5 (R94 c): the lens as the signed document prints it (the acknowledgement, each statement with its justification, the closing sentences);
+    // an edition that carries only the lens's fingerprint says so
+    const lens = e.lens && typeof e.lens === "object" ? e.lens : null;
+    const bias = typeof e.bias_acknowledgement === "string" && e.bias_acknowledgement.trim() ? e.bias_acknowledgement : lens && typeof lens.bias_acknowledgement === "string" && lens.bias_acknowledgement.trim() ? lens.bias_acknowledgement : "";
+    const stated = lens && Array.isArray(lens.statements) ? lens.statements.filter(function (x) { return x && typeof x.text === "string" && x.text.trim(); }) : [];
+    const closing = lens && Array.isArray(lens.closing) ? lens.closing.filter(function (x) { return typeof x === "string" && x.trim(); }) : [];
+    const print = !lens && /^[0-9a-f]{64}$/.test(String(e.lens_fingerprint || "")) ? cs.w("screen.published.this_edition_carries_only_the", { fingerprint: String(e.lens_fingerprint) }) : "";
+    if (bias || stated.length || closing.length || print) {
+      out.push(cs.sec("screen.published.the_lens_this_team_read", '<div data-lens>' + (bias ? '<p class="rec" data-bias>' + cs.esc(bias) + "</p>" : "")
+        + (stated.length ? cs.sheet(stated.map(function (x) {
+          return cs.row("", '<span class="rec">' + cs.esc(x.text) + "</span>", typeof x.justification === "string" && x.justification.trim() ? '<span class="meta">' + cs.esc(x.justification) + "</span>" : "");
+        }).join("")) : "")
+        + closing.map(function (c) { return '<p class="mk-small" data-lens-closing>' + cs.esc(c) + "</p>"; }).join("") + (print ? "<p>" + print + "</p>" : "") + "</div>",
+      { help: "screen.published.the_lens_this_team_read2" }));
     }
 
     // R57 (C12; DEC-378): the case's details as its team currently states them, for any reader; a field not stated draws nothing. They are
@@ -164,7 +188,9 @@ export const PUBLISHED = Object.freeze({
     out.push('<div class="mk-acts">' + cs.act("verify", { data: { sha: String(e.manifest_sha || "") } }) + cs.act("publishedcase")
       + (/^[0-9a-f]{64}$/.test(String(e.manifest_sha || "")) ? cs.act("publishedcase", { label: "screen.published.download", data: { download: "1", manifest: String(e.manifest_sha) } }) : "")
       + (findings.length ? cs.act("pubprint") : "") + "</div>" + P.said(view, "verify") + P.said(view, "download")
-      + (P.casefileSaid(cs, e) ? '<p class="mk-note" role="status" data-casefile-state>' + P.casefileSaid(cs, e) + "</p>" : ""));
+      + (P.casefileSaid(cs, e) ? '<p class="mk-note" role="status" data-casefile-state>' + P.casefileSaid(cs, e) + "</p>" : "")
+      // 10B C5 (R95 a): what the check proves and what it does not, in the plane's own sentence (`verification.detail`)
+      + (e.verification && typeof e.verification.detail === "string" && e.verification.detail.trim() ? '<p class="mk-small" data-verification>' + cs.esc(e.verification.detail) + "</p>" : ""));
     // R38: a minimum strength to read it at, when there is a finding to hold to one
     if (findings.length) out.push(P.minimum(cs, view));
 

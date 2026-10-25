@@ -55,7 +55,7 @@ test("R27 R3: a determination noncompliant against a standard with no stated end
   assert.deepEqual([s.in_force, s.in_force_why], ["in_force", null]);
   const why = w.standards.inForceAt({ standard: open, date: D, viewer: V("olive") }).why ?? "";
   /* standards' sentence is its key `standard.inforce.known`, never a copy of its words (K3677) */
-  assert.equal(why, word("standard.inforce.known", { through: D, source: rec.source.says, author: rec.by }));
+  assert.equal(why, word("standard.inforce.known", { through: D, source: rec.source.says, author: String(rec.by).replace(/^member:/, "") }));
   /* the read answers the same as the act did */
   assert.deepEqual(w.c.determinationRead({ id: d.id, viewer: V("pat") }).standards, d.standards);
   assert.match(w.text(d.id), /Standard · binds Parks Department/);

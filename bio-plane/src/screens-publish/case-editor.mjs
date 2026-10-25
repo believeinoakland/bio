@@ -124,7 +124,11 @@ export const CASE_EDITOR = Object.freeze({
 
     // The readiness ladder: each rung "not yet checked" until its check answers (R1, R28).
     const check = caseOf && caseOf.case_id ? P.later(cs, view, "check", "casecheck", { query: { case: caseOf.case_id, edition: edition } }) : null;
-    const doc = caseOf && caseOf.case_id && edition ? P.later(cs, view, "document", "casedocument", { query: { case: caseOf.case_id, edition: edition } }) : null;
+    // 10B C10: the begun edition has no document until it is prepared (the plane answers NO_CASE_DOCUMENT with a 404): the read is sent for an edition
+    // the record says is prepared or published; an older answer that states neither is read as before (R77)
+    const eds = chosen.editions && typeof chosen.editions === "object" ? chosen.editions : null;
+    const onRecord = !eds || Number(eds.prepared) === Number(edition) || !!(eds.published && Number(eds.published.edition) === Number(edition));
+    const doc = caseOf && caseOf.case_id && edition && onRecord ? P.later(cs, view, "document", "casedocument", { query: { case: caseOf.case_id, edition: edition } }) : null;
     const held = check && check.state === "ok" ? check.value.state : null;
     const gates = copy.state === "ok" ? copy.value.gates : null;
     const distributed = (held === "published") || (doc && doc.state === "ok" && !!doc.value.published_at);
@@ -208,7 +212,7 @@ export const CASE_EDITOR = Object.freeze({
     if (caseOf && caseOf.case_id && before >= 1) {
       const changed = P.later(cs, view, "changed", "whatchangeddrafts", { query: { case: caseOf.case_id } },
         function (v) { return !v || !Array.isArray(v.drafts) || v.drafts.length === 0; });
-      out.push(cs.sec("screen.case-editor.changed", cs.field("ce-wc", "screen.case-editor.changed.label", { area: true, rec: true, help: "screen.case-editor.changed.help" })
+      out.push(cs.sec("screen.case-editor.changed", cs.field("ce-wc", "screen.case-editor.changed.label", { area: true, rec: true, value: authored.whatChanged && typeof authored.whatChanged.text === "string" ? authored.whatChanged.text : "", help: "screen.case-editor.changed.help" })
         + '<div class="mk-acts">' + cs.act("writinghelp", { data: { field: "whatchanged" } }) + (view.reachable ? cs.act("whatchangedpropose") : "") + "</div>"
         + P.said(view, "help-whatchanged") + P.said(view, "whatchangedpropose")
         + P.listed(cs, changed, function (v) {
@@ -343,6 +347,9 @@ export const CASE_EDITOR = Object.freeze({
           if (pos && pos !== held.subjectPosition) body.subjectPosition = pos;
           const why = cs.value("ce-posjust");
           if (typeof why === "string" && why.trim() && why.trim() !== String(held.subjectJustification || "")) body.subjectJustification = why.trim();
+          // 10A R90 (i): the What-changed words she typed, when they differ from the ones the draft holds (case-authoring reads `whatChanged.text`)
+          const wc = String(cs.value("ce-wc") || "").trim();
+          if (wc && wc !== String(held.whatChanged && held.whatChanged.text || "").trim()) body.whatChanged = { text: wc };
           const found = Array.isArray(copy.findings) ? copy.findings : [];
           const roles = {};
           found.forEach(function (f, i) { const r = (cs.value("ce-role-" + i) || [])[0]; if (r && f.target) roles[f.target] = r; });
@@ -415,10 +422,15 @@ export const CASE_EDITOR = Object.freeze({
       // R1: a person the case names, with the reason it must (its consequence in the shell's dialog, op-grades R4).
       op: "attribute", label: "act.attribute.label.case-editor", rereads: [], reasonField: "reason",
       send: function (view, el, cs) {
+        // follow-up 54 (review R16): a draft that asked for a new case names no case until it is prepared; then the record states the case and
+        // edition it prepared (`editions.case`, `editions.prepared`, case-authoring R83), which the author's choice is for
         const c = view.ui.draft && view.ui.draft.case;
-        if (!c || !c.case_id) return { refuse: "screen.case-editor.people.nocase" };
+        const ed = view.ui.draft && view.ui.draft.editions;
+        const prepared = ed && typeof ed.case === "string" && ed.case && Number(ed.prepared) > 0 ? { case_id: ed.case, edition: Number(ed.prepared) } : null;
+        const at = c && c.case_id ? c : prepared;
+        if (!at) return { refuse: "screen.case-editor.people.nocase" };
         const i = el.dataset.index;
-        return { body: { caseId: c.case_id, edition: Number(c.edition), observation: el.dataset.observation,
+        return { body: { caseId: at.case_id, edition: Number(at.edition), observation: el.dataset.observation,
           level: String(cs.value("ce-level-" + i) || "name"), reason: String(cs.value("ce-why-" + i) || "").trim() } };
       },
       done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "attribute", answer)) view.parts.forget(view); }, // D29
