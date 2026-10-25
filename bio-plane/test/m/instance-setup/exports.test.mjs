@@ -91,6 +91,8 @@ test("N348 this module holds no Durable Object door or class of its own: its rou
     /* T48 (R89, R90): the update notice and the administrators' three choices */
     "updatenotice", "updatestart", "updatelater", "updateskip",
     /* T51 (R95): the seven facts `op=bootstrap` states to a credentialed caller, a store-internal route */
-    "bootstrapfacts"].sort());
+    "bootstrapfacts",
+    /* T51 (R105, K5170): the migrations' counts `op=selftest` states to an administrator, a store-internal route */
+    "selftestmigrations"].sort());
   for (const f of Object.values(ops)) assert.equal(typeof f, "function");
 });
