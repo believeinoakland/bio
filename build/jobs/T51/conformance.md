@@ -39,3 +39,7 @@ Lines left in `fixtures.mjs --list conformance`: 4, the FIX-E lines named in B2 
 Checks: module tests 123 pass, 0 fail; words 0 failures; format 0; architecture 0; coverage 42 of 42, 0 failures; `impact.mjs origin/tranche/T51 HEAD`: affected modules 0 (no source change), no user tests to run.
 
 Size (session_014bYaS8aw3Ywr8iWF6pbvdN): test runs 4, module lines 0 (source unchanged; 63 test lines added)
+
+## J3 · COMPLETE
+
+Fix round 10 Wave A batch 1 done: fixtures.mjs publishes curesOf, determinationRead, noDeterminations (real code, tested in fixtures.test.mjs). No fixtures-own/-generic markers added. 4 FIX-E lines left (retrieval, basis-versions, case-import x2), as B2 said. Module tests 123/0, words/format/architecture/coverage 0 failures, impact: 0 affected.
