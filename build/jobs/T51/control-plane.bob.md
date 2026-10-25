@@ -1889,3 +1889,7 @@ Mail with `--module control-plane`; record `build/jobs/T51/control-plane.md` (ap
 Not in this job: control-plane's Wave B (follow-ups 8 and 42), which waits on `store-request` and is a later session.
 
 **Done:** the marked requirement met (name the ids; BOB strikes the marks); `node /home/user/civicos-process/checks/fixtures.mjs <absolute root> control-plane --list` 0 failing; module tests green; format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B88 · CHANGE
+
+CHANGE (K5138): adopt two through-the-door tests into your tests (they import your `r8-kit.mjs`, which only modules after yours may): `bio-plane/test/m/citation/imported-door.test.mjs` from `origin/job/T51/citation` and `bio-plane/test/m/ratification/t51-walker-observation.test.mjs` from `origin/job/T51/ratification` (`git show <branch>:<path>`), as `bio-plane/test/m/control-plane/t51-round10-seam-imported.test.mjs` and `t51-round10-seam-observation.test.mjs`, imports re-pointed; each keeps the requirement ids it names (citation R18; ratification R2) in its titles, and the walker's case it states (WALK-FINAL-09 R169; WALK-FINAL-10A R92, R171 (5)). Run both green on your branch after merging `origin/tranche/T51` (promotion's R28 is merged there; citation's stamps merge when CITATION #20 re-completes: if `imported-door` is red only for that, say so and BOB merges citation first). Include them in your COMPLETE.

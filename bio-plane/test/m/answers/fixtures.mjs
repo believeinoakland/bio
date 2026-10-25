@@ -2,6 +2,7 @@
    account whose limits cannot be read, or that ends a standing question, made by answers' own code over its test world
    when the test runs and never stored. A user's test takes the answer from here and does not write it by hand. Each is
    called by a test of answers' own, `fixtures.test.mjs`, which checks the real answer. */
+import { answersOps } from "../../../src/answers/index.mjs";
 import { answersWorld, V } from "./fixture.mjs";
 
 /* `askAccount` for a member served by an account whose paying limits cannot be judged (no `useCheck`): the refusal
@@ -47,4 +48,16 @@ export async function standingAnswersHeldBack({ member = "bob", finds = "Budget 
   const run = (await w.a.standingTick(w.clock.now)).ran.find((x) => x.id === q.id);
   if (!run || run.new_found !== true) throw new Error(`standingAnswersHeldBack: the run found nothing: ${JSON.stringify(run)}`);
   return w.a.standingAnswersFor({ member: author });
+}
+
+/* `ruleservicesstate` (R7; K5131) as a member reads it: `{ok: true, on}`. A fresh team's rule services are off (K1505 (14));
+   `on: true` is the state after the administrator's switch, made by answers' own act. */
+export function ruleServicesState({ on = false } = {}) {
+  const w = answersWorld({ rules: false });
+  const url = (viewer) => new URL(`https://plane.test/?${new URLSearchParams({ viewer })}`);
+  if (on) {
+    const sw = answersOps(w.a, url(V("alice")), { on: true }).ruleservicesswitch();
+    if (!sw.ok) throw new Error(`ruleServicesState: ${sw.reason}`);
+  }
+  return answersOps(w.a, url(V("bob")), {}).ruleservicesstate();
 }

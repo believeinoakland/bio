@@ -1,6 +1,6 @@
 # screens-daily (T51)
 
-**Status** · session_0177s7VkCbiDMwJSDa3V4Dzp · depth 2 · COMPLETE · handled B37
+**Status** · session_01GykapzvyLDepprUbDPaXny · depth 2 · COMPLETE · handled B38
 
 ## Completion (SCREENS-DAILY #18, B27: fix round 4, wave 2)
 
@@ -498,3 +498,22 @@ R17a draw and the two queue-states fixture lines are done and pushed (record: Co
 ## J25 · COMPLETE
 
 COMPLETE (R17a draw, queue-states fixture lines), branch job/T51/screens-daily: Find in names the part of a footnote/header etc. term item (held content.part_kind rows as stand-in; none for body/null/unknown); queue-states lines 48 and 93 take record-core's perItemRetained. Failing-first red then green. Suite 295/295; architecture, coverage, words, ownership, format 0; fixtures: only op-tables remain. Users: 1019/1027, the 8 are journey-check pseudo* needing playwright-core (npm ci not run here). Markers added: one fixtures-contract retrieval-browse findin-term-part (find-in.test.mjs); no fixtures-own or fixtures-generic. R103 proposed in record. Size line in record.
+
+## Completion (SCREENS-DAILY #21, B38: fix round 10, follow-up 57, WALK-FINAL-09 R84 "Ask as search", K5131)
+
+Merged `tranche/T51` first. Applies the first half of R6 as amended: the search the screen sends (not reachable) is one `retrieval` admits. The second half ("Show how this was counted" drawn only while `ruleservicesstate` reads `on`) waits for the CHANGE after ANSWERS #15; R6's mark stays until then.
+
+**Cause (K4426's four fields).**
+1. Root cause: `answers.mjs` `reads` (line 21) and the `search` act (line 225) turned plain words into `(w) OR (passage:w)`; `retrieval` R88 refuses an `OR` joining a passage route to a fields route (`ROUTES_CROSSED`), so Ask-as-search found nothing. Evidence: with the real `retrieval.search`, `(sewer) OR (passage:sewer)` answers `ok:false, code ROUTES_CROSSED`.
+2. Why the tests missed it: `answers.test.mjs:123` asserted the crossed string against a stub that never refused. Fixed: the string assertion now asserts the two admitted queries, and a new test answers `op=search` with the real `retrieval.search` (retrieval's own test `world`, `../retrieval/fixture.mjs`), recording any refusal.
+3. Test of the walker's exact case through the real entry: `answers.test.mjs` "R6: Ask-as-search ... answered by the real retrieval": a document found by its title word, a document found by words only its passage holds ("approved council"), another by title; control: words nothing holds draw the none sentence; no search sent was refused. Seen red first (stashed `answers.mjs`: 2 failing, the new test and the R6 string test), then green.
+4. Platform check: none (a pure screen change, no deploy dependency).
+Fix: the plain words go to `search` alone (fields route); the passages holding them are a second read `passages` (`search` with `passage:w1 passage:w2`, an AND, admitted), the two read apart and drawn once per document; a query in the member's own syntax is sent as written, to `search` alone. Registry list of reads in `contract.test.mjs` names `passages` for `answers`.
+
+Tests: `screens-daily/*.test.mjs` 296 tests, 296 pass, 0 fail (after the contract list update; the one first failure was that list). Checks (absolute root): format 0 failures; architecture 0; coverage 101 of 101, 0; ownership 0; words 0; fixtures `--list`: 249 failures, all `op-table` lines (waiting for the CHANGE re-pointing them to `storeWorld()`, as B-earlier said), none from the new test. `impact.mjs origin/tranche/T51 HEAD`: 0 affected modules besides mine.
+Markers added: none.
+Size (session_01GykapzvyLDepprUbDPaXny): test runs 6, module lines 4258
+
+## J26 · COMPLETE
+
+COMPLETE (B38): R6 first half met — Ask-as-search now sends plain words to search alone and the passage: terms as a second read, never joined by OR; seen red first against the real retrieval.search, green. Second half of R6 (ruleanswer drawn only while ruleservicesstate is on) waits for the CHANGE after ANSWERS #15, so R6's mark stays. Module tests 296/296, format/architecture/coverage/ownership/words 0; fixtures --list: 249, all op-table (waiting). Record: build/jobs/T51/screens-daily.md.
