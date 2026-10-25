@@ -1,6 +1,6 @@
 # site (T51)
 
-**Status** · session_01Gifejt79x58qraFwkvR3hs · depth 2 · WORKING · handled B4
+**Status** · session_01Gifejt79x58qraFwkvR3hs · depth 2 · WAITING ON BOB (J5) · handled B4
 
 ## J1 · COMPLETE
 
