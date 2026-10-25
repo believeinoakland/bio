@@ -140,3 +140,26 @@ No `fixtures-own`.
 - The ledger's wall clock exists in plane's copy too; it is left as is for Wave B (K5132).
 
 Size (session_01PFCJP5a6GVyjzzsxKD2a53): test runs 52, module lines 3735
+
+## J6 · COMPLETE
+
+**STORE-ASSEMBLY #3 COMPLETE: B5 (follow-up 68), B6 (K5149) and B8 (K5168) applied.** Session #2's work was committed but its record was not closed; I verified it and fixed what its last commit left red.
+
+**Entries applied.**
+- B5: the ledger tests' readHeld answers come from extraction's published `readHeldAnswer` (10 of the 11 lines). Two tests that session #2 left red are corrected here, tests only: `r9-jobs` R74 G126j (the scan's `ocr` row, registered by the owed answer, is asked beside the reading and takes a tick of its own; the answer is by kind and the test ticks until the reading ends) and `fix6-pending` R68 (G13) (the unit is the whole read, so the first kill, though cleared from the row's count by progress, stands in the unit's attempts: the reap after the second kill here is the third against the whole and ends the row; REPORT already in the title).
+- B6: the world binds `INSTANCE_NAME`; a bare world promotes and names its team (`sa-world`). Base time as measured: base 587–776 ms, copy 129–170 ms (K5046 (g)); `INSTANCE_NAME` adds no measurable cost. No requirement's meaning changes.
+- B8: `assemble.mjs:203`, the first `credentialsOf` call for the storage, hands `now: () => nowMs(null)`. Test `sa-world` "R5 R92 (K5168)": a pinned world's claim records the pin as `consumedAt`. It was not red first: the claim path already reached the pin through `credentialsOps`' `env.BIO_NOW_MS` (K5148's fallback), so the test is a guard; the change covers any instant written before `credentialsOps` sets the env. `ask.mjs:281,361` run after `assemble.mjs:203`, so cannot run first.
+
+**Still red, by name, for BOB.**
+1. `fixtures.mjs` 1 failure: `r9-jobs.test.mjs:356`, R76 G129c, the 300-page OCR scan that scripts `{more: true, detail: {next_page: p}, counters}`. No provider publishes it: extraction's real `killed()` is a 4-page scan and no producer outside plane/store-assembly emits `next_page` at all (`pending.mjs:139` `unitOf` and `:447` read it). Either extraction publishes a multi-window OCR tick answering the next page, or the ledger's `next_page` reading is dead code for BOB to rule on. I changed no product file for it.
+2. `release.test.mjs` R23 (`screen.objective.purpose`), inherited, accepted (K5139 (3)).
+3. words: the 15 unkeyed copied strings, accepted (K5144).
+4. The two `test.todo`s (R1's class clause, R98).
+
+**Tests and checks** (HEAD after merging `origin/tranche/T51`): `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/store-assembly/*.test.mjs`: tests 379, pass 376, fail 1 (R23), todo 2. A run without `--test-force-exit` does not exit by itself (over 30 minutes). format 0 failures; architecture 0; coverage 99 of 99, 0; ownership 0; words 15 (accepted); fixtures 1 (above). `modules.json` lists my row on the tranche; none run over a local copy.
+
+**Markers added this session:** none (the 7 `fixtures-generic` of J4 stand).
+
+**Found in other modules:** extraction's gap above (item 1); `next_page` in `pending.mjs` is the ledger's own (my copy; plane keeps its copy until Wave B).
+
+Size (session_01HPMiWGM9dDovp7swY1STgF): test runs 9, module lines 3740
