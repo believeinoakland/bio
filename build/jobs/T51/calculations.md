@@ -372,3 +372,18 @@ QUESTION (job 109, R47-R50). Three points where the requirements as written cann
 - A fiscal-year label (`FY2025`, `FY 2025`, `FY2025-26`) in a period cell is read as the fiscal key it names (`{fiscal: "FY2025"}`, money maps it), and one found in an amount cell is not an amount (`AMOUNT_IS_A_YEAR_LABEL`, naming the year).
 - An XLSX date serial is a date: the cell reader (office-readers, G134c) already delivers a date-formatted cell as `{type: "date", value: <ISO>, serial}`; I test that such a cell in a `date` column is determined. A bare number in a date column stays undetermined (I cannot know the workbook's date system from the cell; reading it as a serial would be a guess).
 Reply with ANSWER only if a point is wrong; silence on (3) is consent.
+
+## J21 · COMPLETE
+
+COMPLETE (job 109, G182, R47-R49; R50 retired to workbooks R22 by B28). Branch job/T51/calculations, tranche/T51 merged in (no rebase).
+
+Entries applied, each reproduced red on the tip first (tests r47-sheet, r48-memory, r49-money-cells):
+- R47 (S-27): the sheet range's header row is found by the declared names (first row holding each once); columns are the named ones, so an empty leading column or a title/blank row above the header shifts nothing and the header is never a data row; a value in an unnamed column refuses (BAD_SCHEMA). The table's source records `header_row` and `first_row`; a sheet table's money facts cite `source.row` = the sheet's row. CSV tables keep position.
+- R48 (S-28, S-29): `readTable` answers the asked page in `table.rows` and `page`, only that page built; `rows: "all"` answers every row (B28 (2)). The raw-document fallback judges size from the store head, then the object's size, before reading the body (TABLE_TOO_LARGE with size and bound), and decodes by the stored type's charset else csv-reader's `encodingSignature` (windows-1252 accents read). The record's byte copy is decoded a piece at a time. NOT REPRODUCED on the tip, proven by tests that pass there: the sight check re-reading a bound table per act (one create reads each table once; read/gradeFactsOf/calcStatusOf read none), and a 19.5 MiB declaration surviving 85 % of capFor(20).
+- R49 (S-30): new `money-cells.mjs`: `12%` AMOUNT_IS_A_PERCENTAGE; dashes AMOUNT_NONE_STATED; FY labels AMOUNT_IS_A_YEAR_LABEL (and `FY 2025-26` as a period value reaches money as `FY2025-26`); cell currency mark wins; separators by the amount field's `locale` (new optional Table Schema key), else the profile's, else shape, with `1,234`/`1.234` AMOUNT_LOCALE_UNDETERMINED. XLSX date serial: not reproduced (the reader already delivers type date + ISO); a bare number in a date column stays undetermined (test).
+- R50: not mine (B28).
+
+Deferred: none. Found in another module: workbooks' `#readTable` must pass `rows: "all"` (job 112, R23); until then 10 workbooks tests fail on the page-only answer. coverage.mjs still counts R50 live although the requirement line is struck as retired ("1 of 50 live ids named by no test: R50"): the checker's format, BOB's.
+
+Tests/checks: calculations suite 143 pass, 0 fail. format 0 failures; architecture 0 failures; words 0 failures (inline 0); ownership 9 files, 0 failures; coverage 49 of 50, R50 only; setup-words --check: stale-rows note only (expected). Not run: workbooks suite re-run after job 112, seam section 4.
+Size (session_01QjzUX72r6jBzxqxd3JsT9R): test runs 12, module lines 4135
