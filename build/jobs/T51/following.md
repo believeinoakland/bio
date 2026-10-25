@@ -165,3 +165,29 @@ Tests only; no source file, no requirement line changed.
 **Checks.** `fixtures.mjs . following`: 1 failure (the monitoring line above); `format`: 178 modules, 0 failures; `architecture following`: 0 failures; `coverage following`: 36 of 36 ids, 0 failures; `words following`: 0 failures; `ownership following tranche/T51 job/T51/following`: 0 failures. `run.mjs`: no finding in following but the monitoring line; other modules' fixture findings are theirs.
 
 Size (session_017RAWf5wK7x8JvjByQ7CkS3): test runs 6, module lines 2210
+
+## J7 · COMPLETE
+
+## FOLLOWING #14 · COMPLETE (START B5, fix round 10, Wave A batch 5)
+
+Tests only; no source file, no requirement line changed.
+
+**Published fixture.** `bio-plane/test/m/following/fixtures.mjs` (new): `watchedByRefusal`, the real `following.watchedBy` answer `MARK_NO_SUCH_ITEM`, called by `fixtures.test.mjs`. (Users now: notice-producers 1; they re-point in their own job.)
+
+**Own lines re-pointed (13 of 13 in B5's list; FIX-E providers merged).**
+- promotion/registrars (fixture.mjs:66): the unused `promotionStub` is removed (nothing called it).
+- acquisition/acquireRefusals (fixture.mjs:132): the capture stand-in returns `acquireRefusals({kind:"fetch_failed"})`.
+- standards/standardRead (:212): NO_SUCH_STANDARD from `standardRead().absent`, with the asked id.
+- duties/occurrences (:260): NO_SUCH_DUTY from `occurrences().absent`; the duty read in `watches.test.mjs` now passes `asOf` (duties' `AS_OF`, K5070).
+- plan-work/watchReaderRegistrar (:268, :269): LISTENER_MALFORMED and LISTENER_DECLARED from `watchReaderRegistrar()` (`noModule`/`noReader`/`again`, module named as the stand-in holds it).
+- answers/standingQuestions (:298, :304, :305): NO_SUCH_STANDING_QUESTION (end and end-set) and STANDING_ENDED from `standingQuestions()`, with the asked id.
+- retrieval-browse/marksRegistrarDeclared (marks.test.mjs:215): `retrieval-browse` is not in following's `uses` (architecture refused the import), so the refusing door is the real retrieval's `registerBrowseMarks`, which following already registered with at start (a delegating wrapper); the answer is retrieval's real LISTENER_DECLARED. BOB may add `retrieval-browse` to `uses` if the published fixture is wanted instead.
+- standards/standardsIn (watches.test.mjs:320, 592, 635): `NO_STANDARDS = standardsIn()` from standards' fixture.
+
+**Left (1, as B5 said):** fixture.mjs:179 `monitor` op table (FIX-E, provider monitoring); it arrives as a CHANGE.
+**Markers added:** no `fixtures-own`, no `fixtures-generic`, no `fixtures-contract`.
+
+**Tests.** `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/following/`: 128 pass, 0 fail. `impact.mjs origin/tranche/T51 HEAD`: 0 affected modules, 0 test files.
+**Checks.** `fixtures.mjs . following`: 1 failure (the monitoring line above); `format`: 178 modules, 0 failures; `architecture following`: 0 failures; `coverage following`: 36 of 36 ids, 0 failures; `words following`: 0 failures; `ownership following tranche/T51 job/T51/following`: 0 failures. `run.mjs`: no finding in following but the monitoring line; other modules' fixture findings are theirs.
+
+Size (session_017RAWf5wK7x8JvjByQ7CkS3): test runs 6, module lines 2210
