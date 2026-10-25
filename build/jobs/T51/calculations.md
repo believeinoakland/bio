@@ -450,3 +450,7 @@ Fix round 10, follow-up 58 (B31, K5131): two causes. Branch job/T51/calculations
 **Tests and checks.** calculations module 151/151 pass (151 tests, 0 fail). Users: 20 non-calculations test files naming `calculationcreate`/`recordVisit`/`spotcheckvisit`: 221/221 pass. format 0 failures; architecture 0; coverage 49 of 49; words 0; fixtures 0; ownership 1 file, 0 failures (before commit of the working tree).
 **Deferred.** Nothing. **Found in another module.** Nothing new.
 Size (session_017WZeneCFenmdMXwGaZTxaK): test runs 9, module lines 4181
+
+## J25 · COMPLETE
+
+COMPLETE (J24 in my record): R4 and R41 met. Cause 1: built-in kinds compose their default recipe (create/evaluate take top-level column and part; calculationcreate accepts them); NO_COLUMN/NO_PART/NO_SUCH_COLUMN/KIND_INPUTS refusals. Cause 2: sameMember reads a bare testify handle as the member. Tests seen red then green (r15-default-recipe, r15-bare-handle); module 151/151, 20 user files 221/221; checks 0. My reading of share/ratio/difference is the open QUESTION J23: unanswered, a one-function change if you mean otherwise. No fixture markers added.
