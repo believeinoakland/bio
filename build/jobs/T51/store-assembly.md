@@ -33,3 +33,33 @@ Five items for you; none blocks my building, and items 1–2 decide whether my c
 3. **A red that predates this job.** `release.test.mjs`' R23 words test fails, as plane's original does: the words list lacks `screen.objective.purpose`. It is the design's (words.json), not this module's; my suite is 373 pass, 1 fail (this), 2 todo (R1's class clause and R98, per K5125).
 4. **The case-file sweep in a world.** R70's consumer builds an edition's case file through public-read's published plane, which is bound only by plane's `index.mjs` (`bindPublishedPlane`) in the isolate. A world (no Worker) has it unbound, so the sweep cannot build there unless a test binds it, as my `g54-sweep.test.mjs` does with answer-envelope's real helpers and the store's own namespace. This is for `store-request`'s world door, or public-read, to decide; I changed nothing.
 5. **Fixture contracts stay plane's in the copy window.** The users' `fixtures-contract: plane <id>` markers (job-registrar, keep-later, owed-later, owed-ledger) name plane, so plane keeps `r10-fixtures-run.test.mjs`; I did not copy it, since the runs would be orphans here. They move to store-assembly when Wave B re-points the users. My copies of plane's ledger tests carried plane's open FIX-E and CODE lines (part-4 §plane); a worker is re-pointing mine to the providers' published fixtures now, so store-assembly's fixtures count reaches 0.
+
+## J4 · QUESTION
+
+**The last 11 fixtures findings: reader answers extraction's published fixtures do not produce.** A worker re-pointed my copies of plane's ledger tests to the providers' published fixtures and real codes. The fixtures count for store-assembly went from 64 to 11; stub, code and op-table findings are all 0; 7 `fixtures-generic` markers were added, listed below for K5060. The 11 remaining are all in `r9-jobs.test.mjs` (`:90`, `:92`, `:113` ×2, `:302` ×2, `:345`, `:378`, `:389`, `:439`) and `fix6-pending.test.mjs:182`. Each scripts an answer of extraction's `readHeld` that the ledger's own rules (R64, R68, R74, R76, R82) turn on:
+- a `cursor` in `detail` (`unitOf` reads `cursor`, `next` or `next_page`);
+- `counters {written, skipped, owed, failed}`;
+- `owed: true` with counters;
+- `killed` and `ocr_killed` pages;
+- a `killedCursor` stepped past.
+
+Extraction's real `readHeld` emits these on its paged and killed paths (`extraction/index.mjs:914`, `:1036-1044`, `:1140`; `reading-pipeline/index.mjs:2602`, `:2652`). But `bio-plane/test/m/extraction/fixtures.mjs`' `readHeldAnswer` publishes only `noHome`, `read`, `piece`, `pieces(n)` (whose `detail` is `{read_through, total}`, no cursor), `held` and `final`. The worker tried the real `pieces(4)` for `fix6-pending:182`. With no cursor the unit is `whole`, three kills end the row `PAGE_KILLED_READER`, and the `killedCursor` path the test exists for is never reached, so it reverted that test.
+
+Best reading: a provider gap, extraction's to close. Its fixtures publish, made by its real `readHeld`:
+- a windowed text read that answers `more` with a cursor in `detail`;
+- a scan read answering `owed: true` with `counters`;
+- a page or window that kills its reader (`killed`, `killedCursor` honoured);
+- a finishing answer with `counters`.
+
+Then I re-point the 11 to them, as a CHANGE to this job. Until then the 11 stay red by name for store-assembly, as they stand red for plane (part-4 §plane; plane's own count is 75). I do not mark them: no rule of K5044 lets a marker cover an answer the provider really gives. If you would rather I build these answers myself through extraction's real `readHeld` over a held capture (extraction is earlier, so allowed), say so; it is about 150 lines of test setup, and duplicates what extraction's fixtures exist for.
+
+Markers added (K5060):
+- `r7-keephome.test.mjs:40`: STORE_DOWN, an outage word no module gives.
+- `r7-lastmem.test.mjs:25`: AGAIN.
+- `r7-lastmem.test.mjs:63`: SLOW.
+- `r7-lastms.test.mjs:41`: SLOW.
+- `r9-jobs.test.mjs:91`: STORE_BUSY.
+- `r9-jobs.test.mjs:303`: R2_HICCUP. This and the four above are made-up transient retry words.
+- `t36.test.mjs:55`: NOT_HERE, the fetch double's fall-through for an unscripted path.
+
+No `fixtures-own`.
