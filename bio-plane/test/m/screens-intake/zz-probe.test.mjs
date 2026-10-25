@@ -1,13 +1,16 @@
 import { test } from "node:test";
-import { openWorld, members, btn } from "./page.mjs";
+import { openWorld, members, text, fill, press, main } from "./page.mjs";
+import { SCREENS } from "../../../src/screens-intake/index.mjs";
+import { DOCUMENT_STUB } from "./page.mjs";
+const FILLED = { "ci-how-made": true, "ci-where": "6012 Seminary Ave", "ci-what": "The pothole." };
 test("probe", async () => {
-  const t = await members({ mai: ["contribute"] });
-  const admin = await t.world.signIn("admin");
-  try { console.log("PROBE set", JSON.stringify(await admin.act("groupkeyset", { body: { key: "sk-ant-api03-abcdefghijklmnopqrstuvwxyz0123456789" } }))); } catch (e) { console.log("PROBE ERR", e.message); }
-  try { console.log("PROBE sw", JSON.stringify(await admin.act("groupkeyswitch", { body: { on: true } }))); } catch (e) { console.log("PROBE ERR", e.message); }
-  console.log("PROBE st", JSON.stringify(await t.mai.read("groupkeystate")));
-  const sha = "3".repeat(64);
-  for (const path of [`/app/about-knocker/${sha}`, "/app/leads", "/app/watching"]) { const p = await openWorld(path, { world: t.world, as: t.mai }); console.log("PROBE", path, !!btn(p, "writinghelp")); }
-  try { console.log("PROBE rm", JSON.stringify(await admin.act("groupkeyswitch", { body: { on: false } }))); } catch (e) { console.log("PROBE ERR", e.message); }
-  const p = await openWorld("/app/leads", { world: t.world, as: t.mai }); console.log("PROBE off", !!btn(p, "writinghelp"));
+  const t = await members({ mai: ["contribute","create_projects"] });
+  for (const [k, f] of Object.entries({ note: new File(["a note about the garage. It is old."], "note.txt", { type: "text/plain" }), jpg: new File([new Uint8Array([255,216,255,224,0,16,74,70,73,70,0,1,1,0,0,1,0,1,0,0,255,217])], "Seminary Ave.jpg", { type: "image/jpeg" }), blank: new File(["   \n"], "blank.txt", { type: "text/plain" }) })) {
+    const p = await openWorld("/app/capture/file", { world: t.world, as: t.mai, screens: [...SCREENS, DOCUMENT_STUB] });
+    fill(p, { "ci-file": f, ...FILLED });
+    await press(p, "captureupload");
+    console.log("PROBE", k, p.requests.map(r=>r.op).slice(14).join(","), "|", Array.from(main(p).querySelectorAll('[role="status"]')).map(e=>e.textContent).join(" // ").slice(0,600));
+    await t.world.tick(5000); for (let i=0;i<10;i++) await p.settle(50);
+    console.log("PROBE2", k, p.requests.map(r=>r.op).slice(14).join(","), "|", Array.from(main(p).querySelectorAll('[role="status"]')).map(e=>e.textContent).join(" // ").slice(0,600));
+  }
 });

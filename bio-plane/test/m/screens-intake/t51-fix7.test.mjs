@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
-import { open as openPage, fill, press, ok, DOCUMENT_STUB } from "./page.mjs";
+import { openWorld, members, fill, press, ok, DOCUMENT_STUB } from "./page.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 
 const BOUND = 1048576 - 65536;
@@ -75,18 +75,20 @@ test("R61 (G43) a document with no reading is never marked dropped (control: a s
   assert.equal(provOf(cs).text, JSON.stringify({ documents: [bare] }, null, 1));
 });
 
-/* the three callers, over the real page with the plane scripted: a big reading on the door's document is not embedded, whichever act filed it */
+/* the three callers, over the real page and the real store: a big reading on the door's document is not embedded, whichever act filed it. The door itself reads a file in
+   bounded units (a 1.7 MB CSV answers a 0.5 MB document), so a reading over the promotion bound is a state no real act makes: those two answers stay scripted (`acquire`,
+   `captureupload`), the rest (the held check, the id, the promotion, the list) is the owners'. */
 const BIG = (n) => ({ units: "y".repeat(n) });
-const OPEN0 = ok({ ok: true, captures: [], truncated: false });
-const NOT_HELD = ok({ ok: true, held: false, copy: null, versions: 0, truncated: false, changed: { state: "undetermined", basis: "x", as_of: null, earlier_differs: false } });
-const open = (path, o = {}) => openPage(path, { ...o, plane: { heldat: NOT_HELD, ...(o.plane || {}) }, screens: [...SCREENS, DOCUMENT_STUB] });
-const PLANE = { opencaptures: OPEN0, allocid: ok({ ok: true, id: "INFO-2026-0001" }), promote: (req) => ok({ ok: true, bundleId: req.body.bundleId }) };
+const open = async (path, plane = {}) => {
+  const t = await members({ mai: ["contribute"] });
+  return { t, p: await openWorld(path, { world: t.world, as: t.mai, plane, screens: [...SCREENS, DOCUMENT_STUB] }) };
+};
 const provOfPage = (p) => p.byOp("promote")[0].body.files.find((f) => f.path === "data/provenance.json");
 
 test("R61 (G43, the address path) an acquired 1 MB CSV whose reading is over the bound is filed without it", async () => {
   const doc = { capture: { sha256: SHA, bytes: 1048576, encoding: "binary", content_type: "text/csv" }, file: "snapshots/a.csv", title: null,
                 reading: BIG(BOUND), text_units: [{ n: 1, text: "y".repeat(BOUND) }] };
-  const p = await open("/app/capture/address", { plane: { ...PLANE, acquire: ok({ ok: true, document: doc }) } });
+  const { p } = await open("/app/capture/address", { acquire: ok({ ok: true, document: doc }) });
   fill(p, { "ci-address": "https://city.example/data/big.csv" });
   await press(p, "acquire");
   await p.settle();
@@ -107,7 +109,7 @@ test("R61 (G43, a docx with a large table) a Word document whose reading carries
   assert.ok(!("reading" in JSON.parse(provOf(cs).text).documents[0]));
   /* the upload path: a member's .docx upload whose door-read document carries the table */
   const FILE = new File(["PK docx bytes"], "t.docx", { type: doc.capture.content_type });
-  const up = await open("/app/capture/file", { plane: { ...PLANE, captureupload: ok({ ok: true, existed: false, capture: { sha256: SHA, bytes: 90000 }, document: doc }) } });
+  const { p: up } = await open("/app/capture/file", { captureupload: ok({ ok: true, existed: false, capture: { sha256: SHA, bytes: 90000 }, document: doc }) });
   fill(up, { "ci-file": FILE, "ci-how-made": true, "ci-where": "the clerk's office, 4 October", "ci-what": "The budget table." });
   await press(up, "captureupload");
   const f = provOfPage(up), got = JSON.parse(f.text).documents[0];
@@ -115,12 +117,14 @@ test("R61 (G43, a docx with a large table) a Word document whose reading carries
 });
 
 test("R61 (G43) control: a document whose reading fits is filed with it by the address path", async () => {
-  const doc = { capture: { sha256: SHA, bytes: 1200, encoding: "binary", content_type: "text/csv" }, file: "snapshots/a.csv", title: null, reading: { title: "Small" }, text_units: [{ n: 1, text: "a,b" }] };
-  const p = await open("/app/capture/address", { plane: { ...PLANE, acquire: ok({ ok: true, document: doc }) } });
+  const { t, p } = await open("/app/capture/address");
+  t.world.script("https://city.example/", () => new Response("a,b\n1,2\n", { status: 200, headers: { "content-type": "text/csv" } }));
   fill(p, { "ci-address": "https://city.example/data/small.csv" });
   await press(p, "acquire");
   await p.settle();
-  assert.deepEqual(JSON.parse(provOfPage(p).text).documents[0].text_units, [{ n: 1, text: "a,b" }]);
+  const got = JSON.parse(provOfPage(p).text).documents[0];
+  assert.ok(got.reading && Array.isArray(got.text_units) && got.text_units.length >= 1, "the reading is embedded");
+  assert.ok(got.text_units.some((u) => String(u.text).includes("1\t2")), "with the units the door read");
 });
 
 /* G126h (fix round 9; R61; K4835): the two arms that judged a reading the door had cut (a unit `truncated`, units over the bound or skipped) are gone: a reading's
