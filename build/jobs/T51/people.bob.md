@@ -1,6 +1,6 @@
 # BOB to people (T51)
 
-**Read** · handled J15
+**Read** · handled J16
 
 ## B1 · START
 
@@ -142,3 +142,19 @@ Mail with `--module people`; record `build/jobs/T51/people.md` (append a new sec
 3. **`sourcepersonlinks` by source always answers none** (`diag2-04.md` §2; people R21): `index.mjs:1843` reads `q("source")`, a door stamp deleted from every query. Read `source_id` (declare the field), and refuse a read naming neither. Test at your interface: `source_id` reads the link; a call with neither is refused. REPORT the door case for BOB.
 
 **Done:** module tests green; `checks/fixtures.mjs <absolute root> people --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B12 · START
+
+START · PEOPLE #16 · tranche T51 · product believeinoakland/bio · fix round 10 (plan item 92; K5186)
+
+Depth 2 (BOB #301 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/people tranche/T51`; if a local `job/T51/people` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/people stale/people-local && git checkout -b job/T51/people origin/job/T51/people`. If `job/T51/people` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module people`; record `build/jobs/T51/people.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root `/home/user/bio`, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one; REPORT the door case for BOB to place (K5138). A new sentence people read is written at its use as `localize(id, en, vars)` in a module that may (K3930, K3943); a screens module draws by key only.
+
+Bob's direction for this round (K5175): every bug, failure and broken feature found is fixed in this round; no guessing, no deferrals, no assumptions. A cause you find outside your paths is REPORTed the day you find it, with file:line.
+
+
+Your job: people R43, R44 (written by BOB, K5186; read them whole with R4, R11, R14, R31, R39). Found by SCREENS-INVESTIGATE #16 (J29) and confirmed by BOB's reading: `personAt`'s claim rows (`people/index.mjs` ~1071) omit the stored `basis` that `identityOf` serves (R43), and `#factsOf` (~822) answers only facts not withdrawn, so the person view cannot draw the withdrawn facts screens-investigate R32 (2), R38 and R39 draw (R44; read those three screen requirements whole for what each draws). Failing-first tests at the interface naming R43, R44.
+
+**Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio people --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio people $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.

@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { OPS } from "../../../src/op-declarations/index.mjs";
-import { open, main, text, ops, press, last, ok, button, W, DATA_PLANE, DET, ESC, ESCALATION, STATUS_NONE, CONSEQUENCES, COMPLIANCE_SAYS } from "./page.mjs";
+import { open, main, text, ops, press, last, ok, button, W, D, DATA_PLANE, DET, ESC, ESCALATION, STATUS_NONE, CONSEQUENCES, COMPLIANCE_SAYS } from "./page.mjs";
 
 /* N1073 (K3268): the acts the screen draws are read against the declarations that own them, never a list of them written here:
    the design's registry for this screen and `op-declarations`' `OPS`; a state's acts are then checked one by one. (Reading
@@ -22,7 +22,7 @@ test("R6: the determination: each standard, what it requires and what the act di
   const p = await open(AT, DATA_PLANE);
   assert.equal(p.byOp("determination")[0].query.id, DET);
   const t = text(p);
-  for (const s of ["The 2024 rent adjustment", W("screen.matter.by", { actor: "City Administrator, City" }), W("screen.matter.outcome.noncompliant"), W("screen.matter.outcome.compliant"),
+  for (const s of [`vote · ${D("2024-03-01")}`, W("screen.matter.by", { actor: "City Administrator, City" }), W("screen.matter.outcome.noncompliant"), W("screen.matter.outcome.compliant"),
     `${W("screen.matter.requires", { requires: "a council vote" })} · ${W("screen.matter.did", { did: "adjusted without a vote" })}`,
     `${W("screen.matter.requires", { requires: "notice within 30 days" })} · ${W("screen.matter.did", { did: "noticed on day 21" })}`, W("screen.matter.samecare")]) assert.ok(t.includes(s), s);
 });

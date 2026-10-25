@@ -1,6 +1,6 @@
 # BOB to publication (T51)
 
-**Read** · handled J15
+**Read** · handled J16
 
 ## B1 · START
 
@@ -192,3 +192,19 @@ Mail with `--module publication`; record `build/jobs/T51/publication.md` (append
 ## B14 · CHANGE
 
 CHANGE · correction to START B13 (K5110). B13 carries by mistake a paragraph beginning "**Re-point (test files only; BASIS-VERSIONS #22 J7)**" and the "**Done:**" line after it: both belong to another job; ignore them. Your work is follow-up 39 only, and its own "**Done:**" line (the one naming reevaluation's list). The corrected START is `build/plan/starts-T51-F10/publication-3.txt`.
+
+## B15 · START
+
+START · PUBLICATION #42 · tranche T51 · product believeinoakland/bio · fix round 10 (plan item 93; K5187)
+
+Depth 2 (BOB #301 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/publication tranche/T51`; if a local `job/T51/publication` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/publication stale/publication-local && git checkout -b job/T51/publication origin/job/T51/publication`. If `job/T51/publication` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module publication`; record `build/jobs/T51/publication.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root `/home/user/bio`, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one; REPORT the door case for BOB to place (K5138). A new sentence people read is written at its use as `localize(id, en, vars)` in a module that may (K3930, K3943); a screens module draws by key only.
+
+Bob's direction for this round (K5175): every bug, failure and broken feature found is fixed in this round; no guessing, no deferrals, no assumptions. A cause you find outside your paths is REPORTed the day you find it, with file:line.
+
+
+Your job: publication R79 (written by BOB; read it whole). Found by CASE-AUTHORING's R31 chain test (`bio-plane/test/m/case-authoring/` on `job/T51/case-authoring` at `ad3b895617`: two grounded legs, one citation severed, concluded, prepared; the publish gate refuses C-2.8 "published_strength_grounds names no row for ground 'part 2'"). Cause, read by BOB: `case-catalogue/checks.mjs:917-926` builds the member's frontmatter from `memberBasis` alone, while the live-leg filter (`:378-387`) reads `fm.references`, so on the case document's member arm no leg is ever severed. The members' basis reaches that arm from `publication`'s `#pinnedMemberBasis` (`index.mjs:1839`), `ratification`'s `#memberBasisAtPins` (`index.mjs:1096`) and the standalone checker (`case-checker/check.mjs:506-515`), through the gate's `runCaseGate` (`bio-plane/src/gate.mjs:1311`), which forwards it unread. BOB's packaging (K2008, K5187): a `memberBasis` entry is the member's basis array or `{basis, references}`; case-catalogue reads both forms; the three producers send `{basis, references}`. Four jobs run at once, each tested at its own interface; the chain test is case-authoring's, re-run when all four have merged. Failing-first test naming R79: `caseDocumentFacts`' `memberBasis` for a member whose pinned bytes hold references.
+
+**Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio publication --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio publication $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.

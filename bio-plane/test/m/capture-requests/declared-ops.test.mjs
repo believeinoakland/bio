@@ -1,4 +1,4 @@
-/* capture-requests R57, R58 (T51 fix round; K4189, K4202): each op this module declares in DECLARED_OPS is held true
+/* capture-requests R57, R58, R59 (T51 fix round; K4189, K4202, K5182): each op this module declares in DECLARED_OPS is held true
    against the op as the door runs it (test-support R15): only its requires raise no refusal naming a declared field, a
    call without each required one is refused naming it, and a field outside accepts is dropped or refused naming it. */
 import { test } from "node:test";
@@ -32,4 +32,20 @@ test("R57 capturerequestretry declares its fields: its requires alone raise no r
   await declaredOpHolds({ op: "capturerequestretry", declaration: DECLARED_OPS.capturerequestretry,
     call: (fields) => { refuse(); return call(fields); },
     values: { request: id }, refusedNaming: namesField, same: sameVerdict });
+});
+
+/* R59: capturerequests reads its filters from the query string (the stamps too), so its fields go there, not in a body */
+const queryDoor = (w, stamps) => (fields) => captureRequestsOps(w.cr, new URL("http://x/?" + new URLSearchParams({ ...stamps, ...fields })), {}).capturerequests();
+
+test("R59 capturerequests declares its fields: no field is required, each query field it reads is accepted, and a field outside accepts is dropped", async () => {
+  const w = world();
+  const stamps = { viewer: V("ann"), principal: "member:ann" };
+  const call = queryDoor(w, stamps);
+  const values = { run: "RUN-1", target: "INQ-1", state: "requested", limit: "5" };
+  await declaredOpHolds({ op: "capturerequests", declaration: DECLARED_OPS.capturerequests, call, values,
+    refusedNaming: namesField, same: sameVerdict });
+  /* each query field the arm reads is accepted: given with a sample value, no refusal names it */
+  for (const field of DECLARED_OPS.capturerequests.fields.accepts) {
+    assert.equal(namesField(await call({ [field]: values[field] }), field), false, `${field} is refused naming it`);
+  }
 });

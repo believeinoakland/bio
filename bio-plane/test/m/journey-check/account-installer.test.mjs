@@ -8,7 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import worker from "../../../../newgroup/src/index.mjs";
 import { RELEASE_MANIFEST } from "../../../../newgroup/src/release.mjs";
-import { fakeAccount } from "../../../src/journey-check/account.mjs";
+import { fakeAccount, API, READY_PREFIX } from "../../../src/journey-check/account.mjs";
 
 const ORIGIN = "https://newgroup.believeinoakland.workers.dev";
 const json = (o) => new Response(JSON.stringify(o), { headers: { "content-type": "application/json" } });
@@ -16,8 +16,7 @@ const json = (o) => new Response(JSON.stringify(o), { headers: { "content-type":
 const copy = () => json({ ok: true });
 
 /* Runs the installer's install of `slug` over a fake account; answers the account, the progress page's events and the page. */
-async function install(slug, { hide = null } = {}) {
-  const account = fakeAccount({ copyFetch: copy });
+async function install(slug, { hide = null, account = fakeAccount({ copyFetch: copy }) } = {}) {
   const realFetch = globalThis.fetch, realTimeout = globalThis.setTimeout;
   globalThis.setTimeout = (fn) => realTimeout(fn, 0);
   globalThis.fetch = async (input, init) => {
@@ -77,4 +76,33 @@ test("R1 (a), control: when the account answers no container application create,
   const fleet = events.filter((e) => e.k === "ok" && e.id === "fleet").at(-1);
   assert.ok(fleet && !installed(fleet).includes("agent-runner") && !installed(fleet).includes("file-scanner"), fleet && fleet.label);
   assert.equal(account.applications.length, 0);
+});
+
+/* ---------- the account's address (fix round 10, K5101, B1) ---------- */
+
+/* What the account answers to the call the installer makes to learn whether it has a workers.dev address (a bearer token got
+   as the installer gets one is not needed: the call is the account's own interface). */
+async function subdomainOf(account) {
+  const verifier = "v".repeat(48);
+  const challenge = Buffer.from(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier))).toString("base64url");
+  const consent = await (await account.handle(new Request("https://dash.cloudflare.com/oauth2/auth?" + new URLSearchParams({
+    response_type: "code", client_id: "c", redirect_uri: "https://x.example/callback", state: "s", code_challenge: challenge, code_challenge_method: "S256", scope: "workers-scripts.write" })))).text();
+  const code = new URL(/href="([^"]+)"/.exec(consent)[1].replace(/&amp;/g, "&")).searchParams.get("code");
+  const grant = await (await account.handle(new Request("https://dash.cloudflare.com/oauth2/token", { method: "POST",
+    body: new URLSearchParams({ grant_type: "authorization_code", code, code_verifier: verifier, redirect_uri: "https://x.example/callback" }) }))).json();
+  return account.handle(new Request(`${API}/accounts/${account.account}/workers/subdomain`, { headers: { authorization: "Bearer " + grant.access_token } }));
+}
+
+test("R1 (a), B1: the fake account is ready as a person's is, holding a workers.dev address; control: an account that has none answers none, and the installer stops before it creates anything", async () => {
+  const ready = fakeAccount();
+  const got = await subdomainOf(ready);
+  assert.equal(got.status, 200);
+  assert.equal((await got.json()).result.subdomain, READY_PREFIX);
+  assert.equal(ready.prefix(), READY_PREFIX);
+  const none = fakeAccount({ subdomain: null });
+  assert.equal((await subdomainOf(none)).status, 404, "an account with no workers.dev address says so");
+  const { account, events } = await install("fakecheck4", { account: fakeAccount({ copyFetch: copy, subdomain: null }) });
+  assert.equal(account.scripts.size, 0, "nothing was created in an account that has no address to give the copy");
+  assert.ok(events.some((e) => e.k === "no" || e.k === "fail"), "the installer says it stopped: " + JSON.stringify(events.slice(-3)));
+  assert.equal(events.some((e) => e.k === "ok" && e.id === "fleet"), false);
 });

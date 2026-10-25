@@ -3,7 +3,8 @@
    Every request is checked against its owner's declaration by the harness. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { SCREENS, open, main, text, ops, press, last, ok, W, hasWord, DATA_PLANE, PROJECT, ADMIN } from "./page.mjs";
+import { actionWorld, entityOf, officeFor, openIn } from "./world-C.mjs";
+import { SCREENS, open, main, text, ops, press, last, ok, W, hasWord, DATA_PLANE, PROJECT } from "./page.mjs";
 import { DECLARED_FIELDS } from "./declared.mjs";
 
 const NEW = `/app/request/${PROJECT}`;
@@ -31,20 +32,26 @@ test("R39: a request opened for a project sends no `addresseesuggest` with the p
 });
 
 test("R46: a records request that knows no office points to the organization's page; with offices none; a request opened with no name known to ask about draws no pointer", async () => {
-  const none = { ...DATA_PLANE, peopledirectory: ok(NAMES), addresseesuggest: ok({ ok: true, subject: SUBJECT, offices: [], suggestion: true }), whoami: ok(ADMIN) };
-  const p = await open(NEW, none);
+  const { world, me, project } = await actionWorld();
+  const at = `/app/request/${project}`;
+  // a project whose record follows no name has none to ask about
+  const nameless = await openIn(world, me, at);
+  assert.equal(main(nameless).querySelector('[data-list="person"]'), null, "control: no name picked, no page to point to");
+  await entityOf(me, "institution", "Public Works");
+  const subject = await entityOf(me, "person", "Pothole repair program");
+  const p = await openIn(world, me, at);
   assert.equal(main(p).querySelector('[data-list="person"]'), null, "nothing is pointed to before an office is known to be missing");
-  await press(p, "addresseesuggest", { values: { "req-subject": SUBJECT } });
+  await press(p, "addresseesuggest", { values: { "req-subject": subject } });
   const link = main(p).querySelector('[data-list="person"] a[data-screen="person"]');
   assert.ok(link, "the reference");
-  assert.equal(link.getAttribute("href"), `/app/person/${encodeURIComponent(SUBJECT)}`);
+  assert.equal(link.getAttribute("href"), `/app/person/${encodeURIComponent(subject)}`);
   assert.equal(link.textContent.trim(), W("screen.person.name"));
   for (const k of ["screen.request.nooffice.pointer.a", "screen.request.nooffice.pointer.b", "screen.person.purpose"]) assert.ok(text(p).includes(W(k)), k);
-  const known = await open(NEW, { ...DATA_PLANE, peopledirectory: ok(NAMES), addresseesuggest: ok(OFFICES), whoami: ok(ADMIN) });
-  await press(known, "addresseesuggest", { values: { "req-subject": SUBJECT } });
+  assert.deepEqual((await me.read("addresseesuggest", { query: { subject } })).offices, [], "the store holds no office for that name");
+  await officeFor(me, subject, "City Clerk", "Office of the City Clerk");
+  const known = await openIn(world, me, at);
+  await press(known, "addresseesuggest", { values: { "req-subject": subject } });
   assert.equal(main(known).querySelector('[data-list="person"]'), null, "control: with offices none");
-  const nameless = await open(NEW, { ...DATA_PLANE, peopledirectory: ok({ rows: [], truncated: false }), whoami: ok(ADMIN) });
-  assert.equal(main(nameless).querySelector('[data-list="person"]'), null, "control: no name picked, no page to point to");
 });
 
 test("R39, R46 (R19): each key the new lines name is a word of setup-words, on the screen that draws it", () => {
