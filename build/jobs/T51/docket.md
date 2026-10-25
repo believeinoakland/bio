@@ -68,3 +68,7 @@ K4557 (E9) applied in docket: docketpressure asks membership.projectAuthority 'j
 **Ran.** Docket suite `bio-plane/test/m/docket/`: 90 tests, 90 pass, 0 fail. `impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178, test files 0 of 2775 (test-only change). Checks: fixtures 0 failures; format 0 failures; architecture 15 files, 0 failures; coverage 31 of 31 ids, 0 failures; ownership 0 failures.
 
 Size (session_01CnYEEbvuMRb9yWAomBsnUW): test runs 3, module lines 0
+
+## J3 · COMPLETE
+
+COMPLETE fix round 10 Wave A batch 4. Published docket/fixtures.mjs: coreDue, docketEntryRead, pressureMarks (real code, each tested in fixtures.test.mjs). Re-pointed fixture.mjs:137 to publication's stampEditionRefusal (court.test.mjs R25). No fixtures-own/fixtures-generic markers added. fixtures --list docket: 0 failures. Docket 90/90; impact 0 modules; format, architecture, coverage (31/31), ownership 0 failures. Notes: plan's 'docketEntry' is docketPressureOf (no docketEntry exists); 'a docket not asked' (filings docket:{}) has no real answer, so pressureMarks gives a refused-kind answer instead. Details in build/jobs/T51/docket.md.
