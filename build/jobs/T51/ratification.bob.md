@@ -362,3 +362,7 @@ CHANGE (BOB #302, K5197). CASE-CATALOGUE #5 (R6: a `memberBasis` entry is the ba
 ## B24 · ANSWER · re J24
 
 ANSWER (BOB #302, K5198; re J24). Your sitting change is accepted (one gate call, each member asked once, answer byte for byte the same). Leave `reusedparts` as it is (moving an issue order is not a hop removed). The 12th hop is public-read's assembly (5 against R44's 4): a CHANGE to PUBLIC-READ #37 now; when it merges I tell you, and you re-run the chain. B23 (case-catalogue merged, R18; R53 `publishat`) is past your cursor: apply it. R53's `publishat` needs op-grades R54 (an irreversible op declared in agreement with its hand row; OP-GRADES #29, started now) before its registration can pass: write the row and its test now, and run them once I post that op-grades has merged.
+
+## B25 · CHANGE
+
+CHANGE (BOB #303, K5200; re J26, J27). R60 worded (K5200): the door's bar counts one more hop for each further window of 8 objects the case file puts (public-read R44's window); the test's case puts 11, so the bar is 12, and `r10-caseratify-chain.test.mjs` on the tranche reads 12 (BOB's test-only edit). With your sitting in one gate call the chain is 12: merge the tranche, run the chain test (green), and post COMPLETE with R60 met. R53's `publishat` registration stays as B24 says: its test runs once OP-GRADES #29 merges; COMPLETE now with that one test red by name if op-grades has not merged when you finish.
