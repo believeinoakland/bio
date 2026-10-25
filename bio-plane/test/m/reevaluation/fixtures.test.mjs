@@ -1,7 +1,7 @@
 /* reevaluation's published fixtures, each called and its real answer checked. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { noticesRead } from "./fixtures.mjs";
+import { noticesRead, noticesTwoVersions, noticesHiddenVersion } from "./fixtures.mjs";
 
 test("noticesRead (R14): the real notices read over a raised notice, {ok, limit, truncated, notices}", () => {
   const f = noticesRead();
@@ -25,4 +25,25 @@ test("noticesRead (R14), several: four notices over three holders and two target
   assert.equal(new Set(f.notices.filter((n) => n.target === "INFO-2026-0001-old").map((n) => n.newer_capture)).size, 1);
   /* the read is the module's own: a second call answers the same */
   assert.deepEqual(f.world.r.notices({ viewer: f.viewer }).notices, f.notices);
+});
+
+test("noticesTwoVersions (R14): one holder's leg with two newer captures gives two notices, one per newer capture, each graded", () => {
+  const f = noticesTwoVersions();
+  assert.deepEqual([f.ok, f.truncated, f.state, f.count, f.raised.count], [true, false, "open", 2, 2]);
+  assert.deepEqual(f.notices.map((n) => [n.holder, n.target, n.grade, n.affects]),
+                   [[f.holder, "INFO-2026-0007-old3", "NOT_FOUND", "affected"], [f.holder, "INFO-2026-0007-old3", "NOT_FOUND", "affected"]]);
+  assert.deepEqual(f.notices.map((n) => n.newer_capture).sort(), [...f.newer_captures].sort());
+  assert.equal(new Set(f.notices.map((n) => n.newer_capture)).size, 2);
+  /* the read is the module's own: a second call answers the same */
+  assert.deepEqual(f.world.r.notices({ viewer: f.viewer }).notices, f.notices);
+});
+
+test("noticesHiddenVersion (R14, R20): a newer capture the viewer may not see is null in its notice, which the viewer still gets", () => {
+  const f = noticesHiddenVersion();
+  assert.deepEqual([f.ok, f.count, f.state], [true, 1, "open"]);
+  const [n] = f.notices;
+  assert.deepEqual([n.holder, n.target, n.newer_capture, n.grade, n.affects], [f.holder, "INFO-2026-0010-old4", null, null, null]);
+  /* the same notice, read by a viewer who sees the newer capture: its sha and grade are given */
+  const admin = f.world.r.notices({ viewer: "class:admin" }).notices[0];
+  assert.deepEqual([admin.notice, admin.newer_capture, admin.affects], [n.notice, f.newer_capture, "affected"]);
 });
