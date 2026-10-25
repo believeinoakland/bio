@@ -337,3 +337,11 @@ none were started.
 **Found in other modules:** none new beyond G90.
 
 **Checks:** format 0, architecture 0, coverage 31 of 31, ownership 0, words 0 failures for journey-check; impact names journey-check alone.
+
+**Suite (non-journey files, 117 tests: 108 pass, 8 fail), all named:**
+- G90 (release 0.86.0 states no `bio-plane-crons/1`, waits on the 0.87.0 cut): `account-installer` ×3, `plane-cron` ×3.
+- `group.test.mjs` R17: one row, `ai-accounts.index.the_request_names_no_owner` ("the account is group, project: or member:", the owner token): ai-accounts' row, for the design's GROUP_SENSE; not mine.
+- `invite-box.test.mjs` R9: the file imported `fixtures.mjs` exports that screens-settings removed (`ADMIN`, `membersTable`); now uses screens-settings' `seed-members.mjs` `team()` as its own tests do. It stays red because that seed fails in this container (`storeWorld: the producing team was not recorded ... GROUP_ALREADY_RECORDED`); screens-settings' own `members-projects.test.mjs` fails 3 of 3 with it. REPORTed to BOB: screens-settings / store-request fixture, `bio-plane/test/m/store-request/fixtures.mjs:34`. (journey-check importing another module's seed is the K3100 edge; BOB to decide.)
+- `journey.test.mjs` (local arm) not run: waits on the cut.
+
+Size (session_01VXdF2pPmhBEVUJ6iGudgiQ): test runs 6, module lines 4011
