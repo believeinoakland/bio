@@ -178,3 +178,7 @@ Tests and checks:
 - `checks/ownership.mjs /home/user/bio duties tranche/T51 job/T51/duties`: 0 failures.
 
 Size (session_01MyQq2MvqjNMyK2TgY7expN): test runs 3, module lines 2217.
+
+## J8 · COMPLETE
+
+Follow-up 38 (test files only) done. New export bio-plane/test/m/duties/fixtures.mjs dutiesForViewer() (no arguments) returns {duties, asOf, entity, viewer, holder, dutyId, absentId, none, noneOccurrences, held, heldOccurrences}: none = dutiesOf for an entity holding no duty ({ok:true, duties:[]}); noneOccurrences = occurrencesOf for an absent id (NO_SUCH_DUTY); held = dutiesOf for the one duty the holder sees; heldOccurrences = occurrencesOf over a window with no trigger ({ok:true, occurrences:[]}). Note for queue: a viewer holding no duty has no duty id to read, so the real occurrencesOf answers NO_SUCH_DUTY, not an empty list; no product defect. Tests: duties 80 pass, 0 fail; checks format, fixtures, architecture, coverage (34 of 34), words, ownership all 0 failures. Record J5 on job/T51/duties (commit e1fe3926df).
