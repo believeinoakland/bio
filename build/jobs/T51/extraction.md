@@ -906,3 +906,7 @@ COMPLETE follow-up 28. Done: (1) five codes in t44/t46/t50; (3) MODEL_REFUSED/MO
 - Fixtures list: failing `t48:30` (follow-up 23), `t44:93` (plane's run to come), and agent-worker's two orphan runs (`:84`, `:101`, BOB makes them plain comments). Module 392/392; format, architecture, coverage 87/87, words 0.
 
 Size (session_01Jvm3Svfx7hGZ595k1aGkp6): test runs 9, module lines 5040
+
+## J47 · COMPLETE
+
+COMPLETE B61-B63. (1) t44:92 marker is now fixtures-contract: plane transcribe-not-sent (plane's run owed; listed contract-no-run at t44:93). (2) K5139: readHeldAnswer gains windowed(), scanOwed(), killedWindow(), finished() (existing killed() is the page case), real readHeld over held captures, one test in fixtures.test.mjs. NOTE: the windowed answer carries NO cursor in detail (real detail is {read_through, total}); the cursor is the index state's, so windowed().cursor and killedWindow().cursor read it for the caller; the tick's own counters are {written, skipped} on READING_HELD only; {written, skipped, owed, failed} are unitsOf's. Fixtures list fails only t48:30, t44:93 (plane run), agent-worker :84 and :101 (yours). Module 392/392; format, architecture, coverage 87/87, words, ownership 0. Record: build/jobs/T51/extraction.md
