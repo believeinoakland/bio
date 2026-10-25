@@ -27,6 +27,8 @@ import { CROP_REFUSALS } from "../src/imagecrop.mjs";
 import { openPdf, pdfPageImages, imagePlacementSource } from "../../bio-plane/src/pdfstructure.mjs";
 import { boundOf } from "../../bio-plane/src/read-bounds.mjs";
 import { generate as generatePdf } from "../../bio-plane/test/pdfgen.mjs";
+import { generate } from "../../bio-plane/test/imggen.mjs";
+import { pixelRefusal, pageRefusal, renderedPage } from "./pdf-pixels-fixtures.mjs";
 import { cropImage } from "../src/imagecrop.mjs";
 import { makePdf, onePage, content, image, readPng, turn, hex, deflateSync, runner } from "./make-pdf.mjs";
 
@@ -827,6 +829,40 @@ console.log("\n--- R44: a photographed page, made ready for the engine ---");
     t("R44 no text control: a page with text says text_found", (await photo("page-clean", { prepare: true })).prepared.text_found, true);
   }
 
+  /* R44 (a), (d) (fix round 10, cause 6; K5053): a sparse page. The walkers' pictures hold three lines of text, under half a
+     percent ink: the ink level was taken from the darkest half percent of all the pixels, so the paper went dark and the page
+     was found to hold no text. The pictures are made by test-support's imggen, the walkers' recipes. */
+  {
+    /* The ink of a page however little of it there is: the darkest twentieth of the pixels under 128 (the 0.5th percentile
+       of all the pixels, `light().ink`, is paper on a page whose ink is under half a percent). */
+    const inkLevel = (png) => {
+      const v = Array.from(readPng(png).samples).filter((x) => x < 128).sort((a, b) => a - b);
+      return v.length ? v[Math.floor(v.length * 0.05)] : 255;
+    };
+    const sparse = async (recipe, opts = {}) => {
+      const g = generate({ kind: "png", seed: "rw9-A-7", size: { pages: 1, lines: 3 }, ...recipe });
+      const r = await renderPictureToPixels(await g.bytes(), 0, { maxEdge: 4096, grey: true, prepare: true, ...opts });
+      answers.push(r);
+      return { r, truth: g.truth };
+    };
+    for (const frame of [undefined, [4096, 3000], [4097, 3000]]) {
+      const { r, truth } = await sparse(frame ? { frame } : {});
+      const inkShare = (() => { const p = readPng(r.bytes); let n = 0; for (const v of p.samples) if (v < 96) n++; return n / p.samples.length; })();
+      t(`R44 sparse page: three lines of text${frame ? ` framed ${frame.join(" x ")}` : ""} are found to hold text, the lines 15 to 30 px`,
+        [r.ok, r.prepared.text_found, r.prepared.line_px >= 15 && r.prepared.line_px <= 30], [true, true, true]);
+      t(`R44 sparse page: ${frame ? frame.join(" x ") : "the letter page"} keeps its paper light (read 243 or more) and holds under half a percent ink`,
+        [light(r.bytes).paper >= 243, inkShare > 0 && inkShare < 0.005, truth.pages[0].lines.length], [true, true, 3]);
+      t(`R44 sparse page: ${frame ? frame.join(" x ") : "the letter page"}'s ink reads at most 30, however little of it there is`, inkLevel(r.bytes) <= 30, true);
+    }
+    const noise = await sparse({ seed: "rw9-A-noise", size: { pages: 1, lines: 0 }, degrade: { noise: 0.4 } });
+    t("R44 sparse page control: noise is still no text", [noise.r.ok, noise.r.prepared.text_found], [true, false]);
+    t("R44 sparse page control: a blank page is still no text", (await photo("page-blank", { prepare: true })).prepared.text_found, false);
+    const dense = await sparse({ size: { pages: 1, lines: 18 } });
+    t("R44 sparse page control: a dense page is still text, its ink at most 30", [dense.r.prepared.text_found, inkLevel(dense.r.bytes) <= 30], [true, true]);
+    const words3 = words(await readByEngine((await sparse({})).r.bytes));
+    t("R44 sparse page: the engine reads words from the prepared three-line page", words3.length > 0, true);
+  }
+
   {
     const a = await photo("page-combined-a", { prepare: true }), b = await photo("page-combined-a", { prepare: true });
     t("R44 R40 the same bytes and options prepare to the same pixels, and the answer's keys are R42's with `prepared`",
@@ -842,6 +878,29 @@ console.log("\n--- R44: a photographed page, made ready for the engine ---");
     t("R44 R42 a refusal still refuses as R42 does (bytes that are no picture)", (await renderPictureToPixels(new Uint8Array([1, 2, 3, 4]), 0, { maxEdge: 64, prepare: true })).reason, "NOT_A_PICTURE");
     t("R44 a tiny picture with no text lines is answered, not refused", [tiny.ok, tiny.prepared.text_found], [true, false]);
   }
+}
+
+console.log("\n--- the published fixtures: pixelRefusal, pageRefusal, renderedPage give the module's own real answers ---");
+{
+  for (const [reason, extra] of [["NOT_A_PDF", {}], ["PAGE_HAS_TEXT_LAYER", { imageCount: 1 }], ["MULTIPLE_IMAGES_ON_PAGE", { imageCount: 2 }],
+    ["UNSUPPORTED_FILTER", { filters: ["LZWDecode"] }], ["PIXELS_UNDETERMINED", { detail: "decode_array" }]]) {
+    const r = await pixelRefusal(reason);
+    t(`fixtures pixelRefusal(${reason}) is the renderer's refusal, its why that reason's own text`, [r.ok, r.reason, r.why, r.bytes, ...Object.keys(extra).map((k) => r[k])],
+      [false, reason, REFUSALS[reason], undefined, ...Object.values(extra)]);
+  }
+  const big = await pixelRefusal("IMAGE_TOO_LARGE");
+  t("fixtures pixelRefusal(IMAGE_TOO_LARGE) is the picture renderer's, naming PICTURE_FRAME_MAX", [big.ok, big.reason, big.bound_name, big.bound], [false, "IMAGE_TOO_LARGE", "PICTURE_FRAME_MAX", PICTURE_FRAME_MAX]);
+  t("fixtures pixelRefusal refuses a reason it makes no input for", await pixelRefusal("A_REASON_NOBODY_DECLARED").then(() => "answered", (e) => e.message.slice(0, 12)), "pixelRefusal");
+  const text = await pageRefusal("PAGE_HAS_TEXT_LAYER"), prog = await pageRefusal("UNSUPPORTED_JPEG_PROCESS"), none = await pageRefusal("NOT_A_PICTURE");
+  t("fixtures pageRefusal: PAGE_HAS_TEXT_LAYER, UNSUPPORTED_JPEG_PROCESS (with jpeg, process and page), NOT_A_PICTURE",
+    [[text.ok, text.reason], [prog.ok, prog.reason, prog.page, typeof prog.jpeg, typeof prog.process], [none.ok, none.reason, none.why]],
+    [[false, "PAGE_HAS_TEXT_LAYER"], [false, "UNSUPPORTED_JPEG_PROCESS", 0, "string", "string"], [false, "NOT_A_PICTURE", REFUSALS.NOT_A_PICTURE]]);
+  const pdf = await renderedPage("pdf"), pic = await renderedPage("picture", { prepare: true });
+  t("fixtures renderedPage('pdf') is the page renderer's success: route, size, digest, geometry",
+    [pdf.ok, pdf.route, pdf.mediaType, [pdf.width, pdf.height], pdf.upright, pdf.rotate_deg, pdf.pixels_sha256 === createHash("sha256").update(readPng(pdf.bytes).samples).digest("hex"), "page_geometry" in pdf],
+    [true, "raw-samples-grey8", "image/png", [3, 2], true, 0, true, true]);
+  t("fixtures renderedPage('picture', {prepare}) is the picture renderer's success, prepared",
+    [pic.ok, pic.route, pic.mediaType, pic.upright, pic.prepared.text_found, pic.pixels_sha256 === createHash("sha256").update(readPng(pic.bytes).samples).digest("hex")], [true, "decoded-picture", "image/png", true, true, true]);
 }
 
 console.log("\n--- R45: wrong pixels are never ok:true ---");
