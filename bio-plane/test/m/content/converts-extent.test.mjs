@@ -11,7 +11,7 @@ import { deflateRawSync, crc32 } from "node:zlib";
 import { world, V, LAYER, provDoc, infoMd } from "./fixture.mjs";
 import {
   CONTENT_EXTENT_CHECKS, CONTENT_EXTENT_OWN_CHECKS, CONTENT_EXTENT_A1_RE, canonicalExtent, describeExtent,
-  contentIdFor, citationExtent, checkContentExtent,
+  contentIdFor, citationExtent, checkContentExtent, CONTENT_EXTENT_DOCUMENT_ONLY,
 } from "../../../src/content/index.mjs";
 import { sha256HexSync, canonicalJson } from "../../../src/record-grammar/index.mjs";
 import { getFormat } from "../../../src/formats.mjs";
@@ -277,9 +277,15 @@ test("R7, R8 (content-extent-arms, capture-container-extent): each level bounds 
   assert.equal(code(mint(BOOK, { kind: "sheet-cell", sheet: "Sheet1", cell: "ZZ999999" })), "OK", "no grid held: the cell is not bounded");
   assert.match(w.content.contentContextFor(w.content.captureFor(BOOK)).container.empty_level, /every sheet's row and column extent/);
   assert.equal(code(mint(TEXT, { kind: "doc-para", para: 99 })), "CONTENT_EXTENT_OUT_OF_RANGE");
-  assert.equal(code(mint(TEXT, { kind: "slide-shape", slide: 99 })), "OK", "a paragraph count bounds no slide");
-  assert.equal(code(mint(TEXT, { kind: "sheet-cell", sheet: "Any", cell: "A1" })), "OK", "nor any sheet");
-  assert.equal(code(mint(BOOK, { kind: "doc-para", para: 0 })), "OK", "a workbook's missing paragraph count is not an empty level");
+  /* R62: a Word file holds no slide or sheet and a workbook no paragraph, so those three are the format's refusals; the
+     levels bound only themselves where the format is not held, which the pure check answers on a bare container */
+  assert.equal(code(mint(TEXT, { kind: "slide-shape", slide: 99 })), "CONTENT_EXTENT_OUT_OF_RANGE", "a Word file holds no slide");
+  assert.equal(code(mint(TEXT, { kind: "sheet-cell", sheet: "Any", cell: "A1" })), "CONTENT_EXTENT_OUT_OF_RANGE", "nor any sheet");
+  assert.equal(code(mint(BOOK, { kind: "doc-para", para: 0 })), "CONTENT_EXTENT_OUT_OF_RANGE", "a workbook holds no paragraph");
+  const bare = { chain: LAYER, pageCount: null, container: { paragraphs: 4, sheets: [{ name: "Sheet1" }] } };
+  assert.equal(checkContentExtent({ kind: "slide-shape", slide: 99 }, bare), null, "a paragraph count bounds no slide");
+  assert.equal(checkContentExtent({ kind: "sheet-cell", sheet: "Any", cell: "A1" }, { ...bare, container: { paragraphs: 4 } }), null, "nor any sheet");
+  assert.equal(checkContentExtent({ kind: "doc-para", para: 0 }, { ...bare, container: { sheets: [{ name: "Sheet1" }] } }), null, "a workbook's missing paragraph count is not an empty level");
   /* no container held at all: the impossible-looking address mints, stated, never refused */
   const wild = mint(DECK, { kind: "sheet-cell", sheet: "NoSuchSheet", cell: "ZZ9999999" });
   const wildP = mint(DECK, { kind: "doc-para", para: 9999999 });
@@ -574,4 +580,57 @@ test("R3, R12, R28, R39 (content-extent): re-minting after the bundle's purge gi
   const now = w.content.resolveCitation({ target: LATE });
   assert.deepEqual([now.minted, now.content_id], [true, contentIdFor(late.sha, { kind: "document" }, chain)]);
   assert.equal(w.content.contentRow(now.content_id).extent_kind, "document");
+});
+
+/* R62 (K5157; walk-T51-final 06 §5): the extent kinds each format can hold. A kind a format cannot hold is refused
+   C-45.1 naming the kind and the format; a kind it can hold, a format the record does not hold and a format outside the
+   table are not refused. Sample extents are each kind's in-range address (no bound is held, so only the format judges). */
+const R62_SAMPLES = {
+  "pdf-page": { kind: "pdf-page", page: 0 },
+  "sheet-cell": { kind: "sheet-cell", sheet: "S", cell: "A1" },
+  "sheet-range": { kind: "sheet-range", sheet: "S", range: "A1:B2" },
+  "doc-para": { kind: "doc-para", para: 0 },
+  "doc-table": { kind: "doc-table", table: 0 },
+  "slide-shape": { kind: "slide-shape", slide: 1 },
+};
+const R62_HOLDS = {
+  pdf: ["pdf-page"], docx: ["doc-para", "doc-table"], odt: ["doc-para", "doc-table"],
+  xlsx: ["sheet-cell", "sheet-range"], ods: ["sheet-cell", "sheet-range"], csv: ["sheet-cell", "sheet-range"],
+  pptx: ["slide-shape"], odp: ["slide-shape"], text: ["doc-para"],
+};
+
+test("R62: over every format of the table, each extent kind the format cannot hold is refused C-45.1 naming the kind and the format, and each kind it holds is admitted; format null and a format outside the table are not refused", () => {
+  const ctx = (format) => ({ chain: LAYER, pageCount: null, container: { format } });
+  let refusals = 0, admissions = 0;
+  for (const [format, holds] of Object.entries(R62_HOLDS))
+    for (const [kind, extent] of Object.entries(R62_SAMPLES)) {
+      const r = checkContentExtent(extent, ctx(format));
+      if (holds.includes(kind)) { assert.equal(r, null, `${format} holds ${kind}`); admissions++; continue; }
+      assert.deepEqual([r && r.ok, r && r.code, r && r.check], [false, "CONTENT_EXTENT_OUT_OF_RANGE", "C-45.1"], `${format} cannot hold ${kind}`);
+      assert.equal(r.translation, CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_OUT_OF_RANGE.translation);
+      assert.ok(r.detail.includes(kind) && r.detail.includes(format), `the detail names ${kind} and ${format}: ${r.detail}`);
+      refusals++;
+    }
+  assert.equal(refusals, 9 * 6 - 14, "every cell of the matrix not held was refused");
+  assert.equal(admissions, 14);
+  for (const extent of Object.values(R62_SAMPLES)) {
+    assert.equal(checkContentExtent(extent, ctx(null)), null, `format null: ${extent.kind} is not refused (R8)`);
+    assert.equal(checkContentExtent(extent, ctx("html")), null, `a format outside the table: ${extent.kind}`);
+    assert.equal(checkContentExtent(extent, { chain: LAYER, pageCount: null, container: {} }), null, "a container naming no format");
+    assert.equal(checkContentExtent(extent, CONTENT_EXTENT_DOCUMENT_ONLY), null, "the document-only pass");
+  }
+  assert.equal(checkContentExtent({ kind: "document" }, ctx("docx")), null, "the whole document is held by every format");
+});
+
+test("R62: at mint a pdf-page over a Word capture, a cell over a PDF and a slide over a text are refused C-45.1 and write nothing; the kind each holds mints", () => {
+  const { w, mint } = office({ [TEXT]: { captureFormat: "docx" }, [BOOK]: { captureFormat: "pdf" }, [DECK]: { captureFormat: "text" } });
+  for (const [id, extent, format] of [[TEXT, R62_SAMPLES["pdf-page"], "docx"], [BOOK, R62_SAMPLES["sheet-cell"], "pdf"], [DECK, R62_SAMPLES["slide-shape"], "text"]]) {
+    const r = mint(id, extent);
+    assert.deepEqual([r.ok, r.code, r.check], [false, "CONTENT_EXTENT_OUT_OF_RANGE", "C-45.1"], JSON.stringify(extent));
+    assert.ok(r.detail.includes(extent.kind) && r.detail.includes(format), r.detail);
+  }
+  assert.equal(w.count("content"), 0, "a refusal writes nothing");
+  for (const [id, extent] of [[TEXT, R62_SAMPLES["doc-para"]], [BOOK, R62_SAMPLES["pdf-page"]], [DECK, R62_SAMPLES["doc-para"]]])
+    assert.equal(mint(id, extent).ok, true, JSON.stringify(extent));
+  assert.equal(w.count("content"), 3);
 });
