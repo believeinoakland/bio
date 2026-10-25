@@ -82,3 +82,21 @@ Deferred: nothing. Found in other modules: nothing new beyond the plan's other G
 Files created outside paths: none.
 
 Size (session_019jzP674bQQxG4CVu7SZEUt): test runs 6, module lines 1403
+
+## J8 · COMPLETE
+
+Fix round 10, batch 1, cause R15 (G3; R24 (c)) — B5 START handled (tranche merged first).
+
+(1) Root cause: `TAG_RE` (`subresources.mjs:75`, used by `scanHtml` and `renderCompanion`) read to the end of the text from every `<` of an unclosed run (`<div<div…`): n squared. The same shape was in the neighbours on the same path: `COMMENT_RE`, `STYLE_EL_RE`, `stripElements`' three patterns plus `<base>`, `<meta refresh>`, `<head>`, the css `url(` / `@import` / comment patterns, `srcsetCandidates`' `/,+$/`, and the queue (`splice` and a full scan per item).
+Fix: linear scanners (`tagScanner`, `mapTags`, `mapElements`, `dropOpenTags`, `dropSpans`, `cssUrls`, `cssImports`), each remembering that a start with no closer fails every later start; `makeQueue` (one list per priority, same order); `recIdx` for `records.indexOf`. Same matches as before: differential fuzz of old against new, 41,000 random pages, 0 differences (scratch only, not committed).
+Measured at 60,000 `<div` (240 KB): 12 s before, 12 ms now; `<script ` ×15,000 52 s → 3 ms; `<meta ` 25 s → 3 ms.
+(2) Tests missed it: small pages, no time assertion.
+(3) Failing-first, seen red on the old module through `captureSubresources`: the 240 KB `<div` page took 502 s over its three timed runs (limit 1 s), the other shapes 582 s, the 40,000-image priority page 32 s. Green now: 62 ms, 735 ms, 1.6 s. Tests: "R1, R14, R15: a page of unclosed tags…" (under 1 s; ratio at twice the size under 3 times, floor 20 ms; refs, links and fetches unchanged against the closed page), "…every shape of opening that is never closed…", "R1, R14: a `>` inside a quoted value…", "R3: a page naming many references…".
+(4) Platform check: L, named for the redeploy: `captureupload` ST for the 240 KB file, then Cloudflare analytics (`http` CPU p999). R-PATH: every caller of `scanHtml` goes through `captureSubresources`; the acquisition, capture-*, link-sweep, monitoring, connections and three reader tests ran.
+
+Note for BOB: no requirement states a time bound; the tests are named under R1, R14, R15 and R3. Suggest a requirement (a walk's time grows with the page) if wanted.
+Deferred: none. Fixtures markers added: none. Stale generated artifacts (bundles of bio-plane, pdf-worker, ocr-worker): BOB regenerates.
+
+Tests: subresources + acquisition walk 55 pass, 0 fail; users (acquisition, capture-requests, capture-sources, connections, link-sweep, monitoring, odf-reader, office-readers, pdf-reader) 1433 pass, 0 fail. Checks: format 0 failures; architecture 0; coverage 36 of 36, 0; ownership 3 files, 0 failures. The full `checks/run.mjs` lists "answer" failures in other modules' files only.
+
+Size (session_01XC1xckBh1sjtooJq8nyEsw): test runs 6, module lines 1596
