@@ -141,3 +141,7 @@ Fix round 10, Wave A batch 2 done. Published in bio-plane/test/m/promotion/fixtu
 `makeMembership`'s `projectAuthority` and `visibilitySettingRefusal` now return membership's own answers from its published `projectActRefusals` (`test/m/membership/fixtures.mjs`, taken once at load; membership is in my uses): the invented literals at `fixtures.mjs:163,166` are gone. `checks/fixtures.mjs /home/user/bio promotion --list`: 0 failures (2 accepted generic markers). `test/m/promotion/` + `d526-refusal-order`: 170 pass, 0 fail. format, architecture, coverage (61/61), words: 0 failures. Markers I added, unchanged: `converts.test.mjs:39` BIAS_FENCE, `row-census.test.mjs:482` CONTROL_ARRIVAL. Nothing left or deferred.
 
 Size (session_01FjnskQoMLcMGgXpteLNQ1m): test runs 9, module lines 3987
+
+## J11 · COMPLETE
+
+B10 applied: the membership double's projectAuthority and visibilitySettingRefusal now return membership's real answers from its projectActRefusals fixture; fixtures check (absolute path) 0 failures; promotion 170 pass; format, architecture, coverage 61/61, words, ownership 0 failures. Pushed.
