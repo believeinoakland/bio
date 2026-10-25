@@ -312,7 +312,7 @@ test("R6 the real store walked from the claim to Finished: each part sends its a
   const answerOf = (op) => o.requests.findLast((x) => x.op === op).answer;
   assert.deepEqual(await sent("groupnameset", { "su-name": " River Town Tenants " }), [{ name: "River Town Tenants" }]);
   assert.equal((await viaDoor(o.world, "groupidentity", {}, o.token)).json.result.display_name, "River Town Tenants", "the plane holds the name");
-  assert.deepEqual(await sent("groupdomainset", { "su-domain": "rivertown.example" }), [{ domain: "rivertown.example" }]);
+  assert.deepEqual(await sent("groupdomainset", { "su-domain": "walked-team.example" }), [{ domain: "walked-team.example" }]);
   assert.deepEqual(await sent("profilesset", { "su-pick": PLACE }), [{ profiles: [PLACE] }]);
   assert.deepEqual(await sent("officesseed", {}), [{}]);
   assert.ok(answerOf("officesseed").value.seeded.length > 0, "the plane seeded the place's public offices");
@@ -380,9 +380,9 @@ test("R6 every part is resumable: what the reads answer is drawn as done, and th
   const o = await returned({ env: { FILE_SCANNER: scannerBinding() }, after: async ({ world, as }) => {
     await act(world, as, "groupnameset", { body: { name: "River Town" } });
     // the website: the claim's file is served as the plane gave it, so the check finds it
-    const claim = await act(world, as, "groupdomainset", { body: { domain: "rivertown.example" } });
-    world.script(/rivertown\.example\/\.well-known\//, () => new Response(JSON.stringify(claim.well_known.body), { headers: { "content-type": "application/json" } }));
-    await act(world, as, "groupdomainset", { body: { domain: "rivertown.example" } });
+    const claim = await act(world, as, "groupdomainset", { body: { domain: "resumed-team.example" } });
+    world.script(/resumed-team\.example\/\.well-known\//, () => new Response(JSON.stringify(claim.well_known.body), { headers: { "content-type": "application/json" } }));
+    await act(world, as, "groupdomainset", { body: { domain: "resumed-team.example" } });
     await act(world, as, "courtnoticeset", { body: { choice: "tell" } });
     await act(world, as, "hostingaccessset", { body: { holders: "The treasurer", note: null } });
     await act(world, as, "aikeepaway", { body: { on: true, reason: "Tips." } });
@@ -393,7 +393,7 @@ test("R6 every part is resumable: what the reads answer is drawn as done, and th
     await reauth(world, as);
     await act(world, as, "memberadd", { body: { memberId: "dev", cover: "Dev", role: "admin" } });
   } });
-  has(o, "screen.setup.name.now", { name: "River Town" }); has(o, "screen.setup.domain.verified", { domain: "rivertown.example" });
+  has(o, "screen.setup.name.now", { name: "River Town" }); has(o, "screen.setup.domain.verified", { domain: "resumed-team.example" });
   has(o, "screen.setup.court.now.tell"); has(o, "screen.group.hosting.now.setup", { date: { html: date(o.requests.findLast((r) => r.op === "hostingaccess").answer.value.current.at) } });
   assert.ok(o.text.includes("The treasurer"), "who holds the hosting account");
   has(o, "screen.setup.keepaway.on");
@@ -498,7 +498,7 @@ test("R22 the website: 'No' draws nothing more; 'Yes', explained by screen.setup
   await choose(o, "su-site", 0);
   assert.ok(!actOps(o.tree).includes("groupdomainset"));
   // a team that holds a website opens on "Yes"
-  const held = await returned({ after: ({ world, as }) => act(world, as, "groupdomainset", { body: { domain: "rivertown.example" } }) });
+  const held = await returned({ after: ({ world, as }) => act(world, as, "groupdomainset", { body: { domain: "held-team.example" } }) });
   assert.ok(actOps(held.tree).includes("groupdomainset"));
 });
 
