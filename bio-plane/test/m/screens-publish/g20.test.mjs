@@ -1,7 +1,4 @@
 /* screens-publish, T51 fix round 6 (G20; S11): the docket's document picker reaches every held document, or says how many it lists. */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, main, drew, ok, refusedIn, P, C } from "./fixtures.mjs";

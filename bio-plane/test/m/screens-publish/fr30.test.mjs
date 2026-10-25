@@ -1,11 +1,8 @@
 /* screens-publish FR-30 (T51 fix round; K4165, K4168, K4192, K4194, K4197): R52 the docket starts the next edition. Each sentence is
  * asserted by its key (R24); every request is compared with its owner's declaration by the harness (interface-shell R104). */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, main, drew, drewIn, ops, press, last, fill, choose, until, keptKey, ok, word, hasWord, COPY, PREFLIGHT, GRANT_SECRET, P, C, DR } from "./fixtures.mjs";
+import { open, openWorld, main, drew, drewIn, ops, press, last, fill, choose, until, keptKey, ok, word, hasWord, COPY, PREFLIGHT, GRANT_SECRET, P, C, DR } from "./fixtures.mjs";
 
 const tick = (p, id, v) => { p.doc.getElementById(id).querySelectorAll("input").forEach((b) => { if (b.value === v) b.checked = true; }); };
 const DOCKET = `/app/docket/${P}/${C}`;
@@ -41,7 +38,7 @@ test("R52 with no finding chosen, or no scope, nothing is sent and the refusal i
   assert.ok(main(p));
 });
 
-const IMPORT = (acc) => ({ importedcase: { status: 200, json: { ok: true, result: { import: "IMP-2026-0001", group: "West Oakland Neighbors", case: "Port lease revenue",
+const IMPORT = (acc) => ({ importedcase: { status: 200, json: { ok: true, result: { import: "IMP-2026-0001", group: "West Oakland Neighbors", case: "CASE-2026-3549", scope: "Port lease revenue",
   edition: { edition: 2, findings: [{ finding: "FND-W-1", title: "Port lease revenue fell short", result: "recreated", origin: acc ? { acceptance: { by: "ana", at: "2026-10-02T09:00:00Z", reason: "checked", checked: "x" } } : {} }] } } } } });
 
 test("R55 an accepted import offers 'Withdraw this acceptance, with a reason' and the act sends the reason", async () => {
@@ -85,12 +82,13 @@ test("R56 with no answer chosen nothing is sent; a refusal is drawn by its words
 });
 
 test("R67 the receipt draws the knock's reference under the heading, by key; an answer without one draws the receipt as before (control)", async () => {
-  const withRef = await open("/app/doorbell", { boot: PUBLIC, plane: { knock: { status: 200, json: { ok: true, result: { ok: true, knockId: "KNOCK-77" } } } } });
+  const withRef = await openWorld("/app/doorbell"); // the real doorbell answers a knockId
   choose(withRef, "db-file", new Uint8Array([104, 105]));
   await press(withRef, "knock");
   assert.ok(withRef.doc.querySelector("[data-received]"));
   assert.ok(drew(withRef, "screen.doorbell.after.head"));
-  assert.ok(drew(withRef, "screen.doorbell.reference", { reference: "KNOCK-77" }), "the reference is the knockId the doorbell answers");
+  assert.ok(withRef.answered("knock").knockId, "the doorbell answers a knockId");
+  assert.ok(drew(withRef, "screen.doorbell.reference", { reference: withRef.answered("knock").knockId }), "the reference is the knockId the doorbell answers");
   const without = await open("/app/doorbell", { boot: PUBLIC, plane: { knock: { status: 200, json: { ok: true, result: { ok: true } } } } });
   choose(without, "db-file", new Uint8Array([104, 105]));
   await press(without, "knock");
@@ -99,17 +97,18 @@ test("R67 the receipt draws the knock's reference under the heading, by key; an 
 });
 
 test("R49 the receipt draws the knock's fingerprint, size, pseudonym and a made phrase once each by key; the phrase is kept nowhere (B420 1)", async () => {
-  const MADE = "SENTINEL-MADE-9QX7-4M2K-8TTR";
-  const answer = { ok: true, knockId: "KNOCK-77", sha256: "ab12" + "0".repeat(56) + "ef90", bytes: 2100000, pseudonym: "PSEUD-K3", secret: MADE };
-  const p = await open("/app/doorbell", { boot: PUBLIC, plane: { knock: { status: 200, json: { ok: true, result: answer } } } });
+  const p = await openWorld("/app/doorbell"); // the real doorbell makes the phrase, the fingerprint and the pseudonym
   choose(p, "db-file", new Uint8Array([104, 105]));
+  tick(p, "db-make", "make");
   await press(p, "knock");
+  const answer = p.answered("knock"), MADE = answer.secret;
+  assert.ok(MADE && answer.sha256 && answer.pseudonym && answer.bytes === 2, "the doorbell's answer carries the made phrase, the fingerprint, the pseudonym and the size");
   const r = p.doc.querySelector("[data-receipt]");
   assert.ok(r, "the receipt is drawn");
-  assert.ok(drew(p, "screen.doorbell.receipt.fingerprint", { fingerprint: "ab120000…0000ef90" }));
+  assert.ok(drew(p, "screen.doorbell.receipt.fingerprint", { fingerprint: answer.sha256.slice(0, 8) + "…" + answer.sha256.slice(-8) }));
   assert.ok(drew(p, "screen.doorbell.receipt.fingerprint.help"));
-  assert.ok(drew(p, "screen.doorbell.receipt.size", { size: "2.1 MB" }));
-  assert.ok(drew(p, "screen.doorbell.receipt.pseudonym", { pseudonym: "PSEUD-K3" }) && drew(p, "screen.doorbell.receipt.pseudonym.help"));
+  assert.ok(drew(p, "screen.doorbell.receipt.size", { size: "2 B" }));
+  assert.ok(drew(p, "screen.doorbell.receipt.pseudonym", { pseudonym: answer.pseudonym }) && drew(p, "screen.doorbell.receipt.pseudonym.help"));
   assert.ok(drew(p, "screen.doorbell.receipt.secret", { secret: MADE }) && drew(p, "screen.doorbell.receipt.secret.note"));
   assert.equal(String(r.textContent).split(MADE).length - 1, 1, "the phrase is drawn once");
   assert.ok(!JSON.stringify(p.requests).includes(MADE), "the made phrase is in no later request");
@@ -118,7 +117,7 @@ test("R49 the receipt draws the knock's fingerprint, size, pseudonym and a made 
 });
 
 test("R49 'Make one for me' sends generateSecret and no phrase, even with one typed; unticked it sends the typed phrase and not generateSecret (control)", async () => {
-  const p = await open("/app/doorbell", { boot: PUBLIC });
+  const p = await openWorld("/app/doorbell");
   assert.ok(drew(p, "screen.doorbell.secret.make") && drew(p, "screen.doorbell.secret.make.help"));
   choose(p, "db-file", new Uint8Array([104, 105]));
   tick(p, "db-make", "make");
@@ -127,7 +126,7 @@ test("R49 'Make one for me' sends generateSecret and no phrase, even with one ty
   const b = last(p, "knock").body;
   assert.equal(b.generateSecret, true);
   assert.equal(b.knockerSecret, undefined);
-  const q = await open("/app/doorbell", { boot: PUBLIC });
+  const q = await openWorld("/app/doorbell");
   choose(q, "db-file", new Uint8Array([104, 105]));
   await press(q, "knock", { values: { "db-secret": "a-long-enough-secret-phrase-of-mine" } });
   assert.equal(last(q, "knock").body.knockerSecret, "a-long-enough-secret-phrase-of-mine");

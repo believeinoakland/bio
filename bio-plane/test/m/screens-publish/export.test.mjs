@@ -1,8 +1,5 @@
 /* screens-publish R40 and R41 (T51-121; DEC-330 A81; N1229): the review copy saved as a stamped file in the page, behind the warning that a
  * file cannot be recalled; and the first share reading the team's zone from the member door's copy, not from a preflight. */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, main, text, drew, drewIn, day, word, ops, press, fill, last, ok, refusedIn, COPY, P, DR, C, GRANT_SECRET } from "./fixtures.mjs";

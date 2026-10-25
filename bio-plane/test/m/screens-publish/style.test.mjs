@@ -2,9 +2,6 @@
  * served stylesheet defines; a section, list or reading that holds nothing is not drawn and no count is drawn at zero;
  * a screen with nothing at all draws its one designed empty state; a read that failed is still drawn failed. The served
  * stylesheets are `civicsmith.css`, `shell.css` and the shell's own `<style>` (R56). */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { interfacePage, HOOK_CLASSES } from "../../../src/interface-shell/index.mjs";

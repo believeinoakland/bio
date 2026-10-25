@@ -1,6 +1,6 @@
 # BOB to journey-check (T51)
 
-**Read** · handled J12
+**Read** · handled J13
 
 ## B1 · START
 
@@ -182,3 +182,25 @@ Your job is journey-check's batch-7 work (`build/plan/fix-round-10-waves.md` §2
 3. **Your 17 fixture lines** (`node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio journey-check --list`): journey-check imports no module (K3100), so before you touch `storeWorld()` or any other module's fixture, REPORT the line, the provider and the import you would add; BOB decides the edge and answers. Carry on with the rest meanwhile.
 
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio journey-check --list` at zero but the lines named above as allowed to remain; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio journey-check $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B18 · ANSWER · re J13
+
+ANSWER re J13 (K5182). Build your best reading, (1) to (3), with the 0.87.0 cut as the one dependency (K5175: nothing is left out):
+(1) `walkStates` takes the arm: on the local arm an unreached state FAILS by its name (kind `state`); on the live arm it stays a note, as R21 is written. No requirement change.
+(2) CARRIED_STATES is completed from the mock's own "In this mockup, show" controls for the four new screens of R28 (hold, holdnotice, counsel, grouprules) and the carried-feature states of screens-settings, screens-intake and screens-daily, labels read from the mock.
+(3) A `reach` function for each state whose live screen you can read in the screens' source, proven at the interface by drawing the real screen through the interface harness (as pseudo.test.mjs does): it finds the screen in the state, and answers false for a screen not in it.
+A state you cannot write a `reach` for from the source: name it in your COMPLETE with why. The local arm end to end runs after the 0.87.0 cut (G90) in the round's step 4 (K5063), where its red-by-name states are read; your tests here prove each `reach` at the interface. Your B1, B3 and live.test fixes: keep them.
+
+## B19 · CHANGE
+
+CHANGE (K5183, Bob: the weekly limit is at 99%; the work moves to Bob's primary account). SAVE NOW, before anything else, then stop:
+1. Commit everything you have changed, finished or not, on your job branch (a work-in-progress commit is right; never a reset, rebase or force), merge nothing new, and `git push origin job/T51/<module>`; check it with `git ls-remote`.
+2. Append to your record a section "Saved at K5183": what is done, what is half done (file names), the exact next step, and any worker you stop. Stop your workers.
+3. `mail state --set "WAITING ON BOB (K5183 save)"`, push, and end your turn with the one line `Waiting on BOB (K5183 save). Nothing for Bob to do.` A new session on the primary account continues your job from your record and branch.
+Do not start any long command now.
+
+## B20 · RESUME
+
+RESUME (BOB #301, K5184). The work moved to Bob's primary account (K5183): your predecessor on the third account saved and stopped. You continue it as a new session on the same branch. First run `mail start --session <your session id> --depth 2` (keep the record's cursor); never `reset` or force anything: merge `origin/tranche/T51` into your branch with a merge commit when your steps say so (the tranche now holds the `uses` edges of K5184). Your record's section **Saved at K5183 (JOURNEY-CHECK #14, B17's fix-round-10 batch 7; the work moves to Bob's primary account)** names what is done and your exact next step: follow it in order, then complete as roles/JOB.md steps 5-7 say. A refused act on the code, your branch, the tranche or a test deployment is covered by Bob's standing approval (bio K5120): take it again once as one plain command, never relayed to Bob.
+
+B18 answered your J13: build (1) to (3). Your saved section's 'Half done' and 'Bookkeeping not done' lists are your steps; `mail done --as job --through B20` after reading this.

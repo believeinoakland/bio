@@ -398,3 +398,21 @@ Also, with B32 (K5084; CASE-CATALOGUE #4 J5, cause R31): case-catalogue is merge
 ## B34 · RESUME
 
 RESUME (K5179) for CASE-AUTHORING #45: CASE-AUTHORING #44 read CHANGE B33 (the R31 chain test: two grounded legs, sever one citation, conclude, prepare, the gate clean; control with the citation live) and its session ended before writing it (archived 11:36; nothing on your branch but mail commits). Merge origin/tranche/T51 into your branch first (never a rebase), then do B33 whole and post COMPLETE.
+
+## B35 · RESUME
+
+RESUME (K5182) for CASE-AUTHORING #45. Your session stopped asking a person to `git reset --hard` or to push a new branch: neither is needed and neither is done. Your local `job/T51/case-authoring` holds your one commit (the R31 chain test) and origin holds only mail commits after it. Plain commands, one at a time (K5120): `git fetch origin job/T51/case-authoring tranche/T51`; `git merge origin/job/T51/case-authoring` (a merge commit; never a rebase, never a reset); resolve any conflict in your record by keeping both sides; then `git push origin job/T51/case-authoring`. Then finish B33 (the R31 chain test, failing first) and post COMPLETE. A step refused: post BLOCKED naming it.
+
+## B36 · CHANGE
+
+CHANGE (K5183, Bob: the weekly limit is at 99%; the work moves to Bob's primary account). SAVE NOW, before anything else, then stop:
+1. Commit everything you have changed, finished or not, on your job branch (a work-in-progress commit is right; never a reset, rebase or force), merge nothing new, and `git push origin job/T51/<module>`; check it with `git ls-remote`.
+2. Append to your record a section "Saved at K5183": what is done, what is half done (file names), the exact next step, and any worker you stop. Stop your workers.
+3. `mail state --set "WAITING ON BOB (K5183 save)"`, push, and end your turn with the one line `Waiting on BOB (K5183 save). Nothing for Bob to do.` A new session on the primary account continues your job from your record and branch.
+Do not start any long command now.
+
+## B37 · RESUME
+
+RESUME (BOB #301, K5184). The work moved to Bob's primary account (K5183): your predecessor on the third account saved and stopped. You continue it as a new session on the same branch. First run `mail start --session <your session id> --depth 2` (keep the record's cursor); never `reset` or force anything: merge `origin/tranche/T51` into your branch with a merge commit when your steps say so (the tranche now holds the `uses` edges of K5184). Your record's section **Saved at K5183 (CASE-AUTHORING #45, session_014YV25pFfG6H8Z4B6eJyWr3)** names what is done and your exact next step: follow it in order, then complete as roles/JOB.md steps 5-7 say. A refused act on the code, your branch, the tranche or a test deployment is covered by Bob's standing approval (bio K5120): take it again once as one plain command, never relayed to Bob.
+
+Your 'Open for BOB' is answered: the branch's ancestry is acceptable (it is 5 commits ahead of the tranche, all yours; the rest is already on the tranche). B34-B36 are read by this entry: B33's R31 chain test is the work.
