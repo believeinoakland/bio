@@ -3,10 +3,14 @@
  * screen draws it with no press: the failed line names its document by its address, as the unfinished line does, so it is not a sentence beside unrelated presses that
  * names nothing; it is listed for a day (K4855). P25: a large file the team already holds, captured again, is said as R49 says an existing document ("already in the
  * record", with its title and link), when the copy the record shows was captured before the fetch began; a copy the fetch delivered is the finished line, as before.
- * Every test enters by pressing the act or opening the screen; a sentence is asserted by its key (R26). */
+ * Every test enters by pressing the act or opening the screen; a sentence is asserted by its key (R26).
+ * Over the REAL store (fix round 10, K5054) except what the world cannot make: a parked fetch that the alarm delivered (or refused). The store-assembly world assembles the
+ * store with no `deliver` (control-plane's owed delivery, assemble.mjs:188), so a parked fetch stays owed for ever: the listing of a failed session stays the real
+ * `openCaptures` output over a store holding one (as before), the press that parks a large file a held answer, and, for P25, the listing's flip to "delivered" and the copy
+ * the record then shows are the test's script. Everything else (`projectlist`, `heldcaptures`, `acquire` of a small page, `allocid`, `promote`, the empty listing) is the owners' own. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open as openPage, main, text, fill, press, idle, ok, says, DOCUMENT_STUB } from "./page.mjs";
+import { openWorld, members, main, text, fill, press, idle, ok, says, DOCUMENT_STUB } from "./page.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 import { openCaptures } from "../../../src/acquisition/index.mjs";
 
@@ -17,8 +21,13 @@ const SESSION = "rs_n1";
 const sessionStore = (startedMs, failed = "CAPTURE_HELD_BY_ANOTHER_BUNDLE") => ({ liveCaptureSessions: () => [{ session: SESSION, locator: ADDRESS, created: iso(startedMs), updated: iso(Date.now()), expires: iso(Date.now() + 29 * 86400000), primarySha: null,
   state: { opened_by: "mai", queue: [], fetch_done: { since: iso(startedMs) }, fetch_pending: { since: iso(startedMs), declared_bytes: 17400000, why: "over_wait", failed } } }] });
 const listingAt = (startedMs, failed) => openCaptures(sessionStore(startedMs, failed), { by: "member:mai", now: iso(Date.now()) });
-const NOT_HELD = { ok: true, held: false, copy: null, versions: 0, truncated: false, changed: { state: "undetermined" } };
-const open = (path, plane) => openPage(path, { plane: { projectlist: ok({ projects: [] }), heldcaptures: ok({ ok: true, held: [], truncated: false }), heldat: ok(NOT_HELD), ...plane }, screens: [...SCREENS, DOCUMENT_STUB] });
+/* the world each page is opened over: mai, who captures; rosa, who has no capture (her listing is the owner's empty one) */
+let team = null;
+const open = async (path, plane = {}, serve = null) => {
+  team = await members({ mai: ["contribute"], rosa: [] });
+  if (serve) team.world.script(serve.address, async () => new Response(serve.body, { status: 200, headers: { "content-type": "text/html" } }));
+  return openWorld(path, { world: team.world, as: team.mai, plane, screens: [...SCREENS, DOCUMENT_STUB] });
+};
 const failedLines = (p) => main(p).querySelectorAll("[data-fetch-failed]");
 
 test("R58 (N1) the real listing's failed fetch is drawn with no press, in the refusal's words and naming its document by its address", async () => {
@@ -34,9 +43,8 @@ test("R58 (N1) the real listing's failed fetch is drawn with no press, in the re
 
 test("R58 (N1) beside an unrelated press the failed line still names its own document, not the press's", async () => {
   const listing = listingAt(Date.now() - 3600000);
-  const doc = { capture: { sha256: "a".repeat(64), bytes: 1200, encoding: "binary" }, file: "snapshots/a.html", title: "An unrelated page" };
-  const p = await open("/app/capture/address", { opencaptures: ok(listing), acquire: ok({ ok: true, existed: false, document: doc }),
-    allocid: ok({ ok: true, id: "INFO-2026-0160" }), promote: (r) => ok({ ok: true, bundleId: r.body.bundleId }) });
+  const p = await open("/app/capture/address", { opencaptures: ok(listing) },
+    { address: OTHER, body: "<html><head><title>An unrelated page</title></head><body><p>Unrelated.</p></body></html>" });
   fill(p, { "ci-address": OTHER });
   await press(p, "acquire");
   await idle(p);
@@ -66,8 +74,8 @@ const PENDING = ok({ ok: true, fetch_pending: { session: SESSION, since: iso(sin
 const STILL = ok({ ok: true, truncated: false, captures: [{ session: SESSION, locator: ADDRESS, started: iso(since), outstanding: 0, fetch_pending: { since: iso(since), declared_bytes: BYTES } }] });
 async function pressed(copy) {
   const state = { listed: true };
-  const p = await open("/app/capture/address", { acquire: PENDING, opencaptures: () => (state.listed ? STILL : ok({ ok: true, truncated: false, captures: [] })),
-    heldat: (r) => ok(r.query.check || state.listed ? NOT_HELD : copy) });
+  const p = await open("/app/capture/address", { acquire: PENDING, opencaptures: async () => (state.listed ? STILL : ok(await team.rosa.read("opencaptures"))),
+    heldat: async (r) => (r.query.check || state.listed ? ok(await team.mai.read("heldat", { query: r.query })) : ok(copy)) });
   fill(p, { "ci-address": ADDRESS });
   await press(p, "acquire");
   state.listed = false;

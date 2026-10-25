@@ -3,18 +3,20 @@
  * gives today (pinned by `fix6-t51.test.mjs` in acquisition: `reasons: [{reason, count, limit?, detail?}]`), its `detail` the real renderer text read from the table. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open as openPage, main, fill, press, ok, word, DOCUMENT_STUB } from "./page.mjs";
+import { openWorld, members, main, fill, press, ok, word, DOCUMENT_STUB } from "./page.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 
+/* Over the REAL store (fix round 10, K5054): the page is served by the world's network, the capture is the owner's own `acquire`, and the page's `allocid` and `promote` are the
+   record's. What the world cannot make is `supporting`: the page sends no walk (`subresources`), so acquisition answers none, and the renderer that would give BODY_NOT_KEPT is not bound
+   in a world. The one thing scripted is that block, laid on the owner's own answer for the very page (it is really captured first). */
 const ADDRESS = "https://www.acgov.org/board/minutes-2026-10.htm";
-const SHA = "b".repeat(64);
-const DOC = { capture: { sha256: SHA, bytes: 1200, encoding: "utf-8" }, file: "snapshots/a.htm", title: null };
-const NOT_HELD = ok({ ok: true, held: false, copy: null, versions: 0, truncated: false, changed: { state: "undetermined" } });
+const PAGE = "<html><head><title>Board minutes</title></head><body><p>Agenda</p></body></html>";
 const MACHINE = word("render.renderer_deliver_response", { is_str: ` (${word("browserrender.body_unavailable.browser_would_give", { err: "CDP No resource with given identifier found" })})`, bytes: "" });
 const drawn = async (supporting) => {
-  const p = await openPage("/app/capture/address", { plane: { acquire: ok({ ok: true, existed: false, document: DOC, text_units: [{ text: "Agenda" }], supporting }), heldat: NOT_HELD,
-    allocid: ok({ ok: true, id: "INFO-2026-0150" }), promote: (r) => ok({ ok: true, bundleId: r.body.bundleId }), projectlist: ok({ projects: [] }), opencaptures: ok({ ok: true, truncated: false, captures: [] }),
-    heldcaptures: ok({ ok: true, held: [], truncated: false }) }, screens: [...SCREENS, DOCUMENT_STUB] });
+  const t = await members({ mai: ["contribute"] });
+  t.world.script(ADDRESS, async () => new Response(PAGE, { status: 200, headers: { "content-type": "text/html" } }));
+  const real = await t.mai.act("acquire", { body: { locator: ADDRESS } });
+  const p = await openWorld("/app/capture/address", { world: t.world, as: t.mai, plane: { acquire: ok({ ...real, supporting }) }, screens: [...SCREENS, DOCUMENT_STUB] });
   fill(p, { "ci-address": ADDRESS });
   await press(p, "acquire");
   drawn.page = p;

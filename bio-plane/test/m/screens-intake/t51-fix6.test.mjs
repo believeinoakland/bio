@@ -170,12 +170,15 @@ test("R31 (G3) control: a continuation answered with only its files draws that a
 
 const pendingMarks = (p) => main(p).querySelectorAll('[data-reading="pending"]').length;
 /* A web page captured by the owner's real act (at an address of its own, so that the pressed address is still one the record does not hold): its answer is the owner's, and a test adds to it only the flag a real act cannot raise (a reading that did not fit the door's bound). */
-async function captured(t, address = "https://www.nps.gov/yose/real.htm", html) {
-  page(t, address, html);
+let distinct = 0;
+async function captured(t) {
+  const n = ++distinct, address = `https://www.nps.gov/yose/real-${n}.htm`;
+  page(t, address, `<html><head><title>Sagamore ${n}</title></head><body><p>Payment vouchers are due in ${n} instalments.</p></body></html>`);
   return t.mai.act("acquire", { body: { locator: address } });
 }
 /* A file uploaded by the owner's real act (the page's own `captureupload`), its answer as the owner gave it */
-async function uploaded(t, name, bytes, type = "application/pdf") {
+async function uploaded(t, name, type = "application/pdf") {
+  const bytes = new TextEncoder().encode(`%PDF-1.4 packet ${++distinct}`);
   const a = await t.world.door({ url: `/api/?${new URLSearchParams({ op: "captureupload", statement: name, name, type })}`, init: { method: "POST", headers: { "content-type": type }, body: bytes } }, t.mai);
   assert.equal(a.json.ok, true, JSON.stringify(a.json).slice(0, 300));
   return a.json.result;
@@ -191,17 +194,20 @@ const FILLED = { "ci-how-made": true, "ci-where": "City hall", "ci-what": "The p
 
 test("R57 (G7) an answer that holds a reading of its own draws no 'reading follows', though it says reading_pending; one without does", async () => {
   const t = await team();
+  /* each case is a document of its own: the record gives a document one home, and refuses a second promotion of the same bytes */
   const real = await captured(t);
   assert.ok(real.document.reading && real.document.reading.words_total > 0 && !real.reading_pending, "the owner's real answer holds its reading");
   const own = await open(t, "/app/capture/address", { acquire: ok({ ...real, existed: false, reading_pending: true }) });
   await pressCapture(own);
   assert.equal(pendingMarks(own), 0, "the reading is there: no 'check again soon'");
-  const bare = { ...real, document: { ...real.document, reading: undefined } };
+  const other = await captured(t);
+  const bare = { ...other, document: { ...other.document, reading: undefined } };
   const none = await open(t, "/app/capture/address", { acquire: ok({ ...bare, existed: false, reading_pending: true }) });
   await pressCapture(none);
     assert.equal(pendingMarks(none), 1, "control: no reading of its own, the mark stays");
   /* the promotion's own flag (the door's reading after `promote`, which the world's door does not follow) beside a reading in the answer */
-  const promo = await open(t, "/app/capture/address", { acquire: ok({ ...real, existed: false }),   // fixtures-generic: a flag no real act raises
+  const third = await captured(t);
+  const promo = await open(t, "/app/capture/address", { acquire: ok({ ...third, existed: false }),   /* the flag the door raises when it reads after a promotion, which the world's door does not follow */
     promote: async (r) => ok({ ok: true, bundleId: r.body.bundleId, reading_pending: true }) });
   await pressCapture(promo);
   assert.equal(pendingMarks(promo), 0, "a promotion's flag beside a reading in the answer draws none");
@@ -210,9 +216,9 @@ test("R57 (G7) an answer that holds a reading of its own draws no 'reading follo
 test("R57 (G7) an upload answered with its reading draws no 'reading follows' beside it, whatever the flag says", async () => {
   const t = await team();
   const FILE = new File(["x"], "w40.pdf", { type: "application/pdf" });
-  const real = await uploaded(t, "w40.pdf", new TextEncoder().encode("%PDF-1.4 packet"));
   const { reading } = await readingOfAPage(t);
   for (const [more, marks] of [[{ reading_pending: true, reading, text_units: [] }, 0], [{ reading_pending: true }, 1]]) {
+    const real = await uploaded(t, "w40.pdf");   /* a document of its own each: the record gives one home to the same bytes */
     const p = await open(t, "/app/capture/file", { captureupload: ok({ ...real, existed: false, ...more }) });
     fill(p, { "ci-file": FILE, ...FILLED });
     await press(p, "captureupload");
@@ -284,23 +290,24 @@ const reads = (p, k) => main(p).querySelectorAll(`[data-reading="${k}"]`).length
 test("R57 (G14) a capture whose reading says it is partial never draws 'full'; stated draws its reason; whole is as before", async () => {
   const t = await team();
   /* a reading that is partial or stated is the owner's account of a document too large to read whole, which a small real upload does not make: the owner's real answer, with the completeness added */
-  const real = await uploaded(t, "w.pdf", new TextEncoder().encode("%PDF-1.4 packet"));
   const held = await readingOfAPage(t);
-  const answer = (more) => ok({ ...real, existed: false, ...more });
+  const answer = async (more) => ok({ ...(await uploaded(t, "w.pdf")), existed: false, ...more });
   const up = async (p) => { fill(p, { "ci-file": new File(["x"], "w.pdf", { type: "application/pdf" }), ...FILLED }); await press(p, "captureupload"); };
-  const partial = await open(t, "/app/capture/file", { captureupload: answer({ reading: held.reading, text_units: held.text_units, completeness: { state: "partial" } }) });
+  const partial = await open(t, "/app/capture/file", { captureupload: await answer({ reading: held.reading, text_units: held.text_units, completeness: { state: "partial" } }) });
   await up(partial);
   assert.equal(reads(partial, "partial"), 1);
   assert.equal(says(partial, "screen.document.text.full"), false, "never 'full' while partial");
-  const stated = await open(t, "/app/capture/file", { captureupload: answer({ reading: { ...held.reading, found: false, failure: "final" }, text_units: [], completeness: { state: "stated", why: "TOO_LARGE" } }) });
+  const stated = await open(t, "/app/capture/file", { captureupload: await answer({ reading: { ...held.reading, found: false, failure: "final" }, text_units: [], completeness: { state: "stated", why: "TOO_LARGE" } }) });
   await up(stated);
   assert.equal(reads(stated, "stated"), 1);
   assert.ok(says(stated, "refusal.TOO_LARGE"));
   assert.equal(says(stated, "screen.document.text.full") || says(stated, "screen.document.text.none"), false);
-  const whole = await open(t, "/app/capture/file", { captureupload: answer({ reading: held.reading, text_units: held.text_units, completeness: { state: "whole" } }) });
+  const whole = await open(t, "/app/capture/file", { captureupload: await answer({ reading: held.reading, text_units: held.text_units, completeness: { state: "whole" } }) });
   await up(whole);
   assert.equal(reads(whole, "read"), 1, "control: whole draws the reading as it did");
-  assert.ok(says(whole, "screen.document.text.full"));
+  /* the owner's reading states its counts, so the whole one is drawn by them (the old fixture's reading had none, and was drawn "full") */
+  assert.ok(says(whole, "screen.document.text.read", { read: String(held.reading.words_read), total: String(held.reading.words_total) }));
+  assert.equal(says(whole, "screen.document.text.full"), false);
 });
 
 test("R2 R59 (G19) a capture that skipped supporting files says how many of how many it kept and why; none skipped says nothing", async () => {
@@ -362,7 +369,7 @@ test("R29 R60 (G20) the question chooser says when the search stopped at its lim
   const pages = (r) => r.query.after === "p2"
     ? ok({ ok: true, held: [{ ...row, source: { ...(row.source || {}), address: ADDRESS } }], truncated: false, next: null })
     : ok({ ok: true, held: [{ ...row, bundle_id: "INFO-2026-0001-first", title: "First", source: { address: "https://other.example/" }, capture: { sha256: "a".repeat(64) } }], truncated: true, next: "p2" });
-  const p = await open(t, "/app/capture/address", { heldcaptures: pages, monitorset: ok({ ok: true }) });
+  const p = await open(t, "/app/capture/address", { heldcaptures: pages });
   fill(p, { "ci-address": "https://one.example/now" });
   page(t, "https://one.example/now");
   await press(p, "acquire");

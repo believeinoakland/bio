@@ -1,17 +1,23 @@
 import { test } from "node:test";
 import { members } from "./page.mjs";
+const show = (x, n = 900) => JSON.stringify(x, (k, v) => (Array.isArray(v) && v.length > 4 ? `[${v.length}]` : v)).slice(0, n);
 test("probe", async () => {
-  const t = await members({ mai: ["contribute", "create_projects"] });
+  const t = await members({ mai: ["contribute", "create_projects"], rosa: ["contribute", "create_projects"] });
   const w = t.world;
-  const prj = await w.recipes.project(t.mai, "Budget");
-  const q = await w.recipes.question(t.mai, prj, { title: "Q", text: "What?" });
-  const ADDR = "https://www.oaklandca.gov/documents/fy23-25-adopted-budget-book-final-reduced-size.pdf";
-  const big = new Uint8Array(26 * 1024 * 1024); for (let i = 0; i < big.length; i++) big[i] = (i * 31 + (i >> 8)) & 255;
-  w.script(ADDR, async () => new Response(big, { status: 200, headers: { "content-type": "application/pdf" } }));
-  const asked = await t.mai.act("capturerequest", { body: { address: ADDR, target: q.id } });
-  const drained = await w.door({ url: "/api/?op=capturerequestdrain", init: { method: "POST", headers: { "content-type": "application/json" }, body: "{}" } }, { token: w.env.DAEMON_TOKEN });
-  console.log("PROBE drained", JSON.stringify(drained.json).slice(0, 1200));
-  const sha = drained.json.result.captured[0].sha;
-  for (const [op, qy] of [["reading", { sha256: sha }], ["readheld", { sha }], ["reading", { sha256: sha }]]) { try { console.log("PROBE", op, JSON.stringify(await t.mai.read(op, { query: qy }), (k, v) => (Array.isArray(v) && v.length > 3 ? `[${v.length}]` : v)).slice(1200, 4000)); } catch (e) { console.log("PROBE ERR", op, String(e.message).slice(0, 600)); } }
-  console.log("PROBE heldat", JSON.stringify(await t.mai.read("heldat", { query: { address: ADDR } })).slice(0, 900));
+  const knock = async (body) => { const k = await w.door({ url: "/api/?op=knock", init: { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } }); if (!k.json.ok) throw new Error(JSON.stringify(k.json)); return k.json; };
+  const S = "a-long-secret-of-twenty-chars";
+  const a = await knock({ contentText: "alpha alpha", note: "n1", knockerSecret: S });
+  const b = await knock({ contentText: "beta beta", note: "n2", knockerSecret: S });
+  const a2 = await knock({ contentText: "alpha alpha", note: "n1 again", knockerSecret: S });
+  const c = await knock({ contentText: "gamma" });
+  for (const [label, o, who] of [["pull a", a, t.mai], ["pull b", b, t.mai], ["pull a2", a2, t.mai], ["pull a2 again", a2, t.mai], ["pull c", c, t.mai]]) {
+    try { console.log("PROBE", label, show(await who.act("inboxpull", { body: { knockId: o.knockId, reason: "It bears on our question." } }))); } catch (e) { console.log("PROBE ERR", label, String(e.message).slice(0, 400)); }
+  }
+  console.log("PROBE resolve", show(await t.mai.act("inboxresolve", { body: { knockId: (await knock({ contentText: "spam", note: "s", knockerSecret: S })).knockId, status: "discarded", reason: "Spam." } })));
+  const list = (await t.mai.read("inbox")).inbox;
+  console.log("PROBE list", list.map((k) => [k.knock_id, k.status, k.capture_sha && k.capture_sha.slice(0, 6), k.pseudonym]).join(" | "));
+  const A = list.find((k) => k.knock_id === a.knockId);
+  console.log("PROBE sourceof", show(await t.mai.read("sourceof", { query: { capture: A.capture_sha } })));
+  const so = await t.mai.read("sourceof", { query: { capture: A.capture_sha } });
+  console.log("PROBE rung", show(await t.mai.read("sourcerung", { query: { source_id: so.sourceId } })));
 });

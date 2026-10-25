@@ -5,6 +5,7 @@
  * owner cannot be made to give from a file (a sheet cut whose total it does not know; an answer from an older record) and the refusal without its
  * figures stay scripted, each said where it is. */
 import { test } from "node:test";
+import { createHash } from "node:crypto";
 import assert from "node:assert/strict";
 import { openWorld, members, html, text, main, press, ok, refused, word, says, rawKeys } from "./page.mjs";
 import { makeZip } from "../../make-zip.mjs";
@@ -32,22 +33,37 @@ function odsDeclaring(declared) {
   return { bytes: makeZip([{ name: "mimetype", data: type, method: 0 }, { name: "META-INF/manifest.xml", data: manifest }, { name: "content.xml", data: content, central: { uncompressedSize: declared } }]), type };
 }
 
-/* the member's own held file, and the page opened on it; `safeview` pressed as a member presses it */
+/* the member's own held file: `captureupload`, `allocid` and `promote` as the recipe `hold` makes them, and for a file larger than one piece the pieces the upload
+   answers (`parts`) filed as blob references, as the capture screen files them; the page is opened on its digest */
+const sha = (v) => createHash("sha256").update(v).digest("hex");
 const held = async (bytes, type = XT, name = "Budget") => {
-  const t = await members({ mai: ["contribute"] });
-  const h = await t.world.recipes.hold(t.mai, name, bytes, "", { type });
-  return { ...t, sha: h.sha };
-};
-/* a file too large to be filed as a document is still a capture the member's upload made (`captureupload`), which the screen opens by its digest */
-const uploaded = async (bytes, type, name = "Budget") => {
   const t = await members({ mai: ["contribute"] });
   const up = await t.world.door({ url: `/api/?${new URLSearchParams({ op: "captureupload", statement: name, name, type })}`, init: { method: "POST", headers: { "content-type": type }, body: bytes } }, t.mai);
   const doc = up.json && up.json.result && up.json.result.document;
   if (!doc || !doc.capture) throw new Error(`captureupload was refused: ${JSON.stringify(up.json).slice(0, 300)}`);
-  return { ...t, sha: doc.capture.sha256 };
+  const now = new Date(t.world.now()).toISOString().replace(/\.\d{3}Z$/, "Z");
+  const id = (await t.mai.read("allocid", { query: { prefix: "INFO", year: now.slice(0, 4) } })).id + "-" + name.toLowerCase();
+  const cap = doc.capture.sha256;
+  const parts = Array.isArray(doc.parts) && doc.parts.length ? doc.parts : null;
+  const blobs = parts ? doc.parts.map((x) => ({ path: x.file, sha256: x.sha256, bytes: x.bytes })) : [{ path: doc.file, sha256: cap, bytes: doc.capture.bytes }];
+  const front = ["---", "id: " + id, "object_type: information", "schema: information@2", "title: " + JSON.stringify(name), "current_state: collected", "prior_state: null",
+    "created: " + now, "last_updated: " + now, "produced_by:", "  mode: assisted", "  capability_tier: session", "references: []", "state_history: []", "annotations_open: 0",
+    "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []", "criticality: supporting", "source_status: unchanged", "content_hash: sha256:" + cap,
+    "source:", "  locator: " + JSON.stringify(doc.locator || "upload"), "  authority: member-entered", "  retrieved: " + now, "monitoring:", "  enabled: false", "  frequency: none",
+    "---", "", "## Summary", "", name, "", "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+  const prov = JSON.stringify({ documents: [doc] }, null, 1), dataset = JSON.stringify({ documents: [{ bytes: doc.capture.bytes, locator: doc.locator || "upload", sha256: cap }] });
+  const len = (v) => new TextEncoder().encode(v).length;
+  const files = [{ path: "bundle.md", text: front, bytes: len(front), sha256: sha(front) }, { path: "data/provenance.json", text: prov, bytes: len(prov), sha256: sha(prov) },
+    { path: "data/dataset.json", text: dataset, bytes: len(dataset), sha256: sha(dataset) }, ...blobs.map((b) => ({ path: b.path, blobSha: b.sha256, sha256: b.sha256, bytes: b.bytes }))];
+  await t.mai.act("promote", { body: { bundleId: id, base: null, snapKey: now.replace(/[-:]/g, "") + "_" + sha(id).slice(0, 8),
+    meta: { object_type: "information", title: name, current_state: "collected", created: now, last_updated: now }, files,
+    register: parts && (parts.length > 1 || parts[0].sha256 !== cap) ? [{ sha256: cap, path: doc.file, encoding: "binary", bytes: doc.capture.bytes, parts: parts.map((x) => ({ sha256: x.sha256, path: x.file, bytes: x.bytes })) }]
+      : [{ sha256: cap, path: doc.file, encoding: doc.capture.encoding, bytes: doc.capture.bytes }] } });
+  return { ...t, sha: cap };
 };
 const drawn = async (t, plane = {}) => {
   const p = await openWorld(`/app/open-file/${t.sha}`, { world: t.world, as: t.mai, plane });
+  p.notesBefore = main(p).querySelectorAll(".mk-note").length;   /* the screen's own notes, drawn before any safe view is asked */
   await press(p, "safeview", { reason: "to read it" });
   return p;
 };
@@ -78,7 +94,8 @@ test("R5 R36 a whole sheet and an answer from an older record draw no cut, no sh
   for (const [p, last] of [[whole, "2"], [old, "2"]]) {
     assert.match(html(p), new RegExp(`<td>A2<\\/td><td>${last}<\\/td>`));
     /* no sentence of the four is in the page: their keys are not even asked for when nothing is cut */
-    assert.equal(main(p).querySelectorAll(".mk-note").length, 0);
+    assert.equal(main(p).querySelectorAll(".mk-note").length, p.notesBefore, "the safe view adds no note of its own");
+    for (const k of cutWords) assert.ok(!says(p, k, { from: 1, to: 2, total: 2, shown: 1, name: "FY22" }), k);
   }
 });
 
@@ -104,13 +121,11 @@ test("R5 R36 a refusal with a size and a bound draws the no-preview sentence in 
   const files = { TOO_LARGE: [xlsxOf([{ name: "S", xml: sheetXml(2) }], [{ name: "xl/media/big.bin", data: pad, method: 0 }]), XT],
                   PREVIEW_NOT_DRAWN: [ods.bytes, ods.type] };
   for (const [reason, [bytes, type]] of Object.entries(files)) {
-    const t = await uploaded(bytes, type);
+    const t = await held(bytes, type);
     const p = await drawn(t);
-    const r = await t.mai.act("safeview", { query: { capture: t.sha } }).then(() => null, (e) => e.message);
-    assert.match(r, new RegExp(reason), "the owner refuses it, naming why");
     /* the figures are the owner's, read from its refusal */
-    const refusal = JSON.parse(r.slice(r.indexOf("{")));
-    const f = refusal.result;
+    const f = (await t.world.door({ url: `/api/?${new URLSearchParams({ op: "safeview", capture: t.sha })}` }, t.mai)).json.result;
+    assert.equal(f.renderer_reason, reason, "the owner refuses it, naming why");
     assert.ok(Number.isFinite(f.size) && Number.isFinite(f.bound), "the owner states the size and the bound");
     assert.ok(says(p, "screen.open-file.safe.notdrawn", { size: MB(f.size), bound: MB(f.bound) }), reason);
     assert.ok(!text(p).includes(f.translation), "not the generic sentence alone");

@@ -123,7 +123,7 @@ test("R43 linked to a person: the person, the evidence and the members who may r
   fill(q, { "ab-person": school, "ab-pev": "e", [`ab-psight-${dev}`]: true });
   const r = await press(q, "sourcepersonlink");
   assert.ok(saysIn(r.slot(), "screen.about-knocker.person.refused.org") && saysIn(r.slot(), "screen.about-knocker.person.refused.org.next"));
-  assert.ok(!/is registered as/.test(r.slot().textContent), "not the owner's detail");
+  assert.ok(!r.slot().textContent.includes(school), "not the owner's detail, which names the entity");
 });
 
 test("R43 each refusal is drawn by its words, never the builder's detail: BAD_DISCLOSURE, NO_EVIDENCE, NO_SIGHT_LIST, NO_SUCH_SOURCE, CONSENT_NOT_STANDING", async () => {
@@ -135,7 +135,6 @@ test("R43 each refusal is drawn by its words, never the builder's detail: BAD_DI
     const p = await open(s, plane);
     fill(p, fields);
     const r = await press(p, op);
-    if (!saysIn(r.slot(), `refusal.${code}`)) console.error("SLOT", code, r.slot().textContent, JSON.stringify(p.byOp(op).map((q) => q.body)));
     assert.ok(saysIn(r.slot(), `refusal.${code}`), code);
     assert.ok(!r.slot().textContent.includes("builder detail"), code);
     seen.add(r.slot().textContent);

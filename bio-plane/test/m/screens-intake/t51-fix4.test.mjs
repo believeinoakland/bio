@@ -1,70 +1,81 @@
 /* screens-intake T51 fix round 4 (SCREENS-INTAKE #15; K4429): C9 R49 (the pre-flight's path), FC-23 (the login control's words), C14 (Held's read
  * set: the picker for the page, the full fields for the rows it draws; capture R102), C25 R54 (a PDF named by its title), and the rows
  * DEC-412 wrote (`filedhere`, `later.none`, `unread.next`). A sentence is asserted by its key (R26), never by its English. Every test
- * enters by pressing the act (or opening the page), never by calling a `done` function. */
+ * enters by pressing the act (or opening the page), never by calling a `done` function.
+ *
+ * Fix round 10 (K5054): over the REAL store. A document held is held by real acts (the page's own capture of an address, an upload and its promotion); a member
+ * who may or may not see it is a participant of its project, or not (`projectinvite`, `projectjoin`); a site that changed is the world's network answering
+ * another body (an environment double). Every value an assertion needs (a digest, a bundle id, the picker's order) is read from what those acts answered. A fault
+ * is the only scripted answer. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open as openPage, text, html, main, btn, fill, press, ok, refused, word, says, saysIn, DOCUMENT_STUB } from "./page.mjs";
+import { readFileSync } from "node:fs";
+import { openWorld, members, text, main, btn, fill, press, refused, word, says, DOCUMENT_STUB } from "./page.mjs";
 import { SCREENS, SCREEN_KEYS } from "../../../src/screens-intake/index.mjs";
+import { generate } from "../../pdfgen.mjs";
 
 const ADDRESS = "https://www.nps.gov/yose/index.htm";
-const SHA = "a".repeat(64);
-const MINE = "PROJ-2026-0007", HOME = "PROJ-2026-0001", HOLDER = "INFO-2026-0083-yosemite";
-const md = (title) => ["---", `title: ${JSON.stringify(title)}`, "---", "", "## Summary", ""].join("\n");
-const IMAGE = (r) => ok(r.query.id === MINE ? { "bundle.md": md("Pothole repairs") } : r.query.id === HOME ? { "bundle.md": md("Housing repairs") } : null);
-const CHANGED = (state) => ({ state, basis: "x", as_of: "2026-10-01T10:00:00Z", earlier_differs: false });
+const CAN = ["contribute", "create_projects"];
+const PAGE = "<html><head><title>Yosemite National Park</title></head><body>\n<h1>Yosemite National Park</h1>\n<p>Yosemite National Park, as first captured.</p>\n</body></html>";
+const PLAIN = { "content-type": "text/html" };
+/* a page whose substance the capture can judge (an ASP.NET calendar, capture R96): a different row is a change, not a rebuilt page */
+const CALENDAR_HEADERS = { "content-type": "text/html; charset=utf-8", "x-powered-by": "ASP.NET", server: "Microsoft-IIS/10.0" };
+const calendar = (row) => `<!DOCTYPE html><html><head><title>City Council Calendar</title></head><body><div id="hdr">nav</div><form id="aspnetForm" method="post"><input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="STATE_${"x".repeat(300)}" /><main id="mainContent" role="main"><table><tr><th>Name</th><th>Date</th></tr><tr><td>${row}</td><td>7/15/2026</td></tr></table></main></form></body></html>`;
 const anchors = (p, id) => Array.from(main(p).querySelectorAll("a")).filter((a) => String(a.getAttribute("href")).includes(id));
+const open = (t, as, path, plane = {}) => openWorld(path, { world: t.world, as, plane, screens: [...SCREENS, DOCUMENT_STUB] });
+const serve = (t, address, body, headers = PLAIN) => t.world.script(address, async () => new Response(body, { status: 200, headers }));
+const pressCapture = async (p, address = ADDRESS) => { fill(p, { "ci-address": address }); await press(p, "acquire"); };
 
-/* The plane as capture R96, R100, R101 and R77 state it, for the case the walker met: the address is held under HOME's document; `heldat`
-   answers it for the address (the press's pre-flight, `check: true`) and for its digest alike; `captureseenin` records the reference once;
-   `heldcaptures` for a project lists what is held there and what was seen there (`also_here`). A viewer who may not see the home reads as
-   not held (R96). */
-function world({ state = "unchanged", project = HOME, sees = true, refuseSeen = null } = {}) {
-  const seen = [];
-  const copy = { sha256: SHA, document: HOLDER, project, retrieved: "2026-10-01T10:00:00Z", actor: "member:x", grade: null, address: ADDRESS };
-  const held = (req) => (!sees || (req.query.address !== ADDRESS && req.query.sha256 !== SHA) ? ok({ ok: true, held: false, copy: null, versions: 0, truncated: false, changed: CHANGED("undetermined") })
-    : ok({ ok: true, held: true, copy, versions: 1, truncated: false, changed: CHANGED(state) }));
-  return {
-    seen,
-    plane: {
-      heldat: held,
-      image: IMAGE,
-      captureseenin: (req) => { if (refuseSeen) return refuseSeen; seen.push(req.body); return ok({ ok: true, recorded: true, home: project }); },
-      heldcaptures: (req) => ok({ ok: true, truncated: false, held: req.query.project === MINE && seen.length
-        ? [{ bundle_id: HOLDER, title: "Yosemite National Park", project, also_here: { home: project }, capture: { sha256: SHA }, standing: "held_and_vouched" }] : [] }),
-      acquire: ok({ ok: true, existed: true, document: { capture: { sha256: SHA, bytes: 9000, encoding: "utf-8" }, file: "snapshots/a.htm", title: null } }),
-      allocid: ok({ ok: true, id: "INFO-2026-0099" }), promote: (req) => ok({ ok: true, bundleId: req.body.bundleId }),
-    },
-  };
+/* the team: `mai` has the project MINE; `xan` has the project HOME and has captured the address into it by the page's own act, so the record holds it (under
+   HOLDER, with the digest SHA); `mai` is a participant of HOME (invited by xan, joined by herself) only when `sees` (a viewer who may not see the home reads
+   the address as not held, capture R96). The host's cooling-off after the first fetch has passed. */
+async function heldElsewhere({ sees = true, body = PAGE, headers = PLAIN } = {}) {
+  const t = await members({ mai: CAN, xan: CAN });
+  serve(t, ADDRESS, body, headers);
+  t.MINE = await t.world.recipes.project(t.mai, "Pothole repairs");
+  t.HOME = await t.world.recipes.project(t.xan, "Housing repairs");
+  await pressCapture(await open(t, t.xan, `/app/capture/address/${t.HOME}`));
+  const filed = (await t.xan.read("heldcaptures", { query: { project: t.HOME } })).held;
+  assert.equal(filed.length, 1, "the other member's capture is in the record");
+  t.HOLDER = filed[0].bundle_id;
+  t.SHA = filed[0].capture.sha256;
+  if (sees) {
+    await t.xan.act("projectinvite", { query: { projectId: t.HOME, handle: "mai" } });
+    await t.mai.act("projectjoin", { query: { projectId: t.HOME } });
+  }
+  await t.world.tick(120_000);
+  return t;
 }
-const open = (path, o = {}) => openPage(path, { ...o, plane: { projectlist: ok({ projects: [] }), ...(o.plane || {}) }, screens: [...SCREENS, DOCUMENT_STUB] });
-const pressCapture = async (p) => { fill(p, { "ci-address": ADDRESS }); await press(p, "acquire"); };
 
 /* ---------- C9: R49, the pre-flight's path ---------- */
 
 test("R49 (C9) pressing Capture on an address already held under another project, from a project's page, sends no acquire, files the document in this project and says so", async () => {
-  const w = world();
-  const p = await open(`/app/capture/address/${MINE}`, { plane: w.plane });
+  const t = await heldElsewhere();
+  const p = await open(t, t.mai, `/app/capture/address/${t.MINE}`);
   await pressCapture(p);
   assert.equal(p.byOp("acquire").length, 0, "the pre-flight found it held: nothing is fetched");
   assert.equal(p.byOp("heldat").length, 1, "the press asked, once");
   assert.deepEqual([p.byOp("heldat")[0].query.address, p.byOp("heldat")[0].query.check], [ADDRESS, "true"]);
-  assert.deepEqual(p.byOp("captureseenin").map((r) => r.body), [{ captureSha: SHA, project: MINE }], "the digest and the page's project, nothing else");
+  assert.deepEqual(p.byOp("captureseenin").map((r) => r.body), [{ captureSha: t.SHA, project: t.MINE }], "the digest and the page's project, nothing else");
   assert.equal(p.byOp("allocid").length + p.byOp("promote").length, 0, "no second document is written");
-  const list = (await w.plane.heldcaptures({ query: { project: MINE } })).json.result;
-  assert.deepEqual(list.held.map((r) => [r.bundle_id, r.also_here]), [[HOLDER, { home: HOME }]], "the project's list now holds it, as seen from its home");
+  const list = (await t.mai.read("heldcaptures", { query: { project: t.MINE } })).held;
+  assert.deepEqual(list.map((r) => [r.bundle_id, r.also_here]), [[t.HOLDER, { home: t.HOME }]], "the project's list now holds it, as seen from its home");
   assert.ok(says(p, "screen.capture.address.filedhere", { project: "Housing repairs" }), "the draw says it is filed here as well and where it stays held");
-  assert.equal(anchors(p, HOLDER).length, 1, "the held copy is linked once");
+  assert.equal(anchors(p, t.HOLDER).length, 1, "the held copy is linked once");
 });
 
 test("R49 (C9) the compared copy of an undetermined look is filed here too; a changed site waits for the member's choice and files nothing at the press", async () => {
-  const u = world({ state: "undetermined" });
-  const pu = await open(`/app/capture/address/${MINE}`, { plane: u.plane });
+  /* the site now gives other bytes of a page whose substance the capture cannot judge: undetermined */
+  const u = await heldElsewhere();
+  serve(u, ADDRESS, PAGE.replace("as first captured", "as it reads now"));
+  const pu = await open(u, u.mai, `/app/capture/address/${u.MINE}`);
   await pressCapture(pu);
-  assert.deepEqual(pu.byOp("captureseenin").map((r) => r.body), [{ captureSha: SHA, project: MINE }]);
+  assert.deepEqual(pu.byOp("captureseenin").map((r) => r.body), [{ captureSha: u.SHA, project: u.MINE }]);
   assert.ok(says(pu, "screen.capture.address.filedhere", { project: "Housing repairs" }));
-  const c = world({ state: "changed" });
-  const pc = await open(`/app/capture/address/${MINE}`, { plane: c.plane });
+  /* the site now gives a page whose substance differs and can be judged: changed */
+  const c = await heldElsewhere({ body: calendar("City Council"), headers: CALENDAR_HEADERS });
+  serve(c, ADDRESS, calendar("Rules Committee"), CALENDAR_HEADERS);
+  const pc = await open(c, c.mai, `/app/capture/address/${c.MINE}`);
   await pressCapture(pc);
   assert.equal(pc.byOp("captureseenin").length, 0, "the member has not chosen: nothing is filed");
   assert.equal(pc.byOp("acquire").length, 0);
@@ -72,24 +83,29 @@ test("R49 (C9) the compared copy of an undetermined look is filed here too; a ch
 });
 
 test("R49 (C9) control: a home that is the page's own project, and a page with no project, file nothing and send no captureseenin", async () => {
-  const same = world({ project: MINE });
-  const ps = await open(`/app/capture/address/${MINE}`, { plane: same.plane });
+  /* the home is the page's own project: the member captured the address into it herself */
+  const t = await members({ mai: CAN });
+  serve(t, ADDRESS, PAGE);
+  const MINE = await t.world.recipes.project(t.mai, "Pothole repairs");
+  await pressCapture(await open(t, t.mai, `/app/capture/address/${MINE}`));
+  const holder = (await t.mai.read("heldcaptures", { query: { project: MINE } })).held[0].bundle_id;
+  await t.world.tick(120_000);
+  const ps = await open(t, t.mai, `/app/capture/address/${MINE}`);
   await pressCapture(ps);
   assert.equal(ps.byOp("captureseenin").length, 0);
   assert.equal(ps.byOp("acquire").length, 0);
-  assert.equal(anchors(ps, HOLDER).length, 1, "it is still named and linked");
+  assert.equal(anchors(ps, holder).length, 1, "it is still named and linked");
   assert.ok(!says(ps, "screen.capture.address.filedhere", { project: "Pothole repairs" }));
-  const bare = world();
-  const pb = await open("/app/capture/address", { plane: bare.plane });
+  /* a page with no project */
+  const bare = await heldElsewhere();
+  const pb = await open(bare, bare.mai, "/app/capture/address");
   await pressCapture(pb);
   assert.equal(pb.byOp("captureseenin").length, 0);
 });
 
 test("R49 (C9) control: a viewer who cannot see the home reads the address as not held, so the capture goes on and the holder sentence is drawn; nothing is filed", async () => {
-  const w = world({ sees: false });
-  const p = await open(`/app/capture/address/${MINE}`, { plane: { ...w.plane,
-    promote: ok({ ok: false, reason: "CAPTURE_HELD_BY_ANOTHER_BUNDLE", code: "CAPTURE_HELD_BY_ANOTHER_BUNDLE", holder: "INFO-2026-0099-elsewhere" }),
-    acquire: ok({ ok: true, existed: true, document: { capture: { sha256: SHA, bytes: 9000 }, file: "snapshots/a.htm", title: null } }) } });
+  const t = await heldElsewhere({ sees: false });
+  const p = await open(t, t.mai, `/app/capture/address/${t.MINE}`);
   await pressCapture(p);
   assert.equal(p.byOp("acquire").length, 1, "not held for this viewer: the capture goes on");
   assert.equal(p.byOp("captureseenin").length, 0);
@@ -97,19 +113,21 @@ test("R49 (C9) control: a viewer who cannot see the home reads the address as no
 });
 
 test("R49 (C9) a captureseenin the plane refuses at the press is drawn by its words and the compared copy is still shown once, not said to be filed", async () => {
-  const w = world({ refuseSeen: refused("CAPTURE_NOT_HELD", "That document is not held.", 404) });
-  const p = await open(`/app/capture/address/${MINE}`, { plane: w.plane });
+  const t = await heldElsewhere();
+  /* the owner's refusal of a reference to a document it holds is a fault no real act of the member can cause: the one scripted answer */
+  const p = await open(t, t.mai, `/app/capture/address/${t.MINE}`, { captureseenin: refused("CAPTURE_NOT_HELD", "That document is not held.", 404) });
   await pressCapture(p);
   assert.equal(p.byOp("captureseenin").length, 1);
   assert.ok(says(p, "refusal.CAPTURE_NOT_HELD"), "the refusal in the row's words");
-  assert.equal(anchors(p, HOLDER).length, 1);
+  assert.equal(anchors(p, t.HOLDER).length, 1);
   assert.ok(!says(p, "screen.capture.address.filedhere", { project: "Housing repairs" }));
 });
 
 /* ---------- FC-23: the login control's words ---------- */
 
 test("FC-23 the 'Store this login' control carries its words, inside the folded 'Give a login for a site' disclosure", async () => {
-  const p = await open("/app/capture/address", { plane: { heldcaptures: ok({ ok: true, held: [] }), capturerequests: ok({ ok: true, requests: [] }) } });
+  const t = await members({ mai: CAN });
+  const p = await open(t, t.mai, "/app/capture/address");
   const b = btn(p, "capturecredentialsupply", '[data-general="1"]');
   assert.ok(b, "the control is drawn");
   assert.equal(b.textContent.trim().startsWith(word("screen.capture.logins.store")), true, "its text is the key's words");
@@ -125,84 +143,90 @@ test("DEC-412 the screen lists the keys it draws: filedhere and later.none (capt
 });
 
 test("N4 'Show my requests for later' with none says screen.capture.later.none, by its key", async () => {
-  const p = await open("/app/capture/address", { plane: { heldcaptures: ok({ ok: true, held: [] }), capturerequests: ok({ ok: true, requests: [] }) } });
+  const t = await members({ mai: CAN });
+  const p = await open(t, t.mai, "/app/capture/address");
   await press(p, "capturerequests");
   assert.ok(says(p, "screen.capture.later.none"));
   assert.ok(!says(p, "state.empty"));
 });
 
 test("R2 (C17) an unread upload that is no picture says what to do next, by screen.document.text.unread.next", async () => {
-  const SHAU = "d".repeat(64);
-  const p = await open("/app/capture/file", { plane: { heldcaptures: ok({ ok: true, held: [] }), allocid: ok({ ok: true, id: "INFO-2026-0003" }), promote: (req) => ok({ ok: true, bundleId: req.body.bundleId }),
-    captureupload: ok({ ok: true, existed: false, capture: { sha256: SHAU, bytes: 14 }, receipt: { address: `upload:${SHAU}`, via: "upload", retrieved: "2026-10-02T10:00:00Z" },
-      document: { file: `snapshots/upload-${SHAU}`, locator: `upload:${SHAU}`, capture: { method: "uploaded", sha256: SHAU, encoding: "binary", bytes: 14 } } }) } });
+  const t = await members({ mai: CAN });
+  const p = await open(t, t.mai, "/app/capture/file");
   fill(p, { "ci-file": new File(["a note"], "note.bin", { type: "application/octet-stream" }), "ci-how-made": true, "ci-where": "Here", "ci-what": "A note." });
   await press(p, "captureupload");
+  assert.equal(p.byOp("promote").length, 1, "the upload was filed");
   assert.ok(says(p, "screen.document.text.unread"));
   assert.ok(says(p, "screen.document.text.unread.next"));
 });
 
 /* ---------- C25: R54, one name for a PDF ---------- */
 
-/* acquisition R98 (pdf-reader R40): the IRS Form 1040-ES answers `document.title` "2026 Form 1040-ES" (the title its Info dictionary
-   holds; checked on the real file, 331,490 bytes, `pdfTitle` read it in 11 ms) and the file name the source gives, `f1040es.pdf`. */
+/* acquisition R98 (pdf-reader R40): the IRS Form 1040-ES answers `document.title` "2026 Form 1040-ES" (the title its Info dictionary holds), the real file the
+   pdf-reader's own tests read (331,490 bytes), and the file name the source gives, `f1040es.pdf`. A PDF with no title is a generated one with no Info dictionary. */
 const IRS = "https://www.irs.gov/pub/irs-pdf/f1040es.pdf";
-const pdfAnswer = (title) => ok({ ok: true, existed: false, document: { capture: { sha256: "b".repeat(64), bytes: 331490, encoding: "binary", content_type: "application/pdf", file_name: "f1040es.pdf" },
-  file: "snapshots/b.pdf", title } });
+const IRS_PDF = new Uint8Array(readFileSync(new URL("../pdf-reader/fixtures/f1040es.pdf", import.meta.url)));
+const PDF_HEADERS = { "content-type": "application/pdf" };
+const TITLE = "2026 Form 1040-ES";
 
-async function capturePdf(title) {
-  const filed = [];
-  const plane = { projectlist: ok({ projects: [] }), heldat: ok({ ok: true, held: false, copy: null, versions: 0, truncated: false, changed: CHANGED("undetermined") }),
-    acquire: pdfAnswer(title), allocid: ok({ ok: true, id: "INFO-2026-0100" }),
-    promote: (req) => { filed.push(req.body); return ok({ ok: true, bundleId: req.body.bundleId }); },
-    heldcaptures: (req) => ok({ ok: true, truncated: false, held: req.query.state === "set_aside" ? [] : filed.map((b) => ({ bundle_id: b.bundleId, title: b.meta.title, project: null, age_days: 0, eligible: true, source: { address: IRS }, capture: { sha256: "b".repeat(64) },
-      captured_for: { questions: [], withheld: null } })) }) };
-  const add = await open("/app/capture/address", { plane });
+async function capturePdf(titled) {
+  const t = await members({ mai: CAN });
+  serve(t, IRS, titled ? IRS_PDF : await generate({ kind: "pdf", seed: "untitled", size: { pages: 2, lines: 3 }, kinds: ["text"] }).bytes(), PDF_HEADERS);
+  const add = await open(t, t.mai, "/app/capture/address");
   fill(add, { "ci-address": IRS });
   await press(add, "acquire");
-  const held = await open("/app/held", { plane });
+  const filed = add.byOp("promote").map((r) => r.body);
+  const held = await open(t, t.mai, "/app/held");
   return { add, held, filed };
 }
+const rowOf = (p, id) => main(p).querySelector(`#pick-held-${id}`).closest("tr, .cs-r, li, div");
 
 test("R54 (C25) a PDF whose answer carries its title is named by it on the Add result, in the filed bundle and on Held", async () => {
-  const { add, held, filed } = await capturePdf("2026 Form 1040-ES");
+  const { add, held, filed } = await capturePdf(true);
   assert.equal(filed.length, 1);
-  assert.equal(filed[0].meta.title, "2026 Form 1040-ES", "the bundle is titled by the PDF's own title");
-  assert.ok(text(add).includes("2026 Form 1040-ES"), "the Add result names it");
+  assert.equal(filed[0].meta.title, TITLE, "the bundle is titled by the PDF's own title");
+  assert.ok(text(add).includes(TITLE), "the Add result names it");
   assert.ok(!text(add).includes("f1040es.pdf"), "and not by the file part of its address");
-  assert.ok(main(held).querySelector(`#pick-held-${filed[0].bundleId}`).closest("tr, .cs-r, li, div").textContent.includes("2026 Form 1040-ES"), "Held names it the same");
+  assert.ok(rowOf(held, filed[0].bundleId).textContent.includes(TITLE), "Held names it the same");
 });
 
 test("R54 (C25) control: a PDF with no title is named by the file name the source gave, on the Add result and on Held alike", async () => {
-  const { add, held, filed } = await capturePdf(null);
+  const { add, held, filed } = await capturePdf(false);
   assert.equal(filed[0].meta.title, "f1040es.pdf");
   assert.ok(text(add).includes("f1040es.pdf"));
-  assert.ok(main(held).querySelector(`#pick-held-${filed[0].bundleId}`).closest("tr, .cs-r, li, div").textContent.includes("f1040es.pdf"));
+  assert.ok(rowOf(held, filed[0].bundleId).textContent.includes("f1040es.pdf"));
 });
 
 /* ---------- C14: Held's read set (capture R102) ---------- */
 
-const pickerRow = (i) => ({ bundle_id: `INFO-2026-${String(1000 + i)}`, title: `Document ${i}`, project: null, source: { address: `https://example.gov/${i}` }, collected_since: "2026-10-01T10:00:00Z",
-  capture: { sha256: String(i % 10).repeat(64) }, actor: "member:x", standing: "collected", whole: true });
-const fullRow = (i) => ({ ...pickerRow(i), age_days: i % 5, eligible: true, captured_for: { questions: [], withheld: null }, whole: true });
-
-/* capture R77, R88, R102 as the op answers: `fields=picker` the cheap rows, `bundle_ids` the listed documents' full rows in the list's order,
-   `state=set_aside` the set-aside list */
-function heldPlane(n, extra = {}) {
-  const rows = Array.from({ length: n }, (_, i) => i);
-  return { projectlist: ok({ projects: [] }), heldcaptures: (req) => {
-    const q = req.query;
-    if (q.state === "set_aside") return ok({ ok: true, held: [], truncated: false });
-    /* fix round 10, cause 33: a page of `limit` rows from `after`, with `truncated` and the `next` cursor that continues it, as capture R77 pages */
-    const from = q.after ? Number(q.after) : 0, page = rows.slice(from, from + (Number(q.limit) || 200)), more = from + page.length < n;
-    if (q.bundle_ids) { const want = String(q.bundle_ids).split(","); return ok({ ok: true, truncated: false, held: want.map((id) => fullRow(Number(id.slice(-4)) - 1000)) }); }
-    return ok({ ok: true, truncated: more, next: more ? String(from + page.length) : null, held: page.map(q.fields === "picker" ? pickerRow : fullRow) });
-  }, ...extra };
+/* documents the member holds, by the real acts of an upload and its promotion (`hold`): `n` of them, filed under `projectId` when one is named; a crucial one
+   (`crucial`) is a document the record marks of crucial criticality, which a batch never releases (ratification), so the list states it ineligible */
+async function documents(t, n, projectId = "") {
+  for (let i = 0; i < n; i++) await t.world.recipes.hold(t.mai, `Document ${i}`, `The words of document ${i}.\n`, projectId);
+}
+async function crucial(t, name, content) {
+  const { hex, instant } = await import("../store-request/door.mjs");
+  const up = await t.world.door({ url: `/api/?${new URLSearchParams({ op: "captureupload", statement: name, name })}`, init: { method: "POST", headers: { "content-type": "text/plain" }, body: new TextEncoder().encode(content) } }, t.mai);
+  const doc = up.json.result.document, sha = doc.capture.sha256, now = instant(t.world);
+  const id = (await t.mai.read("allocid", { query: { prefix: "INFO", year: now.slice(0, 4) } })).id + "-" + name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  const front = ["---", "id: " + id, "object_type: information", "schema: information@2", "title: " + JSON.stringify(name), "current_state: collected", "prior_state: null", "created: " + now,
+    "last_updated: " + now, "produced_by:", "  mode: assisted", "  capability_tier: session", "references: []", "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false",
+    "  since: null", "  source: null", "visuals: []", "criticality: crucial", "source_status: unchanged", "content_hash: sha256:" + hex(sha), "source:", "  locator: " + JSON.stringify(doc.locator || "upload"),
+    "  authority: member-entered", "  retrieved: " + now, "monitoring:", "  enabled: false", "  frequency: none", "---", "", "## Summary", "", name, "", "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+  const prov = JSON.stringify({ documents: [doc] }, null, 1), dataset = JSON.stringify({ documents: [{ bytes: doc.capture.bytes, locator: doc.locator || "upload", sha256: sha }] });
+  const len = (x) => new TextEncoder().encode(x).length;
+  const files = [{ path: "bundle.md", text: front, bytes: len(front), sha256: hex(front) }, { path: "data/provenance.json", text: prov, bytes: len(prov), sha256: hex(prov) },
+    { path: "data/dataset.json", text: dataset, bytes: len(dataset), sha256: hex(dataset) }, { path: doc.file, blobSha: sha, sha256: sha, bytes: doc.capture.bytes }];
+  await t.mai.act("promote", { body: { bundleId: id, base: null, snapKey: now.replace(/[-:]/g, "") + "_" + hex(id).slice(0, 8),
+    meta: { object_type: "information", title: name, current_state: "collected", created: now, last_updated: now }, files, register: [{ sha256: sha, path: doc.file, encoding: doc.capture.encoding, bytes: doc.capture.bytes }] } });
+  return id;
 }
 const reads = (p) => p.byOp("heldcaptures").map(({ query: { op, ...q } }) => q);
 
 test("R4 (C14) Held reads the page as picker rows, then the full fields for the rows it draws by bundle_ids (at most 50), and nothing else of heldcaptures", async () => {
-  const p = await openPage("/app/held", { plane: heldPlane(60), screens: [...SCREENS, DOCUMENT_STUB] });
+  const t = await members({ mai: CAN });
+  await documents(t, 60);
+  const p = await open(t, t.mai, "/app/held");
   const q = reads(p);
   assert.equal(q.length, 3, "the picker page, the full fields of its rows, the set-aside list: no more");
   const picker = q.find((x) => x.fields === "picker"), full = q.find((x) => x.bundle_ids), aside = q.find((x) => x.state === "set_aside");
@@ -211,7 +235,8 @@ test("R4 (C14) Held reads the page as picker rows, then the full fields for the 
   assert.ok(full && !full.fields, "the full read asks no picker");
   const ids = full.bundle_ids.split(",");
   assert.equal(ids.length, 50, "the 50 rows the page draws, never 60");
-  assert.deepEqual(ids, Array.from({ length: 50 }, (_, i) => `INFO-2026-${1000 + i}`), "in the picker's order");
+  const pickerRows = (await t.mai.read("heldcaptures", { query: picker })).held.map((r) => r.bundle_id);
+  assert.deepEqual(ids, pickerRows, "in the picker's order");
   assert.equal(new Set(ids).size, 50);
   assert.ok(aside);
   assert.equal(p.byOp("projectlist").length, 1, "the projects once");
@@ -220,9 +245,12 @@ test("R4 (C14) Held reads the page as picker rows, then the full fields for the 
 });
 
 test("R4 (C14) a project's Held carries the project in both reads; a refresh reads the picker and the full fields once each; an act that changes the list does the same", async () => {
-  const p = await openPage("/app/held/PROJ-2026-0007", { plane: heldPlane(3), screens: [...SCREENS, DOCUMENT_STUB] });
-  assert.deepEqual(reads(p).filter((x) => x.state !== "set_aside").map((x) => x.project), ["PROJ-2026-0007", "PROJ-2026-0007"]);
-  const bare = await openPage("/app/held", { plane: heldPlane(3), screens: [...SCREENS, DOCUMENT_STUB] });
+  const t = await members({ mai: CAN });
+  const project = await t.world.recipes.project(t.mai, "The Coliseum lease");
+  await documents(t, 3, project);
+  const p = await open(t, t.mai, `/app/held/${project}`);
+  assert.deepEqual(reads(p).filter((x) => x.state !== "set_aside").map((x) => x.project), [project, project]);
+  const bare = await open(t, t.mai, "/app/held");
   const before = reads(bare).length;
   await press(bare, "heldcaptures");
   const after = reads(bare).slice(before);
@@ -232,25 +260,23 @@ test("R4 (C14) a project's Held carries the project in both reads; a refresh rea
 });
 
 test("R4 (C14) the rows are listed from the picker at once, and the full fields (eligibility, the questions, the age) are drawn once they arrive; a full read that fails is drawn failed beside rows still listed", async () => {
-  const lease = { ...fullRow(2), eligible: false, class: "CRUCIAL_IN_BATCH" };
-  const p = await openPage("/app/held", { plane: heldPlane(3, { heldcaptures: (req) => {
-    if (req.query.state === "set_aside") return ok({ ok: true, held: [], truncated: false });
-    if (req.query.bundle_ids) return ok({ ok: true, truncated: false, held: [fullRow(0), fullRow(1), lease] });
-    return ok({ ok: true, truncated: false, held: [0, 1, 2].map(pickerRow) });
-  } }), screens: [...SCREENS, DOCUMENT_STUB] });
+  const t = await members({ mai: CAN });
+  await documents(t, 2);
+  const lease = await crucial(t, "The lease", "The lease runs ten years.\n");
+  const p = await open(t, t.mai, "/app/held");
   assert.equal(main(p).querySelectorAll('[id^="pick-held-"]').length, 3);
+  const full = (await t.mai.read("heldcaptures", { query: { bundle_ids: lease } })).held[0];
+  assert.deepEqual([full.eligible, full.class], [false, "CRUCIAL_IN_BATCH"], "the owner states the lease ineligible");
   assert.ok(says(p, "screen.held.ineligible.alone"), "a full field drawn from the second read");
-  const bad = await openPage("/app/held", { plane: heldPlane(3, { heldcaptures: (req) => {
-    if (req.query.state === "set_aside") return ok({ ok: true, held: [], truncated: false });
-    if (req.query.bundle_ids) return refused("STORE_SILENT", "store silent (test fixture)", 502);
-    return ok({ ok: true, truncated: false, held: [0, 1, 2].map(pickerRow) });
-  } }), screens: [...SCREENS, DOCUMENT_STUB] });
+  /* a full read that fails: the store silent for that read alone, a fault; every other read is the owner's */
+  const bad = await open(t, t.mai, "/app/held", { heldcaptures: (req) => (req.query.bundle_ids ? refused("STORE_SILENT", "store silent (test fixture)", 502) : t.world.door(req, t.mai)) });
   assert.equal(main(bad).querySelectorAll('[id^="pick-held-"]').length, 3, "the rows are still listed");
   assert.match(text(bad), /store silent \(test fixture\)/);
   assert.ok(main(bad).querySelector('[data-state="failed"]'));
 });
 
 test("R4 (C14) control: an empty page makes no full read", async () => {
-  const p = await openPage("/app/held", { plane: heldPlane(0), screens: [...SCREENS, DOCUMENT_STUB] });
+  const t = await members({ mai: CAN });
+  const p = await open(t, t.mai, "/app/held");
   assert.equal(reads(p).filter((x) => x.bundle_ids).length, 0);
 });
