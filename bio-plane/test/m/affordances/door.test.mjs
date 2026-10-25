@@ -14,6 +14,9 @@ const KINDS = [...PRODUCT_KINDS, "a_profile_kind"];
 const FACTS = { ok: true, target: "INQ-2026-0001-q", object_type: "inquiry", declared_type: "inquiry", current_state: "open",
   case_member: false, basis_legs: 1, rested_on: { working: 0, frozen: 0, severed: 0 }, basis_version_states: ["suggested"],
   basis_versions: 1, actor_is_machine: false, contradiction_inquiry: false };
+/* a store refusal as the control plane's answer envelope hands it on (answer-envelope's door-helpers contract: BAD_JSON) */
+const REFUSED = { answered: false, refused: true, result: undefined,
+  reply: { status: 400, body: { ok: false, reason: "BAD_JSON", detail: "d" } } }; // fixtures-contract: answer-envelope door-helpers
 
 test("R17 R37: with no target, the catalogue — every act decorated through the gate with appliesTo, the vocabularies for "
    + "the kinds handed in, the capture acts and the set acts with set_key, item_keys, shared_keys and max_items", () => {
@@ -112,7 +115,7 @@ test("R37: a store silence or refusal on the screens is answered by the control 
    + "screens (REC-52)", async () => {
   let d = door({ screens: { answered: false, correlation: "c-2" } });
   assert.deepEqual(await affordancesOp(at(""), d.stub, d.deps), { silent: "affordances", correlation: "c-2" });
-  const refused = { refused: true, reason: "STORE_REFUSED" };
+  const refused = REFUSED;
   d = door({ screens: refused });
   assert.deepEqual(await affordancesOp(at(""), d.stub, d.deps), { refusal: refused });
   d = door({ screens: { answered: true, result: null } });
@@ -151,7 +154,7 @@ test("R17 R13: NO_SUCH_BUNDLE answers 404 and any other refusal 400, each as the
 
 test("R17: a store silence or refusal on either question is answered by the control plane's own answers, never as a "
    + "statement about the object (REC-52)", async () => {
-  const silent = { answered: false, correlation: "c-1" }, refused = { refused: true, reason: "STORE_REFUSED" };
+  const silent = { answered: false, correlation: "c-1" }, refused = REFUSED;
   let d = door({ kinds: silent });
   assert.deepEqual(await affordancesOp(at(""), d.stub, d.deps), { silent: "affordances", correlation: "c-1" });
   d = door({ kinds: refused });
@@ -231,7 +234,7 @@ test("R67 R68: what the profiles add is shaped at `vocabulariesFor`: an entry wi
 
 test("R67 R68: a store that does not answer the profiles' read — a silence, a refusal, an answer of another shape or no answer — leaves "
    + "those keys out of the answer and answers everything else unchanged, on both arms (never `[]`, never a refusal of the answer)", async () => {
-  for (const vocab of [{ answered: false, correlation: "c-9" }, { refused: true, reason: "STORE_REFUSED" }, { answered: true, result: null },
+  for (const vocab of [{ answered: false, correlation: "c-9" }, REFUSED, { answered: true, result: null },
                        { answered: true, result: FACTS }, { answered: true, result: { ok: false } }, { answered: true, result: { ok: true } }]) {
     for (const q of ["", `&target=${FACTS.target}`]) {
       const d = door({ vocab });
