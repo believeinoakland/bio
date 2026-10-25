@@ -321,3 +321,7 @@ Fix round 10 batch 5 done: 2 own fixture lines at zero (case-account registrar f
 **Checks and tests (absolute root /home/user/bio):** module tests 100 pass, 0 fail (97 before, +3); `format` 0 failures; `architecture` 0; `coverage` 45 of 45; `words` 0; `ownership` 0; `fixtures.mjs … review --list` 0 failures; `impact.mjs origin/tranche/T51 HEAD`: 0 affected modules, so no user tests to run. No `fixtures-own`/`fixtures-generic` marker added. Deferred: none.
 
 Size (session_01QnDe6zFwq9Dr5SvYgBwJnE): test runs 5, module lines 13
+
+## J15 · COMPLETE
+
+Follow-up 53 (R171 (h), K5130) done: R16 met. The review copy's observations of a draft that has prepared its new case are read at the prepared case and edition (case-authoring draftEditions); draftIdentity and R8 untouched (grants before and after preparation both stay live, tested). New prepared.test.mjs through the real acts, red 0/3 then green 3/3; module tests 100/100; format, architecture, coverage 45/45, words, ownership, fixtures 0. For screens-publish (follow-up 54): the prepared case is casedrafts rows' editions.case with editions.prepared; the copy's case.case_id stays null. Record: build/jobs/T51/review.md.
