@@ -104,8 +104,7 @@ export async function s2(c) {
   rec("R23", "The forms never ask for an id and the minted id is not shown in the page text", 1280, "administrator", "read the project page text for an id", idShown ? "BROKEN" : "WORKS", idShown ? "an id shows in the text" : "no PROJ- id in the page text", "");
 
   // duplicate and equivalents
-  const tries = [["Sewer Fund Transfers", "the same title"], ["Sewer fund transfers", "different case"], ["Sewer  Fund   Transfers", "doubled spaces"], ["Sewer Fund Transfers ", "trailing space"],
-    ["Séwer Fund Transfers", "an accented letter (composed)"]];
+  const tries = [["Sewer Fund Transfers", "the same title"], ["Sewer fund transfers", "different case"], ["Sewer  Fund   Transfers", "doubled spaces"], ["Sewer Fund Transfers ", "trailing space"]];
   for (const [title, why] of tries) {
     s = await c.go("f", "/app/projects");
     await s.page.getByText("Start a project", { exact: true }).first().click(); await c.settle(s.page, 300);
@@ -114,9 +113,20 @@ export async function s2(c) {
     t = await c.text(s);
     const made = /\/app\/project\/PROJ-/.test(s.page.url());
     const shown = clip((await s.page.locator("[role=alert],[aria-live]").allInnerTexts()).join(" | ") || t.slice(-200), 220);
-    const expectRefused = why !== "an accented letter (composed)";
-    rec("R23", `Name check: '${title}' (${why}) after 'Sewer Fund Transfers' exists`, 1280, "administrator", "started a second project with that title", expectRefused ? verdict(!made) : "WORKS",
+    rec("R23", `Name check: '${title}' (${why}) after 'Sewer Fund Transfers' exists`, 1280, "administrator", "started a second project with that title", verdict(!made),
       `${made ? "a project WAS made at " + s.page.url().split("/").pop() : "refused, nothing made"}: ${shown}`, "");
+  }
+  // a Unicode-equivalent pair: composed and decomposed accent (REC-208: not built, recorded as a finding, not a pass)
+  const pair = [["Caf\u00e9 Audit", "composed accent U+00E9"], ["Cafe\u0301 Audit", "decomposed accent e + U+0301"]];
+  let madeSecond = false;
+  for (const [i, [title, why]] of pair.entries()) {
+    s = await c.go("f", "/app/projects");
+    await s.page.getByText("Start a project", { exact: true }).first().click(); await c.settle(s.page, 300);
+    await s.page.locator("#projects-title").fill(title); await s.page.locator("#projects-visibility-hidden").check();
+    await s.page.getByRole("button", { name: "Start the project" }).click(); await c.settle(s.page, 1800);
+    const made = /\/app\/project\/PROJ-/.test(s.page.url()); if (i === 1) madeSecond = made;
+    rec("R23", `Unicode-equivalent name pair: '${title}' (${why})${i === 1 ? " after its composed twin exists" : ""}`, 1280, "administrator", "started a project with that title", i === 0 ? (made ? "WORKS" : "BROKEN") : (made ? "NOT REACHED" : "WORKS"),
+      i === 0 ? (made ? "made" : "not made") : (made ? "a second project WAS made for the Unicode-equivalent name (REC-208: 'unicode-equivalent names not built'; the id slug also drops the accent: '" + s.page.url().split("/").pop() + "'): the state is confirmed and recorded as a finding, not a defect of the build" : `refused: ${clip((await s.page.locator("[role=alert],[aria-live]").allInnerTexts()).join(" | "), 160)}`), "");
   }
   // member with no right to start; discoverable second project; directory
   s = await c.start("f", "Park Lease Review", "discoverable"); c.P.p2 = s.page.url().split("/").pop();

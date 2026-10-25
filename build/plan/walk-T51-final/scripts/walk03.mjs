@@ -11,7 +11,7 @@ const clip = (t, n = 260) => String(t).replace(/\s+/g, " ").trim().slice(0, n);
 export async function makeWorld({ tag = "w03" } = {}) {
   const k = makeKit({ tag });
   const b = await browserFor(k);
-  const c = { k, b, W: {}, H: { f: "admin" }, pages: new Map(), ov: [], P: {} };
+  const c = { k, b, W: {}, H: { f: "admin" }, pages: new Map(), ov: [], P: {}, settle };
   c.person = async (h, caps = null, role = "member") => { c.W[h] = await k.person(h, role, caps); c.H[h] = h; return c.W[h]; };
   c.sess = async (who, width = 1280, dark = false) => {
     const key = `${who}@${width}${dark ? "d" : ""}`;
