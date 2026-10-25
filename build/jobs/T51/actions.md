@@ -60,3 +60,15 @@ Size (session_01TXuP7EMXudAZjVe2WhZZQT): test runs 17, module lines 3520
 ## J4 · COMPLETE
 
 B3/B4 done on job/T51/actions: tranche/T51 merged; region is-minutes drawn; MINUTES_NOT_PUBLIC_COMMENT (C-117.59) and BAD_MINUTES (C-117.60) raised through their rows, asserted in t51. actions tests 142/142; action-grammar tests (R28 census arm) 80/80 on my branch; words, architecture, coverage, format, ownership 0 failures.
+
+## Fix round 10, Wave A batch 2 (B5)
+
+**Fixtures published** (`bio-plane/test/m/actions/fixtures.mjs`, tested by `fixtures.test.mjs`): `actionRead` and `actionsForRefusal`, each made by the real module at test time. Note for BOB: the plan's line says `actionRead` answers `NO_SUCH_BUNDLE`/`NOT_AN_ACTION`; since R106 (T50) the real `actionRead` answers all three (unknown, unseen, no action) as R43's `NO_SUCH_ACTION`; `NO_SUCH_BUNDLE`/`NOT_AN_ACTION` come from `addresseeSuggest`. The fixtures publish what the code answers; users hand-building `NO_SUCH_BUNDLE` from `actionRead` (escalation `fixture.mjs`:162-165, `draft.test.mjs`:143) copy a shape the module no longer gives.
+
+**Own lines done (4 of 6, plus the retrieval one):** `fixture.mjs`:111 now takes retrieval's `actionRegistrar` (delegating wrapper that also keeps each registration in `reg`); `t12`, `t18`, `write.test.mjs` take conformance's `determinationRead` fixture (viewer `pat`, as the fixture publishes).
+**Left (3 lines in 2 files + 1 inherited):** `t45.test.mjs`:40 and `t50.test.mjs`:27 need determinations with findings' bases (`checked_held`, `accepted` with `matter_stake`, `published`), a compliant outcome, a void determination with causes, and a live superseded one: conformance's `determinationRead` fixture publishes none of these (FIX-E, conformance is earlier; needs a conformance fixture, a product cause for BOB). `t12.test.mjs`:55 is one arm (non-live, no successor, `superseded_by` null) conformance's fixture cannot reach; I kept it as its own test rather than drop it. `t45.test.mjs`:45 is consequences' (not done in this job, as B5 says).
+**Markers added:** none (`fixtures-own` 0, `fixtures-generic` 0).
+
+**Checks:** module tests 151/151; fixtures `--list` 4 failures left (above); words 0 failures; format 0; architecture 0; coverage 76/76; ownership 0. `impact.mjs` lists no source change of mine (tests only).
+
+Size (session_01JVxfm6Xv26CMbdeCJgfGt4): test runs 9, module lines 0
