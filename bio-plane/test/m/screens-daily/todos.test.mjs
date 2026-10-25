@@ -8,6 +8,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { storeWorld } from "../store-request/fixtures.mjs";
+import { counted } from "../interface-shell/harness.mjs";
 import { open as openRaw, ok, refused, main, text, ops, button, fill, last, press, beside, word, hasWord, withScreens, settle } from "./page.mjs";
 
 const timeout = { timeout: 180000 };
@@ -277,7 +278,7 @@ for (const [where, path] of screens) {
     const gate = new Promise((r) => { open1 = r; });
     // The point is a read held open: the world's own answer, given once the gate opens (only this op wraps the world's door).
     const door = w.boot(rosa).door;
-    const p = await open(w, rosa, path, { heldcaptures: async (req) => { await gate; return door(req); } });
+    const p = await open(w, rosa, path, { heldcaptures: counted(async (req) => { await gate; return door(req); }) });
     await settle();
     assert.ok(!text(p).includes(check), "not drawn before her captures are read");
     assert.ok(!text(p).includes("Photo 1"));

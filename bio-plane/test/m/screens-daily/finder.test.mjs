@@ -1,9 +1,14 @@
 /* Find (R4) on the real served page (interface-shell's harness): the search, its results with grade and where they
    matched, holding a picked set together with its strip, letting it go, "Find in these", where nobody looked, and
-   "Count". Every sentence is asserted as `word(key, vars)` (R34): no test here holds a sentence's English. */
+   "Count". The held documents, the held set, its release, the count and the other routes' answers are the REAL store's (store-request's `storeWorld()`,
+   op-tables §5.3): a member's three documents, made by the real acts. The plane's `search` answers only where the test is about the shape of a hit (a grade, a
+   snippet, a title missing, a widened count): no act of the door gives a hit a grade today, and the real snippet is the document's own text. Every sentence is
+   asserted as `word(key, vars)` (R34): no test here holds a sentence's English. */
+import "../../sandbox.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, ok, refused, text, ops, button, press, beside, last, main, screen, word, hasWord, settle } from "./page.mjs";
+import { storeWorld } from "../store-request/fixtures.mjs";
+import { open as openRaw, ok, refused, text, ops, button, press, beside, last, main, screen, word, hasWord, settle } from "./page.mjs";
 import { SESSION_OPS } from "../../../src/op-declarations/index.mjs";
 import { SCREENS } from "./page.mjs";
 
@@ -12,9 +17,20 @@ const HITS = ok({ total: 3, hits: [
   { bundle_id: "INF-2", title: "Memo 88-31 on stormwater", snippet: "within seven calendar days" },
   { bundle_id: "INF-3", title: "Report to council", grade: "C" },
 ] });
-const SEL = ok({ ok: true, handle: "sel-abc", n: 2, members: ["INF-1", "INF-3"], expires: "2026-10-12T16:40:00Z" });
-const PLANE = { search: HITS, select: ok({ ok: true, handle: "sel-abc", n: 2 }), selection: SEL, selectionrelease: ok({ ok: true, released: 1 }),
-  meaningrows: ok({ ok: true, rows: [], total: 0 }), subjectsnamed: ok({ ok: true, subjects: [], count: 0 }), searchfields: ok({ ok: true, scopes: [] }) };
+/** The team: a member (`mem`, who may contribute and start projects), her project and three documents held in it, by the real acts. Shared. */
+let shared = null;
+const lab = () => (shared ||= (async () => {
+  const w = await storeWorld({ group: null, now: Date.now() });
+  const mem = await w.signIn("mem", { capabilities: ["contribute", "create_projects"] });
+  const project = await w.recipes.project(mem, "Pothole repairs");
+  const ids = [];
+  for (const [title, body] of [["Pothole work orders, FY2025", "Work orders for each pothole."], ["Pothole memo 88-31 on stormwater", "Repairs within seven calendar days."], ["Pothole report to council", "The report."]])
+    ids.push((await w.recipes.hold(mem, title, body, project)).bundle);
+  return { w, mem, project, ids };
+})());
+/** Opens `path` as the member over the real store, `plane` on top of it (only a read the test is about the shape of, or one made to fail). */
+const open = async (path, plane = {}, o = {}) => { const L = await lab(); return openRaw(path, plane, { ...L.w.boot(L.mem), ...o }); };
+const PLANE = { search: HITS };
 // `search`, `findin`, `frontier` and `ruleanswer` are reads the shell weighs as reasoned until op-grades names them
 // (SCREENS-DAILY #1's REPORT): the member's reason is answered where the shell asks one.
 const R = "looking";
@@ -78,34 +94,42 @@ test("R4: each result with its grade and where it matched (Found by search), a r
 });
 
 test("R4: select holds the picked results together; the hold strip shows how many and until when, from selection", async () => {
-  const p = await open("/app/finder/pothole", PLANE);
+  const L = await lab();
+  const [d1, d2, d3] = L.ids;
+  const p = await open("/app/finder/pothole");
   assert.ok(ops(p).includes("select"));
   assert.ok(!ops(p).some((o) => ["findin", "calculationcreate", "selectionrelease"].includes(o)), "control: nothing held, nothing to act on");
   const nopick = await press(p, "select");
   assert.equal(beside(p, nopick), word("screen.finder.pickfirst"));
-  await press(p, "select", { values: { "finder-pick-INF-1": true, "finder-pick-INF-3": true } });
+  await press(p, "select", { values: { ["finder-pick-" + d1]: true, ["finder-pick-" + d3]: true } });
   assert.deepEqual(last(p, "select").query, { op: "select", kind: "enumerated", q: "pothole" });
-  assert.deepEqual(last(p, "select").body, { ids: ["INF-1", "INF-3"] });
-  assert.equal(last(p, "selection").query.handle, "sel-abc");
-  const at = new Date("2026-10-12T16:40:00Z");
+  assert.deepEqual(last(p, "select").body, { ids: [d1, d3] });
+  const held = await L.mem.read("selection", { query: { handle: last(p, "selection").query.handle } });
+  assert.deepEqual([held.n, held.members.sort()], [2, [d1, d3].sort()], "the store holds the two");
+  const at = new Date(held.expires);
   const hm = `${String(at.getHours()).padStart(2, "0")}:${String(at.getMinutes()).padStart(2, "0")}`;
   assert.ok(text(p, main(p).querySelector(".cs-hold")).includes(`${word("screen.finder.held.many", { n: "2" })} · ${word("screen.finder.until", { time: hm })}`));
   assert.deepEqual(ops(p).filter((o) => !["search", "frontier", "select", "watchitem", "secondlook"].includes(o)), ["findin", "cite", "calculationcreate", "selectionrelease"]);
-  const one = await open("/app/finder/pothole", { ...PLANE, selection: ok({ n: 1, members: ["INF-1"] }) });
-  await press(one, "select", { values: { "finder-pick-INF-1": true } });
+  const one = await open("/app/finder/pothole");
+  await press(one, "select", { values: { ["finder-pick-" + d1]: true } });
   assert.ok(text(one).includes(word("screen.finder.held.one")), "R25: one document, the singular key");
+  assert.ok(d2);
 });
 
 test("R4: selectionrelease lets the set go; \"Find in these\" opens find-in over the held set", async () => {
-  const p = await open("/app/finder/pothole", PLANE);
-  await press(p, "select", { values: { "finder-pick-INF-1": true } });
+  const L = await lab();
+  const p = await open("/app/finder/pothole");
+  await press(p, "select", { values: { ["finder-pick-" + L.ids[0]]: true } });
+  const handle = last(p, "selection").query.handle;
   await press(p, "selectionrelease");
-  assert.equal(last(p, "selectionrelease").query.handle, "sel-abc");
+  assert.equal(last(p, "selectionrelease").query.handle, handle);
   assert.ok(!ops(p).includes("selectionrelease"), "the set is gone from the strip");
-  await press(p, "select", { values: { "finder-pick-INF-1": true } });
+  assert.equal((await L.mem.read("selection", { query: { handle } })).ok, false, "the store let it go");
+  await press(p, "select", { values: { ["finder-pick-" + L.ids[0]]: true } });
+  const again = last(p, "selection").query.handle;
   await press(p, "findin", { reason: R });
   assert.equal(p.byOp("findin").length, 0, "it sends nothing itself");
-  assert.equal(p.location.pathname, "/app/find-in/sel-abc");
+  assert.equal(p.location.pathname, "/app/find-in/" + again);
 });
 
 // R67: a `frontier` answer for each level: `perLevel[level]` is that level's answer.
@@ -186,15 +210,17 @@ test("R77: \"Somebody has looked everywhere\" is drawn only when every level ans
 });
 
 test("R4: \"Count\" makes a count over the held set as a calculation, asking what and when in place, and says what it counted", async () => {
-  const p = await open("/app/finder/pothole", { ...PLANE, calculationcreate: ok({ ok: true, calc_id: "CALC-1", result_key: "count", results: { count: 812 } }) });
-  await press(p, "select", { values: { "finder-pick-INF-1": true } });
+  const L = await lab();
+  const p = await open("/app/finder/pothole");
+  await press(p, "select", { values: { ["finder-pick-" + L.ids[0]]: true, ["finder-pick-" + L.ids[1]]: true } });
+  const handle = last(p, "selection").query.handle;
   assert.equal(button(p, "calculationcreate").closest("details").querySelector("summary").textContent, word("act.calculationcreate.label.finder"));
   await press(p, "calculationcreate", { values: { "fc-question": "Reports closed in 7 days", "fc-from": "2024-07-01", "fc-to": "2025-06-30" }, reason: R });
   assert.deepEqual({ ...last(p, "calculationcreate").body, reason: undefined },
-    { question: "Reports closed in 7 days", period: { from: "2024-07-01", to: "2025-06-30" }, kind: "count", inputs: [{ name: "held", set: "sel-abc" }], reason: undefined });
-  assert.ok(text(p).includes(word("screen.finder.counted", { result: "812" })));
-  const r = await open("/app/finder/pothole", { ...PLANE, calculationcreate: refused("NO_PERIOD", "Say over which period.") });
-  await press(r, "select", { values: { "finder-pick-INF-1": true } });
+    { question: "Reports closed in 7 days", period: { from: "2024-07-01", to: "2025-06-30" }, kind: "count", inputs: [{ name: "held", set: handle }], reason: undefined });
+  assert.ok(text(p).includes(word("screen.finder.counted", { result: "2" })), "it counted the two held documents");
+  const r = await open("/app/finder/pothole");
+  await press(r, "select", { values: { ["finder-pick-" + L.ids[0]]: true } });
   const b = await press(r, "calculationcreate", { values: { "fc-question": "q" }, reason: R });
   assert.match(beside(r, b), /period|NO_PERIOD/);
 });

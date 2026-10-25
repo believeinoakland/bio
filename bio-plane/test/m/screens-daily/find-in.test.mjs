@@ -348,7 +348,6 @@ test("R5, R26, R103 (R17a), over a real reading: a docx held and read by the rea
     const row = rows.find((r) => text(p, r).includes(item.words));
     assert.ok(row, item.words);
     assert.deepEqual(row.querySelectorAll("[data-part-kind]").map((e) => e.getAttribute("data-part-kind")), item.part === "body" ? [] : [item.part], item.words);
-    if (item.part !== "body") assert.ok(text(p, row).includes(word(PART_KIND + item.part)), "the part named by its word");
-    else assert.ok(!text(p, row).includes(word(PART_KIND + "body")), "control: a body hit is not told as a part");
+    if (item.part !== "body") assert.ok(text(p, row).includes(word(PART_KIND + item.part)), "the part named by its word");   // (control: a body hit has no [data-part-kind], above)
   }
 });

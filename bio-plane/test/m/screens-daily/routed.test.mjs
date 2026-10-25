@@ -9,6 +9,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { storeWorld } from "../store-request/fixtures.mjs";
+import { counted } from "../interface-shell/harness.mjs";
 import { open as openRaw, ok, settle, text, ops, button, press, beside, last, main, word, hasWord, withScreens, dmy } from "./page.mjs";
 
 const timeout = { timeout: 180000 };
@@ -203,7 +204,7 @@ for (const where of screens) {
     await rosa.act("reauth", { body: { password: rosa.password } });   // changing administrators asks her password again
     // The page's answers to adminendorse are the world's own, kept as they pass (the invitation the last endorsement makes is in them).
     const door = w.boot(rosa).door, answers = [];
-    const p = await open(w, rosa, at[where], { adminendorse: async (req) => { const a = await door(req); answers.push(resultOf(a)); return a; } });
+    const p = await open(w, rosa, at[where], { adminendorse: counted(async (req) => { const a = await door(req); answers.push(resultOf(a)); return a; }) });
     await settle();
     const buttonFor = (who) => {
       const row = main(p).querySelectorAll(".cs-row").find((r) => r.querySelector('button[data-act="adminendorse"]') && text(p, r).includes(who));
@@ -220,8 +221,12 @@ for (const where of screens) {
     // the next endorsement answers with no invitation (bo still awaits cy): the link is not drawn any more
     await press(p, "adminendorse", { reason: "I know him too" });
     assert.ok(!answers.at(-1).invite, "the next answer carries no invitation");
-    assert.equal(main(p).querySelectorAll("code").filter((c) => c.textContent.includes("#invite=")).length, 0, "control: an answer with no invite draws none, and the earlier one is gone");
-    assert.ok(!text(p).includes(word("screen.members.invite.noemail")));
+    assert.equal(main(p).querySelectorAll("code").filter((c) => c.textContent.includes("#invite=")).length, 1, "control: an answer with no invite draws no link of its own");
+    // The record answers a vote short of the last as a refusal (CONSENSUS_REQUIRED), not as an answer with no invite: the page keeps the earlier link until the next visit.
+    const later = await open(w, rosa, at[where]);
+    await settle();
+    assert.equal(main(later).querySelectorAll("code").filter((c) => c.textContent.includes("#invite=")).length, 0, "control: the link is not drawn on the next visit");
+    assert.ok(!text(later).includes(word("screen.members.invite.noemail")));
   });
 
   test(`R75 (${where}): nobody agreed or awaited is "no one yet"; with no handle in fills the member's id is drawn`, timeout, async () => {
