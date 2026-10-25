@@ -196,3 +196,11 @@ Size (session_01XG3wEDwRsPvJ8ZMf1es3qF): test runs 7, module lines 1732
 **Stale generated artifacts I make:** `setup-words/rows.mjs` (new key above), the plane bundle `dist/bio-plane.bundled.mjs`. **Found in other modules:** none. **Deferred:** none.
 
 Size (session_01A8uYztGp9qatq9Wz5yfrRC): test runs 5, module lines 1732
+
+## J9 · COMPLETE
+
+COMPLETE · WORKBOOKS #8 · R21 amended (G186, job 114) done; record: section 'G186 · WORKBOOKS #8'.
+Reader (office-readers R48) now gives no-r rows and cells their position, so the add holds them; the no_reference count is gone, dropped is {count, unreadable, repeated, statement} only when something was dropped. g137e 'R21 SHEET X12' rewritten (cells held as a referenced copy's; seen red first on the tip).
+Tests: workbooks 50/50; plane g124f-bounds 16/16. Checks: format, architecture, coverage (23 of 23), words, ownership: 0 failures.
+Row owed to UX-DESIGN: stand-in id is now workbooks.cells_not_kept ({count},{unreadable},{repeated}) because the stale rows.mjs row for workbooks.dropped_cells still wants {no_reference}; BOB regenerates rows.mjs and may drop the orphan. Stale generated: setup-words rows.mjs, plane bundle. Found in other modules: none.
+Size (session_01A8uYztGp9qatq9Wz5yfrRC): test runs 5, module lines 1732
