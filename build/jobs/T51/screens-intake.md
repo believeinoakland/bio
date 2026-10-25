@@ -1,6 +1,6 @@
 # screens-intake (T51)
 
-**Status** · session_01B1m6LkQZAKWjh5ccaAiGF2 · depth 2 · RUNNING until 2026-10-25T20:29:56Z (8 sonnet workers converting test files to storeWorld) · handled B54
+**Status** · session_01B1m6LkQZAKWjh5ccaAiGF2 · depth 2 · WAITING ON BOB (K5183 save) · handled B54
 
 ## Record
 
