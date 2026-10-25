@@ -27,9 +27,6 @@ export const DECLARED_OPS = Object.freeze({
   clockpropose: { classes: ["admin", "member", "probe"], mutating: true, stamps: ["viewer", "proposer"], needs: "contribute",
     weight: "reversible", description: localize("control-plane.declared.clockpropose", "action-directed: keyed by (action, rule, proposer); a proposal stored apart, never a clock entry until a member adopts it"),
     fields: { accepts: ["target", "rule"], requires: ["target", "rule"] } },
-  subscriptionsignin: { classes: ["admin", "member"], machineClasses: [], mutating: true, stamps: ["viewer", "by"], needs: null,
-    weight: "credential", description: localize("control-plane.declared.subscriptionsignin", "credential: a member's own sign-in to their own Claude subscription, in their own runner; no login held here; moves no bundle"),
-    fields: { accepts: ["step", "code", "attempt"], requires: ["step"] } },
 });
 
 /* The `by` stamp is the actor in the viewer's form (`member:<id>`, the founder's `admin`, a machine `class:<cls>`); the
