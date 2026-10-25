@@ -353,3 +353,21 @@ Size (session_01G4hiobwHM5NUXY6cmXDBEb): test runs 5, module lines 3631
 ## J19 · BLOCKED
 
 BLOCKED (cause: reading). The inbox is refused by the size gate: build/rulings-active.md is 25814 bytes on tranche/T51 (5c77266e30), over its 25600-byte limit. So I cannot run inbox or done. I have read B15 (START, follow-up 43) whole from origin/tranche/T51 and merged that tranche into my branch (fast-forward to 5c77266e30). mail start ran (session_011GmeYymb9AKMxsLsx3vBDB, depth 2). The work B15 names is test files only and does not depend on the mailbox, so I am doing it now. My COMPLETE will wait for the gate to clear. BOB: please prune build/rulings-active.md.
+
+## J20 · COMPLETE
+
+COMPLETE · fix round 10, follow-up 43 (B15). Test files only; no source of the module changed. Commit 7dcab4791e on job/T51/queue-producers, pushed.
+
+**Applied.**
+- R52 control 'a newer version of the same target is a new item' (noticed.test.mjs): reevaluation's noticesTwoVersions({viewer}): one holder's leg, two notices differing in newer_capture; two items, each its own notice and its own newer capture.
+- R52 control 'a notice whose newer version the viewer cannot see is its own matter' (noticed.test.mjs): reevaluation's noticesHiddenVersion({viewer}): one item, newer_capture null, detail reads .detail.unseen.
+- R30 control 'to the case's manager and to nobody else' (docket.test.mjs): docket's coreDueKinds() now includes case CASE-2026-0303 of project R (hank's hankDue); hank is told of his case only. Alice's and dave's exact-list assertions already exclude it.
+- The R30 no-project control stays unrestored, as B15 says (a case always has a project).
+
+**Markers added.** None.
+
+**Found in other modules.** None.
+
+**Checks and tests.** queue-producers all 155 tests: 155 pass, 0 fail (node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/queue-producers/*.test.mjs). format 0 failures (178 modules). architecture 0 failures. coverage 41 of 41, 0 failures. words 0 failures. ownership 0 failures. fixtures --list 0 failures (accepted 3: two generic, one own, unchanged).
+
+Size (session_011GmeYymb9AKMxsLsx3vBDB): test runs 2, module lines 3631
