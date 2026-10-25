@@ -1,7 +1,7 @@
 /* docket's published fixtures (fix round 10, Wave A batch 4; K4990, K4993, K4995, K5044): what a user module's test takes in
    place of docket's answers. Each is made by this module's real code, over the real modules it uses, each time a test calls
    one, and is never stored. A user's test names no id of its own: the ids the real code minted come back with the answers. */
-import { seeded, file, V, MACHINE, CASE } from "./fixture.mjs";
+import { seeded, file, V, MACHINE, CASE, NOW, OTHER_SUBJECT } from "./fixture.mjs";
 
 const A = V("alice"), B = V("bob");
 
@@ -58,4 +58,27 @@ export function pressureMarks() {
   x.st.db.exec(`ALTER TABLE docket_marks RENAME TO docket_marks_gone`);
   const unreadable = x.docket.docketPressureMarks({});
   return { world: w, entry, read, empty, marked, refused, unreadable };
+}
+
+/** R9, every core kind: `coreDueKinds` is the real answer to `coreDue` over real acts in two cases of two projects. Case
+ *  CASE (project P, managed by alice) has a subject's response and a subject's statement, edition 2 ratified with its "What
+ *  changed" statement, and a tension on its load-bearing finding F1. Case `caseQ` (project Q, managed by dave) has a
+ *  subject's statement, edition 2 ratified with its "What changed" statement, and a tension on its load-bearing finding F3.
+ *  Every statement is filed with its edition. `due` is alice's read and `otherDue` dave's, each the real `coreDue({viewer})`;
+ *  `response`, `statementP`, `statementQ` are the record entries the acts minted. */
+export function coreDueKinds() {
+  const w = seeded();
+  const F3 = "INQ-2026-0003-permits", caseQ = "CASE-2026-0202";
+  w.subjects.set(F3, OTHER_SUBJECT);
+  w.publish(w.P, CASE, 2, [{ id: w.F1, role: "load_bearing" }, { id: w.F2, role: "supporting" }],
+            { whatChanged: "Corrected the totals.", at: NOW + 500 });
+  w.publish(w.Q, caseQ, 1, [{ id: F3, role: "load_bearing" }]);
+  w.publish(w.Q, caseQ, 2, [{ id: F3, role: "load_bearing" }], { whatChanged: "Added a permit.", at: NOW + 500 });
+  w.tensions.list = [{ member: w.F1, candidate: "CAND-1", state: "open" }, { member: F3, candidate: "CAND-3", state: "open" }];
+  const response = file(w).entry;
+  const statementP = file(w, { kind: "statement", capture: w.swept.sha }).entry;
+  const statementQ = file(w, { case: caseQ, edition: 1, kind: "statement", capture: w.swept.sha,
+                               from: { kind: "subject", entity: OTHER_SUBJECT } }, "dave").entry;
+  return { world: w, case: CASE, caseQ, manager: A, other: V("dave"), response, statementP, statementQ,
+           due: w.docket.coreDue({ viewer: A }), otherDue: w.docket.coreDue({ viewer: V("dave") }) };
 }

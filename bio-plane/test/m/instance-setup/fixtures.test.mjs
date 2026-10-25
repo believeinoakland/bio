@@ -4,8 +4,23 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { boot } from "./fixture.mjs";
-import { assistantState, instanceGroupAnswer, selftestAnswer, fleetReports } from "./fixtures.mjs";
-import { NO_GROUP_RECORDED } from "../../../src/setup.mjs";
+import { assistantState, instanceGroupAnswer, selftestAnswer, fleetReports, bootstrapFacts } from "./fixtures.mjs";
+import { NO_GROUP_RECORDED, BOOTSTRAP_FACT_KEYS } from "../../../src/setup.mjs";
+
+test("fixture bootstrapFacts (R95): the real seven facts of an instance set up by real acts, the team named and the counts as the caller states", async () => {
+  const f = await bootstrapFacts();
+  assert.deepEqual(Object.keys(f).sort(), [...BOOTSTRAP_FACT_KEYS].sort());
+  assert.equal(f.team_name, "River Town");
+  assert.equal(Date.parse(f.installed_at), Date.parse("2026-10-10T08:00:00Z"), "installed when the running release was first seen");
+  assert.equal(Date.parse(f.last_used_at), Date.parse("2026-10-14T17:45:00Z"), "the newest of the three held sessions");
+  assert.deepEqual([f.count_projects, f.count_documents, f.count_published, f.count_members], [2, 5, 1, 3]);
+});
+
+test("fixture bootstrapFacts (R95): the team name and each count are the ones the caller states, and a count of none is 0, never null", async () => {
+  const f = await bootstrapFacts({ team: "Oak Hill", members: 5, projects: 1, documents: 0, published: 0 });
+  assert.equal(f.team_name, "Oak Hill");
+  assert.deepEqual([f.count_projects, f.count_documents, f.count_published, f.count_members], [1, 0, 0, 5]);
+});
 
 test("fixture assistantState: the real answer while the group keeps nothing away and while it keeps its material away", async () => {
   const { notKept, kept } = await assistantState();
