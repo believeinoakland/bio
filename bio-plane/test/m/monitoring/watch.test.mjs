@@ -1,10 +1,13 @@
 /* monitoring R70 (K2524; investigation R18): a watched project's sources. Driven at monitoring's interface over the
    real investigation module (K874), reached as production reaches it (`investigationOf` on the same host, the one per
-   storage), with intent R7 the fixture's stand-in in its Provides' shape and investigation's own reads of steps and
-   questions standing in at their interfaces, so a test states exactly when the project's work is quiet. */
+   storage). intent's answers are the real intent's, from the published `watchSetOf` fixture (follow-up 27): each project
+   of this world is the project the fixture made for its name (`bind`), so a test states what each one's objective reads.
+   investigation's own reads of steps and questions stand in at their interfaces, so a test states exactly when the
+   project's work is quiet. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, serve, DAEMON, V, NOW } from "./fixture.mjs";
+import { world, serve, DAEMON, V, NOW, sha } from "./fixture.mjs";
+import { watchSetOf } from "../intent/fixtures.mjs";
 import { investigationOf } from "../../../src/investigation/index.mjs";
 import { normalizeAddress } from "../../../src/subresources.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
@@ -16,7 +19,28 @@ const tick = (w, id) => w.m.monitor({ bundleId: id, viewer: DAEMON, actorClass: 
 const receipt = (w, addr, cap) => w.prov.recordReceipt({ address: addr, addressNorm: normalizeAddress(addr), captureSha: cap,
   retrieved: NOW, via: "direct", retrievalLocator: addr, context: { authorityKind: "sweep", authority: "x", actorClass: "plane", actor: null, observe: false } });
 
-/* A project document the record holds, owned by Carol, so its close is a revision through promotion. */
+/* intent as this world reaches it: the fixture's real intent, asked about the project the fixture made for each name this
+   world binds. `unreadable` is the set of this world's projects whose watch set cannot be read; `calls` records each
+   watch-set question as this world asks it (its own project id, its cursor). */
+function intentFor(f) {
+  const names = new Map(), unreadable = new Set(), calls = [];
+  const own = (id) => (names.has(id) ? f.projects[names.get(id)] : id);
+  return {
+    calls, unreadable, sources: f.sources,
+    bind(project, name) { names.set(project, name); },
+    watchSet(q = {}) {
+      calls.push({ project: q.project, after: q.after ?? null });
+      if (unreadable.has(q.project)) throw new Error("intent unreadable");
+      return f.intent.watchSet({ ...q, project: own(q.project) });
+    },
+    gaps: (q) => f.intent.gaps({ ...q, project: own(q.project) }),
+    progress: (q) => f.intent.progress({ ...q, project: own(q.project) }),
+    registerSource: (kind, reader) => f.intent.registerSource(kind, reader),
+  };
+}
+
+/* A project document the record holds, owned by Carol, so its close is a revision through promotion. The intent name is
+   the title, which the held watch sets of `watchWorld` are keyed by. */
 function project(w, title) {
   const md = ["---", "object_type: project", "schema: project@1", `title: "${title}"`, "current_state: forming", "prior_state: null",
     `created: "${NOW}"`, `last_updated: "${NOW}"`, "group: test-group", "objective: Know whether the award was proper",
@@ -26,13 +50,15 @@ function project(w, title) {
   assert.equal(made.ok, true, JSON.stringify(made).slice(0, 400));
   w.st.sql.exec(`INSERT OR REPLACE INTO project_sight (project_id, setting) VALUES (?, 'discoverable')`, made.bundleId);
   w.inProject(made.bundleId, { owner: "carol" });
+  w.intent.bind(made.bundleId, title);
   return made.bundleId;
 }
 
 /* The world: the real investigation, its steps (one ended step per project, more as a test adds them), no questions,
-   and intent's progress and gaps (its R5, R6 shapes) for the project's reads and a close. */
-function watchWorld() {
-  const w = world();
+   and intent for the projects `held` names (keyed by title, each watching the digests it lists). */
+async function watchWorld(held) {
+  const f = await watchSetOf(held, { page: 2 });
+  const w = world({ intent: intentFor(f) });
   for (const m of ["carol"])
     w.st.sql.exec(`INSERT OR IGNORE INTO members (member_id, cover, handle, role, status, created, updated) VALUES (?, 'c', ?, 'member', 'active', '2026-01-01', '2026-01-01')`, m, `${m}-h`);
   w.stepsOf = new Map();
@@ -40,9 +66,6 @@ function watchWorld() {
     stepsIn: ({ project }) => ({ ok: true, steps: w.stepsOf.get(project) ?? [{ step: `STEP-${project}`, state: "ended", at: "2026-09-01T00:00:00Z" }], truncated: false }),
     stepsOn: () => ({ ok: true, steps: [], truncated: false }),
   };
-  w.intent.gaps = ({ project }) => ({ ok: true, project, gaps: [] });
-  w.intent.progress = ({ project }) => ({ ok: true, project, objective: "Know whether the award was proper", condition: null,
-    computable: false, why: word("intent.objective_states_condition") });
   w.inv = investigationOf(w.host, { record: w.record, membership: w.membership, promotion: w.promotion, intent: w.intent, steps,
     basisVersions: { projectQuestions: () => ({ items: [], cursor: null }), conclusionRecordOf: () => ({ history: [], stance: null }) },
     inquiry: { questionWaits: () => ({ ok: true, waits: [] }), documentWaits: () => ({ ok: true, questions: [] }) },
@@ -53,14 +76,12 @@ function watchWorld() {
 }
 
 test("R70: a change tick on a source a watched project's intent R7 names is reported once through investigation.watchArrival, and reopens its work; an unwatched project's source and a look that records no change report nothing; a project no longer watched is no longer reported", async () => {
-  const w = watchWorld();
+  const w = await watchWorld({ Watched: ["0".repeat(64), "1".repeat(64), sha("agenda v1")], "Not watched": [sha("budget v1")] });
   const P1 = project(w, "Watched"), P2 = project(w, "Not watched");
   const a = w.monitored("INFO-2026-0001-agenda", LA, "agenda v1", { freq: "daily" });
-  const b = w.monitored("INFO-2026-0002-budget", LB, "budget v1", { freq: "daily" });
+  w.monitored("INFO-2026-0002-budget", LB, "budget v1", { freq: "daily" });
   /* P1's condition reads the agenda's capture (twice over: its register and its address), P2's the budget's; pages of two */
   receipt(w, LA, a.cap);
-  w.intent.watch[P1] = ["0".repeat(64), "1".repeat(64), a.cap];
-  w.intent.watch[P2] = [b.cap];
   assert.equal(w.inv.projectWatch({ project: P1, by: V("carol") }).ok, true);
   assert.deepEqual(w.inv.watchedProjects().projects.map((p) => p.project), [P1]);
 
@@ -125,14 +146,15 @@ test("R70: a change tick on a source a watched project's intent R7 names is repo
 });
 
 test("R70: such a source is found by a capture filed at the tick's address as well as by the document's own register, followed through intent R7's cursor to the end; each watched project naming it is told once; a refusal or an unreadable watch fails no tick", async () => {
-  const w = watchWorld();
+  /* the older capture at the address is the greatest of P1's digests, so it is on P1's last page */
+  const OLD = "contract v0";
+  const w = await watchWorld({ "By address": ["0".repeat(64), "0".repeat(63) + "1", "0".repeat(63) + "2", "0".repeat(63) + "3", sha(OLD)],
+                               "By register": [sha("contract v1")], Unrelated: ["4".repeat(64)], Empty: [] });
   const P1 = project(w, "By address"), P3 = project(w, "By register");
   /* an older capture at the address, held by another (unmonitored) document: P1 names only it, at the end of its pages */
-  const old = w.monitored("INFO-2026-0003-old", LC, "contract v0", { enabled: false });
+  const old = w.monitored("INFO-2026-0003-old", LC, OLD, { enabled: false });
   receipt(w, LC, old.cap);
-  const c = w.monitored("INFO-2026-0004-contract", LC, "contract v1", { freq: "weekly" });
-  w.intent.watch[P1] = ["0".repeat(64), "1".repeat(64), "2".repeat(64), "3".repeat(64), old.cap];
-  w.intent.watch[P3] = [c.cap];
+  w.monitored("INFO-2026-0004-contract", LC, "contract v1", { freq: "weekly" });
   for (const p of [P1, P3]) assert.equal(w.inv.projectWatch({ project: p, by: V("carol") }).ok, true);
   w.net.routes[LC] = serve("contract v2");
   const r = await tick(w, "INFO-2026-0004-contract");
@@ -142,15 +164,14 @@ test("R70: such a source is found by a capture filed at the tick's address as we
   assert.ok(w.intent.calls.filter((x) => x.project === P1).length >= 3, "P1's watch set followed by its cursor");
 
   /* a watch set that cannot be read is stated per project, and the tick still records */
-  const real = w.intent.watchSet;
-  w.intent.watchSet = function (q) { if (q.project === P3) throw new Error("intent unreadable"); return real.call(this, q); };
+  w.intent.unreadable.add(P3);
   w.clock.ms += 1000;
   w.net.routes[LC] = serve("contract v3");
   const r2 = await tick(w, "INFO-2026-0004-contract");
   assert.equal(r2.body.ok, true);
   assert.deepEqual(r2.body.arrivals.failed, [{ project: P3, reason: "the sources intent R7 names for it could not be read" }]);
   assert.deepEqual(r2.body.arrivals.reported.map((x) => x.project), [P1]);
-  w.intent.watchSet = real;
+  w.intent.unreadable.delete(P3);
   /* investigation's refusal is carried as its code, and the tick still records */
   const inv = w.m.investigation;
   const watchArrival = inv.watchArrival;
@@ -170,8 +191,8 @@ test("R70: such a source is found by a capture filed at the tick's address as we
   assert.deepEqual(r4.body.arrivals.failed.map((x) => x.reason), ["investigation unavailable", "investigation unavailable"]);
   assert.equal(w.arrivals().length, 3, "two at the first tick, P1's at the second; neither the refusal nor the throw recorded one");
   /* a capture neither held by the ticked document nor filed at its address is not its source */
-  w.intent.watch[P1] = ["4".repeat(64)];
-  w.intent.watch[P3] = [];
+  w.intent.bind(P1, "Unrelated");
+  w.intent.bind(P3, "Empty");
   w.clock.ms += 1000;
   w.net.routes[LC] = serve("contract v6");
   const r5 = await tick(w, "INFO-2026-0004-contract");
@@ -179,11 +200,10 @@ test("R70: such a source is found by a capture filed at the tick's address as we
 });
 
 test("R70 R36: the cadence tick's change ticks report as a caller's op=monitor does, the watched source checked at its own cadence; a watched source that does not ask to be monitored is never fetched (R33's proposal stands)", async () => {
-  const w = watchWorld();
+  const w = await watchWorld({ Cadence: [sha("agenda v1"), sha("budget v1")] });
   const P1 = project(w, "Cadence");
-  const a = w.monitored("INFO-2026-0005-agenda", LA, "agenda v1", { freq: "daily" });
-  const u = w.monitored("INFO-2026-0006-unwatched", LB, "budget v1", { enabled: false });
-  w.intent.watch[P1] = [a.cap, u.cap];
+  w.monitored("INFO-2026-0005-agenda", LA, "agenda v1", { freq: "daily" });
+  w.monitored("INFO-2026-0006-unwatched", LB, "budget v1", { enabled: false });
   assert.equal(w.inv.projectWatch({ project: P1, by: V("carol") }).ok, true);
   w.net.routes[LA] = serve("agenda v2");
   const t = await w.m.cadenceTick(w.clock.ms);
