@@ -23,6 +23,9 @@ import { actionPlansOf } from "../../../src/action-plans/index.mjs";
 import { legEarningOf } from "../../../src/leg-earning/index.mjs";
 import { runPrincipalGate } from "../../../src/run-rules/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { escalationRead as escalationFixture } from "../escalation/fixtures.mjs";
+import { actionRead as actionFixture } from "../actions/fixtures.mjs";
+import { actionRegistrar } from "../retrieval/fixtures.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 function cursor(rows) {
@@ -120,6 +123,12 @@ export function world({ profiles = ["test-port-ellery"], omit = [], duties } = {
     return s && viewer !== V("outsider") ? { ok: true, id, ...s } : { ok: false, reason: "NO_SUCH_STANDARD" };
   } };
   const escalations = new Map();      // determination -> [{id, state, stage, history}]
+  /* an id escalation holds none of: its own real answer (escalation's published fixture), the same for any id it names. */
+  let realEscalation = null;
+  const noSuchEscalation = (id) => {
+    realEscalation ??= escalationFixture();
+    return realEscalation.escalation.escalationRead({ id, viewer: realEscalation.viewer });
+  };
   const escalation = {
     escalationsFor: ({ determination, viewer }) => {
       const d = determinations.get(determination);
@@ -128,7 +137,7 @@ export function world({ profiles = ["test-port-ellery"], omit = [], duties } = {
     },
     escalationRead: ({ id }) => {
       for (const l of escalations.values()) for (const e of l) if (e.id === id) return { ok: true, id, stage: e.stage, history: e.history };
-      return { ok: false, reason: "NO_SUCH_ESCALATION" };
+      return noSuchEscalation(id);
     },
   };
   const filings = { availableActions: ({ determination }) => ({ ok: true, determination, kinds: [{ kind: "complaint", tier: 1 }] }) };
@@ -166,8 +175,8 @@ export function world({ profiles = ["test-port-ellery"], omit = [], duties } = {
   };
   const stand = { strength, conformance, standards, escalation, filings, aiRuns };
   /* actions, real, over the stand-in conformance; what it registers with retrieval is the test's (nothing here reads it). */
-  const retrievalStub = { registerActionFacts: () => ({ ok: true }), registerProjectionDecoration: () => ({ ok: true }) };
-  const actions = actionsOf(host, { record, membership, promotion, retrieval: retrievalStub, conformance,
+  const { retrieval: realRetrieval } = actionRegistrar();
+  const actions = actionsOf(host, { record, membership, promotion, retrieval: realRetrieval, conformance,
                                     content: { captureFor: () => null }, now: nowMs });
   /* action-clocks' steps (its R16), in the shape of steps' Provides: no step stands for any entry here. Built on this
      host it would declare observation-log's tables, which the plane builds first (K2862, B6). */
@@ -176,8 +185,11 @@ export function world({ profiles = ["test-port-ellery"], omit = [], duties } = {
   const clocks = actionClocksOf(host, { record, membership, actions, conformance, steps, now: nowMs });
   const given = Object.fromEntries(Object.entries(stand).filter(([k]) => !omit.includes(k)).map(([k, v]) => [k, v]));
   for (const k of omit) given[k] = null;
+  /* an action the viewer may not see: actions' own answer to a viewer it withholds the action from (its published fixture). */
+  let realActions = null;
+  const unseenAction = (id) => { realActions ??= actionFixture(); return realActions.actions.actionRead({ id, viewer: realActions.outsider }); };
   const seenActions = new Proxy(actions, { get: (t, k) => (k === "actionRead"
-    ? (a) => (hid(a && a.viewer, a && a.id) ? { ok: false, reason: "NO_SUCH_BUNDLE", target: a.id } : t.actionRead(a))
+    ? (a) => (hid(a && a.viewer, a && a.id) ? unseenAction(a.id) : t.actionRead(a))
     : typeof t[k] === "function" ? t[k].bind(t) : t[k]) });
   /* leg-earning, real; of its own deps R7 reads only connections' `edgeSevered` (no citation here is severed: severing is
      leg-earning's and connections' to test), and content is not read, so neither module is built on this host. */

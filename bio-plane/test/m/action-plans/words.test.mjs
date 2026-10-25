@@ -26,6 +26,7 @@ function sentences(x, path = "", out = []) {
 }
 const offending = (answers) => answers.flatMap((a) => sentences(a)).filter(([, s]) => SUBJECT.test(s));
 
+// fixtures-generic: SOMEONE_ELSES
 test("R36: the words scan finds a sentence calling a matter a subject, and leaves codes, keys and other modules' refusals alone (negative control)", () => {
   assert.deepEqual(offending([{ ok: false, code: "SUBJECT_MALFORMED", detail: "that subject is not one the plan is about" }]),
     [[".detail", "that subject is not one the plan is about"]]);

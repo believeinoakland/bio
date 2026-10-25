@@ -81,3 +81,19 @@ Applied B3 (K4206) and B4 (requirement lines). Commit 59856e01e6 on job/T51/acti
 - `run.mjs`: no finding names action-plans (16 words failures in other modules).
 
 Size (session_019adkgzUkBj7R8ajuFvhTNL): test runs 4, module lines 3357
+
+## Fix round 10, Wave A batch 4 (B5 START) · session_0129vmmwvkC9E9jVVexUhTsz
+
+**Published** (`bio-plane/test/m/action-plans/fixtures.mjs`, new; tested in `fixtures.test.mjs`): `planRead`, made by the real module at test time: `planRead` (ok, unknown id, unseen), `checkpointsDue` (before and after a checkpoint), `plansToLookAgain` (before and on the look-again day).
+
+**Contract run** (`fixtures.test.mjs`): `plan-open-check`, `// fixtures-run: ai-runs plan-open-check` (orphan-run until ai-runs' marker merges). **The real answer differs from the stated one:** the open check refuses a closed plan with `PLAN_CLOSED` (check `C-124.10`, `reason` and `plan` kept), not `PLAN_NOT_OPEN` (that code is `optionReact`'s, not the check's). The real one wins: ai-runs' hand-built value (`plan.test.mjs:95`, `PLAN_NOT_OPEN`, `C-999.1`) must change to it.
+
+**Own lines re-pointed** (`fixture.mjs`): `escalationRead` (line 131) now answers through escalation's published fixture (`escalationRead()`, the real module); `actionRead` unseen (line 180) through actions' (`actionRead()`; the real answer is `NO_SUCH_ACTION`, replacing the invented `NO_SUCH_BUNDLE`); `retrieval` (line 169) is retrieval's real module from `actionRegistrar()`.
+
+**Marker added:** `words.test.mjs:29` `// fixtures-generic: SOMEONE_ELSES`: the code is made up on purpose, as a control that a scan leaves other modules' refusals alone; no module gives it.
+
+**Needs BOB:** `retrieval` is not in action-plans' `uses` in `build/modules.json`; `architecture.mjs action-plans` fails with one failure (`fixture.mjs` imports `test/m/retrieval/fixtures.mjs`). Add `retrieval` to my `uses`. Nothing else fails.
+
+**Checks:** module suite 103 pass, 0 fail; `fixtures.mjs --list` for action-plans: 0 failures (the one accepted line is the generic marker); `words.mjs`: 0 failures; `format.mjs`: 0; `coverage.mjs`: 53 of 53; `ownership.mjs`: 0 failures; `impact.mjs`: 0 affected modules.
+
+Size (session_0129vmmwvkC9E9jVVexUhTsz): test runs 6, module lines 3357
