@@ -69,3 +69,7 @@ EVENTS #12 B4 complete on job/T51/events: five fixtures published in bio-plane/t
 **Ran.** events tests 99 pass 0 fail; screens-investigate + following 377 tests, 376 pass, the 1 above pre-existing. format 0, architecture 0, coverage 55/55, words 0 failures, ownership 0, fixtures --list 0 failures (no marker added).
 
 Size (session_014vh9swNghbuHGzUzM6v8bp): test runs 6, module lines 2809
+
+## J5 · COMPLETE
+
+EVENTS #13 B5 complete on job/T51/events: cause 1 done. R50 met (grade_why and the undated event view's why are {key, vars}; strike the mark). Fixture timelineUndated published for screens-investigate. Module tests 99/99; format, architecture, coverage, words, ownership, fixtures 0 failures. Found: #eventView still gives string why events.why.dated_attestation_see (index.mjs:1065), no key named in R50/R54, left for BOB. following/checks.test.mjs R1 C-137 fails without my change too. Record: build/jobs/T51/events.md.
