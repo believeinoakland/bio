@@ -158,3 +158,28 @@ My COMPLETE gave counts from combined runs. Those totals change between runs (th
 - The earlier R17 result (passing alone, failing in batch) is the same test in a different file. I was wrong to call it a concurrency artifact; it fails on the parent commit too.
 
 Nothing else in J6 changes. The Size line (test runs 13, module lines 1702) still stands; the test-run count is the count of my `node --test` invocations, which is approximate.
+
+## Fix round 10, batch 6 (B9): TASKS #18
+
+Merged `tranche/T51`; re-pointed the five `homeOf` lines (see COMPLETE below, J8).
+
+## J8 · COMPLETE
+
+**COMPLETE: TASKS #18, fix round 10, batch 6 (B9): re-point 5 own fixture lines.** Branch `job/T51/tasks`, tranche merged first.
+
+**Causes done.** The five hand-built `provenance.homeOf` answers are now provenance's own fixtures (`bio-plane/test/m/provenance/fixtures.mjs`, FIX-E, merged): `inbox.test.mjs:188` and `ledger.test.mjs:55,78` use `homeOfHomed`; `world.mjs:99` uses `homeOfEmpty`; `world.mjs:124` (the `inbox()` helper) homes each capture by the provider's `registeredHomes().many`. `checks/fixtures.mjs . tasks --list`: **0 failures** (was 5 stubs).
+
+**What changed (tests and world only, no module code).**
+- `world.mjs`: `defaultFakes` takes `homeOfEmpty()`; `inbox(events, homes)` registers each home through the real promotion (captures sharing a bundle promoted together) and exposes `w.home(label, bundleId)` / `w.homes(map)` to file a capture later; `world()` keeps a real module instance whole instead of spreading it (a plain object still fills the default's keys).
+- The tests name a capture by a label (`a1`, `a3`), and the real `homeOf` answers by digest, so `inbox()` asks the real provider for `sha(label)`. In `inbox.test.mjs:188` and `ledger.test.mjs` the events carry `sha(...)` digests directly.
+- `inbox.test.mjs` R25 test: `homes.a3 = DOC2` became `w.home("a3", DOC2)` (a real promotion at the moment the capture is filed).
+
+**One exception, for BOB (the only judgment call).** A capture homed in a project (`HOMES.a2 → PROJ-2026-0001-team`, which R1's "an active owner of the bundle when it is a project" tests) cannot be made by the real chain: promotion refuses a chosen PROJ id (`PROJECT_ID_SUPPLIED`, `promotion/index.mjs:488`) and provenance's fixture homes only information bundles. For ids starting `PROJ-`, `world.mjs` (`w.homes`) answers `{bundleId}` from a map, beside the real `homeOf`. The fixtures checker does not flag it and I added **no `fixtures-own` or `fixtures-generic` marker**. If you want it real, provenance's `homeOfHomed` would need to home in a project (create the project through promotion with no id, use the minted id); say so and I will re-point.
+
+**Lines done / left.** Done: all 5. Left: none (no waiting, `stay` or Wave B lines of mine).
+
+**Checks.** `checks/run.mjs`: format 0, architecture 0, words 0 (tasks), coverage tasks 25 of 25 named, 0 failures; fixtures `tasks` 0. The run's remaining FAIL lines belong to other users of `taskresolve`/`taskforward`/`taskdecide`/`homeOf` (queue-producers, screens-*, interface-shell and others), not tasks. `checks/ownership.mjs tasks`: 0 failures. Impact (`build/plan/impact.mjs origin/tranche/T51 HEAD`): tasks only, 8 test files, all in my run.
+
+**Tests.** Tasks suite, each file run alone: 134 tests, 134 pass, 0 fail (the R25 seam test, red in J6, now passes: provenance R72 is merged).
+
+Size (session_014XtwY7rHcgXEW5Z93bYUjK): test runs 14, module lines 1702
