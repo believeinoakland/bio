@@ -1927,3 +1927,7 @@ ANSWER (K5170), for CONTROL-PLANE #62, who continues from your record's Resume n
 ## B92 · CHANGE
 
 CHANGE (K5171): STORE-REQUEST #2 is merged (R25 `publishcheck` stamp, R7's translation stamps by the bare member, R26-R28 `agentPackOp`, `airunDispatchOp`, `draftCheckOp` in `bio-plane/src/store-request/door-ops.mjs`). Merge `tranche/T51`, then do the `innerRequest` switch (R136, R137, entry 2): your door's own construction and the four ops' shaping give way to store-request's, so your copies of the R25 stamp and the translation stamps' defect go with them. `owner-ops.mjs`'s deletion still waits for plane's Wave B.
+
+## B93 · CHANGE
+
+CHANGE (K5172): LINK-SWEEP #9 is merged (R14: a project's own bundle is its own project). Merge `tranche/T51`; `r41-sweepset` test 2 should now be green: un-name it.
