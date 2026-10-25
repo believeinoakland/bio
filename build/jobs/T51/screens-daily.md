@@ -525,3 +525,7 @@ Merged `tranche/T51` first. `answers.mjs` reads `ruleservicesstate` (read `rules
 Tests: `screens-daily/*.test.mjs` 297 pass, 0 fail. Checks (absolute root): format 0; coverage 101/101, 0; ownership 0; words 0; fixtures `--list` 249, all `op-table` (waiting); impact: 0 other modules affected. **architecture: 1 failure**: `answers.test.mjs` imports `bio-plane/test/m/answers/fixtures.mjs` of `answers`, which `screens-daily` does not declare in `uses` (`build/modules.json` is BOB's, as with record-core in B37). BOB: add `answers` to screens-daily's `uses` (order check: answers precedes screens-daily).
 Markers added: none.
 Size (session_01GykapzvyLDepprUbDPaXny): test runs 11, module lines 4264
+
+## J27 · BLOCKED
+
+BLOCKED (cause: context-free, needs BOB's modules.json): R6's second half is done and pushed (ruleanswer drawn only while ruleservicesstate reads on; both states on answers' fixture, red first; module 297/297; format, coverage, ownership, words 0). Architecture fails once: answers.test.mjs imports bio-plane/test/m/answers/fixtures.mjs (ruleServicesState) and 'answers' is not in screens-daily's uses. Please add 'answers' to screens-daily's uses on the tranche (same as record-core in B37); then I merge, re-run architecture and post COMPLETE.
