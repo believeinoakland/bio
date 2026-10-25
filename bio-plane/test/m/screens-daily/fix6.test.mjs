@@ -6,6 +6,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { storeWorld } from "../store-request/fixtures.mjs";
 import { resultOf } from "../store-request/door.mjs";
+import { counted } from "../interface-shell/harness.mjs";
 import { open as openRaw, ok, refused, text, main, settle, dmy, word } from "./page.mjs";
 
 const open = (w, as, path, plane = {}) => openRaw(path, plane, w.boot(as));
@@ -44,10 +45,10 @@ async function walker() {
 // One of the door's answers is the real one only through a stand-in for the door's stamp, because the world's door and the Worker's part on it (reported):
 // `reviewcopy` of a member's session is stamped with her viewer by the
 // Worker's door while the world's door stamps none (store-request/door.mjs `publicAnswer`), so the store is asked as the Worker's door asks it for her.
-const copyOf = (w, as) => async (req) => {
+const copyOf = (w, as) => counted(async (req) => {
   const got = await w.send({ url: `http://do/reviewcopy?draft=${encodeURIComponent(req.query.draft)}&viewer=${encodeURIComponent("member:" + as.handle)}`, headers: {}, method: "GET" });
   return ok((await got.json()).result);
-};
+});
 const plane = (w, rosa, ids, casedrafts, shared) => ({
   ...(shared ? { projectlist: LIST(w, rosa, (id) => shared(ids.indexOf(id) + 1)) } : {}),
   reviewcopy: copyOf(w, rosa),
@@ -76,11 +77,11 @@ test("R99, R87, R64 (G12c): a project the viewer may not see answers as the sing
   const DEAD = resultOf(await w.door({ url: "/api/?op=casedrafts&project=PROJ-NO-SUCH-PROJECT" }, rosa));
   assert.equal(DEAD.ok, false);
   // The world's own batch, with the hidden project's entry the dead answer.
-  const hidden = async (req) => {
+  const hidden = counted(async (req) => {
     const a = await w.door(req, rosa);
     a.json.result.lists[ids[3]] = DEAD;
     return a;
-  };
+  });
   const p = await open(w, rosa, "/app", plane(w, rosa, ids, hidden));
   await settle();
   assert.equal(p.byOp("casedrafts").length, 1);
