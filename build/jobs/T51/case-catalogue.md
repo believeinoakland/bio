@@ -86,3 +86,21 @@ R31 done (fix round 10, batch 4). Root cause: checks.mjs checkPublishedExtension
 Checks: case-catalogue tests 17 pass 0 fail; format 0 failures; architecture 0; coverage 5 of 5 ids; words 0; ownership 0. Impact (impact.mjs): 51 modules; ran ratification, case-checker, case-authoring, member-roster tests: 897 pass, 2 fail (case-checker R13, R25: stale generated program, REPORT).
 fixtures markers added: none. Deferred: none. Lines done: R31; left: none (R31b/R31c are other modules').
 Size (session_016Ysqrto5mteFuYJids9GDN): test runs 5, module lines 1020
+
+## J5 · COMPLETE
+
+Fix round 10, B4 (plan item 93; K5187): case-catalogue R6.
+
+What changed: `bio-plane/src/case-catalogue/checks.mjs:918-934`: the case document's member arm reads a `memberBasis` entry as the member's basis array or `{basis, references}`, and the member frontmatter it checks carries `references` beside `basis`, so the live-leg filter (`:377-387`) drops a severed leg there as on the member's own arm. The array form is unchanged.
+
+Failing-first test: `bio-plane/test/m/case-catalogue/checks.test.mjs`, "R6: the case document's member arm reads a member's references beside its basis…": seen red before the change (C-2.8 for the dead ground 'part 2'), green after. Controls: the same leg live and its row absent still answers C-2.8; every live ground with its row is clean; the array form unchanged both ways; an entry with no references drops no leg; the first entry for a target decides; an entry with no basis asks the basis arms of nothing.
+
+Tests: case-catalogue 18/18 (`node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/case-catalogue/checks.test.mjs`). Users run: ratification 332/335, case-checker 106/108. The five failures are identical with my change removed (ratification R21, R29, R32 are retrieval/ops-map; case-checker R13, R25 are the stale `program.mjs`), so none is this job's.
+Checks (`/home/user/civicos-process/checks/run.mjs /home/user/bio`): format 0 failures; architecture 0; coverage 9 failures, none case-catalogue; words 16 failures, none in case-catalogue (testcopy 0); channels 0. `fixtures.mjs … case-catalogue --list`: 0 failures, all counts 0. Ownership: 3 files changed, 0 failures. `impact.mjs`: 55 of 178 modules.
+
+Met ids: R6 (BOB strikes the mark). R2's "not yet met" mark is R31's, met by J4's and this job's tests; BOB strikes it.
+Markers added: none (`fixtures-own`/`fixtures-generic`: none).
+
+Found in another module (REPORT): `bio-plane/src/case-checker/program.mjs` is a generated artifact built from case-catalogue's `checks.mjs` (manifest §14). It was already stale at the tranche tip (case-checker R13, R25 fail without my change); my change to `checks.mjs` makes it stale again. BOB regenerates it (`node bio-plane/src/case-checker/build-program.mjs`) at the layer close. The three producers (`publication` `#pinnedMemberBasis`, `ratification` `#memberBasisAtPins`, `case-checker/check.mjs:506-515`) still send the array form until their jobs send `{basis, references}`; until then R6 has no effect in production.
+
+Size (session_01Gh45buVGyYP3TcXiTnyq1L): test runs 4, module lines 1015
