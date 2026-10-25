@@ -326,3 +326,11 @@ NOT DONE, for BOB: R18 as amended names `identity` too. op-declarations' registe
 
 Checks (absolute root): citation tests 134/134; format 178 modules 0; architecture 0; coverage 21 of 21; words 0; ownership 0; fixtures --list 0 failing.
 Size (session_01JfJyUVCuHWfqyMFpbcucb8): test runs 8, module lines 1731
+
+## B15 (CHANGE, K5138)
+
+1. `imported-door.test.mjs` removed (`git rm`): it imported control-plane's seam kit, later than citation in the order; CONTROL-PLANE #60 adopts the through-the-door test. R18 stays named by `declared-ops.test.mjs` (the rows' stamps).
+2. `identity`: R18 is now worded to `author` and `viewer`; merged `tranche/T51`, no change to the rows.
+
+Checks (absolute root): citation tests 132, fail 0; architecture 0 failures; coverage 21 of 21, 0 failures; format 0; ownership 0; fixtures --list 0.
+Size (session_01JfJyUVCuHWfqyMFpbcucb8): test runs 10, module lines 1731
