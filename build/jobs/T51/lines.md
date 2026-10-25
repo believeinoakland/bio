@@ -60,3 +60,32 @@ Findings outside my paths (K5175: REPORTed the day found).
 1. Generated word row missing. `lines.declared.linewithdraw` (bio-plane/src/lines/index.mjs:846) is a new `localize` id, the description of linewithdraw's DECLARED_OPS row. Its row is not in bio-plane/src/setup-words/rows.mjs; that file is setup-words' generated artifact, so I did not edit it. It needs regenerating at layer close (`node bio-plane/src/setup-words/build.mjs`). The `lines.declared.recordline` row is the pattern.
 
 2. Full product run (`node checks/run.mjs /home/user/bio`) shows failures in other modules' tests that name lines' ops, which I did not cause and did not establish as pre-existing: screens-investigate organization.test.mjs:78 (recordline stub, "-> lines"), organization.test.mjs:134 (linewithdraw stub, "-> lines"), fold.test.mjs:54 (partiesof stub, "-> lines"). The fixtures check counts 1712 failures across the product and coverage 3 failures, all outside lines. My change adds a declaration row and no op behaviour, so the cause is for those modules' owners to place.
+
+## J8 · COMPLETE
+
+R26 applied (K5182; amends R25).
+
+**Changed (file:line)**
+- bio-plane/src/lines/index.mjs:845-847: `linewithdraw` declared beside `recordline` in DECLARED_OPS. Class `["admin","member","probe"]` and mutating true from the `open` grade (op-declarations); weight `reasoned` and description from op-grades t33 (lines 32, 195), the description as `localize("lines.declared.linewithdraw", …)` at its use. Fields: accepts and requires `lineId`, `reason`, the two the arm reads (index.mjs:828; screens-investigate person.mjs:355 sends body `{lineId}`).
+- bio-plane/test/m/lines/declared-ops.test.mjs:37-43: the R26 test, named R26. Its setup records a real line first, so the requires alone withdraw a real line.
+
+**Failing-first.** Before the row, the R26 test was red: `declared op "linewithdraw": the declaration has no fields.accepts and fields.requires arrays`. After the row, both R25 and R26 pass.
+
+**Suites.** `node --test bio-plane/test/m/lines/*.test.mjs`: 38 pass, 0 fail. interface-shell `declared.test.mjs`: 9 pass, 0 fail; the census reads `declared 390 of 395 ops` (was 389).
+
+**Met.** R26 (R25 already met). Coverage: 26 of 26 live ids named by a test.
+
+**Checks (ABSOLUTE root /home/user/bio).**
+- format: 0 failures.
+- architecture lines: 0 failures.
+- coverage lines: 26 of 26, 0 failures.
+- fixtures lines --list: 0 failures.
+- ownership lines (merge-base..HEAD, committed): 0 failures.
+- words (`checks/run.mjs`): no finding in lines; the word total is unchanged at 19239.
+- impact `origin/tranche/T51 HEAD`: 0 of 178 affected modules.
+
+**Fixtures markers added:** none.
+
+**Outside my paths:** see REPORT (J7) for the missing generated word row and the other modules' failures that name lines' ops.
+
+Size (session_01Cf5du72PJUM1L7TgvEqDz1): test runs 7, module lines 1019
