@@ -61,7 +61,7 @@ async function delivered(path, { plane = {}, project = null } = {}) {
   assert.ok((await t.mai.read("opencaptures")).captures[0].fetch_pending, "the owner parked it: a capture owed");
   const copy = await deliver(t);
   await p.clock.tick(4000);
-  for (let i = 0; i < 8; i++) await p.settle(20);
+  await idle(p, 2000);   /* the poll's answers are waited for by their completion (R66), not by a number of rounds */
   return { p, t, copy, proj };
 }
 

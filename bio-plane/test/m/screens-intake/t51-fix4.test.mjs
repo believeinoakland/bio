@@ -10,7 +10,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { openWorld, members, text, main, btn, fill, press, refused, word, says, DOCUMENT_STUB } from "./page.mjs";
+import { openWorld, members, text, main, btn, fill, press, refused, word, says, DOCUMENT_STUB, untitled } from "./page.mjs";
 import { SCREENS, SCREEN_KEYS } from "../../../src/screens-intake/index.mjs";
 import { generate } from "../../pdfgen.mjs";
 
@@ -169,9 +169,10 @@ const IRS_PDF = new Uint8Array(readFileSync(new URL("../pdf-reader/fixtures/f104
 const PDF_HEADERS = { "content-type": "application/pdf" };
 const TITLE = "2026 Form 1040-ES";
 
-async function capturePdf(titled) {
+async function capturePdf(titled, stated = null) {
   const t = await members({ mai: CAN });
-  serve(t, IRS, titled ? IRS_PDF : await generate({ kind: "pdf", seed: "untitled", size: { pages: 2, lines: 3 }, kinds: ["text"] }).bytes(), PDF_HEADERS);
+  serve(t, IRS, titled ? IRS_PDF : await generate({ kind: "pdf", seed: "untitled", size: { pages: 2, lines: 3 }, kinds: ["text"] }).bytes(),
+    stated ? { ...PDF_HEADERS, "content-disposition": `attachment; filename="${stated}"` } : PDF_HEADERS);
   const add = await open(t, t.mai, "/app/capture/address");
   fill(add, { "ci-address": IRS });
   await press(add, "acquire");
@@ -190,11 +191,18 @@ test("R54 (C25) a PDF whose answer carries its title is named by it on the Add r
   assert.ok(rowOf(held, filed[0].bundleId).textContent.includes(TITLE), "Held names it the same");
 });
 
-test("R54 (C25) control: a PDF with no title is named by the file name the source gave, on the Add result and on Held alike", async () => {
+test("R54 (C25) control: a PDF with no title is named by the file name the source states, on the Add result and on Held alike", async () => {
+  const { add, held, filed } = await capturePdf(false, "estimated-tax-vouchers.pdf");
+  assert.equal(filed[0].meta.title, "estimated-tax-vouchers.pdf");
+  assert.ok(text(add).includes("estimated-tax-vouchers.pdf"));
+  assert.ok(rowOf(held, filed[0].bundleId).textContent.includes("estimated-tax-vouchers.pdf"));
+});
+
+test("R54 (C25) control: a PDF with no title whose source states no name is never named by the file part of its address, but by its host and the day", async () => {
   const { add, held, filed } = await capturePdf(false);
-  assert.equal(filed[0].meta.title, "f1040es.pdf");
-  assert.ok(text(add).includes("f1040es.pdf"));
-  assert.ok(rowOf(held, filed[0].bundleId).textContent.includes("f1040es.pdf"));
+  assert.equal(filed[0].meta.title, untitled("www.irs.gov"));
+  assert.ok(!text(add).includes("f1040es.pdf"));
+  assert.ok(rowOf(held, filed[0].bundleId).textContent.includes(untitled("www.irs.gov")));
 });
 
 /* ---------- C14: Held's read set (capture R102) ---------- */
