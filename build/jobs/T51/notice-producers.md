@@ -191,3 +191,20 @@ Options for Bob (one decision):
 Meanwhile: `notice-producers` tests run from the root, `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/notice-producers/*.test.mjs`: 155 pass, 0 fail. The OP-GRADES `DECLARED_OP_DISAGREES` red did not appear on this run. I have made no code change this round. Format, architecture, coverage and ownership checks are not yet run; I will run them once Bob decides, with the COMPLETE.
 
 Met ids: none new this round (R29 stays marked until the fixtures check classes its answer).
+
+## J14 · COMPLETE
+
+COMPLETE (B14 applied; R29). No code change this round: the marker stays at `bio-plane/test/m/notice-producers/reading-ended-seam.test.mjs:36` as BOB's K5204 answer says. The check (civicos-process main `8be32ff`, PR #9) now classes the `{ok: true, rows, next}` answer at `reading-ended-seam.test.mjs:37` as accepted (reading-ended), with plane's `fixtures-run` at `bio-plane/test/m/plane/r10-reading-ended.test.mjs:30`.
+
+Checks, run from /home/user/bio:
+- fixtures `notice-producers --list`: 0 failures, accepted 1 (the reading-ended answer above); no `fixtures-own` or `fixtures-generic` marker added.
+- format: 178 modules, 0 failures.
+- architecture: 20 product files, 0 failures.
+- coverage: 29 of 29 live requirement ids named by a test, 0 failures.
+- ownership (merge-base with tranche/T51 to HEAD): 0 failures.
+- module tests `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/notice-producers/*.test.mjs`: 155 tests, 155 pass, 0 fail.
+- `checks/run.mjs`: no finding in notice-producers files.
+
+Met ids: R29 (BOB strikes the mark). Found outside my paths, already reported at J11/J12: a refused row's `why` is a bound key (`pdf.bytes`) or REFUSED, so the notice reads "was not taken in: pdf.bytes" (plane/setup-words wording).
+
+Size (session_01VGCXrV2bt6soPPDTNLuJ76): test runs 2, module lines 1699
