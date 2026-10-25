@@ -100,10 +100,11 @@ const RELAYS = [["governorstate", "op=governorstate"], ["governorstate", "op=gov
                 ["governorconfig", "op=governorconfig&host=h.example"]];
 
 test("R27: behind each relay, the store's own refusal (ok: false below 500) is answered with its status, code and sentence", async () => {
+  // fixtures-contract: store-door store-replies
   for (const [op, q] of RELAYS) {
-    for (const [status, body] of [[400, { ok: false, reason: "BAD_JSON", detail: "the body is not JSON" }],
-                                  [404, { ok: false, error: "unknown op: governorstate" }],
-                                  [409, { ok: false, reason: "SOMETHING_ELSE", code: "SOMETHING_ELSE", translation: "words" }]]) {
+    for (const [status, body] of [[400, { ok: false, reason: "BAD_JSON", detail: "the request body is not valid JSON" }],
+                                  [400, { ok: false, error: "unknown op: governorstate" }],
+                                  [409, { ok: false, reason: "NOT_ELIGIBLE", code: "NOT_ELIGIBLE", translation: "words" }]]) {
       const opened = [];
       const r = await relayed(op, q, stubStore(status, body), opened);
       assert.equal(r.g.refused, true, `${q} ${status}`);
@@ -132,6 +133,7 @@ test("R27: a reply that is no answer is STORE_DID_NOT_ANSWER, with the store's c
     assert.deepEqual([c.status, c.body.reason, c.body.correlation], [502, "STORE_DID_NOT_ANSWER", id], q);
     assert.deepEqual(c.g, { silent: true, correlation: id }, q);
     // without one (or with one that is not an id): no correlation key
+    // fixtures-contract: store-door store-replies
     for (const body of [{ ok: false, reason: "STORE_INTERNAL_ERROR" }, { ok: false, reason: "STORE_INTERNAL_ERROR", correlation: "x" }]) {
       const n = await relayed(op, q, stubStore(500, body));
       assert.deepEqual([n.status, n.body.reason, "correlation" in n.body], [502, "STORE_DID_NOT_ANSWER", false], q);

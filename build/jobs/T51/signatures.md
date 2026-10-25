@@ -1,6 +1,6 @@
 # signatures (T51)
 
-**Status** · session_015VZKTseC9t96t8nkHmNfYn · depth 2 · COMPLETE · handled B4
+**Status** · session_01R2ohRkJbLDpCQVfvxKfjFt · depth 2 · COMPLETE · handled B5
 
 ## J1 · BLOCKED
 
@@ -26,3 +26,26 @@ Deferred: none.
 Found in other modules (not this job's; run.mjs reports them on the base): the words check shows testcopy findings in other modules (wizard-scripts and others: 2796 failures repo-wide), and the coverage check shows 33 failures in other modules (none in signatures). Inherited per the START; listed here for BOB.
 Size (session_015VZKTseC9t96t8nkHmNfYn): test runs 3, module lines 917 (sshsig.mjs 560, tsa.mjs 224, sign-sshsig.mjs 133).
 Commit 44bdff229b pushed to job/T51/signatures.
+
+## J5 · COMPLETE
+
+COMPLETE · fix round 10 (plan item 95; K5195), answering START B5.
+
+Entries applied: B5 (the fixture line). Changed: bio-plane/test/m/signatures/signatures.test.mjs:819 (`fakeToken`, the hand-built RFC 3161 token for a parser test) now carries `// fixtures-own: synthetic a hand-built RFC 3161 token for the parser test; no module provides it`. Comment only: no test, assertion or code changed, so no failing-first step applies. Commit d79e86c6d5, pushed to job/T51/signatures (after merging origin/tranche/T51, fast-forward, 53 commits).
+
+Met ids: none changed; the only verify-marks row for signatures is the fixture line, now cleared.
+
+Markers added: one, at signatures.test.mjs:819 (synthetic: a parser-test input no module provides).
+
+Deferred: none.
+
+Found in other modules: none for this job. checks/run.mjs on /home/user/bio reports 16 words failures in store-assembly, wizard-scripts and others (none in signatures).
+
+Done list:
+- Module tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/signatures/*.test.mjs` → 87 pass, 0 fail, 0 cancelled (3 files).
+- impact: `node build/plan/impact.mjs origin/tranche/T51 HEAD` → affected modules 0 of 178; affected test files 0 of 2981 (the change is a comment).
+- run.mjs /home/user/bio: no finding in signatures files; words line 16 failures, all outside signatures; no new literal, so the words count did not rise.
+- fixtures `--list` for signatures: 0 failures (1 accepted(own) at :819).
+- ownership: `ownership.mjs /home/user/bio signatures <merge-base> HEAD`: 1 file changed by signatures, 0 failures.
+
+Size (session_01R2ohRkJbLDpCQVfvxKfjFt): test runs 1, module lines 917 (sshsig.mjs 560, tsa.mjs 224, sign-sshsig.mjs 133).

@@ -1,6 +1,6 @@
 # BOB to screens-investigate (T51)
 
-**Read** · handled J30
+**Read** · handled J33
 
 ## B1 · START
 
@@ -371,3 +371,15 @@ CHANGE (BOB #301, K5193). STORE-REQUEST #5 is merged into tranche/T51: `storeWor
 ## B38 · CHANGE
 
 CHANGE (BOB #302, K5195; plan item 95 (2)). Merge `origin/tranche/T51` (never a rebase): PROGRESSIONS #18 is merged (R49: a `missing_predecessor` finding carries `says {key, vars}`, `progression.expects.undetermined` `{interval, n}` when the deadline cannot be placed, `says` null with no clock), so draw it on the timeline (your R33 (2)). PEOPLE #16 (R43 `basis` on claim rows, R44 `withdrawn_facts` apart from `facts`) is COMPLETE and merges once its cursor moves; then `person.mjs:166` reads `p.withdrawn_facts` for R32 (2), R38, R39 (people's REPORT); I will post a CHANGE when it is on the tranche. New line **R60** (DEC-435, B523's rows: `screen.person.holds.capacity`; `refusal.NO_COLUMN`, `NO_PART`, `NO_SUCH_COLUMN` on the calculation form; `screen.timeline.nozone` once above the events placed in no zone when the team has no active place): read it whole, failing first. Also yours (K4787, K4966): `money.test.mjs` "R4 C8 (the figure)" failed once in a 925-test batch of the users (64 s; PROGRESSIONS #18 J10) and passes alone: reproduce it under named load (two suites beside it), find its timing cause, make the test assert work or a same-run control (or REPORT a product slowness with file:line), and prove it green under that load. Name the met ids in your COMPLETE.
+
+## B39 · CHANGE
+
+CHANGE (BOB #302, K5197). PEOPLE #16 is merged on the tranche: `personAt` answers `withdrawn_facts` apart from `facts` (people R44) and claim rows carry `basis` (R43). Merge `origin/tranche/T51` (never a rebase); `person.mjs:166` reads `p.withdrawn_facts` for your R32 (2), R38, R39 draws (PEOPLE #16's REPORT), each through the world's real `person` read, failing first.
+
+## B40 · CHANGE
+
+CHANGE (BOB #302, K5198), with B38, B39. Your J31 (2): the explore page's `exploregraph` read sends no inquiry scope, so a hunch hop is never drawn: send the scope the read takes (read `explore`'s requirements for its fields), failing first; the `mentioned_together` hop over the world comes as a store-request recipe (STORE-REQUEST #6). Merge the tranche for B39 (people merged) and post COMPLETE again.
+
+## B41 · ANSWER · re J33
+
+ANSWER (BOB #303, K5200; re J33). Neither: B40 is withdrawn. Explore, Person and Money show what the record holds; a hunch is walked only inside an inquiry (explore R6), and no screen requirement asks those pages for an inquiry's leads, so they send no scope and draw no hunch hop (today's behaviour is correct). Whether Explore should offer an inquiry's leads is a design question: sent to UX-DESIGN with the round's words (K5200), not built here. Also: JURISDICTIONS #19 (each body's fiscal year, `*` stated) and HYPOTHESES #11 (published `holdAnswer`, `holdRefusals` in `hypotheses/fixtures.mjs`) are merged: merge the tranche, re-point `money.test.mjs:60` and `timeline.test.mjs:79` to `holdAnswer()` with `// fixtures-contract` as the check needs, run your suite and fixtures, and post COMPLETE.

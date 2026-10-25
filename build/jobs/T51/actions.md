@@ -1,6 +1,6 @@
 # actions (T51)
 
-**Status** · session_01PKkGxxBeG3fsZEM17Gs4pa · depth 2 · COMPLETE · handled B5
+**Status** · session_015KaatnqWiEo9goK9sy5KDU · depth 2 · COMPLETE · handled B8
 
 ## Completion (T51-89)
 
@@ -112,3 +112,34 @@ Size (session_01PKkGxxBeG3fsZEM17Gs4pa): test runs 6, module lines 3535
 ## J7 · COMPLETE
 
 B7 item 1 done: actionOverdue is true when any clock entry is stored overdue; clock_next unchanged. Met: actions R110. t46 test (red before: false; green), controls pending/met/not-yet-due. Actions tests 155/155; escalation, action-holds, action-clocks tests 239/239; format, architecture, coverage 77/77, words, ownership 0 failures; fixtures list unchanged (4 lines). Escalation's branch order is its own job (R39).
+
+## J8 · REPORT
+
+Two of my four fixture lines stay red. Each needs a fixture that conformance publishes, which is outside this module's paths. Cleared or changed in this job: t45:45 (consequences' published successRecordRead), t12:55 (removed, item 3), and a product defect (see COMPLETE).
+
+1. **t45.test.mjs:41 (the determinations).** Conformance's published fixtures split the states t45 reads, and none gives all of them. determinationRead gives a live noncompliant determination on a published finding, a superseded one with its successor, and an unclear one. determinationVariants gives a checked_held one, an accepted one, a compliant one, and a superseded/live pair. voidDetermination gives a void one with a recorded noncompliant outcome. The missing state is one determination that carries a checked_held and an accepted basis together (t45's NC, which R75's disclosures read as one action with two bases). Splitting NC across fixtures would drop that case, so I did not compose them. Needed from conformance: a published determination with both bases.
+2. **t50.test.mjs:27 (matter stake).** Needed: a published accepted basis that carries matter_stake (set at import; conformance's read answers it), one with none, and one whose matter stake reads "undetermined". No conformance fixture publishes a matter stake.
+3. **t12.test.mjs:55 (non-live determination with superseded_by null): removed, since conformance cannot produce it.** The only writer of determination_supersessions is conformance/index.mjs:1147, which sets superseded_by to the new determination's id. The schema makes it NOT NULL (conformance/schema.mjs:109). determinationRead sets live = !row and superseded_by from that row (index.mjs:1394). The null-successor branch of determinationSuperseded stays in actions' code and is no longer tested by this file.
+4. **consequences:** its published successRecordRead gives only a live record. t45 (e) builds the superseded read by changing the published answer's live and superseded_by in the test. Please have consequences publish a superseded record's read (its R20).
+
+Found in other modules: nothing beyond items 1, 2 and 4.
+
+## J9 · COMPLETE
+
+Fix round 10, plan item 95 (B8). Commit 551d96cce3 on job/T51/actions (after the merge of tranche/T51).
+
+**Entries applied**
+- Fixture lines: t45.test.mjs:45 cleared (consequences' successRecordRead, t45.test.mjs:15 and :46). t12.test.mjs:55 removed (REPORT item 3). t45.test.mjs:41 and t50.test.mjs:27 stay open (REPORT items 1 and 2), both needing conformance fixtures.
+- Product defect, surfaced by the published read's shape: `#successRecord` (src/actions/index.mjs:1287-1295) read `superseded_by` and `live` at the top level. consequences answers both under `success` (its R20; a superseded record is ok with live false), so a superseded success record passed as a rests_on basis (R8 (e)) and as a recognition basis (R93). Now only a live record passes. Failing-first: t45 "R8 (T45) (e) a success record consequences reads superseded ..." (t45.test.mjs:97), red on the earlier code (accepted, reason undefined), green after the fix. Why the tests missed it: the stand-in read answered the shape the module assumed, so the stand-in agreed with the bug.
+- Met: R8 (e) and R93, as tested. BOB to check the marks.
+- Markers added: none.
+
+**Tests and checks**
+- actions suite 155 of 155 (one case removed, one added), run without --test-force-exit; with affordances/t45-backing 162 of 162.
+- Consumer modules that call the write and read paths (filings, escalation, action-plans, action-holds, action-clocks, action-replies, plan-work): 593 of 593.
+- `fixtures.mjs actions --list`: 2 failing lines (t45.test.mjs:41, t50.test.mjs:27), per REPORT items 1 and 2. Was 4.
+- format 0 failures; architecture 0; coverage 77 of 77; ownership 0 failures (4 files changed by actions).
+- `checks/run.mjs`: no finding in actions' files; its failures are in store-assembly, plane, test-support and others, none of which this job touches. No sentence added, so the words count did not rise from my change.
+- impact.mjs names 43 modules, because the actions index file is a shared declared-ops table, and this commit does not change DECLARED_OPS. I ran the seven modules above, which call the paths I changed.
+
+Size (session_015KaatnqWiEo9goK9sy5KDU): test runs 7, module lines 3533

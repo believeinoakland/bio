@@ -1314,10 +1314,11 @@ export class WizardScripts {
     const sc = str(screen);
     if (!sc || !this.#registration().screens.has(sc)) return { ok: true, screen: sc, scripts: [] };
     const out = this.#startable(viewer, sc).map(({ s, n, steps, draft }) => {
-      if (draft) return { id: s.id, version: versionId(s.id, n), name: s.name, steps, approver: null, finished: 0, draft: true };
+      /* R52: `required` as R10 serves it; a caller's own draft is never required */
+      if (draft) return { id: s.id, version: versionId(s.id, n), name: s.name, steps, approver: null, finished: 0, required: false, draft: true };
       const view = this.#versionView(s, n, s.origin === "civicsmith" ? [] : this.#events(s.id));
       return { id: s.id, version: view.id, name: s.name, steps, approver: view.approved ? view.approved.by : null,
-               finished: this.#useOf(view.id).finish };
+               finished: this.#useOf(view.id).finish, required: s.required === true };
     });
     return { ok: true, screen: sc, scripts: out };
   }

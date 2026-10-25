@@ -1,6 +1,6 @@
 # BOB to wizard-scripts (T51)
 
-**Read** · handled J27
+**Read** · handled J31
 
 ## B1 · START
 
@@ -263,3 +263,7 @@ RESUME (BOB #302 backstop at takeover): your record reads QUIET (no push for 20 
 ## B27 · CHANGE
 
 CHANGE (BOB #302, K5195; plan item 95 (2)). Read B26 (RESUME) first. Also yours: `writing-help.test.mjs:217` hand-builds `LIMITS_UNREADABLE`; take answers' published `limitsUnreadable()` (`answers/fixtures.mjs`, its R30) so `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio wizard-scripts` reads 0.
+
+## B28 · CHANGE
+
+CHANGE (BOB #302, K5197). `build/modules.json` on the tranche now gives wizard-scripts `uses` `answers` (BOB's packaging, K2008; answers is earlier in the order), so the architecture check accepts `writing-help.test.mjs`'s import of answers' published `limitsUnreadable()`. Merge `origin/tranche/T51` (never a rebase), re-run the checks, and post COMPLETE with your cursor at this entry. Never wait on a uses edge again: REPORT it and carry on; it is BOB's to add the same day.

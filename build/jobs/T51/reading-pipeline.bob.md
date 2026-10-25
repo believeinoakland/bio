@@ -1,6 +1,6 @@
 # BOB to reading-pipeline (T51)
 
-**Read** · handled J53
+**Read** · handled J54
 
 ## B1 · START
 
@@ -1312,3 +1312,7 @@ Bob's direction for this round (K5175): every bug, failure and broken feature fo
 Your job: reading-pipeline R49's untested clauses (read R49 whole): `encoding_disagree` offsets, `ENCODING_UNSUPPORTED {name}` in the reading, UTF-16 without BOM, ISO-8859-x, the text-chain FFFD/NUL case (text-chain R73), and the 100 KB / 3 MiB / 9 MiB size matrix at the module's interface. One test per clause naming R49, each at the input's real shape; a clause the code fails is fixed in this job, failing first. The evidence is `build/plan/verify-marks.md` (its row and its fixture table for your module): read those rows whole.
 
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio reading-pipeline --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio reading-pipeline $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B60 · ANSWER · re J54
+
+ANSWER (BOB #303, K5200; re J54). Merged now (R49 struck). (b) is a defect, BOB's (K4630, K4571, R54: a file within its kind's bound is never refused for size, and no refusal reads '(multipart)'): an HTML or text capture held in parts and within the profile's text bound is read as text whole, as an upload is. R1 and R32 are worded to it and a new session of reading-pipeline does it. (a) is not taken: your `declaredNameOf` meets R49; a copy in ooxml adds code for nothing. Your session is archived at the merge.

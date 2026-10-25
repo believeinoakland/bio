@@ -480,3 +480,17 @@ test("R30 (T51; DEC-340) docketOf answers each pressure mark with who made it; t
   assert.doesNotMatch(flat, /bob|"by"/);
   assert.ok(w.docket.docketPressureMarks({}).marks.every((m) => !("by" in m)));
 });
+
+test("R30 (T51; DEC-340) a mark whose author is no longer a member answers by null; the mark itself is kept", () => {
+  const w = seeded();
+  w.member("erin", { role: "admin" });
+  const marked = file(w).entry;
+  w.docket.docketPressure({ entry: marked, pressure: { kind: "legal", note: "Counsel wrote." }, author: V("bob"), viewer: V("bob") });
+  const markOf = () => w.docket.docketOf({ case: CASE, viewer: A }).entries.find((e) => e.shelf === "record" && e.entry === marked).pressure;
+  /* control: while bob is a member, the mark names her */
+  assert.deepEqual(markOf().by, { member: "bob", handle: "h_bob" }, "a member's mark names her");
+  /* bob is revoked by membership's own act; the mark stays, its author no longer a member */
+  assert.equal(w.membership.memberSet({ memberId: "bob", status: "revoked", by: "erin" }).ok, true);
+  assert.equal(markOf().by, null, "by is null for a mark whose author is not a member");
+  assert.equal(markOf().kind, "legal", "the mark itself is kept");
+});
