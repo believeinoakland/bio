@@ -57,3 +57,19 @@ test("R9 fixtures: coreDueKinds is the real answer over two cases of two project
   assert.deepEqual(f.world.docket.coreDue({ case: f.caseQ, viewer: V("alice") }).items, [], "a manager of the other project is told of neither");
   assert.deepEqual(f.world.docket.coreDue({ case: f.caseQ, viewer: f.other }), f.otherDue, "one case when named");
 });
+
+test("R9 fixtures: coreDueKinds: a case of a project alice cannot see is told to its manager alone (hank: an edition and a tension), and to alice not at all; a case with no project cannot be made", () => {
+  const f = coreDueKinds();
+  assert.equal(f.hankDue.ok, true);
+  assert.equal(f.hankDue.wrote, false);
+  assert.deepEqual(f.hankDue.items.map((i) => `${i.kind}:${i.ref}`).sort(), [`edition:2`, `tension:CAND-4`].sort());
+  assert.equal(f.hankDue.count, 2);
+  assert.ok(f.hankDue.items.every((i) => i.case === f.caseR), "hank is told of his case alone");
+  const ed = f.hankDue.items.find((i) => i.kind === "edition");
+  assert.deepEqual([ed.edition, ed.what_changed], [2, "Dropped a date."]);
+  assert.deepEqual(f.unseenDue, { ok: true, items: [], count: 0, wrote: false }, "alice sees no item of a project she is not in");
+  assert.deepEqual(f.world.docket.coreDue({ viewer: f.other }).items.filter((i) => i.case === f.caseR), [], "nor does dave");
+  assert.deepEqual(f.world.docket.coreDue({ viewer: f.hank }), f.hankDue, "one read, the same answer");
+  assert.throws(() => f.world.st.sql.exec(`INSERT INTO cases (case_id, project_id, opened) VALUES ('CASE-2026-0404', NULL, 't')`),
+    /NOT NULL/, "no case without a project: cases.project_id is NOT NULL");
+});

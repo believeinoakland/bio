@@ -65,20 +65,30 @@ export function pressureMarks() {
  *  changed" statement, and a tension on its load-bearing finding F1. Case `caseQ` (project Q, managed by dave) has a
  *  subject's statement, edition 2 ratified with its "What changed" statement, and a tension on its load-bearing finding F3.
  *  Every statement is filed with its edition. `due` is alice's read and `otherDue` dave's, each the real `coreDue({viewer})`;
- *  `response`, `statementP`, `statementQ` are the record entries the acts minted. */
+ *  `response`, `statementP`, `statementQ` are the record entries the acts minted.
+ *  Case `caseR` (project R, managed by hank, who is no member of P or Q) has edition 2 ratified with its "What changed"
+ *  statement and a tension on its load-bearing finding F4. A case of a project alice cannot see is answered to her by no
+ *  item: `unseenDue` is her read of `caseR` alone, `hankDue` the manager's own, `due` and `otherDue` unchanged. A case with
+ *  no project cannot be made: publication's `cases.project_id` is NOT NULL (publication schema.mjs), so none is here. */
 export function coreDueKinds() {
   const w = seeded();
-  const F3 = "INQ-2026-0003-permits", caseQ = "CASE-2026-0202";
+  const F3 = "INQ-2026-0003-permits", caseQ = "CASE-2026-0202", F4 = "INQ-2026-0004-hall", caseR = "CASE-2026-0303";
   w.subjects.set(F3, OTHER_SUBJECT);
+  w.member("hank");
+  const R = w.project("ridge", "hank");
   w.publish(w.P, CASE, 2, [{ id: w.F1, role: "load_bearing" }, { id: w.F2, role: "supporting" }],
             { whatChanged: "Corrected the totals.", at: NOW + 500 });
   w.publish(w.Q, caseQ, 1, [{ id: F3, role: "load_bearing" }]);
   w.publish(w.Q, caseQ, 2, [{ id: F3, role: "load_bearing" }], { whatChanged: "Added a permit.", at: NOW + 500 });
-  w.tensions.list = [{ member: w.F1, candidate: "CAND-1", state: "open" }, { member: F3, candidate: "CAND-3", state: "open" }];
+  w.publish(R, caseR, 1, [{ id: F4, role: "load_bearing" }]);
+  w.publish(R, caseR, 2, [{ id: F4, role: "load_bearing" }], { whatChanged: "Dropped a date.", at: NOW + 500 });
+  w.tensions.list = [{ member: w.F1, candidate: "CAND-1", state: "open" }, { member: F3, candidate: "CAND-3", state: "open" },
+                     { member: F4, candidate: "CAND-4", state: "open" }];
   const response = file(w).entry;
   const statementP = file(w, { kind: "statement", capture: w.swept.sha }).entry;
   const statementQ = file(w, { case: caseQ, edition: 1, kind: "statement", capture: w.swept.sha,
                                from: { kind: "subject", entity: OTHER_SUBJECT } }, "dave").entry;
-  return { world: w, case: CASE, caseQ, manager: A, other: V("dave"), response, statementP, statementQ,
-           due: w.docket.coreDue({ viewer: A }), otherDue: w.docket.coreDue({ viewer: V("dave") }) };
+  return { world: w, case: CASE, caseQ, caseR, manager: A, other: V("dave"), hank: V("hank"), response, statementP, statementQ,
+           due: w.docket.coreDue({ viewer: A }), otherDue: w.docket.coreDue({ viewer: V("dave") }),
+           hankDue: w.docket.coreDue({ viewer: V("hank") }), unseenDue: w.docket.coreDue({ case: caseR, viewer: A }) };
 }
