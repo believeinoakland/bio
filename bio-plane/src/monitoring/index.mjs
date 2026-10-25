@@ -76,7 +76,7 @@ import { identify, doctypeFor, assess, CONTRACT } from "../../../docprofile/regi
 import { combine } from "../../../jurisdictions/index.mjs";
 import { localDay, dayRange, isCalendarDate, bounds } from "../civil-time/index.mjs";
 import { parseFrontmatter, isPublicHttpsLocator, createSha256, MACHINE_CLASS_PREFIX, MACHINE_AUTHOR_PREFIX,
-         isMachineIdentity } from "../record-grammar/index.mjs";
+         isMachineIdentity, EARNED_CAPTURE_CEILING } from "../record-grammar/index.mjs";
 import { checkGatheringGrammar, DRIVE_TICK_CHECKS, GATHERING_CHECKS, frequencyRefusal } from "./checks.mjs";
 import { MONITORING_TABLES, migrateMonitoring } from "./schema.mjs";
 import { namedRequestSet, namedRequests, writeGathering } from "./named-requests.mjs";
@@ -581,6 +581,31 @@ export class Monitoring {
   get publication() { return this.#deps.publication === undefined ? null : (this.#deps.publication ||= publicationOf(this.#deps.host)); }
   get caseImport() { return this.#deps.caseImport ||= caseImportOf(this.#deps.host); }
   get investigation() { return this.#deps.investigation ||= investigationOf(this.#deps.host); }
+  /** R79: the register file `file` with a document entry for the copy the tick filed (`cap`): its locator (the baseline entry's, else
+   *  `locator`), file, retrieval instant, authority as the baseline entry states it, origin, and the capture block with the content type
+   *  and digest. An entry already naming the digest is left as it is. Never throws: an unreadable register is returned unchanged. */
+  async #withCopyEntry(file, cap, base, locator) {
+    let reg;
+    try { reg = JSON.parse(file.text); } catch { return file; }
+    if (!reg || !Array.isArray(reg.documents) || reg.documents.some((d) => d && d.capture && d.capture.sha256 === cap.sha256)) return file;
+    const kind = base && base.origin && typeof base.origin === "object" ? base.origin.kind : null;
+    const entry = {
+      file: cap.file, locator: base && typeof base.locator === "string" ? base.locator : locator, retrieved: cap.retrieved,
+      ...(base && base.authority ? { authority: base.authority } : {}),
+      authority_state: base && base.authority ? "determined" : "undetermined",
+      authority_basis: base && base.authority
+        ? localize("monitoring.index.authority_basis_baseline", "the authority the baseline capture of this address states, carried to its later copy ({retrieved})", { retrieved: String(cap.retrieved) })
+        : localize("monitoring.index.authority_basis_none", "no authority was asserted when the monitor tick filed this copy ({retrieved})", { retrieved: String(cap.retrieved) }),
+      origin: kind === "named_request" || kind === "sweep" ? base.origin : { kind: "named_request" },
+      attestation_attempts: [],
+      capture: { method: localize("monitoring.index.copy_method", "bio-plane monitor tick, https fetch, hashed at receipt"),
+                 grade: EARNED_CAPTURE_CEILING, actor_class: "daemon", actor: MONITOR_AUTHOR, sha256: cap.sha256, encoding: "binary",
+                 bytes: cap.bytes, ...(cap.content_type ? { content_type: cap.content_type } : {}) },
+    };
+    const text = JSON.stringify({ ...reg, documents: [...reg.documents, entry] }, null, 2);
+    return { path: file.path, text, bytes: new TextEncoder().encode(text).length, sha256: await sha256Hex(text) };
+  }
+
   #fetch(u, init) { return (this.#deps.fetch || globalThis.fetch)(u, init); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -768,7 +793,7 @@ export class Monitoring {
     /* The baseline is whatever the provenance register says was captured from
        this locator (R3). Without one there is nothing to compare against, and the
        tick says so rather than guessing at a status. */
-    let baseline = null, baselineProfile = null, baselineAt = null, renderTick = false;
+    let baseline = null, baselineProfile = null, baselineAt = null, baselineRow = null, renderTick = false;
     try {
       const reg = JSON.parse(img["data/provenance.json"] || "{}");
       const rows = (reg.documents || []).filter((d) => d && typeof d.locator === "string");
@@ -817,6 +842,7 @@ export class Monitoring {
         baseline = typeof shellSha === "string" && /^[0-9a-f]{64}$/.test(shellSha) ? shellSha : null;
       } else baseline = match?.capture?.sha256 || null;
       baselineAt = typeof match?.retrieved === "string" ? match.retrieved : null;
+      baselineRow = match || null;
       baselineProfile = !renderTick && match && match.profile && typeof match.profile === "object" ? match.profile : null;
     } catch { /* C-14.3 reports unparsable JSON; monitoring just has no baseline */ }
 
@@ -1201,11 +1227,15 @@ export class Monitoring {
        unless the image already carries those bytes (a later tick seeing the same new bytes), in
        which case the bundle already holds and registers them and nothing is added twice. */
     const capCarried = !!(lookAfterPromote && carried.some((f) => f.sha256 === monCap.sha256));
+    const copyFiled = (withCap) => withCap && !capCarried;
     const promoteWith = async (withCap) => {
       const text2 = withEntry(!monCap ? null
         : withCap ? `the served bytes were captured as ${monCap.file} (sha256 ${monCap.sha256})`
         : `the served bytes (sha256 ${monCap.sha256}) were not filed: ${monCap.why}`);
-      const addCap = withCap && !capCarried;
+      const addCap = copyFiled(withCap);
+      /* R79: the copy is filed with its provenance document entry, so a read of its digest finds the document */
+      const filedFiles = addCap ? await Promise.all(carried.map((f) => (f.path === "data/provenance.json" && typeof f.text === "string"
+        ? this.#withCopyEntry(f, monCap, baselineRow, locator) : f))) : carried;
       return await this.promotion.promote({
         bundleId, base: liveSha, snapKey: stamp, author: MONITOR_AUTHOR,
         writer: "mechanical", operation: "monitor-tick",
@@ -1222,7 +1252,7 @@ export class Monitoring {
            DEFAULT behaviour of a careless caller. */
         files: [
           { path: "bundle.md", text: text2, bytes: new TextEncoder().encode(text2).length, sha256: await sha256Hex(text2) },
-          ...carried,
+          ...filedFiles,
           ...(addCap ? [{ path: monCap.file, blobSha: monCap.sha256, sha256: monCap.sha256, bytes: monCap.bytes }] : []),
         ],
         register: addCap ? [{ sha256: monCap.sha256, path: monCap.file, encoding: "binary", bytes: monCap.bytes }] : [],
@@ -1239,7 +1269,24 @@ export class Monitoring {
       if (first && first.ok === false) {
         monCap.why = localize("monitoring.why.promotion_filing_refused", "the promotion filing them was refused ({reason}{detail})", { reason: String(first.reason || first.code || word("monitoring.reason_given")), detail: String(first.detail ? `: ${String(first.detail).slice(0, 160)}` : "") });
         promoted = await promoteWith(false);
-      } else if (first?.ok) monCap.registered = true;
+      } else if (first?.ok) {
+        monCap.registered = true;
+        /* R79: a copy filed now owes a reading, through the capture's registrar as an entry by `promote` does (control-plane R123); a row
+           the registrar will not take is stated in the note, never swallowed */
+        if (!capCarried) {
+          const reg = this.capture;
+          let owed;
+          /* a host with no owed-work ledger (no registrar) has no job to owe */
+          try { owed = typeof reg.registerJob === "function" ? reg.registerJob({ kind: "reading", sha: monCap.sha256, carrier: monCap.file }) : null; }
+          catch { owed = { ok: false, reason: "REGISTRAR_THREW" }; }
+          if (owed && owed.ok === true) { try { if (typeof reg.armJobs === "function") await reg.armJobs(); } catch { /* the next alarm arms it */ } }
+          else if (owed) {
+            const why = String((owed && owed.reason) || "REGISTRAR_REFUSED").slice(0, 80);
+            note = note ? localize("monitoring.note.reading_not_owed", "{note}; the reading this copy owes could not be registered ({reason})", { note: String(note), reason: why })
+                        : localize("monitoring.note.reading_not_owed_alone", "the reading this copy owes could not be registered ({reason})", { reason: why });
+          }
+        }
+      }
       observation = monitorLook(monCap.registered
         ? { ...lookArgs, captured: { sha256: monCap.sha256, retrieved: monCap.retrieved,
                                      retrievalLocator: monCap.fetched_address } }
