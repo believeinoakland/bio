@@ -32,7 +32,7 @@ test("R34 C56 every kind the event form offers is a kind the plane lists (afford
   const listed = (await me.read("affordances")).vocabularies.event_kinds;
   const p = await openAs(world, me, timeline);
   const offered = optsOf(p, "tl-kind").map(([v]) => v).filter(Boolean);
-  assert.deepEqual(offered, listed.values, "exactly what the plane lists, in its order");
+  assert.deepEqual(offered, listed.values.filter((k) => !["discretion", "waiver", "assessment"].includes(k)), "what the plane lists, in its order, less the kinds it takes only with their own act (USE_NEEDS_ITS_ACT)");
   assert.ok(p.byOp("affordances").length >= 1, "read from the vocabulary door");
   assert.ok(!offered.includes("decision"), "the old hand-copied kind the plane refused (UNKNOWN_EVENT_KIND) is not offered");
   const two = listed.values.slice(0, 2);

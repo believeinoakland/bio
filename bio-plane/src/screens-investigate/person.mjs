@@ -68,7 +68,7 @@ function render(cs, view) {
   const aliasSec = () => {
     const aliases = ((ent && ent.aliases) || []).filter((a) => !a.withdrawn);
     const aliasRow = (a) => cs.row("", `<b>${cs.esc(a.alias)}</b>`,
-      `<span class="mk-small">${!/^(machine|class|agent):/.test(String(a.declared_by || "")) && a.declared_by ? cs.w("entity.alias.by", { who: P.who(cs, a.declared_by), date: cs.date(a.at || "", { year: true }) }) : cs.w("entity.alias.roster")}</span>`
+      `<span class="mk-small">${!a.canonical && !/^(machine|class|agent):/.test(String(a.declared_by || "")) && a.declared_by ? cs.w("entity.alias.by", { who: P.who(cs, a.declared_by), date: cs.date(a.at || "", { year: true }) }) : cs.w("entity.alias.roster")}</span>`
       + (!a.canonical && !/^(machine|class|agent):/.test(String(a.declared_by || "")) && a.declared_by ? cs.act("aliaswithdraw", { label: "act.owed_aliaswithdraw.label.person", data: { alias: a.alias } }) : ""));
     return cs.sec("entity.alias.title", (aliases.length ? cs.sheet(aliases.map(aliasRow).join("")) : "")
       + cs.field("person-alias", org ? "entity.alias.label.org" : "entity.alias.label", { help: "entity.alias.help" })

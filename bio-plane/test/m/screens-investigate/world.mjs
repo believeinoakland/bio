@@ -9,7 +9,7 @@ export { storeWorld, WORLD_FOUNDER_HANDLE };
 
 /** A fresh world with `handle` signed in (an administrator unless `admin: false`; the founder when `founder` is true). Answers `{world, me}`. */
 export async function inWorld({ handle = "rosa", admin = true, capabilities = null, founder = true } = {}) {
-  const world = await storeWorld();
+  const world = await storeWorld({ group: null });
   const me = await world.signIn(founder ? WORLD_FOUNDER_HANDLE : handle, { admin, capabilities });
   return { world, me };
 }
