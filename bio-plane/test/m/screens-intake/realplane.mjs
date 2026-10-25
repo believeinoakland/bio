@@ -13,7 +13,7 @@ import { open, fill, press, idle } from "./page.mjs";
 const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.url));
 const ORIGIN = "https://group.example";
 /* every op the capture screen's flows reach on the way from an upload to its reading */
-const OPS = ["captureupload", "allocid", "promote", "heldat", "heldcaptures", "opencaptures", "capturerequests", "reading", "readheld", "search", "projectlist", "image", "memberlist", "captureseenin"];
+const OPS = ["captureupload", "allocid", "promote", "heldat", "heldcaptures", "opencaptures", "capturerequests", "reading", "readheld", "search", "projectlist", "image", "memberlist", "captureseenin", "select", "release", "heldsetaside", "heldrestore"];
 
 export function realPlane(tag) {
   const ADM = `adm-${tag}-0123456789abcdef`, PASSWORD = `the founder's long password, ${tag}`;

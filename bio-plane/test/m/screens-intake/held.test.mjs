@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open as openPage, html, text, main, btn, fill, press, ok, refused, rawKeys, word, hasWord, says, saysIn } from "./page.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
+import { ALL_STAND_INS } from "../../../src/screens-intake/standins.mjs";
 
 /* B6: a row names its project by the project's name (`projectlist`), never by its record id */
 const PROJECTS = ok({ projects: [{ id: "PROJ-2026-0001-pothole-repairs-at", name: "Pothole repairs" }, { id: "PROJ-2026-0002-sewer-fund-transfers", name: "Sewer" },
@@ -273,7 +274,8 @@ test("R23 a held row's refusal is drawn by its words, never the catalogue's text
 
 test("R26 every key the held screen reads is a word of the list, and its rows draw word(key, vars)", async () => {
   const keys = SCREENS.find((x) => x.id === "held").words;
-  for (const k of keys) assert.ok(hasWord(k), k);
+  /* a key is a word of the list; a stand-in is a `[id, en]` row of standins.mjs (fix round 10; the list wins once it holds the id) */
+  for (const k of keys) assert.ok(typeof k === "string" ? hasWord(k) : ALL_STAND_INS.includes(k), String(k));
   const p = await open("/app/held", { plane: { heldcaptures: LISTS(HELD) } });
   for (const k of ["screen.held.sub"]) assert.ok(says(p, k), k);
   assert.ok(says(p, "screen.held.age.today"));

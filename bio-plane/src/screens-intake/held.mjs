@@ -10,7 +10,15 @@ function heldReads(view) {
   /* R4 (C23): opened for a project (`/app/held/<PROJ-…>`), both lists read that project's captures; opened bare, every project's */
   const s = String((view && view.subject) || "");
   const filter = /^PROJ-[A-Za-z0-9-]+$/.test(s) ? { project: s } : {};
-  return { held: { op: "heldcaptures", query: { limit: 50, fields: "picker", ...filter }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
+  /* R4 (fix round 10, cause 33; DEC-97 clause 1): the list is per member and per project: it opens on the viewer's own captures ("mine", `member` sent) with a
+     filter to everyone's in her team (no `member`), and pages by the answer's `next` (`after`): the page the member is on is `view.ui.heldPage`, kept with the
+     filter it was read under, so changing the filter starts again at the first page */
+  const U = (view && view.ui) || {};
+  const me = view && view.me && typeof view.me.member === "string" ? view.me.member : "";
+  const who = U.who === "all" || !me ? "all" : "mine";
+  const pg = U.heldPage && U.heldPage.who === who && typeof U.heldPage.after === "string" ? U.heldPage : null;
+  const page = { ...(who === "mine" ? { member: me } : {}), ...(pg && pg.after ? { after: pg.after } : {}) };
+  return { held: { op: "heldcaptures", query: { limit: 50, fields: "picker", ...filter, ...page }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
            /* R13 (capture R88): the documents set aside, in an earlier visit or this one */
            aside: { op: "heldcaptures", query: { limit: 50, state: "set_aside", ...filter }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
            /* B6: a row names its project by the project's name, never by its record id */
@@ -127,6 +135,19 @@ function renderHeld(cs, view) {
   const thumb = (r) => r.capture && typeof r.capture.sha256 === "string" && r.capture.sha256
     /* C23, C81: "Open the file" keeps its words on one line and is a 44 px target at every width (the box is as wide as its words need) */
     ? `<span class="mk-thumb" style="display:flex;align-items:center;justify-content:center;width:auto;min-width:64px;height:auto;min-height:48px;padding:0 8px;box-sizing:border-box">${cs.ref("capture", r.capture.sha256, cs.w("screen.held.thumb").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"), [r.title || ""])}</span>` : "";
+  /* R4 (fix round 10, cause 33): the way between the pages. The sentence that more are waiting is drawn only with its door to the next page (the answer's `next`),
+     and a door back when the member is past the first; the doors are the page read again (`heldcaptures`), the next one from the answer's `next`. */
+  const pg = U.heldPage && U.heldPage.who === (U.who === "all" ? "all" : "mine") ? U.heldPage : null;
+  const doors = (v) => {
+    const next = v.truncated === true && typeof v.next === "string" && v.next ? v.next : "";
+    const back = pg && Array.isArray(pg.trail) && pg.trail.length;
+    return (next ? `<p class="mk-small" data-more="1">${cs.w("screen.held.more", { count: v.held.length })}</p>` : "")
+      + (next || back ? `<div class="mk-acts">${back ? cs.act("heldcaptures", { label: "screen.held.back", tone: "quiet", data: { back: "1" } }) : ""}`
+        + `${next ? cs.act("heldcaptures", { label: "screen.held.next", tone: "quiet", data: { after: next } }) : ""}</div>` : "");
+  };
+  /* R4: whose captures the list shows, a filter between the viewer's own and everyone's (R90: the choice redraws and the page is read again with `member` or without) */
+  const me = view.me && typeof view.me.member === "string" ? view.me.member : "";
+  const whoChoice = me ? cs.choice("ch-who", "screen.held.who", [["mine", "screen.held.who.mine"], ["all", "screen.held.who.all"]], { redraw: "who", value: "mine" }) : "";
   const list = cs.state(view.data.held, (v) => cs.rows({
     id: "held",
     cols: ["screen.held.col"],
@@ -145,9 +166,7 @@ function renderHeld(cs, view) {
       + `<span class="meta">${cs.w("state.item.review.name")} · ${r._full ? `${grade(r)} ` : ""}${[r._full ? age(r.age_days) : "", projectOf(r)].filter(Boolean).join(" · ")}`
       + source(r) + "</span>"
       + alsoHere(r) + (r._full ? eligibility(r) + asked(r) + files(r) : "")],
-  }) + (v.truncated ? `<p class="mk-small">${cs.w("screen.held.more", { count: v.held.length })}</p>` : "")
-    ,
-  { empty: "screen.held.empty" });
+  }) + doors(v), { empty: "screen.held.empty" });
   /* R13: the "Set aside" list: who set each aside, when, and why, as `set_aside` answers it; `heldrestore` with a reason in
      its row's panel, and in the hold strip for picked rows */
   const asideSec = cs.sec("screen.held.setaside", (Array.isArray(U.waiting) && U.waiting.length
@@ -167,8 +186,7 @@ function renderHeld(cs, view) {
           + `<span>${cs.w("screen.held.asideby", { author: a.author || "", reason: a.reason || "" })}${a.at ? ` ${cs.date(a.at)}` : ""}</span>`];
       },
       acts: (r) => cs.act("heldrestore", { data: { id: r.bundle_id } }),
-    }) + (v.truncated ? `<p class="mk-small">${cs.w("screen.held.more", { count: v.held.length })}</p>` : ""),
-    { empty: "screen.held.asideempty" }));
+    }), { empty: "screen.held.asideempty" }));
   /* R19: "Set aside" is drawn only when it holds something (or a set-aside just made left a waiting question, or its read
      failed, still drawn as failed); nothing is drawn for it while it loads or when it is empty */
   const A = view.data.aside, W = Array.isArray(U.waiting) && U.waiting.length;
@@ -176,6 +194,7 @@ function renderHeld(cs, view) {
   return `<div class="mk-h">${cs.title()}<p class="mk-sub">${cs.w("screen.held.sub")}</p></div>`
     + (filtered ? `<p class="mk-small"><span style="display:inline-flex;align-items:center;max-width:100%"><a class="cs-ref" href="/app/held" data-nav>${cs.w("screen.held.name")}</a></span></p>` : "")
     + `<div class="mk-acts">${cs.act("heldcaptures")}</div>`
+    + whoChoice
     + list
     + (F && F.state === "failed" ? `<p class="cs-state" data-state="failed" role="alert">${F.refusal}</p>` : "")
     + (U.released ? said("screen.held.released", { count: U.released }) : "")
@@ -254,7 +273,23 @@ function doneRestore(view, answer, cs) {
 function sendRefresh(view, el, cs) {
   cs.set("released", 0);
   const s = String((view && view.subject) || "");
-  return { query: { limit: 50, fields: "picker", ...(/^PROJ-[A-Za-z0-9-]+$/.test(s) ? { project: s } : {}) } };
+  const d = el && el.dataset ? el.dataset : {};
+  const U = (view && view.ui) || {};
+  const me = view && view.me && typeof view.me.member === "string" ? view.me.member : "";
+  const who = U.who === "all" || !me ? "all" : "mine";
+  const cur = U.heldPage && U.heldPage.who === who ? U.heldPage : { who, after: "", trail: [] };
+  /* R4 (fix round 10, cause 33): a door to another page reads from that page's cursor: the next one from the answer's `next` (`data-after`), a door back from the
+     cursor the member came from; the page is kept (`heldPage`) once the read is answered (`doneRefresh`), and the list is then read again for it */
+  let to = null;
+  if (typeof d.after === "string" && d.after) to = { who, after: d.after, trail: cur.trail.concat(cur.after) };
+  else if (d.back === "1" && cur.trail.length) to = { who, after: cur.trail[cur.trail.length - 1], trail: cur.trail.slice(0, -1) };
+  cs.set("heldTo", to);
+  const after = to ? to.after : cur.after;
+  return { query: { limit: 50, fields: "picker", ...(/^PROJ-[A-Za-z0-9-]+$/.test(s) ? { project: s } : {}), ...(who === "mine" ? { member: me } : {}), ...(after ? { after } : {}) } };
+}
+function doneRefresh(view, answer, cs) {
+  const to = view.ui && view.ui.heldTo;
+  if (to) { cs.set("heldPage", to); cs.set("heldTo", null); }
 }
 
 /* R23: `release`'s refusals in words. `refusal.CRUCIAL_IN_BATCH` counts the crucial documents and `refusal.ENTRY_REQUIREMENTS`
@@ -280,7 +315,7 @@ export const HELD_SCREEN = Object.freeze({
   /* G75 (fix round 7): a row with no stored title is named by the chain a delivery names a document by (its host and the day), as `capture` draws it */
   parts: Object.freeze({ heldTitle }),
   acts: Object.freeze([
-    Object.freeze({ op: "heldcaptures", label: "act.heldcaptures.label.held", send: sendRefresh, rereads: Object.freeze(["held"]) }),
+    Object.freeze({ op: "heldcaptures", label: "act.heldcaptures.label.held", send: sendRefresh, done: doneRefresh, rereads: Object.freeze(["held"]) }),
     Object.freeze({ op: "release", label: "act.release.label.held", send: sendRelease, done: doneRelease, rereads: Object.freeze(["held"]), reasonField: "acknowledgment", refusals: RELEASE_REFUSALS }),
     Object.freeze({ op: "heldsetaside", rereads: Object.freeze(["held", "aside"]), label: "act.heldsetaside.label.held", send: sendSetAside, done: doneSetAside }),
     Object.freeze({ op: "heldrestore", rereads: Object.freeze(["held", "aside"]), label: "act.heldrestore.label.held", send: sendRestore, done: doneRestore }),

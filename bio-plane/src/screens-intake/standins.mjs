@@ -11,4 +11,13 @@ export const IMAGE_UNREAD = ["screen.open-file.image.unread", localize("screen.o
 
 export const OPEN_FILE_STAND_INS = Object.freeze([CHECK_INSIDE, IMAGE_UNREAD].map((r) => Object.freeze(r)));
 
-export const ALL_STAND_INS = Object.freeze([...OPEN_FILE_STAND_INS]);
+/* cause R33 (G6; DEC-97 clause 1): the Held list is per member and pages by the answer's cursor */
+export const HELD_STAND_INS = Object.freeze([
+  ["screen.held.who", localize("screen.held.who", "Whose captures")],
+  ["screen.held.who.mine", localize("screen.held.who.mine", "Mine")],
+  ["screen.held.who.all", localize("screen.held.who.all", "Everyone's")],
+  ["screen.held.next", localize("screen.held.next", "Show the next captures")],
+  ["screen.held.back", localize("screen.held.back", "Back to the earlier captures")],
+].map((r) => Object.freeze(r)));
+
+export const ALL_STAND_INS = Object.freeze([...OPEN_FILE_STAND_INS, ...HELD_STAND_INS]);

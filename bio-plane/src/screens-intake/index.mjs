@@ -25,7 +25,7 @@ import { ARCHIVE_SCREEN } from "./archive.mjs";
 import { ABOUT_KNOCKER_SCREEN } from "./about-knocker.mjs";
 import { LEADS_SCREEN } from "./leads.mjs";
 import { WATCHING_SCREEN } from "./watching.mjs";
-import { OPEN_FILE_STAND_INS } from "./standins.mjs";
+import { OPEN_FILE_STAND_INS, HELD_STAND_INS } from "./standins.mjs";
 
 /* R36 (fix round 10, G7): the sentences reading-pipeline holds for a file kind it does not read (`UNSUPPORTED_FORMAT {kind}`), and its general one with the kind filled */
 const UNSUPPORTED = ["rtf", "email", "legacy_word", "legacy_excel", "legacy_powerpoint", "legacy_office", "tiff", "gif", "webp", "heic", "avif", "bmp", "jp2", "ico", "kind"]
@@ -110,6 +110,8 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.held.withheld", "state.undetermined", "document.uploaded.by", "size.kb", "size.mb", "size.small",
     "screen.capture.openit", "screen.capture.openit.help", "state.item.review.name", "screen.held.name",
     "screen.capture.address.filedhere", "shell.unread", "document.untitled.web",
+    /* fix round 10 (cause 33): stand-in rows, `[id, en]`, until the design's rows replace them (standins.mjs) */
+    ...HELD_STAND_INS,
   ]),
   archive: Object.freeze([
     "act.archivelist.label.archive", "act.gradenote.label.archive", "act.heldsetaside.label.archive",

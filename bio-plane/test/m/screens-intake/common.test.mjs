@@ -167,8 +167,11 @@ test("R9 no act or read records which member opened which file: every request is
     for (const r of p.requests) {
       if (FRAME.has(r.op)) continue;
       assert.ok(ours.has(r.op), `request ${r.op} is one of the screens' ops`);
+      /* R4 (fix round 10, cause 33; DEC-97 clause 1): the Held list's own filter, the `member` of `heldcaptures` (the op's own field), names the viewer's own id and no
+         file; no other request names a member (R9 is about which member opened which file) */
+      const own = (k) => k === "member" && r.op === "heldcaptures" && r.query.member === MEMBER.member;
       for (const k of [...Object.keys(r.query).filter((x) => x !== "op"), ...Object.keys(r.body && typeof r.body === "object" ? r.body : {})])
-        assert.ok(!["member", "viewer", "by", "author", "who", "opened_by", "session", "token"].includes(k), `${r.op} names ${k}`);
+        assert.ok(own(k) || !["member", "viewer", "by", "author", "who", "opened_by", "session", "token"].includes(k), `${r.op} names ${k}`);
       if (OF_OPS.has(r.op)) assert.deepEqual(Object.keys(r.query).filter((k) => !["op", "override"].includes(k)), ["capture"], r.op);
     }
     /* the page's storage holds only the shell's own keys: the session record (interface-shell R32, in local storage) and
