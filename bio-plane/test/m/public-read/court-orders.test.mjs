@@ -7,7 +7,7 @@
    Worker's routes, with the case file assembled as the Worker assembles it. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { publishedSix, stubOf } from "./fixture.mjs";
+import { publishedSix, stubOf, caseDoc, V, NOW, SIG } from "./fixture.mjs";
 import { bindPublishedPlane, publishedRoutes, assembleCaseContainer } from "../../../src/publication/worker.mjs";
 import { WITHHELD_SENTENCE } from "../../../src/public-read/courtorders.mjs";
 import { rowOf } from "../../../src/public-read/checks.mjs";
@@ -227,4 +227,86 @@ test("R28 a seal over one file of the case file withholds it on every route that
     assert.equal((await routeBytes(s, f.sha256)).status, 200, `${f.path} unsealed`);
     assert.equal((await routeBytes(s, s.manifest, { format: "zip", part: f.part })).status, 200, `${f.path}: its part again`);
   }
+});
+
+/* R28 (K5148; WALK-FINAL-10B R96 (g)): a second case of the team with its own case file assembled. Both cases declare no
+   criteria, so their `criteria.json` is the same bytes. `shared` pins the first case's findings; otherwise the second case
+   pins a finding of its own. */
+const CASE_B = "CASE-2026-0002", H = "INQ-2026-0003";
+async function withSecondCase(s, { shared = false } = {}) {
+  let targets = [s.F, s.G];
+  if (!shared) {
+    s.w.inquiry(H);
+    s.pins[H] = s.w.head(H);
+    assert.equal(s.w.signFinding(H, { sig: SIG(7) }).ok, true);
+    s.env.PUBLISHED.m.set(`bio/published/${s.w.head(H)}`, new TextEncoder().encode(s.w.text(H)));
+    targets = [H];
+  }
+  const text = caseDoc(CASE_B, 1, { format: "bio-case-document/6", project: s.proj,
+    method: { grading: "bio-grading/1", checks: "1.57.0" }, materials: [], attestations: [],
+    roles: targets.map((t) => ({ target: t, version_sha: s.pins[t], role: "load_bearing" })),
+    strength: targets.flatMap((t) => [{ target: t, axis: "capture", grade: "A" }, { target: t, axis: "connection", grade: "B" }]) });
+  assert.equal(s.w.p.storeCaseDocument({ case: CASE_B, edition: 1, text, author: V("olive"), at: NOW }).ok, true);
+  const signed = s.w.signCase(CASE_B, 1, { project: s.proj, sig: SIG(8),
+    roster: targets.map((t) => ({ bundle_id: t, version_sha: s.pins[t], role: "load_bearing" })) });
+  assert.equal(signed.ok, true, JSON.stringify(signed).slice(0, 300));
+  const out = await assembleCaseContainer({ env: s.env, stub: stubOf(s.w), storeName: "bio",
+    cs: s.w.p.caseEditionState(CASE_B, 1, "parks-group"), via: "test" });
+  assert.equal(typeof out.manifest_sha, "string", JSON.stringify(out).slice(0, 300));
+  return out.manifest_sha;
+}
+
+test("R28 an order on one case does not withhold another case's zip for a file with no member material: two cases with the default criteria, `remove` on the first, the second's zip is served; the first's is refused; the byte-identical criteria.json is withheld only under the first's orders", async () => {
+  const s = await assembled();
+  const manifestB = await withSecondCase(s);
+  const filesOf = async (sha) => JSON.parse(new TextDecoder().decode((await routeBytes(s, sha)).body)).files;
+  const [fa, fb] = [await filesOf(s.manifest), await filesOf(manifestB)];
+  const critA = fa.find((f) => f.kind === "criteria"), critB = fb.find((f) => f.kind === "criteria");
+  assert.ok(critA && critB && critA.sha256 === critB.sha256, "the two cases' criteria.json are the same bytes");
+  assert.equal(await bytesStatus(s, manifestB, { format: "zip" }), 200, "before the order");
+  s.w.stamps.stamp({ case: CASE, editions: [1], entry: ENTRY, effect: "remove" });
+  assert.equal(await bytesStatus(s, s.manifest, { format: "zip" }), 451, "the first case's own zip is refused");
+  assert.equal(await bytesStatus(s, manifestB, { format: "zip" }), 200, "the second case's zip carries no material the order withholds");
+});
+
+test("R28 material an order of any case withholds is withheld in every case's zip: a finding both cases pin, sealed by an order of the first, refuses the second's zip naming it, and only it", async () => {
+  const s = await assembled();
+  const manifestB = await withSecondCase(s, { shared: true });
+  s.w.stamps.stamp({ case: CASE, editions: [1], entry: ENTRY, effect: "seal", parts: [s.pins[s.G]] });
+  const z = await call(s.w, s.env, "publishedbytes", { sha256: manifestB, format: "zip" });
+  assert.equal(z.status, 451);
+  assert.deepEqual(Object.keys((await z.json()).withheld), [s.pins[s.G]], "names the shared finding, not the criteria.json");
+});
+
+test("R28 a case's own order on its criteria.json refuses its own zip, and not another case's", async () => {
+  const s = await assembled();
+  const manifestB = await withSecondCase(s);
+  const files = JSON.parse(new TextDecoder().decode((await routeBytes(s, s.manifest)).body)).files;
+  const crit = files.find((f) => f.kind === "criteria");
+  s.w.stamps.stamp({ case: CASE, editions: [1], entry: ENTRY, effect: "seal", parts: [crit.path] });
+  assert.equal(await bytesStatus(s, s.manifest, { format: "zip" }), 451, "the case named by the order");
+  assert.equal(await bytesStatus(s, manifestB, { format: "zip" }), 200, "another case");
+});
+
+test("R28 a withheld edition's finding rows carry no content of the case document: `case_excludes`, `strength`, `grounds` and `required` are null under a remove and under a seal naming the finding, identity facts stay, and no sentence of the signed document is served outside the orders", async () => {
+  const s = await assembled();
+  const before = s.w.read("publishedcase", { id: CASE });
+  const keys = ["case_excludes", "strength", "grounds", "required"];
+  assert.ok(before.findings.some((f) => f.case_excludes), "control: served before the order");
+  s.w.stamps.stamp({ case: CASE, editions: [1], entry: { seq: 7 }, effect: "seal", parts: [s.pins[s.G]] });
+  const sealed = s.w.read("publishedcase", { id: CASE });
+  for (const f of sealed.findings) {
+    if (f.bundle_id === s.G) for (const k of keys) assert.equal(f[k], null, `sealed ${f.bundle_id} ${k}`);
+    else assert.ok(f.strength, "a finding no order names keeps its row");
+  }
+  s.w.stamps.stamp({ case: CASE, editions: [1], entry: { seq: 8 }, effect: "remove" });
+  const c = s.w.read("publishedcase", { id: CASE });
+  const exclusion = before.findings.find((f) => f.case_excludes).case_excludes;
+  for (const f of c.findings) {
+    for (const k of keys) assert.equal(f[k], null, `removed ${f.bundle_id} ${k}`);
+    assert.equal(typeof f.bundle_sha, "string");
+    assert.ok(f.attestor && f.sig_armored, "identity facts stay");
+  }
+  const { court_orders, withheld, ...rest } = c;
+  assert.equal(JSON.stringify(rest).includes(exclusion), false, "the signed document's exclusion text is not served");
 });
