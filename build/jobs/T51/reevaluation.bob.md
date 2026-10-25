@@ -167,3 +167,9 @@ Mail with `--module reevaluation`; record `build/jobs/T51/reevaluation.md` (appe
 
 
 **Done:** `checks/fixtures.mjs <absolute root> reevaluation --list` 0; your module's tests green; format, architecture, coverage, words, ownership 0 (a new test import of a module you do not declare in `uses`: QUESTION to BOB for the edge). List every marker you add (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only.
+
+## B11 · CHANGE
+
+CHANGE · follow-up 43 (K5116), in this job beside B10, test files only.
+
+queue-producers' R52 (one item per (holder, target, newer version); "a notice whose newer version the viewer cannot see is its own matter") has two controls with no real answer: your `noticesRead({several: true})` holds no target with two newer versions. Extend `noticesRead({several: true})` (keeping every notice it answers now) or add a sibling export, made by real acts: (a) one holder's target with two newer versions (two notices differing in `newer_capture`), and (b) a notice whose newer version the viewer may not see (its `newer_capture` and grade null, as your J9 states the real form). Test each in `fixtures.test.mjs` against the real read. Name what you added in your COMPLETE.
