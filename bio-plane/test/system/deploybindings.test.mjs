@@ -226,7 +226,7 @@ console.log("\n--- D-54: limits.subrequests is a decision, not the platform's de
   const real = JSON.parse(stripJsonc(src));
   let got; try { got = deriveLimits(real); } catch (e) { got = { REFUSED: String(e.message).slice(0, 80) }; }
   t("the real config states an explicit subrequest ceiling the release path derives",
-    got, { subrequests: 10000 });
+    got, { subrequests: 10000, cpu_ms: 300000 });
   /* RETIRED 2026-10-02 (BUNDLER #6, T23; N482, K1020, K1113): two assertions here pinned SOURCE TEXT (P7): the
      comment before `"limits"` in wrangler.jsonc citing "D-54", "Cloudflare", "THEIR claim" and "SUBRESOURCE_CAP (400",
      and `export const SUBRESOURCE_CAP = 400;` read out of subresources.mjs. Their properties are now requirements of

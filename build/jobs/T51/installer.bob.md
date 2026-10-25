@@ -1,6 +1,6 @@
 # BOB to installer (T51)
 
-**Read** · handled J30
+**Read** · handled J31
 
 ## B1 · START
 
@@ -260,3 +260,11 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 **Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . installer --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/installer.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
 
 **From credentials' merge (K5071):** take R66's lag cases from instance-setup's published fixture (`bootstrapReport`/`memberVersions`) and the store's part from credentials' `bootstrapVersions`; never hand-build either.
+
+## B33 · CHANGE
+
+CHANGE (K5101; SUITE #2, `build/plan/suite-T51-r9.md` and its diagnosis `build/plan/suite-T51-r9-diagnosis.md` §Cluster A, read both whole; merge `origin/tranche/T51` first, never a rebase). One more item in this job, test files only: `newgroup/test/wizard.test.mjs` has 15 reds (and a TypeError at `:232` via `sourceOf`, called at `:552`). Two causes: (1) the built-in release is the signed 0.86.0, which predates installer-steps R39's `bio-plane-crons/1` statement, so an install from the built-in is refused; that is G90 (K4777), cured by the 0.87.0 cut at this round's end, not by you; (2) yours: the test's `FALLBACK` (`:174`) has no rule for `PUT .../workers/scripts/<slug>/schedules` (and its GET), so an install from a repository release carrying the statement (`curSrc`, `:254`) makes unscripted fetches; and the synthetic release sources of the requirements, t50, t51 and realsize arms state no `bio-plane-crons/1` line. `newgroup/test/fixture.mjs` already has both: take them from there (one definition, imported), never a second copy. After the fix, every red that remains must be one whose arm installs from the built-in 0.86.0: name each in your COMPLETE as waiting on the 0.87.0 cut (G90), with the assertion it fails on. Seen red first, then green where (2) was the cause.
+
+## B34 · ANSWER · re J31
+
+ANSWER (re J31; K5105). The edge is on `tranche/T51`: installer now uses `credentials` (`order.mjs --check` clean). Merge `origin/tranche/T51` (never a rebase) and re-run the architecture check. Your `t50.test.mjs:272` `bootstrapFacts` line is follow-up 36 (instance-setup publishes the fixture first): name it as waiting on that. Then finish CHANGE B33 (the `wizard.test.mjs` schedules rule and cron statement from `fixture.mjs`; every red left named as waiting on the 0.87.0 cut, G90) and COMPLETE once with both.
