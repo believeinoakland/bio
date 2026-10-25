@@ -563,3 +563,32 @@ Size (session_01EL8FdFvDxMz2KBJrjWn936): test runs 62, module lines 3376
 ## J31 · COMPLETE
 
 COMPLETE for `interface-shell`, fix round 10 (B44, B45; B46 applied). Met: R129 (boot door), R130 (Enter presses the section's primary act), R131 (44 px refs in rows), R132 (rail double-click), R108's `.cs-wizmark`; ADMIN_ACTS/ADMIN_SCREENS now wizard-scripts'. 52 op-table lines re-pointed to storeWorld; harness 88/89/91/97 stay per B46, 22/23 stay. Found and fixed through the real door: a locked session answered 401 SESSION_LOCKED ended the page instead of locking (R33). R34 not reproduced (characterization test). Markers added: t50 ZZ_STOP, ZZ_REASON. Checks 0 failures (architecture, coverage 127/127, words, format, ownership); module suite 375/375; users' suites equal the tranche tip (screens-settings 1, screens-publish 3 fail there too). Details, reports and Size line in the record.
+
+## J32 · COMPLETE
+
+COMPLETE for `interface-shell`, B47 (K5178: `person`'s second act `linecurrentthrough`; SCREENS-INVESTIGATE #16 J28 (1)).
+
+**Changed.**
+- `bio-plane/src/interface-shell/index.mjs:156-157`: `RE_POINTS` gains `person: Object.freeze(["linecurrentthrough"])`, with its K5178 comment. The registry (`docs/development/ux-substrate/screens/registry.json`) does not list the act for `person`, so it stays a named re-point (R73, R55 as amended). The op itself is served by `lines` (`recordCurrentThrough`, R21), declared in `op-declarations` and graded in `op-grades`.
+- `bio-plane/test/m/interface-shell/k5178.test.mjs` (new): `R73 K5178` — `checkScreens` over a `person` screen naming `linecurrentthrough` passes; control: `stepsourcewithdraw` on `person` and `linecurrentthrough` on `explore` still throw.
+- `bio-plane/test/m/interface-shell/design.test.mjs:81` and `t50.test.mjs:34`: the two `deepEqual(RE_POINTS, …)` assertions now name `person: ["linecurrentthrough"]` beside `explore` and `document`. They are the only other tests that pin the table's contents.
+
+**Failing first.** Before the change, `k5178.test.mjs` fails with `interface-shell: screen person's act linecurrentthrough is not the registry's for it, nor a named re-point` (red). After it, the test passes (green).
+
+**Tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/interface-shell/*.test.mjs`: 376 tests, 294 pass, 82 fail. The same 82 fail with my change reverted, so none is caused by it. The only difference between the two runs is `R73 K5178`, red without the change and green with it. The 82 are on the tranche tip, in the tests the B44 round converted to `storeWorld` and in the session-read tests (`R123` E12, `R124` G12b/G81, `R122`, `R119`, `R109`, `R107`, `R102`, `R56` one document, `R60`, `R75`, `R76`, `R86`). Two causes are visible in the failure text:
+- `storeWorld` (store-request's `fixtures.mjs:34`) throws `GROUP_ALREADY_RECORDED` from `world.mjs:13` in `design.test.mjs:194` (R60) and `t50.test.mjs:197, 223, 504` (R75, R76, R86). The team is recorded twice when the world is built per test. That is not in my paths, and I have not changed it. It is REPORTed below for BOB to place.
+- The session-read tests (R122 through R124, with R119) fail with their own expectations on the request count, not on this change. I did not find a cause in `interface-shell`'s code within this job; the list is REPORTed below.
+
+The record's previous COMPLETE (J31, session_01EL8F…) stated 375/375; the tranche tip has since moved (`origin/tranche/T51` is now `3c52f78c34`), and that is when the 82 started. I did not bisect it.
+
+**Checks** (absolute root `/home/user/bio`): format 0 failures (178 modules); architecture 0 (48 files, 194 imports); coverage 127 of 127 live requirements named by a test; words 0 failures (1 module, 0 inline, 0 missing keys); ownership 0 failures (5 files changed by `interface-shell` between `3c52f78c34` and HEAD); `fixtures.mjs … --list`: the 6 lines left are the ones BOB named (`harness.mjs` 88, 89, 91, 97, and 22, 23 which stay listed). No new fixture line from this job. `run.mjs`: no finding in `interface-shell` files.
+
+**Markers.** None added in this job (`fixtures-own` / `fixtures-generic`: none).
+
+**Met.** R73 (the re-point set now includes `person`'s `linecurrentthrough`; the table's test is kept in step); R55 unchanged. The screens-investigate R1 line naming the act is met on its side once BOB merges this and its `person` screen draws the act.
+
+**REPORT to BOB (cause outside my paths; for placement).**
+1. The 82 failing tests in `interface-shell`'s suite on tranche `3c52f78c34`, listed above. The `GROUP_ALREADY_RECORDED` throw (`storeWorld` building the team per test) is store-request's fixture (`bio-plane/test/m/store-request/fixtures.mjs:34`), which is the cause of the four tests that name R60, R75, R76 and R86. Built once per file rather than once per test (K5052 (7)), it would not repeat the record. Placement: store-request or the B44 storeWorld owner.
+2. The request-count tests (`R122`, `R123`, `R124`) fail on today's tip; I did not reproduce them on the job branch alone. Placement needed: BOB to say whether these belong to this job's next round or to the tranche's tip.
+
+**Size (session_0135BWD8XZpisnx9i7kU3v1o): test runs 5, module lines 3392**
