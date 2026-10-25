@@ -136,7 +136,7 @@ Intro. Footnotes, endnotes, headers, footers, comments, tracked deletions, text 
 
 [Causes of G134 that are other jobs' and are not copied here: G134c.]
 
-**Corpus recipes for your cases (size, shape; copied verbatim from the family reports' corpus tables, which you do not read: envelope-docs-T51.md 5.3 (documents, web pages, archives); envelope-sheets-T51.md 5.3 (spreadsheets)).** A row's id is the id the entry above names; `L` marks the smallest file of a family.
+**Corpus recipes for your cases (size, shape; copied verbatim from the family reports' corpus tables, which you do not read: envelope-docs-T51-s5.md 5.3 (documents, web pages, archives); envelope-sheets-T51.md 5.3 (spreadsheets)).** A row's id is the id the entry above names; `L` marks the smallest file of a family.
 
 [SHEET O01] | O01 **L** | 60,000 cells, 297 KB (re-walk 6) | **reading deleted**, no text index (S-1) | J-12, J-10 |
 [SHEET O02] | O02 | 6,000 and 7,000 cells (either side of the cliff) | 6,000 kept, 7,000 deleted | J-12 |

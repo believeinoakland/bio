@@ -12,7 +12,7 @@ One investigation a real team would run, the same in both phases, chosen by BOB 
 
 ## Areas (re-cut by BOB #269 from COVERAGE #1's completed map, K4808; one walker per sitting, in founder order)
 
-From `walk-coverage-T51.md` §3: thirteen sittings, each walker reading whole its area's file `build/plan/walk-T51-final/coverage/<area>.md` (the map's §1, its area's rows of §4 and its area's notes of §6, split out so each is read whole, P20) and the overlay file, which every walker also walks.
+From `walk-coverage-T51.md` §3: thirteen sittings, each walker reading whole its area's file `build/plan/walk-T51-final/coverage/<area>.md`, and its `<area>-part2.md` where the README's Files table names one (K5021) (the map's §1, its area's rows of §4 and its area's notes of §6, split out so each is read whole, P20) and the overlay file, which every walker also walks.
 
 1. **Install, claim, set up the room** (17 rows; install and update rows walk 0.87.0 only once cut, G90, so in the alpha's pass they confirm the built-in route's refusal is the known one).
 2. **The team's people and accounts** (16 rows).

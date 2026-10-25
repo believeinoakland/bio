@@ -46,7 +46,7 @@ Mail with `--module test-support`; record `build/jobs/T51/test-support.md` (appe
 
 **The generators' own design, copied verbatim from the family reports (you do not read the reports): how a corpus case is made, its axes, its truth function and its independent oracles.**
 
-[envelope-docs-T51.md 5.1: docgen.mjs, the ZIP writer, the truth file, the two oracles]
+[envelope-docs-T51-s5.md 5.1: docgen.mjs, the ZIP writer, the truth file, the two oracles]
 ### 5.1 How it is made
 
 **One generator, seeded, that knows its own truth** (the PDF plan's design, so one runner serves both). A new `docgen.mjs` in **test-support** (`bio-plane/test/` beside `make-zip.mjs` and `pdfgen.mjs`; BOB adds the path to `modules.json`). It writes through the **one** ZIP writer, `make-zip.mjs`, which already makes hostile and conforming ZIPs byte-exactly, plus `zipBomb` and `nestedZip`, and has two external oracles (`unzip -t`, Python `zipfile`) (H20). The six independent ZIP writers in module tests (office-readers `fixtures.mjs`/`large.mjs`, odf-reader `pkg.mjs`, ooxml `zip.mjs`, doc-clean, file-safety, `xlsx-gen.mjs`'s `zipChunks`) and the eighteen inline ones are moved onto it as each module's job touches its tests (P7: the module owner does it). Two things the shared writer lacks and must gain: **ZIP64** in the streaming writer (`zipChunks` has none; needed for archives over 4 GiB declared and 65,535+ entries) and a **lazy streaming mode** so a 100 MB or 500 MB file is never in the generator's memory (H20 ran: 500 MiB-declared ZIP 2.9 s, 100 MiB RTF 0.25 s, 5,000-slide PPTX 0.8 s, 10 MiB random-text DOCX 1.9 s: generation is cheap).
@@ -66,13 +66,13 @@ Its output is the bytes (or the origin's script) plus a **truth file**: each uni
 - An independent reader: **LibreOffice** (`soffice --headless --convert-to txt`, present on the build machine and in the file-scanner image) for DOCX, ODT, PPTX, ODP, RTF, DOC; `unzip -t` and Python `zipfile` for every archive and package (as `make-zip` does); **Chromium** (`/opt/pw-browsers`, Playwright) for the visitor view's visible text and the HTML visible-text truth; ClamAV with EICAR for the scanner files. Where the oracle and the truth differ the generator is wrong and the file is fixed. Cases where the reader is *deliberately* stricter than LibreOffice (a tracked deletion is a unit with part kind `deleted`, not dropped) are listed in the truth file.
 
 
-[envelope-docs-T51.md 5.4: seeds]
+[envelope-docs-T51-s5.md 5.4: seeds]
 ### 5.4 Seeded variations
 
 Eight fixed seeds (1-8) plus eight derived from the tranche commit run per round over the cross product F6 and over O2, O7, A4-A6, V4, H4 with the size axes sampled log-uniformly between the corners above. A file that fails keeps its (seed, spec); the shrinker halves the size axis and removes axes one at a time to the smallest failing spec, which becomes the failing-first test of the cause (K4426 (3)). The seeds' vocabulary exercises accents, ligatures (`ﬁ`), CJK, RTL and combining marks (C7, C8).
 
 
-[envelope-docs-T51.md 5.7: owners (test-support rows)]
+[envelope-docs-T51-s5.md 5.7: owners (test-support rows)]
 ### 5.7 Owners
 
 | Owner | Files |
@@ -129,7 +129,7 @@ Beside the 72, **16 variations at every round end**: 8 fixed seeds and 8 derived
 ---
 
 
-[envelope-scans-T51.md 5.1: imggen.mjs]
+[envelope-scans-T51-s4-s7.md 5.1: imggen.mjs]
 ### 5.1 How it is made
 
 **One generator, seeded, that knows its own truth.** `imggen.mjs` under **test-support** (layer 1, beside PDF #1's `pdfgen.mjs`; BOB adds the path), no dependency on the network:
@@ -158,7 +158,7 @@ Beside the 72, **16 variations at every round end**: 8 fixed seeds and 8 derived
 **What passing means.** A file passes when all of SI1-SI14 hold for it, or, for a refusal file, when SI2, SI3 and SI6 hold with exactly the statement its truth names and nothing else is read wrongly. "At the platform's shape" means: the plane in a 128 MB child with the bytes inside it; the OCR member at its stated frame bound; the CPU of one core; no timing taken from the object's clock (R-CLOCK); and the R-CLOCK exemption that the test, outside the object, times the OCR wait.
 
 
-[envelope-scans-T51.md 5.2 F: the 8 fixed seeds]
+[envelope-scans-T51-s4-s7.md 5.2 F: the 8 fixed seeds]
 **F. Seeded variations** (16 a round end: 8 fixed, 8 derived)
 
 The fixed seeds 1-8 cover the joint space once, chosen so each axis value appears at least twice:
@@ -179,7 +179,7 @@ The 8 derived seeds draw every axis from the envelope's distribution: pages log-
 Passing means SI1-SI14 for each seed. On a red, the seed and its shrunk spec are recorded in the run's file (owner: plane, which runs them; the generator is test-support's).
 
 
-[pdf-envelope-T51.md 3.1: pdfgen.mjs]
+[pdf-envelope-T51-s2-s3.md 3.1: pdfgen.mjs]
 ## 3. The corpus (K4785 (3))
 
 ### 3.1 How it is made
@@ -220,7 +220,7 @@ Every text line carries `<seed>-p<page>-l<line>` and a word drawn from a small v
 **What passing means.** A file passes when all of I1-I14 hold for it, or, for a refusal file, when I3 and I7 hold with exactly the statement its truth names and nothing else is read wrongly. The column "Passes when" gives only what is particular to the file.
 
 
-[pdf-envelope-T51.md 3.2 F: the 8 fixed seeds]
+[pdf-envelope-T51-s2-s3.md 3.2 F: the 8 fixed seeds]
 **F. Seeded variations** (16 a round end: 8 fixed, 8 derived)
 
 The fixed seeds 1-8 cover the joint space once, chosen so each axis value appears at least twice:
