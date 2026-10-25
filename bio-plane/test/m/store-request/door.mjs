@@ -586,14 +586,18 @@ export async function hold(world, as, name, content, project = "", { type = "tex
     ...(project ? ["project: " + project] : []), "---", "", "## Summary", "", name, "", "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
   const prov = JSON.stringify({ documents: [doc] }, null, 1), dataset = JSON.stringify({ documents: [{ bytes: doc.capture.bytes, locator: doc.locator || "upload", sha256: sha }] });
   const len = (s) => new TextEncoder().encode(s).length;
+  /* a capture held in parts (a file past `part_bytes`): its files are the parts, and the register is the whole, one row carrying `parts` in order (capture R21; as the capture screen files it) */
+  const parts = Array.isArray(doc.parts) && doc.parts.length > 1 ? doc.parts : null;
   const files = [{ path: "bundle.md", text: front, bytes: len(front), sha256: hex(front) }, { path: "data/provenance.json", text: prov, bytes: len(prov), sha256: hex(prov) },
-    { path: "data/dataset.json", text: dataset, bytes: len(dataset), sha256: hex(dataset) }, { path: doc.file, blobSha: sha, sha256: sha, bytes: doc.capture.bytes }];
-  const register = [{ sha256: sha, path: doc.file, encoding: doc.capture.encoding, bytes: doc.capture.bytes }];
+    { path: "data/dataset.json", text: dataset, bytes: len(dataset), sha256: hex(dataset) },
+    ...(parts ? parts.map((p) => ({ path: p.file, blobSha: p.sha256, sha256: p.sha256, bytes: p.bytes })) : [{ path: doc.file, blobSha: sha, sha256: sha, bytes: doc.capture.bytes }])];
+  const register = [parts ? { sha256: sha, path: doc.file, encoding: "binary", bytes: doc.capture.bytes, parts: parts.map((p) => ({ sha256: p.sha256, path: p.file, bytes: p.bytes })) }
+                          : { sha256: sha, path: doc.file, encoding: doc.capture.encoding, bytes: doc.capture.bytes }];
   const made = await as.act("promote", { body: { bundleId: id, base: null, snapKey: now.replace(/[-:]/g, "") + "_" + hex(id).slice(0, 8),
     meta: { object_type: "information", title: name, current_state: "collected", created: now, last_updated: now }, files, register } });
   const bundle = made.bundleId || id;
-  if (!read) return { sha, bundle };
-  return { sha, bundle, read: await as.act("readheld", { query: { sha } }) };
+  if (!read) return { sha, bundle, ...(parts ? { parts } : {}) };
+  return { sha, bundle, ...(parts ? { parts } : {}), read: await as.act("readheld", { query: { sha } }) };
 }
 
 /** R19: a project, started as Home's "Start a project" starts it (`promote` of its document with no base). Answers its bundle id. It is

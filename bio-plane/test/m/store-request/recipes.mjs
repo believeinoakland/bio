@@ -5,6 +5,7 @@ import { generateKeyPairSync, createHash, sign as cryptoSign } from "node:crypto
 import { generate } from "../../pdfgen.mjs";
 import { HEADINGS } from "../../../src/record-grammar/index.mjs";
 import { caseRatifyStatement, ratifyStatement, NS_RATIFY } from "../../../src/sshsig.mjs";
+import { memoryBucket } from "../store-assembly/world.mjs";
 import { hold, project, resultOf, refusedAct, instant, hex } from "./door.mjs";
 
 const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "x";
@@ -211,9 +212,10 @@ export async function conflict(world, as, { label = "record", through = "notice"
 
 /** R19 (K5178; STORE-REQUEST #3 J11): a case published, by the real ceremony. `finding` is `recipes.finding`'s answer; `as` is its member (the owner of its project, holding `publish`).
  *  `publish` prepares the case document; she gives her password again (`reauth`), signs the case and its finding with her key (`signer`) and `caseratify` ratifies it; the finding's
- *  document crosses to the published store and the case file is assembled (the world holds a published store, `PUBLISHED`); each part of the case file is then fetched as anyone
+ *  document crosses to the published store and the case file is assembled (the recipe binds the published store, `PUBLISHED`, as an installation that publishes has it); each part of the case file is then fetched as anyone
  *  fetches it (`publishedbytes`). Answers `{case, edition, finding, published, ratified, manifest, parts}`: `parts` are the case file's bytes, ready for another team's `caseimport`. */
 export async function published(world, as, finding) {
+  world.env.PUBLISHED ??= memoryBucket();   /* an installation that publishes binds both buckets; the default world binds the captures alone */
   const key = await signer(world, as);
   const prepared = await as.act("publish", { query: finding.publish.query, body: { ...finding.publish.body, tieAttested: true } });
   const doc = prepared.caseDocument.doc_sha, pin = (prepared.findings.find((f) => f.target === finding.id) || {}).bundleSha;
@@ -308,4 +310,37 @@ export async function grantAdmit(world, as, { calls = 1, mode = "ask", usage = C
     body: JSON.stringify({ mode, usage, calls }) } }, { token: grant.token }));
   if (!counted || counted.ok !== true) throw refusedAct("askusage", { status: 200, json: { ok: true, result: counted } });
   return { grant: grant.token, counted };
+}
+
+/** R19 (STORE-REQUEST #6, B15 (3); SCREENS-INTAKE #27 J57 (5)): a capture held in parts, by the real acts a member's upload of a file past what the store holds whole makes
+ *  (`captureupload` of `bytes` bytes, then the `promote` that files it, as the capture screen files it). The bytes are the recipe's, a seeded filler distinct per `name`; the
+ *  store cuts them into parts itself. Answers `{sha, bundle, parts, bytes}` (`parts`: the document's `[{file, sha256, bytes}]` in order). `bytes` defaults to 33 MiB, past the
+ *  32 MiB of one part. */
+export async function parted(world, as, name, { bytes = 33 * 1048576, project: filed = "", type = "application/pdf" } = {}) {
+  const content = new Uint8Array(bytes);
+  const seed = createHash("sha256").update(String(name)).digest();
+  for (let i = 0; i < content.length; i += 4099) content[i] = seed[i % seed.length] ^ (i >>> 12);
+  const held = await hold(world, as, name, content, filed, { type });
+  if (!Array.isArray(held.parts) || held.parts.length < 2) throw new Error(`storeWorld: a file of ${bytes} bytes was held whole, not in parts`);
+  return { ...held, bytes };
+}
+
+/** R19 (STORE-REQUEST #6, B15 (3); J57 (5)): a sheet at an address whose reading is over what a promotion takes inline, by the real read: the source serves a one-column CSV of
+ *  `rows` numbers (the network, scripted), and the store's own `acquire` reads it into a document whose provenance file passes 1 MiB. The recipe acts for nobody: a page that presses
+ *  "Capture" at `address` meets the same answer (the world's `script` is the only double). With `as` and `acquire: true` it also acquires it, answering the owner's answer. Answers
+ *  `{address, rows, bytes}` and `{answer}` when acquired. */
+export async function largeSheet(world, as, { address = "https://city.example/data/large.csv", rows = 200000, acquire = false } = {}) {
+  const text = "x\n" + Array.from({ length: rows }, (_, i) => i).join("\n") + "\n";
+  world.script(address, async () => new Response(text, { status: 200, headers: { "content-type": "text/csv" } }));
+  const out = { address, rows, bytes: text.length };
+  if (acquire) out.answer = await as.act("acquire", { body: { locator: address } });
+  return out;
+}
+
+/** R19 (STORE-REQUEST #6, B15 (1), (3); CAPTURE-SOURCES #20): a capture credential stored by `as`, by the real act (`capturecredentialsupply`, the door stamping `by` as the member).
+ *  Needs the instance's key: make the world with `storeWorld({ env: { CAPTURE_CREDENTIALS_KEY } })`. Answers the owner's answer (the entry R58 lists, never the secret). */
+export async function credential(world, as, { host = "records.example.gov", kind = "login", secret = "a-login-no-answer-carries", scope = "member", project: filed = null } = {}) {
+  if (!world.env.CAPTURE_CREDENTIALS_KEY)
+    throw new Error("storeWorld: recipes.credential needs the instance's key: make the world with storeWorld({ env: { CAPTURE_CREDENTIALS_KEY } })");
+  return as.act("capturecredentialsupply", { body: { kind, host, secret, scope, ...(filed ? { project: filed } : {}) } });
 }
