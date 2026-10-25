@@ -248,3 +248,7 @@ Size (session_014qiZzWUT5rWTceixKQwyba): test runs 4, module lines 2281
 **Ran:** people suite 86/86; screens-investigate 249/249; corpus-export 35/35; entities 164/164; op-declarations 245/248 (3 inherited). Checks (people): format 0, architecture 0, coverage 0 (42 of 42), words 0, fixtures 0, ownership 0 (8 files).
 
 Size (session_019AxS4iGwSHPNGPFzWXjziz): test runs 10, module lines 1895
+
+## J15 · COMPLETE
+
+People #15 COMPLETE (B11): R12 met (person read answers removed [{ground, at, by}] via a person_removals link table; PERSON_ITEM_NOT_HELD for an unknown id) and R21 met (sourcepersonlinks reads source_id; neither source_id nor person refused NO_LINK_SUBJECT). Fixture personRemoved published for screens-investigate. People suite 86/86; format, architecture, coverage, words, fixtures, ownership 0 for people. REPORT: door cases for control-plane (K5138); word rows refusal.PERSON_ITEM_NOT_HELD and refusal.NO_LINK_SUBJECT owed by the design stream; op-declarations has 3 inherited failures. Details in build/jobs/T51/people.md.
