@@ -216,6 +216,7 @@ test("R23 G54 a building older than two minutes is being_prepared with code INTE
 
 test("R23 G54 the closed set maps in one place: a stored code outside it reads UNKNOWN, every state is one the page has a sentence for, and a loose ratified bundle has no case_file", async () => {
   const base = { complete: true, manifest_sha: null, attempts: 2, attempted_at: NOW };
+  // fixtures-generic: SOMETHING_ELSE
   assert.equal(caseFileStateOf({ ...base, state: "failed", why: JSON.stringify({ code: "SOMETHING_ELSE", step: "build" }) }).code, "UNKNOWN");
   assert.equal(caseFileStateOf({ ...base, state: "failed", why: "not json" }).code, "UNKNOWN");
   for (const code of CASEFILE_CODES) assert.equal(caseFileStateOf({ ...base, state: "failed", why: { code, step: "build" } }).code, code);

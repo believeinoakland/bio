@@ -15,6 +15,7 @@ const KEYS = ["group", "name", "domain", "domain_verified_at", "stake", "detail"
 /* instance-setup R10's public answer, as its `groupIdentityPublic` spells it */
 const IDENTITY = { ok: true, group: "parks-group", display_name: "Friends of the Parks", domain: "parks.example",
                    domain_verified_at: "2026-10-01T00:00:00Z" };
+// fixtures-contract: instance-setup group-identity-public
 const NO_SLUG = { ok: true, group: null, display_name: null, domain: null, domain_verified_at: null,
                   detail: "no group is recorded for this instance" };
 /* A record-core stand-in answering `getSetting` from `settings`, logging every name asked; `fail` makes it throw. */
