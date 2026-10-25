@@ -15,10 +15,10 @@ import { scanner } from "../file-safety/fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
 
 const CAN = ["contribute", "create_projects"];
-/* the ops a screen reads: the four states are made by failing or holding them all */
-const READS = ["heldcaptures", "threatof", "originalstate", "verdictnotes", "scanfindings", "scanstatus", "inbox", "inboxget", "sourceof", "sourcerung", "archivelist", "gradenote",
-               "opencaptures", "search", "captureaccounts", "projectlist", "memberlist", "capturerequests"];
+/* the ops a screen reads: its own declared reads, over a subject and a viewer (the four states are made by failing or holding them all) */
 const SHA = "a".repeat(64);   /* an address no team holds: the empty team's */
+/* the screens' declared reads over a capture's address, and the three they ask in a state that address does not reach (a question to file under, a scan not yet reported, a source's rung) */
+const READS = [...new Set([...SCREENS.flatMap((s) => Object.values(s.reads({ subject: SHA, me: MEMBER, data: {}, ui: {} })).map((r) => r.op)), "search", "scanstatus", "sourcerung"])];
 
 /* The team's reach to its assistant (interface-shell R20): the administrator's real acts set and switch on the team's key. */
 async function reach(world) {
