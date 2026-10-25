@@ -26,6 +26,20 @@ import { monitoringOf, MONITOR_PAUSE_SETTING } from "../../../src/monitoring/ind
 import { noSuchPlan } from "../../../src/action-plans/index.mjs";
 import { retrievalOf } from "../../../src/retrieval/index.mjs";
 import { listenerRefusal } from "../../../src/membership/index.mjs";
+import { acquireRefusals } from "../acquisition/fixtures.mjs";
+import { standardRead as standardReadFixture } from "../standards/fixtures.mjs";
+import { occurrences as occurrencesFixture } from "../duties/fixtures.mjs";
+import { watchReaderRegistrar } from "../plan-work/fixtures.mjs";
+import { standingQuestions as standingQuestionsFixture } from "../answers/fixtures.mjs";
+
+/* The refusals of the providers following's stand-ins answer, each made by the provider's real code (K4990; fix round 10):
+   acquire's FETCH_FAILED, standards' NO_SUCH_STANDARD, duties' NO_SUCH_DUTY, plan-work's registration refusals and answers'
+   standing-question refusals. A stand-in returns a copy, with the id the test's own call named. */
+const FETCH_FAILED = await acquireRefusals({ kind: "fetch_failed" });
+const NO_SUCH_STANDARD = standardReadFixture().absent;
+const NO_SUCH_DUTY = occurrencesFixture().absent;
+const WATCH_READER = watchReaderRegistrar();
+const STANDING = standingQuestionsFixture();
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? s : Buffer.from(s)).digest("hex");
 export const MACHINE = "class:daemon";
@@ -63,7 +77,6 @@ function storage() {
     },
   };
 }
-const promotionStub = () => ({ registerStep() { return { ok: true }; }, registerFact() { return { ok: true }; }, onCommitted() { return { ok: true }; } });
 
 /** The test profile's view with a Legistar system (API and site hosts of one origin) and a body scheme it issues, and a
  *  register system a person scheme names, as test data. */
@@ -129,7 +142,7 @@ export function world({ view = testView(), now = T0, realRetrieval = false, door
       w.fetches.push(opts);
       const q = opts.captureRequest;
       const got = w.served.get(q.locator);
-      if (got === undefined) return { status: 502, body: { ok: false, reason: "FETCH_FAILED" } };
+      if (got === undefined) return structuredClone(FETCH_FAILED);
       const bytes = new TextEncoder().encode(got);
       const s = sha(bytes);
       w.store.set(s, bytes);
@@ -209,7 +222,7 @@ export function world({ view = testView(), now = T0, realRetrieval = false, door
       const page = all.slice(0, limit);
       return { ok: true, items: page.map(answer), truncated: all.length > limit, cursor: all.length > limit ? page.at(-1).id : null };
     },
-    standardRead({ id, viewer }) { const p = pol(id); return reads(p, viewer) ? { ok: true, ...answer(p) } : { ok: false, reason: "NO_SUCH_STANDARD" }; },
+    standardRead({ id, viewer }) { const p = pol(id); return reads(p, viewer) ? { ok: true, ...answer(p) } : { ...structuredClone(NO_SUCH_STANDARD), id, standard: id }; },
     isMeasure(id, viewer) { const p = pol(id); return !!p && (p.held || "text") === "text" && reads(p, viewer); },
     lawRelationsOf({ standard }) { const p = pol(standard); return { ok: true, standard, temporal: (p && p.temporal) || [], referential: [] }; },
   };
@@ -257,7 +270,7 @@ export function world({ view = testView(), now = T0, realRetrieval = false, door
     occurrencesOf({ dutyId, viewer }) {
       w.occurrenceReads++;
       const d = w.dutiesHeld.get(dutyId);
-      if (!d || !dutySeen(d, viewer)) return { ok: false, reason: "NO_SUCH_DUTY" };
+      if (!d || !dutySeen(d, viewer)) return { ...structuredClone(NO_SUCH_DUTY), duty_id: dutyId };
       return { ok: true, duty_id: dutyId, occurrences: d.occurrences.map((o, i) => ({ key: `k${i}`, state: o.state,
         evidence: o.at ? [{ kind: "event", event_id: "EV", at: o.at }] : [] })) };
     },
@@ -265,8 +278,8 @@ export function world({ view = testView(), now = T0, realRetrieval = false, door
   w.watchReaders = [];
   const planWork = {
     registerWatchReader(module, fn) {
-      if (typeof fn !== "function" || !module) return { ok: false, reason: "LISTENER_MALFORMED", code: "LISTENER_MALFORMED" };
-      if (w.watchReaders.length) return { ok: false, reason: "LISTENER_DECLARED", code: "LISTENER_DECLARED", module: w.watchReaders[0].module };
+      if (typeof fn !== "function" || !module) return structuredClone(module ? WATCH_READER.noReader : WATCH_READER.noModule);
+      if (w.watchReaders.length) return { ...structuredClone(WATCH_READER.again), module: w.watchReaders[0].module };
       w.watchReaders.push({ module, fn });
       return { ok: true, module };
     },
@@ -295,14 +308,14 @@ export function world({ view = testView(), now = T0, realRetrieval = false, door
     standingQuestionsOf({ viewer }) { return { ok: true, questions: [...w.questions.values()].filter((q) => q.author === viewer).map((q) => ({ ...q })) }; },
     standingQuestionEnd({ id, author }) {
       const q = w.questions.get(id);
-      if (!q || q.author !== author) return { ok: false, reason: "NO_SUCH_STANDING_QUESTION", code: "NO_SUCH_STANDING_QUESTION" };
+      if (!q || q.author !== author) return { ...structuredClone(STANDING.noSuch), id };
       q.ended = { at: new Date(w.t).toISOString().replace(/\.\d{3}Z$/, "Z"), by: author };
       return { ok: true, id, ended: q.ended };
     },
     standingQuestionEndSet({ id, ends, author }) {
       const q = w.questions.get(id);
-      if (!q || q.author !== author) return { ok: false, reason: "NO_SUCH_STANDING_QUESTION", code: "NO_SUCH_STANDING_QUESTION" };
-      if (q.ended) return { ok: false, reason: "STANDING_ENDED", code: "STANDING_ENDED" };
+      if (!q || q.author !== author) return { ...structuredClone(STANDING.noSuchEndSet), id };
+      if (q.ended) return { ...structuredClone(STANDING.ended), id };
       const was = q.ends; q.ends = ends;
       return { ok: true, id, ends, was };
     },
