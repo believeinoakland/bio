@@ -115,6 +115,21 @@ CREATE TABLE IF NOT EXISTS monitor_address_end (
   PRIMARY KEY (address_norm, seq)
 );
 
+-- R4, R32 (K5148): AN ADDRESS'S LAST LOOK WHEN IT WAS NOT SIMPLY ANSWERED: one row per address, replaced by every look
+-- and deleted by a look the source answered at the address itself. outcome is unconfirmed_removal (a first 404 or
+-- 410), removed (one that a look 24 hours or more after absent_since confirmed), moved (a redirect ended at
+-- final_address) or refused (any other non-success, its reason in reason). absent_since is the instant of the first
+-- 404 or 410 of the run that is still unanswered; the window of R4 is counted from it. Keyed on the NORMALISED address;
+-- declared to purge only by a whole-store purge, an address outliving any one version.
+CREATE TABLE IF NOT EXISTS monitor_address_look (
+  address_norm  TEXT PRIMARY KEY,
+  outcome       TEXT NOT NULL,
+  at            TEXT NOT NULL,
+  absent_since  TEXT,
+  final_address TEXT,
+  reason        TEXT
+);
+
 -- R28 (K1096): THE RECORD OF EVERY ATTEMPT AT A NAMED REQUEST of a bundle's
 -- data/gathering.json, one row per attempt, never edited. A request is due by R14's interval
 -- from its last attempt (a governed attempt is our pacing and is not one); outcome is
@@ -150,6 +165,7 @@ export const MONITORING_TABLES = Object.freeze([
   { name: "monitor_address_type", keys: [] },
   { name: "monitor_address_frequency", keys: [] },
   { name: "monitor_address_end", keys: [] },
+  { name: "monitor_address_look", keys: [] },
   { name: "monitor_gathering_run", keys: ["bundle_id"] },
 ]);
 

@@ -258,6 +258,8 @@ test("R4 removed, unreachable, and the Drive shell refusals (C-48.8, C-48.9), ea
     const loc = `https://records.example.org/gone${n}`;
     w.monitored(id, loc, `v1-gone-${n}`);
     w.net.routes[loc] = serve("gone", "text/plain", st);
+    assert.equal((await tick(w, id)).body.status, null, "R4: the first 404 or 410 is unconfirmed (outcomes.test.mjs)");
+    w.clock.ms += 24 * 3600e3;
     const r = await tick(w, id);
     assert.equal(r.body.status, "removed");
     assert.equal(w.looks().at(-1).state, "LOOKED_ABSENT");
@@ -425,6 +427,8 @@ test("R7 a shell captured as the document grades no change: the status withdrawn
   assert.equal(w.looks().at(-1).state, "LOOKED_INDETERMINATE");
   assert.match(w.looks().at(-1).detail, /^unmonitorable;/);
   w.net.routes[loc] = serve(shellPage("cccc"), "text/html", 404);
+  await tick(w, id);                                /* R4: the first 404 is unconfirmed; a look a day on confirms it */
+  w.clock.ms += 24 * 3600e3;
   const g = await tick(w, id);
   assert.equal(g.body.status, "removed");
   assert.equal(g.body.reeval_raised, true);

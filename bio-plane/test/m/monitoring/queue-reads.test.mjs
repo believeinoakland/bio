@@ -89,6 +89,8 @@ const LOC = (n) => `https://records.example.org/flag-${n}.txt`;
 async function flaggedDoc(w, id, n, how = "modified") {
   w.monitored(id, LOC(n), `flag v1 ${n}`, { freq: "daily" });
   w.net.routes[LOC(n)] = how === "removed" ? serve("gone", "text/plain", 404) : serve(`flag v2 ${n}`);
+  /* R4: a removal is confirmed by a second look 24 hours or more after the first */
+  if (how === "removed") { await tick(w, id); w.clock.ms += 24 * 3600e3; }
   const r = await tick(w, id);
   assert.equal(r.body.reeval_raised, true, `${id} flagged`);
   return r;
