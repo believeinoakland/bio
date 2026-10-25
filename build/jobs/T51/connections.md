@@ -154,3 +154,22 @@ B9 done: tranche merged; no-such-document.test.mjs no longer imports answer-enve
 **Deferred.** None.
 
 **Size (session_01Cj68FRJaNM9wJqTDmVe669): test runs 5, module lines 2398.** The module-lines count is the non-blank, non-comment lines of `bio-plane/src/connections/*.mjs` (same method as the round's earlier records, counted at this commit).
+
+## J8 · COMPLETE
+
+COMPLETE: B10 done on job/T51/connections (head a53a3df16a; code 84f65666ab).
+
+What changed:
+- bio-plane/src/connections/themes.mjs:250-278: a content placement's view (and a taken-back one's) carries `extent` (the stored canonical extent of the content id) and, where the extent has one, `page` from 0 (helper #passage). A whole-document placement carries neither.
+- bio-plane/test/m/connections/themes.test.mjs: new R44 test (red first: "the extent's page, counted from 0 — actual undefined, expected 1"; green after).
+- bio-plane/test/m/connections/fixtures.mjs (new, published): themeReadWithPassage(), the real themeread answer for a passage on page 1 and a whole document. fixtures.test.mjs (new) checks it against the real code.
+
+Met: R44 (T51 clause). Markers added: none.
+
+Tests and checks: connections 151 pass, 0 fail. screens-daily + screens-inquiry: 22 pass, 92 fail, all DECLARED_OP_DISAGREES readtranslate description (OP-GRADES #30 pending) or 4 MiniflareCoreError; none names connections; re-run after the CHANGE. format 178 modules 0 failures; architecture 0; coverage 72 of 72; words 0 (no new sentence); fixtures list 0 failures; run.mjs no finding in connections; ownership 0.
+
+REPORT (other modules):
+1. screens-inquiry/fixtures.mjs:117 and fr4-question.test.mjs:119, t51-document.test.mjs:449 hand-build themeread; connections is earlier, so they should take connections' published themeReadWithPassage() (fixtures.mjs). screens-inquiry draws the page (R56, R78) once it does.
+2. checks/fixtures.mjs names screens-inquiry document.test.mjs:168 and fr28-document.test.mjs:105,115,120 as hand-built connectionchoose answers (-> connections, earlier). connections publishes no connectionchoose answer yet; a published one is the fix, for BOB to place as a next job (not built here).
+
+Size (session_01Cj68FRJaNM9wJqTDmVe669): test runs 5, module lines 2398.
