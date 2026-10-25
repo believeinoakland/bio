@@ -532,3 +532,6 @@ COMPLETE · K5046 (c): ADMIN_ACTS (45) and ADMIN_SCREENS copied verbatim into wi
 - `op-declarations` `t50.test.mjs:391` (R73, R21): `registryActGaps` now reports `installregion` and `installaddress` (install screen, owed K4746 and K4937) as owed gaps. Either that test's `OWED_BY_FIX_ROUND` gains the two, or they are installer routes like `INSTALLER_ROUTES`' four (`data.mjs:69`, mine): a requirement-level reading (R41 says "four"), so I did not widen it; BOB to decide.
 - `screens-settings` `contract.test.mjs:75` (R39): `act.captureuploadabort.does` is not a word of the list; not registry-related.
 - Passing on my head: interface-shell 369, screens-wizards 75, translations 42, instance-setup 234, affordances 287.
+- Also on my head: control-plane 680/680; plane 599/601 (R24, the missing words above; R87 G54 L, which passes alone as in J23's note).
+
+Size (session_019XFUSYv3eS4JuzAcTX5AsX): test runs 22, module lines 3050
