@@ -180,3 +180,7 @@ COMPLETE (J6 in my record, pushed): B5, B6 and B8 applied; suite 379 tests, 1 fa
 **Markers added:** none. Previous `fixtures-generic` (7) stand.
 
 Size (session_01HPMiWGM9dDovp7swY1STgF): test runs 14, module lines 3705
+
+## J9 · COMPLETE
+
+COMPLETE (J8 in my record, pushed): B9 and B10 applied. B10: no producer answers next_page; the answer-side read (pending.mjs:447) and R76 G129c are removed; the row-side read (unitOf, fed by transcribe.mjs:111) is live and kept. Suite 379 tests, 1 fail (R23, accepted), 2 todo; fixtures 0; format, architecture, coverage, ownership 0; words 15 (accepted). Two other tests still script an answer next_page (your call); plane's Wave B carries the same dead :447. See J8.
