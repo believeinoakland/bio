@@ -5,7 +5,7 @@
    control (K874). Providers are fakes in their requirements' shapes; membership is real. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, byId, NOW, iso, page, ofKind, DAY, day } from "./world.mjs";
+import { world, byId, NOW, iso, page, ofKind, DAY, day, planAnswer } from "./world.mjs";
 import { WORD, FILLED } from "./words.mjs";
 import { ACTION_KEYS, WORDS_CANON, KEPT } from "../../../src/action-producers/index.mjs";
 import { word, localize, hasWord } from "../../../src/setup-words/index.mjs";
@@ -104,7 +104,7 @@ function keyed() {
         relied_on: false, offered: ["keep", "stop"], recipients: ["alice"] },
       { link: 2, plan: "PLN-1", matters: [], watch: { kind: "address", id: "https://x.example/a", ends: "2026-12-31" }, due_at: iso(NOW),
         cause: "closed", relied_on: true, offered: [], recipients: ["alice"] }] }) },
-    actionPlans: { planRead: ({ id }) => ({ ok: true, id, project: "PRJ-1" }),
+    actionPlans: { planRead: ({ id }) => planAnswer(id, "PRJ-1"),
       plansToLookAgain: () => ({ ok: true, limit: 500, truncated: false, items: [
         { plan: "PLN-2", project: "PRJ-1", title: "Library hours", look_again: day(NOW), paused_by: "alice", paused_at: iso(NOW - DAY), reason: "r" }] }) },
     planWork: { takeUpsFor: () => ({ ok: true, items: [], truncated: false, cursor: null }),

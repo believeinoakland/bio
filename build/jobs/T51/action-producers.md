@@ -21,3 +21,17 @@ Size (session_01MEUzkEwm5YofaKLSUTbrQR): test runs 2, module lines 1560.
 ## J1 · COMPLETE
 
 T51-101 (R23, R24) is complete on job/T51/action-producers at 0ea9b88073. The 26 words-pass findings are fixed: words.mjs holds no sentence; keys are read through word(); canon's question is held apart by localize; dates follow words.json. Tests: action-producers 53 pass; coverage 25 of 25 ids; format, architecture, ownership 0 failures; words.mjs for action-producers 0 failures. One note for BOB, in the record: rows.mjs is stale for action-producers.words.noreply_canon (expected until L1's close), and words.json's queue.action-clock-overdue.noreply differs from canon's words, which R23 keeps. Record: build/jobs/T51/action-producers.md (Completion section).
+
+## Fix round 10, Wave A batch 5 (B2)
+
+**Applied.** Published `actionItems` in `bio-plane/test/m/action-producers/fixtures.mjs` (real `actionProducers.actionItems` over a seeded world: one item to the member who created the action, none to another), with `fixtures.test.mjs` (R13) calling it and checking the real answer. Re-pointed the 7 own lines (FIX-E, providers merged): `escalationsDue` (action.test.mjs:135; t45.test.mjs:122,144,358; world.mjs:120) now answers escalation's published `escalationsDue` fixture and `planRead` (t45.test.mjs:288; world.mjs:123) action-plans' published `planRead` fixture, through `world.mjs` helpers (`noEscalations`, `escalationsAnswer`, `planAnswer`, `noSuchPlan`). A test routes the real item to this world's members and projects by naming the fields it changes (`id`, `project`, `opened_by`, `from`, `to`, `instant`); every other field is the provider's. Also moved the same hand-built answers not on the list (action.test.mjs:150, stamps.test.mjs:55, t46.test.mjs:107) to the helpers.
+
+**Markers added.** No `fixtures-own` or `fixtures-generic` marker; no contract marker (both providers are earlier).
+
+**Lines.** Done: 7 of 7. Left: none (no `stay`, no Wave B line of mine).
+
+**Deferred.** None. **Found in other modules.** None.
+
+**Checks.** `node --test` over `test/m/action-producers/*.test.mjs`: 54 pass, 0 fail. `checks/fixtures.mjs . action-producers --list`: 0 failures (answer 0). format 0 failures; architecture 0; coverage 25 of 25 ids; words 0; ownership 0. `impact.mjs origin/tranche/T51 HEAD` (run before commit): 0 affected modules; queue-producers' own line on `actionItems` is re-pointed in its job.
+
+Size (session_017khFK7Ufj5EYQeuEKFTJ3B): test runs 5, module lines 1560
