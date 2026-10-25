@@ -165,3 +165,7 @@ Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . strength --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/strength.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B17 · CHANGE
+
+re J15 (K5077): money is merged on the tranche with its published fixtures (`bio-plane/test/m/money/fixtures.mjs`: `readFactOf`, `readFactNotFound`). Merge `origin/tranche/T51`, re-point your one money line to `readFactOf` (or whichever is money's real answer for it), check `checks/fixtures.mjs /home/user/bio strength --list` at zero, then post COMPLETE.
