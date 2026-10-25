@@ -298,3 +298,17 @@ COMPLETE for B15 (inquiry's refusal answers published as fixtures, plan item 99 
 **Deferred.** None. **Flaws found in inquiry.** None. **Found in another module:** the REPORT above (control-plane :175, screens-inquiry's seven lines).
 
 Size (session_01RuijnFp5KUgZxc7Koddggy): test runs 7, module lines 3849
+
+## J16 · BLOCKED
+
+BLOCKED (cause: needs Bob) on B16 (K5201), the grounds prompt's braces.
+
+Done: `bio-plane/src/inquiry/index.mjs:2545` is reworded without braces (commit `718ef59bde` on `job/T51/inquiry`; tranche merged in first, `cde59f77cd`). `build.mjs --check` passes. The inquiry suite is unchanged: 242 pass, 0 fail, 1 todo (R31). I did not commit `rows.mjs`.
+
+Blocked: `setup-words/word-list.test.mjs:236` (R13) stays red. The table takes the English for `inquiry.index.pass_grounds_an_array` from the design word list, `docs/development/ux-substrate/screens/words.json` (its entry, key at line 81881, source DEC-259), not from the source's `localize` default. That entry still holds the braces, so the regenerated `rows.mjs` still does too. My source edit cannot change it. That file is the design stream's and outside my paths, so I have not edited it.
+
+Options (NEEDS BOB, P17):
+1. Edit that one `en` in `words.json` to the brace-free wording (the same sentence as `index.mjs:2545`), then regenerate `rows.mjs`. Keeps the key and the design's review. Recommended.
+2. Give the sentence a new key, so the source default is its English, and it enters the design's unreviewed list. The old `words.json` entry becomes orphaned for the design stream to remove.
+
+Once Bob takes option 1 or 2 and the tranche carries it, I merge the tranche, run the test green and post COMPLETE.
