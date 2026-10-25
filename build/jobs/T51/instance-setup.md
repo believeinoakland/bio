@@ -370,3 +370,7 @@ COMPLETE (re B20; fix round 10, plan item 71 (3); K5148). Cause 1 was already fi
 Deferred: none of my own. Found in other modules: the two construction sites above (store-assembly and plane), and credentials' and capture's pinned-world instants (STORE-REQUEST J3 (3)), not touched here.
 
 Size (session_011ShJzhwLnZv3XLiooRzh1n): test runs 1, module lines 3860
+
+## J26 · COMPLETE
+
+COMPLETE (re B20). Cause 1 (instanceGroupSeed's recorded_at under a pinned clock) was already fixed at 4815d2418f (J24, merged on the tranche). This session adds a control test for the handed clock (R4): 243 of 243 module tests pass. No defect remains open in the code; the env fallback is kept until store-assembly and plane hand their clock (see J25 REPORT in the record: assemble.mjs:596 and plane store.mjs:576 must pass { now: () => nowMs(null) }). format, architecture, coverage, words, ownership, fixtures: 0 failures. Commit 05aa616909 on job/T51/instance-setup. Record J25.
