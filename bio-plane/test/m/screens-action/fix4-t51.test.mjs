@@ -5,7 +5,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { WORLD_FOUNDER_HANDLE } from "../interface-shell/world.mjs";
-import { actionWorld, filingIn, correspond, actionsOf, answerOf, openIn } from "./world-C.mjs";
+import { actionWorld, filingIn, correspond, openIn } from "./world-C.mjs";
+import { actionDoc } from "./world.mjs";
 import { open, main, text, ops, press, last, ok, W, D, DATA_PLANE, ROUTES, PLAN, PLAN_ID, DET, PROJECT, PROFILES, PROFILES_WITH_HELP, RECORDS_HELP, ACTION, ACTION_ID, FILING, FILINGS, draft, TEMPLATES, button, READER } from "./page.mjs";
 
 const withPlan = (o) => ({ ...DATA_PLANE, plan: ok({ ...PLAN, ...o }) });
@@ -279,7 +280,7 @@ test("R43, R48 (C65): a request prepared, approved, sent and answered offers the
   assert.deepEqual({ ...last(send, "templatesave").body, reason: undefined }, { filing: kept.filing, name: "A federal records request", use: "file", project, reason: undefined });
   assert.equal(send.byOp("templatesave").length, 1);
   // control: an action not sent draws the door to prepare a text and not this one
-  const other = await me.act("actioncreate", { body: { document: (await import("./world.mjs")).actionDoc(project, { title: "Another request" }), project } });
+  const other = await me.act("actioncreate", { body: { document: actionDoc(project, { title: "Another request" }), project } });
   const unsent = await openIn(world, me, `/app/action/${other.id}`);
   assert.ok(main(unsent).querySelector('[data-list="start-send"]'), "the card to prepare");
   assert.ok(!text(unsent).includes(W("screen.start-send.template.heading")));

@@ -4,6 +4,8 @@
    by its key (R19); every request is compared with its owner's declaration by the harness (R104). */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { actionWorld, filingIn, openIn, answeredAs } from "./world-C.mjs";
+import { actionDoc } from "./world.mjs";
 import { SCREENS, open, main, text, ops, press, last, ok, refusedIn, button, beside, fill, W, D, hasWord, DATA_PLANE, PLAN_ID, ACTION, ACTION_ID, FILING, FILINGS, READ, STAKE, draft, ROUTES, PROJECT } from "./page.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 import { DECLARED_FIELDS } from "./declared.mjs";
@@ -22,18 +24,23 @@ const REACH = { assistantstate: ok({ on: true }), accountreference: ok({ held: t
 
 test("R41: filingprepare answered FILING_TIER_UNDETERMINED draws its refusal words and, beside them, a reference to the action's risk (risk.title) that opens the action screen on this action; control: success and other refusals draw none", async () => {
   assert.ok(hasWord("risk.title") && hasWord("refusal.FILING_TIER_UNDETERMINED"));
-  const p = await open(STEP2, { ...DATA_PLANE, filingprepare: refusedWith("FILING_TIER_UNDETERMINED", { action: ACTION_ID, governing: { tier: "undetermined" } }) });
+  /* the owner's own refusals: an action whose tier no member has stated is refused FILING_TIER_UNDETERMINED, one at tier 3 TIER3_COUNSEL_PACKET */
+  const { world, me, action } = await actionWorld();
+  const at = `/app/start-send/${action}`;
+  const p = await openIn(world, me, at);
   const b = await press(p, "filingprepare");
   const words = beside(p, b);
   assert.ok(words.includes(W("refusal.FILING_TIER_UNDETERMINED")));
   const door = slot(p, b).querySelector("a");
   assert.ok(door, "a door beside the words");
-  assert.equal(door.getAttribute("href"), `/app/action/${ACTION_ID}`);
+  assert.equal(door.getAttribute("href"), `/app/action/${action}`);
   assert.ok(door.hasAttribute("data-nav"));
   assert.equal(door.textContent.trim(), W("risk.title"));
   // control: another refusal draws its words and no door
-  const q = await open(STEP2, { ...DATA_PLANE, filingprepare: refusedWith("TIER3_COUNSEL_PACKET", { action: ACTION_ID }) });
+  await me.act("actionrisktier", { body: { target: action, tier: 3, reason: "the office has fought requests before" } });
+  const q = await openIn(world, me, at);
   const c = await press(q, "filingprepare");
+  assert.ok(beside(q, c).includes(W("refusal.TIER3_COUNSEL_PACKET")), "the owner's other refusal, in its words");
   assert.equal(slot(q, c).querySelector("a"), null);
   // control: success draws none
   const s = await open(STEP2, { ...DATA_PLANE, filingprepare: ok({ id: FILING, text: "From the template.", blanks: [] }) });
@@ -227,13 +234,27 @@ const TPL_KEYS = ["screen.start-send.template.heading", "screen.start-send.templ
 const approvedPlane = (over = {}, d = {}) => ({ ...DATA_PLANE, filingsfor: ok(FILINGS([draft({ approval: APPROVED, ...d })])), ...over });
 const useOptions = (p) => p.doc.getElementById("template-use").querySelectorAll("option").map((o) => o.getAttribute("value"));
 
+/** An action at `tier` whose communication is prepared and, unless `approve` is false, approved by the member; the project asks a second member's
+ *  approval of a tier-2 act when `second`. Answers `{world, me, project, action, filing, at}`: `at` the send step's address. */
+async function approvedWorld({ tier = 2, approve = true, second = false, sent = false } = {}) {
+  const w = await actionWorld();
+  if (tier) await w.me.act("actionrisktier", { body: { target: w.action, tier, reason: "the office has fought requests before" } });
+  if (second) await w.me.act("projectapprovalset", { query: { projectId: w.project, needs: JSON.stringify([{ tier: 2 }]), reason: "two members for a tier-2 act" } });
+  const filing = await filingIn(w.me, w.action, { approve, sent });
+  return { ...w, filing, at: `/app/start-send/${w.action}` };
+}
+const kept = async (me, action) => (await me.read("filingsfor", { query: { action } })).drafts;
+
 test("R48: 'Keep this filing as your team's template' is offered once the filing is approved (the send step) and sends the declared names: filing, name, use and notes; not before approval", async () => {
   for (const k of TPL_KEYS) assert.ok(hasWord(k), k);
-  const early = await open(STEP2, { ...DATA_PLANE, filingread: ok(READ()), filingsfor: ok(FILINGS([draft()])) });
-  assert.ok(!ops(early).includes("templatesave") && !text(early).includes(W("screen.start-send.template.heading")), "control: not before approval");
-  const none = await open(STEP2, DATA_PLANE);
+  const { world, me, project, action, at } = await approvedWorld({ approve: false });
+  const none = await openIn(world, me, `/app/start-send/${(await me.act("actioncreate", { body: { document: actionDoc(project, { title: "Nothing prepared here" }), project } })).id}`);
   assert.ok(!ops(none).includes("templatesave"), "control: nothing prepared");
-  const p = await open(STEP2, approvedPlane({ templatesave: ok({ ok: true }) }));
+  const early = await openIn(world, me, at);
+  assert.ok(!ops(early).includes("templatesave") && !text(early).includes(W("screen.start-send.template.heading")), "control: not before approval");
+  const [draftHeld] = await kept(me, action);
+  await me.act("filingapprove", { body: { filing: draftHeld.filing } });
+  const p = await openIn(world, me, at);
   for (const k of ["heading", "note1", "note2", "note3", "name.help1", "name.help2", "use.label", "notes.label", "notes.help"]) said(p, "screen.start-send.template." + k);
   assert.ok(button(p, "templatesave").textContent.includes(W("act.templatesave.label.start-send")));
   assert.deepEqual(useOptions(p), ["file", "brief"], "a filing of a tier that needs no counsel: both");
@@ -241,56 +262,90 @@ test("R48: 'Keep this filing as your team's template' is offered once the filing
   assert.equal(p.doc.getElementById("template-name").parentNode.querySelector("label").textContent.trim(), W("screen.start-send.template.name.label"));
   assert.deepEqual(p.doc.getElementById("template-use").querySelectorAll("option").map((o) => o.textContent.trim()), [W("screen.start-send.template.use.filing"), W("screen.start-send.template.use.brief")]);
   await press(p, "templatesave", { values: { "template-name": "Records request to a city clerk", "template-use": "brief", "template-notes": "Use for the clerk." }, reason: "keep" });
-  assert.deepEqual({ ...last(p, "templatesave").body, reason: undefined }, { filing: FILING, name: "Records request to a city clerk", use: "brief", notes: "Use for the clerk.", project: PROJECT, reason: undefined });
+  assert.deepEqual({ ...last(p, "templatesave").body, reason: undefined }, { filing: draftHeld.filing, name: "Records request to a city clerk", use: "brief", notes: "Use for the clerk.", project, reason: undefined });
   await press(p, "templatesave", { values: { "template-name": "Another", "template-use": "file", "template-notes": "" }, reason: "keep" });
   const second = last(p, "templatesave").body;
-  assert.deepEqual({ filing: second.filing, name: second.name, use: second.use, notes: second.notes }, { filing: FILING, name: "Another", use: "file", notes: undefined }, "no notes: none sent");
+  assert.deepEqual({ filing: second.filing, name: second.name, use: second.use, notes: second.notes }, { filing: draftHeld.filing, name: "Another", use: "file", notes: undefined }, "no notes: none sent");
+  assert.equal(p.byOp("templatesave").length, 2, "both landed");
   // C65: the scope is the action's project (the filing's basis names one only for a determination); an action in no project sends none
-  assert.equal(second.project, PROJECT);
-  const bare = await open(STEP2, approvedPlane({ templatesave: ok({ ok: true }), action: ok({ ...ACTION, project: null }) }));
+  assert.equal(second.project, project);
+  const loose = await me.act("actioncreate", { body: { document: actionDoc(project, { title: "In no project" }).replace(`project: ${project}\n`, "") } });
+  await me.act("actionrisktier", { body: { target: loose.id, tier: 2, reason: "the office has fought requests before" } });
+  await me.act("filingapprove", { body: { filing: await filingIn(me, loose.id) } });
+  const bare = await openIn(world, me, `/app/start-send/${loose.id}`);
   await press(bare, "templatesave", { values: { "template-name": "Another", "template-use": "file" }, reason: "keep" });
   assert.ok(!("project" in last(bare, "templatesave").body), "control: no project, no scope sent");
 });
 
 test("R48: offered at every step from approval: waiting for the second approval, the send, and after the sending; control: a name that is empty is refused in place and sends nothing", async () => {
-  const waiting = await open(STEP2, approvedPlane({}, { second_needed: true }));
+  const wait = await approvedWorld({ second: true });
+  assert.equal((await kept(wait.me, wait.action))[0].second_needed, true, "the project asks a second member");
+  const waiting = await openIn(wait.world, wait.me, wait.at);
   assert.ok(ops(waiting).includes("templatesave"), "second");
-  const sentDraft = await open(STEP2, approvedPlane({}, { sending: { ord: 1, sent_on: "2026-10-10", reference: null } }));
+  const done = await approvedWorld({ sent: true });
+  const sentDraft = await openIn(done.world, done.me, done.at);
   assert.ok(ops(sentDraft).includes("templatesave"), "sent");
-  assert.equal(button(sentDraft, "templatesave").dataset.filing, FILING);
-  const p = await open(STEP2, approvedPlane({ templatesave: ok({}) }));
+  assert.equal(button(sentDraft, "templatesave").dataset.filing, done.filing);
+  const { world, me, at } = await approvedWorld();
+  const p = await openIn(world, me, at);
   const b = await press(p, "templatesave", { reason: "keep" });
   assert.equal(p.byOp("templatesave").length, 0);
   assert.ok(beside(p, b).includes(W("refusal.TEMPLATE_NAME_REFUSED")));
 });
 
 test("R48: a filing that needs counsel first (tier 3, by the draft, the action or the stake read) is offered only as a brief; control: a tier 2 filing is offered both", async () => {
-  const by = {
-    draft: approvedPlane({}, { tier: 3 }),
-    action: approvedPlane({ action: ok({ ...ACTION, risk_tier: 3 }) }),
-    stake: approvedPlane({ stakeatpreparation: ok(STAKE({ governing_tier: 3 })) }),
-  };
-  for (const [why, plane] of Object.entries(by)) {
-    const p = await open(STEP2, { ...plane, templatesave: ok({}) });
+  /* by the action and the stake read: prepared at tier 2, the tier since raised to 3 (`actions`, `filings` R62 both read it) */
+  const byAction = await approvedWorld({ tier: 2 });
+  await byAction.me.act("actionrisktier", { body: { target: byAction.action, tier: 3, reason: "the office has threatened to sue" } });
+  assert.equal((await byAction.me.read("stakeatpreparation", { query: { action: byAction.action } })).governing_tier, 3, "the stake read says 3");
+  assert.equal((await byAction.me.read("action", { query: { id: byAction.action } })).risk_tier, 3, "the action says 3");
+  /* by the draft: `filings` gives a draft its own `tier` only for a filing prepared at tier 1 or 2 and no member's act brings it to 3, so the
+     one field is the store's own answer with the tier 3 put on the draft (the action stays tier 2) */
+  const byDraft = await approvedWorld({ tier: 2 });
+  const draftAt3 = { filingsfor: answeredAs(byDraft.world, byDraft.me, (a) => { a.json.result.drafts = a.json.result.drafts.map((d) => ({ ...d, tier: 3 })); }) };
+  for (const [why, w, plane] of [["action and stake read", byAction, {}], ["draft", byDraft, draftAt3]]) {
+    const p = await openIn(w.world, w.me, w.at, plane);
     assert.deepEqual(useOptions(p), ["brief"], why);
     await press(p, "templatesave", { values: { "template-name": "Brief to counsel" }, reason: "keep" });
     assert.equal(last(p, "templatesave").body.use, "brief", why);
+    assert.equal(p.byOp("templatesave").length, 1, "the owner took the brief: " + why);
   }
-  const two = await open(STEP2, approvedPlane({ action: ok({ ...ACTION, risk_tier: 2 }), stakeatpreparation: ok(STAKE({ governing_tier: 2 })) }, { tier: 2 }));
-  assert.deepEqual(useOptions(two), ["file", "brief"]);
+  const two = await approvedWorld({ tier: 2 });
+  assert.deepEqual(useOptions(await openIn(two.world, two.me, two.at)), ["file", "brief"]);
 });
 
 test("R48: the template's refusals are drawn by their words beside the act; control: a save that lands draws none", async () => {
-  for (const code of ["TEMPLATE_FROM_UNAPPROVED", "TEMPLATE_NAME_TAKEN", "TEMPLATE_TIER3_FILE", "TEMPLATE_NAME_REFUSED", "TEMPLATE_USE_REFUSED"]) {
+  /* each refusal is the owner's own, provoked by the state or the value that makes it */
+  const provoke = {
+    TEMPLATE_NAME_TAKEN: async (w) => { await w.me.act("templatesave", { body: { filing: w.filing, name: "Clerk request", use: "file", project: w.project } }); return {}; },
+    TEMPLATE_TIER3_FILE: async (w) => { await w.me.act("actionrisktier", { body: { target: w.action, tier: 3, reason: "the office has threatened to sue" } }); return {}; },
+    /* the page refuses a long or broken-line name in place, as the owner does; a name holding half of a surrogate pair (a pasted emoji cut in two) passes the page and not the owner */
+    TEMPLATE_NAME_REFUSED: async () => ({ "template-name": "Clerk \uD83D request" }),
+  };
+  for (const [code, make] of Object.entries(provoke)) {
+    assert.ok(hasWord("refusal." + code), code);
+    const w = await approvedWorld();
+    const p = await openIn(w.world, w.me, w.at);
+    const more = await make(w);
+    const b = await press(p, "templatesave", { values: { "template-name": "Clerk request", ...more }, reason: "keep" });
+    assert.equal(p.byOp("templatesave").length, 1, "sent, and refused by the owner: " + code);
+    assert.ok(beside(p, b).includes(W("refusal." + code)), code);
+    assert.equal(p.doc.getElementById("template-name").value, more["template-name"] || "Clerk request", "the form is kept");
+  }
+  /* the two the page cannot bring to the owner: an approval is never taken back (TEMPLATE_FROM_UNAPPROVED), and the page sends only `file` or `brief`
+     (TEMPLATE_USE_REFUSED); the owner's answer for these two stays the table's */
+  for (const code of ["TEMPLATE_FROM_UNAPPROVED", "TEMPLATE_USE_REFUSED"]) {
     assert.ok(hasWord("refusal." + code), code);
     const p = await open(STEP2, approvedPlane({ templatesave: refusedWith(code) }));
-    const b = await press(p, "templatesave", { values: { "template-name": "Clerk request" }, reason: "keep" });
-    assert.ok(beside(p, b).includes(W("refusal." + code)), code);
+    const u = await press(p, "templatesave", { values: { "template-name": "Clerk request" }, reason: "keep" });
+    assert.ok(beside(p, u).includes(W("refusal." + code)), code);
     assert.equal(p.doc.getElementById("template-name").value, "Clerk request", "the form is kept");
   }
-  const p = await open(STEP2, approvedPlane({ templatesave: ok({ ok: true }) }));
+  const w = await approvedWorld();
+  const p = await openIn(w.world, w.me, w.at);
   const b = await press(p, "templatesave", { values: { "template-name": "Clerk request" }, reason: "keep" });
   assert.equal(beside(p, b), "");
+  assert.equal(p.byOp("templatesave").length, 1);
 });
 
 /* ---------- R49 (C76; DEC-377; filings R25) ---------- */

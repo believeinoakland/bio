@@ -251,7 +251,7 @@ export const matter = Object.freeze({
       const add = function (id, title) { if (id && !opts.some(function (o) { return o.value === id; })) opts.push({ value: id, text: title || id, on: held(id) }); };
       qs.forEach(function (q) { if (q && q.stance === "concluded") add(q.inquiry, q.title); });
       Object.keys(latest).slice(0, 12).forEach(function (c) {
-        const pc = P.later(cs, view, "case:" + c, "publishedcase", { caseId: c, edition: String(latest[c]) }, "");
+        const pc = P.later(cs, view, "case:" + c, "publishedcase", { id: c, edition: String(latest[c]) }, "");
         const fs = pc.state === "ok" && pc.value && Array.isArray(pc.value.findings) ? pc.value.findings : [];
         fs.forEach(function (f) { if (f) add(f.bundle_id, f.title); });
       });

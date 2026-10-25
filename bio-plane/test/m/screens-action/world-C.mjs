@@ -2,6 +2,7 @@
    the record holds, the filings an action has prepared, approved and sent, and the refusals the owners give are the acts and states that make
    them; every id a test asserts is read back from the world's own answers. Import this file before "./page.mjs" (it imports "./world.mjs"). */
 import { actionWorld, openIn, correspond } from "./world.mjs";
+import { counted } from "../interface-shell/harness.mjs";
 
 export { actionWorld, openIn, correspond };
 
@@ -47,7 +48,10 @@ export async function officeFor(me, subject, role, body) {
 
 /** The plane answer for `addresseesuggest` asked about a question: the owner's own answer for `entity`, the subject the record holds the offices
  *  for (the owner suggests offices for an entity or a record whose captures resolve to one; an inquiry holds no capture, so none could be made). */
-export const suggestingFor = (world, me, entity) => (req) => world.boot(me).door({ ...req, url: req.url.replace(/subject=[^&]*/, "subject=" + encodeURIComponent(entity)) });
+export const suggestingFor = (world, me, entity) => counted((req) => world.boot(me).door({ ...req, url: req.url.replace(/subject=[^&]*/, "subject=" + encodeURIComponent(entity)) }));
+
+/** The world's own answer to a request, changed by `change(answer)`: a plane function the page waits for as it waits for the door. */
+export const answeredAs = (world, me, change) => counted(async (req) => { const a = await world.boot(me).door(req); change(a); return a; });
 
 /** `op` as the owner answers it for `me`, whatever it answers: `{status, result}` (a refusal is read, not thrown). */
 export async function answerOf(world, me, op, { query = {}, body } = {}) {
