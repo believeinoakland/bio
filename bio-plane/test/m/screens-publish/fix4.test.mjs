@@ -1,8 +1,5 @@
 /* screens-publish, T51 fix round 4 (K4429), over a scripted plane: C40. The seam tests that need a provider's own instance are in
  * seam4.test.mjs. A sentence is asserted by its key (R24); every request is compared with its owner's declaration (interface-shell R104). */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, drew, press, ok, PREFLIGHT, F1, P, DR, rawKeys, main } from "./fixtures.mjs";
@@ -11,7 +8,7 @@ const CER = `/app/ceremony/${P}/${DR}`;
 const B64 = "b".repeat(64);
 const ROW = (o = {}) => ({ capture: B64, by: "dev", findings: [F1], timestamp_at: null, co_archive: null, missing: ["timestamp", "co_archive"], late: false, timestamp_late: false, late_words: null, ...o });
 const STEP3 = (o = {}) => ({ step: 3, tensions: { candidates: [], count: 0 }, not_co_attested: [], self_attested: [], ...o });
-const HELD_BACK = { ok: false, code: "CO_ATTESTATION_UNACKNOWLEDGED", reason: "CO_ATTESTATION_UNACKNOWLEDGED" };
+const HELD_BACK = gateRefusal().CO_ATTESTATION_UNACKNOWLEDGED;
 const pre = (row) => PREFLIGHT({ steps: [...PREFLIGHT().steps.slice(0, 5), STEP3({ not_co_attested: [row] }), ...PREFLIGHT().steps.slice(5)], ready: false, first: HELD_BACK, blockers: [] });
 
 test("R74 R51 C40 after reattest the document's sentence is read again: it says 'neither' only while both proofs are missing, and no raw key is drawn", async () => {
@@ -105,6 +102,7 @@ test("R80 C48 a draft naming no case whose pre-flight refused first still reads 
 /* ---------- C81 (R120 of interface-shell; R79): the walker's two screens at 390 px with a live-sized count of rows ---------- */
 import { measure } from "./phone.mjs";
 import { GRANT_UNTIL } from "./fixtures.mjs";
+import { gateRefusal } from "../case-disclosures/fixtures.mjs";
 const refsMd = ["---", `id: ${P}`, "title: \"The Coliseum lease\"", "references:", ...Array.from({ length: 12 }, (_, i) => [`  - target: INQ-2026-00${10 + i}-what-does-the-federal-freedom-of-information-act-require-agencies`, "    rel: cites", "    status: live"]).flat(), "---", ""].join("\n");
 const manyGrants = Array.from({ length: 6 }, (_, i) => ({ grant_id: "GRT-" + i, recipient: "Professor Reader Number " + i + " of the Housing Law Clinic · housing law and tenant organizing", until: GRANT_UNTIL, zone: "America/Los_Angeles" }));
 test("R79 C81 at 390 px the case editor's 'Remove a citation' and the review copy's 'Stop sharing' are each one line, over 200 px wide, inside the screen, with a live-sized number of rows", { timeout: 120000 }, async () => {

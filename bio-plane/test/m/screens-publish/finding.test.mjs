@@ -1,8 +1,5 @@
 /* screens-publish R37 (T51-121; DEC-330 A76): one finding's own page at <case>/<edition>/<finding>, read from `publishedcase` asked by
  * the finding's id, drawn in the public frame from what that answer holds and nothing more. Each sentence is asserted by its key. */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, main, text, drew, drewIn, tipOf, day, word, ok, refused, refusedIn, F1, F2, C, FINDING, leg, publishedPlane, findingPath } from "./fixtures.mjs";
