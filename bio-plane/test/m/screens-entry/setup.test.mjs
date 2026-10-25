@@ -833,7 +833,7 @@ test("R26 groupdomainset refused GROUP_DOMAIN_MALFORMED or NOT_AN_ADMIN draws it
 test("R30 where setup shows who recorded hosting access, the setup and the system have their words; control: a member's is as before", async () => {
   const holders = "The treasurer";
   /* the founder's own act is recorded as `admin`, which setup reads as the setup; the installer's and the operator's records are the system's:
-     no act of the door records a hosting account by the system, so those rows are written to the table the plane reads (REPORT 3) */
+     no act of the door records a hosting account by the system, so those rows are written to the table the plane reads (K5192) */
   const seed = (world, by) => world.sql.exec("INSERT INTO hosting_access (holders, note, recorded_by, at) VALUES (?,?,?,?)", holders, null, by, "2026-10-01T00:00:00Z");
   for (const [by, key] of [["admin", "screen.group.hosting.now.setup"], ["bootstrap", "screen.group.hosting.now.setup"], ["system:seed", "screen.group.hosting.now.system"], ["token:ops", "screen.group.hosting.now.system"]]) {
     const o = await returned({ after: async ({ world, as }) => { if (by === "admin") await act(world, as, "hostingaccessset", { body: { holders, note: null } }); else seed(world, by); } });

@@ -6,16 +6,13 @@ import { open, has, lacks, said, date, all, actOps, links, texts, hasWord, world
 /* The plane behind `front` is the real store (store-request's `storeWorld()`): the team's name, description and logo are the
    founder's real acts (`team`), the member who signs in is made by the real `memberadd` and `enroll` (`signIn`). */
 
-const PUBLISHED = {
-  bundles: [{ bundle_id: "F-1", edition: 1, title: "The lease amendment", attestor_member: "dev", ratified_at: "2026-11-19T10:00:00Z" },
-    { bundle_id: "F-2", edition: 1, title: "Repairs closed", attestor_member: "mai", ratified_at: "2026-10-02T10:00:00Z" }],
-  cases: [{ case_id: "CASE-1", edition: 2, findings: ["F-1"], signed_at: "2026-11-19T10:00:00Z" },
-    { case_id: "CASE-2", edition: 1, findings: ["F-2"], signed_at: "2026-10-02T10:00:00Z", title: "Pothole repairs" },
-    { case_id: "CASE-3", edition: 1, findings: [], withheld: true, signed_at: "2026-09-01T00:00:00Z" }],
-};
-/* a published case edition is the one state the world cannot make by real acts (REPORT 2: no recipe signs and commits one yet), so the
-   published list stays scripted in the two tests that read it, its line listed by the fixtures check until the recipe merges */
-const PUBLISHED_LIST = { publishedlist: { ok: true, result: PUBLISHED } };
+/* a case edition published by the real ceremony (store-request R19 `recipes.published`): a member holding `publish` has a finding ratified and the
+   case signed; the list is then what the plane answers to anyone (`publishedlist`) */
+async function publishedCase(world, title = "Seven days") {
+  const ann = await world.signIn("ann", { capabilities: ["contribute", "create_projects", "publish"] });
+  const found = await world.recipes.finding(ann, await world.recipes.project(ann, "Potholes"), { title });
+  return world.recipes.published(ann, found);
+}
 
 test("R1 front reads groupidentity, groupdescription and publishedlist, none under a session", async () => {
   const { world } = await team();
@@ -40,20 +37,22 @@ test("R1 the masthead: the group's name and its logo when set; its public purpos
 
 test("R1 a part the group keeps from the public is not drawn: no purpose answered draws no purpose, nothing withheld is listed", async () => {
   const { world } = await team({ visibility: "members" });
-  const o = await open("front", { world, table: PUBLISHED_LIST });
+  const made = await publishedCase(world);
+  const o = await open("front", { world });
   assert.ok(!o.text.includes("Leases on public land"));
   lacks(o, "state.empty");
-  assert.ok(!links(o.tree).includes("/app/published/CASE-3"), "a withheld case is not drawn");
+  assert.ok(links(o.tree).includes("/app/published/" + made.case), "what the plane lists as published is drawn");
 });
 
 test("R1 what it has published: each case edition's title, edition, signing date and signer, linking /app/published/<case>", async () => {
   const { world } = await team();
-  const o = await open("front", { world, table: PUBLISHED_LIST });
+  const made = await publishedCase(world);
+  const o = await open("front", { world });
   has(o, "screen.front.published");
   const rows = all(o.tree, (e) => e.tag === "a" && /^\/app\/published\//.test(e.attrs.href || ""));
-  assert.deepEqual(rows.map((e) => [e.attrs.href, texts(e).join(" ")]), [["/app/published/CASE-1", "The lease amendment"], ["/app/published/CASE-2", "Pothole repairs"]]);
-  has(o, "screen.front.edition", { edition: "2", date: { html: date("2026-11-19") }, signer: "dev" });
-  has(o, "screen.front.edition", { edition: "1", date: { html: date("2026-10-02") }, signer: "mai" });
+  assert.deepEqual(rows.map((e) => [e.attrs.href, texts(e).join(" ")]), [["/app/published/" + made.case, "Seven days"]]);
+  const listed = o.requests.find((r) => r.op === "publishedlist").answer.value.cases.find((c) => c.case_id === made.case);
+  has(o, "screen.front.edition", { edition: String(made.edition), date: { html: date(listed.signed_at) }, signer: "ann" });
 });
 
 test("R1 the doorbell, the tour and the sign-in panel are drawn, the tour by 'See how it works, step by step'", async () => {

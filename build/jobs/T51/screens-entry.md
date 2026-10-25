@@ -256,3 +256,11 @@ Size (session_0143bTM29139UynmAYarEGQM): test runs 9, module lines 1157
 ## J19 · BLOCKED
 
 BLOCKED (cause: tests; needs a design word row, not Bob). R6 is done and green (an office with no note is refused on the page by refusal.ENTITY_NO_NOTE, nothing sent; setup.test.mjs). R2 is coded: front.mjs:115 and forgot.mjs:57 draw refusal.SIGN_IN_PAUSED with {stated} (the plane's bound) and no time. Two tests stay red only on the design's row: front.test.mjs 'R2 paused' and public.test.mjs 'R2 R4 forgot paused' (red on the old source, red now on the row). ASK for UX-DESIGN, in the round's words: (1) refusal.SIGN_IN_PAUSED without 'Try again at {time}', carrying {stated}, e.g. 'Sign-in is paused for a while after too many tries from here... The limit is: {stated}.'; (2) screen.setup.office.note without '(optional)'. Both land green with no change on my side. Module 96/98; format, architecture, coverage 30/30, ownership 0 failures; impact users r137-parity, pseudo, door fail 9/15 identically before and after my change. Record: build/jobs/T51/screens-entry.md 'Fix round 10'. Size (session_0143bTM29139UynmAYarEGQM): test runs 9, module lines 1156
+
+## Fix round 10, B17 (CHANGE, K5193)
+
+Merged `origin/tranche/T51` (STORE-REQUEST #5). `kit.mjs` `worldOf` no longer passes `group: null` (no other `{group: null}` was held); the module tests ran green on the default world. `front.test.mjs`: the scripted `publishedlist` is gone; the two tests that read it (R1 what it has published; R1 a part kept from the public) now publish a case by `recipes.published` (`publishedCase()`) and read the plane's list; `checks/run.mjs` names no finding in this module's files (the `front.test.mjs`:18 line is gone, REPORT J13 met). R30's system-recorded hosting rows stay seeded into `hosting_access` (J14, K5192, a UX question; the line is not a stand-in the fixtures check flags, so it carries no `fixtures-own` marker, which `checks/run.mjs` reports as idle).
+
+**Tests and checks.** Module: 98 tests, 96 pass, 2 fail: the two R2 paused-sign-in tests, on the design's `refusal.SIGN_IN_PAUSED` row (J19). format, architecture, coverage (30 of 30), ownership (0 failures), `checks/run.mjs` (no finding in screens-entry).
+
+Size (session_0143bTM29139UynmAYarEGQM): test runs 11, module lines 1156
