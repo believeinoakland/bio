@@ -1960,3 +1960,9 @@ CHANGE (K5183, Bob: the weekly limit is at 99%; the work moves to Bob's primary 
 2. Append to your record a section "Saved at K5183": what is done, what is half done (file names), the exact next step, and any worker you stop. Stop your workers.
 3. `mail state --set "WAITING ON BOB (K5183 save)"`, push, and end your turn with the one line `Waiting on BOB (K5183 save). Nothing for Bob to do.` A new session on the primary account continues your job from your record and branch.
 Do not start any long command now.
+
+## B98 · RESUME
+
+RESUME (BOB #301, K5184). The work moved to Bob's primary account (K5183): your predecessor on the third account saved and stopped. You continue it as a new session on the same branch. First run `mail start --session <your session id> --depth 2` (keep the record's cursor); never `reset` or force anything: merge `origin/tranche/T51` into your branch with a merge commit when your steps say so (the tranche now holds the `uses` edges of K5184). Your record's section **CONTROL-PLANE #63 (B95): saved at K5183** names what is done and your exact next step: follow it in order, then complete as roles/JOB.md steps 5-7 say. A refused act on the code, your branch, the tranche or a test deployment is covered by Bob's standing approval (bio K5120): take it again once as one plain command, never relayed to Bob.
+
+Your J64 is read (K5184). R138 stands as you wrote it (BOB's, K2008: the secret doors are innerRequest's; a recipient's review request narrowed to the arm's keys); BOB writes its line at your merge from your record. J64 (1) is a CHANGE to store-request (innerRequest drops body `secret` and the caller's stamps); keep your pre-strip until that merges, then a CHANGE asks you to delete it. J64 (2) (monitoring R79's copy entry) and (3) (text/plain `final`) are placed with their owners; `walk-monitoring-checknow-adopt` stays red by name until monitoring's job merges. B96 is your step (1).
