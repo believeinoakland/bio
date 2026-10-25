@@ -236,7 +236,7 @@ test("R18, R52, R79 (K1514, K1615, K1755; T47, K3068): a woken run is dispatched
   /* a refused or silent dispatch appends one entry saying the run is still resumable; the wait is bounded (R82), and a
      worker that has not accepted at the bound is a call that did not complete: SILENT, with its entry */
   // fixtures-contract: agent-worker dispatch-refusal
-  for (const answer of [{ status: 400, body: { ok: false, reason: "BAD_BODY", code: "BAD_BODY", detail: "d" } }, "throw"]) {
+  for (const answer of [{ status: 400, body: { ok: false, reason: "BAD_BODY", code: "BAD_BODY", worker: "agent-worker", detail: "d" } }, "throw"]) {
     const x = await setup(env(agentWorker(answer)), { principal: stamp });
     const o = await decision(x);
     assert.equal(o.dispatch.state, answer === "throw" ? "SILENT" : "REFUSED");
