@@ -328,3 +328,102 @@ The live reading to repeat after the fix: the walker's three files on the copy; 
 **`screens-intake`.** Requirement for BOB: **R36** says the page "draws High risk with `screen.open-file.high.yours`, then `next.head` and `next.yours` ... its checks are said in words"; it is silent on any other reason of the grade for a file the viewer added, and the omission is what the page implements. For BOB (design): whether an encrypted file's check line should say "its inside could not be checked" beside the scanner's "Clean" (a word the design does not hold: `grep -i "encrypted"` in the word table's `screen.open-file.*` finds the reason words only).
 
 ---
+
+## R15 · a 240 KB `<div` run makes the upload take 30-39 s (C8, X22)
+
+### 1. Root cause with evidence
+
+**`bio-plane/src/subresources.mjs:75`: `const TAG_RE = /<(\/?[a-zA-Z][a-zA-Z0-9:-]*)((?:"[^"]*"|'[^']*'|[^>"'])*?)(\/?)>/g`, used by `scanHtml` (`:263`-`:300`, via `parseHtmlRefs` `:259` and `captureSubresources`) over the page the capture holds. For `<div<div<div...` (a run of tag starts and no `>`), each of the 60,000 `<` opens a match whose attribute group `[^>"']` also takes `<`, so every start reads to the end of the text before failing: n² steps.** This is not the profile (X22's regexes in `client-rendered.mjs` are linear now, R20); the profile of the same bytes takes 28-75 ms.
+
+- Measured, Node, `parseHtmlRefs(text)` over `"<html><body>" + "<div".repeat(n)` with no closing tag: n = 10,000 (40 KB) **0.7 s**; 20,000 **3.0 s**; 40,000 **12.6 s**; **60,000 (240,012 B, the walker's size) 26.9 s**, each doubling costing four times. The same text closed by `</body></html>`: 6-26 ms; the `<div>` control: 6-17 ms. The live copy's `captureupload` ST was **30.5 s and 38.7 s** for the walker's 240 KB run.
+- The call chain: `captureupload` → `acquire` (`acquisition/index.mjs:968`) → `walkSubresources` (`:1752`, `:2224`: any capture profiled HTML and under 8 MiB, "reads the primary back into memory to parse it") → `captureSubresources` → `scanHtml`. The upload therefore runs the web page's supporting-files walk over a file the member handed in, which finds no supporting file here. The same parse is called again on a continuation (`:2415`).
+- Everything else on the upload path I timed over the same text is fast: `identify` + `doctypeFor` 28 + 33 ms, `profileOf` 75 ms, `titleOfBytes` 2 ms, the reading `read()` 86 ms (so the walker's "read `whole` (2 words)" and "upload 30 s" are both true).
+
+### 2. Why the tests missed it
+
+`bio-plane/test/m/subresources/subresources.test.mjs` builds small pages and asserts the references found; it has no input larger than a few KB and no time assertion; `build/requirements/subresources.md` states no bound on the parser's work (the 8 MiB bound is `acquisition`'s `SUB_PARSE_MAX`, a size, not work). `envelope-docs-T51-s2.md` X22 listed `client-rendered.mjs` and `staff-directory.mjs` and fixed those; this regex was not on the list.
+
+### 3. Failing-first test
+
+- **Module and file:** `subresources`, `bio-plane/test/m/subresources/subresources.test.mjs` (a `R? linear` test).
+- **Builds:** `"<html><body>" + "<div".repeat(60000)` (and the 20,000 run, to assert the ratio), `"<a".repeat(80000)`, `"<img ".repeat(...)`.
+- **Asserts:** `parseHtmlRefs` returns (`refs` `[]`) in under 1 s at 240 KB, and the time at 120 KB is under 3 times the time at 60 KB (linear, not quadratic); control: the references of a normal page are unchanged (the existing tests).
+- **Seen red:** yes (26.9 s).
+
+### 4. Platform check
+
+The ST of `captureupload` for the same file on the live copy, after the fix, with the CPU time of the request on `Server-Timing` (workerd's regex engine is the same V8 irregexp; the quadratic is the pattern's, not the platform's).
+
+### 5. Owner
+
+**`subresources`.** Requirement for BOB: silent on work bounds (only sizes); a line "the parse is linear in the page's bytes" belongs beside R-parse. Also worth the job's first step: a search of the module's other regexes for the same shape (`[^>"']` classes inside a lazy group).
+
+---
+
+
+## R16 · a hidden pptx slide is held twice (C3)
+
+### 1. Root cause with evidence
+
+**The pptx entry lists a hidden slide in two lists, `slides[]` and `parts`, and the reading makes a unit of each.** `bio-plane/src/pptx.mjs:943` pushes every slide into `slides` (with `hidden` set from the slide's bytes, `:935`), and `:949` pushes the **same text again** for a hidden slide into the `body` part units: `if (hidden && walked.bodyText) units.body.push({ kind: "body", ref: at(null), part, text: walked.bodyText, hidden: true })`. `reading-pipeline/index.mjs:1006`-`:1028` (`allUnitsOf`) then turns `slides` into `slide-shape` units and `parts` into `doc-part` units, so the slide is two units. The slide's own `slide-shape` unit is built by the `arm(...)` call at `:1011` and **does not copy `hidden`**, so the unit that carries the mark is the duplicate and the original says nothing.
+
+- Red, in-process, the walker's recipe family `{kind:"pptx", seed:"rw9-C-3p", size:{units:6}, parts:["notes","hidden"]}` through the real `pptxEntry.text()` and `read()`: 7 slides (slide 7 `hidden: true`) and parts `[body "slide 7" ppt/slides/slide7.xml hidden, speaker_note "slide 1"]`; the reading holds **9 units for 8 texts**: `slide-shape` slide 7 (`kind: body`, no `hidden`), `doc-part` `ppt/slides/slide7.xml` (`body`, `hidden`), and the notes once. That is the walker's count 2 on a search for the hidden slide's mark, and "nothing says the slide is hidden" on the slide-shape unit a hit lands on.
+- The requirement as written asks for the pair: office-readers **R38** says `parts` carries "a hidden slide's text marked `hidden: true`" and that "`parts` adds, never replaces"; R11's lists (`slides`) are unchanged.
+
+### 2. Why the tests missed it
+
+`bio-plane/test/m/office-readers/parts-kinds.test.mjs` (R38) asserts each part of the deck is a unit with its kind, hidden slide included, from the entry's `parts`; it never reads through `reading-pipeline`'s `allUnitsOf` and counts units against texts. `reading-pipeline`'s units tests build `slides` and `parts` by hand and not from one deck.
+
+### 3. Failing-first test
+
+- **Module and file:** `office-readers` (the entry's contract) with the pipeline half in `reading-pipeline`: `bio-plane/test/m/office-readers/parts-kinds.test.mjs` plus `bio-plane/test/m/reading-pipeline/text-units.test.mjs`.
+- **Builds:** `generate({kind:"pptx", seed:"rw9-C-3p", size:{units:6}, parts:["notes","hidden"]})`.
+- **Asserts:** through `read()`: the reading holds exactly one unit carrying the hidden slide's mark; that unit is marked `hidden`; its kind is `body`; the deck's text count equals its unit count (8 texts, 8 units); the notes unit is once.
+- **Seen red:** yes (9 units for 8 texts; the surviving slide-shape unit not marked).
+
+### 4. Platform check
+
+None. After the fix, on the live copy: `findin`/`search` for the hidden slide's mark counts 1 and the hit says hidden.
+
+### 5. Owner
+
+**`office-readers`** (R38 amended: a hidden slide's text is the slide's own unit marked `hidden`, and is not also a `part`). The pipeline's one-line follow (`allUnitsOf` copies `hidden` onto a `slide-shape` unit) is the same job's contract change and belongs to `reading-pipeline`'s job as a second small cause if BOB splits; K4427 says one owner per cause, so I place the **duplicate** with `office-readers` and name the missing mark as the cause the other module's job takes.
+
+---
+
+## R17 · the search hit and a cited leg carry no part kind (C3)
+
+R17 is **two causes** with different owners.
+
+### R17a · the Find-in hit carries no part kind
+
+- **Root cause (file:line).** `bio-plane/src/retrieval-browse/findin.mjs:639`-`:640` (`#term`): `add({ kind: "term", words, capture_sha, extent, origin: FIND_ORIGIN, term })`. The rows come from the meaning statement with `rows: "passage"` (`:605`-`:612`), which **carry the unit's part kind** (retrieval **R95**: "`meaningRows`' `rows=passage` rows each carry `kind`"); the item is built from `r.snippet`/`u.text`/`r.extent` and **never from `r.kind`**, so the hit has `kind: "term"` (the result kind) and no part kind. The Find-in screen (`screens-daily/find-in.mjs:159`-`:163`) draws the extent (a page or paragraph number) and no kind word either.
+- **Red** (the real `retrieval-browse` over a real SQLite store, the module's own `world` fixture, with a footnote unit written with its part kind `footnote` and a body unit): the term hit for the footnote has keys `kind, words, capture_sha, extent, origin, term, title, content_id, content_held, recorded`, `extent {"kind":"doc-part","part":"word/footnotes.xml","ref":"footnote 1"}`, and **no part kind** (the walker's `findin` items: "carry `extent` ... no kind word").
+- **Why the tests missed it:** `bio-plane/test/m/retrieval-browse/fixture.mjs:221`-`:225` (`w.unit(...)`) inserts `capture_text` rows with **no `kind` column at all** ("as extraction's index writes it"): the fixture's schema (`EXTRACTION_SCHEMA`, `extraction/schema.mjs:283`-`:293`) has no `kind`, while the real index writes it (`extraction/index.mjs:1788`). No find-in test can see a kind. (I had to `ALTER TABLE capture_text ADD COLUMN kind` in my own repro to write one.) `search`'s R95 test is in `retrieval`, whose hits do carry it.
+- **Failing-first test:** `retrieval-browse`, `bio-plane/test/m/retrieval-browse/findin.test.mjs` with the fixture's `unit()` taking a `kind`; builds a docx-like capture with a body unit and a footnote unit and a `term` find; asserts the footnote's item carries `part: "footnote"` (the name is the module's; `kind` is taken) and the body's `body`, and `null` for a unit stored without one. **Seen red:** yes.
+- **Owner:** `retrieval-browse` for the item; then `screens-daily` for the word beside the passage (the words are the design's: there is a closed list of part kinds and no `screen.find-in.part.*` rows, so the **sentence is the design's** for UX-DESIGN, the **key chosen is the module's**).
+
+### R17b · a cited footnote leg names no place (C3 citation)
+
+- **Root cause.** `bio-plane/src/screens-inquiry/question.mjs:219`-`:223` (`whereOf`): the place a leg draws is a page (`pageOf`) else a paragraph (`paraOf`, "Paragraph n", `screen.question.leg.paragraph`); a leg whose extent is `{kind: "doc-part", part, ref}` has neither, so `whereOf` answers `""` and the leg is drawn as the quote and the document's name only. The leg itself is right: the walker read `extent_kind doc-part`, `extent_part word/footnotes.xml`, `extent_ref "footnote 1"`, i.e. the leg already holds the place's own human form (`ref`), which names the kind.
+- **Why the tests missed it:** `screens-inquiry` tests script legs with `extent_page`/`extent_para` only (`question.mjs` handles those two).
+- **Failing-first test:** `screens-inquiry`, a question page whose basis holds a leg with `extent_kind: "doc-part", extent_part: "word/footnotes.xml", extent_ref: "footnote 1"`; asserts the leg's line contains the ref ("footnote 1") the way a paragraph leg contains "Paragraph 23"; control: the page and paragraph legs unchanged. **Seen red:** by reading (`whereOf` has no arm for `extent_ref`); not rendered here.
+- **Owner:** `screens-inquiry`; the sentence is the design's if a part leg should read "In the footnote" rather than the ref as written.
+
+---
+
+## R18 · links-only `<div>` dropped; `<td><p>` cells flat (C8)
+
+R18 is **two observations**: (a) is the specified behaviour; (b) is a defect.
+
+### R18a · a `<div>` of only links is dropped: by design
+
+`bio-plane/src/reading-pipeline/html.mjs:344`-`:362` takes "a block of only links that is no list and holds none" as furniture; reading-pipeline **R51** ends: "a list, table or block holding one, of only links, is kept; **a bar of links is furniture**". The test pins it: `bio-plane/test/m/reading-pipeline/r10-html.test.mjs:58`: `<p>Body words here.</p><div><a href="/a">Facebook</a> <a href="/b">Twitter</a></div>` "a bar of links goes". I reproduced: a `<div>` of two anchors is dropped, and so is a `<p>` of anchors; the same two links as `<li>` items are kept (the walker's `<li><a>` list is kept). So the walker's STILL is a request to change R51, not a defect against it. **For BOB:** whether a bare `<div>` of links on a page with no navigation landmark is a "bar" (today: yes) is the design's; no job until R51 is amended.
+
+### R18b · a `<td><p>` cell splits the row into flat paragraphs
+
+- **Root cause.** `bio-plane/src/reading-pipeline/html.mjs:397`: in the text pass `if (D.block[nm]) { out.push("\n\n"); if (name === "tr" || name === "table") cells = 0; }` makes **every** block tag (including `p`, `div`, `li`) end a paragraph, with no regard to being inside a `td`/`th`; only `td`/`th` starts insert the tab (`:398`). A cell that holds its text in a `<p>` therefore breaks the row at each cell's `<p>`: one unit per cell. R51 says "a table keeps its rows and columns (a cell is not a paragraph)".
+- **Red** (real `read()`, `fresh()` fixture): plain `<table><tr><th>Street</th><th>Cost</th><th>Date</th></tr><tr><td>Oak Ave</td><td>3400</td><td>2026-02-11</td>...` → rows `"Oak Ave\t3400\t2026-02-11"`; the generator's table `{kind:"html", table:{rows:6, cols:3}}` (`<td><p>text</p></td>`) → **22 units = 4 body + 18 cells**, each cell its own unit, no row (the walker's 22 = 4 + 18).
+- **Why the tests missed it:** `r10-html.test.mjs:63` builds the table as `<td>r${r}c${c}</td>` (text direct in the cell) and the `<tr>` rows are asserted; no test puts a block inside a cell, which is what office-pasted and CMS tables do and what `docgen`'s table is.
+- **Failing-first test:** `reading-pipeline`, `bio-plane/test/m/reading-pipeline/r10-html.test.mjs`: `visibleTextOfHtml` of `<table><tr><td><p>a</p></td><td><p>b</p></td></tr></table>` equals the row `"a\tb"` as one paragraph; a `<td>` holding two `<p>`s keeps the row (cell text joined by a space or break inside the cell); the 500 x 20 table with `<p>` in each cell reads as 500 rows. **Seen red:** yes.
+- **Owner:** `reading-pipeline`. Requirement: R51 states the rule ("a cell is not a paragraph") but the closing sentence ("a table row is one paragraph, its cells told apart by a tab") is silent on a block inside a cell.
