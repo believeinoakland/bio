@@ -342,10 +342,15 @@ test("R14 NOT_MONITORED, NO_LOCATOR and MONITOR_SET_REFUSED are drawn by the she
   for (const [op, code] of [["monitor", "NOT_MONITORED"], ["monitorset", "NO_LOCATOR"], ["monitorset", "MONITOR_SET_REFUSED"]]) {
     const t = await team();
     serve(t.world);
-    /* NOT_MONITORED is the owner's own answer to a check of a document nobody set watching on (a real press). NO_LOCATOR and MONITOR_SET_REFUSED are the owner's
-       refusals of a document with no address and of a frequency the page never sends: no real press of this screen causes them, so each is the one scripted answer (a fault) */
-    const p = await at(t, "/app/capture", code === "NOT_MONITORED" ? {} : { [op]: refused(code, `Words for ${code}.`, 400, { field: "frequency" }) });
+    /* NOT_MONITORED is the owner's own answer to a check of a document nobody set watching on, and NO_LOCATOR to watching a document that came from a file (it has no
+       address): both real presses. MONITOR_SET_REFUSED is the owner's refusal of a frequency the page never sends: no real press causes it, so it is the one scripted
+       answer (a fault) */
+    const p = await at(t, "/app/capture", code === "MONITOR_SET_REFUSED" ? { [op]: refused(code, `Words for ${code}.`, 400, { field: "frequency" }) } : {});
     await capture(p);
+    if (code === "NO_LOCATOR") {
+      const file = await t.world.recipes.hold(t.mai, "A file", "some words\n");
+      fill(p, { "ci-address": `upload:${file.sha}` });
+    }
     const r = await press(p, op, { reason: "r" });
     const held = WORD_ROWS.find((w) => w[0] === `refusal.${code}`);
     const expected = held ? held[1].split("{")[0].trim() : `Words for ${code}.`;
