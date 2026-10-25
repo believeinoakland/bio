@@ -345,3 +345,13 @@ Size (session_01Q1BcrfRKSNQeK7397e6hvF): test runs 12, module lines 3679
 **Declarations.** op-grades owns no census op; no declaration changed. **Deferred / other modules.** Nothing.
 
 Size (session_014rNFkQLf1kdsYEby9XrVQi): test runs 560, module lines 3680
+
+## J27 · REPORT
+
+**REPORT (R53 wording, for BOB).** The line appended to R53 (fix round 6, G55) says `moneyingestread` is "a hand row in `NON_ACTS` with a "read: …" reason". The design's sentence for it (`calculations.declared.moneyingestread`, setup-words rows, DEC-424) does not lead with "read: " and ends "Changes nothing.", and calculations declares that same sentence. The grade row is right; only the prefix rule disagrees with the words.
+
+Options:
+- A (my recommendation): amend R53 to "the reason its owner declares for a read (K4168)". The tests now follow this: `ownerReads` finds a read by its owner's declared weight, and the NON_ACTS reason must equal the owner's sentence.
+- B: the design words the calculations sentence with a "read: " lead. The prefix test then stands as it was.
+
+I have not edited the requirement. Per the job rules I write only my paths, tests and record, so this decision is recorded here and not in `build/rulings.md`; please record it there.
