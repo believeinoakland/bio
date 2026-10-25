@@ -248,13 +248,22 @@ export class Themes {
              says: word("connections.says.theme_saying_judged", { target: String(tgt.target), state: String(state === "withdrawn" ? word("connections.says.longer_member") : word("connections.says.longer_proposed")), name: String(T.name.slice(0, 80)), who: String(this.#name(who, administer)), state_2: String(state) }) };
   }
 
+  /** R44: a passage's extent (content's canonical extent of its id) and, where the extent has one, its page from 0.
+   *  A whole-document placement carries neither. */
+  #passage(r) {
+    if (r.target_kind !== "content") return {};
+    const c = this.#one(`SELECT extent FROM content WHERE content_id = ?`, r.target);
+    const extent = c ? JSON.parse(c.extent) : null;
+    return Number.isInteger(extent?.page) ? { extent, page: extent.page } : { extent };
+  }
+
   /** R44: one standing placement as this reader is shown it. `membership` is true for `member` alone. */
   view(r, administer) {
     return { target: r.target, target_kind: r.target_kind, document: r.bundle_id,
              state: r.state, membership: r.state === "member", hunch: r.state === "hunch", grade: r.grade,
              ...this.person("placed_by", r.placed_by, administer), placed_at: r.placed_at, note: r.placement_note,
              ...this.person("proposed_by", r.proposed_by, administer), proposed_at: r.proposed_at,
-             proposal_note: r.proposal_note };
+             proposal_note: r.proposal_note, ...this.#passage(r) };
   }
 
   /** R43: a placement taken back: neither membership nor a hunch, with who, when and why, and the acts before it. */
@@ -263,7 +272,7 @@ export class Themes {
              membership: false, hunch: false, grade: r.grade,
              ...this.person("placed_by", r.placed_by, administer), placed_at: r.placed_at, note: r.placement_note,
              ...this.person("proposed_by", r.proposed_by, administer), proposed_at: r.proposed_at,
-             proposal_note: r.proposal_note,
+             proposal_note: r.proposal_note, ...this.#passage(r),
              ...this.person("ended_by", r.ended_by, administer), ended_at: r.ended_at, reason: r.reason };
   }
 

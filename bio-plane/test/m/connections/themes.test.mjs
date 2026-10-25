@@ -153,6 +153,26 @@ test("R44: one theme — C-81.6 for an unknown id or viewer; members and hunches
   assert.equal(hid.says, word("connections.says.member_declared_lens", { members: "1", hunches: String(hid.hunches.length) }));
 });
 
+test("R44: a placement on a passage carries its extent and, where the extent has one, its page from 0; a whole-document placement carries neither", () => {
+  const { w, a, t } = setup();
+  const cid = w.mint(A, a, { kind: "pdf-page", page: 1 });
+  w.k.placeInTheme({ theme: t.theme_id, target: cid, placer: "bob", viewer: V("bob") });
+  w.k.placeInTheme({ theme: t.theme_id, target: B, placer: "bob", viewer: V("bob") });
+  const r = w.k.readThemes({ id: t.theme_id, viewer: V("bob") });
+  const passage = r.members.find((m) => m.target === cid);
+  assert.equal(passage.target_kind, "content");
+  assert.equal(passage.page, 1, "the extent's page, counted from 0");
+  assert.equal(passage.extent.kind, "pdf-page");
+  assert.equal(passage.extent.page, 1);
+  const whole = r.members.find((m) => m.target === B);
+  assert.equal(whole.target_kind, "document");
+  assert.equal(Object.hasOwn(whole, "page"), false, "a whole-document placement carries no page");
+  assert.equal(Object.hasOwn(whole, "extent"), false, "a whole-document placement carries no extent");
+  w.k.withdrawFromTheme({ theme: t.theme_id, target: cid, reason: "moved", actor: "bob", viewer: V("bob") });
+  const gone = w.k.readThemes({ id: t.theme_id, viewer: V("bob") }).withdrawn.find((m) => m.target === cid);
+  assert.equal(gone.page, 1, "a placement taken back keeps its view, page included");
+});
+
 test("R45: every reading and says shows the handle, never the member id or cover, except with the affirmative administer stamp; a machine is itself", () => {
   const { w, t } = setup();
   w.k.placeInTheme({ theme: t.theme_id, target: A, placer: "bob", viewer: V("bob") });
