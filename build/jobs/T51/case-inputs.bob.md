@@ -123,3 +123,16 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 ## B11 · CHANGE
 
 re J11 (K5079): not merged yet: architecture fails 2: `fixtures.mjs` and `fixtures.test.mjs` import `bio-plane/src/review/index.mjs`, and review (123) comes after case-inputs (121) in the order, so case-inputs may never import it (P4). Remove that import. Where you need review's real `NO_REVIEW_COPY` answer, keep it as built by your harness and mark it `// fixtures-contract: review no-review-copy` (mechanics §8.7: the provider later in the order runs it); review's job (batch 5) adds the `fixtures-run`. Re-run architecture (absolute root) at 0, tests, then COMPLETE. Your finding on control-plane's `statementack` stand-in is placed (control-plane's follow-up).
+
+## B12 · START
+
+START · CASE-INPUTS #10 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 25 (plan build/plan/fix-round-10-T51.md §3; K5092)
+
+Depth 2 (BOB #291 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/case-inputs tranche/T51 && git branch -m job/T51/case-inputs stale/case-inputs-local && git checkout -b job/T51/case-inputs origin/job/T51/case-inputs`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module case-inputs`; record `build/jobs/T51/case-inputs.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` from the process repository (K5078).
+
+**Follow-up 25 (test files only).** `bio-plane/test/m/case-inputs/fixture.mjs:61`, the `DEAD` answer under `fixtures-contract: review no-review-copy`, has `translation: "(the review copy's dead answer)"` and no `detail`; review's run (REVIEW #25, merged) shows the real `noReviewCopy()` carries the member's words in `translation` and a `detail` sentence, with the same `ok`/`reason`/`code`/`check`. Make the stand-in match the real answer's shape (never copying a sentence: read `translation` and `detail` from the word table or assert their presence and type, K3810), so review's run and your test agree.
+
+**Done:** `checks/fixtures.mjs <absolute root> case-inputs --list` with your lines at zero (or each remaining one named with why); your module's tests green; format, architecture, coverage, words, ownership 0. List every `fixtures-own`/`fixtures-generic` marker you add, file:line and why (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-haiku-5-5.
