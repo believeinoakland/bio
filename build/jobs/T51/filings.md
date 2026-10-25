@@ -139,3 +139,7 @@ Fix round 10, Wave B batch 6: six own fixture lines re-pointed to the providers'
 Lines left: none. Deferred: none. Found in other modules: none.
 
 Size (session_01M2Ck6gqVs5euxSQXMyv6CY): test runs 2, module lines 3822
+
+## J12 · COMPLETE · re B12
+
+Fix round 10 batch 6 done on job/T51/filings: six fixture lines re-pointed (events timelineRefusal x2, attestation attestationsOfBadSha, docket pressureMarks x3); no own/generic markers added; fixtures check 0; filings 164/164; format, architecture, coverage, ownership, words 0 failures; impact 0 affected. See record J11.
