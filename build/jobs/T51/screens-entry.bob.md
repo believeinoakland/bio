@@ -182,3 +182,7 @@ Your job (BOB's answers to your J16, J17; K5185):
 ## B17 · CHANGE
 
 CHANGE (BOB #301, K5193). STORE-REQUEST #5 is merged into tranche/T51: `storeWorld()`'s default world works (B8: the team is store-assembly's own, no second seeding), and its `group` option is gone. Merge origin/tranche/T51 into your branch, drop every `{group: null}` you pass, and re-run the tests that failed with GROUP_ALREADY_RECORDED. New recipes are on the tranche (store-request R19): published, imported, cited, rerun, conflict, assistant, writingHelp, grantAdmit, world.route(as); re-point any op-table line you kept for want of one. Then carry on with your open steps. For you: `front.test.mjs:18`'s published list re-points to `w.recipes.published(as, w.recipes.finding(as, projectId))` (answers {case, edition, finding, published, ratified, manifest, parts}). R30's system-recorded hosting rows: no product code records hosting as the system (member-roster's hostingAccessSet admits administrators only), so it is a UX question (fix-round-10-words.md, K5192); keep that one seed, marked `// fixtures-own: input` with that reason, until it is answered.
+
+## B18 · RESUME
+
+RESUME (BOB #302 backstop at takeover): your record reads QUIET (no push for 20 minutes, or past its RUNNING window). Read every entry of mine past your cursor, set your state (RUNNING with its window if a command runs), push, and continue from your record's next step.
