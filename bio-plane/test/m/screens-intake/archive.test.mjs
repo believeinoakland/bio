@@ -14,7 +14,7 @@ const ENTRIES = [
   E(3, "already_held", { name: "03_Resolution.pdf", sha256: "c".repeat(64) }),
   E(4, "folder", { name: "04_Attachments/", kind: "folder" }),
   E(5, "filed", { name: "04_Attachments/Exhibit A.pdf", sha256: "d".repeat(64), bundle: "INFO-2026-0013-exhibit" }),
-  E(6, "not_filed", { name: "07_Closed session minutes.pdf", code: "ZIP_ENCRYPTED", check: "C-1", translation: "The archive locks this file with a password." }),
+  E(6, "not_filed", { name: "07_Closed session minutes.pdf", code: "MEMBER_ENCRYPTED", check: "C-139.5", translation: word("refusal.MEMBER_ENCRYPTED") }),
   E(7, "filed", { name: "../../etc/passwd", path_unsafe: true, sha256: "e".repeat(64), bundle: null }),
 ];
 const ARCHIVE = { sha256: SHA, bundle: "INFO-2026-0010-packet", grade: { grade: "B", route: "direct", determined: true, basis: null },
@@ -50,7 +50,7 @@ test("R15 an archive that opened: its grade, summary, and each entry by state, e
   assert.ok(main(p).querySelector(`a.cs-ref[href="/app/open-file/${"c".repeat(64)}"]`));
   /* not filed: refused, with its reason */
   assert.ok(main(p).querySelector('[data-gap="refused"]'));
-  assert.match(t, /The archive locks this file with a password\./);
+  assert.ok(t.includes(word("refusal.MEMBER_ENCRYPTED")), "the entry's reason, the owner's own words");
   /* a folder with its files */
   assert.ok(t.includes(word("screen.archive.folder", { count: 1 })));
   /* a name is drawn as data, never trusted: escaped text, and a filed entry the viewer may not see is not picked */

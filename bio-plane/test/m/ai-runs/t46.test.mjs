@@ -350,7 +350,7 @@ test("R18 (T46): the wake still withholds a member's own sign-in run as MEMBER_P
   assert.equal(aw.calls.length, 0);
   assert.equal(runCreds(w).length, 0, "the wake mints nothing");
   // fixtures-contract: agent-worker dispatch-refusal
-  for (const answer of [{ status: 400, body: { ok: false, reason: "BAD_BODY", code: "BAD_BODY", detail: "d" } }, "throw"]) {
+  for (const answer of [{ status: 400, body: { ok: false, reason: "BAD_BODY", code: "BAD_BODY", worker: "agent-worker", detail: "d" } }, "throw"]) {
     const x = await memberWorld(agentWorker(answer));
     const r = await x.w.runs.dispatchMemberRun({ run: "R1", by: "member:ann" });
     assert.deepEqual([r.dispatched, r.dispatch.state], [false, answer === "throw" ? "SILENT" : "REFUSED"]);

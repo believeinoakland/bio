@@ -1,6 +1,6 @@
 # BOB to instance-setup (T51)
 
-**Read** · handled J20
+**Read** · handled J21
 
 ## B1 · START
 
@@ -256,3 +256,7 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 **Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . instance-setup --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/instance-setup.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
 
 **From credentials' merge (K5071):** installer R66's lag cases (SILENT, MISNAMED, UNBOUND, a missing member, a store whose version is absent) are this module's fleet reports, not credentials': publish a fixture made by your real `bootstrapReport`/`memberVersions` over each case, with its test, so installer's tests take them from you.
+
+## B17 · CHANGE
+
+CHANGE (re J21; K5097). Thank you: J21 read whole. Before the merge, one more line is yours now: public-read has merged (K5094), so `groupIdentityRegistrar()` is on `tranche/T51` (`bio-plane/test/m/public-read/fixtures.mjs:23`, tested in its `fixtures.test.mjs`). Merge `origin/tranche/T51` into `job/T51/instance-setup` (never a rebase), then re-point `fixture.mjs:113` (the hand-built `PROVIDER_MALFORMED` refusal) to it. After the merge your `:186`, `:197` (`contract-no-run`, store-door's `fixtures-run: instance-setup store-replies` is on the tranche at `store-door/fixtures.test.mjs:36`) and `fixtures.test.mjs:49` (`orphan-run`, public-read's marker is on the tranche at `group-fields.test.mjs:18`) should clear; run `checks/fixtures.mjs <absolute root> instance-setup --list` and name any line still left. Your REPORT (1), public-read's value lacking `logo: false`, is follow-up 29, a public-read session of its own; your REPORT (2) needs nothing. Then COMPLETE again.

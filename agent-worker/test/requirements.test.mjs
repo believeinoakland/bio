@@ -34,6 +34,10 @@ import { versionReadBranches } from "../../agent-steps/test/plane-versions.mjs";
 import { PLANE_OPS_PINNED } from "./owners.mjs";
 import { suggestBranch } from "../../agent-steps/test/plane-suggest.mjs";
 import { captureRequestBranch } from "../../agent-steps/test/plane-capturerequest.mjs";
+import { meaningRowsUnknownArm } from "../../bio-plane/test/m/retrieval/fixtures.mjs";
+import { versionChainNoSuchVersion } from "../../bio-plane/test/m/provenance/fixtures.mjs";
+import { tickStateTooLarge } from "../../bio-plane/test/m/ai-runs/fixtures.mjs";
+import { suggestRefusals } from "../../bio-plane/test/m/run-productions/fixtures.mjs";
 
 /* THE PLANE'S OWN VOCABULARIES AND THE SKILL PACK, from their modules (uses: ai-runs, skills, legacy-checks). */
 import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_ENDINGS, RUN_BOUNDS, runStatusFor } from "../../bio-plane/src/run-rules/index.mjs";
@@ -779,7 +783,7 @@ section("R19 · collect: every report held to agent-harness R5; each cited addre
     citations: Array.from({ length: 20 }, (_, i) => ({ address: `bundle:${i}` })) },
     { level: "content", state: "PRESENT", observed_at: "log:2", citations: [{ address: "bundle:extra" }] }]) });
   t("R19: at most 20 addresses are re-read", many.out.citations_reread, 20);
-  await reset(mf, { refuse_op: { meaningrows: { body: { ok: true, result: { ok: false, reason: "MEANING_ROWS_UNKNOWN_ARM", check: "C-23.2" } } } } });
+  await reset(mf, { refuse_op: { meaningrows: { body: { ok: true, result: await meaningRowsUnknownArm() } } } });
   const refused = await runOp(mf, { ...base, judgements: J([reports[0]]) });
   t("R19: a read that did not answer is not counted", refused.out.citations_reread, 0);
 }
@@ -829,6 +833,7 @@ section("R21 · collect, holdings: each citation resolved to its document by add
     [['id:"https://example.org/cal"', 'id:"bundle:x"'], ["https://example.org/cal", "bundle:x"]]);
   t("R21: an item with no chain counts as itself", [r.out.holdings?.documents, r.out.holdings?.unchained], [0, 2]);
   /* N458 (K899 (1)): the reason a member reads for a cited record that names no source address says "record". */
+  // fixtures-contract: control-plane ask-wire
   await reset(mf, { refuse_op: { search: { body: { ok: true, result: { hits: [{ bundle_id: "bundle:x" }] } } } } });
   const noSource = await runOp(mf, { ...base, judgements: J([{ level: "document", state: "PRESENT", observed_at: "log:1",
     citations: [{ address: "bundle:x" }] }]) });
@@ -843,11 +848,12 @@ section("R21 · collect, holdings: each citation resolved to its document by add
   ]);
   t("R21: holdings count each document once by the record's address_norm (two citations of one calendar are one document)",
     [h.documents, h.by_document.map((d) => [d.address_norm, d.versions_cited.length])], [2, [["x/cal", 2], ["y/cal", 1]]]);
-  await reset(mf, { refuse_op: { versionchain: { body: { ok: true, result: { ok: false, reason: "VERSION_CHAIN_REFUSED", check: "C-0" } } } } });
+  // fixtures-contract: control-plane ask-wire (the door's envelope; the result in it is provenance's real answer)
+  await reset(mf, { refuse_op: { versionchain: { body: { ok: true, result: await versionChainNoSuchVersion() } } } });
   const u = await runOp(mf, { ...base, judgements: J([{ level: "document", state: "PRESENT", observed_at: "log:1",
     citations: [{ address: "https://example.org/cal" }] }]) });
   t("R21: a refused read leaves that citation's document UNDETERMINED, and published",
-    [u.out.holdings?.undetermined, u.out.holdings?.documents, (u.out.refusals || []).some((x) => x.code === "VERSION_CHAIN_REFUSED")],
+    [u.out.holdings?.undetermined, u.out.holdings?.documents, (u.out.refusals || []).some((x) => x.code === "VERSION_CHAIN_NO_SUCH_VERSION")],
     [1, 0, true]);
 }
 
@@ -871,7 +877,7 @@ section("R22 · compose: one meaning read; its note never a false zero; level-em
   t("R22: its description is composed from those facts alone; the report's summary is not appended (agent-harness R14)",
     [/documents level of this question/.test(le.description ?? "") && !/INQ-R22/.test(le.description ?? ""), /at log:3/.test(le.description ?? ""),
      /The sub-session reported/.test(le.description ?? "") || /nothing in the packets/.test(le.description ?? "")], [true, true, false]);
-  await reset(mf, { refuse_op: { meaningrows: { body: { ok: true, result: { ok: false, reason: "MEANING_ROWS_UNKNOWN_ARM", check: "C-23.2" } } } } });
+  await reset(mf, { refuse_op: { meaningrows: { body: { ok: true, result: await meaningRowsUnknownArm() } } } });
   const refused = await runOp(mf, { ...base, judgements: J() });
   t("R22: a refused read -> the note says the meaning layer was NOT READ, never zero",
     [/NOT READ/.test(refused.out.trace?.find((x) => x.step === "compose")?.note ?? ""),
@@ -1029,8 +1035,7 @@ section("R49 · the state a tick publishes stays within ai-runs' AI_RUN_STATE_MA
   }
 
   /* A tick refused AI_RUN_STATE_TOO_LARGE is a refusal, recorded, and never the plane failing. */
-  const refusedTick = { ok: true, result: { ok: false, code: "AI_RUN_STATE_TOO_LARGE", reason: "AI_RUN_STATE_TOO_LARGE",
-                                            check: "C-22.18", bytes: 300000, limit: LIMIT } };
+  const refusedTick = { ok: true, result: (await tickStateTooLarge()).answer };
   await reset(mf, { refuse_op: { airuntick: { body: refusedTick } } });
   const r = await runOp(mf, { ...base, judgements: J() });
   const at = (r.out.refusals || []).filter((x) => x.at === "airuntick");
@@ -1425,9 +1430,9 @@ section("R43 · a refusal reaching the member is never reworded");
     translation: "This agent credential has been withdrawn by a member of the group, so it no longer reaches anything here." };
   await reset(mf);
   t("R43 (R8): the plane's refusal body passed through whole", (await runOp(mf, { ...base, credential: REVOKED })).out.plane, plane);
-  const inner = { ok: false, reason: "SUGGEST_UNWRITABLE_STATE" };
+  const inner = suggestRefusals().unwritableState;
   for (const op of ["airun", "airunlog", "airunspawn", "basisversions", "suggest", "airuntick", "airunclose"]) {
-    const body = { ok: true, result: { ...inner, check: "C-27.13", translation: `the plane's own words for ${op}` } };
+    const body = { ok: true, result: inner };
     await reset(mf, { target: "INQ-R43", refuse_op: { [op]: { body } } });
     const r = await runOp(mf, { ...base, judgements: J([], [{ kind: "basis-version", name: "v", description: "a reading in full" }]) });
     const carried = [r.out.plane, ...(r.out.refusals || []).map((x) => x.plane)].filter(Boolean);

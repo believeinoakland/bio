@@ -12,6 +12,7 @@ import { CASE_DISCLOSURE_CHECKS, ACCOUNT_ARMS, checkerCited } from "../../../src
 import { INQUIRY_BIAS_CHECKS } from "../../../src/inquiry/checks.mjs";
 import { CASE_DOCUMENT_FORMAT, accountLines, accountOf, biasApplicationsLines, biasApplicationsOf } from "../../../src/case-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { checkAccountMalformed } from "../case-checker/fixtures.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q", Q3 = "INQ-2026-0003-q";
@@ -100,7 +101,7 @@ test("R30 (ACCOUNT_CHECK_UNDETERMINED): a check that cannot be run — no checkA
   const answers = {
     "no checkAccount": null,
     throws: () => { throw new Error("down"); },
-    refuses: () => ({ ok: false, reason: "ACCOUNT_MALFORMED", field: "account" }),
+    refuses: () => checkAccountMalformed(),
     "another shape": () => ({ ok: true }),
     "an unknown code": () => ({ ok: true, departures: [{ ord: 1, code: "ANSWER_CITES_UNREAD" }] }),
     "an unknown sentence": () => ({ ok: true, departures: [{ ord: 99, code: "ACCOUNT_SENTENCE_UNSUPPORTED" }] }),

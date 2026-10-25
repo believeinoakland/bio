@@ -19,8 +19,11 @@ import { word } from "../../../src/setup-words/index.mjs";
 import * as publicationWorker from "../../../src/publication/worker.mjs";
 import { publicationOps } from "../../../src/publication/index.mjs";
 import { publicReadOf, publicReadOps } from "../../../src/public-read/index.mjs";
+import { assembleCaseContainerRefusal } from "../public-read/fixtures.mjs";
 
 const { caseConclusionRowLines, CASEFILE_SWEEP_FILES, CASEFILE_SWEEP_BYTES } = ratification;
+/* public-read's refusal of the case-file assembly for an edition with a finding's bytes absent, from its published fixture */
+const { notAssembled: NOT_ASSEMBLED } = await assembleCaseContainerRefusal();
 const OWN = { version: "first", claim: "the transfer was authorised", falsifier: "an adopted resolution forbidding it",
               falsifier_override: null, by: "member:iris", at: "2026-09-27T10:00:00Z" };
 const as = (who) => ({ session: { role: `member:${who}` }, viewer: V(who) });
@@ -423,7 +426,7 @@ async function boundsHouse({ extra, absent }) {
     steer: { caseFilesOwed: (a) => holder.L.owed(a), caseFileNextAt: () => holder.L.nextAt(), recordCaseFileAttempt: (a) => holder.L.record(a) } });
   holder.L = standLedger(s.w);
   const editions = [await s.lay(1), await s.lay(1)];
-  for (const e of editions) assert.equal((await s.act(caseRatifyOp, e.sitting, (p) => { p.ctx.assembleCaseContainer = async () => ({ ok: false, reason: "CASE_FILE_NOT_ASSEMBLED" }); })).status, 200);
+  for (const e of editions) assert.equal((await s.act(caseRatifyOp, e.sitting, (p) => { p.ctx.assembleCaseContainer = async () => NOT_ASSEMBLED; })).status, 200);
   for (const e of editions) assert.equal(s.w.realPub.caseEditionState(e.caseId, 1).complete, true);
   const [A] = editions, syn = new Map(), findings = [];
   for (let i = 1; i <= extra; i++) {

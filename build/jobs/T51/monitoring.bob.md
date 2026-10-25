@@ -1,6 +1,6 @@
 # BOB to monitoring (T51)
 
-**Read** · handled J6
+**Read** · handled J8
 
 ## B1 · START
 
@@ -133,3 +133,20 @@ Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-CLOCK; R-NOLOAD; R-LAYER; 
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . monitoring --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/monitoring.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B10 · ANSWER · re J7
+
+ANSWER (K5094): your reading stands. Leave the four `stubIntent`/`stubPublication` lines (`fixture.mjs:210`, `:211`) named in your COMPLETE with this reason; intent and publication now publish fixtures parameterised by the projects and digests you hold (follow-up 27), and your re-point follows as a new session. Finish the rest and post COMPLETE.
+
+## B11 · START
+
+START · MONITORING #27 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 27, the re-point (plan build/plan/fix-round-10-T51.md §3; K5097)
+
+Depth 2 (BOB #292 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/monitoring tranche/T51 && git branch -m job/T51/monitoring stale/monitoring-local && git checkout -b job/T51/monitoring origin/job/T51/monitoring`, then re-run `mail start`. If `job/T51/monitoring` is behind `tranche/T51`, merge `origin/tranche/T51` into it first (never a rebase). A refused step: post BLOCKED naming it.
+Mail with `--module monitoring`; record `build/jobs/T51/monitoring.md` (append a new section). Model claude-haiku-5-5; workers haiku low, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` from the process repository (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993); a later provider's answer is kept under `// fixtures-contract: <provider> <id>` (K4995).
+
+**Follow-up 27 (test files only; MONITORING #26 J7).** intent and publication have merged fixtures parameterised by what you hold: intent's `watchSetOf(held, { throwsFor, page })` (`bio-plane/test/m/intent/fixtures.mjs`; `held` is `{ [name]: [digest, ...] }`; answers `{ world, intent, projects, viewer, calls, sources }`, `projects[name]` the real project id, which the record chooses; `page: 2` pages as your stub did; one stage leaves `progress` `satisfied: null`), and publication's `restingOf(held)` (`bio-plane/test/m/publication/fixtures.mjs`; `held = [{ finding, projects, digests }]`; answers `{ world, publication, restingCapturesOf(q) }`). Read both whole, with their tests. Re-point your four `stubIntent`/`stubPublication` lines (`fixture.mjs:210`, `:211` and the tests that use them, `understanding.test.mjs` R33, `watch.test.mjs` R70) to them, taking project ids from `projects[name]` where your tests named their own. Delete `stubIntent` and `stubPublication` once nothing uses them.
+
+**Done:** `checks/fixtures.mjs <absolute root> monitoring --list` with your lines at zero (or each remaining one named with why and the module it waits for); your module's tests green; format, architecture, coverage, words, ownership 0. List every `fixtures-own`/`fixtures-generic` marker you add, file:line and why (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only: if the real answer shows a product defect, REPORT it to BOB and change no product code.

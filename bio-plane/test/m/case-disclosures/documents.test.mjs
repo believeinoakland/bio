@@ -15,6 +15,8 @@ import { COPY_CLEANED_LABEL, OBSCURED_LABEL } from "../../../src/case-carriage/i
 import { CLEAN_REFUSALS as DOC_CLEAN_REFUSALS } from "../../../src/doc-clean/index.mjs";
 import { CASE_DOCUMENT_FORMAT, materialBlockLines, materialsOf } from "../../../src/case-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { copyReadStates } from "../case-carriage/fixtures.mjs";
+import { encryptedRefusal } from "../doc-clean/fixtures.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-0003-c", DOC4 = "INFO-2026-0004-d";
 const DOC5 = "INFO-2026-0005-e";
@@ -148,12 +150,12 @@ test("R6 (refused): a member document doc-clean refused, for every code it refus
   }
 });
 
-test("R6 (undetermined): a document whose copy state cannot be read — a read that throws, refuses or answers nothing, case-carriage's own undetermined, an unknown state, copy with no SHA-256, refused with no code, or photo for a document whose marks say it is none — is refused DOCUMENT_COPY_UNDETERMINED, naming it, whichever chain reaches it, held whole or not; it fails closed: it is never included; it writes nothing", () => {
+test("R6 (undetermined): a document whose copy state cannot be read — a read that throws or answers nothing, case-carriage's own undetermined, an unknown state, copy with no SHA-256, refused with no code, or photo for a document whose marks say it is none — is refused DOCUMENT_COPY_UNDETERMINED, naming it, whichever chain reaches it, held whole or not; it fails closed: it is never included; it writes nothing", async () => {
+  const states = await copyReadStates();
   const reads = {
     throws: () => { throw new Error("down"); },
-    refuses: () => ({ ok: false, reason: "NO_SUCH_CAPTURE" }),
     nothing: () => null,
-    "case-carriage's undetermined": () => ({ state: "undetermined", copy: null, refused: null }),
+    "case-carriage's undetermined": () => states.undetermined.answer,
     "an unknown state": () => ({ state: "scrubbed", copy: null, refused: null }),
     "copy with no digest": () => ({ state: "copy", copy: "x", refused: null }),
     "copy with none": () => ({ state: "copy", copy: null, refused: null }),
@@ -292,7 +294,7 @@ test("R6, R7 over the real case-carriage (its R15, R16): a member document (no r
   const enc = w.doc(DOC3, {}, { text: "an encrypted file" });
   w.finding(Q2, [{ target: DOC3 }]);
   assert.deepEqual(judged(w, [Q2]).refusals.map((x) => x.reason), ["DOCUMENT_COPY_PENDING"], "queued by the read");
-  w.clean.answer = () => ({ ok: false, code: "ENCRYPTED", detail: "the file is encrypted" });
+  w.clean.answer = () => encryptedRefusal();
   await w.carriage.copyBatch({});
   r = judged(w, [Q2]);
   assert.deepEqual(r.refusals.map((x) => x.reason), ["DOCUMENT_NOT_CLEANABLE"]);

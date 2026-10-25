@@ -1,6 +1,6 @@
 # BOB to intent (T51)
 
-**Read** · handled J3
+**Read** · handled J5
 
 ## B1 · START
 
@@ -57,3 +57,16 @@ Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . intent --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/intent.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B4 · START
+
+START · INTENT #18 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 27 (plan build/plan/fix-round-10-T51.md §3; K5094)
+
+Depth 2 (BOB #291 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/intent tranche/T51 && git branch -m job/T51/intent stale/intent-local && git checkout -b job/T51/intent origin/job/T51/intent`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module intent`; record `build/jobs/T51/intent.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` from the process repository (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993); a later provider's answer is kept under `// fixtures-contract: <provider> <id>` (K4995).
+
+**Follow-up 27 (test files only; MONITORING #26 J7).** monitoring's tests (`understanding.test.mjs` R33, `watch.test.mjs` R70) state per project which capture digests its objective rests on, over documents monitoring's own world holds; your published `intentWorld()` builds one project with digests of its own making, so it cannot stand for them. Publish in `bio-plane/test/m/intent/fixtures.mjs` a fixture parameterised by what the user holds, for example `watchSetOf({[project]: [digest, ...]}, {throwsFor, gaps, progress})`: a real intent whose projects' conditions read exactly those digests, made by real acts over your real code (never a stored answer), answering `watchSet`, `registerSource`, `gaps` and `progress` as the real module does, a project's `watchSet` throwing when asked to. Test it in `fixtures.test.mjs` against the real module. Name the fixture and its signature in your COMPLETE: monitoring re-points to it with publication's twin (follow-up 27).
+
+**Done:** `checks/fixtures.mjs <absolute root> intent --list` with your lines at zero (or each remaining one named with why); your module's tests green, and the tests of every module `build/plan/impact.mjs` names when you change product code; format, architecture, coverage, words, ownership 0. List every `fixtures-own`/`fixtures-generic` marker you add, file:line and why (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5.

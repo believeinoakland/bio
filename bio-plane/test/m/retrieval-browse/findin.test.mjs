@@ -403,3 +403,20 @@ test("R21 (R17a, fix round 10, G3; retrieval R95) a term hit names the part it l
   assert.deepEqual(partOf("ordinance"), [["term", "body"]]);
   assert.deepEqual(partOf("quokka"), [["term", null]], "a unit stored before the kind is undetermined, never read as body");
 });
+
+// fixtures-run: screens-daily findin-term-part
+test("R21, R17a (fix round 10, follow-up 22) a find over a held document whose term hit lies in a footnote part answers a term item carrying that part, as screens-daily draws it", () => {
+  const w = find();
+  const c = w.cap("memo.docx", "m");
+  w.doc("INFO-M", {}, { captures: [c] });
+  w.read(c, "INFO-M");
+  w.unit(c.sha, "INFO-M", 0, "The levy is set out in the notes.", { kind: "doc-para", paragraph: 1 }, "body");
+  w.unit(c.sha, "INFO-M", 1, "The notes state the zebra levy was $5,000.", { kind: "doc-part", part: "word/footnotes.xml", ref: "footnote 2" }, "footnote");
+  const answer = run(w, { scope: { capture: c.sha }, kinds: ["term"], term: "zebra" });
+  assert.equal(answer.ok, true);
+  const items = kindOf(answer, "term").items;
+  assert.equal(items.length, 1, "one hit: the term sits once, in the footnote");
+  assert.equal(items[0].kind, "term");
+  assert.equal(items[0].part, "footnote", "the hit names the part it lies in (R21)");
+  assert.equal(items[0].term, "zebra");
+});

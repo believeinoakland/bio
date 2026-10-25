@@ -59,6 +59,7 @@ for (const step of Object.keys(STEPS)) {
 test("E9 (R3, R4): the same on request (an action): an invited member drafts nothing; a joined one, an administrator who is no participant, and a member whose place was not read are offered the steps as before", async () => {
   told(await open(REQUEST, stepPlane("invited", "prepare")), "request/prepare");
   told(await open(REQUEST, stepPlane("invited", "send")), "request/send");
+  // fixtures-generic: BAD (a roster read that fails, whatever its code)
   for (const [label, plane] of [["joined", stepPlane("joined", "prepare")], ["no participant", stepPlane(null, "prepare")],
     ["place unread", { ...stepPlane("joined", "prepare"), projectlist: () => ({ ok: false, reason: "BAD" }) }], ["no row", { ...stepPlane("joined", "prepare"), projectlist: ok({ ...ROSTER, projects: [] }) }]]) {
     const member = await open(REQUEST, plane);

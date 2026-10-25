@@ -9,6 +9,7 @@ import { world, storage, V, T0 } from "./fixture.mjs";
 import * as CD from "../../../src/case-disclosures/index.mjs";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { word, localize } from "../../../src/setup-words/index.mjs";
+import { checkAccountMalformed } from "../case-checker/fixtures.mjs";
 
 const { CASE_DISCLOSURE_CHECKS, caseDisclosuresOf } = CD;
 const Q = "INQ-2026-0001-q", DOC = "INFO-2026-0001-a";
@@ -155,7 +156,7 @@ test("R22: each row's method raises its code, with the row's check and translati
   }
   assert.deepEqual(raised(acct([], [{ kind: "account_check", ord: 1, text: "The council met.", cites: ["h1"] }]).refusals), [row("ACCOUNT_FLAG_UNANSWERED")]);
   assert.deepEqual(acct([], [{ kind: "account_check", ord: 1, text: "The council met.", cites: [] }]).refusals, [], "tied to evidence");
-  const un = world({ deps: { caseChecker: { checkAccount: () => ({ ok: false, reason: "ACCOUNT_MALFORMED" }) } } }).cd;
+  const un = world({ deps: { caseChecker: { checkAccount: () => checkAccountMalformed() } } }).cd;
   assert.deepEqual(raised(un.accountJudged({ account: S, cited: {} }).refusals), [row("ACCOUNT_CHECK_UNDETERMINED")]);
 });
 

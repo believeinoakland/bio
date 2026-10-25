@@ -9,6 +9,7 @@ import { world, V } from "./fixture.mjs";
 import { CASE_DISCLOSURE_CHECKS, FLAG_SENTENCE, FLAGS_SAY, acceptedBodyLines, acceptedWorkRow, flagsListed } from "../../../src/case-disclosures/index.mjs";
 import { CASE_DOCUMENT_FORMAT, acceptedWorkBlockLines, acceptedWorkOf, pairLine } from "../../../src/case-grammar/index.mjs";
 import { caseFile, SOURCE, CASE } from "../case-import/fixture.mjs";
+import { openFlagsUnread } from "../case-import/fixtures.mjs";
 import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q";
@@ -83,7 +84,8 @@ test("R13, R14 (N535): each member's words in the section — an acceptance's re
   for (const l of [...line(row("x.", "y."), [flag("z.", "w.")])]) assert.equal(/\.\./.test(l), false, l);
 });
 
-test("R13 (C-120.10): a leg with no acceptance in force — withdrawn, or a read that fails or throws — is ACCEPTED_WORK_NOT_IN_FORCE, naming the member, the leg and the source case and edition; it writes nothing", () => {
+test("R13 (C-120.10): a leg with no acceptance in force — withdrawn, or a read that fails or throws — is ACCEPTED_WORK_NOT_IN_FORCE, naming the member, the leg and the source case and edition; it writes nothing", async () => {
+  const unread = await openFlagsUnread();
   const { w, ref, refs } = onTheirs();
   w.imports.withdraw(IMP, 2, THEIRS);
   const before = w.snapshot();
@@ -96,7 +98,7 @@ test("R13 (C-120.10): a leg with no acceptance in force — withdrawn, or a read
   assert.deepEqual(w.cd.acceptedWorkJudged(refs, V("alice")).refusals, [], "accepted again");
   /* a read that fails closed */
   for (const caseImport of [{ acceptanceOf: () => { throw new Error("down"); }, importedCase: () => { throw new Error("down"); } },
-                            { acceptanceOf: () => ({ ok: false, reason: "NO" }), importedCase: () => null }]) {
+                            { acceptanceOf: () => unread.acceptance, importedCase: () => null }]) {
     const x = world({ deps: { caseImport } });
     const r = x.cd.acceptedWorkJudged([{ member: Q, leg_of: Q, ord: 1, ref }], V("alice"));
     refused(r.refusals[0], "ACCEPTED_WORK_NOT_IN_FORCE");
@@ -104,7 +106,8 @@ test("R13 (C-120.10): a leg with no acceptance in force — withdrawn, or a read
   }
 });
 
-test("R14 (C-120.11–C-120.13): an open flag is FLAG_NOT_DISCLOSED until listed; a listed flag not open FLAG_DISCLOSURE_NOT_STANDING, after it; a failed or incomplete read FLAGS_UNDETERMINED, alone; a malformed list BAD_COMPLETENESS naming the field, alone; never refused because a flag is open", () => {
+test("R14 (C-120.11–C-120.13): an open flag is FLAG_NOT_DISCLOSED until listed; a listed flag not open FLAG_DISCLOSURE_NOT_STANDING, after it; a failed or incomplete read FLAGS_UNDETERMINED, alone; a malformed list BAD_COMPLETENESS naming the field, alone; never refused because a flag is open", async () => {
+  const unread = await openFlagsUnread();
   const { w, ref, refs } = onTheirs();
   const editions = w.cd.acceptedWorkJudged(refs, V("alice")).editions;
   w.imports.flag(IMP, 2, { flag: "IMPFLAG-1", finding: THEIRS, issue: "page 3 is misread" });
@@ -123,7 +126,7 @@ test("R14 (C-120.11–C-120.13): an open flag is FLAG_NOT_DISCLOSED until listed
                                [[{ flag: "IMPFLAG-1", words: 'a "q"' }], "flagsDisclosed[0].words"],
                                [[{ flag: "IMPFLAG-1", words: "x".repeat(2001) }], "flagsDisclosed[0].words"]])
     assert.deepEqual(w.cd.flagsJudged(editions, list).refusals.map((r) => [r.reason, r.field]), [["BAD_COMPLETENESS", field]]);
-  for (const answer of [{ ok: true, complete: false, flags: [] }, { ok: true, truncated: true, flags: [] }, { ok: false, reason: "NO_SUCH_IMPORT" }, null, "throws"]) {
+  for (const answer of [{ ok: true, complete: false, flags: [] }, { ok: true, truncated: true, flags: [] }, unread.flags, null, "throws"]) {
     w.imports.flagsRead = () => { if (answer === "throws") throw new Error("down"); return answer; };
     const u = w.cd.flagsJudged(editions, [{ flag: "IMPFLAG-1" }, { flag: "IMPFLAG-9" }]);
     assert.deepEqual(u.refusals.map((r) => r.reason), ["FLAGS_UNDETERMINED"], JSON.stringify(answer));

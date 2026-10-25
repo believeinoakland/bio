@@ -42,3 +42,33 @@ Not Bob's: layers and test placement are BOB's (P17). Ruling (C, K4009): agent-s
 ## B4 · CHANGE
 
 CHANGE (K4015): the words check now judges a sentence written as string literals joined only by `+` as one sentence at the chain's first line (civicos-process `main` @ d424c32; `git -C /home/user/civicos-process pull`). Before your COMPLETE (or now, if you are already complete): pull it, run `node checks/words.mjs /home/user/bio <your module>`, and fix every finding the words rule covers (a member-read sentence by `localize` or `word`, a copy of a row by `word`, a test copy by equality); list any you judge no person reads in your record for the design's unkeyed list. Merge tranche/T51 first. Then COMPLETE (again).
+
+## B5 · START
+
+START · AGENT-STEPS #3 · tranche T51 · product believeinoakland/bio · fix round 10, Wave B job, batch 6: re-point 12 own lines, 1 marker line (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #292 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/agent-steps tranche/T51 && git branch -m job/T51/agent-steps stale/agent-steps-local && git checkout -b job/T51/agent-steps origin/job/T51/agent-steps`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module agent-steps`; record `build/jobs/T51/agent-steps.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Your own fixture lines, done in this job** (12; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- ai-runs/airunRefusal (1 judgment): interface.test.mjs:36
+- CODE (CHAIN_REFUSED / VERSION_CHAIN_REFUSED is in no product file. Fix: use VERSION_CHAIN_NO_SUCH_VERSION (provenance versionChain); the literal is FIX-E provenance/versionChainNoSuchVersion): interface.test.mjs:149
+- CODE (CLOSE_REFUSED is in no product file. Fix: use an ai-runs refusal code (AI_RUN_NOT_PRINCIPAL); the literal is FIX-E ai-runs/airunRefusal): interface.test.mjs:207
+- FIX-L control-plane/ask-wire: interface.test.mjs:224; t49r90.test.mjs:100; world.mjs:34,59,69,71
+- CODE (AI_LOG_REFUSED is in no product file. Fix: use the code ai-runs' tick really puts in refused[]; read `bio-plane/src/ai-runs/index.mjs` tick before fixing): interface.test.mjs:265,267
+- provenance/versionChainNoSuchVersion (1 judgment): t49r90.test.mjs:94
+
+**Markers owed (K5044 (2), K5060; the audit read each line and found it no module's answer):** write on the line or up to eight lines above:
+- `// fixtures-own: input <why>` (a literal handed to your own export, a route map handed to your own dispatch, an input the module reads opaquely): readers.test.mjs:130
+
+A `fixtures-run` you write shows `orphan-run` in your list until its user module's marker is merged, and a marker you place shows `contract-no-run` until its provider's run is merged: these are the only lines you may leave at done, each named in your record with the module it waits for.
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . agent-steps --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/agent-steps.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.

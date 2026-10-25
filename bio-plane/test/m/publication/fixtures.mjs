@@ -118,6 +118,39 @@ export function publicationWorld() {
   return world;
 }
 
+/** R42 (K5094; follow-up 27): what the user holds, made real. `held` is `[{finding, projects, digests}]`: each `finding` a
+ *  published finding (the real acts of `fixture.mjs`: its inquiry, a case of each of its `projects` pinning it, its
+ *  signature) resting on exactly the captures `digests` names, each a document of the register holding that sha, served
+ *  by a `serve` edge of the finding. A digest two findings name is one capture. `restingCapturesOf` answers as the real
+ *  module does (pages, cursor, `findings_truncated`), over the project ids named; `publication` is the real instance, so
+ *  a user takes `restingOf(held).publication` where it takes publication. */
+export function restingOf(held = []) {
+  const w = planeWorld();
+  w.member("olive");
+  const docs = new Map(), seen = new Set();
+  let n = 0, c = 0;
+  const docOf = (digest) => {
+    if (!docs.has(digest)) { const id = `INFO-2026-${String(++n).padStart(4, "0")}-resting`; w.doc(id, { digest }); docs.set(digest, id); }
+    return docs.get(digest);
+  };
+  for (const { finding, projects, digests } of held) {
+    if (seen.has(finding)) throw new Error(`fixture restingOf: finding ${finding} named twice`);
+    seen.add(finding);
+    if (!Array.isArray(projects) || !projects.length) throw new Error(`fixture restingOf: ${finding} names no project`);
+    const ids = digests.map(docOf);
+    w.inquiry(finding, { legs: ids.map((target) => ({ target })) });
+    const roles = [{ target: finding, version_sha: w.head(finding) }];
+    for (const project of projects) {
+      const caseId = `CASE-2026-${String(++c).padStart(4, "0")}`;
+      must(w.prepare(caseId, 1, { project, roles }), "prepare");
+      must(w.signCase(caseId, 1, { project, roster: roster(roles) }), "signCase");
+    }
+    must(w.signFinding(finding, { sig: SIG(c + 10), edges: ids.map((to) => ({ to, kind: "cites", disclosure: "serve" })) }),
+         "signFinding");
+  }
+  return { world: w, publication: w.p, restingCapturesOf: (q) => w.p.restingCapturesOf(q) };
+}
+
 /** R62 (docket's `stampEdition`): the module's two refusals of a stamp, made by the real writer: `NO_SUCH_CASE_EDITION` for a
  *  case holding no ratified edition, and `STAMP_NO_ORDER` for a ratified edition when no court-order source confirms the
  *  entry. `stamp` is the call, as docket makes it. */

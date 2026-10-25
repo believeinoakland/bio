@@ -564,7 +564,7 @@ section("R64 · the words members read: your group's Civicsmith, or the thing it
   rows.push(["ask.mjs:280", ev(checkSilent)?.detail, cut(localize("agent-worker.ask.the_record_could_not_be_reached_to", "the record could not be reached to check the answer, so nothing is returned: an unchecked answer is never shown.", { why: "\u0000" }))]);
   const checkRefused = await (async () => { const p = plane(); const m = modelApi();
     const binding = { fetch: async (url, init) => (new URL(url).searchParams.get("op") === "askcheck"
-      ? Response.json({ ok: false, reason: "GRANT_EXPIRED" }, { status: 403 }) : p.binding.fetch(url, init)) };
+      ? Response.json({ ok: false, reason: "AI_CREDENTIAL_EXPIRED" }, { status: 403 }) : p.binding.fetch(url, init)) };
     const saved = globalThis.fetch; globalThis.fetch = m.fn;
     try { const res = await worker.fetch(new Request("http://agent-worker/ask", { method: "POST", body: JSON.stringify(askBody()) }), { PLANE: binding });
           return (await res.text()).split("\n").filter(Boolean).map((l) => JSON.parse(l)).find((e) => e.event === "refused"); }

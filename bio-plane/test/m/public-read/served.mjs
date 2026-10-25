@@ -25,6 +25,7 @@ async function doAnswer(res) {
 }
 const storeRefusal = (out, extra = {}) => json({ ...out.reply.body, ...extra }, out.reply.status);
 const storeSilent = (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op, detail: "the store did not answer" }, 502);
+// fixtures-contract: answer-envelope door-helpers
 const requiredArgument = (op, argument, shape, error) => ({ ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error });
 const HELPERS = { json, requiredArgument, storeSilent, storeRefusal, doAnswer };
 export function bindPlane() {

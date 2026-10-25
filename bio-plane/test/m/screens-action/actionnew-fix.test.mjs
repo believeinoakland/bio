@@ -18,7 +18,7 @@ async function refusedWith(extra) {
 }
 
 test("R24, L20 (K4195): a refusal with findings draws each finding's detail after the code's sentence; control: one with no findings draws the code's sentence alone", async () => {
-  const { p, b } = await refusedWith({ findings: [{ code: "LEG_ON_ACTION", detail: "The leg names an action, not a question of this project." }] });
+  const { p, b } = await refusedWith({ findings: [{ check: "C-2.10", detail: "The leg names an action, not a question of this project." }] });
   const at = beside(p, b);
   assert.ok(at.includes(W("refusal.ACTION_BASIS_REFUSED")), "the code's sentence");
   assert.ok(at.includes("The leg names an action, not a question of this project."), "the finding's own detail");
