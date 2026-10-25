@@ -1,6 +1,6 @@
 # publication (T51)
 
-**Status** · session_01Cz7XXhRgKLEhdaMNQ5hG3Y · depth 2 · COMPLETE · handled B10
+**Status** · session_016A5pnT8yWBYi5ogyJCNRvX · depth 2 · COMPLETE · handled B12
 
 ## J1 · COMPLETE
 
@@ -228,3 +228,20 @@ Size (session_01Cz7XXhRgKLEhdaMNQ5hG3Y): test runs 8, module lines 4790
 ## J13 · COMPLETE
 
 Follow-up 18 complete: R15's amendment (K5084) met. recordCaseManifest takes built:true, recording the case file built in the same transaction (also on a same-hash retry); absent/false as before; a malformed built is MALFORMED. Test seen red first (g54-casefile.test.mjs); fixture caseFileLedger(...).manifest(case, edition, {built}) published in fixtures.mjs with a fixtures.test.mjs test. Publication suite 180 pass, 0 fail, 1 todo (R30); public-read 307, ratification 335, publish-schedule 34, docket 90, all pass. format, architecture, coverage (48/48), ownership, words 0 failures; fixtures: only the old door.test.mjs:95 contract-no-run. No fixtures-own or fixtures-generic marker added. Deferred none; nothing found in other modules. public-read (#34) may now call it. Size (session_01Cz7XXhRgKLEhdaMNQ5hG3Y): test runs 8, module lines 4790.
+
+## Follow-up 27 · completion (PUBLICATION #40, session_016A5pnT8yWBYi5ogyJCNRvX; fix round 10, START B12; K5094)
+
+**Entry applied (test files only).** New fixture in `bio-plane/test/m/publication/fixtures.mjs`: **`restingOf(held)`**, `held = [{finding, projects, digests}]`. Each finding is a real published finding (its inquiry, one case per named project pinning it, its signature with a `serve` edge to each document) resting on exactly the captures `digests` names (each a real register document holding that sha; a digest two findings name is one capture). Answers `{world, publication, restingCapturesOf(q)}`; `restingCapturesOf` is the real module's (R42): its paging, cursor, caps, and project ids are the ones the caller names. Throws if a finding is named twice or names no project. To state the digests, `fixture.mjs`'s `doc(id, {digest})` takes an optional capture sha (default unchanged: the sha of its own text); `provDoc` takes it too.
+Test: `fixtures.test.mjs`, "R42 fixtures: restingOf …", against the real module (captures in order, findings and projects per capture, paging by `limit` and `after`, empty). No product code changed.
+
+**fixtures-own / fixtures-generic markers added:** none. `checks/fixtures.mjs … publication --list`: `answer 0 … stub 0, code 0, contract 0, accepted 1; 0 failures` (the one accepted line, `door.test.mjs:95`, was already there).
+
+**Deferred.** None. **Found in another module.** Nothing. monitoring's `stubPublication` (`fixture.mjs:339`) can now be re-pointed to `restingOf(...).publication` (a monitoring session).
+
+**Checks.** publication suite under the preload: `tests 183, pass 182, fail 0, todo 1`; format `0 failures`; architecture `0 failures`; coverage `48 of 48 … 0 failures`; ownership run after commit.
+
+Size (session_016A5pnT8yWBYi5ogyJCNRvX): test runs 3, module lines 2503
+
+## J14 · COMPLETE
+
+Follow-up 27 (B12, K5094): complete. New fixture restingOf(held) in bio-plane/test/m/publication/fixtures.mjs, held = [{finding, projects, digests}]: real published findings (real inquiry, a case per named project, real signature with serve edges) resting on exactly the named capture digests; answers {world, publication, restingCapturesOf(q)}, restingCapturesOf the real R42 over the project ids named. fixture.mjs doc() takes an optional digest. Tested in fixtures.test.mjs against the real module. No marker added; fixtures.mjs --list: 0 failures (1 accepted, door.test.mjs:95, pre-existing). Suite 183 (182 pass, 0 fail, 1 todo); format/architecture/coverage/words/ownership 0 failures. monitoring can re-point stubPublication to restingOf(...).publication. Record: build/jobs/T51/publication.md.

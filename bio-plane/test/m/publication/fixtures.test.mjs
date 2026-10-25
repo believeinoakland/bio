@@ -2,7 +2,7 @@
    its answer checked against what the real module answers, so a user's test that takes one takes the module's own word. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { caseDocumentFacts, caseFileLedger, publicationWorld, stampEditionRefusal, storeCaseDocumentRefusal } from "./fixtures.mjs";
+import { caseDocumentFacts, caseFileLedger, publicationWorld, restingOf, stampEditionRefusal, storeCaseDocumentRefusal } from "./fixtures.mjs";
 import { CASEFILE_GRACE_MS } from "../../../src/publication/index.mjs";
 import { NOW } from "./fixture.mjs";
 
@@ -66,4 +66,22 @@ test("R21 fixtures: storeCaseDocumentRefusal is the real MALFORMED of a document
   const s = storeCaseDocumentRefusal();
   assert.deepEqual([s.refused.ok, s.refused.reason], [false, "MALFORMED"]);
   assert.equal(s.world.count("case_documents"), 0);
+});
+
+test("R42 fixtures: restingOf makes the named findings rest on exactly the named captures by the real acts, and restingCapturesOf answers them with the named projects, paged as the real module pages", () => {
+  const d = (s) => s.repeat(64).slice(0, 64);
+  const [a, b, c] = [d("a"), d("b"), d("c")];
+  const r = restingOf([{ finding: "INQ-2026-0001", projects: ["PROJ-2026-0002-f"], digests: [a, b] },
+                       { finding: "INQ-2026-0002", projects: ["PROJ-2026-0002-f", "PROJ-2026-0003-o"], digests: [b, c] }]);
+  const got = r.restingCapturesOf({});
+  assert.deepEqual(got.captures.map((x) => x.capture_sha), [a, b, c]);
+  assert.deepEqual(got.captures.map((x) => x.findings), [
+    [{ bundle_id: "INQ-2026-0001", projects: ["PROJ-2026-0002-f"] }],
+    [{ bundle_id: "INQ-2026-0001", projects: ["PROJ-2026-0002-f"] },
+     { bundle_id: "INQ-2026-0002", projects: ["PROJ-2026-0002-f", "PROJ-2026-0003-o"] }],
+    [{ bundle_id: "INQ-2026-0002", projects: ["PROJ-2026-0002-f", "PROJ-2026-0003-o"] }]]);
+  const page = r.restingCapturesOf({ limit: 2 });
+  assert.deepEqual([page.captures.length, page.cursor], [2, b]);
+  assert.deepEqual(r.restingCapturesOf({ after: page.cursor }).captures.map((x) => x.capture_sha), [c]);
+  assert.deepEqual(restingOf([]).restingCapturesOf({}).captures, [], "nothing held, nothing rests");
 });

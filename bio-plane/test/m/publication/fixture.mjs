@@ -216,17 +216,18 @@ export function world({ group = "test-group", workerd = false, contradiction = n
     },
     /** A document (information bundle) with one capture of its own, fetched by this copy: a `direct` receipt names it
      *  (provenance R62), so case-carriage carries it whole as captured (its R13, R16; T39). `fetched: false` leaves it
-     *  with no receipt, a member document. */
-    doc(id, { fetched = true } = {}) {
-      const text = `the text of ${id}`, path = `snapshots/${id}.txt`;
+     *  with no receipt, a member document. `digest` names the capture's sha (a test that must state which captures a
+     *  finding rests on); by default the sha of the document's own text. */
+    doc(id, { fetched = true, digest = null } = {}) {
+      const text = `the text of ${id}`, path = `snapshots/${id}.txt`, capSha = digest || sha(text);
       const res = promotion.promote({ bundleId: id, base: null, snapKey: `k${++n}`, author: V("alice"),
         files: [{ path: "bundle.md", text: infoMd(id) }, { path, text },
-                { path: "data/provenance.json", text: JSON.stringify({ documents: [provDoc(path, text)] }, null, 2) }],
+                { path: "data/provenance.json", text: JSON.stringify({ documents: [provDoc(path, text, capSha)] }, null, 2) }],
         meta: { object_type: "information" },
-        register: [{ sha256: sha(text), path, encoding: "utf8", bytes: Buffer.byteLength(text) }] });
+        register: [{ sha256: capSha, path, encoding: "utf8", bytes: Buffer.byteLength(text) }] });
       if (!res.ok) throw new Error(`fixture doc refused: ${JSON.stringify(res).slice(0, 400)}`);
       if (fetched) {
-        const rc = prov.recordReceipt({ addressNorm: `example.org/${id}`, captureSha: sha(text), retrieved: NOW, via: "direct" });
+        const rc = prov.recordReceipt({ addressNorm: `example.org/${id}`, captureSha: capSha, retrieved: NOW, via: "direct" });
         if (!rc.recorded) throw new Error(`fixture doc receipt refused: ${JSON.stringify(rc).slice(0, 400)}`);
       }
       return res;
@@ -394,11 +395,11 @@ export function projMd(title) {
           "references: []", "state_history: []", "---", "", "## Objective", "", "Find out.", ""].join("\n");
 }
 
-function provDoc(path, text) {
+function provDoc(path, text, capSha = sha(text)) {
   return {
     file: path, locator: `https://example.org/${path}`, retrieved: "2026-09-27T00:00:00Z",
     authority: "the publisher", authority_state: "determined", authority_basis: "named on the document",
-    capture: { method: "acquire", grade: "B", actor_class: "session", sha256: sha(text), encoding: "utf8",
+    capture: { method: "acquire", grade: "B", actor_class: "session", sha256: capSha, encoding: "utf8",
                bytes: Buffer.byteLength(text) },
     origin: { kind: "named_request" },
   };
