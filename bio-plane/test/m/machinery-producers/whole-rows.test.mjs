@@ -23,7 +23,8 @@ function heldInParts(w, id, label) {
   w.bundle(id, "information", { title: `Memo ${label}` });
   const reg = (capture, path, bytes, isWhole) => w.run(`INSERT INTO register (capture_sha, bundle_id, path, encoding, registered, last_registered, bytes, whole)
     VALUES (?,?,?,?,?,?,?,?)`, capture, id, path, "binary", iso(NOW), iso(NOW), bytes, isWhole ? 1 : 0);
-  for (const p of parts) reg(p.sha256, p.file, p.bytes, false);
+  /* provenance R74: the register holds the whole only; its parts are the child table `register_parts` */
+  parts.forEach((p, i) => w.run(`INSERT INTO register_parts (bundle_id, whole_sha, idx, part_sha, bytes, path) VALUES (?,?,?,?,?,?)`, id, whole, i, p.sha256, p.bytes, p.file));
   reg(whole, doc.file, sizes.reduce((a, b) => a + b, 0), true);
   const body = JSON.stringify({ documents: [doc] });
   w.run(`INSERT INTO files (bundle_id, path, content, bytes, sha256) VALUES (?,?,?,?,?)`, id, "data/provenance.json", body, body.length, sha(body));

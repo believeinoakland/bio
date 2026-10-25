@@ -13,7 +13,12 @@ import { PROVENANCE_SCHEMA } from "../../../src/provenance/schema.mjs";
 import { membershipOf, viewerPredicate } from "../../../src/membership/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { machineryProducersOf } from "../../../src/machinery-producers/index.mjs";
+import { homeOfEmpty } from "../provenance/fixtures.mjs";
+import { monitoringReads } from "../monitoring/fixtures.mjs";
 
+/** monitoring's real reads (`monitoring`, `archiveEligible`) over a world with no monitor (`empty`) and over seeded monitors
+ *  (`seeded`; its `bundles` and `addresses` name them), made once by monitoring's published fixture. */
+export const READS = await monitoringReads();
 export const NOW = Date.parse("2026-09-01T00:00:00Z");
 export const iso = (ms) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -28,7 +33,7 @@ function cursor(rows) {
   return it;
 }
 
-export function world({ updateNotice, ...fakes } = {}) {
+export function world({ updateNotice, provenance: homes = null, ...fakes } = {}) {
   const db = new DatabaseSync(":memory:");
   const statements = [];
   let sp = 0;
@@ -51,9 +56,11 @@ export function world({ updateNotice, ...fakes } = {}) {
   membership.migrate();
   const F = defaultFakes();
   for (const [k, v] of Object.entries(fakes)) F[k] = { ...F[k], ...v };
-  /* provenance R11, R73: a bundle's register rows with their marks, read from the real module over the same storage unless a
-     test fakes it; the other provenance reads stay the fakes' (`homeOf`). */
-  if (!F.provenance.registeredFor) F.provenance.registeredFor = (bundleId) => provenanceOf(host, { record, membership }).registeredFor(bundleId);
+  /* provenance R11, R73: a bundle's register rows with their marks, read from the real module over the same storage; `homeOf`
+     is the real provenance a test hands in (`homeOfHomed`, provenance's published fixture), the empty one when none. */
+  let home = homes;
+  F.provenance = { homeOf: (sha) => (home ??= homeOfEmpty()).homeOf(sha),
+                   registeredFor: (bundleId) => provenanceOf(host, { record, membership }).registeredFor(bundleId) };
   /* R12: the plane hands the notice read in `deps.updateNotice`; none is handed unless a test gives one. */
   const p = machineryProducersOf(host, { record, membership, ...F, ...(updateNotice ? { updateNotice } : {}) });
 
@@ -113,11 +120,9 @@ export function world({ updateNotice, ...fakes } = {}) {
 export function defaultFakes() {
   return {
     governor: { governorHolding: () => [] },
-    provenance: { homeOf: () => null },
     capture: { liveCaptureSessions: () => [] },
     captureRequests: { completed: () => ({ requests: [] }), rendersHeld: () => ({ requests: [] }) },
-    monitoring: { monitoring: () => ({ ok: true, items: [], truncated: false }),
-                  archiveEligible: () => ({ ok: true, eligible: [], limit: 50, truncated: false, paused: { paused: false } }) },
+    monitoring: { monitoring: () => READS.empty.monitoring, archiveEligible: () => READS.empty.archiveEligible },
     linkSweep: { sweepConditions: () => ({ ok: true, conditions: [] }) },
     /* actions R12's place: the active profiles' combined view, of which this module reads the `time_zone` (R10) */
     actions: { place: () => ({ time_zone: { value: "UTC", status: "ruled", basis: "TEST" } }) },
