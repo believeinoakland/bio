@@ -239,4 +239,4 @@ Size (session_01NHZHzUiPvoHYG7rYqLUJhb): test runs 6, module lines 3280
 **Requirements:** R80 new (written in `build/requirements/provenance.md`, the one file outside my paths that K4210 accepts), R53 and R68 amended (nine ops; four declared). **Met ids to strike:** R66 (its K5148 sentence), R80; R53 and R68 as amended.
 **Tests/checks:** provenance folder 196 pass, 0 fail; format 0; architecture 0; coverage 65 of 65; words 0; `fixtures provenance --list` 0 (one accepted marker, B10's); ownership: 9 files, 1 failure that is the requirements file K4210 accepts. Users: op-declarations/op-grades/test-support/interface-shell/store-assembly tests 1261 pass, 4 fail: `t33` R19/R6 and `t36` R34 each name `ruleservicesstate` (red before my change), `t36` R34 also `authority` (item (b) above), `R23` words (not mine).
 Deferred: none. Open QUESTION: none.
-Size (session_0177JBZkD5i4LMCHS2gFnjNU): test runs 9, module lines 3295
+Size (session_0177JBZkD5i4LMCHS2gFnjNU): test runs 9, module lines 3311
