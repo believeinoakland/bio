@@ -69,9 +69,9 @@ const STAGES = (loose) => [{ key: "sent", label: "Request sent", after: null, wi
 
 /** The world of a project that follows the Public Works Director's office: the people and the question its document cites; two documents it holds (each reading
  *  names the office, and `resolve` ties it); three dated facts; a vote of three, two meetings whose order no date settles, a statement no date places; a records
- *  request the team sent; a progression `pra` declared twice and threaded for the office with the first document at its first step, dated by a day the member
- *  stated. `bare` makes the project and the people alone. */
-async function scene({ bare = false, cites = true } = {}) {
+ *  request the team sent (`ours`); a progression `pra` declared twice and threaded for the office with the first document at its first step, dated by a day
+ *  the member stated (`matter`). `bare` makes the project and the people alone. */
+async function scene({ bare = false, cites = true, ours = false, matter = false } = {}) {
   const { world, me } = await inWorld();
   await world.recipes.profiles(me, ["oakland-alameda"]);
   const org = (await me.act("entitycreate", { body: { kind: "office", label: "Public Works Director", note: "The city's office for repairs." } })).entity_id;
@@ -94,12 +94,13 @@ async function scene({ bare = false, cites = true } = {}) {
   s.e2 = await ev({ kind: "meeting", attestations: [{ datedFactId: s.f2 }], concerns: [org] });
   s.e3 = await ev({ kind: "meeting", attestations: [{ datedFactId: s.f3 }], concerns: [org] });
   s.e9 = await ev({ kind: "statement", attestations: [{ captureSha: s.d1.sha, extent: DOC }], concerns: [org] });
-  const counterpart = (await me.act("entitycreate", { body: { kind: "body", label: "City Clerk's Office", note: "Answers records requests." } })).entity_id;
-  void counterpart;
+  if (ours) {
   const doc = ["---", "object_type: action", "title: Records request for the rent schedules", "current_state: planned", `created: "${iso(world)}"`, `last_updated: "${iso(world)}"`,
     "counterparty:", "  state: named", "  role: Director", "  body: City of Oakland", "  entity_id: " + org, "action_kind: records_request", "project: " + project, "---", "", "A request.", ""].join("\n");
   s.act = (await me.act("actioncreate", { body: { document: doc } })).id;
   await me.act("actioncorrespond", { query: { target: s.act, direction: "sent", at: "2026-09-04", medium: "email", party: "City Clerk", account: "I emailed the clerk for the rent schedules." }, body: {} });
+  }
+  if (!matter) return s;
   for (const d of [s.d1, s.d2]) await me.act("resolve", { body: { captureSha: d.sha } });
   await me.act("progressiondefine", { body: { progressionKey: "pra", label: "A public records request", basis: "first", citation: "Gov. Code 7922.535", stages: STAGES(true) } });
   await me.act("progressiondefine", { body: { progressionKey: "pra", label: "A public records request", basis: "the agency determines within 10 days", citation: "Gov. Code 7922.535", stages: STAGES(false) } });
@@ -128,14 +129,16 @@ const overdueOf = async (s, entity) => {
 };
 /** The world's `instance` answer with each finding's sentence (`says`) from the proposals feed, as `progressions` R45 describes the finding: the one scripted
  *  line of state b (K5044 (1)): this build's `instance` read does not carry it. */
-const saying = (s) => rewrite(s.world, s.me, async (req, a) => {
-  const r = resultOf(a);
-  if (!r || !Array.isArray(r.findings)) return a;
+const saying = async (s) => {
   const feed = await s.me.read("proposals");
-  const mine = (feed.instances || []).find((i) => i.progression_key === req.query.key && i.entity_id === req.query.id);
-  const said = new Map(((mine && mine.findings) || []).filter((f) => f.kind === "overdue_successor").map((f) => [f.stage_key, f.says]));
-  return { ...a, json: { ...a.json, result: { ...r, findings: r.findings.map((f) => (said.has(f.stage_key) ? { ...f, says: said.get(f.stage_key) } : f)) } } };
-});
+  return rewrite(s.world, s.me, (req, a) => {
+    const r = resultOf(a);
+    if (!r || !Array.isArray(r.findings)) return a;
+    const mine = (feed.instances || []).find((i) => i.progression_key === req.query.key && i.entity_id === req.query.id);
+    const said = new Map(((mine && mine.findings) || []).filter((f) => f.kind === "overdue_successor").map((f) => [f.stage_key, f.says]));
+    return { ...a, json: { ...a.json, result: { ...r, findings: r.findings.map((f) => (said.has(f.stage_key) ? { ...f, says: said.get(f.stage_key) } : f)) } } };
+  });
+};
 const heldRows = async (s) => (await s.me.read("heldcaptures", { query: { project: s.project, limit: "200", state: "held_and_vouched", fields: "picker" } })).held;
 
 test("R3 reads timeline over the project's set (the people and events its document cites), and each event for who took part and its grade", async () => {
@@ -149,7 +152,7 @@ test("R3 reads timeline over the project's set (the people and events its docume
 });
 
 test("R3 two lanes, \"What they did\" and \"What we did\"; each event with its date as precise as its source states it, who decided or took part, and its grade", async () => {
-  const s = await scene();
+  const s = await scene({ ours: true });
   const read = await timelineOf(s);
   const p = await openAs(s.world, s.me, "/app/timeline/" + s.project, { plane: { timeline: graded(s, (w) => {
     w.items[0].grade = "B";
@@ -306,7 +309,7 @@ const optsOf = (p, id) => p.doc.getElementById(id).querySelectorAll("option").ma
 const secOf = (p, key) => main(p).querySelectorAll("section").find((x) => x.querySelector("h2").textContent === word(key));
 
 test("R33 (1) state a draws, after the two lanes, Progressions it follows: each matter a reference to its steps, with its progression, steps threaded and findings", async () => {
-  const s = await scene();
+  const s = await scene({ matter: true });
   const p = await pageOf(s);
   assert.equal(p.byOp("instances")[0].query.set, s.org);
   const m = (await s.me.read("instances", { query: { set: s.org } })).items[0];
@@ -322,8 +325,8 @@ test("R33 (1) state a draws, after the two lanes, Progressions it follows: each 
 });
 
 test("R33 (2) state b: one matter's steps in order with each document, its own date and who threaded it; a step with no document draws the finding's own sentence; never overdue or late; the chain undetermined below two placed steps; findings listed", async () => {
-  const s = await scene();
-  const p = await openAs(s.world, s.me, "/app/timeline/" + s.project + matterAt(s), { plane: { instance: saying(s) } });
+  const s = await scene({ matter: true });
+  const p = await openAs(s.world, s.me, "/app/timeline/" + s.project + matterAt(s), { plane: { instance: await saying(s) } });
   assert.deepEqual(p.byOp("instance")[0].query, { op: "instance", key: "pra", id: s.org });
   const matter = await s.me.read("instance", { query: { key: "pra", id: s.org } });
   const m = main(p);
@@ -350,7 +353,7 @@ test("R33 (2) state b: one matter's steps in order with each document, its own d
   await s.me.act("thread", { body: { progressionKey: "pra", entityId: parks, placements: [{ stage: "sent", captureSha: d3.sha }] } });
   const undetermined = (await overdueOf(s, parks)).says;
   assert.equal(undetermined.key, "progression.expects.undetermined");
-  const undet = await openAs(s.world, s.me, "/app/timeline/" + s.project + "/matter/pra/" + parks, { plane: { instance: saying(s) } });
+  const undet = await openAs(s.world, s.me, "/app/timeline/" + s.project + "/matter/pra/" + parks, { plane: { instance: await saying(s) } });
   drew(secOf(undet, "progression.steps"), undetermined.key, undetermined.vars);
   /* set aside by her own act: the finding stays listed with her reason */
   await s.me.act("proposedispose", { body: { progressionKey: "pra", stageKey: "determination", to: "dismissed", reason: "the clerk called", definitionVersion: f.definition_version } });
@@ -360,7 +363,7 @@ test("R33 (2) state b: one matter's steps in order with each document, its own d
 test.todo("REPORTED: the world's `instance` read carries no `says` on any finding (only `proposals` and `captureprogressions` carry the overdue finding and its sentence, progressions/index.mjs:1326, 1341; readInstance, 976, assembles none), so state b never draws progression.expects of a real matter (timeline-parts.mjs:36-39 reads `says` from the instance); the test above draws it from the proposals feed's own sentence spliced into the instance answer (R33 (2), progressions R45)");
 
 test("R33 (2) the matter's acts: thread keeps the placements it holds and adds the chosen document at the chosen step; a lawful skip with its reason and citation; set a finding aside with a reason", async () => {
-  const s = await scene();
+  const s = await scene({ matter: true });
   const p = await pageOf(s, matterAt(s));
   const version = (await s.me.read("instance", { query: { key: "pra", id: s.org } })).findings[0].definition_version;
   fill(p, { "pm-aside-finding": "determination|" + version, "pm-aside-reason": "the clerk called" });
@@ -380,7 +383,7 @@ test("R33 (2) the matter's acts: thread keeps the placements it holds and adds t
 });
 
 test("R33 (3) state c: a progression's steps (what comes before, how soon, required, how many), its basis with every version, Revise the steps and Define a progression send progressiondefine", async () => {
-  const s = await scene();
+  const s = await scene({ matter: true });
   const p = await pageOf(s, "/progression/pra");
   assert.deepEqual(p.byOp("progression")[0].query, { op: "progression", key: "pra" });
   const def = await s.me.read("progression", { query: { key: "pra" } });
@@ -449,7 +452,7 @@ test("R34 the timeline's event form chooses the project's documents by title and
 
 /* R45 (T51-120), K3996 */
 test("R45 each finding draws its state by key (a deferred one \"Deferred\", a set-aside one \"Set aside\"), explained by progression.finding.state.help; control: a finding with no decision draws Open", async () => {
-  const s = await scene();
+  const s = await scene({ matter: true });
   const step = (key, label, within) => ({ key, label, after: "filed", within, required: "always", cardinality: "0..1" });
   await s.me.act("progressiondefine", { body: { progressionKey: "permit", label: "A permit", basis: "the code", citation: "Code 1",
     stages: [{ key: "filed", label: "Filed", after: null, within: null, required: "always", cardinality: "1" }, step("determination", "Determination", "10 days"), step("closing", "Closing", "20 days"), step("other", "Other", "30 days")] } });
@@ -465,7 +468,7 @@ test("R45 each finding draws its state by key (a deferred one \"Deferred\", a se
 test("R45 the Define and Revise step fields are labelled by the six keys in order, with the steps help under Define and the revise help under Revise", async () => {
   const keys = ["key", "label", "after", "within", "required", "cardinality"].map((c) => "progression.steps.label." + c);
   for (const k of [...keys, "progression.steps.help", "progression.revise.help"]) assert.ok(hasWord(k), k);
-  const s = await scene();
+  const s = await scene({ matter: true });
   const p = await pageOf(s, "/progression/pra");
   const cols = main(p).querySelectorAll("[data-columns]");
   assert.equal(cols.length, 2, "Define and Revise each");
@@ -509,7 +512,7 @@ test("R49 a progression address of a key the record does not hold draws the empt
   assert.ok(m.querySelector('[data-state="empty"]'), "the empty state");
   assert.ok(m.querySelector("details[data-define]"), "and the form that defines it");
   assert.ok(p.doc.getElementById("pd-name"));
-  const known = await scene();
+  const known = await scene({ matter: true });
   const k = await pageOf(known, "/progression/pra");
   assert.equal(main(k).querySelectorAll("details[data-define]").length, 1);
   assert.equal(main(k).querySelector('[data-state="empty"]'), null);
@@ -531,7 +534,7 @@ test("R33 B14 the module names instance and progression among the timeline's act
   const names = (await import("./fixtures.mjs")).SCREENS.find((x) => x.id === "timeline").acts.map((a) => a.op);
   for (const op of ["instance", "progression"]) assert.ok(names.includes(op), op);
   const sectionActs = (p) => main(p).querySelectorAll("section[data-act]").map((x) => x.getAttribute("data-act"));
-  const s = await scene();
+  const s = await scene({ matter: true });
   const a = await pageOf(s);
   assert.deepEqual(sectionActs(a), ["instance"], "state a: Progressions it follows is the instance read");
   assert.equal(secOf(a, "progression.follows").getAttribute("data-act"), "instance");

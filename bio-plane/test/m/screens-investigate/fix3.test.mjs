@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
 import { open, main, fill, press, PATHS, P, ENT, ORG, SHA, SHA2, MSR, word, drew, notDrew } from "./fixtures.mjs";
+import { inWorld, openAs, settled, readHeld } from "./world.mjs";
 
 const wordsOf = (p, id) => p.doc.querySelectorAll("[data-words]").find((e) => e.getAttribute("data-words").startsWith(id + "-"));
 const unitsOf = (p, id) => wordsOf(p, id).querySelectorAll('[data-shell="word"]').map((e) => e.textContent);
@@ -50,35 +51,63 @@ for (const [name, path, doc, words, extra] of SCREENS) {
   });
 }
 
+/** A world whose member holds two documents of a project, the first of two paragraphs, the second of one, each read by the store (`readHeld`), and a money trail of
+ *  the project: the passages a page offers are the words of those readings. */
+async function twoDocuments() {
+  const { world, me } = await inWorld();
+  await world.recipes.profiles(me, ["oakland-alameda"]);
+  const project = await world.recipes.project(me, "Pothole repairs");
+  const first = await world.recipes.hold(me, "Lease amendment 1.txt", "The council adopted the amendment on March 3, 2026.\n\nThe rent is due on the first of each month.", project);
+  const second = await world.recipes.hold(me, "Rent schedule.txt", "Monthly rent is due on the first.", project);
+  const firstUnits = await readHeld(world, me, first.sha);
+  const secondUnits = await readHeld(world, me, second.sha);
+  assert.equal(firstUnits.length, 2, "the first document reads as two passages");
+  assert.equal(secondUnits.length, 1, "the second as one");
+  const trail = await world.recipes.trail(me, project, "Pothole repairs, FY2026");
+  return { world, me, project, trail, first, second, firstUnits, secondUnits };
+}
+const select = async (p, id, sha) => { fill(p, { [id]: sha }); p.fire(p.doc.getElementById(id), "change"); await settled(p); };
+
 test("R34 C59 money and timeline send the passage chosen on screen, and the whole document when none is chosen", async () => {
-  const m = await open(PATHS.money, { plane: { recordfact: ok({ ok: true, fact_id: "MNY-2026-new", grade: { reading: "B" } }), moneysetpropose: ok({ ok: true }) } });
+  const w = await twoDocuments();
+  const m = await openAs(w.world, w.me, "/app/money/" + w.trail);
+  await select(m, "mf-doc", w.first.sha);
+  assert.deepEqual(unitsOf(m, "mf-passage"), w.firstUnits.map((u) => u.text), "the chosen document's words");
   await pickWord(m, "mf-passage", 1);
-  fill(m, { "mf-amount": "1200", "mf-asread": "$1,200" });
-  await press(m, "recordfact");
-  assert.deepEqual(m.byOp("recordfact")[0].body.source, { capture_sha: SHA, extent: { kind: "pdf-page", page: 1 } });
+  fill(m, { "mf-amount": "1200", "mf-asread": "$1,200", "mf-from-date": "2025-07-01", "mf-to-date": "2026-06-30" });
+  await press(m, "recordfact", { reason: "The lease amendment says so." });
+  await settled(m);
+  assert.deepEqual(m.byOp("recordfact")[0].body.source, { capture_sha: w.first.sha, extent: w.firstUnits[1].extent });
+  assert.equal((await w.me.read("moneyset", { query: { id: w.trail } })).proposals.length, 1, "the figure is held");
   await pickWord(m, "mf-passage", 1);
-  fill(m, { "mf-amount": "1200", "mf-asread": "$1,200" });
-  await press(m, "recordfact");
-  assert.deepEqual(m.byOp("recordfact")[1].body.source, { capture_sha: SHA, extent: { kind: "document" } }, "control: nothing selected");
-  const t = await open(PATHS.timeline, { plane: { createevent: ok({ ok: true, event_id: "EVT-2026-0099" }) } });
+  fill(m, { "mf-amount": "1300", "mf-asread": "$1,300", "mf-from-date": "2025-07-01", "mf-to-date": "2026-06-30" });
+  await press(m, "recordfact", { reason: "The lease amendment says so, again." });
+  await settled(m);
+  assert.deepEqual(m.byOp("recordfact")[1].body.source, { capture_sha: w.first.sha, extent: { kind: "document" } }, "control: nothing selected");
+  const t = await openAs(w.world, w.me, "/app/timeline/" + w.project);
+  await select(t, "tl-doc", w.first.sha);
   await pickWord(t, "tl-passage", 0);
   await press(t, "createevent", { reason: "the minutes record it" });
-  assert.deepEqual(t.byOp("createevent")[0].body.attestations, [{ captureSha: SHA, extent: { kind: "pdf-page", page: 0 } }]);
+  await settled(t);
+  assert.deepEqual(t.byOp("createevent")[0].body.attestations, [{ captureSha: w.first.sha, extent: w.firstUnits[0].extent }]);
+  assert.equal((await w.me.read("timeline", { query: { captures: w.first.sha } })).world.placed_nowhere.length, 1, "the event is held, attested by that passage");
 });
 
 test("R34 C59 each document's words are their own selection: words picked on one document are not sent for another (control: back on the first, still picked)", async () => {
-  const p = await open(PATHS.timeline, { plane: { createevent: ok({ ok: true, event_id: "EVT-2026-0099" }) } });
+  const w = await twoDocuments();
+  const p = await openAs(w.world, w.me, "/app/timeline/" + w.project);
+  await select(p, "tl-doc", w.first.sha);
   await pickWord(p, "tl-passage", 1);
-  fill(p, { "tl-doc": SHA2 });
-  p.fire(p.doc.getElementById("tl-doc"), "change");
-  await p.settle();
+  await select(p, "tl-doc", w.second.sha);
   await press(p, "createevent", { reason: "the minutes record it" });
-  assert.deepEqual(p.byOp("createevent")[0].body.attestations, [{ captureSha: SHA2, extent: { kind: "document" } }], "the other document is cited whole");
-  fill(p, { "tl-doc": SHA });
-  p.fire(p.doc.getElementById("tl-doc"), "change");
-  await p.settle();
+  await settled(p);
+  assert.deepEqual(p.byOp("createevent")[0].body.attestations, [{ captureSha: w.second.sha, extent: { kind: "document" } }], "the other document is cited whole");
+  await select(p, "tl-doc", w.first.sha);
   await press(p, "createevent", { reason: "the minutes record it" });
-  assert.deepEqual(p.byOp("createevent")[1].body.attestations, [{ captureSha: SHA, extent: { kind: "pdf-page", page: 1 } }]);
+  await settled(p);
+  assert.deepEqual(p.byOp("createevent")[1].body.attestations, [{ captureSha: w.first.sha, extent: w.firstUnits[1].extent }]);
+  const held = (await w.me.read("timeline", { query: { captures: `${w.first.sha},${w.second.sha}` } })).world.placed_nowhere;
+  assert.equal(held.length, 2, "both events are held");
 });
 
 /* C95 (R34, parts): the question choice leads with the question the page was opened for, chosen; with none, none is chosen */

@@ -128,7 +128,7 @@ test("R1 the acts as drawn for a member: explore, recordpersonfact, identityclai
   assert.ok(actsIn(main(q)).includes("personexpunge"));
 });
 
-test.todo("REPORTED: R1 aliaswithdraw is not offered for a name a member added: the page tells a member's name by a `member:` stamp (person.mjs:71-72) and the store stamps the bare member id", async () => {
+test("R1 aliaswithdraw is offered for a name a member added (the store stamps the bare member id)", async () => {
   const { world, me, chen, member } = await scene();
   const mai = await member("mai");
   await mai.act("entityalias", { body: { entityId: chen, alias: "Lin Chen" } });
@@ -320,7 +320,7 @@ test("R32 (1) what the team says about them: other names (a roster name as data)
   assert.deepEqual(p.byOp("connect")[0].body, { entityId: chen });
 });
 
-test.todo("REPORTED: R32 (1) the name a member added is drawn as the city roster's, not with who and when, and cannot be withdrawn (person.mjs:71-72 reads declared_by as `member:<id>`; the store answers the bare member id)", async () => {
+test("R32 (1) the name a member added is drawn with who and when and can be withdrawn with a reason", async () => {
   const { world, me, chen, member } = await scene();
   const mai = await member("mai");
   await mai.act("entityalias", { body: { entityId: chen, alias: "Lin Chen" } });
