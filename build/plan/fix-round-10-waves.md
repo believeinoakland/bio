@@ -1,191 +1,197 @@
-# Fix round 10 of T51: the waves of the fixture round
+# Fix round 10 of T51: the waves (fixture round and cause jobs)
 
-**Status** · Draft for BOB, written by a drafting worker on `prep/starts-r10` from the fixtures check's live list at the tranche tip (`a9e399d70f`; `node /home/user/civicos-process/checks/fixtures.mjs <bio> --list`: 2,936 lines, answer 2,557, stub 302, code 77, on 109 modules), `build/plan/fixtures-T51/part-1.md` to `part-4.md` and `op-tables.md`, rulings K4990, K4993, K4995, K4996, K5044, K5045, K5046 and `fix-round-10-T51.md` §2. The START bodies are `build/plan/starts-T51-F10/<module>.txt`, one per Wave A module (84). Nothing here binds until BOB reads it.
+**Status** · Draft for BOB, second edition on `prep/starts-r10`, after K5051 to K5057 and the placement files (`placement-R10-a.md` to `-c.md`, `diagnosis-R10-d.md`, `fix-round-10-T51.md` §1). First edition: `a1fbdcdda1`. Sources: the fixtures check's live list at the tranche tip (2,936 lines, 109 modules; unchanged by the merge), `fixtures-T51/part-1.md` to `part-4.md`, `op-tables.md`, K4990, K4993, K4995, K5044 to K5046, K5052, K5054, K3518. One START per job: `build/plan/starts-T51-F10/<module>.txt` (98). One HANDOFF for UX-DESIGN: `build/plan/fix-round-10-words.md`.
 
-## 1. How modules were placed
+## 1. How jobs were placed (K5051, BOB's instructions of this step)
 
-- **Wave A** (K5046, `fix-round-10-T51.md` §2): `store-assembly` (new), `wizard-scripts`, `translations`, `signin-door`, and every provider whose fixture or contract still has a user in the live list (83 modules with `store-assembly`: 84). A provider with no live user has nothing to publish and is Wave B (7 modules, section 6). A provider that is also a user does its own lines in the same Wave A job when the provider it needs is in an EARLIER batch and no `storeWorld()` is needed; the rest of its lines stay in its Wave B column below. `plane` and `control-plane` do provider work only in Wave A.
-- **Wave B**: every other module, after the batches it names in column `after` merge (`A2` = after batch 2; `SA+IS` = after `store-assembly` and interface-shell's `boot({door})`). The live list is the coverage; each line is classed by the part that names it (E = FIX-E re-point to a provider's fixture, L = FIX-L contract marker, F = FALSE still listed, C = CODE, open = a scripted op-table entry or builder call site the parts did not class: K5044 (3) owes them a second audit pass).
-- **Wave B work**: `pass` = every line is a mechanical re-point, a marker or a CODE line with a named real code, so it is a candidate for one mechanics §5.10 pass (no job); `job` = a judgment line, an op-table entry, an unclassed builder, or a CODE line the part says to confirm; `gap` = only FALSE lines remain, which no job can fix (section 5). Model: haiku-5-5 for `pass` and for mechanical test-only work; sonnet-5-5 otherwise; the default model only for `store-assembly` (K3518). Mechanics §5.10 (3) names a sonnet (medium) worker for the pass; BOB picks.
+- **Batched by dependency**, not by bare modules.json order: a provider's fixture is merged in an earlier batch than the users whose own lines re-point to it (a hill-climb over the 85 fixture jobs, 17 per batch: about 245 of the 280 own FIX-E lines of those jobs are done in their own job, the rest stay Wave B). A provider no live finding uses gets no fixture job (7 named by the parts: agent-steps, basis-versions, calculations, corpus-export, doorbell, office-readers, reevaluation; three of them have a job for a cause).
+- **Fixture jobs** (85): `store-assembly` and `store-request` (new), the three enabling modules `wizard-scripts`, `translations`, `signin-door`, `plane`, `control-plane` (batch 1), and every provider with a live user. `store-assembly` is batch 2 (needs batch 1 merged), `store-request` batch 3 (builds on it). **Cause-only jobs** (13): a cause-owning module with no fixture work is a new START, put in the first batch with room. A module with both fixture and cause work runs once, in its fixture batch (28 modules own a re-walk 9 cause or entry 4).
+- **Batch size** at most 20 sessions (K4215). Providers first: a job opens when the batch before it is merged.
+- **Pending marker.** A module with findings the audit classed FALSE or left unclassed (op-table entries, builder call sites) carries `[fixtures: pending part-5 / check v3]` in its START in place of those lines; its classified lines (FIX-E, FIX-L, CODE) are final. Another worker is fixing the check (`prep/fixtures-v3`) and classifying the unclassed lines (`fixtures-T51/part-5.md`); BOB posts nothing until both are reviewed.
+- **Model (K3518):** haiku-5-5 for test-only provider jobs and mechanical re-points; sonnet-5-5 for every cause job and for provider jobs with judgment fixtures; the default model only for `store-assembly` and `store-request` (new modules).
 
-## 2. Wave A in batches (K4215: at most 20 job sessions at once)
+## 2. Batches
 
-| Batch | Jobs | Modules (modules.json order; `store-assembly` after `signin-door`) |
+| Batch | Jobs | Modules (modules.json order; cause-only jobs in italics) |
 |---|---|---|
-| 1 | 17 | `pdf-reader`, `pdf-pixels`, `doc-clean`, `pdf-worker`, `ocr-worker`, `sheet-worker`, `file-scanner`, `member-roster`, `record-core`, `membership`, `project-roster`, `ai-accounts`, `wizard-scripts`, `translations`, `signin-door`, `control-plane`, `plane` |
-| 2 | 16 | `credentials`, `promotion`, `provenance`, `attestation`, `capture-sources`, `acquisition`, `capture`, `file-safety`, `sources`, `reading-pipeline`, `extraction`, `entities`, `events`, `lines`, `local-facts`, `store-assembly` |
-| 3 | 17 | `standards`, `progressions`, `money-checks`, `duties`, `people`, `bias`, `retrieval-browse`, `retrieval`, `inquiry`, `steps`, `strength`, `contradiction`, `ai-use`, `ai-runs`, `run-productions`, `capture-requests`, `answers` |
-| 4 | 17 | `agent-runner`, `agent-worker`, `intent`, `case-carriage`, `publication`, `publish-schedule`, `docket`, `public-read`, `network-notices`, `ratification`, `case-checker`, `case-import`, `case-disclosures`, `case-account`, `case-inputs`, `case-authoring`, `review` |
-| 5 | 17 | `case-check`, `conformance`, `consequences`, `actions`, `action-clocks`, `escalation`, `action-plans`, `plan-work`, `monitoring`, `following`, `link-sweep`, `action-producers`, `instance-setup`, `admission`, `answer-envelope`, `store-door`, `screens-action` |
+| 1 | 20 | *`subresources`*, `pdf-pixels`, `pdf-worker`, `ocr-worker`, `file-scanner`, `record-core`, `membership`, `credentials`, `provenance`, `capture-sources`, `file-safety`, `retrieval-browse`, *`inquiry-grammar`*, `wizard-scripts`, `translations`, `admission`, `signin-door`, *`screens-inquiry`*, `control-plane`, `plane` |
+| 2 | 20 | *`office-readers`*, `pdf-reader`, `ai-accounts`, `promotion`, `attestation`, `acquisition`, `capture`, `sources`, `local-facts`, `standards`, `duties`, `retrieval`, *`basis-versions`*, `ratification`, `case-import`, `case-inputs`, `conformance`, `answer-envelope`, `store-assembly`, *`screens-intake`* |
+| 3 | 20 | *`csv-reader`*, `member-roster`, `project-roster`, `reading-pipeline`, `extraction`, `entities`, `events`, `progressions`, *`calculations`*, `inquiry`, `steps`, `capture-requests`, `answers`, `case-carriage`, `publication`, *`case-catalogue`*, `case-checker`, `consequences`, `actions`, `store-request` |
+| 4 | 20 | `doc-clean`, *`content`*, `lines`, `people`, `bias`, `strength`, `contradiction`, `ai-use`, `ai-runs`, `run-productions`, `agent-runner`, `intent`, `public-read`, `case-account`, `case-authoring`, `action-clocks`, `action-plans`, `plan-work`, *`screens-entry`*, *`screens-daily`* |
+| 5 | 18 | `sheet-worker`, `money-checks`, `agent-worker`, `publish-schedule`, `docket`, `network-notices`, `case-disclosures`, `review`, `case-check`, `escalation`, `monitoring`, `following`, `link-sweep`, `action-producers`, `instance-setup`, `store-door`, *`interface-assets`*, `screens-action` |
 
 Sequencing:
-1. Batch 1 holds the enabling jobs. `wizard-scripts`, `translations`, `signin-door`, `control-plane` and `plane` come first although they sit late in the order, because `store-assembly` copies their results (K5046 (a)-(c)). **Coupled merge:** an op declared by two modules stops plane's start (`plane/declarations.mjs:75`, `:186`). `translations` (row `interfacewords`), `signin-door` (new `DECLARED_OPS`, row `subscriptionsignin`), `control-plane` (both rows leave `owner-ops.mjs`) and `plane` (`OWNERS` gains `signin-door`) merge as ONE set by BOB; each of their STARTs says so. `wizard-scripts` is independent.
-2. Batch k+1 opens when batch k is merged, so the own lines of a batch k+1 job re-point to fixtures that are already on its branch point. Batch 2 holds `store-assembly` (default model), the critical path (suite time measured before any screens job, K5046 (g)); interface-shell's `boot({door})` follows it, then the screens' jobs (Wave B). A Wave B job may open as soon as the providers named in its `after` column are merged.
-3. A `fixtures-run` line a provider writes shows `orphan-run` until its user's marker is merged, and a marker shows `contract-no-run` until its provider's run is merged (`checks/fixtures.mjs:776-779`). Each START lists the lines a job may leave at done and where they clear; BOB reads `--list` after Wave B for the whole product, not after each batch.
-4. The batches follow modules.json order (providers precede their users in the order). A dependency-aware assignment would put 270 of the 280 own FIX-E lines of Wave A modules in Wave A (this order: 164); it is not used: the batches follow modules.json order, and the START bodies carry the order-based split. The remaining own lines are Wave B (column `Wave B`).
+1. **Batch 1 holds the enabling jobs.** `wizard-scripts` (receives `ADMIN_ACTS`/`ADMIN_SCREENS`), `translations` (declares `interfacewords` and deletes control-plane's row, self-contained), `signin-door` (declares `subscriptionsignin`, deletes control-plane's row) and `plane` (`OWNERS` gains `signin-door`; its LOAD-RED 5 (1) study first). **Coupled merge:** signin-door's export and plane's `OWNERS` entry arrive together (plane's test names every module exporting `DECLARED_OPS`). The two row deletions in `control-plane/owner-ops.mjs` are outside those modules' `paths`: each lists them in COMPLETE and BOB adds them before the ownership check (K5052 (4), K1043). `control-plane` no longer removes the rows.
+2. **`store-assembly` (batch 2) then `store-request` (batch 3)** are the critical path: the world (`storeWorld()`), its door, sign-ins and recipes are store-request's (K5054); interface-shell's `boot({door})` follows it, then the screens' op-table jobs (Wave B). Requirements: `build/requirements/store-assembly.md` and `store-request.md` on `prep/store-assembly-reqs`, being revised; BOB adds both `modules.json` entries.
+3. **Gates:** `interface-assets` (R32) starts only when UX-DESIGN's scroll rule is merged. `screens-daily` (batch 4) draws R17a after `retrieval-browse` (batch 1). `screens-inquiry` (batch 1) gets R30b's screen half, R23's `repairs` draw and R9's draw as a CHANGE after `inquiry-grammar` (batch 1), `inquiry` (batch 3), `basis-versions` (batch 2) and reading-pipeline's R9 (batch 3) have merged. `inquiry` must follow `inquiry-grammar` (it does).
+4. **Contract lines wait on each other** (`orphan-run`, `contract-no-run`, `checks/fixtures.mjs:776-779`); each START says which may remain. After Wave B moves the registrar code to `store-assembly`, plane's contract tests keep working because they run through plane's real `Store`.
 
-## 3. Wave A modules (84)
+## 3. The 98 jobs
 
-Columns: `#` = position in `build/modules.json` (L = layer); `a/s/c` = the check's answer/stub/code lines on the module (own user lines); classed = the parts' classes of those lines; a line carrying findings of two classes counts in each class; `Wave B` = what is left for the module after its Wave A job (`none` = nothing); model = Wave A job.
+`#` = position in `build/modules.json`. `a/s/c` = the check's answer/stub/code lines on the module. `Pending` = FALSE-classed or unclassed lines (placeholder in the START). `Wave B` = classified fixture lines the job cannot do (their provider merges in its batch or after) plus module work of the rulings; they arrive as a CHANGE to the same job.
 
-| Batch | # | Module | L | a/s/c | classed | Wave A: why | Wave B | Model |
+| Batch | # | Module | Role | Causes | Fixture work | Wave B / pending | a/s/c | Model |
 |---|---|---|---|---|---|---|---|---|
-| 1 | 18 | `pdf-reader` | 1 | 1/0/0 | F 1 | provider; fixtures `notAPdf` | none | haiku-5-5 |
-| 1 | 29 | `pdf-pixels` | 1 | 0/0/0 | 0 | provider; fixtures `pageRefusal`, `pixelRefusal`, `renderedPage` | none | haiku-5-5 |
-| 1 | 31 | `doc-clean` | 1 | 0/0/0 | 0 | provider; fixtures `encryptedRefusal` | none | haiku-5-5 |
-| 1 | 32 | `pdf-worker` | 1 | 1/0/0 | F 1 | provider; fixtures `tier2Answer` | none | sonnet-5-5 |
-| 1 | 33 | `ocr-worker` | 1 | 1/2/0 | E 2 · F 1 | provider; fixtures `memberRefusal`, `memberWorker`, `pageNotRenderable` | job: FIX-E 2; after A1 | sonnet-5-5 |
-| 1 | 34 | `sheet-worker` | 1 | 0/0/0 | 0 | provider; fixtures `recomputeNotEnabled` | none | haiku-5-5 |
-| 1 | 35 | `file-scanner` | 1 | 0/0/0 | 0 | provider; fixtures `reputationRefresh` | none | haiku-5-5 |
-| 1 | 36 | `member-roster` | 2 | 3/0/1 | F 3 · open 1 | provider; fixtures `expertiseWithdrawn`, `listenerRefusals` | job: op-table 1; after SA+IS | haiku-5-5 |
-| 1 | 37 | `record-core` | 2 | 1/0/0 | F 1 | provider; fixtures `coreOver`, `evidencePartsRefusal`, `perItemRetained`, `tableDeclarationRefusals` | none | sonnet-5-5 |
-| 1 | 38 | `membership` | 2 | 5/0/1 | F 4 · open 2 | provider; fixtures `projectActRefusals` | job: op-table 2; after SA+IS | haiku-5-5 |
-| 1 | 39 | `project-roster` | 2 | 0/0/0 | 0 | provider; fixtures `projectReadRefusals` | none | haiku-5-5 |
-| 1 | 40 | `ai-accounts` | 2 | 8/2/0 | E 8 · F 1 · open 1 | provider; fixtures `accountForRefused`, `accountForResult`, `accountsServing`, `keepAwaySet`, `keepAwayState`, `keepAwayUnreadable`, `keptAwayGroup`, `keptAwayProject`, `keptAwayUnreadable`, `noAccount`, `switchedOff`, `tokenMalformedHold` | job: FIX-E 8, op-table 1; after A1 SA+IS | sonnet-5-5 |
-| 1 | 142 | `wizard-scripts` | 11 | 1/0/0 | E 1 | enabling: receives `ADMIN_ACTS`/`ADMIN_SCREENS` (K5046 (c)) | pass: FIX-E 1; after A3 | sonnet-5-5 |
-| 1 | 151 | `translations` | 11 | 2/0/0 | L 2 | enabling: declares `interfacewords` (K5046 (c)) | none | sonnet-5-5 |
-| 1 | 158 | `signin-door` | 11 | 6/0/0 | E 2 · F 2 · open 2 | enabling: declares `subscriptionsignin` (K5046 (c)); provider; fixtures `signinRefusal` | job: FIX-E 2, op-table 2; after A5 SA+IS | sonnet-5-5 |
-| 1 | 170 | `control-plane` | 11 | 78/11/4 | E 10 · L 6 · F 61 · C 6 · open 11 | provider (K5044 (5)); two rows leave `owner-ops.mjs`; contracts `ask-wire`, `deliver-owed`, `unknown-op` | delete `owner-ops.mjs`, call the door function of `store-assembly`; own findings; job: op-table 11, FIX-E 10, FALSE 61, FIX-L 6, CODE 6; after A5 SA+IS | sonnet-5-5 |
-| 1 | 171 | `plane` | 11 | 42/32/2 | E 61 · F 15 · C 3 · open 3 | provider (K5044 (4), (5)); `OWNERS` gains signin-door; contracts `job-registrar`, `keep-later`, `owed-later`, `owed-ledger` | delete the composition body (copied to `store-assembly`), `Store` calls `assembleStore`; own findings; job: FIX-E 63, CODE 3, FALSE 15, op-table 3; after A5 SA+IS | sonnet-5-5 |
-| 2 | 41 | `credentials` | 2 | 7/2/0 | E 8 · F 1 | provider; fixtures `securityMapRefusal` | none | sonnet-5-5 |
-| 2 | 42 | `promotion` | 2 | 2/0/2 | E 2 · F 2 | provider; fixtures `factUnavailable`, `groupUndetermined`, `makePromotion`, `projectActNotParticipant`, `registrars`, `retireCited`, `staleBaseRefusal` | none | sonnet-5-5 |
-| 2 | 44 | `provenance` | 3 | 1/0/0 | F 1 | provider; fixtures `heldParts`, `holdsOf`, `holdsRegister`, `homeOf`, `homeOfEmpty`, `homeOfHomed`, `homeOfWorld`, `provenanceOver`, `registeredHomes`, `versionChainNoSuchVersion` | none | sonnet-5-5 |
-| 2 | 45 | `attestation` | 3 | 0/0/0 | 0 | provider; fixtures `attestationsOfBadSha`, `noKeyInstanceSign` | remove the dead `attest` declaration (`ops.mjs:46`) if `store-assembly` entry (f) confirms no route | haiku-5-5 |
-| 2 | 47 | `capture-sources` | 3 | 0/1/0 | F 1 | provider; fixtures `renderFailure`, `renderRefusal` | none | haiku-5-5 |
-| 2 | 48 | `acquisition` | 3 | 11/87/0 | E 14 · L 77 · F 6 · C 4 | provider; fixtures `acquireRefusals`, `archiveNotHeld`, `keyedServiceOff`, `notHeldRange`, `owedFetchAnswer`, `owedRunAnswer` | job: FIX-E 14; after A2 | sonnet-5-5 |
-| 2 | 49 | `capture` | 3 | 17/25/1 | E 11 · L 28 · F 4 · C 4 | provider; fixtures `acquireRefusal`, `captureArm`, `heldActsUnreadable`, `heldSetAside`, `storageNotConfigured` | job: FIX-E 10; after A2 | sonnet-5-5 |
-| 2 | 51 | `file-safety` | 3 | 2/2/0 | E 2 · L 2 | provider; fixtures `batchTickAnswers`, `declaredRefusals`, `scannerAbsent`, `toolTestFailed`, `toolTested` | none | sonnet-5-5 |
-| 2 | 52 | `sources` | 3 | 0/0/0 | 0 | provider; fixtures `rungOf`, `sourceOfReads` | none | haiku-5-5 |
-| 2 | 54 | `reading-pipeline` | 4 | 20/10/1 | E 10 · L 1 · F 12 · C 3 · open 5 | provider; fixtures `storeFailedTransient` | job: op-table 5; after SA+IS | sonnet-5-5 |
-| 2 | 55 | `extraction` | 4 | 35/39/0 | E 45 · L 21 · F 1 · C 6 · open 5 | provider; fixtures `extractionNotice`, `progressOf`, `readHeldAnswer`, `unheldStructure` | job: FIX-E 22, op-table 2; after A2 SA+IS | sonnet-5-5 |
-| 2 | 57 | `entities` | 5 | 0/1/0 | E 1 | provider; fixtures `entitiesWorld`, `namingInRefused`, `unreadable` | job: FIX-E 1; after A2 | sonnet-5-5 |
-| 2 | 58 | `events` | 5 | 1/1/0 | E 1 · F 1 | provider; fixtures `recordedByMalformedExtent`, `timelineRefusal`, `usesOf` | job: FIX-E 1; after A2 | haiku-5-5 |
-| 2 | 59 | `lines` | 5 | 0/1/0 | E 1 | provider; fixtures `linesWorld` | job: FIX-E 1; after A2 | sonnet-5-5 |
-| 2 | 60 | `local-facts` | 5 | 0/0/0 | 0 | provider; fixtures `factStatusRefusal` | none | haiku-5-5 |
-| 2 | 158.5 | `store-assembly` | 11 | 0/0/0 | 0 | new module (K5046 (a)): `assembleStore`, `storeWorld()` | none | default |
-| 3 | 64 | `standards` | 5 | 0/0/0 | 0 | provider; fixtures `standardRead`, `standardReadWorld`, `standardRow` | none | sonnet-5-5 |
-| 3 | 65 | `progressions` | 5 | 0/2/0 | E 2 | provider; fixtures `definitionRead`, `disposeProposalRefusal` | none | sonnet-5-5 |
-| 3 | 67 | `money-checks` | 5 | 0/0/0 | 0 | provider; fixtures `runDetectorsAnswers` | none | haiku-5-5 |
-| 3 | 68 | `duties` | 5 | 2/0/0 | F 1 · open 1 | provider; fixtures `occurrences`, `occurrencesOf`, `recordTransitionsAnswers`, `transitionsRefusal` | job: op-table 1; after SA+IS | sonnet-5-5 |
-| 3 | 69 | `people` | 5 | 1/0/0 | open 1 | provider; fixtures `evaluateChecksAnswers`, `tiesConcerningRefusal` | job: op-table 1; after SA+IS | haiku-5-5 |
-| 3 | 71 | `bias` | 5 | 0/0/0 | 0 | provider; fixtures `biasRefusedPromote` | none | haiku-5-5 |
-| 3 | 73 | `retrieval-browse` | 5 | 5/1/0 | E 4 · L 2 | provider; fixtures `browseViewerMissing`, `marksRegistrarDeclared` | none | sonnet-5-5 |
-| 3 | 74 | `retrieval` | 5 | 0/1/0 | E 1 | provider; fixtures `actionRegistrar`, `meaningRowsUnknownArm`, `noSelection`, `selectionResolve`; contracts `selection-read` | none | sonnet-5-5 |
-| 3 | 80 | `inquiry` | 6 | 5/0/1 | E 5 · F 1 | provider; fixtures `basisForUnread`, `basisRefusals`, `migratedSurfacing` | job: FIX-E 3; after A3 | sonnet-5-5 |
-| 3 | 82 | `steps` | 6 | 0/0/0 | 0 | provider; fixtures `stepRead`, `stepsWorld` | none | sonnet-5-5 |
-| 3 | 86 | `strength` | 6 | 3/0/0 | E 2 · open 1 | provider; fixtures `gradingFactsUnread`, `strengthBarSet`, `strengthOfNoId` | job: op-table 1; after SA+IS | sonnet-5-5 |
-| 3 | 87 | `contradiction` | 6 | 2/0/0 | E 1 · open 1 | provider; fixtures `candidateReads`, `readRefusals` | job: FIX-E 1, op-table 1; after A3 SA+IS | haiku-5-5 |
-| 3 | 89 | `ai-use` | 6 | 0/0/0 | 0 | provider; fixtures `ceilingRefusal`; contracts `use-check` | none | haiku-5-5 |
-| 3 | 90 | `ai-runs` | 6 | 5/4/3 | E 5 · L 3 · F 3 · C 1 | provider; fixtures `airunDispatchRefusal`, `airunOpenRefusal`, `airunRefusal`, `tickStateTooLarge` | job: FIX-E 5; after A3 | sonnet-5-5 |
-| 3 | 91 | `run-productions` | 6 | 0/0/0 | 0 | provider; fixtures `suggestRefusals` | none | haiku-5-5 |
-| 3 | 92 | `capture-requests` | 6 | 6/3/1 | E 3 · L 4 · F 2 · open 1 | provider; fixtures `sweepScopeRegistrar` | job: FIX-E 1, op-table 1; after A3 SA+IS | sonnet-5-5 |
-| 3 | 96 | `answers` | 6 | 1/8/0 | E 8 · C 1 | provider; fixtures `limitsUnreadable`, `standingQuestions`, `standingSwitchOff` | none | sonnet-5-5 |
-| 4 | 99 | `agent-runner` | 6 | 0/1/0 | F 1 | provider; fixtures `runnerRefusal` | none | haiku-5-5 |
-| 4 | 101 | `agent-worker` | 6 | 14/1/7 | E 8 · L 1 · F 2 · C 8 · open 3 | provider; contracts `dispatch-refusal`, `transcribe-declined`, `transcribe-not-sent`, `transcribe-refusal` | job: op-table 3, FIX-E 1; after A4 SA+IS | sonnet-5-5 |
-| 4 | 102 | `intent` | 7 | 4/2/0 | E 4 · C 1 · open 1 | provider; fixtures `intentWorld` | job: op-table 1; after SA+IS | sonnet-5-5 |
-| 4 | 107 | `case-carriage` | 8 | 0/0/0 | 0 | provider; fixtures `copyReadStates`, `copyTickRefusals`, `onCopyWorkRegistrarRefusals` | none | haiku-5-5 |
-| 4 | 109 | `publication` | 8 | 5/0/0 | E 4 · L 1 | provider; fixtures `assembleCaseContainerRefusal`, `caseDocumentFacts`, `caseFileLedger`, `publicationWorld`, `stampEditionRefusal`, `storeCaseDocumentRefusal` | none | sonnet-5-5 |
-| 4 | 110 | `publish-schedule` | 8 | 0/0/0 | 0 | provider; fixtures `scheduleRefusals`, `scheduledEditions` | none | haiku-5-5 |
-| 4 | 111 | `docket` | 8 | 1/0/0 | E 1 | provider; fixtures `docketEntryRead` | job: FIX-E 1; after A4 | haiku-5-5 |
-| 4 | 112 | `public-read` | 8 | 13/0/3 | L 12 · F 4 | provider; fixtures `groupIdentityRegistrar` | none | sonnet-5-5 |
-| 4 | 114 | `network-notices` | 8 | 2/0/0 | E 2 | provider; fixtures `noticePrepareRefusal` | none | haiku-5-5 |
-| 4 | 116 | `ratification` | 8 | 20/2/0 | E 9 · L 9 · F 1 · open 3 | provider; fixtures `noCaseDocument`, `preflightRefusal` | job: op-table 3, FIX-E 6; after A4 SA+IS | sonnet-5-5 |
-| 4 | 117 | `case-checker` | 8 | 0/0/0 | 0 | provider; fixtures `checkAccountMalformed` | none | haiku-5-5 |
-| 4 | 118 | `case-import` | 8 | 1/0/0 | E 1 | provider; fixtures `importedWorld`, `openFlagsUnread`, `watchedImports` | none | sonnet-5-5 |
-| 4 | 119 | `case-disclosures` | 8 | 16/0/0 | E 11 · L 2 · C 3 | provider; fixtures `gateRefusal` | job: FIX-E 3; after A4 | sonnet-5-5 |
-| 4 | 120 | `case-account` | 8 | 3/0/0 | E 2 · L 1 | provider; fixtures `reviewCommentsRegistrar` | pass: FIX-E 1; after A4 | haiku-5-5 |
-| 4 | 121 | `case-inputs` | 8 | 0/0/0 | 0 | provider; fixtures `carryOutcome`, `statementAck` | none | haiku-5-5 |
-| 4 | 122 | `case-authoring` | 8 | 13/0/1 | E 6 · C 2 · open 6 | provider; fixtures `preflightAnswer` | job: FIX-E 3; after A4 | sonnet-5-5 |
-| 4 | 123 | `review` | 8 | 2/0/0 | E 2 | provider; contracts `review-copy-read` | job: FIX-E 2; after A4 | haiku-5-5 |
-| 5 | 124 | `case-check` | 8 | 2/0/0 | E 2 | provider; fixtures `caseCheckOfNoSuchCase` | none | sonnet-5-5 |
-| 5 | 125 | `conformance` | 9 | 4/0/0 | E 3 · open 1 | provider; fixtures `curesOf`, `determinationRead`, `noDeterminations` | job: op-table 1, FIX-E 1; after A5 SA+IS | sonnet-5-5 |
-| 5 | 126 | `consequences` | 9 | 5/0/0 | E 5 | provider; fixtures `consequencesOfRefusal`, `successRecordRead` | none | sonnet-5-5 |
-| 5 | 129 | `actions` | 9 | 6/1/0 | E 7 | provider; fixtures `actionRead`, `actionsForRefusal` | job: FIX-E 6; after A5 | sonnet-5-5 |
-| 5 | 131 | `action-clocks` | 9 | 2/1/0 | E 3 | provider; fixtures `pendingClocksRefusal` | job: FIX-E 1; after A5 | haiku-5-5 |
-| 5 | 135 | `escalation` | 9 | 6/0/0 | E 6 | provider; fixtures `escalationRead` | job: FIX-E 6; after A5 | haiku-5-5 |
-| 5 | 136 | `action-plans` | 9 | 3/1/0 | E 3 · F 1 | provider; fixtures `planRead`; contracts `plan-open-check` | job: FIX-E 2; after A5 | haiku-5-5 |
-| 5 | 137 | `plan-work` | 9 | 7/0/0 | E 6 · C 1 | provider; fixtures `watchReaderRegistrar` | job: FIX-E 4; after A5 | sonnet-5-5 |
-| 5 | 138 | `monitoring` | 10 | 30/6/0 | E 15 · L 5 · F 4 · open 12 | provider; fixtures `flaggedRefusal` | job: op-table 12, FIX-E 2; after A5 SA+IS | sonnet-5-5 |
-| 5 | 139 | `following` | 10 | 13/1/0 | E 10 · open 4 | provider; fixtures `watchedByRefusal` | job: op-table 4, FIX-E 2; after A5 SA+IS | sonnet-5-5 |
-| 5 | 140 | `link-sweep` | 10 | 1/1/0 | E 2 | provider; contracts `sweep-fence`, `sweep-mutate`, `sweep-scope` | none | sonnet-5-5 |
-| 5 | 147 | `action-producers` | 11 | 7/0/0 | E 2 · open 5 | provider; fixtures `actionItems` | job: op-table 5, FIX-E 2; after A5 SA+IS | haiku-5-5 |
-| 5 | 152 | `instance-setup` | 11 | 22/0/0 | E 18 · L 2 · F 1 · open 1 | provider; fixtures `assistantState`, `instanceGroupAnswer`; contracts `group-identity-public` | job: op-table 1; after SA+IS | sonnet-5-5 |
-| 5 | 155 | `admission` | 11 | 0/0/0 | 0 | provider; contracts `credential-revoked` | none | haiku-5-5 |
-| 5 | 156 | `answer-envelope` | 11 | 9/0/1 | F 10 | provider; fixtures `planeHelpers`, `refusedAnswer`, `storeSilent`; contracts `door-helpers` | none | haiku-5-5 |
-| 5 | 157 | `store-door` | 11 | 10/5/2 | E 2 · F 7 · open 8 | provider; fixtures `internalErrorAnswer`; contracts `store-replies` | job: op-table 8; after SA+IS | sonnet-5-5 |
-| 5 | 169 | `screens-action` | 11 | 57/0/2 | E 1 · F 3 · C 2 · open 53 | provider; contracts `plan-screen-shape` | job: op-table 50, builder 3, FIX-E 1; after A5 SA+IS | haiku-5-5 |
+| 1 | 13 | `subresources` | cause only | R15 | - | none | 0/0/0 | sonnet-5-5 |
+| 1 | 29 | `pdf-pixels` | provider | R6 | fixtures `pageRefusal`, `pixelRefusal`, `renderedPage` | none | 0/0/0 | sonnet-5-5 |
+| 1 | 32 | `pdf-worker` | provider | R8 | fixtures `tier2Answer` | pending part-5/v3: 1 | 1/0/0 | sonnet-5-5 |
+| 1 | 33 | `ocr-worker` | provider | R7 | fixtures `memberRefusal`, `memberWorker`, `pageNotRenderable` | job: FIX-E 2; after batch 1; pending part-5/v3: 1 | 1/2/0 | sonnet-5-5 |
+| 1 | 35 | `file-scanner` | provider | R11c | fixtures `reputationRefresh` | none | 0/0/0 | sonnet-5-5 |
+| 1 | 37 | `record-core` | provider | - | fixtures `coreOver`, `evidencePartsRefusal`, `perItemRetained`, `tableDeclarationRefusals` | pending part-5/v3: 1 | 1/0/0 | sonnet-5-5 |
+| 1 | 38 | `membership` | provider | - | fixtures `projectActRefusals` | pending part-5/v3: 6 | 5/0/1 | haiku-5-5 |
+| 1 | 41 | `credentials` | provider | R24 (a) | fixtures `securityMapRefusal` | job: FIX-E 8; after batch 3; pending part-5/v3: 1 | 7/2/0 | sonnet-5-5 |
+| 1 | 44 | `provenance` | provider | - | fixtures `heldParts`, `holdsOf`, `holdsRegister`, `homeOf`, `homeOfEmpty`, `homeOfHomed`, `homeOfWorld`, `provenanceOver`, `registeredHomes`, `versionChainNoSuchVersion` | pending part-5/v3: 1 | 1/0/0 | sonnet-5-5 |
+| 1 | 47 | `capture-sources` | provider | - | fixtures `renderFailure`, `renderRefusal` | pending part-5/v3: 1 | 0/1/0 | haiku-5-5 |
+| 1 | 51 | `file-safety` | provider | R39a | fixtures `batchTickAnswers`, `declaredRefusals`, `scannerAbsent`, `toolTestFailed`, `toolTested` | job: FIX-E 2; after batch 1 | 2/2/0 | sonnet-5-5 |
+| 1 | 73 | `retrieval-browse` | provider | R17a, R26 | fixtures `browseViewerMissing`, `marksRegistrarDeclared` | job: FIX-E 4; after batch 3 | 5/1/0 | sonnet-5-5 |
+| 1 | 77 | `inquiry-grammar` | cause only | R30b | - | none | 0/0/0 | sonnet-5-5 |
+| 1 | 142 | `wizard-scripts` | enabling | - | - | pass: FIX-E 1; after batch 3 | 1/0/0 | sonnet-5-5 |
+| 1 | 151 | `translations` | enabling | - | - | none | 2/0/0 | sonnet-5-5 |
+| 1 | 155 | `admission` | provider | R27b | contracts `credential-revoked` | none | 0/0/0 | sonnet-5-5 |
+| 1 | 158 | `signin-door` | enabling | - | fixtures `signinRefusal` | pass: FIX-E 2; after batch 2; pending part-5/v3: 4 | 6/0/0 | sonnet-5-5 |
+| 1 | 166 | `screens-inquiry` | cause only | R1, R2a, R4, R35a, R37, R38, R17b, R30a | - | job: FIX-E 4; after batch 5; pending part-5/v3: 478 | 479/1/4 | sonnet-5-5 |
+| 1 | 170 | `control-plane` | provider | - | contracts `ask-wire`, `deliver-owed`, `unknown-op` | delete `owner-ops.mjs`, call `innerRequest`; job: FIX-E 10, FIX-L 6, CODE 6; after batch 5; pending part-5/v3: 72 | 78/11/4 | sonnet-5-5 |
+| 1 | 171 | `plane` | provider | entry 4, R24 (b2), R24 (d), R28b | contracts `job-registrar`, `keep-later`, `owed-later`, `owed-ledger` | delete the composition copy, `Store` calls `assembleStore`; job: FIX-E 63, CODE 3; after batch 3; pending part-5/v3: 18 | 42/32/2 | sonnet-5-5 |
+| 2 | 16 | `office-readers` | cause only | R11a, R16, R21(b) | - | none | 0/0/0 | sonnet-5-5 |
+| 2 | 18 | `pdf-reader` | provider | - | fixtures `notAPdf` | pending part-5/v3: 1 | 1/0/0 | haiku-5-5 |
+| 2 | 40 | `ai-accounts` | provider | - | fixtures `accountForRefused`, `accountForResult`, `accountsServing`, `keepAwaySet`, `keepAwayState`, `keepAwayUnreadable`, `keptAwayGroup`, `keptAwayProject`, `keptAwayUnreadable`, `noAccount`, `switchedOff`, `tokenMalformedHold` | pending part-5/v3: 2 | 8/2/0 | sonnet-5-5 |
+| 2 | 42 | `promotion` | provider | - | fixtures `factUnavailable`, `groupUndetermined`, `makePromotion`, `projectActNotParticipant`, `registrars`, `retireCited`, `staleBaseRefusal` | pending part-5/v3: 2 | 2/0/2 | sonnet-5-5 |
+| 2 | 45 | `attestation` | provider | - | fixtures `attestationsOfBadSha`, `noKeyInstanceSign` | none | 0/0/0 | haiku-5-5 |
+| 2 | 48 | `acquisition` | provider | R12 | fixtures `acquireRefusals`, `archiveNotHeld`, `keyedServiceOff`, `notHeldRange`, `owedFetchAnswer`, `owedRunAnswer` | pending part-5/v3: 6 | 11/87/0 | sonnet-5-5 |
+| 2 | 49 | `capture` | provider | R29 | fixtures `acquireRefusal`, `captureArm`, `heldActsUnreadable`, `heldSetAside`, `storageNotConfigured` | pending part-5/v3: 4 | 17/25/1 | sonnet-5-5 |
+| 2 | 52 | `sources` | provider | - | fixtures `rungOf`, `sourceOfReads` | none | 0/0/0 | haiku-5-5 |
+| 2 | 60 | `local-facts` | provider | - | fixtures `factStatusRefusal` | none | 0/0/0 | haiku-5-5 |
+| 2 | 64 | `standards` | provider | - | fixtures `standardRead`, `standardReadWorld`, `standardRow` | none | 0/0/0 | sonnet-5-5 |
+| 2 | 68 | `duties` | provider | - | fixtures `occurrences`, `occurrencesOf`, `recordTransitionsAnswers`, `transitionsRefusal` | pending part-5/v3: 2 | 2/0/0 | sonnet-5-5 |
+| 2 | 74 | `retrieval` | provider | - | fixtures `actionRegistrar`, `meaningRowsUnknownArm`, `noSelection`, `selectionResolve`; contracts `selection-read` | job: FIX-E 1; after batch 3 | 0/1/0 | sonnet-5-5 |
+| 2 | 85 | `basis-versions` | cause only | R23 | - | none | 0/0/0 | sonnet-5-5 |
+| 2 | 116 | `ratification` | provider | R27a | fixtures `noCaseDocument`, `preflightRefusal` | job: FIX-E 7; after batch 5; pending part-5/v3: 4 | 20/2/0 | sonnet-5-5 |
+| 2 | 118 | `case-import` | provider | - | fixtures `importedWorld`, `openFlagsUnread`, `watchedImports` | pass: FIX-E 1; after batch 4 | 1/0/0 | sonnet-5-5 |
+| 2 | 121 | `case-inputs` | provider | - | fixtures `carryOutcome`, `statementAck` | none | 0/0/0 | haiku-5-5 |
+| 2 | 125 | `conformance` | provider | - | fixtures `curesOf`, `determinationRead`, `noDeterminations` | job: FIX-E 3; after batch 5; pending part-5/v3: 1 | 4/0/0 | sonnet-5-5 |
+| 2 | 156 | `answer-envelope` | provider | - | fixtures `planeHelpers`, `refusedAnswer`, `storeSilent`; contracts `door-helpers` | pending part-5/v3: 10 | 9/0/1 | haiku-5-5 |
+| 2 | new, after signin-door | `store-assembly` | new module | - | - | none | 0/0/0 | default |
+| 2 | 164 | `screens-intake` | cause only | R5, R35b, R36, R14, R33 | - | job: FIX-E 1; after batch 2; pending part-5/v3: 361 | 359/1/4 | sonnet-5-5 |
+| 3 | 15 | `csv-reader` | cause only | R20 | - | none | 0/0/0 | sonnet-5-5 |
+| 3 | 36 | `member-roster` | provider | - | fixtures `expertiseWithdrawn`, `listenerRefusals` | pending part-5/v3: 4 | 3/0/1 | haiku-5-5 |
+| 3 | 39 | `project-roster` | provider | - | fixtures `projectReadRefusals` | none | 0/0/0 | haiku-5-5 |
+| 3 | 54 | `reading-pipeline` | provider | R2b, R3, R9, R11b, R18b | fixtures `storeFailedTransient` | pending part-5/v3: 17 | 20/10/1 | sonnet-5-5 |
+| 3 | 55 | `extraction` | provider | R10, R24 (b), R39b | fixtures `extractionNotice`, `progressOf`, `readHeldAnswer`, `unheldStructure` | pending part-5/v3: 6 | 35/39/0 | sonnet-5-5 |
+| 3 | 57 | `entities` | provider | - | fixtures `entitiesWorld`, `namingInRefused`, `unreadable` | none | 0/1/0 | sonnet-5-5 |
+| 3 | 58 | `events` | provider | - | fixtures `recordedByMalformedExtent`, `timelineRefusal`, `usesOf` | pending part-5/v3: 1 | 1/1/0 | sonnet-5-5 |
+| 3 | 65 | `progressions` | provider | - | fixtures `definitionRead`, `disposeProposalRefusal` | none | 0/2/0 | sonnet-5-5 |
+| 3 | 75 | `calculations` | cause only | R19 | - | job: FIX-E 1; after batch 3 | 1/1/0 | sonnet-5-5 |
+| 3 | 80 | `inquiry` | provider | R30b | fixtures `basisForUnread`, `basisRefusals`, `migratedSurfacing` | pending part-5/v3: 1 | 5/0/1 | sonnet-5-5 |
+| 3 | 82 | `steps` | provider | - | fixtures `stepRead`, `stepsWorld` | none | 0/0/0 | sonnet-5-5 |
+| 3 | 92 | `capture-requests` | provider | - | fixtures `sweepScopeRegistrar` | pending part-5/v3: 3 | 6/3/1 | sonnet-5-5 |
+| 3 | 96 | `answers` | provider | - | fixtures `limitsUnreadable`, `standingQuestions`, `standingSwitchOff` | none | 1/8/0 | sonnet-5-5 |
+| 3 | 107 | `case-carriage` | provider | - | fixtures `copyReadStates`, `copyTickRefusals`, `onCopyWorkRegistrarRefusals` | none | 0/0/0 | haiku-5-5 |
+| 3 | 109 | `publication` | provider | - | fixtures `assembleCaseContainerRefusal`, `caseDocumentFacts`, `caseFileLedger`, `publicationWorld`, `stampEditionRefusal`, `storeCaseDocumentRefusal` | none | 5/0/0 | sonnet-5-5 |
+| 3 | 115 | `case-catalogue` | cause only | R31 | - | none | 0/0/0 | sonnet-5-5 |
+| 3 | 117 | `case-checker` | provider | - | fixtures `checkAccountMalformed` | none | 0/0/0 | haiku-5-5 |
+| 3 | 126 | `consequences` | provider | - | fixtures `consequencesOfRefusal`, `successRecordRead` | none | 5/0/0 | sonnet-5-5 |
+| 3 | 129 | `actions` | provider | - | fixtures `actionRead`, `actionsForRefusal` | job: FIX-E 1; after batch 3 | 6/1/0 | sonnet-5-5 |
+| 3 | new, after store-assembly | `store-request` | new module | - | - | none | 0/0/0 | default |
+| 4 | 31 | `doc-clean` | provider | - | fixtures `encryptedRefusal` | none | 0/0/0 | haiku-5-5 |
+| 4 | 56 | `content` | cause only | R22 | - | none | 1/2/0 | sonnet-5-5 |
+| 4 | 59 | `lines` | provider | - | fixtures `linesWorld` | none | 0/1/0 | sonnet-5-5 |
+| 4 | 69 | `people` | provider | - | fixtures `evaluateChecksAnswers`, `tiesConcerningRefusal` | pending part-5/v3: 1 | 1/0/0 | haiku-5-5 |
+| 4 | 71 | `bias` | provider | - | fixtures `biasRefusedPromote` | none | 0/0/0 | haiku-5-5 |
+| 4 | 86 | `strength` | provider | - | fixtures `gradingFactsUnread`, `strengthBarSet`, `strengthOfNoId` | pending part-5/v3: 1 | 3/0/0 | sonnet-5-5 |
+| 4 | 87 | `contradiction` | provider | - | fixtures `candidateReads`, `readRefusals` | pending part-5/v3: 1 | 2/0/0 | sonnet-5-5 |
+| 4 | 89 | `ai-use` | provider | - | fixtures `ceilingRefusal`; contracts `use-check` | none | 0/0/0 | haiku-5-5 |
+| 4 | 90 | `ai-runs` | provider | - | fixtures `airunDispatchRefusal`, `airunOpenRefusal`, `airunRefusal`, `tickStateTooLarge` | pending part-5/v3: 3 | 5/4/3 | sonnet-5-5 |
+| 4 | 91 | `run-productions` | provider | - | fixtures `suggestRefusals` | none | 0/0/0 | haiku-5-5 |
+| 4 | 99 | `agent-runner` | provider | - | fixtures `runnerRefusal` | pending part-5/v3: 1 | 0/1/0 | haiku-5-5 |
+| 4 | 102 | `intent` | provider | - | fixtures `intentWorld` | pending part-5/v3: 1 | 4/2/0 | sonnet-5-5 |
+| 4 | 112 | `public-read` | provider | - | fixtures `groupIdentityRegistrar` | pending part-5/v3: 4 | 13/0/3 | sonnet-5-5 |
+| 4 | 120 | `case-account` | provider | - | fixtures `reviewCommentsRegistrar` | none | 3/0/0 | haiku-5-5 |
+| 4 | 122 | `case-authoring` | provider | - | fixtures `preflightAnswer` | pending part-5/v3: 6 | 13/0/1 | sonnet-5-5 |
+| 4 | 131 | `action-clocks` | provider | - | fixtures `pendingClocksRefusal` | none | 2/1/0 | sonnet-5-5 |
+| 4 | 136 | `action-plans` | provider | - | fixtures `planRead`; contracts `plan-open-check` | job: FIX-E 1; after batch 5; pending part-5/v3: 1 | 3/1/0 | sonnet-5-5 |
+| 4 | 137 | `plan-work` | provider | - | fixtures `watchReaderRegistrar` | job: FIX-E 2; after batch 5 | 7/0/0 | sonnet-5-5 |
+| 4 | 161 | `screens-entry` | cause only | R34 | - | pending part-5/v3: 171 | 173/0/0 | sonnet-5-5 |
+| 4 | 165 | `screens-daily` | cause only | R17a | - | pending part-5/v3: 248 | 250/0/0 | sonnet-5-5 |
+| 5 | 34 | `sheet-worker` | provider | - | fixtures `recomputeNotEnabled` | none | 0/0/0 | haiku-5-5 |
+| 5 | 67 | `money-checks` | provider | - | fixtures `runDetectorsAnswers` | none | 0/0/0 | haiku-5-5 |
+| 5 | 101 | `agent-worker` | provider | - | contracts `dispatch-refusal`, `transcribe-declined`, `transcribe-not-sent`, `transcribe-refusal` | pending part-5/v3: 5 | 14/1/7 | sonnet-5-5 |
+| 5 | 110 | `publish-schedule` | provider | - | fixtures `scheduleRefusals`, `scheduledEditions` | none | 0/0/0 | haiku-5-5 |
+| 5 | 111 | `docket` | provider | - | fixtures `docketEntryRead` | none | 1/0/0 | sonnet-5-5 |
+| 5 | 114 | `network-notices` | provider | - | fixtures `noticePrepareRefusal` | none | 2/0/0 | haiku-5-5 |
+| 5 | 119 | `case-disclosures` | provider | - | fixtures `gateRefusal` | none | 16/0/0 | sonnet-5-5 |
+| 5 | 123 | `review` | provider | - | contracts `review-copy-read` | none | 2/0/0 | sonnet-5-5 |
+| 5 | 124 | `case-check` | provider | - | fixtures `caseCheckOfNoSuchCase` | none | 2/0/0 | sonnet-5-5 |
+| 5 | 135 | `escalation` | provider | - | fixtures `escalationRead` | none | 6/0/0 | sonnet-5-5 |
+| 5 | 138 | `monitoring` | provider | - | fixtures `flaggedRefusal` | pending part-5/v3: 16 | 30/6/0 | sonnet-5-5 |
+| 5 | 139 | `following` | provider | - | fixtures `watchedByRefusal` | pending part-5/v3: 4 | 13/1/0 | sonnet-5-5 |
+| 5 | 140 | `link-sweep` | provider | - | contracts `sweep-fence`, `sweep-mutate`, `sweep-scope` | none | 1/1/0 | sonnet-5-5 |
+| 5 | 147 | `action-producers` | provider | - | fixtures `actionItems` | pending part-5/v3: 5 | 7/0/0 | sonnet-5-5 |
+| 5 | 152 | `instance-setup` | provider | - | fixtures `assistantState`, `instanceGroupAnswer`; contracts `group-identity-public` | pending part-5/v3: 2 | 22/0/0 | sonnet-5-5 |
+| 5 | 157 | `store-door` | provider | - | fixtures `internalErrorAnswer`; contracts `store-replies` | pending part-5/v3: 15 | 10/5/2 | sonnet-5-5 |
+| 5 | 159 | `interface-assets` | cause only | R32 | - | none | 0/0/0 | sonnet-5-5 |
+| 5 | 169 | `screens-action` | provider | - | contracts `plan-screen-shape` | pending part-5/v3: 56 | 57/0/2 | sonnet-5-5 |
 
-## 4. Wave B only (modules with findings that are not providers)
+## 4. Modules with findings and no job in the batches (Wave B only)
 
-| # | Module | L | a/s/c | classed | Wave B work | after | Model |
-|---|---|---|---|---|---|---|---|
-| 7 | `test-support` | 1 | 2/2/1 | L 4 · F 1 | pass: FIX-L 4, FALSE 1 | - | haiku-5-5 |
-| 9 | `signatures` | 1 | 0/1/0 | F 1 | gap: FALSE only (FALSE 1): check-rule gap for BOB | - | - |
-| 10 | `bundler` | 1 | 0/7/0 | F 7 | gap: FALSE only (FALSE 7): check-rule gap for BOB | - | - |
-| 17 | `odf-reader` | 1 | 1/0/0 | F 1 | gap: FALSE only (FALSE 1): check-rule gap for BOB | - | - |
-| 22 | `docprofile` | 1 | 0/3/0 | F 3 | gap: FALSE only (FALSE 3): check-rule gap for BOB | - | - |
-| 43 | `host-governor` | 3 | 6/0/0 | L 5 · F 1 | pass: FIX-L 5, FALSE 1 | - | haiku-5-5 |
-| 50 | `doorbell` | 3 | 13/6/0 | E 4 · L 14 · C 1 | pass: FIX-E 4, FIX-L 14, CODE 1 | A2 | haiku-5-5 |
-| 56 | `content` | 4 | 1/2/0 | E 3 | job: FIX-E 3 | A2 | sonnet-5-5 |
-| 61 | `connections` | 5 | 7/0/0 | E 1 · L 4 · F 1 · C 1 | job: FIX-L 4, FALSE 1, CODE 1, FIX-E 1 | A2 | sonnet-5-5 |
-| 62 | `observation-log` | 5 | 1/0/0 | E 1 | job: FIX-E 1 | A2 | sonnet-5-5 |
-| 63 | `law-relations` | 5 | 9/0/0 | E 1 · open 8 | job: FIX-E 1, builder 8 | A2 SA+IS | sonnet-5-5 |
-| 66 | `money` | 5 | 1/0/1 | E 1 · F 1 | job: FALSE 1, FIX-E 1 | A2 | sonnet-5-5 |
-| 70 | `explore` | 5 | 2/0/0 | open 2 | job: op-table 2 | SA+IS | sonnet-5-5 |
-| 75 | `calculations` | 5 | 1/1/0 | E 2 | job: FIX-E 2 | A2 | sonnet-5-5 |
-| 76 | `workbooks` | 5 | 1/0/0 | E 1 | job: FIX-E 1 | A1 | sonnet-5-5 |
-| 81 | `hypotheses` | 6 | 0/0/2 | C 2 | pass: CODE 2 | - | haiku-5-5 |
-| 83 | `citation` | 6 | 2/0/0 | E 1 · C 1 | job: FIX-E 1, CODE 1 | A3 | sonnet-5-5 |
-| 94 | `skills` | 6 | 0/0/8 | F 8 | gap: FALSE only (FALSE 16): check-rule gap for BOB | - | - |
-| 95 | `question-explorer` | 6 | 1/0/0 | open 1 | job: op-table 1 | SA+IS | sonnet-5-5 |
-| 98 | `agent-model` | 6 | 0/0/1 | F 1 | gap: FALSE only (FALSE 1): check-rule gap for BOB | - | - |
-| 100 | `agent-steps` | 6 | 12/0/7 | E 2 · L 3 · F 3 · C 7 · open 4 | job: FIX-E 2, CODE 7, FIX-L 3, op-table 1, FALSE 3, builder 3 | A3 SA+IS | sonnet-5-5 |
-| 104 | `reevaluation` | 7 | 3/0/2 | E 1 · F 2 · C 1 · open 1 | job: CODE 1, op-table 1, FIX-E 1, FALSE 2 | A3 SA+IS | sonnet-5-5 |
-| 128 | `action-records` | 9 | 2/0/0 | E 2 | job: FIX-E 2 | A3 | sonnet-5-5 |
-| 130 | `action-holds` | 9 | 2/0/0 | E 2 | job: FIX-E 2 | A4 | sonnet-5-5 |
-| 132 | `action-replies` | 9 | 3/0/0 | E 3 | job: FIX-E 3 | A5 | sonnet-5-5 |
-| 134 | `filings` | 9 | 6/0/0 | E 3 · open 3 | job: FIX-E 3, op-table 3 | A2 SA+IS | sonnet-5-5 |
-| 141 | `scheduler` | 10 | 12/0/0 | E 11 · open 1 | job: FIX-E 13, op-table 1 | A4 SA+IS | sonnet-5-5 |
-| 144 | `affordances` | 11 | 0/0/5 | L 3 · F 2 | pass: FALSE 2, FIX-L 3 | - | haiku-5-5 |
-| 145 | `tasks` | 11 | 0/5/0 | E 5 | job: FIX-E 5 | A2 | sonnet-5-5 |
-| 146 | `machinery-producers` | 11 | 5/5/0 | E 5 · open 5 | job: FIX-E 5, op-table 5 | A2 SA+IS | sonnet-5-5 |
-| 148 | `queue-producers` | 11 | 24/7/2 | E 16 · F 1 · C 1 · open 15 | job: FIX-E 15, op-table 15, CODE 1, FALSE 1 | A5 SA+IS | sonnet-5-5 |
-| 149 | `notice-producers` | 11 | 8/2/0 | E 9 · open 1 | job: FIX-E 9, op-table 1 | A5 SA+IS | sonnet-5-5 |
-| 150 | `queue` | 11 | 6/1/1 | E 2 · C 1 · open 5 | job: op-table 5, CODE 1, FIX-E 2 | A3 SA+IS | sonnet-5-5 |
-| 160 | `interface-shell` | 11 | 56/0/1 | F 5 · open 52 | `boot({door})` (`harness.mjs:190`), delete its `ADMIN_*` and import them from `wizard-scripts`, own tables; job: op-table 52, FALSE 5 | SA+IS | sonnet-5-5 |
-| 161 | `screens-entry` | 11 | 173/0/0 | C 2 · open 171 | job: op-table 171, CODE 2 | SA+IS | sonnet-5-5 |
-| 162 | `screens-wizards` | 11 | 51/0/0 | open 51 | job: op-table 50, builder 1 | SA+IS | sonnet-5-5 |
-| 163 | `screens-settings` | 11 | 247/0/0 | E 12 · F 5 · C 1 · open 229 | job: op-table 229, FIX-E 13, FALSE 5, CODE 1 | A5 SA+IS | sonnet-5-5 |
-| 164 | `screens-intake` | 11 | 359/1/4 | E 1 · L 1 · F 4 · C 1 · open 357 | job: CODE 1, op-table 355, FALSE 4, FIX-L 1, FIX-E 1, builder 2 | A2 SA+IS | sonnet-5-5 |
-| 165 | `screens-daily` | 11 | 250/0/0 | E 2 · open 248 | job: op-table 248, FIX-E 2 | A1 SA+IS | sonnet-5-5 |
-| 166 | `screens-inquiry` | 11 | 479/1/4 | E 4 · L 1 · F 5 · C 1 · open 473 | job: op-table 471, FIX-E 4, FALSE 5, builder 2, CODE 1, FIX-L 1 | A4 SA+IS | sonnet-5-5 |
-| 167 | `screens-investigate` | 11 | 166/0/0 | E 2 · open 164 | job: op-table 164, FIX-E 2 | A3 SA+IS | sonnet-5-5 |
-| 168 | `screens-publish` | 11 | 56/0/4 | E 10 · F 6 · open 44 | job: FIX-E 10, op-table 44, FALSE 6 | A5 SA+IS | sonnet-5-5 |
-| 172 | `installer-steps` | 11 | 3/0/0 | open 3 | job: op-table 3 | SA+IS | sonnet-5-5 |
-| 173 | `installer` | 11 | 17/0/0 | E 2 · open 15 | job: op-table 15, FIX-E 2 | A5 SA+IS | sonnet-5-5 |
-| 176 | `journey-check` | 11 | 16/1/1 | E 1 · F 2 · open 15 | job: op-table 15, FIX-E 1, FALSE 2 | A1 SA+IS | sonnet-5-5 |
+| # | Module | a/s/c | Wave B work | Model |
+|---|---|---|---|---|
+| 7 | `test-support` | 2/2/1 | pass: FIX-L 4; after -; pending part-5/v3: 1 | haiku-5-5 |
+| 9 | `signatures` | 0/1/0 | pending part-5/v3: 1 | - |
+| 10 | `bundler` | 0/7/0 | pending part-5/v3: 7 | - |
+| 17 | `odf-reader` | 1/0/0 | pending part-5/v3: 1 | - |
+| 22 | `docprofile` | 0/3/0 | pending part-5/v3: 3 | - |
+| 43 | `host-governor` | 6/0/0 | pass: FIX-L 5; after -; pending part-5/v3: 1 | haiku-5-5 |
+| 50 | `doorbell` | 13/6/0 | pass: FIX-E 4, FIX-L 14, CODE 1; after batch 1 | haiku-5-5 |
+| 61 | `connections` | 7/0/0 | job: FIX-L 4, CODE 1, FIX-E 1; after batch 3; pending part-5/v3: 1 | sonnet-5-5 |
+| 62 | `observation-log` | 1/0/0 | job: FIX-E 1; after batch 3 | sonnet-5-5 |
+| 63 | `law-relations` | 9/0/0 | pass: FIX-E 1; after batch 2; pending part-5/v3: 8 | haiku-5-5 |
+| 66 | `money` | 1/0/1 | job: FIX-E 1; after batch 2; pending part-5/v3: 1 | sonnet-5-5 |
+| 70 | `explore` | 2/0/0 | pending part-5/v3: 2 | - |
+| 76 | `workbooks` | 1/0/0 | job: FIX-E 1; after batch 5 | sonnet-5-5 |
+| 81 | `hypotheses` | 0/0/2 | pass: CODE 2; after - | haiku-5-5 |
+| 83 | `citation` | 2/0/0 | job: FIX-E 1, CODE 1; after batch 3 | sonnet-5-5 |
+| 94 | `skills` | 0/0/8 | pending part-5/v3: 16 | - |
+| 95 | `question-explorer` | 1/0/0 | pending part-5/v3: 1 | - |
+| 98 | `agent-model` | 0/0/1 | pending part-5/v3: 1 | - |
+| 100 | `agent-steps` | 12/0/7 | job: FIX-E 2, CODE 7, FIX-L 3; after batch 4; pending part-5/v3: 7 | sonnet-5-5 |
+| 104 | `reevaluation` | 3/0/2 | job: CODE 1, FIX-E 1; after batch 2; pending part-5/v3: 3 | sonnet-5-5 |
+| 128 | `action-records` | 2/0/0 | job: FIX-E 2; after batch 3 | sonnet-5-5 |
+| 130 | `action-holds` | 2/0/0 | job: FIX-E 2; after batch 5 | sonnet-5-5 |
+| 132 | `action-replies` | 3/0/0 | job: FIX-E 3; after batch 3 | sonnet-5-5 |
+| 134 | `filings` | 6/0/0 | pass: FIX-E 3; after batch 3; pending part-5/v3: 3 | haiku-5-5 |
+| 141 | `scheduler` | 12/0/0 | job: FIX-E 13; after batch 3; pending part-5/v3: 1 | sonnet-5-5 |
+| 144 | `affordances` | 0/0/5 | pass: FIX-L 3; after -; pending part-5/v3: 2 | haiku-5-5 |
+| 145 | `tasks` | 0/5/0 | job: FIX-E 5; after batch 1 | sonnet-5-5 |
+| 146 | `machinery-producers` | 5/5/0 | job: FIX-E 5; after batch 1; pending part-5/v3: 5 | sonnet-5-5 |
+| 148 | `queue-producers` | 24/7/2 | job: FIX-E 16, CODE 1; after batch 5; pending part-5/v3: 16 | sonnet-5-5 |
+| 149 | `notice-producers` | 8/2/0 | job: FIX-E 9; after batch 5; pending part-5/v3: 1 | sonnet-5-5 |
+| 150 | `queue` | 6/1/1 | pass: CODE 1, FIX-E 2; after batch 3; pending part-5/v3: 5 | haiku-5-5 |
+| 160 | `interface-shell` | 56/0/1 | `boot({door})`, delete `ADMIN_*` (import from wizard-scripts); pending part-5/v3: 57 | - |
+| 162 | `screens-wizards` | 51/0/0 | pending part-5/v3: 51 | - |
+| 163 | `screens-settings` | 247/0/0 | job: FIX-E 13, CODE 1; after batch 5; pending part-5/v3: 234 | sonnet-5-5 |
+| 167 | `screens-investigate` | 166/0/0 | job: FIX-E 2; after batch 2; pending part-5/v3: 164 | sonnet-5-5 |
+| 168 | `screens-publish` | 56/0/4 | job: FIX-E 10; after batch 5; pending part-5/v3: 50 | sonnet-5-5 |
+| 172 | `installer-steps` | 3/0/0 | pending part-5/v3: 3 | - |
+| 173 | `installer` | 17/0/0 | pass: FIX-E 2; after batch 5; pending part-5/v3: 15 | haiku-5-5 |
+| 176 | `journey-check` | 16/1/1 | job: FIX-E 1; after batch 1; pending part-5/v3: 17 | sonnet-5-5 |
 
 ## 5. Wave B in numbers
 
-Modules with Wave B work: 87. Of these, 45 have findings and no Wave A job, and 42 are Wave A modules with lines their Wave A job cannot do (their provider is in the same or a following batch, or they need `storeWorld()`).
+Classified fixture work left after the batches (the lines the audit classed FIX-E, FIX-L or CODE, which are final):
 
-| | pass (one mechanics §5.10 pass, no job; haiku-5-5) | job (sonnet-5-5) | gap (no work: only FALSE lines remain) |
+| | pass (one mechanics §5.10 pass, no job; sonnet medium worker per §5.10 (3), haiku-5-5 if BOB takes K3518) | job (a CHANGE to the module's job, or a job of its own) | only pending lines |
 |---|---|---|---|
-| Wave B only (45) | 5: `test-support`, `host-governor`, `doorbell`, `hypotheses`, `affordances` | 34 | 6: `signatures`, `bundler`, `odf-reader`, `docprofile`, `skills`, `agent-model` |
-| Wave A modules with Wave B lines (42) | 2: `case-account`, `wizard-scripts` | 40 | 0 |
+| Modules with no job in the batches (39) | 9: `test-support`, `host-governor`, `doorbell`, `law-relations`, `hypotheses`, `filings`, `affordances`, `queue`, `installer` | 19 | 11 |
+| Modules in the batches with lines left (53) | 3: `case-import`, `wizard-scripts`, `signin-door` | 15 | 35 |
 
-`interface-shell` and the nine screens modules need `store-assembly` and interface-shell's `boot({door})`: order `store-assembly`, `interface-shell`, then `screens-entry`, `screens-investigate`, `screens-action`, `screens-wizards`, `screens-publish`, then `screens-settings`, `screens-intake`, `screens-daily`, `screens-inquiry` (op-tables §5.5; 1,834 scripted op-table entries over them, 138 more in 35 other modules). `plane` and `control-plane` Wave B jobs follow `store-assembly` (they delete their copies, K624). A pass worker applies the rules of one provider at a time and leaves every judgment line to the module's job; a module that has both kinds is a job.
+The screens' work (1,834 op-table entries over the nine screens modules and `interface-shell`, 138 more in 35 other modules) is `pending` until part-5 and the check are reviewed; it then needs `store-request` and interface-shell's `boot({door})`. Order of the screens jobs (op-tables §5.5): `interface-shell`, `screens-entry`, `screens-investigate`, `screens-action`, `screens-wizards`, `screens-publish`, then `screens-settings`, `screens-intake`, `screens-daily`, `screens-inquiry`.
 
-## 6. Disagreements between the parts and the live list, and what could not be placed
+## 6. Open points and what moved since the first edition
 
-- **K5044's rules removed less than the parts expect.** The live list still carries 220 lines (53 modules) the parts class FALSE; K5044's rules in the check did not remove them: `control-plane` 61, `plane` 15, `reading-pipeline` 12, `answer-envelope` 10, `skills` 8, `bundler` 7, `store-door` 7, `acquisition` 6, `screens-publish` 6, the rest 1 to 5. A job cannot fix a FALSE line by re-pointing: each START names them, tells the job to re-shape them so the check does not read another module's answer (a code asserted back in the same test, or `// fixtures-generic: <CODE>` for a made-up one) and otherwise to report file:line and the part's rule to BOB. Six modules have only such lines (`gap` above). BOB decides whether the check text gets the rules (parts' `Check rules`) or the lines are marked one by one.
-- **The live list drops 422 lines the parts class FIX-E, FIX-L, FALSE or CODE** (FALSE 205, FIX-L 111, FIX-E 101, CODE 5; same file and line absent), so 54 fixtures or contracts named in the parts' Providers sections have no user left and are not in any START (for example answer-envelope's `required-argument` 38 lines in `public-read`, `agent-runner`'s `runner-refusals` and `runner-wire` for `agent-model`, `basis-versions`' four fixtures, `office-readers`' `cellsInRefusal`, `case-disclosures`' `accountRefusals`). Seven providers named by the parts have no live user at all and are Wave B: `agent-steps`, `basis-versions`, `calculations`, `corpus-export`, `doorbell`, `office-readers`, `reevaluation`. If BOB wants them as providers anyway, a START is two lines of the generator.
-- **2,000 lines no part classes** (K5044 (3) owes them a second audit pass, K5044 (7)): 1,972 op-table entries (1,834 in the nine screens modules and interface-shell, which `storeWorld()` replaces; 138 in 35 other modules, the largest `journey-check` 15, `queue-producers` 15, `installer` 15, `monitoring` 12, `control-plane` 11, `store-door` 8) and 28 builder call sites (`law-relations` 8, `case-authoring` 6, `extraction` 3, `agent-steps` 3, `screens-action` 3, `screens-inquiry` 2, `screens-intake` 2, `screens-wizards` 1). The ones in a Wave A module are in its START with the instruction to read and classify them (`extraction`, `case-authoring`); the rest are in Wave B jobs. No scripted op table outside the screens has a design: `queue-producers`, `monitoring`, `installer` and `store-door` may need one.
-- **`journey-check`'s `servedPlane`** (part 4: the real plane served in process, replacing `fake-plane.mjs`) is not given to `plane`: journey-check imports no module and is imported by none (`layers.md:95`, K3100), op-tables §4 says it stays outside. It is Wave B with 1 FIX-E line, 15 op-table entries and 2 FALSE lines; BOB decides the line.
-- **Ordering inside the check.** Plane's and control-plane's `fixtures-run` lines cannot clear before their users' markers merge (`orphan-run`), and the users' markers cannot clear before the runs merge (`contract-no-run`), so no module's list is zero until both sides are merged; each START says which lines may remain. After Wave B moves the registrar, ledger and `keepLater` code to `store-assembly`, plane's contract tests keep working only if they run through plane's real `Store` (the START says so); the marker names stay `plane`.
-- **Coupled merge** of `translations`, `signin-door`, `control-plane` and `plane` (section 2, item 1): the declarations move is atomic or plane's start stops. If BOB prefers to give the two row removals to `translations` and `signin-door` as an ownership exception, the STARTs change in one line each.
-- **Contract ids** follow K5044 (5): `store-replies` (merging `store-envelope` and `store-reply`), `door-helpers` (merging `relay-helpers`, `envelope-helpers`, `required-argument`, `door-answers`); in addition parts 1 and 2's `use-check` and `use-check-refusal` are one contract, `use-check`, and part 3's names `doorHelpers`, `doAnswerShapes`, `storeReplies`, `unknownOp`, `reviewCopyRead`, `sweepFence`, `sweepMutate` are written as `door-helpers`, `door-helpers`, `store-replies`, `unknown-op`, `review-copy-read`, `sweep-fence`, `sweep-mutate`.
-- **Parts' line numbers** matched the live list for 936 of its 2,936 lines (every non-op-table, non-builder line matched; matching on module, file name and line). The parts' own module numbers differ from `modules.json`'s positions; this document uses `modules.json`.
-- **`pdf-pixels`** has `tests` entries that are single files, so its fixtures file `pdf-worker/test/pdf-pixels-fixtures.mjs` is outside them: its START says to list it in COMPLETE and BOB adds it (K1043).
-- **CODE fixes not confirmed against code**: the parts name the real code from a grep; each START says the job confirms. `screens-action`'s `BREACH_ON_HYPOTHESIS` and `LEG_ON_ACTION` have no real code found (part 4 Uncertain 5); the START applies K5044 (6): a real path giving neither is a product cause for BOB.
+- **Causes placed (28 modules):** pdf-pixels R6; ocr-worker R7; pdf-worker R8; reading-pipeline R2b, R3, R9, R11b, R18b; extraction R10, R24 (b), R39b; office-readers R11a, R16, R21(b); file-scanner R11c; acquisition R12; subresources R15; retrieval-browse R17a, R26; screens-daily R17a (draw); screens-inquiry R1, R2a, R4, R35a, R37, R38, R17b, R30a (+ following entries); screens-intake R5, R35b, R36, R14, R33; file-safety R39a; calculations R19; csv-reader R20; content R22; basis-versions R23; capture R29 (and R33's `heldCaptures` test); inquiry-grammar and inquiry R30b; case-catalogue R31; interface-assets R32 (gated); screens-entry R34 (minor); credentials R24 (a); admission R27b; plane entry 4 (first), R24 (b2), R24 (d), R28b; ratification R27a. **Cause-only STARTs added (13):** subresources, inquiry-grammar, screens-inquiry, basis-versions, screens-intake, office-readers, csv-reader, case-catalogue, calculations, content, screens-daily, screens-entry, interface-assets; plus the new module `store-request`.
+- **No job:** R13a (live reading first, then UX-DESIGN's picker), R13b and R11c's container cause and R5's parted half (the redeploy, K4428), R18a (closed, R32/R51), R21(a) and R21(c), R25, R28a, R34's cause (re-walk asks), R31b/R31c (a reproduction first), R24 (d) beyond plane's arrival log.
+- **Lines for modules the jobs may not own, reported to BOB by the jobs:** `capture`'s four parted ops' class rows live in `control-plane/owner-ops.mjs` (R29); ratification R27a's `session`/`reauthdue` fold touches control-plane; extraction R39b's `migrations` block in `selftest` is a control-plane Worker arm; `interface-shell` may be needed by R34; `office-readers` R21(b) names `odf-reader` for the ODS twin. Each START says so; none is a hidden edit.
+- **attest (K5046 (f))** is closed by K5052 (3): served, nothing removed; the earlier row for `attestation` is gone.
+- **Still true from the first edition:** the live list still carries 220 lines the parts class FALSE and 2,000 no part classes (all in the pending marker now); 54 named fixtures and contracts have no live user and are in no START; seven providers the parts name have no live user (agent-steps, basis-versions as a provider, calculations, corpus-export, doorbell, office-readers, reevaluation: three of them, basis-versions, calculations and office-readers, have a job anyway for a cause); `journey-check`'s `servedPlane` stays outside (journey-check imports no module); `pdf-pixels`' fixtures file is added to its `tests` by BOB at its COMPLETE (K5051).
+- **Counts for the check change:** if `prep/fixtures-v3` drops lines, the classified work above shrinks and a START's line list is rechecked against `--list` at job start (each START names the command).
 
