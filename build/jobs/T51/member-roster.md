@@ -1,6 +1,6 @@
 # member-roster (T51)
 
-**Status** · session_01WzR28gkdxHayrjWwZ6pTwS · depth 2 · COMPLETE · handled B6
+**Status** · session_017ZmLdEK9H7TnpXz4LEe9eG · depth 2 · WORKING · handled B6
 
 ## Completion (MEMBER-ROSTER #4) · FR-07 (B4; K4165, K4168, K4169, K4202, K4204)
 
