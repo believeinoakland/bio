@@ -294,3 +294,37 @@ R13 is **two observations with different causes**; (a) is explained and is not a
 - **Why the tests missed it**: `archive.test.mjs` asserts the promote body carries `project:` in the md and, once, `bundleInfo`; no test draws a member's Document page or the project's list after an unpack (the screen tests script the answers by hand).
 
 **Owner (R13 as a whole):** (a) none (BOB's design call); (b) `screens-inquiry`, pending the live reading above; no job should be opened for (b) before that reading (K4428).
+
+---
+
+## R14 · an encrypted DOCX and a `%PDF-` DOCM are shown "Clean" (C7)
+
+### 1. Root cause with evidence
+
+**`bio-plane/src/screens-intake/open-file.mjs:79`-`:83`: for a file the viewer added, `yours` (`kind === "high" && addedBy && reasons.some(code === "source_not_fetched")`) draws `screen.open-file.high.yours` and **suppresses the "Why: ..." line**: `(reasons.length && !yours ? ... screen.open-file.why ... : "")`. Every other reason of the grade (`encrypted`, `active:vba-project`, `format_unchecked`) is therefore never said to the member who added the file; the only other thing the page draws is the "Checks" list, which holds the scanner's note.**
+
+- The grade itself is **right**. In-process, over the real `file-safety` (the `filedWorld` fixture of `bio-plane/test/m/file-safety/fixture.mjs`, a scanner that answers `clean` as the live ClamAV did), the walker's files: DOCX `{kind:"docx", encryptedMember:true}` → `threat: high`, reasons `["encrypted"]`, original not openable (`may_open: false`, `NOT_SCANNED`); `%PDF-1.4\n` + the macro DOCM → `high`, `["format_unchecked"]`, openable; the macro DOCM → `high`, `["active:vba-project"]`; a template → `low`. In all four the only verdict **note** is the scanner's `clean`. (file-safety R54 holds: an encrypted file is "graded high and never clean".)
+- The screen draws what the walker saw. On the real served page (`bio-plane/test/m/screens-intake/page.mjs`, `open("/app/open-file/<sha>")` with scripted `threatof`/`verdictnotes`/`captureaccounts` answers carrying the member as the capture's actor): grade reasons `[source_not_fetched, encrypted]` → `says(high.yours)` true, the encrypted reason's words **not on the page**, the scanner's note "Clean" on it; the same for `[source_not_fetched, active:vba-project]`; and the control `[encrypted]` alone (a file the viewer did not add) **does** say the reason ("Why: ..."). On the live copy the walker's files were all "Added by you, not fetched" (the live grades carry `source_not_fetched` as well).
+- The scanner's "Clean" is the scanner's true statement (it opens nothing inside an encrypted package and does not alert); it is the only check line until the deeper check is asked, because the structure check that writes the `encrypted` note runs only in `#startDeeper` (`file-safety/index.mjs:1820`-`:1826`). So the page tells a member who added an encrypted file: HIGH RISK, "Added by you, not fetched ... yours included", a clean scanner, and nothing about encryption.
+- Which sentence is wrong: `screen.open-file.high.yours` ("Added by you, not fetched by your team's Civicsmith: every such file is high risk, yours included.", DEC-259) is true and incomplete. **The defect is the key chosen** (the module replaces the reasons line with it) and not the sentence; the reasons line (`screen.open-file.why`, "Why: {reasons}") exists and is simply not drawn.
+
+### 2. Why the tests missed it
+
+`bio-plane/test/m/screens-intake/open-file.test.mjs:235` (`MINE`) scripts `reasons: [{code:"source_not_fetched", ...}]` **alone**, so "yours" replaces nothing; `STATES.warned` has `active:macro` but for a file not added by the viewer. No test has a viewer-added file whose grade also holds another reason. `file-safety`'s tests assert the grade (`r54-encrypted.test.mjs` is green) and none asserts what the page says.
+
+### 3. Failing-first test
+
+- **Module and file:** `screens-intake`, `bio-plane/test/m/screens-intake/open-file.test.mjs` (beside R36).
+- **Builds:** `mine({threatof: high with reasons [source_not_fetched, encrypted]})`, and `[source_not_fetched, active:vba-project]`, and `[source_not_fetched, format_unchecked]`, with the scanner note `clean`.
+- **Asserts:** the page says `high.yours` **and** the other reason's translation (the line "Why: ..." lists the reasons other than `source_not_fetched`); for `encrypted` it also states that the scanner could not look inside (design to word it: a check line for the encrypted state); control: `[source_not_fetched]` alone draws no empty "Why:" line.
+- **Seen red:** yes (above, `says the second reason: false`).
+
+### 4. Platform check
+
+The live reading to repeat after the fix: the walker's three files on the copy; `op=threatof` must list the same reasons the page now says (the grade is computed by the plane; only the draw changes).
+
+### 5. Owner
+
+**`screens-intake`.** Requirement for BOB: **R36** says the page "draws High risk with `screen.open-file.high.yours`, then `next.head` and `next.yours` ... its checks are said in words"; it is silent on any other reason of the grade for a file the viewer added, and the omission is what the page implements. For BOB (design): whether an encrypted file's check line should say "its inside could not be checked" beside the scanner's "Clean" (a word the design does not hold: `grep -i "encrypted"` in the word table's `screen.open-file.*` finds the reason words only).
+
+---
