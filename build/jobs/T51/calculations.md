@@ -1,6 +1,6 @@
 # calculations (T51)
 
-**Status** · session_017WZeneCFenmdMXwGaZTxaK · depth 2 · WORKING · handled B31
+**Status** · session_017WZeneCFenmdMXwGaZTxaK · depth 2 · COMPLETE · handled B31
 
 ## J1 · REPORT
 
