@@ -1,6 +1,6 @@
 # capture-requests (T51)
 
-**Status** · session_01LzS8HvjY3FmLTxLbvbfkTu · depth 2 · WORKING · handled B10
+**Status** · session_01LzS8HvjY3FmLTxLbvbfkTu · depth 2 · COMPLETE · handled B10
 
 ## Completion (T51-59 · red #27, N1243)
 
