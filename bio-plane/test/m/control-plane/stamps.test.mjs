@@ -148,7 +148,7 @@ async function forgedSweep(onlyDeclaring) {
 }
 
 /* the ops whose request body is a file's raw bytes, not fields (R72) */
-const RAW_BODY_OPS = ["captureupload"];
+const RAW_BODY_OPS = ["captureupload", "captureuploadpart"];   /* a part of an upload sent in parts is raw bytes as well (R113) */
 
 test("R17: for every op, every stamp the caller sends (query or body) is deleted before the op's declared stamps are set", async () => {
   const { ops, leaks } = await forgedSweep(false);

@@ -1,6 +1,6 @@
 # case-authoring (T51)
 
-**Status** · session_01QW9dGrckaFUQkzrTTUCWLY · depth 2 · COMPLETE · handled B30
+**Status** · session_01JY7NQfdWnfdhovvoytMtwy · depth 2 · COMPLETE · handled B32
 
 ## Completion record (T51, B1 START)
 
@@ -532,3 +532,49 @@ Green now. Controls (green): an unprepared draft without bias still `NO_BIAS_ACK
 ## J26 · COMPLETE
 
 COMPLETE for G112b (B30 START). Record: build/jobs/T51/case-authoring.md, 'Fix round 9, G112b', pushed. Changed: index.mjs #tieAttestedInPreparation becomes #fromPreparation: the pre-flight (rolled-back run only, never op=publish) also reads back from the signer's own prepared edition her bias acknowledgement, and, found by the sibling check the diagnosis asked for, her self-attested reasons and tension words (a reload of such a case answered CO_ATTESTATION_UNACKNOWLEDGED / TENSION_NOT_DISCLOSED, publish_at null). A field the call sends wins. Tests (red first, green now): r8-prepared-preflight.test.mjs (6 new, R34/R75/R76) and g112b-tensions.test.mjs, with controls. Suites: case-authoring 256/256, review 95/95, screens-publish 0 fail. Checks: architecture 0, ownership 0; format has one failure not mine (office-readers paths). No new words, no census change, no stale artifact. Proposed R34 wording is in the record. Platform P is yours at the re-walk.
+
+## Fix round 10, Wave A batch 4: completion record (B31 START, job 44; session_01JY7NQfdWnfdhovvoytMtwy)
+
+**Published** `bio-plane/test/m/case-authoring/fixtures.mjs` (new): `preflightAnswer()`, the real `caseAuthoring.publishPreflight` (R34) over one world: `blocked` (a bar of A on both axes the load-bearing finding does not reach: `first` BELOW_PROJECT_STRENGTH, exactly `publishCase`'s refusal, with the other shortfalls in `blockers`), `machine` (first MACHINE_CANNOT_PUBLISH), `notOwner` (first NOT_THE_PROJECT_OWNER); also `world`, `args`. Checked by `fixtures.test.mjs` (names R34; calls it, checks the answers against `publishCase`, nothing written, made afresh).
+
+**Re-pointed (7 of 8):**
+- `copy-now.test.mjs:115` CODE: `PDF_ENCRYPTED` replaced by the real `{code, detail}` of doc-clean's `encryptedRefusal()` (ENCRYPTED); the test is `await`ing it.
+- `fixture.mjs:209`: `retrieval` is retrieval's `noSelection().retrieval` (the real one).
+- `fixture.mjs:531`: `importedCase` miss is case-import's real `IMPORT_NO_SUCH_EDITION` (taken once, top-level await, from `importedWorld().ci.importedCase`), with the asked import and edition.
+- `g47-refusal.test.mjs:43`: publication's `storeCaseDocumentRefusal().refused` (MALFORMED).
+- `rests.test.mjs:136` CODE: `NO_SUCH_IMPORT` replaced by `openFlagsUnread().flags` (`{flags: [], complete: false}`); the test became async.
+- `standards.test.mjs:34`: the stand-in's NO_SUCH_STANDARD is the real `standardReadWorld().standardRead(...)` refusal.
+- `timeline.test.mjs:190`: `timelineRefusal().noSet` (NO_SET).
+
+**Left, waiting on a provider (1):** `preflight.test.mjs:409` (ratification/preflightRefusal). The provider's `fixtures.mjs` exists only on `job/T51/ratification` (ratification, wave 3, `preflightRefusal`, J17-era commit), not yet on `tranche/T51`; I have not merged another job's branch. Re-point when it is on the tranche (`const refusal = await preflightRefusal()` at line 409, the test async).
+
+**Markers added (6, K5060):** `disclosures.test.mjs:68`, `:69`, `:70`, `:71`, `:72`, `:73`, each a trailing `// fixtures-generic: H|T|S|M|A|F` on the line: the made-up one-letter refusal code per pre-flight step (`R("H")` ... `R("F")`), which proves the steps' order and is no module's answer.
+
+**For BOB (another module's file):** `build/modules.json` case-authoring `uses` lacks `doc-clean`, `retrieval`, `standards` (the architecture check fails 3: copy-now.test.mjs, fixture.mjs, standards.test.mjs import their `fixtures.mjs`); `events` and `case-import` are already there. I did not edit `modules.json`; the three rows are needed for the checks to pass.
+
+**Found elsewhere, not mine:** `screens-publish/g54-page.test.mjs` "R22 G54 ... no built case file" fails identically on `tranche/T51` (checked in a clean worktree); `setup-words/rows.mjs` is stale against current source (`node bio-plane/src/setup-words/build.mjs --check`: word `control-plane.declared.subscriptionsignin`).
+
+**Tests and checks.** `bio-plane/test/m/case-authoring/` under the preload: 257 tests, 257 pass, 0 fail. `impact.mjs origin/tranche/T51 HEAD`: 5 modules (case-authoring 42/42, review 1/13, case-check 1/5, affordances 2/29, screens-publish 3/26); users' 49 files minus mine: 55 tests, 54 pass, 1 fail (screens-publish, pre-existing on the tranche, above). `fixtures.mjs . case-authoring --list`: 1 failure (preflight.test.mjs:409, waiting), 6 accepted(generic). Checks: format 0 failures; ownership 0 failures; coverage 58 of 58 ids named, 0 failures; architecture 3 failures (the `uses` rows above).
+
+Size (session_01JY7NQfdWnfdhovvoytMtwy): test runs 9, module lines 3102
+
+## J27 · COMPLETE
+
+COMPLETE (START B31, fix round 10 Wave A batch 4). Record: build/jobs/T51/case-authoring.md, 'Fix round 10, Wave A batch 4', pushed.
+
+Published bio-plane/test/m/case-authoring/fixtures.mjs: preflightAnswer (real publishPreflight: blocked = BELOW_PROJECT_STRENGTH first with other shortfalls in blockers; machine = MACHINE_CANNOT_PUBLISH; notOwner = NOT_THE_PROJECT_OWNER), checked by fixtures.test.mjs (R34).
+Re-pointed 7 of 8: copy-now.test.mjs:115 (ENCRYPTED via doc-clean encryptedRefusal), fixture.mjs:209 (retrieval noSelection), fixture.mjs:531 (case-import's real IMPORT_NO_SUCH_EDITION), g47-refusal.test.mjs:43 (publication storeCaseDocumentRefusal), rests.test.mjs:136 (openFlagsUnread flags), standards.test.mjs:34 (standardReadWorld), timeline.test.mjs:190 (events timelineRefusal).
+LEFT, waiting: preflight.test.mjs:409 (ratification/preflightRefusal): the provider's fixtures.mjs is only on job/T51/ratification, not on tranche/T51 yet. Re-point it after that merges (CHANGE).
+Markers added (6, K5060): disclosures.test.mjs:68,69,70,71,72,73, trailing `// fixtures-generic: H|T|S|M|A|F` (the made-up one-letter refusal code per pre-flight step, proving their order; no module's answer).
+NEEDS BOB'S FILE: build/modules.json case-authoring `uses` lacks doc-clean, retrieval, standards; the architecture check fails 3 (copy-now.test.mjs, fixture.mjs, standards.test.mjs import their fixtures.mjs). I did not edit modules.json.
+Tests: case-authoring 257/257; users (review, case-check, affordances, screens-publish) 54/55: the one failure, screens-publish g54-page "no built case file", fails the same on tranche/T51. Checks: format, ownership, coverage 0 failures; architecture 3 (the uses rows). fixtures --list: 1 left (409, waiting), 6 accepted.
+Not mine: setup-words rows.mjs stale (--check fails on control-plane.declared.subscriptionsignin).
+Size (session_01JY7NQfdWnfdhovvoytMtwy): test runs 9, module lines 3102
+
+**B32 CHANGE (K5083): done.** Merged `tranche/T51` (ratification's `preflightRefusal`, `doc-clean`/`retrieval`/`standards` in `uses`). `preflight.test.mjs:409` now takes `refusal` from `await preflightRefusal()` (the test async); the hand-built NO_ATTESTING_KEY entry is gone. Result: `fixtures.mjs . case-authoring --list`: 0 failures (6 accepted generic: `disclosures.test.mjs:68-73`). Module tests 257/257; format, architecture, coverage, ownership 0 failures. Nothing left or deferred.
+
+Size (session_01JY7NQfdWnfdhovvoytMtwy): test runs 12, module lines 3102
+
+## J28 · COMPLETE
+
+COMPLETE (CHANGE B32). Merged tranche/T51; preflight.test.mjs:409 now takes the refusal from ratification's preflightRefusal (test async). fixtures --list for case-authoring: 0 failures (6 accepted generic markers, disclosures.test.mjs:68-73, as you accepted). Module tests 257/257; format, architecture, coverage, ownership 0 failures; impact names no user test beyond my own. Record: build/jobs/T51/case-authoring.md, pushed. Size (session_01JY7NQfdWnfdhovvoytMtwy): test runs 12, module lines 3102

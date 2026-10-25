@@ -1,6 +1,6 @@
 # calculations (T51)
 
-**Status** · session_01XYo1jnZD8HdF9dcUsohXyr · depth 2 · COMPLETE · handled B26
+**Status** · session_01VRJd41T1uHsmH8s4YFxQ5y · depth 2 · COMPLETE · handled B30
 
 ## J1 · REPORT
 
@@ -357,3 +357,62 @@ Size (session_01XYo1jnZD8HdF9dcUsohXyr): test runs 9, module lines 4240
 ## J19 · COMPLETE
 
 COMPLETE · CALCULATIONS #12 · answers B23-B26 · R45 (empty cells keep their column, sheet ranges), R1/G123f (range read on by next_row via content's fromRow, real-content seam green), K4850 (transient source read, logged), R46 (table bounds via boundOf, rows from job 67). Module 128/128, strength 182/182, workbooks 30/37 (7 idle-heap failures identical without my change, workbooks'), format/architecture/coverage/ownership 0, no words finding. Please remove the not-yet-met marks of R45, R46 and R1/R9's amendments. Seam section 4 (t51-round9-seam.test.mjs) does not exist in the tranche yet: I could not run it; the same data is proven in my own tests. Record: build/jobs/T51/calculations.md (Round 9).
+
+## J20 · QUESTION
+
+QUESTION (job 109, R47-R50). Three points where the requirements as written cannot be met inside calculations' own paths, or have more than one reading. My best reading is stated for each and I carry on with it; only (1) and (2) may need BOB.
+
+(1) R50 `exportRecipe` is workbooks' code, not calculations' (`bio-plane/src/workbooks/index.mjs:646`, route `bio-plane/src/workbooks/ops.mjs:36`; `workbooks.md` line 44 "exportRecipe({calcId, viewer})"). calculations has no `exportRecipe`, and my paths are only `bio-plane/src/calculations/`. I cannot make R50 true here and will not touch workbooks. Recommendation: move R50 to workbooks (a job there, with S-31's `exportRecipe` evidence), and mark calculations R50 as moved. I leave R50 unmet in my record until you decide; no test of mine can name it.
+
+(2) R48 vs workbooks' use of `readTable`. Today `readTable` answers `table.rows` = EVERY row as objects, whatever `limit` is (so `limit:1` over 150,000 rows builds 150,000 objects, twice). workbooks reads exactly that: `workbooks/index.mjs:160-162` calls `readTable({sha, viewer, limit: 1})` and `tableFrom` takes `answer.table.rows` as the whole table to bind and export (also `export.mjs:182`). R48 says `readTable` reads only the page asked. Both cannot hold with one answer shape. My best reading, which keeps workbooks working until it is moved: `readTable` answers `table.rows` as the asked page's rows only (as objects), plus `page`, and a new explicit `{rows: "all"}` argument that answers the whole table as today; workbooks then passes `rows: "all"` (a one-line change in `#readTable`). Until that line changes, workbooks' tests that bind a table would read a one-row table. Question: do you want me to (a) ship the page-only answer now and you route the one-line change to workbooks' running job, or (b) keep `table.rows` whole when `rows: "all"` is absent and only avoid the double copy (not meeting R48's `limit` 1 test), or (c) something else? I recommend (a). I continue with everything else in R48 (the sight check once per act, the declaration holding its source once, the raw-document fallback judged before it loads and decoded by its own encoding) and hold the readTable change until you answer.
+
+(3) R49 readings (I carry on with these; correct me if wrong):
+- "the source's stated locale": a column's Table Schema field may carry `locale` (a BCP 47 tag, the member's statement); "else the team's" is the active profile's `locale.value`. Separators come from `Intl.NumberFormat` for that tag, no table of places. With neither, a figure whose shape is unambiguous is read by its shape (`1.234,56` and `1 234,56` and `1,5`), and one that is not (`1,234`, `1.234`: one separator followed by exactly three digits) is not written and is listed `not_written` with reason `AMOUNT_LOCALE_UNDETERMINED`, naming both readings.
+- `12%`: not written, reason `AMOUNT_IS_A_PERCENTAGE`. `—` (and `-`, `–`): the cell states none; not written, reason `AMOUNT_NONE_STATED`, never a zero fact. A cell's own currency mark wins over the currency role's column or value.
+- A fiscal-year label (`FY2025`, `FY 2025`, `FY2025-26`) in a period cell is read as the fiscal key it names (`{fiscal: "FY2025"}`, money maps it), and one found in an amount cell is not an amount (`AMOUNT_IS_A_YEAR_LABEL`, naming the year).
+- An XLSX date serial is a date: the cell reader (office-readers, G134c) already delivers a date-formatted cell as `{type: "date", value: <ISO>, serial}`; I test that such a cell in a `date` column is determined. A bare number in a date column stays undetermined (I cannot know the workbook's date system from the cell; reading it as a serial would be a guess).
+Reply with ANSWER only if a point is wrong; silence on (3) is consent.
+
+## J21 · COMPLETE
+
+COMPLETE (job 109, G182, R47-R49; R50 retired to workbooks R22 by B28). Branch job/T51/calculations, tranche/T51 merged in (no rebase).
+
+Entries applied, each reproduced red on the tip first (tests r47-sheet, r48-memory, r49-money-cells):
+- R47 (S-27): the sheet range's header row is found by the declared names (first row holding each once); columns are the named ones, so an empty leading column or a title/blank row above the header shifts nothing and the header is never a data row; a value in an unnamed column refuses (BAD_SCHEMA). The table's source records `header_row` and `first_row`; a sheet table's money facts cite `source.row` = the sheet's row. CSV tables keep position.
+- R48 (S-28, S-29): `readTable` answers the asked page in `table.rows` and `page`, only that page built; `rows: "all"` answers every row (B28 (2)). The raw-document fallback judges size from the store head, then the object's size, before reading the body (TABLE_TOO_LARGE with size and bound), and decodes by the stored type's charset else csv-reader's `encodingSignature` (windows-1252 accents read). The record's byte copy is decoded a piece at a time. NOT REPRODUCED on the tip, proven by tests that pass there: the sight check re-reading a bound table per act (one create reads each table once; read/gradeFactsOf/calcStatusOf read none), and a 19.5 MiB declaration surviving 85 % of capFor(20).
+- R49 (S-30): new `money-cells.mjs`: `12%` AMOUNT_IS_A_PERCENTAGE; dashes AMOUNT_NONE_STATED; FY labels AMOUNT_IS_A_YEAR_LABEL (and `FY 2025-26` as a period value reaches money as `FY2025-26`); cell currency mark wins; separators by the amount field's `locale` (new optional Table Schema key), else the profile's, else shape, with `1,234`/`1.234` AMOUNT_LOCALE_UNDETERMINED. XLSX date serial: not reproduced (the reader already delivers type date + ISO); a bare number in a date column stays undetermined (test).
+- R50: not mine (B28).
+
+Deferred: none. Found in another module: workbooks' `#readTable` must pass `rows: "all"` (job 112, R23); until then 10 workbooks tests fail on the page-only answer. coverage.mjs still counts R50 live although the requirement line is struck as retired ("1 of 50 live ids named by no test: R50"): the checker's format, BOB's.
+
+Tests/checks: calculations suite 143 pass, 0 fail. format 0 failures; architecture 0 failures; words 0 failures (inline 0); ownership 9 files, 0 failures; coverage 49 of 50, R50 only; setup-words --check: stale-rows note only (expected). Not run: workbooks suite re-run after job 112, seam section 4.
+Size (session_01QjzUX72r6jBzxqxd3JsT9R): test runs 12, module lines 4135
+
+## J22 · COMPLETE
+
+Fix round 10, batch 4 (B30): cause R19 and the two own fixture lines. Branch job/T51/calculations (tranche/T51 merged first, no rebase).
+
+**R19 (G4; R45's amendment).**
+- Root cause, as BOB gave it (`declareTable`, `calculations/index.mjs`): a reading's tab-joined text had its delimiter guessed, and a tie with the comma fell to the comma. Reproduced to the digit: row 1 read `["P1\tQ1\t$69","268.31",""]`. The tie needs a window in which every line holds a comma and a tab (a header line without a comma breaks it), which is why the walker's body-only text tied.
+- Fix: `#sourceRows` marks text that came from the reading's own passage (`own`); `declareTable` reads that text at tabs when a tab is on the majority of its lines (`tabJoined`). For any other text whose signature is `delimiter_undetermined_tied` and whose header has more than one column it refuses `SOURCE_NOT_READ {content_id, delimiter: null, tied, columns_expected}`, never a comma in silence. Other undetermined cases (too few lines, none consistent) are unchanged: comma as before, and the one-cell-per-line refusal still stands.
+- Why the tests missed it: `r9-cells.test.mjs` `lined` had cells with no comma. Failing-first: new `r10-tab-lines.test.mjs`, seen red on the walker's row, now green: (1) tab-joined lines with `$69,268.31` equal the input and the CSV twin's sha; (2) the generator's ODS of 200 rows x 6 columns (`rw9-B-2a`), rows equal the generator's truth and the sha equals the CSV twin's; (3) control: comma+semicolon tied text is refused with the tie named.
+- Note for BOB: test (2) builds the reading's lines from `sheetgen`'s truth joined by a tab, not through `odf.mjs`, because `odf-reader` is not in calculations' `uses` (the architecture check would refuse the import). The real ODS-to-text step is odf-reader's own; a platform re-walk of B2a is the end-to-end check. Also, test (2) makes the currency column hold a thousands comma on every line, as the walker's did.
+- Platform check: none needed (pure code); re-walk B2a on the copy: `op=table` page 0 rows equal the sheet, 0 `undetermined` cells.
+- R-WORDS: one new stand-in via `localize`, key `calculations.index.the_delimiter_is_tied`: "the source's delimiter could not be told ({tied} fit its lines equally), so it is not read as a table. Nothing was written." For the one HANDOFF row (fix-round-10-words.md names G1/R19 for UX-DESIGN).
+- Requirements: R45 stays "not yet met: T51" until BOB marks it; its amendment is now met.
+
+**Own fixture lines (2), both done.**
+- events/usesOf (`fixture.mjs`): the hand-built `KIND_NOT_DISCRETION` answer is now events' own `usesOf().refused` from `events/fixtures.mjs` (FIX-E).
+- provenance/registeredHomes (`g41-cells.test.mjs`): the hand-built `register(rows)` stand-in is now provenance's `registeredHomes()`, the file registered with its real `register` act (provenance is earlier in modules.json, so FIX-E, not a contract marker).
+- `checks/fixtures.mjs . calculations --list`: 0 failures. I added no `fixtures-own`, `fixtures-generic` or `fixtures-contract` marker.
+
+**Found in another module.** `bio-plane/test/m/op-grades/owners.test.mjs:195` ("R13 R3: every op T33 publishes is graded") fails with the op `moneyingestread` listed but not graded. I did not change any op; I did not check whether it fails on the bare tranche. For BOB: op-grades (or whoever owns `moneyingestread`).
+
+**Tests and checks.**
+- calculations module: 146/146 pass (146 tests, 0 fail).
+- Users: the 60 non-calculations test files naming `declareTable`/`tabledeclare` plus workbooks: 693 tests, 690 pass, 1 fail (the op-grades one above, unrelated). `impact.mjs origin/tranche/T51 HEAD` names 78 modules; those users' tests beyond the 60 files were not run.
+- format: 178 modules, 0 failures. architecture: 0 failures. coverage: 49 of 49 live requirement ids named, 0 failures. ownership: 5 files changed, 0 failures.
+
+**Deferred.** Nothing.
+
+Size (session_01VRJd41T1uHsmH8s4YFxQ5y): test runs 9, module lines 4150

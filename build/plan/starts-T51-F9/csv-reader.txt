@@ -115,7 +115,7 @@ Intro. Encodings (BOB's under K4628, a reversal of BOB #32's refusal, recorded w
 
 [Causes of G131 that are other jobs' and are not copied here: G131f, G131g, G131h.]
 
-**Corpus recipes for your cases (size, shape; copied verbatim from the family reports' corpus tables, which you do not read: envelope-sheets-T51.md 5.3 (spreadsheets)).** A row's id is the id the entry above names; `L` marks the smallest file of a family.
+**Corpus recipes for your cases (size, shape; copied verbatim from the family reports' corpus tables, which you do not read: envelope-sheets-T51-s4.md 5.3 (spreadsheets)).** A row's id is the id the entry above names; `L` marks the smallest file of a family.
 
 [SHEET C03] | C03 | 17,825,790 B (the bound − 2) | passes (9 ticks, 3 MB headroom) | J-4 |
 [SHEET C04] | C04 | exactly the E-1 bound (today 17 MiB; target 50 MiB), 1,048,576 rows | passes at 17 MiB; target unreachable | J-1..J-9 |

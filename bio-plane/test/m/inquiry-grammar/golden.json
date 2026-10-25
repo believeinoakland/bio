@@ -945,7 +945,7 @@
      "message": "basis[0] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
      "repairable": true,
      "repairs": [
-      "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+      "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
       "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
      ],
      "code": "CONTENT_EXTENT_NO_PRODUCER"
@@ -958,7 +958,7 @@
      "message": "basis[0] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
      "repairable": true,
      "repairs": [
-      "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+      "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
       "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
      ],
      "code": "CONTENT_EXTENT_NO_PRODUCER"
@@ -971,7 +971,7 @@
      "message": "basis[0] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
      "repairable": true,
      "repairs": [
-      "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+      "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
       "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
      ],
      "code": "CONTENT_EXTENT_NO_PRODUCER"
@@ -986,7 +986,7 @@
      "message": "basis[0] names an extent this record cannot evaluate: extent kind 'pdf-pge' is not one of: document, pdf-page, sheet-cell, slide-shape, doc-para, sheet-range, doc-table, image",
      "repairable": true,
      "repairs": [
-      "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+      "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
       "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
      ],
      "code": "CONTENT_EXTENT_UNREADABLE"
@@ -999,7 +999,7 @@
      "message": "basis[0] names an extent this record cannot evaluate: extent kind 'pdf-pge' is not one of: document, pdf-page, sheet-cell, slide-shape, doc-para, sheet-range, doc-table, image",
      "repairable": true,
      "repairs": [
-      "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+      "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
       "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
      ],
      "code": "CONTENT_EXTENT_UNREADABLE"
@@ -1012,7 +1012,7 @@
      "message": "basis[0] names an extent this record cannot evaluate: extent kind 'pdf-pge' is not one of: document, pdf-page, sheet-cell, slide-shape, doc-para, sheet-range, doc-table, image",
      "repairable": true,
      "repairs": [
-      "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+      "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
       "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
      ],
      "code": "CONTENT_EXTENT_UNREADABLE"
@@ -2215,18 +2215,7 @@
     ]
    }
   ],
-  "partial": [
-   {
-    "check": "C-2.8",
-    "severity": "error",
-    "message": "1 basis leg carries no ground while 1 do: a basis is grouped WHOLE or not at all, because a leg nobody grouped sitting beside branches somebody did is a relationship the record would have to guess at",
-    "repairable": true,
-    "repairs": [
-     "give every leg a ground — a leg that is needed whatever else holds belongs in every ground, so it is its own single-leg ground only if it alone can carry the conclusion",
-     "or remove the grounds and let the basis read as its weakest leg"
-    ]
-   }
-  ],
+  "partial": [],
   "clean": []
  },
  "supersede": {
@@ -7987,7 +7976,7 @@
      "message": "basis[3] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
      "repairable": true,
      "repairs": [
-      "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+      "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
       "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
      ],
      "code": "CONTENT_EXTENT_NO_PRODUCER"
@@ -8094,7 +8083,7 @@
      "message": "basis[3] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
      "repairable": true,
      "repairs": [
-      "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+      "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
       "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
      ],
      "code": "CONTENT_EXTENT_NO_PRODUCER"
@@ -8201,7 +8190,7 @@
      "message": "basis[3] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
      "repairable": true,
      "repairs": [
-      "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+      "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
       "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
      ],
      "code": "CONTENT_EXTENT_NO_PRODUCER"
@@ -8290,16 +8279,6 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "1 basis leg carries no ground while 1 do: a basis is grouped WHOLE or not at all, because a leg nobody grouped sitting beside branches somebody did is a relationship the record would have to guess at",
-     "repairable": true,
-     "repairs": [
-      "give every leg a ground — a leg that is needed whatever else holds belongs in every ground, so it is its own single-leg ground only if it alone can carry the conclusion",
-      "or remove the grounds and let the basis read as its weakest leg"
-     ]
-    },
-    {
-     "check": "C-2.8",
-     "severity": "error",
      "message": "basis[0].ground 'a' is not declared in grounds[]: a ground that nobody asserted is independently sufficient cannot be one, and the finding must not take a maximum over a branch no member signed for",
      "repairable": true,
      "repairs": [
@@ -8387,16 +8366,6 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "1 basis leg carries no ground while 1 do: a basis is grouped WHOLE or not at all, because a leg nobody grouped sitting beside branches somebody did is a relationship the record would have to guess at",
-     "repairable": true,
-     "repairs": [
-      "give every leg a ground — a leg that is needed whatever else holds belongs in every ground, so it is its own single-leg ground only if it alone can carry the conclusion",
-      "or remove the grounds and let the basis read as its weakest leg"
-     ]
-    },
-    {
-     "check": "C-2.8",
-     "severity": "error",
      "message": "basis[0].ground 'a' is not declared in grounds[]: a ground that nobody asserted is independently sufficient cannot be one, and the finding must not take a maximum over a branch no member signed for",
      "repairable": true,
      "repairs": [
@@ -8480,16 +8449,6 @@
      "check": "C-2.8",
      "severity": "error",
      "message": "grounds[0] requires 'at' as an ISO timestamp (got 'x'): the assertion is dated because a structure authored after a strength was seen is a different act from one authored before it (DEC-32), and only a date lets a reader tell"
-    },
-    {
-     "check": "C-2.8",
-     "severity": "error",
-     "message": "1 basis leg carries no ground while 1 do: a basis is grouped WHOLE or not at all, because a leg nobody grouped sitting beside branches somebody did is a relationship the record would have to guess at",
-     "repairable": true,
-     "repairs": [
-      "give every leg a ground — a leg that is needed whatever else holds belongs in every ground, so it is its own single-leg ground only if it alone can carry the conclusion",
-      "or remove the grounds and let the basis read as its weakest leg"
-     ]
     },
     {
      "check": "C-2.8",
@@ -8802,17 +8761,6 @@
       "describe what this reading of the evidence is and why it differs from the others"
      ],
      "code": "VERSION_NO_DESCRIPTION"
-    },
-    {
-     "check": "C-25.5",
-     "severity": "error",
-     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
-     "repairable": true,
-     "repairs": [
-      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
-      "or put every leg in one ground and say relationship: and"
-     ],
-     "code": "VERSION_PARTITION_INCOMPLETE"
     }
    ],
    "both": [
@@ -8855,17 +8803,6 @@
       "describe what this reading of the evidence is and why it differs from the others"
      ],
      "code": "VERSION_NO_DESCRIPTION"
-    },
-    {
-     "check": "C-25.5",
-     "severity": "error",
-     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
-     "repairable": true,
-     "repairs": [
-      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
-      "or put every leg in one ground and say relationship: and"
-     ],
-     "code": "VERSION_PARTITION_INCOMPLETE"
     }
    ],
    "both-none": [
@@ -8940,17 +8877,6 @@
       "describe what this reading of the evidence is and why it differs from the others"
      ],
      "code": "VERSION_NO_DESCRIPTION"
-    },
-    {
-     "check": "C-25.5",
-     "severity": "error",
-     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
-     "repairable": true,
-     "repairs": [
-      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
-      "or put every leg in one ground and say relationship: and"
-     ],
-     "code": "VERSION_PARTITION_INCOMPLETE"
     }
    ],
    "nosubject-none": [
@@ -9025,17 +8951,6 @@
       "describe what this reading of the evidence is and why it differs from the others"
      ],
      "code": "VERSION_NO_DESCRIPTION"
-    },
-    {
-     "check": "C-25.5",
-     "severity": "error",
-     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
-     "repairable": true,
-     "repairs": [
-      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
-      "or put every leg in one ground and say relationship: and"
-     ],
-     "code": "VERSION_PARTITION_INCOMPLETE"
     }
    ],
    "none-none": [
@@ -9082,17 +8997,6 @@
       "describe what this reading of the evidence is and why it differs from the others"
      ],
      "code": "VERSION_NO_DESCRIPTION"
-    },
-    {
-     "check": "C-25.5",
-     "severity": "error",
-     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
-     "repairable": true,
-     "repairs": [
-      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
-      "or put every leg in one ground and say relationship: and"
-     ],
-     "code": "VERSION_PARTITION_INCOMPLETE"
     }
    ],
    "both": [
@@ -9144,17 +9048,6 @@
       "describe what this reading of the evidence is and why it differs from the others"
      ],
      "code": "VERSION_NO_DESCRIPTION"
-    },
-    {
-     "check": "C-25.5",
-     "severity": "error",
-     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
-     "repairable": true,
-     "repairs": [
-      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
-      "or put every leg in one ground and say relationship: and"
-     ],
-     "code": "VERSION_PARTITION_INCOMPLETE"
     },
     {
      "check": "C-2.8",
@@ -9250,17 +9143,6 @@
      "code": "VERSION_NO_DESCRIPTION"
     },
     {
-     "check": "C-25.5",
-     "severity": "error",
-     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
-     "repairable": true,
-     "repairs": [
-      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
-      "or put every leg in one ground and say relationship: and"
-     ],
-     "code": "VERSION_PARTITION_INCOMPLETE"
-    },
-    {
      "check": "C-2.8",
      "severity": "error",
      "message": "basis[0].role 'maybe' is not one of: supports, cuts_against"
@@ -9352,17 +9234,6 @@
       "describe what this reading of the evidence is and why it differs from the others"
      ],
      "code": "VERSION_NO_DESCRIPTION"
-    },
-    {
-     "check": "C-25.5",
-     "severity": "error",
-     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
-     "repairable": true,
-     "repairs": [
-      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
-      "or put every leg in one ground and say relationship: and"
-     ],
-     "code": "VERSION_PARTITION_INCOMPLETE"
     },
     {
      "check": "C-2.8",
@@ -11301,17 +11172,6 @@
       "or, if this is an edit of the other, derive it: give it its own name and derived_from the original"
      ],
      "code": "VERSION_NAME_NOT_UNIQUE"
-    },
-    {
-     "check": "C-25.5",
-     "severity": "error",
-     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
-     "repairable": true,
-     "repairs": [
-      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
-      "or put every leg in one ground and say relationship: and"
-     ],
-     "code": "VERSION_PARTITION_INCOMPLETE"
     }
    ],
    "both": [
@@ -11365,17 +11225,6 @@
       "or, if this is an edit of the other, derive it: give it its own name and derived_from the original"
      ],
      "code": "VERSION_NAME_NOT_UNIQUE"
-    },
-    {
-     "check": "C-25.5",
-     "severity": "error",
-     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
-     "repairable": true,
-     "repairs": [
-      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
-      "or put every leg in one ground and say relationship: and"
-     ],
-     "code": "VERSION_PARTITION_INCOMPLETE"
     }
    ],
    "both-none": [
@@ -11461,17 +11310,6 @@
       "or, if this is an edit of the other, derive it: give it its own name and derived_from the original"
      ],
      "code": "VERSION_NAME_NOT_UNIQUE"
-    },
-    {
-     "check": "C-25.5",
-     "severity": "error",
-     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
-     "repairable": true,
-     "repairs": [
-      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
-      "or put every leg in one ground and say relationship: and"
-     ],
-     "code": "VERSION_PARTITION_INCOMPLETE"
     }
    ],
    "nosubject-none": [
@@ -11557,17 +11395,6 @@
       "or, if this is an edit of the other, derive it: give it its own name and derived_from the original"
      ],
      "code": "VERSION_NAME_NOT_UNIQUE"
-    },
-    {
-     "check": "C-25.5",
-     "severity": "error",
-     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
-     "repairable": true,
-     "repairs": [
-      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
-      "or put every leg in one ground and say relationship: and"
-     ],
-     "code": "VERSION_PARTITION_INCOMPLETE"
     }
    ],
    "none-none": [
@@ -11912,7 +11739,7 @@
       "message": "basis[0] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
       "repairable": true,
       "repairs": [
-       "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+       "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
        "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
       ],
       "code": "CONTENT_EXTENT_NO_PRODUCER"
@@ -11925,7 +11752,7 @@
       "message": "basis_version_legs[0] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
       "repairable": true,
       "repairs": [
-       "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+       "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
        "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
       ],
       "code": "CONTENT_EXTENT_NO_PRODUCER"
@@ -11942,7 +11769,7 @@
       "message": "basis[0] names an extent this record cannot evaluate: extent kind 'pdf-pge' is not one of: document, pdf-page, sheet-cell, slide-shape, doc-para, sheet-range, doc-table, image",
       "repairable": true,
       "repairs": [
-       "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+       "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
        "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
       ],
       "code": "CONTENT_EXTENT_UNREADABLE"
@@ -11955,7 +11782,7 @@
       "message": "basis_version_legs[0] names an extent this record cannot evaluate: extent kind 'pdf-pge' is not one of: document, pdf-page, sheet-cell, slide-shape, doc-para, sheet-range, doc-table, image",
       "repairable": true,
       "repairs": [
-       "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+       "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
        "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
       ],
       "code": "CONTENT_EXTENT_UNREADABLE"

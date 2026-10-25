@@ -267,7 +267,8 @@ async function sha256Hex(u8) {
  *   1. LEVEL the light: the paper's brightness is taken per cell (the mean of
  *      the brighter half of the cell's pixels, so ink does not darken it),
  *      smoothed, and each pixel is divided by it; the picture is then stretched
- *      so the paper reads 255 and the ink's own 0.5th-percentile level 0.
+ *      so the paper reads 255 and the ink's own level (the darkest twentieth of
+ *      the ink pixels, however few they are) 0.
  *   2. DESKEW: the ink pixels' row profile is sharpest at the angle the lines
  *      run; searched over ±PREPARE_TILT_MAX degrees (0.25 steps, then 0.05).
  *   3. SCALE UP: the median text line's height is measured; a picture whose
@@ -300,6 +301,9 @@ function smooth(g, w, h) {
   }
   return out;
 }
+
+/** A pixel under this share (of 255) of the paper beneath it is ink; fewer than INK_MIN of them is no ink. */
+const INK_RATIO = 200, INK_MIN = 32;
 
 /** Levels the light and stretches the contrast in place; returns the grey. */
 function levelLight(g, w, h) {
@@ -346,8 +350,18 @@ function levelLight(g, w, h) {
     const r = Math.min(255, Math.round(255 * g[y * w + x] / at(x + 0.5, y + 0.5)));
     ratio[y * w + x] = r; rh[r]++;
   }
-  let acc = 0, lo = 0; const target = Math.max(1, Math.round(w * h * 0.005));
-  while (lo < 255 && (acc += rh[lo]) < target) lo++;
+  /* The ink level comes from the ink, not from a fixed share of all the pixels (R44 (a)): a page of three lines holds
+   * under half a percent ink, and a level taken there falls among the paper's own greys and turns the page dark. The
+   * ink is the pixels well under the paper (ratio under INK_RATIO); its level is the darkest twentieth of them. A
+   * picture with next to no such pixels has no ink to level by: its paper is stretched to 255 and nothing more. */
+  let inkN = 0;
+  for (let v = 0; v < INK_RATIO; v++) inkN += rh[v];
+  let lo = 0;
+  if (inkN >= INK_MIN) {
+    const target = Math.max(1, Math.round(inkN * 0.05));
+    let acc = 0;
+    while (lo < INK_RATIO - 1 && (acc += rh[lo]) < target) lo++;
+  }
   const hi = 235;
   const span = Math.max(32, hi - lo);
   for (let i = 0; i < g.length; i++) g[i] = Math.max(0, Math.min(255, Math.round((ratio[i] - lo) * 255 / span)));
@@ -424,7 +438,7 @@ function resample(g, w, h, deg, s) {
 }
 
 /** R44: a grey picture made ready for the engine. `{samples, width, height, comps:1,
- *  prepared:{text_found, tilt_deg, scale, line_px}}`. A picture with no text lines
+ *  prepared:{text_found, tilt_deg, scale, line_px}}` (`line_px`: the median text line's height in the answered picture). A picture with no text lines
  *  in it (no ink, or ink everywhere: noise, a blank wall) is handed on as it is,
  *  `text_found:false`: stretching its noise would make marks for the engine to read. */
 export function preparePicture({ samples, width: w, height: h }, maxEdge) {
@@ -441,7 +455,7 @@ export function preparePicture({ samples, width: w, height: h }, maxEdge) {
   scale = scale < 1.05 ? 1 : Math.round(scale * 100) / 100;
   if (scale !== 1) cur = resample(g, w, h, turn, scale);
   return { samples: cur.samples, width: cur.width, height: cur.height, comps: 1,
-           prepared: { text_found: true, tilt_deg: turn ? -turn : 0, scale, line_px: median } };
+           prepared: { text_found: true, tilt_deg: turn ? -turn : 0, scale, line_px: Math.round(median * scale) } };
 }
 /* ── the renderer ─────────────────────────────────────────────────────────── */
 

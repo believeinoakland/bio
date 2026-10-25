@@ -12,13 +12,15 @@ import { fileURLToPath } from "node:url";
 import { Miniflare } from "miniflare";
 import { registerDeclared } from "../../declared-ops.mjs";
 import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
+import { boundOf } from "../../../src/read-bounds.mjs";
 import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
 
 await registerDeclared(fileURLToPath(new URL("../../../../", import.meta.url)), registerDeclaredOps);
 
 const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.url));
 const ADM = "adm-g126h-0123456789abcdef", PASSWORD = "the founder's long password, G126h", ORIGIN = "https://group.example";
-const SIZE = 2 * 1048576;
+/* a sheet past the gate's inline ceiling for a non-PDF kind (control-plane R131 (1): READ_BOUNDS text/request_bytes), one MiB over it */
+const SIZE = boundOf("text", "request_bytes") + 1048576;
 const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
   modulesRules: [{ type: "ESModule", include: ["**/*.mjs"] }],
@@ -48,7 +50,7 @@ const screenCall = (auth, promoted) => ({ now: () => Date.now(), digest: async (
 const upload = async (auth, bytes, name, type) => (await (await door(`/api/?op=captureupload&statement=g126h&name=${encodeURIComponent(name)}&type=${encodeURIComponent(type)}`,
   { method: "POST", headers: auth, body: bytes })).json()).result;
 
-/* exactly 2 MiB of ordinary rows (about 40 B each, none long), the last row `LASTROWMARK`, padded in its own short field to the length */
+/* exactly SIZE bytes of ordinary rows (about 40 B each, none long), the last row `LASTROWMARK`, padded in its own short field to the length */
 function csv() {
   const out = ["id,name,amount"];
   let n = out[0].length + 1;
@@ -70,7 +72,7 @@ const filed = () => filing ||= (async () => {
   return { auth, promoted, bytes, up, made, sha: createHash("sha256").update(bytes).digest("hex") };
 })();
 
-test("R61 (G126h, the real plane; red by name until job 38 and job 37 merge) a 2 MiB sheet through the no-cursor door makes no inline read: the first look only, the answer says its reading follows", async () => {
+test("R61 (G126h, the real plane) a sheet past the gate's ceiling through the no-cursor door makes no inline read: the first look only, the answer says its reading follows", async () => {
   const { bytes, up, made } = await filed();
   assert.equal(bytes.length, SIZE);
   assert.ok(up && up.document, JSON.stringify(up).slice(0, 300));

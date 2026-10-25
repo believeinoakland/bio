@@ -257,6 +257,9 @@ export function pendingOf(ctx, deps = {}) {
       if (sessionKeyed && typeof e.sha === "string") detail = { ...(detail || {}), sha: e.sha };
       const member = typeof e.member === "string" && e.member !== "" && e.member.length <= 200 ? e.member : undefined;
       const r = write(key, kind, { parts, detail, cursor: e.cursor, owed: e.owed, carrier: e.carrier, verdict: e.verdict, priority: e.priority, member });
+      /* R109 (G159): the alarm is arranged after the transaction the caller made this write in: a microtask runs once the synchronous function
+         given to `transactionSync` has returned, so the row has committed (a rolled-back one leaves the alarm nothing to weigh). */
+      void Promise.resolve().then(arm);
       return { ok: true, existed: r.existed, state: r.state };
     } catch (err) {
       return { ok: false, reason: "JOB_NOT_KEPT", detail: why(err) };
@@ -337,7 +340,14 @@ export function pendingOf(ctx, deps = {}) {
              at, at + backoff(row.attempts), because, failedWhy(row, because), row.sha, row.kind);
     return "retried";
   };
-  /* R97: an ended row stays, `finished`, for the table's readers; the document's page no longer lists it as owed */
+  /* R97 (G168): a wait that is no failure: the owner has no home for the capture yet (`NO_HOME`); the row is tried again, backed off, and counts nothing */
+  const wait = (row, at, because) => {
+    sql.exec(`UPDATE keeps_pending SET ${ended(row, "retried")}, last_try=?, due_at=?, last_why=?,
+                state=CASE WHEN written>0 THEN 'partial' ELSE 'queued' END WHERE sha=? AND kind=?`,
+             at, at + backoff(row.attempts), because, row.sha, row.kind);
+    return "retried";
+  };
+  /* R97 (G168): an ended row stays, `finished`, for the table's readers; the document's page no longer lists it as owed */
   const finish = (row, units = null) => {
     sql.exec(`UPDATE keeps_pending SET ${ended(row, "finished", units)}, state='finished', ended_at=?, final_why=NULL, last_why=NULL, owed=0
                 WHERE sha=? AND kind=?`, now(), row.sha, row.kind);
@@ -346,11 +356,15 @@ export function pendingOf(ctx, deps = {}) {
   /* G127c: what a stated end carries beside its reason: a refusal for a held capture names the refused digest, its holder, and whether the digest
      is a whole or a part, so the row says what was refused and by whom (never `detail {}`) */
   const heldOf = (r) => {
-    const d = r && (plain(r.detail) ? r.detail : plain(r.refusal) && plain(r.refusal.detail) ? r.refusal.detail : null);
+    /* R97 (G160): the facts as the refusing module answered them, in its `detail`, its refusal's `detail`, or at the top of its answer; `holder` is
+       null where provenance names none to this caller (D-15) */
+    const d = r && (plain(r.detail) ? r.detail : plain(r.refusal) && plain(r.refusal.detail) ? r.refusal.detail : plain(r) ? r : null);
     if (!d) return null;
-    const sha = typeof d.capture_sha === "string" ? d.capture_sha : typeof d.sha === "string" ? d.sha : null;
-    const out = { ...(sha ? { sha } : {}), ...(d.holder !== undefined ? { holder: d.holder } : {}), ...(d.kind === "whole" || d.kind === "part" ? { kind: d.kind } : {}) };
-    return Object.keys(out).length ? out : null;
+    const capture_sha = typeof d.capture_sha === "string" ? d.capture_sha : typeof d.sha === "string" ? d.sha : null;
+    const kind = d.kind === "whole" || d.kind === "part" ? d.kind : null;
+    const holder = typeof d.holder === "string" && d.holder !== "" ? d.holder : null;
+    if (capture_sha === null && kind === null && holder === null) return null;
+    return { kind, capture_sha, holder };
   };
   const stop = (row, at, because, units = null, state = "final", r = null) => {
     const held = heldOf(r);
@@ -426,6 +440,14 @@ export function pendingOf(ctx, deps = {}) {
       return attempt(row, at, String(r.why || "OWED"), t.units);
     }
     /* an end: the owner read it, or did it, and owes nothing; a picture's or a page's OCR that read nothing is no end (G129d) */
+    /* G168: no home yet for a reading waits, uncounted, as the `ocr` kind's ends without a failure */
+    if (r && r.ok === true && r.read === false && r.why === "NO_HOME" && row.kind === "reading") return wait(row, at, "NO_HOME");
+    /* G168: a reading already held ends with the units the held reading wrote, whoever wrote them: the larger of the row's and the answer's */
+    if (r && r.ok === true && r.why === "READING_HELD" && row.kind !== "ocr" && plain(r.counters)) {
+      const c = countersIn(r);
+      sql.exec(`UPDATE keeps_pending SET written=MAX(written, ?), skipped=MAX(skipped, ?) WHERE sha=? AND kind=?`, c.written ?? 0, c.skipped ?? 0, row.sha, row.kind);
+      return finish(row, c.written);
+    }
     if (r && r.ok === true && (r.read === true || r.done === true || (r.why === "READING_HELD" && row.kind !== "ocr")
                                || (row.kind === "ocr" && OCR_NOTHING_OWED.includes(r.why)))) { const t = tally(row, r, false); return finish(row, t.units); }
     return attempt(row, at, String(r && (r.why || r.code || r.reason) || "NOT_DONE"));
@@ -466,10 +488,12 @@ export function pendingOf(ctx, deps = {}) {
     .filter((r) => !running.has(keyOf(r)));
   const reapInterrupted = (at) => {
     for (const row of startedRows()) {
+      /* the unit the dead run stamped last (R110's, else the cursor's): a page the reader can step past, killed, is not the row's end */
+      const stamped = all(`SELECT unit FROM job_unit_attempts WHERE sha=? AND kind=? AND stamped_at IS NOT NULL`, row.sha, row.kind).map((u) => u.unit);
       sql.exec(`UPDATE job_unit_attempts SET tries=tries+1, stamped_at=NULL WHERE sha=? AND kind=? AND stamped_at IS NOT NULL`, row.sha, row.kind);
       sql.exec(`UPDATE keeps_pending SET interrupted=interrupted+1, started_at=NULL, last_why=?, state=CASE WHEN written>0 THEN 'partial' ELSE 'queued' END
                 WHERE sha=? AND kind=?`, "OBJECT_STOPPED", row.sha, row.kind);
-      const unit = unitOf(json(row.detail, {}));
+      const unit = stamped.find((n) => n !== "whole") ?? unitOf(json(row.detail, {}));
       const u = all(`SELECT tries FROM job_unit_attempts WHERE sha=? AND kind=? AND unit=?`, row.sha, row.kind, unit)[0];
       /* a page or a window the reader can step past goes on (`killedPages`, `killedCursor`); only the whole, which has no unit to leave out, ends stated */
       const steppable = PAGED.includes(row.kind) && (pageOf(unit) !== null || unit.startsWith("c"));
@@ -480,13 +504,26 @@ export function pendingOf(ctx, deps = {}) {
       }
     }
   };
+  /* R110 (G165): the unit in flight. A paged reader calls `stampUnit("p<page>")` (or `"c<cursor>"`) synchronously before that unit's member call; the
+     unit is written as the one in flight and every other stamp of the row is cleared (the whole's, the units already done), so a kill is charged to
+     the unit that died, never to `whole` while a page is known. Only while the isolate is running the row; anything else is refused. */
+  const UNIT = /^(p\d{1,9}|c[^]{1,200})$/;
+  const stampFor = (row) => (unit) => {
+    if (typeof unit !== "string" || !UNIT.test(unit) || !running.has(keyOf(row))) return false;
+    try {
+      sql.exec(`UPDATE job_unit_attempts SET stamped_at=NULL WHERE sha=? AND kind=? AND unit<>?`, row.sha, row.kind, unit);
+      sql.exec(`INSERT INTO job_unit_attempts (sha, kind, unit, tries, stamped_at) VALUES (?,?,?,0,?)
+                ON CONFLICT (sha, kind, unit) DO UPDATE SET stamped_at=excluded.stamped_at`, row.sha, row.kind, unit, now());
+      return true;
+    } catch { return false; }
+  };
   const call = async (fn) => { try { return await fn(); } catch (e) { return { ok: false, reason: why(e) }; } };
   /* R98: what the owner is handed beside its row, so a reader below this module registers owed work through the one registrar */
   const handed = () => ({ registerJob, armJobs: arm });
 
   /* `detail` is what the owner's last answer left for it (a cursor over a text, `{}` at first), handed back as it was kept (R82); R101 the
      pages killed three times and twice */
-  const readArgs = (row) => ({ sha: row.sha, kind: row.kind, detail: json(row.detail, {}), storeName: store(), env: timed(row), ...unitPlan(row), ...handed() });
+  const readArgs = (row) => ({ sha: row.sha, kind: row.kind, detail: json(row.detail, {}), storeName: store(), env: timed(row), ...unitPlan(row), ...handed(), ...(PAGED.includes(row.kind) ? { stampUnit: stampFor(row) } : {}) });
   const readNow = (row, at) => call(() => extractionOf(ctx).readHeld(readArgs(row))).then((r) => settle(row, at, r));
   const owner = {
     reading: readNow,
@@ -573,7 +610,7 @@ export function pendingOf(ctx, deps = {}) {
     openInstruments(row);
     try {
       const w = deps.workers && deps.workers[row.kind];
-      if (typeof w === "function") return settle(row, at, await call(() => w({ ...row, parts: json(row.parts, []), detail: json(row.detail, {}), ...unitPlan(row) }, { at, ...handed() })));
+      if (typeof w === "function") return settle(row, at, await call(() => w({ ...row, parts: json(row.parts, []), detail: json(row.detail, {}), ...unitPlan(row) }, { at, ...handed(), ...(PAGED.includes(row.kind) ? { stampUnit: stampFor(row) } : {}) })));
       if (typeof owner[row.kind] !== "function") return attempt(row, at, "NO_OWNER");
       return await owner[row.kind](row, at);
     } finally {

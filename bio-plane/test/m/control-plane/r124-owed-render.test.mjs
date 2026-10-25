@@ -186,3 +186,85 @@ test("R124 (G2, CAPTURE #48 merged): with the real capture the delivery leaves o
   await deliverOwedRender({ ctx: render.ctx, env: render.env, storeName: "bio", answer: { ok: true, document: rendered(render) }, session: render.session });
   assert.equal([...render.ctx.storage.sql.exec(`SELECT 1 FROM fetch_done`)].length, 0);
 });
+
+/* ---- fix round 9, P25 (K4855; screens-intake R49): an owed fetch whose `acquire` answered `existed: true` follows the inline path ---- */
+const heldBefore = async (r, doc, { project = "INQ-2026-0002", who } = {}) => {
+  const made = await CAPTURE_SCREEN.parts.promoteDocument(screen(r.ctx, who), { doc, title: "Held already", locator: doc.locator, project });
+  assert.equal(made.refused, undefined, JSON.stringify(made).slice(0, 300));
+  return made.bundleId;
+};
+const bundleCount = (r) => [...r.ctx.storage.sql.exec(`SELECT bundle_id FROM bundles`)].length;
+
+test("R124 (P25): a large fetch whose bytes a document the opener sees already holds ends done and linked to it: no second document, the fetch recorded done naming the holder", async () => {
+  const r = await owingFetch();
+  const doc = fetched(r, 15932155, "application/pdf");
+  doc.profile = { format: { format: "pdf" } };
+  const holder = await heldBefore(r, doc);
+  const before = bundleCount(r);
+  const out = await deliverOwedRender({ ctx: r.ctx, env: r.env, storeName: "bio", answer: { ok: true, existed: true, document: doc }, session: r.session });
+  assert.deepEqual([out.ok, out.bundleId, out.existed], [true, holder, true], JSON.stringify(out));
+  assert.equal(bundleCount(r), before, "no second document was promoted");
+  const rows = [...r.ctx.storage.sql.exec(`SELECT session, document, opener FROM fetch_done`)].map((x) => ({ ...x }));
+  assert.deepEqual(rows, [{ session: r.session, document: holder, opener: "member:ann" }], "the fetch is recorded done naming the holder");
+});
+
+test("R124 (P25 control): `existed: true` with no document the opener sees promotes as before; the bytes held by a document she cannot see end `CAPTURE_HELD_BY_ANOTHER_BUNDLE` with the holder named, never a bare `PROMOTE_REFUSED`", async () => {
+  const fresh = await owingFetch();
+  const doc = fetched(fresh, 100);
+  const out = await deliverOwedRender({ ctx: fresh.ctx, env: fresh.env, storeName: "bio", answer: { ok: true, existed: true, document: doc }, session: fresh.session });
+  assert.equal(out.ok, true, JSON.stringify(out));
+  assert.notEqual(out.existed, true, "a promotion, not a link");
+  assert.equal(bundleRow(fresh, out.bundleId).project, "INQ-2026-0002");
+  /* held under another member's project: the one-home rule refuses, and the answer names the holder */
+  const r = await owingFetch();
+  const other = fetched(r, 100);
+  r.ctx.storage.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated) VALUES (?, ?, 'active', 0, '2026-10-22T00:00:00Z', '2026-10-22T00:00:00Z')`, "INQ-2026-0009", "bea");
+  const holder = await heldBefore(r, other, { project: "INQ-2026-0009", who: { author: "bea", actorMemberId: "bea", actorIdentity: "member:bea", actorViewer: "member:bea" } });
+  const refused = await deliverOwedRender({ ctx: r.ctx, env: r.env, storeName: "bio", answer: { ok: true, existed: true, document: other }, session: r.session });
+  assert.equal(refused.ok, false, JSON.stringify(refused));
+  assert.equal(refused.reason, "CAPTURE_HELD_BY_ANOTHER_BUNDLE");
+  assert.ok("holder" in refused, "the holder field is stated (a name where the record names it, else null)");
+  assert.ok(holder);
+  /* G160 (K4980): the refusal carries the facts as provenance answered them: the digest, its `kind` and the holder (null where provenance does not name it to this caller, D-15:
+     the opener shares no project with the holder's), at the top and in `detail`, the form the plane's job row reads (plane R97) */
+  assert.deepEqual([refused.capture_sha, refused.kind, refused.holder], [other.capture.sha256, "whole", null], JSON.stringify(refused));
+  assert.deepEqual(refused.detail, { capture_sha: other.capture.sha256, kind: "whole", holder: null }, "and the plane's row finds them in `detail`");
+});
+
+/* ---- THE CONTRACT `deliver-owed` (FIX-L; K4995, K5044 (5)). acquisition's tests hand its `owedRun` a `deliver` that answers by hand (`{ok: true}`, `{ok: false}`,
+   a throw). This is what the real delivery answers, as data; each hand-built answer of theirs equals the shape here, and where the real one differs the real
+   one wins. Run below against the real code: a delivery that completes, one that throws, one promotion refuses as held. */
+// fixtures-run: acquisition deliver-owed
+const DELIVER_OWED = {
+  completes: { ok: true, keys: ["bundleId", "ok"], bundleId: "string" },
+  throws: { ok: false, reason: "DELIVERY_FAILED", keys: ["detail", "ok", "reason"] },
+  heldByAnother: { ok: false, reason: "CAPTURE_HELD_BY_ANOTHER_BUNDLE", keys: ["capture_sha", "detail", "holder", "kind", "ok", "reason"], kind: "whole", holder: null },
+};
+const shapeOf = (a) => Object.keys(a).sort();
+
+test("R124 (contract deliver-owed, acquisition): a delivery that completes answers {ok: true, bundleId}; one that throws answers {ok: false, reason: DELIVERY_FAILED, detail} and throws nothing; one promotion refuses as held relays CAPTURE_HELD_BY_ANOTHER_BUNDLE with kind, capture_sha and holder (null where not named) at the top and in detail", async () => {
+  const c = DELIVER_OWED.completes;
+  const r = await owing();
+  const done = await deliverOwedRender({ ctx: r.ctx, env: r.env, storeName: "bio", answer: { ok: true, document: rendered(r) }, session: r.session });
+  assert.deepEqual([done.ok, shapeOf(done), typeof done.bundleId], [c.ok, c.keys, c.bundleId], JSON.stringify(done));
+  /* reading_pending is the one optional key, and only when true (the read was written down) */
+  const big = await owing();
+  const bigDoc = rendered(big);
+  bigDoc.capture.bytes = 40 * MB;
+  const pending = await deliverOwedRender({ ctx: big.ctx, env: big.env, storeName: "bio", answer: { ok: true, document: bigDoc }, session: big.session });
+  assert.ok(pending.ok === true && (pending.reading_pending === undefined || pending.reading_pending === true), JSON.stringify(pending));
+  /* a throw inside the delivery is caught: the answer is a refusal, the render stays owed */
+  const t = DELIVER_OWED.throws;
+  const bad = await deliverOwedRender({ ctx: { get storage() { throw new Error("the record is gone"); } }, env: r.env, storeName: "bio", answer: { ok: true, document: rendered(r) }, session: r.session });
+  assert.deepEqual([bad.ok, bad.reason, shapeOf(bad)], [t.ok, t.reason, t.keys], JSON.stringify(bad));
+  assert.equal(typeof bad.detail, "string");
+  /* promotion refuses the bytes as held by another bundle (the case of the test above, driven as the contract's data) */
+  const h = DELIVER_OWED.heldByAnother;
+  const f = await owingFetch();
+  const other = fetched(f, 100);
+  f.ctx.storage.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated) VALUES (?, ?, 'active', 0, '2026-10-22T00:00:00Z', '2026-10-22T00:00:00Z')`, "INQ-2026-0009", "bea");
+  await heldBefore(f, other, { project: "INQ-2026-0009", who: { author: "bea", actorMemberId: "bea", actorIdentity: "member:bea", actorViewer: "member:bea" } });
+  const held = await deliverOwedRender({ ctx: f.ctx, env: f.env, storeName: "bio", answer: { ok: true, existed: true, document: other }, session: f.session });
+  assert.deepEqual([held.ok, held.reason, shapeOf(held), held.kind, held.holder, held.capture_sha], [h.ok, h.reason, h.keys, h.kind, h.holder, other.capture.sha256], JSON.stringify(held));
+  assert.deepEqual(held.detail, { capture_sha: held.capture_sha, kind: h.kind, holder: h.holder });
+});

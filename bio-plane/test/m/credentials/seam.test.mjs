@@ -1,5 +1,6 @@
 /* The seam with membership (K637): R16's revocation listener, R17's claim fact, R18's purge exemption; and the start
    that registers them, at the interface. */
+import { tableDeclarationRefusals } from "../record-core/fixtures.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, realWorld, PASSWORD, FOUNDER_HANDLE } from "./fixture.mjs";
@@ -150,10 +151,11 @@ test("R18 R30 the declaration: (T48) its own fourteen tables declared once by cr
   /* a refusal is a fault: thrown, never silently left purgeable or exportable */
   const sqlStub = { exec() { return []; } };
   const membership = { onRevoked() { return { ok: true }; }, registerClaimed() { return { ok: true }; } };
-  const held = { declareTable() { return { ok: false, reason: "TABLE_DECLARED", table: "signers", declaredBy: "membership" }; } };
+  const refusals = tableDeclarationRefusals("signers", { by: "membership" });
+  const held = { declareTable() { return refusals.declaredAgainByTable; } };
   assert.throws(() => credentialsOf({ storage: { sql: sqlStub } }, { record: held, membership }).declareTables(),
     /refused its table declaration: TABLE_DECLARED \(signers\)/);
-  const bad = { declareTable() { return { ok: false, reason: "TABLE_CLASS_UNKNOWN", table: "x" }; } };
+  const bad = { declareTable() { return refusals.unknownClass; } };
   assert.throws(() => credentialsOf({ storage: { sql: sqlStub } }, { record: bad, membership }).declareTables(), /TABLE_CLASS_UNKNOWN/);
 });
 

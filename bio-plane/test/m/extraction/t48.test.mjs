@@ -2,29 +2,31 @@
    service as `accounts` (`ai-accounts.accountFor`, its R7, R11), as `reading-pipeline` R31 names it, and this module
    passes the transcriber's answer to `tier4Extend` as given; through T48 a `transcription` handing `credentials` in its
    place is still read. Each refusal has its control (K874). `ai-accounts` sits in no `uses` of this module (its account
-   service arrives only through R72's registration), so its answers are stood in for here in its shape (R7, R11, R25:
-   `NO_ACCOUNT`, row C-29.20), never imported. Each test names its ids. */
+   service arrives only through R72's registration), so its answers are taken from its published fixtures (K5044), never
+   hand-built here (R7, R11, R25: `NO_ACCOUNT`, row C-29.20). Each test names its ids. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, withEntry, i2, noText, pageUnits } from "./fixture.mjs";
+import { fresh, bundle, hold, withEntry, i2, noText, pageUnits, payingAccount } from "./fixture.mjs";
 import { WORD } from "./words.mjs";
+import { accountForResult, noAccount, keptAwayGroup, keptAwayProject, keptAwayUnreadable } from "../ai-accounts/fixtures.mjs";
 
 const member1 = { cls: "member", session: true, caps: ["contribute"], viewer: "class:admin", by: "member:m1" };
-const NO_ACCOUNT = { ok: false, reason: "NO_ACCOUNT", code: "NO_ACCOUNT", check: "C-29.20",
-                     translation: "No Claude account serves you here.", detail: "none is held" };
-const ACCOUNT = { ok: true, kind: "apikey", level: "member", key: "k" };
+/* ai-accounts' real answers (its published fixtures, K5044): a member with no account, and one whose own key is served */
+const NO_ACCOUNT = await noAccount();
+const ACCOUNT = await accountForResult({ key: "k" });
 
 /* The composition root's transcriber (plane R36's shape), deployable, handing each account service named in `services`
    (`accounts`, `credentials` or both), each recording what it was asked. */
 function transcriber(services, { away = null } = {}) {
   const calls = { accounts: [], credentials: [], transcribe: [], keptAway: [] };
-  const service = (name) => ({ accountFor: async (q) => { calls[name].push(q); return services[name]; } });
+  const service = (name) => ({ accountFor: payingAccount({ record: calls[name], answer: services[name] }) });
   const t = {
     deployable: () => true,
     keptAway: (q) => { calls.keptAway.push(q); return away; },
     transcription: ({ member, project, at }) => ({ member, project, at, act: `transcribe:t48:${at}`,
       ...Object.fromEntries(Object.keys(services).map((name) => [name, service(name)])),
       useCheck: async () => null,
+      // fixtures-contract: content transcribe-answer
       transcribe: async (q) => { calls.transcribe.push(q);
         return { ok: true, engine: "claude-test", version: "2026-01", pages: q.pages.map((p) => ({ page: p, text: `AI text of page ${p}` })) }; } }),
   };
@@ -103,16 +105,12 @@ test("R72 (T48, N996): handed both, `accounts` is the paying account's service a
   assert.equal(writes(b.w), before);
 });
 
-/* ai-accounts' keep-away refusals in their shape: R7's `AI_KEPT_AWAY` when the group's limit covers the use, R22's
-   `PROJECT_AI_KEPT_AWAY` when the project's does, and R34's fail-closed `AI_KEPT_AWAY` (its row, `keep_away`'s three
-   null) when the setting cannot be read. */
+/* ai-accounts' keep-away refusals, from its published fixtures (K5044): R7's `AI_KEPT_AWAY` when the group's limit covers the use, R22's
+   `PROJECT_AI_KEPT_AWAY` when the project's does, and R34's fail-closed `AI_KEPT_AWAY` (its row, `keep_away`'s three null) when the setting cannot be read. */
 const KEPT = [
-  { ok: false, reason: "AI_KEPT_AWAY", code: "AI_KEPT_AWAY", check: "C-29.31", translation: "The group keeps its material away from AI.",
-    keep_away: { reason: "policy", set_by: "member:admin", set_at: "2026-10-01T00:00:00Z" } },
-  { ok: false, reason: "PROJECT_AI_KEPT_AWAY", code: "PROJECT_AI_KEPT_AWAY", check: "C-29.38", translation: WORD("ai.refused.projectkeptaway"),
-    keep_away: { reason: "sealed", set_by: "member:o1", set_at: "2026-10-02T00:00:00Z" } },
-  { ok: false, reason: "AI_KEPT_AWAY", code: "AI_KEPT_AWAY", check: "C-29.31", translation: "The group keeps its material away from AI.",
-    keep_away: { reason: null, set_by: null, set_at: null }, detail: "the setting could not be read" },
+  (await keptAwayGroup({ use: "transcribe" })).aiKeptAway,
+  (await keptAwayProject({ use: "transcribe" })).aiKeptAway,
+  (await keptAwayUnreadable({ use: "transcribe" })).aiKeptAway,
 ];
 
 test("R71 (T48; ai-accounts.aiKeptAway, its R7, R22, R34): each keep-away refusal the transcriber's keptAway answers is relayed as given, before any byte is read or account asked, saying transcribe.refused; control: keptAway answering null transcribes", async () => {

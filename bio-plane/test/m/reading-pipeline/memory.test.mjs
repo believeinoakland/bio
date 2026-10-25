@@ -30,15 +30,18 @@ const BOUND_MB = 64, WHOLE_MB = 96;
 /* Fix round 9 (K4861 (2), K4890): the four digests are re-recorded. The cause is the reader contract's additions to every answer (R45: `counters`,
    `next`, `final`); the reading and units are the answer before (diffed key by key on the synthetic against the answer of the job's earlier commit: no other
    key moved). */
+/* Fix round 9 (B52): the digest is taken with the "judged from a sample" sentence off `reading.basis` by name (memory-child.mjs), so the pin holds
+   no sentence's text and survives its rewording. APP and the synthetic were re-pinned on evidence: the answer at `40ce74590b` (the earlier pins) and at
+   the job's HEAD, each with that sentence off, hash alike (`14e0a7fd...`, `8cb8e488...`); with it on, `reading.basis` was the only key that differed. */
 const FILES = [
   { name: "BUDGET-2025-BUD", pages: 188, sha: "3f1df41cfa3cebfd675b2a6ed673b6f665e0848c293d8d3bb5ab1815a0bae36b",
     digest: "7578e1416a2d53aa382244b85636cdd2600dfc3f6559a64269600a69b017a848" },
   { name: "BUDGET-2025-PER", pages: 295, sha: "067ad707534788e9011d4b6abdb686f1c3505888218e2ca5327c04e0ad58ae7f",
     digest: "4b2f73e1cdef8f8dc383c94aa784d75f0eee646cef51d563ee1d163f499e0f84" },
   { name: "BUDGET-2024-APP", pages: 1354, sha: "6e0b3dc5f2f3f5bbab8ae5032bbc29207a8dbb290ba25ebafe3feb20dfe13c1e",
-    digest: "350e029e02656ba69ee1e54f7a7e0610326428c7d3b16b03c65934246af55695" },
+    digest: "14e0a7fd24fa0d8f412c55b321860def530705bf91a53fbec676b63e8a939a3f" },
   { name: "the 20 MB synthetic", synth: true, pages: 1300,
-    digest: "7ad8c097bf22cd0379eda1c9a0b169d474638f65e66458a70fda739cf8b2119c" },
+    digest: "8cb8e4882d59686149237e48da7e9fd76abdf7fc81a9657409a95ef97df22610" },
 ];
 
 const sha256 = (b) => createHash("sha256").update(b).digest("hex");

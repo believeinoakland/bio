@@ -3,7 +3,8 @@
    world whose deployed modes are handed in-process (`deployedModes`), as the reviewed change that deploys it will. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, OPEN, INQ, PROJ, inquiryStub } from "./world.mjs";
+import { world, OPEN, INQ, PROJ } from "./world.mjs";
+import { migratedSurfacing } from "../inquiry/fixtures.mjs";
 import { AI_RUNS_CHECKS } from "../../../src/run-rules/index.mjs";
 
 const PLN = "PLN-2026-0001";
@@ -90,7 +91,8 @@ test("R47: registerOpenCheck — malformed LISTENER_MALFORMED, a second by the s
     assert.equal(w.runs.registerOpenCheck(m, mode, fn).code, "LISTENER_MALFORMED", `${m} ${mode}`);
   const open = () => w.runs.open(OPEN({ mode: "plan", plan: PLN, ...BOB }));
   refused(await open(), "AI_RUN_MODE_UNCHECKED");
-  const mine = { ok: false, code: "PLAN_NOT_OPEN", check: "C-999.1", translation: "the plan's own sentence", detail: "d", extra: [1] };
+  // fixtures-contract: action-plans plan-open-check
+  const mine = { ok: false, code: "PLAN_CLOSED", check: "C-124.10", translation: "the plan's own sentence", detail: "d", extra: [1] };
   assert.equal(w.runs.registerOpenCheck("action-plans", "plan", () => mine).ok, true);
   assert.equal(w.runs.registerOpenCheck("action-plans", "check", ok).code, "LISTENER_DECLARED");
   const other = w.runs.registerOpenCheck("someone-else", "plan", ok);
@@ -113,19 +115,20 @@ test("R47: registerOpenCheck — malformed LISTENER_MALFORMED, a second by the s
 });
 
 test("R27 (K674): a question with no surfacing row answers inquiry's migratedSurfacing when it is not null, else not recorded; a row here wins", async () => {
-  const MIG = { migrated: true, run: "OLD-RUN", at: "2026-06-01T00:00:00Z", by: "member:ann" };
-  const w = world({ inquiry: inquiryStub({ "INQ-2026-0050": MIG }) });
+  const f = migratedSurfacing();
+  const w = world({ inquiry: f.inquiry });
   await w.group("ann");
   w.bundle(INQ);
-  assert.deepEqual(await w.runs.surfacedIn("INQ-2026-0050", "admin"), MIG);
-  assert.deepEqual(await w.runs.surfacedIn("INQ-2026-0051", "admin"), { recorded: false, stated: "not recorded", run: null, lens: null });
+  assert.ok(f.migratedAnswer, "inquiry answers the migrated question's surfacing");
+  assert.deepEqual(await w.runs.surfacedIn(f.migrated, "admin"), f.migratedAnswer);
+  assert.deepEqual(await w.runs.surfacedIn(f.plain, "admin"), { recorded: false, stated: "not recorded", run: null, lens: null });
   const throwing = world({ inquiry: { migratedSurfacing: () => { throw new Error("x"); } } });
-  assert.equal((await throwing.runs.surfacedIn("INQ-2026-0050", "admin")).stated, "not recorded");
+  assert.equal((await throwing.runs.surfacedIn(f.migrated, "admin")).stated, "not recorded");
   /* a question this module holds a row for answers from it, not from the migration */
   await w.runs.open(OPEN({ bounds: [{ bound: "surfaces", allowed: 1 }] }));
-  const x = world({ inquiry: inquiryStub({ "INQ-2026-0060": MIG }) });
+  const x = world({ inquiry: f.inquiry });
   await x.group("ann"); x.bundle(INQ);
   await x.runs.open(OPEN({ bounds: [{ bound: "surfaces", allowed: 1 }] }));
-  assert.equal(x.surface("INQ-2026-0060").ok, true);
-  assert.equal((await x.runs.surfacedIn("INQ-2026-0060", "admin")).run, "R1");
+  assert.equal(x.surface(f.migrated).ok, true);
+  assert.equal((await x.runs.surfacedIn(f.migrated, "admin")).run, "R1");
 });

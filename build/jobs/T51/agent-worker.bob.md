@@ -1,6 +1,6 @@
 # BOB to agent-worker (T51)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -65,3 +65,39 @@ Model and effort: you run at medium effort; any worker you spawn names its model
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio agent-worker tranche/T51 job/T51/agent-worker`. Your Size line counts only your module's own code (K2513).
 Also (K4018): `agent-worker/src/harness.mjs`:5 says `MEANING_ARM` is agent-worker's `ops.mjs`; it is agent-steps' `names.mjs`: correct the comment. `harness.control`'s F4 anchors on an ai-runs sentence that is now stale: anchor it on what ai-runs answers (its call or its key), never a copied sentence.
+
+## B8 · START
+
+START · AGENT-WORKER #35 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 5: run 4 contracts, re-point 12 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #291 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/agent-worker tranche/T51 && git branch -m job/T51/agent-worker stale/agent-worker-local && git checkout -b job/T51/agent-worker origin/job/T51/agent-worker`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module agent-worker`; record `build/jobs/T51/agent-worker.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Contracts to run** (FIX-L: your module is later in the order than the users, who cannot import you). State each value as data in a test of yours and run it against your real code; the users' hand-built values must equal it, and where the real answer differs the real one wins and the user changes. One `// fixtures-run: <user> <id>` per user module named:
+- `dispatch-refusal` (users now: ai-runs 2): a 4xx refusal body of the worker's /run dispatch, with a real code. Lines: `// fixtures-run: ai-runs dispatch-refusal`.
+- `transcribe-declined` (users now: extraction 1): the worker's answer when the AI declines ({ok:false, reason:"busy"}) and when the worker is silent; the provider run shows the real worker's shape. Lines: `// fixtures-run: extraction transcribe-declined`.
+- `transcribe-not-sent` (users now: extraction 1): transcribe answers AGENT_WORKER_UNBOUND, EVIDENCE_ABSENT, NO_PAGE_RENDERED. Lines: `// fixtures-run: extraction transcribe-not-sent`.
+- `transcribe-refusal` (users now: extraction 5): the worker's refusal body {ok:false, reason, code, detail, worker:"agent-worker", status?} for its six codes BAD_BODY, BAD_SHA, BAD_PAGES, NO_ACCOUNT, BAD_ACCOUNT, TRANSCRIBE_NEEDS_API_KEY (R72) as plane relays it. Lines: `// fixtures-run: extraction transcribe-refusal`.
+
+**Your own fixture lines, done in this job** (12; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- ai-use/ceilingRefusal (1 mechanical): ask.test.mjs:38
+- retrieval/meaningRowsUnknownArm (2 mechanical): requirements.test.mjs:782,874
+- FIX-L control-plane/ask-wire: requirements.test.mjs:832
+- CODE (CHAIN_REFUSED / VERSION_CHAIN_REFUSED is in no product file. Fix: use VERSION_CHAIN_NO_SUCH_VERSION (provenance versionChain); the literal is FIX-E provenance/versionChainNoSuchVersion): requirements.test.mjs:846,850
+- ai-runs/tickStateTooLarge (1 judgment): requirements.test.mjs:1032
+- run-productions/suggestRefusals (1 mechanical): requirements.test.mjs:1428
+- CODE (GRANT_EXPIRED is in no product file. Fix: use AI_CREDENTIAL_EXPIRED (C-29.30, admission)): t35.test.mjs:567
+- agent-runner/runnerRefusal (1 judgment): t47.test.mjs:206 (agent-runner J6: the image sends no `reason` field; the re-pointed assertion drops `reason`, K5088)
+- CODE (MEANING_ROWS_REFUSED is in no product file. Fix: use MEANING_ROWS_UNKNOWN_ARM (retrieval); the literal is FIX-E retrieval/meaningRowsUnknownArm): t50.test.mjs:83,526
+
+A `fixtures-run` you write shows `orphan-run` in your list until its user module's marker is merged, and a marker you place shows `contract-no-run` until its provider's run is merged: these are the only lines you may leave at done, each named in your record with the module it waits for.
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . agent-worker --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/agent-worker.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.

@@ -13,6 +13,7 @@ import assert from "node:assert/strict";
 import { world, V, sha } from "./fixture.mjs";
 import { Extraction } from "../../../src/extraction/index.mjs";
 import { bucket, doc } from "../extraction/fixture.mjs";
+import { homeOfHomed } from "../provenance/fixtures.mjs";
 
 const find = (w, args) => w.rb.findIn({ viewer: V("vera"), ...args });
 const kindOf = (ans, k) => ans.kinds.find((x) => x.kind === k);
@@ -34,9 +35,9 @@ async function readCsv(w, bytes, evidence) {
   await evidence.put(`bio/captures/${cap.sha}`, bytesU8);
   const document = doc({ digest: cap.sha, bytes: bytesU8.length, ct: "text/csv", format: "csv", fromText: true });
   core.readFile = (b, p) => (b === "INFO-CSV" && p === "data/provenance.json" ? { text: JSON.stringify({ documents: [document] }) } : null);
-  const rows = new Map([[cap.sha, { bundleId: "INFO-CSV", path: "big.csv", encoding: "binary", bytes: bytesU8.length, registered: "t", authored: false }]]);
+  const homed = homeOfHomed({ [cap.sha]: "INFO-CSV" });
   const x = new Extraction(w.st, { record: core, membership: w.membership, calibration: { state: () => ({}) }, promotion: { registerStep: () => ({ ok: true }) },
-                                    env: {}, provenance: { homeOf: (s) => rows.get(s) ?? null, onTestimony: () => ({ ok: true }) } });
+                                    env: {}, provenance: { homeOf: (s) => homed.homeOf(s), onTestimony: () => ({ ok: true }) } });
   x.registerFigures();
   x.migrate();
   let a, guard = 0;

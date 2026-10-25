@@ -9,6 +9,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { O, M, world, call, opCalls, hex64, aik, cred, member, refused, FORGED, QUERY_STAMPS, BODY_STAMPS } from "./harness.mjs";
+import { staleBaseRefusal } from "../promotion/fixtures.mjs";
 const D = await import("../../../src/store-door/dispatch.mjs");
 const { record: fixture } = await import("./record.mjs");
 const P = await import("../../../src/store-door/pull.mjs");
@@ -456,7 +457,7 @@ test("R36 (N364, N380, N386): one pull files the capture and promotes its docume
 });
 
 test("R36 (N380, K559; doorbell R13): the pull and its promotion are one act — a promotion that refuses, or throws, leaves neither written (the knock as it was, no receipt, no actor, no bundle, no id drawn), and the next pull files it; a fault's message is not carried", async () => {
-  for (const [fault, reason, status] of [[{ ok: false, reason: "PROMOTE_REFUSED_HERE", detail: "raced" }, "PROMOTE_REFUSED_HERE", undefined],
+  for (const [fault, reason, status] of [[staleBaseRefusal(), staleBaseRefusal().reason, undefined],
                                          ["throw", "PULL_WITHIN_FAILED", 500]]) {
     const r = await record();
     const k = await r.knock(`one act ${JSON.stringify(fault)}`);

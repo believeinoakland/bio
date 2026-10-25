@@ -1,6 +1,6 @@
 # BOB to workbooks (T51)
 
-**Read** · handled J7
+**Read** · handled J9
 
 ## B1 · START
 
@@ -169,3 +169,33 @@ CHANGE (BOB #280, K4938): runtime-limits job 71 is merged on tranche/T51: READ_B
 ## B6 · CHANGE
 
 CHANGE (BOB #280, K4939): tranche/T51 no longer tracks seven node_modules symlinks my merge c156abe97d added by mistake. Merge origin/tranche/T51 into your branch now (never a rebase); if a node_modules path in your checkout is a symlink afterwards, delete the link and run K4113's npm ci loop. Your diff must not add or keep any node_modules entry.
+
+## B7 · START
+
+START (job 112, K5017; depth 2; P10, P19). Read roles/JOB.md whole; your branch is at the tranche tip. Your requirements R22 and R23 (G182; S-31) are new (not yet met: T51); plan fix-round-9-T51.md §2i G182-G185 and §3c row 112. R22 is calculations' former R50 (`exportRecipe` is your service): the evidence is `build/plan/envelope-sheets-T51.md` §3.3's S-31, read whole; lines have moved since, so reproduce first on the tip (a red test through your module's interface), then fix; one that does not reproduce is proven by its test and recorded as such. R23 follows calculations R48 as amended (K5017): calculations' running job 109 (CALCULATIONS #13) makes `readTable` answer only the page asked as `table.rows`, the whole table only when asked `rows: "all"`. Pass `rows: "all"` wherever you bind or export a whole table (`index.mjs` `#readTable`, `export.mjs`), which today's calculations ignores harmlessly. Your R23 test (a table of more rows than one page bound and exported whole) can show red only once job 109 is merged: when BOB tells you it is (a CHANGE), merge the tranche branch and run your suite again before COMPLETE; until then record the test as written and run green.
+Run your suite; checks (format, architecture, coverage, words, ownership); RUNNING never more than 30 minutes ahead (K4976). Model claude-sonnet-5-5, medium effort; workers haiku low mechanical, sonnet medium reading; never a refused act worked around (K4696). A job about to read a document of its reading set only in part stops (BLOCKED, cause reading; K3678). Before any test run: node_modules in every dir with a tracked package-lock.json (K4113). Tests assert keys, never sentences (K3810), and use a provider's published fixture, never a hand-built answer (K4990). Record completion with a Size line, then COMPLETE.
+
+## B8 · START
+
+START (job 114, K5025; depth 2; P10, P19). Read roles/JOB.md whole; your branch is at the tranche tip. Your requirement R21 is amended (G186; not yet met: T51); plan fix-round-9-T51.md §3c row 114. office-readers R48 (merged K5025) now reads a row or cell with no `r` by its position and holds it; your `addWorkbook`'s no-reference arm (`workbooks/index.mjs:280-287`, S-26) still drops such cells, and `g137e.test.mjs` "R21 SHEET X12" is red on the tip (`add.dropped` undefined). Place such rows and cells by position as office-readers R48 states, hold them, and keep counting only unreadable or repeated references; bring the X12 test in line with the amended R21 (cells held at their positions, a repeated reference one counted drop). Run your suite and plane's `g124f-bounds.test.mjs` (from `bio-plane/`: `node --import ./test/platform-sqlite.mjs --test`).
+Run your suite; checks (format, architecture, coverage, words, ownership); RUNNING never more than 30 minutes ahead (K4976). Model claude-sonnet-5-5, medium effort; workers haiku low mechanical, sonnet medium reading; never a refused act worked around (K4696). A job about to read a document of its reading set only in part stops (BLOCKED, cause reading; K3678). Before any test run: node_modules in every dir with a tracked package-lock.json (K4113). Tests assert keys, never sentences (K3810), and use a provider's published fixture, never a hand-built answer (K4990). Record completion with a Size line, then COMPLETE.
+
+## B9 · START
+
+START · WORKBOOKS #9 · tranche T51 · product believeinoakland/bio · fix round 10, Wave B job, batch 6: re-point 1 own line (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #292 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/workbooks tranche/T51 && git branch -m job/T51/workbooks stale/workbooks-local && git checkout -b job/T51/workbooks origin/job/T51/workbooks`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module workbooks`; record `build/jobs/T51/workbooks.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Your own fixture lines, done in this job** (1; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- sheet-worker/recomputeNotEnabled (1 judgment): add.test.mjs:78
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . workbooks --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/workbooks.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.

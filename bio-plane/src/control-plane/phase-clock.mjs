@@ -14,8 +14,9 @@ import { AsyncLocalStorage } from "node:async_hooks";
 /** The phase each route of the object opens. */
 const PHASE_OF_ROUTE = Object.freeze({ acquire: "acquire", extractread: "reading" });
 const METRIC_MAX = 64;
-/* R129 (fix round 8, G106): when this isolate began, so the age of the isolate at a request is told (workerd's global-scope clock is the start's) */
-const ISOLATE_STARTED = Date.now();
+/* R129 (fix round 8, G106; K4852): when this isolate's FIRST request began, so the age of the isolate at a request is told. Taken lazily at the first `makeClock`: workerd's
+   clock reads 0 at the module's global scope, so a start taken at load would make every age an epoch. */
+let isolateStarted = null;
 const TOKEN = /^[a-z0-9_-]{1,48}$/i;
 
 /* R128: the entries a module states, from a `server-timing` header value; each `{name, params}` whose name is a token and whose every param is `dur` (a plain number)
@@ -23,7 +24,7 @@ const TOKEN = /^[a-z0-9_-]{1,48}$/i;
 const DUR = /^\d{1,12}(?:\.\d{1,6})?$/;
 const DESC = /^[A-Za-z0-9_.:-]{1,48}$/;
 const DESC_QUOTED = /^"[A-Za-z0-9_.: -]{1,48}"$/;
-const OWN = /^(?:do-|in-)/i;
+const OWN = /^(?:do-|in-|bytes-)/i;
 const RESERVED = new Set(["object", "body", "bytes"]);
 export function statedEntries(header) {
   const out = [];
@@ -47,11 +48,13 @@ export function statedEntries(header) {
 
 export function makeClock(now = () => Date.now()) {
   const t0 = now();
+  if (isolateStarted === null) isolateStarted = t0;
   const phases = new Map();   /* name -> {start, end|null} */
   const calls = new Map();    /* route -> total ms */
   const inside = new Map();   /* route -> total ms the object states it spent itself (fix round 5, E10 (i)) */
   const stated = new Map();   /* R128: name -> {dur?, desc?}, the first a module states */
-  const read = { ms: 0, bytes: 0, any: false };   /* R128: the door's read of the object's answer bodies */
+  const read = { ms: 0, bytes: 0, any: false };
+  const routeBytes = new Map();   /* R128 (K4850): route -> bytes of that route's answer bodies read */   /* R128: the door's read of the object's answer bodies */
   let objectAge = null;   /* R129: the object's age at this request, as the object states it (`object-age;dur=<ms>`, R128), else null */
   const since = (t) => Math.max(0, Math.round(t - t0));
   return {
@@ -70,17 +73,33 @@ export function makeClock(now = () => Date.now()) {
       }
     },
     /** R129: the ages of the Worker isolate and of the object, in whole milliseconds (the object's null until it states its age). */
-    cold() { return { isolate_ms: Math.max(0, Math.round(now() - ISOLATE_STARTED)), object_ms: objectAge === null ? null : Math.round(objectAge) }; },
+    cold() { return { isolate_ms: Math.max(0, Math.round(now() - isolateStarted)), object_ms: objectAge === null ? null : Math.round(objectAge) }; },
     /** R129: the milliseconds the object's route took beyond what the object states it spent itself (transport, compute and queueing); null when either is unknown. */
     queued(route) { return calls.has(route) && inside.has(route) ? Math.max(0, Math.round(calls.get(route) - inside.get(route))) : null; },
     /** R128 (K4822): the ONE name a module in the Worker states its own measure by, `stateTiming(name, ms)`: handed to the plane's door context (which forwards it to its handlers) and to
      *  instance-setup's `io`; a name the table of tokens refuses, one that is the door's own, or a duration that is no plain number is dropped, never thrown. */
-    stateTiming(name, ms) {
+    stateTiming(name, ms, desc) {
       if (typeof name !== "string" || typeof ms !== "number" || !Number.isFinite(ms) || ms < 0 || ms > 1e9) return;
-      this.state(statedEntries(`${name};dur=${Math.round(ms)}`));
+      /* R128 (K4870): an optional third argument, written as the entry's desc when it is a short token; else dropped */
+      const d = typeof desc === "string" && DESC.test(desc) ? `;desc=${desc}` : "";
+      this.state(statedEntries(`${name};dur=${Math.round(ms)}${d}`));
+    },
+    /** P24 (fix round 9; R-LOG): the SHAPE of the op asked, never its content: `shape;desc=f<n>:l<limit>` for a request that names `fields` (n = how many, as a count) and/or a
+     *  `limit` (a whole number); a request naming neither states nothing. */
+    shape(search) {
+      let q;
+      try { q = search instanceof URLSearchParams ? search : new URLSearchParams(String(search ?? "")); } catch { return; }
+      const f = q.get("fields"), l = q.get("limit");
+      const n = f === null ? null : f.split(",").filter((x) => x.trim() !== "").length;
+      const lim = l !== null && /^[0-9]{1,9}$/.test(l) ? Number(l) : null;
+      const parts = [...(n !== null ? [`f${n}`] : []), ...(lim !== null ? [`l${lim}`] : [])];
+      if (parts.length) this.stateTiming("shape", 0, parts.join(":"));
     },
     /** R128: one object answer's body was read to its end by the door: the time it took and its length. */
-    bodyRead(ms, bytes) { read.ms += Math.max(0, ms); read.bytes += Math.max(0, bytes); read.any = true; },
+    bodyRead(ms, bytes, route) {
+      read.ms += Math.max(0, ms); read.bytes += Math.max(0, bytes); read.any = true;
+      if (typeof route === "string" && TOKEN.test(route)) routeBytes.set(route, (routeBytes.get(route) ?? 0) + Math.max(0, bytes));
+    },
     /** `{acquire, reading, promote}`, each `{started_ms, elapsed_ms}` (and `running: true` while it had not ended) or `null` when not reached. */
     door() {
       const at = now();
@@ -103,6 +122,12 @@ export function makeClock(now = () => Date.now()) {
       }
       if (read.any && out.length < METRIC_MAX) out.push(`body;dur=${Math.round(read.ms)}`);
       if (read.any && out.length < METRIC_MAX) out.push(`bytes;dur=${Math.round(read.bytes)}`);
+      /* R128 (K4850): the bytes of the five routes with the most, each `bytes-<route>;dur=<n>`, after the door's own */
+      const largest = [...routeBytes].sort((a, b) => b[1] - a[1]).slice(0, 5);
+      for (const [route, n] of largest) {
+        if (out.length >= METRIC_MAX) break;
+        out.push(`bytes-${route};dur=${Math.round(n)}`);
+      }
       for (const e of stated.values()) {
         if (out.length >= METRIC_MAX) break;
         if (e.name === name) continue;
@@ -128,13 +153,13 @@ function objectTime(res) {
 }
 
 /* R128: the answer, its body passed through a counter that tells the clock the time the door's reader took over it and its length when it has been read to its end */
-function counted(res, clock) {
+function counted(res, clock, route) {
   if (!res || !res.body || typeof res.status !== "number" || res.status === 101) return res;
   const began = Date.now();
   let n = 0;
   const counter = new TransformStream({
     transform(chunk, controller) { n += chunk.byteLength ?? chunk.length ?? 0; controller.enqueue(chunk); },
-    flush() { clock.bodyRead(Date.now() - began, n); },
+    flush() { clock.bodyRead(Date.now() - began, n, route); },
   });
   return new Response(res.body.pipeThrough(counter), { status: res.status, statusText: res.statusText, headers: res.headers });
 }
@@ -156,7 +181,7 @@ function clockedStub(stub, clock) {
           const stated = objectTime(res);
           if (stated !== null) clock.within(route, stated);
           clock.state(statedEntries(res && res.headers && typeof res.headers.get === "function" ? res.headers.get("server-timing") : null));
-          return counted(res, clock);
+          return counted(res, clock, route);
         }
         finally { clock.call(route, Date.now() - t); if (phase) clock.end(phase); }
       };

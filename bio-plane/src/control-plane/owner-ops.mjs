@@ -8,6 +8,7 @@
    `of.capture()`, `of.steps()`, `of.investigation()`, `of.questionExplorer()`, since T47 `of.actionClocks()` and since T51 `of.filings()`, `of.actionPlans()`, `of.extraction()` (R117) and `of.projectRoster()` (R118)), each asked only when its op is served. */
 
 import { localize } from "../setup-words/index.mjs";
+import { byteLedger } from "../byte-ledger.mjs";
 
 /* control-plane R112 (T51; K4206, K4210; op-declarations R80, op-grades R49): the ops this door's own map serves and no owner
    declares, declared here beside the map. Each row's classes, machineClasses, mutating, stamps and needs are the hand rows'
@@ -29,12 +30,6 @@ export const DECLARED_OPS = Object.freeze({
   subscriptionsignin: { classes: ["admin", "member"], machineClasses: [], mutating: true, stamps: ["viewer", "by"], needs: null,
     weight: "credential", description: localize("control-plane.declared.subscriptionsignin", "credential: a member's own sign-in to their own Claude subscription, in their own runner; no login held here; moves no bundle"),
     fields: { accepts: ["step", "code", "attempt"], requires: ["step"] } },
-  /* R116 (fix round 2, C15; K4317): `interfacewords` is `translations`' arm (R66), which declares the screens' four acts and not this
-     read; the shell sends it with `v`, the release version the door keys the answer's cache on (R116). `viewer` is the door's stamp,
-     never a field a caller sends; with no `language` the viewer's own is read, so nothing is required. */
-  interfacewords: { classes: ["admin", "member"], machineClasses: [], mutating: false, stamps: ["viewer"], needs: null,
-    weight: "read", description: localize("control-plane.declared.interfacewords", "read: every interface word in a language, the group's shown translation or the English, never blank, with the English beside it; writes nothing"),
-    fields: { accepts: ["language", "v"], requires: [] } },
 });
 
 /* The `by` stamp is the actor in the viewer's form (`member:<id>`, the founder's `admin`, a machine `class:<cls>`); the
@@ -44,6 +39,11 @@ const bare = (by) => (typeof by === "string" && by.startsWith("member:") ? by.sl
 /* steps, investigation and question-explorer ask membership's `positionalMember` of their actor, so the founder's
    session (`admin` in the viewer's form) is handed as its positional identity, `member:admin`. */
 const positional = (by) => (by === "admin" ? "member:admin" : by ?? null);
+/* the request's length as the door declares it in the address (`declared`, from Content-Length): a whole number or nothing */
+const declaredOf = (q) => {
+  const d = q("declared");
+  return typeof d === "string" && /^[0-9]{1,15}$/.test(d) ? { declared: Number(d) } : {};
+};
 /* only the fields an act names cross from the body: a machine arm's `run` or a caller's `at` never does */
 const pick = (b, keys) => Object.fromEntries(keys.filter((k) => b[k] !== undefined).map((k) => [k, b[k]]));
 
@@ -94,7 +94,16 @@ export function controlPlaneOwnerOps(of, url, body) {
        as capture R92 takes it, and only when the request names one. No `within` (T42; K2631, K2656): capture R86's `within` is a function an in-process
        caller hands, never a request's field, so one in the address reaches nothing. */
     captureupload: () => of.capture().uploadCapture({ bytes: body, statement: q("statement"), name: q("name"), by: q("by"),
-                                                                   ...(q("type") !== null ? { type: q("type") } : {}) }),
+                                                                   ...(q("type") !== null ? { type: q("type") } : {}), ...declaredOf(q), ledger: byteLedger() }),
+    /* R72 (capture R113; K4891, K4899): a file past the request-body ceiling sent in parts, the four arms capture declares. Each calls
+       capture's method by name, `by` the door's (a body's copy never wins), `captureuploadpart`'s body the part's raw bytes, unread,
+       its words in the address, and `declared` the request's length, set by the door from Content-Length (only a whole number). */
+    captureuploadbegin: () => of.capture().beginPartedUpload({ sha256: b.sha256, bytes: b.bytes, statement: b.statement, name: b.name, type: b.type,
+                                                               by: q("by") ?? undefined }),
+    captureuploadpart: () => of.capture().putUploadPart({ upload: q("upload"), index: q("index") === null || q("index") === "" ? null : Number(q("index")),
+                                                          sha256: q("sha256"), bytes: body, by: q("by") ?? undefined, ...declaredOf(q), ledger: byteLedger() }),
+    captureuploadcomplete: () => of.capture().completePartedUpload({ upload: b.upload, parts: b.parts, by: q("by") ?? undefined }),
+    captureuploadabort: () => of.capture().abortPartedUpload({ upload: b.upload ?? q("upload"), by: q("by") ?? undefined }),
     /* R117 (fix round 3, C5, C17; extraction R80): STORE-INTERNAL, no spec, so no caller reaches it (R2): the door asks extraction to
        read a home that has no reading once its bytes are held whole. The act is extraction's in-process `readHeld`, answered as
        it answers (`{ok, read, why?}`); `sha` and `store` are the door's, from the capture's answer and the namespace it landed in.

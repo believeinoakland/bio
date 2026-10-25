@@ -26,7 +26,13 @@ export class G54Plane extends Store {
     const caseId = q("case"), edition = Number(q("edition") || 1);
     if (p === "/g54/fault") { this.#silent = q("mode") === "record_silent"; return json({ silent: this.#silent }); }
     if (p === "/g54/seed") return json(await seedEdition(ctx, caseId, edition, { env: this.env, materials: Number(q("materials") || 0), kib: Number(q("kib") || 1) }));
-    if (p === "/g54/finding") { const s = { finding: q("finding") }; await completeEdition(ctx, this.env, s); return json({ ok: true }); }
+    if (p === "/g54/finding") {
+      const s = { finding: q("finding") }; await completeEdition(ctx, this.env, s);
+      /* `disarm=1`: the completing act arms the alarm for the edition it owes (its first-attempt grace is past), and the runtime then fires that alarm ON ITS OWN, at once, beside the test's own ticks: a
+         tick of the object that a test did not ask for. A test that asserts what ITS tick built takes the alarm back before the request is answered, so the only tick is the one it asks (`/g54p/alarm`). */
+      if (q("disarm") === "1") await ctx.storage.deleteAlarm();
+      return json({ ok: true });
+    }
     if (p === "/g54/cs") return json(pub.caseEditionState(caseId, edition, "test-group"));
     if (p === "/g54/state") {
       const cs = pub.caseEditionState(caseId, edition, "test-group");

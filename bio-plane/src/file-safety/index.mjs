@@ -113,7 +113,6 @@ const HEX64 = /^[0-9a-f]{64}$/;
 const LIST = Object.freeze({ default: 200, max: 1000 });
 const INTERNAL_VIEWER = `${MACHINE_CLASS_PREFIX}daemon`;
 const iso = (ms) => new Date(ms).toISOString();
-const second = (ms) => iso(ms).replace(/\.\d+Z$/, "Z");
 const json = (body, status = 200, headers = {}) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", ...headers } });
 const parse = (s, fallback) => { try { return s == null ? fallback : JSON.parse(s); } catch { return fallback; } };
@@ -250,7 +249,7 @@ export class FileSafety {
     try {
       const sha = shaOf(event && event.capture_sha);
       if (!HEX64.test(sha)) return { ok: true, queued: false };
-      const at = second(this.now());
+      const at = iso(this.now());   /* R4 (G171): to the millisecond, so a file queued after a batch within its second is told from one the batch sent */
       const fresh = !this.#one(`SELECT 1 AS x FROM fs_files WHERE capture_sha = ?`, sha);
       this.sql.exec(`INSERT OR IGNORE INTO fs_files (capture_sha, queued_at, render_state) VALUES (?, ?, 'queued')`, sha, at);
       if (this.#routineTools("cdr").length)
@@ -987,7 +986,7 @@ export class FileSafety {
 
   #ensureQueued(sha) {
     this.sql.exec(`INSERT OR IGNORE INTO fs_files (capture_sha, bundle_id, queued_at, render_state) VALUES (?, ?, ?, 'queued')`,
-                  sha, this.#home(sha), second(this.now()));
+                  sha, this.#home(sha), iso(this.now()));
     return this.#one(`SELECT * FROM fs_files WHERE capture_sha = ?`, sha);
   }
 
@@ -1105,7 +1104,8 @@ export class FileSafety {
     const r = await this.#scanner("/render", { store: this.store, target: this.#target(sha), route }, { stream: true });
     const bucket = this.#bucket();
     const detail = r.body && r.body.detail ? String(r.body.detail).slice(0, 300) : r.body && r.body.message ? String(r.body.message).slice(0, 300) : null;
-    if (r.unreachable || r.absent) return this.#renderRetry(sha, route, "SCANNER_UNREACHABLE", null);
+    /* R12 (G171): a server error with no classed refusal is the renderer down, transient like a rejected fetch */
+    if (r.unreachable || r.absent || (r.status >= 500 && !(r.body && r.body.code))) return this.#renderRetry(sha, route, "SCANNER_UNREACHABLE", null);
     if (r.stream && r.status === 200) {
       const derived = r.headers.get("x-derived-sha256");
       if (!derived || !HEX64.test(derived) || !bucket) {
@@ -1429,11 +1429,13 @@ export class FileSafety {
       if (ver && ver.signatures && typeof ver.signatures.published === "string" && Number.isFinite(published)) this.#keep("sig", { published: ver.signatures.published });
       const lists = ver && Array.isArray(ver.reputation_lists) ? ver.reputation_lists.map((l) => Date.parse(l.fetched_at)).filter(Number.isFinite) : [];
       const due = this.#due(now);
+      /* R58: the bounds the scanner (and its renderer) state in their own /version, for an administrator to read */
+      const bounds = ver && ver.bounds && typeof ver.bounds === "object" && !Array.isArray(ver.bounds) ? ver.bounds : null;
       return { ok: true,
         ...(ver && !Number.isFinite(published) ? { no_signatures: this.#noSignatures(ver.signatures, now) } : {}),
-        scanner: ver ? { bound: true, version: ver.version, clamav_version: ver.clamav_version, signatures: ver.signatures }
+        scanner: ver ? { bound: true, version: ver.version, clamav_version: ver.clamav_version, signatures: ver.signatures, bounds }
           : { bound: !!this.#scannerBinding(), version: null, ...(this.#scannerBinding() ? { unreachable: true } : {}) },
-        renderer: ver ? { bound: true, version: ver.renderer_version } : { bound: !!this.#scannerBinding(), version: null },
+        renderer: ver ? { bound: true, version: ver.renderer_version, bounds } : { bound: !!this.#scannerBinding(), version: null },
         signatures_age_ms: Number.isFinite(published) ? Math.max(0, now - published) : null,
         queued: due.length, overdue: due.filter((d) => Number.isFinite(d.since) && now - d.since > OVERDUE_MS).length,
         held: Number(this.#one(`SELECT COUNT(DISTINCT capture_sha) AS n FROM fs_holds WHERE state <> 'released'`).n),
@@ -2168,6 +2170,8 @@ export class FileSafety {
       /* G136b: a view queued again after a transient failure is due at the end of its back-off */
       const views = this.#one(`SELECT MIN(COALESCE(render_wait_at, '')) AS t FROM fs_files WHERE render_state = 'queued'`);
       const copies = this.#one(`SELECT 1 AS x FROM fs_copies WHERE state = 'queued' LIMIT 1`);
+      /* R39 (G171): a view queued with no back-off is due now, so one queued after the last batch is drawn at the next wake, not a poll later */
+      if (views && views.t === "") return this.#answer("render", n);
       if (views && views.t !== null && !copies) {
         const t = views.t === "" ? NaN : Date.parse(views.t);
         return this.#answer("render", Number.isFinite(t) ? Math.max(poll, t) : poll);

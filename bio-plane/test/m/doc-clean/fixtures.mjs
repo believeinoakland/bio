@@ -4,6 +4,7 @@
 import { deflateSync, inflateRawSync } from "node:zlib";
 import { makeZip } from "../../make-zip.mjs";
 import { makePdf } from "../../../../pdf-worker/test/make-pdf.mjs";
+import { cleanDocument } from "../../../src/doc-clean/index.mjs";
 
 export { makeZip, makePdf };
 export const enc = (s) => new TextEncoder().encode(s);
@@ -118,6 +119,11 @@ export function pdf({ catalog = "", page = "", trailer = "/Info 6 0 R", more = [
     ...more,
   ], { trailer });
 }
+
+/** The real answer doc-clean gives an encrypted file: a PDF whose trailer names an /Encrypt dictionary (a Standard
+ *  security handler). Made by `cleanDocument` at call time, never stored (K4990, K4993): `{ok: false, code: "ENCRYPTED"}`. */
+export const encryptedRefusal = () =>
+  cleanDocument(pdf({ more: ["<< /Filter /Standard /V 2 /R 3 /O <00> /U <00> /P -4 >>"], trailer: "/Encrypt 9 0 R" }));
 
 /** `base` with an incremental update appended: object 8 (the image) redefined, the old one left behind. */
 export function incremental(base, newImage) {

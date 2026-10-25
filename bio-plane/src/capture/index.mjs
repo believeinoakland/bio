@@ -40,7 +40,7 @@
  * already holds an address or a digest and whether the source has since changed. The basis sentences of R88's vouched
  * rows and of R96's `changed` are held here as inline builder diagnostics: the screens draw their own keyed words from
  * the answer's `state` (words.json is the design stream's, and WORD_KEYS is its `reads` list for this module). */
-import { isPublicHttpsLocator, createSha256, isMachineIdentity, parseFrontmatter } from "../record-grammar/index.mjs";
+import { isPublicHttpsLocator, createSha256, createResumableSha256, isMachineIdentity, parseFrontmatter } from "../record-grammar/index.mjs";
 import { normalizeAddress } from "../subresources.mjs";
 import { RENDERED_METHOD } from "../render.mjs";
 import { CAPTURE_CHECKS } from "./checks.mjs";
@@ -48,10 +48,10 @@ import { say } from "./words.mjs";
 import { INFORMATION_GRAMMAR } from "./grammar.mjs";
 import { evidenceAbsent } from "./ops.mjs";
 import { acquire, archiveLookup, profileOf, profileView, governedFetch, governedCall, INSTALLATION_CHECKS,
-         firstHopWho, CAPTURE_MAX, keepWhole, keepPast, servedSubstance, PROFILE_TEXT_MAX, MULTIPART_KEEP_MAX, LARGE_FETCH_BYTES, textTypeOf } from "../acquisition/index.mjs";
+         firstHopWho, CAPTURE_MAX, keepWhole, keepPast, servedSubstance, PROFILE_TEXT_MAX, MULTIPART_KEEP_MAX, LARGE_FETCH_BYTES, textTypeOf, profilesAsText } from "../acquisition/index.mjs";
 /* R111 (fix round 9; G124, G124b): the figures a body is bounded by are quoted, never written here: the capture ceiling is `acquisition`'s `CAPTURE_MAX` (the
    archive row of `READ_BOUNDS`, `runtime-limits`), the platform's request-body ceiling an entry of `PLATFORM_FIGURES`. */
-import { statement as boundStatement, boundOf } from "../read-bounds.mjs";
+import { statement as boundStatement, boundOf, wholeReadRow } from "../read-bounds.mjs";
 import { PLATFORM_FIGURES } from "../byte-ledger.mjs";
 import { verifySshsig, NS_RATIFY, captureAccountStatement } from "../sshsig.mjs";
 /* R69 (N530, K1336): the account statement is spelled once, by `signatures` (its R41); re-exported so the names this
@@ -110,12 +110,12 @@ const UPLOAD_PART = 8 * 1024 * 1024;
    inline gate judges a stated document by (`wholeRowOf` of its `kindOf`): a PDF `pdf.bytes`, a CSV `csv.bytes`, a text kind `text.bytes`, every other kind the
    whole-load row `pdf.bytes`. */
 const TEXT_TYPE = /^(?:text\/|application\/(?:xhtml\+xml|xml|json)|application\/[a-z0-9.+-]*\+xml)/i;
-const wholeReadRow = (profile) => {
+const wholeReadKind = (profile) => {
   const format = String(profile?.format?.format ?? "").toLowerCase(), declared = String(profile?.source_content_type ?? "").toLowerCase();
-  if (format === "pdf" || declared.startsWith("application/pdf")) return ["pdf", "bytes"];
-  if (format === "csv" || declared.startsWith("text/csv")) return ["csv", "bytes"];
-  if (TEXT_TYPE.test(declared) || ["text", "tsv", "json", "xml", "html"].includes(format)) return ["text", "bytes"];
-  return ["pdf", "bytes"];
+  if (format === "pdf" || declared.startsWith("application/pdf")) return "pdf";
+  if (format === "csv" || declared.startsWith("text/csv")) return "csv";
+  if (TEXT_TYPE.test(declared) || ["text", "tsv", "json", "xml", "html"].includes(format)) return "text";
+  return undefined;
 };
 /** R107: the bytes of a file held in parts that are read as its head when judging it as text: 64 KiB, chosen, not measured. */
 const UPLOAD_HEAD = 64 * 1024;
@@ -386,10 +386,17 @@ function registerFigures(c) {
     throw new Error(`capture: record-core refused its figures: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
 }
 
+/* R114 (G180): a row's snapshot taken up by record-grammar's stream, which throws on a state it did not write; that answers null, so the caller
+   says the digest is lost (R113's UPLOAD_LOST) rather than hashing on from a wrong state. */
+function resumedOf(state) {
+  try { return createResumableSha256(state); } catch { return null; }
+}
+
 export class Capture {
   #sql; #storage; #listeners = new Map(); #readers = new Map(); #declared = false; #acquisition = null; #acquisitionHost = null;
   #reputationReader = null; #fileScanner = null; #hasWhole = null; #provenHeld = new Set();
-  /* R113: the live state of the uploads sent in parts that this instance is receiving: the hasher of the bytes so far, in order, and the part it expects next. */
+  /* R113: the live state of the uploads sent in parts that this instance is receiving: the hasher of the bytes so far, in order, and the part it expects next.
+     It is a cache of what the upload's row keeps (`hash_state`, G173): an instance taken out of memory between two parts takes it up again from the row. */
   #parted = new Map();
 
   constructor(storage, { record, env = {}, governor = null, provenance = null, attestation = null, credentials = null,
@@ -930,7 +937,7 @@ export class Capture {
     /* R109 (fix round 9, G152; K4958): an upload stated over the whole-read ceiling of its kind is never read, so it owes no `reading`; the reader states it
        at once from the sizes (`control-plane` R132). The kind's row is the one the inline gate judges by: a PDF `pdf.bytes`, a CSV `csv.bytes`, a text `text.bytes`,
        every other kind the whole-load row `pdf.bytes`. */
-    const stated = (profile) => !!profile && total > boundOf(...wholeReadRow(profile));
+    const stated = (profile) => !!profile && total > boundOf(...wholeReadRow(wholeReadKind(profile)));
     const register = (profile) => {
       if (!reg) return { ok: true };
       const entries = [...(stated(profile) ? [] : [{ kind: "reading", sha, carrier, ...(partsOwed && partShas.length ? { parts: partShas } : {}) }]),
@@ -952,8 +959,12 @@ export class Capture {
     });
     /* the profile of the bytes: from the bytes the upload holds when it holds them, else as `profileOf` reads the store */
     const profileThe = async (ct) => {
+      /* a declared text type over bytes the one rule judged not text (`ct` null) is no declaration of a format: the declaration never contradicts the bytes (R107) */
+      const declaredFor = (judged) => (typeof type === "string" && type !== "" && !(judged == null && profilesAsText(type, 0, false)) ? type : null);
       const profile = await profileOf({ ev: held ? Capture.#holding(ev, sha, held) : ev, sha, ct, total, multipart, headers: {}, locator: address, view: profileView(this.core),
-                                        retrieved: when, origin: "member", parts: multipart && parts.length ? parts : null, firstPart });
+                                        retrieved: when, origin: "member", parts: multipart && parts.length ? parts : null, firstPart,
+                                        /* R107 (fix round 9, G170): the file's name and the declared type reach the format, as for a fetched file (acquisition R17) */
+                                        name: typeof name === "string" && name !== "" ? name : null, declaredType: declaredFor(ct) });
       if (typeof type === "string" && type !== "") { profile.source_content_type = type; profile.declared_by = "uploader"; }
       else if (ct) profile.source_content_type = null;
       return profile;
@@ -1063,6 +1074,20 @@ export class Capture {
     return { row: { ...row, parts } };
   }
 
+  /* R113 (G173): the live state of an open upload whose `parts` are put: the one this instance holds when it holds the right one, else taken up again from the
+     digest kept with the row. Null only when the row's state is missing or does not describe the parts held (an upload begun before the state was kept, or a
+     row that was altered): then the digest of the parts so far cannot be told and the caller answers `UPLOAD_LOST`. */
+  #liveOf(row) {
+    const held = row.parts.length, have = this.#parted.get(row.upload);
+    if (have && have.next === held) return have;
+    if (held === 0) return have ?? null;
+    const hasher = typeof row.hash_state === "string" ? resumedOf(row.hash_state) : null;
+    if (!hasher || hasher.length !== row.parts.reduce((n, p) => n + p.bytes, 0)) return null;
+    const live = { hasher, next: held, busy: have ? have.busy : false, whole: null };
+    this.#parted.set(row.upload, live);
+    return live;
+  }
+
   /* R113: abort what a session holds in R2 (when its upload is still open) and remove its row and its live state. True when it is gone; false when the bucket
      would not abort, the row then staying for the next sweep. */
   async #partedDrop(row, bucket, key) {
@@ -1131,10 +1156,10 @@ export class Capture {
     const now = this.#instant(), upload = crypto.randomUUID().replace(/-/g, "");
     const created = stampSecond(now), expires = stampSecond(now + PARTED_UPLOAD_TTL_MS);
     this.#tx(() => this.#sql.exec(
-      `INSERT INTO parted_uploads (upload, sha256, bytes, part_bytes, by, statement, name, type, r2, state, parts, created, expires)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '[]', ?, ?)`,
-      upload, sha256, bytes, partBytes, by, statement, name ?? null, type ?? null, r2, held ? "completed" : "open", created, expires));
-    if (!held) this.#parted.set(upload, { hasher: createSha256(), next: 0, busy: false, whole: null });
+      `INSERT INTO parted_uploads (upload, sha256, bytes, part_bytes, by, statement, name, type, r2, state, parts, hash_state, created, expires)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '[]', ?, ?, ?)`,
+      upload, sha256, bytes, partBytes, by, statement, name ?? null, type ?? null, r2, held ? "completed" : "open", held ? null : createResumableSha256().snapshot(), created, expires));
+    if (!held) this.#parted.set(upload, { hasher: createResumableSha256(), next: 0, busy: false, whole: null });
     return { ok: true, upload, sha256, bytes, part_bytes: partBytes, parts: held ? 0 : count, next: 0, held, created, expires };
   }
 
@@ -1144,11 +1169,28 @@ export class Capture {
    *  `PART_SIZE` and the stream is cancelled. Parts go in order, because the whole file's digest is hashed in order across them: a part past the next one is
    *  `PART_OUT_OF_ORDER` (answering `next`); a part already put, put again, is idempotent, answered `existed: true` and stored once, and one put again with other
    *  bytes is `PART_CONFLICT`. The part is held once in memory (the byte `ledger` counts it) and written to R2's upload before it is recorded. If this instance
-   *  has lost the hash of the parts so far (it was restarted between parts) the upload is aborted and answered `UPLOAD_LOST`: begin again. */
+   *  has been taken out of memory between parts, the digest of the parts so far is taken up again from the upload's row (G173), so the next part is accepted
+   *  whatever the pause; only an upload whose row cannot say that digest is aborted and answered `UPLOAD_LOST`: begin again. */
   async putUploadPart({ upload = null, index = null, bytes, sha256 = null, by, declared = null, ledger = null, key = null } = {}) {
     const tally = Capture.#tally(ledger);
     const reader = uploadReader(bytes);
-    const stop = async (answer) => { if (reader) await reader.cancel(); return answer; };
+    /* G176 (K5005): an answer given without keeping the part is given after the body is read and discarded, never more than the part size, so a client still
+       sending reads the answer and not a closed connection; a body past the part size is cut there (cancelled), as before. The part size is the row's once the
+       row is read, the platform's upper figure before. */
+    let drainTo = PARTED_PART_BYTES, drained = 0;
+    const stop = async (answer) => {
+      if (!reader) return answer;
+      try {
+        for (;;) {
+          if (drained > drainTo) break;
+          const { done, value } = await reader.read();
+          if (done) return answer;
+          drained += value ? value.length : 0;
+        }
+      } catch { /* a body that cannot be read further is answered all the same */ }
+      await reader.cancel();
+      return answer;
+    };
     try {
       const fenced = Capture.#fence({ by, statement: "-", name: null, type: null, op: "captureuploadpart" });
       if (fenced) return await stop(fenced);
@@ -1161,6 +1203,7 @@ export class Capture {
       const got = await this.#partedRow(upload, by, bucket, keyOf);
       if (got.refusal) return await stop(got.refusal);
       const row = got.row, count = Math.ceil(row.bytes / row.part_bytes);
+      drainTo = row.part_bytes;
       if (row.state !== "open")
         return await stop({ ok: false, reason: "UPLOAD_NOT_OPEN", status: 409,
                             detail: localize("capture.index.upload_not_open", "this upload has no part left to put; complete it") });
@@ -1174,13 +1217,13 @@ export class Capture {
       if (index > row.parts.length)
         return await stop({ ok: false, reason: "PART_OUT_OF_ORDER", status: 409, index, next: row.parts.length,
                             detail: localize("capture.index.part_out_of_order", "the parts go in order, because the file's digest is taken across them in order; send the part named next") });
-      let live = this.#parted.get(row.upload);
-      if (row.parts.length > 0 && (!live || live.next !== row.parts.length)) {
+      let live = this.#liveOf(row);
+      if (row.parts.length > 0 && !live) {
         await this.#partedDrop(row, bucket, keyOf);
         return await stop({ ok: false, reason: "UPLOAD_LOST", status: 409,
                             detail: localize("capture.index.upload_lost", "your group's Civicsmith lost the digest of the parts so far, so the upload was aborted and holds nothing; begin it again") });
       }
-      if (!live) { live = { hasher: createSha256(), next: 0, busy: false, whole: null }; this.#parted.set(row.upload, live); }
+      if (!live) { live = { hasher: createResumableSha256(), next: 0, busy: false, whole: null }; this.#parted.set(row.upload, live); }
       if (live.busy)
         return await stop({ ok: false, reason: "PART_IN_PROGRESS", status: 409, index,
                             detail: localize("capture.index.part_in_progress", "a part of this upload is still arriving; send the next one when it is answered") });
@@ -1199,6 +1242,7 @@ export class Capture {
             const { done, value } = await reader.read();
             if (done) break;
             if (!value) throw new Error("not bytes");
+            drained += value.length;
             if (filled + value.length > expected) return await stop(wrongSize(filled + value.length));
             buf.set(value, filled); filled += value.length;
           }
@@ -1220,7 +1264,8 @@ export class Capture {
         live.hasher.update(buf);
         live.next = index + 1;
         const parts = [...row.parts, { sha256, etag, bytes: expected }];
-        this.#tx(() => this.#sql.exec(`UPDATE parted_uploads SET parts = ? WHERE upload = ?`, JSON.stringify(parts), row.upload));
+        /* the part and the digest through it are recorded together (G173): the row never names a part its state does not include */
+        this.#tx(() => this.#sql.exec(`UPDATE parted_uploads SET parts = ?, hash_state = ? WHERE upload = ?`, JSON.stringify(parts), live.hasher.snapshot(), row.upload));
         return { ok: true, existed: false, index, next: parts.length, parts: count, bytes: expected };
       } finally { live.busy = false; }
     } finally { tally.end(); }
@@ -1255,7 +1300,7 @@ export class Capture {
       if (differs >= 0 || named.length !== row.parts.length)
         return { ok: false, reason: "PARTS_OUT_OF_ORDER", status: 409, index: differs >= 0 ? differs : row.parts.length,
                  detail: localize("capture.index.parts_out_of_order", "the parts named are not the ones put, in the order they were put, so the upload was not completed and nothing was written") };
-      const live = this.#parted.get(row.upload);
+      const live = this.#liveOf(row);
       if (!live || live.next !== count) {
         await this.#partedDrop(row, bucket, keyOf);
         return { ok: false, reason: "UPLOAD_LOST", status: 409,
@@ -3859,14 +3904,14 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["captureSha","project"], requires: ["captureSha","project"] } },
   /* R113 (fix round 9; G127f; K4891): a file past the request-body ceiling is sent in parts through the Worker: begin (the file's digest and size, and what R86 asks of an
      upload), each part in order (its raw bytes the body, its index and digest in the address), complete (the parts' digests in order) and abort. `by` is a stamp; each
-     is a member's own act in her own name and needs `contribute` as `captureupload` does. */
-  captureuploadbegin: { classes: ["member"], mutating: true, stamps: ["by"], needs: "contribute", weight: "observational", description: localize("capture.declared.captureuploadbegin", "upload-directed: a member begins sending a file too large for one request in parts, naming its digest, its size and where it came from; nothing is held until its parts arrive (capture R113)"),
+     is a member's own act in her own name (the founder's session too, K5056: the classes `captureupload` admits) and needs `contribute` as `captureupload` does. */
+  captureuploadbegin: { classes: ["admin","member"], mutating: true, stamps: ["by"], needs: "contribute", weight: "observational", description: localize("capture.declared.captureuploadbegin", "upload-directed: a member begins sending a file too large for one request in parts, naming its digest, its size and where it came from; nothing is held until its parts arrive (capture R113)"),
     fields: { accepts: ["sha256","bytes","statement","name","type"], requires: ["sha256","bytes","statement"] } },
-  captureuploadpart: { classes: ["member"], mutating: true, stamps: ["by"], needs: "contribute", weight: "observational", description: localize("capture.declared.captureuploadpart", "upload-directed: a member sends one part of a file begun in parts, in order, its raw bytes the request's body (capture R113)"),
+  captureuploadpart: { classes: ["admin","member"], mutating: true, stamps: ["by"], needs: "contribute", weight: "observational", description: localize("capture.declared.captureuploadpart", "upload-directed: a member sends one part of a file begun in parts, in order, its raw bytes the request's body (capture R113)"),
     fields: { accepts: ["upload","index","sha256"], requires: ["upload","index","sha256"] } },
-  captureuploadcomplete: { classes: ["member"], mutating: true, stamps: ["by"], needs: "contribute", weight: "observational", description: localize("capture.declared.captureuploadcomplete", "upload-directed: a member completes a file sent in parts, naming the parts' digests in order; the file is then held under its own digest as an upload is (capture R113)"),
+  captureuploadcomplete: { classes: ["admin","member"], mutating: true, stamps: ["by"], needs: "contribute", weight: "observational", description: localize("capture.declared.captureuploadcomplete", "upload-directed: a member completes a file sent in parts, naming the parts' digests in order; the file is then held under its own digest as an upload is (capture R113)"),
     fields: { accepts: ["upload","parts"], requires: ["upload","parts"] } },
-  captureuploadabort: { classes: ["member"], mutating: true, stamps: ["by"], needs: "contribute", weight: "reversible", description: localize("capture.declared.captureuploadabort", "upload-directed: a member abandons a file begun in parts; what was sent is discarded and nothing is held (capture R113)"),
+  captureuploadabort: { classes: ["admin","member"], mutating: true, stamps: ["by"], needs: "contribute", weight: "reversible", description: localize("capture.declared.captureuploadabort", "upload-directed: a member abandons a file begun in parts; what was sent is discarded and nothing is held (capture R113)"),
     fields: { accepts: ["upload"], requires: ["upload"] } },
   /* K4206 (T51 FR-52; R98): `text` is read, and an empty one is C-118.6 by its row's words (R69), so it is accepted and not
      required; a missing captureSha names itself (R98), a missing signature is refused naming the signature. The instant is

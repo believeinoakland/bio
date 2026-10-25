@@ -4,7 +4,7 @@
 
 ## Entries
 
-- every screen · "group" where "team" is meant in text people read (K3472; K3803 item 3, moved by K4269) · census-team-words.md, group-words-T51.md · 2026-10-21
+- every screen · "group" where "team" is meant in text people read (K3472; K3803 item 3, moved by K4269) · archive/census-team-words.md, group-words-T51.md · 2026-10-21
 - every module · the words check's two new arms (pattern/prefix copies in tests; "group" in member-read code), K4208 (2), on the process repository's branch `prep/words-arms-K4208` · moved by K4269 · 2026-10-21
 - objective, contradiction, document, question, project · DEC-391's minted label keys not yet adopted (`GAP_WORDS`/`PENDING_WORDS` still in code) · screens-inquiry, K4258/K4260 · 2026-10-21
 - project page · `rerunread` finding titles not drawn (case-import R31 serves them) · K4259 · 2026-10-21
@@ -162,3 +162,4 @@
 - Add · cells a workbook's add dropped, with their count (`workbooks.dropped_cells`) · fix round 9, WORKBOOKS #6 (K4945) · 2026-10-24
 - Add · the states of a read and the parted upload's sentences (screens-intake, fix round 9; keys and stand-ins in `build/jobs/T51/screens-intake.md`, section "B45 · START applied", **Words**): `screen.capture.read.queued`, `screen.capture.address.working.head`, `screen.document.reading.progress`, `screen.capture.file.parts.hashing` · SCREENS-INTAKE #23 (K4954) · 2026-10-24
 - Add · a page whose supporting files were not looked for (`screen.document.supporting.notwalked.pending`, `.toolarge`, `.unavailable`; stood in as the key) · fix round 9, SCREENS-INQUIRY #25 (K4969) · 2026-10-24
+- Add · a reading the plane holds no job row for (`control-plane.reading.not_registered`) · fix round 9, CONTROL-PLANE #56 (K4978) · 2026-10-24

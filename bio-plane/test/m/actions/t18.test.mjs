@@ -4,21 +4,24 @@
    union arms; its R40 table is action-grammar's since T19) and `d526-refusal-order` (R2 with no envelope type). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, MACHINE, actionMd, CP, NOW_MS, NONCOMPLIANT } from "./fixture.mjs";
+import { world, V, MACHINE, actionMd, CP, NOW_MS } from "./fixture.mjs";
+import { determinationRead } from "../conformance/fixtures.mjs";
 import * as actions from "../../../src/actions/index.mjs";
 import * as grammar from "../../../src/action-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b";
 const M = V("alice");
-const D1 = "CONF-2026-0001-determination";
-const det = { [D1]: { ok: true, id: D1, live: true, superseded_by: null, outcomes: NONCOMPLIANT } };
-const conf = { determinationRead: ({ id }) => det[id] || { ok: false, reason: "NO_SUCH_DETERMINATION" } };
+/* conformance's own live determination (its published `determinationRead`, R9), and the participant who sees it. */
+const F = determinationRead();
+const D1 = F.live;
+const conf = F.conformance;
+const P = { author: F.viewer };
 const md = (id, lines, opts) => actionMd(id, ["action_kind: other", ...lines], opts);
 const named = (kind, role, org) => ["counterparty:", "  state: named", `  kind: ${kind}`, `  role: ${role}`, `  organisation: ${org}`];
 function determination(w) {
   const r = w.promote(D1, ["---", `id: ${D1}`, "object_type: determination", `title: ${D1}`, "current_state: recorded",
-    'created: "2026-09-01T00:00:00Z"', 'last_updated: "2026-09-01T00:00:00Z"', "---", "", "d", ""].join("\n"), { extra: { replay: true } });
+    'created: "2026-09-01T00:00:00Z"', 'last_updated: "2026-09-01T00:00:00Z"', "---", "", "d", ""].join("\n"), { author: F.viewer, extra: { replay: true } });
   assert.equal(r.ok, true, JSON.stringify(r));
 }
 
@@ -79,13 +82,13 @@ test("R9 R8 a breach action addresses an office, else ADDRESSEE_NOT_AN_OFFICE; o
   const breach = (id, cp) => md(id, [...cp, "breach: true", "action_basis:", `  - target: ${D1}`, "    kind: rests_on"]);
   for (const cp of [named("press", "Reporter", "Gazette"), ["counterparty:", "  state: audience", '  description: "voters"'],
                     ["counterparty:", "  state: undetermined", '  basis: "not known"']]) {
-    const r = w.promote(B, breach(B, cp));
+    const r = w.promote(B, breach(B, cp), P);
     assert.deepEqual([r.reason, r.check], ["ADDRESSEE_NOT_AN_OFFICE", "C-117.7"], JSON.stringify(cp));
     assert.ok(r.translation.length > 40);
   }
   assert.equal(w.record.head(B), null, "nothing was written");
-  assert.equal(w.promote(A, breach(A, CP)).ok, true, "an office");
-  assert.equal(w.promote("ACTN-2026-0003-c", breach("ACTN-2026-0003-c", [])).ok, true, "no addressee yet: a draft");
+  assert.equal(w.promote(A, breach(A, CP), P).ok, true, "an office");
+  assert.equal(w.promote("ACTN-2026-0003-c", breach("ACTN-2026-0003-c", []), P).ok, true, "no addressee yet: a draft");
   assert.equal(w.promote("ACTN-2026-0004-d", md("ACTN-2026-0004-d", named("press", "Reporter", "Gazette"))).ok, true,
     "an action that seeks attention is not asked");
 });
@@ -231,7 +234,7 @@ test("R49 no action is refused for the grade of what it rests on: a breach actio
   /* a document captured second-hand (a Drive export grades B, an archive copy C): this module reads no grade */
   w.doc("INFO-2026-0002-export", "an exported copy, graded B where acquired");
   const r = w.promote(A, md(A, [...CP, "breach: true", "action_basis:", `  - target: ${D1}`, "    kind: rests_on",
-    "  - target: INFO-2026-0002-export", "    kind: rests_on"]));
+    "  - target: INFO-2026-0002-export", "    kind: rests_on"]), P);
   assert.equal(r.ok, true, JSON.stringify(r));
   const codes = Object.keys({ ...grammar.ACTION_CATALOGUE_CHECKS, ...grammar.ACTION_FENCE_CHECKS, ...grammar.ACTION_ACT_CHECKS });
   assert.ok(!codes.some((k) => /GRADE/.test(k)), "no refusal compares a grade with a floor");

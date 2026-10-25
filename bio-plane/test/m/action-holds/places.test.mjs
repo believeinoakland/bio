@@ -9,10 +9,12 @@ import { world, V, MACHINE, received } from "./fixture.mjs";
 import * as holds from "../../../src/action-holds/index.mjs";
 import { noSuchProject } from "../../../src/membership/index.mjs";
 import { correspondEntryRefusal } from "../../../src/action-records/index.mjs";
+import { docketEntryRead } from "../docket/fixtures.mjs";
 
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b", I = "INFO-2026-0001-d";
 const ALICE = V("alice"), BOB = V("bob"), CAROL = V("carol");
 const ABSENT = "PROJ-2026-0404-absent";
+const NO_ENTRY = docketEntryRead().absent;
 const MARK_CODES = { machine: "MACHINE_CANNOT_MARK_PRESSURE", shape: "PRESSURE_REFUSED" };
 
 /* P alice's hidden project, D alice's discoverable one, Q carol's hidden one; A in P with two received entries (the
@@ -89,7 +91,7 @@ test("R2 from: a pressure mark, a pressure record, a docket legal mark or a coun
       ? { ok: true, entry, case: "CASE-2026-0001", project: P, kind: "legal", note: "n", at: "t" }
       : entry === "DKT-2" ? { ok: true, entry, case: "CASE-2026-0001", project: P, kind: "retaliation", note: "n", at: "t" }
       : entry === "DKT-3" ? { ok: true, entry, pressure: null }
-      : { ok: false, reason: "NO_SUCH_DOCKET_ENTRY" },
+      : NO_ENTRY,
     docketPressureMarks: () => ({ ok: true, marks: [], cursor: null }),
   };
   const h = holds.actionHoldsOf({ storage: w.st }, { record: w.record, membership: w.membership, docket, doorbell: null,

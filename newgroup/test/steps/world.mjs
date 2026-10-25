@@ -290,8 +290,8 @@ export function account({ slug = "grp", plan = "paid", probeDelete = "ok", r2 = 
       return cfok({});
     } },
     { m: (u, mth) => /\/r2\/buckets$/.test(u) && mth === "GET", f: () => {
-      /* Documented shapes (R2's error table); BOB measures them on the rehearsal account (K4942). */
-      if (r2 === "refused") return cferr("Account not entitled to this feature.", 403, 10042);
+      /* The measured shapes (build/plan/measure-R9-account-shapes.md, K4970). */
+      if (r2 === "refused") return cferr("Please enable R2 through the Cloudflare Dashboard.", 403, 10042);
       if (r2 === "permission") return cferr("Authentication error", 403, 10000);
       if (r2 === "unknown") return cferr("The fake could not say", 400, 10001);
       return cfok({ buckets: [...buckets].map((name) => ({ name })) });
@@ -316,7 +316,7 @@ export function account({ slug = "grp", plan = "paid", probeDelete = "ok", r2 = 
       buckets.delete(b); state.removed.push("bucket:" + b); return cfok({});
     } },
     { m: (u, mth) => u.includes("/scripts/bio-plan-probe") && mth === "PUT", f: async (u, init) => {
-      if (plan === "free") return cferr("CPU limits are not supported for the Free plan.", 400, 100328);
+      if (plan === "free") return cferr("CPU limits are not supported for the Free plan. Switch to a paid plan at https://dash.cloudflare.com/x/workers/plans to set CPU limits.", 400, 100328);
       if (plan === "unknown") return cferr("internal error", 500, 7000);
       scripts.set("bio-plan-probe", [{ limits: JSON.parse(await init.body.get("metadata").text()).limits }]);
       state.probeMeta = JSON.parse(await init.body.get("metadata").text());
@@ -354,16 +354,16 @@ export function account({ slug = "grp", plan = "paid", probeDelete = "ok", r2 = 
     } },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: async (u, init) => {
       const { name } = JSON.parse(init.body);
-      if (r2 === "refused") return cferr("Account not entitled to this feature.", 403, 10042);
+      if (r2 === "refused") return cferr("Please enable R2 through the Cloudflare Dashboard.", 403, 10042);
       if (buckets.has(name)) return cferr("The bucket you tried to create already exists", 409, 10073);
       buckets.add(name); return cfok({ name });
     } },
-    { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => prefix ? cfok({ subdomain: prefix }) : cferr("no subdomain", 404) },
+    { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => prefix ? cfok({ subdomain: prefix }) : cferr("You do not have a workers.dev subdomain. Please go to https://dash.cloudflare.com/?to=/:account/workers/workers-and-pages. Opening the Workers & Pages landing page for the first time will create a workers.dev subdomain automatically.", 404, 10007) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "PUT", f: (u, init) => {
       const want = JSON.parse(init.body).subdomain;
       if (subdomainPut === "fail") return cferr("not permitted", 403);
-      /* Documented shape; the taken answer's code is not measured yet, so it is read as HTTP 409 (K4942). */
-      if (taken.includes(want)) return cferr("That subdomain is taken", 409);
+      /* Measured (K4970): a taken prefix is HTTP 403, code 10031. */
+      if (taken.includes(want)) return cferr(`Subdomain '${want}' is unavailable. Please try a different one.`, 403, 10031);
       prefix = want; return cfok({ subdomain: want });
     } },
     { m: (u, mth) => /\/workers\/scripts\/[^/]+\/subdomain$/.test(u) && mth === "POST", f: (u) => {

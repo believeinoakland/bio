@@ -42,11 +42,19 @@ export const ADMISSION_TABLES = Object.freeze([DOOR_WINDOW_TABLE, SESSION_WINDOW
 
 const instances = new WeakMap();
 
+/* R21 (fix round 10, cause 27b): the counts are kept in memory and written to the store at most every this many
+   milliseconds, so fifty counts change a row or two, not fifty; an object restarting loses at most this much. */
+export const WINDOW_FLUSH_MS = 5000;
+
 class DoorWindow {
-  constructor({ storage, fingerprint }) {
+  constructor({ storage, fingerprint, flushMs = WINDOW_FLUSH_MS }) {
     this.storage = storage;
     this.sql = storage.sql;
     this.fingerprint = fingerprint;
+    this.flushMs = flushMs;
+    /* `table` -> { column, newest, keys: Map(key -> { buckets: Map(bucket -> count), dirty: Set(bucket) }) } */
+    this.mem = new Map();
+    this.timer = null;
   }
 
   migrate() { this.sql.exec(SCHEMA); this.sql.exec(SESSION_SCHEMA); }
@@ -75,22 +83,65 @@ class DoorWindow {
     return this.#counted(DOOR_WINDOW_TABLE, "source", source, DOOR_WINDOW, DOOR_WINDOW_STATED, source, nowMs);
   }
 
-  /* One window's count (R21's, R27's), the same two-bucket estimate over `table`'s `column` = `key`. */
+  /* One window's count (R21's, R27's), the same two-bucket estimate over `table`'s `column` = `key`, judged from the
+     counts in memory (27b). A key's stored rows are read once, when it is first counted after the object starts. */
   #counted(table, column, key, { limit, windowMs }, stated, source, nowMs) {
     const bucket = Math.floor(nowMs / windowMs);
     const elapsedFrac = (nowMs - bucket * windowMs) / windowMs;
-    return this.#tx(() => {
-      const held = new Map(this.#rows(`SELECT bucket, count FROM ${table} WHERE ${column} = ? AND bucket IN (?, ?)`,
-        key, bucket, bucket - 1).map((r) => [Number(r.bucket), Number(r.count)]));
-      const prev = held.get(bucket - 1) ?? 0, cur = held.get(bucket) ?? 0;
-      /* the passed buckets go, every key's, so no count outlives both of its buckets */
-      this.sql.exec(`DELETE FROM ${table} WHERE bucket < ?`, bucket - 1);
-      if (doorWindowEstimate({ prev, cur, elapsedFrac }) >= limit)
-        return { source, refused: true, stated, retryAfter: doorRetryAfter({ prev, cur, elapsedFrac, limit, windowMs }) };
-      this.sql.exec(`INSERT INTO ${table} (${column}, bucket, count) VALUES (?, ?, 1)
-                     ON CONFLICT(${column}, bucket) DO UPDATE SET count = count + 1`, key, bucket);
-      return { source, refused: false };
-    });
+    let t = this.mem.get(table);
+    if (!t) this.mem.set(table, t = { column, newest: bucket, keys: new Map() });
+    t.newest = Math.max(t.newest, bucket);
+    let k = t.keys.get(key);
+    if (!k) {
+      const held = this.#rows(`SELECT bucket, count FROM ${table} WHERE ${column} = ? AND bucket IN (?, ?)`,
+        key, bucket, bucket - 1);
+      t.keys.set(key, k = { buckets: new Map(held.map((r) => [Number(r.bucket), Number(r.count)])), dirty: new Set() });
+    }
+    const prev = k.buckets.get(bucket - 1) ?? 0, cur = k.buckets.get(bucket) ?? 0;
+    if (doorWindowEstimate({ prev, cur, elapsedFrac }) >= limit)
+      return { source, refused: true, stated, retryAfter: doorRetryAfter({ prev, cur, elapsedFrac, limit, windowMs }) };
+    k.buckets.set(bucket, cur + 1);
+    k.dirty.add(bucket);
+    this.#schedule();
+    return { source, refused: false };
+  }
+
+  #schedule() {
+    if (this.timer !== null) return;
+    this.timer = setTimeout(() => { this.timer = null; this.flush(); }, this.flushMs);
+    if (typeof this.timer === "object" && typeof this.timer.unref === "function") this.timer.unref();
+  }
+
+  /* Writes the counts changed since the last write, and drops the buckets both of whose windows have passed, from the
+     store and from memory. A write that fails keeps the counts for the next one and never throws (the window fails open). */
+  flush() {
+    if (this.timer !== null) { clearTimeout(this.timer); this.timer = null; }
+    try {
+      this.#tx(() => {
+        for (const [table, t] of this.mem) {
+          const oldest = t.newest - 1;
+          this.sql.exec(`DELETE FROM ${table} WHERE bucket < ?`, oldest);
+          for (const [key, k] of t.keys) {
+            for (const b of k.dirty) {
+              if (b < oldest) continue;
+              this.sql.exec(`INSERT INTO ${table} (${t.column}, bucket, count) VALUES (?, ?, ?)
+                             ON CONFLICT(${t.column}, bucket) DO UPDATE SET count = excluded.count`, key, b, k.buckets.get(b));
+            }
+          }
+        }
+      });
+    } catch (e) {
+      console.warn("admission: the door's window counts were not written; they are kept for the next write");
+      this.#schedule();
+      return;
+    }
+    for (const t of this.mem.values()) {
+      for (const [key, k] of t.keys) {
+        k.dirty.clear();
+        for (const b of [...k.buckets.keys()]) if (b < t.newest - 1) k.buckets.delete(b);
+        if (k.buckets.size === 0) t.keys.delete(key);
+      }
+    }
   }
 }
 
@@ -104,7 +155,7 @@ export function admissionOf(ctx, deps = {}) {
     const record = deps.record || recordOf(ctx);
     const fingerprint = typeof deps.fingerprint === "function" ? deps.fingerprint
       : (address) => doorbellOf(ctx).sourceFingerprint(address);
-    a = new DoorWindow({ storage, fingerprint });
+    a = new DoorWindow({ storage, fingerprint, flushMs: deps.flushMs ?? WINDOW_FLUSH_MS });
     a.migrate();
     const d = record.declareTable("admission", ADMISSION_TABLES.map((t) => ({ ...t })));
     if (d && d.ok === false && d.reason !== "TABLE_DECLARED")

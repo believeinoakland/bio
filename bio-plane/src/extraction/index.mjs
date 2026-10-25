@@ -99,6 +99,13 @@ export const CAPTURE_TEXT_CAPTURE_UNIT_BOUND = 4096;
  *  entry, 1 MiB until BOB records P-M9 (far below the 2,098,176-byte value bound; a 10,000-row write blocks the object about 2.8 s). A unit over it lands
  *  alone in its own batch, never cut. */
 export const LAND_BATCH_BYTES = PLATFORM_FIGURES.LAND_BATCH_BYTES.value;
+/** (fix round 10, cause 24 (b); R111; K5057) The most units one batch lands, beside LAND_BATCH_BYTES: a batch is one uninterrupted stretch that the next
+ *  request waits behind, and on the platform a landed row costs about 0.28 ms (the same measurement as LAND_BATCH_BYTES: 10,000 rows block the object
+ *  about 2.8 s), so 256 units are a stretch of about 70 ms, under R111's 100 ms for the 95th percentile. The tick lands its batches with a turn given back
+ *  between each (`indexUnitsYielding`). */
+export const LAND_BATCH_UNITS = 256;
+/** The turn given back between two batches: a timer of 0 ms, which lets the requests queued on the object run before the next batch lands. */
+const yieldNow = () => new Promise((resolve) => setTimeout(resolve, 0));
 /** (fix round 9, G128j; R105 (b)) The shape of reading this module writes, stated on every reading it writes (`readings.reading_shape`): 9 is fix round
  *  9's (the units land whole in batches, every part with its kind, completeness from the counters, the stored PDF reading completed by its pieces). A
  *  reading stored with none, or an older one, was written by an older reader and is re-read by `migrateReadings` when it is in one of the old shapes. */
@@ -159,6 +166,8 @@ const ADDITIVE_COLUMNS = [
   ["readings", "justification", "TEXT"],
   /* R82 (F12): the candidates a migration could not read yet, and the once-only scan again for a migration that finished before. */
   ["reading_migrations", "retry", "TEXT"], ["reading_migrations", "rescan", "INTEGER"],
+  /* R110 (fix round 10, cause 39b): what each run found, by shape, kept across runs (JSON object of counts) so a read-only answer can state it. */
+  ["reading_migrations", "counts", "TEXT"],
   /* R90 (fix round 6, G13): a text read in pieces states how far it has been read; a store that holds none of it states none. */
   ["capture_text_state", "more", "INTEGER NOT NULL DEFAULT 0"], ["capture_text_state", "cursor", "TEXT"],
   ["capture_text_state", "read_through", "INTEGER"], ["capture_text_state", "total", "INTEGER"],
@@ -723,7 +732,7 @@ export class Extraction {
   /** R1, R18: reads a stored capture (`reading-pipeline.read`, its R24) with this object's evidence store, bindings and the
    *  instance's jurisdiction view (R18), and records the digest of the reading it composed (R21). */
   async read(document, { storeName = "bio", env = null, budget = undefined, pieces = undefined, ocrInvocations = 0, registrar = null, killedPages = null,
-                         skipKilled = false } = {}) {
+                         skipKilled = false, stampUnit = null } = {}) {
     const e = env || this.env || {};
     const out = await this.#reader(document, {
       /* (fix round 9, K4904 (1); plan 2c item 8) the window at this cursor killed its reader three times: the reader steps past it, stated */
@@ -733,10 +742,16 @@ export class Extraction {
       ...(Number.isInteger(ocrInvocations) ? { ocrInvocations } : {}),
       /* (fix round 9, G129c; R101) the pages the ledger states killed their reader three times: not asked, stated `PAGE_KILLED_READER` */
       ...(Array.isArray(killedPages) && killedPages.length ? { killedPages } : {}),
+      /* (fix round 9, G165; R109) the plane's `stampUnit`, handed to the reader as it was given */
+      ...(typeof stampUnit === "function" ? { stampUnit } : {}),
       evidence: this.#evidenceOf(document && document.capture && document.capture.sha256),
       env: e, storeName, view: this.view(), planeVersion: e.VERSION || null,
       liveCalibration: (q) => this.#liveCalibration(q), ...(budget === undefined ? {} : { unitsBudget: budget }),
-      ...(pieces === undefined ? {} : { cursor: pieces.cursor ?? null, maxUnits: CAPTURE_TEXT_CAPTURE_UNIT_BOUND }) });
+      ...(pieces === undefined ? {} : { cursor: pieces.cursor ?? null,
+        /* (fix round 10, cause 24 (b); R111) the first piece lands inside the reading's own transaction, which cannot give the turn back between batches:
+           of a capture past the first tick's budget (it cannot be read at once) it offers one batch, and the pieces that follow, landed by
+           `indexUnitsYielding`, read the rest; a capture within the budget is read at once, as R90 states */
+        maxUnits: (pieces.cursor ?? null) === null && (this.#sizeOf(document) ?? 0) > CAPTURE_TEXT_CAPTURE_BOUND ? LAND_BATCH_UNITS : CAPTURE_TEXT_CAPTURE_UNIT_BOUND }) });
     /* (fix round 9, G128c; reading-pipeline R57) the first piece of a PDF read in ranges states what the whole file's reading states, so far as its pieces
        can: the glyphs of the text it carries, and, when it is also the last, the document's words; a later piece completes them (`#continueText`) */
     if (pieces !== undefined && out && out.reading && typeof out.reading === "object") completeFirstPiece(out);
@@ -744,7 +759,7 @@ export class Extraction {
     /* (fix round 9, G126a; R102) the OCR pages this read left are owed before it answers, through the registrar (`registrar` false: the caller owes
        them in its own write, as `readHeld` does) */
     if (registrar !== false) {
-      const entry = this.#ocrEntry(document && document.capture && document.capture.sha256, out.reading);
+      const entry = this.#ocrEntry(document && document.capture && document.capture.sha256, out.reading, null, out.text_units);
       if (entry) {
         const via = this.#oweVia(registrar);
         const a = await via.owe(entry);
@@ -757,11 +772,11 @@ export class Extraction {
 
   /** (fix round 9, G126a; R102) The `ocr` job a reading owes: `{kind: "ocr", sha, cursor, pages_left}` from its `ocr_left` (reading-pipeline R37: the first
    *  page owed and how many), only while pages remain; null when none does or the digest is no digest. */
-  #ocrEntry(sha, reading, units = null) {
+  #ocrEntry(sha, reading, units = null, piece = null) {
     const left = reading && typeof reading === "object" ? reading.ocr_left : null;
     if (typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha)) return null;
     if (left && Number.isInteger(left.pages) && left.pages > 0)
-      return { kind: "ocr", sha, cursor: Number.isInteger(left.cursor) ? left.cursor : null, pages_left: left.pages };
+      return { kind: "ocr", sha, cursor: Number.isInteger(left.cursor) ? left.cursor : null, pages_left: this.#documentUnread(sha, reading, piece, left.pages) };
     /* (fix round 9, R100, R102) a reading still wanting OCR (`tier3_candidate`) that states no `ocr_left` (a member that answered some of the pages asked and
        named no rest) owes the pages its units leave without a glyph, less those refused: never left unowed while completeness counts them owed */
     const n = reading && reading.tier3_candidate === true && Number.isInteger(reading.page_count) && reading.page_count > 0 ? reading.page_count : 0;
@@ -770,6 +785,22 @@ export class Extraction {
     const refused = new Set((Array.isArray(reading.ocr_refused) ? reading.ocr_refused : []).map((r) => r && r.page));
     const pages = Array.from({ length: n }, (_, p) => p).filter((p) => !read.has(p) && !refused.has(p));
     return pages.length ? { kind: "ocr", sha, cursor: pages[0], pages_left: pages.length } : null;
+  }
+
+  /** (fix round 10, cause 10; R102) The document's unread page count: its pages not yet in the text index, whatever piece is being read (`ocr_left.pages` is
+   *  the piece's count, reading-pipeline R37). The stored index's pages with a glyph and the pages of the piece about to land (`piece`, its units) are read;
+   *  the pages refused are not owed. It is the figure `#pagesLeft` gives the press. `fallback` (the piece's own count) stands when the reading names no
+   *  page count. */
+  #documentUnread(sha, reading, piece, fallback) {
+    /* a later piece's facts reading states no page count: the stored reading's stands */
+    const stored = reading && Number.isInteger(reading.page_count) ? null : this.#one(`SELECT json_extract(reading, '$.page_count') AS pc FROM readings WHERE capture_sha=? AND json_valid(reading)`, sha);
+    const count = reading && Number.isInteger(reading.page_count) ? reading.page_count : stored ? stored.pc : null;
+    const n = Number.isInteger(count) && count > 0 ? count : null;
+    if (n === null) return fallback;
+    const landing = new Set((Array.isArray(piece) ? piece : []).filter((u) => u && u.extent && u.extent.kind === "pdf-page" && glyphCount(u.text || "") > 0).map((u) => u.extent.page));
+    const refused = new Set((Array.isArray(reading.ocr_refused) ? reading.ocr_refused : []).map((r) => r && r.page));
+    const unread = this.#unreadPagesOf(sha, n).filter((p) => !landing.has(p) && !refused.has(p)).length;
+    return Math.max(unread, fallback);
   }
 
   /** (fix round 9, G126a; R102; BOB's K4898) The registrar a write owes work through: the `registerJob` the ledger's call hands (`call.registerJob`,
@@ -857,7 +888,11 @@ export class Extraction {
    *  `kind: "ocr"` the stored reading's unread pages are asked of the OCR member, those the stored units do not hold, and the
    *  re-read is written as a composed reading; a member that is down leaves the entry owed, pages it declines end it. */
   async readHeld({ sha = null, storeName = "bio", env = null, viewer = undefined, kind = null, defer = false, registerJob = null, armJobs = null,
-                   killedPages = null, killedCursor = null, detail = null, halved = false } = {}) {
+                   killedPages = null, killedCursor = null, detail = null, halfBudgetPages = null, stampUnit = null } = {}) {
+    /* (fix round 9, G165; R109; plan 2c item 10) the pages the plane names killed twice are read at half the budget (plane R97's `halfBudgetPages`); the
+       plane's `stampUnit` goes to the reader unchanged, which calls it before each unit's member call */
+    const halved = Array.isArray(halfBudgetPages) && halfBudgetPages.length > 0;
+    const stamp = typeof stampUnit === "function" ? stampUnit : null;
     /* (fix round 9, G126b; R103; K4898) the ledger's tick names its job's kind (and hands the registrar); a call with neither is inside a member's
        request (`op=readheld`, the door's own read after a capture), which makes no OCR call */
     const call = typeof registerJob === "function" ? { registerJob, armJobs } : null;
@@ -872,7 +907,12 @@ export class Extraction {
       const mine = this.#one(`SELECT bundle_id FROM readings WHERE capture_sha=?`, digest);
       home = mine && typeof mine.bundle_id === "string" && mine.bundle_id ? { bundleId: mine.bundle_id } : null;
     }
-    const left = (why, more = {}) => ({ ok: true, read: false, why, ...more });
+    /* (fix round 9, G168; R80) a held reading answers its own counters `{written, skipped}` (never `owed`: the OCR row's), so the job row learns the units
+       the door's read and the passes wrote */
+    const left = (why, more = {}) => {
+      const c = why === "READING_HELD" ? this.#completenessOf(digest).counters : null;
+      return { ok: true, read: false, why, ...(c ? { counters: { written: c.written, skipped: c.skipped } } : {}), ...more };
+    };
     if (!home || typeof home.bundleId !== "string" || !home.bundleId) return left("NO_HOME");
     if (viewer !== undefined && !this.#sees(home.bundleId, viewer)) return left("NO_HOME");
     const stored = this.#storedDocument(home.bundleId, digest);
@@ -891,7 +931,7 @@ export class Extraction {
     /* (fix round 6, G13; R90) a held reading of a text read in pieces that has more to read is not held: the next piece is read. */
     if (held && !ocr && stored && this.#moreOf(digest)) {
       if (defer === true) return left("READING_PENDING");
-      return this.#continueText({ digest, document, bundleId: home.bundleId, storeName, env: env || this.env || {}, left, call, ledger, killedPages, killedCursor });
+      return this.#continueText({ digest, document, bundleId: home.bundleId, storeName, env: env || this.env || {}, left, call, ledger, killedPages, killedCursor, halved, stamp });
     }
     /* (fix round 6, G8; R89) a "not read as text" reading whose held bytes detect nothing is tried: it stops stating itself repairable. */
     if (held && !ocr && ev && !repair && notReadAsText(heldReading)) this.#markRepairTried(home.bundleId, digest, "undetected");
@@ -919,18 +959,18 @@ export class Extraction {
        the ledger, which the door writes; nothing is read. */
     if (defer === true) return left("READING_PENDING");
     const e = env || this.env || {};
-    if (ocr) return this.#continueOcr({ digest, heldReading, bundleId: home.bundleId, storeName, env: e, left, call, killedPages, detail, halved });
+    if (ocr) return this.#continueOcr({ digest, heldReading, bundleId: home.bundleId, storeName, env: e, left, call, killedPages, detail, halved, stamp });
     /* (fix round 5, E2) the text units built are those the index keeps: the budget is the index's bound, never `Infinity`. */
     const reader = repair ? { ...document, profile: { ...(document.profile || {}), format: repair } } : document;
     const out = await this.read(reader, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, pieces: { cursor: null },
-                                          ocrInvocations: ledger ? (halved === true ? HALF_OCR_INVOCATIONS : null) : 0, registrar: false, killedPages });
+                                          ocrInvocations: ledger ? (halved === true ? HALF_OCR_INVOCATIONS : null) : 0, registrar: false, killedPages, stampUnit: stamp });
     if (out.refused) return left(out.refused.code);
     if (repair && held && notReadAsText(out.reading)) { this.#markRepairTried(home.bundleId, digest, "still"); return left("READING_HELD"); }
     const prof = reader.profile && typeof reader.profile === "object" ? reader.profile : null;
     /* (fix round 9, G126a; R102) the OCR pages the read left are owed in the same transaction as the reading (the registrar's row commits or rolls back
        with it), before the answer */
     const via = this.#oweVia(call);
-    const entry = this.#ocrEntry(digest, out.reading, out.more === true ? null : out.text_units);
+    const entry = this.#ocrEntry(digest, out.reading, out.more === true ? null : out.text_units, out.text_units);
     let owing = null;
     const wrote = this.core.transact(() => {
       const now = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest);
@@ -950,7 +990,8 @@ export class Extraction {
     await wrote.afterRead;
     /* (fix round 6, G41; R97) a reading too large to keep whole was stored as its small statement: final, owing nothing, and no piece follows */
     if (wrote.stated) return { ok: true, read: true, bundle_id: home.bundleId, found: false, stated: true };
-    const owed = failedTransiently(out.reading) || !!entry || (out.reading.tier3_candidate === true && !!e.OCR_WORKER);
+    /* (fix round 9, G172; R82) a reading that ended final (the member refused its page from the header) owes nothing, an OCR member bound or not */
+    const owed = failedTransiently(out.reading) || !!entry || (out.reading.tier3_candidate === true && !!e.OCR_WORKER && out.reading.failure !== "final");
     const ow = oweAnswer ? { registration: oweAnswer } : {};
     /* (fix round 6, G13; R90) the first piece of a text that has more: the ledger goes on at once (plane R77: `more`) */
     if (out.more === true) return { ok: true, read: true, bundle_id: home.bundleId, found: out.reading.found === true, more: true,
@@ -992,7 +1033,7 @@ export class Extraction {
    *  `{ok: true, read: true, more: true, detail}` while more follows, which the ledger continues at once, one piece a tick;
    *  `{ok: true, read: true}` for the last; `{final: true, why}` when the reader refuses the cursor (the bytes it was made
    *  from are no longer the ones held), which states it and ends the entry. Nothing else about the capture's reading changes. */
-  async #continueText({ digest, document, bundleId, storeName, env, left, call = null, ledger = false, killedPages = null, killedCursor = null }) {
+  async #continueText({ digest, document, bundleId, storeName, env, left, call = null, ledger = false, killedPages = null, killedCursor = null, halved = false, stamp = null }) {
     const st = this.#one(`SELECT cursor, read_through, total FROM capture_text_state WHERE capture_sha=? AND more=1`, digest);
     if (!st) return left("READING_HELD");
     /* a state with more to read and no cursor is a text read before pieces existed that the index holds only in part: it is read again
@@ -1002,7 +1043,7 @@ export class Extraction {
        past, stated, and the read goes on from the next */
     const skip = !restart && typeof killedCursor === "string" && killedCursor === st.cursor;
     const out = await this.read(document, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, pieces: { cursor: restart ? null : st.cursor },
-                                            ocrInvocations: ledger ? null : 0, registrar: false, skipKilled: skip });
+                                            ocrInvocations: ledger ? (halved === true ? HALF_OCR_INVOCATIONS : null) : 0, registrar: false, skipKilled: skip, stampUnit: stamp });
     /* (fix round 9, G129b; R101) a piece that failed for a cause outside the document (the store, a member: `transient`) is no end: the state keeps its
        cursor, nothing is indexed, and the entry stays owed, to be retried by the ledger with its back-off; never `more` 0 with no reason */
     const rd = out.reading && typeof out.reading === "object" ? out.reading : null;
@@ -1029,7 +1070,7 @@ export class Extraction {
     const units = Array.isArray(out.text_units) ? out.text_units : [];
     /* (fix round 9, G126a; R102) a continuation piece that leaves OCR pages owes them, in the piece's own transaction */
     const via = this.#oweVia(call);
-    const entry = this.#ocrEntry(digest, out.reading);
+    const entry = this.#ocrEntry(digest, out.reading, null, units);
     let owing = null;
     const stated = skip && out.stated && typeof out.stated === "object" ? { at: st.read_through ?? null, why: String(out.stated.why || "UNIT_KILLED_READER").slice(0, 80) } : null;
     /* (fix round 9, G128f; R99) the piece's units land in batches, each in its own transaction keyed by the piece's cursor, so a kill between two batches
@@ -1043,7 +1084,7 @@ export class Extraction {
     const pieceChain = rd && Array.isArray(rd.piece_chain) && !checkChain(rd.piece_chain) ? rd.piece_chain : null;
     const unitChain = pieceChain || (rd && Array.isArray(rd.text_source) ? rd.text_source : storedChain);
     const folded = pieceChain && !restart ? foldPieceChain(storedChain, pieceChain, piecePagesOf(out, units)) : null;
-    const wrote = this.indexUnits(bundleId, digest, units, unitChain ?? null,
+    const wrote = await this.indexUnitsYielding(bundleId, digest, units, unitChain ?? null,
       { append: !restart, more: pieceOf(out), batchKey: `p:${restart ? "start" : st.cursor}`, guard: cursorStands,
         after: () => {
           /* (fix round 9, G128c; reading-pipeline R57) the stored reading is completed, never rewritten, by what the piece adds: its glyphs, the image placements
@@ -1084,7 +1125,7 @@ export class Extraction {
    *  member was down or answered an error (the row stands: never `UNREADABLE`, never finished while the page stays unread). Pages the member declines
    *  in a 200 answer are the document's own, so that ends the entry (`OCR_NO_PROGRESS`). A stored reading that changed while the pass ran is not
    *  written over: the entry stays owed and is read again. */
-  async #continueOcr({ digest, heldReading, bundleId, storeName, env, left, call = null, killedPages = null, detail = null, halved = false }) {
+  async #continueOcr({ digest, heldReading, bundleId, storeName, env, left, call = null, killedPages = null, detail = null, halved = false, stamp = null }) {
     if (!heldReading) return left("NO_READING");
     const basis = this.reextractBasis({ captureSha: digest, ungated: true });
     if (!basis.held) return left("NO_READING");
@@ -1095,7 +1136,7 @@ export class Extraction {
     const d = detail && typeof detail === "object" ? detail : {};
     const author = typeof d.by === "string" && d.by ? d.by : PLANE_AUTHOR;
     const via = d.via === "op=pdfstructure&ocr=1" ? d.via : "ledger";
-    const pass = await this.#ocrPass({ digest, basis, env, storeName, author, via, killedPages, call, halved });
+    const pass = await this.#ocrPass({ digest, basis, env, storeName, author, via, killedPages, call, halved, stamp });
     const killed = pass.killed && pass.killed.length ? { killed: pass.killed } : {};
     if (pass.changed) return left("BASIS_CHANGED", { owed: true });
     if (!pass.filled.length && !pass.stated) return left(pass.why || "OCR_NO_PROGRESS", { ...(pass.transient ? { owed: true } : {}), ...killed });
@@ -1156,7 +1197,7 @@ export class Extraction {
    *  `#storedPages` (the OCR member asked for the pages left, within the call's budget), the reading composed as the press composed it, written by
    *  `#writeReread` only while the stored reading is still `basis` (R103), and the pages still left re-registered. Answers `{filled, transient, why,
    *  changed?, entry?, registration?}`. */
-  async #ocrPass({ digest, basis, env, storeName, author, via, killedPages = null, call = null, halved = false }) {
+  async #ocrPass({ digest, basis, env, storeName, author, via, killedPages = null, call = null, halved = false, stamp = null }) {
     const stored = basis.reading || {};
     const fmt = (this.#one(`SELECT capture_format FROM readings WHERE capture_sha=?`, digest) || {}).capture_format || stored.text_container || "pdf";
     const built = this.#storedPages(basis, fmt);
@@ -1165,7 +1206,9 @@ export class Extraction {
     const t3 = await tier3Extend(env, { sha: digest, storeName, i2text: built.i2text, wiredTier: baseTier, tier2PerPage: null, fmt,
       seed: built.seed, liveCalibration: (q) => this.#liveCalibration(q), ...(Array.isArray(killedPages) ? { killedPages } : {}),
       /* (G129c; R101) the one retry after three kills, at half the budget */
-      ...(halved === true ? { invocations: HALF_OCR_INVOCATIONS } : {}) });
+      ...(halved === true ? { invocations: HALF_OCR_INVOCATIONS } : {}),
+      /* (G165; R109) the plane's unit stamp, called with `p<page>` before each page's member call */
+      ...(stamp ? { stampUnit: stamp } : {}) });
     /* (G129c; R101) a page killed three times is stated for that page alone (`PAGE_KILLED_READER`, written so it is never asked again) and the read
        goes on; the pages whose call died this pass are answered (`killed`) for the ledger's attempt stamps */
     const statedNow = (Array.isArray(t3.refused) ? t3.refused : []).filter((r) => r && r.reason === PAGE_KILLED_READER).map((r) => r.page);
@@ -1713,8 +1756,27 @@ export class Extraction {
    *  wire skipped are named. The state row is written last, in one transaction with the caller's `guard` (asked first: false writes no state and the
    *  answer is null, the batches landed staying, keyed) and `after` (the caller's writes beside the state). The answer gives `offered`, `written`, `truncated`, `over_bound` (the wire's own count), `unaddressable`, the chain kind,
    *  `skipped` and `batches` (landed, and already landed). */
-  indexUnits(bundleId, captureSha, units, chain, { wireOverBound = 0, wireSkipped = null, more = null, append = false, batchKey = "w", guard = null,
-                                                   after = null } = {}) {
+  indexUnits(bundleId, captureSha, units, chain, opts = {}) {
+    const run = this.#landSteps(bundleId, captureSha, units, chain, opts);
+    for (let r = run.next(); ; r = run.next()) if (r.done) return r.value;
+  }
+
+  /** (fix round 10, cause 24 (b); R111) `indexUnits` for a caller that can wait (a tick of the ledger outside any transaction): the turn is given back
+   *  (`yieldNow`) after each batch landed, so a request to the object while a large text is landing is answered between two batches, not after all of
+   *  them. The units landed, the state and the answer are `indexUnits`'. */
+  async indexUnitsYielding(bundleId, captureSha, units, chain, opts = {}) {
+    /* the turn is also given before the first batch: the piece was just read, and the requests queued behind that stretch run before it lands */
+    await yieldNow();
+    const run = this.#landSteps(bundleId, captureSha, units, chain, opts);
+    for (let r = run.next(); ; r = run.next()) {
+      if (r.done) return r.value;
+      await yieldNow();
+    }
+  }
+
+  /** The body of `indexUnits`, a generator that yields after each batch landed (the synchronous runner ignores it). */
+  *#landSteps(bundleId, captureSha, units, chain, { wireOverBound = 0, wireSkipped = null, more = null, append = false, batchKey = "w", guard = null,
+                                                    after = null } = {}) {
     /* (fix round 6, G13; R90) `append`: the next piece of a text read in pieces. The capture's earlier units, named gaps and counts stay and this
        piece's are added to them. */
     const before = append ? this.#one(`SELECT * FROM capture_text_state WHERE capture_sha=?`, captureSha) : null;
@@ -1753,14 +1815,13 @@ export class Extraction {
     const batches = [];
     for (const r of rows) {
       const last = batches[batches.length - 1];
-      if (last && last.size + r.size <= LAND_BATCH_BYTES) { last.rows.push(r); last.size += r.size; }
+      if (last && last.size + r.size <= LAND_BATCH_BYTES && last.rows.length < LAND_BATCH_UNITS) { last.rows.push(r); last.size += r.size; }
       else batches.push({ rows: [r], size: r.size });
     }
     let landed = 0, already = 0, stopped = false;
     const held = new Set();
-    batches.forEach((b, k) => {
-      const id = `${batchKey}:${k}`;
-      if (stopped) return;
+    for (let k = 0; k < batches.length && !stopped; k++) {
+      const b = batches[k], id = `${batchKey}:${k}`;
       this.core.transact(() => {
         /* a piece read while the state moved lands nothing more (the caller's guard, asked in each batch) */
         if (typeof guard === "function" && guard() === false) { stopped = true; return; }
@@ -1779,7 +1840,8 @@ export class Extraction {
         this.#sql.exec(`INSERT INTO job_batches (sha, kind, batch, landed_at) VALUES (?, 'reading', ?, ?)`, captureSha, id, stampInstant("second"));
         landed++;
       });
-    });
+      if (k < batches.length - 1 && !stopped) yield k;
+    }
     /* what the index holds of this write (a batch an earlier try landed counts as written: its units are in the index) */
     for (const { u, size } of rows) {
       if (held.has(u)) continue;
@@ -2375,6 +2437,42 @@ export class Extraction {
     return row;
   }
 
+  /** R110 (fix round 10, cause 39b): add what a run found to its migration's row (`counts`, a JSON object of numbers), so the answer of `migrationCounts` still
+   *  states it after the run's own answer is gone. A zero adds nothing. */
+  #bumpCounts(name, found) {
+    const add = Object.entries(found).filter(([, n]) => Number.isFinite(n) && n > 0);
+    if (!add.length) return;
+    const row = this.#one(`SELECT counts FROM reading_migrations WHERE migration=?`, name);
+    const had = row ? safeJson(row.counts) : null;
+    const counts = had && typeof had === "object" && !Array.isArray(had) ? { ...had } : {};
+    for (const [k, n] of add) counts[k] = (Number.isFinite(counts[k]) ? counts[k] : 0) + n;
+    this.#sql.exec(`UPDATE reading_migrations SET counts=? WHERE migration=?`, JSON.stringify(counts), name);
+  }
+
+  /** R110 (fix round 10, cause 39b; K5055; amends R105): what each migration has done, read-only, for an administrator's answer (the plane's `selftest`, whose
+   *  Worker arm checks the viewer and hands nothing else in). One entry for each of R66, R68, R89, R92 and R105's migrations, in that order:
+   *  `{migration, examined, migrated, done, at, retry, counts}`: the readings examined and migrated, whether it is done, when it last ran (null for one that
+   *  has not), whether it will retry (not done, or candidates waiting for their bytes: R82), and the counts of the shapes it found (R105 (b)'s
+   *  `first_range`, `cut_units`, `pages_unread`, `stated_bare`, with `registered` and `existed`; R105 (a), (c)'s `ocr`, `ods` and `existed`; R92's
+   *  `superseded`). It writes nothing and creates no row: a migration that has not run states zeros. Never throws. */
+  migrationCounts() {
+    const names = [N26_MIGRATION, N439_MIGRATION, REPAIR_MIGRATION, PART_MIGRATION, OWED_MIGRATION, SHAPE_MIGRATION];
+    const shapes = { first_range: 0, cut_units: 0, pages_unread: 0, stated_bare: 0, registered: 0, existed: 0 };
+    return {
+      ok: true,
+      migrations: names.map((migration) => {
+        let row = null;
+        try { row = this.#one(`SELECT done, examined, migrated, at, retry, counts FROM reading_migrations WHERE migration=?`, migration); } catch { row = null; }
+        const counts = row ? safeJson(row.counts) : null;
+        const waiting = row ? safeJson(row.retry) : null;
+        return { migration, examined: row ? Number(row.examined) || 0 : 0, migrated: row ? Number(row.migrated) || 0 : 0, done: !!(row && row.done),
+                 at: row && typeof row.at === "string" ? row.at : null,
+                 retry: !(row && row.done) || (Array.isArray(waiting) && waiting.length > 0),
+                 counts: { ...(migration === SHAPE_MIGRATION ? shapes : {}), ...(counts && typeof counts === "object" && !Array.isArray(counts) ? counts : {}) } };
+      }),
+    };
+  }
+
   /** R66, R68: started by `migrate()` on a Durable Object (its `waitUntil` carries both, docx then pptx, in batches,
    *  until done), so each cutoff is taken inside the boot, before any request can write a reading; a store with no such
    *  host (a test) runs `migrateDocxReadings` and `migratePptxReadings` itself. Never throws: a failed run is retried
@@ -2529,6 +2627,14 @@ export class Extraction {
       const more = await this.#migrateOwedWork(limit);
       out.r105 = more;
       out.done = more.done;
+      /* (fix round 10, R110) and, once that is done, the readings in old shapes, as the branch above does: a run that stopped here would leave them to the
+         next start */
+      if (more.done) {
+        const shapes = await this.migrateReadings({ limit });
+        out.r105b = shapes;
+        out.done = shapes.done;
+        out.examined += shapes.examined;
+      }
     }
     return out;
   }
@@ -2555,6 +2661,7 @@ export class Extraction {
         if (!a || a.ok !== true) { out.refused = (a && a.reason) || "REGISTRAR_REFUSED"; return out; }
         out.registered++; out.shapes[shape]++;
         if (a.existed === true) out.existed++;
+        this.#bumpCounts(SHAPE_MIGRATION, { registered: 1, [shape]: 1, existed: a.existed === true ? 1 : 0 });
       }
       this.#sql.exec(`UPDATE reading_migrations SET after=?, examined=examined+1, migrated=migrated+?, at=? WHERE migration=?`,
                      r.capture_sha, shape ? 1 : 0, stampInstant("second"), SHAPE_MIGRATION);
@@ -2607,7 +2714,7 @@ export class Extraction {
     for (const r of page.slice(0, cap)) {
       let entry = null;
       const left = safeJson(r.ol);
-      if (left && Number.isInteger(left.pages) && left.pages > 0) entry = this.#ocrEntry(r.capture_sha, { ocr_left: left });
+      if (left && Number.isInteger(left.pages) && left.pages > 0) entry = this.#ocrEntry(r.capture_sha, { ocr_left: left, page_count: r.pc });
       else if (r.t3 === 1 || r.t3 === true) {
         const unread = this.#unreadPagesOf(r.capture_sha, Number.isInteger(r.pc) && r.pc > 0 ? r.pc : 1);
         if (unread.length) entry = { kind: "ocr", sha: r.capture_sha, cursor: unread[0], pages_left: unread.length };
@@ -2617,6 +2724,7 @@ export class Extraction {
         if (!a || a.ok !== true) { out.refused = (a && a.reason) || "REGISTRAR_REFUSED"; return out; }
         if (entry.kind === "ocr") out.ocr++; else out.ods++;
         if (a.existed === true) out.existed++;
+        this.#bumpCounts(OWED_MIGRATION, { [entry.kind === "ocr" ? "ocr" : "ods"]: 1, existed: a.existed === true ? 1 : 0 });
       }
       this.#sql.exec(`UPDATE reading_migrations SET after=?, examined=examined+1, migrated=migrated+?, at=? WHERE migration=?`,
                      r.capture_sha, entry ? 1 : 0, stampInstant("second"), OWED_MIGRATION);

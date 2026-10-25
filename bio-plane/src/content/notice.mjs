@@ -179,15 +179,13 @@ function unitAt(extent, held) {
     : logicalUnits(held).find((x) => x.extent === at.extent);
 }
 
-/** A document's units as the file's text, once each, in `seq` order joined by a line feed (R46, R61): the chunks of one
- *  element joined with nothing, and a sheet block's repeated first line (the header a block repeats at its head, R41; its
- *  `lineRows` naming the sheet's first row a second time) dropped, so the text of a CSV, an xlsx or an ods sheet is the
- *  file's lines once each. A line a record's quoted line break adds carries the record's row and is kept: only a block's
+/** Each unit's text with the header its sheet block repeats at its head dropped (R41; the block's `lineRows` naming the
+ *  sheet's first row a second time), aligned with `units`: `null` where only the repeated line was there. The first block of
+ *  a sheet keeps its header. A line a record's quoted line break adds carries the record's row and is kept: only a block's
  *  first line can repeat. Pure. */
-function documentText(units) {
+function headsDropped(units) {
   const first = new Map();
-  let out = "", prev = null;
-  for (const u of units) {
+  return units.map((u) => {
     let text = u.text;
     if (Array.isArray(u.lineRows) && u.lineRows.length) {
       const e = safeParse(u.extent);
@@ -197,11 +195,23 @@ function documentText(units) {
         else if (u.lineRows[0] === first.get(sheet)) { const cut = text.indexOf("\n"); text = cut < 0 ? null : text.slice(cut + 1); }
       }
     }
-    if (text === null) continue;
+    return text;
+  });
+}
+
+/** A document's units as the file's text, once each, in `seq` order joined by a line feed (R46, R61): the chunks of one
+ *  element joined with nothing, and a sheet block's repeated first line dropped (`headsDropped`), so the text of a CSV, an
+ *  xlsx or an ods sheet is the file's lines once each. Pure. */
+function documentText(units) {
+  const texts = headsDropped(units);
+  let out = "", prev = null;
+  units.forEach((u, i) => {
+    const text = texts[i];
+    if (text === null) return;
     const joined = u.run > 0 && prev && prev.extent === u.extent && prev.run === u.run - 1;
     out += (prev === null ? "" : joined ? "" : "\n") + text;
     prev = u;
-  }
+  });
   return out;
 }
 const safeParse = (s) => { try { return JSON.parse(s); } catch { return null; } };
@@ -237,7 +247,13 @@ export function heldTextAt(extent, held) {
     return { text: null, reason: "cited_text_not_held", why: word("content.why.record_holds_text", { extent: String(describeExtent(extent)) }) };
   if (u.truncated)
     return { text: null, reason: "cited_text_truncated", why: localize("content.notice.cited_passage_held_only", "the cited passage's text is held only to the per-unit cap, so the whole passage is not held") };
-  return { text: u.text, extent: at };
+  /* a sheet block cited by its own range reads from the range's first row (R22): the header it repeats at its head is the
+     first block's, not part of the cited rows (`documentText` drops it the same way) */
+  const i = held.units.indexOf(u);
+  const text = i < 0 ? u.text : headsDropped(held.units)[i];
+  if (text === null)
+    return { text: null, reason: "cited_text_not_held", why: word("content.why.record_holds_text", { extent: String(describeExtent(extent)) }) };
+  return { text, extent: at };
 }
 
 /** The grid box a `sheet-cell` or `sheet-range` extent names, `{r0, c0, r1, c1}` 1-based with the corners ordered (the

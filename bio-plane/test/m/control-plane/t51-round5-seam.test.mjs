@@ -3,7 +3,7 @@
    `op=reading` with no further press. R-STOP: every "reading follows" case asserts the words are in `text_units`, never only that a reading exists. The files
    are made here (text-layer PDFs, a scan, text), never taken from a jurisdiction.
      E1  a 10 MB and a 22 MiB PDF and a 12 MB text file uploaded and promoted are read with their words; a 3 MB PDF is as before; a 30 MB PDF states the ceiling;
-     E3  a 41.5 MB five-part capture and a 40 MB five-part upload state their size at once (before any keep has run), and "Read it" answers `read: true`;
+     E3  a 41.5 MB five-part capture and a 52 MB (over the 50 MiB whole-read ceiling of text, R132; a 40 MB text is deferred, not stated) five-part upload state their size at once (before any keep has run), and "Read it" answers `read: true`;
      E5  a 273-byte text knock is pulled and read; a NUL in a declared text type is not read as text; a `.txt` name with no type is;
      E6  a 60-page scan, uploaded and promoted, has all 60 pages' text with no press (the OCR member answers 24 pages a call); the press answers at once.
    Red by name until the providers have merged: E1 (acquisition R-profile, reading-pipeline, extraction), E3 (extraction `readHeld` of a multipart home over the
@@ -151,9 +151,9 @@ test("E1 (controls): a 3 MB PDF is read as before; a 30 MB PDF states the ceilin
 
 /* ---- E3 ---- */
 
-test("E3 (a 40 MB five-part upload): filed, it states its size as a final reading before any keep has run, and \"Read it\" answers `read: true`", { timeout: 600000 }, async () => {
+test("E3 (a 52 MB (over the 50 MiB whole-read ceiling of text, R132; a 40 MB text is deferred, not stated) five-part upload): filed, it states its size as a final reading before any keep has run, and \"Read it\" answers `read: true`", { timeout: 600000 }, async () => {
   const auth = await founder();
-  const bytes = textOf(`E3 the commission approved the long minutes ${Date.now()}`, 40);
+  const bytes = textOf(`E3 the commission approved the long minutes ${Date.now()}`, 52);
   const a = await uploadAndFile(auth, bytes, "e3-minutes.txt", "text/plain");
   assert.ok(a.document.parts && a.document.parts.length >= 5);
   const end = Date.now() + 30000;

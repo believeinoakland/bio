@@ -92,7 +92,7 @@ test("R123, R125 (G5, a promoted upload): the same 12 MB text uploaded again onc
   assert.equal(r.status, 200, r.text);
   assert.deepEqual(r.json.result, landed, "relayed as it was");
   assert.equal(asked(w.env, "extractread").length, 0);
-  assert.equal(asked(w.env, "pendingadd").length, 0);
+  assert.equal(asked(w.env, "pendingadd").length, 1, "R130: bytes held before this upload have the door's own row registered first, which the plane finishes with nothing to read");
   assert.equal(asked(w.env, "readheldfor").length, 0, "the owner is not asked to read");
   assert.ok(asked(w.env, "reading")[0].params.viewer, "the plain read, as the member may see");
   /* control: a held statement is not a made reading, so it stays owed */
@@ -103,7 +103,7 @@ test("R123, R125 (G5, a promoted upload): the same 12 MB text uploaded again onc
 /* ---- G7 ---- */
 
 test("R123, R125 (G7): a 40 MB five-part upload with the clock spent answers its `final` reading with the size, no `reading_pending`, no row owed", async () => {
-  const landed = { ok: true, existed: false, capture: { sha256: SHA, bytes: 40014922 }, document: docOf({ bytes: 40014922, type: "text/plain", parts: 5 }) };
+  const landed = { ok: true, existed: false, capture: { sha256: SHA, bytes: 40014922 }, document: docOf({ bytes: 40014922, type: "application/pdf", pdf: true, parts: 5 }) };
   const w = world({ answer: storeFor(landed, { read: STATED }) });
   const r = await upload(w, late());
   assert.equal(r.status, 200, r.text);
@@ -131,7 +131,7 @@ test("R123, R125 (G7): a 41.5 MB five-part capture answered after the bound is n
   const seen = [];
   const probe = { ...defaultHooks(), acquireBoundMs: 1, async gatedOp(ctx) {
     if (ctx.op !== "acquire") return undefined;
-    seen.push(ctx.deferReading(answer.document), ctx.deferReading({ capture: { sha256: SHA, bytes: MB, content_type: "text/plain" } }));
+    seen.push(await ctx.deferReading(answer.document), await ctx.deferReading({ capture: { sha256: SHA, bytes: MB, content_type: "text/plain" } }));
     return M.json({ ok: true, existed: false, document: answer.document });
   } };
   const p = world();
@@ -157,7 +157,7 @@ test("R1 (G1): the door carries the plane's cron as a literal statement beside i
   assert.equal(M.PLANE_CRONS_STATEMENT, "bio-plane-crons/1 */5 * * * *");
   const door = M.makeFetch({});
   assert.equal(door.cronsStatement, "bio-plane-crons/1 */5 * * * *");
-  assert.equal(door.limitsStatement, "bio-plane-limits/1 subrequests=10000", "the limits statement is as it was");
+  assert.equal(door.limitsStatement, "bio-plane-limits/1 cpu_ms=300000 subrequests=10000", "the limits statement is as it was");
   const crons = M.PLANE_CRONS_STATEMENT.split(" ").slice(1).join(" ");
   assert.equal(crons.split(/\s+/).length, 5, "one five-field cron");
 });
@@ -259,7 +259,7 @@ test("R123 (G14): a reading that answers `more` is continued by the ledger on ev
   assert.deepEqual(asked(m.w.env, "pendingadd").map((c) => c.params.sha), [sha]);
   const n = await promote(false);
   assert.equal(n.r.json.result.reading_pending, undefined);
-  assert.equal(asked(n.w.env, "pendingadd").length, 0);
+  assert.equal(asked(n.w.env, "pendingadd").length, 1, "R130: the row first; no reading_pending once the reading is made");
   /* a held upload whose reading answers more */
   const landed = { ok: true, existed: true, capture: { sha256: SHA, bytes: 9 }, receipt: { address: `upload:${SHA}` } };
   const u = world({ answer: storeFor(landed, { held: () => ({ ok: true, read: true, found: true, more: true }) }) });
@@ -282,14 +282,14 @@ test("R123 (G18): a promotion of 20 documents follows the first 16 and OWES the 
   const r = await call(w.env, { op: "promote", token: w.S.ann, method: "POST", body: { files } });
   assert.equal(r.status, 200, r.text);
   assert.equal(asked(w.env, "readheldfor").length, 16, "the first 16 are followed here");
-  assert.deepEqual(asked(w.env, "pendingadd").map((c) => c.params.sha), shas.slice(16), "the rest are owed");
+  assert.deepEqual(asked(w.env, "pendingadd").map((c) => c.params.sha), shas, "R130: every document's row is registered before any read; the last 4 are not read here and stay owed");
   assert.equal(r.json.result.reading_pending, true);
   /* control: 16 documents owe nothing */
   const f16 = [{ path: "data/provenance.json", text: JSON.stringify({ documents: shas.slice(0, 16).map((s) => ({ locator: `https://x.example/${s.slice(0, 4)}`, capture: { sha256: s, bytes: 9 } })) }) }];
   const c = world({ answer: (q) => (q.route === "promote" ? ok({ ok: true, bundle_id: "INFO-1" }) : q.route === "readheldfor" ? ok({ ok: true, read: true, found: true }) : null) });
   const cr = await call(c.env, { op: "promote", token: c.S.ann, method: "POST", body: { files: f16 } });
   assert.equal(cr.json.result.reading_pending, undefined);
-  assert.equal(asked(c.env, "pendingadd").length, 0);
+  assert.equal(asked(c.env, "pendingadd").length, 16, "R130: each followed document has its row first");
 });
 
 test("R123 (G2): the delivery of a finished fetch records `fetch_done` through capture; a render's delivery records none (see r124-owed-render)", async () => {

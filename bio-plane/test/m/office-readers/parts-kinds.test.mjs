@@ -62,6 +62,27 @@ test("R38 docx: footnotes, endnotes, headers, footers, comments, tracked deletio
   assert.deepEqual(again.parts, t.parts);
 });
 
+test("R38 docx (G166): a text_box part names the paragraphs it holds in paras, their indices in paragraphs; other kinds carry none; a paragraph outside a box is not named", async () => {
+  const body = F.wp(F.wr("Outside line"))
+    + F.wp(`<w:r><w:txbxContent>${F.wp(F.wr("Box first"))}${F.wp(F.wr("Box second"))}</w:txbxContent></w:r>`)
+    + F.wp(F.wr("After the box"));
+  const t = await docxEntry.text(F.docx({ body }));
+  assert.equal(t.ok, true);
+  const idx = (text) => t.paragraphs.findIndex((p) => p.text === text);
+  const [box, ...rest] = byKind(t.parts, "text_box");
+  assert.equal(rest.length, 0, "one text_box piece");
+  assert.equal(box.text, "Box first\nBox second");
+  assert.deepEqual(box.paras, [idx("Box first"), idx("Box second")]);
+  assert.ok(box.paras.every((n) => t.paragraphs[n].para === n), "indices in paragraphs are the para numbers");
+  assert.ok(!box.paras.includes(idx("Outside line")) && !box.paras.includes(idx("After the box")));
+  /* the paragraphs keep their numbers and stay in paragraphs and document (R11) */
+  assert.ok(t.document.includes("Box first") && t.document.includes("Box second"));
+  /* control: a part of another kind has no paras */
+  const w = await docxEntry.text(wordPackage());
+  for (const p of w.parts.filter((x) => x.kind !== "text_box")) assert.equal("paras" in p, false, p.kind);
+  assert.deepEqual(byKind(w.parts, "text_box")[0].paras, [w.paragraphs.findIndex((p) => p.text === "Inside the box")]);
+});
+
 test("R38 docx: a package with no part outside the body has parts: []; a part the reader cannot read is stated, never a reading that says it is whole", async () => {
   const plain = await docxEntry.text(F.docx());
   assert.deepEqual(plain.parts, []);
@@ -99,10 +120,34 @@ test("R38 pptx: speaker notes, master and layout text, text boxes and a hidden s
   assert.equal(box.length, 1);
   assert.equal(box[0].text, "Text box words");
   assert.equal(box[0].anchor.slide, 3);
-  const hidden = t.parts.filter((p) => p.hidden === true);
-  assert.deepEqual(hidden.map((p) => [p.kind, p.text]), [["body", "Secret hidden slide"]]);
+  /* cause 16: the hidden slide's text is held once, as its slide unit marked hidden, not also as a second body piece */
+  assert.deepEqual(t.slides.filter((s) => s.hidden).map((s) => s.text), ["Secret hidden slide"]);
+  assert.ok(!t.parts.some((p) => p.text === "Secret hidden slide"));
   assert.ok(t.document.includes("Secret hidden slide"), "R23: a hidden slide is still in the document");
   assert.ok(!t.document.includes("Speaker says") && !t.document.includes("Master title"), "document stays the slides' text");
+});
+
+test("R38 pptx (K4987): a text box's words are the text_box part's; the slide names them (bodyText leaves them out, the box part names its shapes); a slide with no box has neither", async () => {
+  const sp = (id, box, words) => `<p:sp><p:nvSpPr><p:cNvPr id="${id}" name="S${id}"/><p:cNvSpPr${box ? ' txBox="1"' : ""}/></p:nvSpPr><p:txBody><a:p><a:r><a:t>${words}</a:t></a:r></a:p></p:txBody></p:sp>`;
+  const sld = (...shapes) => `<?xml version="1.0"?><p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><p:cSld><p:spTree>${shapes.join("")}</p:spTree></p:cSld></p:sld>`;
+  const t = await pptxEntry.text(F.pptx({ slides: [
+    { file: "slide1.xml", xml: sld(sp(2, false, "Plain words"), sp(3, true, "Boxed words")) },
+    { file: "slide2.xml", xml: sld(sp(2, true, "Only box")) },
+    { file: "slide3.xml", xml: sld(sp(2, false, "No box here")) },
+  ] }));
+  assert.equal(t.ok, true);
+  const [s1, s2, s3] = t.slides;
+  /* R11 stays: the slide's text and the document hold every word */
+  assert.equal(s1.text, "Plain words\nBoxed words");
+  assert.ok(t.document.includes("Boxed words"));
+  assert.equal(s1.bodyText, "Plain words");
+  assert.equal(s2.bodyText, "");
+  assert.equal("bodyText" in s3, false);
+  const boxes = byKind(t.parts, "text_box");
+  assert.deepEqual(boxes.map((b) => b.text), ["Boxed words", "Only box"]);
+  assert.deepEqual(boxes[0].shapes, [boxes[0].anchor.shape]);
+  assert.equal(boxes[0].anchor.shape, 1);
+  for (const p of t.parts.filter((x) => x.kind !== "text_box")) assert.equal("shapes" in p, false, p.kind);
 });
 
 test("R38 xlsx: a cell comment is a cell_note unit citing its cell; a part that can hold other text is stated unread", async () => {

@@ -154,7 +154,7 @@ test("R97 G127c: a fetch refused for a capture another bundle holds ends `final`
   await x.s.onAlarm(Date.now() + 1000);
   const r = x.jobs.jobRow({ sha: "s-held", kind: "fetch" });
   assert.deepEqual([r.state, r.final_why], ["final", "CAPTURE_HELD_BY_ANOTHER_BUNDLE"]);
-  assert.deepEqual(r.failed_why.CAPTURE_HELD_BY_ANOTHER_BUNDLE, { sha: held, holder: "INFO-2026-0001", kind: "part" });
+  assert.deepEqual(r.failed_why.CAPTURE_HELD_BY_ANOTHER_BUNDLE, { kind: "part", capture_sha: held, holder: "INFO-2026-0001" });
   assert.deepEqual(x.jobs.list({ sha: "s-held" }).map((e) => [e.state, e.why, e.failed_why.CAPTURE_HELD_BY_ANOTHER_BUNDLE.kind]), [["final", "CAPTURE_HELD_BY_ANOTHER_BUNDLE", "part"]]);
 });
 
@@ -557,4 +557,154 @@ test("R107: `jobrow?sha=&kind=` answers one job row whole, a finished and a refu
   assert.deepEqual(rowsOf(x).map((r) => JSON.stringify(r)), before, "a read: nothing written");
   /* control: an absent row */
   assert.deepEqual(await x.call(`/jobrow?sha=${sha("never registered")}&kind=ocr`), { ok: true, row: null });
+});
+
+/* ---- R97 (K4980, G160): a refusal's facts in `failed_why` ---- */
+
+test("R97 G160: a final answer carries the refusal's `kind`, `capture_sha` and `holder` as the refusing module answered them, in `detail` or at the top; `holder` is null where provenance names none (D-15); an answer with no facts adds none", async () => {
+  const held = sha("a whole held elsewhere");
+  const answers = [
+    { ok: true, done: true, final: true, reason: "CAPTURE_HELD_BY_ANOTHER_BUNDLE", kind: "whole", capture_sha: held },
+    { ok: true, done: true, final: true, reason: "CAPTURE_HELD_BY_ANOTHER_BUNDLE", refusal: { detail: { kind: "part", capture_sha: held, holder: "INFO-2026-0001" } } },
+    { ok: true, done: true, final: true, reason: "TOO_LARGE" },
+  ];
+  const x = await world(undefined, {});
+  const { acquisitionOf } = await import("../../../src/acquisition/index.mjs");
+  const seen = [];
+  acquisitionOf(x.ctx).owedFetch = async (_cap, e) => { seen.push(e.session); return answers[seen.length - 1]; };
+  for (let i = 0; i < 3; i++) x.jobs.registerJob({ kind: "fetch", session: `s-facts-${i}` });
+  for (let i = 0; i < 3; i++) await x.s.onAlarm(Date.now() + 1000 + i * 3_600_000);
+  const w = (i) => x.jobs.jobRow({ sha: `s-facts-${i}`, kind: "fetch" }).failed_why;
+  assert.deepEqual(w(0).CAPTURE_HELD_BY_ANOTHER_BUNDLE, { kind: "whole", capture_sha: held, holder: null }, "no holder named: null");
+  assert.deepEqual(w(1).CAPTURE_HELD_BY_ANOTHER_BUNDLE, { kind: "part", capture_sha: held, holder: "INFO-2026-0001" });
+  assert.deepEqual(w(2), {}, "control: a final answer with no facts adds none");
+});
+
+/* ---- R109 (K4980, G159): a registered row arms the object itself ---- */
+
+const settle = () => new Promise((r) => setTimeout(r, 25));
+
+test("R109: registering a `fetch` row due now, with a daily alarm set hours ahead, brings the alarm forward with no `armJobs` call; control: a second row leaves the alarm where both are due; a refused registration arms nothing", async () => {
+  const x = await world();
+  const hours = Date.now() + 8 * 3_600_000;
+  await x.ctx.storage.setAlarm(hours);
+  const r = x.jobs.registerJob({ kind: "fetch", session: "s-arm-1" });
+  assert.equal(r.ok, true);
+  await settle();
+  const due = x.jobs.jobRow({ sha: "s-arm-1", kind: "fetch" }).due_at;
+  assert.ok((await x.ctx.storage.getAlarm()) <= due, "the alarm is no later than the row's due time");
+  /* control: a second row registered beside it leaves the alarm no later than either row's due time */
+  x.jobs.registerJob({ kind: "fetch", session: "s-arm-2" });
+  await settle();
+  assert.ok((await x.ctx.storage.getAlarm()) <= Date.now(), "the alarm stays at or before the instant both rows are due");
+  /* the row runs within one tick of that alarm */
+  await x.s.onAlarm(due + 1);
+  assert.notEqual(x.jobs.jobRow({ sha: "s-arm-1", kind: "fetch" }).attempts, 0, "ran in that tick");
+  /* control: a refusal arms nothing */
+  const z = await world();
+  await z.ctx.storage.setAlarm(hours);
+  assert.equal(z.jobs.registerJob({ kind: "fetch" }).ok, false);
+  await settle();
+  assert.equal(await z.ctx.storage.getAlarm(), hours, "a refused registration arms nothing");
+});
+
+test("R109: a registration made inside a transaction arms once the transaction has returned", async () => {
+  const x = await world();
+  await x.ctx.storage.setAlarm(Date.now() + 8 * 3_600_000);
+  x.ctx.storage.transactionSync(() => { x.jobs.registerJob({ kind: "fetch", session: "s-arm-3" }); });
+  await settle();
+  assert.ok((await x.ctx.storage.getAlarm()) <= x.jobs.jobRow({ sha: "s-arm-3", kind: "fetch" }).due_at, "armed once the transaction returned");
+});
+
+/* ---- R110 (K4980, G165): the unit in flight is stamped by the reader ---- */
+
+test("R110 stampUnit: the reader is handed `stampUnit` for a paged read; a scan whose page 5 kills its reader three times ends with `killedPages: [5]`, pages 0-4 and 6-7 read, the row finished", async () => {
+  const d = sha("an 8-page scan whose page 5 kills the reader");
+  const read = new Set();
+  const handed = [];
+  const answer = async (q) => {
+    handed.push(typeof q.stampUnit);
+    const pass = [];
+    for (let p = 0; p < 8; p++) {
+      if (q.killedPages.includes(p)) continue;
+      assert.equal(q.stampUnit(`p${p}`), true);   /* synchronously before the member call */
+      if (p === 5) return NEVER();
+      pass.push(p);
+    }
+    for (const p of pass) read.add(p);
+    return { ok: true, read: true, counters: { written: pass.length }, refused: q.killedPages.map((k) => ({ page: k, reason: PAGE_KILLED_READER })) };
+  };
+  let x = await world(undefined, { readAnswer: answer });
+  const db = x.db;
+  x.jobs.registerJob({ kind: "ocr", sha: d });   /* as extraction registers it: no page in `detail` */
+  let at = Date.now() + 1000;
+  const seen = [];
+  for (let i = 0; i < 12; i++, at += 3_600_000) {
+    const row = pendingOf(x.ctx).jobRow({ sha: d, kind: "ocr" });
+    if (!row || ["finished", "final"].includes(row.state)) break;
+    seen.push(row.state);
+    if ((await alarm(x, at)) === "killed") x = await world(db, { readAnswer: answer });
+  }
+  const row = pendingOf(x.ctx).jobRow({ sha: d, kind: "ocr" });
+  assert.equal(row.state, "finished", JSON.stringify(row));
+  assert.deepEqual([...read].sort(), [0, 1, 2, 3, 4, 6, 7]);
+  const units = pendingOf(x.ctx).unitAttempts({ sha: d, kind: "ocr" });
+  assert.equal(units.find((u) => u.unit === "p5").tries, UNIT_KILLS_MAX, "the kills are charged to page 5");
+  assert.ok(!units.some((u) => u.unit === "whole" && u.tries > 0), "and to the whole none");
+  assert.ok(handed.every((t) => t === "function"));
+});
+
+test("R110 control: a whole read with no unit stamped is charged to `whole` as before and ends stated at three kills; a kind that is not paged is handed no `stampUnit`", async () => {
+  const d = sha("a DOCX with no pages");
+  let x = await world(undefined, { readAnswer: NEVER });
+  const db = x.db;
+  x.jobs.registerJob({ kind: "reading", sha: d });
+  let at = Date.now() + 1000;
+  for (let i = 0; i < 4; i++, at += 3_600_000) { await alarm(x, at); x = await world(db, { readAnswer: NEVER }); }
+  const r = pendingOf(x.ctx).jobRow({ sha: d, kind: "reading" });
+  assert.deepEqual([r.state, r.final_why], ["final", PAGE_KILLED_READER]);
+  assert.deepEqual(pendingOf(x.ctx).unitAttempts({ sha: d, kind: "reading" }).map((u) => [u.unit, u.tries]), [["whole", UNIT_KILLS_MAX]]);
+  /* a fetch is handed none */
+  const y = await world(undefined, {});
+  const { acquisitionOf } = await import("../../../src/acquisition/index.mjs");
+  let got = "unset";
+  acquisitionOf(y.ctx).owedFetch = async (_c, _e, o) => { got = typeof o.stampUnit; return { ok: true, done: true }; };
+  y.jobs.registerJob({ kind: "fetch", session: "s-nostamp" });
+  await y.s.onAlarm(Date.now() + 1000);
+  assert.equal(got, "undefined");
+});
+
+/* ---- R97 (G168, K4985): no home yet waits uncounted; the finishing answer's counters are kept ---- */
+
+test("R97 NO_HOME: a `reading` row answered NO_HOME waits and counts no failure; then READING_HELD with counters 8 ends it finished, written 8, failed 0", async () => {
+  const d = sha("a scan read to its end");
+  const answers = [{ ok: true, read: false, why: "NO_HOME" }, { ok: true, read: false, why: "READING_HELD", counters: { written: 8, skipped: 1 } }];
+  const x = await world(undefined, { readAnswer: () => answers.shift() });
+  x.jobs.registerJob({ kind: "reading", sha: d });
+  let at = Date.now() + 1000;
+  await x.s.onAlarm(at);
+  let row = x.jobs.jobRow({ sha: d, kind: "reading" });
+  assert.deepEqual([row.state, row.failed, row.failed_why, row.last_why, row.written], ["queued", 0, {}, "NO_HOME", 0], JSON.stringify(row));
+  assert.ok(row.due_at > at, "tried again later");
+  at += 3_600_000;
+  await x.s.onAlarm(at);
+  row = x.jobs.jobRow({ sha: d, kind: "reading" });
+  assert.deepEqual([row.state, row.written, row.skipped, row.failed, row.owed], ["finished", 8, 1, 0, 0], JSON.stringify(row));
+});
+
+test("R97 NO_HOME control: the row keeps the larger of its own and the answer's counters; an owner's real failure is still counted", async () => {
+  const d = sha("a reading with units already written");
+  const answers = [{ ok: true, read: false, why: "READING_HELD", counters: { written: 3, skipped: 0 } }];
+  const x = await world(undefined, { readAnswer: () => answers.shift() });
+  x.jobs.registerJob({ kind: "reading", sha: d });
+  x.ctx.storage.sql.exec(`UPDATE keeps_pending SET written=5 WHERE sha=? AND kind='reading'`, d);
+  await x.s.onAlarm(Date.now() + 1000);
+  const row = x.jobs.jobRow({ sha: d, kind: "reading" });
+  assert.deepEqual([row.state, row.written, row.failed], ["finished", 5, 0]);
+  const e = sha("a reading that fails");
+  const y = await world(undefined, { readAnswer: () => ({ ok: false, why: "BROKEN" }) });
+  y.jobs.registerJob({ kind: "reading", sha: e });
+  await y.s.onAlarm(Date.now() + 1000);
+  const bad = y.jobs.jobRow({ sha: e, kind: "reading" });
+  assert.deepEqual([bad.failed, bad.failed_why], [1, { BROKEN: 1 }]);
 });

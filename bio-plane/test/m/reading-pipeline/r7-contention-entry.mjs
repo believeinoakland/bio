@@ -11,12 +11,15 @@ import { flattenText } from "../../../../docprofile/readtext.mjs";
 import { glyphCount } from "../../../src/textchain.mjs";
 
 const PREFIX = "bio/captures/";
+const SPIN_ITERATIONS = 80_000_000;
 let served = 0;   /* the bytes the store has handed out */
 const json = (v, status = 200) => new Response(JSON.stringify(v), { status, headers: { "content-type": "application/json" } });
 export default {
   async fetch(req, env) {
     const u = new URL(req.url), q = (k) => u.searchParams.get(k);
     if (u.pathname === "/cheap") return json({ ok: true });
+    /* the same-run control for the machine's speed: a fixed amount of CPU work, one stretch that holds the thread (no yield), whose wall time the TEST takes outside the object */
+    if (u.pathname === "/spin") { let x = 0; for (let i = 0; i < SPIN_ITERATIONS; i++) x = (x * 31 + i) % 1000003; return json({ x }); }
     if (u.pathname === "/put") { const bytes = await req.arrayBuffer(); await env.CAPTURES.put(PREFIX + q("sha"), bytes); return json({ ok: true, bytes: bytes.byteLength }); }
     if (u.pathname === "/rawget") { const o = await env.CAPTURES.get(PREFIX + q("sha")); const n = (await o.arrayBuffer()).byteLength; return json({ bytes: n }); }   /* the control: the bucket stand-in's own read of the object */
     if (u.pathname === "/phase") {   /* a probe: one phase of a text tick, alone, over the object */

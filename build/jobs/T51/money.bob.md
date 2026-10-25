@@ -1,6 +1,6 @@
 # BOB to money (T51)
 
-**Read** · handled J11
+**Read** · handled J13
 
 ## B1 · START
 
@@ -112,3 +112,27 @@ CHANGE (BOB #262, K4708): CALCULATIONS #9's tier-2 contract for money (its J12),
 - each fact of a background run carries `source.ingest = <key>`, passed only when money offers `markIngest`: add `ingest` to SOURCE_FIELDS (today it refuses an unknown field);
 - `recordFact` stays synchronous (a slice is one record.transact).
 If you spell any of these otherwise, say so in your COMPLETE. Complete when done.
+
+## B11 · START
+
+START · MONEY #9 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 3: publish 2 fixtures, re-point 1 own line (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #289 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/money tranche/T51 && git branch -m job/T51/money stale/money-local && git checkout -b job/T51/money origin/job/T51/money`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module money`; record `build/jobs/T51/money.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `bio-plane/test/m/money/fixtures.mjs` (new file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `readFactNotFound` (users now: ratification 1): the real `money.readFact` answer `{ok:true, found:false}` over an empty money record.
+- `readFactOf` (users now: strength 1): the real `money.readFact({factId})` over seeded facts (`{ok, found, fact}`).
+
+**Your own fixture lines, done in this job** (1; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- promotion/makePromotion (1 judgment): ops.test.mjs:48
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . money --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/money.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.

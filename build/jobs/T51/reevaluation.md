@@ -1,6 +1,6 @@
 # reevaluation (T51)
 
-**Status** · session_01XcvJkCvweiQ8KgQqV3UTdh · depth 2 · COMPLETE · handled B6
+**Status** · session_01Ed3McYsoc4pJynhHKAnecp · depth 2 · COMPLETE · handled B8
 
 ## J1 · COMPLETE
 
@@ -122,3 +122,27 @@ Size (session_01XcvJkCvweiQ8KgQqV3UTdh): test runs 14, module lines 3452
 ## J6 · COMPLETE
 
 COMPLETE (G89, R41): see the record's G89 section. Re-grade in raiseNotices, sweep pending via #regradeOwed (B6 b). 163/163 module, users 344/345: plane/round6-reevaluation.test.mjs:103 needs 'r.noticeSweep(Date.now());' before it (verified 3/3). Checks 0 (words 13, none mine).
+
+## Fix round 10, Wave A batch 5 (REEVALUATION #27, session_01Ed3McYsoc4pJynhHKAnecp)
+
+- **Published** `noticesRead` in `bio-plane/test/m/reevaluation/fixtures.mjs` (new): the real `raiseNotices` then `notices` over a question whose cited passage has a newer capture; test `fixtures.test.mjs` (R14) calls it and checks the real answer.
+- **caseparts.test.mjs:30 (FIX-L publication/case-cited-parts):** code changed to `NO_SUCH_CASE_EDITION`; marker `// fixtures-contract: publication case-cited-parts` added. Left: the line reads `contract-no-run` until publication's job carries `fixtures-run` (waiting, not mine).
+- **standards/standardsEmptyReads (fixture.mjs:100):** done; `quietUpstreams().standards` now answers from the provider's `standardsEmptyReads()`.
+- **retrieval/selectionResolve (fixture.mjs:160): NOT done.** Re-pointing to retrieval's `noSelection` fixture makes `checks/architecture.mjs` fail (`fixture.mjs imports bio-plane/test/m/retrieval/fixtures.mjs of retrieval, which reevaluation does not declare in uses`). `build/modules.json` is BOB's. The line is the original hand-built refusal. Posted QUESTION J-next.
+- No `fixtures-own` or `fixtures-generic` marker added; one `fixtures-contract` marker (caseparts.test.mjs:30).
+- Tests: reevaluation module tests 164 pass, 0 fail. Checks: format 0 failures; architecture 0 failures (with line 160 as original); coverage 41 of 41 ids, 0; ownership 0; words 0; fixtures --list: 2 left (caseparts:31 waiting on publication; fixture.mjs:160 awaiting BOB). impact.mjs: 0 affected modules.
+- Size (session_01Ed3McYsoc4pJynhHKAnecp): test runs 6, module lines 0 changed in src; test lines ~60
+
+## J7 · QUESTION
+
+QUESTION: one line of the batch is not doable under the rules as they stand. fixture.mjs:160 (retrieval/selectionResolve) should take retrieval's noSelection fixture, but reevaluation's uses (build/modules.json) does not include retrieval, so checks/architecture.mjs fails on the import ('which reevaluation does not declare in uses'). reevaluation reaches retrieval only as the stand-in inquiry is built with. My best reading: add retrieval to reevaluation's uses (your file), then I re-point the line in one more step. Alternative: accept the line as a stand-in (fixtures-own) with your ruling. Everything else is done and pushed (noticesRead published, standardsEmptyReads re-pointed, caseparts code fixed and contract marker added; caseparts:31 awaits publication's fixtures-run). Details in my record.
+
+### After B8 (K5088)
+- Merged `tranche/T51`; `fixture.mjs:160` now takes retrieval's published `noSelection` (`.answer`). Done: `fixtures --list` for reevaluation left with `caseparts.test.mjs:31` only (contract-no-run, waits for publication's `fixtures-run`).
+- No `fixtures-own` or `fixtures-generic` marker added; one `fixtures-contract` (caseparts.test.mjs:30, publication case-cited-parts).
+- Tests: module 164/164. Checks: format, architecture, coverage (41/41), ownership, words: 0 failures.
+- Size (session_01Ed3McYsoc4pJynhHKAnecp): test runs 8, module lines 0 changed in src
+
+## J8 · COMPLETE
+
+COMPLETE (fix round 10, Wave A batch 5): noticesRead published with its test; standardsEmptyReads and noSelection fixtures taken (fixture.mjs:100, :160); caseparts code now NO_SUCH_CASE_EDITION with fixtures-contract publication case-cited-parts (caseparts:31 stays listed until publication's fixtures-run). No fixtures-own or fixtures-generic markers added. Module 164/164; format, architecture, coverage 41/41, ownership, words 0 failures. See record.

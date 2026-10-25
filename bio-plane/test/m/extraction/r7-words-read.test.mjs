@@ -4,11 +4,11 @@
    entry), each tick one `readHeld`, as the plane's ledger calls it. Each test names the requirement ids it checks. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, bucket, doc, sha } from "./fixture.mjs";
+import { fresh, bundle, bucket, doc, sha, homesOver } from "./fixture.mjs";
 import { synthPdf } from "./bigpdf.mjs";
 import { wordsIn } from "../../../src/reading-pipeline/index.mjs";
 
-const register = (rows) => ({ homeOf: (s) => rows.get(s) ?? null, onTestimony: () => ({ ok: true }) });
+const register = (rows) => homesOver(rows);
 
 async function pdfHome(pages) {
   const bytes = synthPdf({ pages, linesPerPage: 4, targetBytes: 0 });

@@ -223,10 +223,10 @@ export const BASIS_VERSION_GRAMMAR_CHECKS = {
     where: GRAMMAR_WHERE,
     translation: word('refusal.VERSION_RELATIONSHIP_DISAGREES'),
   },
-  /* §3: "A version that is a flat leg set cannot express plurality — the version
-     IS the composition, and the partition is part of the composition." The
-     partition is TOTAL on a version: checkGrounds' whole-or-not-at-all rule with
-     the not-at-all arm removed, because the version must carry it. */
+  /* §3: "A version that is a flat leg set cannot express plurality — the version IS the composition, and the partition is
+     part of the composition." HELD, BUT RAISED BY NO DOCUMENT since fix round 10, cause 30b (K5077; DEC-32 clause 4, as
+     `inquiry-grammar` R68): the partition need not cover the legs. A supporting leg naming no ground, beside legs that
+     do, is a necessary leg of the version and no finding. The row stays: `basis-versions`' tests pin the row set. */
   VERSION_PARTITION_INCOMPLETE: {
     check: 'C-25.5',
     where: GRAMMAR_WHERE,

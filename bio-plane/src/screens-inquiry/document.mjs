@@ -205,6 +205,10 @@ function render(cs, view) {
   const isHeld = hers && String(row.standing || "collected") !== "verified";
   /* capture R77 (B27): a held row answers `whole` (true, false or null); only `whole: false` (a part of the capture is missing) withholds vouching and the OCR re-read */
   const incomplete = !!row && row.whole === false;
+  /* R133 (fix round 10, cause 4; capture R110, R130): a copy that is an archive is stated as one, with the number of members it holds and a door to the archive screen, and is
+     offered no read act, before or after any read: its members are read each by itself (the held row's own `archive`, never the archive's reading, which is the bare "not read as
+     text" until a ledger's one attempt and then a size sentence it must never draw) */
+  const archive = row && row.archive && typeof row.archive === "object" && Number.isInteger(row.archive.entries) && row.archive.entries >= 0 ? row.archive : null;
   const vouched = ui.outcome && ui.outcome.release && ui.outcome.release.ok === true;
   if (isHeld && !vouched && !incomplete) out.push(`<div class="mk-note" data-held="1"><p>${cs.w("document.held.says")}</p>`
     + cs.field("document-release-ack", "screen.document.release.ack", { area: true, rec: true })
@@ -262,6 +266,25 @@ function render(cs, view) {
   /* a size as the original-file card draws it (`size.*`) */
   const sizeWord = (n) => (n < 1024 ? T("size.small") : n >= 1073741824 ? T("size.gb", { n: (n / 1073741824).toFixed(1) })
     : n >= 1048576 ? T("size.mb", { n: (n / 1048576).toFixed(1) }) : T("size.kb", { n: String(Math.round(n / 1024)) }));
+  /* R96 (fix round 10, causes 1, 2a; K5055): what a stored statement says is decided by the reading's OWN reason and figures (`reason`, `size`, `bound`, `name`/`metric`), never by the
+     stored size of the file (`bytes`, the register's, which measures nothing that was refused). A figure is drawn in the unit it measures: bytes as `size.*`, and, where the size and the
+     limit would print alike after rounding, as the exact count; a row, column, cell or object count as the exact count (its unit word is the row owed
+     `screen.document.reading.unit.<metric>`, drawn when held, else the count alone). */
+  const grouped = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const statedOf = (k) => (rdObj && rdObj[k] !== undefined ? rdObj[k] : rv0 ? rv0[k] : undefined);
+  const stateReason = typeof statedOf("reason") === "string" ? String(statedOf("reason")) : "";
+  const statedFig = (k) => (Number.isFinite(statedOf(k)) && statedOf(k) >= 0 ? Number(statedOf(k)) : null);
+  const metricOf = (() => {
+    const m = String(statedOf("metric") || statedOf("unit") || "").toLowerCase();
+    const nm = String(statedOf("name") || "").toUpperCase();
+    const pick = m || (/ROWS/.test(nm) ? "rows" : /COLUMNS/.test(nm) ? "columns" : /CELLS/.test(nm) ? "cells" : /OBJECTS/.test(nm) ? "objects" : "bytes");
+    return /bytes?$/.test(pick) ? "bytes" : pick;
+  })();
+  const figure = (n, alike) => {
+    if (metricOf === "bytes" && !alike) return sizeWord(n);
+    const unit = metricOf === "bytes" ? "screen.document.reading.unit.bytes" : "screen.document.reading.unit." + metricOf;
+    return heldWord(unit) ? T(unit, { n: grouped(n) }) : grouped(n);
+  };
   /* G13: `op=reading` pages the passages (at most 4,096 an answer): `next` is the cursor for the rest, `after` asks for it. The member asks for more
      (`ui.readmore`, the number of pages wanted); each page is its own read, and what is drawn is never stated as the whole while `next` stands. */
   const wantPages = Math.max(1, Number(ui.readmore) || 1);
@@ -321,7 +344,7 @@ function render(cs, view) {
   out.push(`<div class="mk-facts"><div><span class="k">${cs.w("screen.document.copy")}</span><span class="v">`
     + (letter ? cs.grade(testimony ? "testimony" : "capture", letter) : "")
     + cs.act("gradenote", { label: "act.gradenote.label.document", data: { capture: sha, letter }, tone: "quiet" }) + "</span></div>"
-    + (textState ? `<div><span class="v"><span data-text-state="${textState}"${["full", "none", "stated", "repairable"].includes(textState) ? "" : ' tabindex="0"'} data-level="1" data-tip="${cs.esc(cs.w("screen.document.text.tip"))}">`
+    + (textState && !archive ? `<div><span class="v"><span data-text-state="${textState}"${["full", "none", "stated", "repairable"].includes(textState) ? "" : ' tabindex="0"'} data-level="1" data-tip="${cs.esc(cs.w("screen.document.text.tip"))}">`
       /* G13: a text still being read says so; the row owed (`screen.document.reading.beingread`) is stood in for by the nearest held row, `state.loading` */
       + (textState === "partial" ? cs.w("screen.document.text.partial", { pages: pagesText(blind0.map((n) => n + 1)) }) : textState === "unread" ? cs.mark("gap", "undetermined") + " " + cs.w("screen.document.text.unread")
         : textState === "cut" ? (comp && comp.why ? cs.esc(String(comp.why)) : cs.mark("gap", "undetermined"))
@@ -331,6 +354,16 @@ function render(cs, view) {
       + (wRead !== null && wTotal !== null && textState !== "reading" ? ` <span class="mk-small" data-words-read="1">${cs.w("screen.document.text.read", { read: String(wRead), total: String(wTotal) })}</span>` : "") + "</span></div>" : "")
     + (sha ? `<div><span class="k">${cs.w("screen.document.fingerprint")}</span><span class="v"><span class="mk-tag" tabindex="0" data-level="1" data-tip="${cs.esc(cs.w("screen.document.fingerprint.means"))}">${cs.esc(sha.slice(0, 4) + "…" + sha.slice(-4))}</span></span></div>` : "")
     + (sha ? `<div><a class="cs-btn" data-tone="quiet" href="/app/open-file/${cs.esc(sha)}">${cs.w("screen.document.open")}</a></div>` : "") + "</div>");
+  /* R133: the archive's own statement: that it is an archive and how many members it holds (`screen.document.archive.says` {n}, the row owed; the Held list's own rows say the same
+     in the meantime), and the door to the archive screen (`screen.held.archivefiles`, as the Held list draws it); no read act is drawn for it (below) */
+  if (archive) {
+    const members = archive.entries;
+    const says = heldWord("screen.document.archive.says") ? cs.w("screen.document.archive.says", { n: String(members) })
+      : cs.w("screen.held.archive", { parts: { html: cs.w("screen.archive.facts.entries", { entries: String(members) }) } });
+    const archiveSha = typeof archive.sha256 === "string" && /^[0-9a-f]{64}$/.test(archive.sha256) ? archive.sha256 : sha;
+    out.push(`<div class="mk-note" data-archive="${members}"><p>${says}</p>`
+      + (archiveSha ? `<p class="meta">${cs.ref("archive", archiveSha, T("screen.held.archivefiles"), [named])}</p>` : "") + "</div>");
+  }
   /* R132 (fix round 9, G136e; S13 (i); K4831 (6) (a)): reading does not wait for the scan, said plainly on the page of a copy that was filed (file-safety's own row: the sentence
      claims nothing of what a scan will find, and does not say that a found threat's text has left search, which waits on the scanner having signatures). A testimony is
      no file and is scanned by no one, so it carries none. */
@@ -339,6 +372,32 @@ function render(cs, view) {
      searchable, its cells are made for a range when it is opened or cited. One quiet line, read by key; never while the text is still being read (the sentence
      says the text is whole), and never for a reading that names no held sheet. */
   if (cellsHeld && textState !== "reading") out.push(`<p class="mk-small" data-cells-held="1">${cs.w("screen.document.cells_held")}</p>`);
+  /* R134 (fix round 10, cause 37; K5055; reading-pipeline R49): the encoding is named only when it was ASSUMED (`encoding_assumed`: no byte-order mark and no declared charset
+     decided it); one a BOM or a declaration decided is said nothing of. The sentence is the row owed `screen.document.encoding.assumed` ({name}); until it is held the name
+     alone is drawn, in the data face. */
+  {
+    const encName = typeof statedOf("encoding") === "string" ? String(statedOf("encoding")).trim() : "";
+    if (encName && statedOf("encoding_assumed") === true && textState !== "reading")
+      out.push(`<p class="mk-small" data-encoding-assumed="${cs.esc(encName)}">${heldWord("screen.document.encoding.assumed") ? cs.w("screen.document.encoding.assumed", { name: encName }) : `<span class="id">${cs.esc(encName)}</span>`}</p>`);
+  }
+  /* R135 (fix round 10, cause 38; capture-sources R49): a page captured by rendering says that its copy is the page's first load (not scrolled, banners and dialogs not dismissed,
+     frames and shadow content absent), in the words of the statement the capture's gaps hold (`render.undetermined`, `RENDER_COPY_STATEMENT`); a plain capture holds none and draws none */
+  {
+    const COPY = "capture-sources.render.copy_first_load_not_scrolled";
+    const gaps = reg0.render && Array.isArray(reg0.render.undetermined) ? reg0.render.undetermined.filter((g) => typeof g === "string") : [];
+    if (heldWord(COPY) && gaps.some((g) => g.trim() === T(COPY).trim())) out.push(`<p class="mk-small" data-render-copy="1">${cs.w(COPY)}</p>`);
+  }
+  /* R136 (fix round 10, cause 38; acquisition R119): the pictures a web capture kept as bytes and never read, with their number and total size (`supporting.pictures_unread`);
+     the sentence is the row owed `screen.document.supporting.pictures` ({count}, {size}; `.one` for one); until it is held the figures alone are drawn */
+  {
+    const supP = reg0.capture && reg0.capture.supporting && typeof reg0.capture.supporting === "object" ? reg0.capture.supporting : reg0.supporting && typeof reg0.supporting === "object" ? reg0.supporting : null;
+    const pu = supP && supP.pictures_unread && typeof supP.pictures_unread === "object" ? supP.pictures_unread : null;
+    if (pu && Number.isInteger(pu.count) && pu.count > 0) {
+      const key = pu.count === 1 && heldWord("screen.document.supporting.pictures.one") ? "screen.document.supporting.pictures.one" : "screen.document.supporting.pictures";
+      const size = Number.isFinite(pu.bytes) && pu.bytes >= 0 ? sizeWord(pu.bytes) : "";
+      out.push(`<p class="mk-small" data-pictures-unread="${pu.count}">${heldWord(key) ? cs.w(key, { count: String(pu.count), size }) : cs.esc(String(pu.count)) + (size ? " · " + cs.esc(size) : "")}</p>`);
+    }
+  }
   /* G19 (fix round 6; acquisition), G110b (fix round 9; K4853): the supporting files a web capture kept and skipped (`supporting: {kept, skipped, total, reasons,
      not_walked}` on the register document): "N of M supporting files kept" (`screen.capture.supporting.kept`, the Add screen's own row) and, for each kind of
      reason, one sentence by its key with the count of the codes sharing it (`CAP_REACHED` the cap, `TOO_LARGE` and `BUDGET_EXHAUSTED` too large, any other code
@@ -368,9 +427,12 @@ function render(cs, view) {
   }
   if (ui.gradenote) {
     const n = ui.gradenote.note;
-    out.push(cs.sec("screen.document.gradenote.head", n
+    /* R35a (fix round 10, cause 35a): a copy with no grade has a heading that says it is not graded (`screen.document.gradenote.head.ungraded`, the row owed; the held
+       "not graded yet" of the unrated mark stands in), never "Why {letter}?" filled with the undetermined word and an empty reason */
+    const headKey = letter ? "screen.document.gradenote.head" : heldWord("screen.document.gradenote.head.ungraded") ? "screen.document.gradenote.head.ungraded" : "mark.gap.unrated.means";
+    out.push(cs.sec(headKey, n
       ? `<p>${cs.esc(typeof n === "string" ? n : (n.says || n.text || n.how || JSON.stringify(n)))}</p>`
-      : `<p>${cs.w("screen.document.gradenote.none")}</p>`, { fills: { letter: letter || T("state.undetermined", { reason: "" }) } }));
+      : `<p>${cs.w("screen.document.gradenote.none")}</p>`, letter ? { fills: { letter } } : {}));
   }
   /* a testimony offers Find in as a link (screens-daily R26); any other document as the act */
   if (sha) out.push(testimony ? `<p><a class="cs-btn" data-tone="quiet" href="/app/find-in/${cs.esc(sha)}" data-nav data-findin="link">${cs.w("act.findin.label.document")}</a></p>`
@@ -429,6 +491,7 @@ function render(cs, view) {
   const readingBody = () => secOf("document.read.title", reading, (r) => {
     /* K3387: the document's words are the reading's `text_units` (extraction R36's units, in seq order, withheld as
        the bundle is); a reading answers no other text, and with none the section says it holds nothing */
+    if (archive) return originalCard;
     const list = allUnits.filter((p) => p && String(p.text || "").trim());
     /* G6, G8 (R96; DEC-418): a copy the reading states it did not read is drawn as that statement, beside the file's size (the card above), never as
        "Nothing here": by the design's `screen.document.reading.stated` (with the size) or `.reading.repairable` where the words list holds them, else the plane's
@@ -437,9 +500,24 @@ function render(cs, view) {
     /* G41 (D3; K4645): a reading stated too large to keep whole carries `too_large: {bytes, key}` beside its `basis` sentence: the size of its largest part and its key */
     const tl = rdObj && rdObj.too_large && typeof rdObj.too_large === "object" ? rdObj.too_large : rv0 && rv0.too_large && typeof rv0.too_large === "object" ? rv0.too_large : null;
     const tooLarge = tl && Number.isFinite(tl.bytes) && tl.bytes >= 0 && typeof tl.key === "string" ? tl : null;
+    /* R130 (G135b): a picture the OCR member refused is drawn by the word held for the member's own reason (`ocr_refused[].reason`, as reading-pipeline carries
+       `refusal.render.reason`), each reason once, never the size sentence or the generic "declined (PAGE_NOT_RENDERABLE)"; a reason with no held word is not drawn raw */
+    const refusedCodes = [...new Set((rdObj && Array.isArray(rdObj.ocr_refused) ? rdObj.ocr_refused : []).map((r) => (r && typeof r.reason === "string" ? r.reason : "")).filter((c) => /^[A-Z][A-Z0-9_]*$/.test(c) && heldWord("refusal." + c)))];
+    const refusedSaid = refusedCodes.map((c) => cs.w("refusal." + c)).join(" ");
+    /* R96 (fix round 10, causes 1, 2a): the reading's own reason decides the sentence. A size refusal (`TOO_LARGE`) is `screen.document.reading.toolarge` with the reading's own
+       size and limit, the stored size of the file never drawn as the refused figure; any other final reading is the word held for its reason (`refusal.<reason>`), else the statement
+       the reading states (its `completeness.why`, else its `basis`), and is never worded as a size. */
+    const refusedFig = statedFig("size"), boundFig = statedFig("bound");
+    const alike = metricOf === "bytes" && refusedFig !== null && boundFig !== null && sizeWord(refusedFig) === sizeWord(boundFig);
+    const sizeSaid = stateReason === "TOO_LARGE" && refusedFig !== null
+      ? (boundFig !== null && heldWord("screen.document.reading.toolarge") ? cs.w("screen.document.reading.toolarge", { size: figure(refusedFig, alike), limit: figure(boundFig, alike) })
+        : heldWord("screen.document.reading.stated") ? cs.w("screen.document.reading.stated", { size: figure(refusedFig, alike) }) : "") : "";
+    const reasonSaid = stateReason && stateReason !== "TOO_LARGE" && /^[A-Z][A-Z0-9_]*$/.test(stateReason) && heldWord("refusal." + stateReason) ? cs.w("refusal." + stateReason) : "";
     const statedSaid = textState === "stated" && tooLarge ? cs.w("screen.document.reading.too_large", { size: sizeWord(tooLarge.bytes), key: tooLarge.key })
+      : textState === "stated" && sizeSaid ? sizeSaid
+      : textState === "stated" && refusedSaid ? refusedSaid
+      : textState === "stated" && reasonSaid ? reasonSaid
       : textState === "repairable" && heldWord("screen.document.reading.repairable") ? cs.w("screen.document.reading.repairable")
-      : textState === "stated" && heldWord("screen.document.reading.stated") && Number.isInteger(rv0 && rv0.bytes) ? cs.w("screen.document.reading.stated", { size: sizeWord(rv0.bytes) })
       : comp && typeof comp.why === "string" && comp.why.trim() ? cs.esc(comp.why.trim()) : basisWords ? cs.esc(basisWords) : undetermined("");
     const statedHtml = noReader && unreadNote ? unreadNote : textState === "stated" || textState === "repairable" ? `<p class="mk-note" data-reading="stated">${statedSaid}</p>` : "";
     /* G13 (R96): a text still being read says how far it has come (R90), and what is drawn of it is never stated as the whole: the passages drawn so far
@@ -614,15 +692,15 @@ function render(cs, view) {
   /* R129 (N5): a copy stored with no reading says so and offers to read it now (`readheld`); the sentence and the act are drawn together or not at all */
   /* G8 (fix round 6): "Read it" is also drawn for a statement extraction states `repairable` (an old "(multipart)" final whose bytes now detect), beside the statement */
   /* R130: a kind with no reader is named and offered no read act; the sentence stands where the act would */
-  if (noReader && textState === "unread" && unreadNote) out.push(unreadNote);
-  if ((textState === "unread" || textState === "repairable") && sha && !noReader) {
+  if (noReader && textState === "unread" && unreadNote && !archive) out.push(unreadNote);
+  if ((textState === "unread" || textState === "repairable") && sha && !noReader && !archive) {
     /* its label, `act.readheld.label.document` ("Read it now"), is a row the design owes (K4269); "Read it" (`document.read.title`) stands in */
     const readNow = cs.act("readheld", { label: textState === "repairable" && heldWord("screen.document.reading.repairable.door") ? "screen.document.reading.repairable.door" : "document.read.title", data: { sha } });
     if (readNow) out.push(`<div class="mk-acts" data-readnow="1">${readNow}${own("readheld")}</div>`);
   }
   /* G6, G13: no OCR re-read after a statement that stands (`stated`), beside one "Read it" repairs, or while the text is still being read; the assistant's
      reading of a picture's page (`pagetranscribe`) stays for a picture whose reading states it did not read it */
-  if (rv0 && textState && !["full", "unread", "repairable", "reading", "cut"].includes(textState) && sha && !incomplete && !noReader) {
+  if (rv0 && textState && !["full", "unread", "repairable", "reading", "cut"].includes(textState) && sha && !incomplete && !noReader && !archive) {
     if (isPicture) {
       if (view.reachable && !drewTranscribe) out.push(`<div class="mk-acts">${cs.act("pagetranscribe", { label: "act.pagetranscribe.label.document", data: { sha } })}</div>`);
     } else if (textState !== "stated") {
@@ -1779,6 +1857,7 @@ const words = Object.freeze([
   "document.names.title", "document.names.help", "document.names.row", "document.names.chosen.record", "document.names.chosen.member",
   /* T51 (R65–R69, R78): the record of this copy, the fingerprints, the links in five groups, the names, "Your citations, leg by leg" */
   "time.at", "time.clock", "time.am", "time.pm", "document.versions.thiscopy", "state.item.retired.name",
+  "refusal.IMAGE_TOO_LARGE", "refusal.TRUNCATED_IMAGE_DATA", "refusal.UNSUPPORTED_JPEG_PROCESS", "refusal.DECODE_FAILED", "refusal.NO_PAGE_RENDERED",
   "refusal.CONTENT_EXTENT_NO_CHAIN", "refusal.NO_SUCH_BUNDLE", "refusal.NO_BUNDLE", "refusal.NO_SHA", "refusal.VERSION_NOTICE_NO_INQUIRY", "refusal.VERSION_NOTICE_NO_SUBJECT",
   "act.owed_linkopen.label.document", "act.owed_linkopen.does", "act.owed_revisioncompare.label.document", "act.owed_revisioncompare.does",
   "act.owed_hashcopy.label.document", "act.owed_hashcopy.does", "act.versionnotice.does",
@@ -1819,6 +1898,8 @@ const words = Object.freeze([
   ...["rtf", "email", "legacy_word", "legacy_excel", "legacy_powerpoint", "legacy_office", "tiff", "gif", "webp", "heic", "avif", "bmp", "jp2", "ico", "kind"].map((k) => "reading-pipeline.index.unsupported_" + k),
   ...["body", "footnote", "endnote", "header", "footer", "comment", "tracked_deletion", "text_box", "speaker_note", "master_text", "cell_note"].map((k) => "content.part_kind." + k),
   "file-safety.index.reading_is_not_gated",
+  /* fix round 10 (R133, R135): an archive's own page uses the Held list's rows until `screen.document.archive.says` is held; the first-load statement is capture-sources' own row */
+  "screen.held.archive", "screen.held.archivefiles", "screen.archive.facts.entries", "capture-sources.render.copy_first_load_not_scrolled",
   "document.read.title", "document.read.help", "document.read.tab.page", "document.read.page", "document.read.prev", "document.read.next", "document.read.select", "document.read.cite.help",
   /* T51 (R81, R82, CR-19): the compare tab, the original-file card, its size and kind */
   "document.read.tab.compare", "document.read.original.card", "size.small", "size.kb", "size.mb", "size.gb",

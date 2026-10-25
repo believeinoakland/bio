@@ -24,7 +24,7 @@ import { WORKBOOKS_TABLES, migrateWorkbooks } from "./schema.mjs";
 import { GRID, cellAt, cellName, splitRange, cellValue, sourceValue, sameValue, closeNumbers } from "./cells.mjs";
 import { indexWorkbook, inputCells, lintFindings, LINT_KINDS } from "./lint.mjs";
 import { buildExport } from "./export.mjs";
-import { XLSX_CONTENT_TYPE } from "./xlsxwrite.mjs";
+import { XLSX_CONTENT_TYPE, XLSX_MAX_COLUMNS } from "./xlsxwrite.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 import { boundOf, statement } from "../read-bounds.mjs";
 
@@ -78,11 +78,21 @@ const cellsTooLarge = (cells, condition, bound = WORKBOOK_CELLS_MAX) => refusal(
   localize("refusal.WORKBOOK_TOO_LARGE", "This workbook has {cells} cells, more than the {bound_cells} that can be held and read here.",
            { cells: String(cells), bound_cells: String(bound) }),
   { cells, bound_cells: bound, condition, limit: { ...statement("workbook", "cells", cells), bound } });
-/* R21: the cells the add did not keep, how many and why (a `<c>` with no reference, one whose reference cannot be read, a
-   repeat of an earlier cell's reference); present only when something was dropped. */
+/* R21: the cells the add did not keep, how many and why (one whose reference cannot be read, a repeat of an earlier cell's
+   reference); present only when something was dropped. A row or cell with no `r` is placed by its position by the reader
+   (office-readers R48) and held, so it is never counted here. */
 const droppedStatement = (by, count) => ({ count, ...by,
-  statement: localize("workbooks.dropped_cells", "{count} cells were not kept: {no_reference} with no cell reference, {unreadable} with a reference that cannot be read, {repeated} repeating an earlier cell's reference.",
-                      { count: String(count), no_reference: String(by.no_reference), unreadable: String(by.unreadable), repeated: String(by.repeated) }) });
+  statement: localize("workbooks.cells_not_kept", "{count} cells were not kept: {unreadable} with a reference that cannot be read, {repeated} repeating an earlier cell's reference.",
+                      { count: String(count), unreadable: String(by.unreadable), repeated: String(by.repeated) }) });
+/* R22: a recipe whose export would lay out more cells than the workbook bound, or a table wider than a sheet (XFD). */
+const exportTooLarge = (cells) => refusal("EXPORT_TOO_LARGE",
+  localize("refusal.EXPORT_TOO_LARGE", "This calculation's tables would make a workbook of {cells} cells, more than the {bound_cells} that can be exported.",
+           { cells: String(cells), bound_cells: String(WORKBOOK_CELLS_MAX) }),
+  { cells, bound_cells: WORKBOOK_CELLS_MAX, limit: statement("workbook", "cells", cells) });
+const exportTooWide = (columns) => refusal("EXPORT_TOO_WIDE",
+  localize("refusal.EXPORT_TOO_WIDE", "A table of this calculation has {columns} columns, more than the {bound_columns} a spreadsheet sheet holds.",
+           { columns: String(columns), bound_columns: String(XLSX_MAX_COLUMNS) }),
+  { columns, bound_columns: XLSX_MAX_COLUMNS });
 const cut = (list) => (list.length > LIST_MAX ? { list: list.slice(0, LIST_MAX), left: list.length - LIST_MAX } : { list, left: 0 });
 
 /* The calculations contract, read through one adapter each (J1): a table `{sha, fields, rows, grade_facts}` or null;
@@ -91,7 +101,8 @@ export function tableFrom(answer) {
   if (!answer || answer.ok === false || answer.found === false) return null;
   const t = answer.table && typeof answer.table === "object" ? answer.table : answer;
   if (!Array.isArray(t.fields) || !Array.isArray(t.rows)) return null;
-  return { sha: t.sha ?? null, fields: t.fields, rows: t.rows, grade_facts: t.grade_facts ?? answer.grade_facts ?? null };
+  return { sha: t.sha ?? null, fields: t.fields, rows: t.rows, row_count: Number.isInteger(answer.rows) ? answer.rows : null,
+           grade_facts: t.grade_facts ?? answer.grade_facts ?? null };
 }
 export function calculationFrom(answer) {
   if (!answer || answer.ok === false || answer.found === false) return null;
@@ -157,9 +168,11 @@ export class Workbooks {
     return !!h && this.#sees(h.bundleId, viewer);
   }
 
-  async #readTable(sha, viewer) {
+  /* R23: a table is read whole only by asking for it (`rows: "all"`); every other read (its sight, its grade facts, its
+     shape) asks for one row. */
+  async #readTable(sha, viewer, { all = false } = {}) {
     if (!this.calculations || typeof this.calculations.readTable !== "function") return null;
-    try { return tableFrom(await this.calculations.readTable({ sha, viewer, limit: 1 })); } catch { return null; }
+    try { return tableFrom(await this.calculations.readTable(all ? { sha, viewer, rows: "all" } : { sha, viewer, limit: 1 })); } catch { return null; }
   }
 
   #readExtent(id, viewer) {
@@ -297,7 +310,7 @@ export class Workbooks {
     try { origin.system = this.provenance.originOf(home.bundleId)?.system ?? null; } catch { /* stated as null */ }
     const facts = { sheets: sheets.map((s) => ({ name: s.name, hidden: !!s.hidden })), hidden_rows, hidden_cols, names };
     const at = this.now();
-    const dropped = { no_reference: 0, unreadable: 0, repeated: 0 };
+    const dropped = { unreadable: 0, repeated: 0 };
     return this.record.transact(() => {
       this.sql.exec(`INSERT INTO workbooks (capture_sha, project, question, period, origin, author, at, facts) VALUES (?,?,?,?,?,?,?,?)`,
                     sha, p, str(question), json(period), json(origin), by, at, json(facts));
@@ -306,7 +319,6 @@ export class Workbooks {
         for (const c of s.cells) {
           const ref = c && c.source && typeof c.source.cell === "string" ? c.source.cell : null;
           const pos = ref ? cellAt(ref) : null;
-          if (!ref) { dropped.no_reference++; continue; }
           if (!pos) { dropped.unreadable++; continue; }
           const key = pos.row * 4294967296 + pos.col;
           if (placed.has(key)) { dropped.repeated++; continue; }
@@ -316,7 +328,7 @@ export class Workbooks {
                        c.value ?? null, c.formula ?? null, c.cached ?? null);
         }
       }
-      const lost = dropped.no_reference + dropped.unreadable + dropped.repeated;
+      const lost = dropped.unreadable + dropped.repeated;
       return { ok: true, already: false, capture_sha: sha, project: p, question: str(question), period, origin, author: by, at,
                sheets: facts.sheets, ...(lost ? { dropped: droppedStatement(dropped, lost) } : {}) };
     });
@@ -327,7 +339,7 @@ export class Workbooks {
   /* A source's grid: `{rows, cols, at(r, c) → {kind, value, figure?}}` or a refusal's detail. */
   async #source(input, viewer) {
     if (input && typeof input.table === "string") {
-      const t = await this.#readTable(input.table, viewer);
+      const t = await this.#readTable(input.table, viewer, { all: true });
       if (!t || !Array.isArray(t.rows)) return { why: word("workbooks.why.declared_table_sha") };
       const r = splitRange(`x!${input.range ?? ""}`);
       const a = r && a1Corner(r.a), b = r && a1Corner(r.b);
@@ -642,24 +654,40 @@ export class Workbooks {
 
   /* ================================================================ R14 */
 
-  /** R14: a calculation the viewer may see, as an XLSX workbook. */
+  /** R14, R22, R23: a calculation the viewer may see, as an XLSX workbook. Refuses `EXPORT_TOO_WIDE` {columns, bound_columns}
+   *  for a table wider than a sheet (XFD) and `EXPORT_TOO_LARGE` {cells, bound_cells, limit} above the workbook bound, both
+   *  judged from each table's shape before its rows load, and again on what the file would lay out. */
   async exportRecipe({ calcId, viewer } = {}) {
     const absent = { ok: true, found: false };
     if (!this.calculations || typeof this.calculations.read !== "function" || typeof viewer !== "string" || !viewer) return absent;
     let calc;
     try { calc = calculationFrom(await this.calculations.read({ calcId, viewer })); } catch { calc = null; }
     if (!calc) return absent;
+    const shapes = [];
+    for (const inp of calc.inputs) {
+      if (inp.kind !== "table") continue;
+      const peek = await this.#readTable(inp.sha, viewer);
+      if (!peek || !Array.isArray(peek.rows)) return absent;
+      shapes.push(peek);
+    }
+    const widest = Math.max(0, ...shapes.map((t) => t.fields.length));
+    if (widest > XLSX_MAX_COLUMNS) return exportTooWide(widest);
+    if (shapes.every((t) => t.row_count !== null)) {
+      const laid = shapes.reduce((n, t) => n + (t.row_count + 1) * t.fields.length, 0);
+      if (laid > WORKBOOK_CELLS_MAX) return exportTooLarge(laid);
+    }
     const tables = {};
     for (const inp of calc.inputs) {
       if (inp.kind !== "table") continue;
-      const t = await this.#readTable(inp.sha, viewer);
+      const t = await this.#readTable(inp.sha, viewer, { all: true });
       if (!t || !Array.isArray(t.rows)) return absent;
       tables[inp.name] = t;
     }
-    const out = buildExport(calc, tables);
+    const out = buildExport(calc, tables, { maxCells: WORKBOOK_CELLS_MAX });
+    if (out.tooLarge) return exportTooLarge(out.cells);
     const id = String(calc.calc_id ?? calcId ?? "calculation").replace(/[^A-Za-z0-9._-]/g, "_");
     return { ok: true, found: true, calc_id: calc.calc_id ?? calcId, filename: `${id}.xlsx`, content_type: XLSX_CONTENT_TYPE,
-             bytes: out.bytes, sheets: out.sheets, formulas: out.formulas, labelled: out.labelled };
+             bytes: out.bytes, sheets: out.sheets, formulas: out.formulas, labelled: out.labelled, cells: out.cells };
   }
 }
 

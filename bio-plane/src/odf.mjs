@@ -301,7 +301,7 @@ function spend(n) {
   if (meter.units + n > ODF_REPEAT_EXPANSION_MAX) {
     throw new OverRepeatBound({ text: "undetermined", why: "over_repeat_bound",
       units: ODF_REPEAT_EXPANSION_MAX + 1, bound: ODF_REPEAT_EXPANSION_MAX,
-      boundName: "ODF_REPEAT_EXPANSION_MAX", metric: "expanded_repeat_units" });
+      boundName: "ODF_REPEAT_EXPANSION_MAX", metric: "expanded_repeat_units", final: true });
   }
   meter.units += n;
 }
@@ -313,7 +313,7 @@ function spendChars(n) {
   if (meter.chars + n > REPEAT_TEXT_BOUND_CHARS) {
     throw new OverRepeatBound({ text: "undetermined", why: "over_repeat_bound",
       units: REPEAT_TEXT_BOUND_CHARS + 1, bound: REPEAT_TEXT_BOUND_CHARS,
-      boundName: "MEASURED_OOXML_TEXT_BOUND_BYTES", metric: "repeated_text_chars" });
+      boundName: "MEASURED_OOXML_TEXT_BOUND_BYTES", metric: "repeated_text_chars", final: true });
   }
   meter.chars += n;
 }
@@ -405,7 +405,9 @@ function attrsOf(raw) {
     const e = s.indexOf(q === 34 ? '"' : "'", k + 1);
     if (e < 0) { i = j; continue; }
     const local = name.includes(":") ? name.slice(name.lastIndexOf(":") + 1) : name;
-    attrs[local] = decodeEntities(s.slice(k + 1, e));
+    /* R56: `calcext:value-type` (LibreOffice's refinement, "error") shares its local name with `office:value-type`, which
+       decides a cell's type whichever the file writes first; calcext's is kept apart, for a cell with no office type. */
+    attrs[name === "calcext:value-type" ? "calcext-value-type" : local] = decodeEntities(s.slice(k + 1, e));
     i = e + 1;
   }
   return attrs;
@@ -1385,15 +1387,26 @@ function* walkTextBodyG(bodyXml, { withText = true } = {}) {
       continue;
     }
 
-    /* R53: a footnote or endnote, and a text box inside a paragraph, are units of their own and are taken out of the
-       host paragraph's text, as an annotation is. */
-    if (!closing && !selfClosed && (name === "note" || (name === "text-box" && inPara))) {
+    /* R53: a footnote or endnote, and a text box, are units of their own and are taken out of the host paragraph's
+       text, as an annotation is. A box inside a paragraph (a frame anchored to it) leaves the paragraph a text without
+       the box's words and holds none of the body's paragraph slots; a box outside any paragraph (a frame anchored to
+       the page, or alone in a table cell) holds its paragraphs' slots, in the file's order, with no text of their
+       own, and the unit names them (`paras`, G166). The links the box carries stay the body's (R7). */
+    if (!closing && !selfClosed && (name === "note" || name === "text-box")) {
       const rest = served.slice(m.index);
       const el = elementsNested(rest, name, 1)[0];
-      inBody.push({
-        kind: name === "text-box" ? "text_box" : attrsOf(m[2])["note-class"] === "endnote" ? "endnote" : "footnote",
-        inner: el ? el.inner : "", para: para >= 0 ? para : null,
-      });
+      const inner = el ? el.inner : "";
+      const unitOf = { kind: name === "text-box" ? "text_box" : attrsOf(m[2])["note-class"] === "endnote" ? "endnote" : "footnote", inner, para: para >= 0 ? para : null };
+      if (name === "text-box") {
+        const own = [];
+        if (!inPara) {
+          for (const _ of iterNested(inner, PARAGRAPH_NAMES)) { para++; paragraphs.push({ para, text: withText ? "" : null }); own.push(para); }
+          if (own.length) unitOf.para = own[0];
+        }
+        unitOf.paras = own;
+        for (const a of iterNested(inner, LINK_NAMES)) if (a.attrs.href != null) hyperlinks.push({ href: a.attrs.href, para: unitOf.para });
+      }
+      inBody.push(unitOf);
       skipDepth = 1;
       continue;
     }
@@ -1448,6 +1461,7 @@ function stripInline(raw) {
 }
 
 const PARAGRAPH_NAMES = new Set(["p", "h"]);
+const LINK_NAMES = new Set(["a"]);
 
 /** The paragraphs (`<text:p>`/`<text:h>`) of a run of markup, each as visible text, newline-joined. */
 function paragraphsText(xml) {
@@ -1674,10 +1688,10 @@ async function odtText(parts, ctx) {
       .map((t) => ({ table: t.table, ref: docTableRef(t.table).ref, rows: t.rows, cols: t.cols }));
     /* R53: every part of the document that is not a body paragraph, with its kind. */
     const units = [];
-    const unit = (kind, para, text) => { if (hasWords(text)) units.push({ kind, ref: para == null ? "document" : docParaRef(para).ref, part: CONTENT_PART, text }); };
+    const unit = (kind, para, text, paras) => { if (hasWords(text)) units.push({ kind, ref: para == null ? "document" : docParaRef(para).ref, part: CONTENT_PART, text, ...(paras ? { paras } : {}) }); };
     for (const x of walk.inBody) {
       if (x.kind === "comment") unit("comment", x.para, paragraphsText(stripElement(x.inner, "change-info")));
-      else if (x.kind === "text_box") unit("text_box", x.para, paragraphsText(x.inner));
+      else if (x.kind === "text_box") unit("text_box", x.para, paragraphsText(x.inner), x.paras);
       else unit(x.kind, x.para, paragraphsText(elementsNested(x.inner, "note-body", 1)[0]?.inner ?? ""));
     }
     const marked = new Map();
@@ -1802,6 +1816,8 @@ function sheetHiddenCols(tableXml) {
  *  million rows costs one unit. `st.hiddenRows` collects those ranges when the caller gives a state.
  *  R53: a cell's annotation is the cell's `note`, apart from its displayed value, at its first address. */
 function* sheetRows(tableXml, st) {
+  /* R56: the repeat meter counts per sheet: each sheet's walk starts its units at zero. */
+  if (meter) meter.units = 0;
   let rowIndex = 0;
   for (const row of iterNested(tableXml, ROW_NAMES)) {
     const rep = parseInt(row.attrs["number-rows-repeated"] ?? "1", 10);
@@ -1832,7 +1848,9 @@ function* sheetRows(tableXml, st) {
           inner = stripElement(inner, "annotation");
         }
       }
-      const carries = cell.attrs["value-type"] != null || cell.attrs.formula != null || inner.trim() !== "" || note != null;
+      /* R56: a typed cell with no value, no formula, no text and no note (a producer's padding to the sheet's edge) is an
+         empty run: advanced over, never expanded. */
+      const carries = valueAttrOf(cell.attrs) != null || cell.attrs.formula != null || inner.trim() !== "" || note != null;
       /* An empty repeated run holds no content and no reference worth
          emitting; skip it but still advance the address. */
       if (carries) {
@@ -1853,7 +1871,7 @@ function* sheetRows(tableXml, st) {
         rowChars += chars * nCols;
         rowLinks += hrefs.length * nCols;
         const base = {
-          valueType: cell.attrs["value-type"] ?? null,
+          valueType: cell.attrs["value-type"] ?? cell.attrs["calcext-value-type"] ?? null,
           value,
           formula: cell.attrs.formula ?? null,
           display,

@@ -1,6 +1,6 @@
 # BOB to pdf-pixels (T51)
 
-**Read** · handled J8
+**Read** · handled J9
 
 ## B1 · START
 
@@ -192,3 +192,28 @@ CHANGE (K4862). RUNTIME-LIMITS #8 is merged: every `READ_BOUNDS` row you asked f
 ## B12 · CHANGE
 
 CHANGE (K4864). You are merged with image-codecs; on the merged tree `pagepixels.test.mjs` "R42 the mapping is total over PNG_REFUSES: every feature has a declared reason, the memory bound IMAGE_TOO_LARGE" fails, because image-codecs no longer keys the memory refusal in `PNG_REFUSES` (it is the code `IMAGE_TOO_LARGE`, `MEMORY_FEATURE` only an identifier). Assert the mapping over the features `PNG_REFUSES` holds plus the `IMAGE_TOO_LARGE` code. Merge the tranche first. Your three R47 tests stay red by name until PDF-READER #15 merges R49; your marks are struck then.
+
+## B13 · START
+
+START · PDF-PIXELS #10 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 1: causes R6, publish 3 fixtures (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #289 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/pdf-pixels tranche/T51 && git branch -m job/T51/pdf-pixels stale/pdf-pixels-local && git checkout -b job/T51/pdf-pixels origin/job/T51/pdf-pixels`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module pdf-pixels`; record `build/jobs/T51/pdf-pixels.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Causes (fix-round-10-T51.md §1; each with K4426's four: root cause, why the tests missed it, a failing-first test on the walker's exact case seen red first, the platform check). The requirement amendments quoted are already on the tranche.**
+**R6** (G2; walks A7, A10, A14: legible pictures end `NOTHING_TRANSCRIBED` for good). Root: `levelLight` takes the ink level from the darkest 0.5 % of all pixels, a sparse page has less ink than that and goes all dark, `preparePicture` says `text_found:false`, and the member answers `NOTHING_TRANSCRIBED` without the engine (`pdf-worker/src/picturepixels.mjs:349-352`, `:437`; `ocr-worker/src/member.mjs:112-115`). BOB amended pdf-pixels R44 (a) on the tranche (not yet met: T51): the ink level is not taken from a fixed darkest fraction of the pixels, so a page of three lines of text is levelled as a page of text and found to hold text (`prepared.text_found` true, `prepared.line_px` 15 to 30); a blank page and noise stay false. Tests missed: only dense pages; the no-text arm uses a blank page; `ocr-worker.test.mjs:720` types `text_found` in by hand. Failing-first, seen red: `pdf-worker/test/pagepixels.test.mjs`, new block: `generate({kind:"png",seed:"rw9-A-7",size:{pages:1,lines:3}})` (also `frame:[4096,3000]`, `[4097,3000]`) through `renderPictureToPixels(.., 0, {maxEdge:4096,grey:true,prepare:true})`: `text_found` true and `line_px` 15-30; controls: blank and noise stay false. ocr-worker only receives; its read of the words is that job's test (REPORT it to BOB). Platform: N, then L (the three recipes read).
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `pdf-worker/test/pdf-pixels-fixtures.mjs` (new file; outside your `tests` entries: list it in your COMPLETE and BOB adds it before the ownership check, K1043), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `pageRefusal` (users now: plane 2): real page-pixels call on a page that has a text layer / a JPEG process it cannot decode / a non-picture (`pagepixels.mjs`, `picturepixels.mjs`), giving PAGE_HAS_TEXT_LAYER, UNSUPPORTED_JPEG_PROCESS (+jpeg, process, page), NOT_A_PICTURE.
+- `pixelRefusal` (users now: ocr-worker 1): `pixelRefusal(reason)` = the real refusal answer of `renderPageToPixels` over an input that provokes it: NOT_A_PDF (bytes that are no PDF), PAGE_HAS_TEXT_LAYER, MULTIPLE_IMAGES_ON_PAGE, UNSUPPORTED_FILTER, PIXELS_UNDETERMINED (turn asked, orientation undeterminable); IMAGE_TOO_LARGE with `bound_name` PICTURE_FRAME_MAX from `renderPictureToPixels` over an over-frame picture.
+- `renderedPage` (users now: ocr-worker 1): `renderPageToPixels(bytes, page, opts)` (and `renderPictureToPixels(bytes, 0, {maxEdge, grey, prepare})`) over a tiny generated PDF or picture (test-support make-pdf, imggen), returning its real `{ok:true, route, mediaType, bytes, width, height, upright, rotate_deg, pixels_sha256, page_geometry}`.
+
+Rules of fix-round-9 §0 that bind: R-FOUR (root cause with file:line, why the tests missed it, a failing-first test on the walker's exact case through the real entry path seen red first, the platform check); R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** each cause above fixed with its failing-first test green (seen red first) and its platform check done or named for the redeploy; your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . pdf-pixels --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/pdf-pixels.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.

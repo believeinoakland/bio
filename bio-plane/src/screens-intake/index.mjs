@@ -17,7 +17,7 @@
 import { CAPTURE_SCREEN } from "./capture.mjs";
 
 /* R42 (C55): the one drawing of what a check found, for `screens-inquiry`'s document page to import (K4164) */
-export { checkOutcome } from "./capture.mjs";
+export { checkOutcome, supportingReasons } from "./capture.mjs";
 import { HELD_SCREEN } from "./held.mjs";
 import { OPEN_FILE_SCREEN } from "./open-file.mjs";
 import { INBOX_SCREEN } from "./inbox.mjs";
@@ -26,9 +26,14 @@ import { ABOUT_KNOCKER_SCREEN } from "./about-knocker.mjs";
 import { LEADS_SCREEN } from "./leads.mjs";
 import { WATCHING_SCREEN } from "./watching.mjs";
 
+/* R36 (fix round 10, G7): the sentences reading-pipeline holds for a file kind it does not read (`UNSUPPORTED_FORMAT {kind}`), and its general one with the kind filled */
+const UNSUPPORTED = ["rtf", "email", "legacy_word", "legacy_excel", "legacy_powerpoint", "legacy_office", "tiff", "gif", "webp", "heic", "avif", "bmp", "jp2", "ico", "kind"]
+  .map((k) => "reading-pipeline.index.unsupported_" + k);
+
 /* The keys each screen reads (R26). */
 export const SCREEN_KEYS = Object.freeze({
   capture: Object.freeze([
+    ...UNSUPPORTED,
     "act.acquire.label.capture", "act.capturerequest.label.capture", "act.captureupload.label.capture",
     "capture.cite", "capture.cite.tip", "capture.filed.project", "capture.filed.question", "act.monitor.label.capture", "act.monitorset.label.capture",
     "act.testify.label.capture", "act.writinghelp.label.capture", "ai.label.untested", "capture.fieldneeded",
@@ -80,8 +85,8 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.capture.address.filedhere", "screen.capture.later.none", "screen.document.text.unread.next",
     /* R38, R31 (fix round 5, E7, E8; K4530): a held copy's reading asked for by the press, and what "Finish it" was answered; the nearest held rows stand in (K4269) */
     "transcribe.why.evidenceabsent", "refusal.CAPTURE_NOT_HELD", "acquisition.index.render_pending_note", "acquisition.note.continuation_files_new",
-    /* G72, G74 (fix round 7; K4269): the nearest held rows stand in: a closed capture, and a project the member is not in (owed: refusal.NO_SUCH_SESSION, a row for the first) */
-    "acquisition.index.no_such_session", "project.notmember", "refusal.PROMOTE_NOT_A_PARTICIPANT",
+    /* G72, G74 (fix round 7; K4269): the nearest held rows stand in: a closed capture, and a project the member is not in; the closed capture has its own row now, `refusal.NO_SUCH_SESSION` (DEC-425) */
+    "refusal.NO_SUCH_SESSION", "project.notmember", "refusal.PROMOTE_NOT_A_PARTICIPANT",
     /* G110 (fix round 8): a skipped supporting file is told by its reason's code: the count line and one sentence for each kind of reason */
     "screen.capture.supporting.kept", "screen.capture.supporting.cap", "screen.capture.supporting.toolarge", "screen.capture.supporting.unavailable",
   ]),
@@ -104,6 +109,8 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.held.withheld", "state.undetermined", "document.uploaded.by", "size.kb", "size.mb", "size.small",
     "screen.capture.openit", "screen.capture.openit.help", "state.item.review.name", "screen.held.name",
     "screen.capture.address.filedhere", "shell.unread", "document.untitled.web",
+    /* fix round 10 (cause 33): the held rows that stand in for the filter and the doors until the design's own are in the list (K4269) */
+    "ai.whose.own", "ai.whose.group", "document.read.next", "document.read.prev",
   ]),
   archive: Object.freeze([
     "act.archivelist.label.archive", "act.gradenote.label.archive", "act.heldsetaside.label.archive",
@@ -145,6 +152,8 @@ export const SCREEN_KEYS = Object.freeze({
     "shell.unavailable.nothing.title", "refusal.NO_SAFE_VIEW", "screen.open-file.check.notyet", "screen.open-file.high.yours",
     "screen.open-file.next.head", "screen.open-file.next.yours", "screen.open-file.safetext", "screen.open-file.safetext.cut",
     "shell.unread", "screen.open-file.digest.checked", "refusal.DIGEST_MISMATCH", "refusal.DIGEST_MISMATCH.unheld",
+    /* fix round 10 (R35b, R33): the held rows that stand in until the design's own are in the list (K4269): the owner's sentence for an unread picture type */
+    "reading-pipeline.index.unsupported_tiff", "reading-pipeline.index.unsupported_heic", "reading-pipeline.index.unsupported_bmp", "reading-pipeline.index.unsupported_kind",
   ]),
   "about-knocker": Object.freeze([
     "act.sourcedisclose.label.about-knocker", "act.sourceconsent.label.about-knocker", "act.sourceconsentwithdraw.label.about-knocker",

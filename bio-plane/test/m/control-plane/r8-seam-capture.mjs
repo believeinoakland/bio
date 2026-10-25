@@ -88,6 +88,7 @@ export function sections(kit) {
       seen.push({ at: seen.length, listed: !!mine, pending: !!(mine && mine.fetch_pending) });
       await later(1000);
     }
+    if (!delivered && process.env.R8_DEBUG) console.log("DEBUG A1 rows", JSON.stringify(body(await get(await founder(), { op: "owedwork", sha: session }))).slice(0, 2500));
     assert.ok(delivered, "the document is delivered within 120 s");
     const unlisted = seen.filter((x) => !(x.listed && x.pending));
     assert.equal(unlisted.length, 0, `at every poll before the delivery the session is listed with fetch_pending; not so at polls ${unlisted.map((x) => x.at).join(",")} of ${seen.length}`);
@@ -246,7 +247,8 @@ export function sections(kit) {
     const words = CAPTURE_SCREEN.parts.refusalHtml(w.cs, { code: HELD_ELSEWHERE });
     assert.ok(words, "the refusal has words");
     assert.ok(w.state.promoteRefused, "the watch ended in a refusal");
-    assert.equal(w.state.promoteRefused.html, words, "the refusal is the held-elsewhere words");
+    /* the screen names the address the fetch was of before the words (screens-intake R49): the words are what ends it */
+    assert.ok(w.state.promoteRefused.html === words || w.state.promoteRefused.html.endsWith(` · ${words}`), "the refusal is the held-elsewhere words");
     assert.notEqual(w.state.promoteRefused.html, word("refusal.FETCH_FAILED"), "not the fetch-failed words");
   });
 

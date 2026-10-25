@@ -173,6 +173,20 @@ export async function tier2Escalate(env, { sha, storeName, text, from, count }) 
   return out;
 }
 
+/* R62 (fix round 10, cause 9): the notes of a PDF's structure read and of the tier-2 member that say the file was repaired, as the reading lists them:
+   `{note: "xref_reconstructed"}`, `{note: "pages_missing", missing, of}` (the structure's `pages_missing:<missing>/<of>`) and `{note: "pdf_truncated"}`
+   (pdf-worker R10: the file was cut before its trailer). Every other note is the reader's own and informational; each is listed once. */
+export function recoveryNotesOf(...lists) {
+  const out = [], seen = new Set();
+  for (const list of lists) for (const n of Array.isArray(list) ? list : []) {
+    if (typeof n !== "string") continue;
+    const m = /^pages_missing:(\d+)\/(\d+)$/.exec(n);
+    const entry = n === "xref_reconstructed" || n === "pdf_truncated" ? { note: n } : m ? { note: "pages_missing", missing: Number(m[1]), of: Number(m[2]) } : null;
+    if (entry && !seen.has(entry.note)) { seen.add(entry.note); out.push(entry); }
+  }
+  return out;
+}
+
 /* The sentence a reading's basis carries when tier 2 could not help (R3: "the reason is carried"). */
 export function tier2FailureNote(failure) {
   /* DEC-149 (T35-24, K1960): on the reading's basis, so it names the group's Civicsmith, never "this instance". */
@@ -378,14 +392,22 @@ export const OCR_SAME_PROVENANCE = ["engine", "version", "cap", "measured_by", "
    its legibility carries it. */
 const refusalReasonOf = (b) => (b && b.refusal && b.refusal.render && typeof b.refusal.render.reason === "string" ? b.refusal.render.reason
   : b && typeof b.reason === "string" ? b.reason : "DECLINED");
-export async function askMemberPerPage(env, { sha, storeName, wantPages, invocations = OCR_INVOCATIONS_PER_REQUEST }) {
+export async function askMemberPerPage(env, { sha, storeName, wantPages, invocations = OCR_INVOCATIONS_PER_REQUEST, stampUnit = null }) {
   if (!(invocations > 0))
     return { status: 200, answer: null, loop: { invocations: 0, asked: 0, notAsked: [...wantPages], threw: null, strays: [], mismatched: [],
                                                 refused: [], refusedWhy: [], down: [], legibility: {} } };
+  /* R59 (fix round 9, G165; K4980): the plane's `stampUnit` is told the page in flight, `"p<page>"`, synchronously before each member
+     call (the first call takes the lowest page asked, as the member does), so a kill is charged to that page and not to `whole`.
+     A stamp that fails never stops the read: the row is then charged as it was before. */
+  const stamp = (page) => {
+    if (typeof stampUnit !== "function") return;
+    try { stampUnit(`p${page}`); } catch { /* the page stays unstamped */ }
+  };
   const call = (pages) => env.OCR_WORKER.fetch("https://ocr-worker/transcribe", {
     method: "POST", headers: { "content-type": "application/json" },
     body: JSON.stringify({ capture_sha: sha, store: storeName, pages }),
   });
+  stamp(wantPages.reduce((a, b) => (b < a ? b : a), Infinity));
   const r = await call(wantPages);
   if (!r.ok) return { status: r.status };
   const first = await r.json();
@@ -399,6 +421,7 @@ export async function askMemberPerPage(env, { sha, storeName, wantPages, invocat
     if (loop.invocations >= invocations) { loop.notAsked = deferred.slice(i); break; }
     loop.invocations++; loop.asked++;
     try {
+      stamp(page);
       const rp = await call([page]);
       if (rp.status >= 500) loop.down.push(page);   /* R37: the member was down for this page; it is owed, not declined */
       const body = rp.ok ? await rp.json() : { ok: false, reason: `HTTP_${rp.status}` };
@@ -582,7 +605,7 @@ export function ocrTextFromMember(res, { calibration = null } = {}) {
    with its reason (final: never owed); `legibility` the legibility the member stated for each page it read or refused (R56). */
 export const PAGE_KILLED_READER = "PAGE_KILLED_READER";
 export async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPage, fmt, seed = null,
-                                         liveCalibration = null, invocations = OCR_INVOCATIONS_PER_REQUEST, killedPages = [] }) {
+                                         liveCalibration = null, invocations = OCR_INVOCATIONS_PER_REQUEST, killedPages = [], stampUnit = null }) {
   let chain, chainSet = false, ocrNote = null, filled = [], engine = null, unanswered = [], loop = null;
   let seeded = [], transient = false, owed = [], killed = [], refused = [], legibility = {};
   const wanted = !!(i2text && needsTier3(i2text));
@@ -661,7 +684,7 @@ export async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier
     } else if (env && env.OCR_WORKER) {
       let failure = null;
       try {
-        const asked = askPages.length ? await askMemberPerPage(env, { sha, storeName, wantPages: askPages, invocations })
+        const asked = askPages.length ? await askMemberPerPage(env, { sha, storeName, wantPages: askPages, invocations, stampUnit })
                                        : { status: 200, answer: null, loop: null };
         loop = asked.loop || null;
         if (loop) {
@@ -772,6 +795,11 @@ function stateOcr(target, left, t3, i2text) {
   for (const pg of (i2text && Array.isArray(i2text.pages) ? i2text.pages : []))
     if (pg && Number.isInteger(pg.page) && (Array.isArray(pg.undetermined) ? pg.undetermined : []).some((u) => u && u.reason === "image_content_unread") && !owedAt.has(pg.page)) folio.push(pg.page);
   if (folio.length) target.folio_pages = [...new Set(folio)].sort((x, y) => x - y);
+  /* pdf-worker R10: the pages of a file cut before its trailer that tier 2 could not read are named `truncated` in the text's undetermined list: stated unread
+     (so the reading is never `whole`, R48) and listed, 0-based, beside the `pdf_truncated` recovery note (R62) */
+  const cut = [...new Set((i2text && Array.isArray(i2text.undetermined) ? i2text.undetermined : [])
+    .filter((u) => u && u.reason === "truncated" && Number.isInteger(u.page) && !refusedAt.has(u.page)).map((u) => u.page))].sort((x, y) => x - y);
+  if (cut.length) { target.truncated_pages = cut; skipped += cut.length; }
   if (skipped) target.units_skipped = (target.units_skipped || 0) + skipped;
   if (pictures) target.pictures_unread = pictures;
   return target;
@@ -982,16 +1010,23 @@ const linesIn = (t) => { let n = 1; for (let i = t.indexOf("\n"); i >= 0; i = t.
 /* Every unit of the text, before the wire's cap and budget: null when the text has no unit list. */
 function allUnitsOf(i2text) {
   if (!i2text) return null;
-  const arm = (list, kind, fields) => (Array.isArray(list) ? list : [])
-    .map((u, i) => (u && typeof u === "object" && typeof u.text === "string" && glyphCount(u.text) > 0
-      ? { extent: { kind, ...fields(u, i) }, seq: i, text: u.text, kind: "body" } : null))
+  /* R47 (G166; K4985): a paragraph a part names in its `paras` (`office-readers` R38: indices into `paragraphs`) is that part's words
+     alone, so it is no body unit; its number stays what it was. */
+  const named = new Set();
+  for (const p of Array.isArray(i2text.parts) ? i2text.parts : [])
+    if (p && typeof p === "object" && Array.isArray(p.paras)) for (const n of p.paras) if (Number.isInteger(n) && n >= 0) named.add(n);
+  /* R47 (G166; K4987): a slide's body unit is its `bodyText` (the text outside its text boxes, '' for a box-only slide) when the entry
+     states one, else its `text`. */
+  const arm = (list, kind, fields, skip = null, textOf = (u) => u.text) => (Array.isArray(list) ? list : [])
+    .map((u, i) => (u && typeof u === "object" && typeof textOf(u) === "string" && glyphCount(textOf(u)) > 0 && !(skip && skip.has(i))
+      ? { extent: { kind, ...fields(u, i) }, seq: i, text: textOf(u), kind: "body", ...(u.hidden === true ? { hidden: true } : {}) } : null))
     .filter(Boolean);
   const body = Array.isArray(i2text.pages)      ? arm(i2text.pages, "pdf-page",
         (u, i) => ({ page: Number.isInteger(u.page) ? u.page : i, rect: null }))
     : Array.isArray(i2text.paragraphs) ? arm(i2text.paragraphs, "doc-para",
-        (u, i) => ({ para: Number.isInteger(u.para) ? u.para : i, run: null }))
+        (u, i) => ({ para: Number.isInteger(u.para) ? u.para : i, run: null }), named)
     : Array.isArray(i2text.slides)     ? arm(i2text.slides, "slide-shape",
-        (u, i) => ({ slide: Number.isInteger(u.slide) ? u.slide : i, shape: null }))
+        (u, i) => ({ slide: Number.isInteger(u.slide) ? u.slide : i, shape: null }), null, (u) => (typeof u.bodyText === "string" ? u.bodyText : u.text))
     : Array.isArray(i2text.sheets)     ? arm(i2text.sheets, "sheet-range", sheetRangeOf)
         .filter((u) => u.extent.sheet !== null)
         /* R47 (G128h): a sheet's unit carries the row of each of its lines, so a hit names its row */
@@ -1001,7 +1036,9 @@ function allUnitsOf(i2text) {
   const parts = Array.isArray(i2text.parts) ? i2text.parts : null;
   if (!parts) return body;
   const out = body ? [...body] : [];
-  let seq = out.length ? Math.max(...out.map((u) => u.seq)) + 1 : 0;
+  /* R11b (fix round 10): the next seq is found by a loop, never by spreading the units into `Math.max`, which overflows the stack for 120,000 units */
+  let seq = 0;
+  for (const u of out) if (u.seq >= seq) seq = u.seq + 1;
   for (const p of parts) {
     if (!(p && typeof p === "object" && typeof p.text === "string" && glyphCount(p.text) > 0)) continue;
     out.push({ extent: { kind: "doc-part", part: typeof p.part === "string" ? p.part : null, ref: typeof p.ref === "string" ? p.ref : null },
@@ -2459,7 +2496,7 @@ function refusalOf(a) {
   if (!a || a.ok !== false || a.failure !== FAILURE_FINAL || typeof a.reason !== "string" || !a.reason) return null;
   const out = { reason: a.reason };
   for (const k of ["pages", "bytes", "need_mb", "limit_mb", "size", "bound", "n"]) if (Number.isFinite(a[k])) out[k] = a[k];
-  for (const k of ["key", "part", "kind", "name"]) if (typeof a[k] === "string" && a[k]) out[k] = a[k].slice(0, 200);
+  for (const k of ["key", "part", "kind", "name", "metric"]) if (typeof a[k] === "string" && a[k]) out[k] = a[k].slice(0, 200);
   return out;
 }
 
@@ -2474,12 +2511,23 @@ function guardRefusalOf(i2text) {
     if (!g || !Number.isFinite(g.bound)) continue;
     const part = typeof m.part === "string" ? m.part : typeof g.part === "string" ? g.part : null;
     const named = part ? { part: part.slice(0, 200) } : {};
+    /* R60: the unit the figure measures is the reader's own (`metric`); a bound marker that names none is counted in what its `why` counts */
+    const metric = typeof g.metric === "string" && g.metric ? g.metric : g.why === "TOO_MANY_OBJECTS" ? "objects" : g.why === "TOO_MANY_CHARACTERS" ? "characters" : "bytes";
     if (Number.isFinite(g.size) && (g.why === "over_size_bound" || g.metric !== undefined || g.boundName !== undefined))
-      return { reason: "TOO_LARGE", size: g.size, bound: g.bound, ...named, ...(typeof g.boundName === "string" ? { name: g.boundName } : {}) };
+      return { reason: "TOO_LARGE", size: g.size, bound: g.bound, metric, ...named, ...(typeof g.boundName === "string" ? { name: g.boundName } : {}) };
     if (typeof g.why === "string")
-      return { reason: "STRUCTURE_OVER_BOUND", bound: g.bound, ...(Number.isFinite(g.n) ? { n: g.n } : {}), ...named, name: g.why };
+      return { reason: "STRUCTURE_OVER_BOUND", bound: g.bound, metric, ...(Number.isFinite(g.n) ? { n: g.n } : {}), ...named, name: g.why };
   }
   return null;
+}
+
+/* R60: the word for the unit a refusal's figure measures: `bytes`, `rows`, `columns`, `objects`, `cells`, as the reader states it (a reader's own
+   longer name, `declared_uncompressed_text_part_bytes`, is its kind of count in plain words). */
+function unitWordOf(metric) {
+  if (typeof metric !== "string" || !metric) return "bytes";
+  if (/bytes$/.test(metric)) return "bytes";
+  if (/chars$/.test(metric)) return "characters";
+  return metric.replace(/_/g, " ");
 }
 
 /* R54 (G135a, G135d, G135e): the sentence of a refusal that names its own cause and figures. Stand-ins until T52 (K4269); owed:
@@ -2488,8 +2536,12 @@ function guardRefusalOf(i2text) {
 function refusalSentence(r) {
   if (r.reason === "TOO_LARGE" && Number.isInteger(r.parts) && r.parts > 1)
     return localize("reading-pipeline.index.too_large_in_parts", "This file is {size} bytes in {parts} parts, over the {bound} bytes allowed for this kind of file.", { size: String(r.size), parts: String(r.parts), bound: String(r.bound) });
+  if (r.reason === "TOO_LARGE" && unitWordOf(r.metric) !== "bytes")
+    return localize("reading-pipeline.index.too_large_units", "This file has {size} {unit}, over the {bound} {unit} allowed for this kind of file.", { size: String(r.size), bound: String(r.bound), unit: unitWordOf(r.metric) });
   if (r.reason === "TOO_LARGE")
     return localize("reading-pipeline.index.too_large", "This file is {size} bytes, over the {bound} bytes allowed for this kind of file.", { size: String(r.size), bound: String(r.bound) });
+  if (r.reason === "STRUCTURE_OVER_BOUND" && typeof r.metric === "string" && r.metric)
+    return localize("reading-pipeline.index.structure_over_bound_units", "{part} holds more than {bound} {unit}, past what is allowed for this kind of file.", { part: String(r.part || r.name || "This file"), bound: String(r.bound), unit: unitWordOf(r.metric) });
   if (r.reason === "STRUCTURE_OVER_BOUND")
     return localize("reading-pipeline.index.structure_over_bound", "{part} is over the {bound} allowed for this kind of file.", { part: String(r.part || r.name || ""), bound: String(r.bound) });
   return null;
@@ -2498,9 +2550,12 @@ function refusalSentence(r) {
 /* R54 (G135a, G135e; K4831 (3)): a kind with no reader is named, by its bytes and the types it is declared as, and its reading is
    stated `final` with `UNSUPPORTED_FORMAT {kind}`: no "non-textual or too large", and nothing for "Read it" to repair. */
 const sig = (b, o, s) => b.length >= o + s.length && [...s].every((c, i) => b[o + i] === (typeof c === "number" ? c : c.charCodeAt(0)));
-function unreadKindOf(b, types) {
+function unreadKindOf(b, types, name = null) {
   if (!(b instanceof Uint8Array) || !b.length) return null;
   const t = types.filter((x) => typeof x === "string").join(" ").toLowerCase();
+  /* R61: a file is declared Word by its type, or by its name where no type that is not text (and not the generic octet-stream) is declared */
+  const declared = types.filter((x) => typeof x === "string" && x.trim()).map((x) => x.toLowerCase().split(";")[0].trim());
+  const wordDeclared = /msword/.test(t) || (typeof name === "string" && /\.doc$/i.test(name.trim()) && declared.every((x) => x === "application/octet-stream" || x.startsWith("text/")));
   if (sig(b, 0, "GIF87a") || sig(b, 0, "GIF89a")) return "gif";
   if (sig(b, 0, [0x49, 0x49, 0x2a, 0]) || sig(b, 0, [0x4d, 0x4d, 0, 0x2a])) return "tiff";
   if (sig(b, 0, "RIFF") && sig(b, 8, "WEBP")) return "webp";
@@ -2519,7 +2574,9 @@ function unreadKindOf(b, types) {
   if (/message\/rfc822/.test(t)) return "email";
   const lines = head.split(/\r?\n/).slice(0, 16);
   const hdr = lines.filter((l) => /^(?:Received|Return-Path|Delivered-To|MIME-Version|Message-ID|Date|From|To|Subject|Content-Type):\s/i.test(l)).length;
-  return hdr >= 4 && lines.some((l) => /^(?:From|Subject|To|MIME-Version):/i.test(l)) && /^[\w-]+:\s/.test(lines[0] || "") ? "email" : null;
+  if (hdr >= 4 && lines.some((l) => /^(?:From|Subject|To|MIME-Version):/i.test(l)) && /^[\w-]+:\s/.test(lines[0] || "")) return "email";
+  /* R61: bytes that say nothing of their own kind, under a Word declaration: stated legacy Word (final, nothing to repair), never "not read as text" */
+  return wordDeclared ? "legacy_word" : null;
 }
 function unreadSentence(kind) {
   switch (kind) {
@@ -2604,14 +2661,15 @@ async function skipWindow(evidence, doc, cursor, windowBytes) {
  *  `liveCalibration` (R5); and, only at a member's act, `transcription` (R29, `tier4Extend`): without it the answer is
  *  exactly what it was before R29. R37: `unitsBudget` is the bytes the text units may spend (default the acquire answer's,
  *  R15; the index path hands `Infinity`), `ocrInvocations` the OCR calls this request may make (default 24; 0 makes none, R55),
- *  and `killedPages` the pages the caller states killed their reader three times (R54, G129c). The `owe` hook is retired (R55,
+ *  and `killedPages` the pages the caller states killed their reader three times (R54, G129c); `stampUnit` (R59, G165) is called with
+ *  `"p<page>"` before each page's OCR call. The `owe` hook is retired (R55,
  *  G126j): nothing here registers owed work; the pages left are `ocr_left` and `counters.owed`, the caller's to owe. R39: a document that is a digest alone (no parts,
  *  size, retrieval instant or profile) answers `{refused: {code: "BARE_DIGEST", why}}` and no reading. R40: `cursor`
  *  (null, or the string a piece answered; with `maxUnits`) reads a capture read as text in pieces (the answer adds `piece`; a refusal is `{refused}` with no
  *  reading). Never throws; every failure is a failed reading, and says whether it is `transient` or `final`. */
 export async function read(document, { evidence = null, env = {}, storeName = "bio", view, planeVersion = null,
                                         liveCalibration = null, transcription = null, unitsBudget, ocrInvocations,
-                                        killedPages, skipKilled, cursor, maxUnits, rangePages, windowBytes } = {}) {
+                                        killedPages, stampUnit, skipKilled, cursor, maxUnits, rangePages, windowBytes } = {}) {
   /* R39: a digest alone is no document; it is refused before anything is loaded, and no reading is composed. */
   if (isBareStub(document)) return refusal(BARE_DIGEST, "reading-pipeline.index.bytes_not_held");
   if (skipKilled === true && typeof cursor === "string") {
@@ -2620,7 +2678,7 @@ export async function read(document, { evidence = null, env = {}, storeName = "b
   }
   let out;
   try { out = await readInner(document, { evidence, env, storeName, view, planeVersion, liveCalibration, transcription,
-                                          unitsBudget, ocrInvocations, killedPages,
+                                          unitsBudget, ocrInvocations, killedPages, stampUnit,
                                           pieces: cursor === undefined ? null : { cursor, maxUnits, rangePages, windowBytes } }); }
   catch (e) {
     const reading = failed(document, null, localize("reading-pipeline.index.reading_not_composed", "the reading could not be composed ({detail}), so nothing is claimed about this document's text; it is a failed reading, never an emptied document", { detail: String(String(e && e.message || e).slice(0, 200)) }), { failure: FAILURE_TRANSIENT });
@@ -2703,7 +2761,7 @@ export async function bytesOf(evidence, doc, { kind = null, textual = false } = 
     const row = kind === "csv" && size > boundOf("csv", "bytes") ? ["csv", "bytes"]
       : textual && size > boundOf("text", "bytes") ? ["text", "bytes"] : WHOLE_READ_ROW;
     const st = statement(...row, size);
-    return { bytes: null, failure: FAILURE_FINAL, stated: { reason: "TOO_LARGE", ...st },
+    return { bytes: null, failure: FAILURE_FINAL, stated: { reason: "TOO_LARGE", ...st, metric: "bytes" },
              why: refusalSentence({ reason: "TOO_LARGE", size, bound: st.bound, parts: parts ? parts.length : 1 }) };
   };
   if (total !== null && total > WHOLE_READ_MAX) return tooBig(total);
@@ -2752,7 +2810,7 @@ const encodingFacts = (d) => (d && d.ok ? { encoding: d.encoding, encoding_assum
   ...(d.replaced ? { encoding_replaced: d.replaced } : {}) } : {});
 
 async function readInner(doc, { evidence, env, storeName, view, planeVersion, liveCalibration, transcription,
-                              unitsBudget, ocrInvocations, killedPages, pieces }) {
+                              unitsBudget, ocrInvocations, killedPages, stampUnit, pieces }) {
   const retrieved = doc && typeof doc.retrieved === "string" ? doc.retrieved : null;
   const sha = doc && doc.capture && typeof doc.capture.sha256 === "string" ? doc.capture.sha256 : null;
   const ct = doc && doc.capture && typeof doc.capture.content_type === "string" ? doc.capture.content_type : "";
@@ -2900,8 +2958,12 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   const wireable = !!(entry && (typeof entry.text === "function" || typeof entry.structure === "function"));
   /* R54 (G135a, G135e): a kind with no reader is named, final, and offers nothing to repair (no "Read it") */
   if (!wireable && bytes && !held) {
-    const unread = unreadKindOf(bytes, [ct, profile.source_content_type, headers["content-type"]]);
-    if (unread) return early(failed(doc, null, unreadSentence(unread), { failure: FAILURE_FINAL, reason: "UNSUPPORTED_FORMAT", kind: unread }));
+    const unread = unreadKindOf(bytes, [ct, profile.source_content_type, headers["content-type"]], doc.capture && doc.capture.file_name);
+    /* R61: a file declared Word whose bytes are not an OLE compound file is stated legacy Word with the clause that its contents do not look like one (stand-in until UX-DESIGN's row) */
+    const notWord = unread === "legacy_word" && !sig(bytes, 0, [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]);
+    if (unread) return early(failed(doc, null, notWord
+      ? `${unreadSentence(unread)} ${localize("reading-pipeline.index.unsupported_legacy_word_not_word", "It was sent as a Word file, but its contents do not look like one.")}`
+      : unreadSentence(unread), { failure: FAILURE_FINAL, reason: "UNSUPPORTED_FORMAT", kind: unread }));
   }
   let reading, classifiedText = null, member = null;
   let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null, readDialect, emitted = null, heldCounts = null, joinedDropped = false;
@@ -3004,6 +3066,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     let i2text = null, wiredTier = null, pageCount = null, pageBoxes = null, pdfPaints = null, wired = null;
     let chain = null, ocrNote = null, tier2note = null, tier2PerPage = null, t3Wanting = false, aiRead = null, structMeta = null;
     let memberDown = false, ocrLeft = null, refusal = null, ocrFacts = null, heldOpenLost = false;
+    const noteLists = [];   /* R62: the notes the structure read and the tier-2 member left, listed on the reading by `recoveryNotesOf` */
     /* G26: in pieces mode a PDF is read by page ranges when its entry reads them. */
     let ranged = piecesOn && fmt === "pdf" ? rangeCursorIn(pieceAsk.cursor, { sha }) : null;
     if (ranged && ranged.refused) return ranged;
@@ -3032,6 +3095,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
         else {
           i2text = st.text || null; wiredTier = 1;
           structMeta = st.metadata || null;
+          noteLists.push(st.notes);
           if (Number.isInteger(st.pages) && st.pages > 0) pageCount = st.pages;
           pageBoxes = pageBoxesFrom(st.pageBoxes);
           pdfPaints = { images: Array.isArray(st.images) ? st.images : null,
@@ -3041,6 +3105,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
           const t2 = await tier2Escalate(env, { sha, storeName, text: i2text, from: st.from,
                                                 count: st.count > 0 ? st.count : Math.min(pieceAsk.rangePages, st.pages - st.from) });
           if (t2.transient) memberDown = true;
+          noteLists.push(t2.memberNotes);
           if (t2.outcome === "refused") tier2note = t2.note;
           else if (t2.outcome !== "merged") tier2note = tier2FailureNote(t2.outcome);
           else {
@@ -3071,6 +3136,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
           i2text = st.text || null; wiredTier = 1;
           /* R34: a structure reader states the document's own metadata beside its text (pdf-reader R39: the /Info Title). */
           structMeta = st.metadata || null;
+          noteLists.push(st.notes);
           if (Number.isInteger(st.pages) && st.pages > 0) pageCount = st.pages;
           /* N100 (R12): each page's box, off the structure object (tier 2 and 3 replace `text`, not it). */
           pageBoxes = pageBoxesFrom(st.pageBoxes);
@@ -3079,6 +3145,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
           /* R3: tier 2, merged page by page; two page-scoped parts when both tiers hold pages. */
           const t2 = await tier2Escalate(env, { sha, storeName, text: i2text });
           if (t2.transient) memberDown = true;
+          noteLists.push(t2.memberNotes);
           if (t2.outcome === "refused") tier2note = t2.note;
           else if (t2.outcome !== "merged") tier2note = tier2FailureNote(t2.outcome);
           else {
@@ -3099,7 +3166,9 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       if (rangeScope) {
         const carried = new Set((i2text && Array.isArray(i2text.pages) ? i2text.pages : []).map((x) => x && x.page)
           .filter((pg) => Number.isInteger(pg) && pg >= rangeScope.from && pg < rangeScope.total));
-        rangeScope.count = Math.max(rangeScope.count, carried.size ? Math.max(...carried) + 1 - rangeScope.from : 0);
+        let last = -1;
+        for (const pg of carried) if (pg > last) last = pg;
+        rangeScope.count = Math.max(rangeScope.count, carried.size ? last + 1 - rangeScope.from : 0);
         if (rangeScope.count === 0 && !memberDown) refusal = { reason: encryptedReasonOf(i2text) || NO_PROGRESS };
       } else if (!refusal && !memberDown && fmt === "pdf") {
         /* R46 (G155): a whole read states it as a range does: no page carried and the text marked locked is the file's refusal */
@@ -3111,7 +3180,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       /* R4–R6: tier 3. */
       const t3 = await tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPage, fmt, liveCalibration,
                                           ...(Number.isInteger(ocrInvocations) && ocrInvocations >= 0 ? { invocations: ocrInvocations } : {}),
-                                          ...(Array.isArray(killedPages) ? { killedPages } : {}) });
+                                          ...(Array.isArray(killedPages) ? { killedPages } : {}),
+                                          ...(typeof stampUnit === "function" ? { stampUnit } : {}) });
       i2text = t3.i2text; wiredTier = t3.wiredTier;
       ocrFacts = t3;
       if (t3.transient) memberDown = true;
@@ -3237,6 +3307,9 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       reading.page_count = Number.isInteger(pageCount) && pageCount > 0 ? pageCount : null;
       /* N100 (R12): the boxes under the count's rule: present where it is, null where no box was read. */
       reading.page_boxes = pageBoxes;
+      /* R62: what the structure read repaired reaches the reading; a sound file lists none (the key is absent) */
+      const recovered = recoveryNotesOf(...noteLists);
+      if (recovered.length) reading.recovery_notes = recovered;
       /* K4868: the head's rows and columns are the head's, not the sheet's: stated as not read (null) until the whole is */
       if (rangedCsv && extent && Array.isArray(extent.sheets))
         extent.sheets = extent.sheets.map((sh) => ({ ...sh, rows: null, cols: null, usedRows: null, usedCols: null }));

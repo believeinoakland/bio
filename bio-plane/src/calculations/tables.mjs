@@ -9,6 +9,7 @@ import { isCalendarDate } from "../civil-time/index.mjs";
 import { sha256HexSync, createSha256 } from "../record-grammar/index.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 import { boundOf } from "../read-bounds.mjs";
+import { separatorsOf } from "./money-cells.mjs";
 
 /** R1, R46 (fix round 9, G124): the bounds of a table, in bytes of canonical CSV and in cells, quoted from `READ_BOUNDS` (N571: a held
  *  table is evaluated as calc-grammar's streamed table, its R22, read row by row from its canonical text, so 1,000,000 cells fit a
@@ -132,12 +133,13 @@ export function schemaFault(schema, header) {
   for (let i = 0; i < schema.fields.length; i++) {
     const f = schema.fields[i];
     if (!plain(f)) return { field: `fields[${i}]`, why: "a field is {name, type}" };
-    const bad = Object.keys(f).filter((k) => !["name", "type", "unit", "currency", "zone", "title"].includes(k));
+    const bad = Object.keys(f).filter((k) => !["name", "type", "unit", "currency", "zone", "title", "locale"].includes(k));
     if (bad.length) return { field: String(f.name ?? `fields[${i}]`), why: word("calculations.why.part_field", { bad: String(bad[0]) }) };
     if (f.name !== header[i]) return { field: String(f.name ?? `fields[${i}]`), why: word("calculations.why.header_names_column", { n: String(i + 1), header: String(header[i]) }) };
     if (!FIELD_TYPES.includes(f.type)) return { field: f.name, why: word("calculations.why.type", { field_types: String(FIELD_TYPES.join(", ")) }) };
     for (const k of ["unit", "currency", "zone", "title"])
       if (f[k] !== undefined && (typeof f[k] !== "string" || !f[k].trim())) return { field: f.name, why: word("calculations.why.text", { key: String(k) }) };
+    if (f.locale !== undefined && (typeof f.locale !== "string" || !separatorsOf(f.locale))) return { field: f.name, why: localize("calculations.tables.a_locale_is_a", "a locale is a well-formed BCP 47 language tag, such as en-GB") };
     if (f.currency !== undefined && !/^[A-Z]{3}$/.test(f.currency)) return { field: f.name, why: word("calculations.why.currency_three_letter") };
   }
   return null;
@@ -231,11 +233,11 @@ export function cellFault(field, raw) {
  *  the cells that do not read as their types listed; the canonical bytes (`canonicalCsv`'s, line by line) and their
  *  SHA-256, made as the rows arrive so the rows are never held whole. `finish()` answers `{bytes, sha, rows,
  *  undetermined, count}`, or `{fault}` / `{tooLarge}`. */
-export function tableBuilder(header, fields, { maxCells = TABLE_MAX_CELLS, maxBytes = TABLE_MAX_BYTES } = {}) {
+export function tableBuilder(header, fields, { maxCells = TABLE_MAX_CELLS, maxBytes = TABLE_MAX_BYTES, headerSeen = false } = {}) {
   const enc = new TextEncoder();
   const hash = createSha256();
   const chunks = [];
-  let lines = [], size = 0, rows = 0, cells = 0, count = 0, first = true, fault = null, tooLarge = null, blank = [];
+  let lines = [], size = 0, rows = 0, cells = 0, count = 0, first = !headerSeen, fault = null, tooLarge = null, blank = [];
   const undetermined = [];
   const width = header.length;
   const flush = () => {
@@ -316,5 +318,16 @@ export function textTable(fields, text, size) {
       yield o;
     }
   }
-  return { fields: held, size, text, arrays, objects, streamed: () => ({ fields: held, rows: arrays }) };
+  /* R48: the rows `from` to `from + limit`, as arrays of strings, the rest of the text scanned past and never built */
+  function page(from, limit) {
+    const out = [];
+    let n = 0;
+    for (const row of arrays()) {
+      if (n >= from + limit) break;
+      if (n >= from) out.push(names.map((_, k) => String(row[k] ?? "")));
+      n++;
+    }
+    return out;
+  }
+  return { fields: held, size, text, arrays, objects, page, streamed: () => ({ fields: held, rows: arrays }) };
 }

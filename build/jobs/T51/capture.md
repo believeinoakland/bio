@@ -1,6 +1,6 @@
 # capture (T51)
 
-**Status** · session_01TcCgd312RDvc5erHPTSkhN · depth 2 · COMPLETE · handled B34
+**Status** · session_0156pHGtfAvwRXABsnFAHq8o · depth 2 · COMPLETE · handled B39
 
 ## J1 · COMPLETE
 
@@ -793,3 +793,124 @@ Checks: capture suite 338/338; impact users that drive the real upload 97/98, th
 REPORT items for you: (a) acquisition.profileOf could take `bytes` itself and replace my wrapper; (b) the kind-to-row map now exists in control-plane and capture: one exported map (runtime-limits or acquisition) is the fix; (c) the door may pass `reading_stated` through. No new words. Nothing deferred.
 
 Size (session_01TcCgd312RDvc5erHPTSkhN): test runs 9, module lines 4963
+
+## Fix round 9 · job 97 (CAPTURE #56, B35; R107 amended, G170, K4985)
+
+**Entries applied**
+1. `uploadCapture` hands `profileOf` the file's `name` (when a non-empty string) and its declared `type` as `declaredType` (when a non-empty string), at `capture/index.mjs` `profileThe` (one call site; a one-part and a multipart upload alike, and a second sighting). No other line changed. A call with neither passes `null` for both, so an upload with no name is profiled from its bytes as before.
+
+**Tests** (R107): new `bio-plane/test/m/capture/g170-t51.test.mjs`, six tests through the real `uploadCapture`: a CSV named `c.csv` declared `application/vnd.ms-excel`, the same declared `application/octet-stream`, and a `.tsv` declared `text/plain` are profiled `csv`; `text/csv` and `text/tab-separated-values` stay `csv`; controls: the same bytes with no name are not `csv`, and a ZIP named `c.csv` declared octet-stream is not `csv` and equals the same ZIP uploaded bare.
+
+**Red first (seen):** with my change in and acquisition's tranche tip as it stands, the three declared-type cases are `undetermined` (3 fail, 3 pass): `profileOf` does not yet take `name` and `declaredType` (acquisition job 96). They turn green when it merges.
+
+**After the merge (B36).** `g170-t51` 6/6 green (the three red cases now `csv`). One further change in my module, found by `g41b-t51`'s first control: acquisition's `profileOf` now prefers `declaredType` over `ct`, so a declared text type over bytes `textTypeOf` judged not text (a NUL in the head, `ct` null) made the format `csv` from the declaration alone. R107 says a declaration never contradicts the bytes, so `profileThe` hands `declaredType` only when it is not a text type the bytes failed (`declaredFor(ct)`, using acquisition's exported `profilesAsText`); non-text declared types (octet-stream, vnd.ms-excel) are handed as the amendment requires. `g41b-t51`'s last control (a 9 MiB `x.csv` declared octet-stream) is now `csv` and records the declaration as the uploader's, judged against R107 amended and format-registry R31: the text content type is still never overridden by a name (textTypeOf's rule), the format is decided by the name pass, as for the one-part file.
+
+**Found in another module (for BOB).** acquisition `profileOf`: `declared0 = declaredType || ct` lets a declared text type over bytes judged not text decide the format; capture guards it on its side (above). The guard could live in `profileOf` for every caller (a fetch passes `declaredType: ct`, the same value). Efficiency/robustness only.
+
+**Deferred.** Nothing. **Rows owed.** None (no sentence added).
+
+**Tests and checks.** capture suite 344/344; `cap13-reuse-pages`, `d57selflink` 2/2; users that drive the real upload: control-plane r100-upload 4, r131-gate 13, r72-parted 8; op-declarations t41 11; plane r8-heal-door 4, r8-headofline 3, r9-jobs 35; screens-inquiry fr5-document/question/reads/seam 7/2/3/3, g41-document 6; wizard-scripts t47 7: all green. `format` 0 failures; `architecture` 0; `coverage` 66 of 66, 0; `words` 0 failures (inline 0, plain 0, testcopy 0, missingkey 0); `ownership` 0 (4 files).
+
+**COMPLETE fields.** Cause: `uploadCapture` called `profileOf` without the file's name or declared type, so format-registry R31's name pass never ran for an upload. Why missed: capture's tests uploaded CSVs declared `text/csv` or named `.csv` with no type, never a CSV declared with a non-text type nor a `.tsv` as `text/plain`. Red first: `g170-t51` 3 of 6 red before acquisition's job 96 merged, green after. Platform check: none owed (no platform behaviour changed; the real-upload users above are green).
+
+Size (session_01Jx17YoKtyusq7GHL5JmPG7): test runs 9, module lines 4966
+
+## J35 · COMPLETE
+
+COMPLETE (CAPTURE #56, job 97, B35/B36; R107 amended, G170). The upload hands profileOf the file's name and declared type (declaredType); a declared text type over bytes judged not text is not handed, so a declaration never contradicts the bytes. Cause: no name/type reached format-registry R31's name pass. Why missed: tests only used text/csv or a .csv name with no type. Red first: g170-t51 3 of 6 red before acquisition job 96, green after. Platform check: none owed. g41b-t51's last control (9 MiB x.csv declared octet-stream) is now csv, judged against R107 and R31. Capture suite 344/344, real-upload users green; format, architecture, coverage (66/66), words, ownership 0 failures. For you: acquisition profileOf could guard 'declared text type over non-text bytes' for every caller (a fetch passes declaredType: ct). No rows owed. Size (session_01Jx17YoKtyusq7GHL5JmPG7): test runs 9, module lines 4966.
+
+## Fix round 9 · job 101 (CAPTURE #57, B37; R113 amended, G173, K5001)
+
+**Entries applied**
+1. R113 (G173): an upload sent in parts survives the object being taken out of memory between two parts. The running SHA-256 of the parts so far is kept with the upload's row (`parted_uploads.hash_state`, a few hundred characters: the eight words, the length and the bytes held back for the next block), written in the same transaction as the part that advanced it (`parts` and `hash_state` never disagree), and taken up again by `#liveOf(row)` in a new instance, at `putUploadPart` and at `completePartedUpload`. `UPLOAD_LOST` is answered only when the row cannot say the digest: no `hash_state` (an upload begun before this change) or one whose length is not the sum of the parts held. A new file `capture/sha256-resume.mjs` holds the resumable stream. The column is in the table's `CREATE` and in `CAPTURE_ADDITIVE_COLUMNS` (older stores gain it at boot, never back-filled). The ledger bound (one part) is unchanged; the row grows by about 300 bytes, far under SQLite's row bound.
+
+**Why a stream of my own.** `record-grammar`'s `createSha256` offers no state to save, and record-grammar is not mine. R2's open multipart parts cannot be read back, so "taken again from the parts held" is not available. `sha256-resume.mjs` is the same FIPS 180-4 compression with a `snapshot()`; its tests drive it against WebCrypto over the block and padding boundaries and across several saves, as record-grammar's own tests drive its stream. See the REPORT item below.
+
+**Tests (R113)**: `g127f-t51.test.mjs`: the old "restarted instance → UPLOAD_LOST" test is replaced by two (that is the requirement's change): a restarted instance accepts the next part, again between later parts, and completes to the declared digest, with the controls that a wrong part is still refused (`PART_DIGEST_MISMATCH`, nothing stored) and a wrong whole still aborts (`WHOLE_DIGEST_MISMATCH`, nothing held); and `UPLOAD_LOST` for a row with no digest or a digest that does not describe the parts held. New `sha256-resume.test.mjs` (3). `g127f-plane.test.mjs`: begin, part 0, a real 12 s pause in Miniflare over the real object, the answering object proven a different one (`inst` in the test Worker, `g127f-worker.mjs`), part 1 accepted, completion's digest the declared one, a wrong part still refused.
+**Red first (seen):** on the tranche tip's code the plane test answers `UPLOAD_LOST` at part 1 after the pause, and the two unit tests fail the same way.
+
+**Found in another module (for BOB).** (a) `record-grammar`'s `createSha256` could offer `snapshot()` and a restoring constructor; `capture/sha256-resume.mjs` would then be deleted (one SHA-256 implementation, its comment's rule). (b) `g127f-plane` test 1 (the idempotent re-put of a full 16 MiB part) is red now and then with `write ECONNRESET` (the diagnosis' P2, on `prep/load-reds`, whose test edit I was told not to merge): it failed 1 run in 3 here, with my change in and with it out; it also takes the other three tests of the file down with it, as the Miniflare instance is shared. Product side of P2 (a part put again or an unknown upload is answered before its body is read) is not part of this job and is left for BOB to place.
+
+**Deferred.** Nothing. **Rows owed.** None (no sentence added; the existing `UPLOAD_LOST` words stand).
+
+**Tests and checks.** capture suite 344/344 (the plane files alone: `g127f-plane` 4/4 green in 2 of 3 runs, the third the ECONNRESET above; `r7-upload-plane`, `g41b-plane`, `plane` 1/1 each); users that name the parted ops: affordances t36, screens-intake r9-parts, store-door dispatch, control-plane stamps, r72-declared-door, r72-parted: 60/60. `impact.mjs` names 98 modules because `index.mjs` carries `DECLARED_OPS` (a shared table); `DECLARED_OPS` is unchanged, so I ran the users that drive the changed code, above. `checks/run.mjs`: format 0, architecture 0, coverage 0 (6927 of 6927), channels 0, words 0 failures (inline 0, plain 0, testcopy 0). Ownership: 8 files changed by capture, 0 failures.
+
+**COMPLETE fields.** Cause: `putUploadPart` kept the running SHA-256 of the parts only in the object's memory (`#parted`), and workerd takes an object out of memory after about 10 s with no event, so a pause of 12 s between two parts answered `UPLOAD_LOST` and the member began again. Why missed: `g127f-plane` and `g127f-t51` sent parts back to back, and the only restart test asserted the loss as the intended behaviour. Red first: seen, above. Platform check: L, passed (Miniflare, real object, real R2 multipart, a real 12 s pause, the object proven replaced).
+
+Size (session_017HhDkwNt6ddjD3dPVU5hd5): test runs 9, module lines 5095
+
+## J36 · COMPLETE
+
+COMPLETE (CAPTURE #57, job 101, B37; R113 amended, G173). An upload sent in parts survives the object being taken out of memory: the digest of the parts so far is kept with the upload's row (hash_state, written with the part) and taken up again by a new instance; UPLOAD_LOST only when the row cannot say it. Red first and platform check L seen (Miniflare, real object replaced by a 12 s pause). Suite 344/344, checks 0 failures, ownership 0. For you, see my record: record-grammar could offer a digest state (capture carries sha256-resume.mjs until then); g127f-plane test 1 is intermittently red with ECONNRESET (diagnosis P2, not this change).
+
+## Fix round 9 · job 104 (CAPTURE #58, B38; R113 amended, G176, K5005)
+
+(B37, job 101, is merged; its work was already on the tranche tip, so B37 was read and nothing of it was redone.)
+
+**Entries applied**
+1. R113 (G176): `putUploadPart`'s `stop()` no longer cancels the body before it answers. An answer given without the part being kept (every refusal after the request carries a part: fence and argument refusals, unknown or not-open upload, `existed`, `PART_CONFLICT`, `PART_OUT_OF_ORDER`, `PART_IN_PROGRESS`, `PART_SIZE` by `declared`, `UPLOAD_LOST`) first reads and discards the body, and stops reading, cancelling, once more than the part size has been read (the row's `part_bytes` once the row is known, `PARTED_PART_BYTES` before it, the upper bound of any part). A body that cannot be read further is answered all the same. A body larger than the part size is cut at the part size, as before. Code: `capture/index.mjs` `putUploadPart` (`drainTo`, `drained`, `stop`), the read loop counting what it read.
+
+**Tests (R113)**
+- `g127f-plane.test.mjs` (platform check L, real Miniflare object and real R2): the re-put of a held 16 MiB part sent whole 20 times reads `existed` every time (control: other bytes at that index still `PART_CONFLICT`); a 16 MiB part sent whole 20 times after the abort reads `UPLOAD_UNKNOWN` every time; a 17 MiB body to a 16 MiB part is still cut (`PART_SIZE` 413 or the connection closed, nothing stored). LOAD-REDS' `unread()` is not merged; these full-body forms stand in its place.
+- `g127f-t51.test.mjs`: the control "a part declared another size is refused before one byte is read" is restated for the amended R113: the refusal is still given before the bytes are kept (nothing stored), and now its body is read whole (`pulled` 4, not cancelled); an out-of-order part's body is read whole; a body past the part size is cancelled before it is all pulled.
+
+**Red first (seen), then green.** Four copies of `g127f-plane.test.mjs` at once beside 3 CPU burners (L-PAR4; script in my scratchpad), before the change: `pass 2 fail 5`, `pass 1 fail 6`, `pass 1 fail 6`, `pass 5 fail 2` for the four copies, `fetch failed / write ECONNRESET` in the re-put and late-part tests (and, as the Miniflare instance is shared, the file's other tests taken down with them). After the change, three rounds of that setup: 12 of 12 copies `pass 7 fail 0`; the file alone `pass 7 fail 0`.
+
+**Found in another module (for BOB; not changed).** `control-plane`'s `test/m/control-plane/r72-parted.test.mjs` test "R72 (parted upload, part bound): a part whose declared length is over the part size is refused ... before a byte is read" asserts `pulled === 0` (line 156) on the body of a part whose `declared` is over the part size. R113 as amended says such an answer is given after the body is read and discarded, so that assertion contradicts the requirement and now fails (1 of 60 in the users' run). It is control-plane's test: its job restates it (the refusal and its `{size, bound}` stand; the body is read and discarded, `pulled` 1 for that stream, and a body past the part size is cut).
+
+**Deferred.** Nothing. **Rows owed.** None (no sentence added).
+
+**Tests and checks.** capture suite 344/344 non-platform (after restating g127f-t51's control), platform files alone: `g127f-plane` 7/7, `plane`, `g41b-plane`, `r7-upload-plane` 1/1 each. Users naming the parted ops: affordances t36, screens-intake r9-parts, store-door dispatch, control-plane stamps, r72-declared-door: green; r72-parted 1 red, the control-plane assertion above. `impact.mjs origin/tranche/T51 HEAD` names 98 modules because `index.mjs` carries the shared `DECLARED_OPS`, which is unchanged; I ran the users that drive the changed code. Checks (from the process repository, product /home/user/bio): format 0 failures, architecture 0, coverage 0 (66 of 66 live ids named), words 0 (inline 0, plain 0, testcopy 0, missingkey 0), ownership 0. Also seen, not mine: `node bio-plane/src/setup-words/build.mjs --check` reports `rows.mjs` stale at `content.extent-core.a_part_extent_names_neither` (a `content` word, nothing of capture's).
+
+**COMPLETE fields.** Cause: `stop()` cancelled the part's body before answering, so workerd closed the connection on the unread body and a client still writing got `write ECONNRESET` in place of the answer. Why missed: `g127f-plane` sent a body only to parts it kept, and its re-put and late-part cases did not run under load (diagnosis §2: 12 of 20 red only beside parallel copies and CPU burners). Red first: seen, above. Platform check: L, passed.
+
+Size (session_01FX1ovW6LH2kvYSQidSdP3i): test runs 16, module lines 5113
+
+## J37 · COMPLETE
+
+COMPLETE (CAPTURE #58, job 104, B38; R113 amended, G176). putUploadPart now reads and discards a part's body (at most the part size; a larger body is still cut there) before any answer that keeps nothing, so a client still sending reads the JSON answer, not ECONNRESET. Red first seen under L-PAR4 (4 copies + 3 burners: 2/7, 1/7, 1/7, 5/7 passing, ECONNRESET); green after, 12 of 12 copies 7/7 over three rounds. Platform check L passed. Capture suite 344/344; checks (format, architecture, coverage, words, ownership) 0 failures.
+FOR YOU: control-plane's test/m/control-plane/r72-parted.test.mjs line 156 asserts pulled === 0 for an over-size declared part; that contradicts the amended R113 and now fails (1 of 60 users). It is control-plane's to restate (see my record). Also seen, not mine: setup-words --check reports rows.mjs stale at content.extent-core.a_part_extent_names_neither.
+
+## J38 · COMPLETE
+
+**COMPLETE**, B39 (job 113, K5020; G180's second half; R114, amends R113). Commit `a031bf3aae` on `job/T51/capture`, merged with `tranche/T51` (`ba24dacd90`) first.
+
+**Entries applied**
+1. **Snapshot formats compared** (the check B39 asks for): `record-grammar`'s `createResumableSha256` (`sha256.mjs` `core().state()` and `parseSnapshot`) and `sha256-resume.mjs` write and accept the same string, `{"h":[eight unsigned words],"t":<bytes>,"b":"<held-back bytes, lowercase hex>"}`, with the same validity rules. A row's `hash_state` the former code wrote is taken up unchanged. Checked by a fixture: the former stream's snapshot after 70 of 100 bytes (written by the removed file before it was deleted) is taken up by the new stream, which finishes to the digest of the whole (`r114.test.mjs`, second test).
+2. **One difference, handled at the caller:** record-grammar's stream throws a `TypeError` on a state it did not write; capture's old one answered `null`. `index.mjs` now has `resumedOf(state)`, which answers `null` on that throw, so `#liveOf` still answers the digest lost and `UPLOAD_LOST` is answered as before (R113 unchanged).
+3. **Re-point:** `import` of `createResumableSha256` now comes from `../record-grammar/index.mjs` (the existing edge, merged into the import line already there); `sha256-resume.mjs` and `sha256-resume.test.mjs` are removed. Both are in `bio-plane/src/capture` and `bio-plane/test/m/capture`, capture's own paths.
+4. **Red first:** `r114.test.mjs` "no file of the module computes SHA-256 rounds" failed on the tip (`sha256-resume.mjs computes SHA-256 rounds`), and passes now.
+5. **Interrupted-and-resumed test** (R114, in `g127f-t51.test.mjs`): begin, parts 0 and 1, the row's `hash_state` taken up by record-grammar's stream (2000 bytes held), part 2 put by a restarted instance, completion's digest the declared one. The source-text check is the requirement's own test (R114 names it); no other test in the module reads source text.
+
+**Deferred:** none.
+
+**Found in other modules:** nothing new from this job.
+
+**Rows owed:** none (no sentence added or changed).
+
+**Tests and checks**
+- `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/capture/` (bio-plane): 352 tests, 352 pass, 0 fail.
+- `test/m/control-plane/r72-parted.test.mjs` (a user of R113): 8 pass, 0 fail.
+- `checks/format.mjs /home/user/bio`: 176 modules, 0 failures. `checks/architecture.mjs /home/user/bio capture`: 0 failures. `checks/coverage.mjs /home/user/bio capture`: 67 of 67 live ids named, 0 failures. `checks/words.mjs /home/user/bio capture`: 0 failures (missingkey 0, inline 0, testcopy 0). `checks/ownership.mjs /home/user/bio capture tranche/T51 job/T51/capture`: 6 files changed by capture, 0 failures.
+
+Size (session_012fgH9vTfzdHdBqQC1UfCpA): test runs 4, module lines 5011
+
+## J39 · COMPLETE
+
+**COMPLETE**, B40 (CAPTURE #60, fix round 10, Wave A batch 2). Merged `tranche/T51` first.
+
+**Cause R29 (R113 amended, K5056).** Root: `capture/index.mjs` DECLARED_OPS rows for the four parted ops had `classes: ["member"]` while `captureupload` is `["admin","member"]`, so the door refused the founder's `admin` session CLASS_FORBIDDEN. Fix: the four rows now `["admin","member"]` (`needs: contribute` and the member-session fence kept; `machineClasses` left as it was so an `ai` credential reaches the fence as before). Why tests missed it: no capture test read the rows' classes or drove the founder's stamp through a parted upload (control-plane's r72-parted drives the member and an `ai` credential only). Failing-first: `g127f-t51.test.mjs` "fix round 10, cause 29" (declared classes + founder stamp `admin` begin/2 parts/complete/abort, receipt names `admin`, machine stamp still refused), seen red on the classes assertion, green after. Platform P: `g127f-plane.test.mjs` same test under Miniflare over real R2 multipart (11 MiB, 5 MiB parts), 8/8. Platform L (the 84 MB TIFF of A11) is for the redeploy. R-PATH: all four ops covered; one-part and multi-part. R33 capture half: `archive.test.mjs` 60 held rows, limit 50: `truncated`, `next` returns exactly the other 10, no repeats (green; no defect on capture's side).
+
+**Fixtures published** (`bio-plane/test/m/capture/fixtures.mjs`, checked by `fixtures.test.mjs`, 7 tests): `acquireRefusal`, `storageNotConfigured`, `captureArm`, `heldActsUnreadable`, `heldSetAside`, `partRefusal`, `recordReuseVerdicts`.
+
+**Product/user findings for BOB (REPORT-worthy):** (1) the real render refusals are 429 (RENDER_DEFERRED, RENDER_HOST_COOLING_OFF) and 501 (RENDER_NO_RENDERER), not 409 as capture-requests' hand-built `renderRefusal` has them. (2) the real `setAside` answer names each document by `document` with `waiting: {questions, withheld}`, not `{id, waiting:[...]}` as screens-intake's held.test.mjs:156 builds it. (3) `partRefusal` gives the real 409 codes PART_CONFLICT, PART_OUT_OF_ORDER, UPLOAD_LOST and UPLOAD_UNKNOWN is 404, UPLOAD_EXPIRED 410. (4) control-plane's `r72-parted.test.mjs` needs the founder case (Wave B).
+
+**Own fixture lines:** provenance/holdsOf lines (fixture.mjs, g127f-t51, g127f-worker now over the REAL provenance, held, r9-t51 x4, upload) re-pointed to `provenance/fixtures.mjs`; record-core `evidencePartsRefusal` at r103-t51; CODE NO_ROOM/JOB_TABLE_FULL replaced by plane's JOB_NOT_KEPT. FIX-L lines carry `// fixtures-contract:` markers: `plane job-registrar` (g127f-t51, r9-t51), `plane keep-later` (r103-t51, r7-upload-t51), `answer-envelope door-helpers` (g27-reset.probe, g27-t51, ops, r6-t51, t35, trace, relays), `store-door store-replies` (relays). All 26 remaining lines in `checks/fixtures.mjs . capture` are `contract-no-run`, waiting for those providers' `fixtures-run`. Markers added: `fixtures-own: harness` g127f-worker.mjs:46 (the probe Worker's own UNKNOWN_COMMAND reply); no `fixtures-generic`.
+
+**Tests/checks:** capture module 355+ pass 0 fail (before fixtures.test: 355/355; fixtures.test 7/7, g127f-t51 25/25, g127f-plane 8/8, archive 10/10). Impact users (op-declarations, admission, control-plane, affordances, op-grades, screens-intake, store-door, plane r9-jobs): 1909 tests, 1907 pass; the 2 failures (op-grades g55 moneyingestread, owners "every op T33 publishes is graded") fail identically on `origin/tranche/T51`, not mine. format 0 failures; architecture 0; coverage 67/67; words 0; ownership 0.
+
+Size (session_0156pHGtfAvwRXABsnFAHq8o): test runs 14, module lines 5013
+
+## J40 · COMPLETE
+
+COMPLETE B40: R29 fixed (four parted ops admit admin+member; red-first test, Miniflare P green; L at redeploy), R33 capture half green, 7 fixtures published, own fixture lines re-pointed or marked; remaining 26 lines are contract-no-run (plane job-registrar/keep-later, answer-envelope door-helpers, store-door store-replies). Findings for users: real render refusals are 429/501 not 409; real setAside names documents by 'document' with waiting.{questions,withheld}. control-plane r72-parted needs the founder case. Details in my record J39.

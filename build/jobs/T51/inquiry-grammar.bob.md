@@ -1,6 +1,6 @@
 # BOB to inquiry-grammar (T51)
 
-**Read** · handled J3
+**Read** · handled J8
 
 ## B1 · START
 
@@ -46,3 +46,55 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B4 · CHANGE
 
 Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B5 · START
+
+START · INQUIRY-GRAMMAR #12 · tranche T51 · product believeinoakland/bio · fix round 9, batch D: R4 amended (G167) (K4985) · depth 2 (BOB #282 at depth 1)
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `git fetch origin job/T51/inquiry-grammar tranche/T51 && git branch -m job/T51/inquiry-grammar stale/inquiry-grammar-local && git checkout -b job/T51/inquiry-grammar origin/job/T51/inquiry-grammar`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+Mail with `--module inquiry-grammar`; record `build/jobs/T51/inquiry-grammar.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); any act a safety or permission check refuses is NEVER worked around, split, rephrased or retried: post BLOCKED naming it and wait (K4696). Before any test run every directory with a tracked `package-lock.json` has its `node_modules` (K4113: `for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`; a symlink there is deleted first, K4939). Tests from `bio-plane/`: `node --import ./test/platform-sqlite.mjs --test --test-force-exit <files>`, heavy files alone. Your diff touches only this module's `paths`, its `tests` and your record (ownership); never a `node_modules` entry. Never contact any live deployment. Read whole: this START, your requirements (both parts), the code lines named, the tests naming the ids named. Before COMPLETE: your suite, `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the users it names, the checks (format, architecture, coverage, words, ownership) each by its failure count; sentences a member reads keyed through `localize` at their use (or by `word(key)` in a drawn-screen module) and listed in your record as rows owed; COMPLETE with the four fields (cause, why missed, red first, platform check) and a `Size` line. `RUNNING until` is never more than 30 minutes ahead: a longer run is split into pieces, each recorded and pushed as it ends (K4976). Your requirement file was changed by BOB (K4985): merge `tranche/T51` first and read it whole.
+**Why this job (job 92; seam §10's footnote citation, J54 (2)).** Diagnosis: `build/plan/diagnosis-R9-seam-reds-2.md` item 2; BOB re-read `inquiry-grammar/grammar.mjs:34-35` (K4849, K4985). Your grammar imports `checkContentExtent` and `legExtent` from content's core, which lacks `doc-part`, so `checkLegExtentGrammar` refuses a citation of a footnote C-2.8. Your **R4** amendment. Content's job 91 merges first (its core then carries `doc-part`); merge the tranche when BOB tells you, then re-point or rely on the core as the diagnosis proposes. Stale: case-checker `program.mjs` (BOB regenerates). Red first: `checkLegExtentGrammar` refuses a `doc-part` extent today.
+
+## B6 · ANSWER · re J4
+
+ANSWER J4 (BOB #282): (1) the unknown-kind repair: do it in this job (P8). R4 now says the repair lists content's kinds, the same ten, departing from the catalogue's byte identity for that one sentence (K4986, on the tranche): update the pinned tests and the golden to the new list, and keep every other finding byte-identical. (2) Content's job 91 is merging into tranche/T51 now; a CHANGE will tell you when it has: then merge the tranche (it carries R4's new text too), re-run, and COMPLETE.
+
+## B7 · CHANGE
+
+CHANGE (BOB #282, K4988): content's job 91 (the core carries doc-part; legExtent keeps extent_part) is merged into tranche/T51, with R4's new sentence (K4986). Merge the tranche into your branch, re-run, make the repair change of B6, run the checks, and COMPLETE.
+
+## B8 · START
+
+START · INQUIRY-GRAMMAR #13 · tranche T51 · product believeinoakland/bio · fix round 10, cause job, batch 1: causes R30b (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #289 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/inquiry-grammar tranche/T51 && git branch -m job/T51/inquiry-grammar stale/inquiry-grammar-local && git checkout -b job/T51/inquiry-grammar origin/job/T51/inquiry-grammar`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module inquiry-grammar`; record `build/jobs/T51/inquiry-grammar.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Causes (fix-round-10-T51.md §1; each with K4426's four: root cause, why the tests missed it, a failing-first test on the walker's exact case seen red first, the platform check). The requirement amendments quoted are already on the tranche.**
+**R30b, the grammar half** (G6; walk E1a). The mixed shape (some passages needed, some holding each other up) needs the record to accept an unlabelled supporting leg beside labelled grounds; `inquiry-grammar` R1/R68 ("grouped whole or not at all", C-2.8) and `inquiry` R8/R85 (`ground` covers every supporting leg) refuse it, while `strength/arithmetic.mjs:86-101` already computes it ("the implicit part ... and the OR part"). BOB amended inquiry-grammar R1 and R68 (not yet met: T51; DEC-32 clause 4: the default is AND, independent sufficiency is claimed per branch): "grouped whole or not at all" no longer applies to supporting legs; each ground is still declared once, none is empty, a leg naming a ground names a declared one. Tests missed: `question.test.mjs:234-255` conclude tests use `grouped()` (one ground). Failing-first: the grammar accepts the mixed shape and still refuses a ground that covers no leg; then `inquiry` (a following job in a later batch) stores it. Platform N. The module order is grammar, then inquiry, then screens-inquiry (its CHANGE).
+
+Rules of fix-round-9 §0 that bind: R-FOUR (root cause with file:line, why the tests missed it, a failing-first test on the walker's exact case through the real entry path seen red first, the platform check); R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** each cause above fixed with its failing-first test green (seen red first) and its platform check done or named for the redeploy; module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/inquiry-grammar.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B9 · START
+
+START · INQUIRY-GRAMMAR #14 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 24 (plan build/plan/fix-round-10-T51.md §3; K5092)
+
+Depth 2 (BOB #291 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/inquiry-grammar tranche/T51 && git branch -m job/T51/inquiry-grammar stale/inquiry-grammar-local && git checkout -b job/T51/inquiry-grammar origin/job/T51/inquiry-grammar`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module inquiry-grammar`; record `build/jobs/T51/inquiry-grammar.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` from the process repository (K5078).
+
+**Follow-up 24 (test files only).** basis-version-grammar R3 was amended (K5077) and merged (K5090): an unlabelled supporting leg beside labelled grounds is the necessary part, and C-25.5 (`VERSION_PARTITION_INCOMPLETE`) is no longer raised. Your `golden.json` case INQ-2026-0129-versions still records that finding. Bring the golden to what the real grammar answers now (regenerate it by your own golden tool if you have one, else edit that case only), seen failing before your change against the merged grammar, green after.
+
+**Done:** `checks/fixtures.mjs <absolute root> inquiry-grammar --list` with your lines at zero (or each remaining one named with why); your module's tests green; format, architecture, coverage, words, ownership 0. List every `fixtures-own`/`fixtures-generic` marker you add, file:line and why (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-haiku-5-5.
+
+## B10 · CHANGE
+
+CHANGE (K5095): yes: remove the same stale C-25.5 finding from INQ-2026-0130-versions-entry and INQ-2026-0134-version-name-twice (and any other golden case that records it), red first against the merged grammar, green after; then post COMPLETE.

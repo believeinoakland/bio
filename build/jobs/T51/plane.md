@@ -1,6 +1,6 @@
 # plane (T51)
 
-**Status** · session_01Di3H5CJCeTUBedG79gEybu · depth 2 · COMPLETE · handled B86
+**Status** · session_01MuMF5vhSWNsf1HhrqP9yuH · depth 2 · COMPLETE · handled B89
 
 ## Record (PLANE #41, T51-125)
 
@@ -972,3 +972,50 @@ Size (session_01Di3H5CJCeTUBedG79gEybu): test runs 4, module lines 3752
 ## J59 · COMPLETE
 
 COMPLETE (PLANE #58, job 74, B87): R108 met. pendingadd takes project and writes detail.project (pending.mjs add and route); absent, empty or over 200 chars: none. Red first, 3 new tests green (r108-project). Affected suite (66 files, plane only): 445 tests, 444 pass, 1 fail: release R24 screen.objective.purpose (accepted red, words.json lacks the key). Checks: format 0, architecture 0, coverage 108/108, words 0, ownership 0. Control-plane's promoteFiled must pass project for the continuation case (diagnosis a). Record updated.
+
+## Record (PLANE #59, fix round 9 batch D, job 84; B88)
+
+**Entries applied**
+- R109 (G159): `registerJob` arranges the alarm after the commit (`Promise.resolve().then(arm)` on success, so it runs once the caller's synchronous transaction returned); a refused registration arms nothing; `armJobs` stays. Tests: `r9-jobs.test.mjs` "R109 …" (daily alarm hours ahead brought forward and the row runs in one tick; second row; refusal; inside `transactionSync`).
+- R110 (G165): readers of `reading` and `ocr` rows are handed `stampUnit(unit)` (`p<page>` or `c<cursor>`; only while the row runs); it writes that unit in flight and clears every other stamp, and `reapInterrupted` charges the kill to the stamped unit (else the cursor's, else `whole`). `halfBudgetPages` unchanged. Tests: a page 5 (not first, not in `detail`) killed three times ends `killedPages: [5]`, pages 0-4, 6-7 read, `whole` uncharged; control: whole read charged to `whole`, ends stated; a `fetch` is handed none.
+- R97 (G160): `heldOf` now writes `{kind, capture_sha, holder}` into `failed_why` from the answer's `detail`, its refusal's `detail` or its top level; `holder` null where none is named (D-15). The G127c test is re-pointed to the new shape; new test for null holder, top-level facts and a no-facts control.
+
+**Red first:** all new tests failed before the change (`q.stampUnit is not a function`, alarm not forward, `failed_why` lacked the facts).
+**Cause / why missed:** the registrar was synchronous and armed nothing; plane stamped `unitOf(row.detail)` so extraction's rows (`detail {}`) were always `whole`; the old kill test only killed a page named in `detail.next_page`.
+**Deferred:** none. **Rows owed:** none (no sentence added).
+**Found in other modules:** none new. `release` R24 and `l77-size` R77 stay red as BOB listed them. Acquisition's `oweOf` still never calls `armJobs`, now harmless (the plane arms itself).
+
+**Tests and checks**
+- Light plane files: tests 472, pass 470, fail 2 (`release` R24 words; R77 L gate: both inherited, not mine). r9-jobs alone: 35/35.
+- Heavy, alone: r8-heal-door 4/4, r7-contention 5/5, g54-l 6/6, g55-alarm-l 2/2 (platform check L, workerd), r9-memory 3/3. `g41-shape` and `g44-shape` not run (untouched by this change).
+- `impact.mjs origin/tranche/T51 HEAD`: affected modules 1 of 176 (plane); no other user named.
+- format 0 failures; architecture 0; coverage 110 of 110, 0; words (plane) 0; ownership 0.
+
+Size (session_01AWoVVqkqd48jwuoT2GtVPZ): test runs 9, module lines 2310
+
+## J60 · COMPLETE
+
+Job 84 done: R109 (registerJob arms after the commit), R110 (stampUnit; kill charged to the page), R97 failed_why {kind, capture_sha, holder}. Red first for each. Light suite 470/472 (release R24 and l77 R77, inherited); heavy alone green incl. L files; impact: plane only; format, architecture, coverage, words, ownership 0 failures. Record has the four fields and Size.
+
+## Record (PLANE #60, fix round 9 batch D, job 93; B90)
+
+**Entries applied**
+- R97 amended (G168, K4985): in `settle`, a `reading` row answered `{ok: true, read: false, why: "NO_HOME"}` goes through the new `wait` (backed off, `last_why` NO_HOME, `state` queued/partial, no `failed`, no `failed_why`); the `ocr` kind is unchanged (ends, `OCR_NOTHING_OWED`). A non-`ocr` row answered `READING_HELD` with `counters` keeps `written = MAX(row, answer)` and `skipped` alike, then `finish`; a held answer without `counters` ends as before. An owner's real failure is still counted (control test).
+- Tests (`r9-jobs.test.mjs`): "R97 NO_HOME …" (NO_HOME then READING_HELD counters 8 → finished, written 8, skipped 1, failed 0, due later after the first) and its control (MAX with a row at 5 vs answer 3; `{ok:false, why:"BROKEN"}` still `failed 1`).
+
+**Red first:** both new tests failed on `tranche/T51`'s `pending.mjs` (row `failed 1, written 0`); green after.
+**Cause:** `settle`'s last line sent a `reading` NO_HOME to `attempt` (counts a failure), and the finishing READING_HELD answer's counters were never read. **Why missed:** plane's tests stubbed `readHeld` and asserted `[kind, attempts]`, never counters. **Platform check:** seam §11 (L) once extraction's job 94 merges; no workerd behaviour here.
+**Deferred:** none. **Rows owed:** none (no sentence a member reads).
+**Found in other modules:** none.
+
+**Tests and checks**
+- Light plane files (77): tests 469, pass 467, fail 2, both inherited: `release` R24 (words.json lacks the key) and `l77-size` R77 L gate. r9-jobs alone: 37/37.
+- Heavy, alone: g54-sweep 5/5, g55-alarm-l 2/2, r7-contention 5/5, r8-heal-door 4/4, r9-memory 3/3; `g54-l` 5/6: "R87 G54 L publishedcase" fails identically on `tranche/T51`'s own `pending.mjs` (checked), so inherited and unrelated to this change (casefile sweep).
+- `impact.mjs origin/tranche/T51 HEAD`: 1 of 176 modules (plane), 66 test files; no other user named.
+- format 0 failures; architecture 0; coverage 110 of 110, 0; words (plane) 0; ownership 0.
+
+Size (session_01MuMF5vhSWNsf1HhrqP9yuH): test runs 9, module lines 3769
+
+## J61 · COMPLETE · re B90
+
+Job 93 done: R97 amended (G168). A reading row answered NO_HOME waits uncounted (no failure); READING_HELD with counters keeps written/skipped as MAX(row, answer), then finishes. Red first (2 new tests failed on the tranche's pending.mjs), green after. Light suite 467/469 (release R24 words, l77 R77 L: inherited); heavy alone green except g54-l R87 publishedcase, which fails identically on the tranche's own pending.mjs (inherited). Impact: plane only. format, architecture, coverage 110/110, words, ownership: 0 failures. Cause: settle sent reading NO_HOME to attempt and never read READING_HELD counters; missed: tests asserted [kind, attempts], not counters. Platform check L: seam section 11 once extraction job 94 merges. Record has Size.

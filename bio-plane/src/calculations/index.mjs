@@ -43,11 +43,12 @@ import { TABLE_MAX_BYTES, TABLE_MAX_CELLS, MONEY_ROLES, scanCsv, shaOf, schemaFa
   vintageFault, tableBuilder, textTable } from "./tables.mjs";
 import { PATTERNS, GATE_MAX_RATE, runPattern } from "./patterns.mjs";
 import { defaultRegistry } from "../connection-grammar/index.mjs";
-import { delimiterSignature } from "../csv-reader/index.mjs";
+import { delimiterSignature, encodingSignature } from "../csv-reader/index.mjs";
 import { statement } from "../read-bounds.mjs";
 import { USES_FIELDS, USES_HEADER, NONE_HELD, tieOf, foldReason, APPLICATION_RECIPES, APPLICATION_KINDS, composeApplication,
   answerApplication } from "./application.mjs";
 import { word, localize } from "../setup-words/index.mjs";
+import { readAmount, fiscalKeyOf } from "./money-cells.mjs";
 
 export { CALCULATIONS_SCHEMA, CALCULATIONS_TABLES } from "./schema.mjs";
 export { ROLES, MONEY_ROLES, KEY_ROLES, ROSTER_ROLES, CROSSWALK_ROLES, TABLE_MAX_BYTES, TABLE_MAX_CELLS, parseCsv,
@@ -217,7 +218,8 @@ function moneyPeriod(v) {
   const t = typeof v === "string" ? v.trim() : "";
   const m = /^(\d{4}-\d{2}-\d{2})\s*\/\s*(\d{4}-\d{2}-\d{2})?$/.exec(t);
   if (m) return { from: m[1], to: m[2] ?? null, precision: "day" };
-  return t ? { fiscal: t } : null;
+  const fy = fiscalKeyOf(t);   /* R49: a fiscal-year label names its year */
+  return fy ? { fiscal: fy.key } : t ? { fiscal: t } : null;
 }
 
 const partyEntity = (p) => (plain(p) ? (p.entity ?? null) : null);
@@ -331,6 +333,14 @@ function extentBox(row) {
 function delimiterWindow(text) {
   const s = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
   return s.length > DELIMITER_WINDOW_CHARS ? s.slice(0, DELIMITER_WINDOW_CHARS) : s.endsWith("\n") ? s : `${s}\n`;
+}
+
+/* R45 (fix round 10, cause 19): a reading's own text of a spreadsheet or an ODS is its cells joined by a tab (`odf.mjs`, `formats-xlsx.mjs`), so
+   the tab is its delimiter whatever commas its cells hold ($69,268.31): a tab on the majority of the window's lines. */
+function tabJoined(window) {
+  let lines = 0, tabbed = 0;
+  for (const l of window.split("\n")) { if (l.trim() === "") continue; lines++; if (l.includes("\t")) tabbed++; }
+  return tabbed > 0 && tabbed * 2 > lines;
 }
 
 export class Calculations {
@@ -536,7 +546,7 @@ export class Calculations {
   }
 
   /* R1: the source's rows: a sheet range's typed cells, a passage's text read as CSV, or a whole document's bytes. */
-  async #sourceRows(row) {
+  async #sourceRows(row, names = null) {
     if (row.extent_kind === "sheet-range" || row.extent_kind === "sheet-cell") {
       /* R1 (G123f): the range is read window after window to its end (`#readCells`); a range that cannot be finished is refused, never a short table.
          R45 (G131d): the cells are folded as they arrive into rows by their address, then the rows are made over the whole box the range names
@@ -563,24 +573,43 @@ export class Calculations {
         : word("calculations.range_cells_held", { got: String(read.got) }) };
       const box = extentBox(row);
       const r0 = Math.min(box ? box.r0 : Infinity, minRow), c0 = Math.min(box ? box.c0 : Infinity, minCol);
+      const cellAt = (r, c) => { const m = byRow.get(r); return m ? m.get(c) ?? "" : ""; };
+      /* R47 (G182): the header row is found by the declared names: the first row of the range that holds some cell and holds every declared name
+         once; the columns are then the named ones, so an empty leading column or an unnamed one shifts nothing, and a value in an unnamed
+         column is handed on past the header's width (the builder refuses it). With no such row the range is read over its whole box, as R45. */
+      let top = null, cols = null;
+      const hit = (r, name) => { const h = []; for (let c = c0; c <= maxCol; c++) if (cellAt(r, c).trim() === name) h.push(c); return h; };
+      for (let r = r0; r <= maxRow && cols === null; r++) {
+        if (!byRow.has(r)) continue;
+        if (top === null && [...byRow.get(r).values()].some((v) => v.trim() !== "")) top = r;
+        if (!names) continue;
+        const found = names.map((n) => hit(r, n));
+        if (found.every((h) => h.length === 1) && new Set(found.flat()).size === names.length) { cols = found.map((h) => h[0]); top = r; }
+      }
+      const named = cols ? new Set(cols) : null;
+      let dataFrom = r0, headerRow = null;
+      if (cols) { dataFrom = top + 1; headerRow = top; }
+      else if (top !== null && names && names.length === maxCol - c0 + 1 && names.every((h, k) => cellAt(top, c0 + k).trim() === h)) { dataFrom = top + 1; headerRow = top; }
       function* rows() {
-        for (let r = r0; r <= maxRow; r++) {
-          const m = byRow.get(r);
-          const out = new Array(maxCol - c0 + 1);
-          for (let k = 0; k < out.length; k++) out[k] = m ? m.get(c0 + k) ?? "" : "";
+        for (let r = dataFrom; r <= maxRow; r++) {
+          const out = cols ? cols.map((c) => cellAt(r, c)) : new Array(maxCol - c0 + 1);
+          if (!cols) for (let k = 0; k < out.length; k++) out[k] = cellAt(r, c0 + k);
+          else for (let c = c0; c <= maxCol; c++) if (!named.has(c) && cellAt(r, c).trim() !== "") out.push(cellAt(r, c));
           yield out;
         }
       }
       /* R9: a range any of whose cells is a formula holds values a third-party engine computed */
-      return { rows: held ? rows() : [], bytes: null, engine: formula ? { name: FILE_ENGINE, version: null } : null };
+      return { rows: held ? rows() : [], bytes: null, engine: formula ? { name: FILE_ENGINE, version: null } : null, sheet: { header_row: headerRow, first_row: dataFrom }, headerSeen: headerRow !== null };
     }
     /* G101 (R44): a CSV document is the file's own stored bytes, never the reading's index (blocks that repeat the header, caps), so the
        table's sha is the file's: a CSV whose bytes are not held is refused, stated, never made from the index. */
     const csv = row.extent_kind === "document" && this.#isCsv(row.capture_sha);
     let text = null;
     if (!csv) { try { text = this.content.passageText(row.content_id); } catch { text = null; } }
+    const own = typeof text === "string";   /* the reading's own text, not the file's bytes (R45, cause 19) */
     if (typeof text !== "string" && row.extent_kind === "document") {
       const stored = await this.#storedText(row.capture_sha);
+      if (stored.tooLarge) return { tooLarge: stored.tooLarge };
       if (stored.transient)
         return { transient: true, fault: localize("calculations.index.the_files_own_bytes_could", "the file's own bytes could not be read just now, and the file is held; ask again in a moment") };
       text = stored.text;
@@ -588,7 +617,7 @@ export class Calculations {
     if (typeof text !== "string")
       return { fault: csv ? localize("calculations.index.the_csv_files_own_bytes", "the CSV file's own bytes are not held, and a table is made from the file, never from the index of its reading") : word("calculations.source_text_held") };
     if (text.length > TABLE_MAX_BYTES * 2) return { tooLarge: { bound: "bytes", max: TABLE_MAX_BYTES, got: text.length } };
-    return { text };
+    return { text, own };
   }
 
   /* R1 (R44; fix round 9, G131d follow-up, K4850): a document's stored bytes as text. `{text}`; `{text: null}` for a file that is not held (the store
@@ -600,6 +629,10 @@ export class Calculations {
     if (!ev) return { text: null };
     const log = (line) => { try { console.log(JSON.stringify({ event: "table_source_read", module: "calculations", sha: captureSha, ...line })); } catch { /* a log changes nothing */ } };
     log({ phase: "start" });
+    /* R48 (G182; S-29): the size is judged before the bytes are loaded: the store's head (R2's, with its size), then the object's own size; a file
+       over twice the table's bytes bound is refused with its size and the bound, its body never read */
+    const over = (size) => (Number.isFinite(size) && size > TABLE_MAX_BYTES * 2 ? { text: null, tooLarge: { bound: "bytes", max: TABLE_MAX_BYTES, got: size } } : null);
+    try { const h = typeof ev.head === "function" ? await ev.head(captureSha) : null; const o = over(h && h.size); if (o) { log({ phase: "end", outcome: "too_large", bytes: h.size }); return o; } } catch { /* the head is asked again below when the read finds nothing */ }
     let obj = null;
     try { obj = await ev.get(captureSha); }
     catch (e) { log({ phase: "end", outcome: "thrown", error: String((e && e.name) || "Error").slice(0, 80) }); return { text: null, transient: true }; }
@@ -610,8 +643,20 @@ export class Calculations {
       log({ phase: "end", outcome: held ? "null_but_held" : "null_not_held" });
       return held ? { text: null, transient: true } : { text: null };
     }
+    const big = over(obj.size);
+    if (big) { log({ phase: "end", outcome: "too_large", bytes: obj.size }); return big; }
     try {
-      const text = typeof obj.text === "function" ? await obj.text() : new TextDecoder().decode(await obj.arrayBuffer());
+      /* R48: decoded by the document's own encoding: the charset its stored type states, else the one its bytes show (csv-reader's signature),
+         never UTF-8 alone */
+      let text;
+      if (typeof obj.arrayBuffer === "function") {
+        const bytes = new Uint8Array(await obj.arrayBuffer());
+        const stated = /charset\s*=\s*"?([A-Za-z0-9._:-]+)/i.exec(String((obj.httpMetadata && obj.httpMetadata.contentType) || ""));
+        const label = stated ? stated[1] : (encodingSignature(bytes).encoding || "utf-8");
+        let dec;
+        try { dec = new TextDecoder(/^us-ascii$/i.test(label) ? "utf-8" : label); } catch { dec = new TextDecoder("utf-8"); }
+        text = dec.decode(bytes);
+      } else text = await obj.text();
       log({ phase: "end", outcome: "read", chars: text.length });
       return { text };
     } catch (e) { log({ phase: "end", outcome: "thrown", error: String((e && e.name) || "Error").slice(0, 80) }); return { text: null, transient: true }; }
@@ -646,16 +691,22 @@ export class Calculations {
       if (!has("crosswalk_from", r.crosswalk.from) || !has("crosswalk_to", r.crosswalk.to))
         return no("BAD_SCHEMA", `the crosswalk "${col}" names is not a declared crosswalk with those two ends. Nothing was written.`, { field: col });
     }
-    const src = await this.#sourceRows(row);
+    const src = await this.#sourceRows(row, names);
     if (src.tooLarge) return this.#tooLarge(src.tooLarge);
     if (src.fault) return no("SOURCE_NOT_READ", `${src.fault}. Nothing was written.`, { content_id: contentId, ...(src.transient ? { transient: true } : {}) });
-    const tb = tableBuilder(names, schema.fields);
+    const tb = tableBuilder(names, schema.fields, { headerSeen: !!src.headerSeen });
     if (src.rows) for (const r of src.rows) tb.push(r);
     else {
       /* G64 (R1): the delimiter is the document's own reader's (csv-reader's signature over the head of the text): a comma, semicolon, tab
          or pipe; none found reads as a comma, as before. The canonical bytes stay comma RFC 4180, so one table has one sha. */
-      const sig = delimiterSignature(delimiterWindow(src.text));
-      const delimiter = sig.delimiter || ",";
+      const win = delimiterWindow(src.text);
+      const sig = delimiterSignature(win);
+      /* R45 (cause 19): a reading's own tab-joined text is cut at tabs; any other text whose delimiter is tied is refused, never read as a comma */
+      const tab = src.own && tabJoined(win);
+      if (!tab && !sig.delimiter && sig.undetermined === "delimiter_undetermined_tied" && names.length > 1)
+        return no("SOURCE_NOT_READ", localize("calculations.index.the_delimiter_is_tied", "the source's delimiter could not be told ({tied} fit its lines equally), so it is not read as a table. Nothing was written.", { tied: sig.tied.join(", ") }),
+          { content_id: contentId, delimiter: null, tied: sig.tied, columns_expected: names.length });
+      const delimiter = tab ? "\t" : sig.delimiter || ",";
       let widest = 0;
       const sc = scanCsv(src.text, (r) => { if (r.length > widest) widest = r.length; tb.push(r); }, delimiter);
       src.text = null;
@@ -682,12 +733,10 @@ export class Calculations {
       this.sql.exec(`INSERT INTO calc_tables (sha, bundle_id, source_json, schema_json, header_json, roles_json, vintage_key,
                        vintage_json, superseded_by, rows, bytes, undetermined_json, undetermined_count, declared_by, declared_at)
                      VALUES (?,?,?,?,?,?,?,?,NULL,?,?,?,?,?,?)`,
-        tableSha, row.bundle_id ?? null, json({ content_id: contentId, capture_sha: row.capture_sha, extent_kind: row.extent_kind, engine: src.engine ?? null }),
+        tableSha, row.bundle_id ?? null, json({ content_id: contentId, capture_sha: row.capture_sha, extent_kind: row.extent_kind, engine: src.engine ?? null, ...(src.sheet ? src.sheet : {}) }),
         json(schema), json(names), roles ? json(roles) : null, vintage ? vintage.key.trim() : null, vintage ? json(vintage) : null,
         built.rows, bytes.byteLength, json(built.undetermined), built.count, by, at);
-      const text = new TextDecoder().decode(bytes);
-      for (let k = 0, i = 0; i < text.length; k++, i += TEXT_CHUNK)
-        this.sql.exec(`INSERT INTO calc_table_bytes (sha, seq, bundle_id, chunk) VALUES (?,?,?,?)`, tableSha, k, row.bundle_id ?? null, text.slice(i, i + TEXT_CHUNK));
+      this.#putChunks(tableSha, row.bundle_id ?? null, bytes);
       if (superseded) {
         this.sql.exec(`UPDATE calc_tables SET superseded_by=? WHERE sha=? AND superseded_by IS NULL`, tableSha, superseded);
         this.#stale(superseded, "table_superseded");
@@ -706,6 +755,18 @@ export class Calculations {
       ? localize("calculations.index.table_over_cells_bound", "the table holds {size} cells, over the bound of {bound} cells. Nothing was written.", { size: String(st.size), bound: String(st.bound) })
       : localize("calculations.index.table_over_bytes_bound", "the table is {size} bytes, over the bound of {bound} bytes. Nothing was written.", { size: String(st.size), bound: String(st.bound) });
     return no("TABLE_TOO_LARGE", text, { bound: bound === "cells" ? "cells" : "bytes", max: st.bound, size: st.size, bound_key: st.key });
+  }
+
+  /* R48: the record's chunked copy of a table's canonical bytes, decoded a piece at a time (a piece at most TEXT_CHUNK bytes, so at most that many
+     characters), never the whole text at once; `#heldTableSync` joins the pieces in order. */
+  #putChunks(tableSha, bundleId, bytes) {
+    const dec = new TextDecoder();
+    for (let i = 0, k = 0; i < bytes.byteLength; i += TEXT_CHUNK) {
+      const end = Math.min(bytes.byteLength, i + TEXT_CHUNK);
+      const piece = dec.decode(bytes.subarray(i, end), { stream: end < bytes.byteLength });
+      if (piece === "") continue;
+      this.sql.exec(`INSERT INTO calc_table_bytes (sha, seq, bundle_id, chunk) VALUES (?,?,?,?)`, tableSha, k++, bundleId, piece);
+    }
   }
 
   #tableAnswer(r) {
@@ -754,9 +815,10 @@ export class Calculations {
     return this.#fromText(tableSha, text);
   }
 
-  /** R1: `readTable({sha, viewer, limit?, after?})`: the table's declaration and a page of its rows. A table whose
-   *  source the viewer may not see answers as an absent one. */
-  async readTable({ sha: tableSha = null, viewer = null, limit = 100, after = 0 } = {}) {
+  /** R1, R48: `readTable({sha, viewer, limit?, after?, rows?})`: the table's declaration and a page of its rows, only that page read (the rest of its
+   *  text is scanned past, never built into rows). `table.rows` holds the page's rows as objects; `rows: "all"` asks for every row there, as a caller
+   *  that binds the whole table (`workbooks`) does. A table whose source the viewer may not see answers as an absent one. */
+  async readTable({ sha: tableSha = null, viewer = null, limit = 100, after = 0, rows: want = null } = {}) {
     if (!str(tableSha)) return no("NO_TABLE", "a table is read by its sha256.");
     const r = this.#one(`SELECT * FROM calc_tables WHERE sha=?`, str(tableSha));
     if (!r || !this.#seesTable(r, viewer)) return { ok: true, found: false, sha: str(tableSha) };
@@ -764,7 +826,9 @@ export class Calculations {
     const from = Math.max(0, Number.isInteger(Number(after)) ? Number(after) : 0);
     const t = await this.#heldTable(r.sha);
     const header = parse(r.header_json);
-    const rows = t ? [...t.objects()].map((x) => Object.fromEntries(header.map((h) => [h, String(x[h] ?? "")]))) : null;
+    const all = want === "all";
+    const asked = t ? (all ? t.page(0, Number.MAX_SAFE_INTEGER) : t.page(from, lim)) : null;
+    const rows = asked ? (all ? asked : asked).map((row) => Object.fromEntries(header.map((h, k) => [h, row[k]]))) : null;
     const src = parse(r.source_json);
     const crow = src ? this.content.contentRow(src.content_id) : null;
     let cg = null;
@@ -775,8 +839,7 @@ export class Calculations {
       table: { sha: r.sha, fields: parse(r.schema_json).fields, rows,
         grade_facts: { capture_grade: cg && isGrade(cg.grade) ? cg.grade : null, derivation: crow && isGrade(crow.derivation_cap) ? crow.derivation_cap : null,
           grade: g.grade, why: g.why, engine: g.engine, engine_measured: g.engine_measured, ...(g.derivation_step ? { derivation_step: g.derivation_step } : {}) } },
-      page: t ? { after: from, limit: lim, rows: rows.slice(from, from + lim).map((x) => header.map((h) => x[h])),
-        truncated: from + lim < rows.length } : { rows: null, why: word("calculations.why.table_bytes_held") } };
+      page: t ? { after: from, limit: lim, rows: all ? asked.slice(from, from + lim) : asked, truncated: from + lim < r.rows } : { rows: null, why: word("calculations.why.table_bytes_held") } };
   }
 
   /** R3: `tablesAt({key, at, viewer})`: the vintage under `key` valid at `at` (`civil-time.validAt`), or undetermined
@@ -1806,7 +1869,7 @@ export class Calculations {
 
   /* R14: what one row asks of money, or why it is not written: `{notWritten}` or `{fact}` (a fact money has not yet recorded). */
   #judgeRow(ctx, i, row, ingest = null) {
-    const { b, roles, declared, resolved } = ctx;
+    const { b, roles, declared, resolved } = ctx;   /* ctx.firstRow: R47 */
     const val = (r, role) => (typeof roles[role] === "string" ? String(r[roles[role]] ?? "").trim() : roles[role] ? roles[role].value : null);
     const payer = this.#resolveParty(declared[roles.payer] || {}, row[roles.payer], resolved);
     if (!payer.entity) return { notWritten: { row: i, reason: "PAYER_NOT_IDENTIFIED", detail: payer.why } };
@@ -1822,9 +1885,10 @@ export class Calculations {
       fund = r.entity;
     }
     const asRead = String(row[roles.amount] ?? "");
-    const f = parseFigure(asRead);
-    if (f.refused) return { notWritten: { row: i, reason: "AMOUNT_NOT_READ", detail: f.why } };
-    const currency = val(row, "currency") || f.currency || null;
+    const read = readAmount(asRead, { locale: ctx.locale });
+    if (read.refused) return { notWritten: { row: i, reason: read.refused, detail: read.detail } };
+    const f = read.figure;
+    const currency = f.currency || val(row, "currency") || null;   /* R49: a currency mark in the cell wins over its column's */
     const unsigned = (d) => String(d).replace(/^-/, "");
     const range = f.precision === "range" ? (f.sign === "-" ? { low: unsigned(f.high), high: unsigned(f.low) } : { low: f.low, high: f.high }) : null;
     return { fact: { amount: range || f.value, as_read: asRead, currency, sign: f.sign, precision: f.precision,
@@ -1833,12 +1897,19 @@ export class Calculations {
       from: { entity: payer.entity, as_written: String(row[roles.payer]), ...(fund ? { fund } : {}),
         ...(roles.account ? { account: val(row, "account") } : {}) },
       to: { entity: payee.entity, as_written: String(row[roles.payee]) },
-      source: { table: b.table_sha, row: i, binding: b.binding_key, ...(ingest ? { ingest } : {}) }, method: INGEST_METHOD, by: INGEST_STAMP } };
+      source: { table: b.table_sha, row: ctx.firstRow === null ? i : ctx.firstRow + i, binding: b.binding_key, ...(ingest ? { ingest } : {}) }, method: INGEST_METHOD, by: INGEST_STAMP } };
   }
 
   #ingestCtx(b) {
-    const t = this.#one(`SELECT roles_json FROM calc_tables WHERE sha=?`, b.table_sha);
-    return { b, roles: parse(b.roles_json), declared: parse(t && t.roles_json) || {}, resolved: new Map() };   /* resolved: this act's (or slice's) cache */
+    const t = this.#one(`SELECT roles_json, source_json, schema_json FROM calc_tables WHERE sha=?`, b.table_sha);
+    /* R47: a table made from a sheet range cites the sheet's own row: the row its first data row stood in, plus the table row */
+    const src = parse(t && t.source_json) || {};
+    const firstRow = (src.extent_kind === "sheet-range" || src.extent_kind === "sheet-cell") && Number.isInteger(src.first_row) ? src.first_row : null;
+    /* R49: the amount column's stated locale (the member's, on its Table Schema field), else the team's (the active profile's) */
+    const field = (parse(t && t.schema_json) || { fields: [] }).fields.find((f) => f.name === parse(b.roles_json).amount);
+    const view = this.#view();
+    const locale = field && typeof field.locale === "string" ? field.locale : view && view.locale && typeof view.locale.value === "string" ? view.locale.value : null;
+    return { b, roles: parse(b.roles_json), declared: parse(t && t.roles_json) || {}, resolved: new Map(), firstRow, locale };   /* resolved: this act's (or slice's) cache */
   }
 
   /** R14: `ingestMoney({binding, rows, reason?, by})`: money facts written through `money.recordFact`, machine-attributed,
@@ -2425,9 +2496,7 @@ export class Calculations {
                      VALUES (?,?,?,?,?,NULL,NULL,NULL,NULL,?,?,?,?,?,?)`,
         built.sha, bundle, json({ kind: "uses", filter, frozen_by: by, frozen_at: at }), json({ fields: USES_FIELDS }), json(USES_HEADER),
         built.rows, built.bytes.byteLength, json(built.undetermined), built.count, by, at);
-      const text = new TextDecoder().decode(built.bytes);
-      for (let k = 0, i = 0; i < text.length; k++, i += TEXT_CHUNK)
-        this.sql.exec(`INSERT INTO calc_table_bytes (sha, seq, bundle_id, chunk) VALUES (?,?,?,?)`, built.sha, k, bundle, text.slice(i, i + TEXT_CHUNK));
+      this.#putChunks(built.sha, bundle, built.bytes);
       this.sql.exec(`INSERT INTO calc_uses (sha, project, filter_json, ids_json, n, frozen_by, frozen_at) VALUES (?,?,?,?,?,?,?)`,
         built.sha, bundle, json(filter), json(ids), ids.length, by, at);
       return { ok: true };

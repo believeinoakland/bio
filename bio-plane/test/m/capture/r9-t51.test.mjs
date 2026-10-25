@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import { fresh, bucket, sha } from "./fixture.mjs";
 import { provenance as acquisitionProvenance } from "../acquisition/fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
+// fixtures-contract: plane job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 import { byteLedger, PLATFORM_FIGURES } from "../../../src/byte-ledger.mjs";
 import { acquisitionOf, CAPTURE_MAX, MULTIPART_KEEP_MAX } from "../../../src/acquisition/index.mjs";
@@ -17,6 +18,7 @@ import { captureObjectOp } from "../../../src/capture/ops.mjs";
 import { statement as boundStatement, boundOf } from "../../../src/read-bounds.mjs";
 import { HELD_AT_CHECK_MAX } from "../../../src/capture/index.mjs";
 import { LARGE_FETCH_BYTES } from "../../../src/acquisition/index.mjs";
+import { holdsWorld } from "../provenance/fixtures.mjs";
 
 const MiB = 1024 * 1024;
 const PART = 8 * MiB;
@@ -53,6 +55,7 @@ const setup = () => {
    transaction (a throw or a refusal rolls its rows back as it rolls back the SQL rows) */
 const registrar = (w) => {
   const j = jobRegistrarStub();
+  // fixtures-contract: plane job-registrar
   w.c.registerJob = j.registerJob;
   w.c.armJobs = j.armJobs;
   const real = w.core.transact.bind(w.core);
@@ -99,7 +102,8 @@ test("R108 (control and the second member): a one-part upload is unchanged, and 
   assert.deepEqual([one.capture.sha256, "parts" in one.document], [sha(small), false], "one part is its own whole, as before");
   const big = varied(9 * MiB, 5);
   const a = await up(w.c, big, { by: "m1" });
-  w.c.provenance.registerHolds = ({ sha: x }) => ({ ok: true, sha: x, asked: true, registered: x === sha(big), acquired: x === sha(big) });
+  const holdsBig = holdsWorld({ [sha(big)]: { registered: true, acquired: true } });
+  w.c.provenance.registerHolds = (a) => holdsBig.registerHolds(a);
   const b = await up(w.c, big, { by: "m2", statement: "my own copy" });
   assert.deepEqual([a.capture.sha256, b.capture.sha256, b.existed], [sha(big), sha(big), true]);
   const seen = w.c.provenance.receipts.filter((x) => x.captureSha !== sha(small)).map((x) => x.captureSha);
@@ -116,7 +120,8 @@ test("R109 (G126, K4835 (2)): an upload registers its `reading` row through the 
   assert.deepEqual(j.rows().map((x) => [x.kind, x.sha, x.state]), [["reading", sha(big), "queued"]]);
   assert.equal(j.rows()[0].carrier, `snapshots/upload-${sha(big)}`);
   assert.equal(j.armed(), true, "armed after the commit");
-  w.c.provenance.registerHolds = ({ sha: x }) => ({ ok: true, sha: x, asked: true, registered: true, acquired: true });
+  const holdsBig = holdsWorld({ [sha(big)]: { registered: true, acquired: true } });
+  w.c.provenance.registerHolds = (a) => holdsBig.registerHolds(a);
   const again = await up(w.c, big, { by: "m2", statement: "forwarded to me" });
   assert.equal(again.existed, true);
   assert.deepEqual(j.rows().map((x) => [x.kind, x.sha]), [["reading", sha(big)]], "one row after the second upload");
@@ -134,6 +139,7 @@ test("R109: a registrar that is the options', not the store's, is read as keepLa
   const r = await up(w.c, te.encode("by options"), { registerJob: mine.registerJob, armJobs: mine.armJobs });
   assert.equal(r.ok, true);
   assert.equal(mine.rows().length, 1, "the options' registrar was used when the store has none");
+  // fixtures-contract: plane job-registrar
   w.c.registerJob = theirs.registerJob;
   assert.equal((await up(w.c, te.encode("by the store"), { registerJob: mine.registerJob })).ok, true);
   assert.deepEqual([theirs.rows().length, mine.rows().length], [1, 1], "the store's was preferred");
@@ -155,11 +161,12 @@ test("R109 (a kill between the put and the transaction): the parts are stored fi
   assert.deepEqual(j.rows().map((x) => [x.kind, x.sha]), [["reading", sha(big)]], "the retry leaves exactly one row");
   /* a refusing registrar */
   const v = setup();
-  v.c.registerJob = () => ({ ok: false, reason: "JOB_TABLE_FULL" });
+  // fixtures-contract: plane job-registrar
+  v.c.registerJob = () => ({ ok: false, reason: "JOB_NOT_KEPT" });
   v.c.armJobs = async () => { throw new Error("armed though refused"); };
   const t0 = tables(v);
   const r = await up(v.c, te.encode("refused by the registrar"));
-  assert.deepEqual([r.ok, r.reason, r.status, r.job], [false, "JOB_NOT_REGISTERED", 502, { kind: "reading", reason: "JOB_TABLE_FULL" }]);
+  assert.deepEqual([r.ok, r.reason, r.status, r.job], [false, "JOB_NOT_REGISTERED", 502, { kind: "reading", reason: "JOB_NOT_KEPT" }]);
   assert.equal(typeof r.detail, "string");
   assert.deepEqual(tables(v), t0, "no receipt, no actor, nothing written");
   /* a registrar that throws is a refusal too, never swallowed */
@@ -237,7 +244,8 @@ test("R110 (G126f, X3; DOCS A1, A12): an uploaded ZIP of three text members regi
   assert.ok(list.entries.length === 3 && list.entries.every((e) => e.state !== "waiting"), "no entry waits for ever");
   assert.deepEqual(opened.documents.map((d) => d.capture.method).every(Boolean), true);
   /* the same archive uploaded again: one row, and opening it again files nothing twice */
-  w.c.provenance.registerHolds = ((orig) => (a) => ({ ...orig(a), registered: a.sha === sha(z) ? true : orig(a).registered }))(w.c.provenance.registerHolds.bind(w.c.provenance));
+  const holdsZ = holdsWorld({ [sha(z)]: { registered: true, acquired: true } });
+  w.c.provenance.registerHolds = (a) => holdsZ.registerHolds(a);
   const again = await up(w.c, z, { by: "m2", statement: "my copy" });
   assert.equal(again.existed, true);
   assert.equal(j.rows().filter((x) => x.kind === "unpack").length, 1, "one unpack row for one whole sha");
@@ -251,7 +259,8 @@ test("R110 (control): an upload that is not an archive registers no `unpack` row
   assert.equal((await up(w.c, te.encode("plain text, not a zip"))).ok, true);
   assert.deepEqual(j.rows().map((x) => x.kind), ["reading"]);
   const v = archiveWorld();
-  v.c.registerJob = (e) => (e.kind === "unpack" ? { ok: false, reason: "NO_ROOM" } : { ok: true, existed: false, state: "queued" });
+  // fixtures-contract: plane job-registrar
+  v.c.registerJob = (e) => (e.kind === "unpack" ? { ok: false, reason: "JOB_NOT_KEPT" } : { ok: true, existed: false, state: "queued" });
   const z = makeZip([{ name: "a.txt", data: "alpha" }]);
   const t0 = tables(v);
   const r = await up(v.c, z);
@@ -472,7 +481,8 @@ test("R109 (G152, K4958; control-plane R125 (a), R132): a PDF stated over the wh
   assert.equal(r.reading_stated, true, "the answer says it was stated, never silently");
   assert.equal("jobs" in r, false);
   /* the same upload again (bytes the record holds) registers none either */
-  w.c.provenance.registerHolds = ({ sha: x }) => ({ ok: true, sha: x, asked: true, registered: true, acquired: true });
+  const holdsOver = holdsWorld({ [sha(over)]: { registered: true, acquired: true } });
+  w.c.provenance.registerHolds = (a) => holdsOver.registerHolds(a);
   const again = await up(w.c, over, { by: "m2", statement: "forwarded to me" });
   assert.equal(again.existed, true);
   assert.deepEqual(j.rows().map((x) => x.kind), [], "a second sighting of a stated upload owes no reading either");

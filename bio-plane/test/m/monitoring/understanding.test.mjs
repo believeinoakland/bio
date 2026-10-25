@@ -5,11 +5,18 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, stubIntent, sha, V, NOW_MS, infoMd, serve, DAEMON } from "./fixture.mjs";
+import { staleBaseRefusal } from "../promotion/fixtures.mjs";
+import { acquireRefusals } from "../acquisition/fixtures.mjs";
+import { escalationsDue } from "../escalation/fixtures.mjs";
+import { pendingClocksRefusal } from "../action-clocks/fixtures.mjs";
 import { markOverdue, MONITOR_AUTHOR, MONITOR_VIEWER, DEADLINE_RECHECK_MAX, GATHERING_PURPOSE, GATHERING_LANDS_AT,
          MONITOR_CADENCE_BATCH, DEADLINE_NO_ZONE } from "../../../src/monitoring/index.mjs";
 import { MECHANICAL_FIELD_SETS } from "../../../src/promotion/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+
+/* escalation as its real module answers in a world with no escalation open (its published fixture, R16) */
+const emptyEscalation = () => escalationsDue().emptyWorld.esc;
 
 /* R28: a bundle carrying named requests, in project P. */
 const GB = "INFO-2026-0600-gathering", GP = "PROJ-2026-0600-g";
@@ -149,7 +156,8 @@ test("R28 (K1102) the bundle's daemon block governs its requests: enabled false 
   carry("INFO-2026-0654-plain", { requests: [r2("pl", 5)] });
   /* every locator refuses, so each request tries all it is allowed */
   const asked = [];
-  w.capture.acquire = async (body, opts) => { asked.push(opts.captureRequest.locator); return { status: 502, body: { ok: false, reason: "SOURCE_REFUSED", status: 503 } }; };
+  const refused = await acquireRefusals({ kind: "source_refused" });
+  w.capture.acquire = async (body, opts) => { asked.push(opts.captureRequest.locator); return refused; };
   const g = w.m.gathering(NOW_MS);
   assert.deepEqual(g.disabled.map((x) => x.id), ["GATH-2026-0651-off"]);
   assert.equal(g.due.some((x) => x.bundle === "INFO-2026-0651-off"), false, "a disabled bundle's request is never due");
@@ -329,7 +337,7 @@ test("R33 (N230) the sources a published finding rests on are known to monitorin
 });
 
 test("R34 a pending clock entry whose date has passed is marked overdue by a mechanical deadline-recheck promotion changing only clock[].status and last_updated", async () => {
-  const w = world({ realActions: true, escalation: { calls: [], escalationsDue(q) { this.calls.push(q); return { ok: true, items: [], truncated: false }; } } });
+  const w = world({ realActions: true, escalation: emptyEscalation() });
   const before = createAction(w, ACT, [["answer", "2026-09-01", "pending"], ["appeal", "2099-12-01", "pending"], ["today", "2026-09-28", "pending"]]);
   const r = await w.m.deadlineRecheck(NOW_MS);
   assert.equal(r.ok, true);
@@ -359,7 +367,7 @@ test("R34 a pending clock entry whose date has passed is marked overdue by a mec
   assert.deepEqual([again.marked, w.manifest(ACT).length], [[], n]);
 });
 test("R34 the overdue mark R44 writes is what action-clocks.overdueClocks reads for queue-producers' telling: a pending entry past its date is read pending before the mark and overdue after it; an entry not yet past is not read", async () => {
-  const w = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+  const w = world({ realActions: true, escalation: emptyEscalation() });
   const id = "ACTN-2026-0705-told";
   createAction(w, id, [["answer", "2026-09-01", "pending"], ["appeal", "2099-12-01", "pending"]]);
   const read = () => w.clocks.overdueClocks({ viewer: MONITOR_VIEWER, now: NOW_MS }).items.filter((x) => x.action === id)
@@ -372,7 +380,7 @@ test("R34 the overdue mark R44 writes is what action-clocks.overdueClocks reads 
 });
 
 test("R44 the mark reads action-clocks.pendingClocks and moves an entry only from pending to overdue; met, waived and overdue entries are left; nothing is added, removed or re-dated", async () => {
-  const w = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+  const w = world({ realActions: true, escalation: emptyEscalation() });
   const id = "ACTN-2026-0720-mixed";
   createAction(w, id, [["a", "2026-08-01", "met"], ["b", "2026-08-02", "waived"], ["c", "2026-08-03", "overdue"], ["d", "2026-08-04", "pending"]]);
   let read = null;
@@ -442,7 +450,7 @@ const DAY = 86400000, HOUR = 3600000;
 const dayAfter = (d) => Date.parse(`${d}T00:00:00Z`) + DAY + (d >= "2026-11-01" ? 4 : 3) * HOUR;
 
 test("R50 deadlineRecheckWake(now) answers the start of the local day (the jurisdiction's zone, never UTC) after the earliest pending clock date of the actions this module sees, read through action-clocks.pendingClocks as its machine viewer; null when none is pending", async () => {
-  const w = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+  const w = world({ realActions: true, escalation: emptyEscalation() });
   assert.equal(w.m.deadlineRecheckWake(NOW_MS), null, "no action: no wake");
   /* only met, waived and overdue entries: nothing pending, no wake */
   createAction(w, "ACTN-2026-0750-settled", [["a", "2026-08-01", "met"], ["b", "2026-08-02", "waived"], ["c", "2026-08-03", "overdue"]]);
@@ -475,7 +483,7 @@ test("R50 the wake follows pendingClocks' cursor to the end, so a pending entry 
   const w = world({ actionClocks: clocks });
   assert.equal(w.m.deadlineRecheckWake(NOW_MS), dayAfter("2026-10-09"));
   assert.deepEqual(seen, [null, "ACTN-a#0", "ACTN-b#2"], "every page, by its cursor");
-  for (const bad of [() => ({ ok: false, reason: "PENDING_CLOCKS_BAD_BEFORE" }), () => { throw new Error("gone"); }, () => null]) {
+  for (const bad of [() => pendingClocksRefusal(), () => { throw new Error("gone"); }, () => null]) {
     const x = world({ actionClocks: { pendingClocks: bad } });
     assert.equal(x.m.deadlineRecheckWake(NOW_MS), null);
     assert.equal(x.m.deadlineRecheckDue(NOW_MS), null);
@@ -483,7 +491,7 @@ test("R50 the wake follows pendingClocks' cursor to the end, so a pending entry 
 });
 
 test("R50 deadlineRecheckDue(now) answers the wake's instant when it is at or before now, else null; the scheduler's consumer then runs R34 on the first alarm of the day an entry passes", async () => {
-  const w = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+  const w = world({ realActions: true, escalation: emptyEscalation() });
   assert.equal(w.m.deadlineRecheckDue(NOW_MS), null, "nothing pending");
   const id = "ACTN-2026-0760-due";
   createAction(w, id, [["a", "2026-10-03", "pending"]]);
@@ -501,7 +509,7 @@ test("R50 deadlineRecheckDue(now) answers the wake's instant when it is at or be
 });
 
 test("R50 (N429) an entry of an action whose last R34 mark failed is left out of the wake's earliest date until the start of the local day after the failure, so a failing mark is asked again once a day and never holds the wake in the past for the entries that can be marked", async () => {
-  const w = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+  const w = world({ realActions: true, escalation: emptyEscalation() });
   const FAIL = "ACTN-2026-0770-fails", OK = "ACTN-2026-0771-marks", LATER = "ACTN-2026-0772-later";
   createAction(w, FAIL, [["a", "2026-09-01", "pending"]]);
   createAction(w, LATER, [["a", "2026-10-05", "pending"]]);
@@ -509,7 +517,7 @@ test("R50 (N429) an entry of an action whose last R34 mark failed is left out of
   assert.equal(w.m.deadlineRecheckWake(NOW_MS), dayAfter("2026-09-01"), "before any failure, the past entry holds the wake");
   /* R34's mark of FAIL fails: its entry is held out until the start of the next local day */
   const real = w.promotion.promote.bind(w.promotion);
-  w.promotion.promote = (pkg) => (pkg.operation === "deadline-recheck" && pkg.bundleId === FAIL ? { ok: false, reason: "BASE_MOVED" } : real(pkg));
+  w.promotion.promote = (pkg) => (pkg.operation === "deadline-recheck" && pkg.bundleId === FAIL ? staleBaseRefusal() : real(pkg));
   const r1 = await w.m.deadlineRecheck(NOW_MS);
   assert.deepEqual(r1.failed.map((f) => f.action), [FAIL]);
   assert.equal(w.m.deadlineRecheckWake(NOW_MS), nextDay, "held no earlier than the next day, never in the past");
@@ -539,10 +547,10 @@ test("R50 (N429) an entry of an action whose last R34 mark failed is left out of
   assert.deepEqual(r5.marked.map((m) => m.action), [FAIL]);
   assert.equal(w.m.deadlineRecheckWake(nextDay + DAY), dayAfter("2026-10-05"));
   /* an entry not yet past is not moved by its action's failure: its own day after stands when later than the hold */
-  const v = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+  const v = world({ realActions: true, escalation: emptyEscalation() });
   createAction(v, "ACTN-2026-0773-both", [["past", "2026-09-01", "pending"], ["future", "2026-10-20", "pending"]]);
   const vreal = v.promotion.promote.bind(v.promotion);
-  v.promotion.promote = (pkg) => (pkg.operation === "deadline-recheck" ? { ok: false, reason: "BASE_MOVED" } : vreal(pkg));
+  v.promotion.promote = (pkg) => (pkg.operation === "deadline-recheck" ? staleBaseRefusal() : vreal(pkg));
   await v.m.deadlineRecheck(NOW_MS);
   assert.equal(v.m.deadlineRecheckWake(NOW_MS), nextDay);
   v.promotion.promote = vreal;
@@ -550,7 +558,7 @@ test("R50 (N429) an entry of an action whose last R34 mark failed is left out of
 });
 
 test("R34 R50 (K1444 (iii)) an entry's date passes on the local day of the actions' jurisdiction, as actions R12 and its R33 bound read it, never the UTC day: an entry dated the 3rd is not past at 02:00 UTC on the 4th (23:00 on the 3rd in Halifax) and is marked at 03:00 UTC; the wake is that instant, and across the change to standard time the local day starts an hour later", async () => {
-  const w = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+  const w = world({ realActions: true, escalation: emptyEscalation() });
   const id = "ACTN-2026-0780-local";
   createAction(w, id, [["a", "2026-10-03", "pending"]]);
   const start = Date.parse("2026-10-04T03:00:00Z");
@@ -572,14 +580,14 @@ test("R34 R50 (K1444 (iii)) an entry's date passes on the local day of the actio
   assert.deepEqual([r.day, r.marked.map((m) => [m.action, m.dates])], ["2026-10-04", [[id, ["2026-10-03"]]]]);
   assert.equal(w.fm(id).clock[0].status, "overdue");
   /* across the end of daylight time (2026-11-01) the local day after starts at 04:00 UTC */
-  const x = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+  const x = world({ realActions: true, escalation: emptyEscalation() });
   createAction(x, "ACTN-2026-0781-dst", [["a", "2026-11-01", "pending"]]);
   assert.equal(x.m.deadlineRecheckWake(NOW_MS), Date.parse("2026-11-02T04:00:00Z"));
   /* a failed mark is held to the start of the next local day, never the next UTC midnight */
-  const y = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+  const y = world({ realActions: true, escalation: emptyEscalation() });
   createAction(y, "ACTN-2026-0782-hold", [["a", "2026-09-01", "pending"]]);
   const real = y.promotion.promote.bind(y.promotion);
-  y.promotion.promote = (pkg) => (pkg.operation === "deadline-recheck" ? { ok: false, reason: "BASE_MOVED" } : real(pkg));
+  y.promotion.promote = (pkg) => (pkg.operation === "deadline-recheck" ? staleBaseRefusal() : real(pkg));
   const late = Date.parse("2026-09-29T01:00:00Z");   /* 22:00 on the 28th in Halifax */
   y.clock.ms = late;
   assert.equal((await y.m.deadlineRecheck(late)).failed.length, 1);
@@ -587,7 +595,7 @@ test("R34 R50 (K1444 (iii)) an entry's date passes on the local day of the actio
 });
 
 test("R34 R50 with no zone held for the actions' jurisdiction no entry has passed: nothing is marked, the answer says why, and no wake is held; the UTC day is never used in its place", async () => {
-  const w = world({ profiles: null, realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+  const w = world({ profiles: null, realActions: true, escalation: emptyEscalation() });
   const id = "ACTN-2026-0790-nozone";
   createAction(w, id, [["a", "2026-09-01", "pending"]]);
   const r = await w.m.deadlineRecheck(NOW_MS);

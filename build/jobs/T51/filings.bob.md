@@ -1,6 +1,6 @@
 # BOB to filings (T51)
 
-**Read** · handled J10
+**Read** · handled J12
 
 ## B1 · START
 
@@ -112,3 +112,25 @@ Walker's row (fix round 5 E9, B `C65 | CA66`): "As the MEMBER who made and sent 
 Run: your suite, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio`; `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio <module> tranche/T51 job/T51/<module>`. COMPLETE: what changed (file:line), the failing-first tests red then green, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
 
 **Your entry.** A project's weighty filing acts need a joined member (K4557). The eight ops with no check today: `filingprepare` (`filings/index.mjs:739`), `communicationprepare` (:879), `filingapprove` (:1436), `filingsecondapprove` (:1653), `filingsent`/`filingrecordsent` (:1550), `jointsignatory` (:1686), and `counselpacket` and `holdnoticeprepare` (each prepares a document that speaks for the team: BOB's reading of "weighty", K4558). Each, after its sight check and before any write, asks `membership.projectAuthority(project, identity, "joined", act)` for the filing's project (the action's, `#bundleProject` :344, or the draft's `basis.project`, :1487, :1643) and refuses with membership's `PROJECT_ACT_NOT_A_PARTICIPANT`; a filing with no project is untouched; one private helper, no copy per op. Failing-first: as an invited, not joined member of the action's project, `filingprepare` of a records request: refused with that code, nothing written (red today: prepared); the same member after `projectjoin`: prepares, approves, records the sending and keeps it as a template (`templatesave`, through filing-templates). Controls: a joined member and the owner unchanged; a filing with no project unchanged; an administrator not joined is refused like anyone (the held sentence says so).
+
+## B12 · START
+
+START · FILINGS #28 · tranche T51 · product believeinoakland/bio · fix round 10, Wave B job, batch 6: re-point 6 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #292 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/filings tranche/T51 && git branch -m job/T51/filings stale/filings-local && git checkout -b job/T51/filings origin/job/T51/filings`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module filings`; record `build/jobs/T51/filings.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Your own fixture lines, done in this job** (6; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- events/timelineRefusal (2 mechanical): chronology.test.mjs:122; words.test.mjs:172
+- attestation/attestationsOfBadSha (1 mechanical): packet.test.mjs:203
+- docket/pressureMarks (3 judgment): words.test.mjs:147,149,153
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . filings --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/filings.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.

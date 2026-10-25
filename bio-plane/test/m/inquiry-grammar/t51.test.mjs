@@ -79,13 +79,22 @@ test("R68 one supporting leg in a declared ground and one cutting leg with none 
   assert.deepEqual(grounded([SUP({ ground: "a" }), CUT({}), CUT({})], [G_A]), []);
 });
 
-test("R68 control: a supporting leg left out of the partition is still refused, cutting leg or none", () => {
-  for (const basis of [[SUP({ ground: "a" }), SUP({})], [SUP({ ground: "a" }), SUP({}), CUT({})]]) {
-    const r = grounded(basis, [G_A]);
-    assert.equal(r.length, 1);
-    assert.equal(r[0].check, "C-2.8");
-    assert.equal(r[0].message, localize("inquiry-grammar.grammar.unlabelled_basis_legv1_carrv2_no", "{unlabelled} basis leg{v1} carr{v2} no ground while {length} do: a basis is grouped WHOLE or not at all, because a leg nobody grouped sitting beside branches somebody did is a relationship the record would have to guess at", { unlabelled: "1", v1: "", v2: "ies", length: "1" }));
+test("R68 (fix round 10, cause 30b) one unlabelled supporting leg beside one labelled ground is clean: it is a necessary leg, and the basis is no longer grouped whole or not at all", () => {
+  for (const basis of [[SUP({ ground: "a" }), SUP({})], [SUP({}), SUP({ ground: "a" })], [SUP({ ground: "a" }), SUP({}), CUT({})],
+                       [SUP({ ground: "a" }), SUP({}), SUP({}), SUP({ ground: "b" })]]) {
+    const grounds = basis.some((l) => l.ground === "b") ? [G_A, { ...G_A, ground: "b" }] : [G_A];
+    assert.deepEqual(grounded(basis, grounds), [], JSON.stringify(basis));
   }
+});
+
+test("R68 (fix round 10, cause 30b) control: a ground no leg carries, a leg naming an undeclared ground, a duplicated row and a malformed label are each still refused", () => {
+  const noLeg = grounded([SUP({}), SUP({})], [G_A]);
+  assert.equal(noLeg.length, 1, "declared, no basis leg belongs to it");
+  assert.equal(noLeg[0].check, "C-2.8");
+  const undeclared = grounded([SUP({ ground: "a" }), SUP({})], []);
+  assert.ok(undeclared.length >= 1 && undeclared.every((x) => x.check === "C-2.8"), "a leg naming a ground no row declares");
+  assert.equal(grounded([SUP({ ground: "a" }), SUP({})], [G_A, G_A]).length, 1, "a ground declared twice");
+  assert.equal(grounded([SUP({ ground: "a" }), SUP({ ground: "b!" })], [G_A]).length >= 1, true, "a label outside the form");
 });
 
 test("R68 a cutting leg that names a ground is refused with its own finding naming the leg and the label, and the label does not count for it", () => {
@@ -103,4 +112,25 @@ test("R68 control: a basis with no cutting leg is judged as before, and a cuttin
   assert.deepEqual(grounded([SUP({ ground: "a" }), SUP({ ground: "a" })], [G_A]), []);
   assert.equal(grounded([SUP({ ground: "a" })], undefined).length, 1);
   assert.deepEqual(grounded([SUP({}), CUT({})], undefined), []);
+});
+
+/* R4 (fix round 9, G167; K4985): the leg's extent is judged by content's ten kinds, `doc-part` among them. */
+const extentOf = (l) => plain(run((f) => IG.checkLegExtentGrammar(l, "basis[0]", "C-2.8", f)).findings);
+const partLeg = (o) => ({ target: "INF-2026-0001-doc", role: "supports", extent_kind: "doc-part", ...o });
+
+test("R4 a citation of a footnote, header, comment or other part found by a search passes checkLegExtentGrammar (control-plane seam §10)", () => {
+  for (const l of [partLeg({ extent_part: "word/footnotes.xml", extent_ref: "footnote 2" }), partLeg({ extent_part: "word/header1.xml" }),
+                   partLeg({ extent_ref: "comment 3" }), partLeg({ extent_part: "word/comments.xml", extent_ref: "comment 3" })])
+    assert.deepEqual(extentOf(l), [], JSON.stringify(l));
+});
+
+test("R4 control: a doc-part leg naming neither part nor reference is refused C-2.8, and an extent kind not in content's list is refused as before", () => {
+  const none = extentOf(partLeg({}));
+  assert.equal(none.length, 1);
+  assert.equal(none[0].check, "C-2.8");
+  assert.equal(none[0].code, "CONTENT_EXTENT_UNREADABLE");
+  const unknown = extentOf(partLeg({ extent_kind: "doc-prt", extent_part: "word/footnotes.xml" }));
+  assert.equal(unknown.length, 1);
+  assert.equal(unknown[0].check, "C-2.8");
+  assert.ok(unknown[0].message.includes("doc-prt"), unknown[0].message);
 });

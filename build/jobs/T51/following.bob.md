@@ -1,6 +1,6 @@
 # BOB to following (T51)
 
-**Read** · handled J6
+**Read** · handled J8
 
 ## B1 · START
 
@@ -73,3 +73,50 @@ Mail with `--module following`; record `build/jobs/T51/following.md` (append a n
 **Seam reds by name:** none.
 
 Run: your suite under the preload, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio following tranche/T51 job/T51/following`. COMPLETE: what changed (file:line), each failing-first test red then green, the measures this START names, the seam tests still red by name and which provider each waits for, suite counts, the requirement lines you propose (BOB writes them), and the `Size` line.
+
+## B5 · START
+
+START · FOLLOWING #14 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 5: publish 1 fixture, re-point 13 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #291 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/following tranche/T51 && git branch -m job/T51/following stale/following-local && git checkout -b job/T51/following origin/job/T51/following`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module following`; record `build/jobs/T51/following.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `bio-plane/test/m/following/fixtures.mjs` (new file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `watchedByRefusal` (users now: notice-producers 1): real `following.watchedBy(...)` (MARK_NO_SUCH_ITEM).
+
+**Your own fixture lines, done in this job** (13; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- promotion/registrars (1 mechanical): fixture.mjs:66
+- acquisition/acquireRefusals (1 mechanical): fixture.mjs:132
+- standards/standardReadWorld (1 judgment): fixture.mjs:212
+- duties/occurrences (1 judgment): fixture.mjs:260
+- plan-work/watchReaderRegistrar (2 judgment): fixture.mjs:268,269
+- answers/standingQuestions (3 judgment): fixture.mjs:298,304,305
+- retrieval-browse/marksRegistrarDeclared (1 mechanical): marks.test.mjs:215
+- standards/standardsIn (3 mechanical): watches.test.mjs:320,592,635
+
+**Fixture lines NOT done in this job** (1; their providers merge in your batch or after): FIX-E 1; FIX-E providers: monitoring. They stay in your list and arrive as a CHANGE.
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-CLOCK; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . following --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/following.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+**From duties' merge (K5070):** the real read is `occurrencesOf` and it requires `asOf`; your stand-in omits it, so the re-point to duties' published `occurrencesOf`/`occurrences` passes `asOf`.
+
+## B6 · START
+
+START · FOLLOWING #15 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 26 (plan build/plan/fix-round-10-T51.md §3; K5097)
+
+Depth 2 (BOB #292 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/following tranche/T51 && git branch -m job/T51/following stale/following-local && git checkout -b job/T51/following origin/job/T51/following`, then re-run `mail start`. If `job/T51/following` is behind `tranche/T51`, merge `origin/tranche/T51` into it first (never a rebase). A refused step: post BLOCKED naming it.
+Mail with `--module following`; record `build/jobs/T51/following.md` (append a new section). Model claude-haiku-5-5; workers haiku low, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` from the process repository (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993); a later provider's answer is kept under `// fixtures-contract: <provider> <id>` (K4995).
+
+**Follow-up 26 (test files only; FOLLOWING #14 J7).** monitoring has merged; its published fixtures are in `bio-plane/test/m/monitoring/fixtures.mjs` (`monitorAnswer({ ticks, kind })`, `flaggedRefusal`, `monitoringReads`). Read the file and its test whole. Re-point `fixture.mjs:179`, the hand-built `monitor` answer of your `monitoring` op table (`{ status: 200, body: { ok: true, status: "unchanged", capture: {...} } }`), to monitoring's real answer from `monitorAnswer()`; keep your own record of what was monitored (`w.monitored`) around it. If `monitoring` is not in your `uses`, REPORT the edge to BOB (monitoring, 138, precedes following, 139) and carry on: BOB adds it.
+
+**Done:** `checks/fixtures.mjs <absolute root> following --list` with your lines at zero (or each remaining one named with why and the module it waits for); your module's tests green; format, architecture, coverage, words, ownership 0. List every `fixtures-own`/`fixtures-generic` marker you add, file:line and why (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only: if the real answer shows a product defect, REPORT it to BOB and change no product code.

@@ -47,7 +47,7 @@ async function peek(body, limit) {
 /* the two fields of the answer's head, the language and the stamp: a JSON string each, or null when the head does not state them */
 function fieldsOf(text) {
   const field = (name) => {
-    const m = new RegExp(`"${name}"\\s*:\\s*("(?:[^"\\\\]|\\\\.)*")`).exec(text);
+    const m = new RegExp(`"${name}"\\s*:\\s*("(?:[^"\\\\]|\\\\.)*"|null)`).exec(text);
     if (!m) return undefined;
     try { return JSON.parse(m[1]); } catch { return undefined; }
   };
@@ -85,8 +85,9 @@ export async function interfaceWordsCache(res, req, env) {
   }
   if (seen.kind !== "words") return { res: new Response(body, { status: res.status, statusText: res.statusText, headers: res.headers }), table: false };
   const version = env && typeof env.VERSION === "string" ? env.VERSION : "";
-  const stated = typeof seen.language === "string" && PART.test(seen.language) && typeof seen.words_version === "string" && PART.test(seen.words_version);
-  const key = version && !version.includes("~") && stated ? `${version}~${seen.language}~${seen.words_version}` : null;
+  /* R127 (K4853): a viewer with no language (`null`) is the EMPTY part of the key, `<release>~~<words_version>`, as the shell names it */
+  const stated = (seen.language === null || (typeof seen.language === "string" && PART.test(seen.language))) && typeof seen.words_version === "string" && PART.test(seen.words_version);
+  const key = version && !version.includes("~") && stated ? `${version}~${seen.language ?? ""}~${seen.words_version}` : null;
   const kept = key !== null && new URL(req.url).searchParams.get("v") === key;
   const headers = new Headers(res.headers);
   const acceptsGzip = /\bgzip\b/i.test(req.headers.get("accept-encoding") || "") && typeof CompressionStream === "function";

@@ -3,6 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, serve, sha, DAEMON, V, infoMd } from "./fixture.mjs";
+import { staleBaseRefusal } from "../promotion/fixtures.mjs";
 import { monitorOp, monitoringOps, MONITOR_AUTHOR, DRIVE_TICK_CHECKS } from "../../../src/monitoring/index.mjs";
 import { identify } from "../../../../docprofile/registry.mjs";
 import { substanceDigests, DRIVE_CAPTURE_CHECKS } from "../../../src/acquisition/index.mjs";
@@ -567,9 +568,10 @@ test("R10 the answer's fields, and a promotion that does not answer is named as 
   v.monitored(vid, LOC, "a1");
   v.net.routes[LOC] = serve("a1");
   const orig = v.promotion.promote.bind(v.promotion);
-  v.promotion.promote = (pkg) => (pkg.author === MONITOR_AUTHOR ? { ok: false, reason: "BASE_MISMATCH", detail: "moved" } : orig(pkg));
+  v.promotion.promote = (pkg) => (pkg.author === MONITOR_AUTHOR ? staleBaseRefusal() : orig(pkg));
   const rr = await tick(v, vid);
-  assert.deepEqual([rr.status, rr.body.ok, rr.body.reason, rr.body.detail], [409, false, "BASE_MISMATCH", "moved"]);
+  const stale = staleBaseRefusal();
+  assert.deepEqual([rr.status, rr.body.ok, rr.body.reason, rr.body.detail], [409, false, stale.reason, stale.detail]);
   assert.equal(rr.body.revision, undefined);
   /* a promotion that does not answer: the service fails, so the store does not answer and the control plane names it silent */
   v.promotion.promote = () => { throw new Error("storage went away"); };

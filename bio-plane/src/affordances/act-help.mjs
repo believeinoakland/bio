@@ -34,13 +34,13 @@
  *   - T51 (G49, K4680): `capturerequests`, `casedrafts` and `readheld`, whose `act.<op>.does` words the design's reads list now gives, are
  *     held in `T51_DESIGN_OPS` (`readheld` was a stand-in until its design row landed);
  *   - T51 (K4900; `capture` R113): `captureuploadbegin`, `captureuploadpart`, `captureuploadcomplete` and `captureuploadabort`, the steps the
- *     page takes to send a large file in parts, are held in `T51_STANDIN_OPS` under stand-in sentences until the design gives its rows;
+ *     page takes to send a large file in parts, are held in `T51_DESIGN_OPS` (stand-ins until DEC-431 gave their rows, K4968);
  *   - T51 (R69): the seven browser acts, `BROWSER_ACTS`, are held under their own names from `act.owed_<name>.does`;
  *   - `projectownervotes` has no text in the design and is held none (`op-declarations` names it in `ACT_HELP_ABSENT`, R61);
  *   - `selftest` (FR-40, K4190): the word list holds `act.selftest.does` for the updates screen (DEC-376), but this module's reads
  *     list (R62) does not give it and no act this module draws is `selftest` (instance-setup's probe), so it is held none.
  * A retired op is not held. */
-import { word, localize } from "../setup-words/index.mjs";
+import { word } from "../setup-words/index.mjs";
 import { MEMBERSHIP_CHECKS } from "../membership/index.mjs";
 
 /** T51 (K4248; U421, DEC-387): the declared ops whose `act.<op>.does` words the design's reads list for this module gives (R62), held
@@ -127,6 +127,10 @@ export const T51_DESIGN_OPS = Object.freeze([
   "transcriptionattest",
   "transcriptions",
   "triage",
+  "captureuploadabort",
+  "captureuploadbegin",
+  "captureuploadcomplete",
+  "captureuploadpart",
 ]);
 
 /** T51 (B14, K4376; `op-declarations` J22): the declared ops whose `act.owed_<op>.does` words the design's reads list gives, held under
@@ -140,18 +144,11 @@ export const T51_OWED_OPS = Object.freeze(["expertisewithdraw", "declareorigin",
  *  captureseenin, scanmirror, officeconfirm), so they are held in `T51_DESIGN_OPS`; kept as an empty frozen value for the tests that import it. */
 export const T51_LIST_ONLY_OPS = Object.freeze([]);
 
-/** T51 (K4900, fix round 9; `capture` R113): the declared ops the word list gives no sentence for, each held under its plain `localize`
- *  default, keyed `act.<op>.does` so the design stream's row, when it lands, takes the place of the stand-in (R62; setup-words R14).
- *  `localize` takes literal ids, so each is written out. These are the four steps the page takes to send a file past the request-body
- *  ceiling in parts; the member never names them (the design draws `captureupload`), but each is a member op, so R48 explains it. Rows
- *  owed to the design stream: `act.captureuploadbegin.does`, `act.captureuploadpart.does`, `act.captureuploadcomplete.does`,
- *  `act.captureuploadabort.does`. Kept as exported values for the tests that import them. */
-export const T51_STANDIN_HELP = Object.freeze({
-  captureuploadbegin: localize("act.captureuploadbegin.does", "Starts sending a large document to the group's store in parts. Nothing is kept until the last part has arrived."),
-  captureuploadpart: localize("act.captureuploadpart.does", "Sends one part of a large document that is being sent in parts. The part is checked as it arrives."),
-  captureuploadcomplete: localize("act.captureuploadcomplete.does", "Finishes sending a large document once every part has arrived, and files it as one document."),
-  captureuploadabort: localize("act.captureuploadabort.does", "Stops sending a large document in parts. Nothing of it is kept."),
-});
+/** T51 (K4900, fix round 9; `capture` R113; K4968, DEC-431): the declared ops held under a `localize` default while the word list held no
+ *  sentence for them. `captureuploadbegin`, `captureuploadpart`, `captureuploadcomplete` and `captureuploadabort`, the steps the page takes
+ *  to send a file in parts, had their design rows landed (DEC-431), so they are held in `T51_DESIGN_OPS` and read by key; kept as an empty
+ *  frozen value for the tests that import it. */
+export const T51_STANDIN_HELP = Object.freeze({});
 export const T51_STANDIN_OPS = Object.freeze(Object.keys(T51_STANDIN_HELP));
 
 /** The ops held, in the design's order (R48, R61). */

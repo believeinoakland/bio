@@ -37,7 +37,7 @@ casefile.bindPublishedPlane({
   doAnswer: async (res) => { let out = null; try { out = await (await res).json(); } catch { out = null; }
                              return out && out.ok === true ? { answered: true, result: out.result } : { answered: false }; },
   storeSilent: (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }, 502),
-  requiredArgument: (op, argument, shape, error) => ({ ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error }),
+  requiredArgument: (op, argument, shape, error) => ({ ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error }), // fixtures-contract: answer-envelope door-helpers
 });
 
 /* The published bucket with one fault made at a time (`state.fault`): a `put` that throws, one only for the manifest's own
@@ -95,18 +95,20 @@ export class G54Held {
     st.sql.exec(`CREATE TABLE IF NOT EXISTS inquiry_basis (bundle_id TEXT NOT NULL, ord INTEGER NOT NULL, target_id TEXT NOT NULL)`);
     st.sql.exec(`CREATE TABLE IF NOT EXISTS refs (bundle_id TEXT NOT NULL, target_id TEXT NOT NULL, kind TEXT NOT NULL DEFAULT '',
                                    PRIMARY KEY (bundle_id, target_id, kind))`);
+    // fixtures-own: platform this entry is bundled into the Miniflare script and runs on workerd, where provenance's published fixture (it builds node SQLite worlds) cannot load; the stand-in answers "nothing held" only, for a case file this test does not gate
+    const stand = { registeredFor: () => [], registerHolds: () => ({ ok: true, parts: null, registered: false, acquired: false }),
+                    containerResolver: () => ({ holds: () => false, gradeVia: () => null, archiveOrigin: () => ({ found: false }), authority: () => null }) };
     const none = { self: [], via: [] };
     const publication = publicationOf(host, { storage: st, record, membership, promotion, now: () => new Date().toISOString(),
       inquiry: { exclusionsNaming: () => [] }, basisVersions: { testimonyReach: () => none },
       reevaluation: { registerCaseParts: () => ({ ok: true }) } });
     const publishSchedule = publishScheduleOf(host, { storage: st, record, membership, publication, now: () => NOW });
-    const stand = { registeredFor: () => [], registerHolds: () => ({ ok: true, parts: null, registered: false, acquired: false }),
-                    containerResolver: () => ({ holds: () => false, gradeVia: () => null, archiveOrigin: () => ({ found: false }), authority: () => null }) };
     const ratification = ratificationOf(host, { storage: st, record, membership, credentials, promotion, provenance: stand,
       inquiry: { subjectEntityOf: () => null, earned: () => ({}) },
       basisVersions: { conclusionOf: () => null, conclusionRecordOf: () => ({ history: [], stance: null }), noProjectConclusionOf: () => null,
                        projectsDrawingOn: () => Object.assign([], { bound: 32, truncated: false }), testimonyReach: () => none },
       publication, caseTensions: publication.caseTensionsModule, capture: { registerReader: () => ({ ok: true }) },
+      // fixtures-own: platform this entry runs on workerd, where strength's and money's published fixtures build node:sqlite worlds and cannot load; the stand-ins answer the one ok shape the sweep reads (testimony with no legs, a fact not found)
       strength: { testimonyCorroboration: () => ({ ok: true, legs: [] }) }, reevaluation: { levelMoved: () => ({ ok: true }) },
       networkNotices: { openSeals: async () => ({ ok: true }) }, people: { tiesConcerning: () => ({ ok: true, ties: [] }) },
       money: { readFact: () => ({ ok: true, found: false }) }, publishSchedule,

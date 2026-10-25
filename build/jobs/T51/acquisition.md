@@ -1,6 +1,6 @@
 # acquisition (T51)
 
-**Status** · session_01XzAj5EuQc3hnH5xNiPDvpB · depth 2 · COMPLETE · handled B42
+**Status** · session_01UzsMeXPSWSfbJkij7yPiZw · depth 2 · COMPLETE · handled B48
 
 ## J1 · REPORT
 
@@ -675,3 +675,147 @@ Checks (run in this session)
 - `checks/format.mjs`: 176 modules, 176 requirements files; 0 failures. `checks/architecture.mjs … acquisition`: 0 failures. `checks/coverage.mjs … acquisition`: 76 of 76 live requirement ids named by a test; 0 failures. `checks/words.mjs`: 33 failures, none naming acquisition. `checks/ownership.mjs … acquisition tranche/T51 job/T51/acquisition`: 9 files, 1 failure: build/requirements/acquisition.md, accepted per B3/B4.
 
 Size (session_01XzAj5EuQc3hnH5xNiPDvpB): test runs 14, module lines 4417
+
+## J41 · COMPLETE · re B43
+
+COMPLETE re B43 (ACQUISITION #36; job 86; R39 and R116 amended; head below). Requirement lines: I removed the `not yet met` marks of R39's and R116's amendments in `build/requirements/acquisition.md` and named the test (ownership lists that one file, accepted per B3/B4).
+
+Applied
+- G161 (`unpack.mjs` `fileDocument`): with no letter the member's `grade_basis` is the ARCHIVE's (`g.archive.basis` when `g.archive` is an object, else `g.basis`), so an uploaded archive's members pass provenance C-18.1.
+- G163 (`unpack.mjs` `fileDocument`): bytes with no magic are typed by `textTypeOf({bytes, name: row.name})` (R102) when the member is held in one part; a `.txt`, `.md`, `.csv` member is text, a NUL-bearing `.txt` and a `.bin` stay untyped.
+- G160 (`index.mjs` `owedFetch`, and the two render-delivery paths of `owedRun`): the three final answers carry `detail: {kind, capture_sha, holder}` from the refusal, taken from its `detail` when that is a plain object, else from its top level (provenance's shape); a refusal with none adds no `detail`. Control-plane's side (its answer carrying `detail`) is job 43's; this works with either shape.
+- One existing assertion changed, not weakened: `unpack.test.mjs` (R38 R39 R26) asserted a `notes.txt` member untyped; R39 now types it `text/plain`. Absence for a member neither bytes nor name type is held by the new test's `x.bin` and NUL controls.
+- No sentence added; no word row owed.
+
+Tests: `r123-batch-d.test.mjs` (6 tests; red first on the 3 reds, controls green): uploaded ZIP of three `.txt` members (receipt, no letter) carries `CAPTURE_RECEIVED_NOT_FETCHED`, no grade, `text/plain`, `profiled_from_text`; fetched letter-graded archive's members carry its letter; `.txt/.md/.csv` typed, NUL and `.bin` not; `owedFetch` final answer carries kind, capture_sha, holder (both shapes), bare refusal adds none, `DELIVERY_FAILED` goes again, accepted delivery ends done.
+
+The four fields
+- cause: `unpack.mjs:849` stated `g.basis`, which provenance R59 always answers `CAPTURE_UNPACKED_FROM_ARCHIVE` for a member, not the archive's; `:821-826` typed a member by `detectFormat(head, null)` alone; `owedFetch`'s three final answers built `{reason}` only.
+- why missed: acquisition's fixtures unpacked only letter-graded archives (the no-letter branch never ran) and only formats with magic bytes; no test joined `owedFetch` to a refusal carrying facts.
+- red first: `r123-batch-d.test.mjs` run before the change: basis `CAPTURE_UNPACKED_FROM_ARCHIVE`, content types undefined, `detail` undefined (5 of 6 red; the controls green).
+- platform check: L, as the START says; nothing here is platform-specific (no new SQL, no new storage call); run on node:sqlite only.
+
+Checks (run in this session)
+- acquisition suite: tests 336, pass 336, fail 0 (after the one amended assertion).
+- impact (`build/plan/impact.mjs origin/tranche/T51 HEAD`): 112 modules affected; the users that touch `unpack`, `archiveList` or `owedFetch` (capture, doorbell, control-plane, plane, file-safety, screens-intake, tasks, monitoring, capture-requests, instance-setup test files): every file fail 0.
+- format 176/176, 0 failures; architecture 0; coverage 76 of 76, 0; words 0 failures (acquisition: plain 0, testcopy 0); ownership: 1 failure, the requirements file, accepted per B3/B4.
+
+Size (session_01GRvfGdeJxS5azaPFdT5hLD): test runs 9, module lines 4426
+
+## J42 · COMPLETE
+
+COMPLETE re B43 (job 86; G160, G161, G163; R39, R116). Record J41. Suite 336/336, users fail 0, checks 0 failures (ownership: the requirements file, per B3/B4). Control-plane's detail (job 43) is read from either shape.
+
+## J43 · COMPLETE
+
+COMPLETE re B44 (ACQUISITION #37; job 96; R17 amended, G170, K4985). Head below.
+
+Applied
+- `profileOf` takes `name` and `declaredType` and hands both to `detectFormat` (the bytes pass, and the range-read passes of R101: the name to the byte read, name and declared type to the declared-type fallback). On the fetch's path `acquire` passes the address's last path segment (decoded) as `name` and the response's content type as `declaredType`. A declared type the bytes contradict still decides nothing (format-registry's pass order); a PDF named `x.csv` stays a PDF.
+- R17's `not yet met` mark removed in `build/requirements/acquisition.md` (ownership lists that one file, accepted per B3/B4).
+- Own flaw fixed (P8): `stage-times.test.mjs` R95 (C5a) compared the cut stage's milliseconds at two moments for equality and failed about one run in three on a one-millisecond difference; it now compares every ended stage exactly and the cut stage to within a millisecond (8 of 8 runs green).
+- Capture's job 97 passes `name`/`declaredType` on the upload path; nothing here is needed from it to merge. No sentence added; no word row owed.
+
+Tests: `r17-name-type.test.mjs` (4 tests; red first, 3 red and the control green): CSV uploaded as `application/vnd.ms-excel` and as `application/octet-stream` profiled `csv`; `.tsv` declared `text/plain` profiled as a table; controls (PDF named `x.csv` stays `pdf`; the same CSV with no name is not `csv`); the fetch path through `acquire` (octet-stream CSV, text/plain TSV, PDF named x.csv).
+
+The four fields
+- cause: `profileOf` called `detectFormat(formatBytes, ct)` with no name, so format-registry R31's name pass never ran, on either path.
+- why missed: no test profiled bytes with a name or a non-text declared type; capture's upload path passes `ct` null for a non-text type.
+- red first: `r17-name-type.test.mjs` run before the change: 3 of 4 red (format `undetermined`/text), control green. Green after.
+- platform check: L; nothing platform-specific (no SQL, no storage call); node:sqlite only.
+
+Checks (run in this session)
+- acquisition suite: tests 340, pass 340, fail 0.
+- impact (`build/plan/impact.mjs origin/tranche/T51 HEAD`, before commit): 0 modules; users of `profileOf` run: capture 338/338, doorbell 97/97, fail 0.
+- format 0 failures; architecture 0; coverage 76 of 76, 0; words 0 failures (acquisition: inline 0, plain 0, testcopy 0); ownership: acquisition's changed files, 0 failures after commit.
+
+Size (session_01QSsP9bjU3egDoknVjvNuYp): test runs 9, module lines 4432
+
+## Round 9, batch D: R17 amended (G174; K5001), session_01Lv37K3RbyQhtwcLT3uXGvx
+
+Applied
+- `profileOf` (`acquisition/index.mjs` about 2063): on `origin: "fetch"`, a declared text type over stored bytes that `textTypeOf` (R102) judges not text is dropped: the bytes are not read as text, `ct`, the `content-type` header and a declared text type no longer reach `identify`/`doctypeFor`/`detectFormat`. `source_content_type` still records the source's own statement. The upload (capture R107) and the knock's pull (origin `member`) are unchanged.
+- Requirement R17 already carried the amendment (BOB's); no requirement file edit.
+- Reproduction: binary bytes (NULs, no signature) served `text/plain` / `text/csv` at `.csv`, `.txt`, `.bin`: format and `content_type` were unchanged, but `profiled_from_text` was `true` (and `text_encoding`, digests basis read as text) where the same bytes served `application/octet-stream` give `false`. That was the red; fixed.
+
+Tests: `r17-fetch-declared.test.mjs` (2 tests; red first: test 1 red on `data.csv` declared `text/plain`, control green). Control: text bytes declared `text/csv` still profile `csv` from text.
+
+The four fields
+- cause: the fetch handed the server's content type to `profileOf` and `profileOf` read any bytes under a textual type as text.
+- why missed: the upload judged text by `textTypeOf` at its door (capture); the fetch had no such judgement and no test fed non-text bytes under a text type.
+- red first: `profiled_from_text` true vs false for the same bytes, as above; green after.
+- platform check: N.
+
+Checks (this session)
+- acquisition suite: tests 342, pass 342, fail 0. Users of `profileOf` (impact: 112 modules): capture and doorbell suites 441/441, fail 0.
+- format 0 failures; architecture 0; coverage 0 (6927 of 6927); words 0 (acquisition: inline 0, plain 0, testcopy 0); ownership 0. No sentence added; no word row owed.
+
+Size (session_01Lv37K3RbyQhtwcLT3uXGvx): test runs 4, module lines 2658
+
+## J44 · COMPLETE
+
+G174 done: fetch no longer reads a declared text type over non-text bytes as text (profiled_from_text was true, now false, as the same bytes declared octet-stream); format and content_type were already unchanged. Test r17-fetch-declared.test.mjs, red first. Acquisition 342/342, capture+doorbell 441/441; format, architecture, coverage, words, ownership 0 failures. Record: build/jobs/T51/acquisition.md (Round 9 batch D).
+
+## Round 9, job 103: G175 (R116) and G177 (R95), session_01FepaYctVekwaxhoDHB6QtY
+
+Applied
+- G175: `oweOf` (`acquisition/index.mjs`) now awaits the plane's `armJobs` (the store handed in's, else `opts.armJobs`; `armerOf`, `armAfter`) after every row the registrar accepts, so every `oweOf` user arms (parkFetch, the subresources rows, the render's owed row, the continuation's re-arm, the `unpack` row and `unpack`'s own `owedLater`); `keepLaterOf` (the `keep` row) arms the same way. A refused row arms nothing; an arm that throws never fails the capture (the next alarm is the backstop).
+- G177: a thrown call takes ONE clock reading for the cut and the close (`stageTimes(t, at)`, `stageEnd(t, at)`); the normal close reads once too. The answer's `timings.stages` and `total_ms` equal the caller's `opts.timings` object exactly.
+- Requirement lines: R95 and R116 were amended by BOB; I removed their "not yet met: T51" markers in `build/requirements/acquisition.md` now that tests name them (K4210: the ownership check lists that one file, accepted at the merge).
+
+Tests (red first, then green)
+- `r9-registrar.test.mjs` (3 new, all naming R116; red on the tip: `armed()` false after fetch, keep, subresources, unpack and via `opts.armJobs`; green now). Controls: a refusing registrar arms nothing; a throwing arm leaves the capture 200; a small capture arms nothing.
+- `stage-times.test.mjs`: the C5a test now asserts exact equality (my own version; LOAD-REDS' edit not merged); new G177 test with `performance.now` moving 1.5 ms per read after the throw (red: read 7 vs 4; green now).
+- control-plane `t51-round7-seam` "G61 twin": green alone (`node --max-old-space-size=6144`, 18/18 in the file, the twin 25.6 s). It was also green alone on the tip with my change stashed (it is the load-dependent test LOAD-REDS found; the module-level red above is the failing-first proof of the missing arm).
+
+The four fields
+- cause (G175): `oweOf` registered the row and never called `armJobs`, so the plane's alarm was set for a later time; (G177): three clock readings (`stageTimes`, `t.end`, `stageEnd`) for one cut.
+- why missed: no test of an owed row read whether the alarm was armed; the C5a test never moved the clock between reads.
+- red first: as above.
+- platform check: G175 L (control-plane twin run alone, Node, 6 GB); G177 N.
+
+Checks (this session)
+- acquisition suite: tests 346, pass 346, fail 0. capture 349/349, doorbell 97/97, control-plane acquire-timings/server-timing/door-phases + plane r9-jobs 55/55, fail 0.
+- `node checks/run.mjs`: format 0, architecture 0, coverage 0 (6927 of 6927), channels 0, words 0 (inline 0, plain 0, testcopy 0). Ownership: 1 listing, `build/requirements/acquisition.md` (accepted, K4210); the other four changed files are mine. No sentence added; no word row owed.
+
+Size (session_01FepaYctVekwaxhoDHB6QtY): test runs 9, module lines 4457
+
+## J45 · COMPLETE
+
+Job 103 done. G175: every row registerJob accepts is now followed by armJobs (store's, else opts.armJobs), all oweOf users and the keep row; G177: one clock reading for a thrown call's cut and close, answer and object equal exactly. R95 and R116 markers removed (tests name them). Tests red first in r9-registrar and stage-times; acquisition 346/346, capture 349, doorbell 97, control-plane timings/door/plane jobs 55, twin green alone. format, architecture, coverage, words 0; ownership lists only build/requirements/acquisition.md (K4210). Record: build/jobs/T51/acquisition.md
+
+## Round 9, job 103 extended (B47, K5006): G154 (4), the `offers` ALTER at workerd
+
+Added `test/m/acquisition/r122-workerd.test.mjs` with its worker `offers-worker.mjs` (a test file in my module; no product change, since nothing was red). On a real Durable Object's SQLite under Miniflare: `archive_entries` is made WITHOUT `offers`, acquisition's `migrate` runs, and the column is there (`PRAGMA table_info` then `ALTER TABLE ADD COLUMN`); a member's `op=unpack` files two entries; the daemon's `op=unpack` offers both again (`complete: false`), `offers` counted 2 on each. Result pasted: `[L] workerd: columns before [..."bytes","tree_entries","tree_bytes"], after [..."tree_entries","tree_bytes","offers"]; offers per entry after the second run [2,2]`; run 3 times, green each (1 test, with r122.test.mjs 6/6 twice more). Platform check L done. Checks: format 0, architecture 0, coverage 76/76 0, words 0, ownership: only `build/requirements/acquisition.md` listed (K4210, accepted). Test runs 3.
+
+Size (session_01FepaYctVekwaxhoDHB6QtY): test runs 12, module lines 4457
+
+## J46 · COMPLETE · re B47
+
+B47 done: G154 (4) platform check. New r122-workerd.test.mjs + offers-worker.mjs (test files only, no product change, nothing red): on workerd/Miniflare an archive_entries table made without offers gains the column via migrate (PRAGMA table_info then ALTER ADD COLUMN); member unpack files 2 entries, daemon unpack offers both again, offers=2 each. Green 3 runs. Checks format/architecture/coverage/words 0; ownership lists only build/requirements/acquisition.md (K4210). Record: build/jobs/T51/acquisition.md
+
+## Fix round 10, Wave A batch 2 (ACQUISITION #40, session_01UzsMeXPSWSfbJkij7yPiZw; B48): R12, 7 fixtures, 99 own fixture lines
+
+### Cause R12 (G3; walk C1: `.tsv` members of an archive unread)
+- Root cause: `NAME_TEXT_TYPES` held only txt, md, csv and `textTypeOf`'s name pattern was `/\.(txt|md|csv)$/`, so a `.tsv` (or `.tab`) member typed null at `unpack.mjs` `fileDocument` and was not read as text (`index.mjs` `NAME_TEXT_TYPES`/`textTypeOf`). Fix: `tsv` and `tab` stand for `text/tab-separated-values`, csv-reader's delimited names (the table is a literal here: csv-reader does not export it and is no `uses` of this module; BOB may wish to export it, for P9). R102's *(not yet met: T51)* marker removed (the test names R102).
+- Why the tests missed it: `fix5-t51.test.mjs` tested only the names R102 listed (txt, md, csv); nothing put a `.tsv` member through `unpack`.
+- Red first: `r12-tsv-members.test.mjs` (2 tests, both name R102): `textTypeOf` gave null for `.tsv`/`.tab`; the archive of `m01.txt`, `m02.tsv`, `m03.csv`, `m04.tab` typed only the txt and csv members. Green after. Controls: a NUL under a `.tsv` name is filed and not typed (null, `profiled_from_text` false); a declared non-text type is not overridden by the name. R-PATH: the member path (`unpack`) and the standalone rule (`textTypeOf`, the upload's and the pull's).
+- Platform check: N done (Node, above). L (the 30-member archive, all 10 `.tsv` whole) is named for the redeploy. The workerd run of `r122-workerd.test.mjs` (a real Durable Object's SQLite) is green with the real provenance (below).
+
+### Fixtures published (`bio-plane/test/m/acquisition/fixtures.mjs`, new; `fixtures.test.mjs`, 7 tests, each calls its fixture and compares the real answer)
+`acquireRefusals({kind})` (source_refused, fetch_failed, not_eligible), `archiveAnswer({memberBytes})`, `archiveNotHeld({archiveSha})`, `keyedServiceOff()` (over credentials' real `keyedServiceFor`), `notHeldRange()`, `owedFetchAnswer({kind, reason})` (done, outstanding, gone, final with a DELIVERY_FINAL code or SOURCE_REFUSED), `owedRunAnswer({kind, reason})` (done, outstanding, final: RENDER_FAILED over capture-sources' real `renderFailure`, RENDER_NOT_A_PAGE by a restarted module, a DELIVERY_FINAL code). `archiveNotHeld` answers `{ok: false, reason}` as `unpack` gives it; the 409 is the door's mapping, not this module's. The two owed fixtures take the delivery from the caller's side as a FIX-L stand-in (`control-plane deliver-owed`) and the ledger (`plane owed-ledger`), each with its marker.
+
+### Own fixture lines (99)
+- FIX-E done: capture-sources `renderFailure` (acquire.test:244, checks.test:66, r7-render-failed, r9-render-charge; the elapsed times are now the driver's own, so r9-render-charge asserts the charge equals the answer's `elapsed_ms`, and the transient tries sum the answers'); the invented `OBJECT_TOO_LARGE` is record-core's real `EVIDENCE_STORE_REFUSED` from its `evidencePartsRefusal` fixture (fix3-t51); `JOB_TABLE_FULL` is plane's `JOB_NOT_KEPT` (r9-registrar); provenance `heldParts`/`homeOfEmpty` in r9-read-range; provenance's real `registeredHomes` behind `fixture.mjs`'s `homeOf` and `registerHolds` (homes named in a test are registered by really promoting a bundle; a capture named under another bundle starts that real world over with the receipts so far; a bundle already promoted takes a later capture in a bundle of its own, named back, since the fixture cannot add to a promoted bundle; the double's other answers (`capturesOf` with `heldAt`, `captureGrade`, `named` parts) stay as they were) and `offers-worker.mjs` uses the real `provenanceOf` over its Durable Object with a real receipt (r122-workerd green, offers per entry [2,2]).
+- FIX-L markers added (`// fixtures-contract: <provider> <id>`, 76 lines in 18 files, none idle): plane owed-ledger, plane keep-later, plane job-registrar, control-plane deliver-owed. These stay at `contract-no-run` until each provider's `fixtures-run` is merged: **plane** (owed-ledger, keep-later, job-registrar) and **control-plane** (deliver-owed). `fixtures --list acquisition`: 75 failures, every one `contract-no-run`, none other; no `fixtures-own` or `fixtures-generic` marker added.
+
+### Checks (this session)
+- acquisition suite: tests 349 (r12 2, fixtures 7 new), pass 349, fail 0. Users of `fixture.mjs` (capture, screens-intake, control-plane, 10 files): 89/89. Every other module's test file that imports acquisition (36 files): 352/352. capture, doorbell and screens-intake whole: 823/823. `impact.mjs origin/tranche/T51 HEAD`: 112 of 178 modules affected (the `textTypeOf` rule is exported and the fixture is shared), the users that name acquisition run as above.
+- `checks/run.mjs`: format 0, architecture 0, words 0 (inline 0, plain 0, testcopy 0), coverage 0 for acquisition (76 of 76; other modules' failures are theirs). No sentence added; no word row owed.
+- Found in another module (P9): none beyond csv-reader's delimited-names table not being exported.
+
+Size (session_01UzsMeXPSWSfbJkij7yPiZw): test runs 30, module lines 4457
+
+## J47 · COMPLETE
+
+COMPLETE (B48, fix round 10 Wave A batch 2). R12: .tsv/.tab members read as text (textTypeOf; r12-tsv-members.test.mjs red first, green; platform N done, L named for the redeploy: the 30-member archive, 10 .tsv whole). 7 fixtures published in test/m/acquisition/fixtures.mjs (acquireRefusals, archiveAnswer, archiveNotHeld, keyedServiceOff, notHeldRange, owedFetchAnswer, owedRunAnswer), each tested against the real answer. Own fixture lines: FIX-E done (renderFailure, evidencePartsRefusal, JOB_NOT_KEPT, heldParts/homeOfEmpty, provenance registeredHomes behind fixture.mjs homeOf/registerHolds, real provenanceOf in the workerd worker); FIX-L markers added on 76 lines, 75 remain contract-no-run waiting on plane (owed-ledger, keep-later, job-registrar) and control-plane (deliver-owed); no fixtures-own or fixtures-generic marker added. Suite 349/349; other importers 352/352; capture+doorbell+screens-intake 823/823; format, architecture, words 0; coverage acquisition 76/76; ownership lists only build/requirements/acquisition.md (R102 marker removed, K4210). P9: csv-reader does not export its delimited names, so acquisition keeps the .tsv/.tab names as a literal. Record: build/jobs/T51/acquisition.md

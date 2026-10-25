@@ -2,13 +2,17 @@
    a transient failure is read again; nothing read is cut short. Each test names the requirement ids it checks. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, bucket, member, withEntry, i2, noText, ocrAnswer, doc, sha, pressThenPass } from "./fixture.mjs";
+import { fresh, bundle, hold, bucket, member, withEntry, i2, noText, ocrAnswer, doc, sha, pressThenPass, homesOver } from "./fixture.mjs";
 import { wp, wr, wtbl, box, docx, bucket as _b } from "./fixture.mjs";
 import { textUnitsFor, layerChainFor, readingProvenance } from "../../../src/reading-pipeline/index.mjs";
 import { glyphCount } from "../../../src/textchain.mjs";
+import { memberRefusal } from "../../../../ocr-worker/test/fixtures.mjs";
+
+/* the real OCR member declining a page whose pixels it cannot read, a final decline (its published fixture, K5044) */
+const PIXELS_UNREADABLE = await memberRefusal("PIXELS_UNREADABLE");
 
 const pdf = (text) => ({ format: "pdf", structure: async () => ({ ok: true, text: structuredClone(text), pages: (text.pages || []).length, notes: [] }) });
-const register = (rows) => ({ homeOf: (s) => rows.get(s) ?? null, onTestimony: () => ({ ok: true }) });
+const register = (rows) => homesOver(rows);
 const row = (bundleId, bytes = 20) => ({ bundleId, path: "a.pdf", encoding: "binary", bytes, registered: "t", authored: false });
 const count = (w, table, d) => w.one(`SELECT count(*) c FROM ${table} WHERE capture_sha=?`, d).c;
 const readingOf = (w, d) => JSON.parse(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading);
@@ -166,7 +170,7 @@ test("R82 R35 (F9): an OCR member that is down leaves the entry owed; one that d
   const a = await withEntry(pdf(SCAN(3)), () => down.w.x.readHeld({ sha: down.d, env: down.w.env, kind: "ocr" }));
   assert.deepEqual([a.read, a.owed], [false, true], "a member that answers 503 is a transient cause");
   assert.equal(typeof a.why, "string");
-  const declines = await held({ env: { OCR_WORKER: member(() => ({ ok: false, reason: "UNREADABLE" })) } });
+  const declines = await held({ env: { OCR_WORKER: member(() => PIXELS_UNREADABLE) } });
   await withEntry(pdf(SCAN(3)), () => declines.w.x.readHeld({ sha: declines.d, env: declines.w.env }));
   const b = await withEntry(pdf(SCAN(3)), () => declines.w.x.readHeld({ sha: declines.d, env: declines.w.env, kind: "ocr" }));
   assert.deepEqual([b.read, b.owed === true], [false, false], "pages the member declines are the document's own: final");
@@ -271,3 +275,17 @@ async function restartOver(w) {
   await Promise.all(waited);
   return x;
 }
+
+test("R82 R37 (G172): the ledger's first `reading` pass over a scan whose page the OCR member refuses from its header ends final and owes nothing; a member answering transiently still owes", async () => {
+  // fixtures-contract: plane job-registrar
+  const registerJob = async () => ({ ok: true }), armJobs = async () => {};
+  const refuses = await held({ env: { OCR_WORKER: member(() => ({ ok: false, reason: "IMAGE_TOO_LARGE" })) } });
+  const a = await withEntry(pdf(SCAN(1)), () => refuses.w.x.readHeld({ sha: refuses.d, env: refuses.w.env, kind: "reading", registerJob, armJobs }));
+  assert.equal(a.read, true);
+  assert.equal(readingOf(refuses.w, refuses.d).failure, "final", "the refusal ends the reading final");
+  assert.notEqual(a.owed, true, "a reading that ended final owes nothing, an OCR member bound");
+  /* control: a member that answers transiently leaves the page owed */
+  const down = await held({ env: { OCR_WORKER: member(() => ({ status: 503, body: { ok: false } })) } });
+  const b = await withEntry(pdf(SCAN(1)), () => down.w.x.readHeld({ sha: down.d, env: down.w.env, kind: "reading", registerJob, armJobs }));
+  assert.equal(b.owed, true, "a transient answer is still owed");
+});

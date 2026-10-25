@@ -1,6 +1,6 @@
 # money (T51)
 
-**Status** · session_01RUnq4fs9yS6fvUi9DZjnt9 · depth 2 · COMPLETE · handled B10
+**Status** · session_01EsE9gtefQQBM7aApNuuTJS · depth 2 · COMPLETE · handled B11
 
 ## J1 · REPORT
 
@@ -187,3 +187,19 @@ COMPLETE, G55 tier 2 (money), after B9 and B10. tranche/T51 merged; pushed.
 **Made stale (not edited, P9):** `bio-plane/dist/bio-plane.bundled.mjs` embeds money's source; BOB regenerates it at the layer close.
 
 Size (session_01RUnq4fs9yS6fvUi9DZjnt9): test runs 330, module lines 1566
+
+## J12 · COMPLETE
+
+COMPLETE, fix round 10 Wave A batch 3 (B11). tranche/T51 merged; pushed.
+
+**Fixtures published** (`bio-plane/test/m/money/fixtures.mjs`, new; each made by money's real code when called, checked by `fixtures.test.mjs`, R8): `readFactNotFound()` (the real `readFact` answer `{ok:true, found:false, fact_id, fact:null}` over an empty record) for ratification's 1 line; `readFactOf(over?)` (the real `readFact` answer `{ok, found:true, fact}` over a seeded fact, fields overridable) for strength's 1 line. Their users re-point in their own jobs.
+
+**Own fixture line done:** `ops.test.mjs:48` (promotion/makePromotion): the hand-built `promotionStandIn` is gone; R5's test now joins a real promotion (`promotionOver` over promotion's `makeRecord`/`makeMembership`, steps read back with `registeredSteps`), all from promotion's `fixtures.mjs`. Lines left: none. `fixtures-own` / `fixtures-generic` markers added: none.
+
+**Ran.** Money 106 of 106 pass (all files in one run). `checks/fixtures.mjs . money --list`: 0 failures (was 1). format 0; architecture 0; coverage 31 of 31; ownership 0 failures. Impact set: tests only (no src change), users of money's src are unaffected; impact.mjs run after commit below.
+
+Size (session_01EsE9gtefQQBM7aApNuuTJS): test runs 8, module lines 1566
+
+## J13 · COMPLETE
+
+Fix round 10 Wave A batch 3 done (record J12). Published readFactNotFound and readFactOf in bio-plane/test/m/money/fixtures.mjs, each tested (R8); re-pointed my line ops.test.mjs:48 to promotion's real fixtures. Fixtures check for money: 0 failures. Money 106/106 pass; format, architecture, coverage 31/31, ownership 0. No fixtures-own/generic markers added. Impact set names only money's own tests (run).

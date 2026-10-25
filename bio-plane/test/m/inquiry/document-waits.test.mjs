@@ -6,6 +6,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd, V, MACHINE } from "./fixture.mjs";
+import { heldActsUnreadable } from "../capture/fixtures.mjs";
 import { DOCUMENT_WAITS_MAX, WAIT_ENDING_STATES } from "../../../src/inquiry/index.mjs";
 
 const Q = "INQ-2026-0901-q", R = "INQ-2026-0902-r";
@@ -110,9 +111,11 @@ test("R58 a question at an ending state (concluded, divided, dismissed) answers 
   assert.equal(one(w).state, "waiting", "deferred is no ending state");
 });
 
+const unreadable = heldActsUnreadable();   /* capture's published fixture: its real answer over a store it cannot read */
+
 test("R58 when capture's read cannot be read (it throws, answers ok: false or no list), the question's wait is undetermined with that reason, never no wait", () => {
   for (const heldActsOf of [() => { throw new Error("boom"); },
-                            () => ({ ok: false, reason: "HELD_ACTS_UNREADABLE", acts: null }),
+                            () => unreadable,
                             () => ({ ok: true, acts: "none" }), () => null]) {
     const w = world({ capture: true }); w.member("alice"); w.inquiry(Q);
     w.held.heldActsOf = heldActsOf;
@@ -121,7 +124,7 @@ test("R58 when capture's read cannot be read (it throws, answers ok: false or no
     assert.match(a.why, /could not be read/);
   }
   const w = world({ capture: true }); w.member("alice"); w.inquiry(Q);
-  w.held.heldActsOf = () => ({ ok: false, reason: "HELD_ACTS_UNREADABLE", acts: null });
+  w.held.heldActsOf = () => unreadable;
   assert.match(one(w).why, /HELD_ACTS_UNREADABLE/);
 });
 

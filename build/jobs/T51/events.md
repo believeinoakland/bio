@@ -1,6 +1,6 @@
 # events (T51)
 
-**Status** · session_011EKDRCfuAzrqpjUU7nEv36 · depth 2 · COMPLETE · handled B2
+**Status** · session_01DAv9PSDWrsm3wEZhdCb73f · depth 2 · COMPLETE · handled B4
 
 ## Completion (CR-7, events)
 
@@ -39,3 +39,19 @@ Size (session_011EKDRCfuAzrqpjUU7nEv36): test runs 9, module lines 2795
 ## J3 · COMPLETE
 
 EVENTS #10 B3 complete on job/T51/events: C54, C6 met, events R53 as amended by K4310. timeline({captures}) now answers in the world lane the events whose event attestation (extent or dated fact) cites one of the captures, under R40 sight, R30 audience, R27 limit; set-found events not repeated; items found only by a capture carry of: []. Three tests naming R53 (written first, seen failing), controls included; one old R53 assertion (alone.world.items == []) changed with the requirement. events 93/93; explore, filings, actions, docket green as on base; op-declarations t50 has 1 inherited red identical on tranche/T51. checks/run.mjs: events 0 failures; ownership 0. Nothing to report in other modules. SCREENS-INVESTIGATE-2 and CAUSE-ACTION-T51 may read it after your merge.
+
+## Completion after B4 (START, fix round 10, Wave A batch 3)
+
+**Fixtures published** (`bio-plane/test/m/events/fixtures.mjs`, made by events' real code at call time over a fresh `world()`, never stored; each checked by a test naming a requirement in `fixtures.test.mjs`): `recordedByMalformedExtent` (R49, EXTENT_MALFORMED), `sequenceUndetermined` (R31/R51: `withWhy`, `withoutWhy` = the real answer with `why` taken off, `disagree` = cited orders disagree), `timelineAnswer` (R28, empty world), `timelineRefusal` (R28: NO_SET, BAD_DATE), `usesOf` (R46: one discretion, waiver and assessment through the real acts; `refused` = KIND_NOT_DISCRETION).
+
+**Own line done.** fixture.mjs:48 `promotionStub` removed; `world()` takes `promotionOver({record, membership, host})` from `../promotion/fixtures.mjs` (promotion's real code). `fixtures.mjs --list` for events: 0 failures. Markers added: no `fixtures-own`, no `fixtures-generic`, no `fixtures-contract`. Lines left: none.
+
+**Needs BOB.** `checks/architecture.mjs` fails one file: `bio-plane/test/m/events/fixture.mjs` imports promotion's fixtures, which `events` does not list in `uses` in `build/modules.json`. The line is BOB's, not mine: add `"promotion"` to events' `uses`. Nothing else in architecture fails for events.
+
+**Tests and checks.** events: 98 pass, 0 fail (93 before, 5 new). format 0 failures; fixtures 0 failures; words: no events finding; coverage: no events failure (other modules' ids listed unnamed are not mine); ownership 0 failures; `impact.mjs origin/tranche/T51 HEAD`: 0 affected modules (test files only).
+
+Size (session_01DAv9PSDWrsm3wEZhdCb73f): test runs 4, module lines 2807
+
+## J4 · COMPLETE
+
+EVENTS #12 B4 complete on job/T51/events: five fixtures published in bio-plane/test/m/events/fixtures.mjs (recordedByMalformedExtent, sequenceUndetermined, timelineAnswer, timelineRefusal, usesOf), each with a test naming its requirement; own line fixture.mjs:48 re-pointed to promotion's promotionOver. fixtures check for events at 0; events 98/98; format, words, ownership 0 failures; no fixtures-own/generic/contract markers added. NEEDS BOB: architecture fails 1 file (events/fixture.mjs imports promotion's fixtures; add "promotion" to events' uses in build/modules.json, your file). Record: build/jobs/T51/events.md.

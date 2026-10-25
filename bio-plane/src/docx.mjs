@@ -106,7 +106,7 @@ import { columnLetters } from "./formats-xlsx.mjs";
 import { localize } from "./setup-words/index.mjs";
 import { boundOf } from "./read-bounds.mjs";
 import {
-  Scanner, scanPart, scanWhole, scanSync, parseAttrs, unescape, readText, scanNotes, jsonBytes, memberIdentities, addressParts,
+  Scanner, scanPart, scanWhole, scanSync, parseAttrs, unescape, readText, scanNotes, jsonBytes, memberIdentities, addressParts, countObjects, precountFloor, readTextBytes, scanBytes, owned, decodePart,
 } from "./office-xml.mjs";
 
 /* R44: what the walk may retain, paragraphs, cells and links together (the table's figure, never a literal here). */
@@ -246,7 +246,7 @@ export function mceSkipper() {
  *  `meter` (R44) counts what the walk retains, paragraphs, cells and links, and the characters it holds; the first
  *  figure past its bound is `meter.exceeded` and stops the scan. `paragraphText: false` keeps no paragraph's text (a
  *  reader that needs the count and the structure, not the words); the text of a tracked change is kept either way. */
-function bodyWalk({ paragraphText, meter, count, over, charsMax }) {
+function bodyWalk({ paragraphText, meter, count, over, charsMax, refs }) {
   const paragraphs = [];
   const hyperlinks = [];
   const bookmarks = new Map();
@@ -295,7 +295,7 @@ function bodyWalk({ paragraphText, meter, count, over, charsMax }) {
   const skipped = mceSkipper();
 
   const handler = {
-    text(s) { if (textTarget) characters(decodeEntities(s)); },
+    text(s) { if (textTarget) characters(owned(decodeEntities(s))); },
     cdata(s) { if (textTarget) characters(s); },
     close(name) {
       /* N26: a branch of mc:AlternateContent not read adds nothing. */
@@ -323,9 +323,9 @@ function bodyWalk({ paragraphText, meter, count, over, charsMax }) {
           count();
           if (!selfClosed) {
             if (inPara) outer.push({ para, run });
-            para = ++last; run = -1; inPara = true; paragraphs.push({ para, text: "" });
+            para = ++last; run = -1; inPara = true; paragraphs.push(refs ? { para, ref: `¶${para + 1}`, text: "" } : { para, text: "" });
           } else {
-            paragraphs.push({ para: ++last, text: "" });
+            paragraphs.push(refs ? { para: ++last, ref: `¶${last + 1}`, text: "" } : { para: ++last, text: "" });
             if (!inPara) { para = last; run = -1; }
           }
           for (const b of boxStack) b.paras.push(last);
@@ -407,17 +407,22 @@ function bodyWalk({ paragraphText, meter, count, over, charsMax }) {
     footnoteRefs, endnoteRefs, headerRefs, textBoxes, images }) };
 }
 
+/* R44: the elements the body walk counts as a retained object, one for each open of one (paragraphs, cells, links); `countObjects` counts the same. */
+/* a body of at least this many declared bytes is kept as bytes (4 MiB: a string of it is under 8 MiB beside the answer) */
+const WINDOWED_FLOOR = 4 * 1048576;
+const BODY_COUNTED = new Set(["p", "tc", "hyperlink"]);
+
 /** The walk the body gets (R42, R44): the body walk, and with `tables` the tables walk, fed by ONE scan. Its `handler` is
  *  what a scanner is given; `result()` the two walks' collections once the part is scanned; `meter.exceeded` the
  *  bound the walk went past, if it did (`{why:"TOO_MANY_OBJECTS"|"TOO_MANY_CHARACTERS", n, bound, final:true}`). */
-export function createDocWalk({ paragraphText = true, tables = true, retainedMax = OFFICE_RETAINED_MAX, charsMax = OFFICE_DECODED_CHARS_MAX } = {}) {
+export function createDocWalk({ paragraphText = true, tables = true, refs = false, retainedMax = OFFICE_RETAINED_MAX, charsMax = OFFICE_DECODED_CHARS_MAX } = {}) {
   const meter = { objects: 0, chars: 0, exceeded: null };
   const handler = { stopped: false };
   const over = (why, n, bound) => {
     if (!meter.exceeded) { meter.exceeded = { why, n, bound, final: true }; handler.stopped = true; }
   };
   const count = () => { if (++meter.objects > retainedMax) over("TOO_MANY_OBJECTS", meter.objects, retainedMax); };
-  const body = bodyWalk({ paragraphText, meter, count, over, charsMax });
+  const body = bodyWalk({ paragraphText, meter, count, over, charsMax, refs });
   const tab = tables ? tablesWalk() : null;
   Object.assign(handler, {
     text: body.handler.text,
@@ -627,11 +632,28 @@ async function docxParts(bytes) {
 
   let documentXml = null;
   let commentsXml = null;
+  let refused = null, precounted = 0, documentBytes = null, documentEncoding = null;
   if (plan.read !== "none") {
     if (plan.read === "whole") {
-      const main = await readText(b, container, mainPart);
-      if (main.ok) { documentXml = main.text; if (main.partial) partials.push(main.partial); }
-      else undetermined.push({ part: mainPart, ...stripOk(main) });
+      /* R44 (cause 11a): a body that could hold more objects than the figure is counted in pieces BEFORE it is held whole,
+         so a part that would pass it is refused having spent no more than a piece. */
+      const mainEntry = container.byName.get(mainPart);
+      if (mainEntry && mainEntry.uncompressedSize >= precountFloor(OFFICE_RETAINED_MAX)) {
+        const c = await countObjects(b, container, [mainPart], BODY_COUNTED, { skipper: mceSkipper, max: OFFICE_RETAINED_MAX });
+        precounted = c.scanned;
+        if (c.exceeded) refused = c.exceeded;
+      }
+      if (!refused && mainEntry && mainEntry.uncompressedSize >= WINDOWED_FLOOR) {
+        /* a large body is kept as its bytes and decoded a window at a time by the walk: held as a string it is up to twice its size
+           beside the answer (R44's margin) */
+        const main = await readTextBytes(b, container, mainPart);
+        if (main.ok) { documentBytes = main.data; documentEncoding = main.encoding; if (main.partial) partials.push(main.partial); }
+        else undetermined.push({ part: mainPart, ...stripOk(main) });
+      } else if (!refused) {
+        const main = await readText(b, container, mainPart);
+        if (main.ok) { documentXml = main.text; if (main.partial) partials.push(main.partial); }
+        else undetermined.push({ part: mainPart, ...stripOk(main) });
+      }
     } else if (!container.byName.has(mainPart)) {
       /* Read in pieces by text() and structure(), each in its own pass; a body
          the package does not hold is stated now (R35). */
@@ -665,15 +687,26 @@ async function docxParts(bytes) {
   /* R32: read from names, rels and the VBA project, so over the guard too. */
   const active = await activeContent(b, container, rels, "word/");
 
-  return { ok: true, format: "docx", variant: d.variant ?? null, bytes: b, container, mainPart,
-    documentXml, commentsXml, rels, core, active, extras: extras.filter((x) => container.byName.has(x.part)),
-    guard, piecewise, stream: plan.read === "pieces", partials, undetermined };
+  const out = { ok: true, format: "docx", variant: d.variant ?? null, bytes: b, container, mainPart,
+    documentXml, documentBytes, documentEncoding, commentsXml, rels, core, active, extras: extras.filter((x) => container.byName.has(x.part)),
+    guard, piecewise, stream: plan.read === "pieces", partials, undetermined, refused, precounted };
+  /* a body kept as bytes (R44) still answers `documentXml` for a caller that wants the string (extraction's renumbering): made when asked, held by no one */
+  if (documentBytes != null) {
+    Object.defineProperty(out, "documentXml", { enumerable: false, configurable: true, get: () => { const d = decodePart(documentBytes, mainPart); return d.ok ? d.text : null; } });
+  }
+  return out;
 }
 
 /* The body of a docx walked through `w` (createDocWalk): whole, its text in hand, or, over the bound, in pieces (R35).
    Answers `{ok:true, scanner}` or the refusal that states why the part was not read (R40: a character reference that
    names no character). A walk stopped by the retained-objects bound is `w.meter.exceeded` (R44). */
 async function runBody(parts, w, yieldNow) {
+  if (parts.documentBytes != null) {
+    const sc = new Scanner(w.handler);
+    await scanBytes(sc, parts.documentBytes, parts.documentEncoding, yieldNow);
+    if (sc.badRef && !w.meter.exceeded) return { ok: false, why: "char_ref_invalid", final: true };
+    return { ok: true, scanner: sc };
+  }
   if (parts.documentXml != null) {
     const sc = new Scanner(w.handler);
     await scanWhole(sc, parts.documentXml, yieldNow);
@@ -881,7 +914,8 @@ async function docxStructure(parts, opts) {
      answer counts paragraphs and states changes, and holds no words but a change's own). A body that cannot be read to
      its end, or that the retained-objects bound refuses (R44), is stated. */
   let walk = null, bodyFailure = null;
-  if (parts.documentXml != null || parts.stream) {
+  if (parts.refused) bodyFailure = parts.refused;
+  else if (parts.documentBytes != null || parts.documentXml != null || parts.stream) {
     const w = createDocWalk({ paragraphText: false, tables: false });
     const run = await runBody(parts, w, yieldNow);
     if (w.meter.exceeded) bodyFailure = w.meter.exceeded;
@@ -1094,21 +1128,24 @@ async function docxText(parts, opts) {
   const yieldNow = opts?.yieldNow;
   /* The body walked: whole (its XML in hand) or, over the bound, in pieces (R35): the body walk and the tables walk
      are fed by ONE scan, so the part is never held and read once (R42). */
-  if (parts.documentXml == null && !parts.stream) {
+  /* R44 (cause 11a): refused before the body was held, by the count parts() made in pieces; the same answer the walk gives. */
+  if (parts.refused) return bodyRefused({ part: parts.mainPart, ...parts.refused });
+  if (parts.documentBytes == null && parts.documentXml == null && !parts.stream) {
     const stated = parts.undetermined.find((u) => u.part === parts.mainPart);
     return bodyRefused({ reason: "main_part_unreadable", part: parts.mainPart, ...(stated ? stripOk(stated) : { why: "unreadable" }) });
   }
-  const w = createDocWalk({ paragraphText: true });
+  const w = createDocWalk({ paragraphText: true, refs: true });
   const run = await runBody(parts, w, yieldNow);
   /* R44: the walk would retain more than the table's figures: refused, by name and with its figure. */
   if (w.meter.exceeded) return bodyRefused({ part: parts.mainPart, ...w.meter.exceeded });
   if (!run.ok) return bodyRefused({ reason: "main_part_unreadable", part: parts.mainPart, ...stripOk(run) });
   const walk = w.body();
   const tablesDone = w.tables();
-  let scanned = run.scanner.scanned;
+  let scanned = run.scanner.scanned + (parts.precounted ?? 0);
   const undetermined = [...parts.partials, ...scanNotes(parts.mainPart, run.scanner)];
 
-  const paragraphs = walk.paragraphs.map((p) => ({ para: p.para, ref: `¶${p.para + 1}`, text: p.text }));
+  /* the walk made the paragraphs as they are answered (`refs`), so no second list of 200,000 objects is held beside the first (R44's margin) */
+  const paragraphs = walk.paragraphs;
   const document = paragraphs.map((p) => p.text).filter((t) => t.length).join("\n");
   /* FW-19 / IC-124: the `doc-table` units — the bound the arm is checked
      against. An EMPTY list is a real zero (the body was walked and held no
@@ -1178,9 +1215,10 @@ async function docxText(parts, opts) {
   for (const c of walk.changes) {
     if (c.change === "deletion" && c.text) kinds.body.push({ at: [c.para, c.run ?? -1], u: { kind: "tracked_deletion", ref: docParaRef(c.para, c.run), part: parts.mainPart, text: c.text } });
   }
+  /* R38 (G166): a text box's piece names the paragraphs it holds, so a reader takes their words from the piece only. */
   for (const box of walk.textBoxes) {
     const text = box.paras.map((p) => walk.paragraphs[p]?.text ?? "").filter(Boolean).join("\n");
-    if (text) kinds.body.push({ at: [box.paras[0] ?? 0, -1], u: { kind: "text_box", ref: docParaRef(box.paras[0] ?? 0), part: parts.mainPart, text } });
+    if (text) kinds.body.push({ at: [box.paras[0] ?? 0, -1], u: { kind: "text_box", ref: docParaRef(box.paras[0] ?? 0), part: parts.mainPart, text, paras: [...box.paras] } });
   }
   kinds.body.sort((a, b) => a.at[0] - b.at[0] || a.at[1] - b.at[1]);
   for (const x of parts.undetermined) if (x.why === "part_unread" && !undetermined.includes(x)) undetermined.push(x);

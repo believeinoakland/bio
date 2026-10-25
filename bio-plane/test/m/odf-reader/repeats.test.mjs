@@ -8,9 +8,9 @@ import { pkg, metaXml, sha256Hex } from "./pkg.mjs";
 
 const MAX = 262144;
 const UNITS = { text: "undetermined", why: "over_repeat_bound", units: MAX + 1, bound: MAX,
-  boundName: "ODF_REPEAT_EXPANSION_MAX", metric: "expanded_repeat_units" };
+  boundName: "ODF_REPEAT_EXPANSION_MAX", metric: "expanded_repeat_units", final: true };
 const CHARS = { text: "undetermined", why: "over_repeat_bound", units: MEASURED_OOXML_TEXT_BOUND_BYTES + 1,
-  bound: MEASURED_OOXML_TEXT_BOUND_BYTES, boundName: "MEASURED_OOXML_TEXT_BOUND_BYTES", metric: "repeated_text_chars" };
+  bound: MEASURED_OOXML_TEXT_BOUND_BYTES, boundName: "MEASURED_OOXML_TEXT_BOUND_BYTES", metric: "repeated_text_chars", final: true };
 
 const table = (rows) => `<table:table table:name="S">${rows}</table:table>`;
 const row = (cells, attrs = "") => `<table:table-row${attrs ? " " + attrs : ""}>${cells}</table:table-row>`;

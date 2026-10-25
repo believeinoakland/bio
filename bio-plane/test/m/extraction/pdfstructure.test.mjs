@@ -4,19 +4,25 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bundle, hold, member, withEntry, i2, noText, folio, unreadImage, ocrAnswer, calibration, pageUnits } from "./fixture.mjs";
+// fixtures-contract: plane job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 import { needsTier3 } from "../../../src/reading-pipeline/index.mjs";
 import { REEXTRACT_CHECKS } from "../../../src/extraction/index.mjs";
 import { pdfStructureOp, extractionOp, EXTRACTION_OPS } from "../../../src/extraction/ops.mjs";
 import { evidenceAbsent } from "../../../src/capture/ops.mjs";
 import { unregisterFormat, registerFormat, getFormat } from "../../../src/formats.mjs";
+import { notAPdf } from "../pdf-reader/fixtures.mjs";
+import { memberRefusal } from "../../../../ocr-worker/test/fixtures.mjs";
+
+/* the real OCR member declining a page it cannot read (its published fixture, K5044) */
+const PAGE_NOT_LEGIBLE = await memberRefusal("PAGE_NOT_LEGIBLE");
 
 /* reading-pipeline R4: at most 24 calls of the OCR member per request, as its requirement states the bound. */
 const OCR_CALLS_PER_REQUEST = 24;
 
 const pdf = (text, pages) => ({ format: "pdf", structure: async (b) => (new TextDecoder().decode(b).startsWith("%PDF")
   ? { ok: true, text: structuredClone(text), pages: pages ?? (text.pages || []).length, notes: [] }
-  : { ok: false, reason: "NOT_A_PDF" }) });
+  : await notAPdf()) });
 
 /* A store holding a capture of `text` in bundle B-1, read once (its reading and whole-page units written, as the reader stores them: one unit per page
    holding text; `tier3_candidate` when a page wants OCR), with test-support's job registrar as the composition's `registerOwe` hook. */
@@ -177,7 +183,7 @@ test("R33 R103: the press reads nothing and calls no engine: a reading with no p
   assert.deepEqual([ocr.calls.length, f.jobs.rows().length], [0, 0]);
   const g = await held(i2([{ page: 0, text: "", undetermined: [noText(0)] }]));
   const before2 = writes(g.w);
-  const declines = member(() => ({ ok: false, reason: "busy" }));
+  const declines = member(() => PAGE_NOT_LEGIBLE);
   const { press, job, pass } = await pressThenPass(g, { OCR_WORKER: declines });
   assert.deepEqual([press.status, press.body.reextraction.performed, press.body.reextraction.written, press.body.reextraction.owed, press.body.reextraction.candidate],
                    [200, false, false, true, [0]]);

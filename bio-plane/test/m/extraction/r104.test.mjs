@@ -5,11 +5,11 @@
    R81's tests (the home of a capture registered by its parts) are superseded by these (R104 restates R81). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, bucket, withEntry, i2, doc, sha } from "./fixture.mjs";
+import { fresh, bundle, bucket, withEntry, i2, doc, sha, homesOver } from "./fixture.mjs";
 
 /* a pdf entry that reads the bytes it is handed as one page's text, so a reading shows which bytes it was made from */
 const asText = { format: "pdf", structure: async (bytes) => ({ ok: true, text: i2([{ page: 0, text: new TextDecoder().decode(bytes) }]), pages: 1, notes: [] }) };
-const register = (rows, parts) => ({ homeOf: (s) => rows.get(s) ?? null, partsOf: (s) => parts.get(s) ?? null, onTestimony: () => ({ ok: true }) });
+const register = (rows, parts = null) => homesOver(rows, parts);
 const row = (bundleId, bytes) => ({ bundleId, path: "a.pdf", encoding: "binary", bytes, registered: "t", authored: false });
 const count = (w, table, d) => w.one(`SELECT count(*) c FROM ${table} WHERE capture_sha=?`, d).c;
 const units = (w, d) => w.x.readingFor(d, "class:admin").text_units.map((u) => u.text).join(" ");

@@ -1,6 +1,6 @@
 # BOB to installer (T51)
 
-**Read** · handled J28
+**Read** · handled J30
 
 ## B1 · START
 
@@ -217,3 +217,20 @@ ANSWER (BOB #280, K4947) to J26.
 ## B28 · CHANGE
 
 CHANGE (BOB #280, K4951, Bob's ruling): installer R85 is new (merge origin/tranche/T51 and read it whole): before the sign-in, ask whether the founder has a Cloudflare account; walk one without (or not ready) step by step: account and email, Workers Paid and a payment method, R2, then sign-in and 'Allow'; one step a screen, resumable, 'Check again' (R84's), each step's likely questions answered in place; never ask a token or an account id. Words by word(key) only, stand-in keys listed in your record (K4947 (3)); UX-DESIGN draws them (HANDOFF posted). Red first per R85's test; add it to the same COMPLETE.
+
+## B29 · START
+
+START · INSTALLER #27 · tranche T51 · product believeinoakland/bio · fix round 9, batch D: G157, R84 amended: Containers on Free is 401 / 1000, the plan stop, measured (K4970) · depth 2 (BOB #281 at depth 1)
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `git fetch origin job/T51/installer tranche/T51 && git branch -m job/T51/installer stale/installer-local && git checkout -b job/T51/installer origin/job/T51/installer`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+Mail with `--module installer`; record `build/jobs/T51/installer.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); any act a safety or permission check refuses is NEVER worked around, split, rephrased or retried: post BLOCKED naming it and wait (K4696). Before any test run every directory with a tracked `package-lock.json` has its `node_modules` (K4113; a symlink there is deleted first, K4939). Tests: `cd newgroup && node --test --test-force-exit test/` (your module's files). Your diff touches only this module's `paths`, its `tests` and your record (ownership); never a `node_modules` entry. Never contact any live deployment or Cloudflare. `installer` is a drawn-screen module: sentences only by `word(key)`, no `localize` (K4947). Read whole: this START, your requirements R6, R84 (amended), R85, `newgroup/src/ready.mjs`, `build/plan/measure-R9-account-shapes.md` (whole), and the tests naming R84. Before COMPLETE: your suite (the tranche's sixteen inherited installer reds are accepted by name: R8, R11, R20, R44, R55, R61, R71, G54, wizard, R33 six; say if any changes), `node build/plan/impact.mjs origin/tranche/T51 HEAD` and its users, the checks (format, architecture, coverage, words, ownership) each by its failure count; COMPLETE with the four fields and a `Size` line.
+**Why this job (job 83, G157; runs beside job 82).** Merge `origin/tranche/T51` first. Cause: `containersState` (`ready.mjs:72-83`) reads only codes 10000/9109 (permission) and 100328 (plan); a Free account answers `GET /containers/applications` with HTTP 401, code 1000, "Unauthorized: You do not have access to Cloudflare Containers. Deploying containers requires the Workers Paid plan..." (measured), read today as "unknown". Why missed: the codes were documented stand-ins (K4947). Red first: a fixture with the measured answer gives state `plan` and the plan stop. Put the measured code in `CONTAINERS_CODES.plan` (decide by status 401 with code 1000 on this path; a bare 1000 elsewhere is not the plan); bring every R84 fixture to the measured shapes (R2 403/10042, no prefix 404/10007, plan 400/100328, taken prefix 403/10031). Platform check: P (measured). Add no sentence.
+
+## B30 · ANSWER · re J29
+
+ANSWER J29 (BOB #281). Both go to INSTALLER-STEPS #11 (job 82, running): (2) is already its G158 entry; (1) `failureOf` carrying `code` on a 401 is added to it as a CHANGE now. When job 82 merges BOB sends you a CHANGE naming the commit; merge the tranche then, re-run r84 (and your suite) and COMPLETE. Keep your work committed meanwhile.
+
+## B31 · CHANGE
+
+CHANGE (BOB #281, K4971): job 82 is merged on tranche/T51 (failureOf carries Cloudflare's code on a 401; a taken prefix 403/10031 is taken). Merge origin/tranche/T51, re-run r84 and your suite, and COMPLETE.

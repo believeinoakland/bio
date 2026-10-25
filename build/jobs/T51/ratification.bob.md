@@ -1,6 +1,6 @@
 # BOB to ratification (T51)
 
-**Read** · handled J17
+**Read** · handled J20
 
 ## B1 · START
 
@@ -257,3 +257,57 @@ Mail with `--module ratification`; record `build/jobs/T51/ratification.md` (appe
 **Before COMPLETE:** your module's tests, `node build/plan/impact.mjs tranche/T51 HEAD` and the users it names that your change touches, then format, architecture, coverage, words and ownership (civicos-process `checks/`), each read by its failure count. Record completion (mechanics section 6 step 7) with `Size (<session id>): test runs <n>, module lines <n>` and each cause's four fields; state COMPLETE; post COMPLETE.
 
 **G120b · One `caseratify` still takes 4.1-4.6 s on `Server-Timing` against K4354's 2 s act bar** (re-walk 8 B: STILL; was 13.1 s; diagnosis item 2, structure Certain). (1) The counting door shows 61 calls, chain 25. The gate phase is 5 object levels deep; with a sitting of 2 members `gatefacts`, `image`, `list` and `ratifygate` run once per member and `list` (every bundle id) is read twice; the `reusedparts` check runs member after member (`ratification/ops.mjs` ~282-291). Gate, copy, assemble and reuse are 3.9 s of the 4.1 s. (2) Missed: round 8's `r8-caseratify-calls` asserted the count fell, not the chain length per phase or the per-member repetition. (3) Red, by counts (R-CLOCK), through the counting door (`wrap-entry.mjs`) on a 2-member sitting with one finding: each read the sitting needs is made ONCE per act, not once per member (`list`, `gatefacts`, `image`, `ratifygate` counted); the reuse check's member calls run concurrently (its chain depth counted); report the chain length of each phase before and after. (4) **L** (the counting door); **P** the re-walk's `caseratify;dur` (BOB's). Public-read's assembly (G121b) is job 50; what remains over 2 s after both is measured by BOB and planned from the measurement, never assumed.
+
+## B17 · START
+
+START · RATIFICATION #36 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 3: causes R27a, publish 2 fixtures, re-point 19 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #290 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/ratification tranche/T51 && git branch -m job/T51/ratification stale/ratification-local && git checkout -b job/T51/ratification origin/job/T51/ratification`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module ratification`; record `build/jobs/T51/ratification.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Causes (fix-round-10-T51.md §1; each with K4426's four: root cause, why the tests missed it, a failing-first test on the walker's exact case seen red first, the platform check). The requirement amendments quoted are already on the tranche.**
+**R27a** (G5; walk E2: `caseratify` 2.8-3.5 s). Root: the act is a chain of 18 sequential awaited calls (47 calls: 20 to the object, 27 to R2) and 1.9 s of its 2.8 s follow the commit; the floor of a read hop is 66 ms and of a write hop 98 ms (`ratification/ops.mjs` `caseCeremony`: gate `:111-215`, commit `:236`, copy `:258-273`, assembly `:274-283`, reuse `:284-293`). BOB ruled option A and amended ratification R6 and R60 (not yet met: T51): cutting the act's chain of awaited calls to at most 10 changes nothing in what the member is told; the answer still carries the container and the reused-parts report. Cut the chain: fold `session` and `reauthdue` into one hop; fold `recordcasefile`, `casefilefacts`, `recordcasemanifest` into one; issue the R2 heads and puts of the copy and the assembly in one group of 8. What the member is told is unchanged. Tests missed: `r8-caseratify-calls.test.mjs` bounds the chain at 25 (derived from that day's chain); nothing derives a bound from the 2 s bar. Failing-first, seen red as a count (chain 18, 47 calls): a counting test (the counting door `r8-kit.mjs` + `wrap-entry.mjs`, the G59 case as E2): the longest chain at most 10; controls: the answer's keys are the golden list (`GOLDEN_KEYS`), `materials_copied` and `container` unchanged. That test is control-plane's (`bio-plane/test/m/control-plane/r10-caseratify-chain.test.mjs`; ratification R60 names it): write it in your own tests if those helpers can be imported without an architecture edge, else REPORT its text to BOB for control-plane's Wave B job. The `session`/`reauthdue` fold touches control-plane: REPORT that line to BOB. Platform P: E2's own sequence on the copy, `Server-Timing` `object-calls;dur`: chain 10 or less, total under 2 s.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `bio-plane/test/m/ratification/fixtures.mjs` (new file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `noCaseDocument` (users now: control-plane 1): real `casedocument` read by a stranger (secret not honoured): NO_CASE_DOCUMENT; and the document answer it gives the holder.
+- `preflightRefusal` (users now: case-authoring 1): real ratification R18 pre-flight with no attesting key (NO_ATTESTING_KEY).
+
+**Your own fixture lines, done in this job** (19; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- contradiction/candidateReads (1 judgment): contested.test.mjs:108
+- capture/recordReuseVerdicts (1 judgment): converted-c.test.mjs:415
+- provenance/holdsRegister (2 judgment): fixture.mjs:145; g54-entry.mjs:103
+- FIX-L answer-envelope/door-helpers: fixture.mjs:424; g54-entry.mjs:40; g54-paths.test.mjs:448; g57-heal.test.mjs:47
+- publication/caseFileLedger (2 judgment): g54-paths.test.mjs:109,114
+- publication/assembleCaseContainerRefusal (3 mechanical): g54-paths.test.mjs:310,455; g57-heal.test.mjs:426
+- FIX-L control-plane/unknown-op: relays.test.mjs:118
+- FIX-L store-door/store-replies: relays.test.mjs:119,159,163,188
+- publish-schedule/scheduleRefusals (1 mechanical): schedule.test.mjs:127
+
+**Fixture lines NOT done in this job** (2; their providers merge in your batch or after): FIX-E 2; FIX-E providers: money, strength. They stay in your list and arrive as a CHANGE.
+
+A `fixtures-run` you write shows `orphan-run` in your list until its user module's marker is merged, and a marker you place shows `contract-no-run` until its provider's run is merged: these are the only lines you may leave at done, each named in your record with the module it waits for.
+
+Rules of fix-round-9 §0 that bind: R-FOUR (root cause with file:line, why the tests missed it, a failing-first test on the walker's exact case through the real entry path seen red first, the platform check); R-SEAM / R-ONE; R-CLOCK; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** each cause above fixed with its failing-first test green (seen red first) and its platform check done or named for the redeploy; your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . ratification --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/ratification.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+**K5074:** your three case-file build refusals (`g54-paths:310`, `:455`, `g57-heal:426`) come from public-read's `assembleCaseContainerRefusal` (public-read, batch 4, after you): public-read is earlier in the order, so you import its fixture directly once it has merged (until then these three lines stay listed, and arrive as a CHANGE); the ledger half is publication's `caseFileLedger`.
+
+## B18 · START
+
+START · RATIFICATION #37 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 16 (plan build/plan/fix-round-10-T51.md §3; K5094)
+
+Depth 2 (BOB #291 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/ratification tranche/T51 && git branch -m job/T51/ratification stale/ratification-local && git checkout -b job/T51/ratification origin/job/T51/ratification`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module ratification`; record `build/jobs/T51/ratification.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` from the process repository (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993); a later provider's answer is kept under `// fixtures-contract: <provider> <id>` (K4995).
+
+**Follow-up 16 (test files only).** public-read is merged (K5094) with `assembleCaseContainerRefusal` in its published fixtures. Re-point `g54-paths.test.mjs:109`, `:114`, `:310`, `:455` and `g57-heal.test.mjs:426` to it (read the fixture whole first; the real answer wins where it differs), and `g54-entry.mjs:111` (strength) and `:113` (money) to those providers' published fixtures (FIX-E; strength and money are merged). `g54-entry.mjs` is bundled into the Miniflare script (its `fixtures-own: platform` line at :98, K5083): if a provider fixture cannot load on workerd there, keep the line and REPORT why. Do not strike R60: its door bar of 11 waits on control-plane's fold (follow-up 8).
+
+**Done:** `checks/fixtures.mjs <absolute root> ratification --list` with your lines at zero (or each remaining one named with why); your module's tests green, and the tests of every module `build/plan/impact.mjs` names when you change product code; format, architecture, coverage, words, ownership 0. List every `fixtures-own`/`fixtures-generic` marker you add, file:line and why (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-haiku-5-5.

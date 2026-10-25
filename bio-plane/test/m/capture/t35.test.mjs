@@ -12,6 +12,7 @@ import { word } from "../../../src/setup-words/index.mjs";
 import { TSA_ENDPOINTS, ARCHIVE_SAVE_BASE } from "../../../src/tsa.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
+// fixtures-contract: answer-envelope door-helpers
 const storeSilent = (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }, 502);
 const doAnswer = async (res) => { let out = null; try { out = await (await res).json(); } catch { out = null; }
   return out && out.ok === true ? { answered: true, result: out.result } : { answered: false, result: undefined }; };

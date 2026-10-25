@@ -1,6 +1,6 @@
 # BOB to case-carriage (T51)
 
-**Read** · handled J6
+**Read** · handled J8
 
 ## B1 · START
 
@@ -130,3 +130,40 @@ Mail with `--module case-carriage`; record `build/jobs/T51/case-carriage.md` (ap
 - **G136c · doc-clean writes a 16-bit entry count (no ZIP64, no entry bound), and a cleaner crash loops (X21).** (1) `doc-clean/package.mjs:55-60, 83-123`: a valid 70,009-entry DOCX cleans to `ok:true` with an end record saying 4,473, which `ooxml.readContainer` also lists (it never checks it reached the directory's end); `case-carriage/index.mjs:1270-1282`; `tried` stamped after the work returns. ZIP64 or a stated `TOO_MANY_ENTRIES`, the written count equal to the read count, `tried` stamped before. (2) Missed: the oracles (Info-ZIP, Python) were not applied to the cleaned copy. (3) Red: DOCS C1 (70,009 and 65,535 entries; a crash mid-clean; the next wake does not loop). (4) **L**.
 
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE.
+
+## B8 · START
+
+START · CASE-CARRIAGE #17 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 2: publish 3 fixtures (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #289 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/case-carriage tranche/T51 && git branch -m job/T51/case-carriage stale/case-carriage-local && git checkout -b job/T51/case-carriage origin/job/T51/case-carriage`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module case-carriage`; record `build/jobs/T51/case-carriage.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `bio-plane/test/m/case-carriage/fixtures.mjs` (new file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `copyReadStates` (users now: case-disclosures 1): real `caseCarriage` copy read (`documentCopy`) over a captured document in each state: copy, photo, refused, undetermined, unknown capture.
+- `copyTickRefusals` (users now: scheduler 1): real case-carriage `copyWake`/`copyBatch` tick with no evidence store (DOCUMENT_COPY_NO_STORE).
+- `onCopyWorkRegistrarRefusals` (users now: scheduler 1): real `caseCarriage.onCopyWork` registered twice / with a non-function (LISTENER_DECLARED, LISTENER_MALFORMED).
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . case-carriage --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/case-carriage.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-haiku-5-5, medium effort.
+
+## B9 · START
+
+START · CASE-CARRIAGE #18 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 14: cause R24 (b2) (plan build/plan/fix-round-10-T51.md §3; K5082)
+
+Depth 2 (BOB #290 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/case-carriage tranche/T51 && git branch -m job/T51/case-carriage stale/case-carriage-local && git checkout -b job/T51/case-carriage origin/job/T51/case-carriage`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module case-carriage`; record `build/jobs/T51/case-carriage.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` from the process repository (K5078).
+
+**Cause R24 (b2), the filing stall (G5; walk D8a; PLANE #61 J62's CPU profile, its record's last section on `job/T51/plane`).** Filing over an 8 MB text holds the object's thread: about half the stretch is case-carriage's one-shot pure-JS SHA-256 in `#copyOne`; a native digest cut it 524 to 268 ms under L-PIN in plane's experiment. The placement (K5057) ruled the fix: hash with the platform's native digest (`crypto.subtle.digest('SHA-256', ...)`) for inputs over 1 MiB, the same bytes, the same digest (a hash is an identifier: compare it byte for byte with the old one's output on a fixed input, R-OLD: nothing stored changes). Root cause with file:line; why the tests missed it (no test measured the work of a large copy); a failing-first test that asserts WORK, not time (K4787: no load-dependent tests): over a 2 MiB input the copy calls the native digest once and the JS hash zero times (through a counting seam of your own), and the digest equals the known SHA-256 of that input; control: a small input answers the same digest as before. Plane's `r10-filing-stall` (plane's tests, merged with plane's coupled merge) is plane's platform-side check; name it as owed in your COMPLETE.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE (K5060).
+
+**Done:** the cause fixed with its failing-first test green (seen red first); module tests, words, fixtures, coverage, architecture, format green by failure count; the impact set's tests run; record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5.

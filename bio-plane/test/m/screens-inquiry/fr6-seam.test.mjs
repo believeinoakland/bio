@@ -83,7 +83,10 @@ test("R96 R129 G6 (the real plane) the walker's 40 MB upload, filed by the scree
   const p = await boot({ screens: SCREENS, plane: forwarded(auth), path: "/app/document/" + filed.bundleId });
   await until(p, () => !!main(p).querySelector("[data-text-state]"));
   const m = main(p);
-  assert.ok(String(m.textContent).includes(hasWord("screen.document.reading.stated") ? word("screen.document.reading.stated", { size: word("size.mb", { n: (stored.bytes / 1048576).toFixed(1) }) }) : stored.reading.basis), "the statement is drawn: the design's row when held, else the plane's words");
+  /* R96 (fix round 10): the reading's own reason, size and limit decide the sentence: this is a size refusal, drawn with the reading's size and the limit, each in MB */
+  const mb = (n) => word("size.mb", { n: (n / 1048576).toFixed(1) });
+  assert.equal(stored.reading.reason, "TOO_LARGE");
+  assert.ok(String(m.textContent).includes(word("screen.document.reading.toolarge", { size: mb(stored.reading.size), limit: mb(stored.reading.bound) })), "the statement is drawn: a size refusal with its own size and limit");
   assert.ok(String(m.textContent).includes(word("size.mb", { n: (stored.bytes / 1048576).toFixed(1) })), "with the file's size");
   assert.ok(!String(m.textContent).includes(word("state.empty")), "never 'Nothing here'");
   assert.ok(!actsIn(m).includes("pdfstructure") && !actsIn(m).includes("readheld"), "no act is offered after it");

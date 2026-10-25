@@ -1,6 +1,6 @@
 # review (T51)
 
-**Status** · session_016SWyQAUyjKySSg7jMkWWY1 · depth 2 · COMPLETE · handled B17
+**Status** · session_01MSRpgw82aZM18FqtkcrU26 · depth 2 · COMPLETE · handled B17
 
 ## Completion record (fix round 4, B13 START, K4429; REVIEW #22)
 
@@ -285,3 +285,22 @@ Size (session_016SWyQAUyjKySSg7jMkWWY1): test runs 9, module lines 1703
 ## J13 · COMPLETE
 
 COMPLETE for fix round 6 (G12c, provider). casedrafts takes projects (at most 50) and reviewcopy takes drafts (at most 20), each answering one single-read answer per id, a hidden or unknown id the same dead answer byte for byte; an over-long list is refused whole, REVIEW_BATCH_TOO_LARGE (C-87.18, stand-in words, row owed refusal.REVIEW_BATCH_TOO_LARGE). Both ops declared (K4208). Failing-first batch.test.mjs 8 tests (red: unchanged source ignores the keys), review suite 95/95, users 1143/1144 (plane release R24, accepted by name), checks and ownership clean for review (format failure next.md:38 inherited). Requirement lines R44, R45 and the R23/R42 amendments are proposed in my record, with the parameters control-plane and store-door must forward. No QUESTION open, nothing deferred.
+
+## Completion record (fix round 10, Wave A batch 5, B18 START; REVIEW #25, session_01MSRpgw82aZM18FqtkcrU26)
+
+`tranche/T51` merged at the start. Causes done:
+
+1. **Own fixture lines (2):** `case-account/reviewCommentsRegistrar` (fixture.mjs:130, 131): the test world's `caseAccount.registerReviewComments` no longer hand-builds MALFORMED or REVIEW_COMMENTS_DECLARED; it takes `malformed`, `declared` and the first registration's `{ok: true}` from case-account's published `reviewCommentsRegistrar()` (`bio-plane/test/m/case-account/fixtures.mjs`, FIX-E, provider earlier in the order). Import added at the top of `fixture.mjs`.
+2. **Contracts run (new `bio-plane/test/m/review/fixtures.test.mjs`):** `// fixtures-run: case-account review-copy-read` (R33: the registered reader answers ok false / NO_REVIEW_COPY, the dead answer whole, for no door, no viewer, case not held; writes nothing) and, from the found-before note, `// fixtures-run: case-inputs no-review-copy` (R10: ok false, reason and code NO_REVIEW_COPY, check C-87.1, member's words and detail, stable bytes).
+
+Markers added: no `fixtures-own`, no `fixtures-generic`. The two `fixtures-run` lines wait for their users' markers only if those are not merged yet (case-account `comments.test.mjs:51` and case-inputs `fixtures.mjs:41` carry them already on this branch).
+
+**Found in another module (for BOB):** case-inputs' stand-in `DEAD` (`bio-plane/test/m/case-inputs/fixture.mjs:61`) has `translation: "(the review copy's dead answer)"` and no `detail`; the real `noReviewCopy()` answers the full member's words in `translation` and a `detail` sentence. Same `ok`/`reason`/`code`/`check`. The real one wins; case-inputs changes its stand-in (or takes the shape from this run).
+
+Checks: `fixtures.mjs . review --list` 0 failures (both lines at zero); module tests 97 pass, 0 fail; `format` 0 failures; `architecture` 0; `coverage` 45 of 45; `ownership` 0; `impact.mjs origin/tranche/T51 HEAD`: 0 affected modules (tests only), so no user tests to run.
+
+Size (session_01MSRpgw82aZM18FqtkcrU26): test runs 3, module lines 0
+
+## J14 · COMPLETE
+
+Fix round 10 batch 5 done: 2 own fixture lines at zero (case-account registrar fixture taken), fixtures-run added for case-account review-copy-read and case-inputs no-review-copy; tests 97/97, all checks 0. Found: case-inputs' DEAD stand-in lacks the real translation/detail (see record). Record: build/jobs/T51/review.md.

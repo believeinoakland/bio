@@ -25,6 +25,7 @@ import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
 import { eventsOf } from "../../../src/events/index.mjs";
 import { moneyOf } from "../../../src/money/index.mjs";
 import { contradictionOf, inquiryServices } from "../../../src/contradiction/index.mjs";
+import { noSelection } from "../retrieval/fixtures.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -86,7 +87,7 @@ export function world({ gate = true, now = null, strictConclude = false } = {}) 
   entities.migrate();
   const connections = { themeLegFindings: () => [], edgeSevered: () => false, portionGrades: () => ({}), portionAxes: () => ({}) };
   const k = inquiryOf(host, { record, membership, promotion, content, connections, entities, provenance: prov,
-                              retrieval: { selectionResolve: () => ({ ok: false, reason: "NO_SUCH_SELECTION" }) }, now: tick });
+                              retrieval: { selectionResolve: noSelection().selectionResolve }, now: tick });
   k.migrate();
   migrateBasisVersions(st.sql);
   for (const [id, cover] of [["m1", "Cover m1"], ["m2", "Cover m2"], ["m3", "Cover m3"], ["outsider", "Cover outsider"]])

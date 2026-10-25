@@ -502,6 +502,21 @@ function parseDict(buf, s, pos) {
 const SLICE_OBJECTS = 2000;
 const SLICE_BYTES = 1 << 20;
 const SLICE_STREAMS = 16;
+/** R45, amended (G179; K5006): the most work a region's compute does before it gives the thread back, in units: a content token
+ *  walked is one, a font's code-map entries an eighth each, 64 characters counted one (about 20 ms of this module's own work on
+ *  the machine the figure was taken on, never read as a time). */
+const SLICE_UNITS = 4096;
+/** `yieldNow` as a tick that never fails: a `yieldNow` that throws or rejects is ignored, and the answer does not depend on it. */
+const tickOf = (yieldNow) => async () => { try { await yieldNow(); } catch { /* the answer does not depend on it */ } };
+/** The slicer a region's compute carries (R45): `n` counts the work since the last yield; a loop adds its work and awaits `go()`
+ *  once it reaches SLICE_UNITS (`if (sl && ++sl.n >= SLICE_UNITS) await sl.go()` for a token, `await sl.add(k)` for a lump). */
+function slicerOf(yieldNow) {
+  const tick = tickOf(yieldNow);
+  const sl = { n: 0,
+    async go() { sl.n = 0; await tick(); },
+    async add(k) { sl.n += k; if (sl.n >= SLICE_UNITS) await sl.go(); } };
+  return sl;
+}
 const WORK = { scans: 0, objectStreamLoads: 0, innerDecodes: 0 };
 export function pdfWork() { return { ...WORK }; }
 
@@ -2677,7 +2692,7 @@ class PieceList {
 /** Extract Tier 1 text from one page. Returns { text, undetermined:[markers] }.
  *  `fontCache` is keyed by font object so a font shared across pages is parsed
  *  once. Every undecodable region is recorded, never rendered. */
-async function extractPageText(doc, pageIdx, pageMap, fontCache, wantPlaced = true, given = null) {
+async function extractPageText(doc, pageIdx, pageMap, fontCache, wantPlaced = true, given = null, slice = null) {
   const resources = pageResources(doc, pageMap);
   const fontDict = resources ? doc.dictOf(resources.Font) : null;
   const content = given ?? await pageContent(doc, pageMap);
@@ -2737,6 +2752,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache, wantPlaced = tr
     if (fontCache.has(key)) return fontCache.get(key);
     const f = await loadFont(doc, ref);
     fontCache.set(key, f);
+    if (slice && f && f.toUni) await slice.add(Math.ceil(f.toUni.size / 8));   /* R45: a code map parsed is work */
     return f;
   };
 
@@ -2992,6 +3008,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache, wantPlaced = tr
 
   const run = async (toks, depth, formChain) => {
   for (const tk of toks) {
+    if (slice && ++slice.n >= SLICE_UNITS) await slice.go();   /* R45: a page's token walk gives the thread back on a bounded slice */
     if (tk.t !== "op") {
       /* R47: operands past the bound are not held; the operator they were for sees none, and the page says so */
       if (stack.length >= OPERANDS_MAX) { stack.length = 0; if (!doc.notes.some((n) => n.startsWith("over_bound:operands"))) doc.note(`over_bound:operands:${OPERANDS_MAX + 1}:${OPERANDS_MAX}`); }
@@ -3585,6 +3602,11 @@ export function imagePlacementSource(placement) {
  * Returns `{ images:[placement…], why:null }` or `{ images:null, why }`.
  */
 export async function pdfPageImages(doc, pageIdx) {
+  return pageImagesOf(doc, pageIdx, null);
+}
+
+/** `pdfPageImages` whose walk gives the thread back on a bounded slice when it carries a slicer (R45). */
+async function pageImagesOf(doc, pageIdx, sl) {
   const pageMap = doc.pageDict(pageIdx);
   if (!pageMap) return { images: null, why: `page_unreadable:${pageIdx}` };
   const top = await decodeContentStreams(doc, pageMap.Contents);
@@ -3598,6 +3620,7 @@ export async function pdfPageImages(doc, pageIdx) {
     const saved = [];
     const operands = [];
     for (const tk of toks) {
+      if (sl && ++sl.n >= SLICE_UNITS) await sl.go();
       if (tk.t !== "op") { operands.push(tk); continue; }
       switch (tk.v) {
         case "q": saved.push(ctm); break;
@@ -3903,9 +3926,17 @@ function pdfPageBox(doc, pageMap) {
  *  thousands of pages is almost always one box, so each is stored once. Null
  *  only when there is no page to read. */
 function extractPageBoxes(doc) {
+  const steps = pageBoxSteps(doc);
+  for (let r = steps.next(); ; r = steps.next()) if (r.done) return r.value;
+}
+
+/** `extractPageBoxes` as steps (R45): it yields every SLICE_OBJECTS pages, so a range's first call over a document of many
+ *  pages gives the thread back while it reads the boxes; `extractPageBoxes` drains it with no await between steps. */
+function* pageBoxSteps(doc) {
   if (!doc.pageCount) return null;
   const boxes = [], key = new Map(), of_page = [];
   for (let idx = 0; idx < doc.pageCount; idx++) {
+    if (idx && idx % SLICE_OBJECTS === 0) yield;
     const b = pdfPageBox(doc, doc.pageDict(idx));
     if (!b) { of_page.push(null); continue; }
     const k = JSON.stringify(b);
@@ -4936,7 +4967,7 @@ async function loadPdf(bytes) {
 /** `loadPdf` that gives the thread back (R45): `yieldNow()` is awaited between the three phases and between the slices
  *  inside each; a `yieldNow` that throws or rejects is ignored (the open goes on, and its answer is the same). */
 async function loadPdfYielding(bytes, yieldNow) {
-  const tick = async () => { try { await yieldNow(); } catch { /* the answer does not depend on it */ } };
+  const tick = tickOf(yieldNow);
   const doc = new PdfDoc(bytes);
   for (const _ of doc._scanSteps()) await tick(); // eslint-disable-line no-unused-vars
   await tick();
@@ -5138,8 +5169,8 @@ function refusalOf(bytes) {
  * the same for the same arguments. What the opened document holds is what one `extractPdfRange` holds while it reads: the
  * object table (typed arrays), the bounded caches of R41 (parsed objects, decoded object streams) and the bytes the
  * caller passed in. Nothing a `range` call builds is kept: its fonts and its pages' structures are the call's own, and
- * its notes (informational, no answer carries them) are dropped at the call's start, so fourteen calls leave the document
- * as one left it. A caller that holds the opened document between calls (reading-pipeline, per digest) holds that. Bytes
+ * its notes are the open's again at the call's start (R50: the open's, kept and never cleared, then the range's own), so
+ * fourteen calls leave the document as one left it. A caller that holds the opened document between calls (reading-pipeline, per digest) holds that. Bytes
  * that are not a PDF answer as `extractPdfRange` does, with no `range`.
  *
  * R45 (G82; K4743): `openPdfRange(bytes, {yieldNow})` with a function `yieldNow` awaits it between the opening's phases and
@@ -5152,12 +5183,22 @@ export async function openPdfRange(bytes, opts) {
   if (refused) return refused;
   const yieldNow = opts && typeof opts.yieldNow === "function" ? opts.yieldNow : null;
   const doc = yieldNow ? await loadPdfYielding(bytes, yieldNow) : await loadPdf(bytes);
-  return { ok: true, pages: doc.pageCount, range: (range) => readRange(doc, bytes, range) };
+  openedNotes(doc);
+  return { ok: true, pages: doc.pageCount, notes: [...new Set(doc.notes)], range: (range) => readRange(doc, bytes, range, yieldNow ? slicerOf(yieldNow) : null) };
+}
+
+/** The notes (and the streams already noted) the open left on `doc`, taken once, at the open. */
+function openedNotes(doc) {
+  return doc._opened ||= { notes: doc.notes.slice(), noted: new Set(doc._trailingNoted) };
 }
 
 /** R43's reading of an opened document's pages; the one body of `extractPdfRange` and of an opened document's `range`. */
-async function readRange(doc, bytes, range) {
+async function readRange(doc, bytes, range, sl = null) {
+  /* R50: the notes the open made stay; a range adds its own to them, each once */
+  const opened = openedNotes(doc);
   doc.notes.length = 0;
+  doc.notes.push(...opened.notes);
+  doc._trailingNoted = new Set(opened.noted);
   const total = doc.pageCount;
   const from = Math.max(0, Math.floor(Number(range && range.from)) || 0);
   const asked = range && range.count !== undefined ? Math.floor(Number(range.count)) : total;
@@ -5170,6 +5211,7 @@ async function readRange(doc, bytes, range) {
   const out = (pages, undetermined, chars) => ({
     ok: true, container: "pdf", pages: total, from, count: pages.length,
     text: { pages, undetermined, counts: { chars, undetermined: undetermined.length } },
+    notes: [...new Set(doc.notes)],
   });
   if (count <= 0) return out([], [], 0);
   if (doc.isEncrypted()) {
@@ -5196,7 +5238,7 @@ async function readRange(doc, bytes, range) {
           if (pages.length > 0 && spent + size > maxBytes) { doc._peek = { idx, content: given }; break; }
           spent += size;
         }
-        res = await extractPageText(doc, idx, pageMap, fontCache, false, given);
+        res = await extractPageText(doc, idx, pageMap, fontCache, false, given, sl);
       } catch {
         doc.note("text_extraction_error");
         res = { text: "", undetermined: [{ page: idx, reason: "text_extraction_error", font: null, codes: "", count: 0 }] };
@@ -5214,20 +5256,34 @@ async function readRange(doc, bytes, range) {
   let walked = true, why = null;
   for (let idx = from; idx < from + pages.length && walked; idx++) {
     let got;
-    try { got = await pdfPageImages(doc, idx); } catch { got = null; }
+    try { got = await pageImagesOf(doc, idx, sl); } catch { got = null; }
     if (!got || !got.images) { walked = false; why = got ? got.why : `page_unreadable:${idx}`; } else for (const im of got.images) painted.push(im);
   }
   if (walked) { markImageContent(doc, result.text, painted); markImagesUnread(doc, result.text, painted); }
   /* R46: what a reading stores of the document and not of its text, so that the union of the ranges loses none of it */
-  const level = doc._level ||= { metadata: extractMetadata(doc), pageBoxes: extractPageBoxes(doc) };
+  const levelFrom = doc.notes.length;
+  if (!doc._level) {
+    let boxes;
+    if (sl) { const steps = pageBoxSteps(doc); for (let r = steps.next(); ; r = steps.next()) { if (r.done) { boxes = r.value; break; } await sl.go(); } }
+    else boxes = extractPageBoxes(doc);
+    doc._level ||= { metadata: extractMetadata(doc), pageBoxes: boxes };
+    doc._level.notes = doc.notes.slice(levelFrom);
+  }
+  const level = doc._level;
+  for (const n of level.notes) doc.note(n);   /* a title that cannot be decoded is the document's, in every range */
+  result.notes = [...new Set(doc.notes)];
   result.metadata = level.metadata;
   result.pageBoxes = level.pageBoxes;
   result.images = walked ? painted : null;
   if (!walked) result.imagesWhy = why;
-  let glyphs = 0, words = 0;
+  let glyphs = 0, words = 0, seen = 0;
   for (const pg of pages) {
-    for (const ch of pg.text) if (!/\s/u.test(ch)) glyphs++;
-    words += (pg.text.match(/\S+/gu) || []).length;
+    for (const ch of pg.text) {
+      if (!/\s/u.test(ch)) glyphs++;
+      if (sl && (++seen & 0x3fff) === 0) await sl.add(256);   /* R45: 16,384 characters counted, a quarter of a slice */
+    }
+    if (!sl) words += (pg.text.match(/\S+/gu) || []).length;
+    else for (const _ of pg.text.matchAll(/\S+/gu)) { words++; if ((++seen & 0x3fff) === 0) await sl.add(256); } // eslint-disable-line no-unused-vars
   }
   result.text_glyphs = glyphs;
   result.words_total = words;

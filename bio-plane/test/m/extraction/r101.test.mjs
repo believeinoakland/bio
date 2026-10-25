@@ -1,15 +1,15 @@
 /* extraction R101 (fix round 9, G129b, G129c; CF-18): progress only forward; a failure is transient (retried, never written as an end) or deterministic
    (final, with its reason); a unit that kills its reader three times is stated for that unit alone and the read goes on. At the module's real entry,
-   `readHeld`, as the plane's ledger calls it (one call a tick; `kind`, `killedPages` from the plane's attempt stamps in `job_unit_attempts`, `halved` for
+   `readHeld`, as the plane's ledger calls it (one call a tick; `kind`, `killedPages` from the plane's attempt stamps in `job_unit_attempts`, `halfBudgetPages` for
    the one retry at half the budget), with the real reader for a text in pieces and a scripted OCR member for a scan. The corpus cases run here at the
    smallest size that shows the cause (PDF E7, SCAN E2, DOCS F1: the store failing at tick 2 of a text read in pieces; PDF E10, SCAN D12: the page that
    kills its reader); their full sizes are the corpus R set's. Each test names the requirement ids it checks. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, bucket, doc, sha, hold, member, i2, noText, ocrAnswer, pageUnits } from "./fixture.mjs";
+import { fresh, bundle, bucket, doc, sha, hold, member, i2, noText, ocrAnswer, pageUnits, homesOver } from "./fixture.mjs";
 import { HALF_OCR_INVOCATIONS } from "../../../src/extraction/index.mjs";
 
-const register = (rows) => ({ homeOf: (s) => rows.get(s) ?? null, onTestimony: () => ({ ok: true }) });
+const register = (rows) => homesOver(rows);
 const LINES = 12000;
 const text = () => Array.from({ length: LINES }, (_, i) => `line ${String(i).padStart(5, "0")} ` + "council-minutes ".repeat(5).padEnd(88, ".")).concat(["ENDMARKER"]).join("\n");
 
@@ -103,14 +103,29 @@ test("R101 (G129c; control): a page whose reader died twice and is then read is 
   assert.deepEqual([got.unread_pages, got.reading.ocr_refused], [[], undefined]);
 });
 
-test("R101 (G129c): the one retry after three kills runs at half the budget: a `halved` tick asks the OCR member at most half the calls of a tick", async () => {
+test("R101 R109 (G129c, G165): the one retry after two kills runs at half the budget: a page the plane names in `halfBudgetPages` makes the tick ask the OCR member at most half the calls of a tick", async () => {
   const { w, d } = await scan(40);
   const ocr = member((b) => ({ ...ocrAnswer([b.pages[0]]), deferred: b.pages.slice(1) }));
-  await w.x.readHeld({ sha: d, kind: "ocr", env: { OCR_WORKER: ocr }, halved: true });
+  await w.x.readHeld({ sha: d, kind: "ocr", env: { OCR_WORKER: ocr }, halfBudgetPages: [5] });
   assert.equal(ocr.calls.length, HALF_OCR_INVOCATIONS);
   const full = member((b) => ({ ...ocrAnswer([b.pages[0]]), deferred: b.pages.slice(1) }));
   await w.x.readHeld({ sha: d, kind: "ocr", env: { OCR_WORKER: full } });
   assert.equal(full.calls.length, 2 * HALF_OCR_INVOCATIONS, "control: a tick's whole budget");
+  const none = member((b) => ({ ...ocrAnswer([b.pages[0]]), deferred: b.pages.slice(1) }));
+  const x = await scan(40);
+  await x.w.x.readHeld({ sha: x.d, kind: "ocr", env: { OCR_WORKER: none }, halfBudgetPages: [] });
+  assert.equal(none.calls.length, 2 * HALF_OCR_INVOCATIONS, "control: no page named, the whole budget");
+});
+
+test("R109 (G165): the plane's `stampUnit` reaches the reader: it is stamped with each page, before the OCR member is asked for it, in the order the pages are asked", async () => {
+  const { w, d } = await scan(4);
+  const order = [];
+  const ocr = member((b) => { order.push(`ask${b.pages[0]}`); return { ...ocrAnswer([b.pages[0]]), deferred: b.pages.slice(1) }; });
+  await w.x.readHeld({ sha: d, kind: "ocr", env: { OCR_WORKER: ocr }, stampUnit: (u) => order.push(`stamp:${u}`) });
+  assert.deepEqual(order.slice(0, 4), ["stamp:p0", "ask0", "stamp:p1", "ask1"], JSON.stringify(order));
+  const bare = await scan(2);
+  const r = await bare.w.x.readHeld({ sha: bare.d, kind: "ocr", env: { OCR_WORKER: allPages() } });
+  assert.equal(r.read, true, "control: without `stampUnit` the reader behaves as before");
 });
 
 /* (K4904 (1); plan 2c item 8) reading-pipeline's `read` with `skipKilled` (job 40), a stand-in of its contract until it merges (R-SEAM): pieces of 3 units by
@@ -154,6 +169,27 @@ test("R101 (G129c; K4904 (1); DOCS killAt): the window at the cursor the ledger 
   assert.equal(c.state, "partial");
   assert.deepEqual(c.stated_units, [{ at: 60, why: "UNIT_KILLED_READER" }]);
   assert.equal(c.counts.skipped_named, 1);
+});
+
+test("R109 (G165): the plane's `stampUnit` reaches the reader of a text read in pieces as the same function, on the first piece and on a continuation; a tick given none hands none", async () => {
+  const seen = [];
+  const rows = new Map(), evidence = bucket();
+  const spy = (rd) => async (doc, o = {}) => { seen.push(o.stampUnit); return rd(doc, o); };
+  const inner = windowed([]);
+  const w2 = fresh({ evidence, provenance: register(rows), reader: spy(inner) });
+  bundle(w2.s, "INFO-1");
+  const bytes = new TextEncoder().encode("a document read in windows " + Math.random());
+  const d = sha(bytes);
+  rows.set(d, { bundleId: "INFO-1", path: "a.docx", encoding: "binary", bytes: bytes.length, registered: "t", authored: false });
+  await evidence.put(`bio/captures/${d}`, bytes);
+  const document = doc({ digest: d, bytes: bytes.length, ct: "text/plain", format: "text", fromText: true });
+  w2.core.readFile = (b, p) => (p === "data/provenance.json" ? { text: JSON.stringify({ documents: [document] }) } : null);
+  const stamp = () => {};
+  assert.equal((await tick(w2, d, { stampUnit: stamp })).more, true);
+  assert.equal((await tick(w2, d, { stampUnit: stamp })).more, true);
+  assert.equal((await tick(w2, d)).more, true);
+  assert.deepEqual(seen.map((f) => f === stamp), [true, true, false], "the first piece and the continuation get the plane's function; a tick without one gets none");
+  assert.equal(seen[2], undefined);
 });
 
 test("R101 (progress only forward): an OCR pass whose answered pages merge to no glyph has read nothing: it writes nothing and ends `NO_PROGRESS`, owing nothing, so the job never loops", async () => {

@@ -12,9 +12,10 @@
  * Pure: no store, no network, no clock. Never throws. */
 
 import * as OOXML from "./ooxml.mjs";
+import { boundOf } from "./read-bounds.mjs";
 
 /** A tag longer than this is not a tag (R42): its bytes are text and the part states `tag_over_bound`. */
-export const TAG_MAX = 65536;
+export const TAG_MAX = boundOf("xml", "tag");
 /* The window a part is fed in; two windows hold far fewer than 65,536 tokens, so a yield between windows is never
    more than that many tokens apart (R42). */
 const WINDOW = 65536;
@@ -321,6 +322,40 @@ export async function readText(bytes, container, name) {
   return out;
 }
 
+/** A copy of `s` that keeps nothing else alive. A slice of 13 characters or more is a view into the string it was cut from,
+ *  so a paragraph's text held by the answer would hold the whole window (and, for a part read whole, the part) it came out
+ *  of for as long as the answer lives (R44's margin); a short one is copied by the engine already. */
+export const owned = (s) => (s.length < 13 ? s : (" " + s).slice(1));
+
+/** R44 (fix round 10, cause 11a): the same read as `readText`, but the part is kept as its bytes and its encoding, not as a
+ *  string: a large part decoded whole is a string of up to two bytes a character beside the answer it makes. The decode is
+ *  made once here, whole, as `readText` makes it, for its encoding and its share of replaced characters (R41) and let go;
+ *  `scanBytes` decodes it again a window at a time with that same encoding, which gives the same text. */
+export async function readTextBytes(bytes, container, name) {
+  const r = await OOXML.readPart(bytes, container, name);
+  if (!r.ok) return { ok: false, why: r.why, ...(r.size != null ? { size: r.size } : {}), ...(r.final ? { final: true } : {}) };
+  const d = decodePart(r.bytes, name);
+  if (!d.ok) return { ok: false, why: d.why, name: d.name ?? name, final: true };
+  const out = { ok: true, data: r.bytes, encoding: d.encoding };
+  if (d.replaced > 0 && d.replaced_ratio > REPLACED_RATIO_MAX) out.partial = { part: name, why: "partial", replaced: d.replaced };
+  return out;
+}
+
+/** Feed a part kept as bytes through `scanner`, decoding a window of it at a time (`readTextBytes`), awaiting `yieldNow` as
+ *  `scanWhole` does. */
+export async function scanBytes(scanner, data, encoding, yieldNow) {
+  const decoder = new TextDecoder(encoding, { fatal: false });
+  for (let at = 0; at < data.length && !scanner.stopped; at += WINDOW) {
+    const end = Math.min(at + WINDOW, data.length);
+    scanner.push(decoder.decode(data.subarray(at, end), { stream: end < data.length }), false);
+    if (typeof yieldNow === "function" && scanner.tokens - scanner.yielded >= YIELD_TOKENS) {
+      scanner.yielded = scanner.tokens;
+      await letPass(yieldNow);
+    }
+  }
+  scanner.push("", true);
+}
+
 /* ------------------------------------------------------------------ *
  * One part, scanned
  * ------------------------------------------------------------------ */
@@ -334,13 +369,15 @@ export async function scanPart(bytes, container, name, handler, { mode = "whole"
   let partial = null;
   if (mode === "pieces") {
     const read = await OOXML.readPartPieces(bytes, container, name, cut, (piece) => {
-      scanner.push(piece, false);
-      if (onPiece) onPiece(piece);
+      /* G178 (R46): a piece is fed in windows, so what a window carries over is joined to a window and never to the whole piece (a copy of it) */
+      for (let at = 0; at < piece.length && !scanner.stopped; at += WINDOW) scanner.push(piece.slice(at, at + WINDOW), false);
+      /* `onPiece` may answer a promise (work it started on the piece): the next piece is not read before it settles */
+      const held = onPiece ? onPiece(piece) : undefined;
       if (typeof yieldNow === "function" && scanner.tokens - scanner.yielded >= YIELD_TOKENS) {
         scanner.yielded = scanner.tokens;
-        return letPass(yieldNow);
+        return held ? Promise.all([held, letPass(yieldNow)]) : letPass(yieldNow);
       }
-      return undefined;
+      return held;
     });
     if (!read.ok) return { ok: false, ...OOXML.pieceWhy(read) };
     scanner.push("", true);
@@ -352,6 +389,64 @@ export async function scanPart(bytes, container, name, handler, { mode = "whole"
   }
   if (scanner.badRef) return { ok: false, why: "char_ref_invalid", final: true };
   return { ok: true, scanner, ...(partial ? { partial } : {}) };
+}
+
+/** The least bytes of a part that can hold more than `max` retained objects: the shortest object is an empty `<p/>`, 4 bytes
+ *  (a prefix only lengthens it), so a part under `4 * max` is never counted before it is read. */
+export const precountFloor = (max) => 4 * max;
+
+/** R44 (fix round 10, cause 11a): the objects a walk would retain, counted BEFORE the part is held whole. `parts` are
+ *  names read in pieces by ooxml one after the other, never held; `counted` is the set of local element names the walk
+ *  counts (one object per open of such an element), `skipper` makes the per-part test for a branch the walk does not read
+ *  (`mceSkipper`, so the same elements are counted as are retained). The count carries across the parts. Answers
+ *  `{n, exceeded}`: `exceeded` is `{why:"TOO_MANY_OBJECTS", n, bound, final:true}` at the first object past `max` (the
+ *  scan stops, the rest of the part is let go piece by piece), else null; `scanned` the bytes examined. A part this
+ *  cannot read adds nothing: the walk states its own failure. */
+export async function countObjects(bytes, container, parts, counted, { skipper, max, startAt = 0 }) {
+  let n = startAt, scanned = 0, exceeded = null;
+  for (const name of parts) {
+    if (exceeded) break;
+    const skipped = skipper();
+    const handler = {
+      stopped: false,
+      text() {}, cdata() {},
+      close(local) { skipped(local, true, false); },
+      open(local, raw, selfClosed) {
+        if (skipped(local, false, selfClosed)) return;
+        if (counted.has(local) && ++n > max && !exceeded) { exceeded = { why: "TOO_MANY_OBJECTS", n, bound: max, final: true }; handler.stopped = true; }
+      },
+    };
+    const r = await scanPart(bytes, container, name, handler, { mode: "pieces" });
+    scanned += r.scanner?.scanned ?? 0;
+  }
+  return { n, exceeded, scanned };
+}
+
+/** G178 (R46): text made a piece at a time and kept as UTF-8 bytes (a growing buffer, not one string per row), made one
+ *  string once, at the end. `chars` counts the UTF-16 units added, so the string's offsets are known as it is made; `mark`
+ *  and `reset` take back what a sheet that could not be read to its end added. The pieces added hold no lone surrogate
+ *  (every text is decoded from bytes or made of whole references), so the bytes are the text. */
+const SINK_ENC = new TextEncoder();
+const SINK_DEC = new TextDecoder("utf-8", { ignoreBOM: true });
+export function textSink(expected = 0) {
+  /* `expected`: about how many bytes the text will take; a buffer that starts near it is grown once, not many times */
+  let buf = new Uint8Array(Math.min(Math.max(Math.floor(expected) || 0, 1 << 16), 8 << 20)), n = 0, chars = 0;
+  const room = (need) => {
+    if (n + need <= buf.length) return;
+    let size = buf.length;
+    while (size < n + need) size *= 2;
+    const next = new Uint8Array(size);
+    next.set(buf.subarray(0, n));
+    buf = next;
+  };
+  return {
+    get chars() { return chars; },
+    add(s) { if (!s.length) return; room(s.length * 3); n += SINK_ENC.encodeInto(s, buf.subarray(n)).written; chars += s.length; },
+    newline() { room(1); buf[n++] = 10; chars++; },
+    mark() { return { n, chars }; },
+    reset(m) { n = m.n; chars = m.chars; },
+    text() { const t = SINK_DEC.decode(buf.subarray(0, n)); buf = null; return t; },
+  };
 }
 
 /** The UTF-8 bytes of a value's JSON. */

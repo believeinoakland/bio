@@ -1,6 +1,6 @@
 # BOB to record-core (T51)
 
-**Read** · handled J8
+**Read** · handled J9
 
 ## B1 · START
 
@@ -199,3 +199,29 @@ When done: record completion with `Size (<session id>): test runs <n>, module li
 ## B9 · RESUME
 
 RESUME (backstop 12:33): nothing pushed on your branch for 20 minutes. If you are mid-run, set `mail state --running <minutes> --what <command>`; else push your progress and continue.
+
+## B10 · START
+
+START · RECORD-CORE #31 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 1: publish 4 fixtures, 1 marker line (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #289 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/record-core tranche/T51 && git branch -m job/T51/record-core stale/record-core-local && git checkout -b job/T51/record-core origin/job/T51/record-core`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module record-core`; record `build/jobs/T51/record-core.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `bio-plane/test/m/record-core/fixtures.mjs` (new file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `coreOver` (users now: ai-accounts 5, credentials 5): `recordOf(ctx, ...)` migrated over the test's SQLite with `bundles` rows, exposing `bundleInfo`, `declarePurge`, `declareTable` as record-core answers them (TABLE_DECLARED naming the holder, TABLE_CLASS_MISSING, TABLE_CLASS_UNKNOWN); replaces the duplicated `stubCore(db)`.
+- `evidencePartsRefusal` (users now: capture 1): `evidenceStore().putFromParts(digest, parts)` on a record-core whose evidence bucket refuses the whole object: EVIDENCE_STORE_REFUSED (C-102.39), plus a variant that throws.
+- `perItemRetained` (users now: screens-daily 2): `perItem('taskresolve', {items}, stamped, one)` where one item applies and one is refused: SET_ITEMS_RETAINED with `items[]`, `applied`, `retained`, `count`.
+- `tableDeclarationRefusals` (users now: ai-accounts 3, credentials 2, doorbell 2): the real `declarePurge` / `declareTable` called twice for one table (TABLE_DECLARED with `declaredBy`), with an invalid name (TABLE_NAME_INVALID) and with an unknown class value (TABLE_CLASS_UNKNOWN).
+
+**Markers owed (K5044 (2), K5060; the audit read each line and found it no module's answer):** write on the line or up to eight lines above:
+- `// fixtures-generic: <the made-up word the line carries>`: record-core.test.mjs:777
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . record-core --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/record-core.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.

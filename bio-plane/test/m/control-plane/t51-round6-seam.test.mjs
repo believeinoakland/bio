@@ -7,7 +7,7 @@
           (11 s or less); a second capture of the held file answers at once; control: a 1 MB page is captured in the request;
      G5   the 12 MB text (last line ENDMARKER) is answered unread and owed under 15 s; read by the ledger its first lines are in the units; a second upload is not read again;
           control: a 1 MB text is read in the answer;
-     G7   a 40 MB five-part upload states its size as a `final` reading with no owed row;
+     G7   a 52 MB (over the 50 MiB whole-read ceiling of text, R132; a 40 MB text is deferred, not stated) five-part upload states its size as a `final` reading with no owed row;
      G13  the 12 MB text is read WHOLE by the ledger's ticks: ENDMARKER is in `text_units`, and while it is not the ledger still holds the reading as owed.
    Red by name until the providers have merged: G2 (acquisition `fetch_pending`/`owedFetch`, capture `openCaptures`/`fetch_done`, plane's `fetch` kind, notice-producers' notice), G13
    (reading-pipeline's cursor, extraction's segments and `more`, plane's continuation). */
@@ -209,9 +209,9 @@ test("R123, R125 (G13): the 12 MB text is read WHOLE by the ledger's ticks: `END
 
 /* ---- G7 ---- */
 
-test("R123, R125 (G7): a 40 MB five-part upload states its size as a `final` reading with no `reading_pending` and no row owed", { timeout: 600000 }, async () => {
+test("R123, R125 (G7): a 52 MB (over the 50 MiB whole-read ceiling of text, R132; a 40 MB text is deferred, not stated) five-part upload states its size as a `final` reading with no `reading_pending` and no row owed", { timeout: 600000 }, async () => {
   const auth = await founder();
-  const bytes = textOf(`G7 the commission approved the long minutes ${Date.now()}`, 40);
+  const bytes = textOf(`G7 the commission approved the long minutes ${Date.now()}`, 52);
   const up = await uploadAndFile(auth, bytes, "g7-minutes.txt", "text/plain");
   assert.equal(up.answer.reading_pending, undefined, "stated from its sizes at once");
   const r = await until(async () => { const x = await readingOf(auth, sha(bytes)); return x && x.found ? x : null; }, 60000, 1500);

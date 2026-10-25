@@ -4,8 +4,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { standard, args, V, P, F1, F2, NOW } from "./fixture.mjs";
 import { caseCheckOps, CHECK_PREFIX } from "../../../src/case-check/index.mjs";
+import { preflightAnswer } from "../case-authoring/fixtures.mjs";
 
-const blocker = { ok: false, reason: "BELOW_PROJECT_STRENGTH", code: "BELOW_PROJECT_STRENGTH", member: F1 };
+/* case-authoring's real pre-flight answers (R34), taken from its published fixtures */
+const real = preflightAnswer();
 
 test("R1: a ready pre-flight stores the preparation (case-authoring R14) and records the check {check, case, edition, doc_sha, members, checked_at, by}, answering {ok, held, check, caseDocument}", () => {
   const w = standard();
@@ -30,10 +32,11 @@ test("R1: a ready pre-flight stores the preparation (case-authoring R14) and rec
 
 test("R1: a pre-flight with one blocker answers R34's {ready: false, first, blockers} and writes nothing: no preparation, no check (control: the same act ready writes both)", () => {
   const w = standard();
-  w.ca.pre = { ok: true, wrote: false, ready: false, first: null, blockers: [blocker], steps: [] };
+  w.ca.pre = real.blocked;
   const before = w.snapshot();
   const r = w.c.checkAndHold(args([F1]));
-  assert.deepEqual([r.ok, r.ready, r.held, r.first, r.blockers, r.reason], [false, false, false, null, [blocker], blocker.reason]);
+  assert.deepEqual([r.ok, r.ready, r.held, r.first, r.blockers, r.reason],
+                   [false, false, false, real.blocked.first, real.blocked.blockers, real.blocked.first.reason]);
   assert.deepEqual(w.snapshot(), before, "nothing written");
   assert.equal(w.calls.publish.length, 0, "publishCase is never run");
   w.ca.pre = { ok: true, wrote: false, ready: true, first: null, blockers: [], steps: [] };
@@ -43,12 +46,12 @@ test("R1: a pre-flight with one blocker answers R34's {ready: false, first, bloc
 
 test("R1: every refusal is the pre-flight's, in its order; MACHINE_CANNOT_PUBLISH and the owner-only authority come first, unchanged", () => {
   const w = standard();
-  for (const reason of ["MACHINE_CANNOT_PUBLISH", "NOT_THE_PROJECT_OWNER"]) {
-    const first = { ok: false, reason, code: reason, check: "C-x", translation: "t", detail: "d" };
-    w.ca.pre = { ok: true, ready: false, first, blockers: [blocker], steps: [] };
+  for (const key of ["machine", "notOwner"]) {
+    const pre = real[key], first = pre.first;
+    w.ca.pre = pre;
     const r = w.c.checkAndHold(args([F1], { author: "ed" }));
-    assert.deepEqual([r.reason, r.code, r.check, r.translation, r.detail], [reason, reason, "C-x", "t", "d"], "unchanged");
-    assert.deepEqual([r.first, r.blockers], [first, [blocker]]);
+    assert.deepEqual([r.reason, r.code, r.check, r.translation, r.detail], [first.reason, first.code, first.check, first.translation, first.detail], "unchanged");
+    assert.deepEqual([r.first, r.blockers], [first, pre.blockers]);
   }
   assert.deepEqual([w.count("case_documents"), w.count("case_checks")], [0, 0]);
 });
@@ -113,7 +116,7 @@ test("R1: op=publishcheck takes author and viewer from the query after the body,
   assert.ok(w.calls.publish.every((p) => p.facts && p.facts.marker === "facts"));
   /* an agent's stamp is carried whole to the pre-flight and the act is asked as the stamp */
   const agent = new URL(`${url}&aiCred=${encodeURIComponent(JSON.stringify({ tokenId: "AIC-1" }))}`);
-  w.ca.pre = { ok: true, ready: false, first: null, blockers: [blocker], steps: [] };
+  w.ca.pre = real.blocked;
   await caseCheckOps(w.c, agent, body).publishcheck();
   assert.deepEqual(w.calls.preflight.at(-1).args.viewer, { stamp: V("ann"), aiCred: { tokenId: "AIC-1" } });
 });

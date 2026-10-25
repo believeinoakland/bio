@@ -254,7 +254,16 @@ function renderCapture(cs, view) {
   const pendingLine = (g) => {
     if (!g || !g.readingPending) return "";
     const asked = typeof g.sha === "string" && g.sha ? U["job:" + g.sha] : null;
-    return (asked && jobLine(asked)) || `<p class="mk-note" role="status" data-reading="pending">${cs.w("screen.document.text.unread.next")}</p>`;
+    if (asked) {
+      const line = jobLine(asked);
+      if (line) return line;
+      /* R65 (fix round 10, G1; K5055): the job row is gone (`job.state` null) once a reading has ended, and the stored reading is what is left to say. A reading that
+         holds words, or states itself (a final failure, a refusal, a completeness, its word counts), is drawn as that statement at every tick, never as "unread, check
+         again soon"; a reading that states nothing yet, or none, keeps the static line. */
+      const stored = view.parts.readingOf(asked, {});
+      if (stored.present && (stored.own || stored.failure === "final")) return readDrawn(stored);
+    }
+    return `<p class="mk-note" role="status" data-reading="pending">${cs.w("screen.document.text.unread.next")}</p>`;
   };
   /* R65 (G135f; K4831 (5); control-plane R135, plane R97): the reading's state as `op=reading` answers it from the job row (never from the reading object):
      queued; being fetched; being read N of M (N the units written, M what the row counts: written, skipped, owed and failed); read in part, searched only so far;
@@ -406,15 +415,8 @@ function renderCapture(cs, view) {
       const x = g && g.supporting;
       if (!x || !(x.skipped > 0)) return "";
       const total = x.kept + x.skipped;
-      const why = {};
-      for (const r of Array.isArray(x.reasons) ? x.reasons : []) {
-        if (!r || typeof r !== "object") continue;
-        const code = String(r.reason || r.code || ""), n = Number.isFinite(r.count) && r.count > 0 ? r.count : 1;
-        const kind = code === "CAP_REACHED" && Number.isFinite(r.limit) ? "cap" : code === "TOO_LARGE" || code === "BUDGET_EXHAUSTED" ? "toolarge" : "unavailable";
-        why[kind] = why[kind] || { n: 0, cap: kind === "cap" ? r.limit : 0 };
-        why[kind].n += n;
-      }
-      const lines = ["cap", "toolarge", "unavailable"].filter((k) => why[k]).map((k) => `<p class="mk-small muted" data-supporting-why="${k}">${cs.w("screen.capture.supporting." + k, { n: String(why[k].n), cap: String(why[k].cap) })}</p>`).join("");
+      const why = view.parts.supportingReasons(x.reasons);
+      const lines = ["cap", "toolarge", "unavailable"].filter((k) => why[k]).map((k) => `<p class="mk-small muted" data-supporting-why="${k}">${cs.w("screen.capture.supporting." + k, { n: String(why[k].n), cap: String(why[k].cap || 0) })}</p>`).join("");
       return `<div role="status" data-supporting><p class="mk-small">${cs.w("screen.capture.supporting.kept", { kept: String(x.kept), total: String(total) })}</p>${lines}</div>`;
     };
     /* R31 (N1094; DEC-240 D3): the member's own unfinished captures, each titled from the held document that holds its
@@ -478,8 +480,8 @@ function renderCapture(cs, view) {
     /* R50 (A1, A2): the working line from the press until the answer; the result is a status line under the button */
     const working = U.working ? `<p class="mk-note" role="status" data-working><b>${cs.w("screen.capture.address.working.head")}</b> ${cs.w("screen.capture.address.working")}</p>` : "";
     /* G72 (fix round 7): "Finish it" on a capture the plane no longer holds (`NO_SUCH_SESSION`: finished, closed or expired) says so in a status line and the
-       Unfinished line leaves; the nearest held row (`acquisition.index.no_such_session`) stands in until `refusal.NO_SUCH_SESSION` has its own row (K4269) */
-    const closedLine = U.closed ? `<p class="mk-note" role="status" data-closed>${cs.w("acquisition.index.no_such_session")}</p>` : "";
+       Unfinished line leaves; the design's row `refusal.NO_SUCH_SESSION` (DEC-425) is the sentence */
+    const closedLine = U.closed ? `<p class="mk-note" role="status" data-closed>${cs.w("refusal.NO_SUCH_SESSION")}</p>` : "";
     /* R31 (fix round 5, E8; K4530): "Finish it" says what the continuation answered: the visitor copy still being made, its supporting files fetched
        with nothing new filed (each in the nearest held row's words, K4269), or the visitor copy filed (a new document, below) */
     const finishLine = (g) => `<p class="mk-note" role="status" data-finish="${g.finish}">${cs.w(g.finish === "pending" ? "acquisition.index.render_pending_note" : "acquisition.note.continuation_files_new")}</p>`;
@@ -844,7 +846,7 @@ function watchReading(cs, o, n = 0) {
     const again = () => { if (n < 40) v.parts.watchReading(k, o, n + 1); };
     if (!a || a.ok === false) return again();
     k.set("job:" + o.sha, a);
-    const st = typeof a.state === "string" ? a.state : "";
+    const st = a.job && typeof a.job.state === "string" ? a.job.state : "";
     if (st === "queued" || st === "fetching" || st === "reading" || (st === "" && n < 3)) again();
   });
 }
@@ -982,7 +984,21 @@ function checkOutcome(cs, answer, title) {
   const t = String(title || "");
   return cs.w("screen.capture.address.checked." + st, st === "unknown" ? { title: t, note: typeof a.note === "string" ? a.note : "" } : { title: t });
 }
-export { checkOutcome, heldTitle };
+/* R67 (fix round 9; K4969): the one classification of a capture's `supporting.reasons`, for every screen that states why supporting files were not kept
+   (the Add screen's line, screens-inquiry's Document page): by code, `CAP_REACHED` with a `limit` the cap, `TOO_LARGE` and `BUDGET_EXHAUSTED` too large, any other
+   code unavailable; a reason's `count` summed (else 1); a non-object skipped. A kind with no reason is absent. */
+function supportingReasons(reasons) {
+  const why = {};
+  for (const r of Array.isArray(reasons) ? reasons : []) {
+    if (!r || typeof r !== "object") continue;
+    const code = String(r.reason || r.code || ""), n = Number.isFinite(r.count) && r.count > 0 ? r.count : 1;
+    const kind = code === "CAP_REACHED" && Number.isFinite(r.limit) ? "cap" : code === "TOO_LARGE" || code === "BUDGET_EXHAUSTED" ? "toolarge" : "unavailable";
+    why[kind] = why[kind] || (kind === "cap" ? { n: 0, cap: r.limit } : { n: 0 });
+    why[kind].n += n;
+  }
+  return why;
+}
+export { checkOutcome, heldTitle, supportingReasons };
 
 /* R2: the upload. `statement` composed from the three answers in order, each with its label, at most 2,000 characters;
  * nothing is sent while one is empty, and the screen says which. The file's bytes are the raw body (control-plane R72),
@@ -1229,8 +1245,16 @@ function readRefusalHtml(cs, f) {
   if (reason === "STRUCTURE_OVER_BOUND" && Number.isFinite(f.bound))
     return keyedW("screen.capture.read.refused.STRUCTURE_OVER_BOUND", { part: String(f.part || f.name || ""), bound: String(f.bound) },
       () => `${cs.w("screen.document.reading.stated", { size: String(f.part || f.name || "") })} <span class="mk-data" data-limit>${String(f.bound)}</span>`);
-  if (reason === "UNSUPPORTED_FORMAT")
-    return keyedW("screen.capture.read.refused.UNSUPPORTED_FORMAT", { kind: String(f.kind || "") }, () => `${cs.w("capture.picture.unread")}${f.kind ? ` <span class="mk-data">${cs.esc(String(f.kind))}</span>` : ""}`);
+  if (reason === "UNSUPPORTED_FORMAT") {
+    /* R36 (fix round 10, G7; walk A7): the sentence the reading's owner holds for the kind (`reading-pipeline.index.unsupported_<kind>`: "GIF is not read yet."), the
+       kind named in it; a kind it holds no sentence for is its `unsupported_kind` row with the kind filled; a refusal naming no kind is `shell.unread`. The design's own
+       row, when it comes, wins (`screen.capture.read.refused.UNSUPPORTED_FORMAT`). Never the stand-in "picture unread" with the raw kind beside it. */
+    const kind = String(f.kind || "").toLowerCase().replace(/[^a-z0-9_]/g, "");
+    return keyedW("screen.capture.read.refused.UNSUPPORTED_FORMAT", { kind }, () => {
+      const own = "reading-pipeline.index.unsupported_" + kind, general = "reading-pipeline.index.unsupported_kind";
+      return kind && cs.w(own) !== own ? cs.w(own) : kind && cs.w(general, { kind }) !== general ? cs.w(general, { kind }) : cs.w("shell.unread");
+    });
+  }
   if (reason === "ENCODING_UNSUPPORTED")
     return keyedW("screen.capture.read.refused.ENCODING_UNSUPPORTED", { name: String(f.name || "") }, () => `${cs.w("shell.unread")}${f.name ? ` <span class="mk-data">${cs.esc(String(f.name))}</span>` : ""}`);
   if (reason === "ENCRYPTED" || reason === "PASSWORD_REQUIRED")
@@ -1242,7 +1266,8 @@ function readRefusalHtml(cs, f) {
  * when it states no state (a digest with no row, or one the viewer may not see: `state: null`). The total is what the row counts (written, skipped, owed and
  * failed), so N of M is the row's, never a guess. */
 function jobStateOf(a) {
-  const x = a && typeof a === "object" ? a : null;
+  /* control-plane R135 (`job-state.mjs`): the job row's state is `job`, beside the stored reading in the same answer; `job.state` null when no row is left */
+  const x = a && typeof a === "object" && a.job && typeof a.job === "object" ? a.job : null;
   const state = x && typeof x.state === "string" ? x.state : "";
   if (!["queued", "fetching", "reading", "partial", "refused", "finished", "final"].includes(state)) return null;
   const num = (v) => (Number.isFinite(v) && v >= 0 ? v : null);
@@ -1369,7 +1394,7 @@ export const CAPTURE_SCREEN = Object.freeze({
   id: "capture",
   reads: captureReads,
   render: renderCapture,
-  parts: Object.freeze({ bundleFor, checkOutcome, copyOf, doneUpload, estimateOf, filedFor, filedHeld, forOf, heldTitle, homeOf, jobStateOf, notMemberWords, pictureOf, projectOf, promoteDocument, readProjectQuestions, readRefusalHtml, readingOf, refusalHtml, refusedHtml, repairedReading, sendInParts, sha256Hasher, titleOf, watchFetch, watchReading }),
+  parts: Object.freeze({ bundleFor, checkOutcome, copyOf, doneUpload, estimateOf, filedFor, filedHeld, forOf, heldTitle, homeOf, jobStateOf, notMemberWords, pictureOf, projectOf, promoteDocument, readProjectQuestions, readRefusalHtml, readingOf, refusalHtml, refusedHtml, repairedReading, sendInParts, sha256Hasher, supportingReasons, titleOf, watchFetch, watchReading }),
   acts: Object.freeze([
     Object.freeze({ op: "acquire", label: "act.acquire.label.capture", send: sendAcquire, done: doneAcquire, failed: failedAcquire, rereads: Object.freeze(["open"]),
                     /* G72: a session the plane no longer holds is the end of that capture, not a failure: `done` draws it (its line is the screen's own, so the note beside the act is empty) */

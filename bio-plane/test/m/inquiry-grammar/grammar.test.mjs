@@ -170,7 +170,7 @@ test("R4 checkLegExtentGrammar: for every leg of the corpus, under C-2.8 and C-2
   });
   const dom = sync((f) => checkLegExtentGrammar({ extent_kind: "dom" }, "basis[2]", "C-25.10", f));
   assert.deepEqual(dom.map((x) => [x.check, x.code]), [["C-25.10", "CONTENT_EXTENT_NO_PRODUCER"]]);
-  assert.match(dom[0].repairs[0], /name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape —/);
+  assert.match(dom[0].repairs[0], /name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape —/);
   assert.deepEqual(sync((f) => checkLegExtentGrammar({ target: INFO }, "basis[0]", "C-2.8", f)), [], "no extent is the whole document");
 });
 

@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open as openPage, html, text, main, btn, fill, press, ok, refused, rawKeys, word, hasWord, says, saysIn } from "./page.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
+import { heldSetAside } from "../capture/fixtures.mjs";
 
 /* B6: a row names its project by the project's name (`projectlist`), never by its record id */
 const PROJECTS = ok({ projects: [{ id: "PROJ-2026-0001-pothole-repairs-at", name: "Pothole repairs" }, { id: "PROJ-2026-0002-sewer-fund-transfers", name: "Sewer" },
@@ -151,10 +152,12 @@ test("R4 release sends nothing with a field missing, or a field outside ratifica
 
 test("R4 R13 heldsetaside: one reason (the shell's reason field, no writing help) for every picked row; they move to the Set aside list", async () => {
   let asideNow = NONE;
+  /* capture's real answer for a document a question waits on (its published fixture, K5077): the document by `document`, `waiting` being `{questions, withheld}` */
+  const SET_ASIDE = await heldSetAside({ ids: ["INFO-2026-0002-budget"], reason: "Wrong year.", author: "member:mai",
+    waiting: [{ question: "INQ-1", title: "Were the transfers authorised?", asker: "Ana" }] });
   const AFTER = ok({ ok: true, held: [{ ...ROWS[1], set_aside: { reason: "Wrong year.", author: "mai", at: "2026-10-13T10:00:00Z" } }] });
   const p = await open("/app/held", { reachable: true, plane: { heldcaptures: (req) => (req.query.state === "set_aside" ? asideNow : HELD),
-    heldsetaside: () => { asideNow = AFTER; return ok({ ok: true, act: "set_aside", ids: ["INFO-2026-0002-budget"], reason: "Wrong year.",
-      documents: [{ id: "INFO-2026-0002-budget", waiting: [{ question: "INQ-1", title: "Were the transfers authorised?", asker: "Ana" }] }] }); } } });
+    heldsetaside: () => { asideNow = AFTER; return ok(SET_ASIDE); } } });
   assert.ok(!says(p, "screen.held.setaside"), "R19: an empty Set aside is not drawn");
   await pick(p, "INFO-2026-0002-budget");
   const r = await press(p, "heldsetaside", { reason: "Wrong year.", sel: ":not([data-id])" });

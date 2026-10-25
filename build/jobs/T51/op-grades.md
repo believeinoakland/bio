@@ -1,6 +1,6 @@
 # op-grades (T51)
 
-**Status** · session_014rNFkQLf1kdsYEby9XrVQi · depth 2 · COMPLETE · handled B34
+**Status** · session_01HMaPz7pqmixWTqj6Bw5a1N · depth 2 · COMPLETE · handled B35
 
 ## J1 · QUESTION
 
@@ -345,3 +345,25 @@ Size (session_01Q1BcrfRKSNQeK7397e6hvF): test runs 12, module lines 3679
 **Declarations.** op-grades owns no census op; no declaration changed. **Deferred / other modules.** Nothing.
 
 Size (session_014rNFkQLf1kdsYEby9XrVQi): test runs 560, module lines 3680
+
+## J27 · REPORT
+
+**REPORT (R53 wording, for BOB).** The line appended to R53 (fix round 6, G55) says `moneyingestread` is "a hand row in `NON_ACTS` with a "read: …" reason". The design's sentence for it (`calculations.declared.moneyingestread`, setup-words rows, DEC-424) does not lead with "read: " and ends "Changes nothing.", and calculations declares that same sentence. The grade row is right; only the prefix rule disagrees with the words.
+
+Options:
+- A (my recommendation): amend R53 to "the reason its owner declares for a read (K4168)". The tests now follow this: `ownerReads` finds a read by its owner's declared weight, and the NON_ACTS reason must equal the owner's sentence.
+- B: the design words the calculations sentence with a "read: " lead. The prefix test then stands as it was.
+
+I have not edited the requirement. Per the job rules I write only my paths, tests and record, so this decision is recorded here and not in `build/rulings.md`; please record it there.
+
+## J28 · COMPLETE
+
+**COMPLETE (follow-up 19, K5094).** Cause: `moneyingestread` is calculations' read, graded in `t33.mjs:285` with the owner's words. The grade row is right (a read, no rung or ground, a NON_ACT, phone true). Two of my tests took a read by its "read: " lead and "writes nothing" ending, so they failed on a correct row. Fix, tests only (commit 7775f42248): `declared.mjs` gains `ownerReads`, which finds a table's ops whose owner declares weight `read`; `owners.test.mjs` R13 adds those to `T33_READS` and holds each to its owner's sentence (`declaredSentence(owner, op)`); `g55.test.mjs` asserts weight `read`, `mutating: false`, and the owner's sentence. No product code and no other module changed; no fixtures markers added.
+
+**Entries applied:** follow-up 19. `owners.test.mjs:195` was red on the tranche and is green now.
+**Deferred:** none.
+**Tests:** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/op-grades/*.test.mjs`: 144 pass, 0 fail (before the fix, 2 fail: `owners.test.mjs:195` and `g55.test.mjs`).
+**Checks** (product root `/home/user/bio`): format 0 failures; architecture 0 failures; coverage 53 of 53 live requirement ids named; ownership 0 failures (4 files, the job's own); words 0 failures; fixtures for op-grades 0 failures, answer 0.
+**Impact:** not run; no product code changed.
+
+Size (session_01HMaPz7pqmixWTqj6Bw5a1N): test runs 3, module lines 3680

@@ -19,6 +19,11 @@
  * C-25.10) until it was deleted (T19, control-plane R43); that leg grammar is now `inquiry-grammar`'s and reads this
  * core.
  *
+ * ONE ADDITION TO THE COPY (G167, K4985; R48): the tenth kind, `doc-part` (R1, R58). `legExtent` reads its `extent_part`,
+ * `checkContentExtent` judges its shape (`checkPart`, moved here from `./extent.mjs`) and `describePart` is its human form,
+ * so the leg grammar, which reads this core directly, and the face answer one thing and a content id is minted over the
+ * extent the reading found. Its algebra (canonical form) is text-chain's.
+ *
  * `./extent.mjs` is the one public face (R1–R10); what the grammar has gained since (envelope, a rect's space, the
  * MediaBox bound) is written there, over this, never here. */
 
@@ -125,6 +130,12 @@ export function legExtent(leg) {
   if (kind === 'doc-table') {
     if (l.extent_table !== undefined && l.extent_table !== null) out.table = l.extent_table;
     if (l.extent_cell !== undefined && l.extent_cell !== null) out.cell = l.extent_cell;
+  }
+  /* G167 (K4985, R48): a `doc-part` is the package part and the element reference a reader names for a non-body unit
+     (R1, R58). `extent_ref` is read above for every kind; the part is read here, or the content id a citation mints would
+     be over a different extent than the reading found. */
+  if (kind === 'doc-part') {
+    if (l.extent_part !== undefined && l.extent_part !== null) out.part = l.extent_part;
   }
   if (kind === 'image') {
     if (l.extent_part !== undefined && l.extent_part !== null) out.part = l.extent_part;
@@ -282,7 +293,8 @@ export function checkContentExtent(extent, ctx = {}) {
   if (e.kind === CONTENT_EXTENT_KIND_NO_PRODUCER)
     return refusal("CONTENT_EXTENT_NO_PRODUCER",
       localize('content.extent-core.dom_names_a_region', 'extent kind \'dom\' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate'));
-  const row = CONTENT_EXTENT_KINDS[e.kind];
+  /* `doc-part` (R1, R58; G167) is text-chain's canonical arm and not one of its eight kinds; its shape is judged below */
+  const row = e.kind === 'doc-part' ? { landed: true } : CONTENT_EXTENT_KINDS[e.kind];
   if (!row)
     return refusal("CONTENT_EXTENT_UNREADABLE",
       localize('content.extent-core.extent_kind_string_is_not', 'extent kind \'{String}\' is not one of: {keys}', { String: String(String(e.kind).slice(0, 40)), keys: String(Object.keys(CONTENT_EXTENT_KINDS).join(', ')) }));
@@ -435,6 +447,7 @@ export function checkContentExtent(extent, ctx = {}) {
   if (citedAs === 'bytes' && e.kind !== 'image')
     return refusal("CONTENT_EXTENT_UNREADABLE",
       localize('content.extent-core.only_an_image_can_be', 'only an image can be cited as its bytes. A {kind} extent addresses text, and reading \'bytes\' here as \'text\' would silently change what the citation claims, so it is refused', { kind: String(e.kind) }));
+  if (e.kind === 'doc-part') return checkPart(e, ctx);
   if (e.kind === 'sheet-range') {
     if (typeof e.sheet !== 'string' || !e.sheet.trim())
       return refusal("CONTENT_EXTENT_UNREADABLE",
@@ -542,6 +555,32 @@ export function checkContentExtent(extent, ctx = {}) {
     return refusal("CONTENT_EXTENT_NO_CHAIN",
       localize('content.extent-core.this_record_holds_no_extraction', 'this record holds no extraction chain for the capture this leg cites, so there is no transcription over {describeExtent} for the citation to point at', { describeExtent: String(describeExtent(e)) }));
   /* END DEC-49 REGION is-content-extent */
+  return null;
+}
+
+/* R1 (K4910; G167) — A `doc-part`'S SHAPE: the package part and the element reference a reader names for a non-body unit
+   (`reading-pipeline` R47), each a non-empty string or absent, one at least present. The record lists no parts of a capture
+   to bound one against (they arrive as text units), so a well-formed one is admitted and its existence rests on the index
+   that found it (R8: `part_list`, in `./extent.mjs`); a capture nobody read holds no text to address (C-45.2), as for an
+   envelope item. Judged here, in the core, so the leg grammar and the face answer one thing. */
+/** A `doc-part`'s human form: its element reference, else its package part (R1, R2). `./extent.mjs`' `describeExtent` reads it. */
+export function describePart(e) {
+  const at = typeof e.ref === 'string' && e.ref.trim() ? e.ref.trim() : typeof e.part === 'string' && e.part.trim() ? e.part.trim() : '';
+  return localize('content.extent-core.part_ref', 'part {at}', { at: String(at.slice(0, 120)) });
+}
+
+function checkPart(e, ctx) {
+  const said = (v) => String(v).slice(0, 40);
+  for (const k of ['part', 'ref'])
+    if (e[k] !== undefined && e[k] !== null && !(typeof e[k] === 'string' && e[k].trim()))
+      return refusal("CONTENT_EXTENT_UNREADABLE",
+        localize('content.extent-core.a_part_extent_names_the', 'a part extent names the package part and the element reference of the unit as the reader emitted them, each a non-empty string. This one names \'{String}\' as its {k}', { String: said(e[k]), k }));
+  if (!(typeof e.part === 'string' && e.part.trim()) && !(typeof e.ref === 'string' && e.ref.trim()))
+    return refusal("CONTENT_EXTENT_UNREADABLE",
+      localize('content.extent-core.a_part_extent_names_neither', 'a part extent names the package part or the element reference of the unit as the reader emitted them, and this one names neither'));
+  if (ctx.known !== false && !(Array.isArray(ctx.chain) && ctx.chain.length))
+    return refusal("CONTENT_EXTENT_NO_CHAIN",
+      localize('content.extent-core.this_record_holds_no_extraction_2', 'this record holds no extraction chain for the capture this citation names, so there is no transcription over {describeExtent} for the citation to point at', { describeExtent: describePart(e) }));
   return null;
 }
 

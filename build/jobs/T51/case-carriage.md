@@ -1,6 +1,6 @@
 # case-carriage (T51)
 
-**Status** · session_01VyoeUd2RteSyDN2p9gjFYw · depth 2 · COMPLETE · handled B7
+**Status** · session_01VR43LyTQS6cPbKEumGEzr6 · depth 2 · COMPLETE · handled B9
 
 ## J1 · BLOCKED
 
@@ -139,3 +139,64 @@ Size (session_01VyoeUd2RteSyDN2p9gjFYw): test runs 9, module lines 1718
 ## J6 · COMPLETE
 
 COMPLETE · G136c (case-carriage piece): tried is stamped before the clean runs (case-carriage/index.mjs #copyOne). Failing-first test seen red then green; DOCS C1 (70,009-entry DOCX, crash after the work) green with merged doc-clean. Module 100/100, scheduler 163/163, case-authoring 249/249; format, architecture, coverage, words, ownership 0 failures for my files. New ids none; files outside paths none; stale artifacts none; nothing deferred. Record: build/jobs/T51/case-carriage.md 'Round 9'.
+
+## J7 · COMPLETE
+
+COMPLETE (fix round 10, Wave A batch 2; START B8). Commit `01b9b9d0f1` on `job/T51/case-carriage`, pushed.
+
+**Entries applied.** The three published fixtures, in `bio-plane/test/m/case-carriage/fixtures.mjs`. Each is made by the module's real code when the test runs and is never stored. `fixtures.test.mjs` calls each and checks the real answer (3 tests).
+- `copyReadStates()` (async), users now case-disclosures 1: answers `{copy, photo, refused, undetermined, unknown}`, each `{capture, answer}` with `answer` as `documentCopy` gives it. `copy` is `{state: "copy", copy, refused: null, obscured: {copy, label: COPY_CLEANED_LABEL, kind: "document"}}`. `photo` is `{state: "photo"}`. `refused` is `IMAGE_NOT_CLEANABLE`. `undetermined` is the state with its table unreadable. `unknown` is `pending` (see Found).
+- `copyTickRefusals()` (async), users now scheduler 1: answers `{capture, batch, wake, queued}`. `batch` is DOCUMENT_COPY_NO_STORE (C-141.11), `wake` is null, and `queued` holds the document untried.
+- `onCopyWorkRegistrarRefusals()`, users now scheduler 1: answers `{first, twice, malformed}`, the first `{ok: true, module}`, then LISTENER_DECLARED and LISTENER_MALFORMED.
+
+**Shared helper moved.** `supplied()` moves from `documents.test.mjs` into `fixture.mjs`, exported. `documents.test.mjs` imports it. No test changes meaning.
+
+**Causes.** None: a fixture job. **Deferred.** None.
+
+**Markers added (K5060).** None (no `fixtures-own` or `fixtures-generic`). **Words.** No new sentence.
+
+**Found in this module (a question for BOB; not changed).** `documentCopy` on a digest the record holds nowhere queues it (R16: "a miss is queued") and answers `pending`. `copyBatch` then reads nothing, answers failed, and retries it every `DOCUMENT_COPY_RETRY_MS` for ever, so the queue never drains. This is from reading `documentCopy`, `#enqueue` and `#copyOne` in `index.mjs`, not from running it. The `unknown` fixture makes exactly this row. Is a digest the register does not hold a member document to queue? My recommendation: no. A digest with no capture should be answered `undetermined` (or a refusal) and queue nothing. That is BOB's call; I have changed nothing.
+
+**Found in other modules.** None. The users' hand-built answers stay for their own jobs, as the START says.
+
+**Tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/case-carriage/*.test.mjs`: 103 tests, 103 pass, 0 fail (100 before, plus the 3 fixture tests). Modules that import `fixture.mjs` from outside: `scheduler/copies`, `affordances/t38-backing`, `plane/t51`, `plane/disclosures`: 28 pass, 0 fail.
+
+**Checks** (civicos-process, product `/home/user/bio`, absolute root: the relative `.` root reads nothing, K5066):
+- format: 178 modules, 178 requirements files; 0 failures.
+- architecture case-carriage: 16 product files; 0 failures.
+- coverage case-carriage: 23 of 23 live requirement ids named by a test; 0 failures.
+- words case-carriage: 0 failures.
+- ownership case-carriage `tranche/T51` to `job/T51/case-carriage`: 5 files changed by case-carriage; 0 failures.
+- fixtures case-carriage `--list`: 0 failures (the module has no live lines of its own).
+- impact `origin/tranche/T51 HEAD`: names 119 modules and 2084 test files, from the tranche's own movement. My change reaches only the tests that import `fixture.mjs`, run above. I did not run the 2084.
+
+Size (session_016jr2sKapnMAJpzphgBXm9Q): test runs 5, module lines 1719
+
+## Fix round 10, follow-up 14: cause R24 (b2), the filing stall (START B9; CASE-CARRIAGE #18)
+
+**Root cause.** `index.mjs` `#copyOne` (the read of a queued document's bytes) verified them with `createSha256().update(bytes).hex()`, the one-shot pure-JS SHA-256 of `record-grammar`, run synchronously over the whole file. Over an 8 MB text that held the object's thread for about half of the stretch (PLANE #61 J62's profile: 524 ms, 268 ms with a native digest). The same pattern verified an original in `#original` (photo, up to `COVER_MAX_BYTES`) and digested a derived copy's bytes in `#derive` and `#copyOne`.
+
+**Why the tests missed it.** No test measured the work of a large copy: every copy test used a document of a few hundred bytes to 5 MB that `copyNow` skips unread, and none counted which digest ran.
+
+**Change.** `NATIVE_DIGEST_MIN_BYTES` (1 MiB, exported) and one method `#digest(bytes)`: over the bound it asks `crypto.subtle.digest('SHA-256', ...)` (the constructor's `nativeDigest` seam), else, or when the native digest throws or answers anything but 64 hex digits, the pure-JS hash (the `jsDigest` seam). Both answer the same lower-case hex, so the identifier is unchanged (R-OLD: nothing stored changes). It replaces the four `createSha256().update(bytes).hex()` calls over file bytes (`#original`, `#derive`'s cover, `#copyOne`'s read check and its copy). `shaOf` (short text strings) is unchanged.
+
+**Tests** (`copy-digest.test.mjs`, new; `fixture.mjs`'s `world(extra)` passes deps through, so a test supplies the counting seam). Failing first: seen red (native digest asked 0 times, not once) against the old code with only the constant added.
+- R15: a 2 MiB document: native digest called once with 2 MiB, pure-JS zero; the document is made `clean`; its digest equals node's SHA-256 of the input and the old pure-JS output (byte for byte).
+- Controls: a 356-byte document: JS once, native zero, same digest as before; exactly 1 MiB is small, 1 MiB + 1 is large; native throwing, or answering "not a digest", falls back to the pure-JS hash with the same result; stored bytes that are not the capture's digest are still `failed` and stay queued, over the bound too.
+
+**Owed by plane (named for BOB).** `r10-filing-stall`, plane's own platform-side check (plane's tests, merged with plane's coupled merge): not mine, not run here.
+
+**For BOB (requirements).** R15 says nothing of how the bytes are digested; it may want one clause (the native digest over 1 MiB, the same digest). I changed no requirement.
+
+**Deferred.** None. **Found in other modules.** None (`record-grammar`'s `createSha256` stays pure-JS for small inputs by design; other modules that hash large bytes with it are not mine to judge).
+
+**Markers added (K5060).** None (no `fixtures-own` or `fixtures-generic`). **Words.** No new sentence.
+
+**Tests run.** case-carriage: 106 tests, 106 pass, 0 fail (103 before, plus 3). Impact set, modules using case-carriage: case-disclosures 115/115, case-authoring 256/256, case-check 34/34, scheduler 185/185, public-read 307/307, publication 179 pass of 180 (0 fail; the rest not a fail). Not run: affordances, op-declarations, answer-envelope, control-plane, plane (they reach this module only through its declared ops, unchanged).
+**Checks** (civicos-process, absolute root `/home/user/bio`): format: 0 failures; architecture case-carriage: 18 product files, 0 failures; coverage case-carriage: 23 of 23 ids named, 0 failures; ownership: see the push; `checks/run.mjs`: fixtures 2622 failures and words 1 failure (progressions) are inherited, identical with my change stashed, none in my files.
+
+Size (session_01VR43LyTQS6cPbKEumGEzr6): test runs 12, module lines 1740
+
+## J8 · COMPLETE
+
+COMPLETE · follow-up 14, cause R24 (b2). Root cause: index.mjs #copyOne (and #original, #derive) verified file bytes with the one-shot pure-JS createSha256 over the whole file. Fixed: NATIVE_DIGEST_MIN_BYTES (1 MiB) and #digest(): crypto.subtle.digest over it, the pure-JS hash below it or if native fails; same hex, nothing stored changes. Failing-first test copy-digest.test.mjs (seen red): 2 MiB copy calls native once, JS zero, digest equals node's SHA-256 and the old output; controls: small input, 1 MiB edge, native failure fallback, wrong bytes still failed. Module 106/106; impact set (case-disclosures, case-authoring, case-check, scheduler, public-read, publication) 0 fail. format, architecture, coverage (23/23), ownership 0 failures; run.mjs fixtures/words failures inherited and identical without my change. Markers added: none. Owed: plane's r10-filing-stall (platform-side check). For BOB: R15 may want one clause on the digest. Record: build/jobs/T51/case-carriage.md, last section. Size (session_01VR43LyTQS6cPbKEumGEzr6): test runs 12, module lines 1740.

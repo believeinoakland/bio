@@ -1,6 +1,6 @@
 # installer (T51)
 
-**Status** · session_01DCAWkiUVqfwYfbb2mBxLJd · depth 2 · WORKING · handled B28
+**Status** · session_01EBZBHpiJKKbVycjEP1ox2e · depth 2 · COMPLETE · handled B31
 
 ## J1 · QUESTION
 
@@ -415,3 +415,32 @@ COMPLETE (B28, R85). Merged tranche/T51 first.
 **Deferred / other modules.** `words-reads.json` (design's) lacks the 63 keys. The generated bundle and `invite-page.mjs` are untouched; the bundle is stale (BOB regenerates).
 
 Size (session_0133bNMzhnXsy441ZfjLU6xR): test runs 62, module lines 3262
+
+## Job 83 (G157, R84 amended: Containers on Free is 401 / 1000, K4970) — INSTALLER #27, session_01EBZBHpiJKKbVycjEP1ox2e
+
+**Done in this module.** `newgroup/src/ready.mjs`: `CONTAINERS_CODES.planUnauthorized = {status: 401, code: 1000}`; `containersState` reads the plan answer (that pair, or 100328) before `special(e)`, so a measured Free answer is state `plan` and the plan stop (R6); a bare 1000 under another status is "unknown" (Cloudflare's words), a 401 of another code stays "approve again". `newgroup/test/fixture.mjs` brought to the measured shapes: Containers plan 401/1000 (the measured message), R2 not entitled 403/10042, no prefix 404/10007, taken prefix 403/10031 (plan probe 400/100328 was already so); new knobs `containers: "bare1000"` and `"expired"`. `r84.test.mjs` R84 (2) gains the two controls. No sentence added.
+
+**Found in installer-steps (another module; needs BOB, two one-line changes), both measured in `measure-R9-account-shapes.md`:**
+1. `api.mjs` `failureOf` raises every 401 as `ApproveAgain` with `status` and `apiMessage` but NOT `code`; so `containersState` cannot tell the measured Free answer (401/1000) from an expired permission, and the fresh run asks the founder to approve again instead of showing the plan stop. Fix: `{ status: 401, code: e.code, apiMessage: e.message }`.
+2. `probes.mjs` `registerSubdomain` reads a taken prefix as HTTP 409; the measured answer is 403 / code 10031. Fix: also accept `e.code === 10031` (not `e.status === 403` alone: 403 is also "not permitted"). Until then a taken name ends the run as a lookup failure instead of asking for another.
+With both applied locally (then reverted, not committed) `newgroup/test/r84.test.mjs`: 8 pass, 0 fail. Without them: R84 (2) and R84 (4) fail on these two points alone.
+
+**Checks run (before the steps fix).** format 0 failures; architecture 0 failures; coverage 0 failures (75 of 75). Not yet run: words, ownership, impact, the full suite (waiting on the installer-steps change, which changes the suite's outcome).
+
+## J29 · BLOCKED
+
+BLOCKED (cause: needs BOB, another module). G157 is built in installer (ready.mjs, fixtures at the measured shapes, controls) but two measured answers are lost in installer-steps, which I may not change:
+1. api.mjs failureOf: a 401 becomes ApproveAgain with status and apiMessage but no code, so the Free account's 401/1000 on /containers/applications cannot be told from an expired permission. One line: add `code: e.code` to that object.
+2. probes.mjs registerSubdomain: a taken prefix is read as HTTP 409; measured is 403/10031. One line: accept `e.code === 10031` too.
+With both applied locally (reverted, uncommitted) r84.test.mjs is 8 pass 0 fail; without them R84 (2) and (4) fail on exactly these. Please have installer-steps change them (or tell me to proceed otherwise), then CHANGE me to merge and finish. Details in my record, Job 83.
+
+**Job 83 completion (after CHANGE B31, tranche merged, job 82's failureOf code and 403/10031 in).**
+- Entries applied: G157 / R84 amended: the Containers plan stop decided by 401 + code 1000 on this path (`CONTAINERS_CODES.planUnauthorized`), fixtures at every measured shape, controls for a bare 1000 and a bare 401. No sentence added. Nothing deferred.
+- Found in another module: nothing new (the two installer-steps points of J29 are fixed by job 82).
+- Tests: `newgroup/test/r84.test.mjs` 8 pass, 0 fail. Installer suite (`cd newgroup && node --test --test-force-exit test/`): tests 254, pass 232, fail 15, all on the accepted list (R8, R11, R20, R44, R55, R61, R71, G54, wizard, R33 six): fifteen, one fewer than the sixteen BOB named; none new. `node build/plan/impact.mjs origin/tranche/T51 HEAD`: installer 12/23, journey-check 2/25 (affected modules 2 of 176, test files 14 of 2671). The user journey-check's files `account-installer.test.mjs`, `journey.test.mjs` with `newgroup-bundle-fresh.test.mjs`: 28 tests, 8 pass, 20 fail, identical with my three files (ready.mjs, fixture.mjs, r84.test.mjs) reverted to the tranche version, so not caused by this job (bundle staleness is BOB's regeneration; the newgroup bundle is stale by this change).
+- Checks (failure counts): format 0, architecture 0, coverage 0 (75 of 75), words 0, ownership 0.
+Size (session_01EBZBHpiJKKbVycjEP1ox2e): test runs 9, module lines 3270
+
+## J30 · COMPLETE
+
+COMPLETE (G157, R84 amended). Entries applied: Containers plan stop by 401/1000 on this path; every R84 fixture at the measured shapes; controls for a bare 1000 and a bare 401; no sentence added; nothing deferred. r84: 8 pass 0 fail. Installer suite: 254 tests, 232 pass, 15 fail, all on the accepted list (fifteen, not sixteen; none new). Impact: installer 12/23, journey-check 2/25; the journey-check/bundle files show 20 failing of 28 identically with my change reverted (not this job's; the newgroup bundle is stale, yours to regenerate). Checks: format 0, architecture 0, coverage 0, words 0, ownership 0. Size (session_01EBZBHpiJKKbVycjEP1ox2e): test runs 9, module lines 3270.

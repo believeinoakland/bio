@@ -1,0 +1,130 @@
+/* extraction's published fixtures (K4990, K4993, K4995, K5044; fix round 10, the fixture round): the answers extraction gives its users, made by extraction's
+   own code when a test runs and never stored. A user's test takes the answer from here and does not write it by hand. Each is called by a test of
+   extraction's own, `fixtures.test.mjs`, which checks the real answer. Each runs this module's real code over `fresh()` (its real record-core and membership
+   over a real SQLite database) with a scripted evidence bucket, and the real reader (reading-pipeline's) where a read is made. */
+import { fresh, bundle, bucket, doc, sha, member, ocrAnswer, homesOver } from "./fixture.mjs";
+
+const lines = (n, f) => Array.from({ length: n }, (_, i) => f(i));
+/** A text of `n` lines (about 99 bytes each) ending in a mark, so a read of it goes on in pieces of 4,096 units. */
+const textOf = (n) => lines(n, (i) => `line ${String(i).padStart(6, "0")} ${"council-minutes ".repeat(5)}`.padEnd(99, ".")).concat(["ENDMARKER"]).join("\n");
+
+/* A store holding the bytes in its bucket, the register naming the bundle `INFO-1` the capture's home (the register is provenance's real instance over its
+   own fixture), the bundle's provenance document naming the capture. `ct`, `format` and `fromText` are the capture's profile. */
+async function held(bytes, { ct = "text/plain", format = "undetermined", fromText = true, reader = null, env = {}, whole = true } = {}) {
+  const rows = new Map(), evidence = bucket();
+  const w = fresh({ evidence, env, reader, provenance: homesOver(rows) });
+  bundle(w.s, "INFO-1");
+  const u8 = typeof bytes === "string" ? new TextEncoder().encode(bytes) : bytes;
+  const d = sha(u8);
+  rows.set(d, { bundleId: "INFO-1", path: "f", encoding: "binary", bytes: u8.length });
+  const document = doc({ digest: d, bytes: u8.length, ct, format, fromText });
+  w.core.readFile = (b, p) => (b === "INFO-1" && p === "data/provenance.json" ? { text: JSON.stringify({ documents: [document] }) } : null);
+  if (whole) await evidence.put(`bio/captures/${d}`, u8);
+  return { w, d, rows, evidence, document };
+}
+
+/** `extractionNotice`: a real extraction's reading notice and index notice, as its R24 and R62 state them. `onReading(module, fn)` and `onIndexed(module, fn)`
+ *  are the real registrations (one listener a module; a second by the same module is `LISTENER_DECLARED`, a malformed one `LISTENER_MALFORMED`); each
+ *  registration that was accepted is kept in `listeners` / `indexListeners`, and `fire(e)` / `fireIndexed(e)` run those in registration order, answering each
+ *  `{module, answer}`. `readingOf`, `unitsOf` and `capturesReadFor` are the real reads over the instance's (empty) store; `extraction` is the instance. */
+export function extractionNotice() {
+  const w = fresh();
+  const listeners = [], indexListeners = [];
+  const taking = (list, register) => (module, fn) => {
+    const answer = register(module, fn);
+    if (answer && answer.ok === true) list.push({ module, fn });
+    return answer;
+  };
+  return {
+    extraction: w.x, world: w, listeners, indexListeners,
+    onReading: taking(listeners, (module, fn) => w.x.onReading(module, fn)),
+    onIndexed: taking(indexListeners, (module, fn) => w.x.onIndexed(module, fn)),
+    fire: (e) => listeners.map((l) => ({ module: l.module, answer: l.fn(e) })),
+    fireIndexed: (e) => indexListeners.map((l) => ({ module: l.module, answer: l.fn(e) })),
+    readingOf: (s) => w.x.readingOf(s), unitsOf: (s, o) => w.x.unitsOf(s, o), capturesReadFor: (b) => w.x.capturesReadFor(b),
+  };
+}
+
+/** `progressOf`: the real `progressOf(shas)` (R108) over a store holding three captures read by the real reader: `scan` (a 30-page scan, 24 of its pages read
+ *  by a scripted OCR member, 6 owed: `partial`), `text` (a short text read to its end: `whole`) and `big` (a text read through its first piece, more to
+ *  follow: `partial` with R90's figures); `unknown` is a digest nothing holds (`none`). `answer` is the answer for all four, as the module gives it. */
+export async function progressOf() {
+  const { generate } = await import("../../pdfgen.mjs");
+  // fixtures-contract: plane job-registrar
+  const { jobRegistrarStub } = await import("../../job-registrar-stub.mjs");
+  const g = generate({ kind: "pdf", seed: "progress", fonts: ["type0"], size: { pages: 30, lines: 1 }, kinds: ["scan"] });
+  const scan = await held(await g.bytes(), { ct: "application/pdf", format: "pdf", fromText: false });
+  const jobs = jobRegistrarStub();
+  const ocr = member((body) => ocrAnswer((Array.isArray(body.pages) ? body.pages : []).slice(0, 24), { text: (p) => `ocr words of page ${p}` }));
+  await scan.w.x.readHeld({ sha: scan.d, kind: "reading", env: { OCR_WORKER: ocr }, registerJob: jobs.registerJob, armJobs: jobs.armJobs });
+  const text = await held(textOf(20));
+  await text.w.x.readHeld({ sha: text.d, kind: "reading" });
+  const big = await held(textOf(32_000));
+  await big.w.x.readHeld({ sha: big.d, kind: "reading" });
+  const unknown = "4".repeat(64);
+  const stores = { [scan.d]: scan.w.x, [text.d]: text.w.x, [big.d]: big.w.x };
+  return {
+    shas: { scan: scan.d, text: text.d, big: big.d, unknown },
+    /* each digest is asked of the instance that holds it: one store a capture, as the three were made */
+    progressOf: (list) => Object.assign({}, ...list.map((s) => (stores[s] || scan.w.x).progressOf([s]))),
+    answer: Object.assign({}, scan.w.x.progressOf([scan.d]), text.w.x.progressOf([text.d]), big.w.x.progressOf([big.d]), scan.w.x.progressOf([unknown])),
+  };
+}
+
+/** `readHeldAnswer`: the real answers of `readHeld({sha, ...})` (R80, R82, R90), the ledger's tick, over fixture captures. Each is a function of its own:
+ *  - `noHome()` a digest the register names no home of: `{ok: true, read: false, why: "NO_HOME"}`;
+ *  - `read()` a short text read to its end in one tick: `{ok: true, read: true, bundle_id, found}`;
+ *  - `piece()` the first tick of a text that goes on: `more: true` with `detail: {read_through, total}`; `pieces(n)` the ticks of a text of `n` pieces, the
+ *    last answering as `read()` does (`n` from 2 to 5, so that every piece is 4,096 units);
+ *  - `held()` a reading already held: `{ok: true, read: false, why: "READING_HELD", counters: {written, skipped}}`;
+ *  - `final(why)` a read in pieces ended, stated, because the reader refuses the cursor (`why` `CURSOR_MISMATCH`; a refused `NOT_PIECEWISE` is stated
+ *    partial once and answers `READING_HELD`, not final): `{ok: true, read: false, final: true, why}`;
+ *  - `killed()` an OCR tick whose member died on a page: the answer carries `killed: [page]`. */
+export const readHeldAnswer = {
+  async noHome() { const { w } = await held("a text no register names"); return w.x.readHeld({ sha: "a".repeat(64) }); },
+  async read() { const h = await held(textOf(20)); return h.w.x.readHeld({ sha: h.d, kind: "reading" }); },
+  async piece() { const h = await held(textOf(9000)); return h.w.x.readHeld({ sha: h.d, kind: "reading" }); },
+  async pieces(n) {
+    if (!(Number.isInteger(n) && n >= 2 && n <= 5)) throw new Error("readHeldAnswer.pieces: n is from 2 to 5");
+    const h = await held(textOf((n - 1) * 4096 + 1000));
+    const answers = [];
+    do answers.push(await h.w.x.readHeld({ sha: h.d, kind: "reading" })); while (answers.at(-1).more === true && answers.length < n + 2);
+    if (answers.length !== n) throw new Error(`readHeldAnswer.pieces: ${answers.length} pieces for ${n}`);
+    return answers;
+  },
+  async held() { const h = await held(textOf(20)); await h.w.x.readHeld({ sha: h.d, kind: "reading" }); return h.w.x.readHeld({ sha: h.d, kind: "reading" }); },
+  async final(why = "CURSOR_MISMATCH") {
+    if (why !== "CURSOR_MISMATCH") throw new Error(`readHeldAnswer.final: no such reason ${why}`);
+    const h = await held(textOf(9000));
+    await h.w.x.readHeld({ sha: h.d, kind: "reading" });
+    h.w.x.read = async () => ({ refused: { code: why, why: "the held bytes are not the ones this cursor was made from" } });
+    return h.w.x.readHeld({ sha: h.d, kind: "reading" });
+  },
+  async killed() {
+    const { generate } = await import("../../pdfgen.mjs");
+    const g = generate({ kind: "pdf", seed: "killed", fonts: ["type0"], size: { pages: 4, lines: 1 }, kinds: ["scan"] });
+    const h = await held(await g.bytes(), { ct: "application/pdf", format: "pdf", fromText: false });
+    const dies = member((body) => { if ((body.pages || []).includes(1)) throw new Error("the member's isolate was reset"); return ocrAnswer(body.pages, { text: (p) => `ocr ${p}` }); });
+    await h.w.x.readHeld({ sha: h.d, kind: "reading", env: {} });
+    return h.w.x.readHeld({ sha: h.d, kind: "ocr", env: { OCR_WORKER: dies } });
+  },
+};
+
+/** `transcribeRefusal`: the whole real refusal of `op=pagetranscribe` when the transcriber is not deployable (R47's C-51.7): `{status: 501, body: {ok: false,
+ *  reason: "TRANSCRIBE_NOT_DEPLOYED", code, check: "C-51.7", translation, op}}`, with its check, made by `pageTranscribe` over a stored scan and a registered
+ *  transcriber whose `deployable()` answers false. */
+export async function transcribeRefusal() {
+  const h = await held("%PDF-1.7 a scan " + Math.random(), { ct: "application/pdf", format: "pdf", fromText: false });
+  h.w.x.writeReading({ bundleId: "INFO-1", captureSha: h.d, reading: { content_type: "generic", reader_version: 1, found: false, entities: [], facts: {},
+    at: "2026-09-01T00:00:00Z", basis: "b", text_source: null, page_count: 1 }, textUnits: [] });
+  h.w.x.registerTranscriber("plane", { deployable: () => false, keptAway: () => null, transcription: () => { throw new Error("not deployed: no account is read"); } });
+  return h.w.x.pageTranscribe({ captureSha: h.d, cls: "member", session: true, caps: ["contribute"], viewer: "class:admin", by: "member:m1", env: {} });
+}
+
+/** `unheldStructure`: the real answer of `pdfStructure({sha})` for a digest the evidence store does not hold (R31, capture's `evidenceAbsent`): `{status: 404,
+ *  body: {ok: false, reason: "EVIDENCE_NOT_HELD", ...}}`. */
+export async function unheldStructure({ sha: digest = "e".repeat(64), cls = "member", storeName = "bio" } = {}) {
+  const { w } = await held("a held text");
+  return w.x.pdfStructure({ sha: digest, cls, storeName });
+}
+

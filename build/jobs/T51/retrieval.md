@@ -1,6 +1,6 @@
 # retrieval (T51)
 
-**Status** · session_01E8rJsiNPGQhSTzqHve1gec · depth 2 · COMPLETE · handled B14
+**Status** · session_019Nb9MktkjHjGw15MBh7yrF · depth 2 · COMPLETE · handled B15
 
 ## Work notes (RETRIEVAL #20)
 
@@ -250,3 +250,19 @@ Retrieval suite 191 of 197; the 6 reds are the hit-side tests waiting on `snippe
 ## J14 · COMPLETE
 
 COMPLETE · B14 applied: progressOf is read through the real extraction (job 41); R108 test green. Retrieval suite 191 of 197; the 6 reds are the hit-side R95/R96 tests waiting on query-language R34 snippet_unit (job 66), green with R34 emulated. Checks: 0 failures. Record: build/jobs/T51/retrieval.md.
+
+## Fix round 10, Wave A batch 1 (B15; RETRIEVAL #28)
+
+**Done.** `bio-plane/test/m/retrieval/fixtures.mjs` (new) publishes `actionRegistrar` (R53, R56: the real retrieval's `registerActionFacts` / `registerProjectionDecoration`), `meaningRowsUnknownArm` (R10, R31, C-23.2), `noSelection` (R19, R31, C-33.20) and `selectionResolve` (R18-R20, R77; helper `selection(ids, owner)`, with the real `resolve` and `read`), all made by the real retrieval over `world()` when the test runs. `fixtures.test.mjs` (new) calls each and checks the real answer, and runs the `selection-read` contract (`// fixtures-run: retrieval-browse selection-read`).
+
+**Contract result for retrieval-browse.** The real `selectionRead` answers `{ok:true, members, ...}` with no `viewer` key; the user's stand-in (`retrieval-browse/fixture.mjs:172-173`) echoes `viewer`. The real answer wins: the user drops `viewer` from its value. The two refusals match exactly (NO_SUCH_SELECTION with detail "unknown, released, or expired"; NOT_YOURS, whose detail is a localized sentence, not the stand-in's "stand-in: not yours").
+
+**Lines left.** `fixtures-run: retrieval-browse selection-read` waits on retrieval-browse's `fixtures-contract` marker (orphan-run until it merges). 1 FIX-E line, `progressStub` at `t51-round9.test.mjs:211` (extraction's `progressOf`), waits on extraction's fixture (CHANGE). No `fixtures-own` or `fixtures-generic` marker added. Deferred: none. Found in other modules: none.
+
+**Tests and checks.** Retrieval suite 202 of 202 (5 new); fixtures list for retrieval: 1 line (the extraction one); impact.mjs: 0 of 178 modules affected, so no user tests to run. format 0, architecture 0, coverage 86 of 86, ownership 0.
+
+Size (session_019Nb9MktkjHjGw15MBh7yrF): test runs 5, module lines 3097
+
+## J15 · COMPLETE
+
+COMPLETE · retrieval T51 fix round 10, Wave A batch 1 (B15). Published in bio-plane/test/m/retrieval/fixtures.mjs: actionRegistrar, meaningRowsUnknownArm, noSelection, selectionResolve; each called and checked against the real answer in fixtures.test.mjs. Ran the selection-read contract (fixtures-run: retrieval-browse selection-read); the real selectionRead has NO viewer key where retrieval-browse's stand-in (fixture.mjs:172-173) echoes it, and its NOT_YOURS detail is a localized sentence: the real answer wins, retrieval-browse changes. Left: fixtures-run orphan-run until retrieval-browse's marker merges; 1 FIX-E line (progressStub, t51-round9.test.mjs:211, extraction's progressOf) waits on extraction (CHANGE). No fixtures-own/fixtures-generic markers added. Retrieval suite 202/202; impact.mjs 0 of 178 affected. format, architecture, coverage 86/86, words, ownership: 0 failures. Record: build/jobs/T51/retrieval.md.

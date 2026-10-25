@@ -3,6 +3,7 @@
    control. `publication`'s `stampEdition` (its R62) is the fixture's recorder until T33-63 merges; `events` is real. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { stampEditionRefusal } from "../publication/fixtures.mjs";
 import { seeded, file, prepare, sign, post, fileAndPlace, V, MACHINE, CASE, SUBJECT, OTHER_SUBJECT, NOW, DAY }
   from "./fixture.mjs";
 import { DOCKET_CHECKS, ENTRY_FORMAT, ORDER_EFFECTS } from "../../../src/docket/index.mjs";
@@ -131,7 +132,7 @@ test("R25 a stamp refused or failed undoes the post, writing nothing: never a si
   const p = prepare(w, ORDER(w));
   const go = () => w.docket.docketPost({ digest: p.digest, signature: sign(p), acknowledged: true, by: A, viewer: A });
   const before = w.snapshot();
-  w.stamps.refuse = "NO_SUCH_CASE_EDITION";
+  w.stamps.refuse = stampEditionRefusal().noEdition;
   const r = await go();
   assert.deepEqual([r.ok, r.reason], [false, "NO_SUCH_CASE_EDITION"], "answered as publication gave it");
   assert.deepEqual(w.snapshot(), before, "the entry's row is rolled back");

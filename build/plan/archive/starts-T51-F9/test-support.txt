@@ -1,0 +1,287 @@
+START · TEST-SUPPORT #10 · tranche T51 · product believeinoakland/bio · fix round 9, causes G123c (first half: `alarmDouble`), G123d, G123e, and `jobRegistrarStub` (plan section 2c) (plan build/plan/fix-round-9-T51.md, adopted K4837; requirement edits K4840) · depth 2 (BOB #272 at depth 1)
+
+**BOB's rulings for every round-9 START (K4842; they govern over any line below that differs).** (1) `READ_BOUNDS`' file is runtime-limits' alone: no other job edits it; a ceiling you keep that has no row is a REPORT to BOB naming its kind, name and three figures, and BOB carries it to runtime-limits (P9, P10). (2) A new file you create outside your `paths` (test-support's `pdfgen.mjs`, `imggen.mjs`, `sheetgen.mjs`, `docgen.mjs`, `alarm-double.mjs`, `job-registrar-stub.mjs`; runtime-limits' `read-bounds.mjs`, `byte-ledger.mjs`): create it and list it in your COMPLETE; BOB adds it to your `paths` before the ownership check (K1043): no BLOCKED for it. (3) The PDF recipe file is `build/plan/red-pdf-T51.mjs` (run `cd bio-plane && node ../build/plan/red-pdf-T51.mjs N5`); every `red.mjs` below means it. (4) G136c's case-carriage piece (`tried` stamped before the clean) is case-carriage's own job (45, batch C); doc-clean does not ask for it. (5) A corpus case whose row names no seed takes its case id as its seed. (6) "DOCS E9" means SCAN E9. (7) A figure in MB or GB counts 2^20 or 2^30 bytes (K4840 (1)).
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `git fetch origin job/T51/test-support tranche/T51 && git branch -m job/T51/test-support stale/test-support-local && git checkout -b job/T51/test-support origin/job/T51/test-support`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+Process: attach `believeinoakland/civicos-process` and read your role's instructions there (`roles/JOB.md`) whole before anything else (CLAUDE.md of this repository).
+
+Mail with `--module test-support`; record `build/jobs/T51/test-support.md` (append a new section; earlier sections are history). Model claude-opus-5-5 (the plan's default model: more than three new provided ids), medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis, never above your own model (K3518); any act a safety or permission check refuses is NEVER worked around, split, rephrased or retried: post BLOCKED naming it and wait (K4696). Before any test run every directory with a tracked `package-lock.json` has its `node_modules` (K4113: `for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`). Run your tests from `bio-plane/`: `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/test-support/`; a command handing `node --test` a computed file list checks it is non-empty first (K4741). At most two suites at once; a heavy or time-sensitive file runs alone, five runs, and also on one core (`taskset -c 0`) (R-NOLOAD, K4787). Your diff touches only this module's `paths`, its `tests` and your record (ownership). Never edit a generated artifact; name in your record any you make stale (BOB regenerates at the round end). Never contact biosmoke8 or any live deployment (the P steps are BOB's; if ever, only through the environment's proxy, unchanged, K4733).
+
+**Rules.** Section 0 of the plan, copied below, binds: R-FOUR, R-SEAM, R-ONE, R-PATH, R-NOTMET (no "not met", deferred, REPORT or open QUESTION at COMPLETE: name the smallest thing you need and ask BOB now), R-OLD, R-LIVE, R-STOP, R-CLOCK, R-PROXY, R-QUIET, R-NOLOAD, R-LOG, R-SILENT, R-GATE, R-LAYER, R-WORDS. Declare every census op you own (K4208). Words wait for T52 (K4269): a new sentence uses a stand-in (the nearest held row, or `localize` with a fixed id where your module already keys its own words; a drawn-screen module never adds `localize`), the row owed named in your record; the rows of plan section 5 that are yours are copied below. Tests never copy a sentence people read (K3810). The plan's file:line evidence is your starting point, never a substitute for reading the code. A job never writes a requirement and never strikes a "not yet met" mark: propose any wording change of your requirements in your record; BOB writes it. **Requirement ids BOB changed for this module (K4840): R9, R19-R28. Merge tranche/T51 first: your requirement file was changed by BOB (K4840); read it whole.**
+
+**New ids (K874).** New ids in your requirements, all marked not yet met: R19, R20, R21, R22, R23, R24, R25, R26, R27, R28. Each new id of yours, and each changed id, is named by an explicit test of its own that asserts it: the coverage check counts any `R<n>` string, and an older test's chance mention must not make it read green.
+
+**Reading rule (K3678).** Read your set whole: section 0 and your entries below, your requirements (both parts), of each module you use the services your entries touch, your code and the tests that name a requirement your entries change; your other tests are run, not read. The reading set is this START + your requirement + the named source + the tests you edit, about 250 KB at most (the plan's estimate for your job). A document of your set you would read only in part: stop at once, post BLOCKED with cause `reading`, and wait for BOB.
+
+**Providers and users.** You PROVIDE, to every later job: the generators `pdfgen`, `imggen`, `sheetgen`, `docgen` (G123d; one seeded generator per family, each knowing its own truth), the ZIP64 and lazy streaming mode of the shared writer `bio-plane/test/make-zip.mjs` (`zipChunks64`), `truthOf` (a truth function per kind), `loopbackOrigin` (the scripted `node:http` origin of the served-page cases), the independent-reader oracle helpers (pdf.js through the committed pdf-worker bundle, Pillow/libtiff for pixels, an RFC 4180 parser inside the generator for CSV, `unzip -t` and Python `zipfile` for packages, LibreOffice headless for office text), `alarmDouble` (G123c first half; no plane import) and `jobRegistrarStub` (the in-memory registrar of 2c.1). The new files go beside `make-zip.mjs` under `bio-plane/test/`: `pdfgen.mjs`, `imggen.mjs`, `sheetgen.mjs`, `docgen.mjs`, `alarm-double.mjs`, `job-registrar-stub.mjs` (plan section 6 item 4: adding these paths to `modules.json` is BOB's edit, not yours; if `ownership` reports one of them outside your paths, post BLOCKED naming it and do not edit `modules.json`). The fault injectors, the harness and the 2 MB value shim are plane-1's (job 20), not yours. You USE nothing of the new interfaces. A later job whose named case needs a generator option you have not built builds it in its own test directory, marked `// MOVE`; BOB moves it here at the round end (rB D1), so build your library from the recipes below and the axes of the reports' sections, and keep each generator deterministic in its seed.
+
+**Merged before you start (the "after" column of your row): round 8's sessions are merged and archived (batch A, merged first, K4219, K4836); nothing else starts until jobs 1, 2 and 20 have merged.** A seam test whose provider is unmerged is written first and stays red by name (R-SEAM). A provider's interface that you code against before it merges is the text of plan section 2c below: test against the stub or a minimal local implementation of that contract, never against code not yet merged.
+
+**Interfaces your job provides or uses, plan section 2c, copied.** Providers merge in `modules.json` order, so a user coded before its provider merges needs the provider's interface in text. These are BOB's details (P17), recorded at adoption and copied into every START that provides or uses one. A user job tests against the stub or a minimal local implementation of the contract named here.
+
+1. **The registrar, `registerJob`.** Wired by the composition root, **plane** (plane-2, job 37), in `plane/store.mjs` beside `capture.keepLater = (a) => pending.keepLater(a)` (`store.mjs:434-438`), as `capture.registerJob = (e) => pending.registerJob(e)`; acquisition, capture and doorbell read it as they read `keepLater` (`typeof cap.registerJob === "function"`, else `opts.registerJob`, else the caller proceeds without a row and says so in its answer, never silently); extraction receives it as `opts.registerJob` and its `owe` is `registerJob` bound to a kind. Signature: `registerJob({kind, sha, session?, cursor?, owed?, carrier?, parts?, detail?, verdict?, priority?}) -> {ok:true, existed:boolean, state} | {ok:false, reason}`; **synchronous**, never throws. `kind` is one of `keep`, `reading`, `ocr`, `subresources`, `unpack`, `fetch` (today's `PENDING_KINDS`, `plane/pending.mjs`) and `scan`, `safe_view`, `grade`, `ingest`; `sha` is the WHOLE digest (64 lowercase hex), except `fetch` and `subresources`, keyed by capture `session` as today (`SESSION_KEYED`). Idempotence key `(sha or session, kind)`; a second registration re-arms, updates `cursor`, `owed`, `detail`, `parts` only when given, never resets the counters; `priority: "raised"` is "Read it". **The transaction rule:** `registerJob` is a synchronous write on the object's own SQL storage, so a caller makes it inside the synchronous function it gives `core.transact(fn)` (`capture/index.mjs:462-464`, `doorbell/index.mjs:149-151`), and the row commits or rolls back with the filing; arming the alarm is a separate async `cap.armJobs()` (`schedulerOf(ctx, env).arm(now)`) after the commit. A caller whose `registerJob` returns `{ok:false}` throws inside its transaction (the filing rolls back) or answers a stated refusal, never swallows it (G98, G126c). **The job row** is plane-2's table, additive to `keeps_pending` (`KEEPS_PENDING_DDL`, `plane/pending.mjs`): the existing columns plus `state` (`queued`, `fetching`, `reading`, `partial`, `refused`, `finished`, `final`), `verdict` (JSON `{ok, size, limit, bound_key}`: the plan step's bound verdict), `cursor` (JSON), `written`, `skipped`, `owed`, `failed` (integers) with `failed_why` (JSON by cause), `last_progress_at`, `rate_per_s`, `carrier` (text: the R2 key or `snapshots/<name>`), `reader_version`, `priority`; per-unit attempt stamps in `job_unit_attempts(sha, kind, unit, tries, stamped_at)`; batch idempotence in `job_batches(sha, kind, batch, landed_at)`. The row is read by control-plane's `op=reading` and `owedwork`, by extraction's `completeness` and by the screens. **Stub:** test-support's `jobRegistrarStub()` implements the contract in memory (`registerJob`, `armJobs`, `rows()`, `armed()`), so jobs 23, 24, 25 and 28 test "a kill between the put and the transaction finds one job row" before plane-2; the same test with the real table is control-plane's seam, section 11 of section 3b.
+
+6. **`alarmDouble(opts)`** (test-support, job 1; no plane import) `-> {storage, getAlarm(), setAlarm(t), deleteAlarm(), run(fn), retries}`: `getAlarm()` answers null while a `run` is in flight, a spent alarm stays set until deleted, a failed `run` retries up to 6 times. Used by scheduler's `r8-budget` and `r8-stale` and by plane's harness; scheduler takes `uses: test-support` (section 6).
+
+**PLATFORM_FIGURES (K4838), for every job touching a GATED entry (G123, G126, G127, G128).** Isolate memory 268,435,456 B shared by up to five objects of a class, one buffer at most ~128 MiB; `cpu_ms` 300,000 for the plane (the default ~30 s cut alarms 7 of 7); alarm handlers re-run after completion (retryCount 1) and a code deploy cuts a running alarm 299-328 s after it and restarts it on new code, outbound calls dying silently, so handlers are idempotent; batches at most 1 MiB, a 10,000-row write blocks the object ~2.8 s; SQLite bound value up to 8,388,609 B, statement cap 100,000 B (the suites' 2 MB shim stays the stricter bound); workers.dev request body cap 104,857,600 B including framing; six ranged R2 reads in flight per request; G127f (presigned upload) is the conditional job 42, not planned now.
+
+**Reds you inherit** (accepted by name): test-support R2 (read-only tree; plan section 4). None other in the module. (Carried round-wide, plan section 4: setup-words, bundler `fleetbundles`, case-checker `program.mjs` and the other generated artifacts are stale and BOB regenerates them at the round end (plan section 4); heavy files run alone (section 7). Reds named across the tree, so you recognise them and never take them as yours: plane `release` R24 and `l77-size` R77 L (two); system `row-census` R50; file-safety `rows.test.mjs` R24 words; installer-steps R36 R40; installer R33, R8, R11, R20 and R44 until 0.87.0; words `case-checker spec.mjs` inline 6 and missingkey `refusal.PROMOTE_NOT_A_PARTICIPANT` (K4731).)
+
+**Your row of the plan's section 3:**
+| # | batch | job (layer, position) | after | causes (every piece, section 3a) | model, new ids | reads |
+|---|---|---|---|---|---|---|
+| 1 | A | test-support (L1, 7) | round 8 archived | G123d (generators `pdfgen/imggen/sheetgen/docgen`, ZIP64 and lazy streaming writer, truth functions, loopback origin, independent-reader oracles), G123e, G123c first half (`alarmDouble`), `jobRegistrarStub` (section 2c) | default: `pdfgen`, `imggen`, `sheetgen`, `docgen`, `zipChunks64`, `truthOf`, `loopbackOrigin`, `alarmDouble`, `jobRegistrarStub` (9) | 250 |
+
+**Your pieces, plan section 3a (every cause piece has a job; the rows that name your job number, verbatim):**
+(no row of 3a names your job beyond your row above)
+
+**Your through-the-door sections, plan section 3b (`bio-plane/test/m/control-plane/t51-round9-seam.test.mjs`, ONE file, written by control-plane-1 and control-plane-2; you do not write it; each section is red by name until its providers merge):**
+(no section lists your module as a provider)
+
+**From plan section 2b (requirement changes and rulings BOB writes; yours):**
+- Intro line: **test-support** (the alarm double, the registrar stub, the generators)
+- Ruled (K4835) (vii) GAP-1.1 says the harness comes first: it does (batch A, section 3), and the generators are in the merged library before any job uses a named case (the first draft's "land at the round end" is withdrawn: rB D1).
+- Ruled (K4835) (viii) The harness is test-support's (generators, double, stub) and plane's tests (the harness and faults); plane-1, test-only, merges first.
+
+**The generators' own design, copied verbatim from the family reports (you do not read the reports): how a corpus case is made, its axes, its truth function and its independent oracles.**
+
+[envelope-docs-T51-s5.md 5.1: docgen.mjs, the ZIP writer, the truth file, the two oracles]
+### 5.1 How it is made
+
+**One generator, seeded, that knows its own truth** (the PDF plan's design, so one runner serves both). A new `docgen.mjs` in **test-support** (`bio-plane/test/` beside `make-zip.mjs` and `pdfgen.mjs`; BOB adds the path to `modules.json`). It writes through the **one** ZIP writer, `make-zip.mjs`, which already makes hostile and conforming ZIPs byte-exactly, plus `zipBomb` and `nestedZip`, and has two external oracles (`unzip -t`, Python `zipfile`) (H20). The six independent ZIP writers in module tests (office-readers `fixtures.mjs`/`large.mjs`, odf-reader `pkg.mjs`, ooxml `zip.mjs`, doc-clean, file-safety, `xlsx-gen.mjs`'s `zipChunks`) and the eighteen inline ones are moved onto it as each module's job touches its tests (P7: the module owner does it). Two things the shared writer lacks and must gain: **ZIP64** in the streaming writer (`zipChunks` has none; needed for archives over 4 GiB declared and 65,535+ entries) and a **lazy streaming mode** so a 100 MB or 500 MB file is never in the generator's memory (H20 ran: 500 MiB-declared ZIP 2.9 s, 100 MiB RTF 0.25 s, 5,000-slide PPTX 0.8 s, 10 MiB random-text DOCX 1.9 s: generation is cheap).
+
+Its input is a spec of these axes:
+- **kind** (text, html, docx, odt, pptx, odp, rtf, eml, doc/ole, zip, a served page);
+- **size axes**: bytes, decoded characters, paragraphs/slides/cells/links/tables, entries, entry-name length, nesting depth, compression ratio, requests, DOM size;
+- **content axes**: part kinds present (footnote, header, comment, deleted, notes, hidden slide, text box, image-only), unit length (one 3 MB line; 25-byte lines), line endings, the encoding (UTF-8, UTF-8 BOM, UTF-16LE/BE with BOM, Latin-1, Windows-1252, a bad byte), a charset declaration (header, `<meta>`, XML declaration), markup shape (nesting depth, unterminated tags, `<main>` present/absent, link-only lists);
+- **package axes**: classic vs ZIP64, central directory in physical or shuffled order, a lying directory, an encrypted member, trailing garbage, macro-enabled flavour, a polyglot prefix;
+- **served-page axes** (for the loopback origin of §5.2 path W): status, content type, `Content-Encoding`, redirects, a delay, a body that never settles, a client-rendered shell and its hydrated DOM;
+- **a seed**.
+
+Its output is the bytes (or the origin's script) plus a **truth file**: each unit's expected text with its part kind (every paragraph/slide/line carries `<seed>-u<n>-k<part>` and a word from a small vocabulary with accents, ligatures, CJK, RTL and a combining mark, so a unit is checkable alone); the first, middle and last markers; the units expected *unread* with their named reason; the **expected statement** for a refusal (its code and its figures: `TOO_LARGE {size, bound}`, `UNSUPPORTED_FORMAT {kind}`, `ENCODING_UNSUPPORTED {name}`, `ENCRYPTED`, `STRUCTURE_OVER_BOUND {part, bound}`, `TOO_MANY_OBJECTS {n}`); the archive's expected member table (name, state, bytes, sha); the visitor view's expected fidelity statement. The generator is deterministic in its seed; large files are written once to `BIO_FIXTURE_CACHE` by spec hash and never committed. Real public files (the four government pages in `reading-pipeline/fixtures/`, plus N1268's fixed set once chosen) stay as they are, SHA-pinned.
+
+**Two oracles, never the reader's own past output** (pdf-pixels R40's rule).
+- The generator's truth, for every file.
+- An independent reader: **LibreOffice** (`soffice --headless --convert-to txt`, present on the build machine and in the file-scanner image) for DOCX, ODT, PPTX, ODP, RTF, DOC; `unzip -t` and Python `zipfile` for every archive and package (as `make-zip` does); **Chromium** (`/opt/pw-browsers`, Playwright) for the visitor view's visible text and the HTML visible-text truth; ClamAV with EICAR for the scanner files. Where the oracle and the truth differ the generator is wrong and the file is fixed. Cases where the reader is *deliberately* stricter than LibreOffice (a tracked deletion is a unit with part kind `deleted`, not dropped) are listed in the truth file.
+
+
+[envelope-docs-T51-s5.md 5.4: seeds]
+### 5.4 Seeded variations
+
+Eight fixed seeds (1-8) plus eight derived from the tranche commit run per round over the cross product F6 and over O2, O7, A4-A6, V4, H4 with the size axes sampled log-uniformly between the corners above. A file that fails keeps its (seed, spec); the shrinker halves the size axis and removes axes one at a time to the smallest failing spec, which becomes the failing-first test of the cause (K4426 (3)). The seeds' vocabulary exercises accents, ligatures (`ﬁ`), CJK, RTL and combining marks (C7, C8).
+
+
+[envelope-docs-T51-s5.md 5.7: owners (test-support rows)]
+### 5.7 Owners
+
+| Owner | Files |
+| --- | --- |
+| **plane** (R, the harness, W) | all R/R+ files; contention (F2, F3); the harness gaps R+ (a)-(f) |
+| **test-support** | `docgen.mjs`, the shared ZIP writer (ZIP64, lazy), the loopback origin, the truth-file reader |
+| **reading-pipeline** | T1-T15, H1-H6, O1, O4, O5, P1-P3, F1, F4 |
+| **extraction** | T4, T14, T15, O3, F1, F4, F5 |
+| **office-readers** | O1-O8, P1-P6 |
+| **ooxml** | O6-O8, A3, A5, A6 |
+| **odf-reader** | D1-D6 |
+| **doc-clean** | C1-C3, D4 |
+| **acquisition** | O9, O10, A1-A12, V1-V3, T7 |
+| **capture** | A1, V1, V9, O10 |
+| **capture-sources** | V4-V7 |
+| **file-safety, file-scanner** | O9, O11, S1-S5, A9 |
+| **docprofile, doctypes, site-profiles** | H7, H8, Q1 |
+| **format-registry** | O11, R4, T13 |
+| **text-chain** | T5 (R35), the chain algorithms' O(steps²) (X27) |
+| **screens-intake, control-plane** | V8, A12 |
+| **reevaluation** | F5 |
+
+
+[envelope-sheets-T51.md 5.1: sheetgen.mjs]
+### 5.1 How it is made
+
+**One seeded generator, `sheetgen.mjs`, with a truth.** It is a **test-support** path (layer 1, beside `make-zip.mjs` and the shape harness's `xlsx-gen.mjs`; BOB adds the path, and adds the edges `csv-reader`, `office-readers`, `odf-reader` → `test-support` that today are missing: G §2.5). It replaces the CSV generator copied in six places (2.3 item 8) and builds on the one good thing already there, the streaming zip writer `zipChunks` (`plane/shape/xlsx-gen.mjs:48-78`), which never holds the file.
+- **Input:** a spec of axes: *kind* (csv, tsv, xlsx, ods, docx-table, html-table, xls), *rows*, *columns*, *target bytes*, *delimiter*, *encoding* (utf-8, utf-8 BOM, utf-16 LE/BE with and without a BOM, windows-1252), *line ending*, *quoting* (embedded doubled quote, quoted line break, stray quote, tab in a value), *cell types* (text, integer, decimal, percent, currency, date, formula, shared string), *empties* (leading, middle, last, whole row, whole column), *raggedness*, *header shape* (none, one, a title line, a header of N characters), *declared type and name*, *sheets*, *merged ranges*, *dimension*, *hostile* (deflate bomb, lying directory, no `r`, styled empty), *seed*.
+- **Output:** the bytes (streamed to disk once, by spec hash, in `BIO_FIXTURE_CACHE`; large files are never committed) and a **truth**: a pure function `cell(r, c)` of the seed (so a 1,048,576-row truth is computed, not stored), the row and column counts, the **marks** (`<seed>-R<row>-C<col>`) at the first data row, a middle row and the last row, **in a non-header cell**, the cells expected undetermined and why, and, for a refusal, **the statement it must carry** (size, bound, cause).
+- **Two oracles, never the reader's own past output (P7):** the generator's truth, and an independent reader: for CSV a small RFC 4180 parser inside the generator that shares no code with `csv-reader`; for XLSX `sheet-worker`'s own parse (IronCalc: cell count and formula values); for ODS none exists today, so the truth alone is the oracle and BOB decides whether the corpus container carries a converter (LibreOffice headless, if the container image has it: not checked here).
+
+
+[envelope-sheets-T51.md 5.4: seeds]
+### 5.4 Seeded variations
+Beside the 72, **16 variations at every round end**: 8 fixed seeds and 8 derived from the round's number. Each draws the axes of §5.1 **within the envelope** (so a legal file) and, in a second draw, **just outside one bound** (so a refusal). Every failure is shrunk to the smallest spec that fails, printed as a spec so it is the next cause's reproduction; a variation that ever fails joins the 72 as a named file.
+
+
+[envelope-sheets-T51.md 5.6: owners]
+### 5.6 Which module's tests own each part
+| Part | Owner (tests path in `modules.json`) |
+|---|---|
+| the generator and its truth; the hostile zips | `test-support` (`make-zip.mjs` `zipBomb`/`nestedZip`, R14) |
+| CSV unit: C03-C36 at U and M, windows at U3 | `csv-reader` (`bio-plane/test/m/csv-reader/`), `reading-pipeline` |
+| XLSX unit: X02-X19 | `office-readers`, `ooxml` |
+| ODS unit: O02-O12 | `odf-reader` |
+| format identity: C32-C34, C23, D03 | `format-registry`, `acquisition`, `capture`, `file-safety` |
+| the read, index, state, retries: J-1..J-3, J-5, J-8, J-9, J-12 | `reading-pipeline`, `extraction`, the ledger in `plane` |
+| cells and citation: J-10, J-11 | `content`, `extraction` |
+| table, money: J-13, J-14 | `calculations` |
+| workbook, recompute: X20 | `workbooks`, `sheet-worker` |
+| the real path R, memory, contention: J-4, J-16 | `plane` (`plane/shape/`, `r7-contention`) |
+| the safe view | `file-safety` |
+
+---
+
+
+[envelope-scans-T51-s4-s7.md 5.1: imggen.mjs]
+### 5.1 How it is made
+
+**One generator, seeded, that knows its own truth.** `imggen.mjs` under **test-support** (layer 1, beside PDF #1's `pdfgen.mjs`; BOB adds the path), no dependency on the network:
+- **Pages.** Text lines are rasterised in node from a built-in bitmap font at a stated line height, so the generator needs no font file and the truth (the words) is exact. Each line carries `<seed>-p<page>-l<line>` and a word from a small vocabulary. Degradations are seeded and independent: tilt (±10°), 90/180/270 turns, uneven light, noise, blur, inversion, low contrast, colour, two columns, a table.
+- **Encoders.** PNG (grey, RGB, palette, alpha, 1/8/16-bit, interlaced or not) and BMP and GIF (LZW) and TIFF (uncompressed, PackBits, Flate, LZW, G4, JPEG-in-TIFF; single and multi-page; II and MM; predictor 2) are written by the generator. Baseline and progressive JPEG (4:4:4, 4:2:2, 4:2:0, grey, CMYK, EXIF orientation 1-8) come from the committed Pillow/libjpeg generator (`make-picture-fixtures.py`) with its hashes; WebP and HEIC come from the same generator where an encoder exists and from committed tiny fixtures where it does not (no HEIC encoder was available here). CCITT G4, JBIG2 generic and JPX scan pages inside PDFs are produced by PDF #1's generator with its independent decoders (libtiff, jbig2dec, OpenJPEG).
+- **Hostile files.** Declared-size files are patched headers (IHDR, SOF, SIZ, JBIG2 page info, PDF `/Width /Height`) over a few bytes of data; bombs are streamed zlib; chunk-count files are generated as bytes.
+- **Truth file.** For each file: the page count, each page's words and orientation, the pages expected unread and the named reason, the expected statement for a refusal, and the markers on the first, middle and last lines.
+
+**Two oracles, never the reader's own past output.** (1) The generator's truth. (2) An independent decoder for pixels: Pillow, libjpeg-turbo, libtiff, jbig2dec, OpenJPEG (the repository's own references); the OCR text is judged against the truth by the floor of SI8, not against a stored OCR output.
+
+**The entry paths.**
+
+| Path | What it runs | Owner |
+|---|---|---|
+| **R** the real path | PDF #1's shape harness (`test/m/plane/shape/harness.mjs`), made a suite runner, with two additions this plan needs: an **image document kind** (`imageDoc`, `scanDoc` beside `textDoc`, `pdfDoc`), and `members: "real"` binding the ocr-worker handler from its committed bundle over the same R2 stand-in. Upload by `captureOf(ctx).uploadCapture`, the capture screen's promotion, the door's `pendingadd`, the ledger's alarm driven tick by tick to the end, then `op=search` for the three markers, `op=reading` paged by `next`, and the Document screen's Next page to the last page. The child's old space is 128 MB with the held bytes inside it; faults `restartAt: n`, `storeFailAt: n`, `killPage: p` (the member dies on that page). Per tick it reports pages, OCR calls, bytes pulled, store calls, longest operator stretch; never a time from the object (R-CLOCK). The OCR wait is timed by the test, outside the object | **plane** (a new `scan-shape.test.mjs`, heavy, run alone) |
+| **M** the module interface | Each module's own tests read the same generated files at their interface, so a failing-first test points at its module: image-codecs (decode against the oracle), pdf-pixels (`renderPageToPixels`, `renderPictureToPixels`, bounds), ocr-worker (the member over a page, in node with the real engine and under Miniflare), reading-pipeline (`read` in pieces with the real member), extraction (`readHeld` ticks, completeness, search), file-safety (classification, grade), capture (`uploadCapture` of the file), image-cover (cover, strip, hostile counts) | each module (column "Owner" below) |
+| **W** workerd | The files that test the thread and the platform's behaviour: the OCR member's CPU and memory at the largest admitted frame, **two consecutive frames in one warm isolate** (C9), and the contention run (SI14). Memory is not asserted in Miniflare (it enforces none); the OCR member's memory is read by a **P** probe (read-only: a fixture OCR'd on biosmoke8 and the member's memory read back) at each redeploy, as K4785 (4) brings forward | plane, ocr-worker |
+
+**Note on memory in the OCR member.** Local workerd enforces no 128 MB and node's RSS is not the isolate's bytes. The OCR member's peak is therefore **measured, not asserted, in node**, and **asserted on biosmoke8** by the P probe; the first job (§6) is that measurement.
+
+**When it runs.**
+- **At every round end,** whole, never only for the fix in hand (K4785 (3)), in its own container with nothing else (K4787 (3)), then again for the time-sensitive set on one core (`taskset -c 0`).
+- **Seeded variations:** the 8 fixed seeds of §5.2 F plus 8 derived from the round's tranche commit. A red keeps its seed and spec in the run's record; the generator's shrinker (halve pages, drop axes one at a time) gives the smallest failing spec before the red is planned.
+- **Live subset on biosmoke8 (K4785 (4)):** the smallest file of each family (marked **L**) is the subset. Choosing it is item (4)'s, not this plan's.
+
+**What passing means.** A file passes when all of SI1-SI14 hold for it, or, for a refusal file, when SI2, SI3 and SI6 hold with exactly the statement its truth names and nothing else is read wrongly. "At the platform's shape" means: the plane in a 128 MB child with the bytes inside it; the OCR member at its stated frame bound; the CPU of one core; no timing taken from the object's clock (R-CLOCK); and the R-CLOCK exemption that the test, outside the object, times the OCR wait.
+
+
+[envelope-scans-T51-s4-s7.md 5.2 F: the 8 fixed seeds]
+**F. Seeded variations** (16 a round end: 8 fixed, 8 derived)
+
+The fixed seeds 1-8 cover the joint space once, chosen so each axis value appears at least twice:
+
+| Seed | Type and pages | Codec | Degradation | Size |
+|---|---|---|---|---|
+| 1 | JPEG, 1 page | baseline 4:2:0 | tilt 3° | 800 KB |
+| 2 | PNG, 1 page | palette | inverted | 300 KB |
+| 3 | TIFF, 40 pages | G4 | clean | 3 MB |
+| 4 | TIFF, 12 pages | LZW + predictor 2 | noise, shade | 6 MB |
+| 5 | PDF, 130 pages | JBIG2 | 90° turn on every 7th page | 1.5 MB |
+| 6 | PDF, 60 pages | JPX | mixed with 40 text pages | 8 MB |
+| 7 | PDF, 300 pages | DCT, mixed sizes | two columns, one huge page | 24 MiB |
+| 8 | all axes drawn at random | | | |
+
+The 8 derived seeds draw every axis from the envelope's distribution: pages log-uniform 1-1,000, size up to A2, the type, codec, orientation, colour and degradation by their weights. A derived seed whose draw falls outside the envelope is answered by the statement its truth names.
+
+Passing means SI1-SI14 for each seed. On a red, the seed and its shrunk spec are recorded in the run's file (owner: plane, which runs them; the generator is test-support's).
+
+
+[pdf-envelope-T51-s2-s3.md 3.1: pdfgen.mjs]
+## 3. The corpus (K4785 (3))
+
+### 3.1 How it is made
+
+**One generator, seeded, that knows its own truth.** The generator is a new `pdfgen.mjs` under **test-support** (layer 1, beside `pdf-worker/test/make-pdf.mjs` in its paths; BOB adds the path). It reuses `test/m/pdf-reader/pdf.mjs`'s and `indexed.mjs`'s object writers, `reading-pipeline/bigpdf.mjs`'s padding, and `pdf-worker/test/make-pdf.mjs`'s image pages.
+
+Its input is a spec of these axes:
+- pages; lines per page;
+- page kinds (text, scan, mixed, folio, blank, vector);
+- the font mix (ToUnicode identity; WinAnsi, MacRoman or Differences with no ToUnicode; Type0 Identity-H with and without ToUnicode; Type3; mixed codespace);
+- the content filter chain;
+- the structure (no xref, classic, xref stream, object streams, revisions with their rewrite mode, linearized, damaged offsets, truncation point, two catalogs, fake `obj`, untyped leaf);
+- encryption (none, empty-password RC4 or AES, user password);
+- image codecs (DCT, CCITT G4, JBIG2 generic, JPX, Flate raw), sizes and dpi; page size and rotation;
+- target bytes; and a seed.
+
+Its output is the bytes plus a **truth file**: each page's expected text (normalised per C4), the first, middle and last line markers, the pages expected unread with their reason, and the expected statement for a refusal.
+
+Every text line carries `<seed>-p<page>-l<line>` and a word drawn from a small vocabulary with accents and ligatures, so a unit can be checked against its page alone. Scan pages are rendered by the generator from the same text, as a 1-bit or grey bitmap at the chosen dpi. Their truth is "OCR words ≥ 90 % of the page's words", the floor pdf-pixels R44 uses. The generator is deterministic in its seed; large files are written once to `BIO_FIXTURE_CACHE` by spec hash, never committed. Real external files (BUDGET-2024-APP) stay as today, fetched once, SHA-pinned.
+
+**Two oracles, never the reader's own past output (R40 of pdf-pixels).**
+- The generator's truth, for every file.
+- An independent reader for the structure and font files: pdf.js through the committed pdf-worker bundle, already the tier-2 member. pdf.js must agree with the truth on the page count and on the text of the decodable pages. Where pdf.js and the truth differ, the generator is wrong and the file is fixed.
+
+**The entry paths.**
+
+| Path | What it runs | Who owns it |
+|---|---|---|
+| **R** the real path | `test/m/plane/shape/harness.mjs`, made a suite runner. Upload by `captureOf(ctx).uploadCapture`, the capture screen's promotion, the door's `pendingadd`, the ledger's alarm driven tick by tick to the end, then `op=search` for the three markers, `op=reading` paged by `next` to the end, and the Document screen's Next page to the last page (I11) through the screens' own drawing. The child's old space is 128 MB with the held bytes inside; the platform value shim is preloaded. Per tick it reports pages, work counts, bytes pulled, store calls, yields and the longest operator stretch; never a time from the object (R-CLOCK). It gains `members: "real"`: the pdf-worker and ocr-worker handlers, from their committed bundles, bound in-process over the same R2 stand-in (R-SEAM). It also gains three faults: `restartAt: n`, the object rebuilt between ticks (I8); `storeFailAt: n`, the store throws once (N14); `killPage: p`, the OCR member dies on that page (E6). | **plane** (the PDF twin of R84: a new `pdf-shape.test.mjs`, heavy, run alone) |
+| **M** the module interface | Each module's own tests read the same generated files at their interface, so a failing-first test points at its module. pdf-reader: `openPdfRange` and `range`, against the truth, with `pdfWork()` counts. reading-pipeline: `read` in pieces with real members bound. pdf-pixels: `renderPageToPixels` and the crop route. ocr-worker: its member over a page. extraction: `readHeld` ticks, `readingFor`, the index and search. | each module (column "Owner" below) |
+| **W** workerd | The R files that test the thread and the platform's own behaviour (I13, the `DecompressionStream` behaviour, the stack depth of A7) also run in Miniflare with the real Durable Object (`r7-contention`'s pattern). Memory is not asserted there: local workerd enforces none (G27's lesson), so memory stays I4's child. | plane |
+
+**When it runs.**
+- **At every round end,** whole, never only for the fix in hand (K4785 (3)), in its own session and container with nothing else in it (K4787 (3)), then again for the time-sensitive set on one core (`taskset -c 0`).
+- **Seeded variations at each round end:** the 8 fixed seeds below plus 8 new seeds derived from the round's tranche commit. A red keeps its seed and spec in the run's record, and the generator's shrinker (halving pages, dropping axes one at a time) gives the smallest failing spec before the red is planned (K4426's (3): the walker's exact case is the shrunk spec).
+- **Subsets:** the smallest file of each family (marked **L** below) forms the live subset K4785 (4) brings forward for biosmoke8 at each redeploy. Choosing it is item (4)'s, not this plan's.
+
+**What passing means.** A file passes when all of I1-I14 hold for it, or, for a refusal file, when I3 and I7 hold with exactly the statement its truth names and nothing else is read wrongly. The column "Passes when" gives only what is particular to the file.
+
+
+[pdf-envelope-T51-s2-s3.md 3.2 F: the 8 fixed seeds]
+**F. Seeded variations** (16 a round end: 8 fixed, 8 derived)
+
+The fixed seeds 1-8 cover the joint space once, chosen so each axis value appears at least twice:
+
+| Seed | Pages, size | Fonts | Structure | Page kinds | Codec | Encryption |
+|---|---|---|---|---|---|---|
+| 1 | 40 pages, 2 MB | WinAnsi | object streams | text | | |
+| 2 | 900 pages, 9 MB | Type0 | 3 revisions | text | | |
+| 3 | 120 pages, 20 MB | | | mixed and folio | DCT | |
+| 4 | 15 pages | Type3 | damaged xref | | | |
+| 5 | 2,500 pages, 12 MB | MacRoman | linearized | | | |
+| 6 | 60 pages | | | scans | JBIG2 | RC4, empty password |
+| 7 | 1 huge page among 300 | | | | | AES |
+| 8 | All axes drawn at random | | | | | |
+
+The 8 derived seeds draw every axis from the envelope's distribution: pages log-uniform 1-10,000, size up to A1, the kinds and fonts by their weights. A derived seed whose draw falls outside the envelope is answered by the statement its truth names.
+
+Passing means I1-I14 for each seed. On a red, the seed and its shrunk spec are recorded in the run's file (owner: plane, which runs them; the generator is test-support's).
+
+### 3.3 What this costs to run (to be measured by the first run)
+
+There are 64 files and 16 seeds. The heavy files are A2, A4, A6-A9, A11, B1 (23 MiB), D3, E1-E3, E5, E6 and E10: about 15 runs of 2-30 minutes each in node, and longer on one core. That makes it a round-end suite, not a per-job one. Each job runs the M-path files of its own module, a few seconds each, plus the R files its fix touches. The first round-end run records the times, and BOB sets the split from them.
+
+---
+
+
+**G123c, which half is yours.** The platform-shaped double `alarmDouble(opts)` (2c.6) is yours, in `bio-plane/test/alarm-double.mjs` with no plane import, so that scheduler (job 33) takes it through a new `uses: test-support` edge (rB D3). The fault injectors (`restartAt`, `storeFailAt`, `killPage`, `objectGoneAt`, `entryThrowsAt`, `killAt`), the 2 MB value shim in every suite and the poke-after-restart helper are plane-1's (job 20). **G123e** is yours as the generators' marking rule: marks sit in a non-header cell of the first data row, a middle row and the last row (`<seed>-R<row>-C<col>`), in `sheetgen`; the harness line `plane/shape/harness.mjs:303` is plane's file and is plane-1's to widen.
+
+**Section 0 of the plan (binding):**
+
+## 0. Rules for every START (round 8 section 0 holds; carried)
+
+- **R-FOUR** (K4426): each cause has (1) root cause with file:line, or "Cause unknown" with the diagnosis file that records the reproduction tried (its logging rides the one redeploy, K4428); (2) why the tests missed it and that gap fixed; (3) a failing-first test on the walker's or the corpus's exact case through the real entry path, seen red first (a case that names a standard-sized file runs in the job at the smallest size that shows the cause, its bound injected or its size scaled, and at full size in the corpus R set of section 7: rB D1); (4) the platform check **L** (local workerd or a capped child at the real limits), **P** (read-only probe of biosmoke8 through the proxy), **N** (none).
+- **R-SEAM / R-ONE** (K4427): one owning job per cause with its providers; a through-the-door test uses the real merged providers and inputs made by the member's own acts (the E4 lesson); the walker's or corpus row is copied verbatim into the START. A seam test whose provider is unmerged is written first and stays red by name. The door tests live in ONE file, `bio-plane/test/m/control-plane/t51-round9-seam.test.mjs` (the pattern of `t51-round8-seam.test.mjs`), written by control-plane's two sessions (jobs 38 and 43); section 3b lists every section of it with its providers, its writer and the merge at which it turns green (rB D7); counting-door tests reuse round 8's `wrap-entry.mjs`. A provider's interface that others code against before it merges is specified in section 2c (rB D2); the job that uses it tests against the stub or the interface text, never against code not yet merged.
+- **R-PATH** (new, from the four family reports): a cause is proved on the path the corpus names AND on its sibling paths: upload (one part and multipart), `acquire`, the doorbell pull, the archive member, the no-cursor door read, the cursor read. "Fixed on the path the test used" is the commonest miss (pdf P5, sheets P5, docs P5); every bullet below names the entry path of its red test, and the job adds the siblings it shares code with.
+- **R-NOTMET / R-OLD / R-LIVE** (K4427, K4428): no "not met" holds a cause; stored-data fixes say "new data only" or carry a repair; platform causes start with a measurement; one deployment after every job is merged and BOB's check of K4426's four points, then a targeted re-walk.
+- **R-STOP.** A "reading follows" test asserts the words are in `text_units` and the LAST line is searchable by `op=search`, never only that a reading exists.
+- **R-CLOCK.** Workerd freezes `Date.now()` in synchronous work: tests assert counts (bytes pulled, calls, rows, yields, objects walked), never a time from the object. A wall time is taken by the test outside the object and only where a bullet says so (K4787, X30 is a cause here). Every bound a test waits on is an injected constant (the scheduler's budget, the scanner call bound: 50 ms in the test), and each bullet that named a wall bar names the count that replaces it or the same-run control it is compared with (rB G2); a real-alarm Miniflare test with a 40 s scanner is the slowest test of the suite and runs alone, five runs (R-NOLOAD).
+- **R-PROXY** (K4733): live reads only through the environment's proxy, unchanged; the direct route is refused and never tried.
+- **R-QUIET.** The PERFORMANCE re-time runs on a quiet copy; a time taken while a reading tick runs is reported as that.
+- **R-NOLOAD** (K4787): every heavy file named below runs alone, five runs, and the time-sensitive set also on one core (`taskset -c 0`); the corpus R set (section 7) runs whole in its own session and container.
+- **R-LOG** (K4428): the logging a cause plans is itself tested (the line exists, carries the named fields, is written BEFORE the slow await as well as after) and is a count, an instant or an identifier, never a secret.
+- **R-SILENT** (K4571, K4630, K4831 (3)): a new bound is stated to the member in the same change, with the file's size and the limit, and never says "read" of a file that is not; a bound that changes what a member may do is Bob's (K1881) and no job raises or lowers one on its own. The standard's figures (K4628) are the bounds; reaching them is Stage 3 (K4834).
+- **R-GATE** (new): an entry that depends on a Stage 0 measurement (GAP-0.1 / GAP-0.2) is marked **GATED** below. Its job starts with the non-gated part. The mechanism (rB G13): the figure is a named entry of `PLATFORM_FIGURES`, exported by `runtime-limits` (section 2c), each with `{value, source}`: `source` is today's ruling (for example "K4616 50 MB") until BOB records the P-M row in `PLATFORM.md`, and in the same commit BOB edits the entry to the row's value and `source: "PLATFORM.md P-M<n>"`; a test pins that no entry is changed without a `source` naming a row, and that an entry still citing its ruling holds that ruling's figure. Code never reads the Markdown. No job guesses a platform figure. The protective figures that BOB cannot supply before the STARTs (the pixels a page, the entries of a zip, the retained objects, a page's decoded content) are proposed constants the job uses with a comment "proposed; BOB records" (rB G8; section 2b), and the job reports what its capped child showed.
+- **R-LAYER** (new): a module quotes only a module of a lower layer or lower order (`modules.json`); a lower module reaches a higher one's service only through a callback the composition root injects (the pattern of `owe`, `keepLater`, `pendSha`). The two places GAP's wording crosses this (READ_BOUNDS, the registrar) are ruled (K4835 (1), (2)) and their interfaces are specified in section 2c.
+- **R-WORDS** (K3930, K4269; rB G1): every sentence a member reads is a stand-in keyed through `localize`, in the module that says it, and its row is owed to `later-ux.md` (section 5, one HANDOFF to UX-DESIGN); the `words` check fails a job that hard-codes text. The member-facing statements this plan adds are listed in section 5 and each START copies the rows for its job. A words row in `setup-words/rows.mjs` (G135d) is BOB's edit with the regenerate step (section 6), since `setup-words` has no job.
+- **Ruled (K4835), carried here as ruled and not as recommended:** (1) `READ_BOUNDS` lives in `runtime-limits` (layer 1); GAP-1.2's owner is runtime-limits; every quoting module takes a `uses` edge to it. (2) GAP-1.4's job row in the filing transaction is written through a registrar callback injected into acquisition, capture and doorbell, never an import upward. (3) S22's test script is `pdf-worker`'s. (4) X22 includes `site-profiles`' `client-rendered.mjs`. (5) An empty-password scan PDF is stated, per GAP section 7.2 (N24), until GAP-3.2. (6) The harness's code is test-support's and plane's tests; plane-1 (test-only) merges first. **K4836** adds one cause, G143.
+
+**Plan section 5 rows (WORDS owed to `later-ux.md`; BOB appends, one HANDOFF to UX-DESIGN, K4269) that name your causes:**
+(none names your causes)
+
+**Your entries, full text.** Where an entry is a GAP entry of several causes (G123 to G137), its heading and intro are copied, then each cause that is yours, verbatim and whole with its (1)-(4), and the others are only named, since they are other jobs'. A single-cause entry (G91, G93, G140, G141) is copied whole.
+
+### G123 · GAP-1.1 The harness at the platform's shape (S9): owner test-support (generators, ZIP writer, the platform-shaped alarm double, the registrar stub) and plane (the harness and the fault injectors are `bio-plane/test/m/plane/shape/`, plane's tests, K4835 (6)); prov runtime-limits (byte ledger). Batch A, merged first, so that every later job's red finds them (rB D1). **GATED** (P-M2 memory figure, GAP-0.2): starts with the harness, faults and generators; the cap convention's idle figure is the `PLATFORM_FIGURES` entry of R-GATE, K4616's 50 MB until P-M2 is recorded, said in its `source`
+
+Intro, true for every bullet. (2) Missed: the tests were written on the reader's own builder's kind of file (ASCII, LF, one font, short rows), measured in node not workerd, judged by wall time, and fixed on the walker's path; gap fixed by the harness and corpus of this entry, R-PATH. (3) Failing-first: the harness's own tests, plus the corpus truth function checked against an independent reader (pdf.js through the committed pdf-worker bundle; Pillow/libtiff for pixels; an RFC 4180 parser inside the generator for CSV; `unzip -t` and Python `zipfile` for packages; LibreOffice headless for office text), a red per bullet. (4) **L** unless the bullet says otherwise. BOB's acts before the STARTs are listed once, in section 6 (the generator and double paths added to test-support, the `uses` edges, `MODULE_ORDER`, the `red.mjs` recipe). A named corpus case is a call of the generator library with the recipe (size, shape, seed) that the START copies verbatim from the family report's row (jobs do not read the family reports); a case whose generator option is not yet in the merged library is built by the user job in its own test directory first, marked `// MOVE`, and BOB moves it into test-support at the round end (rB D1).
+
+- **G123c · The real alarm's semantics are absent from the doubles: a null `getAlarm()` during a run, a spent alarm that stays set, 6 retries; no kill, restart or store-failure injection.** (1) `scheduler/fixture.mjs:6-26`; the harness feeds `captureOf(ctx).uploadCapture` only and has no `restartAt`, `storeFailAt`, `killPage`, `objectGoneAt`, `entryThrowsAt`, `killAt` (docs R+ list; pdf 3.1 path R). Add the platform-shaped double (`alarmDouble`, written by test-support, job 1, in a file with no plane import, so scheduler (141, which does not use plane) takes it through a new `uses: test-support` edge: rB D3) and the fault injectors (plane-1's harness, which acts through the real object), the 2 MB value shim in every suite, and the Workflows poke-after-restart helper (used from Stage 2). A lower module's tick-2 or kill red (G129b, G129c) is written first in its own test directory against its scripted provider (the pattern of `round6.test.mjs`) and is repeated through the real object by control-plane's seam (section 9 of section 3b). (2) Missed: faults were never injectable, so tick-2 failures (N14) and kills (E6) had no test. (3) Red: a reading with `storeFailAt: 2` ends partial today (shown by G129b's test), and the double's `getAlarm()` is null during a gated consumer (G91's `r8-budget` test). (4) **L**.
+- **G123d · The committed real-file set has no `.ods`, `.xls`, `.tsv`, no spreadsheet over 232 KB, and the reading modules do not list test-support in `uses` (S-41); the corpora do not exist.** (1) Seeded generators with a truth function per kind at the alpha's limits and the standard's sizes, boundary cases either side of each limit, built on demand into `BIO_FIXTURE_CACHE`, never committed; the shared ZIP writer `bio-plane/test/make-zip.mjs` gains ZIP64 in the streaming writer (`zipChunks` in `plane/shape/xlsx-gen.mjs:48-78` has none) and a lazy streaming mode; the six independent ZIP writers move onto it as each module's job touches its tests. The families' named cases (PDF A1-F, SCAN A-F, SHEET C/X/O/D, DOCS T/H/O/P/D/R/A/V/S/C/F) are the failing-first cases of the bullets below. (2) Missed: pdf P1/P3 and sheets P1, P3: the fixtures are the reader's kind of file and the wrong size (120 rows when a block is 128 KiB). (3) Red: the truth function of each generator agrees with its independent reader on a small file (a generator that disagrees is wrong and fixed). Large cases are round-end (section 7). (4) **L**.
+- **G123e · The first-row marker of a cursor-less xlsx run appears in all 18 index rows because the header repeats, so it proves nothing (S-24).** (1) The harness marks `FIRSTROWMARK` in the header row (`plane/shape/harness.mjs:303`, sheets 3.3 item 24); marks must sit in a non-header cell of the first data row, a middle row and the last row (`<seed>-R<row>-C<col>`). (2) Missed: the mark shared the header cell. (3) Red: a header-repeating index (G128g's today's behaviour) fails the J-1 check "each data row in exactly one unit". (4) **L**.
+
+[Causes of G123 that are other jobs' and are not copied here: G123a, G123b, G123f, G123g, G123h.]
+
+When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE. Record, for each cause, its four fields as R-FOUR says (the failing-first test seen RED with the red line pasted, then green).

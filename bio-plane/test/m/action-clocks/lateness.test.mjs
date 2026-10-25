@@ -3,7 +3,7 @@
    zone America/Halifax (UTC−3). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, CP, actionMd } from "./fixture.mjs";
+import { world, V, ALICE, CP, actionMd, determinations } from "./fixture.mjs";
 import * as clocks from "../../../src/action-clocks/index.mjs";
 import { localize, word } from "../../../src/setup-words/index.mjs";
 
@@ -16,9 +16,10 @@ const rests = (t) => ["action_basis:", `  - target: ${t}`, "    kind: rests_on"]
 const exact = (v) => ({ value: String(v), sign: "+", precision: "exact", label: "computed fact" });
 
 function setUp() {
-  const w = world();
-  w.doc("CONF-2026-0001-p1");
-  w.determinations.set("CONF-2026-0001-p1", { project: "PROJ-2026-0001", sees: [M] });
+  const d = determinations([ALICE]);
+  const w = world({ conformance: d.conformance });
+  w.project = d.project;
+  w.doc(d.live);
   w.action(A, ["clock:",
     ...E("2026-09-10", "met", "window", ["    met_on: 2026-09-09"]),          /* 0 on time: met the day before */
     ...E("2026-09-12", "met", "commitment", ["    owed_by: group", "    met_on: 2026-09-15"]),  /* 1 the group's own commitment: late, 3 days */
@@ -32,7 +33,7 @@ function setUp() {
     ...E("2026-09-14", "pending", "stated", ['    stated_by: "the clerk"', '    held_in: "a letter"']),  /* 9 stated, not marked the group's */
     ...E("2026-09-16", "pending", "rule", ["    owed_by: group"]),           /* 10 a rule the group owes: pending past */
     ...E("2026-09-17", "met", "stated", ["    owed_by: group", '    stated_by: "the registry"', '    held_in: "a notice"', "    met_on: 2026-09-17"]),  /* 11 on time */
-    ...rests("CONF-2026-0001-p1")]);
+    ...rests(d.live)]);
   /* B's entry is marked met by a later revision dated 2026-09-15T02:00Z: still the 14th in the action's zone. */
   w.action(B, ["clock:", ...E("2026-09-14", "pending", "window")]);
   const t = w.text(B).replace("status: pending", "status: met").replace('last_updated: "2026-09-01T00:00:00Z"', 'last_updated: "2026-09-15T02:00:00Z"');
@@ -73,7 +74,7 @@ test("R15 lateness counts the group's own entries (owed_by: group, whatever thei
   /* the period bounds it, the project narrows it. */
   const sept10 = w.c.lateness({ from: "2026-09-10", to: "2026-09-12", viewer: M });
   assert.deepEqual(sept10.entries.map((x) => [x.action, x.ord]), [[A, 0], [A, 1], [C, 0], [C, 1]]);
-  const p1 = w.c.lateness({ from: "2026-09-01", to: "2026-09-30", project: "PROJ-2026-0001", viewer: M });
+  const p1 = w.c.lateness({ from: "2026-09-01", to: "2026-09-30", project: w.project, viewer: M });
   assert.deepEqual([p1.on_time.value, p1.late.value, p1.pending_past.value, p1.denominator.value], ["2", "1", "2", "6"]);
   /* a period reaching A:3's date counts it, not yet due. */
   const oct = w.c.lateness({ from: "2026-10-01", to: "2026-10-31", viewer: M });

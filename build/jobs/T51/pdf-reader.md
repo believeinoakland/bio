@@ -1,6 +1,6 @@
 # pdf-reader (T51)
 
-**Status** · session_016yJWxBnqwtLKmTKCGHKJiL · depth 2 · COMPLETE · handled B18
+**Status** · session_01HRJxJCDxgaoWS3f4CW9K9k · depth 2 · COMPLETE · handled B20
 
 ## Completion (T51-7, R39)
 
@@ -373,3 +373,77 @@ Size (session_016yJWxBnqwtLKmTKCGHKJiL): test runs 30, module lines 5860
 ## J13 · COMPLETE
 
 COMPLETE · PDF-READER #15 · R49 pageSource (fallback on any irregularity; real APP volume pages read from <1 MB), embedded-file streaming SHA-256 (60 MiB: 3.9 MB live vs 60.3), 40/60 MiB text pages read in a 128 MB heap (PieceList + byte lexer; fuzz equal to tip), XMP_MAX via boundOf(pdf,xmp); R41 PER test green. Suite 190 tests all green after merge; format/architecture/coverage 49 of 49/ownership 0 failures. Users: doc-clean R3 R12 entries and file-safety R24 reds not mine. Stale bundles: pdf-worker, ocr-worker, agent-worker, bio-plane.bundled. Record: build/jobs/T51/pdf-reader.md. Size (session_016yJWxBnqwtLKmTKCGHKJiL): test runs 30, module lines 5860
+
+## Completion (job 106, G179: R45 amended, the range yields inside its compute; PDF-READER #16, session_01XSLiprXchrExEGryjSadfu)
+
+**Entry applied.** G179. `bio-plane/src/pdfstructure.mjs` only (+51/-10); new test `bio-plane/test/m/pdf-reader/range-yield.test.mjs` (3 tests, R45).
+
+1. **Root cause (located by instrumenting `readRange`, removed again).** `openPdfRange` took `yieldNow` for the open only; the `range(...)` closure never used it. A 78-page range of the 21 MB synthetic PDF is one unyielded stretch of 250-450 ms, in three loops of `readRange`: the page loop calling `extractPageText` (about 150 ms; its token loop `run`, `pdfstructure.mjs` ~3000, never awaits), the image walk `pdfPageImages` (about 52 ms, the `for (const tk of toks)` loop), and the glyph/word count (about 55 ms, `for (const ch of pg.text)` and `pg.text.match(/\S+/gu)`). Also `extractPageBoxes` on a document's first range (one pass over all pages). Not reading-pipeline's code: it already yields around `range()`.
+2. **Why the tests missed it.** R45's tests measured the open only; none timed a range with a yielding `yieldNow`.
+3. **Failing-first (seen RED, then green).** `range-yield.test.mjs`: RED `0 awaits for a range of 10 pages` and `0 yields` (unsliced one stretch 347 ms, longest stretch 312.9 ms). GREEN: 24 yields, longest stretch 22.0 ms against 331 ms unsliced. Answers identical with and without `yieldNow` (a timer turn, plain, throwing, rejecting) over text, heavy-page, scanned and encrypted files.
+4. **Fix.** A count-based slicer (`SLICE_UNITS` 4096: one per content token, one per 8 code-map entries, one per 64 characters; never a time) threaded through `readRange` into the text walk's token loop, the image walk (`pageImagesOf`, `pdfPageImages` unchanged), the glyph and word count (`matchAll`, counted) and the page-box pass (`pageBoxSteps`). `yieldNow` that throws or rejects is ignored; without one nothing awaits (R44).
+5. **Platform check (Miniflare, the figure BOB named).** A temporary copy of `r7-contention.test.mjs`'s PDF case with the bar at 150 ms times `slow` (not committed, deleted: that file is reading-pipeline's), under L-4B (4 burners): WITH the fix 5 of 5 green, cheap-read p95 63-66 ms, max 225-289 ms, slow x1.88-1.96 (bar about 295 ms). WITHOUT the fix, same load: RED, p95 401 ms, p50 250 ms.
+
+**For BOB / reading-pipeline.** `r7-contention.test.mjs` still asserts the PDF case at `BAR_MS` (500) times `slow`; to make G179's bar the test's, reading-pipeline's job sets the PDF case to 150 ms times `slow` (passes now, 5 of 5 under L-4B).
+
+**Deferred.** One synchronous stretch remains: inflating one large Flate stream (128 KiB compressed and up, `inflateProved`/`inflateSync`) of a single page is not resumable; it is bounded by the 64 MiB page bound and a range's `maxBytes` after its first page. Slicing it needs a resumable decoder; stated, not built.
+
+**Stale artifact (manifest 14).** `pdf-worker/dist/pdf-worker.bundled.mjs` (+ `.bundle.json`) embeds `pdfstructure.mjs`: stale; BOB regenerates.
+
+**Tests and checks.** `node --test test/m/pdf-reader/ test/pdfstructure.test.mjs`: 193 tests, 193 pass, 0 fail. Users: reading-pipeline `*pdf*` tests, `pdf-worker/test/structure.test.mjs`, format-registry: 69 pass, 0 fail. checks: format 0 failures; architecture 0; coverage 49 of 49 ids named, 0; words 0; ownership 3 files, 0. Not run: the whole impact set (2,691 files; B19 asked for my suite and the named files). `node_modules` missing in agent-runner, journey-check, file-scanner, sheet-worker, site (not needed by these tests; not installed).
+
+Size (session_01XSLiprXchrExEGryjSadfu): test runs 12, module lines 5750
+
+## J14 · COMPLETE
+
+COMPLETE job 106 (G179, R45 amended). Root: readRange's page loop, image walk, glyph/word count and the text token loop never yielded (the range closure ignored yieldNow); one 78-page range held the thread 250-450 ms. Fix: count-based slicer through readRange (pdfstructure.mjs only); answers identical. Failing-first range-yield.test.mjs seen RED (0 yields, longest stretch 312.9 ms) then green (24 yields, 22 ms). Miniflare r7-contention PDF case at 150 ms x slow (temp copy, not committed): 5/5 green under L-4B (p95 63-66 ms), RED without the fix (p95 401). For reading-pipeline's job: set that test's PDF bar to 150 ms x slow. Suite 193/193; users 69/69; format, architecture, coverage 49/49, words, ownership 0 failures. Stale bundle: pdf-worker. Deferred: one sync inflate of a single huge page stream. Record: build/jobs/T51/pdf-reader.md. Size (session_01XSLiprXchrExEGryjSadfu): test runs 12, module lines 5750
+
+## J15 · COMPLETE
+
+COMPLETE, fix round 10 wave A batch 2 (B20: publish 1 fixture, 1 marker line). Commit ab7df849d1, pushed to job/T51/pdf-reader.
+
+**Entries applied**
+- `notAPdf` published in `bio-plane/test/m/pdf-reader/fixtures.mjs` (new file): an async export that calls `extractPdfStructure(new TextEncoder().encode("not a pdf"))` at call time, nothing stored. Users now: extraction 2 (re-point in their own job).
+- `bio-plane/test/m/pdf-reader/fixtures.test.mjs` (new): test "R1: the published fixture notAPdf answers NOT_A_PDF, from the module's real code", checks the real answer.
+- Marker: `bio-plane/test/m/pdf-reader/pagesource.test.mjs:177`, `// fixtures-own: input a source's refusal, a literal handed to pageSource`. Only marker added; no `fixtures-generic`.
+
+**Deferred in my module:** none.
+
+**Found in other modules (for BOB):** `bio-plane/test/system/fleetbundles.test.mjs` fails 11 of 155 assertions: committed bundles of `agent-worker` (`dist/agent-worker.bundled.mjs`) and `bio-plane` (`dist/bio-plane.bundled.mjs`) no longer match a fresh build of their sources (staleness, no-drift, byte-identity, and the R39 export check). My commit touches no source either bundle builds from, so the failures are not from this job; they need a bundle regeneration by BOB. The pdf-worker bundle staleness from my round 9 job is not among these failures in this run.
+
+**Impact.** `build/plan/impact.mjs origin/tranche/T51 HEAD` names 92 modules, but its base is the tranche tip, which has moved 47 files past my branch, so the set is not from my change. I ran the 9 test files that import `pdfstructure.mjs` outside pdf-reader's own tests (content, doc-clean x3, format-registry, reading-pipeline x2, tier2-wire, system fleetbundles): 70 pass, 1 skipped, 1 failing file (fleetbundles, above).
+
+**Tests and checks**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/pdf-reader/*.test.mjs bio-plane/test/pdfstructure.test.mjs`: 194 tests, 194 pass, 0 fail (193 before, plus the new one).
+- `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio pdf-reader --list`: answer 0, accepted 1 (my own marker), 0 failures; the one pdf-reader finding (pagesource.test.mjs:177) is now accepted.
+- format: 0 failures. architecture: 0 failures. coverage: 49 of 49 live ids named, 0 failures. ownership (tranche/T51): 4 files, 0 failures.
+
+**Markers for BOB to read at the merge (K5060):** `pagesource.test.mjs:177` fixtures-own, reason above.
+
+Size (session_01RNBm7pmRk2YDU7VtxCuH3U): test runs 6, module lines 5750
+
+## Completion (fix round 10, cause R9, K5074: R50, notes on ranged reads; PDF-READER #18, session_01HRJxJCDxgaoWS3f4CW9K9k)
+
+**Entries applied.** R50 met. `openPdfRange`'s answer carries `notes` (the parse's, deduplicated); every `range(...)` answer and every `extractPdfRange` answer carries `notes`: the open's notes, restored at the start of each range instead of cleared (`readRange` no longer does `doc.notes.length = 0`), then the range's own, each once. The open's `_trailingNoted` set is restored too, so a range's `flate_trailing_bytes:<n>` does not depend on which range ran before. A note made while computing the document-level `metadata`/`pageBoxes` (R46, cached once: `title_undecodable`) is kept with the cached value and carried by every range, not the first alone. An intact PDF carries `notes: []`. Code: `bio-plane/src/pdfstructure.mjs` (`openedNotes`, `openPdfRange`, `readRange`). Header comment of R44 updated (it said no answer carries notes).
+
+**Failing-first.** `bio-plane/test/m/pdf-reader/ranged-notes.test.mjs` (6 tests, all R50): run against the source before the change, 6 of 6 red (`notes` undefined on the open and on every range); after, 6 of 6 green. Cases: the 30-page file with `startxref` damaged and the same file cut at 70 % (the open and ranges 0-9, 10-19, 20-29 and `extractPdfRange` carry the notes `extractPdfStructure` gives, the cut one with `xref_reconstructed`, `structure_reconstructed`, `pages_missing:5/30`); control: the intact file, `notes: []` on the open and on five ranges (past the end and the whole included); a range's own note (`content_stream_undecodable`) after the open's, once however often read, absent from a range that does not read that page; an empty range; `title_undecodable` on every range; an encrypted document (`encrypted` once). Published fixture: `rangedNotes()` in `bio-plane/test/m/pdf-reader/fixtures.mjs` (the real open, range, direct and whole answers' `notes` for the damaged, cut and intact files; `rangedNotesFiles()` makes the three files), its test in `fixtures.test.mjs`. I added no `fixtures-own` or `fixtures-generic` marker. `range.test.mjs` R43 test: its exact expected answer for a range past the end gains `notes` (taken from `extractPdfStructure`, as R50 states); that is R50 amending R43, not a weakening.
+
+**Reading note.** Read whole: the requirements, `pdfstructure.mjs` lines 1235-1270, 4895-5280 (page index notes, `loadPdf*`, `extractPdfRange`, `openPdfRange`, `readRange`), `fixtures.mjs`, `fixtures.test.mjs`, `pdf.mjs`. I read the first 60 lines of `opened-range.test.mjs`, `revisions.test.mjs` and `indexed.mjs`, and the R8 cut-file test, not whole; I ran the other pdf-reader tests without reading them. I did not read `build/layers.md`.
+
+**Deferred.** None.
+
+**Found in other modules / stale artifacts.**
+- `pdf-worker/dist/pdf-worker.bundled.mjs` (+ `.bundle.json`) is stale (manifest §14): it embeds `pdfstructure.mjs`. `node pdf-worker/test/structure.test.mjs` fails 2 of 98 (`R7 every other field is pdf-reader's own for the range, unchanged`; `R10 the range's fields are kept`) only because the bundle's range answer has no `notes`; at `origin/tranche/T51` the same file passes 98/0. BOB regenerates (`pdf-worker/`: `npm run build`); I did not. The same applies to `bio-plane/dist/bio-plane.bundled.mjs` and `agent-worker/dist/agent-worker.bundled.mjs` if they embed it.
+- reading-pipeline: its ranged path can now read `notes` from the open and each range (the job's reason); that is its own change.
+
+**Tests and checks.**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/pdf-reader/ bio-plane/test/pdfstructure.test.mjs`: 201 tests, 201 pass, 0 fail.
+- Users of the service (`format-registry`, `doctypes`, `budget-doctypes`, `doc-clean`, `acquisition`, `file-safety`, `reading-pipeline` tests and `bio-plane/test/fixtures/d460/`): 1,142 tests, 1,140 pass, 0 fail, 1 skipped (pre-existing). `pdf-worker/test/`: 88 tests, 87 pass, 1 fail (`structure.test.mjs`, the stale bundle above).
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: 118 of 178 modules, 2,094 of 2,747 test files (pdfstructure.mjs is imported widely); I ran the direct users above, not the transitive set.
+- format 0 failures; architecture 0 failures; coverage 50 of 50 live ids named, 0 failures; ownership (`tranche/T51`): 6 files changed, 0 failures; `checks/fixtures.mjs /home/user/bio`: 2,742 failures before and after my change, none in a pdf-reader file.
+
+Size (session_01HRJxJCDxgaoWS3f4CW9K9k): test runs 9, module lines 5765
+
+## J16 · COMPLETE
+
+R50 met (fix round 10, cause R9, K5074). openPdfRange and every range / extractPdfRange answer carry notes: the open's, kept, then the range's own, each once; intact => []. Failing-first ranged-notes.test.mjs (6 tests, red before, green after); fixture rangedNotes published in fixtures.mjs with its test; no fixtures-own/generic markers added. pdf-reader tests 201/201; users 1142 tests 0 fail; format/architecture/coverage/ownership 0 failures. FOR BOB: pdf-worker/dist bundle is stale (embeds pdfstructure.mjs): pdf-worker structure.test.mjs R7/R10 range checks fail 2 of 98 until regenerated (npm run build in pdf-worker); passes 98/0 at tranche tip. Details in my record.

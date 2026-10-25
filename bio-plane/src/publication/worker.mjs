@@ -163,6 +163,8 @@ export const CASEFILE_FILES_MAX = 4000;
 const ERROR_CUT = 160;
 const cut = (v) => String(v ?? "").slice(0, ERROR_CUT);
 const errorText = (e) => (e == null ? null : cut(`${(e && e.name) || "Error"}: ${(e && e.message) || e}`));
+/* fix round 10 (cause 27a; K5084): the case files whose record wrote `built` with their manifest, so the assembly writes it no second time */
+const CASE_FILE_BUILT = new WeakSet();
 /* A step and what went wrong at it, to one code of the closed set. */
 function casefileCodeOf(step, out, err) {
   if (err) return step === "facts" || step === "record" ? "STORE_SILENT" : step === "bucket_put" || step === "manifest_put" || step === "materials" ? "BUCKET_FAILED" : "UNKNOWN";
@@ -226,7 +228,8 @@ export async function assembleCaseContainer({ env, stub, storeName, cs, via, max
     try { out = await assembleOnce({ env, stub, storeName, cs, via, maxBytes, mark, prior }); } catch (e) { err = e; }
     await building;
     if (!err && out && out.manifest_sha) {
-      const done = await ledger(stub, { caseId: cs.caseId, edition: cs.edition, state: "built" });
+      /* fix round 10 (cause 27a; K5084): the case file's own record already wrote `built`, in the call that recorded its manifest */
+      const done = CASE_FILE_BUILT.has(out) ? { ok: true } : await ledger(stub, { caseId: cs.caseId, edition: cs.edition, state: "built" });
       attemptLog(true, { ...base, step: "manifest_put", code: null, files: out.files ?? null, bytes: out.bytes ?? null, recorded: !!(done && done.ok) });
       return { ...out, case_file: "built" };
     }
@@ -558,9 +561,12 @@ async function assembleCaseFile({ env, storeName, cs, stub, via, facts, maxBytes
   const failure = done.findIndex((r, i) => r && r.status === "rejected" && !writes[i].manifest);
   if (failure >= 0) throw done[failure].reason;
   mark("record");
+  /* G54: `built` only once the manifest's own bytes are stored */
+  const manifestStored = done[writes.length - 1].status === "fulfilled";
   const recOut = await plane().doAnswer(stub.fetch(new Request("http://do/recordcasemanifest", {
     method: "POST", body: JSON.stringify({ caseId: cs.caseId, edition: cs.edition,
-                                           manifest: built.manifest, manifestSha: mSha, bytes: mBytes.length }) })));
+                                           manifest: built.manifest, manifestSha: mSha, bytes: mBytes.length,
+                                           built: manifestStored }) })));
   const rec = recOut.result;
   if (!recOut.answered)
     return { ok: false, reason: plane().STORE_SILENT_REASON, op: `${via}/recordcasemanifest`, detail: plane().STORE_SILENT_DETAIL };
@@ -570,10 +576,12 @@ async function assembleCaseFile({ env, storeName, cs, stub, via, facts, maxBytes
   if (done[writes.length - 1].status !== "fulfilled") throw done[writes.length - 1].reason;
   const parts = built.manifest.parts.map((p) => ({ index: p.index, sha256: p.sha256, bytes: p.bytes,
     zip: `op=publishedbytes&sha256=${mSha}&format=zip&part=${p.index}` }));
-  return { manifest_sha: mSha, format: built.manifest.format, parts: parts.length, part_addresses: parts,
+  const answer = { manifest_sha: mSha, format: built.manifest.format, parts: parts.length, part_addresses: parts,
            files: built.files.length, findings: facts.findings.length, bytes: built.files.reduce((n, f) => n + f.bytes, 0),
            complete_edition: built.files.find((f) => f.kind === "complete_edition")?.sha256 ?? null,
            unheld: built.unheld, zip: parts[0].zip, inband };
+  if (manifestStored) CASE_FILE_BUILT.add(answer);
+  return answer;
 }
 
 /* REC-22 / DEC-34 / R3, R5: the public read path's control-plane side, `op=publishedcase` and `op=publishedbytes`,

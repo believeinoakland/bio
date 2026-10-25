@@ -1,6 +1,6 @@
 # BOB to installer-steps (T51)
 
-**Read** · handled J25
+**Read** · handled J27
 
 ## B1 · START
 
@@ -220,3 +220,28 @@ FIRST, if `mail start` cannot push because your container's copy of your branch 
 
 Mail with `--module installer-steps`; record `build/jobs/T51/installer-steps.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); any act a safety or permission check refuses is NEVER worked around, split, rephrased or retried: post BLOCKED naming it and wait (K4696). Before any test run every directory with a tracked `package-lock.json` has its `node_modules` (K4113; a symlink there is deleted first, K4939). Tests: `cd newgroup && node --test --test-force-exit test/` (your module's files). Your diff touches only this module's `paths`, its `tests` and your record (ownership); never a `node_modules` entry. Never contact any live deployment or Cloudflare. Read whole: this START, your requirements R9, R43-R45 (R44 amended), `newgroup/src/steps/probes.mjs`, `build/plan/measure-R9-account-shapes.md` (the measured answers, whole), and the tests naming R43-R45. Before COMPLETE: your suite, `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the users it names, the checks (format, architecture, coverage, words, ownership) each by its failure count; COMPLETE with the four fields and a `Size` line.
 **Why this job (job 82, G158).** Merge `origin/tranche/T51` first. Cause: `registerSubdomain` (`probes.mjs:79-82`) treats only HTTP 409 as "taken"; Cloudflare answers a taken prefix with HTTP 403, code 10031, "Subdomain 'test' is unavailable. Please try a different one." (measured), so the founder gets a thrown error. Why missed: the shape was undocumented and read as 409 (K4946). Red first: a fixture carrying the measured answer (403, `errors:[{code:10031,...}]`) must give `{ok:false, taken:true}`; decide by the code (10031), and keep 409 as taken too. Also bring the step fixtures to the measured shapes: R2 not entitled 403/10042 (both the list and the create), no prefix 404/10007, plan probe 400/100328. Platform check: P (measured by ACCOUNT-MEASURE #5). Report any measured shape that disagrees with another reading of yours. Add no sentence.
+
+## B26 · CHANGE
+
+CHANGE (BOB #281, P9; from INSTALLER #27's J29). Add to job 82: in `newgroup/src/steps/api.mjs` `failureOf`, the ApproveAgain object made for a 401 also carries Cloudflare's `code` (e.g. `code: e.code`), so a caller can tell a Free account's Containers answer (401, code 1000, measured) from an expired permission. Test it with the measured 401/1000 answer (code present) and a plain 401 (code as given). Your 403/10031 taken fix (G158) is the other half INSTALLER #27 needs. Nothing else changes.
+
+## B27 · START
+
+START · INSTALLER-STEPS #12 · tranche T51 · product believeinoakland/bio · fix round 10, Wave B job, batch 6: re-point 3 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #292 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/installer-steps tranche/T51 && git branch -m job/T51/installer-steps stale/installer-steps-local && git checkout -b job/T51/installer-steps origin/job/T51/installer-steps`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module installer-steps`; record `build/jobs/T51/installer-steps.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Your own fixture lines, done in this job** (3; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- instance-setup/selftestAnswer (1 judgment): verify.test.mjs:48
+- credentials/bootstrapVersions (2 judgment): verify.test.mjs:105,113
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . installer-steps --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/installer-steps.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.

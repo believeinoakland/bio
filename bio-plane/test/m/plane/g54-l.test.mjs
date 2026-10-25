@@ -36,7 +36,7 @@ async function seeded(extra = "") {
   const s = await doAsk(`g54/seed?case=${caseId}&edition=1${extra}`);
   return { ...s, caseId };
 }
-const completed = async (s) => { await doAsk(`g54/finding?finding=${s.finding}`); const st = await state(s); assert.deepEqual([st.complete, st.manifest_sha], [true, null], "complete, no case file (4783's shape)"); return st; };
+const completed = async (s, { disarm = false } = {}) => { await doAsk(`g54/finding?finding=${s.finding}${disarm ? "&disarm=1" : ""}`); const st = await state(s); assert.deepEqual([st.complete, st.manifest_sha], [true, null], "complete, no case file (4783's shape)"); return st; };
 const drain = async () => { await doAsk("g54p/bucket?mode=none"); for (let i = 0; i < 40; i++) { const t = await alarm(); if (!asked(t)) return; } };
 
 test("R87 G54 L: the object's own alarm handler builds the case file of each complete edition that has none, two a tick; a second and a third alarm do nothing", { timeout: 240_000 }, async () => {
@@ -124,7 +124,7 @@ test("R87 G54 L: an edition whose caller disconnects after the commit is complet
 test("R87 G54 L (measure): an edition of about 500 files and 40 MB of material is built by one tick of the object's alarm at the real limits, without a memory kill; the bucket's counts are printed", { timeout: 480_000 }, async () => {
   await drain();
   const s = await seeded("&materials=250&kib=160");
-  await completed(s);
+  await completed(s, { disarm: true });   /* the build is the tick asked for below, not one the runtime fires beside it (a 9 s sweep of 40 MB on a slow machine meets the next request and the tick's counts are the other tick's) */
   await doAsk("g54p/bucket?mode=count");
   const t = await alarm();
   const st = await state(s);

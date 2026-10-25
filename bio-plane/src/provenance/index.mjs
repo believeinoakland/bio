@@ -37,6 +37,7 @@ import { migrateProvenance } from "./schema.mjs";
 import { registerChecks, RECEIVED_NOT_FETCHED, DOORBELL_ORIGIN } from "./register-checks.mjs";
 import { REGISTER_ENTRY_CHECKS, TESTIMONY_CHECKS, VERSION_CHAIN_CHECKS, PROVENANCE_ACT_CHECKS } from "./checks.mjs";
 import { word, localize } from "../setup-words/index.mjs";
+import { boundOf } from "../read-bounds.mjs";
 
 export { PROVENANCE_SCHEMA } from "./schema.mjs";
 
@@ -359,7 +360,7 @@ function observedMs(v) {
    D-556 (BOB #34, 2026-09-25 00:00Z): THREE READERS, ONE RULE. The ratify gate asks it of a whole-hash register row
    held in parts before admitting it, and publication asks it again of the PUBLISHED bucket after copying the parts
    across, so `keyOf` names the bucket's key for a part's hash rather than this function assuming the working one. */
-export const PART_VERIFY_READ_MAX = 8 * 1024 * 1024;
+export const PART_VERIFY_READ_MAX = boundOf("provenance", "part_verify_bytes");
 export async function partsHeld(bucket, keyOf, parts) {
   const missing = [], disagree = [], unverified = [];
   for (const p of parts) {

@@ -1,6 +1,6 @@
 # BOB to csv-reader (T51)
 
-**Read** · handled J7
+**Read** · handled J9
 
 ## B1 · START
 
@@ -247,3 +247,36 @@ RESUME (backstop, K4862): nothing pushed on your branch for 20 minutes. If you a
 ## B11 · CHANGE
 
 CHANGE (K4864). OOXML #4 is merged (`decodeText`, `discriminate` and `readPart` over a range source, `readPartPieces` awaiting `onPiece`, the archive limits), with image-codecs, text-chain, file-scanner, doc-clean, pdf-pixels and runtime-limits' rows 20-22. Merge the tranche, turn green the tests you kept red by name for ooxml, re-run your suites and checks, and record COMPLETE (again, if you had).
+
+## B12 · START
+
+START · CSV-READER #6 · tranche T51 · product believeinoakland/bio · fix round 10, cause job, batch 3: causes R20 (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #289 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/csv-reader tranche/T51 && git branch -m job/T51/csv-reader stale/csv-reader-local && git checkout -b job/T51/csv-reader origin/job/T51/csv-reader`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module csv-reader`; record `build/jobs/T51/csv-reader.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Causes (fix-round-10-T51.md §1; each with K4426's four: root cause, why the tests missed it, a failing-first test on the walker's exact case seen red first, the platform check). The requirement amendments quoted are already on the tranche.**
+**R20** (G4; walk B5c: a CSV with a title block and ragged rows read as one column). Root: a delimiter counts as consistent only when one exact count of it holds on over half the lines; a file whose every row is ragged (three widths) has none, so the delimiter is null and the whole file reads as one column (`csv-reader/index.mjs:385-415`, the test `:401`). BOB amended csv-reader R7 (not yet met: T51) and ruled the reading: a delimiter is consistent when it occurs on the majority of the lines, ties broken by the modal count, so ragged rows and a title block do not fail it. No limit a member meets changes. Tests missed: `text.test.mjs:281-287`, `windows.test.mjs:168-178` make a ragged row one in 17 or 50; `sheetgen`'s `ragged` is used in no csv-reader test. Failing-first (reproduced: delimiter null, `usedCols 1`, `usedRows 3003`): `windows.test.mjs`: `generate({kind:"csv",seed:"rw9-B-5c",size:{rows:3000,cols:5},header:"title",ragged:true})` through `csvEntry.text`: `dialect.delimiter === "comma"`, `usedCols === 5`, the last mark `rw9-B-5c-R3003-C1` in column A of a five-field row; controls: ragged alone and title alone. Platform N.
+
+Rules of fix-round-9 §0 that bind: R-FOUR (root cause with file:line, why the tests missed it, a failing-first test on the walker's exact case through the real entry path seen red first, the platform check); R-SEAM / R-ONE; R-SILENT (a new bound is stated to the member with the file's size and the limit; a job never raises or lowers a bound (K1881)); R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** each cause above fixed with its failing-first test green (seen red first) and its platform check done or named for the redeploy; module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/csv-reader.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B13 · START
+
+START · CSV-READER #7 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 11 (plan build/plan/fix-round-10-T51.md §3; K5078)
+
+Depth 2 (BOB #290 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/csv-reader tranche/T51 && git branch -m job/T51/csv-reader stale/csv-reader-local && git checkout -b job/T51/csv-reader origin/job/T51/csv-reader`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module csv-reader`; record `build/jobs/T51/csv-reader.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` from the process repository (K5078).
+
+**Follow-up 11 (found by READING-PIPELINE #37 J51).** A one-line CSV of 16,385 columns (`c0,c1,...,c16384`) is not refused: `usedCols` is 1 and no guard fires, so csv-reader R22's column bound (the standard's figure, K4630) is not met on a one-line file. Root cause with file:line, why the tests missed it (no test has a single line wider than the bound), a failing-first test on that exact file through the real entry path, seen red first; the refusal carries the count and the limit as R22 states (the `metric: "columns"` marker reading-pipeline R60 carries). Control: 16,384 columns on one line is read; a many-line file past the bound is refused as before. Platform N. Run the tests of every module `node build/plan/impact.mjs origin/tranche/T51 HEAD` names (reading-pipeline among them).
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE (K5060).
+
+**Done:** the cause fixed, its test green (seen red first); module tests, words, fixtures, coverage, architecture, format green by failure count; record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5.

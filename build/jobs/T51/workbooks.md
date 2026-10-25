@@ -1,6 +1,6 @@
 # workbooks (T51)
 
-**Status** · session_011euAAFYAD76GYT6xKMDMLz · depth 2 · COMPLETE · handled B6
+**Status** · session_01A8uYztGp9qatq9Wz5yfrRC · depth 2 · COMPLETE · handled B8
 
 ## J1 · REPORT
 
@@ -138,3 +138,69 @@ Tests: workbooks 46/46 (g137e 9, g44-large 8; each alone 5 runs and twice on one
 Index workbook_cells_position added; no read loads every cell at once. Row owed to UX-DESIGN: workbooks.dropped_cells.
 New files outside paths: none. Stale generated artifacts: none.
 Size (session_011euAAFYAD76GYT6xKMDMLz): test runs 31, module lines 1692
+
+## G182 · WORKBOOKS #7 (session_01XG3wEDwRsPvJ8ZMf1es3qF) · fix round 9, job 112 START
+
+**Entries applied.** R22 (`exportRecipe` bounded; calculations R50 moved) and R23 (bind and export ask `readTable` for `rows: "all"`).
+
+**What changed** (`bio-plane/src/workbooks/`)
+- `index.mjs`: `#readTable(sha, viewer, {all})` asks `{rows: "all"}` when it binds or exports (`#source`, used by bind and by every binding's compare; `exportRecipe`), `{limit: 1}` for the sight check, the grade facts and the shape peek. `tableFrom` also answers `row_count` (the answer's top-level `rows`). `exportRecipe` judges each table from its shape before any row loads: a table wider than 16,384 fields is refused `EXPORT_TOO_WIDE` {columns, bound_columns}; cells laid out ((rows + 1) × fields over the tables) above `boundOf("workbook","cells")` are refused `EXPORT_TOO_LARGE` {cells, bound_cells, limit: {size, bound, key}}; it judges again on what the file would lay out (the results and method sheets included, the answer's `cells`) before any XML is written. Nothing is written by a refusal.
+- `export.mjs`: `buildExport(calc, tables, {maxCells})` counts the cells of its sheets, answers `{cells, tooLarge: true}` and writes no file above `maxCells`; the answer carries `cells`.
+- `xlsxwrite.mjs`: `XLSX_MAX_COLUMNS` 16,384 (XFD), a row longer than it throws (defence; the service refuses first); `zipStored` lays the file into one buffer and releases each part as it is placed (it held the parts, a spread copy and the output).
+- `ops.mjs`: the export op's `bytes_base64` is built in pieces of 24,576 bytes (a multiple of three), each through `btoa`, joined once; the whole-file binary string and the whole-file `btoa` input are gone. The answer's one base64 string remains (it is the answer); the plane's JSON copy is the plane's.
+
+**Not reproduced / decisions.**
+- S-31's "base64s the whole file": reproduced as the op's whole-file `String.fromCharCode` string plus `btoa` (two whole copies beside the bytes); fixed as above. `draw`, `interval` and the 2 MB `SQLITE_TOOBIG` hypothesis of S-31 are calculations' and calc-grammar's (jobs 109, 110), not here.
+- The bound the export is judged against is the workbook row `workbook.cells` (250,000), the same bound the add holds, so an exported file can be added back. The measure is cells laid out, empties included, the same figure before and after the rows load. A decision of mine (BOB may reword): a column past XFD is a refusal, never a cut, since a cut would drop data silently.
+- Refusal reasons are new: `EXPORT_TOO_LARGE`, `EXPORT_TOO_WIDE`. **Rows owed to later-ux.md / UX-DESIGN:** `refusal.EXPORT_TOO_LARGE` ({cells}, {bound_cells}), `refusal.EXPORT_TOO_WIDE` ({columns}, {bound_columns}); their `en` is in `index.mjs`. `setup-words/rows.mjs` is stale for them until BOB regenerates it.
+
+**R-FOUR.** (1) Root: `exportRecipe` had no size or width test (`index.mjs` earlier `:646-662`), `colName` unbounded in `export.mjs`, base64 of the whole file in `ops.mjs`. (2) The export tests used tables of six rows; no test had a table near the bound or past XFD. (3) Failing-first, seen RED on the earlier source (tests added first, module files untouched): the at-bound/past-bound test (`the answer states the cells it wrote: undefined`), the XFD test (the 16,385-field table was accepted, `true !== false`), the op test (`more than one piece` failed: one `btoa` call on the whole file), the R23 test (`the bind asked for the whole table`). Green now: 4 of 4. (4) Platform check **N**: node only; the export's memory at the bound was not measured in a capped child (the file at 250,000 cells is about 6 MB of XML).
+- R23 is run green against today's calculations, which returns the whole table whatever `rows` says. It shows red only if `rows: "all"` is not passed once job 109 merges; the test records the call arguments of the real `readTable` and asserts them, and asserts the bind and the export carry all 1,200 rows (more than the 1,000 a page can hold). **Job 109 is not merged at the tranche tip I merged (`cec275b674`)**: when BOB sends the CHANGE I merge and re-run.
+
+**Tests and checks.**
+- `node --import ./test/platform-sqlite.mjs --test --test-force-exit "test/m/workbooks/*.test.mjs"` from `bio-plane/`: `tests 50`, `pass 50`, `fail 0` (the 46 of the last job and the 4 of `r22-r23.test.mjs`).
+- Users of the services I changed (`exportRecipe`'s answer gained `cells`; refusals are new): no caller outside this module reads `exportRecipe` (`grep`), and the op arm passes a refusal through unchanged.
+- `checks/format.mjs`: `176 modules, 176 requirements files; 0 failures`. `checks/architecture.mjs workbooks`: `20 product files, 76 relative imports (0 naming no tracked file, not judged); 0 failures`. `checks/coverage.mjs workbooks`: `1 modules, 23 of 23 live requirement ids named by a test; 0 failures`. `checks/words.mjs workbooks`: `2759 string literals read ... inline 0, plain 0, testcopy 0, missingkey 0 ...; 0 failures`. `checks/ownership.mjs workbooks origin/tranche/T51`: `6 files changed by workbooks between origin/tranche/T51 and HEAD; 0 failures`.
+- `setup-words/build.mjs --check`: stale `rows.mjs` (expected; BOB regenerates; it also names a content word that is not mine).
+- node_modules: `sheet-worker` was missing and installed (`npm ci`) before the run (K4113).
+
+**Found in other modules.** None new. J1's `case-grammar/words.mjs` finding stands.
+
+**Deferred.** None.
+
+**Stale generated artifacts I make:** `bio-plane/src/setup-words/rows.mjs` (two new keys above); `bio-plane/dist/bio-plane.bundled.mjs` (the plane bundles this module); BOB regenerates both.
+
+Size (session_01XG3wEDwRsPvJ8ZMf1es3qF): test runs 7, module lines 1732
+
+## J8 · COMPLETE
+
+COMPLETE · WORKBOOKS #7 · R22 and R23 (G182, job 112) done; completion in my record, section 'G182 · WORKBOOKS #7'.
+Tests: workbooks 50/50 (4 new in r22-r23.test.mjs, each seen red on the earlier source first). Checks: format, architecture, coverage (23 of 23), words, ownership: 0 failures.
+R22: exportRecipe refuses EXPORT_TOO_LARGE {cells, bound_cells, limit} above workbook.cells (250,000, the add's bound) and EXPORT_TOO_WIDE past XFD (16,384), judged from table shapes before rows load and again on what the file lays out; the op builds base64 in pieces. R23: bind and export pass rows: 'all'; the sight check and grade facts ask one row.
+NOT YET PROVEN against job 109: calculations' readTable still returns the whole table at the tip I merged (cec275b674), so R23 runs green; send a CHANGE when 109 merges and I re-run.
+Rows owed to UX-DESIGN: refusal.EXPORT_TOO_LARGE ({cells},{bound_cells}), refusal.EXPORT_TOO_WIDE ({columns},{bound_columns}). Stale for BOB to regenerate: setup-words rows.mjs, the plane bundle. Found in other modules: none new.
+Size (session_01XG3wEDwRsPvJ8ZMf1es3qF): test runs 7, module lines 1732
+
+## G186 · WORKBOOKS #8 (session_01A8uYztGp9qatq9Wz5yfrRC) · fix round 9, job 114 START
+
+**Entry applied.** R21 amended (G186; K5025): a row or cell with no `r` is held at its position, never dropped; only an unreadable or repeated reference is dropped and counted.
+
+**What changed.**
+- `bio-plane/src/workbooks/index.mjs` (`addWorkbook`, `droppedStatement`): office-readers R48 now gives every no-`r` cell its position as `source.cell` (checked: a four-row fixture yields A1, B1, A2, A4, B4), so the add holds them with no change of mine; the `no_reference` count is gone, a cell with no usable reference falls under `unreadable`. The `dropped` answer is `{count, unreadable, repeated, statement}`, present only when something was dropped.
+- `bio-plane/test/m/workbooks/g137e.test.mjs`: "R21 SHEET X12" now asserts the no-`r` book holds the same five cells (`cell, r, c, type, value`) as its referenced copy, no `dropped`, reads with 5 cells, and a repeat answers `already`. Seen RED on the tip first: `Cannot read properties of undefined (reading 'count')`. The repeated and unreadable test lost its `no_reference` line; the control is unchanged.
+
+**Row owed to UX-DESIGN (changed).** The stand-in id is now `workbooks.cells_not_kept` ({count}, {unreadable}, {repeated}); the old `workbooks.dropped_cells` (with `{no_reference}`) is no longer used by this module. I changed the id because the stale `rows.mjs` row for the old id wins over `en` and still needs `{no_reference}`; BOB regenerates `rows.mjs` and may drop the orphan row.
+
+**Tests and checks.** From `bio-plane/`: workbooks `tests 50, pass 50, fail 0`; plane `g124f-bounds.test.mjs` `tests 16, pass 16, fail 0` (reached through the real reading, including F1). Nothing outside this module reads `dropped.no_reference` (grep). `checks/format.mjs`: 0 failures. `architecture workbooks`: 0 failures. `coverage workbooks`: 23 of 23, 0 failures. `words workbooks`: inline 0, plain 0, testcopy 0, missingkey 0; 0 failures. `ownership workbooks tranche/T51 job/T51/workbooks`: 1 file changed by workbooks; 0 failures.
+
+**Stale generated artifacts I make:** `setup-words/rows.mjs` (new key above), the plane bundle `dist/bio-plane.bundled.mjs`. **Found in other modules:** none. **Deferred:** none.
+
+Size (session_01A8uYztGp9qatq9Wz5yfrRC): test runs 5, module lines 1732
+
+## J9 · COMPLETE
+
+COMPLETE · WORKBOOKS #8 · R21 amended (G186, job 114) done; record: section 'G186 · WORKBOOKS #8'.
+Reader (office-readers R48) now gives no-r rows and cells their position, so the add holds them; the no_reference count is gone, dropped is {count, unreadable, repeated, statement} only when something was dropped. g137e 'R21 SHEET X12' rewritten (cells held as a referenced copy's; seen red first on the tip).
+Tests: workbooks 50/50; plane g124f-bounds 16/16. Checks: format, architecture, coverage (23 of 23), words, ownership: 0 failures.
+Row owed to UX-DESIGN: stand-in id is now workbooks.cells_not_kept ({count},{unreadable},{repeated}) because the stale rows.mjs row for workbooks.dropped_cells still wants {no_reference}; BOB regenerates rows.mjs and may drop the orphan. Stale generated: setup-words rows.mjs, plane bundle. Found in other modules: none.
+Size (session_01A8uYztGp9qatq9Wz5yfrRC): test runs 5, module lines 1732

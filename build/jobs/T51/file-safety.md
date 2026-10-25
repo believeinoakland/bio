@@ -1,6 +1,6 @@
 # file-safety (T51)
 
-**Status** · session_015APyFqZNBSsmXdhzGxAkgD · depth 2 · COMPLETE · handled B19
+**Status** · session_01YBRdy1ssgabFSCE7bRoS1Y · depth 2 · COMPLETE · handled B23
 
 ## Completion (T51-183, words)
 
@@ -456,3 +456,55 @@ Size (session_015APyFqZNBSsmXdhzGxAkgD): test runs 9, module lines 3374
 ## J18 · COMPLETE
 
 COMPLETE: job 54 applied (R39 render wake is now while renderBatch left a view or safe copy queued; completion section of my record). Red/green shown; module tests 132 pass, 2 fail (rows.test R24 inherited, X19 flaked once). checks: format, architecture, coverage, words, ownership 0. FOR SCHEDULER (job 33): scheduler files.test.mjs:279 assumes the old wake (nextAt > at) and now fails; passes on the tranche base. Details in my record.
+
+## Completion (job 99, fix round 9 batch D: R39, R12 amended, G171; K4998; B21)
+
+**Entries applied.** (A) R39: `renderWake` answers `now` while a view is queued with no back-off (`render_wait_at` NULL), so a view queued after a batch that left nothing is drawn at the next wake, not 300 s after the last batch; a view in back-off keeps its instant. (B) R12: `#renderCall` classes a renderer answer of 5xx with no classed refusal as `SCANNER_UNREACHABLE` (transient, back-off retry); a 5xx that carries its own `code` keeps its class, a 4xx with none stays `RENDER_FAILED`, final. (C) R4/R39 sibling (R-PATH): `fs_files.queued_at` was cut to the second, so a file queued within the second of a `scanBatch` read as "sent by that batch" and waited a poll (300 s) against R4's "a newly queued file at once". It is now written to the millisecond (`#onReceipt`, `#ensureQueued`); the unused `second` helper is removed. The fix is mine, not the diagnosis's diff: that diff covered A and B only.
+
+**Four fields.**
+- Cause: A, `renderWake` fell to the last batch plus the poll for a view whose `render_wait_at` is NULL. B, a 5xx with no class fell to `RENDER_FAILED`. C, the second-truncated `queued_at` compared `<=` the batch instant.
+- Why missed: `wakes.test.mjs` and `r39-render-wake` queued a view before any batch or after a batch that left work; `r12-render-classes` made "unreachable" a rejected fetch, never a 5xx. No test queued a file after a batch that left nothing, in either queue.
+- Red first (`r39-after-batch.test.mjs`, before the fix): `now, not now + 299000 (the last batch plus the poll)`, actual 1791461100000, expected 1791460801000; `[ 'failed', 'RENDER_FAILED' ]` expected `[ 'queued', 'SCANNER_UNREACHABLE' ]`; scan: actual 1791461100000, expected 1791460800001. Green after: 3 pass, 0 fail.
+- Platform check: **L** (the seam in Miniflare, the real alarm) is BOB's; I did not run it.
+
+**Seam §16.** `--test-name-pattern="R9 seam §16"` on `control-plane/t51-round9-seam.test.mjs`, alone: 5 tests, 5 pass, 0 fail, including G137a (safe view, 205 ms) and G136b (OVER_BOUND 3.1 s; S5 42.6 s).
+
+**Scheduler.** Its tests assume no old wake: the scheduler, notice-producers, queue, plane, store-door, op-declarations and affordances tests that name file-safety all pass (the three failures `node --test` lists are `fixtures/registry-*.json` and `plane/r8-headofline-entry.mjs`, helper files my grep handed it, not tests).
+
+**Deferred.** None. **Found in another module.** None. **Rows owed.** None (no sentence added). **Generated artifacts staled.** The plane bundle (`bio-plane.bundled.mjs`) takes file-safety's source; BOB regenerates it at the round end. **New files outside `paths`.** None. **Requirement wording.** R12 and R39 already carry the amendments; the scan clause (C) needs none (R4 already says "at once").
+
+**Tests and checks.** `test/m/file-safety/*.test.mjs`: tests 137, pass 137, fail 0 (R24 and X19 now green). `impact.mjs origin/tranche/T51 HEAD`: affected modules 11 of 176. format 176 modules, 0 failures; architecture 0 failures; coverage 57 of 57 ids named, 0 failures; ownership 3 files, 0 failures; words 0 failures.
+
+Size (session_01DQq5SUCuskyyd5iwgeuLR7): test runs 8, module lines 3376
+
+## J19 · COMPLETE
+
+COMPLETE · FILE-SAFETY #22 · job 99, batch D (G171): R39 renderWake now for a view queued with no back-off; R12 5xx with no class is SCANNER_UNREACHABLE; R4 sibling fixed (queued_at to the millisecond). Red first seen for all three; file-safety 137/137; control-plane seam §16 5/5 alone; format, architecture, coverage, words, ownership 0 failures. Platform check L is yours. Plane bundle stale (regenerate). Details in my record.
+
+## Completion (fix round 10, Wave A batch 1, B22)
+
+**Cause R39a (G7; walk D5), done.** Root cause: `scanStatus` (`index.mjs`, the `scanner`/`renderer` objects of its answer) copied `version`, `clamav_version` and `signatures` from the scanner's `/version` but not its `bounds` (`file-scanner/src/handler.mjs:28`), and the plane's own `GET /version` is a plain string by design, so no administrator could read the bounds. Why the tests missed it: the scripted scanner answered `bounds: {}` and no test asked `scanStatus` for them (R58 was unmet). Fix: both objects carry `bounds`, the object `/version` states (null when it states none; an unreachable or unbound scanner states none). Failing-first test `r58-bounds.test.mjs`, seen red first on the real `BOUNDS` (imported from `file-scanner/src/limits.mjs`) and green after; control: a member, a machine credential, no viewer are refused with no bound in the answer, no scanner bound and an unreachable one state none. `fixture.mjs` gains a `bounds` script key (default `{}`). Platform check L (the bound scanner's `/version`): not run, I never contact a live deployment; for the redeploy, BOB reads `GET /scanstatus` as an administrator and finds `scanner.bounds` and `renderer.bounds` holding `SAFE_VIEW_PAGES_MAX` and the rest.
+
+**Fixtures published** in `bio-plane/test/m/file-safety/fixtures.mjs` (new), each an async function made by the real code when called, with `fixtures.test.mjs` calling each and checking the real answer: `batchTickAnswers`, `declaredRefusals` (SCANNER_ABSENT, RENDERER_ABSENT, DEEPER_CHECKS_UNREADABLE, RENDER_QUEUE_UNREADABLE, FORWARD_PERIOD_INVALID, LIMIT_INVALID: every declared `*_ABSENT/*_UNREADABLE/*_INVALID` code, none made up), `scannerAbsent`, `toolTestFailed`, `toolTested`. Note for the scheduler's re-point: the real `forwardSecurityCounts({})` on an empty store answers `record: {period, counts}` (the period since the last whole hour), not `record: null`, and `renderBatch` copies carry `queued`; their hand-built answers differ from the real ones.
+
+**Own fixture lines.** Done: `r1-registrar.test.mjs` (the `jobRegistrarStub` import and the `registerJob` stand-in) carry `// fixtures-contract: plane job-registrar`; they show `contract-no-run` until `plane`'s run is merged (waits for: plane). Left, FIX-E waiting on file-scanner (arrive as a CHANGE): `tools.test.mjs:412` and `wakes.test.mjs:163` (the refresh refusal answers). No `fixtures-own` or `fixtures-generic` marker added.
+
+**Deferred.** None. **Found in another module.** None.
+
+**Tests and checks run.**
+- `node --test … bio-plane/test/m/file-safety/*.test.mjs`: "tests 143, pass 143, fail 0".
+- `checks/words.mjs file-safety`: "0 failures"; `format`: "0 failures"; `architecture file-safety`: "0 failures"; `coverage file-safety`: "58 of 58 live requirement ids named by a test; 0 failures"; `ownership`: "7 files changed by file-safety …; 0 failures".
+- `checks/fixtures.mjs . file-safety --list`: 4 lines (2 `contract-no-run` waiting for plane, 2 FIX-E waiting for file-scanner).
+- `impact.mjs origin/tranche/T51 HEAD`: affected 11 modules (file-safety, scheduler, affordances, notice-producers, queue, op-declarations, store-door, screens-settings, control-plane, plane, journey-check); users' tests: see the COMPLETE.
+
+Size (session_01YBRdy1ssgabFSCE7bRoS1Y): test runs 4, module lines 3378
+
+## Completion (B23 CHANGE)
+
+Merged `tranche/T51`. `tools.test.mjs` (the checksum refusal) and `wakes.test.mjs` (the unreadable refusal) now take `reputationRefresh("checksum")` / `reputationRefresh("unreadable")` from `file-scanner/test/fixtures.mjs`; the expected code is the answer's own. Tests `tools` and `wakes`: pass 19, fail 0. `checks/fixtures.mjs /home/user/bio file-safety --list`: answer 0; the 2 `contract-no-run` lines in `r1-registrar.test.mjs` wait for plane's run. No `fixtures-own` or `fixtures-generic` marker added.
+
+**Users' tests (impact.mjs, 149 files outside this module).** "tests 1231, pass 1223, fail 8": seven in `journey-check/pseudo.test.mjs` (R29 a-c), which fail identically on `origin/tranche/T51` without my change ("pass 0, fail 7"), and one R24 words test of a screens module in the same run, not touching `scanStatus`'s new field; none is file-safety's. Named for BOB as inherited.
+
+## J20 · COMPLETE
+
+R58 (cause 39a) done: scanStatus states scanner.bounds and renderer.bounds from /version; r58-bounds.test.mjs seen red then green on real BOUNDS; control refused. Platform check L named for redeploy (admin reads scanstatus). Five fixtures published (fixtures.mjs + fixtures.test.mjs). B23: two refresh refusals re-pointed to file-scanner reputationRefresh. fixtures list: answer 0; 2 contract-no-run (r1-registrar.test.mjs, wait for plane). No fixtures-own/generic markers. Module tests 143 pass; words/format/architecture/coverage(58/58)/ownership 0 failures. Users' tests (impact, 149 files): 1223 pass, 8 fail, all outside file-safety (7 journey-check/pseudo.test.mjs fail identically on tranche/T51; 1 R24 words test). Note for scheduler re-point: real forwardSecurityCounts({}) answers record {period,counts}, not null. Size (session_01YBRdy1ssgabFSCE7bRoS1Y): test runs 5, module lines 3378

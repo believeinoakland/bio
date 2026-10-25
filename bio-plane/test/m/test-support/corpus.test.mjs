@@ -257,6 +257,8 @@ test("R28 no product code imports a generator or a double: no module's paths (ot
     if (m.id === "test-support") continue;
     for (const p of m.paths) for (const f of tracked) {
       if (!(p.endsWith("/") ? f.startsWith(p) : f === p) || !/\.(mjs|js|cjs|ts)$/.test(f)) continue;
+      /* a module whose paths hold its own tests (pdf-worker, ocr-worker) is product code only outside them (K4997) */
+      if ((m.tests || []).some((t) => (t.endsWith("/") ? f.startsWith(t) : f === t))) continue;
       const text = readFileSync(join(ROOT, f), "utf8");
       for (const n of NEW_FILES) if (new RegExp(`["'][^"']*/${n.replace(".", "\\.")}["']`).test(text)) offenders.push(`${m.id} ${f} ${n}`);
     }

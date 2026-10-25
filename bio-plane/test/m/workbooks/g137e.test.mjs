@@ -1,7 +1,7 @@
 /* G137e (fix round 9; K4831 (10), K4835 (1)): an analysis workbook is held whole up to the cells bound, and `addWorkbook`
    counts what it drops. Ids: R20 (the bounds are READ_BOUNDS rows; SHEET X20, workbooks of 50,000, 130,000, 250,000 and
    250,001 cells through add, bind and recompute in a child capped as the plane's object leaves it) and R21 (SHEET X12,
-   cells with no reference; a repeated reference; a workbook with every reference drops none). R1 and R2 are the
+   cells with no reference held at their positions; a repeated reference; a workbook with every reference drops none). R1 and R2 are the
    refusals X20 reads. */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -110,19 +110,19 @@ async function addOf(bytes) {
   return { w, at, add: await w.wb.addWorkbook({ ...at, question: "q", period: "p", by: V("bob") }) };
 }
 
-test("R21 SHEET X12: rows and cells with no r are not thrown on: the add is accepted, the cells it drops are counted with their cause, and the workbook reads", async () => {
+test("R21 SHEET X12: rows and cells with no r are placed by their position and held, read as a referenced copy reads, and nothing is dropped or stated", async () => {
   const noRef = `<row><c><v>1</v></c><c><v>2</v></c></row><row><c><v>3</v></c></row><row r="4"><c r="A4"><v>7</v></c><c><v>8</v></c></row>`;
+  const withRef = `<row r="1"><c r="A1"><v>1</v></c><c r="B1"><v>2</v></c></row><row r="2"><c r="A2"><v>3</v></c></row><row r="4"><c r="A4"><v>7</v></c><c r="B4"><v>8</v></c></row>`;
   const { w, at, add } = await addOf(book(noRef));
+  const copy = await addOf(book(withRef));
   assert.equal(add.ok, true, JSON.stringify(add));
-  assert.equal(add.dropped.count, 4);
-  assert.equal(add.dropped.no_reference, 4);
-  assert.equal(add.dropped.unreadable, 0);
-  assert.equal(add.dropped.repeated, 0);
-  assert.ok(add.dropped.statement && !/[{}]/.test(add.dropped.statement), "its words hold the figures");
-  assert.equal(w.count("workbook_cells"), 1, "the one cell that carries its reference is held");
+  assert.equal("dropped" in add, false, "a cell with no r is held, never counted as dropped");
+  const cells = (x) => x.w.rows(`SELECT cell, r, c, type, value FROM workbook_cells ORDER BY r, c`);
+  assert.equal(cells({ w }).length, 5);
+  assert.deepEqual(cells({ w }), cells(copy), "held at the positions a referenced copy gives");
   const read = await w.wb.readWorkbook({ ...at, viewer: V("bob") });
   assert.equal(read.ok, true);
-  assert.equal(read.workbook.counts.cells, 1);
+  assert.equal(read.workbook.counts.cells, 5);
   assert.equal((await w.wb.addWorkbook({ ...at, question: "q", period: "p", by: V("bob") })).already, true, "a repeat answers already");
 });
 
@@ -133,7 +133,6 @@ test("R21 a cell whose reference cannot be read, and a repeat of an earlier cell
   assert.equal(add.dropped.count, 2);
   assert.equal(add.dropped.repeated, 1, "one dropped repeat");
   assert.equal(add.dropped.unreadable, 1);
-  assert.equal(add.dropped.no_reference, 0);
   const held = w.rows(`SELECT cell, value FROM workbook_cells ORDER BY cell`);
   assert.deepEqual(held, [{ cell: "A1", value: "1" }, { cell: "B1", value: "4" }]);
 });

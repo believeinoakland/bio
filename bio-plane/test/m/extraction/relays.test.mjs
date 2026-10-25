@@ -10,10 +10,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { pdfStructureOp, acquireReadingOp } from "../../../src/extraction/ops.mjs";
+import { storageNotConfigured } from "../capture/fixtures.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 const requiredArgument = (op, argument, shape, error) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error });
-const storageAbsent = (op, error) => json({ ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", op, error }, 503);
+/* capture's real refusal of an instance with no evidence store (its published fixture, K5044) */
+const STORAGE_ABSENT = await storageNotConfigured();
+const storageAbsent = (op, error) => json({ ...STORAGE_ABSENT.body, op, error }, STORAGE_ABSENT.status);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 /* control-plane R23, R25: a reply with `ok: false` below 500 is the store's own refusal, `refused` with its `reply`;
    at 500 or above it is a silence, carrying the correlation of the store's own STORE_INTERNAL_ERROR only. */
@@ -43,6 +46,7 @@ const RELAYS = {
   pdfstructure: (store, h) => pdfStructureOp(new URL(`https://p/?op=pdfstructure&sha256=${SHA}`), { CAPTURES: { get() {} } }, store,
     { ...h, storageAbsent, requiredArgument, cls: "member", session: true, caps: new Set(["contribute"]), viewer: "member:m1",
       author: "member:m1", storeName: "bio" }),
+  // fixtures-own: input acquireReadingOp is this module's own function: the acquire answer is its argument, the capture's answer it reads the digest of
   acquire: async (store, h) => {
     const out = await acquireReadingOp({ ok: true, document: { capture: { sha256: SHA } } }, store, { ...h, storeName: "bio" });
     return out.response;
@@ -70,11 +74,12 @@ const deferred = async (store, h) => {
 const read = async (r) => ({ status: r.status, body: await r.json() });
 
 test("R64 (N339): each relay answers the store's own refusal (ok false below 500) with the store's status, code and sentence, never as STORE_DID_NOT_ANSWER, whatever it is handed", async () => {
+  /* the store's own replies as it gives them (store-door R6: a bad body, an op it does not know, in its two forms) */
+  // fixtures-contract: store-door store-replies
   const refusals = [
     [{ ok: false, reason: "BAD_JSON", error: "the body is not JSON" }, 400],
     [{ ok: false, reason: "UNKNOWN_OP", code: "UNKNOWN_OP", error: "unknown op: pdfstructure", translation: "t" }, 404],
     [{ ok: false, error: "unknown op: extractread" }, 404],
-    [{ ok: false, reason: "PAYLOAD_TOO_LARGE" }, 413],
   ];
   for (const [name, relay, label, h] of cases())
     for (const [body, status] of refusals) {
@@ -91,6 +96,7 @@ test("R64: a relay handed storeRefusal and doAnswer answers through them, once e
     const refused = [], read1 = [];
     const spyRefusal = (out) => { refused.push(out.reply.status); return storeRefusal(out); };
     const spyAnswer = (res) => { read1.push(1); return doAnswer(res); };
+    // fixtures-contract: store-door store-replies
     const body = { ok: false, reason: "BAD_JSON", error: "the body is not JSON" };
     const via = await read(await relay(stub(body, 400), { json, storeSilent, storeRefusal: spyRefusal, doAnswer: spyAnswer }));
     const own = await read(await relay(stub(body, 400), HANDED[name]["as legacy-index handed it"]));
@@ -116,6 +122,8 @@ test("R64 (N349, control-plane R25): a 500 STORE_INTERNAL_ERROR with a correlati
     const withId = await read(await relay(stub({ ok: false, reason: "STORE_INTERNAL_ERROR", correlation: CORRELATION, error: STACK }, 500), h));
     assert.deepEqual([withId.status, withId.body.reason, withId.body.correlation], [502, "STORE_DID_NOT_ANSWER", CORRELATION], `${name} ${label}`);
     assert.ok(!JSON.stringify(withId.body).includes("Store.fetch"), `${name} ${label}: nothing else of the store's envelope`);
+    /* a code the store does not give, made up on purpose: only a STORE_INTERNAL_ERROR carries a correlation */
+    // fixtures-generic: OTHER
     for (const body of [{ ok: false, reason: "STORE_INTERNAL_ERROR" }, { ok: false, reason: "STORE_INTERNAL_ERROR", correlation: "not-an-id" },
                         { ok: false, reason: "OTHER", correlation: CORRELATION }]) {
       const r = await read(await relay(stub(body, 500), h));

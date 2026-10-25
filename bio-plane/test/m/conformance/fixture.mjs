@@ -35,6 +35,11 @@ import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
 import { conformanceOf, conformanceOps } from "../../../src/conformance/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { noSelection } from "../retrieval/fixtures.mjs";
+import { importedWorld } from "../case-import/fixtures.mjs";
+
+/* case-import's real answer for an import it does not hold (its R4), from its published fixture: a store with no import. */
+const noImport = (await importedWorld({ imports: [] })).ci;
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -144,7 +149,7 @@ export function world({ group = "test-group" } = {}) {
   content.provenance.migrate();
   content.migrate();
   const k = inquiryOf(host, { record, membership, promotion, content, now,
-                              retrieval: { selectionResolve: () => ({ ok: false, reason: "NO_SUCH_SELECTION" }) } });
+                              retrieval: { selectionResolve: noSelection().selectionResolve } });
   k.migrate();
   k.entities.migrate();
   k.connections.migrate();
@@ -260,7 +265,7 @@ export function world({ group = "test-group" } = {}) {
       const m = typeof viewer === "string" && viewer.startsWith("member:") ? viewer.slice(7) : null;
       const active = m && st.sql.exec(`SELECT status FROM members WHERE member_id=?`, m).toArray()[0]?.status === "active";
       const e = active ? imports.editions.get(`${imp}|${edition}`) : null;
-      if (!e) return { ok: false, reason: "IMPORT_NO_SUCH_EDITION" };
+      if (!e) return noImport.importedCase({ import: imp, edition, viewer });
       const gf = e.group_fields === undefined ? null : e.group_fields;
       return { ok: true, import: imp, edition: { edition, imported_at: NOW, imported_by: "olive", ...e, group_fields: gf,
                                                  ...(gf === null ? { group_fields_note: "not recorded at import" } : {}) } };

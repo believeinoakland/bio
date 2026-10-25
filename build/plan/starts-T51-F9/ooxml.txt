@@ -136,7 +136,7 @@ Intro. ODS gets held cells and row windows and merged ODS cells keep their colum
 
 [Causes of G133 that are other jobs' and are not copied here: G133a, G133b, G133d, G133f.]
 
-**Corpus recipes for your cases (size, shape; copied verbatim from the family reports' corpus tables, which you do not read: envelope-docs-T51.md 5.3 (documents, web pages, archives); envelope-sheets-T51.md 5.3 (spreadsheets)).** A row's id is the id the entry above names; `L` marks the smallest file of a family.
+**Corpus recipes for your cases (size, shape; copied verbatim from the family reports' corpus tables, which you do not read: envelope-docs-T51-s5.md 5.3 (documents, web pages, archives); envelope-sheets-T51-s4.md 5.3 (spreadsheets)).** A row's id is the id the entry above names; `L` marks the smallest file of a family.
 
 [DOCS T7] | T7 | the encoding matrix: Latin-1, Windows-1252, UTF-16LE/BE with BOM, UTF-8 with BOM, UTF-8 with a bad byte at the middle and at the end; each as `text/plain` with and without `charset`, as upload and as fetched; at 100 KB, 3 MiB and 9 MiB (multipart) | M, R | the text equals the truth or `ENCODING_UNSUPPORTED {name}`; **never** `U+FFFD`/NUL units with `failure: null` (I16); the same file gives the same answer by upload, fetch and parts | reading-pipeline, acquisition |
 [DOCS H5] | H5 | charset matrix pages: Windows-1252 with `<meta charset>`, Shift-JIS, UTF-16 with BOM, header and meta in conflict (the header wins) | M, R | I16; the page title, the profile and the reading decode alike | reading-pipeline, acquisition, site-profiles |

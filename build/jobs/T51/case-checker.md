@@ -1,6 +1,6 @@
 # case-checker (T51)
 
-**Status** · session_01Hzwm1zycMHWjX8D2N1KFXS · depth 2 · COMPLETE · handled B10
+**Status** · session_01TKioRc2yRq4EnYqzY6AQst · depth 2 · COMPLETE · handled B10
 
 ## Completion (T51-142)
 
@@ -143,3 +143,25 @@ Size (session_01Hzwm1zycMHWjX8D2N1KFXS): test runs 7, module lines 75
 ## J8 · COMPLETE
 
 G50 complete (record: Completion section). tranche/T51 merged; g50-path 8/8 green against the real providers; module suite 107 tests, 2 fail (R13, R25, stale program.mjs); case-import 156/156. Old program.mjs on a /4 file: departs at format and at every discriminated path, all findings did_not_recreate, as expected. checks: format, architecture, coverage, ownership 0 failures. Words: 5 new inline strings in spec.mjs (the /4 specification, same class as the earlier judged ones) beside the accepted :11, for you and the design stream. Stale generated: program.mjs, dist/, release/. Requirements R2/R8/R14/R19 are yours (diff in my record). Size (session_01Hzwm1zycMHWjX8D2N1KFXS): test runs 7, module lines 75
+
+## Completion (fix round 10, Wave A batch 2; START B11; CASE-CHECKER #18)
+
+**Entry applied.** Published `checkAccountMalformed` in `bio-plane/test/m/case-checker/fixtures.mjs` (new): the real `checkAccount({account: "x"})` (account.mjs), made when the test runs, never stored. Its test `fixtures.test.mjs` (R24, new, names the requirement) calls the fixture and checks it is `{ok: false, reason: "MALFORMED", field: "account"}` and equal to `checkAccount`'s own answer. Users re-point in their own jobs (case-account: 1, `advocacy.test.mjs:123`, mechanical; not this job).
+
+**Markers added:** none (`fixtures-own`, `fixtures-generic`). `fixtures-run`: none owed, the users (case-account, case-disclosures) come after this module in `build/modules.json`.
+
+**Merge.** The job branch was behind the tranche: `origin/tranche/T51` merged at `ce31ba37bd` (merge commit `9bd8608c71`), so the impact diff shows only this module's own files.
+
+**Checks, on the merged head.** `checks/fixtures.mjs <bio> case-checker --list`: 0 failures (answer 0). `checks/format.mjs`: 0 failures. `checks/architecture.mjs case-checker`: 0 failures. `checks/ownership.mjs case-checker tranche/T51`: 0 failures. `checks/coverage.mjs case-checker` (run before the merge): 27 of 27 live requirement ids named, 0 failures; the merge changed no case-checker source, and no requirement changed.
+
+**Tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/case-checker/*.test.mjs`: tests 108, pass 106, fail 2. The two are R13 and R25, the inherited reds on the stale generated `program.mjs` (the same two as before this job: 107 tests, 105 pass, 2 fail). The new test passes. `node build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules: case-checker only (1 of 12 of its test files); no user's tests named, since no user imports the fixture yet.
+
+**Deferred:** the regeneration of `bio-plane/src/case-checker/program.mjs` (R13, R25). Why: it is a generated artifact that has been stale since before this job, and BOB regenerates the round-end artifacts in their own commits (K5033); regenerating it here would change a file this fix round does not ask for. Still red by name until then.
+
+**Found in other modules:** none.
+
+Size (session_01TKioRc2yRq4EnYqzY6AQst): test runs 5, module lines 0 (src; the two new test-folder files are 22 lines)
+
+## J9 · COMPLETE
+
+B11 complete (fix round 10, Wave A batch 2; record Completion section, fix round 10). Published checkAccountMalformed in bio-plane/test/m/case-checker/fixtures.mjs (new): the real checkAccount({account:"x"}) answer MALFORMED/account, made at test time; its test fixtures.test.mjs (R24) checks the real answer. Markers added: none. Checks at merged head: fixtures (case-checker) 0 failures, format 0, architecture 0, ownership 0, coverage 27/27 (before merge). Tests: 108, 106 pass, 2 fail: R13 and R25, inherited from the stale generated program.mjs (not regenerated here; BOB regenerates round-end artifacts, K5033). Impact: case-checker only; no user tests named (case-account re-points in its own job). Merged tranche/T51 at ce31ba37bd. Size (session_01TKioRc2yRq4EnYqzY6AQst): test runs 5, module lines 0 (src).

@@ -10,6 +10,7 @@ import { fresh, hold, doc, member, evidenceStore, withEntry, bucket, ocrAnswer }
 import * as rp from "../../../src/reading-pipeline/index.mjs";
 import { boundOf } from "../../../src/read-bounds.mjs";
 import { scanPdf, chunked } from "./scans.mjs";
+import { BUNDLE as PDF_WORKER_BUNDLE } from "../../../../pdf-worker/test/subject.mjs";
 
 /* the module's names, read off its namespace so a name not yet exported fails its own test, not the file */
 const { read, WHOLE_READ_MAX, MULTIPART_READ_MAX, CAPTURE_TEXT_UNIT_CAP } = rp;
@@ -152,6 +153,44 @@ test("R47 (G134d, DOCS O4 at the interface): every part an entry emits is a unit
     }
     assert.ok(out.text_units.every((u) => UNIT_KINDS.includes(u.kind)));
     assert.equal(new Set(out.text_units.map((u) => u.seq)).size, out.text_units.length);
+  });
+});
+
+test("R47 (G166): a paragraph a text_box part names in paras is no body unit, so the box's words are one unit of kind text_box; without paras every paragraph stays a body unit", async () => {
+  const paragraphs = [0, 1, 2, 3, 4].map((para) => ({ para, text: para === 3 ? "words inside the box" : `Body paragraph ${para}` }));
+  const reading = (paras) => ({ format: "x9box", text: async () => ({ container: "docx", document: paragraphs.map((p) => p.text).join("\n\n"), paragraphs,
+    parts: [{ kind: "text_box", ref: "\u00b64", part: "word/document.xml", text: "words inside the box", ...(paras ? { paras } : {}) }],
+    counts: { chars: 100, undetermined: 0 } }) });
+  const unitsOf = async (paras) => {
+    let units;
+    await withEntry(reading(paras), async () => {
+      const { w, document } = await heldDoc("x", "x9box");
+      units = (await read(document, { evidence: ev(w), env: {}, unitsBudget: Infinity })).text_units;
+    });
+    return units;
+  };
+  const named = await unitsOf([3]);
+  assert.deepEqual(named.filter((u) => u.kind === "body").map((u) => u.extent.para), [0, 1, 2, 4], "paragraph 3 is no body unit");
+  assert.deepEqual(named.filter((u) => u.text === "words inside the box").map((u) => u.kind), ["text_box"], "the words are one unit, of one kind");
+  const two = await unitsOf([3, 4]);
+  assert.deepEqual(two.filter((u) => u.kind === "body").map((u) => u.extent.para), [0, 1, 2], "every paragraph the part names is left out");
+  const none = await unitsOf(null);
+  assert.deepEqual(none.filter((u) => u.kind === "body").map((u) => u.extent.para), [0, 1, 2, 3, 4], "control: without paras every paragraph is a body unit");
+  const bad = await unitsOf([9, "x", -1]);
+  assert.equal(bad.filter((u) => u.kind === "body").length, 5, "control: indices that name no paragraph leave every paragraph a body unit");
+});
+
+test("R47 (G166, pptx): a slide's body unit is its bodyText when it states one, so a text box's words are one unit of kind text_box; a box-only slide has no body unit; without bodyText the slide's text stays", async () => {
+  const slides = [{ slide: 0, text: "Title\nbox words", bodyText: "Title" }, { slide: 1, text: "only box words", bodyText: "" }, { slide: 2, text: "plain slide" }];
+  const entry = { format: "x9pptx", text: async () => ({ container: "pptx", document: slides.map((s) => s.text).join("\n\n"), slides,
+    parts: [{ kind: "text_box", ref: "slide 1 shape 2", part: "ppt/slides/slide1.xml", text: "box words", shapes: [1] },
+            { kind: "text_box", ref: "slide 2 shape 1", part: "ppt/slides/slide2.xml", text: "only box words", shapes: [0] }],
+    counts: { chars: 50, undetermined: 0 } }) };
+  await withEntry(entry, async () => {
+    const { w, document } = await heldDoc("x", "x9pptx");
+    const out = await read(document, { evidence: ev(w), env: {}, unitsBudget: Infinity });
+    assert.deepEqual(out.text_units.filter((u) => u.kind === "body").map((u) => [u.extent.slide, u.text]), [[0, "Title"], [2, "plain slide"]]);
+    assert.deepEqual(out.text_units.filter((u) => u.kind === "text_box").map((u) => u.text), ["box words", "only box words"]);
   });
 });
 
@@ -361,9 +400,16 @@ test("R3 R40 (K4861, R-PATH): every piece of a PDF read in ranges that escalates
   const f = generate({ kind: "pdf", seed: "K4861", size: { pages: 5, lines: 3 } });   /* winansi with no ToUnicode: tier 1 reads nothing, so it escalates */
   const bytes = await f.bytes();
   const asked = [];
-  const pdfWorker = member((body) => { asked.push({ from: body.from, count: body.count });
-    return { ok: false, reason: "OVER_ENVELOPE" }; });
-  const w = fresh({ env: { PDF_WORKER: pdfWorker } });
+  /* the member is the real pdf-worker (a fresh build of its source, `pdf-worker/test/subject.mjs`), answering from the bucket `read` reads; the front only records the range asked */
+  const { pathToFileURL } = await import("node:url");
+  const realWorker = (await import(pathToFileURL(PDF_WORKER_BUNDLE).href)).default;
+  const evidence = bucket();
+  const pdfWorker = { async fetch(url, init) {
+    const body = JSON.parse(init.body);
+    asked.push({ from: body.from, count: body.count });
+    return realWorker.fetch(new Request(url, init), { CAPTURES: { get: async (key) => { const o = await evidence.get(key); return o ? { size: o.size, arrayBuffer: o.arrayBuffer } : null; } } });
+  } };
+  const w = fresh({ evidence, env: { PDF_WORKER: pdfWorker } });
   const d = await hold(w.evidence, bytes);
   const document = docOf(d, bytes.length, "pdf", "application/pdf");
   let cursor = null;

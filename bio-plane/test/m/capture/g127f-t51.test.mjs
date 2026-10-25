@@ -7,11 +7,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bucket, sha } from "./fixture.mjs";
+// fixtures-contract: plane job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 import { makeZip } from "../../make-zip.mjs";
 import { byteLedger, PLATFORM_FIGURES } from "../../../src/byte-ledger.mjs";
 import { CAPTURE_MAX } from "../../../src/acquisition/index.mjs";
 import { Capture, PARTED_PART_BYTES, PARTED_UPLOAD_TTL_MS } from "../../../src/capture/index.mjs";
+import { createResumableSha256 } from "../../../src/record-grammar/index.mjs";
 
 const MiB = 1024 * 1024;
 const STATEMENT = "a file the clerk handed me at the counter";
@@ -86,6 +88,7 @@ const setup = ({ minPart = 0, clock = null } = {}) => {
 };
 const registrar = (w) => {
   const j = jobRegistrarStub();
+  // fixtures-contract: plane job-registrar
   w.c.registerJob = j.registerJob;
   w.c.armJobs = j.armJobs;
   const real = w.core.transact.bind(w.core);
@@ -226,7 +229,7 @@ test("R113 (order): a part past the next is refused with the next one named and 
   assert.deepEqual([done.ok, done.capture.sha256, j.rows().length], [true, sha(file), 1]);
 });
 
-test("R113 and R111 (the ceilings): the declared size is judged before any part: over `CAPTURE_MAX` is refused 413 with size and bound and no upload is begun; at the ceiling it is begun; a part of another size is refused before one byte is read", async () => {
+test("R113 and R111 (the ceilings): the declared size is judged before any part: over `CAPTURE_MAX` is refused 413 with size and bound and no upload is begun; at the ceiling it is begun; a part of another size is refused with nothing kept, its body read and discarded (G176)", async () => {
   const w = setup();
   const sum = sha("x");
   const over = await w.c.beginPartedUpload({ sha256: sum, bytes: CAPTURE_MAX + 1, statement: STATEMENT, by: "m1" });
@@ -248,9 +251,16 @@ test("R113 and R111 (the ceilings): the declared size is judged before any part:
   assert.deepEqual([short.reason, short.status, short.size, short.bound], ["PART_SIZE", 400, 999, 1000]);
   const decl = streamOf(ps[0], 300);
   const d = await w.c.putUploadPart({ upload: b.upload, index: 0, bytes: decl.stream, sha256: sha(ps[0]), by: "m1", declared: 1001 });
-  assert.deepEqual([d.reason, decl.pulled, decl.cancelled], ["PART_SIZE", 0, true], "judged before one byte is read");
+  assert.deepEqual([d.reason, decl.pulled, decl.cancelled], ["PART_SIZE", 4, false], "judged before the bytes are kept, then the body is read whole and discarded (G176)");
   const last = await w.c.putUploadPart({ upload: b.upload, index: 2, bytes: ps[2], sha256: sha(ps[2]), by: "m1" });
   assert.equal(last.reason, "PART_OUT_OF_ORDER");
+  /* G176: a refusal before the bytes are read still reads and discards the body, and a body past the part size is cut there */
+  const ooo = streamOf(ps[0], 300);
+  assert.equal((await w.c.putUploadPart({ upload: b.upload, index: 2, bytes: ooo.stream, sha256: sha(ps[0]), by: "m1" })).reason, "PART_OUT_OF_ORDER");
+  assert.deepEqual([ooo.pulled, ooo.cancelled], [4, false], "the out-of-order part's body was read whole");
+  const huge = streamOf(varied(5000, 3), 300);
+  assert.equal((await w.c.putUploadPart({ upload: b.upload, index: 2, bytes: huge.stream, sha256: sum, by: "m1" })).reason, "PART_OUT_OF_ORDER");
+  assert.deepEqual([huge.cancelled, huge.pulled < 17], [true, true], "a body larger than the part size is cut at the part size");
   assert.equal(w.b.mp.parts.length, 0, "nothing stored by any of them");
   /* control: the last part is the remainder, 500 bytes, and is accepted as such */
   assert.equal((await put(w.c, b.upload, 0, ps[0])).ok, true);
@@ -355,17 +365,82 @@ test("R113 (abandoned): an abandoned upload is aborted and holds nothing: by the
   assert.deepEqual(await w.c.abortPartedUpload({ upload: z.upload, by: "m1" }), { ok: true, aborted: true });
 });
 
-test("R113 (a restarted instance): if the instance lost the hash of the parts so far between parts, the upload is aborted and holds nothing, and the answer says to begin again; a begin of the same file again by the same member abandons the first", async () => {
+/* a second instance over the same storage, as after the object was taken out of memory: it has the rows and none of the hashing in memory */
+const restarted = (w) => {
+  const c2 = new Capture(w.s, { record: w.core, env: { ...w.c.env }, governor: w.c.governor, provenance: w.c.provenance, credentials: w.c.credentials });
+  c2.evidenceKey = keyOf;
+  c2.clock = w.c.clock;
+  return c2;
+};
+
+test("R113 (G173, an instance taken out of memory between parts): the next part in order is accepted by an instance that has none of the hashing in memory, and the completion's digest is the declared one; a wrong part and a wrong whole are still refused", async () => {
+  const w = setup();
+  const file = varied(2500, 12), ps = partsOf(file, 1000);
+  const b = await begin(w.c, file);
+  assert.equal((await put(w.c, b.upload, 0, ps[0])).ok, true);
+  /* the object is taken out of memory: the instance that took part 0 is gone, and the one that takes part 1 has only the storage */
+  const c2 = restarted(w);
+  /* control: a wrong part is still refused by the restarted instance, and nothing is stored for it */
+  const wrong = await c2.putUploadPart({ upload: b.upload, index: 1, bytes: varied(1000, 99), sha256: sha(ps[1]), by: "m1" });
+  assert.deepEqual([wrong.ok, wrong.reason], [false, "PART_DIGEST_MISMATCH"]);
+  assert.equal(w.b.mp.parts.length, 1, "no part was written for the wrong one");
+  const r1 = await put(c2, b.upload, 1, ps[1]);
+  assert.deepEqual([r1.ok, r1.existed, r1.next], [true, false, 2]);
+  /* and again between the next two */
+  const c3 = restarted(w);
+  assert.equal((await put(c3, b.upload, 2, ps[2])).ok, true);
+  const done = await restarted(w).completePartedUpload({ upload: b.upload, parts: ps.map((p) => sha(p)), by: "m1", at: AT });
+  assert.equal(done.ok, true, JSON.stringify(done).slice(0, 300));
+  assert.deepEqual([done.capture.sha256, done.capture.bytes], [sha(file), file.length], "the completion's digest is the declared one");
+  assert.deepEqual(w.b.held.get(keyOf(sha(file))), file, "the object is the file");
+  /* control: a restarted instance still refuses a whole that is not the declared one (a part's bytes differ from the file the begin declared) */
+  const other = varied(2500, 13), qs = partsOf(other, 1000), wrongWhole = partsOf(file, 1000);
+  const b2 = await begin(w.c, other);
+  assert.equal((await put(w.c, b2.upload, 0, qs[0])).ok, true);
+  const c4 = restarted(w);
+  assert.equal((await put(c4, b2.upload, 1, qs[1])).ok, true);
+  /* the third part is the right size and digest on its own, but of another file */
+  const bad = wrongWhole[2].length === qs[2].length ? wrongWhole[2] : null;
+  assert.ok(bad);
+  assert.equal((await put(restarted(w), b2.upload, 2, bad)).ok, true);
+  const mismatch = await restarted(w).completePartedUpload({ upload: b2.upload, parts: [qs[0], qs[1], bad].map((p) => sha(p)), by: "m1", at: AT });
+  assert.deepEqual([mismatch.ok, mismatch.reason, mismatch.status], [false, "WHOLE_DIGEST_MISMATCH", 400]);
+  assert.equal(w.b.openUploads(), 0, "and the refused upload holds nothing");
+});
+
+test("R114 (G180): a parted upload interrupted after its second part and resumed from the row's snapshot files the digest of the whole; the snapshot is the one record-grammar's stream takes up", async () => {
+  const w = setup();
+  const file = varied(3000, 21), ps = partsOf(file, 1000);
+  const b = await begin(w.c, file);
+  assert.equal((await put(w.c, b.upload, 0, ps[0])).ok, true);
+  assert.equal((await put(w.c, b.upload, 1, ps[1])).ok, true);
+  /* the object is taken out of memory after its second part: the row's snapshot is all that is kept of the digest so far */
+  const row = w.s.db.prepare(`SELECT hash_state FROM parted_uploads WHERE upload = ?`).get(b.upload);
+  assert.equal(createResumableSha256(row.hash_state).length, 2000, "the snapshot holds the bytes of the two parts");
+  assert.equal((await put(restarted(w), b.upload, 2, ps[2])).ok, true);
+  const done = await restarted(w).completePartedUpload({ upload: b.upload, parts: ps.map((p) => sha(p)), by: "m1", at: AT });
+  assert.deepEqual([done.ok, done.capture?.sha256], [true, sha(file)], JSON.stringify(done).slice(0, 300));
+});
+
+test("R113 (G173, UPLOAD_LOST only when the digest cannot be told): an open upload whose row keeps no digest of its parts (begun before it was kept) or one that does not describe the parts held is aborted and answered UPLOAD_LOST, nothing held; a begin of the same file again by the same member abandons the first", async () => {
   const w = setup();
   const file = varied(2500, 12), ps = partsOf(file, 1000);
   const b = await begin(w.c, file);
   await put(w.c, b.upload, 0, ps[0]);
-  /* a second instance over the same storage, as after the object was restarted: it has the rows and none of the hashing */
-  const c2 = new Capture(w.s, { record: w.core, env: { ...w.c.env }, governor: w.c.governor, provenance: w.c.provenance, credentials: w.c.credentials });
-  c2.evidenceKey = keyOf;
-  const lost = await put(c2, b.upload, 1, ps[1]);
+  w.s.db.prepare(`UPDATE parted_uploads SET hash_state = NULL WHERE upload = ?`).run(b.upload);
+  const lost = await put(restarted(w), b.upload, 1, ps[1]);
   assert.deepEqual([lost.ok, lost.reason, lost.status], [false, "UPLOAD_LOST", 409]);
   assert.deepEqual([w.b.openUploads(), w.b.mp.aborted.length], [0, 1]);
+  /* a state that is another length than the parts held is no state of them */
+  const b3 = await begin(w.c, file);
+  await put(w.c, b3.upload, 0, ps[0]); await put(w.c, b3.upload, 1, ps[1]);
+  const kept = w.s.db.prepare(`SELECT hash_state FROM parted_uploads WHERE upload = ?`).get(b3.upload).hash_state;
+  const one = partsOf(file, 1000)[0];
+  const early = Object.assign(JSON.parse(kept), { t: one.length, b: "" });
+  w.s.db.prepare(`UPDATE parted_uploads SET hash_state = ? WHERE upload = ?`).run(JSON.stringify(early), b3.upload);
+  const lost2 = await put(restarted(w), b3.upload, 2, ps[2]);
+  assert.deepEqual([lost2.ok, lost2.reason], [false, "UPLOAD_LOST"]);
+  assert.equal(w.b.openUploads(), 0);
   /* the same member begins again: the earlier session is abandoned */
   const first = await begin(w.c, file);
   const second = await begin(w.c, file);
@@ -393,12 +468,13 @@ test("R113 and R109 (the filing): a refusing registrar rolls the whole filing ba
   const w = setup();
   const file = varied(2500, 14), ps = partsOf(file, 1000);
   let calls = 0;
-  w.c.registerJob = (e) => (++calls === 1 ? { ok: false, reason: "NO_ROOM" } : { ok: true, existed: false, state: "queued" });
+  // fixtures-contract: plane job-registrar
+  w.c.registerJob = (e) => (++calls === 1 ? { ok: false, reason: "JOB_NOT_KEPT" } : { ok: true, existed: false, state: "queued" });
   const b = await begin(w.c, file);
   for (let i = 0; i < 3; i++) await put(w.c, b.upload, i, ps[i]);
   const t0 = tables(w);
   const refused = await w.c.completePartedUpload({ upload: b.upload, parts: ps.map((p) => sha(p)), by: "m1", at: AT });
-  assert.deepEqual([refused.ok, refused.reason, refused.status, refused.job], [false, "JOB_NOT_REGISTERED", 502, { kind: "reading", reason: "NO_ROOM" }]);
+  assert.deepEqual([refused.ok, refused.reason, refused.status, refused.job], [false, "JOB_NOT_REGISTERED", 502, { kind: "reading", reason: "JOB_NOT_KEPT" }]);
   assert.deepEqual(tables(w), t0, "no receipt, no actor");
   assert.equal(w.b.mp.completed.length, 1, "R2's upload is complete: the object is held, content-addressed, named by nothing");
   /* a retry of the completion files the object already complete, and completes nothing twice */
@@ -450,7 +526,8 @@ test("R113 (the same file again): bytes the evidence store already holds are beg
   const file = varied(2500, 16);
   const first = await send(w, file);
   assert.equal(first.done.ok, true);
-  w.c.provenance.registerHolds = ({ sha: x }) => ({ ok: true, sha: x, asked: true, registered: x === sha(file), acquired: x === sha(file) });
+  const holds = holdsWorld({ [sha(file)]: { registered: true, acquired: true } });
+  w.c.provenance.registerHolds = (a) => holds.registerHolds(a);
   const before = w.b.mp.created.length;
   const b = await begin(w.c, file, { by: "m2" });
   assert.deepEqual([b.ok, b.held, b.parts], [true, true, 0]);
@@ -525,6 +602,7 @@ test("R113 (the ops): the four ops are declared and routed with the stamps the d
    `argument`, or by the code the field's own refusal carries. */
 import { declaredOpHolds } from "../../declared-ops.mjs";
 import { DECLARED_OPS, captureOps } from "../../../src/capture/index.mjs";
+import { holdsWorld } from "../provenance/fixtures.mjs";
 const namedBy = (codes = {}) => (answer, field) => !!answer && typeof answer === "object"
   && ((answer.reason === "REQUIRED_ARGUMENT_MISSING" && answer.argument === field) || (codes[field] || []).includes(answer.code ?? answer.reason));
 const callOp = (op, stamps, { prepare = null } = {}) => async (given) => {
@@ -555,4 +633,24 @@ test("R97 capture declares captureuploadcomplete (R113): its requires alone rais
 test("R97 capture declares captureuploadpart (R113): its requires alone raise no refusal naming a declared field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
   await declaredOpHolds({ op: "captureuploadpart", declaration: DECLARED_OPS.captureuploadpart, call: callOp("captureuploadpart", { by: "m1" }),
     refusedNaming: namedBy(), values: { upload: "an-upload-nobody-holds", index: 0, sha256: PART } });
+});
+
+test("R113 (fix round 10, cause 29): the four parted operations admit the classes `captureupload` admits, the founder's among them (the founder's session is class `admin`), and the founder's stamp begins, puts two parts, completes and aborts a parted upload, the receipt naming the founder; they still need `contribute`, and a machine's stamp is still refused", async () => {
+  const { DECLARED_OPS: declared } = await import("../../../src/capture/index.mjs");
+  for (const op of ["captureuploadbegin", "captureuploadpart", "captureuploadcomplete", "captureuploadabort"]) {
+    assert.deepEqual([...declared[op].classes].sort(), ["admin", "member"], `${op} admits the founder's session and a member's`);
+    assert.equal(declared[op].needs, "contribute", `${op} still needs contribute`);
+  }
+  const w = setup(), j = registrar(w);
+  const file = varied(2000, 29);
+  const { b, puts, done } = await send(w, file, { by: "admin" });
+  assert.deepEqual([b.ok, puts.map((p) => p.ok), done.ok], [true, [true, true], true], JSON.stringify(done).slice(0, 300));
+  assert.deepEqual(w.c.captureAccountsOf(sha(file)).actors.map((a) => a.actor), ["admin"], "the receipt names the founder's stamp");
+  assert.equal(j.rows().length, 1);
+  const other = await begin(w.c, varied(2000, 30), { by: "admin" });
+  assert.equal(other.ok, true);
+  assert.deepEqual(await w.c.abortPartedUpload({ upload: other.upload, by: "admin" }), { ok: true, aborted: true });
+  /* control: a machine's stamp is still refused at the member-session fence */
+  const machine = await begin(w.c, varied(2000, 31), { by: "class:admin" });
+  assert.deepEqual([machine.ok, machine.reason], [false, "MEMBER_SESSION_REQUIRED"]);
 });

@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, sha, filed } from "./fixture.mjs";
-import { noSuchStandard } from "../../../src/standards/index.mjs";
+import { standardReadWorld } from "../standards/fixtures.mjs";
 import { localize } from "../../../src/setup-words/index.mjs";
 import { CAPTURE_REQUEST_CHECKS, CAPTURE_REQUEST_ADDRESS_MAX, RECORDS_ANSWERS, captureRequestsOps }
   from "../../../src/capture-requests/index.mjs";
@@ -227,50 +227,56 @@ test("R50 a co-archive choice under a stamp that is not a member's is refused CA
  * R51–R53 — RECORDS REQUESTS
  * ===================================================================== */
 
-/** standards' R5 as a stand-in (K61): standards the test writes, each with its sight; an absent or unseen one answers
- *  standards' own R17 refusal. */
-function fakeStandards(w) {
-  const held = new Map();
+/** standards' R5 over standards' published fixture (`standardReadWorld`: the real `standardsOf` over a seeded record). The test names each standard (`add`);
+ *  the read is the real standard's, made under the name's real id. A standard the test hides (`hidden`, with the viewers who see it) answers a viewer who
+ *  does not as the real answer for an id the record does not hold (standards' own R17); the sight of a project is not offered by the fixture (reported to BOB, J7). */
+function realStandards() {
+  const sw = standardReadWorld();
+  const ids = new Map(), hidden = new Map();
+  const asViewer = (viewer) => (typeof viewer === "string" && /^(member:|class:|admin$)/.test(viewer) ? sw.member : sw.stranger);
   return {
-    held,
+    add(name, { held = "cited", cite = `Policy ${name}`, seenBy = null } = {}) {
+      const p = sw.passage();
+      const extra = held === "cited" ? { held, text: "", cited_by: { captureSha: p.capSha, extent: { kind: "pdf-page", page: 0 } } }
+        : held === "absent" ? { held, text: "", search: { places: ["the issuer's records portal"] } } : { held };
+      const r = sw.declare({ cite, kind: "policy", issuer: "Police Department", ...extra });
+      assert.equal(r.ok, true, JSON.stringify(r));
+      ids.set(name, r.id);
+      if (seenBy) hidden.set(name, seenBy);
+    },
+    /** the real read of a named standard, as the viewer the fixture offers. */
+    real: (name) => sw.standardRead({ id: ids.get(name), viewer: sw.member }),
     standardRead({ id, viewer }) {
-      const s = held.get(id);
-      if (!s || !w.cr || (s.bundle && !w.row(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND project IS NULL`, s.bundle)
-                           && !(s.seenBy || []).includes(viewer))) return noSuchStandard(id ?? null);
-      if (typeof viewer !== "string" || !/^(member:|class:|admin$)/.test(viewer)) return noSuchStandard(id ?? null);
-      return { ok: true, id, cite: s.cite, kind: "policy", issuer: s.issuer,
-               owner: { issuer: s.issuer, label: s.issuer, entity: null, sector: null },
-               held: s.held, ...(s.held === "cited" ? { cited_by: s.cited_by } : {}) };
+      if (hidden.has(id) && !hidden.get(id).includes(viewer)) return sw.standardRead({ id, viewer: asViewer(viewer) });
+      return sw.standardRead({ id: ids.get(id) ?? id, viewer: asViewer(viewer) });
     },
   };
 }
 function rrWorld() {
   const box = {};
   const w = world({ standards: () => box.s }).scene();
-  box.s = fakeStandards(w);
-  const add = (id, over = {}) => box.s.held.set(id, { cite: `Policy ${id}`, issuer: "Police Department", held: "cited",
-    cited_by: { captureSha: sha(`cites ${id}`), extent: { page: 3 } }, ...over });
-  add("STD-1"); add("STD-2"); add("STD-TEXT", { held: "text" }); add("STD-ABSENT", { held: "absent" });
+  box.s = realStandards();
+  box.s.add("STD-1"); box.s.add("STD-2"); box.s.add("STD-TEXT", { held: "text" }); box.s.add("STD-ABSENT", { held: "absent" });
   w.project("PROJ-S");
   w.participant("PROJ-S", "inner");
   w.bundle("SRC-H", "information");
   w.st.sql.exec(`UPDATE bundles SET project='PROJ-S' WHERE bundle_id='SRC-H'`);
   w.membership.reindexProjectSight("SRC-H");
-  add("STD-H", { bundle: "SRC-H", seenBy: [V("inner")] });
+  box.s.add("STD-H", { seenBy: [V("inner")] });
   return { w, s: box.s };
 }
 const open = (w, standard, by = "member:ann/tok1", viewer = V("ann")) => w.cr.recordsRequestOpen({ standard, by }, { viewer });
 
 test("R51 a member opens a records request for a standard held cited: one row open, its citation and addressee copied from the standard, opened by the member; asked again while open it answers that row with already true and writes nothing", () => {
-  const { w } = rrWorld();
+  const { w, s } = rrWorld();
   const a = open(w, "STD-1");
   assert.equal(a.ok, true, JSON.stringify(a));
   assert.equal(a.already, false);
   assert.match(a.request, /^RR-\d{14}-[0-9a-f]{12}$/);
   assert.deepEqual({ ...a, request: "x", opened_at: "t" }, {
     ok: true, already: false, request: "x", standard: "STD-1",
-    citation: { cite: "Policy STD-1", cited_by: { captureSha: sha("cites STD-1"), extent: { page: 3 } } },
-    addressee: { issuer: "Police Department", label: "Police Department", entity: null, sector: null },
+    citation: { cite: s.real("STD-1").cite, cited_by: s.real("STD-1").cited_by },
+    addressee: s.real("STD-1").owner,
     opened_by: "member:ann", opened_at: "t", state: "open", answer: null, answer_capture: null, answer_note: null,
     answered_by: null, answered_at: null });
   const b = open(w, "STD-1", "member:bea");
@@ -281,15 +287,15 @@ test("R51 a member opens a records request for a standard held cited: one row op
 });
 
 test("R51 refusals in order, each writing nothing: a machine or empty by MACHINE_CANNOT_REQUEST_RECORDS; an absent or unseen standard answered as standards answers it (NO_SUCH_STANDARD, one answer); one not held cited RECORDS_REQUEST_NOT_CITED naming its held", () => {
-  const { w } = rrWorld();
+  const { w, s } = rrWorld();
   for (const by of ["class:daemon", "class:ai", "admin", "", null, "token:daemon"])
     refusedBy(open(w, "STD-1", by), "MACHINE_CANNOT_REQUEST_RECORDS");
   /* a machine is refused first even for an absent standard */
   refusedBy(open(w, "STD-NONE", "class:probe"), "MACHINE_CANNOT_REQUEST_RECORDS");
   const absent = open(w, "STD-NONE");
   const unseen = open(w, "STD-H");
-  assert.deepEqual(absent, noSuchStandard("STD-NONE"));
-  assert.deepEqual(unseen, noSuchStandard("STD-H"), "an unseen standard answers exactly as an absent one");
+  assert.deepEqual(absent, s.standardRead({ id: "STD-NONE", viewer: V("ann") }));
+  assert.deepEqual(unseen, s.standardRead({ id: "STD-H", viewer: V("ann") }), "an unseen standard answers exactly as an absent one");
   for (const [id, held] of [["STD-TEXT", "text"], ["STD-ABSENT", "absent"]]) {
     const r = open(w, id);
     refusedBy(r, "RECORDS_REQUEST_NOT_CITED");
@@ -377,7 +383,7 @@ test("R53 the reads answer the rows whose standard the viewer may read, each wit
   assert.equal(w.cr.recordsRequestById({ request: one, viewer: V("ann") }).state, "open");
   /* the bound and the cursor: an unseen row between pages is skipped and never counted */
   for (let i = 0; i < 5; i++) {
-    s.held.set(`STD-P${i}`, { cite: `P${i}`, issuer: "Clerk", held: "cited", cited_by: { captureSha: sha(`p${i}`) } });
+    s.add(`STD-P${i}`, { cite: `P${i}` });
     open(w, `STD-P${i}`);
   }
   const page1 = w.cr.recordsRequests({ viewer: V("ann"), limit: 3 });

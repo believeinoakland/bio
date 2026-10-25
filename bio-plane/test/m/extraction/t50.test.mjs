@@ -6,13 +6,22 @@
    control (K874). Each test names its ids. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, withEntry, i2, noText, pageUnits } from "./fixture.mjs";
+import { fresh, bundle, hold, withEntry, i2, noText, pageUnits, payingAccount } from "./fixture.mjs";
+import { noAccount, keptAwayGroup } from "../ai-accounts/fixtures.mjs";
 import { extractionOps } from "../../../src/extraction/index.mjs";
+import { WORD } from "./words.mjs";
 import { pageTranscribeOp } from "../../../src/extraction/ops.mjs";
 
 const SENTINEL = "sk-ant-SENTINEL-KEY-5050";
 const member1 = { cls: "member", session: true, caps: ["contribute"], viewer: "class:admin", by: "member:m1" };
-const ACCOUNT = { ok: true, kind: "apikey", level: "member", key: SENTINEL };
+/* ai-accounts' real answers (its published fixtures, K5044) for a member with no account and for a group keeping its material away */
+const NO_ACCOUNT = await noAccount();
+/* ai-use is after this module, so its `useCheck` refusal is a contract (ai-use's test runs this shape against its real code) */
+// fixtures-contract: ai-use use-check
+const CEILING = { ok: false, code: "AI_LIMIT_REACHED", check: "C-143.1",
+  translation: WORD("ai.refused.limit").replace("{whose}", WORD("ai.whose.own")).replace("{period}", WORD("ai.period.day")).replace("{use}", WORD("ai.use.transcribe.inline")).replace("{when}", WORD("ai.when.day")),
+  detail: "member:ann's day limit (transcribe, in calls) is reached for the period from 2026-10-09. Nothing was started." };
+const KEPT_GROUP = (await keptAwayGroup({ use: "transcribe" })).aiKeptAway;
 const pdfEntry = (text, pages) => ({ format: "pdf",
   detect: (b) => (b && new TextDecoder().decode(b.slice(0, 5)) === "%PDF-" ? { format: "pdf", confidence: "certain", signals: [] } : null),
   structure: async () => ({ ok: true, text: structuredClone(text), pages, notes: [] }) });
@@ -27,14 +36,14 @@ const stored = (w) => JSON.stringify(["readings", "reading_history", "capture_te
 /* The composition root's transcriber (plane R36's shape): `account` is what the account service answers, `limit` what
    the limit check answers, `away` what the keep-away check answers, `answer` what the AI path answers; every
    `transcription(...)` argument is recorded whole. */
-function transcriber({ deployable = true, account = ACCOUNT, limit = null, away = null, answer = filled } = {}) {
+function transcriber({ deployable = true, account = null, limit = null, away = null, answer = filled } = {}) {
   const calls = { transcription: [], transcribe: [] };
   const t = {
     deployable: typeof deployable === "function" ? deployable : () => deployable,
     keptAway: () => away,
     transcription: (arg) => { calls.transcription.push(arg);
       return { member: arg.member, project: arg.project, at: arg.at, act: `transcribe:t50:${arg.at}`,
-        accounts: { accountFor: async () => account }, useCheck: async () => limit,
+        accounts: { accountFor: payingAccount({ key: SENTINEL, answer: account }) }, useCheck: async () => limit,
         transcribe: async (q) => { calls.transcribe.push(q); return typeof answer === "function" ? answer(q.pages, q) : answer; } }; },
   };
   return { t, calls };
@@ -98,15 +107,16 @@ test("R71 (T50; N1066): the paying account's key goes to `transcribe` and nowher
     "pages filled": { opts: {}, text: SCAN, sent: true },
     "none filled (nothing left unread)": { opts: {}, text: ALL_READ, sent: false },
     "the AI filled nothing": { opts: { answer: { ok: true, engine: "claude-test", version: "1", pages: [] } }, text: SCAN, sent: true },
+    "a limit refusing": { opts: { limit: CEILING }, text: SCAN, sent: false },
+    // fixtures-contract: agent-worker transcribe-declined
     "the AI declining": { opts: { answer: { ok: false, reason: "busy" } }, text: SCAN, sent: true },
     "the worker silent": { opts: { answer: { ok: false, reason: "AGENT_WORKER_SILENT" } }, text: SCAN, sent: true },
     "a malformed transcribe answer (null)": { opts: { answer: null }, text: SCAN, sent: true },
     "a malformed transcribe answer (a string)": { opts: { answer: "sk" }, text: SCAN, sent: true },
     "a malformed transcribe answer (pages not a list)": { opts: { answer: { ok: true, engine: "e", version: "1", pages: "nope" } }, text: SCAN, sent: true },
     "a malformed transcribe answer (a page with no text)": { opts: { answer: { ok: true, engine: "e", version: "1", pages: [{ page: 1 }] } }, text: SCAN, sent: true },
-    "the account refusing": { opts: { account: refusalOf("NO_ACCOUNT") }, text: SCAN, sent: false },
-    "a limit refusing": { opts: { limit: refusalOf("AI_LIMIT_REACHED") }, text: SCAN, sent: false },
-    "the keep-away check refusing": { opts: { away: refusalOf("AI_KEPT_AWAY") }, text: SCAN, sent: false },
+    "the account refusing": { opts: { account: NO_ACCOUNT }, text: SCAN, sent: false },
+    "the keep-away check refusing": { opts: { away: KEPT_GROUP }, text: SCAN, sent: false },
     "agent-worker refusing after the post": { opts: { answer: refusalOf("BAD_PAGES", { worker: "agent-worker" }) }, text: SCAN, sent: true },
     "not deployed": { opts: { deployable: false }, text: SCAN, sent: false },
   };
@@ -218,7 +228,8 @@ test("R72 (T50; N1082; control): a `trace` or `memberRef` in the url's own query
 
 test("R72 (T50; N1082): this module reads, stores and answers neither string: no reading, history row, text row, listener payload or answer of the act holds either, written or refused", async () => {
   const T = "TRACE-ID-7788", M = "MEMBER-REF-9911";
-  for (const opts of [{}, { account: refusalOf("NO_ACCOUNT") }, { away: refusalOf("AI_KEPT_AWAY") }, { answer: { ok: false, reason: "busy" } }]) {
+  // fixtures-contract: agent-worker transcribe-declined
+  for (const opts of [{}, { account: NO_ACCOUNT }, { away: KEPT_GROUP }, { answer: { ok: false, reason: "busy" } }]) {
     const { w, d, payloads, run } = await heldScan(opts);
     const r = await run({ trace: T, memberRef: M });
     assert.doesNotMatch(JSON.stringify(r), /TRACE-ID-7788|MEMBER-REF-9911/, "the answer");

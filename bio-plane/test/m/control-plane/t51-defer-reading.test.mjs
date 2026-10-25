@@ -16,7 +16,7 @@ const handler = (o, seen) => ({ ...defaultHooks(), acquireBoundMs: o.bound ?? 25
   seen.push(typeof ctx.deferReading);
   if (o.wait) await later(o.wait);
   const document = docOf(o);
-  const pending = ctx.deferReading(document);
+  const pending = await ctx.deferReading(document);
   seen.push(pending);
   return M.json(pending ? { ok: true, existed: false, document, reading_pending: true } : { ok: true, existed: false, document: { ...document, reading: { found: true } } });
 } });

@@ -23,6 +23,7 @@ import { checkCaseDocument, CASE_DOCUMENT_FAMILY, caseConclusionRowLines } from 
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { CASE_AUTHORITY_CHECKS, PROJECT_AUTHORITY_CHECKS } from "../../../src/membership/index.mjs";
 import { word, localize } from "../../../src/setup-words/index.mjs";
+import { recordReuseVerdicts } from "../capture/fixtures.mjs";
 
 /* ================================================================ a /6 case document, in op=publish's shape */
 
@@ -368,6 +369,8 @@ const BODIES = new Map([["/one.css", "body{color:#111}"], ["/two.css", ".a{margi
 const PARTS = [...BODIES].map(([path, text], i) => ({ address: `https://${HOST}${path}`, primary_sha: String(i).repeat(64),
                                                         host: HOST, address_norm: `${HOST}${path}`, reused_sha: sha(text) }));
 
+const REUSE_DOC = "INFO-2026-7301-envelope";
+
 /** An information bundle a ratified case's finding rests on, ratified by its owner at the Worker half, with the
  *  outbound GET the re-fetch makes answered from BODIES (and counted). */
 async function reuseRun({ ops = {}, env = {} } = {}) {
@@ -375,7 +378,7 @@ async function reuseRun({ ops = {}, env = {} } = {}) {
   const key = await newKey();
   w.member("alice", { signer: key });
   const P = w.project("Team", "alice");
-  const DOC = "INFO-2026-7301-envelope";
+  const DOC = REUSE_DOC;
   w.promote(DOC, cleanInfoMd(DOC), "information");
   w.pub.resting.set(DOC, [{ case_id: "CASE-2026-0001", finding: "INQ-2026-0001-finding", project: P }]);
   Object.assign(w.ops, ops);
@@ -410,19 +413,19 @@ test("R6 (ratify-envelope site 2): a bundle that genuinely reused nothing carrie
 });
 
 test("R6 (ratify-envelope site 2): a budget-bounded report — two reused parts under a budget of one: one re-fetched with a plain GET and confirmed by our own hash, one not_attempted with a basis naming the ceiling; the answered ceiling is stated and every outcome is handed to the record", async () => {
-  const recorded = [];
-  const r = await reuseRun({ env: BUDGET_ONE, ops: { reusedparts: () => ({ parts: PARTS }),
-                                                     recordreuseverdicts: (url, body) => { recorded.push(body); return { ok: true }; } } });
+  /* capture's own reused parts and its own recorder (its `fixtures.mjs`, made by its real code), read back from its record */
+  const rv = recordReuseVerdicts({ bundleId: REUSE_DOC, host: HOST, parts: [...BODIES].map(([path, text]) => ({ address: `https://${HOST}${path}`, text })) });
+  const r = await reuseRun({ env: BUDGET_ONE, ops: rv.ops });
   assert.equal(r.status, 200, JSON.stringify(r.body).slice(0, 400));
   assert.deepEqual([r.body.reuse.reused_parts, r.body.reuse.budget, r.body.reuse.confirmed, r.body.reuse.changed,
                     r.body.reuse.unavailable, r.body.reuse.not_attempted], [2, 1, 1, 0, 0, 1]);
-  assert.deepEqual(r.fetched, [PARTS[0].address], "one GET, the budget's one");
+  assert.deepEqual(r.fetched, [rv.parts[0].address], "one GET, the budget's one");
   assert.deepEqual(r.body.reuse.outcomes.map((o) => [o.address_norm, o.verdict, o.observed_sha]),
-    [[PARTS[0].address_norm, "confirmed", PARTS[0].reused_sha], [PARTS[1].address_norm, "not_attempted", null]]);
+    [[rv.parts[0].address_norm, "confirmed", rv.parts[0].reused_sha], [rv.parts[1].address_norm, "not_attempted", null]]);
   assert.match(notAttempted(r), /none observed/);
   assert.deepEqual(["ceiling" in r.body.reuse, r.body.reuse.ceiling, "ceiling_unread" in r.body.reuse, "recorded" in r.body.reuse],
     [true, null, false, false]);
-  assert.deepEqual(recorded.map((b) => [b.bundleId, b.verdicts.map((v) => v.verdict)]), [[r.DOC, ["confirmed", "not_attempted"]]]);
+  assert.deepEqual(rv.recorded().map((v) => v.verdict).sort(), ["confirmed", "not_attempted"], "capture's record holds the two verdicts");
 });
 
 test("R6 (ratify-envelope site 7): a capturelimit silence does not write `none observed` — the not_attempted basis says the ceiling was UNREAD and the budget our own appetite; `ceiling` gives way to `ceiling_unread`; it still ratifies", async () => {

@@ -148,14 +148,14 @@ export function profilesAsText(ct, total, multipart) {
 
 /** R102 (fix round 5, E5): THE ONE RULE for reading a file a member brought in as text, shared by the upload and the knock's pull.
  *  `textTypeOf({bytes, type, name})` answers the text content type the bytes are to be profiled and read as, else null: the
- *  declared `type` when it is a text type (`profilesAsText`), or, when none is declared, the type a `.txt`, `.md` or `.csv` name
- *  stands for; and only for bytes that are text, valid UTF-8 with no NUL, within what a profile reads as text (`PROFILE_TEXT_MAX`).
+ *  declared `type` when it is a text type (`profilesAsText`), or, when none is declared, the type a `.txt`, `.md`, `.csv`, `.tsv` or `.tab` name
+ *  stands for (csv-reader's delimited names); and only for bytes that are text, valid UTF-8 with no NUL, within what a profile reads as text (`PROFILE_TEXT_MAX`).
  *  A declared type that is not text is never overridden by a name. Pure; never throws. */
-const NAME_TEXT_TYPES = Object.freeze({ txt: "text/plain", md: "text/markdown", csv: "text/csv" });
+const NAME_TEXT_TYPES = Object.freeze({ txt: "text/plain", md: "text/markdown", csv: "text/csv", tsv: "text/tab-separated-values", tab: "text/tab-separated-values" });
 export function textTypeOf({ bytes = null, type = null, name = null } = {}) {
   try {
     if (!(bytes instanceof Uint8Array) || bytes.length > PROFILE_TEXT_MAX) return null;
-    const named = typeof type !== "string" || type === "" ? /\.(txt|md|csv)$/i.exec(typeof name === "string" ? name : "") : null;
+    const named = typeof type !== "string" || type === "" ? /\.(txt|md|csv|tsv|tab)$/i.exec(typeof name === "string" ? name : "") : null;
     const readAs = named ? NAME_TEXT_TYPES[named[1].toLowerCase()] : type;
     if (typeof readAs !== "string" || readAs === "" || !profilesAsText(readAs, bytes.length, false)) return null;
     /* R120: the one decode; UTF-16 carries NULs by its nature, any other NUL is a binary file; replacement over 0.5 % is not text */
@@ -334,9 +334,9 @@ function openTimings(given) {
   return t;
 }
 function stageBegin(t, name) { stageEnd(t); t.running = { name, since: clockNow() }; }
-function stageEnd(t) {
+function stageEnd(t, at = clockNow()) {
   if (!t.running) return;
-  t.stages[t.running.name] = (t.stages[t.running.name] || 0) + (clockNow() - t.running.since);
+  t.stages[t.running.name] = (t.stages[t.running.name] || 0) + (at - t.running.since);
   t.running = null;
 }
 async function timed(t, name, work) {
@@ -353,9 +353,9 @@ async function splitTimed(t, part, work) {
 /** R95: `{total_ms, stages: {<stage>: ms}}` of an `acquire`, read at any moment: whole milliseconds, every stage floored and
  *  the total ceiled, so the stages sum to no more than the whole; a stage still running names itself as `running`. R103: once the
  *  body is being read, `read_split` states, within `read`, the milliseconds of `download`, `hash` and `store`. */
-export function stageTimes(t) {
+export function stageTimes(t, at = undefined) {
   if (!t || typeof t !== "object" || !t.stages) return { total_ms: 0, stages: {} };
-  const now = clockNow(), stages = {};
+  const now = at ?? clockNow(), stages = {};
   for (const [k, v] of Object.entries(t.stages)) stages[k] = Math.floor(v);
   if (t.running) stages[t.running.name] = Math.floor((t.stages[t.running.name] || 0) + (now - t.running.since));
   const split = t.split ? { download: Math.floor(t.split.download), hash: Math.floor(t.split.hash), store: Math.floor(t.split.store) } : null;
@@ -401,12 +401,16 @@ const registrarOf = (cap, opts) => (cap && typeof cap.registerJob === "function"
   : opts && typeof opts.registerJob === "function" ? opts.registerJob : null);
 /* what a call could not register, for the answer: `[{kind, reason}]`, one per kind */
 const noteJob = (opts, kind, reason) => { const n = opts && opts.jobNotes; if (Array.isArray(n) && !n.some((x) => x.kind === kind)) n.push({ kind, reason: String(reason).slice(0, 80) }); };
+/* R116 (fix round 9, G175; K5005): a row the registrar accepts is followed, once it is written, by the plane's `armJobs` (the store handed in's, else `opts.armJobs`), as capture
+   and extraction arm theirs, so owed work is due at once and not at an alarm set for later. An alarm not armed is the backstop's, never a failed capture. */
+const armerOf = (cap, opts) => (cap && typeof cap.armJobs === "function" ? () => cap.armJobs() : opts && typeof opts.armJobs === "function" ? opts.armJobs : null);
+const armAfter = async (cap, opts) => { const f = armerOf(cap, opts); if (f) { try { await f(); } catch { /* the next alarm arms it */ } } };
 const oweOf = (cap, opts) => {
   const reg = registrarOf(cap, opts);
   if (reg) return async (entry) => {
     let r;
     try { r = reg(entry); } catch (e) { r = { ok: false, reason: "REGISTRAR_THREW" }; }
-    if (r && r.ok === true) return true;
+    if (r && r.ok === true) { await armAfter(cap, opts); return true; }
     noteJob(opts, entry && entry.kind, (r && r.reason) || "REGISTRAR_REFUSED");
     return false;
   };
@@ -417,8 +421,8 @@ const oweOf = (cap, opts) => {
 /* R116: the `keep` hand-off, `keepLater({sha, parts}) -> {ok}`: the registrar's row of kind `keep` keyed by the whole's digest, else the older hook */
 const keepLaterOf = (cap, opts) => {
   const reg = registrarOf(cap, opts);
-  if (reg) return (k) => { let r; try { r = reg({ kind: "keep", sha: k.sha, parts: k.parts }); } catch { r = { ok: false, reason: "REGISTRAR_THREW" }; }
-    if (!(r && r.ok === true)) noteJob(opts, "keep", (r && r.reason) || "REGISTRAR_REFUSED"); return { ok: !!(r && r.ok === true) }; };
+  if (reg) return async (k) => { let r; try { r = reg({ kind: "keep", sha: k.sha, parts: k.parts }); } catch { r = { ok: false, reason: "REGISTRAR_THREW" }; }
+    if (!(r && r.ok === true)) noteJob(opts, "keep", (r && r.reason) || "REGISTRAR_REFUSED"); else await armAfter(cap, opts); return { ok: !!(r && r.ok === true) }; };
   return opts && typeof opts.keepLater === "function" ? opts.keepLater : undefined;
 };
 
@@ -967,12 +971,14 @@ export async function acquire(cap, body0, opts = {}) {
   try { out = await acquireRun(cap, body0, opts || {}, t); }
   catch (e) {
     /* R95 (fix round 4, C5a): a throw is an answer too, with the times the stages had when it was thrown: the stage it cut is `running`. */
-    const cut = stageTimes(t);
-    t.end = clockNow();
+    /* R95 (fix round 9, G177): the cut and the close are ONE clock reading, so the answer's stages are the object's, exactly */
+    const at = clockNow();
+    const cut = stageTimes(t, at);
+    stageEnd(t, at); t.end = at;
     return { status: 500, body: { ok: false, reason: "ACQUIRE_FAILED", op: "acquire", timings: cut,
       detail: localize("acquisition.index.acquire_failed", "the capture stopped on an error ({detail}); nothing is known to have been filed", { detail: String(e && e.message || e).slice(0, 200) }) } };
   }
-  finally { stageEnd(t); t.end = t.end ?? clockNow(); }
+  finally { const at = clockNow(); stageEnd(t, at); t.end = t.end ?? at; }
   /* R95: on every outcome, a refusal included, the answer carries the times of the stages that ran. */
   return out && out.body && typeof out.body === "object" && !Array.isArray(out.body)
     ? { ...out, body: { ...out.body, timings: stageTimes(t) } } : out;
@@ -1784,7 +1790,7 @@ async function acquireRun(cap, body0, opts0, t) {
      read only from a member's own capture (court-doctypes R2) never matches a fetch. */
   stageBegin(t, "profile");
   const profile = await profileOf({ ev, sha, ct, total, multipart, headers: profHeaders, locator: documentAddress, view: pv,
-                                    retrieved, origin: "fetch", parts: renderRecorded ? null : parts, firstPart });
+                                    retrieved, origin: "fetch", name: fetchedName(documentAddress), declaredType: ct, parts: renderRecorded ? null : parts, firstPart });
   /* R4, CAP-8: Google's hop, built from what this call established. Its confirmation is the FORMAT registry's own
      detection over the stored export's BYTES, whole (an OpenDocument package is recognised by its central directory,
      which lies past the first KiB `profile.format` reads for any export of real size): a detection that fell back to
@@ -2039,6 +2045,14 @@ async function addressReputation(address, given, scanner) {
   } finally { clearTimeout(timer); }
 }
 
+/** R17 (G170): the name a fetched address ends in, its last path segment decoded, else null. */
+function fetchedName(address) {
+  try {
+    const seg = new URL(String(address)).pathname.split("/").pop();
+    return seg ? decodeURIComponent(seg) : null;
+  } catch { return null; }
+}
+
 /** R17: the profile of a capture the store holds under `sha`: docprofile's `identify` over the headers, the document
  *  address, the content type and (single-part, textual, within bound) the stored bytes read back; `doctypeFor` under
  *  `view` (`profileView`); `profileRecord`; the normalisation rules and boundary; `format` from the bytes (the first
@@ -2049,7 +2063,11 @@ async function addressReputation(address, given, scanner) {
  *  needs a member's own capture does not match. `firstPart` (R96), the first bytes of the first part when the caller holds them, is
  *  what the ZIP magic is read from, so a capture of several parts reads none back for it. */
 export async function profileOf({ ev, sha, ct = null, total = 0, multipart = false, headers = {}, locator = null, view, retrieved,
-                                  origin = null, parts = null, firstPart = null, unread = null }) {
+                                  origin = null, parts = null, firstPart = null, unread = null, name = null, declaredType = null }) {
+  /* R17 (G170): the file's name and the type its sender declared go to `detectFormat` beside the bytes (format-registry R31's name pass) */
+  const fileName = typeof name === "string" && name ? name : null;
+  const sourceCt = ct;
+  let declared0 = (typeof declaredType === "string" && declaredType ? declaredType : null) || ct || null;
   const pv = view || { view: undefined, ids: null };
   let profileText = "", profileBytes = null, textEncoding = null;
   if (profilesAsText(ct, total, multipart)) {
@@ -2057,6 +2075,14 @@ export async function profileOf({ ev, sha, ct = null, total = 0, multipart = fal
       const pobj = await ev.get(sha);
       if (pobj) {
         profileBytes = new Uint8Array(await pobj.arrayBuffer());
+        /* R17 (G174; K5001): on a fetch as on an upload (capture R107), a declared text type over bytes the one rule (`textTypeOf`, R102) judges not text
+           contradicts the bytes: it decides neither the format nor the text content type. The source's own statement stays recorded as `source_content_type`. */
+        if (origin === "fetch" && textTypeOf({ bytes: profileBytes, type: ct }) === null) {
+          profileBytes = null; ct = null; headers = { ...headers }; delete headers["content-type"];
+          if (declared0 && profilesAsText(declared0, 0, false)) declared0 = null;
+        }
+      }
+      if (pobj && profileBytes) {
         /* R120: one decode for an upload, a fetch and a part; a text it cannot decode is stated, never replacement characters with no failure */
         const d = decodeAs(profileBytes, (headers && typeof headers["content-type"] === "string" && headers["content-type"]) || ct, { kind: /html/i.test(ct || "") ? "html" : /xml/i.test(ct || "") ? "xml" : undefined });
         if (d.ok) { profileText = d.text; textEncoding = { encoding: d.encoding, assumed: d.assumed, replaced: d.replaced, replaced_ratio: d.replaced_ratio }; }
@@ -2083,12 +2109,12 @@ export async function profileOf({ ev, sha, ct = null, total = 0, multipart = fal
     content_type_confidence: docType.confidence, content_type_signals: docType.signals, contract: docType.type.contract || null,
     normalised: (typeof stackId.handler.rules === "function" ? stackId.handler.rules(profCtx) : []).map((r) => ({ region: r.region, label: r.label })),
     boundary: !!(typeof stackId.handler.boundary === "function" && stackId.handler.boundary(profCtx)),
-    source_content_type: ct || null,
+    source_content_type: sourceCt || null,
     profiled_from_text: !!profileText,
     ...(textEncoding ? { text_encoding: textEncoding } : {}),
     /* R17 (N3, N10): which jurisdiction view the content type was judged under. */
     jurisdiction_view: pv.ids,
-    format: detectFormat(formatBytes, ct || null),
+    format: detectFormat(formatBytes, declared0, fileName),
   };
   /* R101 (fix round 9, G130c; amends R17): a capture held in several parts, or whole past the bytes read back, is judged from RANGE READS of its head and of its
      tail, never from a 1 KiB prefix alone: `format-registry.detectFormat` over a range source reads the head for the signatures (an image before a PDF or a web
@@ -2108,12 +2134,12 @@ export async function profileOf({ ev, sha, ct = null, total = 0, multipart = fal
       return new Uint8Array(0);
     } };
     let byBytes = null;
-    try { byBytes = await detectFormat(src, null); } catch { byBytes = null; }
+    try { byBytes = await detectFormat(src, null, fileName); } catch { byBytes = null; }
     if (byBytes && byBytes.format !== "undetermined") profile.format = byBytes;
     else {
       /* no signature in the bytes: the declared type, as before, from the head that was read (a ZIP is never made by a declared type) */
       let declared = null;
-      try { const head = await src.readRange(0, FORMAT_HEAD); declared = detectFormat(head.length ? head : null, ct || null); } catch { declared = null; }
+      try { const head = await src.readRange(0, FORMAT_HEAD); declared = detectFormat(head.length ? head : null, declared0, fileName); } catch { declared = null; }
       profile.format = declared && declared.format === "zip"
         ? { format: "undetermined", confidence: "none",
             signals: [...(declared.signals || []), "the stored bytes were not read as a ZIP archive, so the declared type does not make one"] }
@@ -2433,7 +2459,7 @@ export async function owedRun(cap, entry, opts = {}) {
           if (!(given && given.ok === true)) {
             /* R111 (G105): a refusal no later try changes ends the copy's entry, stated; any other goes again */
             const why = refusalOf(given);
-            if (DELIVERY_FINAL.includes(why)) { try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ } return { ok: true, done: true, final: true, reason: why }; }
+            if (DELIVERY_FINAL.includes(why)) { try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ } return withFacts({ ok: true, done: true, final: true, reason: why }, given); }
             return { ok: true, done: false, outstanding: 1, reason: why };
           }
         }
@@ -2459,7 +2485,7 @@ export async function owedRun(cap, entry, opts = {}) {
         if (!(given && given.ok === true)) {
           /* R111 (G105): as for a finished copy above */
           const why = refusalOf(given);
-          if (DELIVERY_FINAL.includes(why)) { try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ } return { ok: true, done: true, final: true, reason: why }; }
+          if (DELIVERY_FINAL.includes(why)) { try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ } return withFacts({ ok: true, done: true, final: true, reason: why }, given); }
           return { ok: true, done: false, outstanding: 1, reason: why };
         }
         try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ }
@@ -2506,6 +2532,16 @@ const refusalOf = (given) => {
   const c = given && typeof given === "object" ? given.reason ?? given.code : null;
   return typeof c === "string" && c !== "" ? c.slice(0, 80) : "DELIVERY_REFUSED";
 };
+/* R116 (G160): the facts a refusal carried (`kind`, `capture_sha`, `holder`), as the refusing module gave them: from its `detail` when that is a plain object, else from its top level
+   (provenance's own shape). `{}` when it named none, and then no `detail` is added. Pure; never throws. */
+const refusalFacts = (given) => {
+  const out = {};
+  if (!given || typeof given !== "object") return out;
+  const src = given.detail && typeof given.detail === "object" && !Array.isArray(given.detail) ? given.detail : given;
+  for (const k of ["kind", "capture_sha", "holder"]) if (k in src) out[k] = src[k];
+  return out;
+};
+const withFacts = (answer, given) => { const f = refusalFacts(given); return Object.keys(f).length ? { ...answer, detail: f } : answer; };
 const FETCH_RETRY = Object.freeze(["HOST_COOLING_OFF", "FETCH_FAILED", "ACQUIRE_FAILED", "CAPTURE_NOT_KEPT", "ARCHIVE_UNREACHABLE", "EVIDENCE_STORAGE_NOT_CONFIGURED"]);
 export async function owedFetch(cap, entry, opts = {}) {
   try {
@@ -2515,7 +2551,7 @@ export async function owedFetch(cap, entry, opts = {}) {
     const st = ld.state && typeof ld.state === "object" ? ld.state : {};
     if (typeof opts.deliver !== "function") return { ok: true, done: false, outstanding: 1, reason: "DELIVERY_NOT_HANDED" };
     const opener = typeof st.opened_by === "string" ? st.opened_by : "";
-    const final = (reason) => ({ ok: true, done: true, final: true, reason });
+    const final = (reason, given = null) => withFacts({ ok: true, done: true, final: true, reason }, given);
     if (!opener) return final("NO_OPENER");
     let made = st.fetch_done && typeof st.fetch_done === "object" ? st.fetch_done : null;
     if (!made) {
@@ -2558,7 +2594,7 @@ export async function owedFetch(cap, entry, opts = {}) {
                      fetch_pending: { ...(st.fetch_pending && typeof st.fetch_pending === "object" ? st.fetch_pending : {}), failed: why, failed_at: stampSecond() } },
             ttlMs: OWED_SESSION_TTL_MS });
         } catch { /* the entry still ends, stated */ }
-        return final(why);
+        return final(why, given);
       }
       return { ok: true, done: false, outstanding: 1, reason: why };
     }

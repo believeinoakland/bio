@@ -25,6 +25,14 @@ import { peopleOf } from "../../../src/people/index.mjs";
 import { calculationsOf } from "../../../src/calculations/index.mjs";
 import { consequencesModule, Consequences } from "../../../src/consequences/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { noSelection } from "../retrieval/fixtures.mjs";
+import { carryOutcome as caseInputsCarryOutcome } from "../case-inputs/fixtures.mjs";
+import { rungOf as sourcesRungOf } from "../sources/fixtures.mjs";
+
+/* sources' own answers (its published fixture): the real held rung and the real NO_SUCH_SOURCE refusal. */
+const REAL_RUNG = await sourcesRungOf();
+/* case-inputs' own answers to `carryOutcome`: the real NO_SUCH_CASE and BAD_CARRIED_OUTCOME refusals, and a real carried outcome. */
+const REAL_CARRY = caseInputsCarryOutcome();
 
 export const sha = (s) => createHash("sha256").update(Buffer.from(s, "utf8")).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -125,7 +133,7 @@ export function world({ passages = true, group = "test-group", superseded = null
   const entities = entitiesOf(host, { record, membership, provenance: prov });
   entities.migrate();
   const inquiry = inquiryOf(host, { record, membership, promotion, content,
-    retrieval: { selectionResolve: () => ({ ok: false, reason: "NO_SUCH_SELECTION" }) }, provenance: prov,
+    retrieval: { selectionResolve: noSelection().selectionResolve }, provenance: prov,
     now: () => clock.now });
   inquiry.migrate();
   /* connections' tables (promotion writes its `refs`): connections is not this module's use, so the architecture check
@@ -141,7 +149,7 @@ export function world({ passages = true, group = "test-group", superseded = null
   money.migrate();
   /* people's source↔person link names a source `sources` holds (its R9); sources is not this module's use, so a
      stand-in holds every `SRC-` id. */
-  const sources = { rungOf: ({ source }) => (/^SRC-/.test(String(source)) ? { ok: true, rung: "held" } : { ok: false, reason: "NO_SUCH_SOURCE" }) };
+  const sources = { rungOf: ({ source }) => (/^SRC-/.test(String(source)) ? REAL_RUNG.held : REAL_RUNG.unheld) };
   const people = peopleOf(host, { record, membership, entities, provenance: prov, content, events: none, money, duties: none,
                                   lines: none, sources });
   if (typeof people.migrate === "function") people.migrate();
@@ -185,9 +193,9 @@ export function world({ passages = true, group = "test-group", superseded = null
   const noCases = new Set(["CASE-2026-0099"]);
   const caseInputs = {
     carryOutcome: (a) => {
-      if (noCases.has(a.case)) return { ok: false, reason: "NO_SUCH_CASE", detail: "no published case" };
+      if (noCases.has(a.case)) return REAL_CARRY.noSuchCase;
       if (typeof a.text !== "string" || !a.text.trim() || /["\\\r\n]/.test(a.text))
-        return { ok: false, reason: "BAD_CARRIED_OUTCOME", code: "BAD_CARRIED_OUTCOME", field: "text" };
+        return REAL_CARRY.badCarriedOutcome;
       carried.push(a);
       return { ok: true, outcome: `OUT-2026-${String(carried.length).padStart(4, "0")}` };
     },

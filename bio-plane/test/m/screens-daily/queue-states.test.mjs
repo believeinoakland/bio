@@ -4,11 +4,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { collectOwnerRows, fieldMismatches } from "../interface-shell/harness.mjs";
+import { perItemRetained } from "../record-core/fixtures.mjs";
 import { open, ok, refused, refusedIn, text, ops, button, press as pressRaw, beside, last, main, word, hasWord, dmy, withScreens, settle, screen } from "./page.mjs";
 
 // a day well after tomorrow, on the page's own clock (R79 (c): a snooze comes back tomorrow at the earliest)
 const LATER = new Date(Date.now() + 10 * 86400000).toISOString().slice(0, 10);
 const R = "looking";
+const RETAINED = perItemRetained("taskresolve"); // record-core's own answer to a set act that applied one item and retained one
 const press = (p, op, o = {}) => pressRaw(p, op, { reason: R, ...o });
 const PROJ = (id, title) => ({ state: "determined", ungrouped: false, ancestors: [{ id, type: "project", title, depth: 1 }] });
 const NOCASE = { ungrouped: true, ancestors: [] };
@@ -45,8 +47,7 @@ test("R58: Mark them done sends taskresolve once with the chosen items; the outc
   const items = [task("T1"), task("T2"), task("L1", { kind: "filing-approval", disposition: { available: false, instead: "filingapprove" }, options: [] }), finding("F1")];
   const p = await open("/app/queue/choose", {
     queue: queueOf(items),
-    taskresolve: (req) => ok({ ok: false, code: "SET_ITEMS_RETAINED", reason: "SET_ITEMS_RETAINED", count: req.body.items.length, applied: 1, retained: 1,
-      items: [{ index: 0, outcome: "applied", asked: { id: "T1" } }, { index: 1, outcome: "retained", asked: { id: "T2" }, check: "needs_check", translation: "This needs your answer on the check itself." }] }),
+    taskresolve: ok(RETAINED.answer),
   });
   const none = await press(p, "taskresolve", { nth: 0 }).catch(() => null);
   assert.equal(none, null, "control: with nothing chosen there is no strip to press");
@@ -59,7 +60,7 @@ test("R58: Mark them done sends taskresolve once with the chosen items; the outc
   assert.ok(t.includes(word("queue.multi.result", { n: "3", done: "1", kept: "2" })));
   assert.equal(t.split(word("queue.multi.refused")).length - 1, 2);
   assert.ok(t.includes(word("queue.multi.why.letter")), "a letter to approve");
-  assert.ok(t.includes("This needs your answer on the check itself."), "another door's reason is the owner's own translation");
+  assert.ok(t.includes(RETAINED.answer.items[1].translation), "a kept item's reason is the record's own translation");
   assert.ok(main(p).querySelector('a[href="/app/queue"]') && t.includes(word("queue.multi.back")));
   // An item never leaves on a refusal: back on the list the re-read queue still holds the kept items.
   assert.ok(p.byOp("queue").length >= 1);
@@ -89,9 +90,9 @@ test("R58, C71: a set act over a mix says why for every item it does not handle:
 
 test("R58: an item that is a check another member asked of you stays with the check's reason, its own door beside it", async () => {
   const check = task("C1", { kind: "check", disposition: { available: false, instead: "taskresolve" }, options: [] });
-  const p = await open("/app/queue/choose", { queue: queueOf([task("T1"), check]),
-    taskresolve: ok({ ok: false, code: "SET_ITEMS_RETAINED", reason: "SET_ITEMS_RETAINED", count: 1, applied: 1, retained: 0, items: [{ index: 0, outcome: "applied", asked: { id: "T1" } }] }) });
-  await choose(p, ["T1", "C1"]);
+  const p = await open("/app/queue/choose", { queue: queueOf([task("T1"), task("T2"), check]),
+    taskresolve: ok(RETAINED.answer) });
+  await choose(p, ["T1", "T2", "C1"]);
   await press(p, "taskresolve", { nth: 0 });
   const t = text(p);
   assert.ok(t.includes(word("queue.multi.why.check")) && !t.includes(word("queue.multi.why.letter")));

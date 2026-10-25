@@ -53,6 +53,7 @@
  * (its R29). */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
+import { boundOf } from "../read-bounds.mjs";
 import { membershipOf, viewerPredicate, notAnAdmin } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { governorOf, governedFetch } from "../host-governor/index.mjs";
@@ -286,7 +287,7 @@ export const DEADLINE_NO_ZONE = "no time zone is held for the actions' jurisdict
 
 /** R67 (N534): a watched docket is read once a day (R14's `daily`), at most this many bytes of its answer per read. */
 export const DOCKET_READ_INTERVAL_MS = MONITOR_CADENCE_MS.daily;
-export const DOCKET_READ_MAX_BYTES = 8 * 1024 * 1024;
+export const DOCKET_READ_MAX_BYTES = boundOf("monitoring", "docket_read_bytes");
 /** R67: the purpose a docket read's user agent states. */
 export const DOCKET_PURPOSE = "docket";
 /** R67: the reasons a docket read is `unreadable`, beside `http_<status>`. */
