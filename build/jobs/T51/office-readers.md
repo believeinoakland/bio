@@ -1,6 +1,6 @@
 # office-readers (T51)
 
-**Status** · session_01Uhytx8VzpNnUec6KSH9otY · depth 2 · WORKING · handled B21
+**Status** · session_01Uhytx8VzpNnUec6KSH9otY · depth 2 · RUNNING until 2026-10-25T01:24:12Z (plane g41-shape, g44-shape, g123f-cells, r9-memory) · handled B21
 
 ## Completion
 
