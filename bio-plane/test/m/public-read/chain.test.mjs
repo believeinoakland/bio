@@ -1,5 +1,5 @@
-/* public-read R6 (fix round 10, cause 27a; K5083; RATIFICATION #36 J18 (2)): the case-file assembly makes at most three
-   awaited hops in a row: its facts, its one group of bucket calls, its record. The chain is the longest run of calls each of
+/* public-read R6 (fix round 10, cause 27a; K5083; RATIFICATION #36 J18 (2)): the case-file assembly makes at most four
+   awaited hops in a row: its facts, its one group of bucket calls, its puts, its record that also marks it built. The chain is the longest run of calls each of
    which began after the one before it ended, counted by a logical sequence, never by time (R-CLOCK). Red at five before this
    fix; the controls are the container's bytes, the manifest and every refusal, unchanged. */
 import { test } from "node:test";
@@ -8,7 +8,7 @@ import { world, stubOf, bucket } from "./fixture.mjs";
 import { bindPublishedPlane, assembleCaseContainer } from "../../../src/publication/worker.mjs";
 
 const CASE = "CASE-2026-0001", F = "INQ-2026-0001", DOC = "INFO-2026-0001-minutes";
-const CHAIN_BAR = 3;
+const CHAIN_BAR = 4;
 const nap = () => new Promise((r) => setTimeout(r, 2));
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 bindPublishedPlane({
@@ -65,7 +65,7 @@ function chainOf(calls) {
   return Math.max(0, ...depth.values());
 }
 
-test("R6 (cause 27a, K5083): the case-file assembly of a complete edition is a chain of at most 3 awaited hops: its facts, its group of bucket calls, its record (red: 5)", async () => {
+test("R6 (cause 27a, K5083): the case-file assembly of a complete edition is a chain of at most 4 awaited hops: its facts, its group of bucket calls, its puts, its record that also marks it built (red: 5)", async () => {
   const s = scene();
   const t = counted(s);
   const out = await assembleCaseContainer({ env: t.env, stub: t.stub, storeName: "bio", cs: s.cs, via: "test" });

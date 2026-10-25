@@ -119,6 +119,7 @@ test("R6 G54 a success records building, then built only after the manifest's by
   const stub = { fetch: async (req, init) => {
     const r = typeof req === "string" ? new Request(req, init) : req;
     if (new URL(r.url).pathname === "/recordcasefile") order.push(`ledger:${JSON.parse(await r.clone().text()).state}`);
+    if (new URL(r.url).pathname === "/recordcasemanifest") order.push(`manifest:built=${JSON.parse(await r.clone().text()).built}`);
     return real.fetch(req, init);
   } };
   s.env.PUBLISHED.put = async (k, v) => { order.push(`put:${k.slice(-8)}`); return put(k, v); };
@@ -126,7 +127,8 @@ test("R6 G54 a success records building, then built only after the manifest's by
   assert.equal(typeof result.manifest_sha, "string");
   assert.equal(result.case_file, "built");
   const mKey = `put:${result.manifest_sha.slice(-8)}`;
-  assert.ok(order.indexOf(mKey) >= 0 && order.indexOf("ledger:built") > order.indexOf(mKey), `built after the manifest's bytes: ${order.join(" ")}`);
+  /* K5084: the built state is written by the manifest's own record, after its bytes are in the bucket (no separate built write) */
+  assert.ok(order.indexOf(mKey) >= 0 && order.indexOf("manifest:built=true") > order.indexOf(mKey) && !order.includes("ledger:built"), `built after the manifest's bytes: ${order.join(" ")}`);
   assert.equal(order[0], "ledger:building");
   const l = attempts(out);
   assert.equal(l.length, 1);
