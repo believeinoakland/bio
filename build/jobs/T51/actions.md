@@ -143,3 +143,33 @@ Fix round 10, plan item 95 (B8). Commit 551d96cce3 on job/T51/actions (after the
 - impact.mjs names 43 modules, because the actions index file is a shared declared-ops table, and this commit does not change DECLARED_OPS. I ran the seven modules above, which call the paths I changed.
 
 Size (session_015KaatnqWiEo9goK9sy5KDU): test runs 7, module lines 3533
+
+## J10 · COMPLETE
+
+Fix round 10, item 97 (2) (K5198): the two fixtures lines in actions' tests. Commit 96f508a24f on job/T51/actions (after the merge of tranche/T51, 61ae2a7123).
+
+**Entries applied**
+- `bio-plane/test/m/actions/t50.test.mjs:9-25`: the hand-built `determinationRead` stand-in is removed. The determinations are conformance's published `matterStakeBases()` (`conformance/fixtures.mjs:84`), read through its real `determinationRead` as the participant who sees them (`F.viewer`). Assertions unchanged; `matter_stake` is compared with conformance's own `matterStake`.
+- `bio-plane/test/m/actions/t45.test.mjs:1-38`: the stand-in `DETS` and its `NONCOMPLIANT`/`COMPLIANT` imports are removed. The states come from conformance's published fixtures: `voidDetermination()` (VO, the void one, and PUB, the published-finding control), `determinationVariants()` (CO compliant, SU superseded, NC live), `determinationRead()` only as the refusal fallback for an id no fixture holds. A reader routes each id to the fixture it is made in (`conf`, line 38).
+- `t45.test.mjs:46-52` (`grounded`): accepts a conformance and an id list, default the five states above.
+- `t45.test.mjs:145-160` (R75): grounds its own both-basis determination (`determinationBothBases()`, `REAL.both`) beside PUB. Its disclosure expectations are conformance's own basis: the accepted edition was imported without identity or stake, so it reads `identity: null`, `edition_date: null`, `stake` and `matter_stake` `"undetermined"`, and the checked_held `checked_at` is the scene clock. I checked actions' disclosures against the raw `determinationRead` findings: they match field for field, so actions relays exactly what conformance answers.
+
+**Why the t45 states are split across two fixtures.** Each fixture numbers its determinations from `CONF-2026-0001-determination`, so the ids collide across fixtures (`both`, `voided`, `held`, `live` all share 0001). One actions world cannot hold two determinations with one id. So the default set takes ids unique within it: VO and PUB from the void fixture (0001, 0002), CO, SU and NC from the variants fixture (0003, 0004, 0005). R75 alone needs the both-basis one (0001), so it has its own world with PUB (0002). Every state is conformance's real answer; no field is written by hand.
+
+**Tests and checks**
+- Failing first: `fixtures.mjs actions --list` was red before the change (2 failures: `t45.test.mjs:42` the `conf` refusal, `t50.test.mjs:27`); it is at 0 after. The module's tests were green before and after. The first t45 run after the swap had four failures (R8 (a), R8 (d), R75, R76), all from the id collision; after the id split one remained (R75's expected values, which were the stand-in's); after updating those to conformance's values, all 30 pass.
+- actions suite: 155 of 155 (`node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/actions/*.test.mjs`), run without `--test-force-exit`; the run exits by itself.
+- `checks/format.mjs /home/user/bio`: 178 modules, 0 failures. `checks/architecture.mjs /home/user/bio actions`: 0 failures. `checks/coverage.mjs /home/user/bio actions`: 77 of 77 live requirement ids named by a test. `checks/ownership.mjs /home/user/bio actions <merge-base> HEAD`: 0 failures.
+- `checks/fixtures.mjs /home/user/bio actions --list`: 0 failures (0 answers, 0 stubs, 0 codes).
+- `checks/run.mjs /home/user/bio`: no finding in actions' files; its 16 failures are in store-assembly, plane and others this job does not touch. The two files I changed add no string literal to product source, so the words count did not rise.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 1 of 178 (actions), affected test files 2 of 2994.
+
+**Met ids**: none change. The two files name the same ids as before (`R8`, `R74`, `R75`, `R76`, `R105`, `R106`, `R107`, plus the t45 and t50 ids in their titles). No requirement was edited.
+
+**Markers added**: none. No `fixtures-own` or `fixtures-generic`.
+
+**Deferred**: none.
+
+**Found in other modules**: none new. This closes REPORT items 1 and 2 of my earlier record (J8), now that conformance (#28) publishes these states. One note for BOB, not a defect: conformance's fixtures each number their determinations from 0001, so a test cannot put two of its states in one world. A single published fixture holding NC (both bases), CO, VO, SU and PUB with distinct ids would let t45 ground all five in one world without the split above.
+
+Size (session_01UPyQp2ZbB7wjPqmg4PELgH): test runs 8, module lines 3533
