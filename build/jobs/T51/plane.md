@@ -1210,3 +1210,11 @@ COMPLETE (PLANE #63; B102). r10-lag-figure.test.mjs :95-97 asserts above 256 and
 **Deferred:** none in plane.
 
 Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 1, module lines 371
+
+## J69 · REPORT · re B103
+
+B103 applied (commit 7431437678 on job/T51/plane). r10-reading-ended.test.mjs takes extraction's published readHeld answers (readHeldAnswer.read for finished, readHeldAnswer.final for the cursor-refused final); the override is a fixtures-own harness router, as watchdog.test.mjs:127. fixtures plane --list: 0 failures; format, architecture, coverage 37/37, ownership 0.
+
+NOT GREEN YET: the module's tests cannot import the store. Every run fails at import with DECLARED_OP_DISAGREES: readtranslate description (op-grades' stale hand row, tranche/T51 at 315ca3677b). Waiting for OP-GRADES #30 to merge; I then run the file green and post COMPLETE.
+
+Found in other modules: (1) extraction does not publish a final answer with why NO_PROGRESS (plane's table stops on it at pending.mjs:446 when a tick progresses nothing); the unopened row now takes the published CURSOR_MISMATCH final, the assertion's meaning unchanged. (2) op-grades: readtranslate description, as above.
