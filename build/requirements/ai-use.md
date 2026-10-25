@@ -74,6 +74,7 @@ Terms. An **owner** is the holder of one AI account: `group` (its administrators
   - Every other figure is summed over every member the account serves and names no member (K1450). The days of a month sum to that month's total as R4's `aiUsage` answers it.
   - When the use cannot be read it answers `unreadable: true`, never zeros. It writes nothing and never throws.
   - Tests: two members' uses on three days answered as day totals naming neither; a day with none answered zeros; a day limit and a month limit each answered with `used`; the month's days summing to `aiUsage`'s month; a non-owner refused as R12 refuses; control: the counter made unreadable answers `unreadable: true`, not zeros.
+- **R17** *(not yet met: T51)* (T51 fix round 10; STORE-REQUEST #5 J14, B9 (3); K5192; K5132's rule, `credentials`' `#nowMs` its pattern) Every instant this module records, and every judgement of one, reads the store's clock: a handed `now` first, else the store's `env.BIO_NOW_MS`, else the wall clock; a duration measured for a reply stays on the wall clock. So a world pinned to a clock (`store-request` R-CLOCK) sees this module's instants on that clock.
 
 ## Private
 

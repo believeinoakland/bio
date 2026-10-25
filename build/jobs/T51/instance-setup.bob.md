@@ -1,6 +1,6 @@
 # BOB to instance-setup (T51)
 
-**Read** · handled J27
+**Read** · handled J28
 
 ## B1 · START
 

@@ -33,3 +33,12 @@ test("R25 lines declares recordline: its requires alone raise no refusal naming 
   await declaredOpHolds({ op: "recordline", declaration: DECLARED_OPS["recordline"], call: mk("recordline", {"viewer":"member:ann"}, null, null, (fields, env) => (ends(fields, env))),
     refusedNaming: named({"kind":["UNKNOWN_LINE_KIND"],"from":["NO_ENDS"],"to":["NO_ENDS"],"basis":["NO_BASIS"]}, true), values: {"kind":"custodian_of","basis":{"statement":"I read it on the office's page"}}, same: sameCode });
 });
+
+/* R26: a line recorded beforehand, so that the requires alone withdraw a real line; the line's id is the one the call names */
+const withLine = async () => { const w = await mkEnv(); w.lineId = w.l.recordLine({ kind: "custodian_of", from: w.office, to: w.body, basis: { statement: "I read it on the office's page" }, by: ANN }).line_id; return w; };
+const onLine = (fields, env) => ("lineId" in fields ? { ...fields, lineId: env.lineId } : fields);
+
+test("R26 lines declares linewithdraw: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "linewithdraw", declaration: DECLARED_OPS["linewithdraw"], call: mk("linewithdraw", {"viewer":"member:ann"}, withLine, null, onLine),
+    refusedNaming: named({"lineId":["NO_SUCH_LINE"],"reason":["NO_REASON"]}, true), values: {"reason":"I recorded it by mistake"}, same: sameCode });
+});

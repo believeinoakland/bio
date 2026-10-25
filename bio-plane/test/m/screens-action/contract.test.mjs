@@ -2,6 +2,7 @@
    (`SCREENS`, `SCREEN_WORDS`) and on the real served page (interface-shell's harness). The registry is the design
    stream's `registry.json` as merged into `tranche/T47` at PR #33's head (wizard-scripts R35). */
 import test from "node:test";
+import { actionWorld, openIn } from "./world-B.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -117,7 +118,7 @@ test("R7 (interface-shell R23): no place is named in the words this module reads
   for (const k of SCREEN_WORDS) assert.ok(!/California|Oakland|Alameda|NextRequest|Sunshine Ordinance|Government Code/.test(EN.get(k) || ""), k);
 });
 
-const DATA = ["River Town", "Inspection logs, 2025", "a letter from the city's counsel", "Pothole repairs", "Repairs: closed is not repaired", "INQ-2026-ffffffffffffffff", DET, "STD-1", "STD-2", ESC, ACTION_ID, PLAN_ID, PROJECT,
+const DATA = ["River Town", "Inspection logs, 2025", "a letter from the city's counsel", "Pothole repairs", "Repairs: closed is not repaired", "INQ-2026-ffffffffffffffff", DET, "STD-1", "STD-2", "Lease §7.2", "Lease §9.1", ESC, ACTION_ID, PLAN_ID, PROJECT,
   "a suspected matter", "determined", "Records request: inspection logs", "Story with a reporter", "Complaint to the auditor",
   "first, to see what closed means", "Records first", "Phase 1", "opt-1", "Scenario 1: no branch answers a hostile response to the records request.",
   "Ask the committee to agendize repair performance", "the committee oversees repairs", "machine work", `inquiry:INQ-2026-ffffffffffffffff`, `outcome:${DET}#STD-1`,
@@ -276,13 +277,17 @@ test("R14: a section, list or reading that holds nothing is not drawn, and no co
     plan: ok({ ...PLAN, subjects: [], options: [], scenarios: [], offers: [], checks: [] }),
     action: ok({ ...ACTION, clock: [], correspondence: [], entries: [], reply_owed: { owed: false }, governing_laws: { state: "undetermined", laws: [], by: null, at: null, stated: "x" }, governing_laws_proposals: { proposals: [] }, risk_tier: "undetermined", risk_tier_history: { revisions: [] }, risk_tier_proposals: { proposals: [] } }),
     determination: ok({ ...DETERMINATION, standards: [], outcomes: [] }), consequencesof: ok({ ...CONSEQUENCES, parts: [] }),
-    escalationstatus: ok(STATUS_NONE), escalation: ok({}), pressurefor: ok({ ok: true, items: [], limit: 500, truncated: false, cursor: null }),
+    escalationstatus: ok(STATUS_NONE), escalation: ok({}),
     profiles: ok({ ...PROFILES, view: { deadlines: [] } }),
   };
   const reach = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }), planproposals: ok({ plan: PLAN_ID, run: "RUN-1", proposals: [], says: "x" }) };
+  const { world, me, action } = await actionWorld();
   for (const [path, extra] of [[ROUTES.plan, reach], [ROUTES.plan, {}], [ROUTES.action, {}], [ROUTES.matter, {}], [ROUTES["help-records"], {}], [ROUTES.request, {}], [`/app/start-send/${ACTION_ID}`, {}],
     [`/app/request/${PROJECT}`, { addresseesuggest: ok({ subject: PROJECT, offices: [], suggestion: true }), whoami: ok(ADMIN) }]]) {
-    const p = await open(path, { ...DATA_PLANE, ...empty, ...extra });
+    /* the action's marks are the store's: `pressurefor` is read from the world's real action, which no act has marked (the action's page is opened at its real id) */
+    const p = path === ROUTES.action ? await openIn(world, me, `/app/action/${action}`, { ...DATA_PLANE, ...empty, ...extra, action: ok({ ...empty.action.json.result, id: action }) })
+      : await open(path, { ...DATA_PLANE, ...empty, ...extra });
+    if (path === ROUTES.action) assert.deepEqual(p.byOp("pressurefor").map((r) => r.query.action), [action], "the marks were read from the store");
     for (const sec of main(p).querySelectorAll("section.cs-section")) {
       const head = (sec.querySelector("h2") || { textContent: "" }).textContent;
       assert.ok(sec.textContent.replace(head, "").trim() || sec.querySelector("button, input, select, textarea"), `${path}: an empty section "${sec.textContent.trim().slice(0, 40)}"`);

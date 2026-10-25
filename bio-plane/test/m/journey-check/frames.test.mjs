@@ -11,8 +11,10 @@ import { browser } from "../../../src/journey-check/run.mjs";
 import { Walk, FAIL } from "../../../src/journey-check/walker.mjs";
 import { designMock, WIDTHS } from "../../../src/journey-check/design.mjs";
 import { CARRIED_STATES, walkStates } from "../../../src/journey-check/states.mjs";
-import { walkPublished } from "../../../src/journey-check/published.mjs";
-import { word, localize } from "../../../src/setup-words/index.mjs";
+import { walkPublished, NO_PUBLISHED_NOTE } from "../../../src/journey-check/published.mjs";
+import { walkDashboards } from "../../../src/journey-check/journeys.mjs";
+import { fakePlane, publishedPage } from "./fake-plane.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const COMMIT = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
 let B, dir, mock;
@@ -43,25 +45,34 @@ test("R21: a state the live screen reaches is paired at both widths; control: a 
   assert.deepEqual(walk.notes, [localize("journey-check.states.name_not_reached_on_this_instance", "{name}: not reached on this instance", { name: `${states[1].screen}, ${states[1].state}` })]);
 });
 
-/* a fixture instance holding a published case, drawn as the screen draws it: the minimum strength, the filtered view's notice and
-   its way back, a finding's page, and a press on Print the case; `bad` makes the minimum a request */
+test("R21: on the local arm a state that cannot be reached fails by its name, on the live arm it is a note; a reached state passes on both", { timeout: 300000 }, async () => {
+  const states = CARRIED_STATES.filter((s) => s.screen === "project").slice(0, 2);
+  const name = (st) => `${st.screen}, ${st.state}`;
+  const ctx = await B.newContext(); const page = await ctx.newPage();
+  const reach = { [name(states[0])]: async (p) => { await p.setContent("<main>the state</main>"); return true; } };
+  const local = new Walk({ out: join(dir, "c"), arm: "local" });
+  const wrote = await walkStates(local, B, mock, { out: local.out, page, base: "http://x", states, reach });
+  const live = new Walk({ out: join(dir, "d"), arm: "live" });
+  await walkStates(live, B, mock, { out: live.out, page, base: "http://x", states, reach });
+  await ctx.close();
+  assert.equal(wrote.length, 2, "the reached state is paired at both widths");
+  assert.deepEqual(local.failures.map((f) => f.kind), [FAIL.STATE]);
+  assert.ok(local.failures[0].detail.startsWith(name(states[1])), "the failure names the state");
+  assert.deepEqual(local.notes, []);
+  assert.deepEqual(live.failures, []);
+  assert.equal(live.notes.length, 1);
+});
+
+/* a fixture instance holding a published case (fake-plane.mjs `publishedPage`, drawn as the screen draws it); `bad` makes the minimum a request */
 function publishedInstance({ bad = false } = {}) {
   const seen = [];
-  const page = (body) => `<!doctype html><html><head><title>Published</title><link rel="stylesheet" href="/app/assets/civicsmith.css"></head><body><main id="cs-main" data-screen="published">${body}</main></body></html>`;
-  const whole = `<h1>Case</h1><label for="min">${word("screen.published.show.only.findings.this.strong")}</label><select id="min"><option>Any</option><option>Firm</option></select>
-<p id="notice" hidden>${word("screen.published.this.is.part.of.the.many", { n: 1, total: 3, hidden: 2 })} <a id="back" href="/app/published/c1">${word("screen.published.back.to.the.whole.case")}</a></p>
-<a href="/app/published/c1/finding/1">${word("screen.published.finding", { n: 1 })}</a>
-<button id="print">${word("act.owed_pubprint.label.published")}</button>
-<footer>${word("screen.published.signed.for.lakeshore.tenants.by", { team: "Lakeshore Tenants", member: "Rosa", date: "1 October 2026", fingerprint: "ab12" })}</footer>
-<script>document.getElementById("min").onchange = () => { ${bad ? 'fetch("/api/?op=minimum", { method: "POST", body: "{}" });' : ""} document.getElementById("notice").hidden = false; };
-document.getElementById("print").onclick = () => window.print();</script>`;
   const server = createServer((req, res) => {
     seen.push(`${req.method} ${req.url}${req.headers.authorization ? " AUTH" : ""}`);
     const send = (s, t, b) => { res.writeHead(s, { "content-type": t }); res.end(b); };
     if (req.url.startsWith("/app/assets/")) return send(200, "text/css", "main{}");
     if (req.url.startsWith("/api/")) return send(200, "application/json", '{"ok":true}');
-    if (req.url.includes("/finding/")) return send(200, "text/html", page("<h1>Finding 1</h1>"));
-    return send(200, "text/html", page(whole));
+    if (req.url.includes("/finding/")) return send(200, "text/html", publishedPage().replace(/<main[\s\S]*<\/main>/, '<main id="cs-main" data-screen="published"><h1>Finding 1</h1></main>'));
+    return send(200, "text/html", publishedPage({ bad }));
   });
   return new Promise((ok) => server.listen(0, "127.0.0.1", () => ok({ base: `http://127.0.0.1:${server.address().port}`, seen, close: () => server.close() })));
 }
@@ -89,6 +100,28 @@ test("R24 control: a page that sets a minimum by a request fails; with no case t
   } finally { inst.close(); }
   const none = new Walk({ out: join(dir, "e"), arm: "live" });
   await walkPublished(none, B, "http://127.0.0.1:9", mock, { path: "", out: none.out });
-  assert.deepEqual(none.notes, ["published: no case on this instance"]);
+  assert.deepEqual(none.notes, [NO_PUBLISHED_NOTE]);
   assert.deepEqual(none.steps, []);
+});
+
+test("R22: each dashboard is paired with the design's drawing at both widths where the arm gives the mock (the local arm); control: a mock that draws neither fails each by name", { timeout: 300000 }, async () => {
+  const fp = await fakePlane({});
+  try {
+    const walk = new Walk({ out: join(dir, "f"), arm: "local" });
+    walk.copyHost = new URL(fp.base).host;
+    const ctx = await B.newContext(); const page = walk.watch(await ctx.newPage());
+    try { await walkDashboards(walk, page, fp.base, { mock, b: B, out: walk.out }); } finally { await ctx.close(); }
+    assert.deepEqual(walk.failures, [], JSON.stringify(walk.failures));
+    for (const id of ["dash-project", "dash-action"]) for (const w of WIDTHS) {
+      const file = `pairs/dashboard-${id}-${w}.png`;
+      assert.ok(walk.pairs.includes(file), file);
+      assert.ok(existsSync(join(walk.out, file)), file);
+    }
+    const bare = new Walk({ out: join(dir, "g"), arm: "local" });
+    bare.copyHost = walk.copyHost;
+    const ctx2 = await B.newContext(); const page2 = bare.watch(await ctx2.newPage());
+    try { await walkDashboards(bare, page2, fp.base, { mock: { commit: "none", draw: async () => null }, b: B, out: bare.out }); } finally { await ctx2.close(); }
+    assert.deepEqual([...new Set(bare.failures.map((f) => f.kind))], [FAIL.DESIGN]);
+    assert.deepEqual(bare.pairs, []);
+  } finally { await fp.close(); }
 });

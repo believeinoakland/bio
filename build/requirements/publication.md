@@ -164,6 +164,7 @@ Terms. A **case** is a production of one project over one or more findings (inqu
 #### The attesting member's credit for off-the-record material (DEC-119 (3); N523)
 
 - **R60** *(retired: moved to `case-tensions` R7, a capture's attribution; K617, K1505 (1), T33-62)*
+- **R79** *(not yet met: T51)* (T51 fix round 10; K5187; `case-catalogue` R6) `caseDocumentFacts`' `memberBasis` (`#pinnedMemberBasis`) is each member's `{basis, references}` at its pinned bytes.
 
 ## Private
 

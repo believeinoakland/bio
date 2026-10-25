@@ -1901,6 +1901,15 @@ export const DECLARED_OPS = Object.freeze({
     description: "request-directed: retries a capture request the source refused, keyed by request id; travels with the request in op=capturerequests",
     fields: { accepts: ["request"], requires: ["request"] },
   },
+  /* R59 (fix round 10; K5182): a read, so its weight is `read` and its description the read sentence, as a read's hand row
+     states it; its query fields are the filters its arm reads, the viewer stamp excluded. */
+  capturerequests: {
+    classes: ["admin", "member", "probe"],
+    mutating: false,
+    weight: "read",
+    description: localize("capture-requests.index.declared_capturerequests", "read: the capture requests whose target the viewer can see, filtered by run, target and state, oldest first, bounded; writes nothing"),
+    fields: { accepts: ["run", "target", "state", "limit"], requires: [] },
+  },
 });
 
 /** The op handlers the control plane routes to (K3): `capturerequest`, `capturerequestdrain`, `capturerequests`,

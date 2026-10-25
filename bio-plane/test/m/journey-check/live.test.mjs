@@ -12,12 +12,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { runLive, browser, directFetch } from "../../../src/journey-check/run.mjs";
-import { FAIL } from "../../../src/journey-check/walker.mjs";
+import { FAIL, Walk } from "../../../src/journey-check/walker.mjs";
 import { sweepScreens } from "../../../src/journey-check/screens.mjs";
 import { developerWords, assetsCommit, designMock, WIDTHS } from "../../../src/journey-check/design.mjs";
-import { fakePlane } from "./fake-plane.mjs";
-import { STEP_NAMES } from "../../../src/journey-check/investigation.mjs";
+import { fakePlane, PUBLISHED_PATH } from "./fake-plane.mjs";
+import { STEP_NAMES, notReady } from "../../../src/journey-check/investigation.mjs";
 import { ACTION_BLOCK_NOT_DRAWN } from "../../../src/journey-check/journeys.mjs";
+import { NO_PUBLISHED_NOTE } from "../../../src/journey-check/published.mjs";
 import { localize } from "../../../src/setup-words/index.mjs";
 
 const SRC = join(import.meta.dirname, "..", "..", "..", "src", "journey-check");
@@ -267,4 +268,43 @@ test("R28 (live arm): a screen whose tab title is not the word of its screen fai
   assert.equal((await cleanWalk()).walk.failures.filter((f) => f.kind === FAIL.DEC340).length, 0);
   const walk = (await cleanWalk()).walk;
   assert.ok(walk.steps.some((s) => s.journey === "R28 the public pages"), "the public pages are walked signed out");
+});
+
+test("R24 (live arm): the published case the environment names is walked signed out at both widths, a minimum set, a finding opened, Print the case pressed, and no request carries an Authorization header; control: with none named the note is written and nothing is walked", { timeout: 300000 }, async () => {
+  const fp = await fakePlane({ admins: { ada: true }, published: true });
+  try {
+    const out = join(dir, String(Math.random()).slice(2));
+    const r = await runLive({ base: fp.base, env: { ...ENV, JOURNEY_PUBLISHED_CASE: PUBLISHED_PATH }, out, commit: COMMIT, screens: only("members"), investigate: false });
+    assert.deepEqual(r.walk.failures.filter((f) => /published/.test(f.step || "") || /published/.test(f.detail)), [], r.report);
+    for (const w of WIDTHS) assert.ok(r.walk.pairs.includes(`pairs/published-${w}.png`), `pairs/published-${w}.png`);
+    assert.ok(r.walk.steps.some((s) => /Print the case/.test(s.label) && s.ok), r.report);
+    assert.ok(!r.walk.notes.includes(NO_PUBLISHED_NOTE));
+    /* the arm signed in and swept as a person does, and the published case was opened with no session at all: the requests for it carry no credential */
+    const forCase = fp.seen.filter((x) => x.includes(PUBLISHED_PATH));
+    assert.ok(forCase.length >= 4 && forCase.every((x) => !/ AUTH$/.test(x)), JSON.stringify(forCase));
+    const none = await runLive({ base: fp.base, env: ENV, out: join(dir, String(Math.random()).slice(2)), commit: COMMIT, screens: only("members"), investigate: false });
+    assert.ok(none.walk.notes.includes(NO_PUBLISHED_NOTE), none.report);
+    assert.ok(!none.walk.steps.some((s) => /Print the case/.test(s.label)));
+  } finally { await fp.close(); }
+});
+
+test("R20 control: a screen that draws an assistant control while the assistant does not work fails by name, its step reported not walked; the same screen without it passes", { timeout: 300000 }, async () => {
+  const stepOn = async (plane) => {
+    const fp = await fakePlane(plane);
+    const b = await browser();
+    try {
+      const walk = new Walk({ out: join(dir, String(Math.random()).slice(2)), arm: "live" });
+      walk.copyHost = new URL(fp.base).host;
+      const ctx = await b.newContext(); const page = walk.watch(await ctx.newPage());
+      await notReady(walk, page, fp.base, { label: "assistant not ready: the Ask screen", path: "/app/answers", screen: "answers", names: [STEP_NAMES.ask] });
+      await ctx.close();
+      return walk;
+    } finally { await b.close(); await fp.close(); }
+  };
+  const bad = await stepOn({ askControl: true });
+  assert.ok(bad.failures.some((x) => x.kind === FAIL.STEP && /answers draws an assistant control that cannot work while the assistant does not: act ask/.test(x.detail)), JSON.stringify(bad.failures));
+  assert.ok(bad.notes.includes(localize("journey-check.walker.name_not_walked_the_assistant", "{name}: not walked, the assistant does not work (K3717)", { name: STEP_NAMES.ask })));
+  const good = await stepOn({});
+  assert.deepEqual(good.failures, [], JSON.stringify(good.failures));
+  assert.ok(good.steps.some((s) => s.label === "assistant not ready: the Ask screen" && s.ok));
 });
