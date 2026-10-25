@@ -270,3 +270,41 @@ The refusal code matches the contract, and each part is exactly `{bundle_id, cap
 START B13 carried another job's "Re-point" paragraph and its "Done" line; CHANGE B14 said to ignore them, and I did.
 
 **Size (session_01B3sty8GH9yv5VdR2zqwU5D): test runs 4, module lines 2645** (code lines, comments and blanks excluded, across `deliverer.mjs` and `publication/`).
+
+## J16 · COMPLETE
+
+R79 (fix round 10, plan item 93; K5187) · publication: complete. Commit 060721ec62 on job/T51/publication (merged tranche/T51 first, no rebase).
+
+**What changed.**
+- `bio-plane/src/publication/index.mjs:1853-1859` (`#pinnedMemberBasis`): each pinned member's entry is now `{basis, references}`, both read at the same pin (`basis` as before, `references` from the member's own frontmatter, `[]` when absent). The call-site comment at `index.mjs:1838` states the shape.
+- `bio-plane/test/m/publication/casedoc.test.mjs`: new test "R79 caseDocumentFacts' memberBasis for a member whose pinned bytes hold references ..." (a confirmed and a severed citation, both read back from the pin). Two existing assertions (R2) now read `.basis` of the entry, because the contract changed; no assertion was weakened.
+
+**Failing first.** The R79 test was red before the change (`TypeError: Cannot read properties of undefined (reading 'map')`, the member entry was a bare array) and green after.
+
+**Tests (from /home/user/bio).**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/publication/*.test.mjs`: tests 186, pass 185, fail 0, todo 1 (the todo was already there).
+- Cross-module, because `caseDocumentFacts` feeds ratification's gate and queue-producers: ratification + case-checker + case-catalogue: 460 tests, 455 pass, 5 fail (see below); queue-producers + case-authoring: 416 of 416 pass.
+
+**Checks.**
+- `checks/format.mjs /home/user/bio`: 178 modules, 178 requirements files; 0 failures.
+- `checks/architecture.mjs /home/user/bio publication`: 41 product files, 146 relative imports; 0 failures. (The setup-words edge from J3 is no longer reported after the tranche merge.)
+- `checks/coverage.mjs /home/user/bio publication`: 49 of 49 live requirement ids named by a test; 0 failures.
+- `checks/ownership.mjs /home/user/bio publication db837aea7f HEAD`: 0 failures (publication's own files only).
+- `checks/fixtures.mjs /home/user/bio publication --list`: 0 failures, but it lists one accepted entry, `bio-plane/test/m/publication/door.test.mjs:95 accepted(store-replies)`. That file is untouched by this round and was already on the tranche; it is not zero, and I did not change it.
+- `checks/run.mjs /home/user/bio`: architecture 0 failures; words 16 failures, none in publication (all in store-assembly and plane; no string literal was added here).
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 60 of 178 modules, 1276 of 2966 test files. I ran the consumers of what changed (ratification, case-checker, case-catalogue, queue-producers, case-authoring) as above.
+
+**Failures in other modules, reported, not fixed here.**
+- `case-checker/program.mjs` is stale (`program.test.mjs:26`, R13 and R25). The bundle contains no publication source (grep for `pinnedMemberBasis` is 0), so my change does not stale it. Not mine to regenerate.
+- `ratification/release.test.mjs:121-129` (R21) and `ratification/retire.test.mjs:96-104, 287-299` (R29, R32): they expect `NOT_YOURS` and get `SELECTION_NOT_YOURS`. That is retrieval's refusal wording, not member basis.
+- Ask for BOB: `case-catalogue/checks.mjs:920-921` still reads `Array.isArray(basis)` only. Until case-catalogue's own job lands the `{basis, references}` reader (BOB's packaging, K5187), a member's basis from publication's producer is dropped at that arm (the C-2.8 member arm sees no basis for it). The R31 chain test is case-authoring's and should be re-run after all four jobs merge.
+
+**Deferred.** None.
+
+**Deviations.** None from the START. The commit contains no model identifier, per the session's rule.
+
+**Met ids.** R79 (BOB strikes the mark).
+
+**Markers added.** None (no `fixtures-own` or `fixtures-generic`).
+
+Size (session_01KLH6dtogMA9e51LgYdJSJm): test runs 5, module lines 3612 (awk count of non-blank, non-comment lines over `bio-plane/src/publication/*.mjs` and `deliverer.mjs`; a different counting method from the earlier record's 2444, so the two figures are not comparable).
