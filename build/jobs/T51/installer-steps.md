@@ -404,3 +404,7 @@ Size (session_01PdTWUBacQLSzCMnpG4EoW6): test runs 3, module lines 2182
 **Tests and checks.** `newgroup/test/steps/*.test.mjs`: 123 tests, 121 pass, 0 fail. words 0 failures; format 0 failures; coverage 45 of 45; ownership 0 failures; architecture 1 failure (above); fixtures `--list` 1 failure (selftest, waiting); impact: 0 affected modules.
 
 Size (session_01Qsr6sBAiKXETnXBTaFti8B): test runs 2, module lines 1,734
+
+## J28 · COMPLETE
+
+Batch 6 fixtures: 2 of 3 lines done (credentials/bootstrapVersions, verify.test.mjs R28); 1 waiting: instance-setup/selftestAnswer (verify.test.mjs:49) — provider fixtures.mjs is only on job/T51/instance-setup, not on tranche/T51 (abc0c02d68); re-send CHANGE once merged. NEEDS BOB: architecture check fails once, installer-steps' uses in modules.json lacks 'credentials' for the new fixtures import. Tests 121 pass/0 fail, words/format/coverage/ownership green. No fixtures-own/generic markers added. Details in record.
