@@ -138,9 +138,9 @@ export function withheldByCourtOrder(sha256, withheld) {
 
 /* R28: of `shas`, the ones a court order in force withholds, asked of the store (`op=withheld`): `{answered: true,
    withheld}` with `withheld` an object of hash to orders, empty for none; or the unanswered reply, relayed by the caller. */
-async function withheldOf(stub, shas) {
+async function withheldOf(stub, shas, zip = null) {
   const P = plane();
-  const out = await P.doAnswer(stub.fetch(`http://do/withheld?sha256=${shas.map(encodeURIComponent).join(",")}`));
+  const out = await P.doAnswer(stub.fetch(`http://do/withheld?sha256=${shas.map(encodeURIComponent).join(",")}${zip ? `&zip=${encodeURIComponent(zip)}` : ""}`));
   if (!out.answered) return out;
   const w = out.result && out.result.withheld && typeof out.result.withheld === "object" ? out.result.withheld : {};
   return { answered: true, withheld: w };
@@ -723,7 +723,7 @@ export async function publishedRoutes({ op, url, env, stub }) {
     const listedShas = [...new Set((Array.isArray(source.parts) ? source.parts : [])
       .map((p) => p && p.sha256).filter((x) => typeof x === "string" && /^[0-9a-f]{64}$/.test(x)))];
     if (listedShas.length) {
-      const zOut = await withheldOf(stub, listedShas);
+      const zOut = await withheldOf(stub, listedShas, shaParam);
       if (!zOut.answered) return relayUnanswered(zOut, "publishedbytes");
       if (Object.keys(zOut.withheld).length) return P.json(withheldByCourtOrder(shaParam, zOut.withheld), 451);
     }

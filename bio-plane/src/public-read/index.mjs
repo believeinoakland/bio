@@ -138,6 +138,8 @@ export function caseWordsOf(fm) {
 /* R23: a text held by `publication`'s `publishedMaterialText` (its R57), whichever shape it answers in. */
 const heldText = (v) => (typeof v === "string" ? v : v && typeof v.text === "string" ? v.text : null);
 const HEX64 = /^[0-9a-f]{64}$/;
+/* R28 (K5148): the case-file kinds that are the grammar's scaffolding and hold no member material of their own: the criteria, and a finding's facts files (a finding's own bytes are its `finding` kind). */
+const SCAFFOLD_KINDS = new Set(["criteria", "grading_facts", "passages"]);
 /* R5 (T46; N906, K2832): a SHA-256 of 64 hexadecimal digits in upper or mixed case is read as its lowercase form, by
    the store as by the Worker, never refused for its case; anything else is answered as given. */
 const lowerSha = (v) => (typeof v === "string" && /^[0-9a-fA-F]{64}$/.test(v) ? v.toLowerCase() : v);
@@ -1187,6 +1189,9 @@ export class PublicRead {
       const by = withheldBy(fnd.bundle_sha);
       if (by)
         return { ...fnd, title: null, serves: [], names: [], unresolved: [],
+                 /* R28 (K5148): the row's other content is the case document's (its strength pair, grounds, exclusion
+                    text) or the member's `required`; identity facts (hash, signer, attestor, role, edition) stay. */
+                 case_excludes: null, strength: null, grounds: null, required: null,
                  division: { parent: null, siblings: [], detail: WITHHELD_SENTENCE },
                  parts: (fnd.parts || []).map((p) => ({ ...p, withheld: true })),
                  withheld: { orders: by, detail: WITHHELD_SENTENCE } };
@@ -1744,7 +1749,7 @@ export class PublicRead {
          path reaches every capture's file; a copy is also known by its capture's `document` path. A file without a
          capture in its path is known as it was. */
       const capture = entry && entry.capture ? entry.capture : null;
-      items.push({ sha256: f.sha256, paths: ref ? [f.path, caseFilePath("document", ref),
+      items.push({ sha256: f.sha256, scaffold: !!(entry && SCAFFOLD_KINDS.has(entry.kind)), paths: ref ? [f.path, caseFilePath("document", ref),
         ...(capture ? [caseFilePath("document", [ref, capture])] : []),
         ...(originalsOfCopy.get(f.sha256.toLowerCase()) || [])]
         : capture ? [f.path, caseFilePath(entry.kind, entry.ref)] : [f.path] });
@@ -1763,34 +1768,48 @@ export class PublicRead {
      object, so bytes an order withholds under one edition are withheld wherever they would be served (J1 (5)). The
      stamps are one read (`#stampedEditions`); only an edition with a stamp is opened. */
   #withheldIndex() {
-    const editions = new Map(), bySha = new Map();
+    const editions = new Map(), bySha = new Map(), scaffoldBy = new Map();
     const stamped = this.#stampedEditions();
-    if (!stamped.size) return { editions, bySha };
+    if (!stamped.size) return { editions, bySha, scaffoldBy };
     for (const e of this.#rows(`SELECT case_id, edition, manifest_sha, manifest FROM published_cases ORDER BY case_id, edition`)) {
       const stamps = stamped.get(`${e.case_id}\u0000${Number(e.edition)}`);
       if (!stamps) continue;
       const state = this.publication.caseEditionState(e.case_id, Number(e.edition));
       const manifest = safeJson(e.manifest);
-      const w = withholdingOf(e.case_id, stamps, this.#editionItems(e.case_id, state, e.manifest_sha, manifest), docketAddress);
+      const items = this.#editionItems(e.case_id, state, e.manifest_sha, manifest);
+      const w = withholdingOf(e.case_id, stamps, items, docketAddress);
       withholdChains(w.withheld, manifest);
       editions.set(`${e.case_id}\u0000${Number(e.edition)}`, w);
+      /* R28 (K5148): a hash this edition holds only as scaffolding (bytes the case-file grammar generates, no member's
+         material: the default `criteria.json`, a finding's facts files when it has no rows to state) is this case's own,
+         however many cases share the bytes. */
+      for (const it of items) if (it.scaffold && !items.some((o) => o.sha256 === it.sha256 && !o.scaffold)) {
+        if (!scaffoldBy.has(it.sha256)) scaffoldBy.set(it.sha256, new Set());
+        scaffoldBy.get(it.sha256).add(e.case_id);
+      }
       for (const [sha, orders] of w.withheld) {
         const prev = bySha.get(sha) || [];
         bySha.set(sha, [...prev, ...orders.map((o) => ({ case: e.case_id, edition: Number(e.edition), ...o }))]);
       }
     }
-    return { editions, bySha };
+    return { editions, bySha, scaffoldBy };
   }
 
   /** R28 (`op=withheld&sha256=<hash>[,<hash>…]`, for the Worker's `op=publishedbytes`; internal, routed by no door): of
    *  the hashes asked, each a court order in force withholds, with each order (its case, edition, effect, parts and
-   *  docket entry). `{ok: true, withheld: {<sha256>: [order…]}}`; a hash nothing withholds is not listed. Writes nothing. */
-  withheldOf(shas) {
+   *  docket entry). `{ok: true, withheld: {<sha256>: [order…]}}`; a hash nothing withholds is not listed. Writes nothing.
+   *  (K5148) With `zip`, a case edition's manifest hash, the answer is for that case's zip: a hash that another case holds
+   *  only as scaffolding counts under that case's orders alone, and material (a finding, a capture, a document) under any
+   *  case's. */
+  withheldOf(shas, zip = null) {
     const want = (Array.isArray(shas) ? shas : String(shas ?? "").split(","))
       .map((s) => String(s).trim().toLowerCase()).filter((s) => HEX64.test(s));
     if (!want.length) return { ok: true, withheld: {} };
-    const { bySha } = this.#withheldIndex();
-    return { ok: true, withheld: Object.fromEntries(want.filter((s) => bySha.has(s)).map((s) => [s, bySha.get(s)])) };
+    const { bySha, scaffoldBy } = this.#withheldIndex();
+    const forCase = zip && HEX64.test(String(zip).toLowerCase())
+      ? this.#one(`SELECT case_id FROM published_cases WHERE manifest_sha=?`, String(zip).toLowerCase())?.case_id ?? null : null;
+    const counted = (sha) => (bySha.get(sha) || []).filter((o) => !zip || o.case === forCase || !scaffoldBy.get(sha)?.has(o.case));
+    return { ok: true, withheld: Object.fromEntries(want.map((s) => [s, counted(s)]).filter(([, os]) => os.length)) };
   }
 
   /* ---------------------------------------------------------------- R26, R27: calculations and the timeline */
@@ -2073,7 +2092,7 @@ export function publicReadOps(r, url) {
     /* R23: what a case edition's case file carries, for the Worker's assembly (R6); internal, routed by no door. */
     casefilefacts: () => r.caseFileFacts(q("caseId"), q("edition")),
     /* R28: which of these hashes a court order in force withholds, for the Worker's `publishedbytes`; internal. */
-    withheld: () => r.withheldOf(q("sha256")),
+    withheld: () => r.withheldOf(q("sha256"), q("zip")),
   };
 }
 
