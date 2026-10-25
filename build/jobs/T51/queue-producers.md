@@ -388,3 +388,20 @@ COMPLETE · fix round 10, final pass cause 1 (B16; diag2-10b C7; R43 as amended,
 **Tests/checks:** queue-producers all tests: 156 pass, 0 fail (node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/queue-producers/, no force-exit, exits by itself). format 0 failures (178 modules); architecture 0 failures; coverage 41 of 41, 0 failures; ownership 0 failures; words 0 failures; fixtures --list 0 failures.
 
 Size (session_01DGBpwp2MkVRUms4MnyuCjB): test runs 4, module lines 3659
+
+## J22 · COMPLETE
+
+COMPLETE · B18 CHANGE (K5157; plan item 75): R54 built. Commit pushed on job/T51/queue-producers (tranche/T51 merged first).
+
+**Met: R54** (BOB strikes the mark).
+
+**Built.** New producer `#obligationsProjectLeave` (queue-producers/index.mjs), in the `projects` feed beside R41/R42: for each project the member owns (at most 50, id order), one OBLIGATION `project-leave`, keyed `OBLIGATION::project-leave::<project>::<handle>`, for each participant whose `project-roster.projectParticipants` row (R1) is `leaving` (membership R35); recipients = the project's owners (membership R65) and nobody else; no project home; names the participant and the project; her note is carried apart as `quote: {by, text}` (null when none); offers `projectremove`. It leaves for all owners when an owner removes her or she rejoins (membership R34's withdrawal), since the row is no longer `leaving`. Sentences (summary, detail, basis detail, age reason) are `localize(id, en, vars)` at their use; no word key exists, so none is claimed (unreviewed list for the design stream). Age is undetermined (`no_leave_instant`): the row carries no instant of the request.
+- Choice (my ruling, small): a leaving OWNER makes no item; owners are removed by the owners' vote (R47), not by `projectremove`.
+- Tests (projects.test.mjs, three, over the real membership acts and real project-roster, as R41/R42's): one item per owner and none for others, with the note apart and a joined/invited participant giving none; removal and withdrawal clear it for both owners; control: a hidden project names nothing (sentence, note, title) to a non-owner. Seen red without the code (3 of 11 failed), green with it (11/11).
+- Why the tests missed it: no earlier test or requirement had a leaving participant reach the queue; R42 covered only join requests.
+
+**REPORT to BOB (another module): `queue` must register the kind `project-leave`.** `queue/index.mjs:1269` refuses an item whose kind `classOfKind` (queuestate.mjs, the `queue` module's file; its three kind lists, e.g. line 205 for `project-request`) does not name, as `NO_SUCH_KIND`; queue R57's list, `queue/index.mjs:729` (kind to act) and `:791` (its note) and `screens-daily/item-words.mjs:14,34,86` (the words of the two project kinds) all name only `project-invitation` and `project-request`. Until `queue` lists `project-leave` as an OBLIGATION (act `projectremove`) and the Home/Queue screens draw it, an owner with a leave request may see it refused or undrawn. Please place that in `queue` and `screens-daily` before the merge.
+
+**Tests/checks:** queue-producers 159 pass, 0 fail (no force-exit); impact.mjs users run: queue + screens-daily 526 pass, 0 fail. format, architecture, coverage (42 of 42), ownership, words, fixtures --list: 0 failures. Markers added: none.
+
+Size (session_01DGBpwp2MkVRUms4MnyuCjB): test runs 7, module lines 3721
