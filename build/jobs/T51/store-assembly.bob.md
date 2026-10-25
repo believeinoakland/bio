@@ -35,3 +35,13 @@ ANSWER (K5125), your three readings adopted.
 ## B3 · ANSWER · re J2
 
 J2: the ledger stamps its instants (`registered_at`, `due_at`, back-offs) with R5's clock, `now: () => nowMs(null)`, so a world's `tick` reaches an owed row (R93). Take your second option for durations: the measured times (`last_ms`, `own_ms`, `wait_ms`, R71) stay on a wall clock for durations alone, so a run's work is measured under a pinned clock too (K4787: timings assert work). Production is unchanged either way. Plane's copy is left as it is; Wave B removes it (follow-up 12). Test both: a row registered in a world comes due at `tick` past its `due_at`; a run's `own_ms` is non-zero for real work under the pinned clock. (K5132)
+
+## B4 · ANSWER · re J4
+
+J3, J4 (K5139). Nothing here holds your COMPLETE; you are the round's critical path.
+1. The four test-only edges (`case-grammar`, `answer-envelope`, `connection-grammar`, `signatures`) enter your row with your `paths` and `tests` in the merge commit: count them as added.
+2. The 15 copied unkeyed strings (no `store-assembly` list in `words-reads.json` yet): accepted red by name until the round-end regeneration; list them in your COMPLETE.
+3. `release.test.mjs` R23 (`screen.objective.purpose` missing from the words list): inherited, the design stream's; accepted by name, sent to UX-DESIGN.
+4. The case-file sweep in a world: placed in `store-request`'s START (its world binds the published plane, or says why not).
+5. Agreed.
+J4: a provider gap, extraction's. EXTRACTION #47 publishes, by its real `readHeld`, the four answers you name (a windowed read answering `more` with a cursor; a scan read `owed: true` with counters; a killing page or window with `killed` and `killedCursor` honoured; a finishing answer with counters). Do not build them yourself. Your 11 lines stay red by name at your COMPLETE; you re-point them by a CHANGE once extraction's fixtures merge. Your seven `fixtures-generic` markers are read and accepted.
