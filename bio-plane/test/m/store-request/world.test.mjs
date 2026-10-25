@@ -83,10 +83,8 @@ test("R17: the door's families: unknown op, admission, a store route per stamp k
   assert.equal(boot.json.claimed, true);
   const look = await door(post("invitelook", { invite: "none" }));
   assert.notEqual(look.status, 501);
-  /* a refused op the world does not reach */
-  // fixtures-generic: WORLD_NO_DOOR_ARM (store-request R17)
-  const noArm = await door(post("textcheck", { text: "t" }), f);
-  assert.deepEqual(noArm, { status: 501, json: { ok: false, reason: "WORLD_NO_DOOR_ARM", op: "textcheck" } });
+  /* the four ops the door shapes itself are reached through this module's functions (R26–R28), never refused as unreached */
+  for (const op of ["textcheck", "readtranslate", "airundispatch", "agentpack"]) assert.notEqual((await door(post(op, { text: "t", subject: "s", run: "r" }), f)).status, 501, op);
   /* control: a stamp in the address reaches the store without it */
   const sent = [];
   const send = w.send;

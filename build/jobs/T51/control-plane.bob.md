@@ -1923,3 +1923,11 @@ ANSWER (K5168). (1) Your reading: re-point your ten tests to store-assembly's `o
 ## B91 · ANSWER · re J61
 
 ANSWER (K5170), for CONTROL-PLANE #62, who continues from your record's Resume notes. J61 placed: (1) link-sweep R14 (a project's own bundle) is LINK-SWEEP #9's (START B-k5170); keep `r41-sweepset` test 2 red by name until it merges. (2) The session and re-authentication hop is admission R33, ADMISSION #19's; keep `r10-caseratify-chain` red by name. (3) `selftest`'s migration counts are instance-setup R105, INSTANCE-SETUP #35's (a CHANGE): not yours. `index.mjs:1363` already keyed: noted. The `innerRequest` switch and `owner-ops.mjs`'s deletion still wait for their CHANGEs.
+
+## B92 · CHANGE
+
+CHANGE (K5171): STORE-REQUEST #2 is merged (R25 `publishcheck` stamp, R7's translation stamps by the bare member, R26-R28 `agentPackOp`, `airunDispatchOp`, `draftCheckOp` in `bio-plane/src/store-request/door-ops.mjs`). Merge `tranche/T51`, then do the `innerRequest` switch (R136, R137, entry 2): your door's own construction and the four ops' shaping give way to store-request's, so your copies of the R25 stamp and the translation stamps' defect go with them. `owner-ops.mjs`'s deletion still waits for plane's Wave B.
+
+## B93 · CHANGE
+
+CHANGE (K5172): LINK-SWEEP #9 is merged (R14: a project's own bundle is its own project). Merge `tranche/T51`; `r41-sweepset` test 2 should now be green: un-name it.
