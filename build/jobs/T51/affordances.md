@@ -1,6 +1,6 @@
 # affordances (T51)
 
-**Status** · session_01DY2KdCQs7GqoGoDGHPGsK3 · depth 2 · RUNNING until 2026-10-25T17:23:31Z (affordances suite (bio-plane/test/m/affordances)) · handled B21
+**Status** · session_01DY2KdCQs7GqoGoDGHPGsK3 · depth 2 · WAITING ON BOB (J27) · handled B21
 
 ## J1 · QUESTION
 
