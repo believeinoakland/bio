@@ -1,6 +1,6 @@
 # capture (T51)
 
-**Status** · session_0156pHGtfAvwRXABsnFAHq8o · depth 2 · RUNNING until 2026-10-25T10:28:11Z (module-user tests of the declared-ops change (op-declarations, admission, control-plane, affordances, op-grades, screens-intake, store-door)) · handled B39
+**Status** · session_0156pHGtfAvwRXABsnFAHq8o · depth 2 · COMPLETE · handled B39
 
 ## J1 · COMPLETE
 
