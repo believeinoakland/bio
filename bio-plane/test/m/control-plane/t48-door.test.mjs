@@ -25,7 +25,7 @@ import { aiUseOps } from "../../../src/ai-use/index.mjs";
 import { reviewOps } from "../../../src/review/index.mjs";
 import { aiAccountsOps } from "../../../src/ai-accounts/index.mjs";
 import { instanceSetupOps } from "../../../src/setup.mjs";
-import { controlPlaneOwnerOps } from "../../../src/control-plane/owner-ops.mjs";
+import { ownerOps as controlPlaneOwnerOps } from "../../../src/store-assembly/owner-ops.mjs";
 
 const { OPS, OP_STAMPS } = O;
 const U = new URL("http://do/x");

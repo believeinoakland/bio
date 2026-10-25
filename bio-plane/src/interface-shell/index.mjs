@@ -156,6 +156,8 @@ export const RE_POINTS = Object.freeze({
      design's registry lists both now, so the one screen-registry check admits them */
   /* B3 (K4467; screens-inquiry J21, N5): the read of a record stored unread, until the registry lists `readheld` on `document` */
   document: Object.freeze(["readheld"]),
+  /* K5178 (screens-investigate R1, screens-investigate J28 (1)): `linecurrentthrough` on a person's page, stating a holder current through a day, until the registry lists it for `person` */
+  person: Object.freeze(["linecurrentthrough"]),
 });
 export const LOCKED_OPS = Object.freeze(["unlock"]);
 export const ANY_SCREEN_OPS = Object.freeze(["infolevelset"]);

@@ -5,7 +5,11 @@
 import { webcrypto } from "node:crypto";
 import { SCREENS } from "../../../src/screens-publish/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
-import { boot, ok, refused, refusedIn, silent, pending, textNodes, settle, bytes, MEMBER } from "../interface-shell/harness.mjs";
+/* store-request's world registers the declared ops (store-assembly) when it is first imported. A test that registered them itself first (control-plane's
+   seam tests import this file after `register-declared.mjs`) has no world here: only `openWorld` needs it. */
+let storeWorld = null;
+try { ({ storeWorld } = await import("../store-request/fixtures.mjs")); } catch (e) { if (!/second registration|registered after the first read/.test(String(e && e.message))) throw e; }
+import { boot, counted, ok, refused, refusedIn, silent, pending, textNodes, settle, bytes, MEMBER } from "../interface-shell/harness.mjs";
 
 export { SCREENS, ok, refused, refusedIn, silent, pending, settle, bytes, word, hasWord };
 
@@ -39,6 +43,7 @@ export const COPY = (o = {}) => ({ kind: "review-copy", reader: "member", draft:
   ...o });
 
 export const PREFLIGHT = (o = {}) => ({ wrote: false, ready: false,
+  // fixtures-generic: PHOTO_CHECK_UNWORDED (a code no module gives, so the pre-flight's first refusal falls back to its canned translation)
   first: { ok: false, code: "PHOTO_CHECK_UNWORDED", reason: "PHOTO_CHECK_UNWORDED", translation: "Photo 1 is not yet checked." }, // a code the list holds no word for (every code case-disclosures answers today has a refusal.<CODE> row, DEC-418)
   blockers: [{ ok: false, code: "TENSION_NOT_DISCLOSED", translation: "A contradiction is not yet disclosed." }],
   steps: [{ case: C, edition: 2, pinned: [{ target: "FND-2026-0031", bundleSha: B1 }] }, { roles: {}, required: null }, { tensions: [] },
@@ -104,9 +109,9 @@ export function plane(o = {}) {
     publishedcase: (req) => ((req.query || {}).caseId && !(req.query || {}).id && !(req.query || {}).sha256 ? refusedIn("NOT_PUBLISHED") : ok(PUBLISHED_CASE)),
     publishedbytes: bytes("%PDF-1.7", "application/pdf"),
     verify: ok({ published: true, sha256: SHA, matches: [{ bundle_id: C, path: "manifest", kind: "manifest", published: true }] }),
-    importedcases: ok({ imports: [{ import: "IMP-2026-0001", group: "West Oakland Neighbors", case: "Port lease revenue", latest_edition: 2,
+    importedcases: ok({ imports: [{ import: "IMP-2026-0001", group: "West Oakland Neighbors", case: "CASE-2026-3549", scope: "Port lease revenue", latest_edition: 2,
       editions: [{ edition: 2, imported_by: "dev", imported_at: "2026-10-01T09:00:00Z", importer: { member: "dev", handle: "dev" }, findings: 3, recreated: 1, recreated_in_part: 1, did_not_recreate: 1 }] }], count: 1, wrote: false }),
-    importedcase: ok({ import: "IMP-2026-0001", group: "West Oakland Neighbors", case: "Port lease revenue",
+    importedcase: ok({ import: "IMP-2026-0001", group: "West Oakland Neighbors", case: "CASE-2026-3549", scope: "Port lease revenue",
       edition: { edition: 2, imported_by: "dev", imported_at: "2026-10-01T09:00:00Z", importer: { member: "dev", handle: "dev" },
         group_fields: { group: "west-oakland", name: "West Oakland Neighbors", domain: "westoakland.example", domain_verified_at: null, stake: "We live beside the port.", detail: null,
           matter_stake: { stake: "Our block lies under the flight path.", set_by: "ana", set_at: "2026-09-01T09:00:00Z", source: "project" }, read_at: "2026-10-01T08:59:00Z" },
@@ -131,7 +136,6 @@ export function plane(o = {}) {
     projectlist: ok({ projects: [{ id: P, title: "The Coliseum lease" }, { id: "PROJ-2026-0013", title: "Potholes" }] }),
     list: ok({ bundles: [{ bundle_id: "INQ-2026-0001", title: "Is the city repairing reported potholes?" }] }),
     entitieskind: ok({ ok: true, kind: "body", entities: [{ entity_id: "ENT-1", kind: "body", label: "Oakland Rent Board" }], count: 1, truncated: false, next: null }),
-    knock: ok({ ok: true, knockId: "KNOCK-1", sha256: SHA, bytes: 3, received: true, pseudonym: null }),
     ...o,
   };
 }
@@ -153,6 +157,22 @@ export async function answerSign(p, yes = true, sent = null) {
   await p.click(`[data-shell="${yes ? "dialog-yes" : "dialog-no"}"]`);
   await until(p, () => (sent ? p.byOp(sent).length > 0 : !signDialog(p)));
   return lines;
+}
+
+/** The served page at `path` with this module's screens over a real world (store-request, op-tables §5.3): the world's door answers every
+ *  op the `plane` table does not (the table keeps what a world cannot make: a fault, the model's stream, a state no act reaches). `as` is a
+ *  signed-in member of the world (`world.signIn`), or none for the public frame. Answers the page with its `world` and `as`. */
+export async function openWorld(path, o = {}) {
+  if (!storeWorld && !o.world) throw new Error("openWorld: the declared ops were registered before this file was imported, so no world is built here");
+  const world = o.world || (await storeWorld());
+  const as = o.as === undefined ? null : o.as;
+  const { door, session } = world.boot(as);
+  const got = [];
+  const p = await boot({ screens: SCREENS, plane: o.plane || {}, path, session, ...(o.boot || {}),
+    door: counted(async (req) => { const a = await door(req); got.push({ op: req.op, answer: a }); return a; }) });
+  await p.settle();
+  /* `answered(op)`: the world's last answer to `op` (its `result`), what a test reads its expected values from */
+  return Object.assign(p, { world, as, answered: (op) => { const a = got.filter((x) => x.op === op).at(-1); return a && a.answer.json ? (a.answer.json.result !== undefined ? a.answer.json.result : a.answer.json) : undefined; } });
 }
 
 /** The served page at `path` with this module's screens, over the plane. */

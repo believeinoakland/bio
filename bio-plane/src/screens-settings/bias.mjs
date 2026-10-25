@@ -261,7 +261,12 @@ export const bias = {
           }
           yaml.push("---", "", "## What This Does Not Enforce", "", residue, "");
           const text = yaml.join("\n");
-          return { body: { base: null, snapKey: iso.replace(/[-:]/g, "") + "_" + nonce, meta: { object_type: "bias", title, current_state: state, created: iso, last_updated: iso }, files: [{ path: "bundle.md", text }], register: [] } };
+          // the record keeps the set under an id it mints (`allocid`), as a held document is: the owner takes no bundle without one (promotion R7)
+          const minted = await cs.call("allocid", { query: { prefix: "BIAS", year: iso.slice(0, 4) } });
+          const mid = minted && (minted.result !== undefined ? minted.result : minted);
+          if (!mid || mid.ok === false || typeof mid.id !== "string") return null;
+          const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40).replace(/-$/, "");
+          return { body: { bundleId: slug ? mid.id + "-" + slug : mid.id, base: null, snapKey: iso.replace(/[-:]/g, "") + "_" + nonce, meta: { object_type: "bias", title, current_state: state, created: iso, last_updated: iso }, files: [{ path: "bundle.md", text }], register: [] } };
         })();
       },
       done(view, answer, cs) {
@@ -277,9 +282,10 @@ export const bias = {
         if (!set) return { refuse: "screen.bias.the_set_must_be_offered" };
         if (!reason || reason.length > 2000) return { refuse: "screen.bias.required_up_to_characters" };
         const picked = ["instance"].concat((view.data && view.data.projects && view.data.projects.value && view.data.projects.value.projects || []).map((p) => String(p.id))).find((v, i) => cs.value("bi-adopt-" + i) === true) || "instance";
-        const body = { bundleId: String(set), reason };
-        if (picked === "instance") body.scope = "instance"; else { body.scope = "project"; body.scopeId = picked; }
-        return { body };
+        // the owner reads the set and the scope from the address and the reason from the body (bias R11: `biasOps`)
+        const query = { bundleId: String(set) };
+        if (picked === "instance") query.scope = "instance"; else { query.scope = "project"; query.scopeId = picked; }
+        return { query, body: { reason } };
       } },
     // an outside policy read into proposals; nothing is saved, offered or adopted
     { op: "biasinhale", rereads: [],
