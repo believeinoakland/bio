@@ -1,6 +1,6 @@
 # case-authoring (T51)
 
-**Status** · session_014YV25pFfG6H8Z4B6eJyWr3 · depth 2 · WORKING · handled B32
+**Status** · session_01JY7NQfdWnfdhovvoytMtwy · depth 2 · WORKING · handled B33
 
 ## Completion record (T51, B1 START)
 
@@ -578,3 +578,17 @@ Size (session_01JY7NQfdWnfdhovvoytMtwy): test runs 12, module lines 3102
 ## J28 · COMPLETE
 
 COMPLETE (CHANGE B32). Merged tranche/T51; preflight.test.mjs:409 now takes the refusal from ratification's preflightRefusal (test async). fixtures --list for case-authoring: 0 failures (6 accepted generic markers, disclosures.test.mjs:68-73, as you accepted). Module tests 257/257; format, architecture, coverage, ownership 0 failures; impact names no user test beyond my own. Record: build/jobs/T51/case-authoring.md, pushed. Size (session_01JY7NQfdWnfdhovvoytMtwy): test runs 12, module lines 3102
+
+## Saved at K5183 (CASE-AUTHORING #45, session_014YV25pFfG6H8Z4B6eJyWr3)
+
+**Done.** Merged `origin/job/T51/case-authoring` into the local job branch (a merge commit, no rebase, no reset). The one conflict was the Status line; the origin line (`handled B33`) was kept, and its session id is #44's, not this session's. `mail start` for #45 has not been re-run.
+
+**Not done.** B33: the R31 chain test has not been written. No R31 test is on this branch. B35 says the branch holds an R31 test commit; it does not. The only local commit not in origin's job branch before this merge was my `mail start` commit, `bef52875c1`, also kept on `backup/case-authoring-mail-start-2026-10-25`. Nothing from B33 was started in the working tree.
+
+**Half done.** None. No source or test file has been changed.
+
+**Next step.** Run `mail start --session session_014YV25pFfG6H8Z4B6eJyWr3 --depth 2` on the saved branch; then write the B33 R31 chain test, with its control, failing first (the test-first rule applies); then run the module tests and the four checks and post `COMPLETE`.
+
+**Workers stopped.** None were running.
+
+**Open for BOB.** Pushing this branch publishes its whole ancestry, including the 2,260 local commits (other modules' mail commits and tranche history, already on `origin/tranche/T51`), because the job branch had diverged from them. Confirm that this base is acceptable.
