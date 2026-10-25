@@ -49,7 +49,9 @@
    union of overlapping calls), `own_ms` the rest; the 10 s bar is `own_ms`'s. `last_mem` is NULL where the platform reports no memory
    (workerd answers zeros). The last run of each `(sha, kind)` is kept beyond the row in `keeps_last`. (R105, G123g) Each run also states
    what it cost: `max_stretch_ms`, the longest gap an event-loop meter of `LAG_EVERY_MS` saw while it ran; `rows_read` and `rows_written`, the
-   SQL rows its statements touched (the platform's cursor counts); `units`, the units its owner wrote. Each is NULL when unmeasured.
+   SQL rows its statements touched (the platform's cursor counts); `units`, the units its owner wrote; `max_run_statements` (fix round 10, 28b),
+   the most statements it ran between two turns of the event loop, a count that needs no timer to beat inside the stretch it measures, so a pass that
+   never yields states it where `max_stretch_ms` is NULL; a row keeps the largest over all its runs. Each is NULL when unmeasured.
 
    Lower modules cannot import this one (it is last in the order), so they are handed the registration at composition, as they
    are handed `cap.waitUntil`: `captureOf(ctx).registerJob(entry)` and `.armJobs()` (R98), and the older async hooks
@@ -83,7 +85,7 @@ export const KEEPS_LAST_DDL = `CREATE TABLE IF NOT EXISTS keeps_last (
   sha TEXT NOT NULL, kind TEXT NOT NULL, last_ms INTEGER, own_ms INTEGER, wait_ms INTEGER, last_mem INTEGER, outcome TEXT NOT NULL, at INTEGER NOT NULL,
   PRIMARY KEY (sha, kind))`;
 /** R105: what a run cost, beside R92's times (NULL when unmeasured). */
-export const TICK_FIGURES = Object.freeze(["max_stretch_ms", "rows_read", "rows_written", "units"]);
+export const TICK_FIGURES = Object.freeze(["max_stretch_ms", "rows_read", "rows_written", "units", "max_run_statements"]);
 /** R97, R101: a unit's attempts, stamped before its reader runs: `tries` counts the runs that died on it. */
 export const JOB_UNIT_ATTEMPTS_DDL = `CREATE TABLE IF NOT EXISTS job_unit_attempts (
   sha TEXT NOT NULL, kind TEXT NOT NULL, unit TEXT NOT NULL, tries INTEGER NOT NULL DEFAULT 0, stamped_at INTEGER,
@@ -155,7 +157,16 @@ const countersIn = (r) => {
 const transientIn = (r) => !!r && (r.transient === true || r.failure === "transient" || (plain(r.reading) && r.reading.failure === "transient"));
 
 /* R105: the SQL rows a run's statements touched, from the platform's cursors (`rowsRead`, `rowsWritten`); a storage whose cursors carry no
-   such count is unmeasured. The object's one `sql.exec` is wrapped once, and counts only while a run is metered. */
+   such count is unmeasured. The object's one `sql.exec` is wrapped once, and counts only while a run is metered. Fix round 10 (28b): it also
+   counts the statements of the run's current stretch, which a zero-delay timer resets when the event loop turns (a timer that can only fire
+   between stretches, so no clock is read and a stretch that never yields is counted whole); `most` is the largest stretch seen. */
+const countStatement = (t) => {
+  t.run++;
+  if (t.run > t.most) t.most = t.run;
+  if (t.run === 1) {
+    try { t.reset = setTimeout(() => { t.run = 0; }, 0); } catch { t.reset = null; t.unmeasured = true; }
+  }
+};
 const SQL_METERS = new WeakMap();
 function sqlMeter(sql) {
   let m = SQL_METERS.get(sql);
@@ -166,7 +177,11 @@ function sqlMeter(sql) {
     if (typeof exec === "function") {
       sql.exec = function (...a) {
         const cur = exec.apply(this, a);
-        if (m.active && m.active.length < 1_000_000) m.active.push(cur);
+        const t = m.active;
+        if (t) {
+          if (t.cursors.length < 1_000_000) t.cursors.push(cur);
+          countStatement(t);
+        }
         return cur;
       };
     }
@@ -289,21 +304,22 @@ export function pendingOf(ctx, deps = {}) {
      beats, less the interval; null when it never beat) and the SQL cursors of the run */
   const instruments = new Map();
   const openInstruments = (row) => {
-    const t = { beat: null, stretch: null, timer: null, cursors: [] };
+    const t = { beat: null, stretch: null, timer: null, cursors: [], run: 0, most: 0, reset: null, unmeasured: false };
     try {
       t.beat = now();
       t.timer = setInterval(() => { const n = now(); const gap = Math.max(0, n - t.beat - LAG_EVERY_MS); t.stretch = Math.max(t.stretch ?? 0, gap); t.beat = n; }, LAG_EVERY_MS);
     } catch { t.timer = null; }
-    meter.active = t.cursors;
+    meter.active = t;
     instruments.set(keyOf(row), t);
   };
   const closeInstruments = (row, units) => {
     const t = instruments.get(keyOf(row));
     instruments.delete(keyOf(row));
-    if (!t) return { max_stretch_ms: null, rows_read: null, rows_written: null, units: units ?? null };
+    if (!t) return { max_stretch_ms: null, rows_read: null, rows_written: null, units: units ?? null, max_run_statements: null };
     try { if (t.timer) clearInterval(t.timer); } catch { /* none */ }
-    if (meter.active === t.cursors) meter.active = null;
-    return { max_stretch_ms: t.stretch === null ? null : Math.round(t.stretch), ...sumRows(t.cursors), units: units ?? null };
+    try { if (t.reset) clearTimeout(t.reset); } catch { /* none */ }
+    if (meter.active === t) meter.active = null;
+    return { max_stretch_ms: t.stretch === null ? null : Math.round(t.stretch), ...sumRows(t.cursors), units: units ?? null, max_run_statements: t.unmeasured || t.most === 0 ? null : t.most };
   };
   /* a row's run, measured at its end: the elapsed time, the part awaiting workers, the rest, the memory marker (null where none is measured)
      and what the run cost (R105) */
@@ -314,10 +330,12 @@ export function pendingOf(ctx, deps = {}) {
   };
   /* R92, R105: the last run of this (digest or session, kind), kept after the row ends */
   const noteLast = (row, m, outcome) => {
-    sql.exec(`INSERT INTO keeps_last (sha, kind, last_ms, own_ms, wait_ms, last_mem, outcome, at, max_stretch_ms, rows_read, rows_written, units) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+    /* the run's statements: the largest of all the row's runs is kept (a later, smaller pass does not lower it), NULL while no run measured one */
+    sql.exec(`INSERT INTO keeps_last (sha, kind, last_ms, own_ms, wait_ms, last_mem, outcome, at, max_stretch_ms, rows_read, rows_written, units, max_run_statements) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
               ON CONFLICT (sha, kind) DO UPDATE SET last_ms=excluded.last_ms, own_ms=excluded.own_ms, wait_ms=excluded.wait_ms, last_mem=excluded.last_mem, outcome=excluded.outcome,
-                at=excluded.at, max_stretch_ms=excluded.max_stretch_ms, rows_read=excluded.rows_read, rows_written=excluded.rows_written, units=excluded.units`,
-             row.sha, row.kind, m.last_ms, m.own_ms, m.wait_ms, m.last_mem, outcome, now(), m.max_stretch_ms, m.rows_read, m.rows_written, m.units);
+                at=excluded.at, max_stretch_ms=excluded.max_stretch_ms, rows_read=excluded.rows_read, rows_written=excluded.rows_written, units=excluded.units,
+                max_run_statements=NULLIF(MAX(COALESCE(keeps_last.max_run_statements, 0), COALESCE(excluded.max_run_statements, 0)), 0)`,
+             row.sha, row.kind, m.last_ms, m.own_ms, m.wait_ms, m.last_mem, outcome, now(), m.max_stretch_ms, m.rows_read, m.rows_written, m.units, m.max_run_statements ?? null);
     meters.delete(keyOf(row));
   };
   const num = (v) => (v === null || v === undefined ? "NULL" : String(Math.round(v)));
@@ -500,7 +518,7 @@ export function pendingOf(ctx, deps = {}) {
       if (u && u.tries >= UNIT_KILLS_MAX && !steppable) {
         sql.exec(`UPDATE keeps_pending SET final_why=?, last_why=?, state='final', ended_at=?, last_try=? WHERE sha=? AND kind=?`,
                  PAGE_KILLED_READER, PAGE_KILLED_READER, now(), at, row.sha, row.kind);
-        noteLast(row, { last_ms: null, own_ms: null, wait_ms: null, last_mem: null, max_stretch_ms: null, rows_read: null, rows_written: null, units: null }, "final");
+        noteLast(row, { last_ms: null, own_ms: null, wait_ms: null, last_mem: null, max_stretch_ms: null, rows_read: null, rows_written: null, units: null, max_run_statements: null }, "final");
       }
     }
   };
@@ -727,9 +745,9 @@ export function pendingOf(ctx, deps = {}) {
       return { ok: true, rows: out, next: rows.length === n && lastRow ? `${lastRow.ended_at}\u0001${lastRow.sha}\u0001${lastRow.kind}` : null };
     },
     /** R92, R105: the last run of each kind held for a digest or session, after its row has ended or while it is owed: `{kind, outcome,
-     *  last_ms, own_ms, wait_ms, last_mem, at, max_stretch_ms, rows_read, rows_written, units}` */
+     *  last_ms, own_ms, wait_ms, last_mem, at, max_stretch_ms, rows_read, rows_written, units, max_run_statements}` */
     ledgerLast({ sha } = {}) {
-      return all(`SELECT kind, outcome, last_ms, own_ms, wait_ms, last_mem, at, max_stretch_ms, rows_read, rows_written, units FROM keeps_last WHERE sha=?`, sha)
+      return all(`SELECT kind, outcome, last_ms, own_ms, wait_ms, last_mem, at, max_stretch_ms, rows_read, rows_written, units, max_run_statements FROM keeps_last WHERE sha=?`, sha)
         .sort((a, b) => RANK[a.kind] - RANK[b.kind]).map((r) => ({ ...r }));
     },
     /** counts for each kind and state, with no digest: what a member's diagnosis may see */

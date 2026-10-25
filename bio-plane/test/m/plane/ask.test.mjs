@@ -49,7 +49,7 @@ async function world({ account = true, worker = true } = {}) {
   return { ...x, asks };
 }
 
-test("B2 (K1674): a member's ask mints their grant, unseals their own account and carries both to agent-worker's /ask, whose stream comes back unchanged", async () => {
+test("R111, B2 (K1674): the Store's RPC `ask(args)`: a member's ask mints their grant, unseals their own account and carries both to agent-worker's /ask, whose stream comes back unchanged", async () => {
   const x = await world();
   const res = await x.s.ask({ member: "member:ann", session: SESSION, question: "Who holds the clerk's office?",
                               conversation: [], store: null });
@@ -219,7 +219,7 @@ const ask = (extra = {}) => ({ op: "writinghelp", member: "ann", session: SESSIO
                                field: "reason", firsthand: false, pack: PACK, ...extra });
 const draft = async (x, extra = {}) => { const res = await x.s.draft(ask(extra)); return { status: res.status, body: await res.json() }; };
 
-test("R19 (N686; K2062; agent-worker R59): a member's draft carries their account in R6's shape and the door's pack to agent-worker's /draft, with no grant while their suggestions switch is off; agent-worker's answer comes back at its status with the switch and an empty read log", async () => {
+test("R111, R19 (N686; K2062; agent-worker R59): the Store's RPC `draft(args)`: a member's draft carries their account in R6's shape and the door's pack to agent-worker's /draft, with no grant while their suggestions switch is off; agent-worker's answer comes back at its status with the switch and an empty read log", async () => {
   const x = await world();
   const r = await draft(x);
   assert.equal(r.status, 200);

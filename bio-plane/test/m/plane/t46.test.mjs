@@ -432,7 +432,7 @@ test("R42 (T46; K2950; hypotheses R23, R14): the plane's own Store, booted on wo
 
 /* ===== R40 (T46; K2999; control-plane R77, R20): the Store's two RPC methods for control-plane's door ===== */
 
-test("R40, R46 (T46; K2999; T47: N955; ai-runs R18; control-plane R77): the Store's RPC `dispatchMemberRun(args)` is ai-runs' dispatchMemberRun in the object addressed, handed the args as given but for a credential, which R46 retires (t47.test.mjs); a run nobody holds answers {found: false}; control: no args is ai-runs' own answer to none", async () => {
+test("R114 (was R40), R46 (T46; K2999; T47: N955; ai-runs R18; control-plane R77): the Store's RPC `dispatchMemberRun(args)` is ai-runs' dispatchMemberRun in the object addressed, handed the args as given but for a credential, which R46 retires (t47.test.mjs); a run nobody holds answers {found: false}; control: no args is ai-runs' own answer to none", async () => {
   const x = await store();
   const ai = aiRunsOf(x.ctx), was = ai.dispatchMemberRun.bind(ai), seen = [];
   ai.dispatchMemberRun = async (a) => { seen.push(a); return was(a); };
@@ -453,7 +453,7 @@ test("R40, R46 (T46; K2999; T47: N955; ai-runs R18; control-plane R77): the Stor
   assert.notEqual(aiRunsOf(y.ctx), ai);
 });
 
-test("R40 (T46; K2999; public-read R34; control-plane R20): the Store's RPC `groupFields()` answers public-read's groupFields() of the object addressed, the group's fields and nothing else; control: once a group identity is registered, its fields are answered", async () => {
+test("R114 (was R40) (T46; K2999; public-read R34; control-plane R20): the Store's RPC `groupFields()` answers public-read's groupFields() of the object addressed, the group's fields and nothing else; control: once a group identity is registered, its fields are answered", async () => {
   const { publicReadOf } = await import("../../../src/public-read/index.mjs");
   const x = await store();
   const f = await x.s.groupFields();

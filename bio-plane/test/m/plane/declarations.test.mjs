@@ -95,6 +95,7 @@ test("R71 every op an owner declares is reachable: in the route map (by its door
   for (const op of unrouted) {
     if (Object.hasOwn(PLANE_OPS, op)) continue;   /* R72: the door's ask arm and the draft path, no route */
     if (Object.hasOwn(OWNERS["control-plane"], op)) continue;   /* control-plane R112: the door's own map serves it (its tests ask it) */
+    if (Object.hasOwn(OWNERS["signin-door"] ?? {}, op)) continue;   /* signin-door R6 (K5052 (4)): `subscriptionsignin` moved its declaration from control-plane's rows to signin-door's; the door's own arm still serves it */
     if (publicReads.has(op)) continue;   /* a public read a module registered at start: asked as `op=publicread&name=` (t51 R17) */
     let arm = null;
     try {

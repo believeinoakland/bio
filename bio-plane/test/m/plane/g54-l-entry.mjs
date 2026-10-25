@@ -15,6 +15,10 @@ const isManifest = (value) => { const t = value instanceof Uint8Array ? new Text
 
 export class G54Plane extends Store {
   #silent = false;
+  #hold = false;
+  /* `/g54p/hold?on=1` (R-NOLOAD): the platform's alarm does nothing while held, so the only ticks of the object are the ones a test asks for (`/g54p/alarm`). Any ordinary request re-arms a lost alarm (plane R102), so
+     deleting the alarm once does not keep it away: the alarm the runtime fires on its own, at once, beside the test's tick built what the test was about to fail (whole-file runs under load). */
+  async alarm() { if (this.#hold) { await this.ctx.storage.deleteAlarm(); return; } return super.alarm(); }
   #counts = { get: 0, head: 0, put: 0, bytes: 0 };
   #mode = { mode: "none", n: 0 };
   #real = null;
@@ -45,6 +49,7 @@ export class G54Plane extends Store {
       const at = Number(q("at")) || Date.now(), ans = await this.onAlarm(at);
       return json({ sweep: ans && ans.casefilesweep ? ans.casefilesweep : null, keys: Object.keys(ans || {}), alarm: await ctx.storage.getAlarm(), counts: { ...this.#counts } });
     }
+    if (p === "/g54p/hold") { this.#hold = q("on") === "1"; if (this.#hold) await ctx.storage.deleteAlarm(); return json({ hold: this.#hold }); }
     if (p === "/g54p/wake") return json({ alarm: await ctx.storage.getAlarm() });
     if (p === "/g54p/bucket") {
       /* the object's own binding, replaced on the env object the sweep's worker reads at each call */

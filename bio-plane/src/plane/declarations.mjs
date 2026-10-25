@@ -89,6 +89,7 @@ import { DECLARED_OPS as queue } from "../queue/index.mjs";
 import { DECLARED_OPS as instanceSetup } from "../setup.mjs";
 import { DECLARED_OPS as storeDoor } from "../store-door/dispatch.mjs";
 import { DECLARED_OPS as controlPlane } from "../control-plane/owner-ops.mjs";
+import { DECLARED_OPS as signinDoor } from "../signin-door/index.mjs";
 
 /* module id → that module's `DECLARED_OPS`, in `build/modules.json`'s order */
 export const OWNERS = Object.freeze({
@@ -171,6 +172,7 @@ export const OWNERS = Object.freeze({
   translations: translations,
   "instance-setup": instanceSetup,
   "store-door": storeDoor,
+  "signin-door": signinDoor,
   "control-plane": controlPlane,
   plane,
 });
