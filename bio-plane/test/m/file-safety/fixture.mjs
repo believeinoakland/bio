@@ -65,6 +65,7 @@ const verdict = (capture_sha, tool, engine, fields) => ({ capture_sha, tool, eng
      runTrace: true       → /mirror?async=1 leaves the trace file-scanner R6 (fix round 4, C84) states, as the real handler does:
                             `last_attempt` now, `last_error` RUN_STARTED, `stage` seed, `stage_at` now, at the start; the invocation is then
                             cancelled (nothing follows) until a test calls `binding.stage(name)` or `binding.end(error)`
+     bounds               → the `bounds` /version answers (default {}; R58's test gives the real `BOUNDS`)
      signatures           → the signature state /version answers (default: a set published an hour ago); `null` versions and
                             `published` is a scanner that has mirrored none
      render(sha, route)   → bytes | {bytes, pages, sourcePages, truncated} | {code, class?, detail?, status?}
@@ -90,7 +91,7 @@ export function scanner(script = {}, { now = () => T0 } = {}) {
       if (s.throwOn && s.throwOn.has(u.pathname.slice(1))) throw new Error("the scanner is not reached");
       if (u.pathname === "/version") return reply({ ok: true, name: "file-scanner", version: "1.0.0", clamav_version: "1.4.3",
         signatures: s.signatures ?? { versions: { main: 62 }, published: new Date(at - 3_600_000).toISOString(), mirrored_at: null, last_attempt: null, last_error: null },
-        providers: {}, reputation_lists: s.lists ?? [], renderer_version: "libreoffice 7; poppler 24", bounds: {} });
+        providers: {}, reputation_lists: s.lists ?? [], renderer_version: "libreoffice 7; poppler 24", bounds: s.bounds ?? {} });
       /* file-scanner R6 (fix round 3, C84): `POST /mirror?async=1` starts a run and answers 202 at once; `mirror(search)` scripts another answer */
       if (u.pathname === "/mirror") {
         if (s.runTrace && !s.mirror && s.signatures) Object.assign(s.signatures, { last_attempt: new Date(at).toISOString(), last_error: "RUN_STARTED", stage: "seed", stage_at: new Date(at).toISOString() });
