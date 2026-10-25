@@ -273,3 +273,17 @@ Size (session_01USyGMZHTJG6V897tNLHTHH): test runs 7, module lines 13
 ## J12 · COMPLETE
 
 K4847 applied: browser() falls back to /opt/pw-browsers/chromium when the pinned build is absent (walker 17/0 with CHROMIUM unset, was red at launch). Checks: format, architecture, coverage, words, ownership all 0 failures. NOT green, and not caused by the launch: group 4/1 (R17, 'group' in other modules' rows), journey 11/13 (install step timeout; identical with CHROMIUM set), live 11/4 (R9 step 2 timeout). Details in my record. No requirement names the Chromium choice: please write one.
+
+## J13 · QUESTION
+
+QUESTION (J14) · R21 (and R28's "four new screens' drawn states"): scope against what the local arm can prove. Replaces none.
+
+Findings so far (details in my record when I complete):
+- B1 (the fake account holds a workers.dev prefix, `READY_PREFIX`, `fakeAccount({subdomain:null})` is the control), B3 (`installerFirstPage` answers "Yes, I have one"), and live.test's cause (the fake plane drew no visibility choice on Projects, so R9 step 2 timed out on `#projects-visibility-hidden`) are fixed with tests. After them every account-installer / plane-cron / local-arm install stops at "this release's description of its program can't be read": G90 alone (release/bio-plane.bundled.mjs 0.86.0 states no `bio-plane-crons/1`). So the local arm cannot reach the copy until the 0.87.0 cut, and nothing I write for the local arm's states can be run end to end in this job.
+- R21 says: on the local arm a state of the list that cannot be reached FAILS by name; on the live arm it is a note. The code (states.mjs, T51-131) writes the note on BOTH arms and holds no `reach` function for any of the 20 states, so every state is "not reached". The mock offers ~60 "In this mockup, show" controls; the four new screens of R28 (hold, holdnotice, counsel, grouprules) have none of their states in CARRIED_STATES, and the carried states of screens-settings / screens-intake / screens-daily (T51-116 to T51-118) are only partly listed.
+
+My best reading (what I will build unless you say otherwise): (1) `walkStates` takes the arm: on the local arm an unreached state fails by its name (kind `state`), on the live arm it stays a note (R21 as written); (2) CARRIED_STATES is completed from the mock's own controls for the four new screens and the carried-feature states of the three modules, the labels read from the mock; (3) a `reach` function for each state whose live screen I can read in the screens' source, proven at the interface by drawing the real screen through the interface harness (as pseudo.test.mjs does) and checking the function finds the screen in the state and reports false for a screen not in it. The local arm will therefore be red by name for every state I cannot reach, and no state is proven on a real local walk until after the cut.
+
+Alternative if you prefer it: keep the note on both arms, amend R21's local clause, and leave the reach functions to a follow-up job after the cut when the local arm can run.
+
+I carry on with R20, R22 to R28, the markers and the rest meanwhile; the answer decides only the R21 / R28 states part.
