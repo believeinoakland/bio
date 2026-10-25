@@ -367,3 +367,7 @@ Size (session_01YGp5SXAG8uve2pBSVTbPvh): test runs 2, module lines 0 (test file 
 **Tests and checks** (absolute root `/home/user/bio`): queue suite `bio-plane/test/m/queue/*.test.mjs` 232 tests, 232 pass, 0 fail (run three times); format 0 failures; architecture 41 files, 146 imports, 0 failures; coverage 56 of 56 live ids, 0 failures; words 0 failures; ownership 1 file changed by queue, 0 failures; `fixtures.mjs … queue --list`: answer 0, stub 0, code 0, contract 0; 0 failures. Markers added: none.
 
 Size (session_01VKactdh7kQCY61oFDcnvi4): test runs 8, module lines 41
+
+## J19 · COMPLETE
+
+COMPLETE (B22). R95 met: What you answered gains join_answer (project-roster R44 read, window, R33 gate). project-leave registered as an OBLIGATION (kind to act projectremove; sentence queue.index.this_one_is_a_participants). Queue suite 232/232; format, architecture, coverage, words, ownership, fixtures 0 failures; no markers. With origin/job/T51/queue-producers merged locally (undone): projects.test.mjs 11/11, queue 232/232. Yours: strike R95's mark, add project-leave to R57's text; screens-daily draws join_answer; the through-the-door case is control-plane's. Details in my record.
