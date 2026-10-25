@@ -492,3 +492,5 @@ Size (session_0177s7VkCbiDMwJSDa3V4Dzp): test runs 8, module lines 4262
 ## J24 · QUESTION
 
 R17a draw and the two queue-states fixture lines are done and pushed (record: Completion, SCREENS-DAILY #20). One thing I need: add record-core to screens-daily's uses in build/modules.json (queue-states.test.mjs imports record-core/fixtures.mjs per the FIX-E rule; architecture fails on it only). Also: retrieval-browse publishes no find-in term-item fixture (my find-in.test.mjs carries fixtures-contract: retrieval-browse findin-term-part; it needs a fixtures-run). Stand-in words are held content.part_kind rows, not localize (render cannot call it). I COMPLETE once architecture is green.
+
+**After B37 (K5090):** merged `tranche/T51` (`record-core` now in `uses`). Architecture 0 failures; ownership 0; screens-daily suite 295/295. No open question.
