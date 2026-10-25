@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { Miniflare } from "miniflare";
 import { memberRefusal, pageNotRenderable, memberWorker } from "./fixtures.mjs";
 
-// fixtures-run: extraction memberRefusal
+// memberRefusal's real answers (extraction imports it directly: ocr-worker is earlier in the order; K4990)
 for (const reason of ["PAGE_NOT_LEGIBLE", "PIXELS_UNREADABLE", "ENGINE_FAILED", "UNEXPECTED_FAILURE"]) {
   test(`fixture memberRefusal(${reason}): the real member answers 200 ok:false with that reason`, async () => {
     const a = await memberRefusal(reason);
@@ -21,7 +21,7 @@ test("fixture memberRefusal: a reason the member does not give is refused by the
   await assert.rejects(() => memberRefusal("busy"), /no such reason/);
 });
 
-// fixtures-run: reading-pipeline pageNotRenderable
+// pageNotRenderable's real answer (reading-pipeline imports it directly: ocr-worker is earlier in the order; K4990)
 test("fixture pageNotRenderable: the real member's PAGE_NOT_RENDERABLE with the renderer's own reason beside it", async () => {
   for (const renderReason of ["NOT_A_PDF", "EMPTY_FILE"]) {
     const a = await pageNotRenderable({ renderReason });
@@ -34,7 +34,7 @@ test("fixture pageNotRenderable: the real member's PAGE_NOT_RENDERABLE with the 
   }
 });
 
-// fixtures-run: reading-pipeline memberWorker
+// memberWorker's real answers (reading-pipeline imports it directly: ocr-worker is earlier in the order; K4990)
 test("fixture memberWorker: the real member behind a front that logs the pages asked and applies one deviation to its real answers", { timeout: 600_000 }, async () => {
   const askPage = async (mf, name, sha, pages) => await (await (await mf.getWorker(name)).fetch("http://f/transcribe", {
     method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ capture_sha: sha, store: "scratch", pages }) })).json();
