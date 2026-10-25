@@ -1,6 +1,6 @@
 # conformance (T51)
 
-**Status** · session_01H6qaqGGdsgsJYq9QcBswrD · depth 2 · WORKING · handled B5
+**Status** · session_01H6qaqGGdsgsJYq9QcBswrD · depth 2 · WAITING ON BOB (J7) · handled B5
 
 ## J1 · REPORT
 
