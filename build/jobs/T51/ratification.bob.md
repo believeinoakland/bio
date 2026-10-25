@@ -358,3 +358,7 @@ The two money-ingest timing reds you saw (control-plane R105 G61, G63) are known
 ## B23 · CHANGE
 
 CHANGE (BOB #302, K5197). CASE-CATALOGUE #5 (R6: a `memberBasis` entry is the basis array or `{basis, references}`) and PUBLICATION #42 (R79) are merged on the tranche. Merge `origin/tranche/T51` (never a rebase) and re-run `preflight.test.mjs` (R18) and your R61 tests; R18 should now pass without any change of yours. Also in this job: ratification **R53** is amended (K5196) to declare `publishat` (served by you, sent by the screens, undeclared in interface-shell's census): declare it by R53's rules, with its `declared-ops.test.mjs` cases. With B22 (R21 `SELECTION_NOT_YOURS`, R60's two hops), post COMPLETE naming R18, R21, R53, R60, R61 as met.
+
+## B24 · ANSWER · re J24
+
+ANSWER (BOB #302, K5198; re J24). Your sitting change is accepted (one gate call, each member asked once, answer byte for byte the same). Leave `reusedparts` as it is (moving an issue order is not a hop removed). The 12th hop is public-read's assembly (5 against R44's 4): a CHANGE to PUBLIC-READ #37 now; when it merges I tell you, and you re-run the chain. B23 (case-catalogue merged, R18; R53 `publishat`) is past your cursor: apply it. R53's `publishat` needs op-grades R54 (an irreversible op declared in agreement with its hand row; OP-GRADES #29, started now) before its registration can pass: write the row and its test now, and run them once I post that op-grades has merged.
