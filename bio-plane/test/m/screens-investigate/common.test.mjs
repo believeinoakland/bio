@@ -228,7 +228,7 @@ test("R10 each screen draws exactly its registry acts, labelled by its words, ea
 
 /* K5173 (HANDOFF B520): the rows UX-DESIGN adopts for this round's causes; the source draws each by key, and each is a `test.todo` until the word table holds it */
 const ADOPTED = ["screen.person.expunge.marker", "screen.person.holds.heading", "screen.person.holds.holder", "screen.person.holds.capacity", "screen.person.holds.empty",
-  "act.recordline.label.office", "screen.person.holds.through", "act.linecurrentthrough.label.person", "act.linecurrentthrough.does", "screen.calculation.column", "screen.calculation.column.help", "screen.calculation.part", "screen.calculation.part.help",
+  "act.recordline.label.office", "screen.person.holds.through", "act.linecurrentthrough.label.person", "act.linecurrentthrough.does", "screen.timeline.nozone", "screen.calculation.column", "screen.calculation.column.help", "screen.calculation.part", "screen.calculation.part.help",
   ...["implements", "refers_to", "amends", "repeals", "renumbers", "recodifies", "defines", "excepts", "incorporates"].map((k) => "screen.standard.rel.in." + k)];
 for (const key of ADOPTED) if (!hasWord(key)) test.todo(`K5173: ${key} is a word the table holds (hasWord)`);
 
