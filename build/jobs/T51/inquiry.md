@@ -150,3 +150,9 @@ Size (session_011Jyr771vUcNgdkLV7aQq1C): test runs 14, module lines 3860
 ## J7 · COMPLETE
 
 COMPLETE: fix round 10 batch 3 for inquiry; see the record section 'Fix round 10, Wave A batch 3'. Cause 30b record half done (conclude half is a test.todo per B9); five fixtures published; own lines done but capture/heldActsUnreadable (2, waiting for capture's fixture). Tests 235/233 pass/0 fail/2 todo; checks clean but fixtures 2 (capture). No fixtures-own/generic markers.
+
+## B10 (CHANGE) applied
+
+Merged tranche/T51 (capture's `fixtures.mjs`). `document-waits.test.mjs` lines 115 and 124 now take `heldActsUnreadable()` from `bio-plane/test/m/capture/fixtures.mjs`. `checks/fixtures.mjs /home/user/bio inquiry --list`: 0 findings. inquiry tests 235, pass 233, fail 0, todo 2; format, architecture, coverage, ownership, words 0 failures. No fixtures-own or fixtures-generic marker added. The earlier "left" line (capture) is closed.
+
+Size (session_011Jyr771vUcNgdkLV7aQq1C): test runs 16, module lines 3860
