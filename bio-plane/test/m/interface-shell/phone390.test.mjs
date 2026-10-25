@@ -34,6 +34,7 @@ const STAND_IN = {
       + '<div class="mk-cards">' + [1, 2].map(function () { return '<div class="mk-card"><b>' + cs.esc(long) + '</b><span class="cs-kind" data-kind="todo">busy</span>' + cs.initials(["ann", "bo", "cy", "di", "ed", "fy"]) + '</div>'; }).join("") + '</div>'
       + cs.sec("screen.question.name", cs.row(cs.icon("sever"), cs.esc("The passage that is cited here, with a long sentence of text about what it is " + long),
         cs.act("sever", { label: "act.sever.label.question", data: { target: "a" } }) + cs.act("reinstate", { label: "act.reinstate.label.question", data: { target: "b" } }), cs.esc(long)))
+      + cs.row(cs.icon("sever"), cs.ref("project", "P1", "Ann"), "", "") + '<ul class="mk-list"><li>' + cs.ref("project", "P2", "Bo") + '</li></ul>'
       + cs.rows({ id: "r", pick: true, cols: ["state.loading", "state.empty", "state.failed"], items: [{ id: "a", n: long, x: long }, { id: "b", n: "short", x: "" }],
         key: function (i) { return i.id; }, name: function (i) { return cs.ref("member", i.id, i.n); }, cells: function (i) { return [cs.esc(i.x), cs.esc(i.n)]; },
         acts: function () { return cs.act("reinstate", { label: "act.reinstate.label.question", data: { target: "z" } }); } })
@@ -41,11 +42,15 @@ const STAND_IN = {
       + cs.strip([{ n: 1, label: { text: long } }, { n: 22, label: { text: "two" } }, { n: 3, label: { text: "three" } }, { n: 4, label: { text: "four" } }])
       + '<div role="tablist">' + ["one", "two", "three", "four", "five", "six"].map(function (t) { return '<button type="button" role="tab" class="cs-btn" data-tone="quiet">' + t + ' tab with words</button>'; }).join("") + '</div>'
       + cs.field("f1", "screen.question.name") + cs.checks("c1", { text: "legend" }, [{ value: "a", text: long }, { value: "b", text: "short", on: true }])
+      + '<div data-guide-marks><button type="button" class="cs-wizmark" data-guide="chip" aria-expanded="false" data-level="2">Show me how</button></div>'
       + '<details class="cs-part"><summary>' + cs.esc(long) + '</summary><p>' + cs.esc(long) + '</p></details>'
       + '<div class="tw"><table class="mk-table"><thead><tr><th>a</th><th>b</th></tr></thead><tbody><tr><td>' + cs.esc(long) + '</td><td>2</td></tr></tbody></table></div>';
   `),
   acts: [{ op: "sever", send: fitSend("sever") }, { op: "reinstate", send: fitSend("reinstate") }],
 };
+
+/* a registered screen a ref can open, so the refs are drawn as links */
+const PROJECT = { id: "project", words: [], reads: () => ({}), acts: [], render: new Function("cs", "return cs.title('x');") };
 
 const PLANE = { session: true, member: "mai", handle: "mai", tokenClass: "admin", administer: true, capabilities: ["contribute", "create_projects", "publish"], items: [], projects: [], display_name: "A team with a very long name that has to wrap and never be cut however many words it takes", members: [] };
 
@@ -53,7 +58,7 @@ async function measure(width) {
   const pw = engine();
   assert.ok(pw && pw.chromium, "playwright-core is needed beside the product (`npm ci` in site/), with Chromium: this test cannot measure without them");
   assert.ok(existsSync(EXE), "Chromium is needed at CHROMIUM or /opt/pw-browsers/chromium");
-  const html = interfacePage([STAND_IN]), script = interfaceScript([STAND_IN]);
+  const html = interfacePage([STAND_IN, PROJECT]), script = interfaceScript([STAND_IN, PROJECT]);
   const browser = await pw.chromium.launch({ executablePath: EXE });
   try {
     const ctx = await browser.newContext({ viewport: { width, height: 900 } });
@@ -105,7 +110,7 @@ async function measure(width) {
   } finally { await browser.close(); }
 }
 
-test("R84 R89 R108 (C81) at 390 px no part of the main area or the masthead runs past the screen, a long name or digest wraps, and every control is at least 44 px to press (a ticked box counts its label)", { timeout: 120000 }, async () => {
+test("R84 R89 R108 R131 (C81) at 390 px no part of the main area or the masthead runs past the screen, a long name or digest wraps, and every control is at least 44 px to press (a ticked box counts its label)", { timeout: 120000 }, async () => {
   const m = await measure(390);
   assert.ok(m.mainScroll <= 390, "the main area is no wider than the screen: " + m.mainScroll);
   assert.deepEqual(m.over, [], "nothing past the edge");

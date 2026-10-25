@@ -9,7 +9,7 @@ import { WORD_ROWS, word } from "../setup-words/index.mjs";
 import * as DECLARATIONS from "../op-declarations/index.mjs";
 import { OPS, NEEDS, SESSION_OPS } from "../op-declarations/index.mjs";
 import { RUNGS, RUNG_ABSENT, IRREVERSIBLE_WEIGHT, MARKS, phoneOf } from "../op-grades/index.mjs";
-import { SCREEN_REGISTRY } from "../wizard-scripts/index.mjs";
+import { SCREEN_REGISTRY, ADMIN_ACTS, ADMIN_SCREENS } from "../wizard-scripts/index.mjs";
 import { sha256HexSync } from "../record-grammar/index.mjs";
 import { shellProgram } from "./browser.mjs";
 
@@ -90,7 +90,9 @@ export const PLACE_SCREENS = Object.freeze({
    after Security, drawn only while `whoami`'s `administer` is true, `ADMIN_SCREENS`; R106: `bias` last, the drawing's "For every member"). */
 export const SETTINGS_SCREENS = Object.freeze(["members", "account", "connect", "notes", "ties", "group-identity", "security",
   "updates", "translations", "wizards", "group", "places", "recovery", "bias"]);
-export const ADMIN_SCREENS = Object.freeze(["updates"]);
+/* K5046 (c): `ADMIN_SCREENS` and `ADMIN_ACTS` are wizard-scripts' (R40), the module that withholds the group-setup scripts by them; the shell
+   imports them, and re-exports them for the plane's wizards file until it imports them from wizard-scripts itself. */
+export { ADMIN_ACTS, ADMIN_SCREENS };
 
 /* R16: the screen an item of each kind opens (R27: a knock opens `inbox` at that knock; R47: a person or organisation
    the record follows opens `person`, a proceeding `proceeding`, a standard `standard`; R66: a project's plan, timeline,
@@ -158,27 +160,6 @@ export const RE_POINTS = Object.freeze({
 export const LOCKED_OPS = Object.freeze(["unlock"]);
 export const ANY_SCREEN_OPS = Object.freeze(["infolevelset"]);
 
-/* R12: the acts their owners refuse to a member who does not administer: `membership`'s administrator acts (its R84's
-   one answer), `credentials`' group-key acts (its R33) and `aikeepaway` (its R51). */
-export const ADMIN_ACTS = Object.freeze(new Set([
-  "memberadd", "membercaps", "memberset", "adminendorse", "adminremove", "expertiseconfirm", "hostingaccessset", "invitewithdraw",
-  "websitekeycreate", "websitekeyset", "websitekeyrevoke", "joinlinkenable", "joinlinkset", "joinlinkreplace", "joinlinkoff",
-  "courtnoticeset", "groupdescriptionset", "joindoors", "projectownerrescue",
-  "groupkeyset", "groupkeyremove", "groupkeyswitch", "aikeepaway",
-  /* R47: `people`' expunging of a person (its R12) */
-  "personexpunge",
-  /* R50: the reset link, a member's key set by an administrator, the group's settings, its places and offices, its
-     translators, its security tools */
-  "passwordresetlink", "signerset", "groupnameset", "grouplogoset", "groupdomainset", "grouplanguagesset", "courtnoticeset",
-  "hostingaccessset", "profilesset", "placewanted", "officesseed", "translationgrant", "translationrevert",
-  "securitytools", "securitytoolcatalogue", "securitytoolevents", "securitytooladd", "securitytooltest", "securitytoolremove",
-  /* R101 (T51): a member's signing key added by an administrator (`credentials` R6), and the root of trust's seeding of the
-     team (`instance-setup` R4) */
-  "signeradd", "instancegroupseed",
-  /* fix round 3 (C64; `file-safety` R49, `entities` R64): an administrator starts a signature run; an administrator confirms an
-     office a member named */
-  "scanmirror", "officeconfirm",
-]));
 
 /* R107 (T51 fix round; K4197 T-07): the acts that carry the Reasoned mark and no weight (`op-grades` `MARKS`, R64) and that the
    walk found asking no reason: the administrator's acts on a member or the team (`ADMIN_ACTS`), a project's owner added, and a
@@ -357,7 +338,8 @@ const STYLE = `html,body.cs{height:100%}body.cs{margin:0;height:100dvh;display:f
 .cs-main{overflow-x:hidden;overflow-wrap:anywhere}.cs-main .cs-row,.cs-main .mk-rowname{grid-template-columns:auto minmax(0,1fr);min-width:0}.cs-main .cs-row>*{min-width:0}
 .cs-main td,.cs-main th{min-width:0;overflow-wrap:anywhere}.cs-main .cs-field label{min-width:0}.cs-main fieldset.cs-field label{display:flex;align-items:flex-start;gap:8px}
 .cs-main fieldset.cs-field label>span{display:block;min-width:0}.cs-main [role=tablist]{flex-wrap:wrap}
-.cs-btn,button.mk-avatar,.cs-main a.cs-ref,.cs-main input:not([type=checkbox]):not([type=radio]),.cs-main select,.cs-tabs a,.cs-mast a,.cs-mast button{min-height:44px;min-width:44px}
+.cs-btn,button.mk-avatar,.cs-main a.cs-ref,.cs-main input:not([type=checkbox]):not([type=radio]),.cs-main select,.cs-tabs a,.cs-mast a,.cs-mast button,.cs-wizmark{min-height:44px;min-width:44px}
+.cs-main :is(.cs-row,.mk-rowname,li,td) a.cs-ref{display:inline-flex;align-items:center;box-sizing:border-box}
 .cs-main input[type=checkbox],.cs-main input[type=radio]{width:24px;height:24px;flex:none}
 :root:root .cs-main input.mk-pick{width:44px;height:44px;margin:0}
 :root:root .mk-open,:root:root .mk-mastsearch{min-width:44px;min-height:44px;box-sizing:border-box;align-items:center}
