@@ -437,7 +437,12 @@ function render(cs, view) {
     /* G41 (D3; K4645): a reading stated too large to keep whole carries `too_large: {bytes, key}` beside its `basis` sentence: the size of its largest part and its key */
     const tl = rdObj && rdObj.too_large && typeof rdObj.too_large === "object" ? rdObj.too_large : rv0 && rv0.too_large && typeof rv0.too_large === "object" ? rv0.too_large : null;
     const tooLarge = tl && Number.isFinite(tl.bytes) && tl.bytes >= 0 && typeof tl.key === "string" ? tl : null;
+    /* R130 (G135b): a picture the OCR member refused is drawn by the word held for the member's own reason (`ocr_refused[].reason`, as reading-pipeline carries
+       `refusal.render.reason`), each reason once, never the size sentence or the generic "declined (PAGE_NOT_RENDERABLE)"; a reason with no held word is not drawn raw */
+    const refusedCodes = [...new Set((rdObj && Array.isArray(rdObj.ocr_refused) ? rdObj.ocr_refused : []).map((r) => (r && typeof r.reason === "string" ? r.reason : "")).filter((c) => /^[A-Z][A-Z0-9_]*$/.test(c) && heldWord("refusal." + c)))];
+    const refusedSaid = refusedCodes.map((c) => cs.w("refusal." + c)).join(" ");
     const statedSaid = textState === "stated" && tooLarge ? cs.w("screen.document.reading.too_large", { size: sizeWord(tooLarge.bytes), key: tooLarge.key })
+      : textState === "stated" && refusedSaid ? refusedSaid
       : textState === "repairable" && heldWord("screen.document.reading.repairable") ? cs.w("screen.document.reading.repairable")
       : textState === "stated" && heldWord("screen.document.reading.stated") && Number.isInteger(rv0 && rv0.bytes) ? cs.w("screen.document.reading.stated", { size: sizeWord(rv0.bytes) })
       : comp && typeof comp.why === "string" && comp.why.trim() ? cs.esc(comp.why.trim()) : basisWords ? cs.esc(basisWords) : undetermined("");
@@ -1779,6 +1784,7 @@ const words = Object.freeze([
   "document.names.title", "document.names.help", "document.names.row", "document.names.chosen.record", "document.names.chosen.member",
   /* T51 (R65–R69, R78): the record of this copy, the fingerprints, the links in five groups, the names, "Your citations, leg by leg" */
   "time.at", "time.clock", "time.am", "time.pm", "document.versions.thiscopy", "state.item.retired.name",
+  "refusal.IMAGE_TOO_LARGE", "refusal.TRUNCATED_IMAGE_DATA", "refusal.UNSUPPORTED_JPEG_PROCESS", "refusal.DECODE_FAILED", "refusal.NO_PAGE_RENDERED",
   "refusal.CONTENT_EXTENT_NO_CHAIN", "refusal.NO_SUCH_BUNDLE", "refusal.NO_BUNDLE", "refusal.NO_SHA", "refusal.VERSION_NOTICE_NO_INQUIRY", "refusal.VERSION_NOTICE_NO_SUBJECT",
   "act.owed_linkopen.label.document", "act.owed_linkopen.does", "act.owed_revisioncompare.label.document", "act.owed_revisioncompare.does",
   "act.owed_hashcopy.label.document", "act.owed_hashcopy.does", "act.versionnotice.does",

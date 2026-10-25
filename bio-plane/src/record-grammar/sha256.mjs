@@ -1,5 +1,5 @@
 // @ts-check
-/* record-grammar: the digests (R20–R23, R25). Moved from the check catalogue at T18 with their comments. The
+/* record-grammar: the digests (R20–R23, R25, R64). Moved from the check catalogue at T18 with their comments. The
    catalogue carried TWO SHA-256 implementations, the stream (`createSha256`) and a synchronous string digest
    (`sha256HexSync`, with its own round-constant table `SHA256_K`); they are consolidated here on one compression
    function and one table (R25), `sha256HexSync` now the stream over the string's UTF-8 bytes. */
@@ -36,6 +36,93 @@ const K = new Int32Array([
 const isByteArrayLike = (c) => c !== null && typeof c === 'object' && !(c instanceof String)
   && Number.isSafeInteger(c.length) && c.length >= 0;
 
+/* The one compression function and padding (R25): a core over eight words, a 64-byte buffer and a length, which both
+   streams below wrap. `init` is a state `snapshot` wrote, already validated, or absent for a new digest. */
+function core(init) {
+  const h = new Int32Array([0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]);
+  const buf = new Uint8Array(64);
+  const w = new Int32Array(64);
+  let bufLen = 0;
+  let total = 0;       // message length in bytes (< 2^53, ample for the store)
+
+  if (init) {
+    init.h.forEach((v, i) => { h[i] = v | 0; });
+    bufLen = init.b.length / 2;
+    for (let i = 0; i < bufLen; i++) buf[i] = parseInt(init.b.slice(2 * i, 2 * i + 2), 16);
+    total = init.t;
+  }
+
+  function compress(bytes, off) {
+    for (let i = 0; i < 16; i++) {
+      w[i] = (bytes[off] << 24) | (bytes[off + 1] << 16) | (bytes[off + 2] << 8) | bytes[off + 3];
+      off += 4;
+    }
+    for (let i = 16; i < 64; i++) {
+      const x = w[i - 15], y = w[i - 2];
+      const s0 = ((x >>> 7) | (x << 25)) ^ ((x >>> 18) | (x << 14)) ^ (x >>> 3);
+      const s1 = ((y >>> 17) | (y << 15)) ^ ((y >>> 19) | (y << 13)) ^ (y >>> 10);
+      w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+    }
+    let a = h[0], b = h[1], c = h[2], d = h[3], e = h[4], f2 = h[5], g = h[6], hh = h[7];
+    for (let i = 0; i < 64; i++) {
+      const S1 = ((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7));
+      const ch = (e & f2) ^ (~e & g);
+      const t1 = (hh + S1 + ch + K[i] + w[i]) | 0;
+      const S0 = ((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10));
+      const maj = (a & b) ^ (a & c) ^ (b & c);
+      const t2 = (S0 + maj) | 0;
+      hh = g; g = f2; f2 = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
+    }
+    h[0] = (h[0] + a) | 0; h[1] = (h[1] + b) | 0; h[2] = (h[2] + c) | 0; h[3] = (h[3] + d) | 0;
+    h[4] = (h[4] + e) | 0; h[5] = (h[5] + f2) | 0; h[6] = (h[6] + g) | 0; h[7] = (h[7] + hh) | 0;
+  }
+
+  return {
+    /** Feed a Uint8Array. */
+    feed(c) {
+      let i = 0;
+      const n = c.length;
+      total += n;
+      if (bufLen > 0) {                                          // top up a partial block
+        while (bufLen < 64 && i < n) buf[bufLen++] = c[i++];
+        if (bufLen === 64) { compress(buf, 0); bufLen = 0; }
+      }
+      while (n - i >= 64) { compress(c, i); i += 64; }           // full blocks, no copy
+      while (i < n) buf[bufLen++] = c[i++];                      // tail into the buffer
+    },
+    /** The state so far: the eight words, the length, and the bytes held back for the next block (hex). */
+    state() {
+      let b = '';
+      for (let i = 0; i < bufLen; i++) b += (buf[i] < 16 ? '0' : '') + buf[i].toString(16);
+      return { h: Array.from(h, (v) => v >>> 0), t: total, b };
+    },
+    get length() { return total; },
+    /** Pad, compress the last block(s) and return the lowercase hex digest. */
+    finish() {
+      const bitHi = Math.floor(total / 0x20000000);              // total*8 >>> 32
+      const bitLo = (total % 0x20000000) * 8;                    // low 32 bits of total*8
+      buf[bufLen++] = 0x80;
+      if (bufLen > 56) { while (bufLen < 64) buf[bufLen++] = 0; compress(buf, 0); bufLen = 0; }
+      while (bufLen < 56) buf[bufLen++] = 0;
+      buf[56] = (bitHi >>> 24) & 0xff; buf[57] = (bitHi >>> 16) & 0xff;
+      buf[58] = (bitHi >>> 8) & 0xff; buf[59] = bitHi & 0xff;
+      buf[60] = (bitLo >>> 24) & 0xff; buf[61] = (bitLo >>> 16) & 0xff;
+      buf[62] = (bitLo >>> 8) & 0xff; buf[63] = bitLo & 0xff;
+      compress(buf, 0);
+      let out = '';
+      for (let i = 0; i < 8; i++) out += ('00000000' + (h[i] >>> 0).toString(16)).slice(-8);
+      return out;
+    }
+  };
+}
+
+/* update()'s input (R20): a Uint8Array as it is, or a byte array-like copied (signed bytes coerce mod 256). */
+function toBytes(chunk) {
+  if (chunk instanceof Uint8Array) return chunk;
+  if (!isByteArrayLike(chunk)) throw new TypeError('sha256 update takes a Uint8Array or a byte array-like, not ' + (chunk === null ? 'null' : typeof chunk));
+  return Uint8Array.from(chunk);
+}
+
 /** Incremental SHA-256 (FIPS 180-4), pure JS, Uint8Array-native, zero
  *  dependencies: one byte per element end to end, no platform digest, no
  *  signed-byte conversion. Exists so oversize multi-part captures stream
@@ -51,80 +138,65 @@ const isByteArrayLike = (c) => c !== null && typeof c === 'object' && !(c instan
  *  offsets: a wrong hash here would silently corrupt every gate verdict, so
  *  those tests are load-bearing, not decorative. */
 export function createSha256() {
-  let h0 = 0x6a09e667 | 0, h1 = 0xbb67ae85 | 0, h2 = 0x3c6ef372 | 0, h3 = 0xa54ff53a | 0;
-  let h4 = 0x510e527f | 0, h5 = 0x9b05688c | 0, h6 = 0x1f83d9ab | 0, h7 = 0x5be0cd19 | 0;
-  const buf = new Uint8Array(64);
-  const w = new Int32Array(64);
-  let bufLen = 0;
-  let total = 0;       // message length in bytes (< 2^53, ample for the store)
+  const c = core();
   let finalized = false;
-
-  function compress(bytes, off) {
-    for (let i = 0; i < 16; i++) {
-      w[i] = (bytes[off] << 24) | (bytes[off + 1] << 16) | (bytes[off + 2] << 8) | bytes[off + 3];
-      off += 4;
-    }
-    for (let i = 16; i < 64; i++) {
-      const x = w[i - 15], y = w[i - 2];
-      const s0 = ((x >>> 7) | (x << 25)) ^ ((x >>> 18) | (x << 14)) ^ (x >>> 3);
-      const s1 = ((y >>> 17) | (y << 15)) ^ ((y >>> 19) | (y << 13)) ^ (y >>> 10);
-      w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
-    }
-    let a = h0, b = h1, c = h2, d = h3, e = h4, f2 = h5, g = h6, h = h7;
-    for (let i = 0; i < 64; i++) {
-      const S1 = ((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7));
-      const ch = (e & f2) ^ (~e & g);
-      const t1 = (h + S1 + ch + K[i] + w[i]) | 0;
-      const S0 = ((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10));
-      const maj = (a & b) ^ (a & c) ^ (b & c);
-      const t2 = (S0 + maj) | 0;
-      h = g; g = f2; f2 = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
-    }
-    h0 = (h0 + a) | 0; h1 = (h1 + b) | 0; h2 = (h2 + c) | 0; h3 = (h3 + d) | 0;
-    h4 = (h4 + e) | 0; h5 = (h5 + f2) | 0; h6 = (h6 + g) | 0; h7 = (h7 + h) | 0;
-  }
-
   return {
     /** Feed a chunk of bytes. Chainable. */
     update(chunk) {
       if (finalized) throw new Error('sha256 stream already finalized');
-      let c = chunk;
-      if (!(c instanceof Uint8Array)) {
-        if (!isByteArrayLike(c)) throw new TypeError('sha256 update takes a Uint8Array or a byte array-like, not ' + (c === null ? 'null' : typeof c));
-        c = Uint8Array.from(c);                                  // signed bytes coerce mod 256
-      }
-      let i = 0;
-      const n = c.length;
-      total += n;
-      if (bufLen > 0) {                                          // top up a partial block
-        while (bufLen < 64 && i < n) buf[bufLen++] = c[i++];
-        if (bufLen === 64) { compress(buf, 0); bufLen = 0; }
-      }
-      while (n - i >= 64) { compress(c, i); i += 64; }           // full blocks, no copy
-      while (i < n) buf[bufLen++] = c[i++];                      // tail into the buffer
+      c.feed(toBytes(chunk));
       return this;
     },
     /** Finalize and return the lowercase hex digest. */
     hex() {
       if (finalized) throw new Error('sha256 stream already finalized');
       finalized = true;
-      const bitHi = Math.floor(total / 0x20000000);              // total*8 >>> 32
-      const bitLo = (total % 0x20000000) * 8;                    // low 32 bits of total*8
-      buf[bufLen++] = 0x80;
-      if (bufLen > 56) { while (bufLen < 64) buf[bufLen++] = 0; compress(buf, 0); bufLen = 0; }
-      while (bufLen < 56) buf[bufLen++] = 0;
-      buf[56] = (bitHi >>> 24) & 0xff; buf[57] = (bitHi >>> 16) & 0xff;
-      buf[58] = (bitHi >>> 8) & 0xff; buf[59] = bitHi & 0xff;
-      buf[60] = (bitLo >>> 24) & 0xff; buf[61] = (bitLo >>> 16) & 0xff;
-      buf[62] = (bitLo >>> 8) & 0xff; buf[63] = bitLo & 0xff;
-      compress(buf, 0);
-      let out = '';
-      const H = [h0, h1, h2, h3, h4, h5, h6, h7];
-      for (let i = 0; i < 8; i++) {
-        const v = H[i] >>> 0;
-        out += ('00000000' + v.toString(16)).slice(-8);
-      }
-      return out;
+      return c.finish();
+    }
+  };
+}
+
+const HEX = /^[0-9a-f]*$/;
+
+/* A snapshot's content, or null when `state` is not one `snapshot()` wrote. */
+function parseSnapshot(state) {
+  let s;
+  try { s = JSON.parse(state); } catch { return null; }
+  const ok = s !== null && typeof s === 'object' && Array.isArray(s.h) && s.h.length === 8
+    && s.h.every((v) => Number.isInteger(v) && v >= 0 && v <= 0xffffffff)
+    && Number.isSafeInteger(s.t) && s.t >= 0 && typeof s.b === 'string' && HEX.test(s.b)
+    && s.b.length % 2 === 0 && s.b.length / 2 === s.t % 64;
+  return ok ? s : null;
+}
+
+/** R64: a stream as `createSha256`'s whose running state can be written down (`snapshot()`, a short string) and
+ *  taken up again (`createResumableSha256(snapshot)`), so a file hashed in parts across objects that leave memory
+ *  between them gives the digest of the whole. A state that is not a string `snapshot()` wrote is a TypeError. */
+export function createResumableSha256(state) {
+  let init = null;
+  if (state !== undefined && state !== null) {
+    init = typeof state === 'string' ? parseSnapshot(state) : null;
+    if (init === null) throw new TypeError('sha256 snapshot is not one snapshot() made');
+  }
+  const c = core(init);
+  let finalized = false;
+  return {
+    update(chunk) {
+      if (finalized) throw new Error('sha256 stream already finalized');
+      c.feed(toBytes(chunk));
+      return this;
+    },
+    /** The running state as a string; the stream stays usable. */
+    snapshot() {
+      if (finalized) throw new Error('sha256 stream already finalized');
+      return JSON.stringify(c.state());
+    },
+    /** The bytes taken so far, a resumed stream's earlier ones included. */
+    get length() { return c.length; },
+    hex() {
+      if (finalized) throw new Error('sha256 stream already finalized');
+      finalized = true;
+      return c.finish();
     }
   };
 }

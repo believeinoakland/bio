@@ -142,7 +142,7 @@ test("R72 (parted upload, who): a caller's `by` in the body names nobody; anothe
   assert.ok(abortOther);
 });
 
-test("R72 (parted upload, part bound): a part whose declared length is over the part size is refused as capture refuses, {size, bound} relayed, before a byte is read and nothing stored (control: a part of exactly the part size is accepted)", async () => {
+test("R72 (parted upload, part bound): a part whose declared length is over the part size is refused as capture refuses, {size, bound} relayed, nothing stored, its body read and discarded so the client reads the answer (capture R113, G176) (control: a part of exactly the part size is accepted)", async () => {
   const w = setup();
   const file = varied(PARTED_PART_BYTES + 10, 11);
   const b = await arm(w, "captureuploadbegin", { by: MEMBER }, { sha256: sha(file), bytes: file.length, statement: STATEMENT });
@@ -153,7 +153,7 @@ test("R72 (parted upload, part bound): a part whose declared length is over the 
   assert.ok([400, 413].includes(r.status));
   assert.equal(r.size, PARTED_PART_BYTES + 1);
   assert.equal(r.bound, PARTED_PART_BYTES);
-  assert.equal(pulled, 0);
+  assert.equal(pulled, 1);   /* capture R113 (G176): the body is drained, never left unread */
   const first = file.subarray(0, PARTED_PART_BYTES);
   const ok = await arm(w, "captureuploadpart", { by: MEMBER, upload: b.upload, index: "0", sha256: sha(first), declared: String(first.length) }, first);
   assert.equal(ok.ok, true);

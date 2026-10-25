@@ -1,6 +1,6 @@
 # capture (T51)
 
-**Status** · session_017HhDkwNt6ddjD3dPVU5hd5 · depth 2 · COMPLETE · handled B36
+**Status** · session_01FX1ovW6LH2kvYSQidSdP3i · depth 2 · COMPLETE · handled B38
 
 ## J1 · COMPLETE
 
@@ -842,3 +842,31 @@ Size (session_017HhDkwNt6ddjD3dPVU5hd5): test runs 9, module lines 5095
 ## J36 · COMPLETE
 
 COMPLETE (CAPTURE #57, job 101, B37; R113 amended, G173). An upload sent in parts survives the object being taken out of memory: the digest of the parts so far is kept with the upload's row (hash_state, written with the part) and taken up again by a new instance; UPLOAD_LOST only when the row cannot say it. Red first and platform check L seen (Miniflare, real object replaced by a 12 s pause). Suite 344/344, checks 0 failures, ownership 0. For you, see my record: record-grammar could offer a digest state (capture carries sha256-resume.mjs until then); g127f-plane test 1 is intermittently red with ECONNRESET (diagnosis P2, not this change).
+
+## Fix round 9 · job 104 (CAPTURE #58, B38; R113 amended, G176, K5005)
+
+(B37, job 101, is merged; its work was already on the tranche tip, so B37 was read and nothing of it was redone.)
+
+**Entries applied**
+1. R113 (G176): `putUploadPart`'s `stop()` no longer cancels the body before it answers. An answer given without the part being kept (every refusal after the request carries a part: fence and argument refusals, unknown or not-open upload, `existed`, `PART_CONFLICT`, `PART_OUT_OF_ORDER`, `PART_IN_PROGRESS`, `PART_SIZE` by `declared`, `UPLOAD_LOST`) first reads and discards the body, and stops reading, cancelling, once more than the part size has been read (the row's `part_bytes` once the row is known, `PARTED_PART_BYTES` before it, the upper bound of any part). A body that cannot be read further is answered all the same. A body larger than the part size is cut at the part size, as before. Code: `capture/index.mjs` `putUploadPart` (`drainTo`, `drained`, `stop`), the read loop counting what it read.
+
+**Tests (R113)**
+- `g127f-plane.test.mjs` (platform check L, real Miniflare object and real R2): the re-put of a held 16 MiB part sent whole 20 times reads `existed` every time (control: other bytes at that index still `PART_CONFLICT`); a 16 MiB part sent whole 20 times after the abort reads `UPLOAD_UNKNOWN` every time; a 17 MiB body to a 16 MiB part is still cut (`PART_SIZE` 413 or the connection closed, nothing stored). LOAD-REDS' `unread()` is not merged; these full-body forms stand in its place.
+- `g127f-t51.test.mjs`: the control "a part declared another size is refused before one byte is read" is restated for the amended R113: the refusal is still given before the bytes are kept (nothing stored), and now its body is read whole (`pulled` 4, not cancelled); an out-of-order part's body is read whole; a body past the part size is cancelled before it is all pulled.
+
+**Red first (seen), then green.** Four copies of `g127f-plane.test.mjs` at once beside 3 CPU burners (L-PAR4; script in my scratchpad), before the change: `pass 2 fail 5`, `pass 1 fail 6`, `pass 1 fail 6`, `pass 5 fail 2` for the four copies, `fetch failed / write ECONNRESET` in the re-put and late-part tests (and, as the Miniflare instance is shared, the file's other tests taken down with them). After the change, three rounds of that setup: 12 of 12 copies `pass 7 fail 0`; the file alone `pass 7 fail 0`.
+
+**Found in another module (for BOB; not changed).** `control-plane`'s `test/m/control-plane/r72-parted.test.mjs` test "R72 (parted upload, part bound): a part whose declared length is over the part size is refused ... before a byte is read" asserts `pulled === 0` (line 156) on the body of a part whose `declared` is over the part size. R113 as amended says such an answer is given after the body is read and discarded, so that assertion contradicts the requirement and now fails (1 of 60 in the users' run). It is control-plane's test: its job restates it (the refusal and its `{size, bound}` stand; the body is read and discarded, `pulled` 1 for that stream, and a body past the part size is cut).
+
+**Deferred.** Nothing. **Rows owed.** None (no sentence added).
+
+**Tests and checks.** capture suite 344/344 non-platform (after restating g127f-t51's control), platform files alone: `g127f-plane` 7/7, `plane`, `g41b-plane`, `r7-upload-plane` 1/1 each. Users naming the parted ops: affordances t36, screens-intake r9-parts, store-door dispatch, control-plane stamps, r72-declared-door: green; r72-parted 1 red, the control-plane assertion above. `impact.mjs origin/tranche/T51 HEAD` names 98 modules because `index.mjs` carries the shared `DECLARED_OPS`, which is unchanged; I ran the users that drive the changed code. Checks (from the process repository, product /home/user/bio): format 0 failures, architecture 0, coverage 0 (66 of 66 live ids named), words 0 (inline 0, plain 0, testcopy 0, missingkey 0), ownership 0. Also seen, not mine: `node bio-plane/src/setup-words/build.mjs --check` reports `rows.mjs` stale at `content.extent-core.a_part_extent_names_neither` (a `content` word, nothing of capture's).
+
+**COMPLETE fields.** Cause: `stop()` cancelled the part's body before answering, so workerd closed the connection on the unread body and a client still writing got `write ECONNRESET` in place of the answer. Why missed: `g127f-plane` sent a body only to parts it kept, and its re-put and late-part cases did not run under load (diagnosis §2: 12 of 20 red only beside parallel copies and CPU burners). Red first: seen, above. Platform check: L, passed.
+
+Size (session_01FX1ovW6LH2kvYSQidSdP3i): test runs 16, module lines 5113
+
+## J37 · COMPLETE
+
+COMPLETE (CAPTURE #58, job 104, B38; R113 amended, G176). putUploadPart now reads and discards a part's body (at most the part size; a larger body is still cut there) before any answer that keeps nothing, so a client still sending reads the JSON answer, not ECONNRESET. Red first seen under L-PAR4 (4 copies + 3 burners: 2/7, 1/7, 1/7, 5/7 passing, ECONNRESET); green after, 12 of 12 copies 7/7 over three rounds. Platform check L passed. Capture suite 344/344; checks (format, architecture, coverage, words, ownership) 0 failures.
+FOR YOU: control-plane's test/m/control-plane/r72-parted.test.mjs line 156 asserts pulled === 0 for an over-size declared part; that contradicts the amended R113 and now fails (1 of 60 users). It is control-plane's to restate (see my record). Also seen, not mine: setup-words --check reports rows.mjs stale at content.extent-core.a_part_extent_names_neither.
