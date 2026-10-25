@@ -43,7 +43,7 @@ const WORDS = {
   members: [...STATES, "screen.members.name", ...own("screen.members."), ...["member", "may-do", "expertise"].flatMap((c) => [`column.members.${c}.name`, `column.members.${c}.shows`]), "member.founder.unnamed", "member.founder.unnamed.help", "screen.group.name", "screen.places.name", "screen.recovery.name",
     ...LABELS("members", ["memberadd", "membercaps", "memberset", "adminendorse", "adminremove", "expertiseconfirm", "invitewithdraw",
       "websitekeycreate", "joinlinkenable", "signerset", "signeradd"]), "refusal.BAD_KEY", "refusal.NO_SUCH_MEMBER", "screen.members.signer.held.nodate",
-    "act.owed_passwordresetlink.label.members", "act.owed_expertisewithdraw.label.members", "act.owed_expertisewithdraw.does", "refusal.CONSENSUS_REQUIRED", "shell.card.member"],
+    "act.owed_passwordresetlink.label.members", "act.owed_expertisewithdraw.label.members", "act.owed_expertisewithdraw.does", "refusal.CONSENSUS_REQUIRED", "shell.card.member", "screen.projects.name", "screen.members.tip.owner", "screen.members.tip.workson"],
   teamai: [...STATES, "screen.teamai.name", ...own("screen.teamai.", "screen.members.key.", "screen.members.keepaway."), ...PANEL, "ai.whopays", "act.aikeepaway.does", "screen.connect.whopays.summary", "ai.usage.meter.month_group",
     ...["ask", "draft", "run", "enquire", "read", "transcribe", "account", "suggestions"].map((u) => `ai.use.${u}.inline`),
     ...LABELS("teamai", ["groupkeyset", "groupkeyswitch", "accountusesset", "ailimitset", "groupkeyremove", "aikeepaway"])],

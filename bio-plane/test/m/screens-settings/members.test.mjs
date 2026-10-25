@@ -374,9 +374,9 @@ test("R29 Administrators and Active members count the roster as listed, the foun
 test("R29 control: a member with no expertise shows no Expertise, and an empty cell draws nothing", async () => {
   const a = await open("members", { me: ADMIN, table: membersTable() });
   const cells = (key) => all(rowOf(a.tree, key), (e) => e.tag === "td").map((c) => textOf(c).trim());
-  const last = (key) => cells(key)[cells(key).length - 1];
-  assert.equal(last("dev"), "", "dev declared nothing: the cell is empty");
-  assert.ok(last("ana").includes("CPA"), "ana declared CPA");
+  const expertise = (key) => cells(key)[5];   // handle, cover, role, may do, status, expertise (then the projects, R47)
+  assert.equal(expertise("dev"), "", "dev declared nothing: the cell is empty");
+  assert.ok(expertise("ana").includes("CPA"), "ana declared CPA");
   assert.ok(!textOf(rowOf(a.tree, "dev")).match(/undefined|null/));
 });
 
