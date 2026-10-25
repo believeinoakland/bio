@@ -48,3 +48,20 @@ test("R25: an agent's op graded as publish carries aiCred as publishpreflight do
     for (const kind of ["founder", "member", "admin", "probe"]) assert.equal(Q(make(op, C[kind])).has("aiCred"), false, `${kind} ${op}`);
   }
 });
+
+test("R25: the walker's case in a world: the project's owner, holding the publish capability, is answered by the pre-flight on `publishcheck` as on `publishpreflight`, never NOT_THE_PROJECT_OWNER; nothing is held for a target that is no finding", async () => {
+  const w = await storeWorld();
+  const owner = await w.signIn("admin");
+  const project = await w.recipes.project(owner, "Walker's project");
+  const held = await w.recipes.hold(owner, "Minutes", "the council met on a Tuesday", project);
+  const ask = (op, as) => w.door({ url: `/api/?op=${op}&project=${project}`, init: { method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ project, targets: [held.bundle], roles: { [held.bundle]: "load_bearing" }, scope: "s", statement: "It does not cover the amendments.",
+      subjectPosition: "not_sought", subjectJustification: "A public record.", biasAcknowledgement: "Ours.", excluded: [], author: "FORGED" }) } }, as);
+  const pre = (await ask("publishpreflight", owner)).json.result;
+  const check = (await ask("publishcheck", owner)).json.result;
+  assert.equal(pre.first.reason, "NOT_AN_INQUIRY", "control: the owner reaches the pre-flight's own blocker");
+  assert.notEqual(check.reason, "NOT_THE_PROJECT_OWNER");
+  assert.deepEqual([check.reason, check.first, check.held, check.ok], [pre.first.reason, pre.first, false, false]);
+  const sql = w.sql.exec("SELECT COUNT(*) AS n FROM case_checks").toArray()[0].n;
+  assert.equal(sql, 0, "no check is recorded for a blocked pre-flight");
+});
