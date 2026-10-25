@@ -80,3 +80,7 @@ T51-191 applied: the eleven plain findings in src/bias/index.mjs read through lo
 - `bio-plane/src/setup-words/build.mjs --check`: a stale-rows note for `rows.mjs`, expected; no refusal naming bias.
 
 Commit `d16c6d15f7` (the two files). Size (session_011rb4tKh8PQJkPQoMa9Dzgp): test runs 3, module lines 1922
+
+## J3 · COMPLETE
+
+B3 done: bias fixture biasRefusedPromote published (bio-plane/test/m/bias/fixtures.mjs, new; its test fixtures.test.mjs names R9 and checks the real BIAS_REFUSED with its three findings). Markers added: none. Lines left, not mine: screens-settings' hand-built bias answers (its fixtures.mjs:473-479, bias.test.mjs:61, :140) re-point in its own job. Tests: fixture test 1 pass; bias suite 80 tests, 79 pass, 0 fail, 1 todo (R26, K102). Checks: fixtures 0 failures for bias; format 0; words 0 for bias; architecture 0 (repo-wide); ownership 0. Impact names bias only. Record: build/jobs/T51/bias.md (Completion, fix round 10 batch 4). Commits d16c6d15f7 (files), 5f725eb1ad (record). Size (session_011rb4tKh8PQJkPQoMa9Dzgp): test runs 3, module lines 1922
