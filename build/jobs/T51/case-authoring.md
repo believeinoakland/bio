@@ -645,3 +645,7 @@ Module tests: 258 of 259 pass; the one failure is the severed chain. format 0, a
 - format 0; architecture 0; coverage 59 of 59 live ids named; ownership 0 failures.
 
 **Size (session_01PkeaPY8AiQwGQmpx2xoXoy): test runs 7, module lines 3121** (`bio-plane/src/case-authoring/*.mjs`).
+
+## J30 · REPORT
+
+REPORT for CHANGE B39 (R87). Done and pushed (job/T51/case-authoring, 5b04edf896). Prepare writes each member finding's basis version on its case_roles row: basis_version (the name, basis-versions currentOf for the publishing project) and basis_version_identity (SHA-256 of the version's composition). A project naming no version writes null for both. Reading taken: 'that finding's project' is the publishing project of this act. Failing-first test r87-basis-version.test.mjs names R87, with a control (no version: both null); red with the source reverted, green with the change. Module suite: 260 of 261 pass; the one failure is the R31 chain, which waits on the four jobs as B38 said. Checks: format 0, architecture 0, coverage 59 of 59 live ids, ownership 0. Record: build/jobs/T51/case-authoring.md, 'Completion record for B39'. R31 is unchanged; COMPLETE will cover both once the R31 CHANGE comes.
