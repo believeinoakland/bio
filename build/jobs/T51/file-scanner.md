@@ -224,3 +224,7 @@ COMPLETE for B20 (START, fix round 10, Wave A batch 1: R11c, `reputationRefresh`
 **Checks** (civicos-process): file-scanner tests 106, pass 95, fail 0, skipped 11; `fixtures.mjs . file-scanner --list` 0 failures; format 0; architecture 0; coverage file-scanner 35 of 35 ids named; ownership 0; `checks/run.mjs`: words 0 failures (file-scanner none), format/architecture/channels 0; impact set: screens-settings `security-seam.test.mjs` 2 of 2 pass. Whole-tree fixtures/coverage failures belong to other modules (file-safety `wakes.test.mjs`:163 is the user above).
 **Deferred:** none. **Found in other modules:** none.
 - Size (session_01NwJ1dye2ForcwCFpMuZJ1q): test runs 9, module lines 5970
+
+## J21 · COMPLETE
+
+COMPLETE for B20: R11c fixed (NOT_RENDERABLE message reaches the answer, failing-first test seen red), reputationRefresh fixture published with its test; all checks green. Platform check owed at the redeploy. Detail in J20 of the record.
