@@ -3,8 +3,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { registerDeclaredOps as registerOps } from "../../../src/op-declarations/index.mjs";
-import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, rawKeys, inquiryMd, INQUIRY_REFS, LEGS, BASIS, plane, says, section, lead, word, day, POLICY,
+import { boot, ok, refusedIn } from "../interface-shell/harness.mjs";
+import { open, storeWorld, WORLD_FOUNDER_HANDLE, main, actsIn, button, fill, press, rawKeys, inquiryMd, INQUIRY_REFS, LEGS, BASIS, plane, says, section, lead, word, day, POLICY,
   SCREENS, P, Q, D } from "./fixtures.mjs";
 
 /* K4245 (test-support R17): every owner's declarations registered once, before the first read, by the one registrar */
@@ -14,7 +14,49 @@ const at = "/app/question/" + Q;
 const GROUNDS = [{ ground: "part 1", asserted_by: "member:dev", at: "2026-10-05T09:00:00Z" }];
 const grouped = (o = {}) => inquiryMd(P, INQUIRY_REFS, { legs: LEGS.map((l) => (l.target === D ? { ...l, ground: "part 1" } : l)), grounds: GROUNDS, ...o });
 const A = { images: { [Q]: { "bundle.md": grouped() } } };
+/* still scripted (airuns): the machine-reading, proposal and translate tests below need an accepted or suggested machine reading, which no recipe makes (needed: a question holding a machine-authored version, with its run) */
 const REACH = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }), agentpack: ok({ ok: true, pack: { version: "p@1" } }), airuns: ok({ ok: true, runs: [] }) };
+/** A project with `n` held documents and a question in it resting on them (`legs` overrides each leg's keys), drawn into the project: all by real acts over the world.
+ *  Answers `{world, ann, project, docs, id, page(opts)}`; `page` boots the question's page over the world (`plane` overrides only the ops it names, as `boot` does). */
+const stateWorld = async ({ n = 2, legs = null, role = "supports", world = null, as = "ann", names = null } = {}) => {
+  world = world || await storeWorld();
+  const ann = await world.signIn(as, { capabilities: ["contribute", "create_projects"] });
+  const project = await world.recipes.project(ann, "Stormwater");
+  const docs = [];
+  for (let i = 0; i < n; i++) docs.push((await world.recipes.hold(ann, names ? names[i] : "Passage " + (i + 1), "The Director shall repair each reported pothole, part " + (i + 1) + ".", project)).bundle);
+  const made = docs.map((target, i) => ({ target, role, grade: "B", grade_axis: "capture", grade_source: "capture", ...(legs ? legs[i] : {}) }));
+  const id = (await world.recipes.question(ann, project, { title: "Seven days", text: "Do crews repair each pothole within seven days?", legs: made, draw: true })).id;
+  const page = async (o = {}, who = ann) => {
+    const { door, session } = world.boot(who);
+    const p = await boot({ screens: SCREENS, door, session, path: "/app/question/" + id, ...o });
+    await p.settle();
+    return p;
+  };
+  return { world, ann, project, docs, id, page };
+};
+/** the question's leg on `target` severed, by the acts the page makes (a selection, then `sever` with the question as the citing object) */
+const severLeg = async (w, target, reason = "the wrong year's orders") => {
+  const sel = await w.ann.act("select", { body: { ids: [target] } });
+  await w.ann.act("sever", { query: { project: w.id, handle: sel.handle, reason }, body: {} });
+};
+/** the partition held, by the act the page's "Save the answers" makes (`grounds` are `{ground, legs: [ordinals]}`) */
+const ground = (w, grounds, reason = "my reading") => w.ann.act("inquiryground", { body: { target: w.id, grounds, reason } });
+/** the team's Claude account, by the administrator's real acts (the world made with `storeWorld({ ai: true })`): her password again, the team's key set and switched on, its notice read */
+const aiTeam = async (world) => {
+  const admin = await world.signIn(WORLD_FOUNDER_HANDLE);
+  await admin.act("reauth", { body: { password: admin.password } });
+  await admin.act("groupkeyset", { body: { key: "sk-ant-api03-" + "w".repeat(40) } });
+  await admin.act("groupkeyswitch", { body: { on: true } });
+  await admin.act("groupkeynoticeseen", { body: {} });
+};
+/** the member reads the team's notice (`groupkeynoticeseen`), as each member must before the assistant answers her */
+const readNotice = (w) => w.ann.act("groupkeynoticeseen", { body: {} });
+/** a run of the member's own over the question, opened by her real act (`airunopen`: running, as the page's own press opens one, before anything dispatches it) */
+const openRun = async (w, run = "RUN-" + "c".repeat(16)) => {
+  await w.ann.act("airunopen", { body: { run, contextType: "inquiry", contextId: w.id, skillVersion: "investigative-session@1", principalClaude: `member:${w.ann.member}`, mode: "check" } });
+  return run;
+};
+
 const reach = (o = {}) => ({ boot: { plane: { ...plane(o), ...REACH, ...(o.reach || {}) } } });
 
 test("R2 reads: the inquiry, its strength, basis versions, hunches, what it waits on and what relies on it", async () => {
@@ -69,18 +111,20 @@ test("R2 R34 Supports lists every passage the question cites from its own legs, 
 });
 
 test("R34 a question with two citations and no reading lists both; the strength sentence is drawn by its words, never raw grade text", async () => {
-  const p = await open(at, { ...A, plane: { basisversions: ok({ ok: true, inquiry: Q, versions: [] }) } });
+  const w = await stateWorld({ n: 2 });
+  await ground(w, [{ ground: "part 1", legs: [0] }]);
+  await severLeg(w, w.docs[1]);
+  const p = await w.page();
   const sup = section(p, "screen.question.supports.head");
-  assert.deepEqual(sup.querySelectorAll("a.cs-ref").map((a) => a.getAttribute("href")).sort(), [`/app/document/${D}`, "/app/document/INFO-2026-0005"]);
+  assert.deepEqual(sup.querySelectorAll("a.cs-ref").map((a) => a.getAttribute("href")).sort(), w.docs.map((d) => `/app/document/${d}`).sort());
   assert.ok(!/\bB\/C\b|grade:/.test(main(p).querySelector(".mk-strengthbox").textContent.replace(word("screen.question.strength.against", { capture: "B", connection: "B" }), "")));
   /* control: a severed leg is drawn severed (R12) */
   assert.ok(sup.querySelector('[data-leg="severed"]'));
 });
 
 test("R23 state b: three cited passages and no partition: the ask first, no strength mark; saving sends the partition the answers give", async () => {
-  const legs = [{ target: D, role: "supports", grade: "B" }, { target: "INFO-2026-0007", role: "supports", grade: "B" }, { target: "INFO-2026-0009", role: "supports", grade: "C" }];
-  const refs = legs.map((l) => [l.target, "cites", "confirmed", null]);
-  const p = await open(at, { images: { [Q]: { "bundle.md": inquiryMd(P, refs, { legs }) } }, plane: { inquiryground: ok({ ok: true, act: "authored" }) } });
+  const w = await stateWorld({ n: 3, legs: [{ grade: "B" }, { grade: "B" }, { grade: "C" }] });
+  const p = await w.page();
   const m = main(p);
   assert.ok(says(m, "question.ask.first.title") && says(m, "question.ask.first.says"));
   assert.equal(m.querySelector(".mk-strengthbox"), null, "no strength mark and no strength sentence in state b");
@@ -97,12 +141,12 @@ test("R23 state b: three cited passages and no partition: the ask first, no stre
   p.doc.getElementById("ask-which-1-1").checked = true;
   await press(p, "inquiryground", { reason: "my first reading" });
   assert.deepEqual(p.byOp("inquiryground")[0].body.grounds, [{ ground: "part 1", legs: [1, 2] }]);
-  assert.equal(p.byOp("inquiryground")[0].body.target, Q);
+  assert.equal(p.byOp("inquiryground")[0].body.target, w.id);
   assert.ok(p.byOp("inquiryground")[0].body.grounds.every((g) => !("statement" in g)), "each part's statement left empty");
   /* no drawn word is AND or OR */
   assert.ok(!/\b(AND|OR)\b/.test(m.textContent));
   /* control: a question with a partition draws state a */
-  const a = await open(at, A);
+  const a = await w.page();
   assert.ok(main(a).querySelector(".mk-strengthbox") && !section(a, "question.ask.title"));
 });
 
@@ -115,6 +159,7 @@ test("R24 R54 the read-back: one single part and one two-passage part in both sh
   const titled = (id, t) => ({ "bundle.md": `---\nid: ${id}\ntitle: "${t}"\n---\n` });
   const docs = { "INFO-2026-0007": titled("INFO-2026-0007", "The count"), "INFO-2026-0009": titled("INFO-2026-0009", "The audit") };
   const p = await open(at, { images: { [Q]: { "bundle.md": md }, ...docs }, plane: {
+  /* still scripted (partitionindependence, inquirypartition): needed: a recipe for two held documents issued by one entity (a shared origin), and a partition restructured by a second member with a connection-axis grade on a leg */
     partitionindependence: ok({ ok: true, inquiry: Q, independence: { checked: true, parts: 2, shared: [{ a: "part 1", b: "part 2", through: ["issuer:Public Works"] }], complete: true } }),
     /* R54: who set it and each change come from `inquirypartition`; a `strength_after` of null is said, never computed */
     inquirypartition: ok({ ok: true, id: Q, grouped: true, groups: [{ ground: "part 1", asserted_by: "dev", at: "2026-10-05T09:00:00Z", legs: [0] }], ungrouped: [],
@@ -184,6 +229,7 @@ test("R25 readings: three drawn with their states, one a what-if, stands on the 
   assert.equal(p.byOp("versionreject")[0].body.reason, "not enough on its own");
   /* Stand on: offered only on an accepted reading, not the CURRENT, to a joined member */
   const v2 = versions.map((v) => (v.name === "Two counts" ? { ...v, state: "accepted" } : v));
+  /* still scripted (basisversions, versioncurrent, projectparticipants, versionaccept/consider/reject/revert/hide): needed: a recipe for a question holding readings in states accepted, considering, suggested and rejected (a versions block in its bundle) */
   const c = await open(at, { ...A, plane: { basisversions: (r) => ok({ ok: true, inquiry: Q, versions: v2, ...(r.query.project ? { current: { project: P, version: "Seven-day standard" } } : {}) }),
     versioncurrent: ok({ ok: true }), projectparticipants: ok({ ok: true, participants: [{ handle: "mai", state: "joined", owner: 0 }] }) } });
   const s2 = section(c, "question.readings.title");
@@ -237,6 +283,7 @@ test("R35 R41 R50 conclude is offered once a passage is cited, on a reading that
   assert.ok(says(main(empty), "question.empty.conclude.own"));
   assert.ok(!actsIn(main(empty)).includes("conclude") && section(empty, "screen.question.concluding.head") === undefined);
   /* cited, and no reading stands: the form is offered with her own reading as the choice */
+  /* still scripted (basisversions, conclude): needed: a recipe for a question with an accepted reading, or one with only a considering reading (basis-versions has no act that makes a version) */
   const none = await open(at, { ...A, plane: { basisversions: ok({ ok: true, inquiry: Q, versions: [{ name: "draft", state: "considering", legs: [] }] }) } });
   const c = section(none, "screen.question.concluding.head");
   assert.ok(actsIn(c).includes("conclude"));
@@ -265,32 +312,39 @@ test("R41 conclude's controls: an empty falsifier with the box unticked sends no
 });
 
 test("R41 state c, new and empty: nothing cited yet, the three ways in; the capture link carries the question (R38)", async () => {
-  const empty = inquiryMd(P, [], { legs: [] });
-  const p = await open(at, reach({ images: { [Q]: { "bundle.md": empty } } }));
+  const world = await storeWorld({ ai: true });
+  await aiTeam(world);
+  const w = await stateWorld({ world, n: 0 });
+  const p = await w.page();
   const s = section(p, "question.empty.heading");
   for (const k of ["question.empty.note", "question.empty.capture", "question.empty.find", "question.empty.ask"]) assert.ok(says(s, k), k);
-  assert.equal(s.querySelector('[data-adddoc="question"]').getAttribute("href"), "/app/capture/address/" + Q);
+  assert.equal(s.querySelector('[data-adddoc="question"]').getAttribute("href"), "/app/capture/address/" + w.id);
   assert.deepEqual(actsIn(s).sort(), ["airunopen", "search"]);
   /* without the assistant reachable, no "Ask the assistant to look" */
-  const off = await open(at, { images: { [Q]: { "bundle.md": empty } } });
+  const bare = await stateWorld({ n: 0 });
+  const off = await bare.page();
   assert.deepEqual(actsIn(section(off, "question.empty.heading")), ["search"]);
 });
 
 test("R41 state d: a run of hers at work, the run's words and Stop the run", async () => {
-  const run = { id: "RUN-" + "c".repeat(16), status: "running", ticks: 3, principal: { plane: "member:mai" } };
-  const p = await open(at, reach({ ...A, reach: { airuns: ok({ ok: true, runs: [run] }) }, plane: { airunclose: ok({ ok: true }) } }));
+  const world = await storeWorld({ ai: true });
+  await aiTeam(world);
+  const w = await stateWorld({ world, n: 1 });
+  await readNotice(w);
+  const run = await openRun(w);
+  const p = await w.page();
   const s = section(p, "question.run.heading");
   assert.ok(says(s, "question.run.leave"));
   await press(p, "airunclose", { within: s });
-  assert.deepEqual(p.byOp("airunclose")[0].body, { run: run.id, bound: "cancelled" });
+  assert.deepEqual(p.byOp("airunclose")[0].body, { run, bound: "cancelled" });
 });
 
 test("R41 controls (D29): a run opened and withheld is never drawn at work; the withholding is said by its words", async () => {
-  const empty = inquiryMd(P, [], { legs: [] });
-  let runs = [];
-  const p = await open(at, reach({ images: { [Q]: { "bundle.md": empty } }, reach: { airuns: () => ok({ ok: true, runs }) }, plane: {
-    airunopen: (r) => { runs = [{ id: r.body.run, status: "running", ticks: 1, principal: { plane: "member:mai" } }]; return ok({ run: r.body.run, started: true, status: "running" }); },
-    airundispatch: ok({ run: "x", found: true, dispatched: false, status: "running", withheld: "AGENT_WORKER_UNBOUND" }) } }));
+  const world = await storeWorld({ ai: true });
+  await aiTeam(world);
+  const w = await stateWorld({ world, n: 0 });
+  await readNotice(w);
+  const p = await w.page();
   await press(p, "airunopen");
   assert.equal(section(p, "question.run.heading"), undefined, "never drawn at work");
   assert.ok(says(main(p).querySelector('[data-refusal="airundispatch"]'), "dock.withheld.AGENT_WORKER_UNBOUND"));
@@ -299,6 +353,7 @@ test("R41 controls (D29): a run opened and withheld is never drawn at work; the 
 test("R41 state e: the assistant's proposal, machine work, accepted or declined with a reason", async () => {
   const versions = [{ name: "Proposed", state: "suggested", author: "class:ai/t", run: "RUN-1", claim: { text: "About 9 in 10 within seven days." }, grounds: [],
     legs: [{ target_id: D, target_title: "the 2026 performance report" }] }];
+  /* still scripted (basisversions, versionreject): needed: a recipe for a question with a suggested machine reading and its run */
   const p = await open(at, reach({ ...A, plane: { basisversions: ok({ ok: true, inquiry: Q, versions }), versionreject: ok({ ok: true }) } }));
   const s = section(p, "question.proposal.heading");
   assert.ok(s.querySelector('[data-origin="machine"]') && s.textContent.includes("About 9 in 10 within seven days."));
@@ -353,12 +408,16 @@ test("R41 state g: concluded over a project is drawn from the read that names th
 });
 
 test("R36 C63 after planopen, the question opens its plan page (fix round 3; it no longer stays to link it); control: a refused press opens none", async () => {
-  const p = await open(at, { ...A, plane: { planopen: ok({ ok: true, id: "PLAN-2026-0003", title: "Ask the committee" }) } });
+  const w = await stateWorld({ n: 1 });
+  const p = await w.page();
   assert.equal(main(p).querySelector("[data-plan]"), null);
   fill(p, { "question-plan": "Ask the committee" });
   await press(p, "planopen");
-  assert.deepEqual(p.byOp("planopen")[0].body, { project: P, title: "Ask the committee", subjects: [{ kind: "inquiry", inquiry: Q }] });
-  assert.equal(p.location.pathname, "/app/plan/PLAN-2026-0003", "the plan page is opened with the plan as subject");
+  assert.deepEqual(p.byOp("planopen")[0].body, { project: w.project, title: "Ask the committee", subjects: [{ kind: "inquiry", inquiry: w.id }] });
+  assert.match(p.location.pathname, /^\/app\/plan\/PLN-/, "the plan page is opened with the plan as subject");
+  const plan = decodeURIComponent(p.location.pathname.slice("/app/plan/".length));
+  const held = await w.ann.read("plans", { query: { project: w.project } });
+  assert.ok(JSON.stringify(held).includes(plan) && JSON.stringify(held).includes("Ask the committee"), "the plan the page opened is the one the plane holds: " + JSON.stringify(held).slice(0, 300));
 });
 
 test("R31 Read in my language sends the question as subject, the answer drawn in place and labeled, the original back by one press", async () => {
@@ -396,16 +455,20 @@ test("R39 no heading is a record id; a question with no words or title draws und
 });
 
 test("R2 the other acts send what their owners take", async () => {
-  const p = await open(at, { ...A, plane: { narrow: ok({ ok: true }), hypothesishold: ok({ ok: true }), checkrequest: ok({ ok: true }), heldrestore: ok({ ok: true }) } });
+  const w = await stateWorld({ n: 1 });
+  const p = await w.page();
   /* R87: Narrow is exercised in fr28-question.test.mjs (it reads the proposed parts first) */
   fill(p, { "question-hunch": "Inspections close them.", "question-hunch-kind": "flow" });
   await press(p, "hypothesishold");
-  assert.deepEqual(p.byOp("hypothesishold")[0].body, { inquiry: Q, kind: "flow", statement: "Inspections close them.", about: { from: D, to: Q } });
+  assert.deepEqual(p.byOp("hypothesishold")[0].body, { inquiry: w.id, kind: "flow", statement: "Inspections close them.", about: { from: w.docs[0], to: w.id } });
   fill(p, { "question-check": "engineering", "question-check-note": "the crew reports" });
   await press(p, "checkrequest");
-  assert.deepEqual(p.byOp("checkrequest")[0].body, { target: Q, label: "engineering", note: "the crew reports" });
-  await press(p, "heldrestore", { reason: "it is the right year after all" });
-  assert.deepEqual(p.byOp("heldrestore")[0].body, { ids: ["INFO-2026-0008"], reason: "it is the right year after all" });
+  assert.deepEqual(p.byOp("checkrequest")[0].body, { target: w.id, label: "engineering", note: "the crew reports" });
+  /* a document the member set aside that a question waits on (the world's recipe: a capture request drained, its copy promoted and set aside), in the same project */
+  const aside = await w.world.recipes.setAside(w.ann, { project: w.project });
+  const r = await w.page({ path: "/app/question/" + aside.question });
+  await press(r, "heldrestore", { reason: "it is the right year after all" });
+  assert.deepEqual(r.byOp("heldrestore")[0].body, { ids: [aside.document], reason: "it is the right year after all" });
 });
 
 test("R2 cite chooses its passage in Find in over the question's project; Find another source searches its words", async () => {
@@ -441,36 +504,49 @@ test("R12 sever is drawn on each live leg (confirmed or proposed) and reinstate 
 });
 
 test("R12 sever and reinstate select the leg's target, then act on the question as the citing object, with her reason", async () => {
-  const p = await open(at, { ...A, plane: { select: (r) => ok({ ok: true, handle: "SEL-" + r.body.ids[0], items: r.body.ids }),
-    sever: ok({ ok: true, severed: [D] }), reinstate: ok({ ok: true, reinstated: ["INFO-2026-0005"] }) } });
+  const w = await stateWorld({ n: 2 });
+  const [live, gone] = w.docs;
+  await severLeg(w, gone, "the wrong year's orders");
+  const p = await w.page();
   await press(p, "sever", { reason: "it is the 2023 policy", within: section(p, "screen.question.supports.head") });
-  await press(p, "reinstate", { reason: "the orders were right after all" });
-  assert.deepEqual(p.byOp("select").map((r) => r.body), [{ ids: [D] }, { ids: ["INFO-2026-0005"] }]);
+  /* the page re-reads what her press did: the first leg is severed now, so the leg she reinstates is the one severed before, named by its row */
+  const rowOf = (pg, target) => section(pg, "screen.question.supports.head").querySelectorAll(".cs-row").find((r) => r.querySelector(`a.cs-ref[href="/app/document/${target}"]`));
+  await press(p, "reinstate", { reason: "the orders were right after all", within: rowOf(p, gone) });
+  assert.deepEqual(p.byOp("select").map((r) => r.body), [{ ids: [live] }, { ids: [gone] }]);
   const sv = p.byOp("sever")[0].query, rn = p.byOp("reinstate")[0].query;
-  assert.deepEqual([sv.project, sv.handle, sv.reason], [Q, "SEL-" + D, "it is the 2023 policy"]);
-  assert.deepEqual([rn.project, rn.handle, rn.reason], [Q, "SEL-INFO-2026-0005", "the orders were right after all"]);
+  assert.deepEqual([sv.project, sv.reason], [w.id, "it is the 2023 policy"]);
+  assert.deepEqual([rn.project, rn.reason], [w.id, "the orders were right after all"]);
+  assert.ok(sv.handle && rn.handle && sv.handle !== rn.handle, "each selection is its own handle, the one the selection answered");
+  /* the real record now holds what she did: the first leg severed, the second live again */
+  const after = await w.page();
+  assert.deepEqual(actsIn(rowOf(after, live)), ["reinstate"], "the first leg is severed now");
+  assert.ok(actsIn(rowOf(after, gone)).includes("sever") && !actsIn(rowOf(after, gone)).includes("reinstate"), "the second leg is live again");
   /* controls: a selection refused sends no act and says so beside it */
-  const s = await open(at, { ...A, plane: { select: refusedIn("SCOPE_TOO_LARGE") } });
+  const s = await w.page({ plane: { select: refusedIn("SCOPE_TOO_LARGE") } });
   const slot = await press(s, "sever", { reason: "why", within: section(s, "screen.question.supports.head") });
   assert.ok(says(slot, "screen.question.leg.unselectable"));
   assert.equal(s.byOp("sever").length, 0);
 });
 
 test("R2 R39 (K3402) the question says who opened it, by handle from the record's first promotion; a cited passage is named by its words or its document's title, never its id", async () => {
-  const hist = JSON.stringify({ target: Q, base: null, created: "2026-10-03T10:00:00Z", author: "member:dev" });
-  const later = JSON.stringify({ target: Q, base: "x", created: "2026-10-05T10:00:00Z", author: "member:mai" });
-  const legs = [{ target: "INFO-2026-0002-2026-118", role: "supports", grade: "B" }];
-  const md = inquiryMd(P, [["INFO-2026-0002-2026-118", "cites", "confirmed", null]], { legs });
-  const p = await open(at, { images: { [Q]: { "bundle.md": md, "_history/promotion_a.json": hist, "_history/promotion_b.json": later },
-    "INFO-2026-0002-2026-118": { "bundle.md": "---\nid: INFO-2026-0002-2026-118\ntitle: \"The 2026 performance report\"\n---\n" } },
-    plane: { basisversions: ok({ ok: true, inquiry: Q, versions: [] }) } });
+  const w = await stateWorld({ n: 1, as: "dev", names: ["The 2026 performance report"] });
+  /* a later promotion by another member (mai's own reading of the question) must not change who opened it */
+  const mai = await w.world.signIn("mai", { capabilities: ["contribute"] });
+  await w.ann.act("projectinvite", { query: { projectId: w.project, handle: "mai" }, body: {} });
+  await mai.act("projectjoin", { query: { projectId: w.project }, body: {} });
+  await mai.act("inquiryground", { body: { target: w.id, grounds: [{ ground: "part 1", legs: [0] }] } });
+  const p = await w.page();
+  const opened = day(new Date(w.world.now()).toISOString());
   const sub = main(p).querySelector(".mk-sub");
-  assert.ok(sub.textContent.includes(word("screen.question.opened", { name: "dev", date: day("2026-10-03"), project: "" }).trim()), "the opener filled");
+  assert.ok(sub.textContent.includes(word("screen.question.opened", { name: "dev", date: opened, project: "" }).trim()), "the opener filled: " + sub.textContent);
   assert.doesNotMatch(main(p).textContent, /\{name\}/);
   assert.ok(main(p).textContent.includes("The 2026 performance report"), "the document's title");
-  for (const el of main(p).querySelectorAll("a.cs-ref, .rec, .mk-ev")) assert.doesNotMatch(el.textContent, /INFO-2026-0002-2026-118/, "never the record id");
+  for (const el of main(p).querySelectorAll("a.cs-ref, .rec, .mk-ev")) assert.doesNotMatch(el.textContent, new RegExp(w.docs[0]), "never the record id");
   /* control: a record that names no opener draws `screen.project.opened.date`, never an undetermined name and never the placeholder
-     (changed in fix round 3: R2, C44 now says so; it drew "Opened by" with an undetermined name) */
+     (changed in fix round 3: R2, C44 now says so; it drew "Opened by" with an undetermined name). The world's record always carries its first promotion,
+     so this one stays a record written by hand with no promotion history (needed: a recipe for a question promoted with no history, K3402). */
+  const md = inquiryMd(P, [["INFO-2026-0002-2026-118", "cites", "confirmed", null]], { legs: [{ target: "INFO-2026-0002-2026-118", role: "supports", grade: "B" }] });
+  /* still scripted (basisversions): the record with no promotion history; needed: a recipe for a question promoted with no history (K3402) */
   const none = await open(at, { images: { [Q]: { "bundle.md": md } }, plane: { basisversions: ok({ ok: true, inquiry: Q, versions: [] }) } });
   assert.ok(main(none).querySelector(".mk-sub").textContent.includes(word("screen.project.opened.date", { date: day("2026-10-03") }).trim()));
   assert.doesNotMatch(main(none).querySelector(".mk-sub").textContent, /\{name\}/);
