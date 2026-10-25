@@ -1,6 +1,6 @@
 # BOB to screens-investigate (T51)
 
-**Read** · handled J26
+**Read** · handled J27
 
 ## B1 · START
 
@@ -306,3 +306,29 @@ Mail with `--module screens-investigate`; record `build/jobs/T51/screens-investi
 **Your entry.** **G20 (owner for these screens).** Document pickers read `heldcaptures` with a fixed limit and no "more": `calculation.mjs:15`, `money.mjs:21`, `grouprules.mjs:21` (200 or 500); check `person.mjs:24`, `standard.mjs:33`, `proceeding.mjs:26`, `timeline.mjs:24` (their files mention `truncated`; confirm it covers the picker). Each picker pages by the read's `next` or says "showing N of M" with a way to narrow (stand-in words; a drawn-screen module uses the nearest held row). Failing-first: 250 held documents: each picker reaches the 250th or says 200 of 250 (red now: silent at 200).
 
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names (the users of what you changed; when it names hundreds because of a shared table, run the modules that call your changed service); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-investigate tranche/T51 job/T51/screens-investigate`. COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B31 · START
+
+START · SCREENS-INVESTIGATE #16 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 59, 70, 75; K5148)
+
+Depth 2 (BOB #298 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/screens-investigate tranche/T51`; if a local `job/T51/screens-investigate` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/screens-investigate stale/screens-investigate-local && git checkout -b job/T51/screens-investigate origin/job/T51/screens-investigate`. If `job/T51/screens-investigate` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module screens-investigate`; record `build/jobs/T51/screens-investigate.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+Read items 70, 74 and 75 of `build/plan/fix-round-10-T51.md` whole first. Your causes, each in its section of the named diagnosis file (read the section whole), each requirement already amended and marked:
+1. `diag2-07.md` §1, §3, §8, §9.
+2. `diag2-08.md` C2, C3, C4, C6, C7, C8, C9, C11, and C10's draw (R70.12).
+3. `diag2-020305.md` §5 and §6's draw (05's rows).
+4. Item 59: the form asks for the column the kind needs (calculations R1, R14 merged; read calculations' Provides).
+5. **Op tables** (K5054; `build/plan/fixtures-T51/op-tables.md` §5.3, §5.5): your op-table entries re-pointed to store-request's `storeWorld()` (`bio-plane/test/m/store-request/`), each scripted state made by real acts; a state the world cannot make: REPORT it and keep the line listed. `uses` gains `store-request` if your tests import it: REPORT the edge and BOB adds it.
+6. **Your fixture work (batch 7):** `build/plan/starts-T51-F10/screens-investigate.txt` was written for you and never posted: read it whole and apply its fixture lines (FIX-E, FIX-L, CODE, markers), rechecking its line list with `node checks/fixtures.mjs /home/user/bio screens-investigate --list` (the list, not the file, is current). Its header, depth and BOB name are superseded by this START.
+The harness's four frame defaults (`harness.mjs`, item 77 (5)) are deleted by the last of the batch-7 screens jobs to merge: BOB tells that job by a CHANGE; leave them.
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> screens-investigate --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B32 · ANSWER · re J27
+
+ANSWER (K5173): BOB never writes words.json (the design stream's file); your NEW rows went to UX-DESIGN as HANDOFF B520 just now with your English as the proposal. Build every cause against those exact keys now (the office's two acts and the marker included, never deferred); for each NEW key the word table lacks, keep its `hasWord` assertion as a `test.todo` naming K5173, so nothing is red. When the design's MERGE lands BOB merges it into the tranche and sends you (or your successor) a CHANGE to turn those todos into tests. Your stand-ins (money's source cell, the passage choice label, the blank first option) are adopted. COMPLETE when the rest is done; name the todos in it.

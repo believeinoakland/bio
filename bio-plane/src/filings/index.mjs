@@ -154,6 +154,7 @@ export const COMMUNICATION_PURPOSE_MAX = 500;
 export const COMMUNICATION_PURPOSES = Object.freeze(["document_infraction", "chance_to_fix"]);
 /** R37: the audiences a documenting version may be written for. */
 export const AUDIENCES = Object.freeze(["violating_party", "members", "oversight", "public", "broad"]);
+const PUBLIC_COMMENT = "public_comment";
 /** R44: whose act a public comment or testimony is. */
 export const VOICES = Object.freeze(["group", "self"]);
 /** R8: what a counsel packet is assembled for. */
@@ -827,7 +828,7 @@ export class Filings {
     const mf = Filings.#fills(fills, own ? text : used.text, who, { action: a.id });
     if (!mf.ok) return mf;
     /* T45: the marks the member states (R34, R39, R43, R44, R48), refused whole when malformed */
-    const mk = Filings.#marks({ voice, audience, language, own_doing, names_pending, textcheck });
+    const mk = Filings.#marks({ voice: Filings.#voiceOf(voice, a), audience, language, own_doing, names_pending, textcheck });
     if (!mk.ok) return mk;
     const when = this.#when();
     const { det, hidden } = this.#restsOn(a, viewer);
@@ -923,7 +924,7 @@ export class Filings {
       return { ok: false, reason: "COMMUNICATION_PURPOSE_REFUSED", max: COMMUNICATION_PURPOSE_MAX,
                detail: localize("filings.index.say_what_the_communication_is_for", "say what the communication is for, in at most {max} characters", { max: COMMUNICATION_PURPOSE_MAX }) };
     /* END DEC-49 REGION is-communication-prepare */
-    const mk = Filings.#marks({ voice, audience, language, own_doing, names_pending, textcheck });
+    const mk = Filings.#marks({ voice: Filings.#voiceOf(voice, a), audience, language, own_doing, names_pending, textcheck });
     if (!mk.ok) return mk;
     if (why === "document_infraction" && !mk.marks.audience)
       return { ok: false, reason: "FILING_MARK_REFUSED", field: "audience",
@@ -1049,6 +1050,11 @@ export class Filings {
   }
 
   /* ---------------------------------------------------------------- T45: what an outward text is checked for */
+
+  /* R44: a public comment prepared with no voice is the group's act. Another kind states none, as the member leaves it. */
+  static #voiceOf(voice, a) {
+    return voice == null && a.kind === PUBLIC_COMMENT ? "group" : voice;
+  }
 
   /* R34, R37, R39, R43, R44, R48: the marks a member states at preparation, read and refused whole when malformed
      (`FILING_MARK_REFUSED`, naming the field): `voice` (R44), `audience` (R37, R42), `language` (R43, a BCP 47 tag the

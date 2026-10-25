@@ -151,7 +151,7 @@ Terms. An **action** is a bundle whose type (by its document or its envelope, D-
 
 Rows (T45): the codes above take C-117's next numbers in `action-grammar` (its R9) at the job's stamp; translations BOB's drafts, the UX stream's to revise.
 - **R108** (T51; N880 (U4); DEC-340, U366; K3935; amends R15; `filings` R64) **A reply on a public comment can carry the minutes' passage.** `actionCorrespond` (R15), on a `received` entry of an action whose kind the combined view names `public_comment`, takes `minutes: {meeting, date, passage: {captureSha, extent}}`: `meeting` one line of 1–200 characters, `date` a real calendar day (`BAD_DATE`), `passage` an extent of a capture the author sees (`content`'s extent refusals, an unseen capture answered as absent, `NO_SUCH_BUNDLE`). The passage is recorded as content by the author's act: `content.mint` (its R12, R13: mint or find, `mintedBy` the author) at that extent, and `minutes.passage` keeps the row's `content_id` beside `captureSha` and `extent` (K4041). The entry's bytes or account (R34) are unchanged; `minutes` is kept on the entry and read by `actionRead` as it stands. On any other kind or direction it is refused `MINUTES_NOT_PUBLIC_COMMENT` (a new row of this module's family, next free number). Test: a received entry of a public comment holds the passage; control: the same key on a `sent` entry is refused.
-- **R110** *(not yet met: T51)* (K5157; walk-T51-final 11 §5) `clock_overdue` is also true when any clock entry is stored `overdue` (R33: neither met nor waived); `clock_next` is unchanged (R12).
+- **R110** (K5157; walk-T51-final 11 §5) `clock_overdue` is also true when any clock entry is stored `overdue` (R33: neither met nor waived); `clock_next` is unchanged (R12).
 
 ## Private
 

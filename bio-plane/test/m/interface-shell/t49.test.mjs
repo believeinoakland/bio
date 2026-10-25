@@ -11,6 +11,7 @@ import { word } from "../../../src/setup-words/index.mjs";
 import { boot, ok, refused, bytes, SESSION } from "./harness.mjs";
 import { documentOf } from "./dom.mjs";
 import { ALL, FRONT } from "./screens.fixture.mjs";
+import { inWorld, bootAs } from "./world.mjs";
 
 const styleOf = (html) => /<style>([\s\S]*?)<\/style>/.exec(html)[1];
 const REPLACED = ["cs-menuwrap", "cs-menu", "cs-actwrap", "cs-slot", "cs-rowname", "cs-overlay", "cs-image", "cs-areas-box", "cs-area"];
@@ -117,7 +118,9 @@ test("R68 nothing clipped at the phone width: a long unbroken name, label or dig
   const LONG = "Riverbend" + "x".repeat(60);
   const s = { id: "home", reads: () => ({}), acts: [],
     render: fn(`return cs.title() + cs.ref("project", "P1", "${HEX}", []) + cs.mark("kind", "todo", { reason: "${HEX}" }) + cs.hint("${HEX}");`) };
-  const p = await boot({ screens: [s], phone: true, plane: { groupidentity: ok({ ok: true, group: "g", display_name: LONG }) } });
+  const { world, me } = await inWorld();
+  await me.act("groupnameset", { body: { name: LONG } });
+  const p = await bootAs(world, me, { screens: [s], phone: true });
   const root = p.root();
   const grp = root.querySelector(".cs-mast .mk-grp");
   assert.equal(grp.textContent, LONG, "the name whole");
@@ -144,17 +147,20 @@ function textNodesOf(el) {
 test("R68 an expected refusal writes no console line: an act answered REAUTH_DUE that the shell handles (R34) calls no console method from the page's script (measured at START: the 403 line the browser shows is Chromium's own network log of the answer, which no page code can remove, so journey-check's console check admits it)", async () => {
   const calls = [];
   const was = {};
+  /* the store's own REAUTH_DUE: adding an administrator is one of the acts that always ask the password again (credentials R66) */
+  const { world, me } = await inWorld();
+  const adding = { ...ALL.find((x) => x.id === "members"), acts: [{ op: "memberadd", send: fn('return { body: { memberId: "new-admin", cover: "The new administrator", role: "admin" } };') }] };
   for (const m of ["log", "info", "warn", "error", "debug", "trace"]) { was[m] = console[m]; console[m] = (...a) => { calls.push([m, a]); }; }
   try {
-    const p = await boot({ screens: ALL, plane: { projectdirectory: ok({ projects: [] }), promote: refused("REAUTH_DUE", null, 403), reauth: ok({ ok: true }) } });
-    p.doc.getElementById("home-title").value = "T";
-    await p.click('button[data-act="promote"]');
-    const reason = p.root().querySelector('[data-slot="m:0"] textarea');
+    const p = await bootAs(world, me, { screens: [adding], path: "/app/members" });
+    await p.click('button[data-act="memberadd"]');
+    const reason = p.root().querySelector('textarea');
     if (reason) { reason.value = "because"; await p.click('[data-shell="reason-send"]'); }
-    assert.ok(p.byOp("promote").length >= 1, "the act was sent and answered REAUTH_DUE");
+    assert.ok(p.byOp("memberadd").length >= 1, "the act was sent and answered REAUTH_DUE");
     assert.ok(p.root().querySelector('[data-overlay="reauth"]'), "the shell asks the password again (R34)");
   } finally { for (const m of Object.keys(was)) console[m] = was[m]; }
-  assert.deepEqual(calls, [], "no console line from the page's own script");
+  /* the store's own structured log lines (one JSON object a line, written by the world's modules) are not the page's */
+  assert.deepEqual(calls.filter(([, a]) => !(typeof a[0] === "string" && a[0].startsWith("{"))), [], "no console line from the page's own script");
 });
 
 test("R71 the startup bootstrap carries the page's session whenever the page holds one, and none when it holds none; setup's acts admit founderhandleset; control: an act on none of R72's lists still throws, and each R72 act is admitted on its screen", async () => {

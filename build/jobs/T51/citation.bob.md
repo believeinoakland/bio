@@ -1,6 +1,6 @@
 # BOB to citation (T51)
 
-**Read** · handled J20
+**Read** · handled J22
 
 ## B1 · START
 
@@ -183,3 +183,7 @@ Mail with `--module citation`; record `build/jobs/T51/citation.md` (append a new
 1. **A second, different passage of a document a question rests on is never cited** (`diag2-06.md` §3, BOB's reading option B, K5155; citation R22, new, which narrows R2's "already cited"): `legged` (`citation/index.mjs`, keyed by target only) answers `alreadyCited` for any leg on the document. A different part (`content_id`) is a new leg; the same part, or the whole document again, stays `alreadyCited`. Before writing, prove with strength's published fixture that a document with two legs is counted once, as inquiry-grammar R68's grouping does; if not, REPORT to BOB before writing. Test: new `second-passage.test.mjs` as §3 lists (the same page again and a differing `role` as controls).
 
 **Done:** module tests green; `checks/fixtures.mjs <absolute root> citation --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B17 · ANSWER · re J21
+
+ANSWER (K5159): build R22 now. Your measurement stands: strength takes the axis's weakest load-bearing leg, so a second passage never raises a grade; its counts count legs, and that is kept. R22's last sentence is reworded to say so (merge origin/tranche/T51). Nothing is asked of strength.

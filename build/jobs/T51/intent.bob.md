@@ -1,6 +1,6 @@
 # BOB to intent (T51)
 
-**Read** · handled J5
+**Read** · handled J8
 
 ## B1 · START
 
@@ -85,3 +85,7 @@ Mail with `--module intent`; record `build/jobs/T51/intent.md` (append a new sec
 1. **A retired aspiration, its dead ends and its lesson can no longer be read** (`diag2-03b.md` §12; intent R37, new): `aspirationsFor` returns only those in force (R12); no read lists retired ones though R11 keeps them readable. Add `retired: true` to it (the project's and the viewer's own retired aspirations, each with `taught` and its dead ends); the default read unchanged. Publish it in your `fixtures.mjs` (screens-inquiry draws it). Test: `pursuits.test.mjs` after `retireAspiration`, as §12 lists.
 
 **Done:** module tests green; `checks/fixtures.mjs <absolute root> intent --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B6 · CHANGE
+
+CHANGE (K5161, plan item 78 (5)): retrieval R99 is merged: another member s selection is now refused `SELECTION_NOT_YOURS` (C-33.59), not `NOT_YOURS`. Merge `origin/tranche/T51`; every intent test or fixture that hand-builds a selection refusal `NOT_YOURS` takes retrieval s published fixture (its selection-read / selectionResolve answer by its real code) instead; intent s own `NOT_YOURS` (C-111.15) for its own objects is unchanged. Name the lines changed in your COMPLETE.

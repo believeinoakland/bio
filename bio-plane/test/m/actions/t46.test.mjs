@@ -196,3 +196,32 @@ test("R99 no answer of this module carries the sentences T45 worded", () => {
   for (const old of T45) assert.ok(!text.includes(old), old);
   for (const k of KEYS.slice(0, 3)) assert.ok(text.includes(JSON.stringify(en(k)).slice(1, -1)), k);
 });
+
+/* ================================================================ R110: an entry stored overdue keeps the flag */
+
+test("R110 R12 R33 clock_overdue is also true when any clock entry is stored overdue; clock_next is unchanged; controls: none stored overdue, a met entry", () => {
+  const w = world();
+  const two = ["clock:", '  - text: "first"', '    description: "d"', "    date: 2026-09-28", "    basis: Act s.2", "    status: pending",
+    '  - text: "second"', '    description: "d"', "    date: 2026-10-30", "    basis: Act s.2", "    status: pending"];
+  w.action(A, two);
+  w.action(B, entry());
+  w.action(C, entry());
+  w.clock.ms = Date.parse("2026-10-25T12:00:00Z");
+  const flags = (id) => { const r = w.a.actionRead({ id, viewer: M }); return [r.clock_next, r.clock_overdue]; };
+  assert.deepEqual(flags(A), [null, null].map((_, i) => i ? true : "2026-09-28"), "both pending, the first passed: overdue as before");
+  /* the mechanical recheck stores the first entry overdue; the second stays pending and not yet due */
+  const text = w.text(A).replace("status: pending", "status: overdue");
+  assert.equal(w.promote(A, text, { author: MACHINE, extra: recheck }).ok, true);
+  assert.deepEqual(flags(A), ["2026-10-30", true], "the stored overdue entry keeps the flag; clock_next is the pending one");
+  /* only the overdue entry left */
+  assert.equal(overdue(w, B).ok, true);
+  assert.deepEqual(flags(B), [null, true], "no pending entry: clock_next null, clock_overdue true");
+  /* control: a met entry (no entry overdue, none pending) is not overdue */
+  assert.equal(w.promote(C, w.text(C).replace("status: pending", "status: met"), { author: M }).ok, true);
+  assert.deepEqual(flags(C), [null, false], "met: not overdue");
+  /* control: a pending entry not yet due, none stored overdue */
+  const later = world();
+  later.action(D, entry({ date: "2026-12-01" }));
+  later.clock.ms = Date.parse("2026-10-25T12:00:00Z");
+  assert.deepEqual([later.a.actionRead({ id: D, viewer: M }).clock_next, later.a.actionRead({ id: D, viewer: M }).clock_overdue], ["2026-12-01", false]);
+});

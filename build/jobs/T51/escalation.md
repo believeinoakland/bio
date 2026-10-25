@@ -1,6 +1,6 @@
 # escalation (T51)
 
-**Status** · session_018J3iWfL3tx9JNibc3aC31F · depth 2 · COMPLETE · handled B2
+**Status** · session_011BKNexGjsvnZ8XJJ24i5W8 · depth 2 · COMPLETE · handled B5
 
 ## J1 · REPORT
 
@@ -83,3 +83,25 @@ Tests and checks (from /home/user/bio, absolute root):
 - `node checks/coverage.mjs /home/user/bio escalation`: 38 of 38 live requirement ids named by a test; 0 failures.
 
 Size (session_018J3iWfL3tx9JNibc3aC31F): test runs 2, module lines 0
+
+## J6 · BLOCKED
+
+Fix round 10, item 74 (diag2-11 §5): R39 built; one test red until actions R110 merges.
+
+Cause 1 (R39). (1) Failing-first test `bio-plane/test/m/escalation/r39.test.mjs`: stage 3, an action whose only clock entry is stored `overdue` (and one beside a later pending entry) meets the stage 4 trigger with no "action pending" note; controls: a `met`-only clock draws the note, a not-yet-past pending entry draws neither. Seen red on today's code. (2) Fix `src/escalation/index.mjs` stage-3 loop: `clock_overdue` is tested before the pending note; `storedOverdueDate` reads the earliest stored `overdue` entry, whose date is the age stated (the record holds no instant for the flip); the note is drawn only with neither a pending nor an overdue entry. (3) Why the tests missed it: stages.test.mjs's clock cases (:43-110) used only pending, met, and absent entries; no case stored `overdue`, which only monitoring's recheck (actions R33) writes.
+
+BLOCKED (cause: tests, on a provider). `actionFacts` on the tranche still answers `clock_overdue: false` and `clock_next: null` for a stored-overdue entry: actions R110 is not merged (actions `actionClockNext`/`actionOverdue` read `pending` only), and actions publishes no fixture for it. So `r39.test.mjs` is red for that reason alone. Proof: with a temporary, uncommitted local patch making `actionFacts` answer `clock_overdue: true` for any stored `overdue` entry (R110's text), the test passes (1/1); patch reverted, actions untouched. Need: actions' R110 merged to the tranche; then CHANGE me, I merge, rerun, COMPLETE. No other change needed here.
+
+Other escalation tests: 102 pass. Checks: format 0; architecture 0; coverage 39 of 39 live ids named (R39 now); words 0; fixtures --list 0; ownership 0 (3 files: module, test, record). Met id when green: R39.
+
+Size (session_011BKNexGjsvnZ8XJJ24i5W8): test runs 8, module lines 20
+
+## J7 · COMPLETE
+
+Item 74 cause 1 done. Met: R39 (strike its mark).
+
+Merged origin/tranche/T51 (actions R110 in). r39.test.mjs green; escalation suite 103 tests, 103 pass, 0 fail. The fix is in the stage-3 loop of src/escalation/index.mjs (clock_overdue tested first; storedOverdueDate); the why-missed is in J6. No marker added. Deferred: none. Found in other modules: none new.
+
+Checks (absolute root /home/user/bio): format 0; architecture 0; coverage 39 of 39; words 0; fixtures --list 0; ownership 0.
+
+Size (session_011BKNexGjsvnZ8XJJ24i5W8): test runs 10, module lines 20

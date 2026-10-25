@@ -237,7 +237,7 @@ test("R27 (legacy-index map §4.4 move): end to end, a named bundle the stamped 
   const before = w.snapshot(["refs", "asserted_connections", "files"]);
   const hidden = await op(w, `capture=${s}&bundle=${p}&${FORGED}`, { viewer: V("bob"), identity: V("bob") });
   const none = await op(w, `capture=${s}&bundle=INFO-2026-0404-z&${FORGED}`, { viewer: V("bob"), identity: V("bob") });
-  assert.equal(hidden.body.ok, false); assert.equal(hidden.body.reason, "NO_SUCH_BUNDLE");
+  assert.equal(hidden.body.ok, false); assert.equal(hidden.body.reason, "NO_SUCH_DOCUMENT");
   assert.deepEqual({ ...hidden, body: { ...hidden.body, target: 0 } }, { ...none, body: { ...none.body, target: 0 } });
   /* The query names alice (the project's owner); the stamp is carl, who has not joined. */
   const denied = await op(w, `capture=${s}&bundle=${p}&${FORGED}`, { viewer: V("alice"), identity: V("carl") });

@@ -29,7 +29,7 @@ const OBLIGATION = ["authority-undetermined", "bias-debt", "endorsement-owed", "
   /* T48 (R54; N1047, DEC-226 (1)) */
   "update-ready",
   /* T50 (R57; N1091, N1204; queue-producers R41, R42) */
-  "project-invitation", "project-request"];
+  "project-invitation", "project-request", "project-leave"];
 /* R1's twenty-nine, `cardinality_exceeded` (N107, K209), `newer-capture-affects-reference` (N172), N345's five, the two
    docket kinds (queue-producers R31, DEC-116 items 3, 7) and the released hold (queue-producers R29, DEC-113) among
    them. */

@@ -123,11 +123,13 @@ function render(cs, view) {
   /* R30, state c: an administrator at a hidden project's existence only, whose owners are all inactive */
   if (seen && view.me && view.me.administer === true) {
     const aff = later("rescue", "affordances", { target: id });
-    const roster = aff.state === "ok" && aff.value && aff.value.roster ? aff.value.roster : null;
+    /* R30 (K5148; WALK-FINAL-03b §7): the plane offers the rescue where the act accepts it, as an act of the answer's own `acts`
+       (affordances R18); the answer carries no `roster` */
+    const rescueOpen = aff.state === "ok" && !!aff.value && Array.isArray(aff.value.acts) && aff.value.acts.some((a) => a && a.id === "projectownerrescue");
     /* R54: the date of the rescue's title is `projectownersgone`'s `since`; none recorded draws the title without one */
-    const gone = roster && roster.rescue_open === true ? later("gone", "projectownersgone", { projectId: id }) : null;
+    const gone = rescueOpen ? later("gone", "projectownersgone", { projectId: id }) : null;
     if (gone && gone.state === "loading") { out.push(cs.state({ state: "loading" }, () => "")); return out.join(""); }
-    if (roster && roster.rescue_open === true) {
+    if (rescueOpen) {
       const owners = (Array.isArray(seen.owners) ? seen.owners : []).map((o) => whoIs(o)).join(", ");
       const since = gone && gone.state === "ok" && gone.value && gone.value.since ? String(gone.value.since) : "";
       out.push(cs.sec(since ? "project.rescue.title" : "project.rescue.title.nodate", `<p>${W("project.rescue.says", { owners })}</p>`
@@ -142,18 +144,26 @@ function render(cs, view) {
   /* not joined (R1, R60): an invited member joins; a findable project (the directory lists it) shows its name with "Ask to
      join" and her open request; a hidden one is unavailable (state b), with no form */
   const me = view.me && view.me.handle;
+  /* R40 (K5148; WALK-FINAL-03 R24): the viewer is found in a roster by `member`, else by handle: a founder who chose no handle has
+     `handle: null` in the roster and in `whoami`, and is still the owner whose row reads "founder" */
+  const isMe = (x) => P.isMe(view, x);
   /* R1, R37: an invited member who has not joined is a participant to the roster but not to the project's reads
      (`projectaccountstate` answers NO_SUCH_PROJECT): she sees the not-joined state, never a failed read */
   const roster = d.participants && d.participants.state === "ok" && Array.isArray(d.participants.value.participants)
-    ? d.participants.value.participants.find((x) => x && x.handle && x.handle === me) : null;
+    ? d.participants.value.participants.find(isMe) : null;
   const invited = !!(roster && roster.state === "invited");
   const notJoined = !!seen || !!listed || invited;
   if (notJoined) {
     const owners = seen && Array.isArray(seen.owners) && seen.owners.length ? seen.owners.map((o) => whoIs(o)).join(", ") : "";
     if (!invited && !listed) return out.join("") + P.unavailable(cs);
     const req = listed && listed.request && listed.request.state === "open" ? listed.request : null;
+    /* R60 (K5157; WALK-FINAL-03b §3; project-roster R44): her latest request when the owners declined it: the day and the owners' word (the
+       request's `closed_comment`, record data), drawn above the way to ask again; a granted one is drawn no sentence (she is invited) */
+    const declined = listed && listed.request && listed.request.state === "declined" ? listed.request : null;
     out.push(cs.sec("screen.project.members.head",
       `<p>${W("screen.project.notjoined")}</p>${owners ? `<p>${W("screen.project.notjoined.owners", { owners })}</p>` : ""}`
+      + (declined && !invited ? `<p class="mk-note" data-request="declined">${declined.closed ? cs.date(String(declined.closed), { year: true }) : ""}`
+          + (declined.closed_comment ? ` <span class="rec" data-request="comment">${cs.esc(String(declined.closed_comment))}</span>` : "") + "</p>" : "")
       + (invited ? cs.act("projectjoin", { label: "act.projectjoin.label.project", data: { project: id }, tone: "primary" })
         : req ? `<p class="mk-note" data-request="asked">${W("projects.request.asked", { date: { html: req.asked ? cs.date(String(req.asked), { year: true }) : "" } })}</p>`
             + cs.act("projectrequestwithdraw", { label: "act.projectrequestwithdraw.label.project", data: { project: id } })
@@ -171,7 +181,7 @@ function render(cs, view) {
     + cs.act("rerunread", { tone: "primary" }));
   const people = d.participants && d.participants.state === "ok" && Array.isArray(d.participants.value.participants)
     ? d.participants.value.participants.filter((x) => x && x.state !== "removed") : [];
-  const mine = people.find((x) => x.handle && x.handle === me) || null;
+  const mine = people.find(isMe) || null;
   const joined = !!(mine && mine.state === "joined");
   const owner = !!(mine && Number(mine.owner) && mine.state === "joined");
 
@@ -194,7 +204,9 @@ function render(cs, view) {
 
   /* R10, R52 (2), (3): the project's bar read in words, in the one of its four cases that is true (never as zero); the
      setting is in the foot's fold. "Bar" a card: the project's meaning, the team's when it has none of its own */
-  const barRead = d.bar && d.bar.state === "ok" && d.bar.value ? (d.bar.value.bar || {}) : null;
+  /* R10 (K5157; strength R45): after a `BAR_STALE` refusal the bar now held (its `previous`) is the bar drawn, so the next save names it */
+  const barNow = ui.barNow && typeof ui.barNow === "object" ? ui.barNow : null;
+  const barRead = barNow || (d.bar && d.bar.state === "ok" && d.bar.value ? (d.bar.value.bar || {}) : null);
   const barDeclared = !!(barRead && barRead.declared === true && (barRead.capture || barRead.connection));
   out.push(cs.sec("screen.project.bar.head", cs.state("bar", view, () => {
     const c = barRead.capture, k = barRead.connection;
@@ -538,19 +550,24 @@ function render(cs, view) {
       /* R54: an owner's date is `owner_since`, a member's `joined_at`; a null date draws none, never "since null" */
       const since = Number(x.owner) ? x.owner_since || null : x.joined_at || null;
       const date = since ? W(Number(x.owner) ? "project.member.since" : "project.member.joined", { date: { html: cs.date(String(since), { year: true }) } }) : "";
-      const self = x.handle && x.handle === me;
+      const self = isMe(x);
+      /* R29 (K5157; WALK-FINAL-03 R25): a participant who asked to leave is still a participant until an owner removes her */
+      const asked = x.state === "leaving";
       /* R75: "Stand down as owner…" opens the vote in place (state e) and sends nothing */
       const awaitingNames = rm ? (Array.isArray(rm.awaiting) && rm.awaiting.length ? rm.awaiting : seatedOwners.map((o) => o.handle).filter((h) => h !== x.handle && !agreedOf(rm).includes(String(h)))).map((h) => whoIs(h)).join(", ") : "";
       const acts = self && Number(x.owner)
         ? (rm ? `<span class="mk-small" data-standdown="opened">${W("project.owners.standdown.opened", { awaiting: awaitingNames })}</span>`
           /* C90 (R75, R29): the only owner has no vote that could carry: the act is not drawn, and the row says to add another owner first */
           : seatedOwners.length < 2 ? `<span class="mk-small" data-standdown="sole">${W("refusal.LAST_OWNER")}</span>`
-          : cs.act("projectownerremove", { label: "act.projectownerremove.label.project", data: { handle: String(x.handle), mode: "open" } }))
-        : owner && !self && x.handle && x.state === "joined" ? (Number(x.owner) ? (rm && !agreedOf(rm).includes(String(me))
-          ? cs.act("projectownerremove", { label: "project.owners.agree.remove", fills: { who: name }, data: { handle: String(x.handle), mode: "open" } }) : "") : cs.act("projectowneradd", { label: "act.projectowneradd.label.project", data: { handle: String(x.handle) } }))
+          : cs.act("projectownerremove", { label: "act.projectownerremove.label.project", data: { handle: String(x.handle || ""), mode: "open" } }))
+        /* R29: an owner removes a joined participant, or one who asked to leave (and makes an owner of a joined one only: a member who asked to leave is not offered the seat) */
+        : owner && !self && x.handle && (x.state === "joined" || asked) ? (Number(x.owner) ? (rm && !agreedOf(rm).includes(String(me))
+          ? cs.act("projectownerremove", { label: "project.owners.agree.remove", fills: { who: name }, data: { handle: String(x.handle), mode: "open" } }) : "")
+            : asked ? "" : cs.act("projectowneradd", { label: "act.projectowneradd.label.project", data: { handle: String(x.handle) } }))
           + cs.field("project-remove-why-" + x.handle, "shell.reason", { help: "shell.reason.help" })
           + cs.act("projectremove", { label: "act.projectremove.label.project", data: { handle: String(x.handle) } }) : "";
-      return cs.row(lead, `<span class="rec">${cs.esc(name)}</span> · ${role}` + (x.state === "invited" ? " · " + W("screen.project.members.invited", { handle: "" }) : ""), acts ? `<div class="mk-acts">${acts}</div>` : "", date);
+      const row = cs.row(lead, `<span class="rec">${cs.esc(name)}</span> · ${role}` + (x.state === "invited" ? " · " + W("screen.project.members.invited", { handle: "" }) : ""), acts ? `<div class="mk-acts">${acts}</div>` : "", date);
+      return asked ? `<div data-leaving="asked">${row}</div>` : row;
     }).join("");
     const waiting = pend.map((c) => {
       const fills = { who: whoIs(c.target), by: whoIs(c.proposed_by), date: { html: c.proposed_at ? cs.date(String(c.proposed_at), { year: true }) : "" },
@@ -560,14 +577,17 @@ function render(cs, view) {
         + (mineToAgree ? cs.act(c.change === "remove" ? "projectownerremove" : "projectowneradd", { label: c.change === "remove" ? "screen.project.agree.dev.stands.down.as" : "project.owners.agree",
             fills: c.change === "remove" ? { member: fills.who } : { who: fills.who }, data: c.change === "remove" ? { handle: String(c.target || ""), mode: "open" } : { handle: String(c.target || "") } }) : "");
     }).join("");
+    const forkAct = cs.act("projectfork", { label: "act.projectfork.label.project", data: { project: id } });
     return (rows ? cs.sheet(rows) : "") + waiting + `<p class="mk-small">${W("project.owners.rule")}</p>`
       + `<p class="mk-small">${W("screen.project.members.who")}</p>`
       + (owner ? cs.field("project-invite", "screen.project.invite.label", {}) + cs.act("projectinvite", { label: "act.projectinvite.label.project", data: { project: id } }) : "")
-      + (mine && mine.state === "invited" ? cs.act("projectjoin", { label: "act.projectjoin.label.project", data: { project: id } }) : "")
+      /* R29 (K5157): "Join" is also how a request to leave is withdrawn (membership R34); the leave act is drawn to a joined participant only */
+      + (mine && (mine.state === "invited" || mine.state === "leaving") ? cs.act("projectjoin", { label: "act.projectjoin.label.project", data: { project: id } }) : "")
       + (joined ? cs.act("projectleave", { label: "act.projectleave.label.project", data: { project: id } }) : "")
-      + (joined ? cs.field("project-fork-title", "project.start.title", { help: "project.start.title.help" })
+      /* R29 (K5157; WALK-FINAL-03b §10): the fork's two fields are drawn with its act: a joined participant who may not start projects is shown none of the three */
+      + (joined && forkAct ? cs.field("project-fork-title", "project.start.title", { help: "project.start.title.help" })
         + cs.choice("project-fork-visibility", "project.visibility.title", [["hidden", "project.visibility.start.hidden"], ["discoverable", "project.visibility.start.discoverable"]], { value: "hidden" })
-        + cs.act("projectfork", { label: "act.projectfork.label.project", data: { project: id } }) : "");
+        + forkAct : "");
   })));
   /* R75 (state e): an owner stands down by a vote, in place, before anything is sent. Every heading, row and count is a key
      of the design's, filled from the reads (`projectownerarith`, `projectownervotes`, `projectparticipants`). */
@@ -850,6 +870,8 @@ const acts = [
     } } },
   { op: "findin", label: "act.findin.label.project", rereads: [],
     send(view, el, cs) { cs.go("find-in", String(view.subject || "")); return null; } },
+  /* R10 (strength R45): the save names the bar the owner saw (`expected`, each axis null for none), so a bar another owner changed since is
+     refused `BAR_STALE` with the bar now held, which the page then draws and the next save names */
   { op: "projectbarset", label: "act.projectbarset.label.project", rereads: ["bar"],
     send(view, el, cs) {
       const body = { project: String(view.subject || "") };
@@ -857,8 +879,16 @@ const acts = [
         const g = String(cs.value("project-bar-" + a) || "");
         if (["A", "B", "C", "D"].includes(g)) body[a] = g;
       }
+      const seen = view.ui.barNow || (view.data && view.data.bar && view.data.bar.state === "ok" && view.data.bar.value ? view.data.bar.value.bar : null) || {};
+      body.expected = { capture: seen.capture || null, connection: seen.connection || null };
       return { body };
-    } },
+    },
+    done(view, answer, cs) { cs.set("barNow", null); },
+    refusals: { BAR_STALE: (r, cs) => {
+      const now = r && r.previous && typeof r.previous === "object" ? r.previous : {};
+      cs.set("barNow", { declared: now.declared === true, source: now.source || "project", capture: now.capture || null, connection: now.connection || null });
+      return r && r.translation ? cs.esc(String(r.translation)) : cs.w("state.failed", { reason: "BAR_STALE" });
+    } } },
   { op: "projectinvite", label: "act.projectinvite.label.project", rereads: ["participants"],
     send(view, el, cs) {
       const handle = String(cs.value("project-invite") || "").trim().replace(/^@/, "");
@@ -961,7 +991,9 @@ const acts = [
     send(view, el, cs) {
       const stake = String(cs.value("project-stake") || "").trim();
       return { query: { projectId: String(view.subject || ""), stake: stake || "null" }, raw: "" };
-    } },
+    },
+    /* R53 (K5148; WALK-FINAL-03b §2): the project's own sentence for a malformed stake, not the team's that the bare code names */
+    refusals: { STAKE_MALFORMED: "refusal.STAKE_MALFORMED.project", MACHINE_CANNOT_SET_STAKE: "refusal.MACHINE_CANNOT_SET_STAKE" } },
   /* R60: a findable project's "Ask to join", and withdrawing her open request */
   { op: "projectrequest", label: "act.projectrequest.label.project", rereads: ["directory"],
     send(view) { return { query: { projectId: String(view.subject || "") } }; } },
@@ -1170,6 +1202,7 @@ const words = Object.freeze([
   "project.owners.standdown.opened", "project.owners.agree.remove", "act.heldcaptures.label.project", "act.heldcaptures.does",
   ...["head", "about1", "about2", "none1", "none2", "listhelp", "kind.web", "kind.sheet", "kind.photo", "captured"].map((k) => "screen.project.docs." + k), "screen.group-identity.draft.label", "ai.label.untested",
   "refusal.BASIS_REFUSED", "refusal.ACTION_BASIS_REFUSED", "refusal.PROJECT_ACT_NOT_THE_OWNER", "refusal.CLOSE_BAD_REASON",
+  "refusal.STAKE_MALFORMED.project", "refusal.MACHINE_CANNOT_SET_STAKE",
   ...["heading", "legend.welcome", "legend.sign", "thenotice", "change", "stop", "lapsed.on", "missed", "your.team.has.two.other", "tell.the.network.we.are", "an.owner.can.publish.a", "it.is.public.and.it", "only.an.owner.can.do",
     "you.sign.it.in.your", "it.names.no.member.only", "what.the.notice.says", "what.the.team.is.working", "one.line.up.to.280",
     "nothing.is.filled.in.from", "a.few.words.more.optional", "one.line.up.to.120", "the.matter.it.belongs.to", "one.line.up.to.120.2",

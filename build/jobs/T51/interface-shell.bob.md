@@ -1,6 +1,6 @@
 # BOB to interface-shell (T51)
 
-**Read** · handled J29
+**Read** · handled J31
 
 ## B1 · START
 
@@ -479,3 +479,7 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 ## B45 · CHANGE
 
 CHANGE (K5157; plan item 75): merge origin/tranche/T51 into your branch, then add three causes to your job, each with K4426's fields (failing-first test seen red, the fix, why missed): (1) R130 (`diag2-06.md` §16; BOB's reading K5155): Enter in a one-line field (never a textarea) presses the primary act of the section holding the field, once, with what was typed; a field may name another act (`enter`). Your keydown handler excludes inputs today (`browser.mjs` about :2445). Test over your Chromium harness: Enter in a field sends its section's act once; Enter in a textarea does not. (2) R131 (`diag2-06.md` §19 (c)): `.cs-main a.cs-ref` in a row is inline, so the phone rule's min-height is void (22 px at 390); make it at least 44 px in rows and lists, running-text links unchanged. Test: `phone390.test.mjs`, a `cs.row` holding `cs.ref` measures at least 44 px. (3) R132 (DEC-155; `diag2-11.md` §9, `diag2-03b.md` §19): a double-click on the rail's grip restores 184 px and stores it; delegate the listener on the root (the grip is redrawn after a drag). Test: `frame.test.mjs`, drag to 263 then dblclick: `aria-valuenow` and `cs-railw` 184. Name R130-R132 met in your COMPLETE.
+
+## B46 · ANSWER · re J30
+
+ANSWER (K5159): your reading is adopted. The four frame defaults (harness.mjs 88, 89, 91, 97) stay, listed as left; the last screens job of batch 7 to merge deletes them (BOB names it in that START). Your item 5 is done: interface-shell's uses gains store-request on the tranche (merge origin/tranche/T51). Items 1 (op-grades namedrequests), 2-4 (store-request's world) and 6 (plane's import) are placed by BOB.

@@ -1,7 +1,7 @@
 /* project-roster — the acts on a project's working group that follow its setup: the roster and its removals record,
  * the owners' votes and an administrator's rescue, the visibility history and the directory, and requests to join.
  *
- * Requirements: build/requirements/project-roster.md (R1–R42; fix round 3 adds R42, `question_count` and `shared_drafts` on the list; T51 adds R35 `projectInvitations`, R36 the list's cursor, R37 `member_id` on requests, R38 `mine` and `scope` on the list). T45 adds a project's scope (R21–R23: a counsel matter, a
+ * Requirements: build/requirements/project-roster.md (R1–R42; fix round 3 adds R42, `question_count` and `shared_drafts` on the list; T51 adds R35 `projectInvitations`, R36 the list's cursor, R37 `member_id` on requests, R38 `mine` and `scope` on the list; fix round 10 adds R43, `by` read in the door's form (`actorOf`), and R44, the requester told the answer and `projectRequestsAnswered`). T45 adds a project's scope (R21–R23: a counsel matter, a
  * member's own project; the guard membership calls before an invitation or a visibility change, its R128) and the
  * second-approval setting (R24), the acts it names checked against the active profiles' `action_kinds`; T46 (R25)
  * reads their refusals' words by key from `words.json` (`checks.mjs`' `said`); T47 (R26) lists the
@@ -30,6 +30,17 @@ export { PROJECT_ROSTER_TABLES } from "./schema.mjs";
 export { PROJECT_ROSTER_CHECKS, PROJECT_JOIN_REQUEST_CHECKS, PROJECT_SCOPE_CHECKS } from "./checks.mjs";
 
 const ROOT_ADMIN = Membership.ROOT_ADMIN;
+
+/** R43 (fix round 10; K5157): THE ACTOR `by` IN THE FORM THE DOOR STAMPS IT. A declared act arrives with `by` in the
+ *  viewer's form (`member:<id>`; the founder's is the bare `admin`), a legacy act with the bare member id; membership's
+ *  reads (`isProjectOwner`, `participation`, `isAdministrator`) take the member id. This is the one place the form is read:
+ *  `member:<id>` answers `<id>`, anything else (a bare id, the founder's `admin`, a machine `class:<cls>`, a non-string)
+ *  as it came, so a prefix is never added to one already there. */
+const MEMBER_FORM = /^member:([A-Za-z0-9._:-]{1,128})$/;
+export function actorOf(by) {
+  const m = typeof by === "string" ? MEMBER_FORM.exec(by) : null;
+  return m ? m[1] : by;
+}
 
 /** R31 (T50; `action-records` R17): THE STAKE'S TWO REFUSALS, pure. `null` for a member's stamp and a stake that is
  *  `null` or trimmed text of 1 to 1,000 characters on one line with no control character; else the one refusal, its
@@ -187,6 +198,7 @@ export class ProjectRoster {
    * uninvited member cannot see that a project EXISTS. The ownership decisions (R6) and the removals an owner made (R2,
    * membership R36 writes them) are read here beside the participants, by the same readers. */
   projectParticipants({ projectId, by } = {}) {
+    by = actorOf(by);
     const mine = this.m.participation(projectId, by);
     if (!mine && !this.#adminAtFull(projectId, by)) return noSuchProject(projectId);   /* membership R78 */
     /* R29: a name given to a reader is a handle, the founder's the one membership holds for her (null while none). */
@@ -274,6 +286,7 @@ export class ProjectRoster {
      ALL existing owners. Consensus on addition is the load-bearing half, exactly as in §4.7: without it one owner
      recruits confederates and manufactures the majority that then removes the others. */
   projectOwnerAdd({ projectId, handle, by, viewer = null } = {}) {
+    by = actorOf(by);
     { const refused = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT" }); if (refused) return refused; }
     if (!this.m.isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
@@ -327,6 +340,7 @@ export class ProjectRoster {
      about this exception strips anyone. Its caller-and-project refusals are membership's `rescueRefusal` (its R75),
      asked here so the offer (affordances) and the act cannot disagree. */
   projectOwnerRescue({ projectId, handle, by, reason, viewer = null } = {}) {
+    by = actorOf(by);
     /* Sight before position — so NOT_AN_ADMIN is said only to a member who can already see the project (an invited
        one). An administrator sees a discoverable project at FULL, and a hidden one it is not in at EXISTENCE, where
        the rescue alone stays reachable (D54; membership R60): there every answer below names only what that EXISTENCE
@@ -365,6 +379,7 @@ export class ProjectRoster {
   /* R4 (§7.10 removal). A majority of all owners, the target in the denominator and not voting, EXCEPT at exactly two
      owners where both must agree and the target is one of them. The floor is one owner. */
   projectOwnerRemove({ projectId, handle, by, reason, viewer = null } = {}) {
+    by = actorOf(by);
     { const refused = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT" }); if (refused) return refused; }
     if (!this.m.isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
@@ -556,6 +571,7 @@ export class ProjectRoster {
    *  nothing. The participant is asked of membership's fence (its R55, `joined`) as the member `by` names, so a caller
    *  that is no member of the project, a machine credential or the founder included, is refused there. */
   projectScopeSet({ projectId, scope, reason, by, viewer = null } = {}) {
+    by = actorOf(by);
     { const refused = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT", project: projectId });
       if (refused) return refused; }
     const who = typeof by === "string" && /^[A-Za-z0-9._:-]{1,128}$/.test(by) ? by : "unnamed:caller";
@@ -614,6 +630,7 @@ export class ProjectRoster {
   /** R24: SET WHICH ACTS NEED A SECOND MEMBER'S APPROVAL. An owner's act (administrators and the founder included, as
    *  R3), after sight; each entry checked, then each kind against the active profiles' view, then the reason. */
   projectApprovalSet({ projectId, needs, reason, by, viewer = null } = {}) {
+    by = actorOf(by);
     { const refused = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT", project: projectId });
       if (refused) return refused; }
     if (!this.m.isProjectOwner(projectId, by))
@@ -684,6 +701,7 @@ export class ProjectRoster {
   /** R31: SET OR CLEAR THE PROJECT'S STAKE. Sight first (the Terms'), then a machine credential, then position (joined,
    *  or an administrator at FULL sight), then the text; each refusal writes nothing. */
   projectStakeSet({ projectId, stake, by, viewer = null } = {}) {
+    by = actorOf(by);
     { const refused = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT", project: projectId });
       if (refused) return refused; }
     /* DEC-49 REGION is-project-stake-set */
@@ -782,6 +800,9 @@ export class ProjectRoster {
    *  administrator's gate withholds only hidden projects they are not in, and a hidden project is never listed here, so
    *  they too are listed none.
    *
+   *  R44 (fix round 10; K5157): `request` is the latest in ANY state, `{state, asked, closed, closed_comment}`, the last two
+   *  null until it is answered, so a requester whose request was declined is told, and with the owner's word.
+   *
    *  `limit` is the cap APPLIED, the caller's to lower and never to raise; `truncated` is MEASURED by reading one row
    *  past it, never derived from the page (a full page and a complete answer read alike). The page is the first `limit`
    *  in `bundle_id` order, so a page means the same thing twice. */
@@ -803,7 +824,8 @@ export class ProjectRoster {
        and its requests cannot disagree. Only the caller's own row is joined: whose else has asked is not a fact the
        directory holds. A granted request never appears: a grant makes the caller a participant, at FULL sight. */
     const projects = this.#rows(
-      `SELECT b.bundle_id AS id, r.state AS rstate, r.asked_at AS rasked, r.closed_at AS rclosed
+      `SELECT b.bundle_id AS id, r.state AS rstate, r.asked_at AS rasked, r.closed_at AS rclosed,
+              r.closed_comment AS rcomment
          FROM bundles b JOIN project_sight s ON s.project_id = b.bundle_id
          LEFT JOIN project_join_requests r
            ON r.seq = (SELECT MAX(r2.seq) FROM project_join_requests r2
@@ -812,7 +834,7 @@ export class ProjectRoster {
         ORDER BY b.bundle_id
         LIMIT ?`, member, ...gate.args, cap + 1)
       .map((r) => ({ id: r.id, name: this.#bundle(r.id)?.title ?? null,
-                     request: r.rstate ? { state: r.rstate, asked: r.rasked, closed: r.rclosed ?? null } : null }));
+                     request: r.rstate ? { state: r.rstate, asked: r.rasked, closed: r.rclosed ?? null, closed_comment: r.rcomment ?? null } : null }));
     const truncated = projects.length > cap;
     /* Cut by a slice at the published cap, so the collection `truncated` was measured over stays beside the page. */
     const page = truncated ? projects.slice(0, cap) : projects;
@@ -1125,7 +1147,7 @@ export class ProjectRoster {
      nothing. The founder's viewer is spelled bare `admin` or `member:admin` (membership R43); every other member is
      matched by `viewerPredicate`'s own parse, never a second one. */
   #requester(by, viewer) {
-    const me = this.#activeMemberRow(by);
+    const me = this.#activeMemberRow(actorOf(by));
     if (!me) return null;
     if (me.member_id === ROOT_ADMIN)
       return viewer === ROOT_ADMIN || viewerPredicate(viewer).member === ROOT_ADMIN ? me : null;
@@ -1245,6 +1267,7 @@ export class ProjectRoster {
    *  credential are refused by name. GRANT writes `invited`, `invited_by` the granting owner — never `joined` (§7.4).
    *  DECLINE is recorded with the owner's optional comment. A refused grant leaves the request open. */
   projectRequestAnswer({ projectId, handle, answer, comment = null, by, viewer = null } = {}) {
+    by = actorOf(by);
     { const refused = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT", project: projectId });
       if (refused) return refused; }
     const want = String(answer ?? "");
@@ -1295,6 +1318,7 @@ export class ProjectRoster {
    *  not already seen. Its answering owner is NOT in the requester's view: who owns a project is contents. Both lists
    *  are bounded as R9's directory is (the first `limit` in the order made). */
   projectRequests({ projectId = null, by, viewer = null, limit = null } = {}) {   /* R37: rows carry `member_id` */
+    by = actorOf(by);
     const cap = ProjectRoster.#cap(limit, ProjectRoster.PROJECT_REQUESTS_LIMIT);
     const refusal = (code, detail) => {
       const row = PROJECT_JOIN_REQUEST_CHECKS[code];
@@ -1333,6 +1357,33 @@ export class ProjectRoster {
     const theirsPage = theirsCut ? theirs.slice(0, cap) : theirs;
     return { ok: true, own: false, projectId, requests: theirsPage, count: theirsPage.length, limit: cap,
              truncated: theirsCut };
+  }
+
+  /** R44 (fix round 10; K5157): THE REQUESTS A MEMBER ANSWERED, `{ok, answered, count, limit, truncated}`, `answered`
+   *  newest first (by the instant closed), each `{projectId, name, requester: {member, handle}, answer, comment,
+   *  closed}`: the join requests closed `granted` or `declined` with `closed_by` that member (a withdrawal is the
+   *  requester's own and a lapse the one who hid the project: neither is an answer), only for projects she sees at FULL
+   *  (membership R43, the rule every list here applies), so a project she is out of names nothing. `by` and `viewer`
+   *  must name one active member, as R14's own list asks (`PROJECT_REQUEST_NEEDS_A_MEMBER`). Capped as R14; writes
+   *  nothing; for `queue`'s answered list, which reads it in process. */
+  projectRequestsAnswered({ by, viewer = null, limit = null } = {}) {
+    const me = this.#requester(by, viewer);
+    if (!me)
+      return this.#noRequester(null,
+        localize("project-roster.index.the_requests_you_answered_are", "the requests a member answered are read by that member, signed in. A credential with no active member behind it answered none."));
+    const cap = ProjectRoster.#cap(limit, ProjectRoster.PROJECT_REQUESTS_LIMIT);
+    const gate = viewerPredicate(me.member_id === ROOT_ADMIN ? ROOT_ADMIN : viewer);
+    const rows = this.#rows(
+      `SELECT r.project_id AS id, r.member_id AS member, m.handle AS handle, r.state AS answer, r.closed_comment AS comment,
+              r.closed_at AS closed
+         FROM project_join_requests r JOIN bundles b ON b.bundle_id = r.project_id AND b.object_type = 'project'
+         JOIN members m ON m.member_id = r.member_id
+        WHERE r.closed_by = ? AND r.state IN ('granted','declined') AND (${gate.sql})
+        ORDER BY r.closed_at DESC, r.seq DESC LIMIT ?`, me.member_id, ...gate.args, cap + 1);
+    const truncated = rows.length > cap;
+    const page = (truncated ? rows.slice(0, cap) : rows).map((x) => ({ projectId: x.id, name: this.#bundle(x.id)?.title ?? null,
+      requester: { member: x.member, handle: x.handle }, answer: x.answer, comment: x.comment ?? null, closed: x.closed }));
+    return { ok: true, answered: page, count: page.length, limit: cap, truncated };
   }
 
   /* THE REQUESTS READ'S PAGE SIZE, a chosen ceiling as R9's: a list a person reads to answer or to recall their own

@@ -156,6 +156,25 @@ test("R1 R96 G1 (the real plane) a PDF cut short (A5b): the page draws what the 
   assertOwnReading(shown(), reading, "truncated pdf");
 });
 
+const notesOf = (reading) => (reading.reading && reading.reading.recovery_notes) || reading.recovery_notes || [];
+const NOTE_VARS = (n) => (n.note === "pages_missing" ? { missing: String(n.missing), of: String(n.of) } : {});
+
+test("R9 R62 (the real plane) a PDF cut at 70 per cent: each recovery note the reading lists is drawn by the design's key, with the pages missing and the total; a sound PDF draws none", async () => {
+  const cut = await probe(await bytesOf({ kind: "pdf", seed: "b60-recovery-cut", size: { pages: 4 }, truncate: 0.7 }), "cut.pdf", "application/pdf");
+  const notes = notesOf(cut.reading);
+  assert.ok(notes.length > 0, "the plane lists the repair a cut file needed: " + JSON.stringify(cut.reading.reading).slice(0, 300));
+  for (const n of notes) {
+    /* the design's row once rows.mjs is regenerated (the round's end); until then the page draws the key */
+    const key = "screen.document.recovery." + n.note;
+    assert.ok(cut.shown().replace(/\s+/g, " ").includes(hasWord(key) ? word(key, NOTE_VARS(n)) : key), n.note + " is drawn");
+  }
+  assert.equal(main(cut.page).querySelectorAll("[data-recovery]").length, notes.filter((n) => ["xref_reconstructed", "pdf_truncated", "pages_missing"].includes(n.note)).length);
+  /* control: a sound file lists no note and the page draws none */
+  const sound = await probe(await bytesOf({ kind: "pdf", seed: "rw9-sound", size: { pages: 2 } }), "sound.pdf", "application/pdf");
+  assert.equal(notesOf(sound.reading).length, 0);
+  assert.equal(main(sound.page).querySelectorAll("[data-recovery]").length, 0);
+});
+
 /* the figures a size refusal draws, each in the unit it measures; a unit's own row when held, else the exact count alone */
 const grouped = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 const UNIT = (m) => "screen.document.reading.unit." + m;

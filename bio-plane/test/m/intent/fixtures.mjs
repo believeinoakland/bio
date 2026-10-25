@@ -94,3 +94,24 @@ export async function watchSetOf(held = {}, { throwsFor = [], page = null } = {}
   };
   return { world: w, intent, projects, viewer, calls, sources };
 }
+
+/** R11, R12, R37 (screens-inquiry draws a project's retired aspirations, their lessons and dead ends): the real `intentOf(...)`
+ *  over a project holding one aspiration still held and one retired, and a member aspiration of bob's retired, each made by
+ *  real acts (declared, a dead end recorded, retired with what pursuing it taught, a dead end after), never a stored answer.
+ *  Answers `{ world, intent, project, viewer, held, retired, mine, taught, deadEnds }`: `held`, `retired` (the project's) and
+ *  `mine` (bob's own, retired) are aspiration ids; `taught` the lessons by id; `deadEnds` the notes by id, oldest first.
+ *  `viewer` is bob, who has joined the project; ask `intent.aspirationsFor({ project, member: "bob", viewer, retired: true })`. */
+export function retiredWorld() {
+  const w = seeded();
+  const viewer = V("bob");
+  const declare = (scope, owner, statement) => must(w.i.declareAspiration({ scope, owner, statement, author: viewer }), "aspiration").aspiration;
+  const held = declare("project", w.P, "Map the minutes");
+  const retired = declare("project", w.P, "Name every signatory");
+  const mine = declare("member", "bob", "Learn the codes");
+  const taught = { [retired]: "Signatories are in the minutes, not the register.", [mine]: "Codes are learned by use." };
+  const deadEnds = { [retired]: ["The register was sealed.", "The clerk had no copy."], [mine]: [] };
+  must(w.i.recordDeadEnd({ aspiration: retired, note: deadEnds[retired][0], author: viewer }), "dead end");
+  for (const id of [retired, mine]) must(w.i.retireAspiration({ aspiration: id, taught: taught[id], author: viewer }), "retire");
+  must(w.i.recordDeadEnd({ aspiration: retired, note: deadEnds[retired][1], author: viewer }), "dead end after retirement");
+  return { world: w, intent: w.i, project: w.P, viewer, held, retired, mine, taught, deadEnds };
+}

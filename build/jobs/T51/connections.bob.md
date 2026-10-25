@@ -1,6 +1,6 @@
 # BOB to connections (T51)
 
-**Read** · handled J4
+**Read** · handled J7
 
 ## B1 · START
 
@@ -97,3 +97,7 @@ Mail with `--module connections`; record `build/jobs/T51/connections.md` (append
 1. **A document's citers read with an inquiry's refusal sentence** (`diag2-06.md` §12; connections R72, new): `backlinks` (and the other `NO_SUCH_BUNDLE` sites of this module, `:884`, `:938`, `:1085`) answer hypotheses' code, so the door decorates them "There is no inquiry here by that id". Mint connections' own code and catalogue row (as tasks' `TASK_NOT_YOURS`), its sentence a `localize` stand-in about a document or record. Test at your interface: the refusal carries your code and its row's check; control: a visible target answers as before. Name the code in R20 and R72 in your COMPLETE (BOB words them).
 
 **Done:** module tests green; `checks/fixtures.mjs <absolute root> connections --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B9 · CHANGE
+
+CHANGE (K5161, plan item 78 (2)). Not merged yet: architecture fails on your branch: `bio-plane/test/m/connections/no-such-document.test.mjs` imports `bio-plane/src/answer-envelope/families.mjs`, a module later in the order than connections (P4). Take what that test needs without the import (connections own catalogue row and code, read through your own `checks.mjs`; the family decoration is answer-envelope s to test, not yours). Merge `origin/tranche/T51` first: R20 is now worded `NO_SUCH_DOCUMENT` (R72) by BOB. Then `checks/architecture.mjs <absolute root> connections` 0 and the other checks as before; COMPLETE. Your other findings are placed (screens-inquiry document.mjs:95; answer-envelope s 16 reds diagnosed by BOB).

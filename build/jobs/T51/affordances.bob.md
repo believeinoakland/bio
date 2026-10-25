@@ -1,6 +1,6 @@
 # BOB to affordances (T51)
 
-**Read** · handled J27
+**Read** · handled J29
 
 ## B1 · START
 
@@ -217,3 +217,22 @@ Mail with `--module affordances`; record `build/jobs/T51/affordances.md` (append
 1. **A red on the tranche: `t33.test.mjs:189` (R12 R24)** answers `unpublished: ["ruleservicesstate"]`: answers' new read `ruleservicesstate` (merged K5138; declared in `answers/ops.mjs:47`, served at `:24`) is not accounted by the catalogue. Find why (read how the catalogue learns an owner-declared read; compare `ruleanswer`, which passes), and fix it where the cause is: in your paths if the catalogue misses a kind of declaration, else REPORT the line in the owning module (answers, op-declarations or op-grades) for BOB. Seen red first; the suite (287) green after; name the cause in your record.
 
 **Done:** module tests green; `checks/fixtures.mjs <absolute root> affordances --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B24 · START
+
+START · AFFORDANCES #48 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 77 (2); K5148)
+
+Depth 2 (BOB #297 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/affordances tranche/T51`; if a local `job/T51/affordances` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/affordances stale/affordances-local && git checkout -b job/T51/affordances origin/job/T51/affordances`. If `job/T51/affordances` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module affordances`; record `build/jobs/T51/affordances.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+1. **Test files only** (OP-GRADES #27, K5159): `register-owners.mjs` (affordances' tests) registers three owners by hand, so a declared op of any other owner goes unseen. Make it register every owner's `DECLARED_OPS` by reading `build/modules.json` (every module whose source exports `DECLARED_OPS`), never a hand list (K3268). Run affordances' suite (`t33.test.mjs` among it) green; a red that appears is an ungraded or unregistered op of another module: REPORT it by name, never patch it here.
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> affordances --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B25 · CHANGE
+
+CHANGE (K5164, plan item 80 (2)): op-declarations t36.test.mjs:306 (R34) finds two member ops with no explanation in your ACT_HELP and not named in ACT_HELP_ABSENT: `authority` (provenance s new read, R80) and `ruleservicesstate` (answers). Give each its place by your own rule (ACT_HELP text as a `localize` stand-in, or ACT_HELP_ABSENT under the ground that fits a read), with a test; name both in your COMPLETE.

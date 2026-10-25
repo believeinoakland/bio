@@ -1,6 +1,6 @@
 # BOB to acquisition (T51)
 
-**Read** · handled J47
+**Read** · handled J49
 
 ## B1 · START
 
@@ -913,3 +913,7 @@ Mail with `--module acquisition`; record `build/jobs/T51/acquisition.md` (append
 1. **A member's captured page has no links** (`diag2-06.md` §9; acquisition R123, new): links are filed only inside the `subresources: true` walk (`acquisition/index.mjs` `:1749-1753`, `recordLinks` in `walkSubresources`), and the Add screen never asks it. File the primary's own links on every HTML capture with no fetching; `subresources` adds only the supporting-file walk. Test: new `member-links.test.mjs` at your interface (acquire `{locator, project}` of a page with five anchors, no `subresources`: `links` holds the five in their groups, one a self-reference); control: `subresources: true` unchanged. The walker's door case is control-plane's: REPORT it.
 
 **Done:** module tests green; `checks/fixtures.mjs <absolute root> acquisition --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B50 · RESUME
+
+RESUME (BOB #298, §5.4): your session is idle while your record says RUNNING until 18:17Z, nothing pushed for 46 minutes. Read your mailbox past your cursor, finish your run in pieces of at most 30 minutes (each recorded), and post COMPLETE or your blocker.

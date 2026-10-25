@@ -7,7 +7,8 @@ import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { OPS, NEEDS } from "../../../src/op-declarations/index.mjs";
 import { MARKS } from "../../../src/op-grades/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
-import { boot, ok, refused, pending, fitSend, ADMIN, MEMBER } from "./harness.mjs";
+import { boot, ok, refused, pending, httpError, fitSend, ADMIN, MEMBER } from "./harness.mjs";
+import { inWorld, bootAs, doorAs } from "./world.mjs";
 import { ALL } from "./screens.fixture.mjs";
 
 const textOf = (h) => String(h).replace(/<[^>]*>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
@@ -68,36 +69,33 @@ test("R11 R107 (C76) over every act of every working screen the registry lists: 
   assert.ok(marked.includes("memberadd"), "control: a reasoned administrator's act still marks and asks");
 });
 
-test("R11 (C76) op-grades marks no read above Reversible: every op in MARKS that its owner declares not mutating is Reversible (bootstrap's 'Irreversible' among them)", () => {
-  const reads = Object.keys(MARKS).filter((op) => Object.hasOwn(OPS, op) && OPS[op].mutating === false);
-  assert.ok(reads.includes("bootstrap") && reads.length > 20);
-  assert.deepEqual(reads.filter((op) => MARKS[op] !== "Reversible"), []);
-  assert.ok(Object.keys(MARKS).some((op) => Object.hasOwn(OPS, op) && OPS[op].mutating !== false && MARKS[op] !== "Reversible"), "control: an act keeps a mark above Reversible");
-});
-
 test("R107 (C76) control: a reasoned act sent with its reason carries it; a Reversible-marked act and a sign-in act still run on press", async () => {
   const reg = SCREEN_REGISTRY.find((r) => actsOf(r).includes("memberadd") && !Object.hasOwn(FRAMES, r.id));
   const screen = standIn(reg.id, new Function("cs", "return cs.act('memberadd', { label: 'x' }) + cs.act('memberset', { label: 'x' });"),
     [{ op: "memberadd", send: fitSend("memberadd") }, { op: "memberset", send: fitSend("memberset") }]);
-  const p = await boot({ screens: [screen], path: "/app/" + reg.id, plane: { whoami: ok(ADMIN_ALL), memberadd: ok({ ok: true }) } });
+  const { world, me } = await inWorld();
+  const p = await bootAs(world, me, { screens: [screen], path: "/app/" + reg.id, plane: { whoami: ok(ADMIN_ALL) } });
   await p.click('button[data-act="memberadd"]');
   p.root().querySelector("textarea").value = "because";
   await p.click('button[data-shell="reason-send"]');
   assert.equal(p.byOp("memberadd")[0].body.reason, "because");
   const login = SCREEN_REGISTRY.find((r) => r.acts.includes("login"));
-  const lp = await boot({ screens: [standIn(login.id, new Function("cs", "return cs.act('login', { label: 'x' });"), [{ op: "login", send: fitSend("login") }])], path: "/app/" + login.id, session: null, plane: { login: ok({ ok: true }) } });
+  const lp = await bootAs(world, null, { screens: [standIn(login.id, new Function("cs", "return cs.act('login', { label: 'x' });"), [{ op: "login", send: fitSend("login") }])], path: "/app/" + login.id });
   await lp.click('button[data-act="login"]');
   assert.equal(lp.byOp("login").length, 1, "a sign-in runs on press");
 });
 
 /* ---------- C77 · R109: passwords are cleared only after an act that sent one ---------- */
 
-const JOINISH = standIn("join", new Function("cs", "return cs.field('j-handle', 'x') + cs.field('j-pass', 'x', { type: 'password' }) + cs.field('j-pass2', 'x', { type: 'password' }) + cs.act('handlecheck', { label: 'x' }) + cs.act('enroll', { label: 'x' });"),
+const joinish = (invite) => standIn("join", new Function("cs", "return cs.field('j-handle', 'x') + cs.field('j-pass', 'x', { type: 'password' }) + cs.field('j-pass2', 'x', { type: 'password' }) + cs.act('handlecheck', { label: 'x' }) + cs.act('enroll', { label: 'x' });"),
   [{ op: "handlecheck", send: fitSend("handlecheck", "{ handle: cs.value('j-handle') }") },
-    { op: "enroll", send: fitSend("enroll", "{ handle: cs.value('j-handle'), password: cs.value('j-pass') }") }]);
+    { op: "enroll", send: fitSend("enroll", `{ invite: ${JSON.stringify(invite)}, handle: cs.value('j-handle'), password: cs.value('j-pass') }`) }]);
 
 test("R109 (C77) a successful handle check keeps both typed passwords; control: a successful join empties them", async () => {
-  const p = await boot({ screens: [JOINISH], path: "/app/join", session: null, plane: { handlecheck: ok({ free: true }), enroll: ok({ ok: true }) } });
+  /* the invitation is the administrator's real `memberadd`; the join and the handle check are the world's own */
+  const { world, me } = await inWorld();
+  const { invite } = await me.act("memberadd", { body: { memberId: "newbie", cover: "the world's new member" } });
+  const p = await bootAs(world, null, { screens: [joinish(invite)], path: "/app/join" });
   const type = () => { p.doc.getElementById("j-handle").value = "newbie"; p.doc.getElementById("j-pass").value = "pw-one-one-one"; p.doc.getElementById("j-pass2").value = "pw-one-one-one"; };
   type();
   await p.click('button[data-act="handlecheck"]');
@@ -111,10 +109,15 @@ test("R109 (C77) a successful handle check keeps both typed passwords; control: 
 });
 
 test("R109 (C77) control: a refused act keeps what was typed, passwords included", async () => {
-  const p = await boot({ screens: [JOINISH], path: "/app/join", session: null, plane: { enroll: refused("HANDLE_TAKEN") } });
-  p.doc.getElementById("j-handle").value = "newbie";
+  /* the refusal is the real one: the handle typed is a member's already */
+  const { world, me } = await inWorld();
+  const { invite } = await me.act("memberadd", { body: { memberId: "newbie", cover: "the world's new member" } });
+  const p = await bootAs(world, null, { screens: [joinish(invite)], path: "/app/join" });
+  p.doc.getElementById("j-handle").value = me.handle;
   p.doc.getElementById("j-pass").value = "pw-one-one-one";
   await p.click('button[data-act="enroll"]');
+  assert.equal(p.byOp("enroll").length, 1);
+  assert.equal(p.byOp("enroll")[0].body.handle, me.handle);
   assert.equal(p.doc.getElementById("j-pass").value, "pw-one-one-one");
 });
 
@@ -161,26 +164,32 @@ test("R9 (C79) a navigation opens the screen at the top whatever the list had sc
 
 const unnamed = () => textOf(word("shell.group.unnamed"));
 test("R60 (C80) before groupidentity answers the masthead draws nothing as the team's name; once it answers, the name; a null display_name then draws the word", async () => {
+  const { world, me } = await inWorld();
+  const none = await bootAs(world, me, { screens: ALL });
+  assert.equal(none.root().querySelector(".cs-mast .mk-grp").textContent.trim(), unnamed(), "control: answered with no name, the word");
+  const name = (await me.act("groupnameset", { body: { name: "River Town" } })).display_name;
+  const door = doorAs(world, me).door;
   let release;
   const gate = new Promise((r) => { release = r; });
-  const p = await boot({ screens: ALL, plane: { groupidentity: async () => { await gate; return ok({ ok: true, group: "river-town", display_name: "River Town" }); } } });
+  /* only the delay is the test's: the answer, once released, is the door's */
+  const p = await bootAs(world, me, { screens: ALL, plane: { groupidentity: async (req) => { await gate; return door(req); } } });
   assert.equal(p.root().querySelector(".cs-mast .mk-grp"), null, "no link and no placeholder while it is unknown");
   assert.ok(!p.root().querySelector(".cs-mast").textContent.includes(unnamed()), "nowhere in the masthead");
   release();
   await p.settle();
-  assert.equal(p.root().querySelector(".cs-mast .mk-grp").textContent.trim(), "River Town");
-  const none = await boot({ screens: ALL, plane: { groupidentity: ok({ ok: true, group: "river-town", display_name: null }) } });
-  assert.equal(none.root().querySelector(".cs-mast .mk-grp").textContent.trim(), unnamed(), "control: answered with no name, the word");
+  assert.equal(p.root().querySelector(".cs-mast .mk-grp").textContent.trim(), name);
 });
 
 test("R60 (C80) the last known name, kept on the device, is drawn while the read is out; a failed read keeps it", async () => {
-  const p = await boot({ screens: ALL, plane: { groupidentity: pending } });
+  const { world, me } = await inWorld();
+  const name = (await me.act("groupnameset", { body: { name: "River Town" } })).display_name;
+  const p = await bootAs(world, me, { screens: ALL, plane: { groupidentity: pending } });
   assert.equal(p.root().querySelector(".cs-mast .mk-grp"), null, "nothing kept yet");
-  const first = await boot({ screens: ALL });
-  const kept = [...first.local.entries()].filter(([k, v]) => v === "River Town");
+  const first = await bootAs(world, me, { screens: ALL });
+  const kept = [...first.local.entries()].filter(([k, v]) => v === name);
   assert.equal(kept.length, 1, "the name is kept on the device");
-  const again = await boot({ screens: ALL, plane: { groupidentity: pending }, local: { [kept[0][0]]: "River Town" } });
-  assert.equal(again.root().querySelector(".cs-mast .mk-grp").textContent.trim(), "River Town");
+  const again = await bootAs(world, me, { screens: ALL, plane: { groupidentity: pending }, local: { [kept[0][0]]: name } });
+  assert.equal(again.root().querySelector(".cs-mast .mk-grp").textContent.trim(), name);
 });
 
 /* ---------- C94 · R111: members are named by handle ---------- */
@@ -244,15 +253,18 @@ test("R13 (C11) the refusal goes when the act is pressed again and succeeds, and
 /* ---------- C15 · R5: the words are asked for by the release version ---------- */
 
 test("R5 (C15, fix round 3 P1) the words request carries the release version the served page names, whatever bootstrap answers or whether it fails; control: a page naming none sends none", async () => {
-  const p = await boot({ screens: ALL, version: "0.86.0", plane: { bootstrap: ok({ ok: true, version: "other", test_instance: false }) } });
+  const { world, me } = await inWorld();
+  const p = await bootAs(world, me, { screens: ALL, version: "0.86.0" });
   const words = p.byOp("interfacewords");
-  assert.equal(words.length, 1);
   assert.equal(words[0].query.v, "0.86.0", "asked for by the page's release version, in hand before bootstrap answers");
-  const down = await boot({ screens: ALL, version: "0.86.0", plane: { bootstrap: refused("X") } });
+  assert.notEqual((await me.read("bootstrap")).version, "0.86.0", "the plane's own release is not the page's: the page's names the words");
+  for (const w of words.slice(1)) assert.ok(w.query.v.startsWith("0.86.0~"), "a later ask names the same release first (R128)");
+  const down = await bootAs(world, me, { screens: ALL, version: "0.86.0", plane: { bootstrap: httpError(500) } });
   assert.equal(down.byOp("interfacewords").length, 1, "a bootstrap that fails never holds the words back");
   assert.equal(down.byOp("interfacewords")[0].query.v, "0.86.0");
-  const bare = await boot({ screens: ALL, plane: { bootstrap: ok({ ok: true, version: "0.86.0", test_instance: false }) } });
-  assert.equal(bare.byOp("interfacewords")[0].query.v, undefined, "control: the page names no version, so no field");
+  const bare = await bootAs(world, me, { screens: ALL });
+  assert.ok(bare.byOp("interfacewords").length >= 1);
+  for (const w of bare.byOp("interfacewords")) assert.equal(w.query.v, undefined, "control: the page names no version, so no field");
 });
 
 /* ---------- B4 · R90, R11: a place word explains the act in the confirmation dialog too ---------- */
@@ -268,4 +280,11 @@ test("R90 R11 (C48) an act drawn with a here word confirms with that word, not .
   assert.notEqual(here, does);
   assert.equal(await dialogOf(", here: 'ceremony'"), here);
   assert.equal(await dialogOf(""), does);
+});
+
+test("R11 (C76) op-grades marks no read above Reversible: every op in MARKS that its owner declares not mutating is Reversible (bootstrap's 'Irreversible' among them)", () => {
+  const reads = Object.keys(MARKS).filter((op) => Object.hasOwn(OPS, op) && OPS[op].mutating === false);
+  assert.ok(reads.includes("bootstrap") && reads.length > 20);
+  assert.deepEqual(reads.filter((op) => MARKS[op] !== "Reversible"), []);
+  assert.ok(Object.keys(MARKS).some((op) => Object.hasOwn(OPS, op) && OPS[op].mutating !== false && MARKS[op] !== "Reversible"), "control: an act keeps a mark above Reversible");
 });

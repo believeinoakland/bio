@@ -111,7 +111,8 @@ test("R10 R16 Set this project's bar sends projectbarset with both axes, either 
   await press(p, "projectbarset", { reason: "the council meets on it" });
   fill(p, { "project-bar-capture": "", "project-bar-connection": "" });
   await press(p, "projectbarset", { reason: "we withdraw it" });
-  assert.deepEqual(p.byOp("projectbarset").map((r) => r.body), [{ project: P, capture: "A", connection: "C", reason: "the council meets on it" }, { project: P, reason: "we withdraw it" }]);
+  assert.deepEqual(p.byOp("projectbarset").map((r) => r.body), [{ project: P, capture: "A", connection: "C", expected: { capture: "B", connection: "B" }, reason: "the council meets on it" },
+    { project: P, expected: { capture: "B", connection: "B" }, reason: "we withdraw it" }], "R10: the save names the bar the owner saw (strength R45)");
   assert.equal(p.byOp("strengthbarset").length, 0);
   /* control: a member not joined (invited) is offered no bar act */
   const ana = await open(at(), { boot: { plane: { ...plane(), whoami: ok({ ...MEMBER, member: "ana", handle: "ana" }) } } });
@@ -275,7 +276,7 @@ test("R29 beneath the rows: invite (an owner), leave, and start a project from t
 
 test("R30 state c: an administrator at a hidden project's existence, its owners inactive: the rescue and nothing else", async () => {
   const p = await open(at(), { boot: { plane: { ...plane({ plane: { projectstage: seenWith, image: ok(null), projectparticipants: refusedIn("NO_SUCH_PROJECT"),
-    affordances: ok({ ok: true, roster: { rescue_open: true, owner: false } }), projectownerrescue: ok({ ok: true }) } }), whoami: ok(ADMIN) } } });
+    affordances: ok({ target: P, object_type: "project", current_state: null, acts: [{ id: "projectownerrescue" }], vocabularies: {}, capture_acts: [] }), projectownerrescue: ok({ ok: true }) } }), whoami: ok(ADMIN) } } });
   const s = section(p, "project.rescue.title.nodate");
   assert.ok(says(s, "project.rescue.says", { owners: "dev" }) && says(s, "project.rescue.own"));
   assert.deepEqual(actsIn(main(p)), ["projectownerrescue"], "nothing else of the project");
@@ -285,12 +286,12 @@ test("R30 state c: an administrator at a hidden project's existence, its owners 
   assert.deepEqual([q.projectId, q.handle, q.reason], [P, "rosa", "its work must go on"]);
   /* R54: the date of the title is `projectownersgone`'s `since` */
   const dated = await open(at(), { boot: { plane: { ...plane({ plane: { projectstage: seenWith, image: ok(null), projectparticipants: refusedIn("NO_SUCH_PROJECT"),
-    affordances: ok({ ok: true, roster: { rescue_open: true } }), projectownersgone: ok({ ok: true, projectId: P, gone: true, since: "2026-09-30T09:00:00Z" }) } }), whoami: ok(ADMIN) } } });
+    affordances: ok({ target: P, object_type: "project", current_state: null, acts: [{ id: "projectownerrescue" }], vocabularies: {}, capture_acts: [] }), projectownersgone: ok({ ok: true, projectId: P, gone: true, since: "2026-09-30T09:00:00Z" }) } }), whoami: ok(ADMIN) } } });
   assert.equal(dated.byOp("projectownersgone")[0].query.projectId, P);
   assert.ok(section(dated, "project.rescue.title", { date: day("2026-09-30") }));
   /* control: refused by its words (a project kept for its owner alone) */
   const r = await open(at(), { boot: { plane: { ...plane({ plane: { projectstage: seenWith, image: ok(null),
-    affordances: ok({ ok: true, roster: { rescue_open: true } }), projectownerrescue: refusedIn("PROJECT_SCOPE_OWN", "A project kept for one member alone is never taken over.") } }), whoami: ok(ADMIN) } } });
+    affordances: ok({ target: P, object_type: "project", current_state: null, acts: [{ id: "projectownerrescue" }], vocabularies: {}, capture_acts: [] }), projectownerrescue: refusedIn("PROJECT_SCOPE_OWN", "A project kept for one member alone is never taken over.") } }), whoami: ok(ADMIN) } } });
   fill(r, { "project-rescue-why": "x" });
   assert.ok((await press(r, "projectownerrescue")).textContent.length > 0);
 });

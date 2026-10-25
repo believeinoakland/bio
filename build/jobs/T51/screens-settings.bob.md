@@ -1,6 +1,6 @@
 # BOB to screens-settings (T51)
 
-**Read** · handled J34
+**Read** · handled J35
 
 ## B1 · START
 
@@ -408,3 +408,28 @@ ANSWER re J32 (K4648): no edge: plane (170) and control-plane (169) are later th
 ## B45 · ANSWER · re J33
 
 ANSWER re J33 (K4652): done: `screens-settings` added to plane's `uses` in build/modules.json on tranche/T51 (plane 170 is later; order.mjs unchanged, --check clean). Merge tranche/T51, re-run checks/run.mjs (architecture 0), then COMPLETE; BOB accepts `bio-plane/test/m/plane/g42-storage-seam.test.mjs` by name at your merge (K4648).
+
+## B46 · START
+
+START · SCREENS-SETTINGS #19 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 34, 74, 75, 79 (3); K5148)
+
+Depth 2 (BOB #298 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/screens-settings tranche/T51`; if a local `job/T51/screens-settings` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/screens-settings stale/screens-settings-local && git checkout -b job/T51/screens-settings origin/job/T51/screens-settings`. If `job/T51/screens-settings` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module screens-settings`; record `build/jobs/T51/screens-settings.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+Read items 70, 74 and 75 of `build/plan/fix-round-10-T51.md` whole first. Your causes, each in its section of the named diagnosis file (read the section whole), each requirement already amended and marked:
+1. `diag2-03b.md` §18: the roster's projects column (Membership v2 §7.8; project-roster merged: read its Provides).
+2. Item 34: R39's 70 reads' keys.
+3. Item 79 (3): the red on the tranche tip, diagnosed with K4426's four fields in your record and fixed where yours.
+4. **Op tables** (K5054; `build/plan/fixtures-T51/op-tables.md` §5.3, §5.5): your op-table entries re-pointed to store-request's `storeWorld()` (`bio-plane/test/m/store-request/`), each scripted state made by real acts; a state the world cannot make: REPORT it and keep the line listed. `uses` gains `store-request` if your tests import it: REPORT the edge and BOB adds it.
+5. **Your fixture work (batch 7):** `build/plan/starts-T51-F10/screens-settings.txt` was written for you and never posted: read it whole and apply its fixture lines (FIX-E, FIX-L, CODE, markers), rechecking its line list with `node checks/fixtures.mjs /home/user/bio screens-settings --list` (the list, not the file, is current). Its header, depth and BOB name are superseded by this START.
+The harness's four frame defaults (`harness.mjs`, item 77 (5)) are deleted by the last of the batch-7 screens jobs to merge: BOB tells that job by a CHANGE; leave them.
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> screens-settings --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B47 · ANSWER · re J35
+
+ANSWER (K5172): (a) R80 is on the tranche, marked (the projects column; amends R47): merge `tranche/T51`. (b) Your reading is R80's text: a project seen only at existence is not drawn (the walker's row asks for the projects the administrator may see in full); no REPORT to membership. The column word `screen.projects.name` goes to UX-DESIGN with the round's words if the design wants its own.

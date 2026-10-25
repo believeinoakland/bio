@@ -4,12 +4,30 @@
  * scripted plane. Every expectation is a word read by key (R44). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ok, MEMBER } from "../interface-shell/harness.mjs";
+import { ok, MEMBER, boot } from "../interface-shell/harness.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
-import { open, main, actsIn, fill, press, says, section, plane, word, SCREENS, P } from "./fixtures.mjs";
+import { open, main, actsIn, fill, press, says, section, plane, word, SCREENS, P, storeWorld } from "./fixtures.mjs";
 
-/* every owner's declarations, registered once before the first read (test-support R17, K4245) */
-
+/** The page `path` as `me`, over the real world's door and the session her sign-in made (op-tables §5.3). */
+async function pageAs(world, me, path) {
+  const { door, session } = world.boot(me);
+  const p = await boot({ screens: SCREENS, door, session, path });
+  await p.settle();
+  return p;
+}
+/** A world where `ann` started a project, `ben` is a joined owner beside her, and `cat` a joined member. */
+async function ownersWorld() {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", { capabilities: ["contribute", "create_projects"] });
+  const project = await world.recipes.project(ann, "Stormwater");
+  const people = {};
+  for (const h of ["ben", "cat"]) {
+    people[h] = await world.signIn(h, { capabilities: ["contribute"] });
+    await ann.act("projectinvite", { query: { projectId: project, handle: h } });
+    await people[h].act("projectjoin", { query: { projectId: project } });
+  }
+  return { world, ann, project, ...people };
+}
 
 const at = "/app/project/" + P;
 const PROJECT = SCREENS.find((s) => s.id === "project");
@@ -66,9 +84,13 @@ test("R122 another owner's view of the row draws the button to agree, which open
   /* control: dev has already agreed */
   const done = await open(at, as("dev", { projectownervotes: votes(waiting("mai", ["mai", "dev"], [])), projectparticipants: TWO, projectownerarith: arith(2) }));
   assert.equal(rowOf(done, "mai").querySelector('button[data-act="projectownerremove"]'), null);
-  /* control: ana is a member, not an owner */
-  const ana = await open(at, as("ana", { projectparticipants: ok({ ok: true, projectId: P, participants: [owner("dev"), owner("mai"), { handle: "ana", state: "joined", owner: 0 }] }), projectownervotes: pending }));
-  assert.ok(!actsIn(section(ana, "screen.project.members.head")).includes("projectownerremove"));
+  /* control: cat is a member, not an owner, and ben's real stand-down vote is open (the refusal is the plane's own answer) */
+  const t = await ownersWorld();
+  await t.ann.act("projectowneradd", { query: { projectId: t.project, handle: "ben", reason: "she carries it with me" } });
+  await assert.rejects(t.ben.act("projectownerremove", { query: { projectId: t.project, handle: "ben", reason: "stepping back" } }), /VOTES_SHORT/);
+  const cat = await pageAs(t.world, t.cat, "/app/project/" + t.project);
+  assert.ok(rowOf(cat, "ben"), "control: ben's row is drawn to her");
+  assert.ok(!actsIn(section(cat, "screen.project.members.head")).includes("projectownerremove"));
 });
 
 test("R122 control: a row with no pending removal draws neither the opened sentence nor the agree button", async () => {
@@ -90,12 +112,13 @@ test("R122 every key of the stand-down's notice is held and listed (K874)", () =
 });
 
 test("R29 K4199 Make an owner asks its reason before it runs, and sends it with the act; control: Remove from the project, whose reason is optional, is unchanged", async () => {
-  const p = await open(at, { plane: { projectparticipants: ok({ ok: true, projectId: P, participants: [owner("dev"), owner("mai"), { handle: "ana", state: "joined", owner: 0 }] }), projectowneradd: ok({ ok: true }) } });
-  const row = () => section(p, "screen.project.members.head").querySelectorAll(".cs-row").find((r) => r.textContent.includes("ana"));
+  const { world, ann, project } = await ownersWorld();
+  const p = await pageAs(world, ann, "/app/project/" + project);
+  const row = () => section(p, "screen.project.members.head").querySelectorAll(".cs-row").find((r) => r.textContent.includes("cat"));
   const add = await press(p, "projectowneradd", { within: row() });
   assert.equal(p.byOp("projectowneradd").length, 0, "nothing is sent until she gives a reason");
   assert.ok(add && add.querySelector('textarea[id^="cs-reason-"]'), "the shell opens its reason box");
   await press(p, "projectowneradd", { within: row(), reason: "she has done the work" });
   assert.equal(p.byOp("projectowneradd").length, 1);
-  assert.equal(p.byOp("projectowneradd")[0].query.handle, "ana");
+  assert.equal(p.byOp("projectowneradd")[0].query.handle, "cat");
 });

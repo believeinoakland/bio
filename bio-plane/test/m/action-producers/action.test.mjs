@@ -339,3 +339,38 @@ test("R8 (DEC-113): one FINDING litigation-hold-released per release action-hold
   const cut = ofKind(w.read("alice"), "litigation-hold-released");
   assert.equal(n, 20); assert.equal(cut.length, 20); assert.ok(cut.every((i) => i.basis.bound.truncated === true));
 });
+
+test("R26: every item names an action by its title, never its id: the legal-threat, reminder, released-hold and local-fact items; an action with no title is named by the module's fallback", () => {
+  const TITLE = "Comment on the filing rule";
+  const w = people({
+    actionClocks: {
+      remindersDue: () => page([
+        { action: "ACT-1", ord: 0, date: day(NOW + 5 * DAY), basis: "b", text: "response due", on: day(NOW), set_by: "alice", project: "PRJ-1" },
+        { action: "ACT-2", ord: 0, date: day(NOW + 5 * DAY), basis: "b", text: "response due", on: day(NOW), set_by: "alice", project: "PRJ-1" }]),
+      calendarFactsRead: () => ({ ok: true, actions_limit: 500, truncated: false,
+        paths: [{ path: "profile:p/hours/clerk", actions: [{ action: "ACT-1", project: "PRJ-1", created_by: "alice" }] }] }) },
+    actionHolds: {
+      holdsDue: () => page([
+        { action: "ACT-1", ord: 2, note: "a letter threatening suit", marked_by: "alice", marked_at: iso(NOW - DAY), project: "PRJ-1" },
+        { action: "ACT-2", ord: 1, note: "a subpoena", marked_by: "alice", marked_at: iso(NOW - DAY), project: "PRJ-1" }]),
+      holdsReleased: () => page([
+        { action: "ACT-1", ord: 2, seq: 3, released_by: "olga", released_at: iso(NOW - DAY), reason: "settled", placers: ["alice"], restarted: [] },
+        { action: "ACT-2", ord: 1, seq: 4, released_by: "olga", released_at: iso(NOW - DAY), reason: "settled", placers: ["alice"], restarted: [] }]) },
+    localFacts: { factsDue: () => ({ ok: true, unknown: [], absent: [], due: [{ path: "profile:p/hours/clerk", fact: {}, status: "unconfirmed",
+      due: true, why: "w", latest: null, due_from: "2026-08-01" }] }) } });
+  w.run(`UPDATE bundles SET title=?, project='PRJ-1' WHERE bundle_id='ACT-1'`, TITLE);
+  w.run(`UPDATE bundles SET title='', project='PRJ-1' WHERE bundle_id='ACT-2'`);
+  const r = w.read("alice");
+  const of = (kind, action) => r.items.filter((i) => i.kind === kind && (i.subject?.id === action || i.basis?.action === action || i.basis?.actions?.includes(action)));
+  for (const kind of ["action-reminder", "litigation-hold", "litigation-hold-released", "local-fact-due"]) {
+    const [it] = of(kind, "ACT-1");
+    assert.ok(it, `${kind}: the item on the titled action is drawn`);
+    assert.ok(it.summary.includes(TITLE), `${kind}: the summary holds the action's title (${it.summary})`);
+    assert.ok(!it.summary.includes("ACT-1"), `${kind}: and never its id (${it.summary})`);
+  }
+  for (const kind of ["action-reminder", "litigation-hold", "litigation-hold-released"]) {
+    const [it] = of(kind, "ACT-2");
+    assert.ok(it, `${kind}: the item on the untitled action is drawn`);
+    assert.ok(!it.summary.includes("ACT-2"), `${kind}: an action with no title is never named by its id (${it.summary})`);
+  }
+});

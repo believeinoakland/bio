@@ -97,7 +97,7 @@ Terms. An **item**, a **home set**, the **depth bound** and a **case** are `queu
 #### T47's L11 fold (K3100)
 
 - **R25** (DEC-212; K1364; wide path rule 6) CONDITION `request-unsent`: one per filing `filings.approvedUnsent` answers the viewer, keyed `CONDITION::request-unsent::<filing>`, to the member who approved it, else the action's creator, else its project's owners; its subject the action, homed under its project, naming what is asked and the approval date; its doors the action's screen, `queuesnooze` and `actionmove` (`abandoned`, reasoned). Test with a control.
-- **R26** *(not yet met: T51)* (K5157; walk-T51-final 11 §7b) Every item names an action by its title, never its `ACTN-` id (the reminder, legal-threat, released-hold and local-fact items among them).
+- **R26** (K5157; walk-T51-final 11 §7b) Every item names an action by its title, never its `ACTN-` id (the reminder, legal-threat, released-hold and local-fact items among them).
 
 ## Private
 

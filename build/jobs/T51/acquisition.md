@@ -1,6 +1,6 @@
 # acquisition (T51)
 
-**Status** · session_01UzsMeXPSWSfbJkij7yPiZw · depth 2 · COMPLETE · handled B48
+**Status** · session_01JjkV7W74Hx4TPxHQN3nSf6 · depth 2 · COMPLETE · handled B50
 
 ## J1 · REPORT
 
@@ -819,3 +819,23 @@ Size (session_01UzsMeXPSWSfbJkij7yPiZw): test runs 30, module lines 4457
 ## J47 · COMPLETE
 
 COMPLETE (B48, fix round 10 Wave A batch 2). R12: .tsv/.tab members read as text (textTypeOf; r12-tsv-members.test.mjs red first, green; platform N done, L named for the redeploy: the 30-member archive, 10 .tsv whole). 7 fixtures published in test/m/acquisition/fixtures.mjs (acquireRefusals, archiveAnswer, archiveNotHeld, keyedServiceOff, notHeldRange, owedFetchAnswer, owedRunAnswer), each tested against the real answer. Own fixture lines: FIX-E done (renderFailure, evidencePartsRefusal, JOB_NOT_KEPT, heldParts/homeOfEmpty, provenance registeredHomes behind fixture.mjs homeOf/registerHolds, real provenanceOf in the workerd worker); FIX-L markers added on 76 lines, 75 remain contract-no-run waiting on plane (owed-ledger, keep-later, job-registrar) and control-plane (deliver-owed); no fixtures-own or fixtures-generic marker added. Suite 349/349; other importers 352/352; capture+doorbell+screens-intake 823/823; format, architecture, words 0; coverage acquisition 76/76; ownership lists only build/requirements/acquisition.md (R102 marker removed, K4210). P9: csv-reader does not export its delimited names, so acquisition keeps the .tsv/.tab names as a literal. Record: build/jobs/T51/acquisition.md
+
+## J48 · COMPLETE
+
+Fix round 10, item 1 (K5148): **R123 met**. BOB strikes its mark.
+
+Cause (diag2-06 §9, re-read): the links were filed only inside the `subresources: true` walk (`walkSubresources`), and the Add screen never asks for it. Fix: `acquire` now also runs `walkSubresources` with `linksOnly: true` on every HTML primary that is not walked, not render-pending and not multipart. That path reads the primary back and runs `captureSubresources` with `cap: 0`, so no reference is fetched and nothing is stored, then files the links through the shared `fileLinks` helper (the walk's own filing now uses the same helper). It is timed as the existing `subresources` stage, so R95's stage names are unchanged and a non-HTML capture gains none. A failed filing never fails the capture. Files: `bio-plane/src/acquisition/index.mjs`.
+
+Tests: new `bio-plane/test/m/acquisition/member-links.test.mjs` (3 tests, R123), seen red on the old code. The page has five anchors and no `subresources`: five links filed in their groups (one anchor into the page itself, four deferred) and the source was asked only for the page. Control: `subresources: true` files the same links once and still fetches the stylesheet. A non-page files none, and a failing `recordLinks` leaves the capture 200. `selflink-render.test.mjs`'s negative control encoded the old R19 behaviour ("no walk, no links"), so I changed it to expect the same three links without the walk.
+
+Why the tests missed it: every acquire test that looked at links passed `subresources: true`, and the one control that did not asserted the absence.
+
+Reported for BOB: the walker's door case (control-plane's: `op=links capture=<sha>` of a member-captured page) is not written here (K5138). No `fixtures-own` or `fixtures-generic` markers were added.
+
+Checks: acquisition suite 359 pass, 0 fail. capture and screens-intake suites 750 pass. plane `sweep` and `t50`, the only plane tests naming links: 13 pass. control-plane suite: 682 pass, 7 fail, all in credentials R83/R112 and R105 money-ingest tests that do not touch capture or links. I did not run them against the tranche tip, so I take them as inherited but have not shown it. The whole plane suite hung with no progress at test 149 and I stopped it; the monitoring suite was not run (the combined run hit its time limit). format 0 failures; architecture 0; coverage 77 of 77; ownership 0 failures (4 files); fixtures `--list`: nothing new from acquisition (the failures listed belong to other modules).
+
+Size (session_01JjkV7W74Hx4TPxHQN3nSf6): test runs 12, module lines 4479
+
+## J49 · COMPLETE
+
+R123 met (see J48): every HTML capture files its page's own links with no fetching. Tests member-links.test.mjs red then green; acquisition 359 pass. Door case for control-plane to place (K5138). control-plane suite has 7 failures in credentials/money-ingest, unrelated, not compared with the tranche tip.

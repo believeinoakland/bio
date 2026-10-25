@@ -238,6 +238,7 @@ Terms. The **slug** is the producing group's short name, in `GROUP_SLUG_RE`'s gr
 - **R42** At start this module registers with `capture` (its R55) a listener that records each walk's compute measurement through R33 (`metric` `capture_work_bytes`, the value as `ms` until R34's unit is recorded, the detail as given). *(met in substance: `legacy-store` registers this listener on capture's R55 today, and this module takes the registration at its extraction; the store route `recordruntime` is left with no product caller and goes with it)*
 - **R75** *(retired: moved to `translations` R9, T50; N1084)*
 - **R43** (N339, K421) A store answer this module's Worker handlers relay that is the store's own refusal (`answer-envelope` R3: `ok: false` below 500) is answered with the store's status, code and sentence through `storeRefusal`; only a reply that is no answer is `STORE_DID_NOT_ANSWER`, with the store's correlation id when it gave one (`store-door` R6; N349).
+- **R105** (fix round 10; K5170; `extraction` R110; CONTROL-PLANE #61 J61 (3)) **`selftest` states each migration's counts.** `op=selftest` answers `migrations`, extraction's `extractionOf(ctx).migrationCounts()` as extraction R110 states it, for an administrator; read only.
 
 ### Satisfies
 
