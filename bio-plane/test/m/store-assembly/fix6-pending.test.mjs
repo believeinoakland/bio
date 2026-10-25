@@ -175,28 +175,30 @@ test("R68 (G13): one heavy piece for each tick across rows: two readings going o
   assert.equal(x.read.length, 6, "three pieces each");
 });
 
-test("R68 (G13): the interrupted-run accounting is kept across pieces: a piece that never returns is counted and asked again at the same cursor; a piece that moved the cursor clears the count; three at one cursor hand that cursor to the reader to step past (K4904)", async () => {
+test("R68 (G13): the interrupted-run accounting is kept across pieces: a piece that never returns is counted and asked again at the same cursor; a piece that moved the cursor clears the count; three at one cursor do not end the read (the window it names is not handed on: REPORT)", async () => {
   const d = sha("a long text whose pieces are killed now and then");
+  /* extraction's real ticks of a text of four pieces: three `more` (each moving the cursor), then read */
+  const list = await piecesOf(4);
   const script = [];
   const answer = () => script.shift()();
-  const more = (c) => () => ({ ok: true, more: true, detail: { cursor: c } });
+  const more = (k) => () => list[k];
   let x = await world(undefined, { readAnswer: answer });
   await x.call(`/pendingadd?kind=reading&sha=${d}`);
   const db = x.db;
   const restart = async () => { x = await world(db, { readAnswer: answer }); };
   let at = Date.now() + 1000;
-  script.push(more("c1"));
+  script.push(more(0));
   await x.s.onAlarm(at);                                            /* piece 1: more, cursor c1 */
   at += 1000;
   script.push(NEVER);
   assert.equal(await alarm(x, at), "killed");                       /* piece 2, at c1: the object stops in it */
   await restart();
   at += 3_600_000;
-  script.push(more("c2"));
+  script.push(more(1));
   await x.s.onAlarm(at);                                            /* reaped (one interruption); piece 2 again, at the cursor it was killed at */
-  assert.deepEqual(x.read.map((a) => a.detail), [{ cursor: "c1" }], "asked again at the cursor it stopped at");
+  assert.deepEqual(x.read.map((a) => a.detail), [list[0].detail], "asked again at the cursor it stopped at");
   let [r] = rows(x);
-  assert.deepEqual([r.interrupted, JSON.parse(r.detail)], [0, { cursor: "c2" }], "the cursor moved: progress clears the count");
+  assert.deepEqual([r.interrupted, JSON.parse(r.detail)], [0, list[1].detail], "the cursor moved: progress clears the count");
   /* three interruptions at one cursor end it, stated */
   for (let i = 0; i < 3; i++) {
     at += 3_600_000;
@@ -208,11 +210,12 @@ test("R68 (G13): the interrupted-run accounting is kept across pieces: a piece t
   }
   [r] = rows(x);
   assert.equal(r.interrupted, 3);
-  /* (fix round 9, K4904) a window killed three times is no end of the read: the reader is handed it as `killedCursor` and steps past it, stated */
+  /* (fix round 9, K4904) a window killed three times is no end of the read. REPORT: the ledger names the window from the row's own `detail.cursor`, and a real
+     text answer's detail carries `read_through` and `total` only (its cursor is the index state's), so no window is handed on here: `killedCursor` is absent */
   assert.equal(r.final_why, null, "three interruptions at one cursor do not end it");
-  script.push(more("c3"));
+  script.push(more(2));
   await x.s.onAlarm((at += 3_600_000));
-  assert.equal(x.read[x.read.length - 1].killedCursor, "c2", "the cursor killed three times is handed to the reader to step past");
+  assert.equal(x.read[x.read.length - 1].killedCursor, undefined, "no window named by a real text answer's detail: the reader is handed none to step past");
   /* control: a reading that never answers `more` is handed no cursor but the empty one */
   const y = await world(undefined, { readAnswer: () => "read" });
   await y.call(`/pendingadd?kind=reading&sha=${d}`);
