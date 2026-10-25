@@ -1,6 +1,6 @@
 # office-readers (T51)
 
-**Status** · session_0125Uavk4SCgaTBsu5Z16S9v · depth 2 · WORKING · handled B24
+**Status** · session_0125Uavk4SCgaTBsu5Z16S9v · depth 2 · COMPLETE · handled B24
 
 ## Completion
 
