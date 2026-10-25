@@ -13,6 +13,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { shapeRun, capFor, report } from "./shape/harness.mjs";
 import { exactFile } from "./shape/exact-gen.mjs";
+import { whole, refused } from "./shape/reading-judge.mjs";
 import { boundOf } from "../../../src/read-bounds.mjs";
 
 const MiB = 1048576;
@@ -21,34 +22,12 @@ const BOUNDS = {
   "ods declared content.xml": { kind: "ods", bound: boundOf("ods", "content_xml"), figure: "declared" },
   "entry file bytes": { kind: "xlsx", bound: boundOf("pdf", "bytes"), figure: "file" },
 };
-const digits = (s) => String(s || "").replace(/[,\s_]/g, "");
-
 async function read(rec) {
   const f = await exactFile(rec);
   const r = await shapeRun({ doc: { kind: "file", path: f.path, bytes: f.bytes, name: f.name, type: f.type, marks: [] }, maxTicks: 400, pageAll: false }, { capMB: capFor(Math.min(f.bytes, 2 * MiB) / MiB) });
   console.log(report(`${JSON.stringify(rec)} -> ${f.bytes} B file, ${f.rows} rows`, r));
   return { f, r };
 }
-/** the reading is whole: the child lived, completeness `whole`, nothing owed */
-function whole(r, label) {
-  assert.equal(r.died, false, `${label}: ${r.error || r.stderr}`);
-  const g = r.reading; assert.ok(g, `${label}: no reading was made`);
-  assert.equal(g.refusal, null, `${label}: refused ${JSON.stringify(g.refusal)}: ${g.completeness && g.completeness.why}`);
-  assert.equal(g.completeness && g.completeness.state, "whole", `${label}: ${JSON.stringify(g.completeness)}`);
-  assert.deepEqual(r.done.left, [], `${label}: work still owed`);
-}
-/** the reading is refused with the size and the limit it was judged against */
-function refused(r, label, size, bound) {
-  assert.equal(r.died, false, `${label}: ${r.error || r.stderr}`);
-  const g = r.reading; assert.ok(g, `${label}: no reading was made`);
-  const said = `${g.completeness && g.completeness.why} | ${g.basis}`;
-  assert.ok(g.refusal, `${label}: not refused; it said: ${said} (state ${g.completeness && g.completeness.state}, read_through ${g.read_through}/${g.total})`);
-  assert.equal(Number(g.refusal.size), size, `${label}: the refusal's size ${g.refusal.size}, the file's figure ${size}`);
-  assert.equal(Number(g.refusal.bound), bound, `${label}: the refusal's limit ${g.refusal.bound}, the table's ${bound}`);
-  assert.ok(digits(said).includes(String(size)) && digits(said).includes(String(bound)), `${label}: the sentence holds neither or only one of the figures ${size} and ${bound}: ${said}`);
-  assert.ok(!/undecodable/i.test(said), `${label}: worded as an undecodable region (S-8): ${said}`);
-}
-
 for (const [name, { kind, bound, figure }] of Object.entries(BOUNDS)) {
   const rec = (n) => (figure === "declared" ? { kind, declared: n } : { kind, declared: 1_000_000, padTo: n });
   test(`G124f SHEET C03 ${name}: ${bound} - 2 is read whole`, { timeout: 1_800_000 }, async () => { const { r } = await read(rec(bound - 2)); whole(r, `C03 ${name}`); });
