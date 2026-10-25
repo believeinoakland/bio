@@ -73,3 +73,32 @@ Fix round 10, Wave A batch 1 (B3): `subscriptionsignin` declared here (R6, K5046
 **Checks.** Module tests 20 of 20 pass. format.mjs 0 failures (178 modules). architecture.mjs signin-door 0 failures. coverage.mjs 6 of 6 ids named; 0 failures. words.mjs signin-door 0 failures. ownership.mjs 0 failures. setup-words build --check: stale-rows note for the new id only.
 
 Size (session_01GU1iv4VtLeuTsVtVTUKjWm): test runs 7, module lines 343
+
+## J6 · BLOCKED
+
+Fix round 10 (B5): the four FIX-E lines now take their answers from published fixtures. Commit `afb9c8467e` on `job/T51/signin-door`.
+
+Order: `mail start` ran before the fetch and tranche merge that START asks for. The job branch was fast-forwarded to origin first, then `tranche/T51` was merged in (`395ae4909e`), and the work followed.
+
+**Applied (`bio-plane/test/m/signin-door/door.test.mjs`; each case keeps what it tests, only the answer's source changed):**
+- `:31` the store's refused reply → answer-envelope `refusedAnswer()`.
+- `:52` the account state → ai-accounts `accountReference()`, its `with` state; the test compares against that state's `subscription`.
+- `:246` the malformed-token hold → ai-accounts `tokenMalformedHold().tooShort`.
+- `:286` the disconnect → ai-accounts `subscriptionDisconnect()`.
+
+No marker added; the sentinel `silent` answers stay as they were, since they are not invented answers.
+
+**Checks (absolute root `/home/user/bio`):**
+- `fixtures.mjs signin-door --list`: 0 failures (was 4).
+- `format.mjs`: 178 modules, 0 failures.
+- `coverage.mjs signin-door`: 6 of 6 live ids named, 0 failures.
+- `words.mjs signin-door`: 0 failures.
+- `ownership.mjs signin-door tranche/T51`: 0 failures.
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/signin-door/door.test.mjs`: 12 of 12 pass.
+- `architecture.mjs signin-door`: **1 failure**, see below.
+
+**NEEDS BOB (architecture; the act is in `build/modules.json`, outside this job's paths):** the door's test now imports ai-accounts' published fixtures, but `signin-door`'s `uses` does not declare `ai-accounts`. The fixtures rule (mechanics §8, check 7) is met, because ai-accounts is layer 2, earlier than signin-door. The one act is to add `ai-accounts` to `signin-door`'s `uses` on `tranche/T51`. My recommendation is yes: the door's store routes are ai-accounts' answers, so the dependency is real. I did not edit `modules.json`.
+
+Once that is in, I re-run `architecture.mjs` and post `COMPLETE` with the `Size` line. Nothing else is open.
+
+**Deferred:** none.
