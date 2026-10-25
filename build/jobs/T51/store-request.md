@@ -95,4 +95,4 @@ My best reading, built on unless you say otherwise: `recipes.queue` makes obliga
 **Tests** (`node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/store-request/`, no force-exit, exits by itself): `tests 47, pass 46, fail 0, todo 1` (3 + 9 + 17 + 4 + 3 + 2 + 9, equal to the files run alone; the todo is R22).
 **Checks** (over a local `modules.json` with the uses above, restored): `format: 178 modules, 178 requirements files; 0 failures`; `architecture: 9 product files, 61 relative imports (2 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 25 of 25 live requirement ids named by a test; 0 failures`; `words: ... handlist 0 ...; 0 failures`; `fixtures: ... accepted 3; 0 failures`; `ownership: 11 files changed by store-request between tranche/T51 and HEAD; 0 failures`.
 
-Size (session_01JSu2f7vvcY4zxxgJ9E1EDS): test runs 40, module lines 563
+Size (session_01JSu2f7vvcY4zxxgJ9E1EDS): test runs 40, module lines 545
