@@ -1,4 +1,4 @@
-START · AI-ACCOUNTS #<n> · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 2: publish 14 fixtures, re-point 8 own lines, 1 marker line (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+START · AI-ACCOUNTS #6 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 2: publish 14 fixtures, re-point 8 own lines, 1 marker line (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
 
 Depth 2 (BOB #289 is depth 1).
 
