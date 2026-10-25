@@ -100,3 +100,4 @@ Each is a CHANGE to the running job, or a new session of a merged job (K4219), a
 61. **action-plans** (WALK-FINAL-09 R102; K5131): a matter concluded in the project reads "still open"; Terms amended; ACTION-PLANS #18 (START `action-plans-2`).
 62. **citation** (WALK-FINAL-09 R169; K5131): `citeimported` and `withdrawimported` declare no author stamp; R18 amended; CITATION #20 (START `citation-2`).
 63. **Placed without a job (K5131):** 09's D10 (partitionindependence, a walker's wrong partition; strength R11), D9 (conclude's reason is the screen's, screens-inquiry R121), D7 (the shell asks the reason; `browser.mjs:2098`), D5 (writinghelp's `NO_ACCOUNT` is store-door R10; the screens draw no control without the assistant, interface-shell R20) are specified.
+64. **ratification** (follow-up 52 started, K5133): RATIFICATION #38 (START `ratification-3`, haiku-5-5).
