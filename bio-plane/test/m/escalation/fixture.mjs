@@ -17,6 +17,12 @@ import { entitiesOf } from "../../../src/entities/index.mjs";
 import { eventsOf } from "../../../src/events/index.mjs";
 import { linesOf } from "../../../src/lines/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { actionRead as publishedActionRead } from "../actions/fixtures.mjs";
+
+/* actions R43, R106: the one refusal for an action that is unknown, unseen or no action, as actions' published `actionRead`
+   answers it, naming the id asked. */
+let noSuchActionShape = null;
+export const noSuchAction = (id) => ({ ...(noSuchActionShape ??= publishedActionRead().unknownAnswer), action: id });
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
@@ -159,10 +165,10 @@ export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [], s
     actionRead({ id, viewer, now }) {
       calls.actionRead.push({ id, viewer, ...(now !== undefined ? { now } : {}) });
       const h = typeof id === "string" ? record.head(id) : null;
-      if (!h || (viewer !== null && viewer !== undefined && !membership.inSight(id, viewer))) return { ok: false, reason: "NO_SUCH_BUNDLE" };
-      if (h.type !== "action") return { ok: false, reason: "NOT_AN_ACTION" };
+      if (!h || (viewer !== null && viewer !== undefined && !membership.inSight(id, viewer))) return noSuchAction(id);
+      if (h.type !== "action") return noSuchAction(id);
       const hidden = actionHidden.has(id) && viewer !== null && viewer !== undefined && viewer !== V("alice");
-      if (hidden) return { ok: false, reason: "NO_SUCH_BUNDLE" };
+      if (hidden) return noSuchAction(id);
       const fm = parseFrontmatter(record.readFile(id, "bundle.md").text).data || {};
       const legs = (Array.isArray(fm.action_basis) ? fm.action_basis : []).map((l) => ({ target: l.target, kind: l.kind }));
       return { ok: true, id, current_state: fm.current_state ?? null, kind: fm.action_kind ?? null,

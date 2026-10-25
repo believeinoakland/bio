@@ -1,6 +1,6 @@
 # BOB to people (T51)
 
-**Read** · handled J10
+**Read** · handled J14
 
 ## B1 · START
 
@@ -121,3 +121,7 @@ Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . people --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/people.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-haiku-5-5, medium effort.
+
+## B10 · CHANGE
+
+re J11/J12 (K5077). (1) events is merged on the tranche with its published fixtures (`bio-plane/test/m/events/fixtures.mjs`: `sequenceUndetermined`, `timelineAnswer` and the rest): merge `origin/tranche/T51` and re-point `why.test.mjs:110` to the one that is events' real answer for that op-table `sequence` entry; your lines end at zero. (2) `moneyChecks.noticed`: money-checks publishes it from its own tests (its batch 5 START now says so); queue re-points to both providers; nothing for you. (3) `tiesConcerning` never refuses (your R20): your `tiesConcerningRefusal` stands as the real answer; case-disclosures' START now says to re-point to it and drop the made-up refusal. Then post COMPLETE.

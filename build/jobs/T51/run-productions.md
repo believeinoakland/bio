@@ -1,6 +1,6 @@
 # run-productions (T51)
 
-**Status** · session_017HzxWiogmpDtrEeVS4YKyV · depth 2 · COMPLETE · handled B2
+**Status** · session_01DmrwrogYnk1Yq7FyATTh2Y · depth 2 · COMPLETE · handled B5
 
 ## J1 · REPORT
 
@@ -81,3 +81,41 @@ Tests and checks (from civicos-process against /home/user/bio):
 - `checks/run.mjs /home/user/bio`: no finding for run-productions (the repo-wide list above is other modules').
 
 Size (session_017HzxWiogmpDtrEeVS4YKyV): test runs 5, module lines 2239
+
+## J5 · REPORT
+
+Found outside run-productions, not changed by this job (for BOB to route to agent-worker's owner):
+
+- `node --test agent-worker/test/*.test.mjs` (the impact report names agent-worker as a user of `suggestRefusals`): 302 pass, 2 fail in `agent-worker/test/requirements.test.mjs`: R45 "the static check finds nothing" and "a fresh build is byte-identical to the committed bundle". Both cite the same cause: `agent-worker: STALE BUNDLE, the source bio-plane/src/docx.mjs has changed since dist/agent-worker.bundled.mjs was built`. The rebuild the test names is `node bio-plane/scripts/bundles.mjs` from the repository root. This job's commit touches neither file; the other 20 agent-worker files pass.
+
+## J6 · COMPLETE
+
+Fix round 10, Wave A batch 2 (START B5): one fixture published, `suggestRefusals`, and its lines in run-productions done.
+
+Causes done: none (this job's START has no cause; fixture only).
+
+Fixture published: `suggestRefusals()` in `bio-plane/test/m/run-productions/fixtures.mjs` (new). It makes the two real refusals through `suggest()` on the module's own world, nothing stored:
+- `boilerplate`: SUGGEST_BOILERPLATE, check C-27.12 (placeholder description "TBD").
+- `unwritableState`: SUGGEST_UNWRITABLE_STATE, check C-27.13 (a body carrying `state`).
+Its test, `bio-plane/test/m/run-productions/fixtures.test.mjs` (3 tests, R3), calls it and checks code, check, translation, and that nothing was written (`wrote: false`). The test file was seen failing first (module not found) before the fixture was written.
+
+Lines: the fixture's users are agent-worker's (inprocess.mjs:94, requirements.test.mjs:1428, t35.test.mjs:106), re-pointed in agent-worker's own job, not here. Left in run-productions: none. The `node checks/fixtures.mjs . run-productions --list` reads 0 failures.
+
+Markers added: none (no `fixtures-own` or `fixtures-generic`).
+
+Requirements: none new. R3 and C-27.12 and C-27.13 already exist; the fixture adds no meaning.
+
+Deferred: nothing.
+
+Checks, from civicos-process against /home/user/bio, after the commit 9fd79e75d0 pushed on job/T51/run-productions:
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/run-productions/`: 68 pass, 0 fail.
+- `checks/fixtures.mjs . run-productions --list`: 0 failures.
+- `checks/format.mjs /home/user/bio`: 178 modules, 0 failures.
+- `checks/architecture.mjs /home/user/bio run-productions`: 0 failures.
+- `checks/coverage.mjs /home/user/bio run-productions`: 27 of 27 live requirement ids named, 0 failures.
+- `checks/words.mjs /home/user/bio run-productions`: 0 failures.
+- `checks/ownership.mjs /home/user/bio run-productions tranche/T51 job/T51/run-productions`: 3 files, 0 failures.
+- Correction to J5 REPORT: the agent-worker node run has 22 test files, 21 pass and the requirements file fails; "the other 20" there should read 21.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: names run-productions (7 of 7 test files) and agent-worker (22 of 22) as affected. Both run; run-productions passes, agent-worker has the 2 R45 failures reported above.
+
+Size (session_01DmrwrogYnk1Yq7FyATTh2Y): test runs 6, module lines 2239

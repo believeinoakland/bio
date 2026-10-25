@@ -23,6 +23,8 @@
 | `ocr-worker` | R7 | wording for a picture or page stated sideways (`PICTURE_NOT_LEGIBLE` says "too unclear") | the sentence that says the page was turned or could not be turned upright |
 | `calculations` | R19 | refusal for a tied delimiter (key chosen by the module) | one sentence: the table's delimiter could not be told, so it is not read as a table |
 | `office-readers` | R21(b) | refusal for a workbook past 16,384 columns (R6's marker with `metric:"columns"`, key chosen by the module) | one sentence with the count and the limit, as the CSV's |
+| `inquiry` | R30b (K5077) | `NO_PARTITION`'s detail ("Pass an EMPTY array to remove the grouping") | an empty list now saves a partition with no ground (every supporting leg necessary, DEC-32 clause 4), not a removal: the sentence that says so |
+| `plane` R24 (design gap, K5078) | `screen.objective.purpose`, `screen.about-knocker.purpose` | the registry at `c752a602da` names screens `objective` and `about-knocker` whose purpose sentence `words.json` lacks: the two sentences |
 
 ## Layout and scope
 

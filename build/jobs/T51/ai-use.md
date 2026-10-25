@@ -1,6 +1,6 @@
 # ai-use (T51)
 
-**Status** · session_01PuyDahdpv1J5bkAgBw2hpw · depth 2 · COMPLETE · handled B2
+**Status** · session_01VeDBEyQuMEPBYRrcEb8xgS · depth 2 · COMPLETE · handled B2
 
 ## J1 · COMPLETE
 
@@ -52,3 +52,25 @@ T51-211 · ai-use (the words check after the conversion, K3949, K3962): complete
 - `bio-plane/src/setup-words/build.mjs --check`: only the expected stale-rows note; no refusal naming ai-use.
 
 Size (session_01PuyDahdpv1J5bkAgBw2hpw): test runs 5, module lines 1279
+
+## J3 · COMPLETE
+
+**Entries applied (START, Wave A batch 3)**
+- Published `ceilingRefusal` in `bio-plane/test/m/ai-use/fixtures.mjs` (new file): the real `useCheck` over a spent daily `ask` ceiling, answered `AI_LIMIT_REACHED` (check C-143.1), the sentence filled, no cost. The START names `AI_USE_CEILING_REACHED` (C-22.30); that code is retired (run-rules C-109.8, retired for `AI_LIMIT_REACHED`, and C-22.30 is `MEMBER_RUN_MODE_NOT_ADMITTED`), so the published answer is the real code's. Users re-point to `AI_LIMIT_REACHED` in their own jobs. Decided here as the lower-level reading; flagged for BOB.
+- Contract `use-check`: the real `useCheck` for a member's spent `transcribe` limit, compared with the literal (`ok`, `code`, `check`, `translation`, `detail`); `null` before the spend. Both in `bio-plane/test/m/ai-use/fixtures.test.mjs`.
+- Markers I added: `// fixtures-run: reading-pipeline use-check` (fixtures.test.mjs:22), `// fixtures-run: extraction use-check` (fixtures.test.mjs:23). No `fixtures-own` or `fixtures-generic` markers.
+
+**Lines left at done (each named)**
+- `fixtures-run: reading-pipeline use-check`: its marker is on the tranche now (reading-pipeline `transcribe.test.mjs:175`); no longer orphan.
+- `fixtures-run: extraction use-check`: waits for extraction's `// fixtures-contract: ai-use use-check`, which extraction's job places. Until then `checks/fixtures.mjs ai-use --list` shows one `orphan-run`.
+- `ceilingRefusal` users (extraction, agent-worker) and the `use-check` user re-points are their jobs' findings; none is ai-use's.
+
+**Deferred:** none.
+
+**Found in other modules:** none. The change is tests only; no other module is affected (impact names none).
+
+**Tests and checks** (from the repository root, `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/ai-use/*.test.mjs`): 87 pass, 0 fail, 0 skipped. `checks/format.mjs`: 178 modules, 0 failures. `checks/architecture.mjs ai-use`: 0 failures. `checks/coverage.mjs ai-use`: 16 of 16 live ids named, 0 failures. `checks/words.mjs ai-use`: 0 failures. `checks/ownership.mjs ai-use tranche/T51`: 0 failures (3 files). `checks/fixtures.mjs ai-use --list`: 1 failure, the `orphan-run` above, waiting on extraction. `build/plan/impact.mjs origin/tranche/T51 HEAD`: ai-use 1 of 11 test files affected (fixtures.test.mjs); no user module named.
+
+**Git:** `tranche/T51` merged into the branch (c05fc01f09), never rebased; the fixture and contract commit is e4207b43e3; pushed to `job/T51/ai-use`.
+
+Size (session_01VeDBEyQuMEPBYRrcEb8xgS): test runs 5, module lines 1288

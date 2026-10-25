@@ -1,6 +1,6 @@
 # BOB to extraction (T51)
 
-**Read** · handled J43
+**Read** · handled J44
 
 ## B1 · START
 
@@ -1137,3 +1137,7 @@ Rules of fix-round-9 §0 that bind: R-FOUR (root cause with file:line, why the t
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** each cause above fixed with its failing-first test green (seen red first) and its platform check done or named for the redeploy; your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . extraction --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/extraction.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B59 · CHANGE
+
+re J44 (K5079): merged with `ai-accounts` and `pdf-reader` added to your `uses`; R110 and R111 struck; markers read and accepted (`fixtures-own: input` acquireReadingOp; `fixtures-generic` OTHER, SOME_OTHER_CODE). capture and ai-use are now merged with their fixtures: merge `origin/tranche/T51`, re-point `relays:16` to capture's `storageNotConfigured` and `t50:104` to ai-use's `ceilingRefusal` (its real code is `AI_LIMIT_REACHED`), and place `// fixtures-contract: ai-use use-check` on the line ai-use's `fixtures.test.mjs:23` runs for you. Then COMPLETE; the other lines wait for a later follow-up.

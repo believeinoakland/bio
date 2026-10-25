@@ -23,7 +23,7 @@ const REG_FILE = JSON.parse(src("registry.json")), LIB_T50 = JSON.parse(src("lib
 const COMMIT = "2a64c5ae77";
 const FIX = "1cc4a957f0";   /* R45: the fix round re-takes the doors and the library again */
 const LIB_R45 = JSON.parse(src("library-1cc4a957f0.json"));
-const REG_COMMIT = "f72b2f8a4c";   /* the registry's pin, moved by R44, R45, DEC-389 (R41) and DEC-402 (R49) and DEC-419 (R50) */
+const REG_COMMIT = "c752a602da";   /* the registry's pin, moved by R44, R45, DEC-389 (R41) and DEC-402 (R49) and DEC-419 (R50) */
 const OWED = /^owed:([a-z][a-z0-9]*)(?:\s+(DEC-\d+|K\d+))?$/;
 const status = (s) => REG_FILE.screens.flatMap((f) => f.acts.filter((a) => a.status === s).map((a) => [f.id, a.op]));
 const OWED_OPS = [...new Set(status("owed").map(([, op]) => OWED.exec(op)[1]))];
@@ -110,12 +110,12 @@ test("R41 (T50; N1130; DEC-266, DEC-279, DEC-281; K2241) build-data.mjs --check 
 
 test("R41 (T50; DEC-266, DEC-279, DEC-281) SCREEN_REGISTRY is the registry at the design commit named at START, screen by screen and act by act: 71 screens and 413 acts, 269 declared, 128 function and 16 owed naming 15 ops; the four screens new since R38 are docket-public, more, teamai and theme; control: the earlier commit's registry is not it", () => {
   assert.equal(wz.SCREEN_REGISTRY_SOURCE.commit, REG_COMMIT);
-  assert.equal(wz.SCREEN_REGISTRY.length, 84);
+  assert.equal(wz.SCREEN_REGISTRY.length, 91);
   assert.deepEqual(wz.SCREEN_REGISTRY.map((s) => s.id), REG_FILE.screens.map((f) => f.id), "the file's order");
   const acts = REG_FILE.screens.flatMap((f) => f.acts);
   assert.deepEqual([acts.length, acts.filter((a) => a.status === "declared").length, acts.filter((a) => a.status === "function").length, acts.filter((a) => a.status === "owed").length],
-                   [609, 448, 83, 78]);
-  assert.equal(OWED_OPS.length, 62, "seventy-eight owed acts name sixty-two ops: updatelater, taskdecide and others are owed on more than one screen");
+                   [652, 448, 83, 121]);
+  assert.equal(OWED_OPS.length, 105, "121 owed acts name 105 ops: updatelater, taskdecide and others are owed on more than one screen");
   REG_FILE.screens.forEach((f, i) => {
     const s = wz.SCREEN_REGISTRY[i];
     assert.deepEqual([s.id, s.name, s.purpose], [f.id, f.name, f.purpose], f.id);
@@ -123,11 +123,11 @@ test("R41 (T50; DEC-266, DEC-279, DEC-281) SCREEN_REGISTRY is the registry at th
     assert.deepEqual(s.owed.map((o) => o.op), f.acts.filter((a) => a.status === "owed").map((a) => OWED.exec(a.op)[1]), `${f.id}: its owed acts`);
   });
   const before = JSON.parse(src("registry-4664e8efd4.json")).screens.map((s) => s.id);
-  assert.deepEqual(wz.SCREEN_REGISTRY.map((s) => s.id).filter((id) => !before.includes(id)).sort(), ["about-knocker", "actionnew", "bias", "contradiction", "counsel", "docket-public", "glossary", "grouprules", "hold", "holdnotice", "leads", "more", "objective", "registers", "teamai", "theme", "watching"]);
+  assert.deepEqual(wz.SCREEN_REGISTRY.map((s) => s.id).filter((id) => !before.includes(id)).sort(), ["about-knocker", "actionnew", "aiconnect", "aimine", "aimoments", "aiproject", "aiproviders", "airesults", "aitest", "bias", "contradiction", "counsel", "docket-public", "glossary", "grouprules", "hold", "holdnotice", "leads", "more", "objective", "registers", "teamai", "theme", "watching"]);
   assert.ok(!before.includes("teamai") && wz.SCREEN_REGISTRY.some((s) => s.id === "teamai"), "control: PR #34's registry has no teamai");
   /* registered as the plane registers it: the screens, and with no op table the declared and function acts */
   const w = world({ register: false });
-  assert.equal(w.wz.wizardRegister({ library: [] }).screens, 84);
+  assert.equal(w.wz.wizardRegister({ library: [] }).screens, 91);
   assert.deepEqual(w.wz.registeredScreens().map((s) => s.id), wz.SCREEN_REGISTRY.map((s) => s.id));
   assert.deepEqual(w.wz.registeredScreens().find((s) => s.id === "docket-public").acts, [], "docket-public lists no act");
   assert.deepEqual(w.wz.registeredScreens().find((s) => s.id === "theme").acts, ["themeread", "themedeclare", "themeplace", "themewithdraw"]);
@@ -183,7 +183,7 @@ test("R41 (T50; N1130; R13) each of the owed acts the file names is registered a
     assert.deepEqual(check(w), [], `${op}: admitted once declared`);
     assert.deepEqual(check(base), [["WIZARD_ACT_UNKNOWN", 1]], `${op}: refused while undeclared`);
   }
-  assert.equal(new Set(OWED_NOW).size, 58, "R50: sixty-two owed ops at f72b2f8a4c less the installer's four");
+  assert.equal(new Set(OWED_NOW).size, 101, "R52: 105 owed ops at c752a602da less the installer's four");
   assert.ok(T50_OWED.every((op) => OWED_NOW.includes(op)), "T50's owed acts are still owed or declared in the file");
   /* aliaswithdraw is the entities' op, declared already (K3674): a table that holds it registers it now */
   assert.ok(where("aliaswithdraw").length > 0);

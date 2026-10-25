@@ -1,6 +1,6 @@
 # wizard-scripts (T51)
 
-**Status** · session_01H5ogzKbBJfic7Cqb8K8bF6 · depth 2 · COMPLETE · handled B21
+**Status** · session_01CnwJQiXshRasgJ9ErXumcK · depth 2 · COMPLETE · handled B24
 
 ## J1 · BLOCKED
 
@@ -480,3 +480,86 @@ Size (session_01H5ogzKbBJfic7Cqb8K8bF6): test runs 14, module lines 2866
 ## J22 · COMPLETE
 
 COMPLETE · G53 (fix round 6): registry re-taken at f72b2f8a4c (84 screens, 609 acts: 448 declared, 83 function, 78 owed), vendored file equals the tranche's design file (commit-equality test t52g53, seen red then green), projectjoin admitted by checkScreens on start-send/request/action (scratch tree with screens-action merged: control-plane+plane 745/746, only plane release R24 accepted). Module suite 137/137. Impact: other reds are 44b/44c's and G52's held contract.test:34 only. Library and doors unchanged. R50 text proposed in my record. Checks: format/architecture/coverage 0, ownership 0, words only case-checker inline 1. Size (session_01H5ogzKbBJfic7Cqb8K8bF6): test runs 14, module lines 2866
+
+## K5046 (c) · WIZARD-SCRIPTS #25 · work record (fix round 10, Wave A batch 1; B22)
+
+**Entry.** `ADMIN_ACTS` and `ADMIN_SCREENS` move to this module (R51 names both; no QUESTION needed).
+
+**Built.**
+- `bio-plane/src/wizard-scripts/admin.mjs` (new): both constants copied verbatim from `interface-shell/index.mjs:93,163` (names, members, order, `Object.freeze`, requirement ids in the comments); exported from `index.mjs`. interface-shell keeps its pair until its Wave B job deletes it and imports these.
+- `startFrom` still takes the acts and screens as the plane hands them in `wizardRegister` (`adminActs`, `adminScreens`; R51: "the plane's registration hands both at start"). I did not default the registration to these constants: R40's test ("with no administrator acts registered nothing is withheld, and the registration reads the acts from what it is given, never a list of its own") forbids it. The plane's wiring re-points to the exported pair in its own job.
+- `bio-plane/test/m/wizard-scripts/fixtures.mjs` (new): `noSuchWizard()`, the real `wizardRead` refusal for an unknown id, made when called.
+- `bio-plane/test/m/wizard-scripts/r51.test.mjs` (new, 4 tests): both sets equal the 45 names / `updates` and are frozen; a line naming `bio-plane/src/interface-shell/index.mjs`'s pair and comparing it (the Wave B job deletes this test with its pair); `startFrom` with the real constants omits the setup script for a plain member and lists it for an administrator; `noSuchWizard` is `NO_SUCH_WIZARD`.
+
+**Fixtures.** `node checks/fixtures.mjs . wizard-scripts --list`: 1 line left, `writing-help.test.mjs:217` `LIMITS_UNREADABLE` (FIX-E, provider `answers`, arrives as a CHANGE). `fixtures-own` / `fixtures-generic` markers added: none. `noSuchWizard`'s user (screens-wizards `fixtures.mjs:55`) re-points in its own job.
+
+**Words.** No new member-facing sentence; nothing for UX-DESIGN.
+
+**Found in another module / generated artifact (REPORT).** `t52g53.test.mjs:30` (R50, "the vendored registry.json is the design's registry.json on the tranche, byte for byte") fails on `origin/tranche/T51` as merged, with and without my change (verified on a clean stash): the design's `registry.json` now carries owed `installregion K4746` and `installaddress K4937` that `source/registry.json` lacks. This is the registry's generated copy going stale after a design-files merge; the re-take (`build-data.mjs`, new counts in R41/R50 and the pin sites) is not in this entry, so I left it. BOB to decide whether it goes in this job.
+
+**Deferred:** none of mine.
+
+**Tests and checks.**
+- Module suite: 141 tests, 140 pass, 1 fail (the t52g53 R50 failure above, not mine); r51: 4/4.
+- format: 178 modules, 0 failures. architecture: 98 relative imports, 0 failures. coverage: 51 of 51 live ids named, 0 failures. ownership (tranche/T51..HEAD): 1 file changed by the module before my commit counted, 0 failures.
+- impact (`impact.mjs origin/tranche/T51 HEAD`): 26 of 178 modules; the change adds exports only, so I ran the direct users' tests (see below).
+- Direct users' suites on my head: interface-shell 369/369, screens-wizards 75/75, queue-producers 154/154, translations 42/42, plane 599/601. The two plane reds are not mine: `R24 (DEC-149; T34-87…)` fails identically on `origin/tranche/T51` (clean worktree); `R87 G54 L` (`g54-l.test.mjs`) passes alone on my head (0 fail) and failed only in the full-directory run (not reproduced; likely load/timing).
+- Fixtures: 1 line left (`LIMITS_UNREADABLE`, FIX-E, provider `answers`); no `fixtures-own` / `fixtures-generic` markers added.
+
+Size (session_019XFUSYv3eS4JuzAcTX5AsX): test runs 9, module lines 2900
+
+## J23 · REPORT
+
+REPORT · other modules. (1) wizard-scripts t52g53 R50 fails on tranche/T51 as merged: the design's registry.json now has owed installregion K4746 and installaddress K4937 that the carried source/registry.json lacks; re-take (build-data.mjs, counts, pin sites) is not in my entry, left for your call. (2) plane R24 (DEC-149 T34-87) fails on tranche/T51 too, likely the same stale registry. (3) plane R87 G54 L failed once in a full-directory run, passes alone; not reproduced.
+
+## J24 · COMPLETE
+
+COMPLETE · K5046 (c): ADMIN_ACTS (45) and ADMIN_SCREENS copied verbatim into wizard-scripts/admin.mjs and exported; registration unchanged (R40 test forbids defaulting; plane re-points in its job). Fixture noSuchWizard published and tested. r51.test.mjs 4/4; module 140/141 (the t52g53 R50 red, see REPORT, not mine). format, architecture, coverage 51/51, ownership green. Fixtures list: 1 left, LIMITS_UNREADABLE (FIX-E, answers). No fixtures-own/generic markers added. Users' suites green except the plane reds in the REPORT. Record: build/jobs/T51/wizard-scripts.md.
+
+## B23 · CHANGE (K5069) · WIZARD-SCRIPTS #25
+
+**Built.** Merged `tranche/T51`; the registry re-taken at the design commit `c752a602da`: `SOURCES.registry.commit` is `c752a602da`; `source/registry.json` is the tranche's `docs/development/ux-substrate/screens/registry.json`; the f72b2f8a4c file kept whole as `source/registry-f72b2f8a4c.json`; `screen-registry.mjs` regenerated (library and front doors unchanged). `build-data.mjs --check` passes. Counts: 91 screens (seven new: aiproviders, aiconnect, aimine, aiproject, aimoments, aitest, airesults), 652 acts (448 declared, 83 function, 121 owed naming 105 ops; `installregion` and `installaddress` among the owed).
+- Pins moved in `library`, `t47`, `t48`, `t50`, `t51`, `t51fr3` (commit, 91, 652, 121, 105; 101 net of the installer's four) and `t52g53` (the f72b2f8a4c file kept whole and asserted: 84 screens, 609 acts; the diff 564 to 652 adds acts only).
+- `r51.test.mjs`: the interface-shell equality test removed (architecture check: a later module may not be imported, even by a test); the by-path line stays as a comment for that module's Wave B job.
+
+**Proposed requirement line for BOB (R52), amending R50:** The registry is re-taken at `c752a602da`: `SCREEN_REGISTRY_SOURCE` becomes `c752a602da`, 91 screens and 652 acts (448 declared, 83 function, 121 owed naming 105 ops); the seven AI screens are new; every act of the earlier registry (`f72b2f8a4c`, kept whole beside it) is still registered. Test: `t52g53` and the pins.
+
+**Results.** Module suite 140/140. format 0; architecture 0; coverage 51 of 51; ownership 0; `build-data.mjs --check` passes. words: 1 failure, `r51.test.mjs:9` handlist (the 45 administrator acts as a hand list: the check counts 29 of them other modules' ops). R51's own test text asks for exactly this list ("the two sets equal the lists above, a one-name change failing"), so I kept it; BOB to decide (accept the line, or change R51's test to a form the check allows). fixtures: 1 line (`LIMITS_UNREADABLE`, FIX-E, answers).
+
+**Plane R24 is NOT green**, and the cause is not the registry: `screen.objective.purpose` and `screen.about-knocker.purpose` are missing from the words list (`setup-words`; the design's `words.json` / `build_words.mjs`), failing identically on the tranche before the re-take. The seven new AI screens have their words.
+
+**Found in other modules (REPORT).**
+- `op-declarations` `t50.test.mjs:391` (R73, R21): `registryActGaps` now reports `installregion` and `installaddress` (install screen, owed K4746 and K4937) as owed gaps. Either that test's `OWED_BY_FIX_ROUND` gains the two, or they are installer routes like `INSTALLER_ROUTES`' four (`data.mjs:69`, mine): a requirement-level reading (R41 says "four"), so I did not widen it; BOB to decide.
+- `screens-settings` `contract.test.mjs:75` (R39): `act.captureuploadabort.does` is not a word of the list; not registry-related.
+- Passing on my head: interface-shell 369, screens-wizards 75, translations 42, instance-setup 234, affordances 287.
+- Also on my head: control-plane 680/680; plane 599/601 (R24, the missing words above; R87 G54 L, which passes alone as in J23's note).
+
+Size (session_019XFUSYv3eS4JuzAcTX5AsX): test runs 22, module lines 3050
+
+## J25 · REPORT
+
+REPORT · other modules. (a) Plane R24 is NOT green after the re-take, and not because of it: the words list lacks screen.objective.purpose and screen.about-knocker.purpose (setup-words / design words.json); same red on the tranche before. (b) op-declarations t50.test.mjs:391 (R73, R21) now fails: registryActGaps reports installregion and installaddress (install screen, owed K4746/K4937). Either its OWED_BY_FIX_ROUND gains them, or they are installer routes like INSTALLER_ROUTES' four (wizard-scripts data.mjs:69; R41 says four): your call, I did not widen R41. (c) screens-settings contract.test.mjs:75 (R39): act.captureuploadabort.does not a word of the list; unrelated to the registry. (d) words check: handlist on my r51.test.mjs:9 (the 45 admin acts; 29 are other modules' ops); R51's test text asks for exactly that list; your call.
+
+## J26 · COMPLETE
+
+COMPLETE · B23 (K5069): registry re-taken at c752a602da: 91 screens, 652 acts (448 declared, 83 function, 121 owed naming 105 ops), the f72b2f8a4c file kept whole beside it; build-data.mjs --check passes; pins moved in library, t47, t48, t50, t51, t51fr3, t52g53. Module suite 140/140; format, architecture, coverage 51/51, ownership green; words 1 (handlist r51.test.mjs:9, see REPORT); fixtures 1 left (LIMITS_UNREADABLE, FIX-E). Plane R24: RED, cause in the REPORT (missing words), not the registry. Users: interface-shell, screens-wizards, translations, instance-setup, affordances, control-plane green; op-declarations R73 and screens-settings R39 red per REPORT; plane 599/601. Proposed R52 line in my record. No fixtures-own/generic markers added. Record: build/jobs/T51/wizard-scripts.md.
+
+## J27 · COMPLETE
+
+COMPLETE · B24 (fix round 10, follow-up 10; K5078). Commit 59d0c64d7b on job/T51/wizard-scripts.
+
+**Change (test file only).** `bio-plane/test/m/wizard-scripts/r51.test.mjs` no longer hand-lists the 45 admin acts. R51's list is read from R51's own line in `build/requirements/wizard-scripts.md` (the backquoted names between "on the team:" and "(45 names)"); the test asserts `ADMIN_ACTS` equals it, in order, with 45 members, frozen. Control: the join screen's first act in `source/registry.json` (`enroll`) is not an administrator's act. R51 is still named in the test title. The other two R51 tests are unchanged.
+
+**Judgement, for BOB.** The requirement's list is the contract, so it is the source I derive from. The admin classes themselves sit in `op-declarations` (`DECLARED_OPS`, `classes`); deriving from them would need a test-only `uses` edge from wizard-scripts to op-declarations in `build/modules.json`. That is BOB's call, so I did not add it. If BOB adds it, the test can be re-pointed in a later job.
+
+**Lines.** The FIX-E line `writing-help.test.mjs:217` (`LIMITS_UNREADABLE`, provider in a later batch) stays, as B24 says. No `fixtures-own` or `fixtures-generic` markers added. No deferrals. Nothing found in another module.
+
+**Checks** (absolute root /home/user/bio):
+- module tests `bio-plane/test/m/wizard-scripts/*.test.mjs`: 140 pass, 0 fail
+- words: 0 failures (handlist 0)
+- format: 0 failures
+- architecture: 0 failures
+- coverage: 51 of 51 live ids named, 0 failures
+- ownership vs origin/tranche/T51: 0 failures
+
+Size (session_01CnwJQiXshRasgJ9ErXumcK): test runs 3, module lines 2730
