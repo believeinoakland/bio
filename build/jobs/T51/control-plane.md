@@ -1,6 +1,6 @@
 # control-plane (T51)
 
-**Status** · session_01CCU5PERV9DBgQStnjK7jSm · depth 2 · RUNNING until 2026-10-25T15:36:46Z (control-plane module tests + checks) · handled B86
+**Status** · session_01CCU5PERV9DBgQStnjK7jSm · depth 2 · COMPLETE · handled B86
 
 ## J1 · QUESTION
 
