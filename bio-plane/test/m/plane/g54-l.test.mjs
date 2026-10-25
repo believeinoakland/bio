@@ -138,7 +138,7 @@ test("R87 G54 L (measure): an edition of about 500 files and 40 MB of material i
 test("R87 G54 L: the reader's `publishedcase` (the Worker's public door, the object's ledger) states the case file: being_prepared before, retrying with its code after a recorded failure, built after the sweep; it never carries a step, an error or a detail", { timeout: 240_000 }, async () => {
   await drain();
   const s = await seeded();
-  await completed(s);
+  await completed(s, { disarm: true });   /* the states below are those of the ticks this test asks for: the alarm the completing act arms would fire beside them (at once, its first-attempt grace being past) and build the case file before the injected failure is met (4 of 4 whole-file runs under load) */
   const read = async () => { const r = await mf.dispatchFetch(`http://plane/api?op=publishedcase&id=${s.caseId}`); const t = await r.text(); assert.equal(r.status, 200, t); return JSON.parse(t); };
   const cf = async () => { const j = await read(); return j.result ? j.result.case_file ?? (j.result.verification && j.result.verification.case_file) : j.case_file; };
   const before = await cf();

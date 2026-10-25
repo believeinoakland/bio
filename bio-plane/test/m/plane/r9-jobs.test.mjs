@@ -476,7 +476,7 @@ test("R104: a firing run twice over one storage leaves the units of a single run
 /* ---- R105: the instruments ---- */
 
 test("R105: each run of the ledger states `max_stretch_ms`, `rows_read`, `rows_written` and `units` on its last run, each a non-negative number or NULL when unmeasured, never a zero standing for none", async () => {
-  assert.deepEqual([...TICK_FIGURES], ["max_stretch_ms", "rows_read", "rows_written", "units"]);
+  assert.deepEqual([...TICK_FIGURES], ["max_stretch_ms", "rows_read", "rows_written", "units", "max_run_statements"]);
   const slow = (q) => new Promise((r) => setTimeout(() => r({ ok: true, read: true, counters: { written: 9 } }), 40));
   const x = await world(undefined, { readAnswer: slow });
   const d = sha("a measured run");
