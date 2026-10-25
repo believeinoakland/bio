@@ -1002,3 +1002,9 @@ CHANGE (K5183, Bob: the weekly limit is at 99%; the work moves to Bob's primary 
 2. Append to your record a section "Saved at K5183": what is done, what is half done (file names), the exact next step, and any worker you stop. Stop your workers.
 3. `mail state --set "WAITING ON BOB (K5183 save)"`, push, and end your turn with the one line `Waiting on BOB (K5183 save). Nothing for Bob to do.` A new session on the primary account continues your job from your record and branch.
 Do not start any long command now.
+
+## B56 · RESUME
+
+RESUME (BOB #301, K5184). The work moved to Bob's primary account (K5183): your predecessor on the third account saved and stopped. You continue it as a new session on the same branch. First run `mail start --session <your session id> --depth 2` (keep the record's cursor); never `reset` or force anything: merge `origin/tranche/T51` into your branch with a merge commit when your steps say so (the tranche now holds the `uses` edges of K5184). Your record's section **Saved at K5183 (SCREENS-INTAKE #26, B55 CHANGE)** names what is done and your exact next step: follow it in order, then complete as roles/JOB.md steps 5-7 say. A refused act on the code, your branch, the tranche or a test deployment is covered by Bob's standing approval (bio K5120): take it again once as one plain command, never relayed to Bob.
+
+Your J56 is read (K5184): (1) the `by` stamp defect is a capture-sources job (its R66 reads `by` as a bare member id while store-request stamps the viewer form); keep your tests' forwarding until it merges, then a CHANGE drops it. (2) the world gaps are placed with store-request and store-assembly; keep those lines listed with why. (4) the `store-request` `uses` edge is on the tranche (K5184). STORE-REQUEST's B8 fix is not merged yet: keep `group: null` until a CHANGE says otherwise.
