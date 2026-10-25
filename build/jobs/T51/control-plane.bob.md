@@ -1931,3 +1931,11 @@ CHANGE (K5171): STORE-REQUEST #2 is merged (R25 `publishcheck` stamp, R7's trans
 ## B93 · CHANGE
 
 CHANGE (K5172): LINK-SWEEP #9 is merged (R14: a project's own bundle is its own project). Merge `tranche/T51`; `r41-sweepset` test 2 should now be green: un-name it.
+
+## B94 · CHANGE
+
+CHANGE (K5178): more through-the-door cases for your Wave B (K5138), each the walker's case, beside items 72 (3), 73 (6), 78 (6), 81 (5):
+1. SCREENS-INVESTIGATE #16 J28 (8): `createevent` with `{datedFactId}` placed on a lane; `lawrelate` from a standard under a project path; `standarddeclare` with a body's `ENT-` id as issuer, then `bindsat`; a person's `removed` rows after `personexpunge`, read by another member.
+2. CONTENT #23 J19: `cite` with `extent_kind=pdf-page` over a docx selection answers `BASIS_REFUSED` carrying content's C-45.1 finding (diag2-06 §5).
+3. STORE-REQUEST #3 J11 (3): the publication's `held: true` case: `recipes.finding` (merged, `bio-plane/test/m/store-request/recipes.mjs`) makes the concluded own reading; `publishpreflight` then `publishcheck` through the door with every authored field.
+Merge origin/tranche/T51 for the recipes. Each in your record with K4426's fields when one is red.

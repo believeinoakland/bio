@@ -1,6 +1,6 @@
 # store-assembly (T51)
 
-**Status** · session_01PFCJP5a6GVyjzzsxKD2a53 · depth 2 · COMPLETE · handled B4
+**Status** · session_01HPMiWGM9dDovp7swY1STgF · depth 2 · COMPLETE · handled B10
 
 ## J1 · QUESTION
 
@@ -140,3 +140,47 @@ No `fixtures-own`.
 - The ledger's wall clock exists in plane's copy too; it is left as is for Wave B (K5132).
 
 Size (session_01PFCJP5a6GVyjzzsxKD2a53): test runs 52, module lines 3735
+
+## J6 · COMPLETE
+
+**STORE-ASSEMBLY #3 COMPLETE: B5 (follow-up 68), B6 (K5149) and B8 (K5168) applied.** Session #2's work was committed but its record was not closed; I verified it and fixed what its last commit left red.
+
+**Entries applied.**
+- B5: the ledger tests' readHeld answers come from extraction's published `readHeldAnswer` (10 of the 11 lines). Two tests that session #2 left red are corrected here, tests only: `r9-jobs` R74 G126j (the scan's `ocr` row, registered by the owed answer, is asked beside the reading and takes a tick of its own; the answer is by kind and the test ticks until the reading ends) and `fix6-pending` R68 (G13) (the unit is the whole read, so the first kill, though cleared from the row's count by progress, stands in the unit's attempts: the reap after the second kill here is the third against the whole and ends the row; REPORT already in the title).
+- B6: the world binds `INSTANCE_NAME`; a bare world promotes and names its team (`sa-world`). Base time as measured: base 587–776 ms, copy 129–170 ms (K5046 (g)); `INSTANCE_NAME` adds no measurable cost. No requirement's meaning changes.
+- B8: `assemble.mjs:203`, the first `credentialsOf` call for the storage, hands `now: () => nowMs(null)`. Test `sa-world` "R5 R92 (K5168)": a pinned world's claim records the pin as `consumedAt`. It was not red first: the claim path already reached the pin through `credentialsOps`' `env.BIO_NOW_MS` (K5148's fallback), so the test is a guard; the change covers any instant written before `credentialsOps` sets the env. `ask.mjs:281,361` run after `assemble.mjs:203`, so cannot run first.
+
+**Still red, by name, for BOB.**
+1. `fixtures.mjs` 1 failure: `r9-jobs.test.mjs:356`, R76 G129c, the 300-page OCR scan that scripts `{more: true, detail: {next_page: p}, counters}`. No provider publishes it: extraction's real `killed()` is a 4-page scan and no producer outside plane/store-assembly emits `next_page` at all (`pending.mjs:139` `unitOf` and `:447` read it). Either extraction publishes a multi-window OCR tick answering the next page, or the ledger's `next_page` reading is dead code for BOB to rule on. I changed no product file for it.
+2. `release.test.mjs` R23 (`screen.objective.purpose`), inherited, accepted (K5139 (3)).
+3. words: the 15 unkeyed copied strings, accepted (K5144).
+4. The two `test.todo`s (R1's class clause, R98).
+
+**Tests and checks** (HEAD after merging `origin/tranche/T51`): `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/store-assembly/*.test.mjs`: tests 379, pass 376, fail 1 (R23), todo 2. A run without `--test-force-exit` does not exit by itself (over 30 minutes). format 0 failures; architecture 0; coverage 99 of 99, 0; ownership 0; words 15 (accepted); fixtures 1 (above). `modules.json` lists my row on the tranche; none run over a local copy.
+
+**Markers added this session:** none (the 7 `fixtures-generic` of J4 stand).
+
+**Found in other modules:** extraction's gap above (item 1); `next_page` in `pending.mjs` is the ledger's own (my copy; plane keeps its copy until Wave B).
+
+Size (session_01HPMiWGM9dDovp7swY1STgF): test runs 9, module lines 3740
+
+## J7 · COMPLETE
+
+COMPLETE (J6 in my record, pushed): B5, B6 and B8 applied; suite 379 tests, 1 fail (R23, accepted), 2 todo; format, architecture, coverage, ownership 0; words 15 (accepted). One fixtures finding is left red for you: r9-jobs.test.mjs:356 (R76 G129c, the 300-page OCR scan scripting next_page): no provider publishes it, extraction's real OCR path never emits next_page. See J6.
+
+## J8 · COMPLETE
+
+**STORE-ASSEMBLY #3 COMPLETE: B9 (K5171) and B10 applied.**
+
+- **B9.** `assemble.mjs:596` hands `now: () => nowMs(null)` to `instanceSetupOf`. Test `sa-world` "R5 R92 (K5171)": a pinned world's producing team is recorded at the pin (`recorded_at`). It passes as a control: reverted, it still passes, because instance-setup's env fallback (`BIO_NOW_MS`) already gives the pin and a world's env carries it. Note: instance-setup's `deps.now` also feeds its measured durations (`#now()`), which read 0 under a pin; that is instance-setup's, not changed here.
+- **B10.** Grep of every module's source (extraction, reading-pipeline, readers first, then the rest outside plane): **no producer answers `next_page`** (the only hits are wrangler/workerd node_modules and plane/store-assembly's own copies). Removed: the answer-side read in `pending.mjs:447` (`r.detail.next_page` in the cursor chain) and the test R76 G129c (`r9-jobs`), whose scripted answers were its only user. **Kept, and why:** `unitOf` (`pending.mjs:139`) reads `next_page`/`page` from the ROW's detail, and `transcribe.mjs:111` (this module) registers `ocr` rows with `detail: {pages, next_page}`, so that read is live. Two tests still script an answer `detail.next_page` (`r9-jobs.test.mjs` the R74 jobCounters test ~`:302` under the R2_HICCUP marker, and the R76 member-kill test ~`:333`); they pass and the fixtures check accepts them, but they script an answer no producer gives: BOB's call whether to rewrite them. **Plane's Wave B:** plane's `pending.mjs:139,447` and `transcribe.mjs` carry the same; its `:447` read is dead the same way. Also found: nothing in the real OCR tick answers `more` with a page detail, so a multi-window OCR row advances only through its row's registration (extraction's, for BOB to confirm).
+
+**Tests and checks** (HEAD after merging `origin/tranche/T51`): suite `--test-force-exit`: tests 379, pass 376, fail 1 (`release.test.mjs` R23, accepted K5139), todo 2. format 0; architecture 0; coverage 99 of 99, 0; ownership 0; **fixtures 0 failures** (accepted 8); words 15 (accepted K5144).
+
+**Markers added:** none. Previous `fixtures-generic` (7) stand.
+
+Size (session_01HPMiWGM9dDovp7swY1STgF): test runs 14, module lines 3705
+
+## J9 · COMPLETE
+
+COMPLETE (J8 in my record, pushed): B9 and B10 applied. B10: no producer answers next_page; the answer-side read (pending.mjs:447) and R76 G129c are removed; the row-side read (unitOf, fed by transcribe.mjs:111) is live and kept. Suite 379 tests, 1 fail (R23, accepted), 2 todo; fixtures 0; format, architecture, coverage, ownership 0; words 15 (accepted). Two other tests still script an answer next_page (your call); plane's Wave B carries the same dead :447. See J8.

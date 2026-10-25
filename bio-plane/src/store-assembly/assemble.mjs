@@ -200,7 +200,7 @@ export function assembleStore(ctx, env, { deliver = null } = {}) {
   /* R21 (K1541; credentials R23, R29): credentials holds the Worker secret its seal is derived from, built here before
      any module reaches it (its instance is one per storage, its deps read on the first call only). Unbound, setting a
      member's reference is refused ACCOUNT_SEAL_UNAVAILABLE. */
-  credentialsOf(ctx, { sealSecret: env.ACCOUNT_SEAL_SECRET ?? null });
+  credentialsOf(ctx, { sealSecret: env.ACCOUNT_SEAL_SECRET ?? null, now: () => nowMs(null) });   /* K5168: the first construction takes the store's clock */
   /* R22 (T33-12; docprofile R36): the content types registered into docprofile's registry, once, generic last. */
   registerReaders();
   /* R10 (K861): the stats figures, each owner's registered under its own name (record-core R63), and the plane's own
@@ -593,7 +593,7 @@ export function assembleStore(ctx, env, { deliver = null } = {}) {
      and instance-setup is built first). Its nine routes are spread beside instance-setup's (R5), and migrated in R3's
      pass. */
   translationsOf(ctx);
-  const instanceSetup = instanceSetupOf(ctx, env, { queueProducers });
+  const instanceSetup = instanceSetupOf(ctx, env, { queueProducers, now: () => nowMs(null) });   /* K5171: the instance clock, handed, not read from the env */
   /* R44 (T47; N981; K3030; credentials R64, instance-setup R54): instance-setup's disclosure read registered with
      credentials once, on this object's own instances, on instance-setup's behalf (credentials is earlier in the order
      and cannot reach it), so `disclosureDue` is asked in the assembled plane: `accountreferenceset` and a sign-in's
