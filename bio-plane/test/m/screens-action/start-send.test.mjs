@@ -66,7 +66,7 @@ test("R3: Step 2 prepares what is sent (her own words, labelled; each filled bla
   assert.ok(beside(p, b).includes(W("screen.start-send.text.needed")));
   assert.equal(p.byOp("communicationprepare").length, 0);
   await press(p, "communicationprepare", { values: { "send-text-0": "We request the inspection logs." }, reason: "ready" });
-  assert.deepEqual({ ...last(p, "communicationprepare").body, reason: undefined }, { action: ACTION_ID, purpose: "request", text: "We request the inspection logs.", reason: undefined });
+  assert.deepEqual({ ...last(p, "communicationprepare").body, reason: undefined }, { action: ACTION_ID, purpose: "request", text: "We request the inspection logs.", language: "en", reason: undefined });
   assert.equal(p.doc.getElementById("send-text-1").value, "We request the logs for {{period}}.");
   said(p, "screen.start-send.draft.own");
   said(p, "screen.start-send.blank.own", { name: "period", value: "2025" }); // a member's fill is labelled hers, not given a source

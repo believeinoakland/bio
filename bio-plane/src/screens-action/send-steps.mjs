@@ -213,6 +213,48 @@ export function joinFirst(cs, view, project) {
     + (join ? '<div class="mk-acts">' + join + "</div>" : '<p class="mk-note">' + cs.ref("project", id, (titled && titled.title) || id, []) + "</p>") + "</div></details>";
 }
 
+/** R3 (filings R43, R44; fix round 10, diagnosis 11 §2a): the language, and for a public comment the voice, the draft is prepared in, as
+ *  the member states them: the language her account holds (`memberlanguage`) among those the team's profiles answer (`grouplanguages`),
+ *  else the team's first; never nothing, as without one `filings` reads no list of phrasings and the assertion gate does not run. */
+export function languagesOf(view) {
+  const mine = view.data.mylang && view.data.mylang.state === "ok" && view.data.mylang.value && typeof view.data.mylang.value.language === "string" ? view.data.mylang.value.language : "";
+  const team = view.data.languages && view.data.languages.state === "ok" && view.data.languages.value && Array.isArray(view.data.languages.value.languages)
+    ? view.data.languages.value.languages.filter(function (t) { return typeof t === "string" && t; }) : [];
+  const tags = mine && team.indexOf(mine) < 0 ? [mine].concat(team) : team;
+  return { tags: tags, first: mine || team[0] || "", mine: mine };
+}
+
+/** The controls that state those marks: the language (named in the member's own language, never as a tag) and, on a public comment, the
+ *  voice (`voice.group`, `voice.self`, each with what it means). "" where there is nothing to state. */
+export function marksFields(cs, view) {
+  const L = view.parts.languagesOf(view);
+  const a = view.data.action && view.data.action.state === "ok" && view.data.action.value ? view.data.action.value : {};
+  const nameOf = function (tag) {
+    try { const n = new Intl.DisplayNames([L.mine || "en"], { type: "language" }).of(String(tag)); return n ? n.charAt(0).toUpperCase() + n.slice(1) : String(tag); } catch (e) { return String(tag); }
+  };
+  const lang = L.tags.length ? cs.choice("send-lang", "screen.account.language.field", L.tags.map(function (t) { return { value: t, text: nameOf(t) }; }), { value: L.first }) : "";
+  const voice = a.kind === "public_comment"
+    ? cs.checks("send-voice", { text: cs.w("voice.group") + " / " + cs.w("voice.self") }, [["group", "voice.group", true], ["self", "voice.self", false]], { radio: true })
+      + '<p class="mk-small">' + cs.w("voice.group.means") + " " + cs.w("voice.self.means") + "</p>" : "";
+  return lang + voice;
+}
+
+/** What those controls state, as the body of `communicationprepare` carries it: `language` (the one chosen, else the member's), and for a
+ *  public comment `voice` (`group` unless she chose `self`). */
+export function marksBody(cs, view) {
+  const L = view.parts.languagesOf(view);
+  const out = {};
+  const picked = String(cs.value("send-lang") || "");
+  const language = L.tags.indexOf(picked) >= 0 ? picked : L.first;
+  if (language) out.language = language;
+  const a = view.data.action && view.data.action.state === "ok" && view.data.action.value ? view.data.action.value : {};
+  if (a.kind === "public_comment") {
+    const v = cs.value("send-voice");
+    out.voice = Array.isArray(v) && v.indexOf("self") >= 0 ? "self" : "group";
+  }
+  return out;
+}
+
 /** The steps drawn: `o.request` adds the period, form and cost limit fields (R8) and the portal's warning and number. */
 export function sendSteps(cs, view, filings, o) {
   const P = view.parts;
@@ -282,6 +324,7 @@ export function sendSteps(cs, view, filings, o) {
   const advisory = draft && draft.advisory ? '<p class="mk-note">' + cs.w("screen.start-send.advisory", { advisory: draft.advisory }) + "</p>" : "";
   const offers = draft && Array.isArray(draft.offers) && draft.offers.includes("counsel_packet")
     ? '<p class="mk-note">' + cs.w("screen.start-send.offer.counsel_packet") + "</p>" : "";
+  const marks = step === "prepare" && P.marksFields ? P.marksFields(cs, view) : "";
   const fills = req && step === "prepare" ? cs.field("req-from", "screen.request.from", { type: "date" }) + cs.field("req-to", "screen.request.to", { type: "date" })
     + cs.choice("req-form", "screen.request.form", [["electronic", "screen.request.form.electronic"], ["spreadsheet", "screen.request.form.spreadsheet"], ["pdf", "screen.request.form.pdf"], ["paper", "screen.request.form.paper"]])
     + cs.field("req-cost", "screen.request.cost", { help: "screen.request.cost.help" }) : "";
@@ -333,7 +376,7 @@ export function sendSteps(cs, view, filings, o) {
   if (reading) return reading + nosend;
   // R21: the stake, above the approval; the question on `start-send` alone
   const stake = (!req && P.stakeAsk ? P.stakeAsk(cs, view) : "") + P.stakeLines(cs, view);
-  return fills + (step === "prepare" || draft ? text : "") + blanks + unfilled + advisory + offers + exhibits + pointed + held
+  return marks + fills + (step === "prepare" || draft ? text : "") + blanks + unfilled + advisory + offers + exhibits + pointed + held
     + (req && part("screen.request.describe") ? '<p class="mk-note">' + part("screen.request.describe") + "</p>" : "") + stake
     + '<div class="mk-acts">' + acts + "</div>" + '<p class="mk-note">' + cs.w("screen.start-send.approvefixes") + "</p>" + nosend;
 }
@@ -353,7 +396,7 @@ export const PREPARE = Object.freeze({
   send: function (view, el, cs) {
     const text = String(cs.value("send-text-" + (view.ui.draftN || 0)) || "").trim();
     if (!text) return { refuse: "screen.start-send.text.needed" };
-    const body = { action: view.subject, purpose: view.ui.purpose || "request", text: text };
+    const body = Object.assign({ action: view.subject, purpose: view.ui.purpose || "request", text: text }, view.parts.marksBody ? view.parts.marksBody(cs, view) : {});
     if (view.parts.isRequest && view.parts.isRequest()) {
       const from = String(cs.value("req-from") || ""), to = String(cs.value("req-to") || ""), cost = String(cs.value("req-cost") || "").trim();
       // C64-template: the plane refuses a fill the text has no blank for (`FILL_UNKNOWN_BLANK`), so a box is sent only where her text names

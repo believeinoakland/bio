@@ -14,7 +14,7 @@ const PATHS = { ...ROUTES, "request on a project": `/app/request/${PROJECT}`, "p
 const OWN = {
   plan: ["determinations", "list", "memberlist", "plan", "projectquestions"],
   "start-send": ["affordances", "list", "memberlist", "optionstartpreview", "plan"],
-  request: ["action", "filingsfor", "list", "memberlist", "profiles", "projectlist", "stakeatpreparation", "templatesforaction"],
+  request: ["action", "filingsfor", "grouplanguages", "list", "memberlanguage", "memberlist", "profiles", "projectlist", "stakeatpreparation", "templatesforaction"],
   action: ["action", "affordances", "filingsfor", "heldcaptures", "list", "memberlist", "pressurefor", "procedureguides", "profiles", "projectlist", "remindersfor", "templatesforaction"],
   matter: ["consequencesof", "determination", "escalation", "escalationstatus", "list"],
   "help-records": ["profiles"],
@@ -25,7 +25,7 @@ const OWN = {
   "dash-action": ["action", "actions", "affordances", "checkpointsdue", "filingsfor", "list", "profiles", "projectlist"],
   "request on a project": ["list", "peopledirectory", "profiles"],
   "plan on a project": ["list", "plans"],
-  "start-send on an action": ["action", "affordances", "filingsfor", "list", "memberlist", "projectlist", "stakeatpreparation"],
+  "start-send on an action": ["action", "affordances", "filingsfor", "grouplanguages", "list", "memberlanguage", "memberlist", "projectlist", "stakeatpreparation"],
 };
 
 for (const [id, path] of Object.entries(PATHS)) {

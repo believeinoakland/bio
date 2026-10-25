@@ -4,7 +4,7 @@
    started): prepare what is sent, approve it, give the second approval where the project asks one, and record the
    sending. Every function here is self-contained (interface-shell R21 (1)). */
 import { OPS } from "../op-declarations/index.mjs";
-import { draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, stakeAsk, readOnly, kindWord, kindsOf, officeLine, joinFirst, PREPARE, PREPARE_FILING, APPROVE, STAKE, SECOND, RECORD_SENT, TEMPLATE_SAVE, JOIN, WRITE_HELP } from "./send-steps.mjs";
+import { languagesOf, marksFields, marksBody, draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, stakeAsk, readOnly, kindWord, kindsOf, officeLine, joinFirst, PREPARE, PREPARE_FILING, APPROVE, STAKE, SECOND, RECORD_SENT, TEMPLATE_SAVE, JOIN, WRITE_HELP } from "./send-steps.mjs";
 
 // R21: `actionstake` is an owed act (`interface-shell` R73): it is registered once `op-declarations` declares it, and the
 // shell draws it as it draws every act (R12).
@@ -35,6 +35,9 @@ export const startSend = Object.freeze({
       identity: { op: "groupidentity", empty: function () { return false; } },
       vocab: { op: "affordances", query: {}, empty: function () { return false; } },
       projects: { op: "list", query: { type: "project", limit: "500" } },
+      // R3 (filings R43, R44): the language the draft is prepared in is the member's, among the team's
+      mylang: { op: "memberlanguage", empty: function () { return false; } },
+      languages: { op: "grouplanguages", empty: function () { return false; } },
       // E9 (K4557): her own place in the action's project (`participation`): an invited member is told at the start, not refused at the end
       standing: { op: "projectlist", query: {}, empty: function () { return false; } },
     };
@@ -53,6 +56,7 @@ export const startSend = Object.freeze({
 
   parts: {
     draftsOf: draftsOf, stepOf: stepOf, sendSteps: sendSteps, draftOf: draftOf, readFiling: readFiling,
+    languagesOf: languagesOf, marksFields: marksFields, marksBody: marksBody,
     stakeLines: stakeLines, stakeAsk: stakeAsk,
     // R48: the approved filing kept as the team's template, from the approval on (the step is second, send or sent). A filing
     // that needs counsel first (a tier of 3, read from the draft, the action or the stake read) is offered only as a brief.
