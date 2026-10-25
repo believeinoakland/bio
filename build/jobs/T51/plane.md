@@ -1235,3 +1235,11 @@ Found in other modules: (1) extraction does not publish a final answer with why 
 **Found in other modules:** none new. The op-grades row in J69 still blocks every plane run.
 
 Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 2, module lines 371
+
+## J70 · REPORT · re B104
+
+B104 applied (job/T51/plane). New bio-plane/test/m/plane/r-transcribe-answer.test.mjs carries fixtures-run reading-pipeline transcribe-answer and fixtures-run extraction transcribe-answer. It runs your transcribe-answer shape {ok, engine, version, pages: [{page, text}]} against the real AI path (transcriberOf(...).transcription(...).transcribe, store-assembly/transcribe.mjs, since the path is there, not plane/transcribe.mjs), with agent-worker's /transcribe answering that shape. Two tests, both naming R36. fixtures plane: 0 failures; format, coverage 37/37, ownership 0.
+
+NOT GREEN YET: same blocker as J69, DECLARED_OP_DISAGREES: readtranslate description (op-grades #30). I run it green after OP-GRADES merges.
+
+Your users' markers still read content transcribe-answer (extraction t48:29, reading-pipeline text-units:531 and :537, transcribe.test:323); the pairing lands with your rename.
