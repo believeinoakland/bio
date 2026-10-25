@@ -108,6 +108,7 @@ export class G54Held {
       basisVersions: { conclusionOf: () => null, conclusionRecordOf: () => ({ history: [], stance: null }), noProjectConclusionOf: () => null,
                        projectsDrawingOn: () => Object.assign([], { bound: 32, truncated: false }), testimonyReach: () => none },
       publication, caseTensions: publication.caseTensionsModule, capture: { registerReader: () => ({ ok: true }) },
+      // fixtures-own: platform this entry runs on workerd, where strength's and money's published fixtures build node:sqlite worlds and cannot load; the stand-ins answer the one ok shape the sweep reads (testimony with no legs, a fact not found)
       strength: { testimonyCorroboration: () => ({ ok: true, legs: [] }) }, reevaluation: { levelMoved: () => ({ ok: true }) },
       networkNotices: { openSeals: async () => ({ ok: true }) }, people: { tiesConcerning: () => ({ ok: true, ties: [] }) },
       money: { readFact: () => ({ ok: true, found: false }) }, publishSchedule,
