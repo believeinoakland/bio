@@ -296,6 +296,7 @@ const asideOf = async (as, ids) => rowsOf(as, ids, { state: "set_aside" });
 test("R4 R13 heldsetaside: one reason (the shell's reason field, no writing help) for every picked row; they move to the Set aside list", async () => {
   const t = await desk(SPEC, { ai: true });
   await assistant(t);
+  assert.deepEqual([(await t.mai.read("assistantstate")).on, (await t.mai.read("groupkeystate")).on], [true, true], "the assistant is reachable for her");
   const pothole = await t.world.recipes.project(t.mai, "Pothole repairs");
   /* a document a question of hers waits on, and one that nothing waits on */
   const budget = await asked(t, t.mai, pothole, { title: "Were the transfers authorised?", pageTitle: "City budget" });
