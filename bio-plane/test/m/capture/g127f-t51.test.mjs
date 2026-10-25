@@ -7,6 +7,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bucket, sha } from "./fixture.mjs";
+// fixtures-contract: plane job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 import { makeZip } from "../../make-zip.mjs";
 import { byteLedger, PLATFORM_FIGURES } from "../../../src/byte-ledger.mjs";
@@ -87,6 +88,7 @@ const setup = ({ minPart = 0, clock = null } = {}) => {
 };
 const registrar = (w) => {
   const j = jobRegistrarStub();
+  // fixtures-contract: plane job-registrar
   w.c.registerJob = j.registerJob;
   w.c.armJobs = j.armJobs;
   const real = w.core.transact.bind(w.core);
@@ -466,12 +468,13 @@ test("R113 and R109 (the filing): a refusing registrar rolls the whole filing ba
   const w = setup();
   const file = varied(2500, 14), ps = partsOf(file, 1000);
   let calls = 0;
-  w.c.registerJob = (e) => (++calls === 1 ? { ok: false, reason: "NO_ROOM" } : { ok: true, existed: false, state: "queued" });
+  // fixtures-contract: plane job-registrar
+  w.c.registerJob = (e) => (++calls === 1 ? { ok: false, reason: "JOB_NOT_KEPT" } : { ok: true, existed: false, state: "queued" });
   const b = await begin(w.c, file);
   for (let i = 0; i < 3; i++) await put(w.c, b.upload, i, ps[i]);
   const t0 = tables(w);
   const refused = await w.c.completePartedUpload({ upload: b.upload, parts: ps.map((p) => sha(p)), by: "m1", at: AT });
-  assert.deepEqual([refused.ok, refused.reason, refused.status, refused.job], [false, "JOB_NOT_REGISTERED", 502, { kind: "reading", reason: "NO_ROOM" }]);
+  assert.deepEqual([refused.ok, refused.reason, refused.status, refused.job], [false, "JOB_NOT_REGISTERED", 502, { kind: "reading", reason: "JOB_NOT_KEPT" }]);
   assert.deepEqual(tables(w), t0, "no receipt, no actor");
   assert.equal(w.b.mp.completed.length, 1, "R2's upload is complete: the object is held, content-addressed, named by nothing");
   /* a retry of the completion files the object already complete, and completes nothing twice */
@@ -523,7 +526,8 @@ test("R113 (the same file again): bytes the evidence store already holds are beg
   const file = varied(2500, 16);
   const first = await send(w, file);
   assert.equal(first.done.ok, true);
-  w.c.provenance.registerHolds = ({ sha: x }) => ({ ok: true, sha: x, asked: true, registered: x === sha(file), acquired: x === sha(file) });
+  const holds = holdsWorld({ [sha(file)]: { registered: true, acquired: true } });
+  w.c.provenance.registerHolds = (a) => holds.registerHolds(a);
   const before = w.b.mp.created.length;
   const b = await begin(w.c, file, { by: "m2" });
   assert.deepEqual([b.ok, b.held, b.parts], [true, true, 0]);
@@ -598,6 +602,7 @@ test("R113 (the ops): the four ops are declared and routed with the stamps the d
    `argument`, or by the code the field's own refusal carries. */
 import { declaredOpHolds } from "../../declared-ops.mjs";
 import { DECLARED_OPS, captureOps } from "../../../src/capture/index.mjs";
+import { holdsWorld } from "../provenance/fixtures.mjs";
 const namedBy = (codes = {}) => (answer, field) => !!answer && typeof answer === "object"
   && ((answer.reason === "REQUIRED_ARGUMENT_MISSING" && answer.argument === field) || (codes[field] || []).includes(answer.code ?? answer.reason));
 const callOp = (op, stamps, { prepare = null } = {}) => async (given) => {
@@ -628,4 +633,24 @@ test("R97 capture declares captureuploadcomplete (R113): its requires alone rais
 test("R97 capture declares captureuploadpart (R113): its requires alone raise no refusal naming a declared field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
   await declaredOpHolds({ op: "captureuploadpart", declaration: DECLARED_OPS.captureuploadpart, call: callOp("captureuploadpart", { by: "m1" }),
     refusedNaming: namedBy(), values: { upload: "an-upload-nobody-holds", index: 0, sha256: PART } });
+});
+
+test("R113 (fix round 10, cause 29): the four parted operations admit the classes `captureupload` admits, the founder's among them (the founder's session is class `admin`), and the founder's stamp begins, puts two parts, completes and aborts a parted upload, the receipt naming the founder; they still need `contribute`, and a machine's stamp is still refused", async () => {
+  const { DECLARED_OPS: declared } = await import("../../../src/capture/index.mjs");
+  for (const op of ["captureuploadbegin", "captureuploadpart", "captureuploadcomplete", "captureuploadabort"]) {
+    assert.deepEqual([...declared[op].classes].sort(), ["admin", "member"], `${op} admits the founder's session and a member's`);
+    assert.equal(declared[op].needs, "contribute", `${op} still needs contribute`);
+  }
+  const w = setup(), j = registrar(w);
+  const file = varied(2000, 29);
+  const { b, puts, done } = await send(w, file, { by: "admin" });
+  assert.deepEqual([b.ok, puts.map((p) => p.ok), done.ok], [true, [true, true], true], JSON.stringify(done).slice(0, 300));
+  assert.deepEqual(w.c.captureAccountsOf(sha(file)).actors.map((a) => a.actor), ["admin"], "the receipt names the founder's stamp");
+  assert.equal(j.rows().length, 1);
+  const other = await begin(w.c, varied(2000, 30), { by: "admin" });
+  assert.equal(other.ok, true);
+  assert.deepEqual(await w.c.abortPartedUpload({ upload: other.upload, by: "admin" }), { ok: true, aborted: true });
+  /* control: a machine's stamp is still refused at the member-session fence */
+  const machine = await begin(w.c, varied(2000, 31), { by: "class:admin" });
+  assert.deepEqual([machine.ok, machine.reason], [false, "MEMBER_SESSION_REQUIRED"]);
 });

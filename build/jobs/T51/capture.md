@@ -1,6 +1,6 @@
 # capture (T51)
 
-**Status** · session_012fgH9vTfzdHdBqQC1UfCpA · depth 2 · COMPLETE · handled B39
+**Status** · session_0156pHGtfAvwRXABsnFAHq8o · depth 2 · COMPLETE · handled B39
 
 ## J1 · COMPLETE
 
@@ -894,3 +894,23 @@ FOR YOU: control-plane's test/m/control-plane/r72-parted.test.mjs line 156 asser
 - `checks/format.mjs /home/user/bio`: 176 modules, 0 failures. `checks/architecture.mjs /home/user/bio capture`: 0 failures. `checks/coverage.mjs /home/user/bio capture`: 67 of 67 live ids named, 0 failures. `checks/words.mjs /home/user/bio capture`: 0 failures (missingkey 0, inline 0, testcopy 0). `checks/ownership.mjs /home/user/bio capture tranche/T51 job/T51/capture`: 6 files changed by capture, 0 failures.
 
 Size (session_012fgH9vTfzdHdBqQC1UfCpA): test runs 4, module lines 5011
+
+## J39 · COMPLETE
+
+**COMPLETE**, B40 (CAPTURE #60, fix round 10, Wave A batch 2). Merged `tranche/T51` first.
+
+**Cause R29 (R113 amended, K5056).** Root: `capture/index.mjs` DECLARED_OPS rows for the four parted ops had `classes: ["member"]` while `captureupload` is `["admin","member"]`, so the door refused the founder's `admin` session CLASS_FORBIDDEN. Fix: the four rows now `["admin","member"]` (`needs: contribute` and the member-session fence kept; `machineClasses` left as it was so an `ai` credential reaches the fence as before). Why tests missed it: no capture test read the rows' classes or drove the founder's stamp through a parted upload (control-plane's r72-parted drives the member and an `ai` credential only). Failing-first: `g127f-t51.test.mjs` "fix round 10, cause 29" (declared classes + founder stamp `admin` begin/2 parts/complete/abort, receipt names `admin`, machine stamp still refused), seen red on the classes assertion, green after. Platform P: `g127f-plane.test.mjs` same test under Miniflare over real R2 multipart (11 MiB, 5 MiB parts), 8/8. Platform L (the 84 MB TIFF of A11) is for the redeploy. R-PATH: all four ops covered; one-part and multi-part. R33 capture half: `archive.test.mjs` 60 held rows, limit 50: `truncated`, `next` returns exactly the other 10, no repeats (green; no defect on capture's side).
+
+**Fixtures published** (`bio-plane/test/m/capture/fixtures.mjs`, checked by `fixtures.test.mjs`, 7 tests): `acquireRefusal`, `storageNotConfigured`, `captureArm`, `heldActsUnreadable`, `heldSetAside`, `partRefusal`, `recordReuseVerdicts`.
+
+**Product/user findings for BOB (REPORT-worthy):** (1) the real render refusals are 429 (RENDER_DEFERRED, RENDER_HOST_COOLING_OFF) and 501 (RENDER_NO_RENDERER), not 409 as capture-requests' hand-built `renderRefusal` has them. (2) the real `setAside` answer names each document by `document` with `waiting: {questions, withheld}`, not `{id, waiting:[...]}` as screens-intake's held.test.mjs:156 builds it. (3) `partRefusal` gives the real 409 codes PART_CONFLICT, PART_OUT_OF_ORDER, UPLOAD_LOST and UPLOAD_UNKNOWN is 404, UPLOAD_EXPIRED 410. (4) control-plane's `r72-parted.test.mjs` needs the founder case (Wave B).
+
+**Own fixture lines:** provenance/holdsOf lines (fixture.mjs, g127f-t51, g127f-worker now over the REAL provenance, held, r9-t51 x4, upload) re-pointed to `provenance/fixtures.mjs`; record-core `evidencePartsRefusal` at r103-t51; CODE NO_ROOM/JOB_TABLE_FULL replaced by plane's JOB_NOT_KEPT. FIX-L lines carry `// fixtures-contract:` markers: `plane job-registrar` (g127f-t51, r9-t51), `plane keep-later` (r103-t51, r7-upload-t51), `answer-envelope door-helpers` (g27-reset.probe, g27-t51, ops, r6-t51, t35, trace, relays), `store-door store-replies` (relays). All 26 remaining lines in `checks/fixtures.mjs . capture` are `contract-no-run`, waiting for those providers' `fixtures-run`. Markers added: `fixtures-own: harness` g127f-worker.mjs:46 (the probe Worker's own UNKNOWN_COMMAND reply); no `fixtures-generic`.
+
+**Tests/checks:** capture module 355+ pass 0 fail (before fixtures.test: 355/355; fixtures.test 7/7, g127f-t51 25/25, g127f-plane 8/8, archive 10/10). Impact users (op-declarations, admission, control-plane, affordances, op-grades, screens-intake, store-door, plane r9-jobs): 1909 tests, 1907 pass; the 2 failures (op-grades g55 moneyingestread, owners "every op T33 publishes is graded") fail identically on `origin/tranche/T51`, not mine. format 0 failures; architecture 0; coverage 67/67; words 0; ownership 0.
+
+Size (session_0156pHGtfAvwRXABsnFAHq8o): test runs 14, module lines 5013
+
+## J40 · COMPLETE
+
+COMPLETE B40: R29 fixed (four parted ops admit admin+member; red-first test, Miniflare P green; L at redeploy), R33 capture half green, 7 fixtures published, own fixture lines re-pointed or marked; remaining 26 lines are contract-no-run (plane job-registrar/keep-later, answer-envelope door-helpers, store-door store-replies). Findings for users: real render refusals are 429/501 not 409; real setAside names documents by 'document' with waiting.{questions,withheld}. control-plane r72-parted needs the founder case. Details in my record J39.

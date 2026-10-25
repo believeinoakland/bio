@@ -141,3 +141,23 @@ test("R113 (L, G176): a body larger than the part size is still cut at the part 
   assert.equal(st.size, null);
   assert.deepEqual(await call("abort", { upload: b.upload }), { ok: true, aborted: true });
 });
+
+test("R113 (fix round 10, cause 29; P): the founder's stamp begins a parted upload on R2's own multipart, puts its parts in separate requests and completes it into one object, the receipt naming the founder; another it aborts holds nothing", { timeout: 300000 }, async () => {
+  const file = varied(11 * MiB, 29), whole = sha(file), by = "admin";
+  const b = await call("begin", { by }, { sha256: whole, bytes: file.length, statement: STATEMENT, bounds: { request: 5 * MiB } });
+  assert.deepEqual([b.ok, b.part_bytes, b.parts], [true, 5 * MiB, 3], JSON.stringify(b).slice(0, 300));
+  const ps = partsOf(file, b.part_bytes);
+  for (let i = 0; i < ps.length; i++) assert.equal((await call("part", { by, upload: b.upload, index: String(i), sha256: sha(ps[i]) }, ps[i])).ok, true);
+  const done = await call("complete", { by }, { upload: b.upload, parts: ps.map((p) => sha(p)) });
+  assert.equal(done.ok, true, JSON.stringify(done).slice(0, 300));
+  assert.equal(done.capture.sha256, whole);
+  const post = await call("state", { sha256: whole });
+  assert.deepEqual([post.size, post.objects.filter((k) => k === `bio/captures/${whole}`), post.receipts.filter((r) => r === whole), post.rows], [file.length, [`bio/captures/${whole}`], [whole], 0], "one object and one receipt under the whole, no session left (the Worker is shared with the tests above)");
+  const other = varied(6 * MiB, 30);
+  const o = await call("begin", { by }, { sha256: sha(other), bytes: other.length, statement: STATEMENT, bounds: { request: 5 * MiB } });
+  assert.equal(o.ok, true);
+  assert.equal((await call("part", { by, upload: o.upload, index: "0", sha256: sha(partsOf(other, 5 * MiB)[0]) }, partsOf(other, 5 * MiB)[0])).ok, true);
+  assert.deepEqual(await call("abort", { by, upload: o.upload }), { ok: true, aborted: true });
+  const after = await call("state", { sha256: sha(other) });
+  assert.deepEqual([after.size, after.rows], [null, 0]);
+});

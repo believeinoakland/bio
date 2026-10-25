@@ -51,6 +51,7 @@ try {
   const store = () => { stubs++; return ns.get(ns.idFromName("p")); };
   const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
   const doAnswer = async (res) => { try { const r = await res; const out = await r.json(); return out.ok === true ? { answered: true, result: out.result, reply: { status: r.status, body: out } } : { answered: false }; } catch { return { answered: false }; } };
+  // fixtures-contract: answer-envelope door-helpers
   const h = { json, storeSilent: (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }, 502), doAnswer, storageAbsent: () => json({}, 503),
     cls: "member", member: true, sessMember: "member:ann", storeName: "bio",
     readAcquired: readerFor({ doAnswer, storeSilent: (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }, 502) }) };
