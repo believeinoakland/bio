@@ -204,3 +204,26 @@ Size (session_014qiZzWUT5rWTceixKQwyba): test runs 3, module lines 2281
 ## J13 · REPORT
 
 Correction to COMPLETE (J12): the process repository commit I cited is not e8…. The checks ran at civicos-process b5531c09f8 (the clone's HEAD, the checkout I read the mechanics and tools from). Nothing else in J12 changes.
+
+## J14 · COMPLETE
+
+**Fixture round 10, Wave A batch 3 (people): COMPLETE after CHANGE B10 (K5077).**
+
+Applied
+- Merged tranche/T51 into job/T51/people (CHANGE B10 (1)).
+- why.test.mjs (R40): the hand-built events `sequence` op-table entry (the one line left, FIX-E events) now takes events' published `sequenceUndetermined` (bio-plane/test/m/events/fixtures.mjs); the owner's `why` is still passed on exactly when given. Commit a29a99d0cb.
+- Items (2) and (3) of B10 need nothing from people: moneyChecks.noticed is money-checks' to publish, and tiesConcerningRefusal stands as published (commit 0b2c72995a).
+
+Fixtures-own / fixtures-generic markers added: none.
+
+Lines of the list: zero. `checks/fixtures.mjs people`: 0 failures (3224 test files read).
+
+Deferred: none.
+
+Checks (process repository b5531c09f8; product job/T51/people at a29a99d0cb)
+- node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/people/: tests 82, pass 82, fail 0.
+- node build/plan/impact.mjs origin/tranche/T51 HEAD: 1 module affected (people), 1 test file.
+- checks/format.mjs: 0 failures. checks/architecture.mjs people: 0 failures. checks/coverage.mjs people: 42 of 42. checks/words.mjs people: 0 failures.
+- checks/ownership.mjs people origin/tranche/T51 job/T51/people: 4 files, 0 failures.
+
+Size (session_014qiZzWUT5rWTceixKQwyba): test runs 4, module lines 2281
