@@ -60,3 +60,27 @@ Green, the ODS pin included.
 ℹ fail 0
 ```
 Green on this run.
+
+## C. The two reds accepted since K4731 with no job
+### C1 plane `release.test.mjs` R24
+```
+ℹ tests 6
+ℹ pass 5
+ℹ fail 1
+✖ R24 (DEC-149; T34-87, K1784; T51): a title or purpose a surface draws is the screen's own key, `screen.<id>.name` and `screen.<id>.purpose`, ... (release.test.mjs:74)
+  AssertionError [ERR_ASSERTION]: screen.objective.purpose is held by the words list   false !== true   at release.test.mjs:78:14
+```
+The loop stops at the first miss. Running its two checks over the whole registry (`SCREEN_REGISTRY` against `hasWord`) finds exactly two missing keys: **`screen.objective.purpose`** and **`screen.about-knocker.purpose`**. `screen.objective.name` exists (`setup-words/rows.mjs:17549`), but neither `.purpose` row exists.
+**Root cause: PRODUCT, module setup-words (words list), with wizard-scripts as the source of the entries.** The registry (`wizard-scripts/screen-registry.mjs:52`, re-taken from `docs/development/ux-substrate/screens/registry.json` at 958d998ccb, commit 782a0c9c4d, FR-46 R45) gives screens `objective` and `about-knocker` a `purpose` string, and R24 (DEC-149, K1784: a title or purpose a surface draws is the screen's own key `screen.<id>.purpose`) requires a words row for each. The test is right and current; the rows are owed (design stream's words, `later-ux`).
+
+### C2 plane `l77-size.test.mjs` R77 L
+```
+ℹ tests 3
+ℹ pass 2
+ℹ fail 1
+✖ R77 L (gate): the alarm reads a synthetic PDF (21 MB) through the ledger in a child capped at the measured idle plus 88 MB, 5 of 5 (l77-size.test.mjs:19)
+  AssertionError: run 1: the ledger holds nothing   (l77-size.test.mjs:26:14)
+  actual: [{ attempts: 0, final_why: null, interrupted: 0, kind: 'reading', last_ms: 408, last_why: null }]   expected: []
+```
+The other two tests (22 MiB `pdf22`, and the 15.9 MB `manyobjects`) pass. I ran the child (`l77-size-child.mjs`, mode `alarm`) by hand with the row's `state`, `cursor` added to its query (not committed): `"state":"partial","cursor":"{\"read_through\":468,\"total\":1300}"`, `ticks: 6`, `found: true, units: 67, words: true`. So the read itself works and stays within the cap; the row is not finished because the 1,300-page file is read in pieces, and 6 ticks reached page 468.
+**Root cause: TEST (stale).** `bio-plane/src/plane/pending.mjs:411-436` (job 37's R101/R97 piece-by-ranges): a reading that answers `ok: true, more: true` is re-armed as `state='partial'` with its cursor, "one heavy piece for each tick" (extraction `index.mjs:969, 1008-1088` answers `detail: {read_through, total}`). The child's loop `while (!direct && rows().length && ticks < 6)` (`l77-size-child.mjs:78`) and the test's `left: []` assertion (`l77-size.test.mjs:26`) date from the one-tick alarm read (R77 L; E2 (4), K4544); at about 78 pages a tick the synthetic file needs more than 6 ticks (468 of 1,300 after 6). Governing requirement: plane R97/R101 (pieces by cursor, a moved cursor is progress) amending R77. The 6-tick cap, not the product, makes it red; I did not run it with a larger cap (no test changes in this session).
