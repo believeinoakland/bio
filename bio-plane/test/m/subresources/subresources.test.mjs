@@ -678,3 +678,68 @@ test("Errors: a missing callback is a TypeError; nothing about a reference or th
   assert.equal(one("/big.png").reason, "TOO_LARGE");
   assert.doesNotThrow(() => { normalizeAddress({}); normalizeCitation(undefined); originOf(null, null); });
 });
+
+/* Fix round 10, cause R15 (G3, R24 (c)): a page that opens markup and never closes it was read
+ * to its end from every opening, quadratic: 240 KB of `<div` held the object for 27 seconds.
+ * Time is asserted as a ratio between two sizes of the same page (R-CLOCK), with a floor so a
+ * run too fast to measure cannot fail it, and as a ceiling a hundredth of what the page cost. */
+const timed = async (html) => {
+  let best = Infinity;
+  for (let i = 0; i < 3; i++) {
+    const t = performance.now();
+    await run(html);
+    best = Math.min(best, performance.now() - t);
+  }
+  return best;
+};
+
+test("R1, R14, R15: a page of unclosed tags is walked in time that grows with its size, and its references are unchanged", async () => {
+  const lead = `<html><body><img src="/a.png"><a href="/next">n</a><link rel="stylesheet" href="/c.css">`;
+  const junk = (n) => "<div".repeat(n);
+  assert.ok(await timed(lead + junk(60000)) < 1000, "240 KB of unclosed <div is read in under a second");
+  const small = await timed(lead + junk(30000));
+  const large = await timed(lead + junk(60000));
+  assert.ok(large < 3 * Math.max(small, 20), `twice the page took ${large.toFixed(0)} ms against ${small.toFixed(0)} ms`);
+  /* The references the page does carry are those it carries without the tail. */
+  const [plain, junky] = [await run(lead + "</body></html>"), await run(lead + junk(60000))];
+  assert.deepEqual(junky.calls, plain.calls);
+  assert.deepEqual(junky.out.links.map((l) => l.address), plain.out.links.map((l) => l.address));
+  assert.equal(junky.out.manifest.counts.fetched, plain.out.manifest.counts.fetched);
+});
+
+test("R1, R14, R15: every shape of opening that is never closed costs time that grows with the page", async () => {
+  const shapes = {
+    comment: "<!--", style: "<style>", scriptTag: "<script ", scriptEl: "<script>", meta: "<meta ", base: "<base ",
+    quote: '<d "', apos: "<d '", attr: '<a href="x" ',
+  };
+  for (const [name, unit] of Object.entries(shapes)) {
+    const page = (n) => "<html><body>" + unit.repeat(n);
+    assert.ok(await timed(page(30000)) < 1500, `${name}: ${unit.length * 30000} bytes in under a second and a half`);
+  }
+  for (const [name, unit] of Object.entries({ url: "url(", comment: "/*", imp: "@import ", quoted: 'url("' })) {
+    const page = (n) => `<html><body><style>${unit.repeat(n)}</style><p style="${unit.repeat(n)}">`;
+    assert.ok(await timed(page(30000)) < 1500, `css ${name}: in under a second and a half`);
+  }
+  const srcset = (n) => `<img srcset="a.png 1x, ${",".repeat(n)}x, b.png 2x">`;
+  assert.ok(await timed(srcset(200000)) < 1500, "a srcset with a long run of commas");
+});
+
+test("R1, R14: a `>` inside a quoted value does not end a tag, and a quote never closed opens no tag after it", async () => {
+  const { one, out } = await run(`<main><img alt="a > b" src="/q.png"><img alt='x"y>z' src='/r.png'/></main>`);
+  assert.ok(one("/q.png").ok && one("/r.png").ok);
+  assert.ok(out.companionText.includes('alt="a > b"'));
+  const closed = await run(`<main><img src="/x.png"/><img src="/y.png"></main><img src=/z.png alt="`);
+  assert.ok(closed.one("/x.png").ok && closed.one("/y.png").ok);
+  assert.equal(closed.one("/z.png"), undefined);
+});
+
+test("R3: a page naming many references takes them in priority order without reading the whole list each time", async () => {
+  const imgs = Array.from({ length: 40000 }, (_, i) => `<img src="/i${i}.png">`).join("");
+  const html = `<main>${imgs}<link rel=stylesheet href=/late.css></main>`;
+  const t = performance.now();
+  const { out, calls } = await run(html, { cap: 3 });
+  assert.ok(performance.now() - t < 3000);
+  assert.equal(calls[0], ORIGIN + "/late.css", "the stylesheet is attempted first");
+  assert.deepEqual(calls.slice(1), [ORIGIN + "/i0.png", ORIGIN + "/i1.png"], "then the images in discovery order");
+  assert.equal(out.manifest.truncated, true);
+});
