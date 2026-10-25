@@ -1,6 +1,6 @@
 # project-roster (T51)
 
-**Status** · session_01JJFFx78szBRC4XdLzNQ25z · depth 2 · COMPLETE · handled B8
+**Status** · session_01PA4fPaBXX6FugXp76aucBs · depth 2 · COMPLETE · handled B10
 
 ## J1 · QUESTION
 
@@ -68,3 +68,29 @@ QUESTION (R42, RC-2): the two facts live above my layer, so I need your ruling o
 ## J6 · COMPLETE
 
 COMPLETE (fix round 3, C14 P2.2): R42 met. projectList rows carry question_count (basis-versions R41's rule over record-core's read contract, 2 statements per page) and shared_drafts (from the sharedDraftsOf reader the caller hands in, review R43, asked once per page; null when none handed in; EXISTENCE rows null for both). 112 module tests pass; users green; architecture, coverage 42/42, words, ownership 0 failures; format's one failure is build/rulings.md:4346 on the tranche tip. TO PLACE: control-plane R118 must put review's sharedDraftsByProject on the env projectRosterOps receives as env.sharedDraftsOf (or pass it to projectList as sharedDraftsOf); until then shared_drafts is null. R42's marker can go. Details in my record.
+
+## J7 · QUESTION
+
+QUESTION (START B9, fixture `projectReadRefusals`): I cannot publish it honestly, because neither read gives a refusal.
+
+- Evidence: `projectList` and `projectInvitations` (src/project-roster/index.mjs) have no `ok: false` return. `projectInvitations` answers `ok: true` with an empty list in its catch. I called both on the module's real test world: a null viewer and an unknown viewer each return `{ok: true, projects: []}` or `{ok: true, invitations: []}`.
+- Requirements R35 and R36 say a viewer with no active member gets an empty list, and the read never throws. The code matches them.
+- The two users, queue-producers `feeds.test.mjs:98` and `inviter.test.mjs:74`, build `{ok: false, reason: "REFUSED"}` by hand. No provider gives that code. The fixture rule (K4426, K5044 (5)) replaces such a code with the real one, and a real path that gives none is a product cause for you.
+
+My best reading: queue-producers re-points its refusal cases to the real answers. A throw is already covered by its `boom` case, and an empty `ok: true` list is the real answer for an unknown viewer. In that case I publish no fixture, since a fixture of refusals would invent a code.
+
+Options, for you to decide:
+(a) Recommended: queue-producers re-points its two cases to the real answers; project-roster publishes nothing for this.
+(b) Amend R35 and R36 so that these reads refuse with a named code. I would then build the refusal and publish the fixture.
+
+Also noted, not done in this job: `bio-plane/test/m/project-roster/figures-purge.test.mjs:149` re-points to record-core's `tableDeclarationRefusals` (mechanical; the fixture exists). It is for a later Wave B job, not this batch.
+
+## J8 · COMPLETE
+
+COMPLETE (START B9, fix round 10, Wave A batch 5; ANSWER B10 = option (a)).
+
+- **Entries applied:** none. No fixture is published: `projectList` and `projectInvitations` never refuse (R35, R36), so `projectReadRefusals` would invent a code (J7). No file in my paths changed; `git status` clean.
+- **Deferred:** `projectReadRefusals` (not built, per B10). `figures-purge.test.mjs:149` re-points to record-core's `tableDeclarationRefusals` in its later job, as B10 says.
+- **Found in other modules:** queue-producers `feeds.test.mjs:98` and `inviter.test.mjs:74` build `{ok:false, reason:"REFUSED"}`; their START now re-points them to the real answers (B10). Nothing else.
+- **Tests and checks:** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/project-roster/*.test.mjs`: 112 pass, 0 fail. `checks/fixtures.mjs /home/user/bio project-roster --list`: 0 failures. `checks/format.mjs /home/user/bio`: see the line above.
+- Size (session_01PA4fPaBXX6FugXp76aucBs): test runs 2, module lines 0
