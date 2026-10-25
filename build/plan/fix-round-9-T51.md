@@ -117,5 +117,6 @@ None stops a member completing an operation; stand-in sentences are in code, key
 | 111 | D | odf-reader (L1) | now | R56 new (K5011): S-18, S-19 rest (G184) | sonnet | 200 |
 | 112 | D | workbooks | now | R22 new (K5017; calculations R50 moved): `exportRecipe` bounded (S-31); R23 new: bind and export ask `readTable` for `rows: "all"` (follows calculations R48, job 109) (G182) | sonnet | 200 |
 | 113 | D | capture (L3, 49) | now | R114 new (K5020): the parted upload's running digest is record-grammar's `createResumableSha256`; `sha256-resume.mjs` removed (G180's second half) | haiku | 150 |
+| 114 | D | workbooks | now | R21 amended (K5025): a row or cell with no `r` is placed by position and held, as office-readers R48 reads it (G186); `g137e` R21 X12 red until then | sonnet | 150 |
 
 The rows for jobs 56 to 102 (merged) and the items 8 to 10 added to section 2c moved whole to `build/plan/archive/fix-round-9-merged.md`.
