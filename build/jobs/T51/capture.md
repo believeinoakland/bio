@@ -966,3 +966,11 @@ Size (session_01HsvPvAFoM9DaMzZURAeCPZ): test runs 6, module lines 5011
 **Tests and checks:** capture suite (51 files, 363 tests) 363 pass, 0 fail, exit 0; `cap13-reuse-pages` and `d57selflink` 2 of 2; `fixtures.test.mjs` 8 of 8. format, architecture (0), coverage (67 of 67), words (0), fixtures (0), ownership (0; 3 files: fixtures.mjs, fixtures.test.mjs, the record). `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 modules affected.
 
 Size (session_01HsvPvAFoM9DaMzZURAeCPZ): test runs 6, module lines 5011
+
+## J42 · QUESTION
+
+QUESTION (re B42). No requirement of capture states the clock for the instants you name. R90 states it only for `sourceReachability` (`captureOf`'s option `now`, `Date.now` by default); R98, R101 and R104 say "this instance's clock" without defining it; R22, R46 and R86 say nothing. My best reading, which I build on now: a new requirement, R115 (amends R22, R46, R86, R90, R98, R101, R104), worded:
+
+"R115 (K5132; amends R22, R46, R86, R90) The instance clock. Every instant this module records or judges without a caller's handed `at`/`now` is read at one clock, in order: the function `captureOf` was handed as `now` (R90), else the store's environment's `BIO_NOW_MS` (handed in by the ops map, epoch milliseconds, a finite number of at least 0), else the wall clock. So an upload's receipt instant and its document's `retrieved` (R86), a capture session's `created`, `updated` and `expires` and its expired judgement (R22, R103), the default instant of `liveCaptureSessions` (R46), and every default instant R98, R101 and R104 call this instance's clock follow it. An `at` or `now` a caller hands (acquisition's job hands them) wins. A duration measured for a reply stays on the wall clock. Test: with `BIO_NOW_MS` pinned through the ops map, an upload's `retrieved`, a saved session's expiry and the live list each follow the pinned clock, a session past expiry on it leaves the list; control: with none pinned they read the wall clock."
+
+I apply it to every default `stampSecond()`/`Date.now()` of the class that records or judges an instant, not only the five you list (same defect, same fix); I will list each in COMPLETE. Tell me if you want R115 numbered otherwise or amended into R90 instead.
