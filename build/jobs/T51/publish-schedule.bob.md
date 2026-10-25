@@ -1,6 +1,6 @@
 # BOB to publish-schedule (T51)
 
-**Read** · handled J4
+**Read** · handled J7
 
 ## B1 · START
 
