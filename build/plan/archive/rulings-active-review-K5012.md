@@ -19,3 +19,6 @@ Read with `rulings-active-dropped-K5012.md`. The draft is lossy: to reach 25 KB 
 16. K3586 kept; K3678's "each START states it until roles/JOB.md does" dropped.
 17. Members' words (K3472, K1821): "team, never group" beside "your group's Civicsmith" contradict; settle it.
 18. K4113: "the merge helper refuses while node_modules is missing" and "every START says so" dropped.
+
+## BOB #285's review (K5016)
+Read whole with the dropped list. Restored: item 3 (K3528: fix rounds on a release are covered by K3466, beside K1548). Settled: item 17, K3472 governs ("your team's Civicsmith"; the word table holds 525 such uses). Confirmed and left dropped: 1 (`release/T50-unassisted` is on origin), 2 (open in the T51 aim line, checked at the close), 4, 5, 6, 7, 9, 11, 12, 13, 14, 16, 18 (each in `build/rulings.md` under its K id, searched on need, or stated by the mechanics or the requirements), 8 (enforced by the tools, not by memory), 10 (the mutation sample is owed in the plan's round end, not a standing rule), 15 (retired by P19).
