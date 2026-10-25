@@ -465,3 +465,24 @@ Test (`court-orders.test.mjs`, R28, red on the prior code at `case_excludes`, gr
 Checks: `bio-plane/test/m/public-read/` 315 pass, 0 fail; format 0; architecture 0; coverage 44 of 44; words none in public-read; ownership 0; fixtures: only the known `group-fields.test.mjs:18` contract line (waits for instance-setup). Deferred: none. Other modules: none.
 
 Size (session_01ML8hpkf2vrUZPMLJcMVCtD): test runs 5, module lines 4207
+
+## J33 · COMPLETE
+
+**COMPLETE (B35: K5195, public-read R40 as amended, and the orphan fixtures marker).** Met: **R40** (declares `publishedcase`; its declared-ops case names R40). BOB strikes the mark.
+
+**1. `publishedcase` declared (R40).** Red first: `declared-ops.test.mjs` "R40 public-read declares publishedcase (K5195)" failed with `the declaration has no fields.accepts and fields.requires arrays`. Then added to `DECLARED_OPS` (`bio-plane/src/public-read/index.mjs:2104`-area, after `verify`): `classes: null, mutating: false, weight: "read", description: "act.publishedcase.label.published"` (the key the op's existing row in `setup-words` already carries; no new sentence), `fields: { accepts: ["id", "edition", "caseId", "sha256"], requires: [] }`, the four fields the arm reads (`publicReadOps`). Green after. The collector finds `publishedcase` owned by public-read, no duplicates (429 ops).
+
+**2. Orphan marker deleted (`bio-plane/test/m/public-read/group-fields.test.mjs:18`).** The `fixtures-contract: instance-setup group-identity-public` line covered nothing (`NO_SLUG` at `:19` is `ok: true` and is used at `:61`); deleted. `NO_SLUG` stays.
+
+**Tests and checks** (absolute root `/home/user/bio`; commit `f0b5a6b2a2`):
+- `bio-plane/test/m/public-read/` (all `*.test.mjs`, run to exit): 316 pass, 0 fail (was 315 at J32; one new test).
+- Cross-module, since `DECLARED_OPS` is shared (impact named 56 modules, 1234 files): every `bio-plane/test/m/*/declared-ops.test.mjs`, `op-declarations/*.test.mjs` and `store-assembly/t51.test.mjs` (109 files): 775 pass, 0 fail.
+- format 0 failures; architecture 0; coverage public-read 45 of 45 live ids named; ownership vs `origin/tranche/T51`: 0 failures.
+- `run.mjs /home/user/bio`: no finding in public-read's paths; no words added (the key `act.publishedcase.label.published` already exists). Its 16 failures are in other modules (the store-assembly and control-plane arms among them), not mine.
+- fixtures `--list`: one line, `instance-setup/fixtures.test.mjs:64` `[orphan-run] fixtures-run: public-read group-identity-public`. That run is instance-setup's to delete (its START, J30; INSTANCE-SETUP #37): left as it is, and this is the zero the two merges reach together. The `accepted` lines (11) are the checker's accepted classes, not failures.
+
+**Deferred:** none. **Found in other modules:** the orphan run above (`instance-setup/fixtures.test.mjs:64`, its owner). **Markers added:** none (no `fixtures-own` or `fixtures-generic`).
+
+**Not done here, as the START says:** R45 (the basis version per finding) is a CHANGE once case-authoring's R87 merges; `publishedcase` tests for R45 wait for it.
+
+Size (session_0117cYK5Yq6yKMxRK124CAvs): test runs 5, module lines 4209 (public-read `src/`, `publication/worker.mjs`, `container.mjs`, `inband.mjs`, `wc -l`)
