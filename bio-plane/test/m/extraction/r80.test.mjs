@@ -3,12 +3,12 @@
    reading. Each test names the requirement ids it checks. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, bucket, member, withEntry, i2, noText, ocrAnswer, sha, doc, pressThenPass } from "./fixture.mjs";
+import { fresh, bundle, hold, bucket, member, withEntry, i2, noText, ocrAnswer, sha, doc, pressThenPass, homesOver } from "./fixture.mjs";
 
 const pdf = (text) => ({ format: "pdf", structure: async () => ({ ok: true, text: structuredClone(text), pages: (text.pages || []).length, notes: [] }) });
 
 /* provenance's R4 `homeOf` stand-in over a map of register rows. */
-const register = (rows) => ({ homeOf: (s) => rows.get(s) ?? null, onTestimony: () => ({ ok: true }) });
+const register = (rows) => homesOver(rows);
 const row = (bundleId, bytes = 20) => ({ bundleId, path: "a.pdf", encoding: "binary", bytes, registered: "t", authored: false });
 
 /* A store whose register names `INFO-1` as the home of a capture whose whole object is not yet held (a parts-only home). */

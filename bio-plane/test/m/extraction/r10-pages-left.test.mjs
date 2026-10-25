@@ -4,11 +4,12 @@
    test-support's PDF generator and registrar stub. Each test names the requirement ids it checks. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, bucket, doc, sha, member, ocrAnswer } from "./fixture.mjs";
+import { fresh, bundle, bucket, doc, sha, member, ocrAnswer, homesOver } from "./fixture.mjs";
 import { generate } from "../../pdfgen.mjs";
+// fixtures-contract: plane job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 
-const register = (rows) => ({ homeOf: (s) => rows.get(s) ?? null, onTestimony: () => ({ ok: true }) });
+const register = (rows) => homesOver(rows);
 async function home(bytes) {
   const rows = new Map(), evidence = bucket();
   const w = fresh({ evidence, provenance: register(rows) });

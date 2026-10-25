@@ -7,9 +7,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { localize } from "../../../src/setup-words/index.mjs";
 import { WHOLE_READ_MAX } from "../../../src/reading-pipeline/index.mjs";
-import { fresh, bundle, bucket, doc, sha } from "./fixture.mjs";
+import { fresh, bundle, bucket, doc, sha, homesOver } from "./fixture.mjs";
 
-const register = (rows, parts = new Map()) => ({ homeOf: (s) => rows.get(s) ?? null, partsOf: (s) => parts.get(s) ?? null, onTestimony: () => ({ ok: true }) });
+const register = (rows, parts = null) => homesOver(rows, parts);
 const row = (bundleId, bytes = 20) => ({ bundleId, path: "a.pdf", encoding: "binary", bytes, registered: "t", authored: false });
 const count = (w, table, d) => w.one(`SELECT count(*) c FROM ${table} WHERE capture_sha=?`, d).c;
 const held = (w) => w.s.sql.exec(`SELECT capture_sha FROM readings ORDER BY capture_sha`).toArray().map((r) => r.capture_sha);

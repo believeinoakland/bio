@@ -6,6 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bundle } from "./fixture.mjs";
+// fixtures-contract: plane job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 import { OWED_MIGRATION, SHAPE_MIGRATION, N26_MIGRATION } from "../../../src/extraction/index.mjs";
 

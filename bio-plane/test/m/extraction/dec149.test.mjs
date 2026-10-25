@@ -10,12 +10,13 @@ import { REEXTRACT_CHECKS } from "../../../src/extraction/index.mjs";
 import { deriveMembership } from "../../../src/extraction/filemembership.mjs";
 import { WORD } from "./words.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { notAPdf } from "../pdf-reader/fixtures.mjs";
 
 const OLD = /\b(this|the) (instance|plane)\b|\binstance's\b|\bplane's\b/i;
 
 const pdf = (text, pages) => ({ format: "pdf", structure: async (b) => (new TextDecoder().decode(b).startsWith("%PDF")
   ? { ok: true, text: structuredClone(text), pages: pages ?? (text.pages || []).length, notes: [] }
-  : { ok: false, reason: "NOT_A_PDF" }) });
+  : await notAPdf()) });
 
 async function held(text) {
   const w = fresh();

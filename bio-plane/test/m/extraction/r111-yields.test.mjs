@@ -7,9 +7,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { LAND_BATCH_UNITS } from "../../../src/extraction/index.mjs";
-import { fresh, bundle, bucket, doc, sha } from "./fixture.mjs";
+import { fresh, bundle, bucket, doc, sha, homesOver } from "./fixture.mjs";
 
-const register = (rows) => ({ homeOf: (s) => rows.get(s) ?? null, onTestimony: () => ({ ok: true }) });
+const register = (rows) => homesOver(rows);
 async function home(bytes) {
   const rows = new Map(), evidence = bucket();
   const w = fresh({ evidence, provenance: register(rows) });
