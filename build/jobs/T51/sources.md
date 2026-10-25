@@ -101,4 +101,4 @@ Each fixture has a test of its own in `bio-plane/test/m/sources/fixtures.test.mj
 - `node checks/ownership.mjs /home/user/bio sources tranche/T51 job/T51/sources`: 3 files changed by sources, 0 failures.
 - `node build/plan/impact.mjs origin/tranche/T51 HEAD`: sources 1 of 11 test files, retrieval-browse 2 of 12 (the change does not touch retrieval-browse; its two named files run and pass, 20 of 20).
 
-Size (session_01KVdCT4xo4Q6wdYgc64U2V2): test runs 3, module lines 61
+Size (session_01KVdCT4xo4Q6wdYgc64U2V2): test runs 3, module lines 67
