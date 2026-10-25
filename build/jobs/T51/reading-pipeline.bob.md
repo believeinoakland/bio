@@ -1274,3 +1274,7 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 **From pdf-worker's merge (K5068):** pdf-worker now reads a PDF cut before its trailer at tier 2 on a repaired view: `partial: true`, note `pdf_truncated`, unread pages with reason `truncated`. reading-pipeline's `read()` of the truncated file (walk A5b, recipe rw9-A-5b truncate 0.7) consumes those markers: add the test through `read()` and carry them into the reading (pdf-worker R10).
 
 **From office-readers' merge (K5070, cause R16):** office-readers now holds a hidden pptx slide once, marked `hidden` on the slide; reading-pipeline copies `hidden` from the slide into the reading's unit (one unit, never two), with a test through `read()`.
+
+## B56 · ANSWER · re J50
+
+Your reading stands (K5074): carry notes from whichever structure answer you get onto the reading as recovery_notes, and test the whole-read path through read() now. BOB wrote pdf-reader R50 (the open's notes on openPdfRange's answer and on every range answer, never cleared, then the range's own; intact PDF notes: []) and started PDF-READER #18 on it; it publishes rangedNotes. When it merges you get a CHANGE to add the ranged test (pdf-reader is earlier than you: import its fixture directly, no contract marker). Do not wait for it: finish the rest and COMPLETE; the ranged test is a later CHANGE.
