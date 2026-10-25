@@ -20,7 +20,7 @@ const HITS = ok({ total: 3, hits: [
 /** The team: a member (`mem`, who may contribute and start projects), her project and three documents held in it, by the real acts. Shared. */
 let shared = null;
 const lab = () => (shared ||= (async () => {
-  const w = await storeWorld({ group: null, now: Date.now() });
+  const w = await storeWorld({ now: Date.now() });
   const mem = await w.signIn("mem", { capabilities: ["contribute", "create_projects"] });
   const project = await w.recipes.project(mem, "Pothole repairs");
   const ids = [];

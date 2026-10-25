@@ -11,7 +11,7 @@ const R = "looking";
 /** The team: a member (who may contribute and start projects), her project, four documents held in it and three questions drawn into it, all by the real acts. Shared. */
 let shared = null;
 const lab = () => (shared ||= (async () => {
-  const w = await storeWorld({ group: null, now: Date.now() });
+  const w = await storeWorld({ now: Date.now() });
   const mem = await w.signIn("mem", { capabilities: ["contribute", "create_projects"] });
   const project = await w.recipes.project(mem, "Pothole repairs");
   const doc = async (title, body) => (await w.recipes.hold(mem, title, body, project)).bundle;

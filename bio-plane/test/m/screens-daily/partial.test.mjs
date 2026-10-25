@@ -21,7 +21,7 @@ const plain = (path, plane, o = {}) => openRaw(path, plane, { screens: SCREENS, 
 const SCOPES = ok({ ok: true, scopes: ["everything", "document"].map((key) => ({ key, kinds: [], only: null })) });
 const rows = (from, n, doc = (i) => "INF-" + (from + i)) => Array.from({ length: n }, (_, i) => ({ bundle_id: doc(i), title: "Document " + doc(i), snippet: "the [sewer] fund", extent: { passage: from + i } }));
 const routeButton = (p, route) => main(p).querySelector(`button[data-route="${route}"]`);
-const worldOf = async () => { const w = await storeWorld({ group: null }); return { w, rosa: await w.signIn("rosa", { admin: true }) }; };
+const worldOf = async () => { const w = await storeWorld(); return { w, rosa: await w.signIn("rosa", { admin: true }) }; };
 const XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
 // 120 titles-and-notes matches shown 50 at a time; 300 passage matches shown 200 at a time; 60 subjects shown 50 at a time.

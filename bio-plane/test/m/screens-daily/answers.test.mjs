@@ -14,7 +14,7 @@ import { open, open as openRaw, ok, refused, text, ops, acts, button, press, bes
    by her real act (`ruleservicesswitch`) when asked, and the page booted as her. What the AI would answer (`ask`, a stream) and whether the assistant is
    reachable stay the plane's, as they are no answer of the store. */
 async function team({ rules = false } = {}) {
-  const w = await storeWorld({ group: null });
+  const w = await storeWorld();
   const rosa = await w.signIn("admin");
   if (rules) await rosa.act("ruleservicesswitch", { body: { on: true } });
   return { w, rosa };

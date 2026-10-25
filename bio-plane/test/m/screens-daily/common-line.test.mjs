@@ -26,7 +26,7 @@ const FULL_QUEUE = ok({ items: [
 ], item_count: 5 });
 const teams = {};
 const teamOf = (kind) => (teams[kind] ||= (async () => {
-  const w = await storeWorld({ group: null, now: Date.now() });
+  const w = await storeWorld({ now: Date.now() });
   if (kind === "empty") return { w, as: await w.signIn("mem", { capabilities: ["contribute"] }) };
   const rosa = await w.signIn("admin");
   await rosa.act("groupnameset", { body: { name: "Lakeshore Tenants" } });

@@ -25,7 +25,7 @@ const FINDING_KIND = "shared-inquiry-concluded-by-another-project";
 
 /** A team: rosa (administrator, owner of both projects), mai (a member, joined to both), the projects "Pothole repairs" and "Coliseum". */
 async function team() {
-  const w = await storeWorld({ group: null });
+  const w = await storeWorld();
   const rosa = await w.signIn("rosa", { admin: true });
   const mai = await w.signIn("mai");
   const p1 = await w.recipes.project(rosa, "Pothole repairs"), p2 = await w.recipes.project(rosa, "Coliseum");

@@ -10,7 +10,7 @@ import { open as openRaw, ok, refused, main, word } from "./page.mjs";
    all by the real acts (the world's clock is the page's: Home's security window is read against it); the held captures and the Inbox are the reads a test sets (a count of held captures or new knocks, a failed read). */
 let built = null;
 const world = () => (built ||= (async () => {
-  const w = await storeWorld({ group: null, now: Date.now() });
+  const w = await storeWorld({ now: Date.now() });
   const admin = await w.signIn("admin");
   await w.recipes.project(admin, "The Coliseum lease");
   await w.recipes.queue({ obligations: 1 });

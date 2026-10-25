@@ -18,7 +18,7 @@ const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 
 /** A world with rosa (administrator, owner of every project made here) and mai (a member). */
 async function world() {
-  const w = await storeWorld({ group: null });
+  const w = await storeWorld();
   const rosa = await w.signIn("rosa", { admin: true });
   const mai = await w.signIn("mai");
   return { w, rosa, mai };
@@ -186,7 +186,7 @@ test("R50: an invitation is drawn by its keys with Join; a team's own passed dat
 });
 
 test("R50: \"Start a project\" explains itself on Home by act.promote.here.home, in place of the general act.promote.does", timeout, async () => {
-  const w = await storeWorld({ group: null });
+  const w = await storeWorld();
   const mai = await w.signIn("mai", { capabilities: ["contribute", "create_projects"] });
   await w.recipes.project(mai, "Mine");
   const p = await open(w, mai, "/app");

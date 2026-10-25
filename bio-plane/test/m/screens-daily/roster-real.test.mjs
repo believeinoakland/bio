@@ -10,7 +10,7 @@ import { open as openRaw, text, settle, word } from "./page.mjs";
  *  review until a day (`casedraft`, `reviewgrant`), and a fourth, hidden project of a member since removed (the rescue is open to the administrator:
  *  the roster knows nothing of its questions or drafts, R39). All by the real acts. */
 async function roster() {
-  const w = await storeWorld({ group: null, now: Date.now() });
+  const w = await storeWorld({ now: Date.now() });
   const ann = await w.signIn("admin");
   const mo = await w.signIn("mo", { capabilities: ["contribute", "create_projects"] });
   const [one, two, three] = [await w.recipes.project(ann, "Pothole repairs"), await w.recipes.project(ann, "Bus stops"), await w.recipes.project(ann, "Library hours")];

@@ -31,7 +31,7 @@ const ZONE = ok({ ok: true, count: 1, facts: [{ path: "profile.time_zone", fact:
 let shared = null;
 const lab = (fresh = false) => {
   const make = async () => {
-    const w = await storeWorld({ group: null, now: Date.now() });
+    const w = await storeWorld({ now: Date.now() });
     const rosa = await w.signIn("rosa", { admin: true });
     const project = await w.recipes.project(rosa, "The Coliseum lease");
     const q = await w.recipes.question(rosa, project, { title: Q_TITLE, text: Q_TITLE, draw: true });

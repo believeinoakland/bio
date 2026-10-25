@@ -57,14 +57,14 @@ const heldRead = async (as) => (await as.read("heldcaptures", { query: { limit: 
 
 /** A group and a member `mai` who has looked at Home before (her first look is the real `lookedsince`, which records it), so Home is not her first visit. */
 async function desk({ looked = true } = {}) {
-  const w = await storeWorld({ group: null });
+  const w = await storeWorld();
   const mai = await w.signIn("mai");
   if (looked) await mai.read("lookedsince");
   return { w, mai };
 }
 /** A group with an administrator `rosa` (who looked at Home before) and an action of her project "Pothole repairs" ("Demand to rescind"). */
 async function office() {
-  const w = await storeWorld({ group: null });
+  const w = await storeWorld();
   const rosa = await w.signIn("rosa", { admin: true });
   await rosa.read("lookedsince");
   const project = await w.recipes.project(rosa, "Pothole repairs");
@@ -236,7 +236,7 @@ test("R17 (home): a to-do to vouch counts among the member's own on the strip; a
 /** A group where rosa (administrator) is asked to check a document by name (a document a question of the project rests on, so its item has a case) and is told
  *  that mai declared an expertise (an item in no case): two items in her queue, both by the real acts. */
 async function crew() {
-  const w = await storeWorld({ group: null });
+  const w = await storeWorld();
   const rosa = await w.signIn("rosa", { admin: true });
   const mai = await w.signIn("mai");
   await rosa.read("lookedsince");

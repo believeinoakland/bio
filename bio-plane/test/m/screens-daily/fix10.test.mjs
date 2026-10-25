@@ -17,7 +17,7 @@ function realPlane(w, as, ops) {
 }
 /** A team with a member, rosa, and two documents she holds: the browse lists both, and a search for "pothole" finds both by title. */
 async function team() {
-  const w = await storeWorld({ group: null });
+  const w = await storeWorld();
   const rosa = await w.signIn("rosa", { admin: true });
   const project = await w.recipes.project(rosa, "Street work");
   await w.recipes.hold(rosa, "Pothole work orders", "Work orders for the potholes on Main Street.", project);

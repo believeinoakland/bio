@@ -24,7 +24,7 @@ const DOC = "Work orders FY2025", QUESTION = "Is the city repairing potholes?", 
  *  second look ("check the dates"). `looked: false` is a member who has not yet visited Home (no mark); `bare` holds none of them; `plan` adds an older document
  *  "Repair plan"; `docs` more documents ("Budget memo ..."), each a minute after the last. */
 async function desk({ looked = true, bare = false, plan = false, docs = 0 } = {}) {
-  const w = await storeWorld({ group: null, now: Date.now() });
+  const w = await storeWorld({ now: Date.now() });
   const rosa = await w.signIn("rosa", { admin: true });
   const project = await w.recipes.project(rosa, "Pothole repairs");
   const ids = {};
@@ -187,7 +187,7 @@ test("R45: Flag for a second look… opens its note in place and sends secondloo
 });
 
 test("R46: a search result is a reference of its own kind with its title and a plain excerpt, the match brackets drawn as emphasis; a passage's words when found through one; a hit with no snippet draws its title and kind alone", async () => {
-  const w = await storeWorld({ group: null, now: Date.now() });
+  const w = await storeWorld({ now: Date.now() });
   const rosa = await w.signIn("rosa", { admin: true });
   const project = await w.recipes.project(rosa, "Repair of the Coliseum lease");
   const q = await w.recipes.question(rosa, project, { title: "Is the city repairing potholes?", text: "Did the city repair each report of potholes?", draw: true });

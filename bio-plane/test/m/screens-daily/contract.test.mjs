@@ -95,7 +95,7 @@ test("R34: every key the module's requirements name is a word of the list and is
    acts. The reads that fail are the world's door with those ops refused (a store that did not answer). */
 const teams = {};
 const teamOf = (kind) => (teams[kind] ||= (async () => {
-  const w = await storeWorld({ group: null, now: Date.now() });
+  const w = await storeWorld({ now: Date.now() });
   const rosa = await w.signIn("admin");
   if (kind === "empty") return { w, as: rosa, project: "PROJ-1" };
   const shut = await w.signIn("shut", { capabilities: [] });

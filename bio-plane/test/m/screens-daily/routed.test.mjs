@@ -50,7 +50,7 @@ async function held(w, as, { title, address }) {
 
 /** A group where the administrator `rosa` looked at Home before and members `ana`, `ben` and `mai` belong to it. */
 async function group(members = ["ana", "ben", "mai"]) {
-  const w = await storeWorld({ group: null });
+  const w = await storeWorld();
   const rosa = await w.signIn("rosa", { admin: true });
   const who = {};
   for (const handle of members) who[handle] = await w.signIn(handle);

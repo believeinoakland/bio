@@ -30,7 +30,7 @@ const LOT = "https://city.example/lot";
 
 /** The store's own appetite for a host's requests (`GOVERNOR_APPETITE_PER_MIN`, an instance binding): a public address is fetched at once, not after the
  *  seconds a person's pace would wait, so a test that captures hundreds of pages from one host does not wait for them. */
-const world = (o = {}) => storeWorld({ group: null, ...o, env: { GOVERNOR_APPETITE_PER_MIN: "6000000", ...(o.env || {}) } });
+const world = (o = {}) => storeWorld({ ...o, env: { GOVERNOR_APPETITE_PER_MIN: "6000000", ...(o.env || {}) } });
 
 /** A document the member holds, collected and not vouched for, by the real acts: fetched from its public address (`acquire`, the address answered by the
  *  world's network, scripted; the clock moves a second on, which refills the host's appetite), then the promotion of its information bundle at `collected`, as

@@ -35,7 +35,7 @@ restage.n = 0;
 
 /** A small team: rosa (administrator), and her projects `names`, none with questions. */
 async function simple(...names) {
-  const w = await storeWorld({ group: null });
+  const w = await storeWorld();
   const rosa = await w.signIn("rosa", { admin: true });
   const ids = [];
   for (const n of names) ids.push(await w.recipes.project(rosa, n));
@@ -48,7 +48,7 @@ async function simple(...names) {
  *  world starts six and a half weeks before it. Viewed by rosa, who administers. */
 async function roster() {
   const t0 = Math.floor(Date.now() / 1000) * 1000 - Math.round(6.5 * WEEK);
-  const w = await storeWorld({ group: null, now: t0 });
+  const w = await storeWorld({ now: t0 });
   const founder = await w.signIn("admin");
   await w.signIn("rosa", { admin: true });
   await w.signIn("teo");
@@ -155,7 +155,7 @@ test("R10 (DEC-201 (8); project-roster R27): each row draws its owner by handle,
 });
 
 test("R32 (N1072; DEC-230 (4); project-roster R29): a member answered founder: true, handle: null is drawn \"The group's founder\", never by the member id; no row draws admin", timeout, async () => {
-  const w = await storeWorld({ group: null });
+  const w = await storeWorld();
   const [founder, rosa] = [await w.signIn("admin"), await w.signIn("rosa", { admin: true })];
   const mine = await w.recipes.project(founder, "The Coliseum lease");
   await founder.act("projectinvite", { query: { projectId: mine, handle: "rosa" } });
@@ -276,7 +276,7 @@ test("R23: \"Start a project\" opens its title field on press, as the act's own 
 });
 
 test("R29 (D25): a project the member is invited to is drawn with Join (projectjoin), set apart under its heading, as the project's participants answer her place; a joined project offers none", timeout, async () => {
-  const w = await storeWorld({ group: null });
+  const w = await storeWorld();
   const rosa = await w.signIn("rosa", { admin: true });
   const [mai, teo] = [await w.signIn("mai"), await w.signIn("teo")];
   const coliseum = await w.recipes.project(rosa, "The Coliseum lease"), library = await w.recipes.project(rosa, "Library hours");
@@ -316,7 +316,7 @@ test("R34: every key projects reads is a word of the list; the retired rows are 
 });
 
 test("R63: projects draws a search by name and a filter (all, in, own), narrowing the rows in the page from projectlist's mine; it sends no op and changes nothing", timeout, async () => {
-  const w = await storeWorld({ group: null });
+  const w = await storeWorld();
   const [rosa, ana] = [await w.signIn("rosa", { admin: true }), await w.signIn("ana", { capabilities: CREATE })];
   const coliseum = await w.recipes.project(rosa, "The Coliseum lease"), sewer = await w.recipes.project(ana, "Sewer fund transfers");
   await w.recipes.project(ana, "Pothole repairs");
@@ -358,7 +358,7 @@ test("R63: projects draws a search by name and a filter (all, in, own), narrowin
 });
 
 test("R72: a project whose row says rescue_open is marked and opens the project; a row without is unchanged", timeout, async () => {
-  const w = await storeWorld({ group: null });
+  const w = await storeWorld();
   const [founder, rosa, ana] = [await w.signIn("admin"), await w.signIn("rosa", { admin: true }), await w.signIn("ana", { capabilities: CREATE })];
   const library = await w.recipes.project(ana, "Library hours");
   await ana.act("projectvisibilityset", { query: { projectId: library, setting: "hidden", reason: "not yet" } });

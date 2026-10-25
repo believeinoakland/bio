@@ -13,7 +13,7 @@ import { open as openRaw, text, main, press, word, withScreens, settle } from ".
 const open = (w, as, path, plane = {}) => openRaw(path, plane, { ...w.boot(as), screens: withScreens("document", "question", "person", "action", "plan", "project") });
 const links = (p) => main(p).querySelectorAll("a[href]").map((a) => [a.getAttribute("href"), a.textContent]);
 const timeout = { timeout: 180000 };
-const WORLD = { group: null };
+const WORLD = {};
 
 /** A web page held with no title of its own (a scan whose title was never read): `captureupload` and `promote` of an information bundle that states none, and
  *  the held file read, as `recipes.hold` does for a titled one. Answers its bundle id. */

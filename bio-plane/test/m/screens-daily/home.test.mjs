@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { storeWorld } from "../store-request/fixtures.mjs";
 import { hex, instant } from "../store-request/door.mjs";
 import { counted } from "../interface-shell/harness.mjs";
-import { open as openRaw, ok, refused, batched, text, ops, button, press, beside, last, main, screen, settle, word, hasWord, dmy, inOrder, withScreens, SCREENS } from "./page.mjs";
+import { open as openRaw, ok, refused, text, ops, button, press, beside, last, main, screen, settle, word, hasWord, dmy, inOrder, withScreens, SCREENS } from "./page.mjs";
 
 const timeout = { timeout: 300000 };
 /** The page at `path`, signed in as `as` over the world `w` (the world's door answers every op the plane table does not). */
@@ -23,10 +23,12 @@ const through = (w, as, change) => counted(async (req) => {
   return a;
 });
 const day = (iso) => String(iso).slice(0, 10);
+/** An instant `n` days past the later of the world's clock and the wall clock (the store judges a grant's end by the wall's), in the record's stamp form. */
+const ahead = (w, n) => new Date(Math.max(Date.now(), w.now()) + n * 86_400_000).toISOString().replace(/\.\d{3}Z$/, "Z");
 
 /** A team: its founder, `rosa` (an administrator), `mai` (may start projects), named, by the real acts. `now: Date.now()` so the world's clock is the page's. */
 async function team({ name = "Lakeshore Tenants", env = {}, ago = 0 } = {}) {
-  const w = await storeWorld({ group: null, now: Date.now() - ago, env });
+  const w = await storeWorld({ now: Date.now() - ago, env });
   const rosa = await w.signIn("rosa", { admin: true });
   const mai = await w.signIn("mai", { capabilities: ["contribute", "create_projects"] });
   if (name) await rosa.act("groupnameset", { body: { name } });
@@ -186,7 +188,7 @@ test("R23: the heading is the group's name, or \"Your group\" while none is set,
 });
 
 test("R40, R17, R23, R11: an unnamed new team's home is headed \"Your team\", leads with \"Name your team\" as its primary button and draws the other steps in order, then What happened?, nothing else", timeout, async () => {
-  const fresh = async () => { const w = await storeWorld({ group: null, now: Date.now() }); return { w, founder: await w.signIn("founder") }; };
+  const fresh = async () => { const w = await storeWorld({ now: Date.now() }); return { w, founder: await w.signIn("founder") }; };
   const { w, founder } = await fresh();
   const p = await open(w, founder, "/app");
   await settle();
@@ -243,9 +245,11 @@ test("R1, R8: each project the member sees is a reference opening project, with 
   assert.equal(ladderOf(p, "Pothole repairs").querySelector("[aria-current]").textContent, word("screen.home.stage.closed"));
   // The roster's stage is the project document's RECORDED state (project-roster R26), and the store writes only forming and closed there
   // (PROJECT_STAGE_COMPUTED: investigating and matured are derived, never recorded), so the two middle steps and a stage no step names cannot be
-  // made by an act: the rows that carry them are the test's own (reported).
-  const row = (id, name, stage) => ({ id, name, stage, question_count: 0, shared_drafts: { count: 0, newest: null } });
-  const odd = await open(w, rosa, "/app", { projectlist: ok({ ok: true, count: 2, limit: 200, truncated: false, projects: [row("PROJ-1", "The Coliseum lease", "investigating"), row("PROJ-3", "Odd", "paused")] }) });
+  // made by an act: the world's own list, with those two rows' stage the only thing the test sets (reported).
+  const odd = await open(w, rosa, "/app", { projectlist: through(w, rosa, (r) => {
+    r.projects.find((x) => x.id === coliseum).stage = "investigating";
+    r.projects.find((x) => x.id === pothole).stage = "paused";
+  }) });
   const ladders = main(odd).querySelectorAll(".cs-ladder");
   assert.equal(ladders.length, 2);
   assert.deepEqual(on(ladders[0]), [true, true, false, false]);
@@ -269,10 +273,10 @@ test("R8, R21, R25 (fix round 3, C14): each project's question count is its rost
 
 test("R8: a project whose stage is null is drawn undetermined; a list answered truncated says more projects exist", timeout, async () => {
   const { w, rosa } = await team();
-  await projectWith(w, rosa, "Pothole repairs", 0);
+  await projectWith(w, rosa, "Unstaged", 0);
   // A project the store records no state for, and a list cut at its limit (200 projects), are not made by an act at a cost a test can bear
-  // (every project is recorded forming): the list that says so is the test's own (reported).
-  const p = await open(w, rosa, "/app", { projectlist: ok({ ok: true, truncated: true, projects: [{ id: "PROJ-5", name: "Unstaged", stage: null, question_count: 0 }] }) });
+  // (every project is recorded forming): the world's own list, with that row's stage taken away and the list said cut, is the test's own (reported).
+  const p = await open(w, rosa, "/app", { projectlist: through(w, rosa, (r) => { r.truncated = true; r.projects[0].stage = null; }) });
   await settle();
   assert.ok(text(p).includes("Unstaged" + word("state.undetermined", { reason: word("screen.home.stage.none") })));
   assert.equal(main(p).querySelectorAll(".cs-ladder [aria-current]").length, 0);
@@ -458,8 +462,9 @@ test("R40: pressing a door sends startfrom for it and opens its offer in place; 
 
 test("R14, R16: with no script offered, the sixth door alone is drawn, so the section is always drawn; its press opens elsewhere, starts no script and sends nothing", timeout, async () => {
   const { w, mai } = await team();
-  // A team offered no script at all is an answer no act of the door makes (the library's scripts are offered to every member): the test's own.
-  const p = await open(w, mai, "/app", { startfrom: ok({ ok: true, scripts: [], doors: [{ door: "elsewhere", scripts: [], opens: "elsewhere" }] }) }, { guide: GUIDE });
+  // A team offered no script at all is an answer no act of the door makes (the library's scripts are offered to every member): the world's own answer
+  // with its scripts taken away, and every door but the sixth (which the store answers to every viewer, and whose `opens` is its own) with them (reported).
+  const p = await open(w, mai, "/app", { startfrom: through(w, mai, (r) => { r.scripts = []; r.doors = r.doors.filter((d) => d.door === "elsewhere"); }) }, { guide: GUIDE });
   assert.deepEqual(main(p).querySelectorAll(".mk-door").map((d) => d.getAttribute("data-door")), ["elsewhere"]);
   assert.ok(main(p).querySelector('[data-front="doors"]'));
   const door = doorOf(p, "elsewhere");
@@ -673,26 +678,52 @@ test("R17, C74: a row's Open opens its subject's screen; a subject that opens no
 });
 
 // R64: Home's remaining readings, over the real store: documents held, people the record follows, actions with clocks running, members' expertise and
-// the security level are all made by the real acts. A case published in editions, and the drafts of a case shared for review with a link a recipient
-// holds, are made by no act of the door a test can use today (a ratified edition is signed by the member's own key; the world keeps no private key):
-// `editions` is that part of the plane, the test's own answers (reported), over the world's own `projectlist` with the one project's row saying it shares drafts.
+// the security level are all made by the real acts, and so are the cases published in editions (`recipes.published`, the real ceremony) and the drafts of a
+// case shared for review with a link a recipient holds (`casedraft`, `reviewgrant`, and the recipient's own `reviewcomment` under the grant's secret): `cases`.
+// One of the door's answers is the real one only through a stand-in for the door's stamp, because the world's door and the Worker's part on it (reported):
+// `reviewcopy` of a member's session is stamped with her viewer by the
+// Worker's door while the world's door stamps none (store-request/door.mjs `publicAnswer`), so the store is asked as the Worker's door asks it for her.
 const EDITION_CASES = (cases) => ok({ bundles: [], cases });
-const editions = (w, as, shared, over = {}) => ({
-  publishedlist: EDITION_CASES([
-    { case_id: "CASE-1", edition: 1, published_at: "2026-09-01T10:00:00Z" }, { case_id: "CASE-1", edition: 2, published_at: "2026-09-18T10:00:00Z" },
-    { case_id: "CASE-2", edition: 1, published_at: "2026-10-02T10:00:00Z" }]),
-  publishedcase: (req) => ok({ ok: true, caseId: req.query.caseId, edition: Number(req.query.edition), scope: req.query.caseId === "CASE-1" ? "The Coliseum lease" : "Pothole repairs" }),
-  casedrafts: batched((id) => ({ ok: true, project: id, count: 1, drafts: id === shared
-    ? [{ draft_id: "DRAFT-1", case: { case_id: "CASE-1", edition: 3, identity: "x" } }, { draft_id: "DRAFT-2", case: { case_id: "CASE-2", edition: 2, identity: "x" } }, { draft_id: "DRAFT-3", case: { case_id: null, edition: null, identity: "x" } }] : [] })),
-  reviewcopy: (req) => ok({ ok: true, comments: req.query.draft === "DRAFT-2" ? [{ author_kind: "recipient", text: "x" }] : [],
-    grants: [{ grant_id: "G-1", live: true, until: "2026-10-20T00:00:00Z" }, { grant_id: "G-0", live: false, until: "2026-10-30T00:00:00Z" }] }),
-  projectlist: through(w, as, (r) => { for (const p of r.projects || []) if (p.id === shared) p.shared_drafts = { count: 3, newest: "2026-10-10T10:00:00Z" }; }),
-  ...over,
-});
+const copyOf = (w, as) => async (req) => {
+  const got = await w.send({ url: `http://do/reviewcopy?draft=${encodeURIComponent(req.query.draft)}&viewer=${encodeURIComponent("member:" + as.handle)}`, headers: {}, method: "GET" });
+  return ok((await got.json()).result);
+};
+const editions = (w, as, over = {}) => ({ reviewcopy: copyOf(w, as), ...over });
+
+/** Two cases of `project` published by the real ceremony, the first in two editions (a reopened and re-concluded finding, its second edition saying what changed), the
+ *  second in one, the second published last; and three drafts of them shared for review: one of the first (a live grant and, beyond it, a later one withdrawn), one of the
+ *  second (a live grant and a recipient's comment under it) and one of no case yet (a new one). `as` owns the project. Answers the cases' ids, the names Home draws for them
+ *  (each edition's scope), the instants they were published, the drafts, every grant, and the end of each live grant. */
+async function cases(w, as, project) {
+  const first = await w.recipes.finding(as, project, { title: "The Coliseum rent" });
+  await w.recipes.published(as, { ...first, publish: { ...first.publish, body: { ...first.publish.body, scope: "The Coliseum lease, as first read" } } });
+  const one = (await as.read("publishedlist")).cases[0].case_id;
+  await as.act("reopen", { query: { target: first.id, reason: "The lease was amended." } });
+  await as.act("conclude", { query: { target: first.id, reading: "The rent rose in 2026, and again in 2027.", falsifier: "The ledger shows no second rise." } });
+  await w.tick(120_000);
+  await w.recipes.published(as, { ...first, publish: { ...first.publish, body: { ...first.publish.body, caseId: one, scope: "The Coliseum lease",
+    whatChanged: { text: "The lease was amended and the rent rose again." }, statement: "This case does not cover rent paid after the amendment's date.",
+    subjectJustification: "The question still concerns only the city's own lease.", biasAcknowledgement: "We still favour a rent the city can bear.",
+    excluded: [{ description: "Rent paid by the sub-tenants.", reason: "The city keeps no record of it." }] } } });
+  const second = await w.recipes.finding(as, project, { title: "Pothole repairs", reading: "Reported potholes are repaired within seven days." });
+  await w.recipes.published(as, { ...second, publish: { ...second.publish, body: { ...second.publish.body, scope: "Pothole repairs" } } });
+  const listed = (await as.read("publishedlist")).cases;
+  const other = listed.find((c) => c.case_id !== one).case_id;
+  const at = (id, edition) => listed.find((c) => c.case_id === id && c.edition === edition).published_at;
+  const draft = async (body) => (await as.act("casedraft", { body: { project, ...body } })).draftId;
+  const grant = async (d, days) => { const until = ahead(w, days); return { until, ...(await as.act("reviewgrant", { body: { draft: d, recipient: "A neighbour", until } })) }; };
+  const [d1, d2, d3] = [await draft({ caseId: one }), await draft({ caseId: other }), await draft({ newCase: true, targets: [first.id] })];
+  const live1 = await grant(d1, 10), late1 = await grant(d1, 20), live2 = await grant(d2, 12), live3 = await grant(d3, 14);
+  await as.act("reviewrevoke", { body: { grant: late1.grantId } });
+  await w.door({ url: `/api/?op=reviewcomment&draft=${d2}`, init: { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ secret: live2.secret, text: "Please check the date." }) } }, null);
+  return { one, other, names: ["The Coliseum lease", "Pothole repairs"], at: [at(one, 2), at(other, 1)], drafts: [d1, d2, d3],
+           grants: [live1.grantId, late1.grantId, live2.grantId, live3.grantId], until: [live1.until, live2.until, live3.until] };
+}
 
 /** A group at the full stretch of Home's readings: documents held, three people the record follows, an action with three clocks running (one the group's
  *  own, two owed by a body), members with expertise (one confirmed, one declared, one declared by a member since revoked), and a security level raised
- *  by failed sign-ins in an hour that is past. Answers the administrator's fresh session (an hour on, the earlier ones have locked). */
+ *  by failed sign-ins in an hour that is past, and two cases published with drafts shared for review (`cases`). Answers the administrator's fresh session (an hour on,
+ *  the earlier ones have locked), the documents held before the cases (`held`) and `cases`' answer (`published`). */
 async function stretch() {
   const { w, rosa, mai } = await team({ ago: 2 * 3_600_000 });   // two hours back: the sign-ins fail then, and the clock is brought up to the page's after them
   const founder = await w.signIn("founder");
@@ -700,6 +731,8 @@ async function stretch() {
   const coliseum = await projectWith(w, rosa, "The Coliseum lease", 0);
   await projectWith(w, rosa, "Pothole repairs", 0);
   for (const name of ["Lease", "Minutes", "Budget"]) await w.recipes.hold(rosa, name, `${name} of the Coliseum.`, coliseum);
+  const held = (await rosa.read("browse", { query: { kinds: "document", limit: "1" } })).total;
+  const published = await cases(w, rosa, coliseum);   // (the world's clock is still two hours behind the wall's, as a record's stamps need: made before it is brought up)
   for (const label of ["Jo Adams", "Mia Chen", "Sam Ortiz"]) await rosa.act("entitycreate", { body: { kind: "person", label, note: `${label} is named in the lease.` } });
   const id = (await rosa.read("allocid", { query: { prefix: "ACT", year: instant(w).slice(0, 4) } })).id, at = instant(w);
   const clock = [["a", "2026-10-23", "group"], ["b", "2026-10-14", "body"], ["c", "2026-10-20", "body"]];
@@ -715,19 +748,20 @@ async function stretch() {
   await founder.act("memberset", { body: { memberId: "dev", status: "revoked" } });
   for (let i = 0; i < 12; i++)
     await w.door({ url: "/api/?op=login", init: { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ handle: "mai", password: "not-her-password", device: "own" }) } });
-  w.tick(2 * 3_600_000);   // the failed sign-ins are in an hour that is past: the level is Raised, not High (a spike going on)
-  return { w, rosa: await w.signIn("rosa"), mai: await w.signIn("mai"), coliseum };
+  w.tick(Math.max(0, Date.now() - w.now()));   // the failed sign-ins are in an hour that is past: the level is Raised, not High (a spike going on)
+  return { w, rosa: await w.signIn("rosa"), mai: await w.signIn("mai"), coliseum, held, published };
 }
 
 test("R64: a home whose fixtures answer each read draws each reading with the read's figure, in its area", timeout, async () => {
-  const { w, rosa, coliseum } = await stretch();
-  const p = await open(w, rosa, "/app", editions(w, rosa, coliseum));
+  const { w, rosa, held, published } = await stretch();
+  const p = await open(w, rosa, "/app", editions(w, rosa));
   await settle();
   const area = (k) => text(p, main(p).querySelector(`[data-area="${k}"]`));
   const inv = area("investigation");
   const docs = (await rosa.read("browse", { query: { kinds: "document", limit: "1" } })).total;
   const following = (await rosa.read("peopledirectory", { query: { show: "people", limit: "1" } })).following;
-  assert.equal(docs, 3);
+  assert.equal(held, 3);
+  assert.equal(docs, held + 2, "the three documents held, and the one each of the two findings published rests on");
   assert.equal(following, 3);
   assert.ok(inv.includes(`${docs} ${word("screen.home.rd.documents")}`), "documents: browse's total");
   assert.ok(inv.includes(`${following} ${word("screen.home.rd.followed.other")}`), "people followed: peopledirectory's following");
@@ -751,37 +785,45 @@ test("R64: a home whose fixtures answer each read draws each reading with the re
 });
 
 test("R64: edition lines: a case with a draft shared until a date says so, with the recipients' comments to answer; a draft of no case and a lapsed grant say nothing; the latest edition alone is its plain line", timeout, async () => {
-  const { w, rosa, coliseum } = await stretch();
-  const p = await open(w, rosa, "/app", editions(w, rosa, coliseum));
+  const { w, rosa, coliseum, published: k } = await stretch();
+  const p = await open(w, rosa, "/app", editions(w, rosa));
   await settle();
   const inv = text(p, main(p).querySelector('[data-area="investigation"]'));
-  assert.ok(inv.includes(word("screen.home.area.edition", { n: "2", case: "The Coliseum lease", date: dmy("2026-09-18"), until: dmy("2026-10-20") })), "no comment: the sentence that says none is to answer");
-  assert.ok(inv.includes(word("screen.home.area.edition.comments.one", { n: "1", case: "Pothole repairs", date: dmy("2026-10-02"), until: dmy("2026-10-20") })), "one recipient commented");
+  assert.ok(inv.includes(word("screen.home.area.edition", { n: "2", case: k.names[0], date: dmy(day(k.at[0])), until: dmy(day(k.until[0])) })), "no comment: the sentence that says none is to answer");
+  assert.ok(inv.includes(word("screen.home.area.edition.comments.one", { n: "1", case: k.names[1], date: dmy(day(k.at[1])), until: dmy(day(k.until[1])) })), "one recipient commented");
   assert.deepEqual(p.byOp("casedrafts").map((r) => r.query.projects), [coliseum], "one read, for the project whose row says a draft is shared (project-roster R42)");
-  assert.deepEqual(p.byOp("reviewcopy").map((r) => r.query.draft).sort(), ["DRAFT-1", "DRAFT-2"], "a draft of no case reads no grant");
-  assert.equal(p.byOp("publishedcase").filter((r) => r.query.caseId === "CASE-1")[0].query.edition, "2", "the latest edition");
-  const bare = await open(w, rosa, "/app", editions(w, rosa, coliseum, { casedrafts: batched(() => ({ ok: true, drafts: [] })) }));
+  assert.deepEqual(p.byOp("reviewcopy").map((r) => r.query.draft).sort(), [k.drafts[0], k.drafts[1]].sort(), "a draft of no case reads no grant");
+  assert.equal(p.byOp("publishedcase").filter((r) => r.query.caseId === k.one)[0].query.edition, "2", "the latest edition");
+  // No draft shared (every grant withdrawn, the lapsed one already): the latest edition, alone.
+  for (const g of k.grants) await rosa.act("reviewrevoke", { body: { grant: g } });
+  const bare = await open(w, rosa, "/app", editions(w, rosa));
   await settle();
-  assert.ok(text(bare, main(bare).querySelector('[data-area="investigation"]')).includes(word("screen.home.area.edition.published", { n: "1", case: "Pothole repairs", date: dmy("2026-10-02") })), "the latest edition, no draft");
-  const draftOnly = (comments) => editions(w, rosa, coliseum, { publishedlist: EDITION_CASES([]),
-    casedrafts: batched((id) => ({ ok: true, drafts: id === coliseum ? [{ draft_id: "DRAFT-1", case: { case_id: "CASE-9", edition: 1 } }] : [] })),
-    reviewcopy: ok({ ok: true, comments, grants: [{ live: true, until: "2026-10-20T00:00:00Z" }] }) });
-  const only = await open(w, rosa, "/app", draftOnly([]));
-  await settle();
-  assert.ok(text(only, main(only).querySelector('[data-area="investigation"]')).includes(word("screen.home.area.edition.draftonly", { case: "CASE-9", until: dmy("2026-10-20") })), "a draft on a case with no edition yet");
-  const one = await open(w, rosa, "/app", draftOnly([{ author_kind: "recipient", text: "x" }]));
-  await settle();
-  assert.ok(text(one, main(one).querySelector('[data-area="investigation"]')).includes(word("screen.home.area.edition.draftonly.comments.one", { case: "CASE-9", until: dmy("2026-10-20") })), "one comment on a draft with no edition yet");
+  assert.ok(text(bare, main(bare).querySelector('[data-area="investigation"]')).includes(word("screen.home.area.edition.published", { n: "1", case: k.names[1], date: dmy(day(k.at[1])) })), "the latest edition, no draft");
+  // A draft on a case with no edition yet: the published list is empty (the test's own: a draft names an existing case, so no act leaves its case unpublished), the
+  // drafts are the world's, shared again by a grant of each of two, and the comment a recipient made is the second's.
+  const draftOnly = async (draft) => {
+    const until = ahead(w, 20);
+    await rosa.act("reviewgrant", { body: { draft, recipient: "A reader", until } });
+    const page = await open(w, rosa, "/app", editions(w, rosa, { publishedlist: EDITION_CASES([]) }));
+    await settle();
+    return { until, page, inv: text(page, main(page).querySelector('[data-area="investigation"]')) };
+  };
+  const only = await draftOnly(k.drafts[0]);
+  assert.ok(only.inv.includes(word("screen.home.area.edition.draftonly", { case: k.one, until: dmy(day(only.until)) })), "a draft on a case with no edition yet");
+  const grants = (await w.send({ url: `http://do/reviewcopy?draft=${k.drafts[0]}&viewer=member:rosa`, headers: {}, method: "GET" }).then((r) => r.json())).result.grants;
+  for (const g of grants.filter((x) => x.live)) await rosa.act("reviewrevoke", { body: { grant: g.grant_id } });
+  const one = await draftOnly(k.drafts[1]);
+  assert.ok(one.inv.includes(word("screen.home.area.edition.draftonly.comments.one", { case: k.other, until: dmy(day(one.until)) })), "one comment on a draft with no edition yet");
 });
 
 test("R64: controls: a member who is not an administrator sends no securitymap and draws no security level; a read that fails draws its reading failed", timeout, async () => {
-  const { w, rosa, mai, coliseum } = await stretch();
-  const m = await open(w, mai, "/app", editions(w, mai, coliseum));
+  const { w, rosa, mai } = await stretch();
+  const m = await open(w, mai, "/app", editions(w, mai));
   await settle();
   assert.equal(m.byOp("securitymap").length, 0);
   assert.ok(!text(m).includes(word("screen.home.rd.security")));
   for (const [op, area] of [["browse", "investigation"], ["peopledirectory", "investigation"], ["publishedlist", "investigation"], ["clocksrunning", "action"], ["securitymap", "administration"]]) {
-    const f = await open(w, rosa, "/app", editions(w, rosa, coliseum, { [op]: refused("STORE_DID_NOT_ANSWER", null, 502) }));
+    const f = await open(w, rosa, "/app", editions(w, rosa, { [op]: refused("STORE_DID_NOT_ANSWER", null, 502) }));
     await settle();
     assert.ok(main(f).querySelector(`[data-area="${area}"] [data-state="failed"]`), `${op} failed is drawn failed in ${area}`);
   }

@@ -14,7 +14,7 @@ const openW = (w, as, path, plane = {}, o = {}) => open(path, plane, { ...w.boot
 /** A team on the REAL store (store-request's `storeWorld()`): rosa (administrator, owner of both projects), mai (a member, joined to both), ana (a member),
  *  the projects "Pothole repairs" and "The Coliseum lease", and the team's time zone (a day is read where the team is). */
 async function team(env = {}) {
-  const w = await storeWorld({ group: null, env });
+  const w = await storeWorld({ env });
   const rosa = await w.signIn("rosa", { admin: true });
   const mai = await w.signIn("mai");
   const ana = await w.signIn("ana");
