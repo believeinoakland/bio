@@ -22,7 +22,7 @@
   "label": 231,
   "project": 56,
   "grouprule": 1,
-  "refusal": 2588,
+  "refusal": 2594,
   "signing": 23,
   "case": 18,
   "docket": 7,
@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7654,
+  "screen": 7684,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -124,7 +124,7 @@
   "list": 1,
   "glossary": 9,
   "people": 42,
-  "reading-pipeline": 86,
+  "reading-pipeline": 93,
   "public-read": 27,
   "odf-reader": 1,
   "roster-reader": 1,
@@ -147,10 +147,15 @@
   "case-disclosures": 99,
   "plane": 1,
   "notice": 2,
-  "calculations": 155,
+  "calculations": 156,
   "case-authoring": 95,
   "docprofile": 1,
   "installer-steps": 1,
+  "capture-sources": 8,
+  "content": 132,
+  "office-readers": 1,
+  "inquiry": 21,
+  "citation": 4,
   "duties": 79,
   "basis-versions": 23,
   "filing-templates": 29,
@@ -159,7 +164,6 @@
   "idspaces": 51,
   "record-core": 3,
   "explore": 31,
-  "capture-sources": 7,
   "doorbell": 13,
   "doc-clean": 7,
   "case-tensions": 9,
@@ -182,7 +186,6 @@
   "workbooks": 21,
   "tasks": 7,
   "answers": 3,
-  "citation": 2,
   "action-records": 15,
   "drive": 19,
   "action-replies": 10,
@@ -190,13 +193,11 @@
   "odf": 2,
   "pdfstructure": 1,
   "contradiction": 114,
-  "content": 122,
   "queue-producers": 89,
   "case-checker": 59,
   "membership": 10,
   "case-import": 32,
   "ai-runs": 37,
-  "inquiry": 20,
   "textchain": 27,
   "plan-work": 27,
   "provenance-routes": 13,
@@ -235,7 +236,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19158,
+  "total": 19217,
   "protected": 1158
  },
  "words": [
@@ -16873,10 +16874,10 @@
   },
   {
    "key": "screen.held.more",
-   "en": "More captures are waiting than are shown here: {count} shown.",
+   "en": "{count} shown here. More are on the next page.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-intake's own rows"
+   "note": "adopted from screens-intake's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.held.ack",
@@ -55138,10 +55139,10 @@
   },
   {
    "key": "refusal.NO_PARTITION",
-   "en": "Grouping needs the list of groups, even an empty one to remove the grouping. Nothing was written.",
+   "en": "Grouping needs a list of groups, even if it is empty. An empty list means no grouping, and then every supporting citation is needed. Nothing was written.",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-342: grouping call without a groups list"
+   "note": "DEC-432 rewords it (B517 inquiry R30b: an empty list is kept, no removal); DEC-342: grouping call without a groups list"
   },
   {
    "key": "refusal.NO_PERIOD",
@@ -77468,10 +77469,10 @@
   },
   {
    "key": "screen.document.reading.toolarge",
-   "en": "This file is {size}, more than the {limit} your team's Civicsmith can read whole. It is kept whole and you can open it, but its words can't be searched or cited.",
+   "en": "This file holds {size}, more than the {limit} your team's Civicsmith can read whole. It is kept whole and you can open it, but its words can't be searched or cited.",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-419: B485 (1) G14 (S6): a reading refused whole for its size on this copy, size and limit named; drawn instead of \"none\"; DEC-418's .stated serves when no limit is answered"
+   "note": "DEC-419: B485 (1) G14 (S6): a reading refused whole for its size on this copy, size and limit named; drawn instead of \"none\"; DEC-418's .stated serves when no limit is answered; DEC-432: \"holds\", so a count of rows or objects reads too"
   },
   {
    "key": "screen.finder.showmore",
@@ -81497,6 +81498,419 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-431: B514 J28 R85"
+  },
+  {
+   "key": "screen.held.who",
+   "en": "Whose captures",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-intake R33: the filter, \"Mine\" first (DEC-97 clause 1)"
+  },
+  {
+   "key": "screen.held.who.mine",
+   "en": "Mine",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-intake R33: the captures the member made or handed in"
+  },
+  {
+   "key": "screen.held.who.all",
+   "en": "Everyone's",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-intake R33: every member's held captures the viewer may see"
+  },
+  {
+   "key": "screen.held.next",
+   "en": "Next page",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-intake R33: the door to the next page, beside the sentence that more are waiting"
+  },
+  {
+   "key": "screen.held.back",
+   "en": "Previous page",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-intake R33: the door back, past the first page"
+  },
+  {
+   "key": "screen.document.pick.find",
+   "en": "Find a document",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R13a: the search above the connect and contradict pickers"
+  },
+  {
+   "key": "screen.document.pick.find.help",
+   "en": "Type part of the document's name. The list shows only the documents whose name contains what you typed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R13a"
+  },
+  {
+   "key": "screen.document.pick.archive",
+   "en": "An archive. Its {n} files are listed under it, each one a document you can choose.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R13a: beside an archive in the picker; {n} its files"
+  },
+  {
+   "key": "screen.document.pick.member",
+   "en": "In {archive}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R13a: under a file of an archive; {archive} the archive's name"
+  },
+  {
+   "key": "screen.document.pick.noproject",
+   "en": "In no project",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R13a: the last group, documents in no project"
+  },
+  {
+   "key": "screen.document.pick.passage",
+   "en": "The passage in it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R13a: the chosen document's passages, in the contradict fold"
+  },
+  {
+   "key": "refusal.NOTHING_TRANSCRIBED",
+   "en": "Reading its pages found no words, so it has no text to search or cite.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R1: a final reading refused for this reason; no placeholder; two may print back to back"
+  },
+  {
+   "key": "refusal.PICTURE_NOT_LEGIBLE",
+   "en": "A picture in it is too unclear to read, even turned each way, so no text is given for it rather than text that is mostly wrong.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R1: a final reading refused for this reason; no placeholder; two may print back to back (ocr-worker R7)"
+  },
+  {
+   "key": "refusal.PAGE_NOT_LEGIBLE",
+   "en": "A page in it is too faint to read, or could not be turned upright, so no text is given for it rather than text that is mostly wrong.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R1: a final reading refused for this reason; no placeholder; two may print back to back (ocr-worker R7: the sideways page)"
+  },
+  {
+   "key": "refusal.PASSWORD_REQUIRED",
+   "en": "The file is locked with a password, so its words can't be read. Open it with its password on your own device, or add a copy that is not locked.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R1: a final reading refused for this reason; no placeholder; two may print back to back"
+  },
+  {
+   "key": "refusal.PAGE_KILLED_READER",
+   "en": "One of its pages made your team's Civicsmith stop each time it tried to read it, so that page was left unread.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R1: a final reading refused for this reason; no placeholder; two may print back to back; per page"
+  },
+  {
+   "key": "refusal.STRUCTURE_OVER_BOUND",
+   "en": "One of its parts is larger than your team's Civicsmith can read at once, so that part was not read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R1: a final reading refused for this reason; no placeholder; two may print back to back; never the stem \"which is more than your team's Civicsmith can read\" (r10-stated.test.mjs:119)"
+  },
+  {
+   "key": "screen.document.reading.unit.bytes",
+   "en": "{n} bytes",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R2a: the figure in screen.document.reading.toolarge; {n} a comma-grouped count, only where two sizes print alike after rounding"
+  },
+  {
+   "key": "screen.document.reading.unit.rows",
+   "en": "{n} rows",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R2a: the figure in screen.document.reading.toolarge; {n} a comma-grouped count"
+  },
+  {
+   "key": "screen.document.reading.unit.columns",
+   "en": "{n} columns",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R2a: the figure in screen.document.reading.toolarge; {n} a comma-grouped count"
+  },
+  {
+   "key": "screen.document.reading.unit.cells",
+   "en": "{n} cells",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R2a: the figure in screen.document.reading.toolarge; {n} a comma-grouped count"
+  },
+  {
+   "key": "screen.document.reading.unit.objects",
+   "en": "{n} objects",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R2a: the figure in screen.document.reading.toolarge; {n} a comma-grouped count"
+  },
+  {
+   "key": "screen.document.reading.unit.characters",
+   "en": "{n} characters",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R2a: the figure in screen.document.reading.toolarge; {n} a comma-grouped count; for a metric ending in _chars (metricOf should map it, as reading-pipeline unitWordOf does)"
+  },
+  {
+   "key": "screen.document.archive.says",
+   "en": "An archive of {n} files. Your team's Civicsmith reads each file in it as its own document, not the archive as a whole.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R4: an archive's own Document page, beside \"Open its files\"; no \"Read it\"; {n} its entries"
+  },
+  {
+   "key": "screen.document.gradenote.head.ungraded",
+   "en": "Not graded",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R35a: the heading in place of \"Why {letter}?\" for a document with no grade"
+  },
+  {
+   "key": "screen.document.encoding.assumed",
+   "en": "Its characters were read as {name}, because the file does not say which encoding it uses. If letters look wrong, that guess was wrong.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R37: only when the encoding was assumed; {name} the IANA label"
+  },
+  {
+   "key": "screen.document.supporting.pictures",
+   "en": "{count} pictures in it are kept but not read, {size} in all: any words in them can't be searched or cited.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R38 (acquisition R119); {size} as size.*; the module draws it only when the size is known"
+  },
+  {
+   "key": "screen.document.supporting.pictures.one",
+   "en": "1 picture in it is kept but not read ({size}): any words in it can't be searched or cited.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R38; {count} is 1"
+  },
+  {
+   "key": "capture-sources.render.copy_first_load_not_scrolled",
+   "en": "This is a copy of the page as it first loaded: it was not scrolled, no banner or dialog was closed, and frames and embedded parts are not in it. What a visitor sees past the first load is not in this copy.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R38, capture-sources render.mjs:436: keeps \"first load\" and \"not scrolled\" (render.test.mjs:547)"
+  },
+  {
+   "key": "screen.question.leg.part",
+   "en": "In {ref}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R17b: after the document's title and a middle dot; {ref} the part as the record states it (\"footnote 1\", \"slide 2 (notes)\")"
+  },
+  {
+   "key": "screen.document.recovery.xref_reconstructed",
+   "en": "The file's table of where its parts sit was damaged and was rebuilt to read it, so check a passage against the original before you rely on it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R9: reading.recovery_notes {note:\"xref_reconstructed\"}; key chosen by the design"
+  },
+  {
+   "key": "screen.document.recovery.pages_missing",
+   "en": "Missing from the file and not read: {missing} of its {of} pages.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R9: {note:\"pages_missing\", missing, of}"
+  },
+  {
+   "key": "screen.document.recovery.pdf_truncated",
+   "en": "The file ends early, as if it had been cut off, so whatever came after the cut was not read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry R9: {note:\"pdf_truncated\"}, carried beside the two the table names"
+  },
+  {
+   "key": "screen.open-file.image.unread",
+   "en": "This kind of image (.{type}) is not read yet. Civicsmith keeps it and you can open it, but “Clean” says only that the scanner found nothing harmful, not that the picture itself was checked.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-intake R35b; {type} lowercase (tiff, heic, bmp)"
+  },
+  {
+   "key": "screen.open-file.check.inside",
+   "en": "Its contents could not be checked: the file is locked, holds macros, or is of a kind the scanner does not look inside, so “Clean” covers only what the scanner could see.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-intake R14: beside \"Clean\", under Checks"
+  },
+  {
+   "key": "content.part_kind.footnote",
+   "en": "in a footnote",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-daily R17a (find-in.mjs:163), screens-inquiry document.mjs:313,572: after \"passage {n}\""
+  },
+  {
+   "key": "content.part_kind.endnote",
+   "en": "in an endnote",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-daily R17a (find-in.mjs:163), screens-inquiry document.mjs:313,572: after \"passage {n}\""
+  },
+  {
+   "key": "content.part_kind.header",
+   "en": "in a page header",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-daily R17a (find-in.mjs:163), screens-inquiry document.mjs:313,572: after \"passage {n}\""
+  },
+  {
+   "key": "content.part_kind.footer",
+   "en": "in a page footer",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-daily R17a (find-in.mjs:163), screens-inquiry document.mjs:313,572: after \"passage {n}\""
+  },
+  {
+   "key": "content.part_kind.comment",
+   "en": "in a comment",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-daily R17a (find-in.mjs:163), screens-inquiry document.mjs:313,572: after \"passage {n}\""
+  },
+  {
+   "key": "content.part_kind.tracked_deletion",
+   "en": "in deleted text",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-daily R17a (find-in.mjs:163), screens-inquiry document.mjs:313,572: after \"passage {n}\""
+  },
+  {
+   "key": "content.part_kind.text_box",
+   "en": "in a text box",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-daily R17a (find-in.mjs:163), screens-inquiry document.mjs:313,572: after \"passage {n}\""
+  },
+  {
+   "key": "content.part_kind.speaker_note",
+   "en": "in the speaker notes",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-daily R17a (find-in.mjs:163), screens-inquiry document.mjs:313,572: after \"passage {n}\""
+  },
+  {
+   "key": "content.part_kind.master_text",
+   "en": "in a slide master",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-daily R17a (find-in.mjs:163), screens-inquiry document.mjs:313,572: after \"passage {n}\""
+  },
+  {
+   "key": "content.part_kind.cell_note",
+   "en": "in a cell note",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-daily R17a (find-in.mjs:163), screens-inquiry document.mjs:313,572: after \"passage {n}\""
+  },
+  {
+   "key": "reading-pipeline.index.too_large",
+   "en": "This file is {size} bytes, over the {bound} bytes allowed for this kind of file.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 reading-pipeline R2b: a final reading's basis; raw digits; never \"read\", \"parts\" or \"multipart\" in too_large (r10-refusals.test.mjs:76-80); word for word its code row"
+  },
+  {
+   "key": "reading-pipeline.index.too_large_in_parts",
+   "en": "This file is {size} bytes in {parts} parts, over the {bound} bytes allowed for this kind of file.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 reading-pipeline R2b: a final reading's basis; raw digits; never \"read\", \"parts\" or \"multipart\" in too_large (r10-refusals.test.mjs:76-80); word for word its code row"
+  },
+  {
+   "key": "reading-pipeline.index.too_large_units",
+   "en": "This file has {size} {unit}, over the {bound} {unit} allowed for this kind of file.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 reading-pipeline R2b: a final reading's basis; raw digits; never \"read\", \"parts\" or \"multipart\" in too_large (r10-refusals.test.mjs:76-80); {unit} from unitWordOf"
+  },
+  {
+   "key": "reading-pipeline.index.structure_over_bound",
+   "en": "{part} is over the {bound} allowed for this kind of file.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 reading-pipeline R2b: a final reading's basis; raw digits; never \"read\", \"parts\" or \"multipart\" in too_large (r10-refusals.test.mjs:76-80); {part} a package part or \"This file\"; word for word its code row"
+  },
+  {
+   "key": "reading-pipeline.index.structure_over_bound_units",
+   "en": "{part} holds more than the {bound} {unit} allowed for this kind of file.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 reading-pipeline R2b: a final reading's basis; raw digits; never \"read\", \"parts\" or \"multipart\" in too_large (r10-refusals.test.mjs:76-80)"
+  },
+  {
+   "key": "reading-pipeline.index.unsupported_legacy_word",
+   "en": "Files in the old Word format (.doc) are not read yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 reading-pipeline R3: keeps \"Word\" (r10-declared-kind.test.mjs:30)"
+  },
+  {
+   "key": "reading-pipeline.index.unsupported_legacy_word_not_word",
+   "en": "It was handed in as a Word file, but its contents do not look like one.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 reading-pipeline R3: the clause after it; keeps \"do not look like one\""
+  },
+  {
+   "key": "calculations.index.the_delimiter_is_tied",
+   "en": "the source's separator could not be told (these fit its lines equally well: {tied}), so it is not read as a table. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 calculations R19 (SOURCE_NOT_READ); lowercase, as its neighbour the_source_reads_as_one; {tied} the separators that tied"
+  },
+  {
+   "key": "office-readers.formats-xlsx.sheet_columns_over_bound",
+   "en": "This sheet is {size} columns wide, more than the {bound} columns a sheet may have, so the workbook is not read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 office-readers R21(b); raw digits (r49-columns.test.mjs:36)"
+  },
+  {
+   "key": "inquiry.index.pass_grounds_an_array",
+   "en": "pass grounds[] — an array of { ground, legs: [ord, ...], statement? }, one entry per group, where each ord is a leg's position in this question's basis. An EMPTY array keeps the answer with no grouping: every supporting citation is then needed, and the answer reads as its weakest citation. That is a restructuring like any other and takes a reason.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 inquiry R30b (K5077, DEC-32 clause 4): an empty list is kept, not a removal"
+  },
+  {
+   "key": "citation.index.repair_add_to_group",
+   "en": "Add it to the group {ground}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry document.mjs:1840 reads it (fr5-document.test.mjs:72); a code row rows.mjs regeneration drops, held here word for word; a group of citations (DEC-32), not a team"
+  },
+  {
+   "key": "citation.index.repair_remove_grouping",
+   "en": "Take the grouping off, so the answer reads as its weakest citation",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry document.mjs:1840; held word for word, as the row above"
+  },
+  {
+   "key": "screen.objective.purpose",
+   "en": "A project's objective: what success means and how it is measured, how it is going, what is still short, and the proposals to decide.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 plane R24 (K5078): the registry names the screen, words.json lacked its purpose"
+  },
+  {
+   "key": "screen.about-knocker.purpose",
+   "en": "Someone who handed material to your team: what became known about them, who may read it, and what they agreed to publish.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 plane R24 (K5078)"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
