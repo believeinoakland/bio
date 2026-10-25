@@ -1,6 +1,6 @@
 # citation (T51)
 
-**Status** · session_017x6zvkp2XqM6D6hY1cnUkA · depth 2 · WORKING · handled B16
+**Status** · session_017x6zvkp2XqM6D6hY1cnUkA · depth 2 · WAITING ON BOB (J21) · handled B16
 
 ## J1 · REPORT
 
