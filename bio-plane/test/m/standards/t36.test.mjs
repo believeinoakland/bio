@@ -172,7 +172,7 @@ test("R51 R7 R43 a version with no stated end, known in force through a date, an
   assert.equal(rec.ok, true, JSON.stringify(rec).slice(0, 300));
   const on = at("2026-09-01");
   assert.equal(on.state, "in_force");
-  assert.equal(on.why, WORD("standard.inforce.known", { through: "2026-09-01", author: V("bob"),
+  assert.equal(on.why, WORD("standard.inforce.known", { through: "2026-09-01", author: "bob",
     source: WORD("standard.source.capture", { capture: src.capSha.slice(0, 12), extent: "page 1" }) }));
   assert.equal(on.in_force_through.record, rec.record.id);
   assert.equal(at("2026-08-01").why, on.why, "the latest through among the standing records names the record");

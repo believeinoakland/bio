@@ -1,6 +1,6 @@
 # standards (T51)
 
-**Status** · session_01SABp1mbexAxC9AfGM6BDu6 · depth 2 · COMPLETE · handled B4
+**Status** · session_01BGmyopxvDtf9nKPbPea8fa · depth 2 · COMPLETE · handled B5
 
 ## J1 · COMPLETE
 
@@ -103,3 +103,22 @@ Size (session_01SABp1mbexAxC9AfGM6BDu6): test runs 4, module lines 3563
 ## J4 · COMPLETE
 
 Fix round 10, Wave A batch 1 done (commit on job/T51/standards). Six fixtures published in bio-plane/test/m/standards/fixtures.mjs (bindsAt, standardRead, standardReadWorld, standardRow, standardsEmptyReads, standardsIn), each made by the real standardsOf at test time; host-refusals contract run (marker fixtures-run: law-relations host-refusals, orphan-run until law-relations' marker merges). No fixtures-own or fixtures-generic markers added. Real answers differ from users' hand-built ones (host:true absent; NO_REASON max_chars, WHY_INVALID max, bindsAt returns state not binds): listed in my record. Tests 117/117; format, architecture, coverage, words, fixtures (standards lines 0), ownership all 0 failures; impact: standards only. Record: build/jobs/T51/standards.md.
+
+## Fix round 10, the final pass's causes (B5) · session_01BGmyopxvDtf9nKPbPea8fa
+
+**Met ids (BOB strikes the marks):** R41 (K5148 clause: a capture's actor names a member spelled `member:<id>` or bare), R45 (K5148 clause: no `member:` stamp inside a `why` or `says`).
+
+**1. "Not public" held by no one (diag2-08 C10, R41).** `#memberCaptured` now strips a leading `member:`, requires a non-empty id, and refuses when either spelling is a machine identity. Test `t35.test.mjs` "R41 K5148 …": bare id and `member:<id>` accepted for `paywalled` and `reading_room`; `system`, `token:ingest`, `member:` and empty refused `TEXT_NOT_MEMBER_CAPTURED`. Seen red (bare id refused) before the fix, green after.
+*Why the tests missed it:* the fixture's capture stand-in was only ever told `V("bob")` (`member:bob`), never the bare handle the real capture records. The stand-in keeps the real `captureAccountsOf` shape (`{actor, at}`); capture publishes no actors fixture, so the stand-in stays, now fed both spellings. A through-the-door case is control-plane's: REPORT for BOB to place.
+
+**2. Raw stamp in a member sentence (R45, R70.12).** `#throughOf` passes the author to `standard.inforce.known` without `member:`, so a `why` reads "recorded by bob". Test `t50.test.mjs` "R45 K5148 …": no `member:` in `inForceAt`'s `why` or the record's `says`; the member is named. Seen red, then green. Three existing tests (t36, t37, t50) that built the expected sentence with `V("bob")` now pass `"bob"`.
+*Why the tests missed it:* they built the expected sentence from the same stamped value the code passed, so the stamp matched itself.
+*Note for BOB / design:* the row `standard.inforce.known` names its var `{author}`, not `{member}` as R45's amendment says; I cannot edit `rows.mjs`/`words.json`. The value is now the bare member, so the sentence is right; renaming the var is the design stream's. The screen (`standard.mjs:97`, `P.why`) draws the string as given; no change needed there now.
+
+**Tests and checks:** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/standards/*.test.mjs`: tests 119, pass 119, fail 0. format 0 failures; architecture (standards) 0; coverage 53 of 53, 0; words 0; ownership (standards, tranche/T51, job/T51/standards) see push; fixtures `--list`: only the known `orphan-run` (`fixtures.test.mjs:83`, waits for law-relations' marker). No marker added. `setup-words --check` refuses on `plane.declared.readtranslate` (plane module, not standards).
+
+Size (session_01BGmyopxvDtf9nKPbPea8fa): test runs 4, module lines 3567
+
+## J5 · COMPLETE · re B5
+
+B5 done: cause 1 (#memberCaptured accepts a bare id or member:<id>, never a machine identity) and cause 2 (the in-force why names the member without a member: stamp) fixed, each test seen red then green. Met ids: R41, R45. Tests 119/119; format, architecture, coverage, words, ownership 0; fixtures only the known orphan-run. Notes: the row standard.inforce.known names its var {author}, not {member} (design's to rename); the door case for a bare-id upload is control-plane's, for BOB to place; setup-words --check refuses on plane.declared.readtranslate (plane, not mine). Record: build/jobs/T51/standards.md.
