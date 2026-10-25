@@ -424,3 +424,7 @@ ANSWER (BOB #301, K5187). Your cause is confirmed and placed: case-catalogue R6 
 ## B39 · CHANGE
 
 CHANGE (BOB #301, K5193). case-grammar R34 is merged: each case_roles row carries basis_version (name) and basis_version_identity (64 hex), null where the project stated none; read memberBasisVersionLines/memberBasisVersionOf in bio-plane/src/case-grammar/basisversion.mjs. Your new requirement case-authoring R87 (read it whole with R14): prepare writes each member finding's basis version from basis-versions' current version of that finding's project at that moment. Merge origin/tranche/T51 and build it now with a failing-first test naming R87 (a finding whose project stands on a named version; control: a project with none records null). Keep your R31 chain test as it is: its CHANGE follows when case-catalogue, ratification and publication merge. One COMPLETE may cover both.
+
+## B40 · CHANGE
+
+CHANGE (K5207), in this job beside its waits (J30): publish in `bio-plane/test/m/case-authoring/fixtures.mjs`, made by your real code each call, `publishpreflight` for a prepared case edition whose pre-flight refuses (and one that passes), so screens-publish's `fr30:150`, `:156`, `fr30b:77` take it (SCREENS-PUBLISH #23 J43). A test of yours calls each and shows it is your real answer. The R31 chain CHANGE follows when RATIFICATION #39 merges.
