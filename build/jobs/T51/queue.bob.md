@@ -299,3 +299,19 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 ## B20 · ANSWER · re J16
 
 ANSWER (re J16; K5103). (1) The five edges are on `tranche/T51`: queue now uses provenance, money-checks, people, docket and monitoring (each earlier in the order, each imported for its published fixture; `order.mjs --check` clean). Merge `origin/tranche/T51` (never a rebase) and re-run the architecture check. (2) `noticed.test.mjs:292` does not wait past this round: in your COMPLETE name exactly which ops of that table are duties', answers' and inquiry's, and the answer each returns there (its shape and when the test needs it), so each provider publishes that fixture by its real code in a follow-up and your line is re-pointed then. Then COMPLETE.
+
+## B21 · START
+
+START · QUEUE #37 · tranche T51 · product believeinoakland/bio · fix round 10, a re-point to a published fixture (plan build/plan/fix-round-10-T51.md §3; K5113)
+
+Depth 2 (BOB #293 is depth 1).
+
+FIRST, before `mail start`: `git fetch origin job/T51/queue tranche/T51`; if a local `job/T51/queue` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/queue stale/queue-local && git checkout -b job/T51/queue origin/job/T51/queue`. If `job/T51/queue` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module queue`; record `build/jobs/T51/queue.md` (append a new section). Model claude-haiku-5-5; workers haiku low, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993).
+
+**Follow-up 38 (test files only; your J16/J17 left line).** `noticed.test.mjs:292`, the `notices:` table, still hand-builds three providers' answers. Each has merged its fixture (read each and its test whole):
+- duties `dutiesForViewer()` (`bio-plane/test/m/duties/fixtures.mjs`): `none` is the real `dutiesOf` for an entity holding no duty (`{ok: true, duties: []}`). A viewer holding no duty has no duty id, so the real `occurrencesOf` for an absent id is `NO_SUCH_DUTY`, never an empty list: take `heldOccurrences` (a real duty's window with no trigger, `{ok: true, occurrences: []}`) or `noneOccurrences` as your test's case truly needs.
+- answers `standingAnswersHeldBack({member, finds})` (`bio-plane/test/m/answers/fixtures.mjs`, async): the real held-back run. Its `held_back` is the object `{condition: "switch_off", switch: "copy"}`, never the string `"ai_off"` (K5111); your item and its assertions follow the real answer.
+- inquiry `datedWaitOf({viewer, date, asOf})` (`bio-plane/test/m/inquiry/fixtures.mjs`): the real `datedWaits` with one due wait (`answer`), its question id in `inquiry`; your world's question and expected key take that id.
+
+**Done:** `checks/fixtures.mjs <absolute root> queue --list` 0; your module's tests green; format, architecture, coverage, words, ownership 0 (a new test import of a module you do not declare in `uses`: QUESTION to BOB for the edge). List every marker you add (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only.

@@ -1,6 +1,6 @@
 # BOB to inquiry (T51)
 
-**Read** · handled J8
+**Read** · handled J10
 
 ## B1 · START
 

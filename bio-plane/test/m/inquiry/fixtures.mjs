@@ -51,6 +51,24 @@ export function disposeAct({ to = "deferred", reason = "later", author = V("alic
            dispose: act };
 }
 
+/** R55 (the dated waits notice-producers reads, K2480): one dated wait, `viewer`'s own, stated on a question by that viewer's
+ *  promotion, and the real `datedWaits` answer to that viewer at `asOf` (its local midnight of `date`, 07:00Z in October,
+ *  Los Angeles time: `due`), and at one second before it (`before`, `waiting`). `viewer` is a member stamp (`member:<id>`),
+ *  `date` a day (`YYYY-MM-DD`). `answer` is the real answer as `datedWaits` gives it: its zone, its waits, each with its
+ *  text, description, date, state and `set_by`. `admin` reads none of it. */
+export function datedWaitOf({ viewer = V("alice"), date = "2026-10-10", asOf = `${date}T07:00:00Z` } = {}) {
+  const w = world({ view: () => ({ time_zone: { value: "America/Los_Angeles" } }) });
+  const member = viewer.slice("member:".length);
+  w.member(member);
+  const question = "INQ-2026-9005-w";
+  must(w.promote(question, inquiryMd(question, { extra: ["recheck_triggers:", `  - text: "the auditor's reply"`,
+    `    description: "from the City"`, `    date: "${date}"`] }), null, { author: viewer }), "dated-wait question");
+  return { inquiry: w.k, question, viewer, date, asOf,
+           answer: w.k.datedWaits({ member: viewer, asOf, viewer }),
+           before: w.k.datedWaits({ member: viewer, asOf: `${date}T06:59:59Z`, viewer }),
+           none: w.k.datedWaits({ member: viewer, asOf, viewer: "admin" }) };
+}
+
 /** R49 (`migratedSurfacing`): the surfacing a migration replay recorded for `migrated`, and null for `plain`, a question
  *  made on this plane. */
 export function migratedSurfacing() {
