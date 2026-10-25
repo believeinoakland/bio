@@ -1,6 +1,6 @@
 # action-plans (T51)
 
-**Status** · session_01QNmwftmFAVAy2K1WHsTW8M · depth 2 · WORKING · handled B6
+**Status** · session_01QNmwftmFAVAy2K1WHsTW8M · depth 2 · WAITING ON BOB (J5) · handled B6
 
 ## Completion
 
