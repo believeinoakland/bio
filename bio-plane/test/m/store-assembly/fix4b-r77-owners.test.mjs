@@ -88,31 +88,5 @@ test("R64 R-SEAM (F9): an `ocr` entry of a 60-page scan runs through extraction'
   assert.ok(rows(down).length > 0, "a member that stays down leaves work owed");
 });
 
-test("R64 R-SEAM (F5): a `subresources` entry holding a pending render is run on the alarm by acquisition's real `owedRun`, its rendered document delivered by control-plane's real `deliverOwedRender`, and the entry ends done with the session dropped", async () => {
-  const bucket = multipartBucket();
-  const shellHtml = new TextEncoder().encode("<html><body><div id=app></div></body></html>");
-  const renderedHtml = "<html><body><p>the rendered page " + Math.random() + "</p></body></html>";
-  const calls = [];
-  const RENDERER = { fetch: async (u, init) => { const q = JSON.parse(init.body); calls.push(q);
-    return new Response(JSON.stringify({ ok: true, html: renderedHtml, elapsed_ms: 12, engine: "Chrome", engine_version: "1", viewport: { width: 1280, height: 800 }, dpr: 1,
-      locale: "en-US", timezone: "UTC", navigated_to: q.url, status: 200, requests: [], scripts: [], wait: { asked: 1000, fired: "networkidle" } })); } };
-  const x = await store({ env: { CAPTURES: bucket, RENDERER, INSTANCE_NAME: "town" } });
-  const { doc, bundleId } = await promoted(x, bucket, shellHtml, "shell.html", "html");
-  const session = `sess-${Math.random().toString(16).slice(2)}`;
-  captureOf(x.ctx).saveCaptureSession({ session, locator: doc.locator, primarySha: doc.capture.sha256, primaryFile: doc.file, base: doc.locator,
-    state: { opened_by: "member:ann", queue: [], render_pending: { body: {} } } });
-  assert.equal((await captureOf(x.ctx).owedLater({ kind: "subresources", sha: doc.capture.sha256, session })).ok, true);
-  const real = globalThis.fetch;
-  globalThis.fetch = async (u) => String(u && u.url ? u.url : u).startsWith(doc.locator)
-    ? new Response(shellHtml, { headers: { "content-type": "text/html" } }) : new Response("nf", { status: 404 });
-  try {
-    let now = Date.now() + 1000;
-    for (let i = 0; i < 6 && rows(x).length; i++) { await x.s.onAlarm(now); now += PENDING_RETRY_MAX_MS + 1000; }
-  } finally { globalThis.fetch = real; }
-  assert.deepEqual(rows(x).map((r) => [r.kind, r.last_why, r.final_why]), [], "the entry ended: done, not dropped and not stuck");
-  assert.ok(calls.length >= 1, "the renderer was asked by the alarm");
-  const renderedSha = hex(new TextEncoder().encode(renderedHtml));
-  const row = [...x.ctx.storage.sql.exec(`SELECT bundle_id FROM register WHERE capture_sha = ?`, renderedSha)][0];
-  assert.ok(row && row.bundle_id !== bundleId, "the rendered document is promoted beside its shell, by the door's delivery");
-  assert.equal(captureOf(x.ctx).loadCaptureSession({ session }).found, false, "the session is dropped once delivered");
-});
+/* The `subresources` seam with control-plane's real `deliverOwedRender` (F5) stays in plane's copy of this test: control-plane is
+   later in the order than this module (P4). */

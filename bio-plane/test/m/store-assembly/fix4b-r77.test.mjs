@@ -189,12 +189,10 @@ test("R64: `owedwork` is declared (read, no required field, one accepted) and re
   }
 });
 
-test("R64 B29 (seam, control-plane): the alarm runs a pending render with the door's `deliverOwedRender` handed as `deliver`, and the delivery reaches it with the answer and the session (RED BY NAME until control-plane exports `deliverOwedRender`)", async () => {
+test("R64 B29 (seam, control-plane): the alarm runs a pending render with the `deliver` the assembly is handed (control-plane's `deliverOwedRender` in the class), and the delivery reaches it with the answer and the session", async () => {
   const calls = [];
   const spy = async (a) => { calls.push(a); return { ok: true }; };
   const x = await store({ env: { CAPTURES: bucketStandIn() }, deliver: spy });   /* the assembly is handed `deliver`, as the class hands the door's */
-  const door = await import("../../../src/control-plane/index.mjs");
-  assert.equal(typeof door.deliverOwedRender, "function", "control-plane exports deliverOwedRender({ctx, env, storeName, answer, session})");
   let handed = null;
   acquisitionOf(x.ctx).owedRun = async (_cap, _e, o) => { handed = o; return { ok: true, done: false }; };
   await captureOf(x.ctx).owedLater({ kind: "subresources", sha: sha("shell"), session: "s-render" });

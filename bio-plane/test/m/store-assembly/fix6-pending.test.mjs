@@ -26,8 +26,10 @@ const NEVER = () => { began(); return new Promise(() => {}); };
 const alarm = (x, at) => Promise.race([x.s.onAlarm(at), new Promise((r) => { began = () => r("killed"); })]);
 
 async function world(db, { fetchAnswer = null, readAnswer = null } = {}) {
-  const x = await store({ db, env: { CAPTURES: bucketStandIn() } });
-  x.fetched = []; x.read = [];
+  /* the delivery the assembly is handed (control-plane's `deliverOwedRender` in the class, a later module's): the test's own */
+  const delivered = [];
+  const x = await store({ db, env: { CAPTURES: bucketStandIn() }, deliver: async (a) => { delivered.push(a); return { ok: true }; } });
+  x.fetched = []; x.read = []; x.delivered = delivered;
   if (fetchAnswer) acquisitionOf(x.ctx).owedFetch = async (cap, entry, o) => { x.fetched.push({ cap, entry, o }); return fetchAnswer(entry, o); };
   if (readAnswer) extractionOf(x.ctx).readHeld = async (a) => { x.read.push(a); return readAnswer(a); };
   return x;
@@ -229,7 +231,8 @@ test("R69 (G8, G13): the assembly hands extraction the ledger's `owedLater` at c
 import { multipartBucket } from "../record-core/storage.mjs";
 
 test("R67 (G2) seam: a 9 MiB source declared by Content-Length is parked by the real `acquire` as a `fetch` row of the assembly's ledger, no body byte pulled; the tick runs the real `owedFetch`, which pulls the body and hands the document to the door's `deliver`", async () => {
-  const x = await store({ env: { CAPTURES: multipartBucket() } });
+  const delivered = [];
+  const x = await store({ env: { CAPTURES: multipartBucket() }, deliver: async (a) => { delivered.push(a); return { ok: true }; } });
   const BIG = new Uint8Array(9 * 1024 * 1024);
   for (let i = 0; i < BIG.length; i += 4096) BIG.fill((i / 4096) % 251, i, Math.min(BIG.length, i + 4096));
   let pulled = 0;
@@ -250,5 +253,6 @@ test("R67 (G2) seam: a 9 MiB source declared by Content-Length is parked by the 
     assert.ok(pulled > 0, "the tick ran the real owedFetch: the body was pulled");
     const [r] = pendingOf(x.ctx).list().filter((q) => q.kind === "fetch");
     assert.ok(r === undefined || !["NO_OWNER", "DELIVERY_NOT_HANDED"].includes(r.why), `the owner and the delivery were handed in (${r && r.why})`);
+    assert.ok(delivered.length >= 1, "the fetched document reached the assembly's `deliver`");
   } finally { globalThis.fetch = real; }
 });
