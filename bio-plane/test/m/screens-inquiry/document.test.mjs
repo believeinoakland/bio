@@ -2,8 +2,8 @@
  * Every expectation is a word read by key (R44). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, fill, press, rawKeys, plane, says, section, lead, word, day, READING, DOCUMENT_MD, DATASET, provenanceOf, P, Q, D, SHA } from "./fixtures.mjs";
+import { boot, ok, refusedIn } from "../interface-shell/harness.mjs";
+import { open, storeWorld, main, actsIn, fill, press, rawKeys, plane, says, section, lead, word, day, READING, DOCUMENT_MD, DATASET, provenanceOf, SCREENS, P, Q, D, SHA } from "./fixtures.mjs";
 
 /** R80: the page bar's Next (a radio of the kit's choice control, no op): checked and changed. */
 async function nextPage(p) {
@@ -28,6 +28,45 @@ const REACH = { assistantstate: ok({ on: true }), accountreference: ok({ held: t
 const HELD = ok({ ok: true, held: [{ bundle_id: D, capture: { sha256: SHA } }] });
 /* a document that is watched (R118): its `monitoring.enabled` */
 const WATCHED_MD = DOCUMENT_MD.replace("\nsource:", "\nmonitoring:\n  enabled: true\n  frequency: weekly\nsource:");
+
+/* the real world (store-assembly's store with the real door; the state is made by real acts, K5054): a page as `as` reads it over the world's door, `plane` scripting
+   only the ops it names; `answers(op)` are the door's own answers to that op, in order */
+const OWN = { capabilities: ["contribute", "create_projects"] };
+async function pageOn(world, as, path, o = {}) {
+  const { door, session } = world.boot(as);
+  const kept = [];
+  const p = await boot({ screens: SCREENS, door: async (req) => { const a = await door(req); kept.push([req.op, a]); return a; }, session, path, ...o });
+  await p.settle();
+  p.answers = (op) => kept.filter(([k]) => k === op).map(([, a]) => (a.json && a.json.result !== undefined ? a.json.result : a.json));
+  return p;
+}
+/** A copy captured from a public address for a question and brought back from aside (`recipes.setAside`, `heldrestore`): the world's network serves the address, so the copy
+ *  can be watched (`monitorset`) and checked (`monitor`); `watched` has her set it watching weekly. */
+async function remoteCopy({ watched = false } = {}) {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const made = await world.recipes.setAside(ann);
+  await ann.act("heldrestore", { body: { ids: [made.document], reason: "brought back for the page" } });
+  if (watched) await ann.act("monitorset", { body: { bundleId: made.document, enabled: true, frequency: "weekly" } });
+  const held = (await ann.read("heldcaptures", { query: { bundle_id: made.document } })).held[0];
+  return { world, ann, ...made, address: held.source.address, at: "/app/document/" + made.document };
+}
+/** The fixtures' scripted plane re-pointed at a real copy (its bundle, capture and address, its project): the reads the world cannot make as the test needs (a reading of a PDF
+ *  with its pages, the page's names) stay scripted over it; the question list and the held list are the world's own. */
+const copyPlane = (w, md = DOCUMENT_MD, more = {}) => {
+  const mine = md.replace(new RegExp(D, "g"), w.document).replace("https://example.org/ai-4-12.pdf", w.address).replace(new RegExp(P, "g"), w.project);
+  const t = plane({ images: { [w.document]: { "bundle.md": mine, "data/provenance.json": provenanceOf(w.sha) } } });
+  delete t.list; delete t.heldcaptures;
+  return { ...t, ...more };
+};
+/** A web page a member brought in (`recipes.page`, filed in her project, read), which no address served: its capture grade is none. */
+async function uploadedCopy() {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const project = await world.recipes.project(ann, "Pothole repairs");
+  const held = await world.recipes.page(ann, "Policy memo", { paragraphs: ["The Director shall repair each reported pothole within seven days."], project });
+  return { world, ann, project, document: held.bundle, sha: held.sha, at: "/app/document/" + held.bundle };
+}
 
 test("R3 reads: the capture and what cites it at once; its reading, grade note, held row and versions once its digest and address are read", async () => {
   const p = await open(at);
@@ -74,8 +113,10 @@ test("R3 R32 the document drawn: title, source as an outside link, its grade as 
 
 test("R32 control: a capture graded B draws B; one no read grades draws no grade mark at all, never Unrated", async () => {
   /* R54: the grade is `capturegrade`'s own answer for the digest; none answered draws no mark */
-  const p = await open(at, { plane: { capturegrade: ok({ ok: true, captureSha: SHA, grade: null }) } });
-  assert.equal(p.byOp("capturegrade")[0].query.capture, SHA);
+  const w = await uploadedCopy();
+  const p = await pageOn(w.world, w.ann, w.at);
+  assert.equal(p.byOp("capturegrade")[0].query.capture, w.sha);
+  assert.equal(p.answers("capturegrade")[0].grade.grade, null, "the real read grades a file brought in by a member as none");
   assert.equal(main(p).querySelector(".mk-facts .cs-grade"), null);
   assert.equal(main(p).querySelector(".mk-facts .cs-gap"), null);
 });
@@ -105,6 +146,7 @@ test("R32 \"Its versions\" draws its refusal by its words", async () => {
 });
 
 test("R32 a newer version's notice is adopted with her reason, or kept (on the question's row, R69)", async () => {
+  /* scripted: adoptversion, keepversion (needs a recipe that holds a newer capture of a cited address and raises the question's re-evaluation notice) */
   const p = await open(at, { plane: { reevaluationnotices: (r) => ok({ ok: true, notices: r.query.holder === Q ? [{ id: "REN-1", state: "open", capture_sha: SHA, newer_capture: "9".repeat(64) }] : [] }),
     adoptversion: ok({ ok: true }), keepversion: ok({ ok: true }) } });
   const s = section(p, "screen.document.a34.your_citations_leg_by_leg");
@@ -122,6 +164,7 @@ test("R32 R67 R68 the links this page carries, held ones a reference; the names 
   const conns = ok({ ok: true, connections: [{ a_capture_sha: SHA, b_capture_sha: "8".repeat(64), entity_id: "ENT-17", entity_name: "L. Chen",
     on_point: { a: { ref: "c1", occurrence: { page: 1 }, chosen_by: "record" }, b: null }, occurrences: 4,
     mentions: [{ ref: "c1", occurrence: "o1", grade: "A", position: null }, { ref: "c2", occurrence: "o2", grade: "B", position: null }] }] });
+  /* scripted: connectionchoose (needs a recipe that reads two captures naming one entity, so a connection with mentions exists) */
   const p = await open(at, { plane: { links, connections: conns, resolutions: NAMES, connectionchoose: ok({ ok: true }) } });
   const l = section(p, "document.links.title");
   assert.ok(says(l, "screen.document.links.group.outside", { n: "1" }) && says(l, "screen.document.links.group.held", { n: "1" }));
@@ -150,59 +193,74 @@ test("R3 pagetranscribe only while the assistant is reachable (DEC-190); transcr
 });
 
 test("R3 an unchanged version chain marks nothing changed; the grade note answers \"Why B?\"", async () => {
-  const p = await open(at, { plane: { versionchain: ok({ ok: true, versions: [{ capture_sha: SHA }] }) } });
+  const w = await remoteCopy();
+  const p = await pageOn(w.world, w.ann, w.at);
+  assert.equal(p.answers("versionchain")[0].versions.length, 1, "the record holds one version of the address");
   assert.ok(!main(p).querySelector("[data-changed]"));
   assert.equal(section(p, "screen.document.versions.head"), undefined, "R20: a chain of one version draws no versions section");
   await press(p, "gradenote", { reason: "to see why" });
-  assert.equal(p.byOp("gradenote").at(-1).query.capture, SHA);
-  assert.ok(section(p, "screen.document.gradenote.head", { letter: "B" }).textContent.includes("a signed copy would raise it to A"));
+  assert.equal(p.byOp("gradenote").at(-1).query.capture, w.sha);
+  const note = (await w.ann.read("gradenote", { query: { capture: w.sha } })).note;
+  assert.ok(section(p, "screen.document.gradenote.head", { letter: "B" }).textContent.includes(note), "the owner's own note, drawn whole");
 });
 
 test("R3 acts send what their owners take", async () => {
-  const p = await open(at, { images: { [D]: { "bundle.md": WATCHED_MD, "data/provenance.json": provenanceOf(SHA) } }, boot: { plane: { ...plane({ images: { [D]: { "bundle.md": WATCHED_MD, "data/provenance.json": provenanceOf(SHA) } }, plane: {
-    attest: ok({ ok: true }), monitor: ok({ ok: true }), transcribe: ok({ ok: true }), cite: ok({ ok: true }), identityclaim: ok({ ok: true }),
-    pagetranscribe: { status: 200, json: { ok: true, transcription: { performed: true, pages: [7, 8], untested: { kind: "untested" } } } }, resolutions: NAMES } }), ...REACH } } });
-  await nextPage(p);
-  fill(p, { "document-cite-question": Q, "document-cite-role": "cuts_against" });
-  await press(p, "cite", { within: main(p).querySelectorAll("blockquote")[0].nextElementSibling });
+  const w = await remoteCopy({ watched: true });
+  /* scripted over the real copy: the reading of its PDF pages, the names, the assistant's reach, and the two acts no recipe lets a world make real (scripted: transcribe, which needs a
+     recipe that holds a PDF with unread pages; identityclaim, which needs a recipe that resolves a named person in a reading); `attest`, `monitor` and `cite` are the world's own */
+  const p = await pageOn(w.world, w.ann, w.at, { plane: copyPlane(w, WATCHED_MD, { ...REACH, transcribe: ok({ ok: true }), identityclaim: ok({ ok: true }),
+    pagetranscribe: { status: 200, json: { ok: true, transcription: { performed: true, pages: [7, 8], untested: { kind: "untested" } } } }, resolutions: NAMES }) });
+  /* a passage cited needs text the record has read: the world's read page (the scripted reading above is a PDF's, whose chain no recipe makes), cited in the copy's question */
+  const page = await w.world.recipes.page(w.ann, "Policy page", { paragraphs: ["The Director shall repair each reported pothole within seven calendar days of the report."], project: w.project });
+  const c = await pageOn(w.world, w.ann, "/app/document/" + page.bundle);
+  fill(c, { "document-cite-question": w.question, "document-cite-role": "cuts_against" });
+  await press(c, "cite", { within: main(c).querySelectorAll("blockquote")[0].nextElementSibling });
   /* R125 (C31): the fields are in the body, not the address */
-  const cite = p.byOp("cite")[0].body;
-  assert.deepEqual([cite.project, cite.role, typeof cite.found === "string" ? JSON.parse(cite.found) : cite.found], [Q, "cuts_against", { capture_sha: SHA, extent: { kind: "pdf-page", page: 3 }, kind: "passage" }]);
+  const cite = c.byOp("cite")[0].body;
+  const unit = (await w.ann.read("reading", { query: { sha256: page.sha } })).text_units[0];
+  assert.deepEqual([cite.project, cite.role, typeof cite.found === "string" ? JSON.parse(cite.found) : cite.found], [w.question, "cuts_against", { capture_sha: page.sha, extent: unit.extent, kind: "passage" }]);
+  assert.equal(c.answers("cite")[0].ok, true, "the world's cite was made");
   await press(p, "attest");
   await p.click(p.root().querySelector('[data-shell="confirm"]'));
   /* R55 (C40): the co-archive is asked for a public https address */
-  assert.deepEqual(p.byOp("attest")[0].body, { sha256: SHA, archive: true, locator: "https://example.org/ai-4-12.pdf" });
+  assert.deepEqual(p.byOp("attest")[0].body, { sha256: w.sha, archive: true, locator: w.address });
+  assert.ok(p.answers("attest").length === 1 && p.answers("attest")[0], "the world answered the attestation");
   await press(p, "monitor");
-  assert.deepEqual(p.byOp("monitor")[0].body, { bundleId: D });
+  assert.deepEqual(p.byOp("monitor")[0].body, { bundleId: w.document });
+  assert.equal(p.answers("monitor")[0].status, "unchanged", "the world's check was made");
   /* R78: the picker draws the record's page 8 as its own 9; the extent sent is the record's number */
   fill(p, { "document-unread-page": String(one(8)), "document-unread-words": "Repairs are inspected." });
   await press(p, "transcribe");
-  assert.deepEqual(p.byOp("transcribe")[0].body, { bundleId: D, extent: { kind: "pdf-page", page: 8 }, text: "Repairs are inspected." });
+  assert.deepEqual(p.byOp("transcribe")[0].body, { bundleId: w.document, extent: { kind: "pdf-page", page: 8 }, text: "Repairs are inspected." });
   fill(p, { "document-claim-person": "ENT-3", "document-claim-basis": "corroborated_name", "document-claim-note": "Same title and department" });
   await press(p, "identityclaim");
   assert.deepEqual(p.byOp("identityclaim")[0].body,
-    { a: "ENT-17", b: "ENT-3", kind: "same_as", basis: "corroborated_name", evidence: { a: { captureSha: SHA } }, note: "Same title and department" });
+    { a: "ENT-17", b: "ENT-3", kind: "same_as", basis: "corroborated_name", evidence: { a: { captureSha: w.sha } }, note: "Same title and department" });
   await press(p, "pagetranscribe", { reason: "the pages hold the dates" });
-  assert.deepEqual([p.byOp("pagetranscribe")[0].query.sha256, p.byOp("pagetranscribe")[0].query.project], [SHA, P]);
+  assert.deepEqual([p.byOp("pagetranscribe")[0].query.sha256, p.byOp("pagetranscribe")[0].query.project], [w.sha, w.project]);
   assert.ok(says(main(p), "screen.document.pagetranscribe.done", { pages: `${one(7)}, ${one(8)}` }) && says(main(p), "ai.label.untested"));
   await press(p, "findin", { reason: "to find the dates" });
-  assert.equal(p.location.pathname, "/app/find-in/" + SHA, "find-in's scope: the capture's digest (screens-daily)");
+  assert.equal(p.location.pathname, "/app/find-in/" + w.sha, "find-in's scope: the capture's digest (screens-daily)");
 });
 
 test("R3 release and retire act on a selection of this document, made first, and draw a refusal beside the act", async () => {
-  const p = await open(at, { plane: { heldcaptures: HELD, select: (r) => ok({ ok: true, handle: "SEL-9", items: r.body.ids }), release: ok({ ok: true, released: [D] }),
-    retire: refusedIn("CITED", "This copy is cited by a question, so it can't be retired yet.") } });
+  const w = await uploadedCopy();
+  /* the copy is the member's own and held: the real selection and release; only the refusal of the retirement is scripted (the real one needs a question citing the copy) */
+  const p = await pageOn(w.world, w.ann, w.at, { plane: { retire: refusedIn("CITED", "This copy is cited by a question, so it can't be retired yet.") } });
   fill(p, { "document-release-ack": "Checked against the site", "document-release-mitigation": "None needed" });
   await press(p, "release");
-  assert.deepEqual(p.byOp("select")[0].body, { ids: [D] });
+  assert.deepEqual(p.byOp("select")[0].body, { ids: [w.document] });
+  const handle = p.answers("select")[0].handle;
+  assert.ok(handle, "the selection's handle is the owner's own");
   const rel = p.byOp("release")[0].query;
-  assert.deepEqual([rel.handle, rel.acknowledgment, rel.mitigation], ["SEL-9", "Checked against the site", "None needed"]);
+  assert.deepEqual([rel.handle, rel.acknowledgment, rel.mitigation], [handle, "Checked against the site", "None needed"]);
+  assert.equal(p.answers("release")[0].ok, true, "the real release was made");
   await press(p, "retire");
   const dlg = p.root().querySelector('[role="dialog"]');
   dlg.querySelector("textarea").value = "superseded";
   await p.click(dlg.querySelector('[data-shell="confirm"]'));
   await p.settle();
-  assert.deepEqual([p.byOp("retire")[0].query.handle, p.byOp("retire")[0].query.reason], ["SEL-9", "superseded"]);
+  assert.deepEqual([p.byOp("retire")[0].query.handle, p.byOp("retire")[0].query.reason], [p.answers("select").at(-1).handle, "superseded"]);
   assert.ok(p.root().textContent.includes(word("screen.document.retire.refused.cited", { questions: "" }).split("  ")[0].slice(0, 20)), "R123: the refusal is drawn beside the act in its own sentence, by key");
 });
 
@@ -218,17 +276,20 @@ test("R3 controls: a release, a transcription and a claim with nothing written a
 });
 
 test("R15 R92 R118 Watch for changes sends monitorset with its frequency and Check for a new version now sends monitor: two acts, each alone, the check only for a watched address", async () => {
-  const un = await open(at, { plane: { monitorset: ok({ ok: true, bundleId: D, enabled: true }) } });
+  const w = await remoteCopy();
+  const un = await pageOn(w.world, w.ann, w.at);
   assert.ok(says(un.root().querySelector('button[data-act="monitorset"]'), "act.monitorset.label.document") && !actsIn(main(un)).includes("monitor"), "unwatched: no check");
   fill(un, { "document-watch-freq": "daily" });
   await press(un, "monitorset", { reason: "the policy changes yearly" });
-  assert.deepEqual(un.byOp("monitorset").map((r) => [r.body.bundleId, r.body.enabled, r.body.frequency]), [[D, true, "daily"]]);
+  assert.deepEqual(un.byOp("monitorset").map((r) => [r.body.bundleId, r.body.enabled, r.body.frequency]), [[w.document, true, "daily"]]);
   assert.equal(un.byOp("monitor").length, 0, "watching checks nothing now");
   assert.ok(says(main(un).querySelector('[data-outcome="monitorset"]'), "screen.document.monitorset.done"));
-  const p = await open(at, { images: { [D]: { "bundle.md": WATCHED_MD, "data/provenance.json": provenanceOf(SHA) } }, plane: { monitor: ok({ ok: true, status: "unchanged" }) } });
+  const watched = await remoteCopy({ watched: true });
+  const p = await pageOn(watched.world, watched.ann, watched.at);
   assert.ok(says(p.root().querySelector('button[data-act="monitor"]'), "act.monitor.label.document"));
   await press(p, "monitor");
-  assert.deepEqual(p.byOp("monitor").map((r) => r.body), [{ bundleId: D }]);
+  assert.deepEqual(p.byOp("monitor").map((r) => r.body), [{ bundleId: watched.document }]);
+  assert.equal(p.answers("monitor")[0].status, "unchanged", "the address still serves the captured bytes");
   assert.equal(p.byOp("monitorset").length, 0, "checking now asks no watching");
 });
 

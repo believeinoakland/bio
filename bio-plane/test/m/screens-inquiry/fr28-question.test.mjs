@@ -7,9 +7,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { registerDeclaredOps as registerOps } from "../../../src/op-declarations/index.mjs";
-import { ok, refusedIn, fieldMismatches, collectOwnerRows } from "../interface-shell/harness.mjs";
+import { boot, ok, refusedIn, fieldMismatches, collectOwnerRows } from "../interface-shell/harness.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
-import { open, main, actsIn, button, fill, press, rawKeys, inquiryMd, INQUIRY_REFS, LEGS, BASIS, says, section, word, POLICY, P, Q, D } from "./fixtures.mjs";
+import { open, storeWorld, main, actsIn, button, fill, press, rawKeys, inquiryMd, INQUIRY_REFS, LEGS, BASIS, says, section, word, POLICY, SCREENS, P, Q, D } from "./fixtures.mjs";
 
 /* K4245 (test-support R17): every owner's declarations registered once, before the first read, by the one registrar */
 
@@ -20,6 +20,30 @@ const A = { images: { [Q]: { "bundle.md": grouped() } } };
 const legRow = (p, target) => section(p, "screen.question.supports.head").querySelectorAll(".cs-row").find((r) => r.querySelector(`a.cs-ref[href="/app/document/${target}"]`));
 const count = (text, part) => String(text).split(part).length - 1;
 const PB = "PROJ-2026-0099";
+const OWN = { capabilities: ["contribute", "create_projects"] };
+/** A project of `ann`'s with a held document for each of `titles` and a question of hers resting on them, drawn into the project, by real acts. With `stand`, a reading stands for the project: she
+ *  concluded the question (her own reading, named `reading-1`) and took the conclusion off again, so the reading is the project's CURRENT and the question is not concluded.
+ *  Answers `{world, ann, project, targets, id, reading, page(opts, path)}`; `page` boots the question's page (or `path`) over the world's door. */
+const worldOf = async ({ titles = [POLICY, "Work orders"], legs = [], stand = false } = {}) => {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const project = await world.recipes.project(ann, "Pothole repairs");
+  const targets = [];
+  for (const t of titles) targets.push((await world.recipes.hold(ann, t, "The Director shall repair each reported pothole, as " + t + " says.", project)).bundle);
+  const id = (await world.recipes.question(ann, project, { title: "Seven days", text: "Is the city repairing reported potholes within seven days?",
+    legs: targets.map((target, i) => ({ target, role: "supports", ...(legs[i] || {}) })), draw: true })).id;
+  if (stand) {
+    await ann.act("conclude", { query: { target: id, project, reading: "Repairs are made within seven days.", falsifier: "Work orders dated later show otherwise." } });
+    await ann.act("withdrawconclusion", { query: { target: id, project, reason: "new evidence" } });
+  }
+  const page = async (o = {}, path = "/app/question/" + id) => {
+    const { door, session } = world.boot(ann);
+    const p = await boot({ screens: SCREENS, door, session, path, ...o });
+    await p.settle();
+    return p;
+  };
+  return { world, ann, project, targets, id, reading: "reading-1", page };
+};
 
 /* ------------------------------------------------------------------------------------------------------------------ R87 */
 
@@ -28,6 +52,7 @@ const CANDS = ok({ ok: true, target: Q, version: "main", ord: 1, leg: { target: 
   { source: "marked", ref: "para 4", extent: { kind: "pdf-page", page: 3 }, reference: null, label: null, mentions_subject: null, content_id: "CNT-2026-0001", fields: { content_id: "CNT-2026-0001" }, machine_work: true }],
   counts: { reading: 1, extract: 0, marked: 1 }, truncated: false, absence: null, proposal_only: true });
 
+/* still scripted (narrowcandidates, narrow): needed: a held document whose reading proposes parts to narrow a citation to (reference positions the reading found, or content a machine marked citable): the world's readings find none */
 test("R87 Narrow on a reading's piece of evidence reads narrowcandidates for its target, version and ord, lists the proposed parts as machine work; choosing one sends narrow with the declared fields (the guard accepts it)", async () => {
   const p = await open(at, { ...A, plane: { narrowcandidates: CANDS, narrow: ok({ ok: true }) } });
   assert.equal(main(p).querySelector("[data-narrow=panel]"), null, "no panel before the press");
@@ -55,8 +80,9 @@ test("R87 control: no part chosen, or no name or reason, sends no narrow and say
   fill(p, { "question-narrow-name": "", "question-narrow-description": "" });
   assert.ok(says(await press(p, "narrow", { within: panel }), "screen.question.narrow.empty"), "no name, no reason");
   assert.equal(p.byOp("narrow").length, 0);
-  /* a question with no reading names no version to narrow */
-  const none = await open(at, { ...A, plane: { basisversions: ok({ ok: true, inquiry: Q, versions: [] }) } });
+  /* a question with no reading names no version to narrow (the world's question, concluded by no one, holds no reading) */
+  const w = await worldOf();
+  const none = await w.page();
   assert.ok(!actsIn(main(none)).includes("narrow"));
   assert.equal(none.byOp("narrowcandidates").length, 0);
 });
@@ -80,10 +106,11 @@ test("R87 a BASIS_REFUSED narrowing draws the first finding's detail; one with n
 /* ------------------------------------------------------------------------------------------------------------------ R88 */
 
 test("R88 / K4203 Keep a hunch sends about: the list holding the question's id for a suspicion, {from, to} for where something went; the guard accepts both", async () => {
-  const p = await open(at, { ...A, plane: { hypothesishold: ok({ ok: true, hypothesis_id: "HYP-2" }) } });
+  const w = await worldOf();
+  const p = await w.page();
   fill(p, { "question-hunch": "Inspections close them." });
   await press(p, "hypothesishold");
-  assert.deepEqual(p.byOp("hypothesishold")[0].body, { inquiry: Q, kind: "other", statement: "Inspections close them.", about: [Q] });
+  assert.deepEqual(p.byOp("hypothesishold")[0].body, { inquiry: w.id, kind: "other", statement: "Inspections close them.", about: [w.id] });
   /* where something went: from and to are chosen among the question and the documents it cites */
   const kind = p.doc.getElementById("question-hunch-kind");
   kind.value = "flow";
@@ -91,12 +118,13 @@ test("R88 / K4203 Keep a hunch sends about: the list holding the question's id f
   await p.settle();
   const from = p.doc.getElementById("question-hunch-from"), to = p.doc.getElementById("question-hunch-to");
   assert.ok(from && to, "the two ends are chosen once the kind is where something went");
-  assert.ok(from.querySelectorAll("option").some((o) => o.getAttribute("value") === D) && to.querySelectorAll("option").some((o) => o.getAttribute("value") === Q));
-  fill(p, { "question-hunch": "Crews close reports when they inspect.", "question-hunch-from": D, "question-hunch-to": Q });
+  assert.ok(from.querySelectorAll("option").some((o) => o.getAttribute("value") === w.targets[0]) && to.querySelectorAll("option").some((o) => o.getAttribute("value") === w.id));
+  fill(p, { "question-hunch": "Crews close reports when they inspect.", "question-hunch-from": w.targets[0], "question-hunch-to": w.id });
   await press(p, "hypothesishold");
-  assert.deepEqual(p.byOp("hypothesishold")[1].body, { inquiry: Q, kind: "flow", statement: "Crews close reports when they inspect.", about: { from: D, to: Q } });
+  assert.deepEqual(p.byOp("hypothesishold")[1].body, { inquiry: w.id, kind: "flow", statement: "Crews close reports when they inspect.", about: { from: w.targets[0], to: w.id } });
   /* the hunch list is read again once a hunch is kept */
   assert.ok(p.byOp("hypotheses").length >= 2, "the hunches are read again");
+  assert.equal((await w.ann.read("hypotheses", { query: { inquiry: w.id } })).hypotheses.length, 2, "and both reached the store");
 });
 
 test("R88 control: a send without about is a mismatch of the owner's declaration; the owner's BAD_ABOUT is drawn by its words and keeps the form", async () => {
@@ -112,6 +140,7 @@ test("R88 control: a send without about is a mismatch of the owner's declaration
 
 /* ------------------------------------------------------------------------------------------------------------------ R89 */
 
+/* still scripted (inquirystrength): needed: a question whose connection axis is graded, which takes a subject_entity on the question (the question recipe names none) and a leg earned by resolution; with the connection unrated the owner names the ungraded legs in its own sentence, so the screen has none to add */
 const strength = (extra, cap = {}, con = {}) => ({ inquirystrength: (r) => ok({ ok: true, target: r.query.id,
   capture: { state: "graded", grade: "B", weakest: { title: POLICY }, ...cap }, connection: { state: "graded", grade: "C", ...con }, ...extra }) });
 
@@ -133,6 +162,7 @@ test("R89 the strength reading names what it leaves out: ungraded (legs not load
 
 const UNRATED = (n, extra = {}) => ({ state: "unrated", grade: null, weakest: null, load_bearing: 0, population: n, detail: "UNRATED on capture: no leg carries a grade. Not load-bearing: " + D + ", INFO-2026-0006.", ...extra });
 
+/* still scripted (inquirystrength, the first part): needed: a held document with no title and two legs on one document with a strength that lists it twice (every document the world holds is titled, and the owner lists each leg once) */
 test("R116 the ungraded legs are named by their documents' titles, never their ids, each once; a leg whose document has no title draws a plain 'a document' word by key", async () => {
   const nlb = [{ target_id: D }, { target_id: "INFO-2026-0077" }, { target_id: D }];
   const p = await open(at, { ...A, plane: { inquirystrength: (r) => ok({ ok: true, target: r.query.id, capture: { state: "graded", grade: "B" }, connection: UNRATED(3, { not_load_bearing: nlb }) }) } });
@@ -142,12 +172,15 @@ test("R116 the ungraded legs are named by their documents' titles, never their i
   assert.equal(count(box.textContent, POLICY), 1, "each leg once");
   assert.doesNotMatch(main(p).textContent, /INFO-2026-0004|INFO-2026-0077/, "never an id");
   assert.ok(!box.textContent.includes("Not load-bearing"), "not the plane's sentence with its ids");
-  /* control: a leg whose document has a title but a second leg of the same document is not drawn twice; the concluded block adds no second copy */
-  const concluded = await open(at, { ...A, plane: { inquirystrength: (r) => ok({ ok: true, target: r.query.id, capture: { state: "graded", grade: "B" }, connection: UNRATED(1, { not_load_bearing: [{ target_id: D }] }) }),
-    basisversions: (r) => ok(BASIS(r.query.project ? { conclusion: { claim: { text: "Yes." }, by: "member:dev", at: "2026-10-13T09:00:00Z" }, conclusion_stance: "concluded" } : {})) } });
+  /* control: a leg whose document has a title is named once in the strength box; the concluded block adds no second copy (the real question, concluded by her real act) */
+  /* the work orders are graded on capture, the policy is not: it is named once, on the axis nothing is graded on */
+  const w = await worldOf({ titles: [POLICY, "Work orders"], legs: [{}, { grade: "B", grade_axis: "capture", grade_source: "capture" }] });
+  await w.ann.act("inquiryground", { body: { target: w.id, grounds: [{ ground: "part 1", legs: [0, 1] }], reason: "my reading" } });
+  await w.ann.act("conclude", { query: { target: w.id, project: w.project, reading: "Repairs are made within seven days.", falsifier: "Work orders dated later show otherwise." } });
+  const concluded = await w.page();
   assert.equal(count(main(concluded).querySelector(".mk-strengthbox").textContent, POLICY), 1, "named once, in the strength box");
   assert.equal(count(section(concluded, "question.concluded.heading").textContent, POLICY), 0, "the concluded block adds no second copy");
-  assert.doesNotMatch(main(concluded).textContent, /INFO-2026-0004/);
+  assert.doesNotMatch(main(concluded).textContent, /INFO-2026-\d{4}/);
 });
 
 /* ------------------------------------------------------------------------------------------------------------------ R120 */
@@ -195,32 +228,53 @@ test("R120 R116 R89 R88 R87 the keys this file uses are held (K874)", () => {
 /* ------------------------------------------------------------------------------------------------------------------ R91 */
 
 test("R91 acts act for the question's home project: the address <question>/<project> carries the project part in conclude, versioncurrent and proposedispose; the bare address carries the home project", async () => {
-  const basis = (r) => ok({ ...BASIS(), versions: [...BASIS().versions, { name: "alt", state: "accepted", author: "member:ana", moved: { by: "ana", at: "2026-10-07T09:00:00Z", reason: null }, grounds: [], legs: BASIS().versions[0].legs }],
-    ...(r.query.project ? { current: { project: r.query.project, version: "main", at: "2026-10-06T09:00:00Z", by: "dev" } } : {}) });
-  const queue = (r) => ok(r.query.aside ? { ok: true, aside: [], count: 0, next: null, truncated: false } : { items: [] });
-  const run = async (path, want) => {
-    const p = await open(path, { ...A, plane: { basisversions: basis, queue, conclude: ok({ ok: true }), versioncurrent: ok({ ok: true }), proposedispose: ok({ ok: true }) } });
-    fill(p, { "question-conclude-falsifier": "logs dated later", "question-conclude-reason": "it answers the question" });
+  /* the real state: a question of hers whose reading stands for its project (her own, `reading-1`, concluded and taken off again), a second reading (her narrowing of its citation, accepted), and a second project of hers for the address's project part */
+  const run = async (part) => {
+    const world = await storeWorld();
+    const ann = await world.signIn("ann", OWN);
+    const project = await world.recipes.project(ann, "Pothole repairs");
+    const other = await world.recipes.project(ann, "Elsewhere");
+    const held = await world.recipes.page(ann, "A cited page", { paragraphs: ["Repairs are made within seven days."], project });
+    const id = (await world.recipes.question(ann, project, { title: "Seven days", text: "Is the city repairing reported potholes within seven days?",
+      legs: [{ target: held.bundle, role: "supports", extent_kind: "doc-para", extent_para: 1 }], draw: true })).id;
+    await ann.act("conclude", { query: { target: id, project, reading: "Repairs are made within seven days.", falsifier: "Work orders dated later show otherwise." } });
+    const description = "Points the first citation at the first run of its paragraph alone, because the rest of the paragraph does not matter.";
+    await ann.act("narrow", { query: { target: id, version: "reading-1", ord: 0, name: "alt", description }, body: { extent: { extent_kind: "doc-para", extent_para: 1, extent_run: 0 } } });
+    await ann.act("versionaccept", { query: { target: id, version: "alt", project }, body: {} });
+    await ann.act("withdrawconclusion", { query: { target: id, project, reason: "new evidence" } });
+    const want = part ? other : project;
+    const { door, session } = world.boot(ann);
+    const path = "/app/question/" + id + (part ? "/" + other : "");
+    const pageOf = async () => { const p = await boot({ screens: SCREENS, door, session, path }); await p.settle(); return p; };
+    /* each act on a page drawn before it: the owner's answer to the one before changes what the page draws */
+    const cur = await pageOf();
+    const alt = main(cur).querySelector('[data-reading="alt"]');
+    assert.ok(alt, "the second reading is drawn");
+    await press(cur, "versioncurrent", { within: alt });
+    assert.equal(cur.byOp("versioncurrent")[0].body.project, want, "versioncurrent");
+    assert.ok(cur.byOp("basisversions").some((r) => r.query.project === want), "the reading the project part stands on is read with it");
+    const set = await pageOf();
+    const fold = main(set).querySelector('details[data-aside="set"]');
+    assert.ok(fold, "the set-aside fold is drawn");
+    set.doc.getElementById("question-aside-0").checked = true;
+    fill(set, { "question-aside-why": "waiting for the log" });
+    await press(set, "proposedispose", { within: fold });
+    assert.equal(set.byOp("proposedispose")[0].body.project, want, "proposedispose");
+    const p = await pageOf();
+    /* no reading stands for the other project, so there her own is written */
+    fill(p, { "question-conclude-falsifier": "logs dated later", "question-conclude-reason": "it answers the question", ...(part ? { "question-conclude-own": "Repairs are made within seven days." } : {}) });
     await press(p, "conclude");
-    assert.equal(p.byOp("conclude")[0].query.project, want, path + ": conclude");
-    await press(p, "versioncurrent", { within: main(p).querySelector('[data-reading="alt"]') });
-    assert.equal(p.byOp("versioncurrent")[0].body.project, want, path + ": versioncurrent");
-    const fold = main(p).querySelector('details[data-aside="set"]');
-    p.doc.getElementById("question-aside-0").checked = true;
-    fill(p, { "question-aside-why": "waiting for the log" });
-    await press(p, "proposedispose", { within: fold });
-    assert.equal(p.byOp("proposedispose")[0].body.project, want, path + ": proposedispose");
-    return p;
+    assert.equal(p.byOp("conclude")[0].query.project, want, "conclude");
   };
-  const other = await run(at + "/" + PB, PB);
-  assert.ok(other.byOp("basisversions").some((r) => r.query.project === PB), "the reading the project part stands on is read with it");
-  await run(at, P);
+  await run(true);
+  await run(false);
 });
 
 /* ------------------------------------------------------------------------------------------------------------------ R114, R121 */
 
 test("R121 Conclude's reason is its own required box (question.conclude.reason): empty, nothing is sent and the needed key is drawn; with a reason it is sent as the reason, and the optional Commentary is kept apart", async () => {
-  const p = await open(at, { ...A, plane: { conclude: ok({ ok: true }) } });
+  const w = await worldOf({ stand: true });
+  const p = await w.page();
   const box = p.doc.getElementById("question-conclude-reason");
   assert.ok(box, "the reason box is drawn");
   assert.ok(says(p.doc.querySelectorAll("label").find((l) => l.getAttribute("for") === "question-conclude-reason"), "question.conclude.reason"));
@@ -231,9 +285,11 @@ test("R121 Conclude's reason is its own required box (question.conclude.reason):
   fill(p, { "question-conclude-reason": "Both counts agree." });
   await press(p, "conclude");
   const q = p.byOp("conclude")[0].query;
-  assert.deepEqual([q.target, q.project, q.version, q.falsifier, q.reason, q.commentary], [Q, P, "main", "logs dated later", "Both counts agree.", "a note, not evidence"]);
+  assert.deepEqual([q.target, q.project, q.version, q.falsifier, q.reason, q.commentary], [w.id, w.project, w.reading, "logs dated later", "Both counts agree.", "a note, not evidence"]);
+  assert.equal((await w.ann.read("basisversions", { query: { id: w.id, project: w.project } })).conclusion_stance, "concluded", "and the real act concluded the question");
   /* control: Commentary is optional, never labelled required, and may be left empty */
-  const c = await open(at, { ...A, plane: { conclude: ok({ ok: true }) } });
+  const v = await worldOf({ stand: true });
+  const c = await v.page();
   const cl = c.doc.querySelectorAll("label").find((l) => l.getAttribute("for") === "question-conclude-commentary");
   assert.ok(says(cl, "question.conclude.commentary") && !/required/i.test(cl.textContent));
   assert.ok(says(cl.closest(".cs-field"), "question.conclude.commentary.help"));
@@ -248,7 +304,8 @@ test("R121 R114 every key of the reason box is held (K874); the reason box is no
 });
 
 test("R114 pressing Conclude in any state the screen draws either succeeds or names the field that is missing, and no required field is labelled Optional", async () => {
-  const p = await open(at, { ...A, plane: { conclude: ok({ ok: true }) } });
+  const w = await worldOf({ stand: true });
+  const p = await w.page();
   /* nothing written: the falsifier is named first, then the reason; nothing is ever sent for a missing field */
   assert.ok(says(await press(p, "conclude"), "question.conclude.falsifier.help"), "the falsifier is the field missing");
   fill(p, { "question-conclude-falsifier": "logs dated later" });

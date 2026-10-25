@@ -10,17 +10,45 @@ import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { SCREENS } from "../../../src/screens-inquiry/index.mjs";
 import { PENDING_WORDS } from "../../../src/screens-inquiry/objective.mjs";
 import { boot, ok, refusedIn } from "../interface-shell/harness.mjs";
-import { rawKeys, fill } from "./fixtures.mjs";
+import { rawKeys, fill, storeWorld } from "./fixtures.mjs";
 
 const REGISTRY = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8"));
-const P = "PROJ-2026-0007";
+/* the world (store-assembly's store with the real door, K5054): `dev` owns the project "Pothole repairs" she started and `mai` is joined to it; the team holds two flows
+   (progressions) and three parties (entities), one aspiration of the team and one of the project (a departure from the team's, a dead end on the project's) and
+   every one is made by the real act that makes it. `bare` is the same project and members with no flow, party or aspiration held. */
+async function team({ held = true } = {}) {
+  const world = await storeWorld();
+  const dev = await world.signIn("dev", { capabilities: ["contribute", "create_projects"] });
+  const project = await world.recipes.project(dev, "Pothole repairs");
+  const mai = await world.signIn("mai", { capabilities: ["contribute"] });
+  await dev.act("projectinvite", { query: { projectId: project, handle: "mai" } });
+  await mai.act("projectjoin", { query: { projectId: project } });
+  const out = { world, dev, mai, project };
+  if (!held) return out;
+  const stage = (key, label) => ({ key, label, cardinality: "1", required: "always" });
+  await dev.act("progressiondefine", { body: { progressionKey: "PRG-rent", label: "Lease rent flow", basis: "the team's reading of the lease", stages: [stage("invoiced", "Invoiced"), stage("authorized", "Council signed off")] } });
+  await dev.act("progressiondefine", { body: { progressionKey: "PRG-permits", label: "Permit flow", basis: "the team's reading of the permit office", stages: [stage("filed", "Filed")] } });
+  const party = async (kind, label) => (await dev.act("entitycreate", { body: { kind, label, note: `${label}, held for the objective's measure.` } })).entity_id;
+  out.city = await party("institution", "Springfield Parks Dept");
+  out.auth = await party("institution", "The Transit Authority");
+  out.person = await party("person", "Mai Chen");
+  const admin = await world.signIn("admin");
+  out.team = (await admin.act("aspirationdeclare", { body: { scope: "group", statement: "Ask for every record in writing." } })).aspiration;
+  out.ours = (await dev.act("aspirationdeclare", { body: { scope: "project", owner: project, statement: "Check every amount against a second document." } })).aspiration;
+  out.stays = (await admin.act("aspirationdeclare", { body: { scope: "group", statement: "Keep every answer in the record." } })).aspiration;   /* one the project has not departed from: the departed one is no longer listed to depart from */
+  await dev.act("aspirationdepart", { body: { project, aspiration: out.team, reason: "The city only answers phone requests here." } });
+  await dev.act("aspirationdeadend", { body: { aspiration: out.ours, note: "We asked the Authority for the 2019 vote record." } });
+  return out;
+}
+const T = await team();
+const P = T.project;
 const AT = "/app/objective/" + P;
 const KEY = (s) => "screen.objective." + s;
 /* a word held, else (a pending design word) the key the screen draws it as */
 const W = (key, vars) => (hasWord(key) ? word(key, vars || {}) : key);
 const SCREEN = SCREENS.find((s) => s.id === "objective");
 
-const COND = { progression: "PRG-rent", entity: "ENT-city", relation: null, filter: null, required: { grade: "B", stages: ["authorized"] }, satisfied: { share: 90 } };
+const COND = { progression: "PRG-rent", entity: T.city, relation: null, filter: null, required: { grade: "B", stages: ["authorized"] }, satisfied: { share: 90 } };
 const short = (id, label, why) => ({ entity_id: id, entity_label: label, grade: "C", grade_determined: true, why });
 const PROGRESS = { ok: true, project: P, objective: "Whether the city kept the terms of its lease.", condition: COND, set_by: "dev", set_at: "2026-10-08T09:00:00Z",
   computable: true, matched: 12, meeting: 9, satisfied: false, computed_at: "2026-10-20T09:00:00Z", limit: 1000, truncated: false,
@@ -35,33 +63,36 @@ const GAPS = { ok: true, project: P, condition: COND, gaps: PROGRESS.short.map((
   instances: [{ entity_id: s.entity_id, entity_label: s.entity_label, documents: [] }], surfaced_by: "machine" })) };
 const PROPOSALS = { ok: true, project: P, proposals: [GAPS.gaps[0],
   { key: "PRG-rent::authorized", source: "progressions", kind: "missing_predecessor", progression_key: "PRG-rent", progression_label: "Lease rent flow",
-    stage_key: "authorized", stage_label: "Council signed off", instances: [{ entity_id: "ENT-city", entity_label: "Springfield Parks Dept", grade: "C", grade_determined: true }], n: 1 }],
+    stage_key: "authorized", stage_label: "Council signed off", instances: [{ entity_id: T.city, entity_label: "Springfield Parks Dept", grade: "C", grade_determined: true }], n: 1 }],
   count: 2, set_aside: [] };
-const ASP_TEAM = { id: "ASP-2026-0001", scope: "group", owner: null, statement: "Ask for every record in writing.", entities: [], progressions: [], state: "held", author: "rosa", at: "2026-09-01T09:00:00Z" };
-const ASP_OURS = { id: "ASP-2026-0002", scope: "project", owner: P, statement: "Check every amount against a second document.", entities: [], progressions: [], state: "held", author: "dev", at: "2026-09-10T09:00:00Z" };
-const ASPIRATIONS = { ok: true, project: P, member: "mai", aspirations: [ASP_TEAM, ASP_OURS],
-  departures: [{ aspiration: ASP_TEAM.id, reason: "The city only answers phone requests here.", author: "dev", at: "2026-10-12T09:00:00Z", notable: true }], precedence: null };
+const ASP_TEAM = { id: T.team, statement: "Ask for every record in writing." };
+const ASP_OURS = { id: T.ours, statement: "Check every amount against a second document." };
 const GOAL = { id: "GOAL-2026-0001", statement: "Close the unvoted collections loophole.", bounds: "only leases the council has the right to amend",
   aspiration: null, objectives: [{ project: P, by: "dev", at: "2026-10-09T09:00:00Z" }], state: "open", closed_reason: null, author: "rosa", at: "2026-10-01T09:00:00Z" };
 
+/* the acts the page sends stay answered by a bare `ok` here (what each sends is asserted, not what the owner does with it); every read not named is the world's */
+const ACTS = Object.fromEntries(SCREEN.acts.filter((a) => a.op !== "writinghelp").map((a) => [a.op, ok(null)]));
 function plane(o = {}) {
   return {
-    objectiveprogress: ok(PROGRESS), objectivegaps: ok(GAPS), intentproposals: ok(PROPOSALS), aspirations: ok(ASPIRATIONS),
-    pursuit: (r) => ok({ ok: true, aspiration: r.query.id === ASP_OURS.id ? ASP_OURS : ASP_TEAM, goals: [], dead_ends: r.query.id === ASP_OURS.id ? [{ at: "2026-09-30T09:00:00Z", author: "dev", note: "We asked the Authority for the 2019 vote record." }] : [], taught: null }),
+    ...ACTS,
+    /* the measure and its count, the proposals and the goals are scripted: no act of the world sets a measure over payments it counts, or proposes or declares them with these shapes */
+    objectiveprogress: ok(PROGRESS), objectivegaps: ok(GAPS), intentproposals: ok(PROPOSALS),
     list: ok({ bundles: [{ bundle_id: GOAL.id, title: "Close the unvoted collections loophole" }] }),
     goal: ok({ ok: true, goal: GOAL }),
-    progressions: ok({ ok: true, count: 2, items: [{ progression_key: "PRG-rent", label: "Lease rent flow", stages: [] }, { progression_key: "PRG-permits", label: "Permit flow", stages: [] }], truncated: false }),
-    entitieskind: (r) => ok({ ok: true, kind: r.query.kind, count: 0, entities: r.query.kind === "institution" ? [{ entity_id: "ENT-city", kind: "institution", label: "Springfield Parks Dept" }, { entity_id: "ENT-auth", kind: "institution", label: "The Transit Authority" }]
-      : r.query.kind === "person" ? [{ entity_id: "ENT-mai", kind: "person", label: "Mai Chen" }] : [], truncated: false, next: null }),
-    progression: ok({ ok: true, found: true, progression_key: "PRG-rent", label: "Lease rent flow", stages: [{ stage_key: "invoiced", label: "Invoiced" }, { stage_key: "authorized", label: "Council signed off" }] }),
-    entity: ok({ ok: true, found: true, entity: { entity_id: "ENT-city", label: "Springfield Parks Dept", kind: "organization" } }),
-    projectparticipants: ok({ ok: true, projectId: P, participants: [{ handle: "dev", state: "joined", owner: 1 }, { handle: "mai", state: "joined", owner: 0 }] }),
     assistantstate: ok({ on: true }), accountreference: ok({ held: true }),
+    /* needs a recipe: the writing help's draft text (the world's door answers it without `text`: the draft is asked of the Worker's assistant object, which needs the model) */
     writinghelp: ok({ ok: true, text: "A drafted reason." }),
     ...o,
   };
 }
-const open = async (o = {}, boots = {}) => { const p = await boot({ screens: SCREENS, plane: plane(o), path: AT, ...boots }); await p.settle(); return p; };
+/** The page as `mai` reads it over the world's door (`world`, else the shared team): `plane` overrides only the ops it names; a key set to undefined is the world's own answer. */
+const open = async (o = {}, boots = {}) => {
+  const { world: w = T, ...rest } = boots;
+  const { door, session } = w.world.boot(w.mai);
+  const p = await boot({ screens: SCREENS, door, session, plane: plane(o), path: "/app/objective/" + w.project, ...rest });
+  await p.settle();
+  return p;
+};
 const main = (p) => p.doc.getElementById("cs-main");
 const text = (p) => main(p).textContent;
 const says = (p, key, vars) => text(p).includes(W(key, vars));
@@ -109,7 +140,8 @@ test("R106 state a: success means (the sentence from the condition), how it is g
 });
 
 test("R106 state b: no measure yet says so, counts nothing, draws no shortfalls, and still offers to set one; control: a measure draws neither sentence", async () => {
-  const p = await open({ objectiveprogress: ok(NOCOND), objectivegaps: ok({ ok: true, project: P, condition: null, gaps: [], why: "x" }) });
+  /* the world sets no measure for this project: its own count and gaps are the no-measure answers */
+  const p = await open({ objectiveprogress: undefined, objectivegaps: undefined });
   assert.ok(says(p, KEY("this-objective-has-no-measure-of-success-yet-so")));
   assert.ok(says(p, KEY("choose-what-counts-and-the-screen-works-it-out-f")));
   assert.ok(says(p, KEY("not-counted-yet-no-measure-of-success-is-set")));
@@ -139,7 +171,7 @@ test("R106 objectivecondition: Save sends project, the condition the fields give
   const sent = ops(p, "objectivecondition");
   assert.equal(sent.length, 1);
   assert.deepEqual(sent[0].body, { project: P, reason: "The lease says the council votes first.",
-    condition: { progression: "PRG-rent", entity: "ENT-city", required: { grade: "A", stages: ["invoiced", "authorized"] }, satisfied: { share: 80 } } });
+    condition: { progression: "PRG-rent", entity: T.city, required: { grade: "A", stages: ["invoiced", "authorized"] }, satisfied: { share: 80 } } });
   await p.click(button(p, "objectivecondition", 1));
   assert.deepEqual(ops(p, "objectivecondition")[1].body, { project: P, condition: null, reason: "The lease says the council votes first." });
 });
@@ -239,9 +271,9 @@ test("R106 aspirationdeclare: a project's aspiration sends scope, owner (the pro
   await press();
   assert.deepEqual(ops(p, "aspirationdeclare")[1].body, { scope: "group", statement: "Name a second source for every claim." });
   p.doc.getElementById("ob-asp-scope").value = "member";
-  fill(p, { "ob-asp-ent": "ENT-city", "ob-asp-prog": "PRG-rent" });
+  fill(p, { "ob-asp-ent": T.city, "ob-asp-prog": "PRG-rent" });
   await press();
-  assert.deepEqual(ops(p, "aspirationdeclare")[2].body, { scope: "member", owner: "mai", statement: "Name a second source for every claim.", entities: ["ENT-city"], progressions: ["PRG-rent"] });
+  assert.deepEqual(ops(p, "aspirationdeclare")[2].body, { scope: "member", owner: "mai", statement: "Name a second source for every claim.", entities: [T.city], progressions: ["PRG-rent"] });
 });
 
 test("R106 aspirationdeclare: control: the plane's NOT_AN_ADMIN is drawn by its key", async () => {
@@ -259,14 +291,14 @@ test("R106 aspirationdepart, aspirationdeadend, aspirationretire send exactly th
   await p.click(button(p, "aspirationretire"));
   for (const op of ["aspirationdepart", "aspirationdeadend", "aspirationretire"]) assert.equal(ops(p, op).length, 0, op);
   assert.ok(says(p, "shell.reason.needed"));
-  p.doc.getElementById("ob-dep-asp").value = ASP_TEAM.id;
+  p.doc.getElementById("ob-dep-asp").value = T.stays;
   fill(p, { "ob-dep-why": "The city only answers phone requests here.", "ob-dea-note": "Asked; none exists.", "ob-ret-taught": "A second document was never there." });
   p.doc.getElementById("ob-dea-asp").value = ASP_OURS.id;
   p.doc.getElementById("ob-ret-asp").value = ASP_OURS.id;
   await p.click(button(p, "aspirationdepart"));
   await p.click(button(p, "aspirationdeadend"));
   await p.click(button(p, "aspirationretire"));
-  assert.deepEqual(ops(p, "aspirationdepart")[0].body, { project: P, aspiration: ASP_TEAM.id, reason: "The city only answers phone requests here." });
+  assert.deepEqual(ops(p, "aspirationdepart")[0].body, { project: P, aspiration: T.stays, reason: "The city only answers phone requests here." });
   assert.deepEqual(ops(p, "aspirationdeadend")[0].body, { aspiration: ASP_OURS.id, note: "Asked; none exists." });
   assert.deepEqual(ops(p, "aspirationretire")[0].body, { aspiration: ASP_OURS.id, taught: "A second document was never there." });
   for (const k of ["when-a-departure-is-not-accepted", "when-a-dead-end-is-not-accepted", "when-retiring-is-refused", "this-aspiration-is-retired-so-nothing-holds-to-i"]) assert.ok(says(p, KEY(k)), k);
@@ -359,12 +391,12 @@ test("R106 the measure: Stop is offered only where a measure is set; a typed min
 });
 
 test("R106 with no flow or party to name (no measure, no proposal, and none held by the group: `progressions` and `entitieskind` answer none) the measure takes them as typed keys; Save sends them", async () => {
-  const p = await open({ objectiveprogress: ok(NOCOND), intentproposals: ok({ ok: true, project: P, proposals: [], count: 0, set_aside: [] }),
-    progressions: ok({ ok: true, count: 0, items: [], truncated: false }), entitieskind: ok({ ok: true, count: 0, entities: [], truncated: false }) });
-  assert.equal(p.doc.getElementById("ob-flow").localName, "input");
+  const bare = await team({ held: false });   /* the group holds no flow and no party: the world's own answers are none */
+  const p = await open({ objectiveprogress: ok(NOCOND), intentproposals: ok({ ok: true, project: bare.project, proposals: [], count: 0, set_aside: [] }) }, { world: bare });
+assert.equal(p.doc.getElementById("ob-flow").localName, "input");
   fill(p, { "ob-flow": "PRG-rent", "ob-ent": "ENT-city", "ob-share": "50", "ob-why": "Because." });
   await p.click(button(p, "objectivecondition", 0));
-  assert.deepEqual(ops(p, "objectivecondition")[0].body, { project: P, reason: "Because.", condition: { progression: "PRG-rent", entity: "ENT-city", required: { stages: [] }, satisfied: { share: 50 } } });
+  assert.deepEqual(ops(p, "objectivecondition")[0].body, { project: bare.project, reason: "Because.", condition: { progression: "PRG-rent", entity: "ENT-city", required: { stages: [] }, satisfied: { share: 50 } } });
 });
 
 test("R106 R20 no aspiration: nothing to depart from, record a dead end on or retire is offered, and declaring one still is; no goal link or close without an open goal", async () => {
@@ -396,7 +428,7 @@ test("R106 entry 3 (B22): the measure's flow and party pickers offer the flows t
   const flows = p.doc.getElementById("ob-flow").querySelectorAll("option").map((o) => o.getAttribute("value"));
   assert.ok(flows.includes("PRG-rent") && flows.includes("PRG-permits"), "both flows are offered, not typed");
   const parties = p.doc.getElementById("ob-ent").querySelectorAll("option").map((o) => o.getAttribute("value"));
-  for (const id of ["ENT-city", "ENT-auth", "ENT-mai"]) assert.ok(parties.includes(id), id);
+  for (const id of [T.city, T.auth, T.person]) assert.ok(parties.includes(id), id);
   assert.equal(ops(p, "progressions")[0].query.limit, "200");
   assert.deepEqual(ops(p, "entitieskind").map((r) => r.query.kind).sort(), ["body", "institution", "office", "person"]);
   const bad = await open({ objectiveprogress: ok(NOCOND), progressions: refusedIn("PROGRESSIONS_UNREADABLE") });
