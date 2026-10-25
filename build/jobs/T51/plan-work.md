@@ -44,3 +44,7 @@ Deferred: none. Flaws in other modules: none. No requirement or provided service
 Checks: plan-work tests 52 of 52 pass; fixtures `--list` plan-work: answer 0, 0 failures; words (own and joint list): 0 failures, no line names plan-work; format 0; architecture 0; coverage 19 of 19; ownership 0.
 
 Size (session_018fWmQdUi2CZqXCuLdnhhG4): test runs 3, module lines 1427
+
+## J3 · COMPLETE
+
+J2 COMPLETE: watchReaderRegistrar published; 6 fixture lines re-pointed to providers' fixtures; the docket NO_SUCH_ENTRY stand-in member removed (docket is not in plan-work's uses, no test reads it). Details and checks in my record J2. Fixtures 0 failures, tests 52/52, words/format/architecture/coverage/ownership 0 failures.
