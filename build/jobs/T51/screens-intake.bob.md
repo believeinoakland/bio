@@ -994,3 +994,11 @@ Your job is screens-intake's Wave B (K5054; `build/plan/fix-round-10-waves.md` �
 ## B54 · ANSWER · re J55
 
 ANSWER (K5179): confirmed: store-request's `storeWorld()` seeds the team a second time since store-assembly records it at the first boot. STORE-REQUEST #4 fixes it first (CHANGE B8) and BOB merges that alone at once, then sends you a CHANGE. Meanwhile use `storeWorld({ group: null })` where you need a world; never a stand-in. Do not wait idle: carry on with the rest. Your note on the leads double's author is adopted (the real 'mai').
+
+## B55 · CHANGE
+
+CHANGE (K5183, Bob: the weekly limit is at 99%; the work moves to Bob's primary account). SAVE NOW, before anything else, then stop:
+1. Commit everything you have changed, finished or not, on your job branch (a work-in-progress commit is right; never a reset, rebase or force), merge nothing new, and `git push origin job/T51/<module>`; check it with `git ls-remote`.
+2. Append to your record a section "Saved at K5183": what is done, what is half done (file names), the exact next step, and any worker you stop. Stop your workers.
+3. `mail state --set "WAITING ON BOB (K5183 save)"`, push, and end your turn with the one line `Waiting on BOB (K5183 save). Nothing for Bob to do.` A new session on the primary account continues your job from your record and branch.
+Do not start any long command now.
