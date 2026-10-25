@@ -70,9 +70,17 @@ function render(cs, view) {
         (it.visits || []).map((x) => `<span>${cs.grade("testimony", x.grade || "D")} ${cs.w(S + "visit", { finding: cs.w(S + "finding." + (["yes", "no", "could_not_tell"].includes(x.finding) ? x.finding : "could_not_tell")), by: P.who(cs, x.visitor), date: cs.date(x.observed_at || "") })} ${P.refOf(cs, x.testimony, cs.w(S + "account"), [], "capture")}</span>`).join(" "))).join(""));
   });
   const items = spot && spot.state === "ok" ? (spot.value.items || []).map((x) => ({ value: String(x.item), text: cs.w(S + "item", { item: String(x.item) }) })) : [];
+  /* the draw's set is a declared table (calculations R38: `calculationdraw` takes a table's digest): the choice offers the tables this calculation reads,
+     each by the title of the document it was made from, never by its fingerprint (R34) */
+  const titles = new Map(P.docsAll(cs, view).rows.map((r) => [r.capture && r.capture.sha256, typeof r.title === "string" && r.title ? r.title : null]));
+  const setOptions = [...new Set((c && Array.isArray(c.inputs) ? c.inputs : []).map((i) => i && i.table).filter((t) => /^[0-9a-f]{64}$/.test(String(t))))].map((t) => {
+    const q = P.later(cs, view, "table:" + t, "table", { query: { sha: t } });
+    const from = q.state === "ok" && q.value && q.value.source ? titles.get(q.value.source.capture_sha) : null;
+    return { value: t, text: from || P.plain(cs, "screen.held.untitled") };
+  });
   out.push(cs.sec(S + "spot", spotInner
     + `<p class="mk-small">${cs.w("screen.help.notsays.p")} <a href="/app/help" data-nav>${cs.w(S + "help")}</a></p>`
-    + P.docChoice(cs, view, "calc-set", { label: S + "set", help: S + "set.help", passage: false, project: c && c.project }) + cs.field("calc-n", S + "n", { value: "40" }) + cs.field("calc-seed", S + "seed", { help: S + "seed.help" })
+    + cs.choice("calc-set", S + "set", [{ value: "", text: "" }].concat(setOptions), {}) + `<p class="mk-small">${cs.w(S + "set.help")}</p>` + cs.field("calc-n", S + "n", { value: "40" }) + cs.field("calc-seed", S + "seed", { help: S + "seed.help" })
     + cs.field("calc-dq", S + "dq", { area: true, rec: true })
     + cs.act("calculationdraw", { label: "act.calculationdraw.label.calculation" })
     + cs.field("calc-words", S + "words", { area: true, rec: true, help: S + "words.help" }) + cs.field("calc-observed", S + "observed", { type: "date", value: P.today(cs) })

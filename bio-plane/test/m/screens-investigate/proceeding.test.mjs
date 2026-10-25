@@ -95,24 +95,23 @@ test("R6 recordline \"Add a party by role\"; followregister (a register needing 
   assert.deepEqual([link.body.type, link.body.from, link.body.to, link.body.citation, link.body.reason], ["interprets", court, ord, passage, "the order reads the ordinance's §4"]);
   assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "the link is held");
   fill(p, { "pr-obligor": M.other, "pr-act": "produce the 2024 rent schedules", "pr-clause": "Order ¶3", "pr-due": "2026-10-30" });
+  fill(p, { "pr-court": court });
   await press(p, "declare", { reason: REASON });
   await settled(p);
-  assert.deepEqual(p.byOp("declare")[0].body, { modality: "duty", obligor: M.other, performance: { act: "produce the 2024 rent schedules" }, source: { kind: "court" }, clause: "Order ¶3", arising_in: M.proc,
+  assert.deepEqual(p.byOp("declare")[0].body, { modality: "duty", obligor: M.other, performance: { act: "produce the 2024 rent schedules" }, source: { kind: "court", standard: court }, clause: "Order ¶3", arising_in: M.proc,
     trigger: { kind: "date", date: "2026-10-30" }, time: { basis: "window", date: "2026-10-30" } });
+  assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "the real store holds the order");
+  const duties = (await me.read("dutiesof", { query: { entity: M.other, as: "obligor" } })).duties;
+  assert.deepEqual(duties.map((d) => [d.performance.act, d.arising_in, d.time.date]), [["produce the 2024 rent schedules", M.proc, "2026-10-30"]]);
 });
 
-/* REPORTED: the page's `declare` sends `source: { kind: "court" }` with no `standard`; the real store refuses it (NO_SUCH_STANDARD, duties/index.mjs:427-429),
-   so "Hold an order as obligations" holds nothing in the real world (proceeding.mjs:195). The assertion stays, as a todo, until the page names the court standard. */
-test.todo("REPORTED: declare \"Hold an order as obligations\" is refused by the real store, no standard named in its source (screens-investigate/proceeding.mjs:195, duties/index.mjs:427)", async () => {
+test("R6 declare names its order: with the other fields filled and no court order chosen, nothing is sent", async () => {
   const { world, me } = await inWorld();
   const M = await matter(world, me);
   const p = await openAs(world, me, "/app/proceeding/" + M.proc);
   fill(p, { "pr-obligor": M.other, "pr-act": "produce the 2024 rent schedules", "pr-clause": "Order ¶3", "pr-due": "2026-10-30" });
   await press(p, "declare", { reason: REASON });
-  await settled(p);
-  assert.ok(!main(p).querySelector('[data-gap="refused"]'), "the order is held");
-  const duties = (await me.read("dutiesof", { query: { entity: M.other, as: "obligor" } })).duties;
-  assert.deepEqual(duties.map((d) => [d.performance.act, d.arising_in, d.time.date]), [["produce the 2024 rent schedules", M.proc, "2026-10-30"]]);
+  assert.equal(p.byOp("declare").length, 0);
 });
 
 test("R6 each act names what it needs (control: nothing sent), and a refusal is drawn beside the act", async () => {

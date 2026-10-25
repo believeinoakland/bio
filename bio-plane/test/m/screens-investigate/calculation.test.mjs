@@ -203,9 +203,20 @@ test("R5 the acts: calculationcreate, tabledeclare, recordcheck, calculationacce
   assert.equal(newer.question, "Payments in FY2026");
 });
 
-/* REPORTED (calculation.mjs, `calc-set` and `calculationdraw`): the draw's set is chosen among the held documents (`calc-set` lists captures, R34), but the store's
-   `calculationdraw` takes the digest of a declared TABLE (`NO_SUCH_SET` for a capture's: "no frozen set answers to that sha"), so no choice the page offers can be drawn. */
-test.todo("REPORTED: calculationdraw is refused NO_SUCH_SET for every document the calc-set choice offers (it takes a declared table's digest) (calculation.mjs: calc-set docChoice, calculationdraw.send)");
+test("R34 R5 the draw's set is chosen among the tables this calculation reads, by the title of the document each was made from, and the real store draws it", async () => {
+  const { world, me } = await inWorld();
+  await world.recipes.profiles(me, ["oakland-alameda"]);
+  const R = await register(world, me);
+  const p = await openAs(world, me, "/app/calculation/" + R.first);
+  await settled(p);
+  const opts = [...p.doc.getElementById("calc-set").querySelectorAll("option")].filter((o) => o.getAttribute("value") !== "");
+  assert.deepEqual(opts.map((o) => [o.getAttribute("value"), o.textContent]), [[R.table, "Payments.csv"]], "the table the calculation reads, by its document's title");
+  fill(p, { "calc-set": R.table, "calc-n": "2", "calc-seed": "2026-10-05-7f31" });
+  await press(p, "calculationdraw", { reason: "a sample to visit" });
+  await settled(p);
+  assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "the store draws what the page offered");
+  assert.ok((await me.read("spotcheck", { query: { id: R.first } })), "the draw is held");
+});
 
 test("R14 \"Record what you saw at a report\" sends testify (her own words) and \"Count it for the drawn report\" sends spotcheckvisit tying it to the drawn item with her finding: two acts", async () => {
   const { world, me } = await inWorld();
@@ -280,9 +291,14 @@ test("R11 \"How spot-checks work\" is reached from calculation and says, in plai
   assert.equal(p.byOp("calculation").length >= 1, true);
 });
 
-test("R34 the calculation's draw set, tabled content, workbook and photo are chosen among documents by title, never typed as fingerprints", async () => {
-  const p = await open("/app/calculation/" + CALC);
-  for (const id of ["calc-set", "calc-content", "calc-wb", "calc-photo"]) {
-    assert.deepEqual(p.doc.getElementById(id).querySelectorAll("option").map((o) => o.textContent), ["Lease amendment 1", "Rent schedule"], id);
+test("R34 the calculation's tabled content, workbook and photo are chosen among documents by title, never typed as fingerprints", async () => {
+  const { world, me } = await inWorld();
+  await world.recipes.profiles(me, ["oakland-alameda"]);
+  const R = await register(world, me);
+  const p = await openAs(world, me, "/app/calculation/" + R.first);
+  await settled(p);
+  for (const id of ["calc-content", "calc-wb", "calc-photo"]) {
+    const titles = p.doc.getElementById(id).querySelectorAll("option").map((o) => o.textContent).filter((t) => t);
+    assert.deepEqual(titles.map((t) => t.split(" · ")[0]).sort(), ["Budget.xlsx", "Grants.csv", "Payments.csv"], id);
   }
 });

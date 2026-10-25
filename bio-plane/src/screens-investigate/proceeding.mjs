@@ -191,8 +191,10 @@ const acts = rereading([
     send(view, el, cs) {
       const obligor = String(cs.value("pr-obligor") || "").trim(), act = String(cs.value("pr-act") || "").trim();
       const clause = String(cs.value("pr-clause") || "").trim(), date = String(cs.value("pr-due") || "").trim();
-      if (!obligor || !act || !clause) return { refuse: "screen.proceeding.order.empty" };
-      return { body: Object.assign({ modality: "duty", obligor, performance: { act }, source: { kind: "court" }, clause, arising_in: String(view.subject || "") },
+      /* the order is the court standard chosen in "pr-court": the store refuses a court source naming none (duties R30) */
+      const order = String(cs.value("pr-court") || "").trim();
+      if (!obligor || !act || !clause || !order) return { refuse: "screen.proceeding.order.empty" };
+      return { body: Object.assign({ modality: "duty", obligor, performance: { act }, source: { kind: "court", standard: order }, clause, arising_in: String(view.subject || "") },
         date ? { trigger: { kind: "date", date }, time: { basis: "window", date } } : { trigger: { kind: "source" }, time: { basis: "window" } }) };
     } },
   { op: "courtlink", label: "act.courtlink.label.proceeding",
