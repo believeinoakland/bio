@@ -1,14 +1,14 @@
-/* plane R72 (T51 fix round; K4168, K4202): the two ops the plane answers itself, `ask` (the door's arm) and `readtranslate`
+/* store-assembly's copy of plane's test. plane R72 -> R84 (T51 fix round; K4168, K4202): the two ops the assembly answers itself, `ask` (the door's arm) and `readtranslate`
    (the draft path), each held true by `test-support`'s `declaredOpHolds` against the op as the door runs it: only its
    requires raise no refusal naming a declared field, a call without each required entry is refused naming it, and a field
-   outside `accepts` is dropped or refused naming it. The rows are also the hand rows' (R68's registration refused no row). */
+   outside `accepts` is dropped or refused naming it. The rows are also the hand rows' (R83's registration refused no row). */
 import "../../../src/store-assembly/register.mjs";   /* the start's registration first */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { store, deployed, GATE_FLAGS, GATE_SET, disclosed } from "./fixture.mjs";
 import { declaredOpHolds } from "../../declared-ops.mjs";
-import { DECLARED_OPS } from "../../../src/store-assembly/declared.mjs";
+import { ASSEMBLY_DECLARED_OPS as DECLARED_OPS } from "../../../src/store-assembly/declared.mjs";
 import { OWNERS } from "../../../src/store-assembly/declarations.mjs";
 import { askOp, assistantGateOf } from "../../../src/store-assembly/ask.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
@@ -65,7 +65,7 @@ const reading = (x) => async (fields) =>
 /* the same answer whatever the grant or instant a call minted */
 const sameAnswer = (a, b) => JSON.stringify({ ...a, grant: null }) === JSON.stringify({ ...b, grant: null });
 
-test("R72 the plane declares ask: its requires (none) raise no refusal naming a field, and a field outside accepts is dropped or refused naming it", async () => {
+test("R84 the assembly declares ask: its requires (none) raise no refusal naming a field, and a field outside accepts is dropped or refused naming it", async () => {
   const x = await world();
   assert.deepEqual(DECLARED_OPS.ask.fields.requires, [], "the plane's arm refuses nothing for a missing field; the assistant's own refusal is agent-worker's");
   await declaredOpHolds({ op: "ask", declaration: DECLARED_OPS.ask, call: asking(x), same: sameAnswer });
@@ -75,7 +75,7 @@ test("R72 the plane declares ask: its requires (none) raise no refusal naming a 
   assert.equal(x.posts.at(-1)[1].question, "Who holds the clerk's office?");
 });
 
-test("R72 the plane declares readtranslate: its requires alone raise no refusal naming a field, a call without subject is refused naming it, and a field outside accepts is dropped or refused naming it", async () => {
+test("R84 the assembly declares readtranslate: its requires alone raise no refusal naming a field, a call without subject is refused naming it, and a field outside accepts is dropped or refused naming it", async () => {
   const x = await world();
   await declaredOpHolds({ op: "readtranslate", declaration: DECLARED_OPS.readtranslate, call: reading(x),
     values: { subject: { kind: "note", id: x.note }, language: "es" }, same: sameAnswer });
@@ -85,8 +85,9 @@ test("R72 the plane declares readtranslate: its requires alone raise no refusal 
   assert.deepEqual(ok.label, { kind: "machine" });
 });
 
-test("R72 the two declarations are the plane's own in the assembly, agree with the hand rows, and carry the fields the arms read", () => {
-  assert.equal(OWNERS.plane, DECLARED_OPS, "the assembly holds the plane's own declaration");
+test("R84 the two declarations are the assembly's own in the assembly, agree with the hand rows, and carry the fields the arms read", () => {
+  for (const op of Object.keys(DECLARED_OPS)) assert.equal(OWNERS["store-assembly"][op], DECLARED_OPS[op], `${op}: the assembly holds store-assembly's own row (under the module 'store-assembly', not 'plane')`);
+  assert.equal(Object.hasOwn(OWNERS, "plane"), false, "plane is no owner in this assembly");
   for (const op of Object.keys(DECLARED_OPS)) {
     const d = DECLARED_OPS[op];
     assert.deepEqual(declaredFields(op), d.fields, `${op}: the assembled fields are the declared ones`);

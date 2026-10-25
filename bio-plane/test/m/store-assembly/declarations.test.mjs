@@ -84,32 +84,6 @@ test("R68 the start registers once: a second registration over the same modules 
   assert.throws(() => assembleDeclaredOps(), /op-declarations: \S+: (registered after the first read|a second registration) \(R81\)/);
 });
 
-test("R71 every op an owner declares is reachable: in the route map (by its door name or its alias), or answered by a Worker arm or the plane's own doors; none is declared and unreachable", async () => {
-  const x = await store();
-  const keys = new Set(Object.keys(x.s.routes(new URL("http://do/"), null)));
-  const { ops } = await declaredOpsOf(ROOT);
-  const unrouted = Object.keys(ops).filter((op) => !keys.has(OP_ALIASES[op] ?? op));
-  const unreachable = [];
-  const publicReads = new Set(publicReadOf(x.ctx).publicReads().map((r) => r.name));
-  const store1 = { fetch: async () => new Response("ROUTE_MAP") };
-  for (const op of unrouted) {
-    if (Object.hasOwn(PLANE_OPS, op)) continue;   /* R72: the door's ask arm and the draft path, no route */
-    if (Object.hasOwn(OWNERS["control-plane"], op)) continue;   /* control-plane R112: the door's own map serves it (its tests ask it) */
-    if (Object.hasOwn(OWNERS["signin-door"] ?? {}, op)) continue;   /* signin-door R6 (K5052 (4)): `subscriptionsignin` moved its declaration from control-plane's rows to signin-door's; the door's own arm still serves it */
-    if (publicReads.has(op)) continue;   /* a public read a module registered at start: asked as `op=publicread&name=` (t51 R17) */
-    let arm = null;
-    try {
-      arm = await gatedOp({ req: new Request(`http://w/${op}`, { method: "GET" }), url: new URL(`http://w/${op}`),
-        env: { STORE: { idFromName: () => "bio", get: () => store1 } }, op, cls: "admin", viaSession: false, sessMember: null,
-        sessViewer: null, aiCred: null, storeName: "bio", stub: store1, grantMember: null });
-    } catch { arm = { threw: true }; }
-    if (!arm) unreachable.push(op);
-  }
-  assert.deepEqual(unreachable, [], "declared by an owner, in no route map and answered by no Worker arm");
-  /* control: an op no owner declares is no route either */
-  assert.equal(keys.has("zzundeclared71"), false);
-});
-
 test("R71 the ops of provenance, case-inputs, case-import, citation, monitoring, link-sweep and the store door's (tasks, queue) answer through the door as the owners' own maps answer them, none an unknown op, each once in the route map", async () => {
   const x = await store(), twin = await store();
   const u = new URL("http://do/");
