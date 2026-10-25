@@ -120,8 +120,9 @@ test("R38 pptx: speaker notes, master and layout text, text boxes and a hidden s
   assert.equal(box.length, 1);
   assert.equal(box[0].text, "Text box words");
   assert.equal(box[0].anchor.slide, 3);
-  const hidden = t.parts.filter((p) => p.hidden === true);
-  assert.deepEqual(hidden.map((p) => [p.kind, p.text]), [["body", "Secret hidden slide"]]);
+  /* cause 16: the hidden slide's text is held once, as its slide unit marked hidden, not also as a second body piece */
+  assert.deepEqual(t.slides.filter((s) => s.hidden).map((s) => s.text), ["Secret hidden slide"]);
+  assert.ok(!t.parts.some((p) => p.text === "Secret hidden slide"));
   assert.ok(t.document.includes("Secret hidden slide"), "R23: a hidden slide is still in the document");
   assert.ok(!t.document.includes("Speaker says") && !t.document.includes("Master title"), "document stays the slides' text");
 });
