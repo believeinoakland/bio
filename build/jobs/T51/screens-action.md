@@ -411,3 +411,7 @@ Merged `tranche/T51`. Causes 1 to 5 were built by #18. **Met ids (B35): R3, R5, 
 
 **Checks:** suite 295 pass, 0 fail; format 0; coverage 55 of 55; words 0; ownership 0; fixtures 7 + 2 accepted. **architecture: 2 failures, waiting on BOB (J31):** `world-A.mjs` imports `publication` and `record-core` (the published case is made by publication's own commits on `world.ctx`, as `store-assembly/g54-seed.mjs` does; a ratification signs with an SSH key no door act can).
 Size (session_01KNqRbreNMPFiyJbKTakfps): test runs 14, module lines 5078
+
+## J31 · QUESTION
+
+QUESTION (re B35): item 6 is built and pushed; suite 295/0, format/coverage/words/ownership 0, fixtures 54 -> 7 (record: Round 11 lists each kept line and why). One check fails that only you can clear: architecture.mjs, 2 failures, world-A.mjs imports publication and record-core, not in screens-action's uses (the published case is made by publication's own commits on world.ctx, as store-assembly/g54-seed.mjs does; no door act can sign a ratification). Please add both edges (tests only), or tell me another way. Also fixed in my module: matter.mjs asked publishedcase with caseId, the op wants id. REPORTs in the record: hold cannot release a reply's hold (holdsdue omits placed holds); taskresolve offered on none of Action's queue kinds (R30); world clocks disagree (pinned vs wall). I post COMPLETE after the edges.
