@@ -45,6 +45,7 @@ import { CONNECTIONS_OPS, connectionsOp } from "../../../src/connections/ops.mjs
 import { ratificationOp } from "../../../src/ratification/ops.mjs";
 import { askOp, actionDraftOp, ACTION_DRAFT_OPS, askOnObject, draftOnObject } from "../../../src/store-assembly/index.mjs";
 import { innerRequest } from "../../../src/store-request/index.mjs";
+import { evidenceStorageAbsent } from "../../../src/acquisition/index.mjs";
 
 /** R17: the address a page's relative request is read against. */
 export const WORLD_ORIGIN = "https://group.example";
@@ -71,8 +72,8 @@ const STATS_GRAIN = 100_000_000;
 /* ---- the helpers control-plane hands its arms, re-made from earlier modules ---- */
 const sha256Hex = async (v) => createSha256().update(typeof v === "string" ? new TextEncoder().encode(v) : new Uint8Array(v)).hex();
 const captureKey = (storeName, sha) => `${storeName}/captures/${sha}`;   /* store-assembly R2: `<namespace>/captures/` */
-/* a world always binds the evidence bucket (store-assembly R90), so the absent-storage complaint is never asked for */
-const storageAbsent = (op) => { throw new Error(`storeWorld: ${op} found no evidence storage, which a world always binds`); };
+/* control-plane's `storageAbsent`: acquisition's one complaint (`evidenceStorageAbsent`, C-68.1), enveloped */
+const storageAbsent = (op, error) => { const { status, body } = evidenceStorageAbsent(op, error); return json(body, status); };
 const caseReader = async (url, env, storeName, presentedAi, credential) => {
   const r = await readerOf(url, env, storeName, presentedAi, doAnswer, credential, { background: url.searchParams.get("background") === "1" });
   return r.silent ? { silent: r.silent.op, correlation: r.silent.correlation } : r;
@@ -406,6 +407,8 @@ export function worldAnswers(op) {
   return ["whoami", "subscriptionsignin", "signintrace", "subscriptiondisconnect", "ask", "affordances", "registeraudit", "attest",
           "monitor", "pagetranscribe", "claim", "login", "recover", "passwordresetlook", "passwordreset", "invitelook", "enroll",
           "grouplanguages", "websiteinvite", "joinlinkinvite", "groupdescription", "handlecheck", "bootstrap",
+          /* capture's arm (`capture`, `links`), ratification's (`ratify`), public-read's public arm (`publishedbytes`, `credit`) */
+          "capture", "links", "ratify", "publishedbytes", "credit",
           ...ACTION_DRAFT_OPS, ...QUEUE_DOOR_OPS, ...INSTANCE_SETUP_OPS, ...CONNECTIONS_OPS, ...GOVERNOR_OPS, ...EXTRACTION_OPS,
           ...PUBLIC_DOOR_READS].includes(op);
 }
@@ -442,11 +445,15 @@ export async function signIn(world, handle, { admin = false, capabilities = null
   } else if (!passwords.has(handle)) {
     const founder = world.__founderSession || (world.__founderSession = await login(founderHandle || "admin", world.password));
     const as = { token: founder.token };
-    const added = await call("memberadd", as, { body: { memberId: handle, cover: `the world's member ${handle}` } });
+    /* an administrator is proposed by `memberadd` with role `admin` (changing administrators asks the founder's password again,
+       `reauth`, as the page's re-ask does) and endorsed by `adminendorse` while one is still owed */
+    if (admin) await call("reauth", as, { body: { password: world.password } });
+    const added = await call("memberadd", as, { body: { memberId: handle, cover: `the world's member ${handle}`, ...(admin ? { role: "admin" } : {}) } });
     const password = passwordOf(handle);
     await call("enroll", null, { body: { invite: added.invite, handle, password } });
     passwords.set(handle, password);
-    if (admin) await call("adminendorse", as, { body: { memberId: handle } });
+    if (admin && !(await call("whoami", { token: (await login(handle, password)).token })).administer)
+      await call("adminendorse", as, { body: { memberId: handle } });
     if (capabilities) await call("membercaps", as, { body: { memberId: handle, capabilities } });
     member = handle;
   } else member = handle;
@@ -529,4 +536,15 @@ export async function admittedAs(world, token, op = "search") {
   const a = await admit({ url, env, op, spec: OPS[op], method: "GET", presented, doAnswer, credential, body: null });
   if (!a.caller) throw new Error(`storeWorld: ${op} did not admit the caller: ${JSON.stringify(a.refusal || a.silent).slice(0, 300)}`);
   return { ...a.caller, token: credential.token };
+}
+
+/** R20: of the declared names given, those the world's door reaches in neither class (a key of the assembled route map, after
+ *  alias resolution and R2's renames, or an arm or function of the door's own) and that `WORLD_UNREACHED` does not name. */
+export function unreachedOf(world, names) {
+  const routes = routesOf(world);
+  return names.filter((declared) => {
+    const op = Object.hasOwn(OP_ALIASES, declared) ? OP_ALIASES[declared] : declared;
+    return !routes.has(innerRequest({ op, url: "http://x/" }).url.slice("http://x/".length).split("?")[0]) && !worldAnswers(op)
+      && !Object.hasOwn(WORLD_UNREACHED, op);
+  });
 }
