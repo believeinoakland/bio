@@ -247,8 +247,6 @@ test("R1, R2, R3, R6, R8, R35: every C-25 row this module's grammar, promotion c
   bad(merge(V1(), V1({ description: "Another reading with one name." })));
   bad(V1({ relationship: undefined }));
   bad(V1({ relationship: "or" }));
-  bad(V1({ legs: [V1F.legs[0], { target: MINUTES }] }));
-  bad(V1({ grounds: [] }));
   bad(V1({ derived_from: "nowhere" }));
   bad(merge(ver("a", { ...V1F, derived_from: "b" }), ver("b", { ...V1F, derived_from: "a", description: "The mirror reading, word for word." })));
   bad(merge(ver("as composed", V1F), (() => { const b = V2({ derived_from: "as composed", regroup_by: undefined, regroup_at: undefined,
@@ -269,8 +267,10 @@ test("R1, R2, R3, R6, R8, R35: every C-25 row this module's grammar, promotion c
   collect(w.bv.compareVersions({ target: INQ, a: "", b: "", viewer: V("ruth") }));
   collect(w.bv.compareVersions({ target: INQ, a: "as composed", b: "never written", viewer: V("ruth") }));
   const got = Object.fromEntries([...wire].sort());
-  assert.deepEqual(got, Object.fromEntries(Object.entries(BASIS_VERSION_CHECKS).map(([k, r]) => [k, r.check]).sort()),
-    "every declared code reached, nothing undeclared sent, each with its own number");
+  /* C-25.5 is held and raised by no document since K5077 (basis-version-grammar R3): its row stays, no promotion reaches it */
+  const NEVER_RAISED = ["VERSION_PARTITION_INCOMPLETE"];
+  assert.deepEqual(got, Object.fromEntries(Object.entries(BASIS_VERSION_CHECKS).filter(([k]) => !NEVER_RAISED.includes(k))
+    .map(([k, r]) => [k, r.check]).sort()), "every declared code reached, nothing undeclared sent, each with its own number");
   assert.deepEqual(got, {
     BASIS_VERSIONS_NOT_AN_INQUIRY: "C-25.18", BASIS_VERSIONS_NO_INQUIRY: "C-25.17",
     VERSION_COMPARE_NO_INQUIRY: "C-25.37", VERSION_COMPARE_NO_SUCH_VERSION: "C-25.39", VERSION_COMPARE_NO_VERSION: "C-25.38",
@@ -278,7 +278,7 @@ test("R1, R2, R3, R6, R8, R35: every C-25 row this module's grammar, promotion c
     VERSION_FROZEN: "C-25.11", VERSION_GROUND_UNASSERTED: "C-25.6", VERSION_HIDDEN_NOT_BOOLEAN: "C-25.13",
     VERSION_LEG_NOT_CITABLE: "C-25.10", VERSION_LEG_SELF: "C-25.14", VERSION_LEG_UNRESOLVED: "C-25.16",
     VERSION_NAME_MALFORMED: "C-25.36", VERSION_NAME_NOT_UNIQUE: "C-25.2", VERSION_NO_DESCRIPTION: "C-25.1", VERSION_NO_RELATIONSHIP: "C-25.3",
-    VERSION_ORPHAN_ROW: "C-25.15", VERSION_PARTITION_INCOMPLETE: "C-25.5", VERSION_REGROUP_UNATTRIBUTED: "C-25.9",
+    VERSION_ORPHAN_ROW: "C-25.15", VERSION_REGROUP_UNATTRIBUTED: "C-25.9",
     VERSION_RELATIONSHIP_DISAGREES: "C-25.4", VERSION_STATE_UNKNOWN: "C-25.12" }, "the C-numbers pinned by name");
 });
 

@@ -391,6 +391,21 @@ test("R41 access is free, reading_room or paywalled (ACCESS_UNKNOWN), a standard
   assert.equal(w.declare().access, null, "not a standard kind: none stated");
 });
 
+test("R41 K5148 a capture's actor names a member whether spelled member:<id> or as the bare id capture records (capture R69); a machine identity never does", () => {
+  const w = seeded();
+  const bare = w.passage("bare", { text: "Section 5: keep the log." }), stamped = w.passage("stamped"), machine = w.passage("machine"), empty = w.passage("empty");
+  w.actors[bare.capSha] = ["bob"];
+  w.actors[stamped.capSha] = [V("bob")];
+  w.actors[machine.capSha] = ["system", "token:ingest"];
+  w.actors[empty.capSha] = ["member:", ""];
+  for (const access of ["paywalled", "reading_room"]) {
+    assert.equal(w.declare({ cite: MHS, kind: "standard", access, text: [bare.contentId] }).ok, true, `${access}: a bare member id is a member`);
+    assert.equal(w.declare({ cite: MHS, kind: "standard", access, text: [stamped.contentId] }).ok, true, `${access}: member:<id> is a member`);
+    refusalRow(w.declare({ cite: MHS, kind: "standard", access, text: [machine.contentId] }), "TEXT_NOT_MEMBER_CAPTURED");
+    refusalRow(w.declare({ cite: MHS, kind: "standard", access, text: [empty.contentId] }), "TEXT_NOT_MEMBER_CAPTURED");
+  }
+});
+
 test("R42 a commitment, policy or standard may carry a target {metric, threshold, period, definition}: comparator at_least, at_most or within, an exact decimal value read by calc-grammar, the unit as the text states it, a period or a stated recurrence, a definition passage or \"none\"; TARGET_INVALID names the field; nothing is computed", () => {
   const w = seeded();
   const t = w.passage().contentId, def = w.passage().contentId;

@@ -41,7 +41,7 @@ Terms.
 
 **importedCases({viewer}), importedCase({import, edition?, viewer})** (`op=importedcases`, `op=importedcase`; member session; reads)
 
-- **R4** `importedCases` lists every import with its source group, case, lens, editions and when each was imported. `importedCase` answers one import's editions, the latest by default, each with:
+- **R4** `importedCases` lists every import with its source group, case, lens, editions and when each was imported. `importedCase` answers one import's editions, the latest by default, each with: (K5148; WALK-FINAL-10B R98) `importedCase` and `importedCases` carry the case's `scope` (its reading name), and each finding of an edition its `title` (the finding file's front matter, R31's rule), never only the ids.
   - for each finding, its role, its result with what is missing or what differs, and its recomputed pair;
   - the source's bar as the case states it, labelled as the source's and never as this group's (DEC-45);
   - each finding against this group's own bar. That is the group default (`strength.strengthBarOf` with no project, its R16), and with none set, that no bar is set (K1134 reading 3). The axis is reached or not, as `case-checker` R6 reads it, with `not_asked` for a supporting finding;

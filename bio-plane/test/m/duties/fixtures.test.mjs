@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as F from "./fixtures.mjs";
-import { BOB } from "./fixture.mjs";
+import { BOB, CAROL } from "./fixture.mjs";
 
 test("R9 R10 R12 fixture occurrencesOf: a met and a pending occurrence over real events, an undetermined one, and NO_SUCH_DUTY for an absent id", () => {
   const f = F.occurrencesOf();
@@ -40,4 +40,13 @@ test("R14 fixture transitionsUnknownDuty: the module refuses no read of an unkno
   const f = F.transitionsUnknownDuty();
   assert.deepEqual([f.read.ok, f.read.transitions, f.read.count], [true, [], 0]);
   assert.equal(f.read.reason, undefined, "no NO_SUCH_DUTY comes from transitionsOf");
+});
+
+test("R7 R9 fixture dutiesForViewer: an entity holding no duty lists none, an absent duty id is NO_SUCH_DUTY, and a held duty with no trigger in the window has no occurrence", () => {
+  const f = F.dutiesForViewer();
+  assert.deepEqual([f.none.ok, f.none.duties, f.none.count], [true, [], 0]);
+  assert.deepEqual([f.noneOccurrences.ok, f.noneOccurrences.reason, f.noneOccurrences.duty_id], [false, "NO_SUCH_DUTY", f.absentId]);
+  assert.deepEqual(f.held.duties.map((d) => d.duty_id), [f.dutyId], "the holder sees the one duty of the entity");
+  assert.deepEqual([f.heldOccurrences.ok, f.heldOccurrences.occurrences], [true, []]);
+  assert.deepEqual(f.duties.dutiesOf({ entity: f.entity, as: "obligor", viewer: f.holder }), f.held, "the same answer the module gives asked directly");
 });

@@ -5,7 +5,8 @@
    drive the same producers through `feedItems` (K1850; seam read §5). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, byId, NOW, iso } from "./world.mjs";
+import { world, byId, NOW, iso, READS } from "./world.mjs";
+import { homeOfHomed, sha } from "../provenance/fixtures.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { MachineryProducers } from "../../../src/machinery-producers/index.mjs";
 import { MACHINE_AUTHOR_PREFIX } from "../../../src/record-grammar/actors.mjs";
@@ -30,18 +31,15 @@ const allFive = (sweep, at = iso(NOW - 3 * DAY)) => [
 function busy(extra = {}) {
   const w = world({
     governor: { governorHolding: () => [{ host: "h.example", cooloff_until: NOW + 5, refusals: 1, last_refusal_at: NOW - 10 }] },
-    capture: { liveCaptureSessions: () => [{ session: "S1", locator: "https://x.example/", primarySha: "p1", created: iso(NOW),
+    capture: { liveCaptureSessions: () => [{ session: "S1", locator: "https://x.example/", primarySha: sha("p1"), created: iso(NOW),
       updated: iso(NOW), expires: iso(NOW + 10), ticks: 1, state: { queue: [1] } }] },
-    provenance: { homeOf: (sha) => (sha === "p1" ? { bundleId: "INF-1" } : null) },
+    provenance: homeOfHomed({ [sha("p1")]: "INF-1" }),
     captureRequests: {
       completed: () => ({ requests: [{ request: "CR-C", run: "r", target: "INQ-S", address: "https://y.example/", host: "y.example",
         purpose: "investigate", ua_mode: "civicos", capture_sha: "cap1", captured_at: iso(NOW), attribution: { ok: true, statement: "s" } }] }),
       rendersHeld: () => ({ requests: [{ request: "CR-R", target: "INQ-S", address: "https://a.example/", state: "requested",
         code: "RENDER_DEFERRED", requested_at: iso(NOW), expires: iso(NOW + 5) }] }) },
-    monitoring: {
-      monitoring: () => ({ ok: true, truncated: false, items: [{ state: "unscheduled", bundle: "INF-1", address: null, reason: "none" }] }),
-      archiveEligible: () => ({ ok: true, limit: 50, truncated: false, paused: { paused: false },
-        eligible: [{ address: "https://gone.example/a", first_failure_since: iso(NOW) }] }) },
+    monitoring: { monitoring: () => READS.seeded.monitoring, archiveEligible: () => READS.seeded.archiveEligible },
     linkSweep: { sweepConditions: () => ({ ok: true, conditions: allFive("GATH-1#agendas") }) },
     networkNotices: { noticesOf: ({ project }) => ({ ok: true, project, sealed_weeks: [], methodVersion: 1, notices: project !== "PRJ-1" ? [] : [
       notice("WO-1", "open", { missed_monthlies: [{ month: "2026-08", at: "2026-08-01T00:00:00Z" }], lapse_date: "2026-09-05" }),
@@ -49,14 +47,14 @@ function busy(extra = {}) {
     ...extra,
   });
   w.member("olga");
-  w.bundle("PRJ-1", "project", { title: "Contracts" }); w.bundle("INQ-S", "inquiry"); w.bundle("INF-1"); w.bundle("INF-U");
+  w.bundle("PRJ-1", "project", { title: "Contracts" }); w.bundle("INQ-S", "inquiry"); w.bundle("INF-1"); w.bundle("INF-U"); w.bundle(READS.seeded.bundles.unscheduled);
   w.bundle("GATH-1", "information", { title: "Council agendas" });
   w.run(`UPDATE bundles SET project='PRJ-1' WHERE bundle_id='GATH-1'`);
   w.join("PRJ-1", "olga", { owner: true });
   w.cite("PRJ-1", "INQ-S"); w.leg("INQ-S", "INF-1"); w.cite("INQ-S", "GATH-1");
   w.run(`INSERT INTO register (capture_sha, bundle_id, path, encoding, registered, bytes) VALUES ('cap1','INF-1','snapshots/x','utf8',?,1)`, iso(NOW));
   w.run(`INSERT INTO captured_locators (address_norm, address, capture_sha, via, first_retrieved, last_retrieved, observations) VALUES (?,?,?,?,?,?,1)`,
-    "https://gone.example/a", "https://gone.example/a", "cap1", "direct", iso(NOW), iso(NOW));
+    READS.seeded.addresses.gone, READS.seeded.addresses.gone, "cap1", "direct", iso(NOW), iso(NOW));
   const man = (key, author, created) => w.run(`INSERT INTO manifest (bundle_id, snap_key, kind, base, author, created, files_json)
     VALUES ('INF-U', ?, 'revision', 'b', ?, ?, '[]')`, key, author, created);
   man("k1", "olga", iso(NOW - 100)); man("k2", `${MACHINE_AUTHOR_PREFIX}daemon`, iso(NOW - 50));
@@ -111,24 +109,25 @@ test("R1: conditionItems answers every item R2–R5 derive, each homed through h
 });
 
 test("R6: no answer names a bundle the viewer may not see, and no count reveals one", () => {
-  const HID = "PRJ-H";
+  const HID = "PRJ-H", GONE = READS.seeded.addresses.gone;
   const w = world({
     governor: { governorHolding: () => [{ host: "h.example", cooloff_until: NOW + 5, refusals: 1 }] },
-    capture: { liveCaptureSessions: () => [{ session: "S1", locator: "https://h.example/1", primarySha: "c-h", created: iso(NOW),
+    capture: { liveCaptureSessions: () => [{ session: "S1", locator: "https://h.example/1", primarySha: sha("c-h"), created: iso(NOW),
       updated: iso(NOW), expires: iso(NOW + 10), ticks: 1, state: {} }] },
-    provenance: { homeOf: (sha) => (sha === "c-h" ? { bundleId: HID } : null) },
+    provenance: homeOfHomed({ [sha("c-h")]: HID }),
     captureRequests: { completed: () => ({ requests: [{ request: "CR-1", run: "r", target: "INQ-S", address: "https://h.example/1",
       host: "h.example", purpose: "investigate", ua_mode: "civicos", capture_sha: "c-h", captured_at: iso(NOW), attribution: { ok: true, statement: "s" } }] }) },
-    monitoring: { archiveEligible: () => ({ ok: true, limit: 50, truncated: false, paused: { paused: false },
-      eligible: [{ address: "https://h.example/1", first_failure_since: iso(NOW) }] }) },
+    monitoring: { archiveEligible: () => READS.seeded.archiveEligible },
     linkSweep: { sweepConditions: () => ({ ok: true, conditions: allFive(`${HID}#s`) }) },
   });
   w.member("alice"); w.bundle(HID, "project"); w.bundle("INF-V"); w.bundle("INQ-S", "inquiry"); w.bundle("PRJ-A", "project");
   w.join("PRJ-A", "alice", { owner: true }); w.cite("PRJ-A", "INQ-S"); w.cite(HID, "INF-V"); w.cite(HID, "INQ-S");
-  for (const [sha, b] of [["c-h", HID], ["c-v", "INF-V"]]) {
-    w.run(`INSERT INTO register (capture_sha, bundle_id, path, encoding, registered, bytes) VALUES (?,?,?,'utf8',?,1)`, sha, b, "snapshots/x", iso(NOW));
+  for (const [cap, b] of [["c-h", HID], ["c-v", "INF-V"]]) {
+    w.run(`INSERT INTO register (capture_sha, bundle_id, path, encoding, registered, bytes) VALUES (?,?,?,'utf8',?,1)`, cap, b, "snapshots/x", iso(NOW));
     w.run(`INSERT INTO captured_locators (address_norm, address, capture_sha, via, first_retrieved, last_retrieved, observations) VALUES (?,?,?,?,?,?,1)`,
-      "https://h.example/1", "https://h.example/1", sha, "direct", iso(NOW), iso(NOW));
+      "https://h.example/1", "https://h.example/1", cap, "direct", iso(NOW), iso(NOW));
+    w.run(`INSERT INTO captured_locators (address_norm, address, capture_sha, via, first_retrieved, last_retrieved, observations) VALUES (?,?,?,?,?,?,1)`,
+      GONE, GONE, cap, "direct", iso(NOW), iso(NOW));
   }
   const man = (key, author) => w.run(`INSERT INTO manifest (bundle_id, snap_key, kind, base, author, created, files_json) VALUES (?,?, 'revision', 'b', ?, ?, '[]')`, HID, key, author, iso(NOW));
   man("k1", "alice"); man("k2", "token:daemon");
@@ -136,7 +135,7 @@ test("R6: no answer names a bundle the viewer may not see, and no count reveals 
   assert.ok(!JSON.stringify(r).includes(HID), "the hidden project is named nowhere");
   const m = byId(r);
   assert.deepEqual(m["CONDITION::governor-holding-host::h.example"].subject.bundles, ["INF-V"], "only the documents she sees, counted");
-  assert.deepEqual(m["CONDITION::archive-fallback-eligible::https://h.example/1"].subject.bundles, ["INF-V"]);
+  assert.deepEqual(m[`CONDITION::archive-fallback-eligible::${GONE}`].subject.bundles, ["INF-V"]);
   assert.equal(m["CONDITION::partial-capture-outstanding::S1"], undefined, "a condition about a hidden bundle is withheld whole");
   assert.equal(m[`CONDITION::capture-completed-unattended::${HID}`], undefined);
   assert.deepEqual(m["CONDITION::capture-completed-unattended::CR-1"].basis.grade_notes, [], "a hidden capture carries no note");
@@ -282,8 +281,8 @@ test("R2, R4, R5, R11 (T50; plan rule 6; K3366): each item's summary is read by 
   assert.equal(m["CONDITION::governor-holding-host::h.example"].summary, w("pacing_holding_captures", { host: "h.example" }));
   assert.equal(m["CONDITION::partial-capture-outstanding::S1"].summary, w("capture_did_finish", { locator: "https://x.example/" }));
   assert.equal(m["CONDITION::render-deferred::CR-R"].summary.startsWith(w("render_waiting", { address: "https://a.example/", words: "" }).trimEnd()), true);
-  assert.equal(m["CONDITION::archive-fallback-eligible::https://gone.example/a"].summary, w("stopped_answering_often", { address: "https://gone.example/a" }));
-  assert.equal(m["CONDITION::monitoring-recheck-due::INF-1"].summary, w("monitored_check_scheduled", { bundle: "INF-1" }));
+  assert.equal(m[`CONDITION::archive-fallback-eligible::${READS.seeded.addresses.gone}`].summary, w("stopped_answering_often", { address: READS.seeded.addresses.gone }));
+  assert.equal(m[`CONDITION::monitoring-recheck-due::${READS.seeded.bundles.unscheduled}`].summary, w("monitored_check_scheduled", { bundle: READS.seeded.bundles.unscheduled }));
   const title = `"Council agendas" (agendas)`;
   assert.equal(m["CONDITION::sweep-held-backlog::GATH-1#agendas"].summary, w("sweep_held_captures", { title }));
   assert.equal(m["CONDITION::sweep-yield-anomaly::GATH-1#agendas"].summary, w("sweep_filed_unusual", { title }));

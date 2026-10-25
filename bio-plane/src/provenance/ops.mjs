@@ -56,6 +56,9 @@ export function provenanceOps(provenance, url, body, { observer = null } = {}) {
                                                     by: q("author"), viewer: q("viewer") }),
     /* R70 (T51; K4259): every declared origin of a document, oldest first; the viewer is the control plane's stamp. */
     origins: () => provenance.originsOf({ bundleId: field("bundleId"), viewer: q("viewer") }),
+    /* R80 (T51; K5148): the standing authority of a document's captures, the read a member's screen uses; the viewer is the
+       control plane's stamp. */
+    authority: () => provenance.authoritiesOf({ bundleId: field("bundleId"), capture: field("capture"), viewer: q("viewer") }),
     /* REC-190: the census of displaced homes, read-only. */
     homecensus: () => provenance.homeCensus({ limit: q("limit") }),
     /* D-476: does the register hold these whole-document bytes, read-only and naming no bundle. */
@@ -95,6 +98,9 @@ export const DECLARED_OPS = Object.freeze({
   declareorigin: { classes: ["admin","member"], mutating: true, stamps: ["viewer","author"], needs: "contribute", weight: "reversible",
     description: localize("provenance.declared.declareorigin", "document-directed: a member states, with their name and the date, the system a document came from, keyed by bundleId; a second declaration is added beside the first and never replaces it, and the document itself does not change"),
     fields: { accepts: ["bundleId","system"], requires: ["bundleId","system"] } },
+  authority: { classes: ["admin","member"], mutating: false, stamps: ["viewer"], needs: null, weight: "read",
+    description: localize("provenance.declared.authority", "document-directed: states, for each captured file of a document, who issued it as the record now stands, with the dated basis and whether a member reviewed it and could not tell; a decision made by a member is stated here and nothing is changed"),
+    fields: { accepts: ["bundleId","capture"], requires: ["bundleId"] } },
   origins: { classes: ["admin","member"], mutating: false, stamps: ["viewer"], needs: null, weight: "read",
     description: localize("provenance.declared.origins", "document-directed: lists, oldest first, every system members have declared a document came from, with who declared it and when; the latest is the standing one, and nothing is changed"),
     fields: { accepts: ["bundleId"], requires: ["bundleId"] } },

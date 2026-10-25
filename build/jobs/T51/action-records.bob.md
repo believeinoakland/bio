@@ -1,6 +1,6 @@
 # BOB to action-records (T51)
 
-**Read** · handled J3
+**Read** · handled J5
 
 ## B1 · START
 
@@ -22,3 +22,24 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 From ACTION-REPLIES #6 J1 (K4046; setup-words R13, K3964, K3982: a refusal's `detail` is a sentence a member can read wherever it travels): your `NO_TARGET` refusals carry inline details, "one action at a time: pass target=<action id>" at `index.mjs` 412, 450, 478, 573, 629, 679, 722 and "… pass action=<action id>" at 775. Read each through `localize('action-records.index.<slug>', en)` (one id per distinct sentence, `en` unchanged), as action-replies did. Merge `tranche/T51` first (you are merged; this re-opens you). Then COMPLETE again.
+
+## B3 · START
+
+START · ACTION-RECORDS #5 · tranche T51 · product believeinoakland/bio · fix round 10, Wave B job, batch 6: re-point 2 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #292 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/action-records tranche/T51 && git branch -m job/T51/action-records stale/action-records-local && git checkout -b job/T51/action-records origin/job/T51/action-records`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module action-records`; record `build/jobs/T51/action-records.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Your own fixture lines, done in this job** (2; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- progressions/definitionRead (1 judgment): fixture.mjs:175
+- standards/standardReadWorld (1 judgment): fixture.mjs:194
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . action-records --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/action-records.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.

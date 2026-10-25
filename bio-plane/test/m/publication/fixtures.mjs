@@ -60,8 +60,8 @@ export function caseDocumentFacts() {
 }
 
 /** R15 (G54): the real ledger of the case file over `editions` complete case editions (the real commit), `record` the
- *  Worker's store-internal hop `recordcasefile`, `owed({now, limit})` and `nextAt()` the one owed rule, `manifest(case)` the
- *  real `recordCaseManifest`. `refusals` are the ledger's own refusals, made by the real writer: a state it does not know
+ *  Worker's store-internal hop `recordcasefile`, `owed({now, limit})` and `nextAt()` the one owed rule, `manifest(case, edition, {built})` the
+ *  real `recordCaseManifest` (`built: true` records the file built in the same call, K5084). `refusals` are the ledger's own refusals, made by the real writer: a state it does not know
  *  (`MALFORMED`), an edition it does not hold (`NO_SUCH_CASE_EDITION`), and `built` before any manifest is recorded
  *  (`NO_MANIFEST`). The build's own refusals (`MATERIAL_MISSING`, `BUCKET_FAILED`) are `public-read`'s. */
 export function caseFileLedger({ editions = 1, at = NOW } = {}) {
@@ -78,8 +78,8 @@ export function caseFileLedger({ editions = 1, at = NOW } = {}) {
     world: w, project, cases, record, refusals,
     owed: ({ now, limit } = {}) => w.p.caseFilesOwed({ now: typeof now === "number" ? iso(now) : now, limit }),
     nextAt: () => w.p.caseFileNextAt(),
-    manifest: (caseId, edition = 1) => w.p.recordCaseManifest({ caseId, edition, manifest: { files: [] },
-      manifestSha: sha(`manifest ${caseId} ${edition}`), bytes: 5 }),
+    manifest: (caseId, edition = 1, { built } = {}) => w.p.recordCaseManifest({ caseId, edition, manifest: { files: [] },
+      manifestSha: sha(`manifest ${caseId} ${edition}`), bytes: 5, ...(built === undefined ? {} : { built }) }),
     state: (caseId, edition = 1) => w.row(`SELECT casefile_state AS state, casefile_attempts AS attempts,
       casefile_attempted_at AS at, casefile_why AS why FROM published_cases WHERE case_id=? AND edition=?`, caseId, edition),
   };
@@ -116,6 +116,39 @@ export function publicationWorld() {
     },
   };
   return world;
+}
+
+/** R42 (K5094; follow-up 27): what the user holds, made real. `held` is `[{finding, projects, digests}]`: each `finding` a
+ *  published finding (the real acts of `fixture.mjs`: its inquiry, a case of each of its `projects` pinning it, its
+ *  signature) resting on exactly the captures `digests` names, each a document of the register holding that sha, served
+ *  by a `serve` edge of the finding. A digest two findings name is one capture. `restingCapturesOf` answers as the real
+ *  module does (pages, cursor, `findings_truncated`), over the project ids named; `publication` is the real instance, so
+ *  a user takes `restingOf(held).publication` where it takes publication. */
+export function restingOf(held = []) {
+  const w = planeWorld();
+  w.member("olive");
+  const docs = new Map(), seen = new Set();
+  let n = 0, c = 0;
+  const docOf = (digest) => {
+    if (!docs.has(digest)) { const id = `INFO-2026-${String(++n).padStart(4, "0")}-resting`; w.doc(id, { digest }); docs.set(digest, id); }
+    return docs.get(digest);
+  };
+  for (const { finding, projects, digests } of held) {
+    if (seen.has(finding)) throw new Error(`fixture restingOf: finding ${finding} named twice`);
+    seen.add(finding);
+    if (!Array.isArray(projects) || !projects.length) throw new Error(`fixture restingOf: ${finding} names no project`);
+    const ids = digests.map(docOf);
+    w.inquiry(finding, { legs: ids.map((target) => ({ target })) });
+    const roles = [{ target: finding, version_sha: w.head(finding) }];
+    for (const project of projects) {
+      const caseId = `CASE-2026-${String(++c).padStart(4, "0")}`;
+      must(w.prepare(caseId, 1, { project, roles }), "prepare");
+      must(w.signCase(caseId, 1, { project, roster: roster(roles) }), "signCase");
+    }
+    must(w.signFinding(finding, { sig: SIG(c + 10), edges: ids.map((to) => ({ to, kind: "cites", disclosure: "serve" })) }),
+         "signFinding");
+  }
+  return { world: w, publication: w.p, restingCapturesOf: (q) => w.p.restingCapturesOf(q) };
 }
 
 /** R62 (docket's `stampEdition`): the module's two refusals of a stamp, made by the real writer: `NO_SUCH_CASE_EDITION` for a

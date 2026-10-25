@@ -1,6 +1,6 @@
 # observation-log (T51)
 
-**Status** · session_01N9utw85aeGstUGpxK1qCWr · depth 2 · COMPLETE · handled B5
+**Status** · session_01NWeJdk2kVHeYkijVPMg5d9 · depth 2 · COMPLETE · handled B6
 
 ## J1 · COMPLETE
 
@@ -149,3 +149,21 @@ G15 (K4571, fix round 6, wave 2): done. A unit stored cut to the per-unit cap no
 Nothing deferred. No flaw found in another module.
 
 Size (session_01N9utw85aeGstUGpxK1qCWr): test runs 8, module lines 3122
+
+## J8 · COMPLETE
+
+Fix round 10, batch 6 (B6): my one fixture line is done. `fixture.mjs:71` hand-built extraction's reading and index notice; `bio-plane/test/m/observation-log/fixture.mjs` now imports `extractionNotice` from extraction's published `../extraction/fixtures.mjs` (made by extraction's real code) and re-exports it, so `world()`, `registrations.test.mjs` and the rest take the real answer. The local copy is removed. No module source changed; no `fixtures-own` or `fixtures-generic` marker added; no sentence changed.
+
+Lines: `checks/fixtures.mjs . observation-log --list`: 0 failures (was 1). Left: none. Flaws in other modules: none new.
+
+Tests and checks:
+- observation-log suite (`node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/observation-log/*.test.mjs`): 84 pass, 0 fail.
+- `impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178 (only test files of my module changed).
+- `checks/run.mjs`: format 0, architecture 0, words 0 failures (19158 words, not risen), channels 0. Coverage and fixtures failures listed are other modules' (3 `screens-intake` lines name observation-log as an earlier provider; they are screens-intake's to re-point).
+- `checks/ownership.mjs`: 1 file changed by observation-log, 0 failures.
+
+Size (session_01NWeJdk2kVHeYkijVPMg5d9): test runs 2, module lines 3122
+
+## J9 · COMPLETE
+
+COMPLETE (B6, fix round 10 batch 6). My one fixture line (extraction/extractionNotice, fixture.mjs:71) is done: observation-log's test fixture now takes `extractionNotice` from extraction's published fixtures.mjs. `fixtures.mjs --list` for observation-log: 0 failures. Suite 84/84; format, architecture, words, ownership 0 failures; impact 0 modules. No fixtures-own/generic markers added. Details in record J8.

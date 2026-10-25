@@ -95,10 +95,10 @@ export const DECLARED_OPS = Object.freeze({
   sweeps: { classes: ["admin", "member", "probe"], mutating: false, weight: "read",
     description: localize("link-sweep.declared.sweeps", "read: the link sweeps the viewer may see, each with its definition as quoted data, its ratification, its schedule and its last runs; writes nothing"),
     fields: { accepts: ["now"], requires: [] } },
-  sweepset: { classes: ["admin", "member"], machineClasses: [], mutating: true, needs: "contribute", weight: "reversible",
+  sweepset: { classes: ["admin", "member"], machineClasses: [], mutating: true, needs: "contribute", weight: "reversible", stamps: ["author", "viewer"],
     description: localize("link-sweep.declared.sweepset", "a member defines a sweep or changes one: a team's named standing intent to watch listing pages, kept unratified until an owner ratifies it, and it fetches nothing"),
     fields: { accepts: ["bundle","sweep","title","sources","seeds","match","cadence","budget"], requires: ["bundle","title","sources","seeds","match","cadence","budget"] } },
-  sweepratify: { classes: ["admin", "member"], machineClasses: [], mutating: true, needs: "contribute", weight: "reversible",
+  sweepratify: { classes: ["admin", "member"], machineClasses: [], mutating: true, needs: "contribute", weight: "reversible", stamps: ["author", "viewer"],
     description: localize("link-sweep.declared.sweepratify", "a project owner ratifies a sweep, or any member who may write the bundle stops it; it fetches nothing itself, and ratifying lets the team's fetches run within the scope and budget shown"),
     fields: { accepts: ["sweep","ratified"], requires: ["sweep","ratified"] } },
 });

@@ -71,6 +71,7 @@ test("R45: a feed whose read throws contributes no item and is named {feed, reas
 test("R45: a provider that answers a refusal names the feed `refused`, one that answers undetermined names it `undetermined`; a refused intent.gaps names `objectives`", () => {
   /* attribution's per-edition `ok: false` is publication's NO_CASE_DOCUMENT, an edition with nothing to say, not a feed unread */
   for (const feed of Object.keys(BREAK).filter((f) => f !== "attribution")) {
+    // fixtures-generic: REFUSED (a sentinel code: fourteen providers' reads each answer it in turn, and the module carries whatever code a provider gives; most of those reads have no refusal of their own to publish) */
     for (const [answer, reason] of [[() => ({ ok: false, reason: "REFUSED", detail: "x" }), "refused"], [() => ({ ok: true, state: "undetermined" }), "undetermined"]]) {
       const w = everyKind();
       for (const [k, v] of Object.entries(BREAK[feed](answer))) Object.assign(w.fakes[k], v);
@@ -95,8 +96,10 @@ test("R45: the places feed, the signing-keys feed and the projects feed fail on 
   assert.deepEqual(own(w2.read("ada")), [{ feed: "signing-keys", reason: "threw" }]);
   const w3 = world({ projectRoster: { projectList: boom, projectParticipants: boom, projectRequests: boom, projectInvitations: boom } }); w3.member("alice");
   assert.deepEqual(own(w3.read("alice")), [{ feed: "projects", reason: "threw" }]);
-  const w4 = world({ projectRoster: { projectList: () => ({ ok: false, reason: "REFUSED" }) } }); w4.member("alice");
-  assert.deepEqual(own(w4.read("alice")), [{ feed: "projects", reason: "refused", read: "project-roster.projectList", code: "REFUSED" }]);
+  /* project-roster's reads never refuse (its R35, R36): for a member it holds nothing of, the real answer is an empty list, and no feed fails */
+  const w4 = world(); w4.member("alice");
+  assert.deepEqual([w4.roster.projectList({ viewer: "member:alice" }).ok, w4.roster.projectList({ viewer: "member:alice" }).projects], [true, []]);
+  assert.deepEqual(own(w4.read("alice")), [], "an empty list is no failure");
 });
 
 test("R45: a provider the machinery or action feed names in its own facts.failed is carried under that feed's id with reason `partial`, and the items it did raise stand", () => {

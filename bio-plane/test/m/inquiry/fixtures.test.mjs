@@ -1,7 +1,7 @@
 /* inquiry's published fixtures (fixtures.mjs): each is called here and its real answer checked (K4990). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { basisForUnread, basisRefusals, disposeAct, migratedSurfacing, readRefusals } from "./fixtures.mjs";
+import { basisForUnread, basisRefusals, datedWaitOf, disposeAct, migratedSurfacing, questionWaitsSetAside, readRefusals } from "./fixtures.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
 test("R16: basisForUnread answers the real basis read for no question (NO_ID) and for one the record does not hold (resting on nothing)", () => {
@@ -55,4 +55,34 @@ test("R33 R65: readRefusals answers NOT_AN_INQUIRY for a bundle that is no quest
   assert.deepEqual(f.absent, { ok: false, reason: "NO_SUCH_BUNDLE", target: f.absentId });
   assert.deepEqual(f.hiddenFromViewer, { ok: false, reason: "NO_SUCH_BUNDLE", target: f.question }, "answered as an absent one is");
   assert.equal(f.visible.ok, true, "control: a question the viewer may see is read");
+});
+
+test("R55: datedWaitOf answers the setter's dated wait due from its local day in the zone, waiting a second before it, and none to admin; parameterised by viewer and date", () => {
+  const f = datedWaitOf();
+  assert.deepEqual([f.answer.ok, f.answer.zone], [true, "America/Los_Angeles"]);
+  assert.deepEqual(f.answer.waits.map((x) => [x.inquiry, x.index, x.text, x.description, x.date, x.state, x.set_by]),
+    [[f.question, 0, "the auditor's reply", "from the City", "2026-10-10", "due", f.viewer]]);
+  assert.equal(typeof f.answer.waits[0].set_at, "string", "stamped when the wait was set");
+  assert.deepEqual(f.before.waits.map((x) => x.state), ["waiting"], "control: one second before the local day, not yet due");
+  assert.deepEqual(f.none.waits, [], "admin reads no member's waits");
+  const g = datedWaitOf({ viewer: "member:bob", date: "2026-10-20" });
+  assert.deepEqual(g.answer.waits.map((x) => [x.date, x.state, x.set_by]), [["2026-10-20", "due", "member:bob"]]);
+  assert.deepEqual(g.before.waits.map((x) => x.state), ["waiting"]);
+});
+
+test("R55 R58: questionWaitsSetAside answers the asker the set-aside wait with by and reason, the restore ending it with both in the history, and nothing to a viewer who may not see the document", () => {
+  const f = questionWaitsSetAside();
+  assert.equal(f.answer.ok, true);
+  assert.deepEqual(f.answer.waits, [], "no dated wait");
+  assert.deepEqual(f.answer.document_waits.map((x) => [x.document, x.by, x.reason]), [[f.document, f.setter, f.reason]]);
+  assert.equal(typeof f.answer.document_waits[0].at, "string");
+  assert.deepEqual(f.answer.history.map((h) => [h.document, h.act, h.by, h.reason]), [[f.document, "set_aside", f.setter, f.reason]]);
+  assert.deepEqual(f.restored.document_waits, [], "a restore ends the wait");
+  assert.deepEqual(f.restored.history.map((h) => [h.act, h.by, h.reason]),
+    [["set_aside", f.setter, f.reason], ["restore", f.asker, f.restoreReason]]);
+  assert.deepEqual([f.hiddenFrom.document_waits, f.hiddenFrom.history], [[], []], "a document the viewer may not see is neither announced nor counted");
+  assert.deepEqual(f.restored.history, f.inquiry.documentWaits({ questions: [f.question], viewer: f.asker }).questions[0].history,
+    "the history is documentWaits'");
+  const g = questionWaitsSetAside({ asker: "member:carol", setter: "member:dave", reason: "Duplicate." });
+  assert.deepEqual(g.answer.document_waits.map((x) => [x.by, x.reason]), [["member:dave", "Duplicate."]]);
 });

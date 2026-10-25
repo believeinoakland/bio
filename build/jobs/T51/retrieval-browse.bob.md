@@ -1,6 +1,6 @@
 # BOB to retrieval-browse (T51)
 
-**Read** · handled J8
+**Read** · handled J9
 
 ## B1 · START
 
@@ -130,3 +130,31 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 ## B12 · CHANGE
 
 Merged (K5067). Two things: (1) BOB wrote your proposed line as retrieval-browse R21 (a term item's part, not yet met: T51) and struck R20's mark: rename your R17a test to name R21 so coverage reads it. (2) provenance is merged and publishes homeOf / homeOfWorld / homeOfHomed in bio-plane/test/m/provenance/fixtures.mjs: re-point g41-findin.test.mjs:39's hand-built homeOf to it. t36/t37/words lines wait on events and entities. Merge the tranche branch into yours first; run checks/fixtures.mjs with the absolute product path. Then record COMPLETE again.
+
+## B13 · START
+
+START · RETRIEVAL-BROWSE #6 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 22 (plan build/plan/fix-round-10-T51.md §3; K5092)
+
+Depth 2 (BOB #291 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/retrieval-browse tranche/T51 && git branch -m job/T51/retrieval-browse stale/retrieval-browse-local && git checkout -b job/T51/retrieval-browse origin/job/T51/retrieval-browse`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module retrieval-browse`; record `build/jobs/T51/retrieval-browse.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` from the process repository (K5078).
+
+**Follow-up 22 (test files only).** screens-daily (`bio-plane/test/m/screens-daily/find-in.test.mjs:278`) carries `// fixtures-contract: retrieval-browse findin-term-part`: its hand-built find-in hit on a term item, with its part kind (cause R17a). Add a test in your module carrying `// fixtures-run: screens-daily findin-term-part` that runs that answer's shape against your real find-in code (a find over a held document whose hit is a term item in a part), naming the requirement it proves; if the real answer differs from screens-daily's hand-built one, test the real one and REPORT the difference.
+
+**Done:** `checks/fixtures.mjs <absolute root> retrieval-browse --list` with your lines at zero (or each remaining one named with why); your module's tests green; format, architecture, coverage, words, ownership 0. List every `fixtures-own`/`fixtures-generic` marker you add, file:line and why (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-haiku-5-5.
+
+## B14 · START
+
+START · RETRIEVAL-BROWSE #7 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 70; K5148)
+
+Depth 2 (BOB #295 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/retrieval-browse tranche/T51`; if a local `job/T51/retrieval-browse` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/retrieval-browse stale/retrieval-browse-local && git checkout -b job/T51/retrieval-browse origin/job/T51/retrieval-browse`. If `job/T51/retrieval-browse` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module retrieval-browse`; record `build/jobs/T51/retrieval-browse.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+1. **A section number runs into its text** (`diag2-08.md` C5; retrieval-browse R2): `findin.mjs:200` (`/[^.!?;\n]+[.!?;]?/g`) splits "Section 8.22.050 No landlord shall ..." at the dots inside the number, and the cut sentence is held as the standard's text. A stop ends a sentence only before whitespace and a capital, or at the end. Test: `findin.test.mjs`, two numbered sections each found whole from "Section"; control: "The Clerk shall publish it. The budget is $4.2 million." still one requirement sentence. Grep `[^.!?;` across `bio-plane/src/`: any other splitter in your paths takes the same rule; one in another module, REPORT it.
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> retrieval-browse --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.

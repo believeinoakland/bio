@@ -201,6 +201,7 @@ test("R6 R13 the door's refusals drawn by their words, beside the act", async ()
 
 test("R13 a refusal of the door with no word and no translation is drawn as refusal.uncatalogued with its code, never the answer's detail; one with a word, its word alone", async () => {
   const DETAIL = "zz-detail-9";
+  // fixtures-generic: NO_SUCH_DOOR_CODE (a code made up on purpose: no module answers it, so the door's refusal with no word and no translation is drawn as uncatalogued)
   const un = await dock(Q, stub({ dispatch: { status: 200, json: { ok: true, result: { ok: false, reason: "NO_SUCH_DOOR_CODE", code: "NO_SUCH_DOOR_CODE", detail: DETAIL } } } }));
   await workOn(un);
   const said = panel(un).querySelector('[data-refusal="airundispatch"]');
@@ -211,6 +212,7 @@ test("R13 a refusal of the door with no word and no translation is drawn as refu
   await workOn(held);
   const h = panel(held).querySelector('[data-refusal="airundispatch"]');
   assert.ok(says(h, "refusal.AI_RUN_NOT_PRINCIPAL") && !says(h, "refusal.uncatalogued") && !panel(held).textContent.includes(DETAIL));
+  // fixtures-generic: NO_SUCH_DOOR_CODE (the same made-up code, here with a translation)
   const tr = await dock(Q, stub({ dispatch: { status: 200, json: { ok: true, result: { ok: false, reason: "NO_SUCH_DOOR_CODE", code: "NO_SUCH_DOOR_CODE", translation: "zz-translated-9", detail: DETAIL } } } }));
   await workOn(tr);
   assert.ok(panel(tr).querySelector('[data-refusal="airundispatch"]').textContent.includes("zz-translated-9"));

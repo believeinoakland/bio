@@ -20,6 +20,9 @@ export const KNOCK = {
   maxBytes: 8 * 1024 * 1024,   // with an evidence store: enough for a captured PDF
   maxInline: 64 * 1024,        // without one: inline into the store, small only
 };
+/* R1, R6 (K5129): a file arrives as base64 (`screens-publish` sends `contentB64`), 4/3 larger than its bytes, so the
+   envelope's bound is the base64 length of the byte cap plus 4 KiB for the rest of the JSON: 11,188,908 bytes. */
+KNOCK.maxEnvelope = 4 * Math.ceil(KNOCK.maxBytes / 3) + 4096;
 KNOCK.statedPerIp =
   word("doorbell.stated_per_ip", { per_ip: String(KNOCK.perIp), window_ms: String(KNOCK.windowMs / 60000) });
 KNOCK.statedGlobal =
@@ -98,7 +101,7 @@ export async function knockOp(req, env, store, { json, requiredArgument, storeSi
      answer. */
   const refuse = async (answer, status) => { await tallyRefusal(store, doAnswer, place); return json(answer, status); };
   const raw = await req.arrayBuffer();
-  if (raw.byteLength > KNOCK.maxBytes + 4096) return refuse(knockEnvelopeTooLarge(), 413);
+  if (raw.byteLength > KNOCK.maxEnvelope) return refuse(knockEnvelopeTooLarge(), 413);
   let body; try { body = JSON.parse(new TextDecoder().decode(raw)); } catch { body = null; }
   if (!body || (typeof body.contentB64 !== "string" && typeof body.contentText !== "string"))
     return refuse({ ok: false, ...requiredArgument("knock", "contentB64 or contentText",

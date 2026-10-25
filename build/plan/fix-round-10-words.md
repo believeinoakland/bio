@@ -26,6 +26,8 @@
 | `inquiry` | R30b (K5077) | `NO_PARTITION`'s detail ("Pass an EMPTY array to remove the grouping") | an empty list now saves a partition with no ground (every supporting leg necessary, DEC-32 clause 4), not a removal: the sentence that says so |
 | `plane` R24 (design gap, K5078) | `screen.objective.purpose`, `screen.about-knocker.purpose` | the registry at `c752a602da` names screens `objective` and `about-knocker` whose purpose sentence `words.json` lacks: the two sentences |
 
+- **Rows the round's screens jobs now read by key (K5090; SCREENS-INQUIRY #27 J39, SCREENS-INTAKE #25 J53).** A drawn-screen module holds no English (words check `marker`; screens-intake R26, K4640): until each row is held the page draws the nearest held row or the figures alone. screens-inquiry: `refusal.NOTHING_TRANSCRIBED`, `.PICTURE_NOT_LEGIBLE`, `.PAGE_NOT_LEGIBLE`, `.PASSWORD_REQUIRED`, `.PAGE_KILLED_READER`, `.STRUCTURE_OVER_BOUND`; `screen.document.reading.unit.bytes|rows|columns|cells|objects` ({n}); `screen.document.archive.says` ({n}); `screen.document.gradenote.head.ungraded`; `screen.document.encoding.assumed` ({name}); `screen.document.supporting.pictures`, `.one` ({count}, {size}); `screen.question.leg.part` ({ref}). screens-intake: `screen.open-file.check.inside`, `screen.open-file.image.unread`, `screen.held.who`, `.who.mine`, `.who.all`, `.next`, `.back`.
+
 ## Layout and scope
 
 | Module | Cause | Item | What UX-DESIGN supplies |
@@ -38,3 +40,40 @@
 
 - R5, R36: the keys exist (`reading-pipeline.index.unsupported_gif`, `_tiff`; the stored reading's own line is chosen by the module). R27a (option A) changes no sentence. R34's first-load `session.ended` sentence exists. R39: no sentence. R25 and R28a are not defects.
 - The Chromium test for R32 (1280x900 and 390x844) belongs to `interface-assets` once the rule is merged.
+
+## The final pass's words and layout (K5148; diagnoses `walk-T51-final/diagnosis/diag2-*.md`)
+
+- 04B OV-15 (`diag2-04.md` §9): "secret phrase" (29 rows, e.g. `screen.doorbell.secret.label`), "Confidential" (`screen.action.confidential`, `.scope.confidential`, `.scope.open`) and British "recognised" (`screen.doorbell.consent.refused.secret`) against the overlay's own rule (check 15).
+- 04B R146 (`diag2-04.md` §6): an authority task's Queue row carries no basis (the task grammar keeps none): what the row says.
+- 03 R20 (`diag2-020305.md` §3): step 1 "Name your team" has no sentence (screens-daily R40 gives none): one, if wanted.
+- 03 R20 (§2): the heading over the lone "Help for my own situation" door, now none (K5148).
+- 07 R60 (`diag2-07.md` §1): "Record an event" now records the form's date as the event's dated fact (K5148): the form's words.
+- 07 R158 (§9): Explore's picker offers the viewer's documents by title, newest first (K5148): its layout.
+- 08 C3, C8 (`diag2-08.md`): the relate form's label (no "content id"; a choice among the standard's passages) and the incoming-direction words for a related law ("Referred to by", "Implemented by", ...; and `rel.interprets`, `applies`, `holds_invalid`).
+- 08 C9: whether the Standard screen also offers `standardadoption` and `standardimpose` (with `bindsat`'s words); the issuer route to "binds" is fixed now (K5148).
+- 08 C13: the glossary holds no law term (standard, in force, benchmark, discretion, writ, proceeding): screens-settings R59 names two groups; a third, if wanted, with its definitions.
+- 08 C14: the records help page draws the profile's laws under "none is shown here" when a profile holds laws and no `records_help` (the first profile gains the block now, K5148).
+- 08 OV4.1: a failed read says "This could not be read. Try again in a moment." with no reason.
+- 10B C8: "Vouch for the 6 photos you captured" for documents (already `later-ux.md:19`).
+- New member sentences written at their use this round (to review through the unreviewed list): people `PERSON_ITEM_NOT_HELD`, monitoring's `unconfirmed_removal`, `moved`, `refused` and the concealment sentence, calculations' `BINDING_UNREADABLE`, `ROW_ALREADY_WRITTEN`, the published page's unrated, no-bar and verification lines.
+- capture-requests R46 (K5151): no screen offers "mark this host a login-gated platform" (and its withdrawal and the list of marked hosts); the ops are routed now: where a member makes the mark.
+- 06/10B (K5152): `standard.inforce.known` names its variable `{author}` where the member is meant (`{member}`).
+- people (K5153): the rows `refusal.PERSON_ITEM_NOT_HELD` and `refusal.NO_LINK_SUBJECT` (written at use) for review.
+
+## The last three diagnoses' words, layout and design questions (K5157; `diag2-03b.md`, `diag2-06.md`, `diag2-11.md`)
+- Questions where a requirement and the design disagree (no job until the design answers): 03b §9, the fork and Start forms preselect "Hidden" (screens-inquiry R29, screens-daily R30) against overlay 7 / DEC-77's "no preselected choice"; 03b §11, whether a project's owners (or the team) read a member's own aspirations (intent R9 says readable, no read lists another member's); 03b §16, whether a theme tells an outsider that something is withheld (connections R44 omits it uncounted; overlay 2 says downstream lists say so).
+- 03b §20: a placement or hunch with no note draws `: “”` (`theme.placed.by`, `theme.hunch.by`: a row without the note clause).
+- 03b §21, §22: "1 questions", "1 items wait on you": `.one`/`.other` rows for `screen.project.stage.*` and `shell.queue.waiting`.
+- 03b §23: a join request on Home reads "any member can take the next step"; it is the owners' move (a row for an item with named recipients).
+- 03b §24: the receipt after Grant or Decline reads "Done: Grant or decline." (the pressed answer's own label).
+- 03b §25: "proposed by , ·" just after "Make an owner" (the presser and the instant until the re-read supplies them).
+- 03b §26: the Proceeding page's breadcrumb loses its project (`place` from the subject; an open entity's project is unknown).
+- 03b §27: "A hidden project shows only to its own members" reads as privacy from administrators (overlay 30).
+- 03b §3, §6, §8: new sentences for a declined request with the owner's word, a member's standing request to leave (and its mark on the owners' Members row), and the bar changed by another owner (`BAR_STALE`).
+- 06 §11, §12: the sentences of retrieval's and connections' new refusal codes (another member's set of things; a record you cannot see), written at use.
+- 06 §15: an upload's source on the Document page (`document.uploaded.by` is the existing row).
+- 06 §20: "The secret is sealed and never shown again" (`screen.capture.logins.about3`, a design row) uses a retired word.
+- 06 record 9: `refusal.NO_SOURCE` is money's sentence and is also drawn for calculations' table refusal.
+- 11 §2a: where the letter's language, the For the team / As myself choice, the audience of a documenting version and the "names a pending measure or a candidate" mark sit on the Send step (the screens job builds them now with the existing words; their placement and any new words are the design's).
+- 11 §6, §7a, §16: how a consequence part's causation line, a determination's name (kind of event, day, office) and a hold's place (its note and day) read.
+- 11 §13: `refusal.STANDARD_NOT_BINDING` does not say the office must first be registered as a subject.

@@ -8761,17 +8761,6 @@
       "describe what this reading of the evidence is and why it differs from the others"
      ],
      "code": "VERSION_NO_DESCRIPTION"
-    },
-    {
-     "check": "C-25.5",
-     "severity": "error",
-     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
-     "repairable": true,
-     "repairs": [
-      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
-      "or put every leg in one ground and say relationship: and"
-     ],
-     "code": "VERSION_PARTITION_INCOMPLETE"
     }
    ],
    "both": [
@@ -8814,17 +8803,6 @@
       "describe what this reading of the evidence is and why it differs from the others"
      ],
      "code": "VERSION_NO_DESCRIPTION"
-    },
-    {
-     "check": "C-25.5",
-     "severity": "error",
-     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
-     "repairable": true,
-     "repairs": [
-      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
-      "or put every leg in one ground and say relationship: and"
-     ],
-     "code": "VERSION_PARTITION_INCOMPLETE"
     }
    ],
    "both-none": [
@@ -8899,17 +8877,6 @@
       "describe what this reading of the evidence is and why it differs from the others"
      ],
      "code": "VERSION_NO_DESCRIPTION"
-    },
-    {
-     "check": "C-25.5",
-     "severity": "error",
-     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
-     "repairable": true,
-     "repairs": [
-      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
-      "or put every leg in one ground and say relationship: and"
-     ],
-     "code": "VERSION_PARTITION_INCOMPLETE"
     }
    ],
    "nosubject-none": [
@@ -8984,17 +8951,6 @@
       "describe what this reading of the evidence is and why it differs from the others"
      ],
      "code": "VERSION_NO_DESCRIPTION"
-    },
-    {
-     "check": "C-25.5",
-     "severity": "error",
-     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
-     "repairable": true,
-     "repairs": [
-      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
-      "or put every leg in one ground and say relationship: and"
-     ],
-     "code": "VERSION_PARTITION_INCOMPLETE"
     }
    ],
    "none-none": [
@@ -9041,17 +8997,6 @@
       "describe what this reading of the evidence is and why it differs from the others"
      ],
      "code": "VERSION_NO_DESCRIPTION"
-    },
-    {
-     "check": "C-25.5",
-     "severity": "error",
-     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
-     "repairable": true,
-     "repairs": [
-      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
-      "or put every leg in one ground and say relationship: and"
-     ],
-     "code": "VERSION_PARTITION_INCOMPLETE"
     }
    ],
    "both": [
@@ -9103,17 +9048,6 @@
       "describe what this reading of the evidence is and why it differs from the others"
      ],
      "code": "VERSION_NO_DESCRIPTION"
-    },
-    {
-     "check": "C-25.5",
-     "severity": "error",
-     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
-     "repairable": true,
-     "repairs": [
-      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
-      "or put every leg in one ground and say relationship: and"
-     ],
-     "code": "VERSION_PARTITION_INCOMPLETE"
     },
     {
      "check": "C-2.8",
@@ -9209,17 +9143,6 @@
      "code": "VERSION_NO_DESCRIPTION"
     },
     {
-     "check": "C-25.5",
-     "severity": "error",
-     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
-     "repairable": true,
-     "repairs": [
-      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
-      "or put every leg in one ground and say relationship: and"
-     ],
-     "code": "VERSION_PARTITION_INCOMPLETE"
-    },
-    {
      "check": "C-2.8",
      "severity": "error",
      "message": "basis[0].role 'maybe' is not one of: supports, cuts_against"
@@ -9311,17 +9234,6 @@
       "describe what this reading of the evidence is and why it differs from the others"
      ],
      "code": "VERSION_NO_DESCRIPTION"
-    },
-    {
-     "check": "C-25.5",
-     "severity": "error",
-     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
-     "repairable": true,
-     "repairs": [
-      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
-      "or put every leg in one ground and say relationship: and"
-     ],
-     "code": "VERSION_PARTITION_INCOMPLETE"
     },
     {
      "check": "C-2.8",
@@ -11260,17 +11172,6 @@
       "or, if this is an edit of the other, derive it: give it its own name and derived_from the original"
      ],
      "code": "VERSION_NAME_NOT_UNIQUE"
-    },
-    {
-     "check": "C-25.5",
-     "severity": "error",
-     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
-     "repairable": true,
-     "repairs": [
-      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
-      "or put every leg in one ground and say relationship: and"
-     ],
-     "code": "VERSION_PARTITION_INCOMPLETE"
     }
    ],
    "both": [
@@ -11324,17 +11225,6 @@
       "or, if this is an edit of the other, derive it: give it its own name and derived_from the original"
      ],
      "code": "VERSION_NAME_NOT_UNIQUE"
-    },
-    {
-     "check": "C-25.5",
-     "severity": "error",
-     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
-     "repairable": true,
-     "repairs": [
-      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
-      "or put every leg in one ground and say relationship: and"
-     ],
-     "code": "VERSION_PARTITION_INCOMPLETE"
     }
    ],
    "both-none": [
@@ -11420,17 +11310,6 @@
       "or, if this is an edit of the other, derive it: give it its own name and derived_from the original"
      ],
      "code": "VERSION_NAME_NOT_UNIQUE"
-    },
-    {
-     "check": "C-25.5",
-     "severity": "error",
-     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
-     "repairable": true,
-     "repairs": [
-      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
-      "or put every leg in one ground and say relationship: and"
-     ],
-     "code": "VERSION_PARTITION_INCOMPLETE"
     }
    ],
    "nosubject-none": [
@@ -11516,17 +11395,6 @@
       "or, if this is an edit of the other, derive it: give it its own name and derived_from the original"
      ],
      "code": "VERSION_NAME_NOT_UNIQUE"
-    },
-    {
-     "check": "C-25.5",
-     "severity": "error",
-     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
-     "repairable": true,
-     "repairs": [
-      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
-      "or put every leg in one ground and say relationship: and"
-     ],
-     "code": "VERSION_PARTITION_INCOMPLETE"
     }
    ],
    "none-none": [

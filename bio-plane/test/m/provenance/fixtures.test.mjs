@@ -3,8 +3,9 @@
    R78 (partsOf), the version chain's C-24.2 refusal. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, sha } from "./fixture.mjs";
-import { heldParts, holdsOf, holdsWorld, holdsRegister, homeOf, homeOfEmpty, homeOfHomed, homeOfWorld, provenanceOver,
+import { world, sha, storage } from "./fixture.mjs";
+import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
+import { heldParts, holdsOf, holdsWorld, holdsRegister, homeOf, homeOfEmpty, homeOfHomed, homeOfProject, homeOfOver, homeOfWorld, provenanceOver,
          registeredHomes, versionChainNoSuchVersion } from "./fixtures.mjs";
 
 const S = sha("a capture"), T = sha("another capture");
@@ -88,8 +89,55 @@ test("fixtures registeredHomes: register promotes a bundle with a register docum
   assert.equal(w.record.head("INFO-2026-0005-o") !== null, true, "promoted into the user's record");
 });
 
+test("fixtures homeOfProject: a project created with no chosen id mints its PROJ- id; its captures are homed there", () => {
+  const p = homeOfProject([S, T]);
+  assert.equal(p.made.ok, true, JSON.stringify(p.made));
+  assert.match(p.projectId, /^PROJ-\d{4}-\d+-/, "the record minted the id");
+  assert.equal(p.made.owner, "ann");
+  assert.deepEqual([S, T].map((s) => p.homeOf(s)?.bundleId), [p.projectId, p.projectId]);
+  assert.equal(p.homeOf(sha("unnamed")), null);
+  assert.equal(homeOfProject([]).homeOf(S), null, "a project with nothing registered homes no capture");
+});
+
 test("fixtures versionChainNoSuchVersion: VERSION_CHAIN_NO_SUCH_VERSION with its check C-24.2", () => {
   const r = versionChainNoSuchVersion();
   assert.deepEqual([r.ok, r.reason, r.check], [false, "VERSION_CHAIN_NO_SUCH_VERSION", "C-24.2"]);
   assert.equal(typeof r.translation, "string");
+});
+
+/* a caller's own store as another module's fixture builds it: record-core's tables and `register` with the contract's columns alone (R48) */
+function callersStore() {
+  const st = storage();
+  const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
+  st.db.exec(`CREATE TABLE register (capture_sha TEXT PRIMARY KEY, bundle_id TEXT NOT NULL, path TEXT,
+                registered TEXT NOT NULL DEFAULT '2026-01-01T00:00:00.000Z', bytes INTEGER)`);
+  const host = { storage: st };
+  const record = recordOf(host);
+  record.migrate();
+  const put = (captureSha, bundleId) => {
+    st.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, bytes) VALUES (?, ?, 'snapshots/x.txt', 5)`, captureSha, bundleId);
+    st.sql.exec(`INSERT OR IGNORE INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version, project)
+                 VALUES (?, 'information', 'g', 't', 'collected', '2026-01-01', '2026-01-01', 'x', 1, NULL)`, bundleId);
+  };
+  return { st, host, record, put, rows: () => JSON.stringify([...st.sql.exec(`SELECT capture_sha, bundle_id, path, registered, bytes FROM register ORDER BY capture_sha`)]) };
+}
+
+test("fixtures homeOfOver: the real homeOf over a caller's own storage and register rows; null where nothing, or no existing bundle, names the capture", () => {
+  const c = callersStore();
+  c.put(S, "BUNDLE-1");
+  c.put(T, "BUNDLE-2");
+  const before = c.rows();
+  const h = homeOfOver({ host: c.host, record: c.record });
+  assert.deepEqual(h.homeOf(S), { bundleId: "BUNDLE-1", path: "snapshots/x.txt", encoding: "utf8", bytes: 5, registered: "2026-01-01T00:00:00.000Z", authored: false });
+  assert.equal(h.homeOf(sha("unregistered")), null);
+  assert.deepEqual(h.homeOf(T), h.provenance.homeOf(T), "the real instance's own answer");
+  assert.equal(c.rows(), before, "no row of the caller's changed in any column the caller wrote");
+  c.st.sql.exec(`DELETE FROM bundles WHERE bundle_id = 'BUNDLE-2'`);
+  assert.equal(h.homeOf(T), null, "a home counts only while its bundle exists (R4)");
+  /* a store whose register already has the real schema (a fresh world) is left as it is */
+  const w = world();
+  const before2 = JSON.stringify([...w.st.sql.exec(`PRAGMA table_info(register)`)]);
+  assert.equal(homeOfOver({ host: { storage: w.st, other: true }, record: w.record }).homeOf(S), null);
+  assert.equal(JSON.stringify([...w.st.sql.exec(`PRAGMA table_info(register)`)]), before2);
 });

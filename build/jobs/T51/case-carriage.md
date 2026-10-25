@@ -1,6 +1,6 @@
 # case-carriage (T51)
 
-**Status** · session_01VR43LyTQS6cPbKEumGEzr6 · depth 2 · COMPLETE · handled B9
+**Status** · session_01Eyr6nAcJni3EthrUFAfdnx · depth 2 · COMPLETE · handled B10
 
 ## J1 · BLOCKED
 
@@ -200,3 +200,26 @@ Size (session_01VR43LyTQS6cPbKEumGEzr6): test runs 12, module lines 1740
 ## J8 · COMPLETE
 
 COMPLETE · follow-up 14, cause R24 (b2). Root cause: index.mjs #copyOne (and #original, #derive) verified file bytes with the one-shot pure-JS createSha256 over the whole file. Fixed: NATIVE_DIGEST_MIN_BYTES (1 MiB) and #digest(): crypto.subtle.digest over it, the pure-JS hash below it or if native fails; same hex, nothing stored changes. Failing-first test copy-digest.test.mjs (seen red): 2 MiB copy calls native once, JS zero, digest equals node's SHA-256 and the old output; controls: small input, 1 MiB edge, native failure fallback, wrong bytes still failed. Module 106/106; impact set (case-disclosures, case-authoring, case-check, scheduler, public-read, publication) 0 fail. format, architecture, coverage (23/23), ownership 0 failures; run.mjs fixtures/words failures inherited and identical without my change. Markers added: none. Owed: plane's r10-filing-stall (platform-side check). For BOB: R15 may want one clause on the digest. Record: build/jobs/T51/case-carriage.md, last section. Size (session_01VR43LyTQS6cPbKEumGEzr6): test runs 12, module lines 1740.
+
+## Fix round 10, follow-up 70: the final pass's cause, an uploaded photo is never a photo (START B10; CASE-CARRIAGE #19)
+
+**Root cause.** `#isPhoto` and `#photo` read only `capture.content_type` and the register path's extension. An upload records no content type (capture R86) and has the path `snapshots/upload-<sha>`, so it was never a photo: `obscuremark` answered `NOT_A_PHOTO`, `documentCopy` did not say `photo`, the Photos step listed none. Re-read the cited lines: as diagnosed.
+
+**Change.** One rule, `#judgePhoto(docs, paths)`, used by both: a photo when a document's `capture.content_type` is an image type, else when `profile.format.format` names an image (jpeg, jpg, png, gif, webp, heic, heif, avif, tiff, tif, bmp), or, with no format, `profile.source_content_type` is an image type; the path's extension decides only when nothing states a type or a format, so a known non-image format wins over the name. Met: R1 (the amended rule), and with it R8, R9, R13, which read it.
+
+**Why the tests missed it.** Every photo in the module's tests was built by `fixture.mjs` `photo()` with `capture.content_type` written in; none had the shape `uploadCapture` writes. `capture` publishes no upload fixture and pins the upload's shape only in `upload.test.mjs`.
+
+**Tests** (`upload-photo.test.mjs`, new). Seen red on the old code (3 of 4), green after. An upload shaped as `capture/upload.test.mjs` pins it: `obscureMark {areas: []}` answers `nothing_to_obscure`, `photoMarks` answers (what the Photos step reads), `documentCopy` says `photo`; a PNG upload with no declared type, and an image type declared over bytes of no known format, are photos; controls: a text upload named `notes.png` is not a photo (format wins), no format/type/extension is not, an undetermined format falls to the extension, a fetched photo is unchanged.
+
+**For BOB (REPORT).** `capture` publishes no upload fixture (`capture/fixtures.mjs`); I used the shape pinned at `capture/upload.test.mjs:138-155`, hand-built in my test with no marker. If you want it published, capture's job adds `uploadedPhoto()` and my test takes it. The through-the-door case (upload, cite, `publishpreflight` lists the Photos step, `PHOTO_UNCHECKED`) is control-plane's to place (K5138); I added none.
+
+**Deferred.** None. **Found in other modules.** None. **Markers added.** None. **Words.** No new sentence.
+
+**Tests run.** case-carriage 110/110 (106 plus 4). Impact set: case-disclosures 116/116, case-check 35/35, case-authoring 257/257, public-read 310/310, scheduler 185/185, publication 184 pass, 0 fail.
+**Checks** (absolute root `/home/user/bio`): format 0 failures; architecture case-carriage 19 files, 0; coverage 23 of 23, 0; words 0; ownership 0; fixtures `--list` 0 failures, no new line.
+
+Size (session_01Eyr6nAcJni3EthrUFAfdnx): test runs 9, module lines 1756
+
+## J9 · COMPLETE
+
+COMPLETE · follow-up 70, 10A §1. Root cause as diagnosed: #isPhoto/#photo read only capture.content_type and the path extension; an upload records neither. Fixed with one rule #judgePhoto: image content_type, else profile.format.format image, else profile.source_content_type image, else extension only when nothing states a type or format (a known non-image format wins over the name). Met: R1 (and R8, R9, R13 that read it). Failing-first upload-photo.test.mjs (3 of 4 red on old code, green now). Module 110/110; impact: case-disclosures 116, case-check 35, case-authoring 257, public-read 310, scheduler 185, publication 184 pass 0 fail. format, architecture, coverage 23/23, words, ownership, fixtures --list: 0 failures. Markers added: none. REPORT: capture publishes no upload fixture; I used the shape pinned at capture/upload.test.mjs:138-155, hand-built, no marker; the through-the-door case is control-plane's to place (K5138). Record: build/jobs/T51/case-carriage.md. Size (session_01Eyr6nAcJni3EthrUFAfdnx): test runs 9, module lines 1756.

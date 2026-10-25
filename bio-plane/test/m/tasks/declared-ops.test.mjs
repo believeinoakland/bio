@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { declaredOpHolds } from "../../declared-ops.mjs";
 import { DECLARED_OPS, tasksOps } from "../../../src/tasks/index.mjs";
-import { world, NOW, iso } from "./world.mjs";
+import { world, NOW, iso, projectOf } from "./world.mjs";
 import { seeded } from "./authority.mjs";
 
 /* a refusal names a field by the code its arm answers for it (a string, or an entry {code}), else as a whole word of its code or detail */
@@ -59,7 +59,7 @@ test("R22, R10: the door does not read a caller's clock for the task acts; the i
 });
 
 /* ---- check requests and sign requests: a fixture of their own ---- */
-const PRJ = "PROJ-2026-0001-team", FIND = "INFO-2026-0001-finding", CASE = "CASE-2026-0001-a";
+const PRJ = projectOf("Team").projectId, FIND = "INFO-2026-0001-finding", CASE = "CASE-2026-0001-a";
 function asking() {
   const w = world();
   for (const m of ["olga", "cpa1", "mia"]) w.member(m);

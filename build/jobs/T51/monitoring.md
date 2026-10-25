@@ -1,6 +1,6 @@
 # monitoring (T51)
 
-**Status** · session_01PCKo5gn3rH8ZDaWARPfr8H · depth 2 · COMPLETE · handled B8
+**Status** · session_01HedZcxhsZ2J2MxA5Rp8RZy · depth 2 · COMPLETE · handled B13
 
 ## J1 · COMPLETE
 
@@ -111,3 +111,128 @@ COMPLETE for T51 monitoring, batch C job 52, G140's consumer half (session sessi
 **Deferred:** none. **Found in another module:** only the `office-readers` path above.
 
 Size (session_01PCKo5gn3rH8ZDaWARPfr8H): test runs 9, module lines 3300 (non-blank, non-comment lines in src/monitoring/*.mjs; 4116 in all)
+
+## J7 · QUESTION
+
+QUESTION (J1) · monitoring · fix round 10 batch 5 · the four `intentWorld` / `publicationWorld` lines (fixture.mjs:210, :211; each a declaration and a use)
+
+What stands: the other lines of the START are re-pointed or marked (see my record when I post COMPLETE); the three fixtures are published and tested; 172 module tests pass. These four findings remain.
+
+The stand-ins are `stubIntent` (intent R7's `watchSet` and `registerSource`) and `stubPublication` (publication R42's `restingCapturesOf`). 14 tests use them, in `understanding.test.mjs` (R33) and `watch.test.mjs` (R70). Each test states, per project, which capture digests the project's objective or findings rest on, and the digests are the ones of documents that monitoring's own world holds (so `watched()` can map a digest to its bundle). Some tests set several projects, a watch set longer than two pages, a `watchSet` that throws for one project, and `gaps` / `progress` overrides for investigation.
+
+Why the published fixtures do not fit: `intentWorld()` and `publicationWorld()` each build one project in their own database with digests of their own making (`ent-1-need` and the like, `sha("the text of <doc>")`), and the two worlds name different project ids. A test cannot say "project P1 rests on this document's capture" and "P2 on that one", and `watched({project})` asks both providers about one project id.
+
+My best reading: re-pointing needs the providers to publish a fixture parameterised by what the user holds, for instance intent `watchSetOf({[projectKey]: [digest, ...]})` (a real intent whose projects' conditions read those digests, made by real acts) and publication `restingOf([{finding, projects, digests}])` over the same project ids. Then my `world()` takes those and the stubs go.
+
+What I will do unless you say otherwise: leave these four lines at `stay` in my COMPLETE, named with this reason, and re-point on a CHANGE once intent and publication publish such fixtures. Alternative if you prefer it now: I re-point R33's objective half only onto `intentWorld()` (its three digests, documents made to hold them); that leaves the stub for the rest, so it does not clear the four findings.
+
+## J8 · COMPLETE
+
+COMPLETE for T51 monitoring, fix round 10, Wave A batch 5 (START B9), session session_013HZfjoGu9DeeFtdAsv1UPN, on job/T51/monitoring. All 36 own lines are done but four, and the one open QUESTION is J7 (named "J1" inside its own text, a slip).
+
+**Fixtures published** in `bio-plane/test/m/monitoring/fixtures.mjs` (new), each made by the real code at test time and called by a test of mine in `fixtures.test.mjs` (names R48; R1 R8 R9 R10; R16 R19 R20 R32 R47 R48):
+- `flaggedRefusal({limit})`: the real unread `flagged` answer `{ok:false, reason:null, items:[], limit, truncated:false, detail}` (the projection it reads is gone).
+- `monitorAnswer({ticks, kind})`: the real `monitor({bundleId})` answer `{status, body}` per tick of the clock (`answers`, `answer` the last). A `modified` source gives a distinct `capture.sha256` per tick; an `unchanged` one gives `capture: null` (the START's shape `status:"unchanged", capture:{sha256}` is not what the real code answers; real unchanged carries no capture, so following's judgment re-point should use `kind: "modified"` where it needs a digest per tick).
+- `monitoringReads()`: `{empty, seeded}`, each with the real `monitoring`, `archiveEligible`, `flagged`, `configured`, `archiveDue` reads; `seeded` has unscheduled, due, modified, removed, quiet monitors (ticked by the real tick), and two failing addresses (one fallback-eligible, one at the floor and not).
+
+**Own lines re-pointed (FIX-E), tests green:**
+- escalation/escalationsDue (12): `ends.test.mjs`, `understanding.test.mjs` take `escalationsDue().emptyWorld.esc` (real escalation, empty world).
+- acquisition/acquireRefusals (5): `docket`, `invariants`, `understanding` take `acquireRefusals({kind: "source_refused" | "not_eligible"})`. A source refusal now carries status 410 where the hand-built one said 503; no test reads it.
+- promotion/projectActNotParticipant (2) and action-clocks/pendingClocksRefusal (1): re-pointed.
+- case-import/watchedImports (2): `stubCaseImport` and `watchOf` are deleted from `fixture.mjs`; `docket.test.mjs` runs over the real case-import (watches made by the member's own `watchImport` act, reads recorded by the real `recordDocketRead`) seen through a spy (pages of two so the cursor is followed, a `reads` log, `refuse` taking `notWatched.refusal`, `fail`). Expected numbers follow the real answers (a docket entry case-import cannot verify is `new_entries: 1, new_refused: 1`; another group's answer is recorded unreadable by the real module, where the old test forced it). The import order is now the real ids', so expected orders are derived from them.
+- conformance/noDeterminations (1): `fixture.mjs` no longer builds a conformance. The published fixture would need a `conformance` edge in monitoring's `uses` (architecture check: monitoring does not declare it), so the world reaches the real conformance on the same host as production does (actions' own default); no determination is held there, which is what the fixture was. If you want the published fixture used, `modules.json` needs the edge (yours).
+
+**Markers I added (K5060), file:line and why:**
+- `docket.test.mjs:112` `fixtures-own: platform`: the docket host's own HTTP 404 answer served by the scripted network (a fake-network double), as your START named.
+- `fixture.mjs:268` `fixtures-own: synthetic`: the calendar content type registered through docprofile's `registerDoctype` seam, as your START named.
+- `fixture.mjs:310` `fixtures-contract: link-sweep sweep-fence` (the registered share's fence refusal), `named-requests.test.mjs:410` `fixtures-contract: link-sweep sweep-mutate` (covers 411, 416, 417), `relay.test.mjs:35` `fixtures-contract: store-door store-envelope`. These show `contract-no-run` until link-sweep's and store-door's own jobs merge a `// fixtures-run: monitoring <id>`: waiting on link-sweep and store-door.
+No `fixtures-generic` marker.
+
+**Left, named (stay):** 4 findings, `fixture.mjs:207` and `:208` (declaration and use of `stubIntent` and `stubPublication`; R33's and R70's 14 tests). Cause in QUESTION J7: the published `intentWorld()` and `publicationWorld()` are one project in their own database with their own digests, and a test must say per project which of monitoring's own documents' digests it rests on. They are the judgment lines for intent and publication; I re-point on a CHANGE once those providers publish fixtures parameterised by what the user holds, or on your other answer.
+
+**List now** (`checks/fixtures.mjs . monitoring --list`): 11 lines: 2 accepted (own), 5 contract-no-run (waiting, above), 4 the stay lines above.
+
+**Found in another module:** `build/plan/fixtures-T51/part-5.md` says `monitorAnswer` is `status:"unchanged"` with `capture:{sha256}`; the real tick answers `capture: null` when unchanged (R9 captures only a modified source). following's stand-in (`following/fixture.mjs:166`) is that unreal shape; its job re-points to `monitorAnswer({kind: "modified"})` or drops the capture. Not a defect of this module.
+
+**Tests run.** `bio-plane/test/m/monitoring/`: tests 172, pass 172, fail 0 (169 before, plus 3 for the fixtures). Users of the files I changed (they import monitoring's `fixture.mjs`): following `watches.test.mjs`, scheduler `rank.test.mjs`, affordances `backing.test.mjs`: 49/49. `build/plan/impact.mjs origin/tranche/T51 HEAD` names 104 modules, 1814 test files, because the diff against `origin/tranche/T51` includes everything the tranche moved since the branch point; no source file of mine changed (tests only), so I ran the three importers, not the rest.
+
+**Checks.** format 178 modules, 0 failures; architecture monitoring 25 files, 129 imports, 0 failures; coverage 65 of 65, 0 failures; words 0 failures; ownership 10 files changed by monitoring between tranche/T51 and HEAD, 0 failures.
+
+**Deferred:** none in the module. Source unchanged.
+
+Size (session_013HZfjoGu9DeeFtdAsv1UPN): test runs 11, module lines 3300
+
+## J9 · COMPLETE
+
+COMPLETE for T51 monitoring, fix round 10 follow-up 27 (B11; B10 read: the four lines stay named in J7 until this re-point, as B10 says), session session_01GCDV8BWKs6fq93QzdCr4rY, on job/T51/monitoring at befc3a1465 (tranche/T51 merged in, no rebase).
+
+**Entries applied.** B11 (follow-up 27): the four `stubIntent`/`stubPublication` lines are re-pointed, and both stubs are deleted.
+- `fixture.mjs`: no stub is built. An absent intent or publication is now `null`. `undefined` makes monitoring build the real module on this host (`intentOf(host)`), which fails in R41's whole-store purge with `no such table: intent_departures`; that is why the default is `null`. The header says so.
+- `understanding.test.mjs` R33 (N170, N230): `watchSetOf({...}, { page: 2 })` and `restingOf([...])` from the providers' published fixtures. Project ids come from `f.projects`. Publication's answers are followed two at a time through a small wrapper, `pagedResting`, which records each call. The unreadable-publication control stays a fault injection. The R35 `assert.ok(stubIntent)` line goes.
+- `watch.test.mjs` R70 (all three tests): intent is the real module, through `intentFor(f)`, a thin adapter that maps this world's projects to the fixture's project for each name (`w.intent.bind`). The held digests are the sha of the bytes monitored, so the watch sets are real answers. The hand-built `gaps`/`progress` overrides are gone; investigation's quiet state and its reopen hold on the real intent answers.
+  - One held digest is the greatest of P1's (the older capture at the address), so it sits on P1's last page, as the stub made it.
+  - Expectations that followed insertion order now follow sha order, because the real `watchSet` and `restingCapturesOf` page by sha.
+
+**Deferred:** none. **Found in another module:** none. Module code (`src/monitoring/`) is unchanged.
+
+**Tests run** (`node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit`)
+- `bio-plane/test/m/monitoring/*.test.mjs`: tests 172, pass 172, fail 0 (after the `null` fix; before it R41 failed on the missing table, as above).
+- `understanding.test.mjs` and `watch.test.mjs`: 20 of 20 (run first).
+- users of the fixture: `following/watches`, `scheduler/rank`, `affordances/backing`: 49 of 49, as in the START.
+
+**Checks run** (from `/home/user/civicos-process`, absolute root)
+- `checks/fixtures.mjs /home/user/bio monitoring --list`: stub 0 (was 4). The remaining monitoring lines are `accepted(own)` (`docket.test.mjs:113`, `fixture.mjs:268`), `accepted(sweep-fence)` and `accepted(sweep-mutate)` (`fixture.mjs:313`; `named-requests.test.mjs:411`, `416`, `417`; link-sweep later), and `relay.test.mjs:36` (`contract-no-run`, waiting on store-door's `fixtures-run: monitoring store-envelope`; named in J8). The check's 2 failures are that one plus store-door's own `fixtures.test.mjs:34` orphan run (not mine).
+- `checks/format.mjs /home/user/bio`: 178 modules, 178 requirements files, 0 failures.
+- `checks/architecture.mjs /home/user/bio monitoring`: 25 files, 132 relative imports, 0 failures.
+- `checks/coverage.mjs /home/user/bio monitoring`: 65 of 65 live ids named by a test, 0 failures.
+- `checks/words.mjs /home/user/bio monitoring following link-sweep scheduler`: 0 failures (testcopy 0, plain 0, inline 0, missingkey 0).
+- `checks/ownership.mjs /home/user/bio monitoring tranche/T51 job/T51/monitoring`: 4 files changed by monitoring, 0 failures.
+
+**Markers added:** none.
+
+**Stray file.** An early command of mine wrote `/fx.mjs` at the filesystem root (a copy of the first 318 lines of the fixture, made before I noticed an unset `$TMPDIR`). Removing it was refused by the safety check, so it is still there. It is outside the repository. Someone with access should delete it.
+
+Size (session_01GCDV8BWKs6fq93QzdCr4rY): test runs 5, module lines 3080 (non-blank, non-comment lines in src/monitoring/*.mjs; unchanged this job).
+
+## J10 · COMPLETE
+
+COMPLETE for T51 monitoring, the B12 CHANGE (re J9; K5101), session session_01GCDV8BWKs6fq93QzdCr4rY, on job/T51/monitoring at the head pushed with this entry (origin/tranche/T51 merged in, no rebase).
+
+**Entry applied (B12).** `relay.test.mjs:36` is marked `fixtures-contract: store-door store-replies` and takes the real BAD_JSON reply that store-door's run states: `{ ok: false, reason: "BAD_JSON", detail: "the request body is not valid JSON" }`. No other line changed.
+
+**Deferred:** none. **Found in another module:** none.
+
+**Tests:** `bio-plane/test/m/monitoring/*.test.mjs`: tests 172, pass 172, fail 0.
+**Checks** (absolute root, from `/home/user/civicos-process`): `checks/fixtures.mjs /home/user/bio monitoring --list`: 0 failures, stub 0, contract 0, answer 0; the seven remaining lines are accepted (own, or link-sweep later). `format`: 0 failures. `words` (monitoring, following, link-sweep, scheduler): 0 failures. `coverage`: 65 of 65, 0 failures. `ownership` (tranche/T51 to job/T51/monitoring): 5 files, 0 failures.
+
+**Markers added:** none.
+
+Size (session_01GCDV8BWKs6fq93QzdCr4rY): test runs 1, module lines 3080 (unchanged this job).
+
+## J11 · COMPLETE
+
+COMPLETE for T51 monitoring, fix round 10, B13 item 1 (diag2-04 §4), session session_01HedZcxhsZ2J2MxA5Rp8RZy, on job/T51/monitoring (origin/tranche/T51 merged in, no rebase).
+
+**Met ids (BOB strikes the marks):** R4, R8, R32.
+
+**Built.**
+- R4 (a): a first 404/410 is `unconfirmed_removal`, stated, `status` null, `source_status` untouched, not flagged, look `LOOKED_INDETERMINATE`. A look at least 24 hours after the first of the run still unanswered is `removed`: flagged, `LOOKED_ABSENT`, note says it may be concealment. A look the source answered at the address clears the run (the window then starts again).
+- R4 (b): a 2xx whose final `res.url` (normalised) differs from the address fetched is `moved`, naming that address; the bytes are compared there as before (`unchanged`/`modified` stand, `modified` still flags; `moved` itself never does). A redirect ending at the same address is no move.
+- R4 (c): any other non-success is `refused`, reason = the note (`the source answered 403`).
+- The answer carries `look`: `{outcome: unconfirmed_removal|removed, since}`, `{outcome: moved, address}`, `{outcome: refused, reason}`, or null.
+- R32: new table `monitor_address_look` (schema.mjs; one row per normalised address, `absent_since` is the window's start; declared to purge by a whole-store purge, in `MONITORING_TABLES`). Each list row carries `last_look` ({outcome, at, since?, address?, reason?}); a watch whose last look is `refused` or `unconfirmed_removal` is listed `due` (due_at no later than that look) instead of an interval away.
+- New sentences at use, all `localize`: `monitoring.index.removal_confirmed`, `monitoring.index.removal_unconfirmed`, `monitoring.index.moved_note`.
+
+**Readings I settled (BOB may CHANGE).** (1) `moved` is a second statement beside the bytes' status, not a replacement of it, because the requirement says its bytes are compared there. (2) A fetch that throws leaves a held row as it is (neither confirms a removal nor clears it). (3) "Stays due" is read literally: due at the next tick, so a refusing host is asked again each cadence tick; the host governor paces it. (4) R41 names three tables only; `monitor_address_look` is a fourth, whole-store purge, and R41's text should list it.
+
+**Tests (failing first, seen red, then green):** `bio-plane/test/m/monitoring/outcomes.test.mjs`, 5 tests: unconfirmed then confirmed for 404 and 410 (inside the window stays unconfirmed, keeps `since`; later 404 stays removed); control 200 clears and restarts the window; moved to another address, then other bytes there are `modified`; control redirect to the same address is not moved and a move that stops clears the row; refused with its reason, the list row `due` with `last_look`, and the control that an answered watch is `scheduled` with no `last_look`.
+Existing tests that took one 404 as `removed` were brought to the amended R4 by adding the first look a day earlier (tick.test.mjs R4 and R7, queue-reads, watch R70, understanding R31, `monitoringReads` in fixtures.mjs, whose `removed` monitor is now one the real tick confirms); invariants R41 lists the new table. No assertion was weakened.
+
+**Why the tests missed it:** R4 and R8 said "404 or 410 is removed" and the tests pinned that sentence; the window, the move and the list row were in the architecture document and the coverage map, and no requirement carried them until K5148.
+
+**Deferred:** none. **Found in another module:** none. No `fixtures` marker added; `checks/fixtures.mjs /home/user/bio monitoring --list`: 0 failures, accepted 7 (as J10).
+
+**Tests run** (`node --import ./bio-plane/test/platform-sqlite.mjs --test`): `bio-plane/test/m/monitoring/*.test.mjs` tests 177, pass 177, fail 0. Users of the fixture and of the tick: queue-producers `producers`, following `watches`, scheduler `rank`, affordances `backing` and `catalogue`, link-sweep: 146 of 146.
+**Checks** (absolute root, from `/home/user/civicos-process`): format 178 modules, 0 failures; architecture monitoring 25 files, 132 imports, 0 failures; coverage 65 of 65, 0 failures; words (monitoring following link-sweep scheduler) 0 failures; ownership (tranche/T51 to job/T51/monitoring) 10 files, 0 failures.
+
+Size (session_01HedZcxhsZ2J2MxA5Rp8RZy): test runs 8, module lines 3140

@@ -2,7 +2,7 @@
    R24). A fixture is only as good as the real answer it hands on, so each test calls it and asserts that answer. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { checkResults, evaluateChecksAnswers, tiesConcerningRefusal } from "./fixtures.mjs";
+import { checkResults, evaluateChecksAnswers, tiesConcerningRefusal, personRemoved } from "./fixtures.mjs";
 import { ANN } from "./fixture.mjs";
 
 test("R22, R24: checkResults hands on the real listChecks and checkResults over an empty record: the shipped check listed, gated with no result shown; no viewer is refused", () => {
@@ -30,4 +30,12 @@ test("R20: tiesConcerningRefusal hands on the real tiesConcerning with a bad arg
   assert.deepEqual(bad, { ok: true, member: null, ties: [] });
   assert.equal(tiesConcerningRefusal({ entities: ["entity:x"], member: "member:ann", viewer: null }).ok, true, "a member read with no viewer still answers the empty list");
   assert.equal(tiesConcerningRefusal({ entities: ["entity:x"], member: null, viewer: ANN }).ok, true);
+});
+
+test("R12: personRemoved hands on the real person read after an administrator's removal on a court order: the marker {ground, at, by} and no value", () => {
+  const { read } = personRemoved();
+  assert.equal(read.ok, true);
+  assert.deepEqual(read.removed.map((r) => [r.ground, r.by]), [["court_order", "boss"]]);
+  assert.deepEqual(read.facts, [], "the removed value is in no list");
+  assert.ok(!JSON.stringify(read).includes("Calder-Voss"));
 });

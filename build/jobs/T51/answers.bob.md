@@ -1,6 +1,6 @@
 # BOB to answers (T51)
 
-**Read** · handled J3
+**Read** · handled J6
 
 ## B1 · START
 
@@ -50,3 +50,29 @@ Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . answers --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/answers.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B4 · START
+
+START · ANSWERS #14 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 38, a published fixture (plan build/plan/fix-round-10-T51.md §3; K5108)
+
+Depth 2 (BOB #293 is depth 1).
+
+FIRST, before `mail start`: `git fetch origin job/T51/answers tranche/T51`; if a local `job/T51/answers` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/answers stale/answers-local && git checkout -b job/T51/answers origin/job/T51/answers`. If `job/T51/answers` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module answers`; record `build/jobs/T51/answers.md` (append a new section). Model claude-haiku-5-5; workers haiku low, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` (K5078). A fixture is made by your real code when the test runs, never stored (K4990, K4993).
+
+**Follow-up 38 (test files only; QUEUE #36, its record's last section).** queue's `noticed.test.mjs:292` needs your real `standingAnswersFor({member, ...})` answering one standing question of that member (`STQ-…`) whose run is held back because AI is off (`held_back: "ai_off"`, `answer: null`), with the finds it kept (a document id); its shape is `{ok, cursor, entries: [{question: {id, question}, run, at, finds: {ids}, answer, held_back, label}]}`. Publish it by your real acts, parameterised by member and the finds.
+
+**Done:** the fixture exported from `bio-plane/test/m/answers/fixtures.mjs` with a test in your `fixtures.test.mjs` that calls it and checks the real answer; `checks/fixtures.mjs <absolute root> answers --list` 0; your module's tests green; format, architecture, coverage, words, ownership 0. Name each new export and its signature in your COMPLETE (its user re-points next). List every `fixtures-own`/`fixtures-generic` marker you add (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only: if the real answer shows a product defect, REPORT it to BOB and change no product code.
+
+## B5 · START
+
+START · ANSWERS #15 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 57, a cause the final pass found (plan build/plan/fix-round-10-T51.md §3; K5131)
+
+Depth 2 (BOB #294 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/answers tranche/T51`; if a local `job/T51/answers` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/answers stale/answers-local && git checkout -b job/T51/answers origin/job/T51/answers`. If `job/T51/answers` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module answers`; record `build/jobs/T51/answers.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993). Each cause carries K4426's four fields in your COMPLETE: root cause with evidence, why the tests missed it (that gap fixed), a test of the walker's exact case through its real entry seen failing then passing, and any platform check.
+
+**The cause (WALK-FINAL-09 row R84 "Show how this was counted", D8; K5131).** The rule services are built switched off (your R7; K1505 (14)), so `ruleanswer` refuses `RULE_SERVICES_OFF` on every new team, while `screens-daily` draws "Show how this was counted" whenever the assistant is not reachable; no read tells a screen whether the switch is on. Your R7 is amended (read it whole): a read any signed-in member may make, `ruleservicesstate` → `{ok: true, on}`, declared in your `DECLARED_OPS` (a read, `classes` admin and member) beside `ruleservicesswitch`. Test: off on a fresh record (`on: false`), on after the administrator's switch; the declaration registers. Publish a fixture of each state made by your real code (`ruleServicesState({on})`) in your tests' `fixtures.mjs` for screens-daily (follow-up 57's CHANGE). Bob's K1505 (14) stands: the services stay off until switched.
+
+**Done:** the marked requirement met (name the ids; BOB strikes the marks); `node /home/user/civicos-process/checks/fixtures.mjs <absolute root> answers --list` 0 failing; module tests green; format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.

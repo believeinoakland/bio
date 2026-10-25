@@ -1,6 +1,6 @@
 # BOB to docket (T51)
 
-**Read** · handled J3
+**Read** · handled J6
 
 ## B1 · START
 
@@ -62,3 +62,44 @@ Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . docket --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/docket.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B4 · START
+
+START · DOCKET #13 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 37, a published fixture (plan build/plan/fix-round-10-T51.md §3; K5108)
+
+Depth 2 (BOB #293 is depth 1).
+
+FIRST, before `mail start`: `git fetch origin job/T51/docket tranche/T51`; if a local `job/T51/docket` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/docket stale/docket-local && git checkout -b job/T51/docket origin/job/T51/docket`. If `job/T51/docket` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module docket`; record `build/jobs/T51/docket.md` (append a new section). Model claude-haiku-5-5; workers haiku low, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` (K5078). A fixture is made by your real code when the test runs, never stored (K4990, K4993).
+
+**Follow-up 37 (test files only; QUEUE-PRODUCERS #25 J16).** Your published `coreDue()` gives one `response` item. queue-producers' `docket.test.mjs:36` and `words.test.mjs:217` need `coreDue` over items of kind `statement` (with and without an edition), `edition` (with `what_changed`) and `tension` (with `member`, `state`), across several cases of different projects. Publish that answer (a new export, or `coreDue` extended without changing its existing answers' shape) made by real acts on a real docket world.
+
+**Done:** the fixture exported from `bio-plane/test/m/docket/fixtures.mjs` with a test in your `fixtures.test.mjs` that calls it and checks the real answer; `checks/fixtures.mjs <absolute root> docket --list` 0; your module's tests green; format, architecture, coverage, words, ownership 0. Name each new export and its signature in your COMPLETE (its user re-points next). List every `fixtures-own`/`fixtures-generic` marker you add (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only: if the real answer shows a product defect, REPORT it to BOB and change no product code.
+
+## B5 · START
+
+START · DOCKET #14 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 43, a published fixture (plan build/plan/fix-round-10-T51.md §3; K5116)
+
+Depth 2 (BOB #293 is depth 1).
+
+FIRST, before `mail start`: `git fetch origin job/T51/docket tranche/T51`; if a local `job/T51/docket` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/docket stale/docket-local && git checkout -b job/T51/docket origin/job/T51/docket`. If `job/T51/docket` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module docket`; record `build/jobs/T51/docket.md` (append a new section). Model claude-haiku-5-5; workers haiku low, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993).
+
+**Follow-up 43 (test files only; QUEUE-PRODUCERS #26 J18).** queue-producers' R30 (`docket-core-due` to the case's manager, its project's owners, and to nobody else) lost two controls because your `coreDueKinds()` holds no case of a project the viewer cannot see and no case outside any project. Add to `coreDueKinds()` (keeping every answer it gives now) or a sibling export, made by real acts: (a) a case of a project whose owner is not the viewer (what the real `coreDue` answers that viewer), and (b) a case with no project, if your real code can make one (if not, say so in your COMPLETE: that state is then not a real answer). Test each in `fixtures.test.mjs` against the real read. Name what you added in your COMPLETE.
+
+**Done:** `checks/fixtures.mjs <absolute root> docket --list` 0; your module's tests green; format, architecture, coverage, words, ownership 0. List every marker you add (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only.
+
+## B6 · START
+
+START · DOCKET #15 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 70; K5148)
+
+Depth 2 (BOB #295 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/docket tranche/T51`; if a local `job/T51/docket` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/docket stale/docket-local && git checkout -b job/T51/docket origin/job/T51/docket`. If `job/T51/docket` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module docket`; record `build/jobs/T51/docket.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+1. **A reaction elsewhere cannot be posted from the screens** (`diag2-10b.md` C4; docket R1, R4): `docketFile` keeps `summary` only for an outcome (`docket/index.mjs:449-457`), and `docketPrepare` demands one as its own argument (`:647-649`, `:749`), which the screen never sends. Keep the filed summary for every kind that has one and use it when the prepare names none. Test: `place.test.mjs`, file a reaction with a summary, then `docketPrepare({case, entry, kind: "reaction"})` with no summary is ok and the statement carries the filed summary; control: a reaction filed with none is still `DOCKET_NO_SUMMARY`. `DOCKET_NO_ARCHIVE_COPY` for an upload is specified (R4): unchanged.
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> docket --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.

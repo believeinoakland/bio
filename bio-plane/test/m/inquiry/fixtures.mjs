@@ -51,6 +51,24 @@ export function disposeAct({ to = "deferred", reason = "later", author = V("alic
            dispose: act };
 }
 
+/** R55 (the dated waits notice-producers reads, K2480): one dated wait, `viewer`'s own, stated on a question by that viewer's
+ *  promotion, and the real `datedWaits` answer to that viewer at `asOf` (its local midnight of `date`, 07:00Z in October,
+ *  Los Angeles time: `due`), and at one second before it (`before`, `waiting`). `viewer` is a member stamp (`member:<id>`),
+ *  `date` a day (`YYYY-MM-DD`). `answer` is the real answer as `datedWaits` gives it: its zone, its waits, each with its
+ *  text, description, date, state and `set_by`. `admin` reads none of it. */
+export function datedWaitOf({ viewer = V("alice"), date = "2026-10-10", asOf = `${date}T07:00:00Z` } = {}) {
+  const w = world({ view: () => ({ time_zone: { value: "America/Los_Angeles" } }) });
+  const member = viewer.slice("member:".length);
+  w.member(member);
+  const question = "INQ-2026-9005-w";
+  must(w.promote(question, inquiryMd(question, { extra: ["recheck_triggers:", `  - text: "the auditor's reply"`,
+    `    description: "from the City"`, `    date: "${date}"`] }), null, { author: viewer }), "dated-wait question");
+  return { inquiry: w.k, question, viewer, date, asOf,
+           answer: w.k.datedWaits({ member: viewer, asOf, viewer }),
+           before: w.k.datedWaits({ member: viewer, asOf: `${date}T06:59:59Z`, viewer }),
+           none: w.k.datedWaits({ member: viewer, asOf, viewer: "admin" }) };
+}
+
 /** R49 (`migratedSurfacing`): the surfacing a migration replay recorded for `migrated`, and null for `plain`, a question
  *  made on this plane. */
 export function migratedSurfacing() {
@@ -74,4 +92,29 @@ export function readRefusals() {
            absent: w.k.partitionOf({ id: "INQ-2026-9099-x", viewer: "admin" }),
            hiddenFromViewer: w.k.partitionOf({ id: Q, viewer: V("alice") }),
            visible: w.k.partitionOf({ id: R, viewer: V("alice") }) };
+}
+
+/** R55, R58 (K5130; the question's own screen reads it through `op=questionwaits`): the real `questionWaits` answer for a
+ *  question with one document cited to it that another member sets aside with a reason, as the asker reads it
+ *  (`answer`: `waits` the dated waits, none; `document_waits` that one wait `{document, by, reason, at}`; `history` its
+ *  set-aside), then after a restore by the asker (`restored`: `document_waits` empty, `history` holding the set-aside and
+ *  the restore), and as a viewer who may not see the document reads it (`hiddenFrom`: neither). `asker` and `setter` are
+ *  member stamps (`member:<id>`). Made by the real capture module's set-aside and restore. */
+export function questionWaitsSetAside({ asker = V("alice"), setter = V("bob"), reason = "Not needed yet.",
+                                        restoreReason = "The question needs it after all." } = {}) {
+  const w = world({ capture: true });
+  const [askerId, setterId] = [asker, setter].map((v) => v.slice("member:".length));
+  w.member(askerId); w.member(setterId);
+  w.inquiry(Q); w.doc(A);
+  w.held.registerReader("captured-for", "capture-requests", ({ document }) => ({ questions: document === A
+    ? [{ question: Q, asker, title: "Is the question answered?", visible: true, waiting: true }] : [] }));
+  const read = (viewer = asker) => w.k.questionWaits({ question: Q, viewer, asOf: "2026-10-10T12:00:00Z" });
+  must(w.held.setAside({ ids: [A], reason, author: setter, viewer: setter }), "set-aside");
+  const answer = read();
+  const hidden = w.project("Setter's own", setterId);
+  w.st.sql.exec(`UPDATE bundles SET project=? WHERE bundle_id=?`, hidden, A);
+  const hiddenFrom = read();
+  w.st.sql.exec(`UPDATE bundles SET project=NULL WHERE bundle_id=?`, A);
+  must(w.held.restoreHeld({ ids: [A], reason: restoreReason, author: asker, viewer: asker }), "restore");
+  return { inquiry: w.k, question: Q, document: A, asker, setter, reason, restoreReason, answer, hiddenFrom, restored: read() };
 }

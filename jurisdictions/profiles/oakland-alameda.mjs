@@ -882,6 +882,67 @@ export default {
       contacts: [{ how: "email", value: "tips@calmatters.org" }, { how: "web", value: "https://calmatters.org/about/contact-us/#news-tips" }],
       source: "https://calmatters.org/about/contact-us/#news-tips", status: "researched", basis: "2026-10-14 pointers" },
   ],
+  /* R51, R94 (T51 fix round 10; K1452, DEC-301, K5148): the four kinds a proceeding is registered as, the forums that hold
+     them and each kind's stages, read 2026-10-25 on the courts' and the City's own pages and the Legislature's own text of
+     the codes (its official bulk download, K3658). A civil action is commenced by filing a complaint with the court (Code Civ.
+     Proc. § 411.10); a writ of mandate may be issued by any court (§ 1085(a)) and, for a final administrative decision, is
+     heard by the court (§ 1094.5(a)); an appeal other than in a limited civil case is to the court of appeal, from a judgment
+     or order (§ 904.1(a)); an ethics complaint is filed with the Public Ethics Commission, which "reviews and takes action on
+     the complaint" and tells the complainant its "final action" (the Commission's own page). That page names no hearing, so
+     the complaint flow has two stages; nor does any page read name a hearing stage for a civil action or an appeal. */
+  proceeding_kinds: [
+    { kind: "civil", label: "Civil case", forum_kind: "court", basis: "2026-10-25 ccp-411-10, 2026-10-25 alameda-superior-court" },
+    { kind: "writ", label: "Petition for a writ", forum_kind: "court", basis: "2026-10-25 ccp-1085, 2026-10-25 ccp-1094-5" },
+    { kind: "appeal", label: "Appeal", forum_kind: "court", basis: "2026-10-25 ccp-904-1, 2026-10-25 first-district-about" },
+    { kind: "complaint", label: "Administrative complaint", forum_kind: "commission", basis: "2026-10-25 oakland-pec-complaint-page" },
+  ],
+  proceeding_flows: [
+    { kind: "civil", stages: [
+      { stage: "filed", label: "complaint filed", reached_by: ["filing"] },
+      { stage: "decided", label: "judgment or order entered", reached_by: ["order"] }],
+      citation: "Cal. Code Civ. Proc. §§ 411.10, 904.1(a)", basis: "2026-10-25 ccp-411-10, 2026-10-25 ccp-904-1" },
+    { kind: "writ", stages: [
+      { stage: "filed", label: "petition filed", reached_by: ["filing"] },
+      { stage: "heard", label: "heard by the court", reached_by: ["hearing"] },
+      { stage: "decided", label: "writ granted or denied", reached_by: ["order"] }],
+      citation: "Cal. Code Civ. Proc. §§ 1085(a), 1094.5(a)", basis: "2026-10-25 ccp-1085, 2026-10-25 ccp-1094-5" },
+    { kind: "appeal", stages: [
+      { stage: "filed", label: "appeal filed", reached_by: ["filing"] },
+      { stage: "decided", label: "appeal decided", reached_by: ["order"] }],
+      citation: "Cal. Code Civ. Proc. § 904.1(a)", basis: "2026-10-25 ccp-904-1" },
+    { kind: "complaint", stages: [
+      { stage: "filed", label: "complaint filed", reached_by: ["filing"] },
+      { stage: "decided", label: "final action taken", reached_by: ["order"] }],
+      citation: "Oakland Public Ethics Commission, File a Complaint", basis: "2026-10-25 oakland-pec-complaint-page" },
+  ],
+  forums: [
+    { label: "Superior Court of California, County of Alameda", forum_kind: "court", basis: "2026-10-25 alameda-superior-court" },
+    { label: "Court of Appeal of California, First Appellate District", forum_kind: "court", basis: "2026-10-25 first-district-about" },
+    { label: "Supreme Court of California", forum_kind: "court", basis: "2026-10-25 supreme-court-home" },
+    { label: "United States District Court, Northern District of California", forum_kind: "court", basis: "2026-10-25 cand-jurisdiction-map" },
+    { label: "Oakland Public Ethics Commission", forum_kind: "commission", basis: "2026-10-25 oakland-pec-complaint-page" },
+  ],
+  /* R93 (T51 fix round 10; K5148): the California Public Records Act as the Legislature's own text prints it (Gov. Code
+     §§ 7921.300, 7922.525–.540, .570–.575, .600, as amended through Stats. 2025, ch. 34, effective 2026-01-01; read 2026-10-25),
+     the City's request portal as the Police Department's own General Order M-9.1 names it (read 2026-10-25), and the Sunshine
+     Ordinance's window as OMC 2.20.230(A) prints it (read 2026-10-11, `test/fixtures/actions-law.mjs`). */
+  records_help: {
+    law: "California Public Records Act", days: 10, extra_days: 14,
+    extension_reasons: [
+      { reason: "the records must be searched for and collected from field facilities or other establishments separate from the office processing the request", citation: "Cal. Gov. Code § 7922.535(c)(1)" },
+      { reason: "a voluminous amount of separate and distinct records is demanded in a single request", citation: "Cal. Gov. Code § 7922.535(c)(2)" },
+      { reason: "the agency must consult another agency with a substantial interest in the request, or two or more of its own components", citation: "Cal. Gov. Code § 7922.535(c)(3)" },
+      { reason: "data must be compiled, a program written, or a computer report constructed to extract the data", citation: "Cal. Gov. Code § 7922.535(c)(4)" },
+      { reason: "a cyberattack stops the agency reaching its electronic servers or systems", citation: "Cal. Gov. Code § 7922.535(c)(5)" },
+      { reason: "a state of emergency proclaimed by the Governor directly affects the agency's ability to respond, through staffing shortages or closed facilities", citation: "Cal. Gov. Code § 7922.535(c)(6)" }],
+    portal: { name: "the City of Oakland's public records request portal (NextRequest)", url: "https://oaklandca.nextrequest.com/" },
+    faster: { ordinance: "Oakland Sunshine Ordinance", window: "three business days", request: "Immediate Disclosure Request", citation: "Oakland Mun. Code § 2.20.230(A)" },
+    citations: { answer: "Cal. Gov. Code § 7922.535(a)", extend: "Cal. Gov. Code § 7922.535(b)", assist: "Cal. Gov. Code § 7922.600(a)",
+      segregate: "Cal. Gov. Code § 7922.525(b)", refuse_in_writing: "Cal. Gov. Code § 7922.540(a)", electronic: "Cal. Gov. Code § 7922.570(a)",
+      cost: "Cal. Gov. Code § 7922.530(a)", cost_electronic: "Cal. Gov. Code § 7922.575(a)", inspect_photograph: "Cal. Gov. Code § 7922.530(b)",
+      purpose: "Cal. Gov. Code § 7921.300" },
+    status: "researched",
+    basis: "2026-10-25 leginfo-bulk-download, 2026-10-25 opd-dgo-m-9-1, 2026-10-11 actions-law" },
   /* Each office's published closure days for 2026, by the list that governs it (K925). The City's and the
      State's are employers' paid-holiday lists, read as closure days (K925 (2)); the City's 09-09 and 11-11,
      marked "(HVA) If applicable", are left out until a member confirms (K925 (3)). The county's own list

@@ -5,7 +5,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, serve, sha, V, NOW_MS, DAEMON } from "./fixture.mjs";
+import { escalationsDue } from "../escalation/fixtures.mjs";
 import { monitoringOps, FREQUENCY_CHECKS, WATCH_END_CHECKS } from "../../../src/monitoring/index.mjs";
+
+/* escalation as its real module answers in a world with no escalation open (its published fixture, R16) */
+const emptyEscalation = () => escalationsDue().emptyWorld.esc;
 
 const HOUR = 3600000, DAY = 24 * HOUR;
 const iso = (ms) => new Date(ms).toISOString().replace(/\.\d+Z$/, "Z");
@@ -208,7 +212,7 @@ const createAction = (w, id, clock) => {
     files: [{ path: "bundle.md", text: md, bytes: Buffer.byteLength(md), sha256: sha(md) }] });
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
 };
-const clockWorld = () => world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+const clockWorld = () => world({ realActions: true, escalation: emptyEscalation() });
 /* 12:00 on the 28th in Halifax (UTC-3) is 15:00 UTC */
 const NOON = Date.parse(`${TODAY}T15:00:00Z`);
 

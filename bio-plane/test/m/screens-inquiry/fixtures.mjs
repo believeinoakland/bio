@@ -48,7 +48,8 @@ export const inquiryMd = (project = P, refs = INQUIRY_REFS, o = {}) => ["---", `
   ...((o.legs || LEGS).length ? ["basis:", ...(o.legs || LEGS).flatMap((l) => [`  - target: ${l.target}`, `    role: ${l.role}`,
     ...(l.grade ? [`    grade: ${l.grade}`] : []), ...(l.grade_axis ? [`    grade_axis: ${l.grade_axis}`] : []), ...(l.ground ? [`    ground: ${l.ground}`] : []),
     ...(l.extent_kind !== undefined ? [`    extent_kind: ${l.extent_kind}`] : []), ...(l.extent_page !== undefined ? [`    extent_page: ${l.extent_page}`] : []),
-    ...(l.extent_para !== undefined ? [`    extent_para: ${l.extent_para}`] : [])])] : []),
+    ...(l.extent_para !== undefined ? [`    extent_para: ${l.extent_para}`] : []),
+    ...(l.extent_part !== undefined ? [`    extent_part: ${l.extent_part}`] : []), ...(l.extent_ref !== undefined ? [`    extent_ref: ${l.extent_ref}`] : [])])] : []),
   ...(o.grounds ? ["grounds:", ...o.grounds.flatMap((g) => [`  - ground: ${g.ground}`, `    asserted_by: ${g.asserted_by}`, `    at: "${g.at}"`])] : []),
   "---", "", "## Question", "", "Is the city repairing reported potholes within seven days?", "",
   "## Session Log", "", ...(o.log || []), "## Review Notes", ""].join("\n");

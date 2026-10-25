@@ -35,7 +35,7 @@
 - Sign step · raw strings ("bio-ratify-case…") and a "device window" that does not exist · CA35 · 2026-10-21
 - Question · strength says "rests on nothing established" without what would make it count · E12 · 2026-10-21
 - Question, Document · "The team's founder" for the acting member; "What would change it" twice · E14, E23 · 2026-10-21
-- Timeline · "Undetermined, because its owner does not settle its validity" · E34 · 2026-10-21
+- Timeline · "Undetermined, because its owner does not settle its validity" · E34 · 2026-10-21 · **moved to a job (K5148): events `grade_why` keyed (fix-round-10 item 70), not words**
 - Plan · checks print "p1", "not_met" · E57 (C63 maps the codes; the sentences are the design's) · 2026-10-21
 - Assistant · "a reason this panel has no words for yet": add the row for the 503 UNAVAILABLE refusal · E59 (C92 makes the panel reachable) · 2026-10-21
 - Reader's copy · heading in capitals (internal words) · CA21 · 2026-10-21
@@ -81,7 +81,7 @@
 - 390 px · controls under 30 px (Home 87, Queue 84, Find 50, Members 5 ...; B: Home 144, Projects 41, Queue 110 ...), the design stylesheet ask 2; Held at 390: the row's checkbox (44 px) overlaps the bordered "Open the file" box · A C81, B C81 · fix round 5 §5 · 2026-10-22
 - Case ceremony · "One confirmation signs all 1: the edition and its 0 findings" (goes with E4), "in your team's time zone ()" with empty brackets; the document is named by 12 hex letters (C40); after "Ask for the confirmation again" the row still shows the first time stamp · B ceremony, C40 · fix round 5 §5 · 2026-10-22
 - Case editor, review copy, ceremony · choosing a draft in the box alone does nothing, a second press of "Which draft" is needed while the box says "Choosing one shows that draft"; the choice is not kept on reload · B C49 · fix round 5 §5 · 2026-10-22
-- Money · a bare "Nothing here" under the contract block; the raw project id in the breadcrumb; a raw capture fingerprint in SOURCE; "did not move: a adopted figure"; "FY2025-26" refused with "the active profiles hold no fiscal year for *" after a sentence about dates the member did not give · B C59, C8 · fix round 5 §5 · 2026-10-22
+- Money · a bare "Nothing here" under the contract block; the raw project id in the breadcrumb; a raw capture fingerprint in SOURCE; "did not move: a adopted figure"; "FY2025-26" refused with "the active profiles hold no fiscal year for *" after a sentence about dates the member did not give · B C59, C8 · fix round 5 §5 · 2026-10-22 · **the SOURCE cell moved to a job (K5148): screens-investigate R33 (item 70)**
 - Request, help · "20 days" against "20 business days"; "portal" in lower case · B C64-law · fix round 5 §5 · 2026-10-22
 - Queue · old "newer version" items: two identical pairs and "was read as." with the grade missing (old data; the new-item check is in section 7) · B C69 · fix round 5 §5 · 2026-10-22
 - Capture · "Finish it" and the held-copy repair draw stand-in rows; owed: `screen.capture.finish.pending`, `.finish.files`, `.finish.done`, `screen.capture.address.reading.pending`, `.address.reading.done` (texts in `build/jobs/T51/screens-intake.md`, B27) · SCREENS-INTAKE #17 · fix round 5 E7, E8 · 2026-10-22

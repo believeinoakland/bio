@@ -154,7 +154,20 @@ test("R59 R45 a policy kept from the public says standard.notpublic and who can 
   const source = WORD("standard.source.capture", { capture: src.capSha.slice(0, 12), extent: "page 1" });
   assert.equal(rec.record.source.says, source);
   const on = w.s.inForceAt({ standard: std, date: "2026-09-01", viewer: V("carol") });
-  assert.equal(on.why, WORD("standard.inforce.known", { through: "2026-09-01", source, author: V("bob") }));
+  assert.equal(on.why, WORD("standard.inforce.known", { through: "2026-09-01", source, author: "bob" }));
+});
+
+test("R45 K5148 a why names the recording member as a value, never a member: stamp inside the sentence", () => {
+  const w = seeded();
+  const src = w.passage("portal", { address: "https://ex.org/portal", retrieved: "2026-09-01T18:00:00Z" });
+  const std = w.declare({ cite: "PEBL § 91", period: { from: "2020-01-01", to: null } }).id;
+  const rec = w.s.inForceThroughRecord({ standard: std, through: "2026-09-01", source: { captureSha: src.capSha, extent: PAGE0 },
+                                         reason: REASON, author: V("bob"), viewer: V("bob") });
+  assert.equal(rec.ok, true, JSON.stringify(rec).slice(0, 300));
+  const on = w.s.inForceAt({ standard: std, date: "2026-09-01", viewer: V("carol") });
+  assert.equal(on.why.includes("member:"), false, "no stamp in the sentence");
+  assert.ok(on.why.includes("bob"), "the member is named");
+  assert.equal(on.in_force_through.says.includes("member:"), false, "the record's own words draw no stamp either");
 });
 
 test("R60 'Hold this as a standard' on an uncited passage of a held capture lands with text one content_id, minted by the declaring member and labelled as content labels a member's; a second declaration over it finds the row and mints nothing more", () => {

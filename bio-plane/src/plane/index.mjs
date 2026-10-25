@@ -1,7 +1,8 @@
 /* plane R6: the Worker's module. Its default export is `control-plane`'s door (`makeFetch`) over the hooks the door takes,
    each composed from the arms' owners' handlers (`door.mjs`); `Store` is the Durable Object class `wrangler.jsonc` binds
    (R1). The published read is handed its plane binding (`bindPublishedPlane`, public-read's) when this module loads. Its
-   default export also carries `scheduled`, the watchdog's cron handler (R79, `watchdog.mjs`). No other export. (R105) Each answer
+   default export also carries `scheduled`, the watchdog's cron handler (R79, `watchdog.mjs`). A `captureupload` request is stated in a line on
+   arrival (`arrival.mjs`, R24 d). No other export. (R105) Each answer
    states the calls its request made to the object, `object-calls;dur=<n>` in its `Server-Timing`. */
 import "./register.mjs";   /* R68 (T51; K4168): first, since control-plane reads the op tables when it loads */
 import { makeFetch, PUBLISHED_STORE } from "../control-plane/index.mjs";
@@ -11,6 +12,7 @@ import { bindPublishedPlane } from "../publication/worker.mjs";
 import { publicInstanceGroup } from "../setup.mjs";
 import { publicOp, gatedOp } from "./door.mjs";
 import { watchdog } from "./watchdog.mjs";
+import { logArrival } from "./arrival.mjs";
 
 export { Store } from "./store.mjs";
 
@@ -60,6 +62,7 @@ function stated(res, n) {
 
 /* the door's own properties (its `limits`) stay readable on the fetch the Worker exports */
 const fetch = Object.assign(async function fetch(req, env, ctx) {
+  logArrival(req);   /* R24 (d): an upload's arrival, stated before anything is awaited */
   const tally = { n: 0 };
   const res = await door(req, counted(env, tally), ctx);
   return stated(res, tally.n);

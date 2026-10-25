@@ -201,7 +201,7 @@ async function firstChunk(res) {
   return { text: new TextDecoder().decode(value), at: performance.now() - t0, reader };
 }
 
-test("R59 (T50; N1195; agent-worker R113; amends R6, R40): a producer that writes its first line then waits 2 s delivers that line to the reader before the wait ends, through the Store's RPC and through the door's arm; the whole stream arrives unchanged; control: a short answer arrives whole and unchanged", async () => {
+test("R59 (T50; N1195; agent-worker R113; amends R6, R114): a producer that writes its first line then waits 2 s delivers that line to the reader before the wait ends, through the Store's RPC and through the door's arm; the whole stream arrives unchanged; control: a short answer arrives whole and unchanged", async () => {
   /* through the Store's RPC (`ask`) */
   const x = await askWorld({ wait: 2000 });
   const res = await x.s.ask({ member: "member:ann", session: SESSION, question: "Who holds the clerk's office?", conversation: [], store: null });
@@ -234,7 +234,7 @@ test("R59 (T50; N1195; agent-worker R113; amends R6, R40): a producer that write
 
 /* ===== R62: the Store's RPC `groupFields` takes a project ===== */
 
-test("R62 (T50; N933; control-plane R102; public-read R36; amends R40): the Store's RPC groupFields({project}) answers public-read's groupFields of the object for that project, its `matter_stake` among its keys; with none it answers `matter_stake: null`; control: a project whose latest stake is cleared answers null, a name that is no project answers null", async () => {
+test("R62 (T50; N933; control-plane R102; public-read R36; amends R114): the Store's RPC groupFields({project}) answers public-read's groupFields of the object for that project, its `matter_stake` among its keys; with none it answers `matter_stake: null`; control: a project whose latest stake is cleared answers null, a name that is no project answers null", async () => {
   const x = await store();
   instanceSetupOf(x.ctx).instanceGroupSeed({ slug: "oak-watch", author: "admin" });
   const sql = x.ctx.storage.sql;

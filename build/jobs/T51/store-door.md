@@ -1,6 +1,6 @@
 # store-door (T51)
 
-**Status** · session_01QLTzPedPAoRQP9VWrUzxYJ · depth 2 · COMPLETE · handled B9
+**Status** · session_0131u5PSNZMenR2zaqE2ZTaU · depth 2 · COMPLETE · handled B12
 
 ## J1 · REPORT
 
@@ -168,3 +168,43 @@ Size (session_01QLTzPedPAoRQP9VWrUzxYJ): test runs 5, module lines 706
 ## J11 · COMPLETE
 
 COMPLETE · R19 applied: STREAMED_BODY_OPS gains captureuploadpart (dispatch.mjs). Failing-first test in dispatch.test.mjs; store-door suite 57 of 57; format, architecture, coverage (19 of 19), words, ownership all 0 failures. Impact users: 599 tests, 3 red, identical without my change (control-plane t51-visitor-copy, plane g41-shape, plane release R24). Details in J10 of my record. Drop 'not yet met' from R19.
+
+## STORE-DOOR #18 · fix round 10, Wave A batch 5 (B11)
+
+**Causes done.**
+- Fixture `internalErrorAnswer(overrides)` in `bio-plane/test/m/store-door/fixtures.mjs` (new): the real `dispatch` over a throwing route, the 500 body (`STORE_INTERNAL_ERROR`, row `C-69.4`, a fresh UUID `correlation`, `error: "internal error"` and no thrown text); `overrides` replace fields. Its test (`fixtures.test.mjs`, R6) calls it twice (own id each), checks the 500 status, and a negative control overriding `correlation`/`reason`. Note for control-plane's re-point: the real body carries `error: "internal error"` (not absent), with `code`, `check`, `translation`.
+- Contract `store-replies` (`fixtures.test.mjs`, R1 R6 R19): `badJson`, `unknownOp`, `internalError`, `answered` stated as data and compared with the real `dispatch`. The real answers differ from the parts' hand-built ones, so the real wins and the users change: BAD_JSON is `{ok:false, reason:"BAD_JSON", detail}` (a `detail`, no `error`), status 400; unknown op is **400** (not 404) `{ok:false, error:"unknown op: <op>"}`; STORE_INTERNAL_ERROR always carries a correlation (the door never answers one without) and the full row; the door never answers a bare-stack `{ok:false, error}` 500 (a throw never carries its text), 413 or 503. One `// fixtures-run: <user> store-replies` per user: host-governor, capture, doorbell, extraction, connections, publication, public-read, ratification, monitoring, translations, instance-setup.
+- Own lines: `pull.test.mjs` `promotionStandIn` takes its success answer from promotion's `promoteControlled` (the bundle id is the pull's); `homeOf` stand-ins are `homeOfWorld` (calls counted by `world.calls()`; the third pull of the residue test re-points `deps.provenance` to a world where the capture has a home).
+
+**Markers added (K5060).**
+- `// fixtures-own: input` (a route map handed to the door under test; routes only record or throw): dispatch.test.mjs:328, :353, :563; purge-hold.test.mjs:17, :90; routes.test.mjs:384 (line numbers before the added marker lines: the marker sits on the line above each).
+- `// fixtures-generic: DOORBELL_ANSWERED` (a made-up reason the spied doorbell returns): pull.test.mjs:314 and :322.
+
+**Lines left.** None in `fixtures.mjs --list` (0 failures, accepted 10). The 11 `fixtures-run` lines show `orphan-run` only until each user's `fixtures-contract: store-door store-replies` marker is merged (users' waves); `internalErrorAnswer`'s user is control-plane (Wave A/B).
+
+**Tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/store-door/*.test.mjs`: 59 tests, 59 pass, 0 fail. `node build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178 (tests only; no source changed).
+**Checks.** format 178 modules, 0 failures; architecture 0; coverage 19 of 19, 0; words 0; fixtures 0 failures; ownership 0 failures.
+**Deferred:** none. **Found in another module:** none.
+
+Size (session_01KJQfyLCeG4fReDepjGQhJP): test runs 5, module lines 0 source (tests +120)
+
+## J12 · COMPLETE
+
+COMPLETE · fix round 10 batch 5: internalErrorAnswer fixture + store-replies contract (11 fixtures-run lines) published in store-door/fixtures.mjs and fixtures.test.mjs; pull.test.mjs re-pointed to promoteControlled and homeOfWorld; 6 fixtures-own and 2 fixtures-generic markers (listed in my record). Store-door suite 59 of 59; fixtures --list 0 failures; format, architecture, coverage, words, ownership 0 failures; impact: 0 modules (tests only). Real answers differ from the parts' hand-built ones (BAD_JSON has detail not error; unknown op is 400; internal error always has correlation and full row; no bare-stack 500): details in my record. Orphan-run waits on users' markers. Size (session_01KJQfyLCeG4fReDepjGQhJP): test runs 5, module lines 0 source
+
+## STORE-DOOR #19 · follow-up 49 (B12), WALK-FINAL-04B row R39 (K5129)
+
+**Cause 1, holder null (R7 clause 1 met).** Root cause: `pull.mjs` called `doorbell.pullKnock` / `inboxResolve` without `viewer`, though `pullAndFile` received it; doorbell's `#sees(undefined)` is false, so `holder` was always null for bytes already held. Evidence: the new test's first run (against the old code) answered `[true, null]` where the holding bundle was expected. Why missed: `pull.test.mjs` asserted no `holder`; now it does. Fix: `viewer` passed on both arms.
+**Cause 2, raw knock id in the title (R7 clause 2 met).** Root cause: `pull.mjs` titled the bundle with `store-door.title.material_handed_doorbell` ("... ({knock_id})"), which every list draws. Evidence: old-code title `Material handed in at the doorbell (KNOCK-2026-09-30-ff128739)`. Fix: `localize("store-door.title.material_handed_doorbell_on", "Material handed in at the doorbell on {date}", {date})`, the date the knock's receipt instant ("30 September 2026"; falls back to the document's `retrieved`, then the pull instant). The old key is left to the round-end regeneration; the new row goes to UX-DESIGN through `words-unreviewed.json` (K3930).
+**Tests** (`pull.test.mjs`, both seen failing on the old code, passing now): (1) a second knock of the same bytes, by a viewer who may see the first's bundle: `existed: true`, `holder` that bundle, for `pullAndFile` pull and resolve; a viewer who may not (`visitor`) and no viewer: `holder` null. (2) the title holds no `KNOCK-` id and reads "...on 30 September 2026", in the document's meta and `bundle.md`, and through the real promotion and `recordOf.head`. No test of mine reaches `op=list`; the title is the stored title the list draws.
+**Platform check:** none.
+**Tests run:** store-door suite 61 of 61 pass. Impact (`impact.mjs origin/tranche/T51 HEAD`): store-door, control-plane (17 of 108 files), plane (71 of 96); 95 files, 719 tests, 718 pass, 1 fail: plane `release.test.mjs` R24 (stale words rows, regenerated by BOB at round end; the same red earlier rounds recorded).
+**Checks (absolute root):** format 0 failures; architecture store-door 0; coverage 19 of 19, 0; words store-door 0 (the new row is keyed); ownership 0; fixtures --list: 2 failures, both `orphan-run` of mine, waiting on users' markers: `host-governor store-replies`, `doorbell store-replies`.
+**Deferred:** none. **Found in another module:** none. No new `fixtures-own` / `fixtures-generic` markers.
+Commit 48dc5eff2b, pushed.
+
+Size (session_0131u5PSNZMenR2zaqE2ZTaU): test runs 6, module lines 12
+
+## J13 · COMPLETE
+
+COMPLETE · B12 applied: R7's two marked clauses met (viewer passed to the doorbell so holder is answered; title names the knock's date, new row store-door.title.material_handed_doorbell_on, old key left to regeneration). Both seen failing then passing in pull.test.mjs. Suite 61/61; impact 719 tests, 1 red = plane release R24 (stale words rows). Checks 0 failures; fixtures: 2 orphan-run waiting on host-governor and doorbell markers. Details in my record, commit 48dc5eff2b. Size (session_0131u5PSNZMenR2zaqE2ZTaU): test runs 6, module lines 12

@@ -11,6 +11,7 @@ import { Conformance, CONFORMANCE_CHECKS, FINDING_KINDS, ADOPTION_KEYS, ACCEPTED
          REASON_MAX, determinationVoided, noSuchDetermination, determinationSuperseded } from "../../../src/conformance/index.mjs";
 import { ACCEPTED_WORK_CHECKS } from "../../../src/accepted-work/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { caseCheckOfNoSuchCase } from "../case-check/fixtures.mjs";
 
 const refused = (r, code) => {
   assert.equal(r.ok, false, `expected ${code}, got ${JSON.stringify(r).slice(0, 300)}`);
@@ -398,8 +399,10 @@ test("R24 R31 R32: a pinned held check or accepted finding the viewer may not se
   const d = w.c.determine(input({ findings: [F, H, { ref, edition: 1 }] }));
   assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
   w.imports.hiddenFrom = [V("pat")];
+  /* case-check's real refusal to a viewer without standing, from its published fixture (K4990): the same bytes as an absent case */
+  const noSuchCase = caseCheckOfNoSuchCase().refusal;
   const fenced = new Proxy(w.caseCheck, { get: (t, p) => (p === "caseCheckOf"
-    ? (a) => (a.viewer === V("pat") ? { ok: false, reason: "NO_SUCH_CASE" } : t.caseCheckOf(a))
+    ? (a) => (a.viewer === V("pat") ? noSuchCase : t.caseCheckOf(a))
     : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
   const c = new Conformance({ storage: w.st, record: w.record, membership: w.membership, promotion: w.promotion, host: w.host,
     content: w.content, inquiry: w.k, strength: w.strength, reevaluation: w.reevaluation, publication: w.publication,

@@ -1,6 +1,6 @@
 # conformance (T51)
 
-**Status** · session_01JnMCs91Bn1r2Lm9pGuRv7D · depth 2 · COMPLETE · handled B5
+**Status** · session_01H6qaqGGdsgsJYq9QcBswrD · depth 2 · COMPLETE · handled B5
 
 ## J1 · REPORT
 
@@ -77,3 +77,38 @@ Size (session_01JnMCs91Bn1r2Lm9pGuRv7D): test runs 4, module lines 0 (source unc
 ## J6 · COMPLETE
 
 B5 done. Published determinationVariants (held-check basis, accepted basis, compliant, superseded with superseded_by set, live with superseded_by null) and voidDetermination, from real code, each tested in fixtures.test.mjs; every state was reachable. Re-pointed the hand-built IMPORT_NO_SUCH_EDITION to case-import's importedWorld. No fixtures-own/-generic markers added. 2 lines left: fixture.mjs:178 (basis-versions, no fixtures.mjs yet) and t45.test.mjs:402 (NO_SUCH_CASE; its provider is case-check, not case-import, and publishes none yet). Module tests 125/0; format, architecture, coverage 42/42, words, ownership 0 failures; impact 0 affected.
+
+## J7 · QUESTION
+
+B6 (follow-up 7): one edge to rule. Two lines were left; one is done, the other needs a `uses` edge.
+
+(2) Done. `t45.test.mjs:402`, the fenced `caseCheckOf` refusal, now takes case-check's published `caseCheckOfNoSuchCase().refusal`. case-check is already in conformance's `uses`. Committed as 19fc12e3fe; 125 tests pass, 0 fail.
+
+(1) Needs an edge. `fixture.mjs:178`, the `conclude` stand-in, can take basis-versions' published `concludeAct({kind, target})`. I tried it: 125 tests pass, and the fixtures check clears the line. But importing `bio-plane/test/m/basis-versions/fixtures.mjs` needs basis-versions in conformance's `uses`, which it is not, and `checks/architecture.mjs` fails on that one import. I reverted the change on the branch so the branch stays green (as with the retrieval edge at J4).
+
+Please add `basis-versions` to conformance's `uses` in `build/modules.json` at the tranche tip, or rule otherwise. Then I apply this change, and nothing else:
+- one import, `import { concludeAct } from "../basis-versions/fixtures.mjs";`
+- in `conclude(args)`, keep the stand-in's promotion write (contradiction's R21 test reads the concluded question through it), and return `r.ok ? concludeAct({ kind: "concluded", target: args.target }) : r` in place of the hand-built object.
+
+`concludeAct` takes only `kind` and `target`, so the returned claim text is the fixture's own wording, not the caller's conclusion. The stand-in's result is used only for its `ok` flag and passed on by `resolve`, so no test in this module reads the wording.
+
+Until the ruling the fixtures check lists one line, `fixture.mjs:178`. Nothing else is open.
+
+## J8 · COMPLETE
+
+Follow-up 7 done (B6, B7). Both lines re-pointed; no fixtures-own or fixtures-generic markers added.
+
+Applied:
+- t45.test.mjs:402: the fenced caseCheckOf refusal takes case-check's published caseCheckOfNoSuchCase().refusal (commit 19fc12e3fe).
+- fixture.mjs:178: the conclude stand-in keeps its promotion write (contradiction's R21 test reads the concluded question through it) and returns basis-versions' concludeAct({kind: "concluded", target}) on success, in place of the hand-built answer. basis-versions is in conformance's uses on tranche/T51 (B7). Commit b49ab14265, after merging origin/tranche/T51 (never a rebase).
+
+Checks by failure count (absolute root /home/user/bio):
+- checks/fixtures.mjs /home/user/bio conformance --list: 0 failures (answer 0)
+- checks/architecture.mjs: 0 failures
+- checks/format.mjs: 0 failures
+- checks/coverage.mjs conformance: 42 of 42 live ids, 0 failures
+- checks/words.mjs conformance: 0 failures
+- checks/ownership.mjs /home/user/bio conformance tranche/T51 job/T51/conformance: 0 failures
+- module tests (bio-plane/test/m/conformance/*.test.mjs): 125 pass, 0 fail
+
+Size (session_01H6qaqGGdsgsJYq9QcBswrD): test runs 4, module lines 0 (source unchanged; test and stand-in lines only)

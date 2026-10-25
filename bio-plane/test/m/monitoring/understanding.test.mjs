@@ -4,13 +4,28 @@
    its R1). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, stubIntent, sha, V, NOW_MS, infoMd, serve, DAEMON } from "./fixture.mjs";
+import { world, sha, V, NOW_MS, infoMd, serve, DAEMON } from "./fixture.mjs";
+import { watchSetOf } from "../intent/fixtures.mjs";
+import { restingOf } from "../publication/fixtures.mjs";
 import { staleBaseRefusal } from "../promotion/fixtures.mjs";
+import { acquireRefusals } from "../acquisition/fixtures.mjs";
+import { escalationsDue } from "../escalation/fixtures.mjs";
+import { pendingClocksRefusal } from "../action-clocks/fixtures.mjs";
 import { markOverdue, MONITOR_AUTHOR, MONITOR_VIEWER, DEADLINE_RECHECK_MAX, GATHERING_PURPOSE, GATHERING_LANDS_AT,
          MONITOR_CADENCE_BATCH, DEADLINE_NO_ZONE } from "../../../src/monitoring/index.mjs";
 import { MECHANICAL_FIELD_SETS } from "../../../src/promotion/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+
+/* escalation as its real module answers in a world with no escalation open (its published fixture, R16) */
+const emptyEscalation = () => escalationsDue().emptyWorld.esc;
+
+/* publication's real answers, followed a page of two at a time to the end (each call recorded in `calls`): the page
+   size the paging of R33 needs, as the cursor is followed to its end over more than one page. */
+function pagedResting(publication) {
+  const calls = [];
+  return { calls, restingCapturesOf(q = {}) { calls.push({ after: q.after ?? null }); return publication.restingCapturesOf({ ...q, limit: 2 }); } };
+}
 
 /* R28: a bundle carrying named requests, in project P. */
 const GB = "INFO-2026-0600-gathering", GP = "PROJ-2026-0600-g";
@@ -150,7 +165,8 @@ test("R28 (K1102) the bundle's daemon block governs its requests: enabled false 
   carry("INFO-2026-0654-plain", { requests: [r2("pl", 5)] });
   /* every locator refuses, so each request tries all it is allowed */
   const asked = [];
-  w.capture.acquire = async (body, opts) => { asked.push(opts.captureRequest.locator); return { status: 502, body: { ok: false, reason: "SOURCE_REFUSED", status: 503 } }; };
+  const refused = await acquireRefusals({ kind: "source_refused" });
+  w.capture.acquire = async (body, opts) => { asked.push(opts.captureRequest.locator); return refused; };
   const g = w.m.gathering(NOW_MS);
   assert.deepEqual(g.disabled.map((x) => x.id), ["GATH-2026-0651-off"]);
   assert.equal(g.due.some((x) => x.bundle === "INFO-2026-0651-off"), false, "a disabled bundle's request is never due");
@@ -213,6 +229,9 @@ test("R31 the reads answer what queue-producers publishes: flagged (R48) names e
   w.net.routes[L(2)] = serve("gone", "text/plain", 404);
   w.net.routes[L(3)] = serve("r31 v1 3");
   const ticks = {};
+  w.clock.ms -= 25 * 3600e3;                        /* R4: a removal is confirmed by a second look a day or more after the first */
+  await tick("INFO-2026-0802-gone");
+  w.clock.ms += 25 * 3600e3;
   for (const id of ["INFO-2026-0801-mod", "INFO-2026-0802-gone", "INFO-2026-0803-same"]) ticks[id] = (await tick(id)).body;
   const f = w.m.flagged({ viewer: DAEMON });
   assert.deepEqual(f.items, [
@@ -264,57 +283,59 @@ const createAction = (w, id, clock) => {
   return md;
 };
 
-test("R33 (N170) the sources a live objective rests on are known to monitoring through intent's watchSet, followed to its end; one not monitored is proposed to the project's members through intent's registration, never enabled", () => {
-  const w = world();
+test("R33 (N170) the sources a live objective rests on are known to monitoring through intent's watchSet, followed to its end; one not monitored is proposed to the project's members through intent's registration, never enabled", async () => {
+  const f = await watchSetOf({ objective: [sha("w1"), sha("w2"), sha("w3")] }, { page: 2 });
+  const w = world({ intent: f.intent });
   const a = w.monitored("INFO-2026-0710-watched", "https://records.example.org/w1", "w1", { freq: "daily" });
   const b = w.monitored("INFO-2026-0711-unwatched", "https://records.example.org/w2", "w2", { enabled: false });
   const c = w.monitored("INFO-2026-0712-also", "https://records.example.org/w3", "w3", { enabled: false });
-  w.intent.watch["PROJ-2026-0001-p"] = [a.cap, b.cap, c.cap];
-  const k = w.m.watched({ project: "PROJ-2026-0001-p" });
+  const P = f.projects.objective;
+  const k = w.m.watched({ project: P });
   assert.equal(k.ok, true);
-  assert.deepEqual(k.captures.map((x) => [x.bundle, x.monitored]),
-    [["INFO-2026-0710-watched", true], ["INFO-2026-0711-unwatched", false], ["INFO-2026-0712-also", false]]);
-  assert.deepEqual(w.intent.calls.map((x) => x.after), [null, b.cap], "the cursor is followed to null");
+  assert.deepEqual(Object.fromEntries(k.captures.map((x) => [x.bundle, x.monitored])),
+    { "INFO-2026-0710-watched": true, "INFO-2026-0711-unwatched": false, "INFO-2026-0712-also": false });
+  /* intent pages its captures in sha order, two at a time: the cursor is followed to null */
+  assert.deepEqual(f.calls.map((x) => x.after), [null, [a.cap, b.cap, c.cap].sort()[1]], "the cursor is followed to null");
   /* registered as intent's proposal source at start (intent R15) */
-  const src = w.intent.sources.find((s) => s.kind === "monitoring");
+  const src = f.sources.find((s) => s.kind === "monitoring");
   assert.ok(src, "monitoring registered its proposal source");
-  const props = src.reader({ project: "PROJ-2026-0001-p", viewer: "class:daemon" });
-  assert.deepEqual(props.map((p) => p.basis.bundle), ["INFO-2026-0711-unwatched", "INFO-2026-0712-also"]);
+  const props = src.reader({ project: P, viewer: "class:daemon" });
+  assert.deepEqual(props.map((p) => p.basis.bundle).sort(), ["INFO-2026-0711-unwatched", "INFO-2026-0712-also"]);
   for (const p of props) {
     assert.deepEqual([p.source, p.kind, p.surfaced_by], ["monitoring", "monitor-source", "machine"]);
     assert.match(p.basis.says, /the daemon never enables it/);
   }
   assert.equal(w.fm("INFO-2026-0711-unwatched").monitoring.enabled, false, "never enabled by the daemon");
-  assert.equal(src.reader({ project: "PROJ-2026-0001-p", viewer: "nobody" }).length, 0, "through the viewer's sight");
+  assert.equal(src.reader({ project: P, viewer: "nobody" }).length, 0, "through the viewer's sight");
   /* a change at a watched source reaches reevaluation as R8's flag: the document's own reeval_pending (tick.test R8) */
 });
-test("R33 (N230) the sources a published finding rests on are known to monitoring through publication's restingCapturesOf, followed by its cursor to the end, and one not monitored is proposed to the finding's project the same way, never enabled", () => {
-  const w = world();
-  const P = "PROJ-2026-0002-f", OTHER = "PROJ-2026-0003-o";
+test("R33 (N230) the sources a published finding rests on are known to monitoring through publication's restingCapturesOf, followed by its cursor to the end, and one not monitored is proposed to the finding's project the same way, never enabled", async () => {
+  /* the objective of P reads f3; the findings rest on f1 and f3 (F, of P), on f2 (G, of P and another project) and on f4 (H, of the other) */
+  const f = await watchSetOf({ objective: [sha("f3")] }, { page: 2 });
+  const P = f.projects.objective, OTHER = "PROJ-2026-0003-o";
+  const pub = pagedResting(restingOf([
+    { finding: "INQ-2026-0701-f", projects: [P], digests: [sha("f1"), sha("f3")] },
+    { finding: "INQ-2026-0702-g", projects: [P, OTHER], digests: [sha("f2")] },
+    { finding: "INQ-2026-0703-h", projects: [OTHER], digests: [sha("f4")] },
+  ]).publication);
+  const w = world({ intent: f.intent, publication: pub });
   const a = w.monitored("INFO-2026-0740-rests", "https://records.example.org/f1", "f1", { freq: "daily" });
   const b = w.monitored("INFO-2026-0741-unwatched", "https://records.example.org/f2", "f2", { enabled: false });
   const c = w.monitored("INFO-2026-0742-both", "https://records.example.org/f3", "f3", { enabled: false });
-  const d = w.monitored("INFO-2026-0743-other", "https://records.example.org/f4", "f4", { enabled: false });
-  const F = "FIND-2026-0001-x";
-  w.publication.resting.push(
-    { capture_sha: a.cap, findings: [{ bundle_id: F, projects: [P] }] },
-    { capture_sha: b.cap, findings: [{ bundle_id: F, projects: [P, OTHER] }] },
-    { capture_sha: c.cap, findings: [{ bundle_id: F, projects: [P] }] },
-    { capture_sha: d.cap, findings: [{ bundle_id: "FIND-2026-0002-y", projects: [OTHER] }] });
-  w.intent.watch[P] = [c.cap];
+  w.monitored("INFO-2026-0743-other", "https://records.example.org/f4", "f4", { enabled: false });
   const k = w.m.watched({ project: P });
   assert.equal(k.ok, true);
   const by = Object.fromEntries(k.captures.map((x) => [x.bundle, x]));
   assert.deepEqual(Object.keys(by).sort(), ["INFO-2026-0740-rests", "INFO-2026-0741-unwatched", "INFO-2026-0742-both"], "only this project's findings");
   assert.deepEqual(by["INFO-2026-0741-unwatched"].rests_on, ["finding"]);
-  assert.deepEqual(by["INFO-2026-0741-unwatched"].findings, [F]);
+  assert.deepEqual(by["INFO-2026-0741-unwatched"].findings, ["INQ-2026-0702-g"]);
   assert.deepEqual(by["INFO-2026-0742-both"].rests_on.sort(), ["finding", "objective"]);
   assert.equal(by["INFO-2026-0740-rests"].monitored, true);
   /* the cursor is followed to its end (pages of two) */
-  const sorted = [a.cap, b.cap, c.cap, d.cap].sort();
-  assert.deepEqual(w.publication.calls.map((x) => x.after), [null, sorted[1]]);
+  const sorted = [a.cap, b.cap, c.cap, sha("f4")].sort();
+  assert.deepEqual(pub.calls.map((x) => x.after), [null, sorted[1]]);
   /* proposed through intent's registration to the project, never enabled */
-  const src = w.intent.sources.find((s) => s.kind === "monitoring");
+  const src = f.sources.find((s) => s.kind === "monitoring");
   const props = src.reader({ project: P, viewer: "class:daemon" });
   assert.deepEqual(props.map((p) => p.basis.bundle).sort(), ["INFO-2026-0741-unwatched", "INFO-2026-0742-both"]);
   const pb = props.find((p) => p.basis.bundle === "INFO-2026-0741-unwatched");
@@ -322,15 +343,15 @@ test("R33 (N230) the sources a published finding rests on are known to monitorin
   assert.match(props.find((p) => p.basis.bundle === "INFO-2026-0742-both").basis.says, /^an objective and a published finding/);
   assert.equal(w.fm("INFO-2026-0741-unwatched").monitoring.enabled, false, "never enabled by the daemon");
   /* a publication that cannot be read leaves the objective half standing, and says so */
-  const x = world({ publication: { restingCapturesOf: () => { throw new Error("gone"); } } });
-  const xa = x.monitored("INFO-2026-0744-obj", "https://records.example.org/f5", "f5", { enabled: false });
-  x.intent.watch[P] = [xa.cap];
-  const xk = x.m.watched({ project: P });
+  const g = await watchSetOf({ objective: [sha("f5")] }, { page: 2 });
+  const x = world({ intent: g.intent, publication: { restingCapturesOf: () => { throw new Error("gone"); } } });
+  x.monitored("INFO-2026-0744-obj", "https://records.example.org/f5", "f5", { enabled: false });
+  const xk = x.m.watched({ project: g.projects.objective });
   assert.deepEqual([xk.ok, xk.captures.length, xk.findings_unread], [true, 1, "gone"]);
 });
 
 test("R34 a pending clock entry whose date has passed is marked overdue by a mechanical deadline-recheck promotion changing only clock[].status and last_updated", async () => {
-  const w = world({ realActions: true, escalation: { calls: [], escalationsDue(q) { this.calls.push(q); return { ok: true, items: [], truncated: false }; } } });
+  const w = world({ realActions: true, escalation: emptyEscalation() });
   const before = createAction(w, ACT, [["answer", "2026-09-01", "pending"], ["appeal", "2099-12-01", "pending"], ["today", "2026-09-28", "pending"]]);
   const r = await w.m.deadlineRecheck(NOW_MS);
   assert.equal(r.ok, true);
@@ -360,7 +381,7 @@ test("R34 a pending clock entry whose date has passed is marked overdue by a mec
   assert.deepEqual([again.marked, w.manifest(ACT).length], [[], n]);
 });
 test("R34 the overdue mark R44 writes is what action-clocks.overdueClocks reads for queue-producers' telling: a pending entry past its date is read pending before the mark and overdue after it; an entry not yet past is not read", async () => {
-  const w = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+  const w = world({ realActions: true, escalation: emptyEscalation() });
   const id = "ACTN-2026-0705-told";
   createAction(w, id, [["answer", "2026-09-01", "pending"], ["appeal", "2099-12-01", "pending"]]);
   const read = () => w.clocks.overdueClocks({ viewer: MONITOR_VIEWER, now: NOW_MS }).items.filter((x) => x.action === id)
@@ -373,7 +394,7 @@ test("R34 the overdue mark R44 writes is what action-clocks.overdueClocks reads 
 });
 
 test("R44 the mark reads action-clocks.pendingClocks and moves an entry only from pending to overdue; met, waived and overdue entries are left; nothing is added, removed or re-dated", async () => {
-  const w = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+  const w = world({ realActions: true, escalation: emptyEscalation() });
   const id = "ACTN-2026-0720-mixed";
   createAction(w, id, [["a", "2026-08-01", "met"], ["b", "2026-08-02", "waived"], ["c", "2026-08-03", "overdue"], ["d", "2026-08-04", "pending"]]);
   let read = null;
@@ -433,7 +454,6 @@ test("R35 when a clock is marked overdue or a response is recorded against an ac
   w.m.actionCommitted({ bundleId: "INFO-2026-0001-x", type: "information" });
   w.m.actionCommitted({ bundleId: "ACTN-2026-0730-esc", type: "action", replay: true });
   assert.equal(calls.length, 0);
-  assert.ok(stubIntent);
 });
 
 const DAY = 86400000, HOUR = 3600000;
@@ -443,7 +463,7 @@ const DAY = 86400000, HOUR = 3600000;
 const dayAfter = (d) => Date.parse(`${d}T00:00:00Z`) + DAY + (d >= "2026-11-01" ? 4 : 3) * HOUR;
 
 test("R50 deadlineRecheckWake(now) answers the start of the local day (the jurisdiction's zone, never UTC) after the earliest pending clock date of the actions this module sees, read through action-clocks.pendingClocks as its machine viewer; null when none is pending", async () => {
-  const w = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+  const w = world({ realActions: true, escalation: emptyEscalation() });
   assert.equal(w.m.deadlineRecheckWake(NOW_MS), null, "no action: no wake");
   /* only met, waived and overdue entries: nothing pending, no wake */
   createAction(w, "ACTN-2026-0750-settled", [["a", "2026-08-01", "met"], ["b", "2026-08-02", "waived"], ["c", "2026-08-03", "overdue"]]);
@@ -476,7 +496,7 @@ test("R50 the wake follows pendingClocks' cursor to the end, so a pending entry 
   const w = world({ actionClocks: clocks });
   assert.equal(w.m.deadlineRecheckWake(NOW_MS), dayAfter("2026-10-09"));
   assert.deepEqual(seen, [null, "ACTN-a#0", "ACTN-b#2"], "every page, by its cursor");
-  for (const bad of [() => ({ ok: false, reason: "PENDING_CLOCKS_BAD_BEFORE" }), () => { throw new Error("gone"); }, () => null]) {
+  for (const bad of [() => pendingClocksRefusal(), () => { throw new Error("gone"); }, () => null]) {
     const x = world({ actionClocks: { pendingClocks: bad } });
     assert.equal(x.m.deadlineRecheckWake(NOW_MS), null);
     assert.equal(x.m.deadlineRecheckDue(NOW_MS), null);
@@ -484,7 +504,7 @@ test("R50 the wake follows pendingClocks' cursor to the end, so a pending entry 
 });
 
 test("R50 deadlineRecheckDue(now) answers the wake's instant when it is at or before now, else null; the scheduler's consumer then runs R34 on the first alarm of the day an entry passes", async () => {
-  const w = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+  const w = world({ realActions: true, escalation: emptyEscalation() });
   assert.equal(w.m.deadlineRecheckDue(NOW_MS), null, "nothing pending");
   const id = "ACTN-2026-0760-due";
   createAction(w, id, [["a", "2026-10-03", "pending"]]);
@@ -502,7 +522,7 @@ test("R50 deadlineRecheckDue(now) answers the wake's instant when it is at or be
 });
 
 test("R50 (N429) an entry of an action whose last R34 mark failed is left out of the wake's earliest date until the start of the local day after the failure, so a failing mark is asked again once a day and never holds the wake in the past for the entries that can be marked", async () => {
-  const w = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+  const w = world({ realActions: true, escalation: emptyEscalation() });
   const FAIL = "ACTN-2026-0770-fails", OK = "ACTN-2026-0771-marks", LATER = "ACTN-2026-0772-later";
   createAction(w, FAIL, [["a", "2026-09-01", "pending"]]);
   createAction(w, LATER, [["a", "2026-10-05", "pending"]]);
@@ -540,7 +560,7 @@ test("R50 (N429) an entry of an action whose last R34 mark failed is left out of
   assert.deepEqual(r5.marked.map((m) => m.action), [FAIL]);
   assert.equal(w.m.deadlineRecheckWake(nextDay + DAY), dayAfter("2026-10-05"));
   /* an entry not yet past is not moved by its action's failure: its own day after stands when later than the hold */
-  const v = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+  const v = world({ realActions: true, escalation: emptyEscalation() });
   createAction(v, "ACTN-2026-0773-both", [["past", "2026-09-01", "pending"], ["future", "2026-10-20", "pending"]]);
   const vreal = v.promotion.promote.bind(v.promotion);
   v.promotion.promote = (pkg) => (pkg.operation === "deadline-recheck" ? staleBaseRefusal() : vreal(pkg));
@@ -551,7 +571,7 @@ test("R50 (N429) an entry of an action whose last R34 mark failed is left out of
 });
 
 test("R34 R50 (K1444 (iii)) an entry's date passes on the local day of the actions' jurisdiction, as actions R12 and its R33 bound read it, never the UTC day: an entry dated the 3rd is not past at 02:00 UTC on the 4th (23:00 on the 3rd in Halifax) and is marked at 03:00 UTC; the wake is that instant, and across the change to standard time the local day starts an hour later", async () => {
-  const w = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+  const w = world({ realActions: true, escalation: emptyEscalation() });
   const id = "ACTN-2026-0780-local";
   createAction(w, id, [["a", "2026-10-03", "pending"]]);
   const start = Date.parse("2026-10-04T03:00:00Z");
@@ -573,11 +593,11 @@ test("R34 R50 (K1444 (iii)) an entry's date passes on the local day of the actio
   assert.deepEqual([r.day, r.marked.map((m) => [m.action, m.dates])], ["2026-10-04", [[id, ["2026-10-03"]]]]);
   assert.equal(w.fm(id).clock[0].status, "overdue");
   /* across the end of daylight time (2026-11-01) the local day after starts at 04:00 UTC */
-  const x = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+  const x = world({ realActions: true, escalation: emptyEscalation() });
   createAction(x, "ACTN-2026-0781-dst", [["a", "2026-11-01", "pending"]]);
   assert.equal(x.m.deadlineRecheckWake(NOW_MS), Date.parse("2026-11-02T04:00:00Z"));
   /* a failed mark is held to the start of the next local day, never the next UTC midnight */
-  const y = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+  const y = world({ realActions: true, escalation: emptyEscalation() });
   createAction(y, "ACTN-2026-0782-hold", [["a", "2026-09-01", "pending"]]);
   const real = y.promotion.promote.bind(y.promotion);
   y.promotion.promote = (pkg) => (pkg.operation === "deadline-recheck" ? staleBaseRefusal() : real(pkg));
@@ -588,7 +608,7 @@ test("R34 R50 (K1444 (iii)) an entry's date passes on the local day of the actio
 });
 
 test("R34 R50 with no zone held for the actions' jurisdiction no entry has passed: nothing is marked, the answer says why, and no wake is held; the UTC day is never used in its place", async () => {
-  const w = world({ profiles: null, realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+  const w = world({ profiles: null, realActions: true, escalation: emptyEscalation() });
   const id = "ACTN-2026-0790-nozone";
   createAction(w, id, [["a", "2026-09-01", "pending"]]);
   const r = await w.m.deadlineRecheck(NOW_MS);

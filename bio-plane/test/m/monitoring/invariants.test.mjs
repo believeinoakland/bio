@@ -2,6 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, serve, sha, DAEMON, NOW_MS, infoMd } from "./fixture.mjs";
+import { acquireRefusals } from "../acquisition/fixtures.mjs";
 import { monitoringOps, MONITORING_TABLES, MONITORING_CHECKS, DRIVE_TICK_CHECKS, GATHERING_CHECKS, FREQUENCY_CHECKS, NAMED_REQUEST_CHECKS,
          WATCH_END_CHECKS, MONITOR_SET_CHECKS }
   from "../../../src/monitoring/index.mjs";
@@ -24,7 +25,8 @@ test("R36 the daemon fetches only what store state authorizes: op=monitor takes 
   assert.deepEqual(w.net.seen, [LOC], "only the document's own locator was fetched");
   /* the archive fire's body names only the document address (R20's test drives the whole tick) */
   const calls = [];
-  w.capture.acquire = async (body) => { calls.push(body); return { status: 409, body: { ok: false, reason: "NOT_ELIGIBLE" } }; };
+  const notEligible = await acquireRefusals({ kind: "not_eligible" });
+  w.capture.acquire = async (body) => { calls.push(body); return notEligible; };
   for (let i = 0; i < 3; i++) await w.capture.recordSourceOutcome({ addressNorm: "https://gone.example.org/p", outcome: "fetch_failed", at: "2026-09-20T00:00:00Z" });
   await w.m.archiveTick(NOW_MS);
   assert.deepEqual(calls, [{ via: "archive.org", address: "https://gone.example.org/p" }]);
@@ -106,7 +108,7 @@ test("R41 the tables are this module's and declared to purge: monitor_fired by s
   const w = world();
   assert.deepEqual(MONITORING_TABLES.map((t) => [t.name, t.keys]),
     [["monitor_fired", ["subject"]], ["monitor_tick_epoch", []], ["monitor_address_type", []], ["monitor_address_frequency", []],
-     ["monitor_address_end", []], ["monitor_gathering_run", ["bundle_id"]]]);
+     ["monitor_address_end", []], ["monitor_address_look", []], ["monitor_gathering_run", ["bundle_id"]]]);
   /* the link sweep's tables are link-sweep's (N506): this module neither creates nor declares them */
   assert.deepEqual(w.rows(`SELECT name FROM sqlite_master WHERE type='table' AND name IN ('sweep_runs', 'sweep_filed')`), []);
   const id = "INFO-2026-0850-purge";
@@ -123,7 +125,8 @@ test("R41 the tables are this module's and declared to purge: monitor_fired by s
                                           authority: "Town Clerk", criticality: "crucial", status: "open" }] });
   assert.equal(w.promote(gid, infoMd(gid, "https://records.example.org/h", { enabled: false }),
     { files: [{ path: "data/gathering.json", text: g, bytes: Buffer.byteLength(g), sha256: sha(g) }] }).ok, true);
-  w.capture.acquire = async () => ({ status: 502, body: { ok: false, reason: "SOURCE_REFUSED", status: 503 } });
+  const refused = await acquireRefusals({ kind: "source_refused" });
+  w.capture.acquire = async () => refused;
   const real = w.m.monitor;
   w.m.monitor = async () => { throw new Error("down"); };
   await w.m.cadenceTick(NOW_MS + 2 * 86400000);   /* fails: its claim and epoch stay; the request is attempted */

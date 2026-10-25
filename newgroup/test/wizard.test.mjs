@@ -113,12 +113,13 @@ import worker, { CFG, ARMED_SIGNERS, reportsBuilds } from "../src/index.mjs";
    by name rather than refusing to link the whole suite. */
 import * as NG from "../src/index.mjs";
 /* R30 (N234): the member binding names are instance-setup's; the installer holds no table of its own. */
+import { instanceGroupAnswer } from "../../bio-plane/test/m/instance-setup/fixtures.mjs";
 import { FLEET_BINDINGS } from "../../bio-plane/src/setup-fleet.mjs";
 import { readFileSync } from "node:fs";
 import { fleetStatement, NS_FLEET } from "../../bio-plane/src/sshsig.mjs";
 import { RELEASE_VERSION } from "../src/release.mjs";
 import { RELEASE_SOURCE } from "./release-text.mjs";
-import { signer, like } from "./fixture.mjs";
+import { signer, like, scheduleRules, CRONS_STATEMENT } from "./fixture.mjs";
 const unesc = (t) => t.replace(/&#39;/g, "'");
 import { word } from "../src/words.mjs";
 
@@ -171,6 +172,8 @@ const cferr = (message, status = 400, code = 0) =>
    those the arm itself scripts) and hands each script back exactly as it was last uploaded (R33's read-back). An arm's
    own rule always wins. */
 const FALLBACK = (calls) => [
+  /* installer-steps R39: the plane's schedules, read and set, as the fake account of fixture.mjs answers them. */
+  ...scheduleRules(),
   /* T50 (R62, R69, R70): the reads an install now makes before it creates anything, answered as an empty account answers them. */
   { m: (u, mth) => /\/workers\/scripts$/.test(u) && mth === "GET", f: () => cfok([]) },
   { m: (u, mth) => /\/r2\/buckets$/.test(u) && mth === "GET", f: () => cfok({ buckets: [] }) },
@@ -225,10 +228,12 @@ const callback = async (qs, cookie) => {
 };
 
 async function metadataOf(call) {
+  if (!call) return { bindings: [], keep_bindings: [] };  /* no upload happened: every assertion about it fails by value, not by a crash that hides the arms after it */
   const blob = call.init.body.get("metadata");
   return JSON.parse(await blob.text());
 }
 async function sourceOf(call) {
+  if (!call) return "";
   return call.init.body.get("index.mjs").text();
 }
 const shaHex = async (text) => {
@@ -251,7 +256,7 @@ const LIM = "bio-plane-limits/1 subrequests=10000";
 const BUILTIN_OK = NG.planeLimits(RELEASE_SOURCE).ok;
 const CUR = await signer("current-release");
 const CUR_VER = bump(RELEASE_VERSION);
-const curSrc = RELEASE_SOURCE + `\nexport const PLANE_LIMITS_STATEMENT = "${LIM}";\nexport const PLANE_CRONS_STATEMENT = "bio-plane-crons/1 */5 * * * *";\n`;
+const curSrc = RELEASE_SOURCE + `\nexport const PLANE_LIMITS_STATEMENT = "${LIM}";\nexport const PLANE_CRONS_STATEMENT = "${CRONS_STATEMENT}";\n`;
 const curMan = { version: CUR_VER, sha256: await shaHex(curSrc), bytes: curSrc.length, asset: "bio-plane.bundled.mjs",
   sig: await CUR.sign(curSrc) };
 const NEWER = () => { armWith(CUR.line); return REL({ manifest: () => jres(curMan), asset: () => new Response(curSrc) }); };
@@ -342,7 +347,7 @@ console.log("\n--- install: the whole conversation ---");
   t("install carries the SQLite migration", meta.migrations,
     { new_tag: "v1", new_sqlite_classes: ["Store"] });
   t("Durable Object bound", meta.bindings.some((b) => b.type === "durable_object_namespace" && b.class_name === "Store"), true);
-  t("VERSION is the release chosen", meta.bindings.find((b) => b.name === "VERSION").text, CUR_VER);
+  t("VERSION is the release chosen", meta.bindings.find((b) => b.name === "VERSION")?.text, CUR_VER);
   t("R20: limits are the release's own statement", meta.limits, { subrequests: 10000 });
   /* D-102: the instance name IS the worker name, so the slug the group already
      chose is what the agent advertises. Bound here rather than asked for
@@ -445,6 +450,7 @@ console.log("\n--- install: no card means a friendly stop, and nothing installed
     { m: (u) => u.includes("/scripts/small-group/settings"), f: () => cferr("not found", 404) },
     { m: (u, mth) => u.endsWith("/scripts/bio-plan-probe") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.includes("/scripts/bio-plan-probe") && mth === "DELETE", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "sg" }) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST",
       f: () => cferr("Please enable R2 by adding a payment method", 403) },
   ]);
@@ -516,7 +522,7 @@ console.log("\n--- install: an existing name stops everything ---");
   const calls = script([
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "A3", name: "X" }]) },
-    { m: (u) => u.includes("/scripts/taken-name/settings"), f: () => cfok({ existing: true }) },
+    { m: (u) => u.includes("/scripts/taken-name/settings"), f: () => cfok({ existing: true, observability: { enabled: true }, bindings: [] }) },
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   t("stops naming the name as taken, with a free one offered (R70, F7)", body.includes(word("screen.install.stopped.nametaken", { name: "taken-name" })) && body.includes("taken-name-2"), true);
@@ -527,7 +533,7 @@ console.log("\n--- install: an existing name stops everything ---");
 /* ---- the repository is preferred when newer and verified ---- */
 console.log("\n--- release: a newer verified repository copy installs ---");
 {
-  const repoSrc = "export default { fetch(){ return new Response('repo release'); } }; export class Store {}; export const S = \"" + LIM + "\";";
+  const repoSrc = "export default { fetch(){ return new Response('repo release'); } }; export class Store {}; export const S = \"" + LIM + "\"; export const C = \"" + CRONS_STATEMENT + "\";";
   const repoVer = bump(RELEASE_VERSION);
   const repoSha = await shaHex(repoSrc);
   disarm();  /* an unarmed installer has only the hash to go on */
@@ -550,7 +556,7 @@ console.log("\n--- release: a newer verified repository copy installs ---");
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   const put = calls.find((c) => c.method === "PUT" && c.u.endsWith("/scripts/fresh-town"));
   t("the repository's source is what installed", await sourceOf(put), repoSrc);
-  t("VERSION carries the repository's version", (await metadataOf(put)).bindings.find((b) => b.name === "VERSION").text, repoVer);
+  t("VERSION carries the repository's version", (await metadataOf(put)).bindings.find((b) => b.name === "VERSION")?.text, repoVer);
   t("the page says which copy was used and why", body.includes(word("installer.release.newer.checked", { version: repoVer, builtin: RELEASE_VERSION })), true);
   globalThis.fetch = realFetch;
 }
@@ -577,8 +583,9 @@ console.log("\n--- release: a copy that fails verification is never installed --
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   const put = calls.find((c) => c.method === "PUT" && c.u.endsWith("/scripts/wary-town"));
   if (BUILTIN_OK) {
+    t("the built-in was uploaded (an upload happened)", !!put, true);
     t("the built-in source installed instead", (await sourceOf(put)).includes("tampered bytes"), false);
-    t("VERSION stays the built-in", (await metadataOf(put)).bindings.find((b) => b.name === "VERSION").text, RELEASE_VERSION);
+    t("VERSION stays the built-in", (await metadataOf(put)).bindings.find((b) => b.name === "VERSION")?.text, RELEASE_VERSION);
   } else {
     t("R20: the built-in states no limits, so nothing installs, and the page says why",
       [put === undefined, body.includes(word("installer.release.refused.none", { builtin: RELEASE_VERSION }))], [true, true]);
@@ -673,7 +680,7 @@ console.log("\n--- update: keeps everything, carries no migration ---");
     ...NEWER(),
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "A1", name: "Oak Watch" }]) },
-    { m: (u) => u.includes("/scripts/oak-watch/settings"), f: () => cfok({ existing: true }) },
+    { m: (u) => u.includes("/scripts/oak-watch/settings"), f: () => cfok({ existing: true, observability: { enabled: true }, bindings: [{ type: "secret_text", name: "ACCOUNT_SEAL_SECRET" }] }) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/oak-watch") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "oakwatch" }) },
@@ -693,7 +700,7 @@ console.log("\n--- update: keeps everything, carries no migration ---");
   t("storage is bound explicitly, healing older copies",
     meta.bindings.filter((b) => b.type === "r2_bucket").map((b) => b.name).sort(), ["CAPTURES", "PUBLISHED"]);
   t("no migrations on update", "migrations" in meta, false);
-  t("VERSION supplied fresh", meta.bindings.find((b) => b.name === "VERSION").text, CUR_VER);
+  t("VERSION supplied fresh", meta.bindings.find((b) => b.name === "VERSION")?.text, CUR_VER);
   /* D-102: the update retro-names copies installed before INSTANCE_NAME
      existed, which are advertising "instance unnamed" right now. Same shape as
      the storage healing above: an update quietly completes what an older
@@ -743,7 +750,7 @@ console.log("\n--- update: storage unavailable never blocks an update ---");
     ...NEWER(),
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "A5", name: "Old" }]) },
-    { m: (u) => u.includes("/scripts/old-copy/settings"), f: () => cfok({ existing: true }) },
+    { m: (u) => u.includes("/scripts/old-copy/settings"), f: () => cfok({ existing: true, observability: { enabled: true }, bindings: [] }) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cferr("payment required", 402) },
     { m: (u, mth) => u.endsWith("/scripts/old-copy") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "old" }) },
@@ -776,7 +783,7 @@ console.log("\n--- update: unconfirmed version is named, patiently, and not repo
     ...NEWER(),
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "A6", name: "Slow" }]) },
-    { m: (u) => u.includes("/scripts/slow-update/settings"), f: () => cfok({ existing: true }) },
+    { m: (u) => u.includes("/scripts/slow-update/settings"), f: () => cfok({ existing: true, observability: { enabled: true }, bindings: [] }) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/slow-update") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "slow" }) },
@@ -863,7 +870,7 @@ async function installWith(slug, sub, manifestExtra, src) {
   return { body, source: put ? await sourceOf(put) : "", meta: put ? await metadataOf(put) : null };
 }
 
-const repoSrc2 = "export default { fetch(){ return new Response('signed repo release'); } }; export class Store {}; export const S = \"" + LIM + "\";";
+const repoSrc2 = "export default { fetch(){ return new Response('signed repo release'); } }; export class Store {}; export const S = \"" + LIM + "\"; export const C = \"" + CRONS_STATEMENT + "\";";
 const repoSha2 = await shaHex(repoSrc2);
 const goodSig = await signAsset(new TextEncoder().encode(repoSrc2));
 
@@ -889,7 +896,7 @@ console.log("\n--- release signing: armed, an unsigned copy is refused ---");
   const r = await installWith("bare-town", "bt", { sha256: repoSha2 }, repoSrc2);
   t("the built-in installed instead", r.source.includes("signed repo release"), false);
   t("VERSION stays the built-in (or, R20, nothing installs while the built-in states no limits)",
-    r.meta ? r.meta.bindings.find((b) => b.name === "VERSION").text : BUILTIN_OK, BUILTIN_OK ? RELEASE_VERSION : false);
+    r.meta ? r.meta.bindings.find((b) => b.name === "VERSION")?.text : BUILTIN_OK, BUILTIN_OK ? RELEASE_VERSION : false);
   t("the page says why in plain words", r.body.includes("carries no signature"), true);
 }
 
@@ -1063,7 +1070,7 @@ console.log("\n--- fleet: the update path installs members too — the healing h
     { m: (u) => u.endsWith("/release/probe-member/assets/x.wasm"), f: () => new Response(wasmBytes) },
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "H", name: "Heal" }]) },
-    { m: (u) => u.includes("/scripts/heal-town/settings"), f: () => cfok({ existing: true }) },
+    { m: (u) => u.includes("/scripts/heal-town/settings"), f: () => cfok({ existing: true, observability: { enabled: true }, bindings: [] }) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/heal-town") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => /\/scripts\/probe-member-[a-z0-9-]+$/.test(u) && mth === "PUT", f: () => cfok({}) },
@@ -1084,7 +1091,7 @@ console.log("\n--- update: replacing a version with itself is not a success ---"
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "N1", name: "Same" }]) },
     { m: (u) => u.includes("/scripts/same-town/settings"),
-      f: () => cfok({ bindings: [{ type: "plain_text", name: "VERSION", text: CUR_VER }] }) },
+      f: () => cfok({ observability: { enabled: true }, bindings: [{ type: "plain_text", name: "VERSION", text: CUR_VER }] }) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/same-town") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "sm" }) },
@@ -1112,7 +1119,7 @@ const semverCmp = (a, b) => { const A = a.split(".").map(Number), B = b.split(".
   for (let i = 0; i < 3; i++) if (A[i] !== B[i]) return A[i] - B[i]; return 0; };
 const groupCalls = (calls) => calls.filter((c) => /op=instancegroupseed/.test(c.u)).map((c) => `${c.method} ${c.u}`);
 /* What the copy answers when asked what it records: a group, or none (`group: null`, instance-setup R3). */
-const recordsGroup = (host, group) => ({ m: (u) => u.includes(`${host}/api/?op=instancegroup`), f: () => jres({ ok: true, result: group ? { ok: true, group } : { ok: true, group: null, detail: "NO_GROUP_RECORDED" }, store: "STORE" }) });
+const recordsGroup = (host, group) => ({ m: (u) => u.includes(`${host}/api/?op=instancegroup`), f: async () => { const answers = await instanceGroupAnswer({ group: group || "none" }); return jres({ ok: true, result: group ? answers.recorded : answers.none, store: "STORE" }); } });
 const unauthenticated = (calls) => calls.filter((c) => /op=instancegroup\b/.test(c.u)).every((c) => !c.init?.headers?.authorization);
 t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES the line the arms are about",
   semverCmp(RELEASE_VERSION, "0.71.0") >= 0, true);
@@ -1123,7 +1130,7 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
     ...NEWER(),
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "G1", name: "Cross" }]) },
-    { m: (u) => u.includes("/scripts/cross-town/settings"), f: () => cfok({ existing: true }) },
+    { m: (u) => u.includes("/scripts/cross-town/settings"), f: () => cfok({ existing: true, observability: { enabled: true }, bindings: [{ type: "secret_text", name: "INSTALL_COMPLETE" }] }) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/cross-town") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "cx" }) },
@@ -1156,7 +1163,7 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
     { m: (u) => u.endsWith("/release/probe-member/assets/x.wasm"), f: () => new Response(wasmBytes) },
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "G2", name: "Past" }]) },
-    { m: (u) => u.includes("/scripts/past-town/settings"), f: () => cfok({ existing: true }) },
+    { m: (u) => u.includes("/scripts/past-town/settings"), f: () => cfok({ existing: true, observability: { enabled: true }, bindings: [] }) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/past-town") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => /\/scripts\/probe-member-[a-z0-9-]+$/.test(u) && mth === "PUT", f: () => cfok({}) },
@@ -1180,7 +1187,7 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
     ...NEWER(),
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "G3", name: "Fog" }]) },
-    { m: (u) => u.includes("/scripts/fog-town/settings"), f: () => cfok({ existing: true }) },
+    { m: (u) => u.includes("/scripts/fog-town/settings"), f: () => cfok({ existing: true, observability: { enabled: true }, bindings: [] }) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/fog-town") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "fg" }) },
@@ -1214,7 +1221,7 @@ console.log("\n--- D-116: the installer reads the store's and each member's OWN 
   t("PIN: a plane without the fields is read as unable to report them (the pre-D-116 releases)",
     reportsBuilds(repoSrc2), false);
 }
-const repoSrc3 = "export default { fetch(){ return Response.json({ storeVersion: 'x', memberVersions: {} }); } }; export class Store {}; export const S = \"" + LIM + "\";";
+const repoSrc3 = "export default { fetch(){ return Response.json({ storeVersion: 'x', memberVersions: {} }); } }; export class Store {}; export const S = \"" + LIM + "\"; export const C = \"" + CRONS_STATEMENT + "\";";
 const repoSha3 = await shaHex(repoSrc3);
 const sig3 = await signAsset(new TextEncoder().encode(repoSrc3));
 const agentEntry = { ...memberEntry, member: "agent-worker", asset: "agent-worker.bundled.mjs", parts: [] };
@@ -1238,7 +1245,7 @@ async function d116Update(slug, after) {
     { m: (u) => u.endsWith("/release/agent-worker.bundled.mjs"), f: () => new Response(memberSrc) },
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "D1", name: "D116" }]) },
-    { m: (u) => u.includes(`/scripts/${slug}/settings`), f: () => cfok({ existing: true }) },
+    { m: (u) => u.includes(`/scripts/${slug}/settings`), f: () => cfok({ existing: true, observability: { enabled: true }, bindings: [] }) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith(`/scripts/${slug}`) && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => /\/scripts\/agent-worker-[a-z0-9-]+$/.test(u) && mth === "PUT", f: () => cfok({}) },
@@ -1300,7 +1307,7 @@ async function d116Update(slug, after) {
     ...NEWER(),
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "D2", name: "Pre" }]) },
-    { m: (u) => u.includes("/scripts/pre-town/settings"), f: () => cfok({ existing: true }) },
+    { m: (u) => u.includes("/scripts/pre-town/settings"), f: () => cfok({ existing: true, observability: { enabled: true }, bindings: [] }) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/pre-town") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "pr" }) },
@@ -1370,7 +1377,7 @@ t("PIN: instance-setup's FLEET_BINDINGS names at least the three members (else t
   ["agent-worker", "pdf-worker", "ocr-worker"].every((m) => PLANE_FLEET.some(([x]) => x === m)), true);
 t("PIN: the installer exports no member binding table of its own (R30: imported, never copied)",
   "MEMBER_BINDINGS" in NG, false);
-const repoSrc6 = "export default { fetch(){ return Response.json({ storeVersion: 'y', memberVersions: {} }); } }; export class Store {}; export const S = \"" + LIM + "\";";
+const repoSrc6 = "export default { fetch(){ return Response.json({ storeVersion: 'y', memberVersions: {} }); } }; export class Store {}; export const S = \"" + LIM + "\"; export const C = \"" + CRONS_STATEMENT + "\";";
 const repoSha6 = await shaHex(repoSrc6);
 const sig6 = await signAsset(new TextEncoder().encode(repoSrc6));
 const fleet6 = PLANE_FLEET.map(([member]) => ({ ...memberEntry, member, asset: `${member}.bundled.mjs`,
@@ -1425,7 +1432,9 @@ async function dist6(slug, { mode = "install", pre = {}, manifest = manifest6, b
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => /\/workers\/scripts$/.test(u) && mth === "GET", f: () => cfok([...acct.keys()].map((id) => ({ id }))) },
     { m: (u, mth) => /\/workers\/scripts\/[^/]+\/settings$/.test(u) && mth === "GET",
-      f: (u) => acct.has(u.split("/workers/scripts/")[1].split("/")[0]) ? cfok({}) : cferr("not found", 404) },
+      f: (u) => { const held = acct.get(u.split("/workers/scripts/")[1].split("/")[0]);
+        /* the copy's own answer: what it holds (R39's held place, G54's logs), as the last upload left it */
+        return held ? cfok({ observability: { enabled: true }, bindings: held.map((b) => ({ type: b.type, name: b.name, ...(b.type === "plain_text" ? { text: b.text } : {}) })) }) : cferr("not found", 404); } },
     { m: (u, mth) => /\/workers\/scripts\/[^/]+$/.test(u) && mth === "PUT", f: putScript },
     { m: (u, mth) => u.endsWith(`/scripts/${slug}/subdomain`) && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "b6" }) },

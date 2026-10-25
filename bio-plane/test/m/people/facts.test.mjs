@@ -109,7 +109,7 @@ test("R12 expunge removes the value of a PFA-, IDC-, MTI- or source link and lea
   const u = w.p.expunge({ ...ok, id: fact.fact_id, ground: "lawful_demand", demandKind: "official_home_contact" });
   assert.equal(u.reason, "DEMAND_KIND_UNLISTED");
   assert.deepEqual(u.demand_kinds, ["officer_privacy"]);
-  assert.equal(w.p.expunge({ ...ok, id: "PFA-2026-none" }).reason, "NO_SUCH_ITEM");
+  assert.equal(w.p.expunge({ ...ok, id: "PFA-2026-none" }).reason, "PERSON_ITEM_NOT_HELD");
   assert.equal(w.p.expunge({ ...ok, id: fact.fact_id, reason: "" }).reason, "NO_REASON");
   const r1 = w.p.expunge({ ...ok, id: fact.fact_id, ground: "lawful_demand", demandKind: "officer_privacy" });
   assert.equal(r1.ok, true);
@@ -237,4 +237,46 @@ test("R9 (T35) recordPersonFact takes an optional question, an inquiry the recor
   w.st.sql.exec(`ALTER TABLE person_contacts DROP COLUMN question`);
   w.p.migrate();
   assert.equal(w.p.recordPersonFact({ ...base, kind: "contact", value: "+1 555 0102", question: q }).question, q);
+});
+
+test("R12 (K5148) the person read answers removed: [{ground, at, by}], one per tombstone of the person's facts, never the value, to every viewer who may read the person; a withdrawn fact is not removed", () => {
+  const w = world();
+  const p = w.person("Ines Calder"), other = w.person("Ines Calder");
+  const c = w.capture("c");
+  const name = w.p.recordPersonFact({ person: p, kind: "name", value: "Ines Calder-Voss", valid, citation: doc(c), by: ANN });
+  const address = w.p.recordPersonFact({ person: p, kind: "address", value: "4 Quay Lane", valid, citation: doc(c), by: ANN });
+  const kept = w.p.recordPersonFact({ person: p, kind: "locality", value: "Port Ellery", valid, citation: doc(c), by: ANN });
+  const elsewhere = w.p.recordPersonFact({ person: other, kind: "name", value: "Another Name", valid, citation: doc(c), by: ANN });
+  const read = (viewer, e = p) => w.p.personAt({ entityId: e, at: "2024-05-05", viewer });
+  assert.deepEqual(read(BOSS).removed, [], "nothing is removed yet");
+  assert.equal(w.p.withdrawPersonFact({ factId: kept.fact_id, reason: "wrong", by: ANN }).ok, true);
+  assert.deepEqual(read(BOSS).removed, [], "control: a withdrawn fact is kept, not removed");
+  const a = w.p.expunge({ id: name.fact_id, ground: "court_order", order: "Order 2026-12", reason: "ordered removed", by: BOSS });
+  const b = w.p.expunge({ id: address.fact_id, ground: "unlawful", reason: "held unlawfully", by: BOSS });
+  assert.ok(a.ok && b.ok);
+  for (const viewer of [ANN, OUT, BOSS]) {
+    const removed = read(viewer).removed;
+    assert.deepEqual(removed.map((r) => r.ground).sort(), ["court_order", "unlawful"], String(viewer));
+    for (const r of removed) { assert.deepEqual(Object.keys(r).sort(), ["at", "by", "ground"]); assert.equal(r.by, "boss"); assert.ok(r.at); }
+  }
+  assert.deepEqual(read(BOSS).removed.find((r) => r.ground === "court_order").at, a.tombstone.at);
+  assert.ok(!JSON.stringify(read(BOSS)).includes("Calder-Voss") && !JSON.stringify(read(BOSS)).includes("4 Quay Lane"), "never the value");
+  assert.ok(!JSON.stringify(read(BOSS).removed).includes("Order 2026-12"), "nor the order");
+  assert.deepEqual(read(BOSS, other).removed, [], "control: another person's page carries none of this person's");
+  assert.equal(elsewhere.ok, true);
+  const none = w.p.personAt({ entityId: p, at: "2024-05-05", viewer: null });
+  assert.equal(none.ok, false);
+  assert.equal(none.removed, undefined, "a viewer who may not read the person gets none");
+});
+
+test("R12 (K5148) expunge of an id that answers no person fact, claim, tie or link is refused PERSON_ITEM_NOT_HELD, this module's own code and its own sentence, not plan-work's NO_SUCH_ITEM", async () => {
+  const { word } = await import("../../../src/setup-words/index.mjs");
+  const w = world();
+  const r = w.p.expunge({ id: "PFA-2026-none", ground: "unlawful", reason: "held unlawfully", by: BOSS });
+  assert.equal(r.ok, false);
+  assert.equal(r.reason, "PERSON_ITEM_NOT_HELD");
+  assert.notEqual(r.reason, "NO_SUCH_ITEM");
+  assert.ok(typeof r.detail === "string" && r.detail.length > 0);
+  assert.notEqual(r.detail, word("refusal.NO_SUCH_ITEM"), "the sentence is this module's, not plan-work's");
+  assert.equal(w.p.expunge({ id: { source: "SRC-2026-0001x", person: "ENT-2026-0001" }, ground: "unlawful", reason: "x", by: BOSS }).reason, "PERSON_ITEM_NOT_HELD");
 });

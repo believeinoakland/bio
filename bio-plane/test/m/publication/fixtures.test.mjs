@@ -2,7 +2,7 @@
    its answer checked against what the real module answers, so a user's test that takes one takes the module's own word. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { caseDocumentFacts, caseFileLedger, publicationWorld, stampEditionRefusal, storeCaseDocumentRefusal } from "./fixtures.mjs";
+import { caseDocumentFacts, caseFileLedger, publicationWorld, restingOf, stampEditionRefusal, storeCaseDocumentRefusal } from "./fixtures.mjs";
 import { CASEFILE_GRACE_MS } from "../../../src/publication/index.mjs";
 import { NOW } from "./fixture.mjs";
 
@@ -36,6 +36,17 @@ test("R15 fixtures: caseFileLedger is the real ledger over complete editions: ow
   assert.deepEqual(l.owed({ now: T0 + 1e9 }).map((x) => x.case), [b.case], "a built edition is never owed");
 });
 
+test("R15 fixtures: caseFileLedger's manifest takes built, recording the real manifest and the case file built in one call; without it the ledger is as before; a malformed built is the real MALFORMED", () => {
+  const l = caseFileLedger({ editions: 2 });
+  const [a, b] = l.cases;
+  assert.equal(l.manifest(a.case, 1, { built: true }).ok, true);
+  assert.equal(l.state(a.case).state, "built");
+  assert.equal(l.manifest(b.case).ok, true);
+  assert.equal(l.state(b.case).state, null, "without built the ledger is left alone");
+  const bad = l.manifest(b.case, 1, { built: "true" });
+  assert.deepEqual([bad.ok, bad.reason], [false, "MALFORMED"]);
+});
+
 test("R42 fixtures: publicationWorld's rest makes a published finding rest on its documents by the real acts, and restingCapturesOf answers their captures with the finding and its project", () => {
   const p = publicationWorld();
   const r = p.rest({ finding: "INQ-2026-0001", docs: ["INFO-2026-0001-a", "INFO-2026-0002-b"] });
@@ -55,4 +66,22 @@ test("R21 fixtures: storeCaseDocumentRefusal is the real MALFORMED of a document
   const s = storeCaseDocumentRefusal();
   assert.deepEqual([s.refused.ok, s.refused.reason], [false, "MALFORMED"]);
   assert.equal(s.world.count("case_documents"), 0);
+});
+
+test("R42 fixtures: restingOf makes the named findings rest on exactly the named captures by the real acts, and restingCapturesOf answers them with the named projects, paged as the real module pages", () => {
+  const d = (s) => s.repeat(64).slice(0, 64);
+  const [a, b, c] = [d("a"), d("b"), d("c")];
+  const r = restingOf([{ finding: "INQ-2026-0001", projects: ["PROJ-2026-0002-f"], digests: [a, b] },
+                       { finding: "INQ-2026-0002", projects: ["PROJ-2026-0002-f", "PROJ-2026-0003-o"], digests: [b, c] }]);
+  const got = r.restingCapturesOf({});
+  assert.deepEqual(got.captures.map((x) => x.capture_sha), [a, b, c]);
+  assert.deepEqual(got.captures.map((x) => x.findings), [
+    [{ bundle_id: "INQ-2026-0001", projects: ["PROJ-2026-0002-f"] }],
+    [{ bundle_id: "INQ-2026-0001", projects: ["PROJ-2026-0002-f"] },
+     { bundle_id: "INQ-2026-0002", projects: ["PROJ-2026-0002-f", "PROJ-2026-0003-o"] }],
+    [{ bundle_id: "INQ-2026-0002", projects: ["PROJ-2026-0002-f", "PROJ-2026-0003-o"] }]]);
+  const page = r.restingCapturesOf({ limit: 2 });
+  assert.deepEqual([page.captures.length, page.cursor], [2, b]);
+  assert.deepEqual(r.restingCapturesOf({ after: page.cursor }).captures.map((x) => x.capture_sha), [c]);
+  assert.deepEqual(restingOf([]).restingCapturesOf({}).captures, [], "nothing held, nothing rests");
 });

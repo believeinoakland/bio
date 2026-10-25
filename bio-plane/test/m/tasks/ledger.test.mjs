@@ -2,7 +2,8 @@
    ledger (its R40) seeded at start and before the first mint. */
 import { test, mock } from "node:test";
 import assert from "node:assert/strict";
-import { world, host, queueRead, NOW, iso } from "./world.mjs";
+import { world, host, queueRead, NOW, iso, projectOf } from "./world.mjs";
+import { homeOfHomed, sha } from "../provenance/fixtures.mjs";
 import { tasksOf } from "../../../src/tasks/index.mjs";
 import { viewerPredicate } from "../../../src/membership/index.mjs";
 
@@ -13,9 +14,10 @@ const hidOf = (viewer) => {
 
 function seeded() {
   const w = world();
+  const PRJ_H = projectOf("H").projectId, PRJ_A = projectOf("A").projectId;
   w.member("alice");
-  w.bundle("INF-1"); w.bundle("PRJ-H", "project"); w.bundle("PRJ-A", "project"); w.join("PRJ-A", "alice");
-  w.task("TASK-2026-0001-a", "INF-1"); w.task("TASK-2026-0002-b", "PRJ-H"); w.task("TASK-2026-0003-c", "PRJ-A");
+  w.bundle("INF-1"); w.bundle(PRJ_H, "project"); w.bundle(PRJ_A, "project"); w.join(PRJ_A, "alice");
+  w.task("TASK-2026-0001-a", "INF-1"); w.task("TASK-2026-0002-b", PRJ_H); w.task("TASK-2026-0003-c", PRJ_A);
   return w;
 }
 const direct = (w) => w.all(`SELECT count(*) c FROM tasks`)[0].c;
@@ -47,12 +49,12 @@ test("R5: under a hid, a task naming a hidden bundle by refers_to is left out; a
 });
 
 test("R5: a first boot seeds nothing and throws nothing; once seeded, a TASK id live before the ledger existed is never drawn again, even after its row is gone", (t) => {
-  const events = [{ kind: "authority-undetermined", captureSha: "a1", subject: "subject", locator: "https://x.example/d",
+  const events = [{ kind: "authority-undetermined", captureSha: sha("a1"), subject: "subject", locator: "https://x.example/d",
                     enqueued: iso(NOW), attempts: 0, lastTry: null }];
   // the instance is reached before any table exists: the start seed learns nothing and nothing throws
   const w = world({ capture: { taskEvents: queueRead(events), taskEventCount: () => events.length,
                                taskEventRemove: () => { events.length = 0; return true; } },
-                    provenance: { homeOf: () => ({ bundleId: "INFO-2026-0001-doc" }) } }, { bare: true });
+                    provenance: homeOfHomed({ [sha("a1")]: "INFO-2026-0001-doc" }) }, { bare: true });
   assert.equal(w.all(`SELECT count(*) c FROM sqlite_master WHERE name IN ('minted_ids','tasks')`)[0].c, 0);
   assert.doesNotThrow(() => w.t.seedLedger());
   w.boot();
@@ -71,11 +73,11 @@ test("R5: a first boot seeds nothing and throws nothing; once seeded, a TASK id 
 });
 
 test("R5: without an explicit seed the drain's first mint seeds first", (t) => {
-  const events = [{ kind: "authority-undetermined", captureSha: "a1", subject: "subject", locator: "https://x.example/d",
+  const events = [{ kind: "authority-undetermined", captureSha: sha("a1"), subject: "subject", locator: "https://x.example/d",
                     enqueued: iso(NOW), attempts: 0, lastTry: null }];
   const w = world({ capture: { taskEvents: queueRead(events), taskEventCount: () => events.length,
                                taskEventRemove: () => { events.length = 0; return true; } },
-                    provenance: { homeOf: () => ({ bundleId: "INFO-2026-0001-doc" }) } }, { bare: true });
+                    provenance: homeOfHomed({ [sha("a1")]: "INFO-2026-0001-doc" }) }, { bare: true });
   w.boot();
   w.bundle("INFO-2026-0001-doc");
   w.task("TASK-2026-0042-subject", "INFO-2026-0001-doc", { status: "resolved", resolvedAt: iso(NOW) });

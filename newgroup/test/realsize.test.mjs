@@ -28,7 +28,7 @@ import { word } from "../src/words.mjs";
 import { RELEASE_SOURCE, RELEASE_BYTES } from "./release-text.mjs";
 import { planeLimits, reportsBuilds } from "../src/index.mjs";
 import { fleetStatement, NS_FLEET } from "../../bio-plane/src/sshsig.mjs";
-import { run, release, armWith, restoreSigners, SIGNER, bump, sha, like } from "./fixture.mjs";
+import { run, release, armWith, restoreSigners, SIGNER, bump, sha, like, CRONS_STATEMENT } from "./fixture.mjs";
 const unesc = (t) => t.replace(/&#39;/g, "'");
 const UNREAD = like("installer.lag.bytes.unread", { version: /[0-9.]+/ });
 
@@ -42,7 +42,7 @@ const here = (f) => fileURLToPath(new URL(f, import.meta.url));
 /* The release's real size, with bytes 0x80-0x9F in it as UTF-8 writes U+0080..U+009F, and still stating its limits and
    its build fields (R20, R15). */
 const C1 = String.fromCharCode(...Array.from({ length: 32 }, (_, i) => 0x80 + i));
-const REAL = RELEASE_SOURCE + `\n/* R33 real-size release ${NEXT}: ${C1} */\n`;
+const REAL = RELEASE_SOURCE + `\n/* R33 real-size release ${NEXT}: ${C1} */\nexport const PLANE_CRONS_STATEMENT = "${CRONS_STATEMENT}";\n`;
 const realSized = () => {
   const b = new TextEncoder().encode(REAL);
   assert.ok(b.length > 29e6, "the release is the real size: " + b.length);

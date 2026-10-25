@@ -7,6 +7,8 @@ import shell, { HOST } from "./shell.mjs";
 import { driveHarness, MAX_STEPS } from "../src/index.mjs";
 import { ACCOUNT } from "./account.mjs";
 import { world, body, CHECK, AIK, PACK, PACK_VERSION, SCOPED } from "./world.mjs";
+import { airunRefusal } from "../../bio-plane/test/m/ai-runs/fixtures.mjs";
+import { versionChainNoSuchVersion } from "../../bio-plane/test/m/provenance/fixtures.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -33,8 +35,9 @@ section("R1 · the run is read from the plane, never from the caller");
   const refused = await go({ refuse: { airun: "NOT_FOR_YOU" } }, { judgements: CHECK() });
   t("R1: a plane that refuses op=airun is 403 PLANE_REFUSED, its refusal passed on unchanged", [refused.status, refused.out.code, refused.out.plane?.code, refused.out.plane?.check, refused.out.plane?.translation],
     [403, "PLANE_REFUSED", "NOT_FOR_YOU", "C-0.0", "canned NOT_FOR_YOU"]);
-  const wrapped = await go({ answer: { airun: (q, b, ok) => ok({ ok: false, reason: "INSIDE", check: "C-9.9" }) } }, { judgements: CHECK() });
-  t("R1: a refusal nested in a well-formed 200 answer is a refusal too, never a missing run", [wrapped.status, wrapped.out.code, wrapped.out.plane?.result?.reason], [403, "PLANE_REFUSED", "INSIDE"]);
+  const { notPrincipal } = await airunRefusal();
+  const wrapped = await go({ answer: { airun: (q, b, ok) => ok(notPrincipal) } }, { judgements: CHECK() });
+  t("R1: a refusal nested in a well-formed 200 answer is a refusal too, never a missing run", [wrapped.status, wrapped.out.code, wrapped.out.plane?.result?.code], [403, "PLANE_REFUSED", "AI_RUN_NOT_PRINCIPAL"]);
   const none = await go({ noSession: true }, { judgements: CHECK() });
   t("R1: no session is 404 NO_SUCH_RUN with the run's id", [none.status, none.out.code, none.out.run_id], [404, "NO_SUCH_RUN", "RUN-W"]);
   const w = world({ session: { mode: "check" } });
@@ -138,7 +141,8 @@ section("R9 · holdings: each document once, by the record's own chain; a refuse
     answer: { versionchain: (q, b, ok, refuse) => (q.address === "upload:c" ? refuse("CHAIN_REFUSED") : ok({ address_norm: q.address, total: 0, truncated: false, versions: [] })) },
   };
   const report = (...addrs) => ({ level: "meaning", state: "PRESENT", observed_at: "log:1", summary: "found", citations: addrs.map((address) => ({ address })) });
-  const cfgFull = { ...cfg, answer: { versionchain: (q, b, ok, refuse) => (q.address === "upload:c" ? refuse("CHAIN_REFUSED")
+  const chainRefusal = await versionChainNoSuchVersion();
+  const cfgFull = { ...cfg, answer: { versionchain: (q, b, ok, refuse) => (q.address === "upload:c" ? refuse(chainRefusal)
     : ok({ address_norm: q.address, total: (cfg.chains[q.address] || []).length, truncated: false, versions: cfg.chains[q.address] || [] })) } };
   const run = await go(cfgFull, { judgements: CHECK([report("INFO-1", "INFO-2", "INFO-3", "INFO-4")]) });
   t("R9: two captures of one address count as one document and a second address as another: 2 documents, not 3", run.out.holdings?.documents, 2);
@@ -146,7 +150,7 @@ section("R9 · holdings: each document once, by the record's own chain; a refuse
     [run.rec.calls.filter((c) => c.op === "search").map((c) => c.query.q).includes('id:"INFO-1"'), run.rec.calls.filter((c) => c.op === "versionchain").map((c) => c.query.address).sort()],
     [true, ["upload:a", "upload:a", "upload:b", "upload:c"]]);
   t("R9: a refused chain read leaves that citation's document UNDETERMINED, published, and never counted",
-    [(run.out.refusals || []).some((r) => r.at === "versionchain" && r.code === "CHAIN_REFUSED"), JSON.stringify(run.out.holdings ?? {}).includes("INFO-4")], [true, true]);
+    [(run.out.refusals || []).some((r) => r.at === "versionchain" && r.code === "VERSION_CHAIN_NO_SUCH_VERSION"), JSON.stringify(run.out.holdings ?? {}).includes("INFO-4")], [true, true]);
   const titled = await go({ ...cfgFull, hits: { "INFO-1": cfg.hits["INFO-1"], "INFO-3": cfg.hits["INFO-3"] } }, { judgements: CHECK([report("INFO-1", "INFO-3")]) });
   t("R9 (control): two different documents are two, whatever their titles or text: documents are never merged by anything but the record's address", titled.out.holdings?.documents, 2);
   const nochain = await go({ hits: cfg.hits, chains: {}, answer: undefined }, { judgements: CHECK([report("INFO-3")]) });
@@ -203,8 +207,9 @@ section("R16 · close names the bound; the segment's own ceiling is never a run'
 {
   const done = await go({}, { judgements: CHECK() });
   t("R16: op=airunclose names the bound, and ended is {bound, by: the table} when the plane accepted", [done.rec.closed, done.out.ended], ["completed", { bound: "completed", by: "the table" }]);
-  const refused = await go({ closeRefuse: "CLOSE_REFUSED" }, { judgements: CHECK() });
-  t("R16: a refused close leaves ended null and the refusal published", [refused.out.ended, (refused.out.refusals || []).some((r) => r.at === "airunclose" && r.code === "CLOSE_REFUSED")], [null, true]);
+  const { notPrincipal } = await airunRefusal();
+  const refused = await go({ closeRefuse: notPrincipal }, { judgements: CHECK() });
+  t("R16: a refused close leaves ended null and the refusal published", [refused.out.ended, (refused.out.refusals || []).some((r) => r.at === "airunclose" && r.code === "AI_RUN_NOT_PRINCIPAL")], [null, true]);
   const short = await go({}, { judgements: CHECK(), max_steps: 3 });
   t("R16: max_steps ends the invocation, not the run: three rows walked, no close sent, no bound reported", [short.out.trace.length, short.out.ended, short.rec.closed], [3, null, null]);
   t("R16: max_steps is at most 400 (the module's own ceiling)", MAX_STEPS, 400);
@@ -221,6 +226,7 @@ section("R19 · a re-examination run reads the recorded response and the procedu
         case "plan": return ok({ id: "PLN-1", project: "PROJ-7", subjects: [], options: [], proposals: [] });
         case "plans": return ok({ plans: [], truncated: false });
         case "profiles": return ok({ profiles: [{ id: "us-ca" }], conflicts: [] });
+        // fixtures-contract: control-plane ask-wire (UNKNOWN_OP: an op with no spec is 400)
         default: return Response.json({ ok: false, error: "unknown op: " + op }, { status: 400 });
       }
     },
@@ -262,9 +268,9 @@ section("R14 · after every step one tick carries the spend, and an entry only w
   t("R14: a step judged PRESENT that can name nothing is logged LOOKED_INDETERMINATE with the stated reason and counted in present_unbacked",
     [present.out.present_unbacked, present.rec.log.map((e) => e.state), /PRESENT/.test(present.rec.log[0]?.detail ?? ""), present.rec.log[0]?.detail.length <= 500], [1, ["LOOKED_INDETERMINATE"], true, true]);
   t("R14: logged counts the entries the plane appended", [present.out.logged, present.rec.log.length], [1, 1]);
-  const refusedEntry = await go({ tick: (b) => ((b.log || []).length ? { appended: 0, refused: [{ index: 0, code: "AI_LOG_REFUSED", check: "C-22.2" }] } : {}) },
+  const refusedEntry = await go({ tick: (b) => ((b.log || []).length ? { appended: 0, refused: [{ index: 0, code: "AI_LOG_STATE_UNKNOWN", check: "C-22.1" }] } : {}) },
     { judgements: [{ targets: [], level: "meaning", observed: "PRESENT", summary: "x" }, { reports: [] }, { candidates: [] }, {}] });
-  t("R14: each entry the plane refused is in log_refused and in refusals, and not in logged", [refusedEntry.out.logged, refusedEntry.out.log_refused.length, refusedEntry.out.refusals.some((r) => r.code === "AI_LOG_REFUSED")], [0, 1, true]);
+  t("R14: each entry the plane refused is in log_refused and in refusals, and not in logged", [refusedEntry.out.logged, refusedEntry.out.log_refused.length, refusedEntry.out.refusals.some((r) => r.code === "AI_LOG_STATE_UNKNOWN")], [0, 1, true]);
   const ended = await go({ tick: (b) => ("segment_end" in b ? {} : { ended: { bound: "wallclock", condition: null } }) }, { judgements: CHECK() });
   t("R14: when the tick reports the run ended, the segment stops and ended.by is the plane's own exit", [ended.out.ended?.by, ended.out.trace.length], ["the plane's own exit", 1]);
   t("R14: a tick after no conversation carries no usage", run.rec.ticks.some((tk) => "usage" in tk), false);

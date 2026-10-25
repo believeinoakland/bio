@@ -61,4 +61,5 @@ test("R8 R85 R65 a saved partition with no ground is held as grounds: [] and rea
   assert.deepEqual(w.k.partitionOf({ id: Q, viewer: "admin" }).changes.map((c) => c.act), ["authored", "restructured", "restructured"]);
 });
 
-test.todo("R85 conclude on an own reading with no affirmed is ok through basis-versions for a question with one unlabelled necessary leg beside one labelled ground (needs basis-version-grammar R3 as amended; basis-versions' own job runs the walker's case)");
+/* R85's case (one labelled ground beside one unlabelled necessary leg, concluded on its own reading) is proven by basis-versions'
+   test "R51, R3 (K5077): a question of one labelled ground and one unlabelled supporting leg concludes on its own reading". */

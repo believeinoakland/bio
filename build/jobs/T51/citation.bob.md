@@ -1,6 +1,6 @@
 # BOB to citation (T51)
 
-**Read** · handled J14
+**Read** · handled J20
 
 ## B1 · START
 
@@ -119,3 +119,67 @@ COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BO
 ## B11 · ANSWER · re J13
 
 ANSWER to J13 (BOB #244; K4438). Your reading is accepted: `cite` gains an optional `ground` (a label the question already declares; on a case `GROUND_NOT_APPLICABLE`), the second repair is `inquiryground` with `{target, grounds: []}` (the screen collects its reason), the top-level `repairs` beside `findings` as you state, offered only on a grouped basis with a C-2.8 finding read from the document; your two stand-in keys stand until the design writes rows. Put the R21 and R19 lines in your COMPLETE; BOB writes them at your merge. screens-inquiry (the seam owner) is told the shape.
+
+## B12 · START
+
+START · CITATION #19 · tranche T51 · product believeinoakland/bio · fix round 10, Wave B job, batch 6: re-point 2 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #292 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/citation tranche/T51 && git branch -m job/T51/citation stale/citation-local && git checkout -b job/T51/citation origin/job/T51/citation`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module citation`; record `build/jobs/T51/citation.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Your own fixture lines, done in this job** (2; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- inquiry/basisRefusals (1 judgment): cite-refusals.test.mjs:274
+- CODE (SOME_STEP_REFUSED is in no product file. Fix: use BASIS_REFUSED (inquiry step refusal)): draw.test.mjs:197
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . citation --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/citation.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+**Inherited reds (K5068, from inquiry-grammar's merge of cause 30b):** three citation R21 tests assert the old refusal of a half-labelled basis and are red on the tranche; bring them in line with inquiry-grammar R68 as amended (an unlabelled supporting leg beside labelled grounds is a necessary leg, no finding).
+
+**Added by BOB #291 (K5090; SCREENS-INQUIRY #27 J39):** R21's test is amended: since inquiry-grammar R68's amendment (DEC-32 clause 4) a second passage cited beside a grouped one is clean, so that case no longer reaches `BASIS_REFUSED`. Find a basis-grammar refusal the real grammar still raises with `repairs`, write R21's test on it (seen red first if your code needs a change), and strike nothing yourself. If no grouping finding is reachable any more, REPORT it: BOB retires R21's C-2.8 arm.
+
+## B13 · CHANGE
+
+CHANGE (re J15, J16; K5101). Your REPORT is taken: the C-2.8 repairs arm is retired. `citation` R21 is amended on `tranche/T51` (read it whole after merging `origin/tranche/T51` into your branch, never a rebase): naming a group is the member's choice, so the cutting-with-ground refusal carries `repairs: []`, and every `BASIS_REFUSED` a cite gives states `repairs: []` until a finding with a repair is specified. Remove `#groupingRepairs` and every path that builds a C-2.8 repair from the module's code, and the tests that drive the arm through inquiry's fixture answer (the three amended `cite-repairs.test.mjs` tests); keep your two new tests (the second passage clean; the cutting-with-ground cite refused with `repairs: []`, and landing without the group) and the control, naming R21. If a `repairs` key, word or helper is left with no user, remove it too; if any other module reads citation's `repairs`, REPORT it. Then COMPLETE again with the met ids named.
+
+## B14 · START
+
+START · CITATION #20 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 62, a cause the final pass found (plan build/plan/fix-round-10-T51.md §3; K5131)
+
+Depth 2 (BOB #294 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/citation tranche/T51`; if a local `job/T51/citation` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/citation stale/citation-local && git checkout -b job/T51/citation origin/job/T51/citation`. If `job/T51/citation` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module citation`; record `build/jobs/T51/citation.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993). Each cause carries K4426's four fields in your COMPLETE: root cause with evidence, why the tests missed it (that gap fixed), a test of the walker's exact case through its real entry seen failing then passing, and any platform check.
+
+**The cause (WALK-FINAL-09 row R169, NOT REACHED, D11; K5131).** `citeimported` and `withdrawimported` (`bio-plane/src/citation/index.mjs:1169-1175`) declare no `stamps`, so `op-declarations` stamps only `viewer` (`op-declarations/declared.mjs:74`); the handler's `author` is null and `#importedMemberRefusal` (`:902-904`) answers `MACHINE_CANNOT_CITE_IMPORTED` to a joined member. Your R18 is amended (read it whole): each row stamps `author`, `identity` and `viewer`, as `cite` does (check the spelling `op-declarations` registers). Why missed: `declared-ops.test.mjs:55-101` checks fields only and module tests pass `author` directly. Test through the door (the r8 kit): `citeimported` as a joined member reaches the op (not `MACHINE_CANNOT_CITE_IMPORTED`), and `withdrawimported` likewise; seen red first.
+
+**Done:** the marked requirement met (name the ids; BOB strikes the marks); `node /home/user/civicos-process/checks/fixtures.mjs <absolute root> citation --list` 0 failing; module tests green; format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B15 · CHANGE
+
+J19: thank you; two changes (K5138).
+1. `imported-door.test.mjs` imports control-plane's seam kit (`control-plane/r8-kit.mjs`), later than citation in the order, so the architecture check refuses it (1 failure). A test through the door is control-plane's: `git rm` it from your branch; CONTROL-PLANE #60 adopts it (a CHANGE to it). Your R18 stays named by `declared-ops.test.mjs` (the rows' stamps).
+2. `identity`: R18 is worded to `author` and `viewer` (neither handler reads an identity), on the tranche: merge it.
+Then re-run architecture and coverage and post COMPLETE.
+
+## B16 · START
+
+START · CITATION #21 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 74; K5148)
+
+Depth 2 (BOB #296 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/citation tranche/T51`; if a local `job/T51/citation` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/citation stale/citation-local && git checkout -b job/T51/citation origin/job/T51/citation`. If `job/T51/citation` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module citation`; record `build/jobs/T51/citation.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+1. **A second, different passage of a document a question rests on is never cited** (`diag2-06.md` §3, BOB's reading option B, K5155; citation R22, new, which narrows R2's "already cited"): `legged` (`citation/index.mjs`, keyed by target only) answers `alreadyCited` for any leg on the document. A different part (`content_id`) is a new leg; the same part, or the whole document again, stays `alreadyCited`. Before writing, prove with strength's published fixture that a document with two legs is counted once, as inquiry-grammar R68's grouping does; if not, REPORT to BOB before writing. Test: new `second-passage.test.mjs` as §3 lists (the same page again and a differing `role` as controls).
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> citation --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.

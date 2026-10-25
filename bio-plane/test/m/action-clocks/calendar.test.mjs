@@ -6,7 +6,7 @@
    as the office calendar; each is a local fact at its own path (R12, N562; local-facts R6). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, MACHINE, actionMd, CLK, officeCalendarProfile } from "./fixture.mjs";
+import { world, V, ALICE, MACHINE, actionMd, CLK, officeCalendarProfile, determinations } from "./fixture.mjs";
 import * as clocks from "../../../src/action-clocks/index.mjs";
 import { factPath } from "../../../src/local-facts/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
@@ -322,25 +322,23 @@ test("R11 at most 500 actions are read, `truncated` stated", () => {
 });
 
 test("R11 each path's actions are answered as {action, project, created_by}, the project and creator as R3 computes them (K1000): one created by a member in a project, one by a machine in another member's project", () => {
-  const w = world({ override: OFFICE });
-  for (const x of ["CONF-2026-0001-mine", "CONF-2026-0002-bobs"]) w.doc(x);
-  w.determinations.set("CONF-2026-0001-mine", { project: "PROJ-2026-0001", sees: [M, BOB] });
-  w.determinations.set("CONF-2026-0002-bobs", { project: "PROJ-2026-0002", sees: [M, BOB] });
+  const d = determinations([ALICE]);
+  const w = world({ override: OFFICE, conformance: d.conformance });
+  for (const x of [d.live, d.unclear]) w.doc(x);
   const rests = (t) => ["action_basis:", `  - target: ${t}`, "    kind: rests_on"];
   const kind = [...CPL("Town Clerk", "City of Port Ellery"), "action_kind: records_request", "clock:", ...CLK("2026-09-01")];
-  assert.equal(w.promote(A, actionMd(A, [...kind, ...rests("CONF-2026-0001-mine")])).ok, true);
-  const byMachine = w.promote(B, actionMd(B, [...kind, ...rests("CONF-2026-0002-bobs")]), { author: MACHINE });
+  assert.equal(w.promote(A, actionMd(A, [...kind, ...rests(d.live)])).ok, true);
+  const byMachine = w.promote(B, actionMd(B, [...kind, ...rests(d.unclear)]), { author: MACHINE });
   assert.equal(byMachine.ok, true, JSON.stringify(byMachine).slice(0, 300));
   /* a later revision by another member: the creator is still the one whose write created it. */
   assert.equal(w.promote(A, w.text(A).replace("title: ", "title: x"), { author: BOB }).ok, true);
-  const want = [{ action: A, project: "PROJ-2026-0001", created_by: M }, { action: B, project: "PROJ-2026-0002", created_by: MACHINE }];
+  const want = [{ action: A, project: d.project, created_by: M }, { action: B, project: d.project, created_by: MACHINE }];
   const r = w.c.calendarFactsRead({ viewer: M });
   assert.ok(r.paths.length >= 3);
   for (const p of r.paths) assert.deepEqual(p.actions, want, p.path);
   /* the same as R3 answers them (both carry a past pending entry). */
   assert.deepEqual(w.c.overdueClocks({ viewer: M }).items.map(({ action, project, created_by }) => ({ action, project, created_by })), want);
   /* the project is read as the viewer sees it: a determination the viewer may not see is passed over. */
-  w.determinations.set("CONF-2026-0002-bobs", { project: "PROJ-2026-0002", sees: [BOB] });
-  assert.deepEqual(w.c.calendarFactsRead({ viewer: M }).paths[0].actions.find((a) => a.action === B),
+  assert.deepEqual(w.c.calendarFactsRead({ viewer: BOB }).paths[0].actions.find((a) => a.action === B),
     { action: B, project: null, created_by: MACHINE });
 });

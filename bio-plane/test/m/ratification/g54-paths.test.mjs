@@ -16,8 +16,12 @@ import { word } from "../../../src/setup-words/index.mjs";
 import * as publicationWorker from "../../../src/publication/worker.mjs";
 import { publicationOps } from "../../../src/publication/index.mjs";
 import { publicReadOf, publicReadOps } from "../../../src/public-read/index.mjs";
+import { assembleCaseContainerRefusal } from "../public-read/fixtures.mjs";
 
 const { caseConclusionRowLines, CASEFILE_SWEEP_EDITIONS, CASEFILE_SWEEP_FILES, CASEFILE_SWEEP_BYTES } = ratification;
+/* public-read's refusals of the case-file assembly, from its published fixture: the real answers, made once for this file */
+const REFUSALS = await assembleCaseContainerRefusal();
+const REFUSED = { MATERIAL_MISSING: REFUSALS.materialMissing, BUCKET_FAILED: REFUSALS.bucketFailed };
 const OWN = { version: "first", claim: "the transfer was authorised", falsifier: "an adopted resolution forbidding it",
               falsifier_override: null, by: "member:iris", at: "2026-09-27T10:00:00Z" };
 const AT = { date: "2026-10-09", time: "09:30" };
@@ -106,12 +110,12 @@ function ledgerOn(w) {
       const next = ledger.next?.(a);
       if (next) { rows.set(key(id, cs.edition), { ...row, state: "failed", why: { code: next.code, step: "build" },
                                                   attempts: row.attempts + 1, next_at: ledger.clock + 1000 * 2 ** row.attempts });
-                  return { ok: false, reason: next.code, code: next.code }; }
+                  return REFUSED[next.code]; }
       if (miss || (a.prior && a.prior.copy_error)) {
         const code = miss ? "MATERIAL_MISSING" : "BUCKET_FAILED";
         rows.set(key(id, cs.edition), { ...row, state: "failed", why: { code, step: miss ? "materials" : "copy" },
                                         attempts: row.attempts + 1, next_at: ledger.clock + 1000 * 2 ** row.attempts });
-        return { ok: false, reason: code, code };
+        return REFUSED[code];
       }
       const sha = `${String(a.cs.edition)}${"f".repeat(63)}`;
       w.st.sql.exec(`UPDATE published_cases SET manifest_sha=? WHERE case_id=? AND edition=?`, sha, id, cs.edition);
@@ -307,7 +311,7 @@ async function owedHouse(n = 3, { worker: extra = {}, steer: steerExtra = {} } =
   holder.ledger = ledgerOn(s.w);
   for (let i = 1; i <= n; i++) {
     const e = await s.edition(i);
-    const r = await s.act(caseRatifyOp, e.body(), {}, (p) => { p.ctx.assembleCaseContainer = async () => ({ ok: false, reason: "CASE_FILE_NOT_ASSEMBLED" }); });
+    const r = await s.act(caseRatifyOp, e.body(), {}, (p) => { p.ctx.assembleCaseContainer = async () => REFUSALS.notAssembled; });
     assert.equal(r.status, 200, JSON.stringify(r.body).slice(0, 300));
   }
   for (const e of s.editions) assert.deepEqual(s.w.realPub.caseEditionState(e.caseId, 1).complete, true);
@@ -452,7 +456,7 @@ test("G54 SEAM (publication, public-read): the real ledger and the real assembly
   holder.w = s.w;
   for (let i = 1; i <= 3; i++) {
     const e = await s.edition(i);
-    const r = await s.act(caseRatifyOp, e.body(), {}, (p) => { p.ctx.assembleCaseContainer = async () => ({ ok: false, reason: "CASE_FILE_NOT_ASSEMBLED" }); });
+    const r = await s.act(caseRatifyOp, e.body(), {}, (p) => { p.ctx.assembleCaseContainer = async () => REFUSALS.notAssembled; });
     assert.equal(r.status, 200, JSON.stringify(r.body).slice(0, 300));
     published.set(`s/published/${e.member.sha}`, new TextEncoder().encode(s.w.record.readFile(e.q, "bundle.md").text));
   }

@@ -139,7 +139,7 @@ This module judges each against the owner's lists and the record at the act, and
 
 #### Grading facts and passages (DEC-112 (3); K1315)
 
-- **R15** (was `case-authoring` R54) `findingFacts(findings, viewer)` answers the `grading_facts:` and `passages:` rows (`case-grammar` R17) for each finding R6 reached:
+- **R15** (was `case-authoring` R54) `findingFacts(findings, viewer)` answers the `grading_facts:` and `passages:` rows (`case-grammar` R17) for each finding R6 reached: (K5148; WALK-FINAL-10B C1) Each `passages` row carries `extent` as the canonical extent object and `chain` as its value or null (parsed from the `content` row's canonical JSON), so `contentIdFor(capture_sha, extent, chain)` recomputes its `content_id`.
   - `strength.gradingFacts({inquiry, levels: null, viewer})` (its R35), one row per leg `{finding, ord, …}`;
   - one passage row per leg naming a content row, `{finding, ord, content_id, capture_sha, extent, chain, quoted}`, with `quoted` the extracted unit's text at that extent, or null where none is held.
 

@@ -5,8 +5,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { boot, stubOver, io, read } from "./fixture.mjs";
+import { memberLanguageRead } from "../translations/fixtures.mjs";
 import { bootstrapReport, bootstrapOp, PARTS_KEPT_MS, BOOTSTRAP_FACT_KEYS, BOOTSTRAP_VIEWER_KEYS } from "../../../src/setup.mjs";
 
+/* translations' own answer to a first registration of the language read (its published fixture) */
+const { registered } = memberLanguageRead();
 const SECOND = 1000;
 const storeAnswer = { claimed: false, rearmed: false, consumedAt: null, storeVersion: "s-1" };
 
@@ -115,7 +118,7 @@ test("R104 bootstrap states fleet;dur (0 when kept) and facts;dur (the store hop
 });
 
 const WORDS = { stamp: "w-1" };
-const translationsStandIn = () => ({ registerMemberLanguageRead() { return { ok: true }; }, wordsVersion: () => WORDS.stamp });
+const translationsStandIn = () => ({ registerMemberLanguageRead: () => registered, wordsVersion: () => WORDS.stamp });
 
 test("R103 a signed-in caller's bootstrap answers the viewer's language and the words stamp in the store's one extra hop; an adoption changes the stamp; a member with none set answers language null", async () => {
   WORDS.stamp = "w-1";
@@ -158,7 +161,7 @@ test("R103 control: without a session neither key is in the answer, whatever the
   for (const k of BOOTSTRAP_FACT_KEYS) assert.ok(k in both, k);
   assert.equal(paths.filter((p) => p === "bootstrapfacts").length, 1);
   /* a stamp that cannot be read, or a store route that does not answer, is null: never omitted, never guessed */
-  const broken = await counted({ translations: { registerMemberLanguageRead() { return { ok: true }; }, wordsVersion() { throw new Error("no"); } } });
+  const broken = await counted({ translations: { registerMemberLanguageRead: () => registered, wordsVersion() { throw new Error("no"); } } });
   broken.w.m.memberLanguageSet({ language: "es", by: "ada" });
   const b = await ask(env, broken.stub, { caller: { viewer: "ada" } });
   assert.deepEqual([b.language, b.words_version], ["es", null]);

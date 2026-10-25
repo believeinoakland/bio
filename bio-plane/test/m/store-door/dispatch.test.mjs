@@ -323,6 +323,7 @@ test("R14 (T47; N970; amends R2; basis-versions R50; project-roster R26): `statu
   const own = M.existenceAct(RP, "member:vera");
   assert.equal(own && own.check, "C-70.1", "vera sees the project only at EXISTENCE");
   const routed = [];
+// fixtures-own: input a route map handed to the door under test; the routes only record that they ran
   const real = { membership: () => membershipOf(x.ctx),
     routes: (url, body) => ({ ...basisVersionsOps(basisVersionsOf(x.ctx), url, body),
       statusreportassist: () => { routed.push("statusreportassist"); return { ok: true }; },
@@ -347,6 +348,7 @@ test("R3 (DEC-113, DEC-36; actions R58): `projectholds` is among the reads namin
   const membership = () => ({ visibilityOf: (id) => { asked.push(id); return id === P ? "discoverable" : "hidden"; },
                                existenceAct: (id) => (id === P ? { ok: false, reason: "PROJECT_SEEN_NOT_A_PARTICIPANT", project: id } : null) });
   const store = { membership, routes: (url, body) => {
+// fixtures-own: input a route map handed to the door under test; the routes only record what reached them
     const seen = (op) => () => { ran.push([op, Object.fromEntries(url.searchParams), body]); return { ok: true, projects: [{ project: P, held: null }] }; };
     return { projectholds: seen("projectholds"), actionholdrelease: seen("actionholdrelease"), actionholdpreview: seen("actionholdpreview"),
              notices: () => ({ ok: true }) };
@@ -558,6 +560,7 @@ test("R11 (K2585; control-plane R72; capture R86): `captureupload`'s POST body i
   const BYTES = new Uint8Array([0x7b, 0x00, 0xff, 0x25, 0x50, 0x44, 0x46, 0x0a]);
   const got = [];
   const store = { membership: () => null,
+// fixtures-own: input a route map handed to the door under test; the route reads the body the door hands it
     routes: (url, body) => ({ captureupload: async () => {
       got.push({ stream: body instanceof ReadableStream, locked: body.locked, by: url.searchParams.get("by") });
       return { ok: true, bytes: [...new Uint8Array(await new Response(body).arrayBuffer())] };

@@ -1044,7 +1044,7 @@ export class Events {
     const checked = p.role === "voted" && this.#voteValues() !== null;
     return { participant_id: Number(p.participant_id), entity_id: p.entity_id, role: p.role,
              ...(p.role === "voted" ? { vote_value: p.vote_value, vote_value_checked: checked,
-                 ...(checked ? {} : { vote_value_why: word("events.vote_value_why") }) } : {}),
+                 ...(checked ? {} : { vote_value_why: reason("events.vote_value_why") }) } : {}),
              attestation_id: Number(p.attestation_id),
              grades: { attestation: a ? a.grade : null, resolution: this.#resolutionGrade(p.entity_id, a, memo) },
              by: p.by_actor, at: p.at,
@@ -1062,9 +1062,9 @@ export class Events {
     const w = this.#whenRead(id);
     let when = w.when, why = w.why ?? null;
     if (when !== "undetermined" && w.governing != null && !attById.has(Number(w.governing))) {
-      when = null; why = word("events.why.dated_attestation_see");
+      when = null; why = reason("events.why.dated_attestation_see");
     }
-    if (when === null && !why) why = word("events.why.placed_nowhere_attestation");
+    if (when === null && !why) why = reason("events.why.placed_nowhere_attestation");
     const parts = this.#rows(`SELECT * FROM event_participants WHERE event_id=? ORDER BY participant_id`, id)
       .filter((p) => attById.has(Number(p.attestation_id))).map((p) => this.#participantView(p, viewer, attById));
     const sees = this.#seer(viewer);
@@ -1261,8 +1261,8 @@ export class Events {
         return { participants, participants_total: live.length, participants_truncated: live.length > ITEM_PARTICIPANTS_MAX,
                  grade: placed ? g.grade ?? null : null,
                  ...(placed ? {} : { grade_why: item.why && item.why.key === "events.why.cache_stale"
-                   ? word("events.why.grade_time_unread")
-                   : word("events.why.grade_placed_nowhere") }) };
+                   ? reason("events.why.grade_time_unread")
+                   : reason("events.why.grade_placed_nowhere") }) };
       });
     }
     return out;

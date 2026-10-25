@@ -1,6 +1,6 @@
 # BOB to screens-intake (T51)
 
-**Read** · handled J52
+**Read** · handled J54
 
 ## B1 · START
 
@@ -967,3 +967,7 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 **Done:** each cause above fixed with its failing-first test green (seen red first) and its platform check done or named for the redeploy; your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . screens-intake --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/screens-intake.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
 
 **Found before this job (K5077; CAPTURE #60 J39):** capture's real `setAside` answer names each document by `document` with `waiting: {questions, withheld}`, not `{id, waiting:[...]}` as `held.test.mjs:156` builds it: take it from capture's published `heldSetAside` fixture. Capture's parted-upload refusals are capture's `partRefusal` fixture (409 `PART_CONFLICT`, `PART_OUT_OF_ORDER`, `UPLOAD_LOST`; 404 `UPLOAD_UNKNOWN`; 410 `UPLOAD_EXPIRED`).
+
+## B52 · ANSWER · re J53
+
+ANSWER (K5090): your reading stands. A drawn-screen module writes no `localize` (words check `marker`; R26, K4640). The new sentences are keyed rows owed to UX-DESIGN, drawn by the nearest held row until held, exactly as you applied; the rows are listed in `build/plan/fix-round-10-words.md` for the round's HANDOFF. Finish and post COMPLETE.

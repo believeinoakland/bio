@@ -4,7 +4,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { world, inbox, ev, host, NOW, iso } from "./world.mjs";
+import { world, inbox, ev, host, NOW, iso, projectOf } from "./world.mjs";
+import { homeOfHomed, sha } from "../provenance/fixtures.mjs";
 import { tasksOf, tasksOps, Tasks, TASK_DRAIN_BACKSTOP_MS, TASK_DRAIN_RETRY_LIMIT, QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, checkInboxGrammar,
          TASKS_TABLES, tasksOwns } from "../../../src/tasks/index.mjs";
 import { mintExhausted } from "../../../src/record-core/index.mjs";
@@ -13,8 +14,10 @@ import { schedulerOf } from "../../../src/scheduler/index.mjs";
 import { Connections } from "../../../src/connections/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
-const DOC = "INFO-2026-0001-doc", PRJ = "PROJ-2026-0001-team", DOC2 = "INFO-2026-0002-other", DOC3 = "INFO-2026-0003-third";
-const HOMES = { a1: DOC, a2: PRJ, a3: DOC2 };
+const DOC = "INFO-2026-0001-doc", DOC2 = "INFO-2026-0002-other", DOC3 = "INFO-2026-0003-third";
+const TEAM = projectOf("Team", ["a2"]);   // a2 is registered in the project the record mints, by provenance's real creation
+const PRJ = TEAM.projectId;
+const HOMES = { a1: DOC, a2: TEAM, a3: DOC2 };
 const box = (events = []) => inbox(events, HOMES);
 
 test("R1: drain takes queued events in order; unfiled waits, a live task folds, a new one is routed owner, citing owner, admin, unassigned", () => {
@@ -69,12 +72,36 @@ test("R1: drain takes queued events in order; unfiled waits, a live task folds, 
   for (const [asked, got] of [[0, 1], [9999, 500], [null, 50], ["", 50], ["x", 50]]) assert.equal(box().t.taskDrain({ limit: asked }).limit, got);
 });
 
+test("R1 (K5148, WALK-FINAL-04B R146): a document filed in a project routes to that project's active owner with no cites edge, before a citing project; with no project and no edge the administrator rule stands", () => {
+  const w = box([ev("a1"), ev("a3")]);
+  w.member("olga"); w.member("gone", { status: "revoked" }); w.member("ada", { role: "admin" });
+  w.bundle(PRJ, "project"); w.join(PRJ, "gone", { owner: true }); w.join(PRJ, "olga", { owner: true });
+  w.bundle(DOC, "information", { project: PRJ });     // filed in PRJ by its front matter: no `cites` edge, no project-type bundle
+  w.bundle(DOC2);                                      // filed in nothing, cited by nothing
+  const route = Object.fromEntries(w.t.taskDrain({ actor: "alarm" }).created.map((c) => [c.refers_to, [c.assignee, c.assignee_role, c.basis]]));
+  assert.deepEqual(route[DOC], ["olga", "project-manager", word("tasks.why.owner_referred_project")], "the filed-in project's first active owner, not the administrator");
+  assert.deepEqual(route[DOC2], ["ada", "group-admin", "no project manager; the RULED fallback to a team admin"], "control: the administrator rule");
+  // the filed-in project comes before a citing project
+  const OTHER = projectOf("Other").projectId;
+  const w1 = box([ev("a1")]);
+  w1.member("olga"); w1.member("dave");
+  w1.bundle(PRJ, "project"); w1.bundle(OTHER, "project"); w1.join(PRJ, "olga", { owner: true }); w1.join(OTHER, "dave", { owner: true });
+  w1.bundle(DOC, "information", { project: PRJ }); w1.cite(OTHER, DOC);
+  assert.deepEqual(w1.t.taskDrain({}).created.map((c) => [c.assignee, c.assignee_role]), [["olga", "project-manager"]], "filed-in before cited-by");
+  // a filed-in project with no active owner falls through to the cites arm, then the administrator
+  const w2 = box([ev("a1")]);
+  w2.member("dave"); w2.member("ada", { role: "admin" });
+  w2.bundle(PRJ, "project"); w2.bundle(OTHER, "project"); w2.join(OTHER, "dave", { owner: true });
+  w2.bundle(DOC, "information", { project: PRJ }); w2.cite(OTHER, DOC);
+  assert.deepEqual(w2.t.taskDrain({}).created.map((c) => [c.assignee, c.assignee_role]), [["dave", "project-manager"]], "no owner in the filed-in project: the citing one");
+});
+
 test("R1 (d280-strengthbar §5): with connections' own edgeSevered over real citing documents, a withdrawn first citer is passed over and the obligation goes to the next live citer's owner", () => {
   const w = box([ev("a1")]);
   /* the real predicate (connections R22), reading each citing project's `bundle.md` through record-core */
   const real = new Connections({ storage: w.host.storage, record: w.record, membership: w.membership });
   w.fakes.connections.edgeSevered = (...a) => real.edgeSevered(...a);
-  const GONE = "PROJ-2026-0001-gone", HERE = "PROJ-2026-0002-here";   // the withdrawn one sorts first by id
+  const [GONE, HERE] = [projectOf("Gone").projectId, projectOf("Here").projectId].sort();   // the withdrawn one sorts first by id
   w.member("carol"); w.member("dave"); w.member("ada", { role: "admin" });
   w.bundle(DOC); w.bundle(GONE, "project"); w.bundle(HERE, "project");
   w.join(GONE, "carol", { owner: true }); w.join(HERE, "dave", { owner: true });
@@ -184,8 +211,8 @@ test("R1, R3: an act given no instant stamps the instance's clock, not the wall'
   // the instance binding, when no clock is given
   const h = host();
   const t = tasksOf(h.host, { record: h.record, membership: h.membership, start: false, env: { BIO_NOW_MS: String(Date.parse("2030-01-02T03:04:05Z")) },
-    capture: { taskEvents: () => [ev("a3")], taskEventCount: () => 0, taskEventRemove: () => true },
-    provenance: { homeOf: () => ({ bundleId: DOC2 }) }, connections: { edgeSevered: () => false } });
+    capture: { taskEvents: () => [ev(sha("a3"))], taskEventCount: () => 0, taskEventRemove: () => true },
+    provenance: homeOfHomed({ [sha("a3")]: DOC2 }), connections: { edgeSevered: () => false } });
   t.migrate();
   h.db.prepare(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha)
                 VALUES (?,?,?,?,?,?,?,?)`).run(DOC2, "information", "g", "t", "collected", iso(NOW), iso(NOW), "sha");
@@ -304,8 +331,7 @@ test("R18 (K2038): after a tick that drains nothing the wake backs off by each e
 });
 
 test("R25 (K4488): an event whose capture is filed after its eighth try is run at the next wake, never dropped by a count", () => {
-  const homes = {};
-  const w = inbox([ev("a3")], homes);
+  const w = inbox([ev("a3")], {});
   w.bundle(DOC2);
   const c = w.t.drainConsumer();
   let t = NOW;
@@ -317,7 +343,7 @@ test("R25 (K4488): an event whose capture is filed after its eighth try is run a
   assert.equal(w.queue[0].attempts, Tasks.TASK_DRAIN_RETRY_LIMIT, "eight tries came back unfiled");
   assert.notEqual(t, null, "still queued: a wake remains, however many tries it has had");
   assert.ok(t - Date.parse(w.queue[0].lastTry) <= Tasks.TASK_DRAIN_MAX_WAIT_MS, "backed off to at most one hour");
-  homes.a3 = DOC2;     // the capture is filed after its eighth try
+  w.home("a3", DOC2);     // the capture is filed after its eighth try
   w.now = t;
   const r = c.tick(t).drain;
   assert.deepEqual(r.created.map((x) => x.refers_to), [DOC2]);

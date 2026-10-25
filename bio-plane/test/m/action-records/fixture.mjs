@@ -13,6 +13,8 @@ import { promotionOf } from "../../../src/promotion/index.mjs";
 import { PROVENANCE_SCHEMA } from "../../../src/provenance/index.mjs";
 import { actionRecordsOf } from "../../../src/action-records/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { definitionRead } from "../progressions/fixtures.mjs";
+import { standardReadWorld } from "../standards/fixtures.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 export const WORKERD_PATTERN_CAP = 50;
@@ -172,7 +174,7 @@ export function progressionsStandIn() {
     readProgression({ progressionKey }) {
       p.asked.push(progressionKey);
       if (p.broken) throw new Error("progressions unavailable");
-      if (p.refusing) return { ok: false, reason: "NO_KEY" };
+      if (p.refusing) return definitionRead({});
       return defs[progressionKey]
         ? { ok: true, progression_key: progressionKey, found: true,
             stages: defs[progressionKey].map((k, i) => ({ stage_key: k, stage_no: i + 1 })) }
@@ -185,13 +187,14 @@ export function progressionsStandIn() {
    `STD-2026-0002-hidden` by `member:bob` alone; `broken` makes every read throw. Each call kept in `asked`. */
 export const STD = "STD-2026-0001-held", STD_HIDDEN = "STD-2026-0002-hidden";
 export function standardsStandIn() {
+  const refusal = standardReadWorld(); /* the real standards' answer for an id its viewer does not see */
   const s = { asked: [], broken: false,
     standardRead({ id, viewer }) {
       s.asked.push({ id, viewer });
       if (s.broken) throw new Error("standards unavailable");
       if (id === STD) return { ok: true, id };
       if (id === STD_HIDDEN && viewer === V("bob")) return { ok: true, id };
-      return { ok: false, reason: "NO_SUCH_STANDARD" };
+      return refusal.standardRead({ id, viewer: refusal.stranger });
     } };
   return s;
 }

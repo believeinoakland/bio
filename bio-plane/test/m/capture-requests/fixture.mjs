@@ -4,6 +4,7 @@
    own instance), recording exactly what it was handed; ai-runs' run sight (`runFor`) is a table of runs the test
    writes; inquiry's `memberUserAgent` (its R44) answers the agents the test records, noting each id asked (a
    plane-created inquiry's stamp is driven in plane.test.mjs). Every test drives `capture-requests` at its interface. */
+import { captureArm, acquireRefusal } from "../capture/fixtures.mjs";
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -69,24 +70,24 @@ export function storage() {
   };
 }
 
-/** `capture`'s in-process arm as a script: each call is recorded; the answer is the next scripted one for the address,
- *  else a filed capture of the address's bytes. */
-export function fakeCapture() {
-  const calls = [], script = new Map(), readers = [];
+/** `capture`'s in-process arm over capture's published fixture (`captureArm`: the real capture, a scripted network, each call recorded): the answer is the
+ *  next scripted one for the address, else the real capture's own filing of the address's bytes. */
+export function captureStage() {
+  const arm = captureArm(), calls = arm.calls, script = new Map();
   let throwing = false;
   return {
-    calls, script, readers,
-    /* capture R83's slot as a stand-in: each registration recorded, the module's own `fn` kept to be driven. */
-    registerReader(slot, module, fn) { readers.push({ slot, module, fn }); return { ok: true, slot, module }; },
+    calls, script, readers: arm.readers,
+    /* capture R83's slot: capture's own registration, each recorded with the module's own `fn` to be driven. */
+    registerReader: arm.registerReader,
     throwNext() { throwing = true; },
     async acquire(body, opts) {
-      calls.push({ body, opts });
-      if (throwing) { throwing = false; throw new Error("boom https://x.example/?token=SECRET"); }
+      if (throwing) { throwing = false; calls.push({ body, opts }); throw new Error("boom https://x.example/?token=SECRET"); }
       const loc = opts && opts.captureRequest ? opts.captureRequest.locator : body.locator;
       const q = script.get(loc);
       const next = Array.isArray(q) ? q.shift() : q;
-      if (next) return typeof next === "function" ? next(body, opts) : next;
-      return filed(loc, opts);
+      if (next) { calls.push({ body, opts }); return typeof next === "function" ? next(body, opts) : next; }
+      arm.routes[loc] = () => new Response(`bytes of ${loc}`, { headers: { "content-type": "application/pdf" } });
+      return arm.acquire(body, opts);
     },
   };
 }
@@ -110,8 +111,20 @@ export function filed(loc, opts, { bytes = `bytes of ${loc}`, existed = false, e
 }
 
 export const refused = (status) => ({ status: 502, body: { ok: false, reason: "SOURCE_REFUSED", status } });
-export const renderRefusal = (code, state) => ({ status: 409, body: { ok: false, reason: code, detail: `${code} said so`,
-                                                                     ...(state ? { render: { state } } : {}) } });
+/* A render capture refuses with, by code, each the real answer of `capture.acquire({locator, render: true})`: capture's published `acquireRefusal` for the three
+   it gives (RENDER_DEFERRED, RENDER_NO_RENDERER, RENDER_HOST_COOLING_OFF), and for the others the same published arm (`captureArm`) driven to the refusal:
+   RENDER_NOT_A_PAGE (the address serves a PDF), RENDER_FAILED (the renderer answers 500), RENDER_AT_CAPACITY (the allowance admits none, waiting). */
+const PROVIDED = ["RENDER_DEFERRED", "RENDER_NO_RENDERER", "RENDER_HOST_COOLING_OFF"];
+export async function renderRefusal(code) {
+  if (PROVIDED.includes(code)) return acquireRefusal({ code });
+  const locator = "https://r.example/page", page = () => new Response("<html><body>hi</body></html>", { headers: { "content-type": "text/html" } });
+  const served = code === "RENDER_NOT_A_PAGE" ? () => new Response("%PDF", { headers: { "content-type": "application/pdf" } }) : page;
+  const renderer = { fetch: async () => (code === "RENDER_FAILED" ? new Response("boom", { status: 500 }) : new Response("{}")) };
+  const arm = captureArm({ routes: { [locator]: served }, env: { RENDERER: renderer } });
+  if (code === "RENDER_AT_CAPACITY") arm.capture.renderAdmit = () => ({ state: "waiting", running: 2, cap: 2 });
+  else if (code !== "RENDER_NOT_A_PAGE" && code !== "RENDER_FAILED") throw new Error(`renderRefusal: no render refusal ${code}`);
+  return arm.acquire({ locator, render: true }, {});
+}
 
 /** A world: the record's modules, the capture stand-in, a table of runs, and capture-requests over them. `group` is
  *  the instance's recorded producing group (promotion R13; null: none recorded). `steps` (R55) is the real `steps` on
@@ -154,7 +167,7 @@ export function world({ env = ENV, configured, credentials = true, group = "test
   const creds = credentials ? credentialsOf(host, { key: env.CAPTURE_CREDENTIALS_KEY ?? null, record, membership,
                                                      now: () => clock.ms }) : null;
   if (creds && typeof creds.migrate === "function") creds.migrate();
-  const capture = fakeCapture();
+  const capture = captureStage();
   const runs = new Map();
   const runSight = { runFor: (run, viewer) => {
     const r = runs.get(run);

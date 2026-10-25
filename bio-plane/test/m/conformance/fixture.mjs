@@ -37,6 +37,7 @@ import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { noSelection } from "../retrieval/fixtures.mjs";
 import { importedWorld } from "../case-import/fixtures.mjs";
+import { concludeAct } from "../basis-versions/fixtures.mjs";
 
 /* case-import's real answer for an import it does not hold (its R4), from its published fixture: a store with no import. */
 const noImport = (await importedWorld({ imports: [] })).ci;
@@ -183,7 +184,8 @@ export function world({ group = "test-group" } = {}) {
         .replace(/\n---\n/, `\nconclusion: "${args.conclusion}"\nfalsifier: "${args.falsifier || "a record showing otherwise"}"\n---\n`);
       const r = promotion.promote({ bundleId: args.target, base: head.bundleSha, snapKey: `conclude${++n}`,
         author: args.author, files: [{ path: "bundle.md", text }], meta: { object_type: "inquiry" } });
-      return r.ok ? { ok: true, target: args.target, to: "concluded", relationship: "no_project", project: null } : r;
+      /* basis-versions' answer to the concluded question, from its published fixture (K4990); the write above is this stand-in's */
+      return r.ok ? concludeAct({ kind: "concluded", target: args.target }) : r;
     },
   };
   const contradiction = contradictionOf(host, { record, membership, promotion, basisVersions: bv, entities: {},

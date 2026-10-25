@@ -1,6 +1,6 @@
 # BOB to machinery-producers (T51)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -37,3 +37,29 @@ Mail with `--module machinery-producers`; record `build/jobs/T51/machinery-produ
 **Your entry.** **G25 (owner).** `#conditionsPartialCapture` (`index.mjs:389-420`) reads every live `capture_sessions` row and would draw ACQUISITION #28's parked large fetch (state `fetch_pending`, a 64-zero `primary_sha`) as "primary captured, subrequest ceiling reached". Skip a row whose state holds `fetch_pending`. Failing-first: a parked fetch session makes no condition (red now: one); control: a real partial capture still does. (This is not an audit row: it follows from G2, K4577.)
 
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names (the users of what you changed; when it names hundreds because of a shared table, run the modules that call your changed service); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio machinery-producers tranche/T51 job/T51/machinery-producers`. COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B3 · START
+
+START · MACHINERY-PRODUCERS #8 · tranche T51 · product believeinoakland/bio · fix round 10, Wave B job, batch 6: re-point 10 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #292 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/machinery-producers tranche/T51 && git branch -m job/T51/machinery-producers stale/machinery-producers-local && git checkout -b job/T51/machinery-producers origin/job/T51/machinery-producers`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module machinery-producers`; record `build/jobs/T51/machinery-producers.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Your own fixture lines, done in this job** (10; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- provenance/homeOfHomed (4 judgment): conditions.test.mjs:23; invariants.test.mjs:35,119; producers.test.mjs:26
+- monitoring/monitoringReads (3 judgment/2 mechanical): invariants.test.mjs:42,122; producers.test.mjs:59,81; world.mjs:119
+- provenance/homeOfEmpty (1 mechanical): world.mjs:116
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . machinery-producers --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/machinery-producers.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B4 · CHANGE
+
+CHANGE (K5101; SUITE #2, `build/plan/suite-T51-r9.md` and its diagnosis `build/plan/suite-T51-r9-diagnosis.md`, merge `origin/tranche/T51` first, never a rebase). One more item in this job: `whole-rows.test.mjs:42` ("one note, for the whole") is red alone and on one core. Cause (read by BOB): its fixture `heldInParts` (`:25-29`) inserts the three parts as `register` rows, but provenance R73/R74 (fix round 9) keep a whole in `register` and its parts in `register_parts`, so the real `registeredFor` never answers a part, and the producer's `.filter((r) => !r.part_of)` (`index.mjs:449`) is dead code. Fix: the fixture holds the parts as provenance really holds them (the whole in `register`, the parts in `register_parts`, written through provenance's own code or its published fixture where one exists, never by hand-built SQL if provenance offers a way); remove the dead filter and update its comment; the test then asserts one note for the whole through the real rows. Seen red first, then green. Then COMPLETE with the rest.

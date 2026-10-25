@@ -1,6 +1,6 @@
 # calculations (T51)
 
-**Status** · session_01VRJd41T1uHsmH8s4YFxQ5y · depth 2 · COMPLETE · handled B30
+**Status** · session_01U7YpWCFreL4k44UMkF8ooE · depth 2 · COMPLETE · handled B31
 
 ## J1 · REPORT
 
@@ -416,3 +416,70 @@ Fix round 10, batch 4 (B30): cause R19 and the two own fixture lines. Branch job
 **Deferred.** Nothing.
 
 Size (session_01VRJd41T1uHsmH8s4YFxQ5y): test runs 9, module lines 4150
+
+## J23 · QUESTION
+
+QUESTION on R4 (K5131), cause 1: what `share`, `ratio` and `difference` mean over ONE table with a `column` (and `part`).
+
+R4 says: `count` over rows; the others over the stated `column`; `share` and `ratio` also the stated `part`; `difference` names only `column`. The grammar's `difference` and `ratio` take two figures, so one table and one column do not fix them. My best reading, which I am building (screens-investigate's follow-up 59 will send `column`/`part` as top-level fields of `create`, which I add to `calculationcreate`'s accepts):
+- `total`: the sum of `column`.
+- `share`: `column` is the column that sorts the rows, `part` the value naming the part: the rows whose `column` equals `part`, over all rows (the grammar's `share`, counted).
+- `ratio`: the same part, over the rows that are not it (count of rows equal to `part` : count of rows not equal).
+- `difference`: needs `column` AND `part` too: rows equal to `part` minus rows not equal.
+The part is a row count, not a sum. If you mean `column` as a numeric column summed (share = sum over the part's rows / sum over all; difference = something over `column` alone), or `difference` over `column` alone with a different meaning (e.g. the sum less the count), say which. Until you answer I build the reading above; a missing `column` is refused `NO_COLUMN` naming `column`, a missing `part` for share, ratio and difference `NO_PART` naming `part`.
+
+## J24 · COMPLETE
+
+Fix round 10, follow-up 58 (B31, K5131): two causes. Branch job/T51/calculations (tranche/T51 merged first, no rebase). R4 and R41 met; ids named: R4, R41.
+
+**Cause 1: work it out with no recipe (R4).**
+- Root cause: `#kindPlan` composed a recipe only for estimate-over-visits, unit cost, budget comparison and ranking, so `count`/`total`/`share`/`ratio`/`difference` with no `recipe` reached `checkRecipe(null)` and answered `RECIPE_INVALID ... a recipe is an object`.
+- Fix: `#defaultRecipe` composes the recipe in the closed grammar over the one input table: `count` over rows; `total` the sum of `column`; `share`/`ratio`/`difference` over the rows whose `column` equals `part` and those that do not (share of rows; ratio part:rest; difference part minus rest). `create` and `evaluate` take top-level `column` and `part` (`calculationcreate`'s accepts gains both). Refusals: `NO_COLUMN` (`field: "column"`), `NO_SUCH_COLUMN`, `NO_PART` (`field: "part"`), `KIND_INPUTS` (input not a table). A recipe given runs as before.
+- Why missed: every module test passed `recipe`. Test: new `r15-default-recipe.test.mjs` (real acts: `w.table` then `create` with the screen's body), seen red (RECIPE_INVALID, 0 of 4 pass) with the source change stashed, now 4 of 4.
+- Open: the meaning of share/ratio/difference over one column is my reading (QUESTION J23, unanswered when I finished); it is in `#defaultRecipe` alone, so a different answer is a one-function change.
+- Platform check: none needed (pure code).
+
+**Cause 2: a visit on one's own testimony (R41).**
+- Root cause: `memberOf` answers null for a bare handle other than the founder, so `sameMember` refused `NOT_YOUR_TESTIMONY` for every member; `testify` stamps the bare handle, `by` arrives `member:bob`.
+- Fix: `sameMember` compares `stampMember`, which is `memberOf` else the bare handle (`[A-Za-z0-9._-]`, never a machine identity, which carries a colon). `memberOf` itself is unchanged, so sight stays closed to a bare string.
+- Why missed: the module test hand-stamped `member:` on both sides. Test: new `r15-bare-handle.test.mjs` (real `testify` as bob; visit as bob counted, as alice and ben refused, a machine matches nothing), seen red, now green.
+- Platform check: none needed.
+
+**Fixture markers added:** none. `fixtures.mjs <root> calculations --list`: 0 failures.
+
+**Tests and checks.** calculations module 151/151 pass (151 tests, 0 fail). Users: 20 non-calculations test files naming `calculationcreate`/`recordVisit`/`spotcheckvisit`: 221/221 pass. format 0 failures; architecture 0; coverage 49 of 49; words 0; fixtures 0; ownership 1 file, 0 failures (before commit of the working tree).
+**Deferred.** Nothing. **Found in another module.** Nothing new.
+Size (session_017WZeneCFenmdMXwGaZTxaK): test runs 9, module lines 4181
+
+## J25 · COMPLETE
+
+COMPLETE (J24 in my record): R4 and R41 met. Cause 1: built-in kinds compose their default recipe (create/evaluate take top-level column and part; calculationcreate accepts them); NO_COLUMN/NO_PART/NO_SUCH_COLUMN/KIND_INPUTS refusals. Cause 2: sameMember reads a bare testify handle as the member. Tests seen red then green (r15-default-recipe, r15-bare-handle); module 151/151, 20 user files 221/221; checks 0. My reading of share/ratio/difference is the open QUESTION J23: unanswered, a one-function change if you mean otherwise. No fixture markers added.
+
+## Round 10 · CALCULATIONS #16 (session_01U7YpWCFreL4k44UMkF8ooE) · answers B34 · fix round 10 item 70 (K5148)
+
+Branch job/T51/calculations (tranche/T51 merged first, no rebase; money's merge, `checkConstant` and `factBySource`, in). Four causes of `diag2-07.md` §4-§7; each test seen red on today's code, then green.
+
+## J26 · COMPLETE
+
+Met: R1 (the K5148 sentences), R14 (the K5148 sentences). Ids named: R1, R14.
+
+**1. A source no line of which splits into the declared columns (R1).** Root cause: `index.mjs` `declareTable` refused only `widest === 1`, so a table whose widest line was 2 or 3 of 4 columns was padded whole and accepted with every value undetermined. Fix: refuse `SOURCE_NOT_READ {content_id, delimiter, columns_expected}` when `widest < names.length` (the one-cell-per-line sentence stays for `widest === 1`); a short row among full ones still pads (R45). `delimiter` is the name the signature gives (`semicolon`, `comma`...), `null` when the lines show none (the prose letter). Why missed: `r7-delimiter.test.mjs` tried one cell per line only. Test: `r7-delimiter.test.mjs` "R1 (K5148) a source no line...": the walker's (a) and (c) refused, control one short row among full ones pads. Red: both accepted.
+
+**2. A binding whose period money cannot read (R14).** Root cause: `adoptBinding` checked only a non-empty string for a constant. Fix: it asks `money.checkConstant` for each constant role (the period as `moneyPeriod` makes it, which is what the ingest sends) and refuses `BINDING_UNREADABLE {role, money_code}`, writing nothing. **Name:** BOB's text says `{role, reason}`; `reason` is every refusal's own code in this module (`{ok:false, reason, detail}`), so money's code is carried as `money_code` and its detail is in `detail`. Say if you want another key. Why missed: the binding tests adopted valid constants only. Test: `money.test.mjs` "R14 (K5148) adoptBinding asks money's checkConstant...": period `2026`, kind, phase, stage, basis refused with money's codes; control `2026-01-01/2026-12-31` and `FY2025-26` adopt. Red: all adopted. The older R14 test used an unreadable kind to reach a row-level money refusal; that cannot be adopted now, so it uses phase `adopted` with stage `paid` (each readable alone, refused as a pair by money) and still asserts money's reason is listed.
+
+**3. A repeat ingest (R14).** Root cause: `ingestMoney` and `ingestTick` called `money.recordFact` for every row and money mints a new id each time (no look-up by source row). Fix: `#alreadyWritten` asks `money.factBySource({table, row, binding})` before judging a row, in the inline act and in the background slice alike; a row with a live fact is `not_written` `ROW_ALREADY_WRITTEN` with `fact_id` and a sentence (`calculations.ingest.row_already_written`); a withdrawn fact is none, so it never blocks. Why missed: every ingest test ingested a binding once. Test: new `r14-repeat.test.mjs`: 50 rows (inline) and 10,001 rows (background), ingested twice: the second writes 0, lists each row with the held fact, money holds N facts; control: a withdrawn fact's row is written again (and only it); plus a repeat naming rows. Red: the second act wrote N again. **Cost note (one query per slice):** money publishes `factBySource` per row (an indexed read), no batch form; so a slice asks one indexed read per row it judges, not one per slice. The g55 statement-count tests still pass. A batch read in money (`factsBySource` over a row list) would make it one per slice; say if you want that asked of money.
+
+**4. A re-declaration with corrected roles (R1).** Root cause: `declareTable` answered `already: true` from the held row's roles and schema whenever the bytes' sha was held (`diag2-07.md` §7). Fix: held bytes declared again with other roles (compared when roles are given; roles left out ask no change) or other schema replace them, the cells recounted, and answer `replaced: ["roles"|"schema"]` (no `already`); calculations over it are marked stale when the schema changed; the table cache entry is dropped; facts already written stay; the next ingest reads the held (new) roles and, with 3, writes only rows not yet held. Same roles and schema stay `already: true`. Why missed: `tables.test.mjs` declared the same file only with the same roles. Test: `tables.test.mjs` "R1 (K5148) a declaration of held bytes with other roles or schema replaces...": roles A then B (B held, named, key the bytes'), schema, both, and the walker's two-ingest case. Red: `already` with the old roles.
+
+**Test infrastructure:** `fixture.mjs`'s money port passes `checkConstant` and `factBySource` to the real money. An act's key names its instant, so the new tests advance the fixture clock between acts.
+
+**Words:** new `localize` ids: `calculations.index.no_line_splits_into`, `calculations.index.money_cannot_read_the_value`, `calculations.ingest.row_already_written` (design reviews them through the unreviewed list).
+
+**Fixture markers added:** none. **Deferred:** nothing. **Found in another module:** nothing.
+
+**Tests and checks.** Module tests (`node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/calculations/`): 157 tests, 157 pass, 0 fail; the files run alone sum to 157 (no shortfall, K5124). Users: scheduler g55-ingest, plane g55-alarm-l, corpus-export tables, case-authoring calculations, op-grades g55, progressions dispose, publication invariants: 46 tests, 0 fail. format 0 failures; architecture calculations 0; coverage calculations 49 of 49; words no finding in calculations; fixtures `calculations --list` 0 failures.
+Size (session_01U7YpWCFreL4k44UMkF8ooE): test runs 12, module lines 4223
+
+## J27 · COMPLETE
+
+COMPLETE (J26 in my record): R1 and R14 met (K5148 sentences); ids named: R1, R14. (1) a source no line of which splits into the declared columns is refused SOURCE_NOT_READ {content_id, delimiter, columns_expected}; a short row among full ones pads. (2) adoptBinding asks money.checkConstant for each constant: BINDING_UNREADABLE {role, money_code} (key is money_code, not reason, because reason is every refusal's own code; say if you want another). (3) a repeat ingest skips rows money holds live (factBySource): not_written ROW_ALREADY_WRITTEN with fact_id, inline and background; a withdrawn fact does not block. Money has no batch form, so it is one indexed read per judged row, not one per slice; ask money for a batch read if you want it. (4) a re-declaration of held bytes with other roles or schema replaces them and answers replaced: [field]. Each test seen red then green. Module 157/157 (files alone sum 157); 46 user tests pass; format, architecture, coverage 49/49, words, fixtures, ownership 0 failures. New words ids in J26.

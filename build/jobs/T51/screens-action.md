@@ -1,6 +1,6 @@
 # screens-action (T51)
 
-**Status** · session_015opo2yPs5rDEGC6mU3j4mb · depth 2 · COMPLETE · handled B31
+**Status** · session_016qFZjYBx2pPnvC1xZPvJ5B · depth 2 · COMPLETE · handled B33
 
 ## J1 · REPORT
 
@@ -328,3 +328,31 @@ Size (session_015opo2yPs5rDEGC6mU3j4mb): test runs 12, module lines 4943
 ## J26 · COMPLETE
 
 COMPLETE (G52): merged tranche/T51 (G53); contract.test.mjs:34 green on the real registry, no local patch. screens-action 278/0. Impact set (screens-action 30, control-plane 72, plane 51 files): 1018 pass, 1 fail (plane release R24, inherited). checks/run.mjs: format, architecture, coverage, channels 0; words 11 failures, none mine (case-checker spec.mjs inline x6; installer-steps installer.fleet.logsunconfirmed missingkey x5, from the merged tranche); ownership 0. Proposed R3 line and five word keys for UX-DESIGN are in the record. Nothing deferred.
+
+## Round 10 · Wave A batch 5 (SCREENS-ACTION #17, session_016qFZjYBx2pPnvC1xZPvJ5B, B32 START)
+
+**Causes done.**
+- `BREACH_ON_HYPOTHESIS` (`start-send.test.mjs:24`): no such code. The real refusal for a breach action naming no determination is `ACTION_NO_DETERMINATION` (`actions/index.mjs` `#breachRefusal`, check C-117.6, which carries `reason`, `detail`, `code`, `check`, `translation`). The test now takes it from the real `promote` over `actions/fixture.mjs` (`world`, `actionMd`, `CP`), asserts the code, and asserts the design's word `refusal.ACTION_NO_DETERMINATION` (the invented sentence is gone). `actions` publishes no fixture for it in `fixtures.mjs`; its job could add one (`breachRefusal`).
+- `LEG_ON_ACTION` (`actionnew-fix.test.mjs:21`): no such finding code; `actions` gives `ACTION_BASIS_REFUSED` findings as `{check: "C-2.10", detail}` (`findingsOf`, `actions/index.mjs:194`, :1248), with a `code` only when the failing check carries one. The finding is now `{check: "C-2.10", detail}`.
+- `storeSilent` (`plan.test.mjs:260`): takes `storeSilentParsed("airun")` from `answer-envelope/fixtures.mjs`.
+- Markers: `// fixtures-generic: BAD` (`join-t51.test.mjs:63`, a roster read failing whatever its code) and `// fixtures-generic: CODE_NO_ONE_HAS_A_WORD_FOR` (`plan.test.mjs:233`, a code the design has no word for, on purpose).
+- Contract `plan-screen-shape`: `plan-screen-shape.test.mjs` states screens-inquiry's stand-in as data (`// fixtures-run: screens-inquiry plan-screen-shape`) and runs it through the shell's `checkScreens` in place of the real `plan` screen; it passes. It shows `orphan-run` until screens-inquiry's marker is merged (it is on its side at `project.test.mjs:185`).
+
+**Lines left.** `plan-t51.test.mjs:209`, `send-t51.test.mjs:35,286` (storeWorld), `real.mjs:54` (stays listed) and the 50 op-table entries wait for the `storeWorld()` CHANGE (store-request, batch 3; interface-shell `boot({door})`, batch 6).
+
+**Tests and checks.** screens-action suite 279 pass, 0 fail. format 0, coverage 55 of 55 (0). architecture: 1 failure, see J27 (the `uses` list lacks `answer-envelope`).
+
+## J27 · QUESTION
+
+QUESTION (re B32): the work of B32 is pushed (a20e9835ba) and green, but one check fails that only you can clear. plan.test.mjs now takes the real 502 STORE_DID_NOT_ANSWER from answer-envelope/fixtures.mjs (storeSilentParsed), and `checks/architecture.mjs` refuses it: screens-action's `uses` in build/modules.json does not list answer-envelope. Please add it to screens-action's uses (modules.json is not mine), or tell me to keep the hand-built value instead. Done meanwhile: BREACH_ON_HYPOTHESIS replaced by the real ACTION_NO_DETERMINATION from actions' own promote; LEG_ON_ACTION replaced by a real finding {check C-2.10, detail}; two fixtures-generic markers; plan-screen-shape contract run (passes). Left, waiting on the storeWorld CHANGE: plan-t51:209, send-t51:35,286, real.mjs:54 and the 50 op-table entries. Suite 279/0. Details in my record, section Round 10.
+
+## Round 10 · completion (after B33)
+
+Merged `tranche/T51` (answer-envelope now in `uses`). Checks: format 0, architecture 0, coverage 55 of 55, ownership 0, words 0. Suite 279 pass, 0 fail.
+Markers added: `join-t51.test.mjs:63` `fixtures-generic: BAD` (a failing roster read, any code); `plan.test.mjs:233` `fixtures-generic: CODE_NO_ONE_HAS_A_WORD_FOR` (a code the design has no word for, on purpose). `fixtures-run: screens-inquiry plan-screen-shape` in `plan-screen-shape.test.mjs` shows `orphan-run` until screens-inquiry's marker (`project.test.mjs:185`) is merged.
+Left, waiting on the storeWorld CHANGE (store-request batch 3, interface-shell `boot({door})` batch 6): `plan-t51.test.mjs:209`, `send-t51.test.mjs:35,286`, `real.mjs:54` (stays listed), the 50 op-table entries.
+Size (session_016qFZjYBx2pPnvC1xZPvJ5B): test runs 14, module lines 4960
+
+## J28 · COMPLETE
+
+COMPLETE (B32, fix round 10 Wave A batch 5), re B33. Merged tranche/T51. Suite 279/0; format, architecture, coverage (55/55), ownership, words all 0. Done: BREACH_ON_HYPOTHESIS -> real ACTION_NO_DETERMINATION (via actions' promote); LEG_ON_ACTION -> real finding {check C-2.10, detail}; storeSilent from answer-envelope fixtures; plan-screen-shape contract run (orphan-run until screens-inquiry's marker merges). Markers: fixtures-generic at join-t51.test.mjs:63 (BAD, failing roster read) and plan.test.mjs:233 (CODE_NO_ONE_HAS_A_WORD_FOR, no design word on purpose). Left, awaiting the storeWorld CHANGE: plan-t51:209, send-t51:35,286, real.mjs:54 (stays listed), 50 op-table entries. Suggestion for actions: publish a breachRefusal fixture. Size (session_016qFZjYBx2pPnvC1xZPvJ5B): test runs 14, module lines 4960

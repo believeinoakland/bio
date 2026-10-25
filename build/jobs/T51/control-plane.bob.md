@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J58
+**Read** · handled J59
 
 ## B1 · START
 
@@ -1875,3 +1875,21 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 ## B86 · CHANGE
 
 Merged (K5070). translations now declares interfacewords, so BOB removed its row and the R116 comment from bio-plane/src/control-plane/owner-ops.mjs (K5052 (4)). Your declared-ops.test.mjs:122 (R116, R112) reads that row and is red. Merge the tranche branch, make the test read interfacewords' declaration from translations' DECLARED_OPS through the declared registry (no hand row), run the interfacewords files (t37-door, r8-words-door, r9-words-no-language, declared-ops, r8-words-cache, t51-interfacewords) and your suite, then record COMPLETE again. Your 70 remaining own lines wait for store-request (a later job).
+
+## B87 · START
+
+START · CONTROL-PLANE #60 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 60, a cause the final pass found (plan build/plan/fix-round-10-T51.md §3; K5131)
+
+Depth 2 (BOB #294 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/control-plane tranche/T51`; if a local `job/T51/control-plane` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/control-plane stale/control-plane-local && git checkout -b job/T51/control-plane origin/job/T51/control-plane`. If `job/T51/control-plane` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module control-plane`; record `build/jobs/T51/control-plane.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993). Each cause carries K4426's four fields in your COMPLETE: root cause with evidence, why the tests missed it (that gap fixed), a test of the walker's exact case through its real entry seen failing then passing, and any platform check.
+
+**The cause (WALK-FINAL-09 row R80 "readtranslate", D2; K5131; platform-dependent).** `bio-plane/src/control-plane/phase-clock.mjs:173` wraps each binding: for a non-`fetch` method it returns `(...a) => v.apply(target, a)`. On a workerd RPC stub, `v` is itself a stub and `.apply` a remote property, so the call becomes an RPC named `apply` carrying the stub, which cannot be serialised: `op=readtranslate` answers `PLANE_INTERNAL_ERROR`, and the same wrapping breaks `textcheck`, the status-report drafts, `dispatchMemberRun` and `groupFields`. Your R128 is amended (read it whole): call the method on the stub itself (`target[key](...a)` or `Reflect.apply` taken locally, proven), never through `.apply`. Why missed: the tests' bindings are plain objects. Test, at the platform's real shape: a Miniflare service binding (a `WorkerEntrypoint` with an RPC method) wrapped by the phase clock, the method called through it, answering; seen red first on the old wrapping; then the walker's `readtranslate` on a question through the door answers (not `PLANE_INTERNAL_ERROR`). Name every other caller you find that went through this wrapping.
+Not in this job: control-plane's Wave B (follow-ups 8 and 42), which waits on `store-request` and is a later session.
+
+**Done:** the marked requirement met (name the ids; BOB strikes the marks); `node /home/user/civicos-process/checks/fixtures.mjs <absolute root> control-plane --list` 0 failing; module tests green; format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B88 · CHANGE
+
+CHANGE (K5138): adopt two through-the-door tests into your tests (they import your `r8-kit.mjs`, which only modules after yours may): `bio-plane/test/m/citation/imported-door.test.mjs` from `origin/job/T51/citation` and `bio-plane/test/m/ratification/t51-walker-observation.test.mjs` from `origin/job/T51/ratification` (`git show <branch>:<path>`), as `bio-plane/test/m/control-plane/t51-round10-seam-imported.test.mjs` and `t51-round10-seam-observation.test.mjs`, imports re-pointed; each keeps the requirement ids it names (citation R18; ratification R2) in its titles, and the walker's case it states (WALK-FINAL-09 R169; WALK-FINAL-10A R92, R171 (5)). Run both green on your branch after merging `origin/tranche/T51` (promotion's R28 is merged there; citation's stamps merge when CITATION #20 re-completes: if `imported-door` is red only for that, say so and BOB merges citation first). Include them in your COMPLETE.

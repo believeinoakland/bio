@@ -115,3 +115,7 @@ test("R18, R19: the declaration is whole: each op names its class, weight and de
   /* the descriptions are read by key: the sentence a key answers is the one the declaration holds */
   assert.equal(DECLARED_OPS.drawquestion.description, localize("citation.declared.drawquestion", "project-directed: keyed by a project and one question; draws the question into the project as a confirmed `cites` edge and promotes the project; moves the project's bundle"));
 });
+
+test("R18: both imported ops declare the stamps the door sets from the session, `author` and `viewer`, so a joined member's act names a member (K5131)", () => {
+  for (const op of ["citeimported", "withdrawimported"]) assert.deepEqual([...DECLARED_OPS[op].stamps].sort(), ["author", "viewer"], op);
+});

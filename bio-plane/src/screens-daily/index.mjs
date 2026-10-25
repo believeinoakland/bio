@@ -181,6 +181,7 @@ const WORDS_OF = {
     "screen.find-in.scope.none", "screen.find-in.what", ...["people", "money", "dates", "requirements", "events", "term"].map((k) => `screen.find-in.kind.${k}`),
     "screen.find-in.term", "screen.find-in.term.help", "screen.find-in.question.help", "findin.question.choose", "screen.document.cite.noquestion",
     "screen.find-in.kindsfirst", "screen.find-in.section", "screen.find-in.termsection", "screen.find-in.nothing", "screen.find-in.notread", "screen.find-in.notread.one",
+    ...["footnote", "endnote", "header", "footer", "comment", "tracked_deletion", "text_box", "speaker_note", "master_text", "cell_note"].map((k) => `content.part_kind.${k}`),
     "screen.find-in.quote", "screen.find-in.passage", "screen.find-in.recorded", "screen.find-in.note", "screen.find-in.questionfirst", "screen.find-in.keeping",
     ...["kind", "value", "date", "cite", "issuer", "reason", "amount", "currency", "phase", "from", "to", "header", "standardkind", "payee.short"].map((f) => `screen.find-in.field.${f}`),
     // R47, R48: the recording forms, their lists by key, the acknowledgement, a passage's count and a match's place.

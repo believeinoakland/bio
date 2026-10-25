@@ -1,6 +1,6 @@
 # screens-daily (T51)
 
-**Status** · session_017vgaPSzbnT5yf4ULaFwgm1 · depth 2 · COMPLETE · handled B35
+**Status** · session_01GykapzvyLDepprUbDPaXny · depth 2 · COMPLETE · handled B40
 
 ## Completion (SCREENS-DAILY #18, B27: fix round 4, wave 2)
 
@@ -476,3 +476,65 @@ Size (session_017vgaPSzbnT5yf4ULaFwgm1): test runs 14, module lines 4240
 ## J23 · COMPLETE
 
 COMPLETE (G12c-casedrafts, G16, G20), branch job/T51/screens-daily: Home sends one casedrafts (lists shape); Search routes, covered panel, frontier partial, Find in continue/truncated, doors and choosers say when they stop. Failing-first red then green (fix6 3 tests; partial 7 red/8 green), seam over the real plane green. Suite 292/292; users 34/34; architecture, coverage, words, ownership 0. Stand-in words and requirement lines R99-R102 in my record. No question open.
+
+## Completion (SCREENS-DAILY #20, B36: fix round 10, R17a draw, queue-states fixture lines)
+
+Merged `tranche/T51` first.
+
+**R17a, the draw (G3).** (1) Root cause: `find-in.mjs` drew a term item's place as the document's title and passage only (old :159-163), so a footnote or header hit read like a body hit. Now a term item whose `part` is a closed-list kind other than `body` draws that kind beside its passage (`data-part-kind`); `body`, `null` (stored without a kind, never read as body) and an unknown kind draw none. (2) Missed: no test gave an item a `part`. (3) Red then green: `find-in.test.mjs` "R5, R26 (R17a …)": red on the old source (`actual [[],[],[],[],[]]`, expected footnote and header named), green now; controls: body, null, unknown kind. (4) Platform: N.
+**Stand-in word (deviation, named):** the START says `localize`, but a screen's `render` is serialized into the page (interface-shell R21 (1)) and cannot call it, and setup-words R13 has drawn screens read by `word` only. So the stand-in is the held `content.part_kind.<kind>` rows (content's, as screens-inquiry draws them); listed in `index.mjs` words. Row owed to UX-DESIGN: the design's own part-kind words for a Find-in item (footnote, endnote, header, hidden slide).
+**Fixture lines.** `queue-states.test.mjs` 48 and 93 now take `perItemRetained` from `record-core/fixtures.mjs` (the real answer; the second test now chooses T1, T2, C1). Done; `fixtures.mjs --list` for screens-daily lists only the 248 op-table entries (arrive by CHANGE). Markers added: one `fixtures-contract: retrieval-browse findin-term-part` at `find-in.test.mjs` (the term item with `part`): retrieval-browse publishes no find-in fixture and no `fixtures-run` carries it, so BOB: that provider needs a published term-item fixture with `fixtures-run: screens-daily findin-term-part`. No `fixtures-own` or `fixtures-generic` added.
+**Needs BOB (one thing):** `architecture.mjs` fails: `queue-states.test.mjs` imports `record-core/fixtures.mjs`, and `record-core` is not in screens-daily's `uses` in `build/modules.json` (mine to read, not write). Please add `record-core`; I re-run architecture then.
+**Runs.** screens-daily suite 295/295. Users (impact: control-plane 83, plane 68, journey-check 2): 1027 tests, 1019 pass, 8 fail, all journey-check `pseudo*` (R29): `playwright-core` cannot be loaded (`npm ci` not run in bio-plane/src/journey-check in this container), not from this change. Checks: format 0, coverage 100/100, words 0, ownership 0, architecture 1 (the `uses` above).
+Requirement line proposed (BOB writes): **R103** A Find-in term item says which part of the document it lies in when it is not the body (the held `content.part_kind` word); none for body, an unkeyed item or an unknown kind. Test: the R17a test above.
+Size (session_0177s7VkCbiDMwJSDa3V4Dzp): test runs 8, module lines 4262
+
+## J24 · QUESTION
+
+R17a draw and the two queue-states fixture lines are done and pushed (record: Completion, SCREENS-DAILY #20). One thing I need: add record-core to screens-daily's uses in build/modules.json (queue-states.test.mjs imports record-core/fixtures.mjs per the FIX-E rule; architecture fails on it only). Also: retrieval-browse publishes no find-in term-item fixture (my find-in.test.mjs carries fixtures-contract: retrieval-browse findin-term-part; it needs a fixtures-run). Stand-in words are held content.part_kind rows, not localize (render cannot call it). I COMPLETE once architecture is green.
+
+**After B37 (K5090):** merged `tranche/T51` (`record-core` now in `uses`). Architecture 0 failures; ownership 0; screens-daily suite 295/295. No open question.
+
+## J25 · COMPLETE
+
+COMPLETE (R17a draw, queue-states fixture lines), branch job/T51/screens-daily: Find in names the part of a footnote/header etc. term item (held content.part_kind rows as stand-in; none for body/null/unknown); queue-states lines 48 and 93 take record-core's perItemRetained. Failing-first red then green. Suite 295/295; architecture, coverage, words, ownership, format 0; fixtures: only op-tables remain. Users: 1019/1027, the 8 are journey-check pseudo* needing playwright-core (npm ci not run here). Markers added: one fixtures-contract retrieval-browse findin-term-part (find-in.test.mjs); no fixtures-own or fixtures-generic. R103 proposed in record. Size line in record.
+
+## Completion (SCREENS-DAILY #21, B38: fix round 10, follow-up 57, WALK-FINAL-09 R84 "Ask as search", K5131)
+
+Merged `tranche/T51` first. Applies the first half of R6 as amended: the search the screen sends (not reachable) is one `retrieval` admits. The second half ("Show how this was counted" drawn only while `ruleservicesstate` reads `on`) waits for the CHANGE after ANSWERS #15; R6's mark stays until then.
+
+**Cause (K4426's four fields).**
+1. Root cause: `answers.mjs` `reads` (line 21) and the `search` act (line 225) turned plain words into `(w) OR (passage:w)`; `retrieval` R88 refuses an `OR` joining a passage route to a fields route (`ROUTES_CROSSED`), so Ask-as-search found nothing. Evidence: with the real `retrieval.search`, `(sewer) OR (passage:sewer)` answers `ok:false, code ROUTES_CROSSED`.
+2. Why the tests missed it: `answers.test.mjs:123` asserted the crossed string against a stub that never refused. Fixed: the string assertion now asserts the two admitted queries, and a new test answers `op=search` with the real `retrieval.search` (retrieval's own test `world`, `../retrieval/fixture.mjs`), recording any refusal.
+3. Test of the walker's exact case through the real entry: `answers.test.mjs` "R6: Ask-as-search ... answered by the real retrieval": a document found by its title word, a document found by words only its passage holds ("approved council"), another by title; control: words nothing holds draw the none sentence; no search sent was refused. Seen red first (stashed `answers.mjs`: 2 failing, the new test and the R6 string test), then green.
+4. Platform check: none (a pure screen change, no deploy dependency).
+Fix: the plain words go to `search` alone (fields route); the passages holding them are a second read `passages` (`search` with `passage:w1 passage:w2`, an AND, admitted), the two read apart and drawn once per document; a query in the member's own syntax is sent as written, to `search` alone. Registry list of reads in `contract.test.mjs` names `passages` for `answers`.
+
+Tests: `screens-daily/*.test.mjs` 296 tests, 296 pass, 0 fail (after the contract list update; the one first failure was that list). Checks (absolute root): format 0 failures; architecture 0; coverage 101 of 101, 0; ownership 0; words 0; fixtures `--list`: 249 failures, all `op-table` lines (waiting for the CHANGE re-pointing them to `storeWorld()`, as B-earlier said), none from the new test. `impact.mjs origin/tranche/T51 HEAD`: 0 affected modules besides mine.
+Markers added: none.
+Size (session_01GykapzvyLDepprUbDPaXny): test runs 6, module lines 4258
+
+## J26 · COMPLETE
+
+COMPLETE (B38): R6 first half met — Ask-as-search now sends plain words to search alone and the passage: terms as a second read, never joined by OR; seen red first against the real retrieval.search, green. Second half of R6 (ruleanswer drawn only while ruleservicesstate is on) waits for the CHANGE after ANSWERS #15, so R6's mark stays. Module tests 296/296, format/architecture/coverage/ownership/words 0; fixtures --list: 249, all op-table (waiting). Record: build/jobs/T51/screens-daily.md.
+
+## Completion (SCREENS-DAILY #21, B39: R6's second half, K5138)
+
+Merged `tranche/T51` first. `answers.mjs` reads `ruleservicesstate` (read `rules`, while not reachable); "Show how this was counted" (`ruleanswer`) is drawn only while it reads `on`. Test (`answers.test.mjs`, "R6 (K5131) ... ruleservicesstate reads on") on answers' published fixture `ruleServicesState({on})`, both states, red first (answers.mjs stashed: it failed), green with it; the earlier R6 Find-and-count tests now take the same fixture with `on: true`. The reads list in `contract.test.mjs` names `rules`.
+
+Tests: `screens-daily/*.test.mjs` 297 pass, 0 fail. Checks (absolute root): format 0; coverage 101/101, 0; ownership 0; words 0; fixtures `--list` 249, all `op-table` (waiting); impact: 0 other modules affected. **architecture: 1 failure**: `answers.test.mjs` imports `bio-plane/test/m/answers/fixtures.mjs` of `answers`, which `screens-daily` does not declare in `uses` (`build/modules.json` is BOB's, as with record-core in B37). BOB: add `answers` to screens-daily's `uses` (order check: answers precedes screens-daily).
+Markers added: none.
+Size (session_01GykapzvyLDepprUbDPaXny): test runs 11, module lines 4264
+
+## J27 · BLOCKED
+
+BLOCKED (cause: context-free, needs BOB's modules.json): R6's second half is done and pushed (ruleanswer drawn only while ruleservicesstate reads on; both states on answers' fixture, red first; module 297/297; format, coverage, ownership, words 0). Architecture fails once: answers.test.mjs imports bio-plane/test/m/answers/fixtures.mjs (ruleServicesState) and 'answers' is not in screens-daily's uses. Please add 'answers' to screens-daily's uses on the tranche (same as record-core in B37); then I merge, re-run architecture and post COMPLETE.
+
+## Completion (SCREENS-DAILY #21, B40)
+
+Merged `tranche/T51` (`answers` now in `uses`, K5142). architecture 0 failures (121 imports); ownership 0; format 0; coverage 101/101, 0; answers and contract tests 21 pass, 0 fail (the full module run, 297 pass, was before the merge, which changed no file of mine). B38's R6 first half and B39's second half are both done.
+Size (session_01GykapzvyLDepprUbDPaXny): test runs 13, module lines 4264
+
+## J28 · COMPLETE
+
+COMPLETE (B38, B39, B40): R6 met in both halves. Ask-as-search sends only admitted searches (fields and passages read apart, no OR); ruleanswer drawn only while ruleservicesstate reads on (both states on answers' fixture, red first). After merging tranche/T51: architecture, ownership, format, coverage 0 failures; module tests 297 pass. fixtures --list: 249, all op-table (waiting). Record: build/jobs/T51/screens-daily.md.

@@ -70,8 +70,10 @@ test("R44: an invitation by a founder with no handle names member.founder.unname
   assert.equal(cy.age.state, "determined", "aged from her own row, as R41 states");
 });
 
-test("R44 (control): a projectInvitations that throws, or answers a refusal, or lacks the project, leaves every item raised with the unnamed summary, aged from her own row's created", () => {
-  for (const answer of [() => { throw new Error("read failed"); }, () => ({ ok: false, reason: "REFUSED" }), () => ({ ok: true, invitations: [], truncated: false, next: null })]) {
+test("R44 (control): a projectInvitations that throws, or answers an empty list (the real answer for a viewer it holds no invitation for; it never refuses, R36), or lacks the project, leaves every item raised with the unnamed summary, aged from her own row's created", () => {
+  for (const answer of [() => { throw new Error("read failed"); },
+                        (a, world) => world.roster.projectInvitations({ ...a, viewer: V("nobody") }),
+                        (a, world) => world.roster.projectInvitations({ ...a, viewer: V("ana") })]) {
     const w = wrapped(answer);
     invite(w, "bob");
     w.run(`UPDATE project_participants SET created=? WHERE project_id='PRJ-1' AND member_id='bob'`, iso(NOW - 3600000));

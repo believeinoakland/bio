@@ -1,6 +1,6 @@
 # BOB to action-plans (T51)
 
-**Read** · handled J4
+**Read** · handled J6
 
 ## B1 · START
 
@@ -77,3 +77,24 @@ Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . action-plans --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/action-plans.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B6 · START
+
+START · ACTION-PLANS #18 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 61, a cause the final pass found (plan build/plan/fix-round-10-T51.md §3; K5131)
+
+Depth 2 (BOB #294 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/action-plans tranche/T51`; if a local `job/T51/action-plans` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/action-plans stale/action-plans-local && git checkout -b job/T51/action-plans origin/job/T51/action-plans`. If `job/T51/action-plans` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module action-plans`; record `build/jobs/T51/action-plans.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993). Each cause carries K4426's four fields in your COMPLETE: root cause with evidence, why the tests missed it (that gap fixed), a test of the walker's exact case through its real entry seen failing then passing, and any platform check.
+
+**The cause (WALK-FINAL-09 row R102, D6; K5131).** A question concluded in the plan's project (its stance row there, `basis-versions` R18; its own state stays open) is offered "Plan what to do" (`screens-inquiry` state g), but `#support` (`bio-plane/src/action-plans/index.mjs:238-239`) answers every inquiry subject `hypothetical` with "a suspected matter: a question still open, nothing decided yet", which is false for it. Your Terms are amended (read them whole): such a matter stays a suspected matter (`hypothetical`: it is not a determination) and its `why` says it is concluded in this project, not yet a determination (a new sentence at its use by `localize`, K3930, reviewed by UX-DESIGN). Read the stance through `basis-versions`' published answer (`concludeAct`, its `fixtures.mjs`), never a hand-built one. Why missed: `open.test.mjs:61` uses an open question only. Test through the real acts: conclude in the project, `planOpen`, `planRead`: the matter's `why` is the concluded sentence; an open question keeps the still-open one; seen red first.
+
+**Done:** the marked requirement met (name the ids; BOB strikes the marks); `node /home/user/civicos-process/checks/fixtures.mjs <absolute root> action-plans --list` 0 failing; module tests green; format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B7 · CHANGE
+
+J5: `basis-versions` is now in action-plans' `uses` on `tranche/T51` (K5135). Merge `origin/tranche/T51` into your branch; your lazy-dependency reading is adopted (a host with no basis-versions keeps the old answer for an open question; a concluded stance never reads as still open).
+
+## B8 · CHANGE
+
+J5: `basis-versions` is now in action-plans' `uses` on `tranche/T51` (K5135). Merge `origin/tranche/T51` into your branch; your lazy-dependency reading is adopted (a host with no basis-versions keeps the old answer for an open question; a concluded stance never reads as still open).

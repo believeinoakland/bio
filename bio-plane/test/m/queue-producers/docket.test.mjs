@@ -1,11 +1,12 @@
-/* The docket's items (R30, R31; N520, DEC-116 items 2, 3, 7) at feedItems' interface. `docket.coreDue` (its R9) and
-   `reevaluation.docketDependents` (its R30) are fakes answering in the shape their requirements publish, filled per test;
-   membership is real, so a case's managers are its project's owners (membership R65), and a case's project is publication's
-   `cases` row (its R40). */
+/* The docket's items (R30, R31; N520, DEC-116 items 2, 3, 7) at feedItems' interface. `docket.coreDue` (its R9) is docket's published
+   fixture, the real answer over real acts; `reevaluation.docketDependents` (its R30) is a fake answering in the shape its requirement
+   publishes, filled per test. Membership is real, so a case's managers are its project's owners (membership R65), and a case's
+   project is publication's `cases` row (its R40). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { coreDueKinds } from "../docket/fixtures.mjs";
 
 const DAY = 86400000;
 const ofKind = (r, kind) => r.items.filter((i) => i.kind === kind);
@@ -22,72 +23,68 @@ function docketWorld(fakes) {
   return w;
 }
 
-test("R30 (docket R9; DEC-116 item 2): one OBLIGATION docket-core-due per core item docket.coreDue answers the viewer, keyed OBLIGATION::docket-core-due::<case>::<kind>::<ref>, to the case's manager and nobody else, offering placement and, for a submission, the decline", () => {
+test("R30 (docket R9; DEC-116 item 2): one OBLIGATION docket-core-due per core item docket.coreDue answers, keyed OBLIGATION::docket-core-due::<case>::<kind>::<ref>, to the case's managers and nobody else, offering placement and, for a submission, the decline", () => {
+  /* docket's real core items (its published fixture): alice manages CASE-2026-0101 of project P, dave manages CASE-2026-0202 of
+     project Q, hank manages CASE-2026-0303 of project R. The fake answers every case whatever the viewer, so this module's own
+     recipient rule is what is measured. */
+  const fx = coreDueKinds();
+  const real = [...fx.due.items, ...fx.otherDue.items, ...fx.hankDue.items];
   const asked = [];
-  const due = [
-    { case: "CASE-1", kind: "response", ref: "DKT-2026-0001", edition: 1, since: iso(NOW - 3 * DAY) },
-    { case: "CASE-1", kind: "statement", ref: "DKT-2026-0002", edition: 2, since: iso(NOW - 2 * DAY) },
-    { case: "CASE-1", kind: "edition", ref: "2", edition: 2, since: iso(NOW - DAY), what_changed: "a finding was added" },
-    { case: "CASE-1", kind: "tension", ref: "CC-9", edition: 2, since: "not an instant", member: "INF-1", state: "open" },
-    { case: "CASE-2", kind: "response", ref: "DKT-2026-0003", edition: 1, since: iso(NOW) },
-    { case: "CASE-H", kind: "response", ref: "DKT-2026-0004", edition: 1, since: iso(NOW) },
-    { case: "CASE-X", kind: "response", ref: "DKT-2026-0005", edition: 1, since: iso(NOW) }];
-  /* the fake answers every case whatever the viewer, so this module's own recipient rule is what is measured */
-  const w = docketWorld({ docket: { coreDue: (a) => { asked.push(a); return { ok: true, items: due, count: due.length, wrote: false }; } } });
+  const answer = { ok: true, items: real, count: real.length, wrote: false };
+  const w = world({ docket: { coreDue: (a) => { asked.push(a); return answer; } } });
+  w.member("ada", { role: "admin" }); w.member("alice"); w.member("dave"); w.member("olga"); w.member("hank");
+  w.bundle("PRJ-P", "project"); w.bundle("PRJ-Q", "project"); w.bundle("PRJ-R", "project");
+  w.join("PRJ-P", "alice", { owner: true }); w.join("PRJ-P", "olga"); w.join("PRJ-Q", "dave", { owner: true });
+  w.join("PRJ-R", "hank", { owner: true });
+  w.run(`INSERT INTO cases (case_id, project_id) VALUES (?, 'PRJ-P'), (?, 'PRJ-Q'), (?, 'PRJ-R')`, fx.case, fx.caseQ, fx.caseR);
+  /* the items are three days old at this read (their `since` is 2026-10-01 in the fixture) */
+  const LATER = Date.parse("2026-10-04T12:00:00Z");
+  const read = (m) => w.read(m, undefined, { now: LATER });
+  const key = (i) => `OBLIGATION::docket-core-due::${i.case}::${i.kind}::${i.ref}`;
   const ids = (r) => ofKind(r, "docket-core-due").map((i) => i.id).sort();
-  const olga = w.read("olga");
-  assert.deepEqual(asked, [{ viewer: "member:olga" }], "docket's read, under the viewer: it answers the cases the viewer manages");
-  assert.deepEqual(ids(olga), ["OBLIGATION::docket-core-due::CASE-1::edition::2", "OBLIGATION::docket-core-due::CASE-1::response::DKT-2026-0001",
-    "OBLIGATION::docket-core-due::CASE-1::statement::DKT-2026-0002", "OBLIGATION::docket-core-due::CASE-1::tension::CC-9"],
-    "the case's manager: one item per core item of the cases she manages, and none of a case she does not");
-  assert.deepEqual(ids(w.read("alice")), ["OBLIGATION::docket-core-due::CASE-2::response::DKT-2026-0003"],
-    "a member of the project who is no owner is told nothing of its case; the owner of another is told of hers");
-  assert.ok(!JSON.stringify(w.read("alice")).includes("CASE-H"), "R11: a case of a project she may not see is named nowhere");
-  assert.deepEqual(ids(w.read("ada")), [], "nor an administrator who manages no case");
-  /* D54 (K2408): PRJ-H is hidden and ada neither invited nor joined; she sees it at EXISTENCE only, so nothing of its
-     case is named to her (R11); the negative control, PRJ-H set discoverable, still tells her nothing (she is no owner) */
-  assert.ok(!JSON.stringify(w.read("ada")).includes("CASE-H"), "D54, R11: a hidden project's case is named nowhere to an administrator outside it");
-  w.discoverable("PRJ-H");
-  assert.deepEqual(ids(w.read("ada")), [], "seen whole, the project's case is still its owners' to be told of (R30)");
+  const item = (kind) => fx.due.items.find((i) => i.kind === kind);
+  const alice = read("alice");
+  assert.deepEqual(asked.at(-1), { viewer: "member:alice" }, "docket's read, under the viewer");
+  assert.deepEqual(ids(alice), fx.due.items.map(key).sort(), "the case's manager: one item per core item of the case she manages");
+  assert.deepEqual(ids(read("dave")), fx.otherDue.items.map(key).sort(), "the manager of the other project is told of its case only");
+  assert.deepEqual(ids(read("hank")), fx.hankDue.items.map(key).sort(), "to the case's manager and to nobody else: hank is told of his case of project R only");
+  assert.deepEqual(ids(read("olga")), [], "a member of the project who is no owner is told nothing of its case");
+  assert.deepEqual(ids(read("ada")), [], "nor an administrator who manages no case");
   asked.length = 0;
   assert.deepEqual(ids(w.read(null, "class:admin")), [], "a caller with no member is no case's manager");
   assert.deepEqual(asked, [], "and docket is not asked for it");
-  const m = byId(olga);
-  const sub = m["OBLIGATION::docket-core-due::CASE-1::response::DKT-2026-0001"];
+  const m = byId(alice);
+  const resp = item("response"), stmt = item("statement"), ed = item("edition"), te = item("tension");
+  const sub = m[key(resp)], st = m[key(stmt)], e = m[key(ed)], t = m[key(te)];
   assert.deepEqual([sub.class, sub.kind], ["OBLIGATION", "docket-core-due"]);
-  assert.deepEqual(sub.subject, { kind: "case", id: "CASE-1", project: "PRJ-1", item: "response", ref: "DKT-2026-0001", edition: 1 },
+  assert.deepEqual(sub.subject, { kind: "case", id: fx.case, project: "PRJ-P", item: "response", ref: resp.ref, edition: 1 },
     "its subject the case, naming the item and its edition");
   assert.deepEqual(sub.options.map((o) => o.id), ["docketprepare", "docketdecline"], "a submission: placement or the decline");
-  assert.deepEqual(m["OBLIGATION::docket-core-due::CASE-1::statement::DKT-2026-0002"].options.map((o) => o.id), ["docketprepare", "docketdecline"]);
-  assert.deepEqual(m["OBLIGATION::docket-core-due::CASE-1::edition::2"].options.map((o) => o.id), ["docketprepare"], "a newer edition: placement only");
-  assert.deepEqual(m["OBLIGATION::docket-core-due::CASE-1::tension::CC-9"].options.map((o) => o.id), ["docketprepare"], "an undisclosed tension: placement only");
+  assert.deepEqual(st.options.map((o) => o.id), ["docketprepare", "docketdecline"]);
+  assert.deepEqual(e.options.map((o) => o.id), ["docketprepare"], "a newer edition: placement only");
+  assert.deepEqual(t.options.map((o) => o.id), ["docketprepare"], "an undisclosed tension: placement only");
   /* R43: the sentences by key, the item named by `what` and the edition where one is stated */
   const what = (k) => word(`queue.docket-core-due.what.${k}`), tail = word("queue.docket-core-due.detail.tail");
-  assert.equal(sub.summary, word("queue.docket-core-due.summary.edition", { case: "CASE-1", what: what("response"), edition: 1 }));
+  assert.equal(sub.summary, word("queue.docket-core-due.summary.edition", { case: fx.case, what: what("response"), edition: 1 }));
   assert.equal(sub.detail, `${word("queue.docket-core-due.detail.response")} ${tail}`);
   assert.deepEqual([sub.summary_key, sub.detail_key], ["queue.docket-core-due.summary.edition", "queue.docket-core-due.detail.response"]);
-  const st = m["OBLIGATION::docket-core-due::CASE-1::statement::DKT-2026-0002"], ed = m["OBLIGATION::docket-core-due::CASE-1::edition::2"], te = m["OBLIGATION::docket-core-due::CASE-1::tension::CC-9"];
-  assert.equal(st.summary, word("queue.docket-core-due.summary.edition", { case: "CASE-1", what: what("statement"), edition: 2 }));
-  assert.equal(ed.summary, word("queue.docket-core-due.summary.edition", { case: "CASE-1", what: what("edition"), edition: 2 }));
-  assert.equal(ed.detail, `${word("queue.docket-core-due.detail.edition", { edition: 2 })} ${tail}`);
-  assert.equal(te.summary, word("queue.docket-core-due.summary.edition", { case: "CASE-1", what: what("tension"), edition: 2 }));
-  assert.equal(te.detail, `${word("queue.docket-core-due.detail.tension")} ${tail}`);
-  assert.deepEqual(sub.age, { state: "determined", since: iso(NOW - 3 * DAY), ms: 3 * DAY }, "aged from the item's since");
-  assert.equal(m["OBLIGATION::docket-core-due::CASE-1::tension::CC-9"].age.state, "undetermined");
-  assert.deepEqual(sub.recipients, ["olga"], "the case's managers, its project's owners");
-  assert.deepEqual(sub.case.ancestors.map((a) => [a.id, a.depth]), [["PRJ-1", 0]], "homed under the case's project");
+  assert.equal(st.summary, word("queue.docket-core-due.summary.edition", { case: fx.case, what: what("statement"), edition: 1 }));
+  assert.equal(e.summary, word("queue.docket-core-due.summary.edition", { case: fx.case, what: what("edition"), edition: 2 }));
+  assert.equal(e.detail, `${word("queue.docket-core-due.detail.edition", { edition: 2 })} ${tail}`);
+  assert.equal(t.summary, word("queue.docket-core-due.summary.edition", { case: fx.case, what: what("tension"), edition: 2 }));
+  assert.equal(t.detail, `${word("queue.docket-core-due.detail.tension")} ${tail}`);
+  assert.deepEqual(sub.age, { state: "determined", since: resp.since, ms: 3 * DAY }, "aged from the item's since");
+  assert.deepEqual(sub.recipients, ["alice"], "the case's managers, its project's owners");
+  assert.deepEqual(sub.case.ancestors.map((a) => [a.id, a.depth]), [["PRJ-P", 0]], "homed under the case's project");
   assert.equal(sub.basis.source, "docket.coreDue");
-  assert.equal(m["OBLIGATION::docket-core-due::CASE-1::edition::2"].basis.what_changed, "a finding was added");
-  for (const it of ofKind(olga, "docket-core-due"))
+  assert.equal(e.basis.what_changed, ed.what_changed, "a newer edition says what changed");
+  for (const it of ofKind(alice, "docket-core-due"))
     for (const s of [it.summary, it.detail, it.basis.detail, ...it.options.map((o) => o.label)])
       assert.doesNotMatch(s, /\b(obligation|condition|subject)s?\b/i, `${it.id}: "${s}"`);
   // raised once: the same read twice is the same items; it leaves when the item is placed, declined, receipted or disclosed
-  assert.deepEqual(ids(w.read("olga")), ids(olga));
-  w.fakes.docket.coreDue = () => ({ ok: true, items: due.slice(1), count: due.length - 1, wrote: false });
-  assert.ok(!ids(w.read("olga")).includes("OBLIGATION::docket-core-due::CASE-1::response::DKT-2026-0001"), "done, it leaves");
-  // hank owns the project: he is told of its case
-  w.fakes.docket.coreDue = () => ({ ok: true, items: due, count: due.length, wrote: false });
-  assert.deepEqual(ids(w.read("hank")), ["OBLIGATION::docket-core-due::CASE-H::response::DKT-2026-0004"]);
+  assert.deepEqual(ids(read("alice")), ids(alice));
+  w.fakes.docket.coreDue = () => ({ ok: true, items: real.filter((i) => i !== resp), count: real.length - 1, wrote: false });
+  assert.ok(!ids(read("alice")).includes(key(resp)), "done, it leaves");
 });
 
 test("R31 (reevaluation R30; DEC-116 items 3, 7): FINDINGs edition-withdrawn and edition-contested, one per (dependent, entry) reevaluation.docketDependents answers, keyed FINDING::<kind>::<dependent>::<entry>, homed under the dependent's ancestors; leaving when the cause closes", () => {

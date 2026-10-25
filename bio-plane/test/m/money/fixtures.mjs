@@ -14,3 +14,28 @@ export function readFactOf(over = {}) {
   const s = seeded();
   return s.m.readFact({ factId: s.rec(over), viewer: ANN });
 }
+
+/** `money.checkConstant` for a value money can read (R7): `{ok:true, role}`. */
+export function checkConstantOk(role = "period", value = "2026-01-01/2026-12-31") {
+  return seeded().m.checkConstant({ role, value });
+}
+
+/** `money.checkConstant` for a value money cannot read (R7): money's own refusal beside the role, `MONEY_BAD_PERIOD` for the
+ *  period `"2026"`. */
+export function checkConstantRefused(role = "period", value = "2026") {
+  return seeded().m.checkConstant({ role, value });
+}
+
+/** `money.factBySource` for a source row a live fact was written from (R7): `{ok:true, found:true, fact_id}`; `fact_id` is
+ *  the fact's. */
+export function factBySourceFound() {
+  const s = seeded();
+  s.bindings.set("BIND-1", { adopted: true, table: "T-1", roles: {}, capture_sha: s.cap });
+  s.rec({ source: { table: "T-1", row: "1", binding: "BIND-1" } });
+  return s.m.factBySource({ table: "T-1", row: "1", binding: "BIND-1" });
+}
+
+/** `money.factBySource` for a source row no live fact was written from (R7): `{ok:true, found:false}`. */
+export function factBySourceNone() {
+  return seeded().m.factBySource({ table: "T-1", row: "1", binding: "BIND-1" });
+}

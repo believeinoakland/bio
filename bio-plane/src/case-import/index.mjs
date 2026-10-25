@@ -832,8 +832,9 @@ export class CaseImport {
     const imports = this.#rows(`SELECT * FROM case_imports ORDER BY source_group, case_id, import_id`).map((i) => {
       const wf = this.#watchFacts(i);
       const editions = this.#editionsOf(i, wf);
-      return { import: i.import_id, group: i.source_group, case: i.case_id, lens: i.lens ?? null,
-               latest_edition: editions.length ? editions[editions.length - 1].edition : null, editions, ...wf.facts };
+      const latest = editions.length ? editions[editions.length - 1].edition : null;
+      return { import: i.import_id, group: i.source_group, case: i.case_id, scope: this.#scopeOf(i.import_id, latest), lens: i.lens ?? null,
+               latest_edition: latest, editions, ...wf.facts };
     });
     return { ok: true, imports, count: imports.length, wrote: false };
   }
@@ -862,8 +863,16 @@ export class CaseImport {
       : int(edition);
     const e = i && named ? this.#edition(i.import_id, named) : null;
     if (!e) return this.#noSuchEdition(importId, edition);
-    return { ok: true, import: i.import_id, group: i.source_group, case: i.case_id, lens: i.lens ?? null, editions,
+    return { ok: true, import: i.import_id, group: i.source_group, case: i.case_id, scope: this.#scopeOf(i.import_id, Number(e.edition)),
+             lens: i.lens ?? null, editions,
              edition: { ...this.#editionView(i, e, viewer), ...wf.publisher(Number(e.edition)) }, ...wf.facts, wrote: false };
+  }
+
+  /* R4: the case's scope, its reading name: the `case_scope` of the edition's case document; null where the edition holds no
+     document or it states none, never the id. */
+  #scopeOf(importId, ed) {
+    const fm = ed === null || ed === undefined ? null : this.#documentFront(importId, ed);
+    return fm ? str(fm.case_scope) : null;
   }
 
   /* R26: who imported an edition, as the list draws it: the member and the handle `membership.memberFacts` gives (null
@@ -921,6 +930,8 @@ export class CaseImport {
     const findings = (rec ? rec.findings : []).map((f) => ({
       ...f,
       ref: importedFindingRef(i.import_id, f.finding),
+      /* R4 (K5148): the finding's title from its file's front matter (R31's rule), null where none, never the id */
+      title: this.#findingTitle(i.import_id, ed, f.finding),
       against_own_bar: againstBar(f.role, f.pair, own.bar),
       /* R23: the finding under this group's own lens, beside the source's (its recorded result and pair) and this bar */
       own_lens: lens.finding(f),

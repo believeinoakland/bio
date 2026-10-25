@@ -9,7 +9,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import "./harness.mjs";
-import { staleBaseRefusal } from "../promotion/fixtures.mjs";
+import { staleBaseRefusal, promoteControlled } from "../promotion/fixtures.mjs";
+import { homeOfWorld } from "../provenance/fixtures.mjs";
 const { record: fixture } = await import("./record.mjs");
 const P = await import("../../../src/store-door/pull.mjs");
 const { doorbellOf, REASON_MAX, PULL_WITHIN_FAILED_DETAIL } = await import("../../../src/doorbell/index.mjs");
@@ -186,9 +187,11 @@ test("R7, R1 (N364, N381): the pull is a route of the record store's door, besid
 
 /* The promotion's answer controlled, the doorbell and record-core real: what reaches the promotion, and when. */
 function promotionStandIn(r, decide) {
-  const seen = [];
+  const seen = [], answered = [];
+  /* the success answer is promotion's real one (its fixture), with the bundle id the pull asked for */
+  const real = promoteControlled();
   return {
-    seen,
+    seen, answered,
     promote(pkg) {
       const at = seen.length;
       seen.push(pkg);
@@ -198,7 +201,8 @@ function promotionStandIn(r, decide) {
       /* a write the promotion makes, so its rollback in a dry run is seen */
       r.db.prepare("CREATE TABLE IF NOT EXISTS standin_writes (id TEXT)").run();
       r.db.prepare("INSERT INTO standin_writes VALUES (?)").run(pkg.bundleId);
-      return { ok: true, bundleId: pkg.bundleId, bundleSha: "b".repeat(64) };
+      answered.push({ ...real.promote(), bundleId: pkg.bundleId });
+      return answered.at(-1);
     },
   };
 }
@@ -208,8 +212,8 @@ test("R7 (N364, N380, N386): one pull files the capture and promotes its documen
   const r = await record();
   const k = await r.knock("the minutes they did not publish");
   const promotion = promotionStandIn(r, () => true);
-  let homes = 0;
-  const deps = { doorbell: doorbellOf(r.ctx), promotion, record: recordOf(r.ctx), provenance: { homeOf: () => { homes++; return null; } } };
+  const world = homeOfWorld({ sha: k.sha256 });
+  const deps = { doorbell: doorbellOf(r.ctx), promotion, record: recordOf(r.ctx), provenance: world.provenance };
   const now = () => Date.parse("2026-09-30T12:34:56.789Z");
   const a = await P.pullAndFile(deps, { knockId: k.knockId, by: "ann", identity: "member:ann", viewer: "member:ann", now });
   assert.equal(a.ok, true, JSON.stringify(a).slice(0, 300));
@@ -219,7 +223,8 @@ test("R7 (N364, N380, N386): one pull files the capture and promotes its documen
   assert.equal(promotion.seen.length, 1);
   const [real] = promotion.seen;
   assert.deepEqual(standinWrites(r), [real.bundleId]);
-  assert.deepEqual(a.bundle, { bundleId: real.bundleId, bundleSha: "b".repeat(64) });
+  assert.deepEqual(a.bundle, { bundleId: real.bundleId, bundleSha: promotion.answered[0].bundleSha });
+  assert.match(a.bundle.bundleSha, /^[0-9a-f]{64}$/);
   assert.match(real.bundleId, /^INFO-2026-0001-doorbell-knock$/);
   /* N386: the pull's instant, to the second (record-core R47's "second" spelling) */
   assert.deepEqual([a.pulled_at, real.meta.created, r.state(k.knockId).pulled_at], Array(3).fill("2026-09-30T12:34:56Z"));
@@ -240,7 +245,7 @@ test("R7 (N364, N380, N386): one pull files the capture and promotes its documen
   /* the knock is pulled by the puller, with its receipt */
   assert.deepEqual([r.state(k.knockId).status, r.state(k.knockId).pulled_by], ["pulled", "ann"]);
   assert.equal(provenanceOf(r.ctx).registerHolds({ sha: k.sha256 }).acquired, true);
-  assert.equal(homes, 0, "a fresh pull promotes; it does not look for a home");
+  assert.equal(world.calls(), 0, "a fresh pull promotes; it does not look for a home");
 });
 
 test("R7 (N380, K559; doorbell R13): the pull and its promotion are one act — a promotion that refuses, or throws, leaves neither written (the knock as it was, no receipt, no actor, no bundle, no id drawn), and the next pull files it; a fault's message is not carried", async () => {
@@ -276,9 +281,8 @@ test("R7 (N364, K559): a pulled knock no bundle holds (pulled through the doorbe
     const k = await r.knock(`residue ${JSON.stringify(fault)}`);
     const pulledAround = await doorbellOf(r.ctx).pullKnock({ knockId: k.knockId, by: "bea" });
     assert.equal(pulledAround.ok, true);
-    let home = null;
     const promotion = promotionStandIn(r, (i) => (i === 0 ? fault : true));
-    const deps = { doorbell: doorbellOf(r.ctx), promotion, record: recordOf(r.ctx), provenance: { homeOf: () => home } };
+    const deps = { doorbell: doorbellOf(r.ctx), promotion, record: recordOf(r.ctx), provenance: homeOfWorld({ sha: k.sha256 }).provenance };
     const who = { knockId: k.knockId, by: "ann", identity: "member:ann", viewer: "member:ann" };
     const first = await P.pullAndFile(deps, who);
     assert.deepEqual([first.ok, first.reason, first.knockId], [false, "PROMOTE_FAILED", k.knockId]);
@@ -293,7 +297,7 @@ test("R7 (N364, K559): a pulled knock no bundle holds (pulled through the doorbe
     assert.deepEqual(standinWrites(r), [again.bundle.bundleId]);
     assert.deepEqual(JSON.parse(promotion.seen.at(-1).files.find((f) => f.path === "data/provenance.json").text).documents[0], again.document);
     /* negative control: once a bundle holds the capture, a pull answers it and promotes nothing */
-    home = { bundleId: again.bundle.bundleId };
+    deps.provenance = homeOfWorld({ sha: k.sha256, bundleId: again.bundle.bundleId }).provenance;
     const asked = promotion.seen.length;
     const third = await P.pullAndFile(deps, who);
     assert.deepEqual([third.ok, third.existed, third.bundle], [true, true, { bundleId: again.bundle.bundleId, bundleSha: null, existed: true }]);
@@ -307,6 +311,7 @@ test("R7 (T42; N826; K2656; doorbell R13, R3): the internal route `inboxpullfile
   const d = doorbellOf(r.ctx), c = captureOf(r.ctx);
   assert.notEqual(d, c);
   const asked = { doorbell: [], capture: [] };
+  // fixtures-generic: DOORBELL_ANSWERED
   const spy = (who, inst, name) => {
     inst[name] = (args) => { asked[who].push({ name, args }); return { ok: false, reason: `${who.toUpperCase()}_ANSWERED`, knockId: args.knockId }; };
   };
@@ -315,6 +320,7 @@ test("R7 (T42; N826; K2656; doorbell R13, R3): the internal route `inboxpullfile
     const direct = await r.go(`inboxpullfile?${SESSION}`, "POST", { knockId: k.knockId });
     assert.equal(direct.json.result.reason, "DOORBELL_ANSWERED", JSON.stringify(direct.json).slice(0, 300));
     const resolved = await r.go(`inboxpullfile?${SESSION}&resolve=pulled`, "POST", { knockId: k.knockId, status: "pulled", reason: "worth a look" });
+    // fixtures-generic: DOORBELL_ANSWERED
     assert.equal(resolved.json.result.reason, "DOORBELL_ANSWERED");
     assert.deepEqual(asked.doorbell.map((x) => x.name), ["pullKnock", "inboxResolve"]);
     const [p, s] = asked.doorbell.map((x) => x.args);
@@ -399,4 +405,55 @@ test("R18 control: a reading already held for the digest (extraction's), or one 
   const noPuller = await P.pullAndFile(deps(null), { ...who, by: undefined, knockId: (await r.knock("no puller")).knockId });
   assert.equal(noPuller.ok, false);
   assert.equal("reading_pending" in noPuller, false);
+});
+
+test("R7 (K5129; WALK-FINAL-04B row R39): bytes the record already holds are pulled `existed: true` and the doorbell's `holder` is the holding bundle to a viewer who may see it — the pull and the `pulled` resolve alike — and null to a viewer who may not (negative control: no viewer stamped)", async () => {
+  const r = await record();
+  /* each knock from its own sender, so the doorbell's per-sender limit does not meet the repetition */
+  let n = 10;
+  const again = async () =>
+    (await r.go(`knock?source=203.0.113.${n++}`, "POST", { content: "the same bytes twice", now: Date.now() })).json.result;
+  const first = await again();
+  const filed = await r.go(`inboxpullfile?${SESSION}`, "POST", { knockId: first.knockId });
+  assert.equal(filed.json.result.ok, true, JSON.stringify(filed.json).slice(0, 300));
+  const home = filed.json.result.bundle.bundleId;
+  const deps = () => ({ doorbell: doorbellOf(r.ctx), promotion: promotionOf(r.ctx), record: recordOf(r.ctx), provenance: provenanceOf(r.ctx) });
+  const who = { by: "ann", identity: "member:ann" };
+  for (const [name, extra] of [["pull", {}], ["resolve", { resolve: true, reason: "already in the record" }]]) {
+    const seen = await again();
+    const a = await P.pullAndFile(deps(), { ...who, knockId: seen.knockId, viewer: "member:ann", ...extra });
+    assert.equal(a.ok, true, `${name}: ${JSON.stringify(a).slice(0, 300)}`);
+    assert.deepEqual([a.existed, a.holder], [true, home], `${name}: the viewer may see the holding bundle`);
+    assert.equal(a.bundle.bundleId, home);
+    const blind = await again();
+    const b = await P.pullAndFile(deps(), { ...who, knockId: blind.knockId, viewer: "visitor", ...extra });
+    assert.deepEqual([b.ok, b.existed, b.holder], [true, true, null], `${name}: a viewer who may not see it is told no holder ${JSON.stringify(b).slice(0, 300)}`);
+    const none = await again();
+    const c = await P.pullAndFile(deps(), { ...who, knockId: none.knockId, ...extra });
+    assert.deepEqual([c.ok, c.existed, c.holder], [true, true, null], `${name}: no viewer, no holder`);
+  }
+});
+
+test("R7 (K5129; screens-intake R32 (3)): the pulled bundle's title names the knock's instant as a date a member reads and no knock id — in the pulled document, the bundle's meta and its bundle.md — and the door's list draws that title", async () => {
+  const r = await record();
+  const k = await r.knock("the minutes they did not publish", { now: Date.parse("2026-09-30T12:34:56.789Z") });
+  const promotion = promotionStandIn(r, () => true);
+  const world = homeOfWorld({ sha: k.sha256 });
+  const deps = { doorbell: doorbellOf(r.ctx), promotion, record: recordOf(r.ctx), provenance: world.provenance };
+  const a = await P.pullAndFile(deps, { knockId: k.knockId, by: "ann", identity: "member:ann", viewer: "member:ann", now: () => Date.parse("2026-10-02T08:00:00Z") });
+  assert.equal(a.ok, true, JSON.stringify(a).slice(0, 300));
+  const [real] = promotion.seen;
+  const md = real.files.find((f) => f.path === "bundle.md").text;
+  for (const title of [real.meta.title, JSON.parse(/^title: (.*)$/m.exec(md)[1])]) {
+    assert.equal(title, "Material handed in at the doorbell on 30 September 2026");
+    assert.equal(/KNOCK-/i.test(title), false);
+    assert.equal(title.includes(k.knockId), false);
+  }
+  /* through the real promotion and the record's own list */
+  const k2 = await r.knock("a second batch of minutes");
+  const p = await r.go(`inboxpullfile?${SESSION}`, "POST", { knockId: k2.knockId });
+  assert.equal(p.json.result.ok, true, JSON.stringify(p.json).slice(0, 300));
+  const head = recordOf(r.ctx).head(p.json.result.bundle.bundleId);
+  assert.match(head.title, /^Material handed in at the doorbell on \d{1,2} [A-Z][a-z]+ \d{4}$/);
+  assert.equal(head.title.includes(k2.knockId), false);
 });

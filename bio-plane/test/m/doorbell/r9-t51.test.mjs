@@ -4,6 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bucket, sha, register } from "./fixture.mjs";
+// fixtures-contract: plane job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 
 const BY = "member:bob";
@@ -19,6 +20,7 @@ const setup = () => {
 };
 /* the registrar as plane wires it: a synchronous write the pull's transaction rolls back with, so the stub is made part of record-core's
    transaction (a throw or a refusal rolls its rows back as it rolls back the SQL rows) */
+// fixtures-contract: plane job-registrar
 const registrar = (w, store = w.cap) => {
   const j = jobRegistrarStub();
   store.registerJob = j.registerJob;
@@ -81,6 +83,8 @@ test("R28 (G126): a pull of bytes already pulled, or held by the record, registe
 });
 
 test("R28 (G126): a registrar that refuses, or throws, rolls the pull back and is answered with the knock's id: no actor, the knock unpulled, no row; the same knock pulled with a working registrar is R13's act", async () => {
+  // fixtures-generic: JOB_TABLE_FULL a refusal made up on purpose: the pull answers any registrar refusal as JOB_NOT_REGISTERED
+  // fixtures-contract: plane job-registrar
   for (const bad of [() => ({ ok: false, reason: "JOB_TABLE_FULL" }), () => { throw new Error("down"); }, () => undefined]) {
     const w = setup(); registrar(w);
     const k = await knockOf(w, "refused by the registrar");
