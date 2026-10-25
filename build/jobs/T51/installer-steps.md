@@ -392,3 +392,15 @@ COMPLETE (B26, job 82 addition). Pushed on job/T51/installer-steps; tranche/T51 
 **Checks:** `newgroup/test/steps/` 123 tests, 0 fail. format, architecture, coverage, words, ownership: 0 failures each. Installer's suite (`newgroup/test/`): 15 reds, all inherited (16 before the merge of the tranche tip; none from this change). Stale generated artifact: `newgroup/dist/newgroup.bundled.mjs`.
 
 Size (session_01PdTWUBacQLSzCMnpG4EoW6): test runs 3, module lines 2182
+
+## Fix round 10, Wave B batch 6 (INSTALLER-STEPS #12, B27)
+
+**Causes done.** `credentials/bootstrapVersions` (2 lines, verify.test.mjs R28 `verifyServing`): the three hand-built `bootstrap` replies (an early `1.0.0`, the right versions, a lagging store `1.0.0` with member versions) are now `bootstrapVersions({...})` of `bio-plane/test/m/credentials/fixtures.mjs`, made by credentials' real code and served by the test's fake network. The stub arms of R28 (`servingVerdict`, which take a verdict object, not a reply) are untouched.
+
+**Left, waiting.** `instance-setup/selftestAnswer` (verify.test.mjs:49, R27 "ok without the store is not an answer"): the provider's `fixtures.mjs` is on `origin/job/T51/instance-setup` but not on `tranche/T51` (checked at abc0c02d68), so there is nothing for me to import without merging another module's branch. The line stays hand-built until it is on the tranche; then it is one line (`await selftestAnswer()`, status 500, `ok:false`, `bindings.STORE:false`). No `fixtures-own` or `fixtures-generic` marker added.
+
+**Needs BOB.** `architecture` fails once: the new import of `credentials`' fixtures is not declared in installer-steps' `uses` in `build/modules.json` (now `signatures`, `instance-setup`); BOB adds `credentials` (and `instance-setup` already covers the second line). I may not edit modules.json.
+
+**Tests and checks.** `newgroup/test/steps/*.test.mjs`: 123 tests, 121 pass, 0 fail. words 0 failures; format 0 failures; coverage 45 of 45; ownership 0 failures; architecture 1 failure (above); fixtures `--list` 1 failure (selftest, waiting); impact: 0 affected modules.
+
+Size (session_01Qsr6sBAiKXETnXBTaFti8B): test runs 2, module lines 1,734
