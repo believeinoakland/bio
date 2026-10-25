@@ -1090,8 +1090,9 @@ export class Ratification {
     return { published: true, published_at: out.ratified_at, caseId: id, edition: ed, after };
   }
 
-  /* Each roster member's `basis` at the bytes its `case_roles` row pins (record-core R60), for the case gate's C-2.8
-     arms; a member whose pinned bytes the record cannot produce is absent, so those arms are left unasked for it
+  /* Each roster member's `{basis, references}` at the bytes its `case_roles` row pins (record-core R60), for the case
+     gate's C-2.8 arms (case-catalogue R6: a severed reference at the pinned bytes drops its leg there, as on the member's
+     own arm); a member whose pinned bytes the record cannot produce is absent, so those arms are left unasked for it
      (publication's `caseDocumentFacts` builds the act's the same way). */
   #memberBasisAtPins(fm) {
     const out = {};
@@ -1100,7 +1101,8 @@ export class Ratification {
       const text = this.record.textAtSha(r.target, typeof r.version_sha === "string" ? r.version_sha : null);
       if (text === null) continue;
       const mfm = parseFrontmatter(text).data || {};
-      out[r.target] = Array.isArray(mfm.basis) ? mfm.basis : [];
+      out[r.target] = { basis: Array.isArray(mfm.basis) ? mfm.basis : [],
+                        references: Array.isArray(mfm.references) ? mfm.references : [] };
     }
     return out;
   }
