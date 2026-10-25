@@ -175,3 +175,17 @@ G50 (105) done: `bio-case-file/4` with the capture in the path for a ref on seve
 - Census ops: none changed.
 
 Size (session_01AWTXz3dDga9C9mXYok9S8p): test runs 33, module lines 3126
+
+## Completion (T51 fix round 10, B7, R34)
+
+**What changed.** New `bio-plane/src/case-grammar/basisversion.mjs`, exported from `index.mjs:64`. R34's two flat optional fields on each member's `case_roles:` row, as R22's `subject_entity` is (no new format version): `basis_version` (the version's name, 1-64 characters, folded to one line by `fmSafe`) and `basis_version_identity` (the SHA-256 of its composition, 64 lowercase hex). `memberBasisVersionLines(version)` writes the two lines for `{name, identity}`; anything else (`null` for a project that stated none, a half pair, a bad identity, a name over 64) writes both `null`, so nothing is filled. `memberBasisVersionOf(fm, finding)` answers `{recorded, name, identity}`: `recorded: true` with name and identity; `recorded: true` with both null when the row states none; `recorded: false` (undetermined, R6, never filled) when the document predates R34, the row names no such member, or the pair is malformed or half stated. Pure; never throws.
+
+**Tests (failing first).** `bio-plane/test/m/case-grammar/basisversion.test.mjs`, four tests naming R34. Run before the module existed: 4 fail (`memberBasisVersionOf is not a function`); after: 4 pass. They cover a round trip for formats `/8`, `/7`, `/6`, `/5`, a project stating none, a silent older document, the writer refusing half pairs and folding a name, and the reader's controls (malformed pairs, odd input, throwing getters, the front matter untouched).
+
+**Suite and checks.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/case-grammar/`: 189 tests, 189 pass, 0 fail. `impact.mjs origin/tranche/T51 HEAD` before my commit: 0 affected (the new exports are used by no module yet). `checks/run.mjs`: format 0 failures; architecture 0; coverage for case-grammar 34 of 34 (R34 now named); `words.mjs`: no finding in `basisversion.mjs`, this job adds no sentence a person reads. `fixtures.mjs case-grammar --list`: 0, no `fixtures-own` or `fixtures-generic` marker added. `ownership.mjs`: 0 failures.
+
+**Met ids.** R34 (BOB strikes the mark).
+
+**For BOB.** (1) R34 names no field: BOB's wording edit should state `basis_version` and `basis_version_identity` on the `case_roles:` row, `memberBasisVersionLines` and `memberBasisVersionOf` in Provides, and that the identity is the SHA-256 of the version's composition (`basis-version-grammar` R5), which `case-authoring` R87 computes. (2) No reader rejects the new fields: `case-catalogue/checks.mjs` C-41 and `case-checker/check.mjs:355` read `case_roles:` rows by field and flag no unknown field; `case-checker` and `ratification` need no change to accept it. (3) `case-checker`'s standalone `program.mjs` is generated and unchanged by this job; it does not read the new fields.
+
+Size (session_01HFdVc2sq2GVhUrdUT8EUik): test runs 6, module lines 3224
