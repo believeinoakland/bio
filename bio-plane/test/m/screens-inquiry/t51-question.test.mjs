@@ -5,9 +5,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { registerDeclaredOps as registerOps } from "../../../src/op-declarations/index.mjs";
-import { ok, refusedIn } from "../interface-shell/harness.mjs";
+import { boot, ok, refusedIn } from "../interface-shell/harness.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
-import { open, main, actsIn, press, fill, plane, inquiryMd, INQUIRY_REFS, DOCUMENT_MD, provenanceOf, SHA, POLICY, LEGS, says, section, lead, word, day, P, Q, D } from "./fixtures.mjs";
+import { open, storeWorld, main, actsIn, press, fill, plane, inquiryMd, INQUIRY_REFS, DOCUMENT_MD, provenanceOf, SHA, POLICY, LEGS, says, section, lead, word, day, SCREENS, P, Q, D } from "./fixtures.mjs";
 
 /* K4245 (test-support R17): every owner's declarations registered once, before the first read, by the one registrar */
 
@@ -15,21 +15,41 @@ const at = "/app/question/" + Q;
 const GROUNDS = [{ ground: "part 1", asserted_by: "member:dev", at: "2026-10-05T09:00:00Z" }];
 const grouped = (o = {}) => inquiryMd(P, INQUIRY_REFS, { legs: LEGS.map((l) => (l.target === D ? { ...l, ground: "part 1" } : l)), grounds: GROUNDS, ...o });
 const A = { images: { [Q]: { "bundle.md": grouped() } } };
+/* still scripted (airuns, and the airun/versionaccept/versionconsider of R74): needed: a question holding a machine-authored reading (suggested by an assistant run, with its run and the bias it was composed under); no act of the world makes one */
 const REACH = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }), agentpack: ok({ ok: true, pack: { version: "p@1" } }), airuns: ok({ ok: true, runs: [] }) };
 const reach = (o = {}) => ({ ...o, boot: { plane: { ...plane(o), ...REACH, ...(o.reach || {}) } } });
 const choose = async (p, id, value) => { const el = p.doc.getElementById(id); el.value = value; p.fire(el, "change"); await p.settle(); };
 const aside = (rows, extra = {}) => (r) => ok(r.query.aside ? { ok: true, aside: rows, count: rows.length, next: null, truncated: false, ...extra } : { items: [] });
 const row = (o = {}) => ({ scope: "project", finding: Q, project: P, key: P + "::" + Q, state: "deferred", reason: "waiting for the 2026 log", decided_by: "mai", at: "2026-10-18T09:00:00Z", definition_version: null, title: null, ...o });
+const OWN = { capabilities: ["contribute", "create_projects"] };
+/** A project of `ann`'s (named Pothole repairs) with `n` held documents and a question of hers resting on them, drawn into the project (or into none), by real acts.
+ *  Answers `{world, ann, project, targets, id, page(opts, who, path), question(title)}`; `page` boots the question's page over the world's door as `who` (default `ann`). */
+const worldOf = async ({ n = 2, filed = true } = {}) => {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const project = await world.recipes.project(ann, "Pothole repairs");
+  const targets = [];
+  for (let i = 0; i < n; i++) targets.push((await world.recipes.hold(ann, i ? "Passage " + (i + 1) : POLICY, "The Director shall repair each reported pothole, part " + (i + 1) + ".", project)).bundle);
+  const question = async (title = "Seven days", o = {}) => (await world.recipes.question(ann, filed ? project : null, { title, text: "Is the city repairing reported potholes within seven days?", legs: targets.map((target) => ({ target, role: "supports" })), draw: filed, ...o })).id;
+  const id = await question();
+  const page = async (o = {}, who = ann, path = "/app/question/" + id) => {
+    const { door, session } = world.boot(who);
+    const p = await boot({ screens: SCREENS, door, session, path, ...o });
+    await p.settle();
+    return p;
+  };
+  return { world, ann, project, targets, id, page, question };
+};
+/** the decisions the project has made about its questions, as the set-aside list gives them */
+const decisions = async (w) => (await w.ann.read("queue", { query: { aside: "true", limit: "500" } })).aside;
 const asideReads = (p) => p.byOp("queue").filter((r) => r.query.aside);
 
 /* ---------------------------------------------------------------------------------------------------------------------- R71 */
 
 test("R71 the fold sets the question aside for the project: nothing preselected; with no choice or no reason nothing is sent; with both, proposedispose carries the project, the question, the choice and the reason, and the receipt is drawn", async () => {
-  let rows = [];
-  const p = await open(at, { ...A, plane: { queue: (r) => aside(rows)(r), proposedispose: (r) => {
-    rows = [row({ state: r.body.to, reason: r.body.reason })];
-    return ok({ ok: true, scope: "project", key: P + "::" + Q });
-  } } });
+  const w = await worldOf();
+  const P = w.project, Q = w.id;
+  const p = await w.page();
   const more = main(p).querySelector('details[data-fold="more"]');
   const fold = more.querySelector('details[data-aside="set"]');
   assert.ok(fold, "in state a, under More you can do");
@@ -54,7 +74,8 @@ test("R71 the fold sets the question aside for the project: nothing preselected;
   assert.deepEqual(p.byOp("proposedispose")[0].body, { project: P, finding: Q, to: "deferred", reason: "waiting for the 2026 log" });
   /* the receipt, read from the set-aside list; the fold gives way to "Change your decision" */
   const r = main(p).querySelector('[data-aside="deferred"]');
-  assert.ok(r && says(r, "screen.question.say000", { project: "Pothole repairs", date: day("2026-10-18") }));
+  const first = (await decisions(w))[0];
+  assert.ok(r && says(r, "screen.question.say000", { project: "Pothole repairs", date: day(first.at) }));
   assert.ok(r.textContent.includes("waiting for the 2026 log") && says(r, "shell.reason.lead") && says(r, "screen.question.say001", { project: "Pothole repairs" }) && says(r, "screen.question.say002"));
   assert.equal(main(p).querySelector('details[data-aside="set"]'), null);
   /* "Change your decision": the same choice (nothing preselected), a reason that replaces the earlier one */
@@ -65,7 +86,8 @@ test("R71 the fold sets the question aside for the project: nothing preselected;
   fill(p, { "question-aside2-why": "the city retired the standard" });
   await press(p, "proposedispose", { within: change });
   assert.deepEqual(p.byOp("proposedispose")[1].body, { project: P, finding: Q, to: "dismissed", reason: "the city retired the standard" });
-  assert.ok(says(main(p).querySelector('[data-aside="dismissed"]'), "screen.question.say008", { project: "Pothole repairs", date: day("2026-10-18") }));
+  assert.ok(says(main(p).querySelector('[data-aside="dismissed"]'), "screen.question.say008", { project: "Pothole repairs", date: day((await decisions(w))[0].at) }));
+  assert.equal((await decisions(w))[0].state, "dismissed", "and the real act changed the decision");
   /* control: no request carries a shared (no-project) dispose */
   for (const q of p.byOp("proposedispose")) assert.ok(q.body.project === P && q.body.finding === Q && !("items" in q.body) && !("progression" in q.body));
 });
@@ -84,7 +106,8 @@ test("R71 what this touches: the reading the project stands on, its plan, a ques
   assert.ok(!t.textContent.includes("Elsewhere") && !t.textContent.includes("PROJ-2026-0042"), "no other project is named");
   assert.equal(p.byOp("plans").find((r) => r.query.subject).query.subject, Q);
   /* control: nothing touched, nothing listed */
-  const n = await open(at, { ...A, plane: { basisversions: (r) => ok({ ok: true, inquiry: Q, versions: [] }) } });
+  const w = await worldOf();
+  const n = await w.page();
   assert.equal(main(n).querySelector("[data-touches]"), null);
 });
 
@@ -100,6 +123,7 @@ test("R71 the refusals are drawn by their words: not a participant, no reason, a
   }
 });
 
+/* still scripted (queue, the first page): needed: a project with more than 500 set-aside decisions, so that the list is paged by `after` (the world holds a few) */
 test("R71 states k and l: the project's decision is read from the set-aside list, paged by after; the receipt replaces the fold, the question is still drawn whole; another participant's decision is drawn by her name", async () => {
   const pages = [
     { aside: [row({ finding: "INQ-2026-0099-other" }), row({ project: "PROJ-2026-0042" })], truncated: true, next: "cursor-1" },
@@ -124,18 +148,25 @@ test("R71 states k and l: the project's decision is read from the set-aside list
 });
 
 test("R71 controls: a member who is not in the project is drawn no fold and no set-aside read is made; a question in no project is drawn none; a read that fails is drawn failed", async () => {
-  const out = await open(at, { ...A, plane: { projectparticipants: ok({ ok: true, projectId: P, participants: [{ handle: "dev", state: "joined", owner: 1 }] }) } });
+  const w = await worldOf();
+  /* invited to the project, not joined: she sees the question and is no participant */
+  const zed = await w.world.signIn("zed", { capabilities: ["contribute"] });
+  await w.ann.act("projectinvite", { query: { projectId: w.project, handle: "zed" } });
+  const out = await w.page({}, zed);
+  assert.ok(section(out, "screen.question.supports.head"), "she sees the question");
   assert.equal(main(out).querySelector("[data-aside]"), null);
   assert.equal(asideReads(out).length, 0);
-  const bare = await open(at, { images: { [Q]: { "bundle.md": inquiryMd("", INQUIRY_REFS) } } });
+  const loose = await worldOf({ filed: false });
+  const bare = await loose.page();
   assert.equal(main(bare).querySelector("[data-aside]"), null);
-  const failed = await open(at, { ...A, plane: { queue: (r) => (r.query.aside ? refusedIn("SOME_REFUSAL") : ok({ items: [] })) } });
+  const failed = await w.page({ plane: { queue: (r) => (r.query.aside ? refusedIn("SOME_REFUSAL") : ok({ items: [] })) } });
   const more = main(failed).querySelector('details[data-fold="more"]');
   assert.ok(more.querySelector('.cs-state[data-state="failed"]'), "drawn failed, never as no decision");
   assert.equal(more.querySelector('details[data-aside="set"]'), null);
-  /* control: a concluded question is drawn its own row, no fold */
-  const c = await open(at, { ...A, plane: { basisversions: (r) => ok({ ok: true, inquiry: Q, versions: [{ name: "main", state: "accepted", author: "member:dev", legs: [] }],
-    conclusion: { claim: { text: "Yes." }, by: "member:dev", at: "2026-10-13T09:00:00Z" }, conclusion_stance: "concluded" }) } });
+  /* control: a concluded question is drawn its own row, no fold (her real conclusion in the project) */
+  const v = await worldOf();
+  await v.ann.act("conclude", { query: { target: v.id, project: v.project, reading: "Yes: repairs are made within seven days.", falsifier: "Work orders dated later show otherwise." } });
+  const c = await v.page();
   assert.equal(main(c).querySelector('details[data-aside="set"]'), null);
 });
 
@@ -362,10 +393,23 @@ test("R74 an accept, a weigh and a reject sent from the fold carry the version; 
 
 test("R70 the question page draws no state chip or term the drawing does not draw: no state of an item is explained by a word of this module, and no glossary term is drawn", async () => {
   const KINDS = ["review", "reviewed", "retired", "open", "concluded", "deferred", "dismissed", "divided", "published", "waiting", "planned", "active", "resolved", "abandoned", "flagged", "watched"];
-  const concluded = { conclusion: { claim: { text: "Yes." }, by: "member:dev", at: "2026-10-13T09:00:00Z" }, conclusion_stance: "concluded" };
-  for (const o of [{ ...A }, { ...A, plane: { queue: aside([row()]) } }, { ...A, plane: { basisversions: bv(VERSIONS) } },
-    { ...A, plane: { basisversions: (r) => ok({ ok: true, inquiry: Q, versions: [], ...concluded }) } }]) {
-    const p = await open(at, o);
+  /* the four states the page is drawn in, each of a question of hers made by real acts: as it is; set aside for the project; with two readings accepted; concluded */
+  const w = await worldOf({ n: 1 });
+  const { ann, project } = w;
+  const conclusion = { query: { project, reading: "Yes: repairs are made within seven days.", falsifier: "Work orders dated later show otherwise." } };
+  const aside1 = await w.question("Set aside");
+  await ann.act("proposedispose", { body: { project, finding: aside1, to: "deferred", reason: "waiting for the 2026 log" } });
+  const held = await w.world.recipes.page(ann, "A cited page", { paragraphs: ["Repairs are made within seven days."], project });
+  const read2 = await w.question("Two readings", { legs: [{ target: held.bundle, role: "supports", extent_kind: "doc-para", extent_para: 1 }] });
+  await ann.act("conclude", { query: { target: read2, ...conclusion.query } });
+  const description = "Points the first citation at the first run of its paragraph alone, because the rest of the paragraph does not matter.";
+  await ann.act("narrow", { query: { target: read2, version: "reading-1", ord: 0, name: "alt", description }, body: { extent: { extent_kind: "doc-para", extent_para: 1, extent_run: 0 } } });
+  await ann.act("versionaccept", { query: { target: read2, version: "alt", project }, body: {} });
+  await ann.act("withdrawconclusion", { query: { target: read2, project, reason: "new evidence" } });
+  const done = await w.question("Concluded");
+  await ann.act("conclude", { query: { target: done, ...conclusion.query } });
+  for (const id of [w.id, aside1, read2, done]) {
+    const p = await w.page({}, ann, "/app/question/" + id);
     const text = main(p).textContent;
     for (const k of KINDS) for (const part of ["means", "can", "cannot"]) assert.ok(!hasWord(`state.item.${k}.${part}`) || !text.includes(word(`state.item.${k}.${part}`)), `state.item.${k}.${part} is the kit's chip's, drawn where the design draws one`);
     assert.equal(main(p).querySelectorAll("[data-chip], [data-term], .cs-chip, .cs-term").length, 0, "no chip or term where the drawing draws none");

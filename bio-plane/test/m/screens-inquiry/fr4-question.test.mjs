@@ -24,48 +24,75 @@ const supportsRows = (p) => supportsHead(p).querySelectorAll(".cs-row");
 
 /* ------------------------------------------------------------------------------------------------------------------ C36 */
 
-/* the units as `extraction` R27 answers them: `reading-pipeline` R15 gives a page unit `{kind: "pdf-page", page, rect: null}` and a
-   paragraph unit `{kind: "doc-para", para, run: null}`: the fields a unit does not narrow to are null, not absent */
+/* the units as `extraction` R27 answers them: `reading-pipeline` R15 gives a paragraph unit `{kind: "doc-para", para, run: null}`: the fields a unit does not narrow to are null, not absent.
+   The words are the ones the world's reading really holds for each held page (a web page's paragraphs; the world has no pdf-worker member, so a held PDF's text is undetermined and no
+   leg can address a page's words: needed for a `pdf-page` leg: a recipe holding a PDF whose text is decoded) */
 const PDF_WORDS = "The Director shall repair each reported pothole within seven calendar days of the report.";
 const WEB_WORDS = "Potholes reported through 311 are repaired within seven days.";
 const OTHER_WORDS = "Repairs are recorded as closed when the crew reports the work complete.";
 const unit = (seq, extent, text) => ({ seq, extent, reference: "u" + seq, truncated: false, text });
-const UNIT_LISTS = [
-  [unit(0, { kind: "pdf-page", page: 0, rect: null }, PDF_WORDS), unit(1, { kind: "pdf-page", page: 1, rect: null }, "Page two words.")],
-  [unit(0, { kind: "doc-para", para: 0, run: null }, "Intro."), unit(1, { kind: "doc-para", para: 2, run: null }, WEB_WORDS)],
-  [unit(0, { kind: "pdf-page", page: 0, rect: null }, OTHER_WORDS)],
-];
-const UNITS = { [SHA]: UNIT_LISTS[0], [SHA2]: UNIT_LISTS[1], [SHA3]: UNIT_LISTS[2] };
+const OWN = { capabilities: ["contribute", "create_projects"] };
+const para = (n) => ["extent_kind: doc-para", `extent_para: ${n}`];
+/** A project of `ann`'s with three held web pages (the first and the third both named TITLE, told apart by their words) and a question of hers resting on them with `legs(docs)` (none: no leg), by real acts. */
+const worldOf = async (legs) => {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const project = await world.recipes.project(ann, "Pothole repairs");
+  const docs = [(await world.recipes.page(ann, TITLE, { paragraphs: [PDF_WORDS, "Page two words."], project })).bundle,
+    (await world.recipes.page(ann, "A web page from www.oaklandca.gov", { paragraphs: ["Intro.", WEB_WORDS], project })).bundle,
+    (await world.recipes.page(ann, TITLE, { paragraphs: [OTHER_WORDS], project })).bundle,
+    (await world.recipes.pdf(ann, "The audit", { pages: 2, project })).bundle];
+  const id = (await world.recipes.question(ann, project, { title: "Seven days", text: "Is the city repairing reported potholes within seven days?", legs: legs(docs), draw: true })).id;
+  return { world, ann, project, docs, id };
+};
+const pageOf = async (w, o = {}) => {
+  const { door, session } = w.world.boot(w.ann);
+  const p = await boot({ screens: SCREENS, door, session, path: "/app/question/" + w.id, ...o });
+  await p.settle();
+  return p;
+};
+const legOf = (target, n) => ({ target, role: "supports", ...(n === undefined ? {} : { extent_kind: "doc-para", extent_para: n }) });
 const readingOf = (units) => (r) => ok({ ok: true, found: true, capture_sha: r.query.sha256, reading: { content_type: "application/pdf", found: true }, text_units: units[r.query.sha256] || [], unread_pages: [] });
-const legsPlane = (legs, units = UNITS) => ({ images: { [Q]: { "bundle.md": legsMd(legs) }, [D]: docImage(D, SHA), [D2]: docImage(D2, SHA2, "A web page from www.oaklandca.gov"), [D3]: docImage(D3, SHA3) },
+/* the scripted legs (the C81 measurements, drawn over a scripted plane in Chromium, and the one rect leg): the images, the reading and a question with no reading yet (still scripted: needed: a question with a rect leg, and the phone measurements over a world: `onPhone` takes only a scripted plane) */
+const legsPlane = (legs, units) => ({ images: { [Q]: { "bundle.md": legsMd(legs) }, [D]: docImage(D, SHA), [D2]: docImage(D2, SHA2, "A web page from www.oaklandca.gov"), [D3]: docImage(D3, SHA3) },
   plane: { reading: readingOf(units), basisversions: ok({ ok: true, inquiry: Q, versions: [] }) } });
 
 
-test("R23 R24 R34 C36 each leg draws the words it cites, told apart by them: two legs on two documents (a PDF page, a web paragraph) in the units' real shape (null rect, null run) draw their own words; control: the same units without the null fields draw the same words", async () => {
-  const legs = [{ target: D, ext: ["    extent_kind: pdf-page", "    extent_page: 0"] }, { target: D2, ext: ["    extent_kind: doc-para", "    extent_para: 2"] }, { target: D3, ext: ["    extent_kind: pdf-page", "    extent_page: 0"] }];
-  const p = await open(at, legsPlane(legs));
+test("R23 R24 R34 C36 each leg draws the words it cites, told apart by them: three legs on three documents (two of one name) in the units' real shape (null run) draw their own words; control: the same units without the null fields draw the same words", async () => {
+  const w = await worldOf((docs) => [legOf(docs[0], 1), legOf(docs[1], 2), legOf(docs[2], 1)]);
+  const p = await pageOf(w);
   const rows = supportsRows(p);
   assert.equal(rows.length, 3);
-  assert.ok(rows[0].textContent.includes(PDF_WORDS) && !rows[0].textContent.includes(OTHER_WORDS), "the PDF leg: its page's words");
+  assert.ok(rows[0].textContent.includes(PDF_WORDS) && !rows[0].textContent.includes(OTHER_WORDS), "the first leg: its paragraph's words");
   assert.ok(rows[1].textContent.includes(WEB_WORDS), "the web leg: its paragraph's words");
-  assert.ok(rows[2].textContent.includes(OTHER_WORDS) && !rows[2].textContent.includes(PDF_WORDS), "a second PDF with the same name is told apart by its words");
-  assert.ok(says(rows[0], "screen.document.passage.where", { page: "1" }) && says(rows[1], "screen.question.leg.paragraph", { n: "3" }), "and the place: the page, the paragraph");
-  /* control: the units a fixture drew without the null fields (the shape that always matched) draw the same words, so the null fields were the cause */
-  const bare = Object.fromEntries(Object.entries(UNITS).map(([k, us]) => [k, us.map((u) => ({ ...u, extent: Object.fromEntries(Object.entries(u.extent).filter(([, v]) => v !== null)) }))]));
-  const q = await open(at, legsPlane(legs, bare));
+  assert.ok(rows[2].textContent.includes(OTHER_WORDS) && !rows[2].textContent.includes(PDF_WORDS), "a second document with the same name is told apart by its words");
+  assert.ok(says(rows[0], "screen.question.leg.paragraph", { n: "2" }) && says(rows[1], "screen.question.leg.paragraph", { n: "3" }), "and the place: the paragraph");
+  /* control: the units without the null fields (the shape that always matched) draw the same words, so the null fields were the cause: the world's own readings, their null fields taken off */
+  const bare = async (r) => {
+    const real = await w.ann.read("reading", { query: { sha256: r.query.sha256 } });
+    return ok({ ...real, text_units: (real.text_units || []).map((u) => ({ ...u, extent: Object.fromEntries(Object.entries(u.extent).filter(([, v]) => v !== null)) })) });
+  };
+  const q = await pageOf(w, { plane: { reading: bare } });
   assert.ok(supportsRows(q)[0].textContent.includes(PDF_WORDS) && supportsRows(q)[1].textContent.includes(WEB_WORDS), "control: the same words from units without null fields");
 });
 
 test("R23 R34 C36 a leg named only draws no words and no bytes: a whole-document leg, a leg whose page the reading holds no unit for, and a leg narrower than the unit (a rect) draw none", async () => {
-  const legs = [{ target: D, ext: ["    extent_kind: document"] }, { target: D2, ext: ["    extent_kind: pdf-page", "    extent_page: 7"] }, { target: D3, ext: ["    extent_kind: pdf-page", "    extent_page: 0", "    extent_rect: [10, 10, 100, 100]"] }];
-  const p = await open(at, legsPlane(legs));
+  /* a held PDF's text is undetermined in the world (no pdf-worker member), so the reading holds no unit for any of its pages */
+  const w = await worldOf((docs) => [legOf(docs[0]), { target: docs[3], role: "supports", extent_kind: "pdf-page", extent_page: 1 }, { target: docs[3], role: "supports", extent_kind: "pdf-page", extent_page: 0 }]);
+  const p = await pageOf(w);
   const rows = supportsRows(p);
   assert.equal(rows.length, 3);
   for (const r of rows) assert.equal(r.querySelector("[data-leg-words]"), null, "no words drawn");
   const all = rows.map((r) => r.textContent).join(" ");
   for (const t of [PDF_WORDS, WEB_WORDS, OTHER_WORDS, "Page two words.", "Intro."]) assert.ok(!all.includes(t), "no invented words: " + t);
+  /* a leg narrower than the unit: a page with a rect. Still scripted (the images and the reading): needed: a recipe for a question whose leg carries extent_rect (the question recipe passes no rect), over a PDF whose text is decoded */
+  const UNITS = { [SHA]: [unit(0, { kind: "pdf-page", page: 0, rect: null }, PDF_WORDS)], [SHA3]: [unit(0, { kind: "pdf-page", page: 0, rect: null }, OTHER_WORDS)] };
+  const rect = await open(at, legsPlane([{ target: D3, ext: ["    extent_kind: pdf-page", "    extent_page: 0", "    extent_rect: [10, 10, 100, 100]"] }], UNITS));
+  assert.equal(supportsRows(rect)[0].querySelector("[data-leg-words]"), null, "no words drawn for a rect");
+  assert.ok(!supportsRows(rect)[0].textContent.includes(OTHER_WORDS), "no invented words");
   /* a leg that names no extent at all draws the document, no words */
-  const bare = await open(at, legsPlane([{ target: D }]));
+  const none = await worldOf((docs) => [legOf(docs[0])]);
+  const bare = await pageOf(none);
   assert.equal(supportsRows(bare)[0].querySelector("[data-leg-words]"), null, "a leg with no extent draws no words");
   assert.ok(supportsRows(bare)[0].textContent.includes(TITLE), "it names its document");
 });
