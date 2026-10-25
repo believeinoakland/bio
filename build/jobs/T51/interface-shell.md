@@ -508,3 +508,13 @@ Size (session_01FNJXyii9ZX1WYQ6je365RX): test runs 16, module lines 3387
 ## J29 · COMPLETE
 
 COMPLETE for interface-shell, fix round 8, G114 (R128). `loadWords` names `<release>~<language>~<words_version>` as ruled in B42 (release alone before bootstrap answers; per-member device note `cs-words:<member>`; one re-ask with the full v). Failing-first `r8-words-version.test.mjs` seen red then green (5/5); module suite 369/369 after merging tranche (B43); users' suites and control-plane page files unchanged from the tranche tip; format, architecture, coverage (123/123), ownership, words: 0 failures. Fixed a fragile R26 assertion in my module. Bound named in the record (first sign-in at front without a record names the release alone). Proposed R128/R24 wording and Size line are in the record. Deferred: none. Nothing for BOB to do but the platform check P after the deploy.
+
+## J30 · QUESTION
+
+QUESTION for `interface-shell` (fix round 10): the harness's four frame defaults, `harness.mjs` `FRAME` `interfacewords`, `groupidentity`, `queue`, `signout` (lines 88, 89, 91, 97 of the fixtures list).
+
+My best reading, built on unless you say otherwise: they STAY for now, listed as left, because they are the default of every boot that passes no `door`, and the nine screens modules' tests boot without one (their jobs, batch 7, re-point after this merge). I measured it: with the four deleted, 12 of this module's 372 tests fail at once (the ones that read `River Town` or a queue count of 3 from the frame), and every screens suite that relies on a default frame would fail with them. With a `door` given the table is already skipped entirely (R129), so a screens job that re-points deletes nothing else of mine.
+
+If you want them deleted in this job anyway, say so: I convert my 12 tests to `storeWorld()` and the screens suites stay red until batch 7 merges. If you want them gone at the last of batch 7, the line is one deletion in `harness.mjs` for whoever merges last.
+
+Carrying on with the rest of the job on my best reading.
