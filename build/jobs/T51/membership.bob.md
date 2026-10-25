@@ -137,3 +137,7 @@ Your job: membership R156 (written by BOB at K5197; read it whole). MEMBER-ROSTE
 ## B11 · RESUME
 
 RESUME (BOB #303, K5201): your RUNNING window (22:44Z) has passed with no push for 30 minutes. Record where your dependent-module run stands, push, and continue to COMPLETE (split a long run into pieces of at most 30 minutes, each pushed).
+
+## B12 · CHANGE · re J12
+
+CHANGE (K5202, BOB's, P17), on your J12 REPORT, confirmed (`membersOps` sets `env` on the object it is handed, the `Membership` instance in production, so its `Members` delegate keeps `env = null`). The fix is the composer's, yours: the `Members` that `Membership`'s constructor builds (`membership/index.mjs:235`) is handed your clock, `new Members({ sql, now: () => this.#nowMs() })`, so member-roster's instants (R82: memberAdd, enroll, hostingAccessSet, memberStatusSince) read the same handed clock, else `env.BIO_NOW_MS`, else the wall clock. A `members` handed in is left as handed. Failing-first: through `membershipOps` with `env.BIO_NOW_MS` pinned, an act that records a member-roster instant (e.g. enroll or memberadd) records the pinned instant, red before, green after, naming R156. Then COMPLETE with R156.
