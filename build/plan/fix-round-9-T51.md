@@ -43,6 +43,7 @@ Each: (1) root, (2) why missed, (3) red, (4) platform check. (3) for both: the n
 - **G154 (4)** the `offers` column added to an `archive_entries` table created without it was run on node:sqlite only (K4426 check row 8): a Miniflare run from such a table, then `op=unpack`, reading the column. Added to job 103.
 - **G180** two SHA-256 implementations: capture carries its own resumable digest (`capture/sha256-resume.mjs`, job 101, CAPTURE #57's J36) beside record-grammar's `createSha256`; one module owns the digest (K4164: one implementation, one owner). (1) job 101 needed a snapshot record-grammar did not offer. (2)-(4) record-grammar R64's test; N. record-grammar R64 new, job 108; capture re-points to it and drops its copy in its next job (a CHANGE to job 104 if it is running when 108 merges).
 - **G182-G185** the spreadsheet study's defects no plan placed (`envelope-sheets-T51.md` §3.3, run there; plan §1 "Absorbed and not here"; K5011): S-27-S-30 calculations R47-R49, job 109, and S-31's `exportRecipe` workbooks R22 with R23 (calculations R50 moved, K5017), job 112 (G182); S-31's `draw` (`calc-grammar/draw.mjs:24`, one tick for 1M hashes) and `interval` calc-grammar R23, job 110 (G183); S-18, S-19 rest odf-reader R56, job 111 (G184); S-15-S-18 office-readers R47, added to job 105 (G185). Each job reproduces each line first (lines have moved since the study), its test red first; (4) S for R48 (the shape harness), else N. S-33's GAP-2.2 is Stage 2, planned with §7 item 4.
+- **G186** a workbook whose rows and cells carry no `r` reads as an empty reading (CORPUS #1's F1, `build/plan/corpus-1-T51.md` §5, K5020): `formats-xlsx.mjs:764-768` takes the used range from `r` alone, so `usedSheetRange` is null and the reading has no sheet unit; office-readers R48, added to job 105 by CHANGE. Failing-first: plane's `g124f-bounds.test.mjs` F1, C07, C08, red on the tip (accepted by name until job 105 merges).
 
 ## 5. WORDS: new lines for `later-ux.md` (BOB appends; one HANDOFF to UX-DESIGN, K4269)
 
@@ -107,7 +108,7 @@ None stops a member completing an operation; stand-in sentences are in code, key
 |---|---|---|---|---|---|---|
 | 103 | D | acquisition (L3, 48) | now | R116 amended (K5005): every registered row armed after the commit (G175); R95 amended: one clock reading for the cut and the close (G177); G154 (4) the `offers` ALTER at workerd (K5006) | sonnet | 200 |
 | 104 | D | capture (L3, 49) | now | R113 amended (K5005): a part answered before its bytes are read is answered after the body is drained, never a reset (G176) | sonnet | 200 |
-| 105 | D | office-readers (L1, 15) | now | R46 new (K5006): a workbook's read peaks at most 85 % of its cap (G178) | sonnet | 250 |
+| 105 | D | office-readers (L1, 15) | now | R46 new (K5006): a workbook's read peaks at most 85 % of its cap (G178); R47 (K5011, G185); R48 new (K5020): rows and cells with no `r` read whole (G186, CORPUS #1 F1) | sonnet | 250 |
 | 106 | D | pdf-reader (L1, 17) | now | R45 amended (K5006): the text entry yields within its compute (G179; locate first) | sonnet | 250 |
 | 107 | D | screens-inquiry (L11) | now | R130 amended (K5006): a picture's refusal reason drawn on the Document page (G135b (4)) | sonnet | 200 |
 | 108 | D | record-grammar (L1, 1) | now | R64 new (K5007): a resumable SHA-256 with snapshot (G180) | sonnet | 150 |
@@ -115,5 +116,6 @@ None stops a member completing an operation; stand-in sentences are in code, key
 | 110 | D | calc-grammar | now | R23 new (K5011): draw, interval at scale (G183) | sonnet | 150 |
 | 111 | D | odf-reader (L1) | now | R56 new (K5011): S-18, S-19 rest (G184) | sonnet | 200 |
 | 112 | D | workbooks | now | R22 new (K5017; calculations R50 moved): `exportRecipe` bounded (S-31); R23 new: bind and export ask `readTable` for `rows: "all"` (follows calculations R48, job 109) (G182) | sonnet | 200 |
+| 113 | D | capture (L3, 49) | now | R114 new (K5020): the parted upload's running digest is record-grammar's `createResumableSha256`; `sha256-resume.mjs` removed (G180's second half) | haiku | 150 |
 
 The rows for jobs 56 to 102 (merged) and the items 8 to 10 added to section 2c moved whole to `build/plan/archive/fix-round-9-merged.md`.
