@@ -27,6 +27,22 @@ test("fixture concludeAct: a reading under the floor is the real BAD_READING ref
   assert.ok(typeof r.detail === "string" && r.detail.length > 0);
 });
 
+test("fixture concludeAct: a named accepted reading with a claim, adopted with no project, answers the real concluded receipt (R19, R51)", () => {
+  const r = concludeAct({ kind: "adopted" });
+  assert.deepEqual([r.ok, r.target, r.from, r.to, r.relationship, r.project, r.version, r.conclusion],
+    [true, "INQ-2026-0001-q", "open", "concluded", "no_project", null, "accepted-reading", "The council approved the transfer on the third reading."]);
+  assert.deepEqual(r.claim, { state: "adopted", text: "the council approved the transfer", version: "accepted-reading" });
+});
+
+test("fixture concludeAct: a named accepted reading that states no claim is the real NO_CLAIM refusal, with its row's check and translation (R16)", () => {
+  const r = concludeAct({ kind: "no_claim" });
+  assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation],
+    [false, "NO_CLAIM", "NO_CLAIM", CONCLUDE_ACT_CHECKS.NO_CLAIM.check, CONCLUDE_ACT_CHECKS.NO_CLAIM.translation]);
+  assert.equal(r.check, "C-33.34");
+  assert.equal(r.translation, word("refusal.NO_CLAIM"));
+  assert.equal(r.version, "accepted-reading");
+});
+
 test("fixture concludeAct control: a kind it does not make is refused by the fixture, not answered", () => {
   assert.throws(() => concludeAct({ kind: "nonsense" }), /no kind/);
 });
