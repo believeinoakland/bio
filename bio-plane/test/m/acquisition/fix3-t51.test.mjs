@@ -8,6 +8,7 @@ import { world, run, sha, text, page, HTML, network } from "./fixture.mjs";
 import { RENDER_DEFAULTS } from "../../../src/render.mjs";
 import { HostGovernor } from "../../../src/host-governor/index.mjs";
 import { ACQUISITION_CHECKS } from "../../../src/acquisition/checks.mjs";
+import { evidencePartsRefusal } from "../record-core/fixtures.mjs";
 
 const MIB = 1024 * 1024;
 const BOUND_MS = 25000;
@@ -149,7 +150,9 @@ test("R96 (C5 e) controls: a capture within memory is put whole by this module a
   assert.equal(n.status, 200);
   assert.equal(none.held(sha(big)), false, "no way to make the whole: held in its parts, as before");
   for (const p of n.body.document.parts) assert.ok(none.held(p.sha256));
-  for (const answer of [async () => ({ ok: false, reason: "OBJECT_TOO_LARGE" }), async () => { throw new Error("store down"); }]) {
+  /* the refusal record-core's real `putFromParts` gives when the store will not take the whole (C-102.39) */
+  const { refused: storeRefused } = await evidencePartsRefusal();
+  for (const answer of [async () => storeRefused, async () => { throw new Error("store down"); }]) {
     const f = world();
     const c = withPutFromParts(f, answer);
     const fr = await run(f, { "https://a.example/huge": octet(big) }, { locator: "https://a.example/huge" });
@@ -165,6 +168,7 @@ test("R96 (C5c): a keep that outlasts what is left of the bound is handed to kee
   const w = world();
   const calls = withPutFromParts(w, async () => { await sleep(1500); return { ok: true }; });
   const registered = [];
+  // fixtures-contract: plane keep-later
   w.store.keepLater = async (k) => { registered.push(k); return { ok: true }; };
   const t0 = Date.now();
   const r = await run(w, { "https://a.example/slow": octet(big) }, { locator: "https://a.example/slow" }, { boundMs: 5600 });
@@ -179,6 +183,7 @@ test("R96 (C5c): a keep that outlasts what is left of the bound is handed to kee
   const f = world();
   withPutFromParts(f, async () => ({ ok: true }));
   const fr2 = [];
+  // fixtures-contract: plane keep-later
   f.store.keepLater = async (k) => { fr2.push(k); return { ok: true }; };
   const ok = await run(f, { "https://a.example/fast": octet(big) }, { locator: "https://a.example/fast" });
   assert.equal(ok.body.keep_pending, undefined);
