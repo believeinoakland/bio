@@ -102,3 +102,20 @@ Each fixture has a test of its own in `bio-plane/test/m/sources/fixtures.test.mj
 - `node build/plan/impact.mjs origin/tranche/T51 HEAD`: sources 1 of 11 test files, retrieval-browse 2 of 12 (the change does not touch retrieval-browse; its two named files run and pass, 20 of 20).
 
 Size (session_01KVdCT4xo4Q6wdYgc64U2V2): test runs 3, module lines 67
+
+## J6 · COMPLETE
+
+COMPLETE for the fix round 10 Wave A batch 2 START (sources, T51; build/plan/starts-T51-F10/sources.txt). Commit bbf8e1399b on job/T51/sources (fixtures b95abac1b9; record d84eabc963).
+
+**Published fixtures** (new files bio-plane/test/m/sources/fixtures.mjs and fixtures.test.mjs), each made by the real sources module over the world fixture.mjs builds, at test time:
+- rungOf (users now: consequences 1): held = real rungOf({source, viewer}) for a held source (rung same_knocker; R9); unheld = real NO_SUCH_SOURCE.
+- sourceOfReads (users now: case-disclosures 1): none and fetched = real NO_SUCH_SOURCE; withSource = real sourceOf answer (R1); publishable = real publishableAt for that source to the group (R8).
+Each has a test at the module's interface (fixtures.test.mjs, R9; R1, R8).
+
+**Markers added:** none (no fixtures-own or fixtures-generic).
+**Causes:** none placed to sources. **Deferred:** none. **Found in another module:** none.
+**Lines of sources' own:** none; checks/fixtures.mjs /home/user/bio sources reports 0 failures (the check's relative root "." reports 0 for everything, K5066, so the absolute root was used).
+
+**Tests and checks:** sources tests 46/46 pass (the new file's first run had one wrong expectation, a knock with a secret is same_knocker, fixed in the test); format 178 modules 0 failures; architecture 0; coverage 22 of 22 live ids named; words 0; fixtures 0; ownership 0 failures (3 files); impact: sources 1 of 11 and retrieval-browse 2 of 12 test files, the latter 20/20 pass.
+
+Size (session_01KVdCT4xo4Q6wdYgc64U2V2): test runs 3, module lines 67
