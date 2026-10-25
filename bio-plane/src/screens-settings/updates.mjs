@@ -20,8 +20,8 @@ export const updates = {
     // `updatenotice` is refused to anyone who does not administer (instance-setup R89), so it is not asked; they are told whose
     // screen it is, by the administrators' handles (the roster a member reads)
     if (!(view.me && view.me.administer === true)) return { roster: { op: "memberlist" } };
-    // the copy's own facts, `installed_at` among them, are an administrator's (instance-setup R95): the day it was set up tells the setup release from a later one
-    return { notice: { op: "updatenotice" }, boot: { op: "bootstrap" } };
+    // the set-up release and its day are `updatenotice`'s `setup` (instance-setup R106), the one the copy was set up with (R81)
+    return { notice: { op: "updatenotice" } };
   },
 
   render(cs, view) {
@@ -99,22 +99,23 @@ export const updates = {
 
     const secure = (r) => (r.security === true ? ` <span class="cs-risk" data-risk="raised" tabindex="0" data-level="1" data-tip="${W("updates.ready.security_says")}">${W("updates.ready.security")}</span>` : "");
 
-    // the day the copy was set up (bootstrap's `installed_at`): a release installed that day, with no member behind it, is the setup release (R73)
-    const setupAt = data.boot && data.boot.state === "ok" && data.boot.value && typeof data.boot.value.installed_at === "string" && data.boot.value.installed_at ? data.boot.value.installed_at : null;
-    const isSetup = (iso) => setupAt !== null && typeof iso === "string" && iso.slice(0, 10) === setupAt.slice(0, 10);
-
     out.push(cs.state(data.notice, (v) => {
       let h = "";
+      // the set-up release is `updatenotice`'s `setup`, the oldest running release (R81), never bootstrap's `installed_at`, which is the
+      // running release's first sighting; a release with no member behind it that is the set-up release says so (R73)
+      const set = v.setup && typeof v.setup === "object" ? v.setup : null;
+      const setupAt = set && typeof set.installed_at === "string" && set.installed_at ? set.installed_at : null;
+      const isSetup = (version) => set !== null && version === set.version;
       const run = v.running;
       if (run && run.version) {
         const by = who(run.allowed_by);
         // a member by their handle; no member behind it: the setup release says it was set up, a later one only its own date (R73)
         const line = by ? W("updates.running.release", { version: run.version, date: D(run.installed_at), who: by })
-          : isSetup(run.installed_at) ? W("updates.running.release_setup", { version: run.version, date: D(run.installed_at) })
+          : isSetup(run.version) ? W("updates.running.release_setup", { version: run.version, date: D(run.installed_at) })
             : W("updates.running.release_noactor", { version: run.version, date: D(run.installed_at) });
         const rows = [cs.row("", line)];
         // the one set-up date, apart from any release, unless the release's own line already says it
-        if (setupAt && !(!by && isSetup(run.installed_at))) rows.push(cs.row("", W("updates.running.setup_on", { date: D(setupAt) })));
+        if (setupAt && !(!by && isSetup(run.version))) rows.push(cs.row("", W("updates.running.setup_on", { date: D(setupAt) })));
         if (v.last_check && v.last_check.at) rows.push(cs.row("", W("updates.running.checked", { when: D(v.last_check.at) }), "", W("updates.running.checked_note")));
         h += cs.sec("updates.running.head", cs.sheet(rows.join("")));
       }
@@ -158,7 +159,7 @@ export const updates = {
         // a skip is a member's act: the founder with no handle yet is `member.founder.unnamed`, never `admin`
         ? W("updates.earlier.skipped", { version: e.version, date: D(e.skipped_at), who: who(e.skipped_by) || T(String(e.skipped_by || "").replace(/^member:/, "") === "admin" ? "member.founder.unnamed" : "settings.set.system"), reason: e.reason || "" })
         : who(e.allowed_by) ? W("updates.earlier.installed", { version: e.version, date: D(e.installed_at), who: who(e.allowed_by) })
-          : isSetup(e.installed_at) ? W("updates.earlier.installed_setup", { version: e.version, date: D(e.installed_at) })
+          : isSetup(e.version) ? W("updates.earlier.installed_setup", { version: e.version, date: D(e.installed_at) })
             : W("updates.earlier.installed_noactor", { version: e.version, date: D(e.installed_at) }))).join("")));
       return h;
     }));
