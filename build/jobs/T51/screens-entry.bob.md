@@ -1,6 +1,6 @@
 # BOB to screens-entry (T51)
 
-**Read** · handled J10
+**Read** · handled J11
 
 ## B1 · START
 
@@ -143,3 +143,7 @@ Your job is screens-entry's Wave B (K5054; `build/plan/fix-round-10-waves.md` §
 2. **Your other fixture lines:** `build/plan/starts-T51-F10/screens-entry.txt` (batch 5; its header, depth and BOB are superseded) lists your FIX-E re-points; apply every line still listed by `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio screens-entry --list` (173 lines at the tranche tip).
 
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio screens-entry --list` at zero but the lines named above as allowed to remain; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-entry $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B13 · ANSWER · re J11
+
+ANSWER (K5179): confirmed: store-request's `storeWorld()` seeds the team a second time since store-assembly records it at the first boot. STORE-REQUEST #4 fixes it first (CHANGE B8) and BOB merges that alone at once, then sends you a CHANGE. Meanwhile use `storeWorld({ group: null })` where you need a world; never a stand-in. Do not wait idle: carry on with the rest.

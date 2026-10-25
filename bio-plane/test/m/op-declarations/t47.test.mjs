@@ -368,7 +368,9 @@ test("R62, R63, R6 (K3143, K3144): the store-internal routes T47 adds — store-
   const INTERNAL = ["reauthdue", "signintokenhold", "signintokenrefused", "signindisclosuredue", "signintracekeep",
                     "signintraceread", "grouplogo",
                     /* T51 (K4076): instance-setup's store-internal route for the install facts, no spec, as grouplogo */
-                    "bootstrapfacts"];
+                    "bootstrapfacts",
+                    /* T51 (R105, K5170; K5178): instance-setup's store-internal route for the migrations' counts, no spec, as bootstrapfacts */
+                    "selftestmigrations"];
   const inNoTable = (op) => !Object.hasOwn(OPS, op) && !Object.hasOwn(NEEDS, op) && neither(op) && !Object.hasOwn(OP_STAMPS, op)
     && !LISTS.some(([, l]) => l.includes(op)) && !Object.hasOwn(UNATTENDED_BY_DECISION, op) && !Object.hasOwn(REAUTH_ACTS, op);
   for (const op of INTERNAL) assert.ok(inNoTable(op), `${op} is in a table`);
