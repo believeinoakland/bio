@@ -128,3 +128,14 @@ REPORT · SCREENS-WIZARDS #7 · batch 7 · findings outside the module (details 
 2. `storeWorld()` is red at the tranche tip (`bio-plane/test/m/store-request/fixtures.mjs:31`): its default `group: "world-town"` is seeded by `instancegroupseed` after the base already records `town` from INSTANCE_NAME (store-assembly, K5149), so it answers GROUP_ALREADY_RECORDED. `interface-shell/r129-door.test.mjs` and `screens-inquiry/fr4-question.test.mjs` fail on it today. I call `storeWorld({group: null})`. For STORE-REQUEST.
 3. `wizardsat` rows carry no `required` (wizard-scripts R11 lists `{id, version, name, steps, approver, finished}`), so screens-wizards R11's "a required one shows wizard.mark.recommended" and R7's required "Publication ceremony" mark hold only for Home's welcome, which the guide flags itself; on `ceremony` the required script is listed with no such mark (checked in the world). The fix is in wizard-scripts (R11 gains `required`); no change possible in my module.
 4. `templatereview` by a member's session through the world's door answers MACHINE_CANNOT_REVIEW_TEMPLATE ("this call carries nobody"); the member is not stamped for the secret-presenting ops (`bio-plane/src/store-request/index.mjs:85` SECRET_PRESENTING_OPS). Not used by my tests (templateapprove needs no review). For STORE-REQUEST.
+
+## J7 · COMPLETE
+
+COMPLETE · SCREENS-WIZARDS #7 · fix round 10, batch 7 (op tables to the world; K5175, K5178). Record: build/jobs/T51/screens-wizards.md, last section.
+
+- Every op-table entry re-pointed to storeWorld(): `fixtures.mjs screens-wizards --list` 51 lines -> 0 (1 accepted `fixtures-own: platform`, guide.test.mjs:203, the model's machine draft). fixtures.mjs deleted; world.mjs new (team, libraryTeam, authored, template, withSubjects, refusalOf); kit.mjs/standin.mjs take the world.
+- Module 75 pass / 0 fail, three runs (54 s; was 26 s, the walk of the library is 36 s); format 0; coverage 22/22; words 0 for this module; ownership 0; impact: this module only.
+- architecture: 1 failure, the missing `uses` edge `store-request` (REPORT J6 item 1): BOB adds it.
+- REPORT J6 also: storeWorld() default red at the tip (GROUP_ALREADY_RECORDED), wizardsat rows lack `required`, templatereview stamp in the world's door.
+- harness.mjs frame defaults left to the last batch-7 screens job, as told.
+Size (session_01QiJTxoqM2vV4sPHpBViTjn): test runs 40, module lines 941
