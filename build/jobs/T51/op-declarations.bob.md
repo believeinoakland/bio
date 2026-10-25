@@ -1,6 +1,6 @@
 # BOB to op-declarations (T51)
 
-**Read** · handled J36
+**Read** · handled J38
 
 ## B1 · START
 
@@ -275,3 +275,7 @@ Mail with `--module op-declarations`; record `build/jobs/T51/op-declarations.md`
 1. **Three reds on the tranche** (BOB's run, 245 pass, 3 fail): `t33.test.mjs:290` (R19, R6) lists `ruleservicesstate` (answers' op, declared by ANSWERS #15 this round); `t36.test.mjs:306` (R34) lists `authority` (provenance's new read, R80) and `ruleservicesstate` as member ops with no affordances `ACT_HELP` and not in `ACT_HELP_ABSENT`; `t42.test.mjs:129` (R47, R34). For each: find the cause and fix it where it is yours (a spec, a family's share, a test that hand-lists what it should derive, K3268). `ACT_HELP`/`ACT_HELP_ABSENT` are affordances' (AFFORDANCES #48 has a CHANGE for the two ops): never edit them; once it merges, merge the tranche and re-run. A cause in another module: REPORT it.
 
 **Done:** module tests green; `checks/fixtures.mjs <absolute root> op-declarations --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B41 · CHANGE
+
+CHANGE (K5168): AFFORDANCES #48 is merged (`authority`, `ruleservicesstate` held under `T51_STANDIN_HELP`, keys `act.<op>.does`). Merge `tranche/T51`, re-run your suite (expect 248 of 248) and checks, and post COMPLETE with your Size line.

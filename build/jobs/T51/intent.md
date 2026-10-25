@@ -1,6 +1,6 @@
 # intent (T51)
 
-**Status** · session_01GUj8GfroqrbB9njoTNg55o · depth 2 · COMPLETE · handled B3
+**Status** · session_0161cAf4uvK6FvmCyPin1KSe · depth 2 · COMPLETE · handled B6
 
 ## J1 · COMPLETE
 
@@ -112,3 +112,62 @@ Size (session_01GUj8GfroqrbB9njoTNg55o): test runs 4, module lines 0
 ## J5 · COMPLETE
 
 COMPLETE follow-up 27 (B4): see record J4. Fixture: watchSetOf(held, { throwsFor, page }) in bio-plane/test/m/intent/fixtures.mjs; answers { world, intent, projects, viewer, calls, sources }; projects[name] is the real project id. Tests 98/98; format, architecture, coverage, ownership 0.
+
+## J6 · COMPLETE · re B5
+
+Fix round 10, the final pass's cause 1 (B5; walk-T51-final 03 §12; R37) done. Commit on `job/T51/intent`; only intent's `paths` and `tests` touched.
+
+**Met (BOB strikes the mark):** R37.
+
+**Cause 1: a retired aspiration, its dead ends and its lesson can be read.**
+- Diagnosis re-read: `aspirationsFor` answered only those in force (R12, `#heldAspirations` kept the held ones and dropped the retired), `pursuitOf` needs the id; no read listed a retired one. As the diagnosis says.
+- Fix (`bio-plane/src/intent/index.mjs`): `#heldAspirations` now also gathers the retired ones among the same bounded read (the first 1,000 the viewer may see, R12), each with `taught` and `dead_ends`; `aspirationsFor({ project, member, viewer, retired: true })` answers `{ ok, project, member, retired: true, aspirations, limit, truncated }`: the project's retired aspirations and the named member's own, in id order. A project the viewer may not see is the same refusal; a project aspiration of an unseen project is skipped. The default read is byte-for-byte unchanged. The `aspirations` op takes `retired=true` in the URL (a read op, so no `DECLARED_OPS` row changes).
+- Test first, seen red on today's code (`retired` was ignored, so `r.retired` was undefined): `pursuits.test.mjs` "R37 …": a project with a held and a retired aspiration (a dead end before retirement, one after), a member's own retired, another member's retired, a retired group aspiration and a retired aspiration of another project; asserts the retired read lists exactly the project's and the member's own, with `taught` and dead ends equal to `pursuitOf`'s; controls: the default read is unchanged (and `retired: false` equals it), a project alone, a member alone, none named; the refusal for an unseen project equals the default read's; the door (`intentOps` with `retired=true`) answers the same.
+- Fixture published for screens-inquiry (`bio-plane/test/m/intent/fixtures.mjs`): `retiredWorld()` (sync) answers `{ world, intent, project, viewer, held, retired, mine, taught, deadEnds }`: the real intent after real acts (declared, dead end, retired with a lesson, dead end after); ask `intent.aspirationsFor({ project, member: "bob", viewer, retired: true })`. Tested in `fixtures.test.mjs` (R11 R12 R37).
+- Why the tests missed it: R11 said only "stay readable" and `pursuits.test.mjs`:153 proved it through `pursuitOf({aspiration})`, which needs the id; R12's test asserted retired ones are absent from the default read. No requirement or test asked for a way to find one.
+
+**Judgment for BOB (requirement text):** R37 names the project's retired aspirations and the viewer's own, so a retired group aspiration (R9) is listed by no read, though `pursuitOf` reads one by id. I built to the text. If the page should show them, R37 is amended to say so and it is one more filter clause (`a.scope === "group"`).
+
+**Markers added:** none (`fixtures-own` 0, `fixtures-generic` 0, `fixtures-contract` 0). My lines in `checks/fixtures.mjs /home/user/bio intent --list`: answer 0, stub 0, code 0, contract 0, accepted 0; 0 failures.
+
+**Tests and checks**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/intent/*.test.mjs`: tests 100, pass 100, fail 0 (98 + 2 new).
+- `checks/format.mjs`: `0 failures`. `checks/architecture.mjs intent`: `0 failures`. `checks/coverage.mjs intent`: `37 of 37 live requirement ids named by a test; 0 failures`. `checks/ownership.mjs /home/user/bio intent tranche/T51 job/T51/intent`: `1 files changed by intent ... 0 failures` (the count is as the tool reports it).
+- `checks/words.mjs`: 16 failures, all in store-assembly (not mine); none in intent. No new sentence.
+
+## J7 · COMPLETE · re B4, B5, B6
+
+Session session_0161cAf4uvK6FvmCyPin1KSe (INTENT #20, depth 2), started over the tranche tip (merged `origin/tranche/T51`, no rebase). The cursor stood at B3, so B4 and B5 were still unread here; both were already done on this branch and are re-checked below.
+
+**B4 (follow-up 27): done earlier, see J4.** `watchSetOf(held, { throwsFor, page })` in `bio-plane/test/m/intent/fixtures.mjs`, tested in `fixtures.test.mjs`. Named for monitoring's re-point: `watchSetOf`, whose answer is `{ world, intent, projects, viewer, calls, sources }`. No marker added.
+
+**B5 (cause 1, R37): done earlier, see J6.** `aspirationsFor({ project, member, viewer, retired: true })` lists the project's retired aspirations and the viewer's own, each with `taught` and `dead_ends`; `retiredWorld()` is published in `fixtures.mjs` for screens-inquiry. Test: `pursuits.test.mjs` "R37 …", with its controls. Met: R37 (BOB strikes the mark).
+
+**B6 (K5161, plan item 78 (5)): no change needed in intent.** The selection stand-ins named in the plan are not in intent's tests. The intent world already runs retrieval's real `selectionCreate` and `selectionResolve` (`fixture.mjs:125-136`, since J3), so no selection refusal is hand-built. The only `NOT_YOURS` in intent's tests and code is intent's own (C-111.15, a member's aspiration: `pursuits.test.mjs:85,106`, `fixtures.mjs`, `checks.mjs`), which the item keeps. Lines changed for B6: none.
+
+**Judgment carried from J6 for BOB:** R37 lists the project's and the viewer's own retired aspirations, so a retired group aspiration is listed by no read (`pursuitOf` still reads it by id). Unchanged.
+
+**Model:** the START names claude-sonnet-5-5; this session runs claude-haiku-5-5, which is the model I can serve. The work ran at that model.
+
+**Checks and tests**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/intent/*.test.mjs`: tests 100, pass 100, fail 0.
+- `checks/format.mjs /home/user/bio`: 0 failures. `checks/architecture.mjs /home/user/bio intent`: 0 failures. `checks/coverage.mjs /home/user/bio intent`: 37 of 37 live requirement ids named by a test; 0 failures. `checks/fixtures.mjs /home/user/bio intent --list`: answer 0, stub 0, code 0, contract 0, accepted 0; 0 failures. `checks/ownership.mjs /home/user/bio intent tranche/T51 job/T51/intent`: 1 file changed by intent; 0 failures.
+- `checks/words.mjs /home/user/bio`: 16 failures, none in intent (store-assembly and others).
+- `bio-plane/src/setup-words/build.mjs --check`: refusal naming `plane.declared.readtranslate`, two sentences at `bio-plane/src/plane/declared.mjs:13` and `bio-plane/src/store-assembly/declared.mjs:16`. Not intent's; for BOB to route (P9).
+
+**Deferred:** nothing. **Found in other modules (not changed):** the setup-words refusal above; the 16 words failures above.
+
+Size (session_0161cAf4uvK6FvmCyPin1KSe): test runs 1, module lines 2276
+
+## J8 · COMPLETE
+
+COMPLETE, session session_0161cAf4uvK6FvmCyPin1KSe (job/T51/intent, pushed df303a4515; record J7).
+B4 (follow-up 27) and B5 (cause 1, R37): already done and checked on this branch (J4, J6); the cursor was at B3, so they are read here. Met: R37 (BOB strikes the mark).
+B6 (K5161): no change needed. No intent test hand-builds a selection refusal; the intent world runs retrieval's real selectionCreate and selectionResolve (fixture.mjs:125-136). Its NOT_YOURS is intent's own (C-111.15). Lines changed: none.
+Tests 100/100 (intent). Checks: format, architecture, coverage (37/37), fixtures, ownership: 0 failures. words: 16 failures, none in intent. setup-words --check refuses plane.declared.readtranslate (two sentences: plane/declared.mjs:13, store-assembly/declared.mjs:16): not intent's, for you to route.
+Judgment carried: R37 lists the project's and the viewer's own retired aspirations; a retired group aspiration is listed by no read (pursuitOf reads it by id). Unchanged, your call.
+Model: the START names sonnet-5-5; this session runs claude-haiku-5-5. Work ran at that model.
+Size: test runs 1, module lines 2276.
+
+---
+_Generated by [Claude Code](https://claude.ai/code)_

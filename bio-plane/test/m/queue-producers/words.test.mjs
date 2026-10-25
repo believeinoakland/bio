@@ -453,6 +453,31 @@ test("R43, R11: a title the viewer may not see is never written into a sentence:
     word("queue.newer-capture-affects-reference.summary", { target: "The hidden document", holder: "Was the contract bid?" }));
 });
 
+test("R43 (R213; WALK-FINAL-10B C7): a newer-capture notice whose holder is a published case names the case by its scope, the newest edition that states one, and never by its CASE- id; a question holder is still named by its title", () => {
+  const CASE = "CASE-2026-4006";
+  const w = world({
+    reevaluation: { notices: () => ({ ok: true, limit: 1000, truncated: false, notices: [
+      { notice: "RN-C", holder: CASE, target: "DOC-T", grade: "affected", raised_at: iso(NOW), state: "open" },
+      { notice: "RN-Q", holder: "INQ-Q", target: "DOC-T", grade: "affected", raised_at: iso(NOW), state: "open" },
+      { notice: "RN-N", holder: "CASE-2026-4007", target: null, grade: "affected", raised_at: iso(NOW), state: "open" }] }) } });
+  w.member("alice");
+  w.bundle("PRJ-C", "project"); w.join("PRJ-C", "alice", { owner: true });
+  w.bundle("DOC-T", "information", { title: "Council notice" });
+  w.bundle("INQ-Q", "inquiry", { title: "Did the clerk stamp the contract?" });
+  w.run(`INSERT INTO cases (case_id, project_id) VALUES (?, 'PRJ-C'), ('CASE-2026-4007', 'PRJ-C')`, CASE);
+  w.run(`INSERT INTO published_cases (case_id, edition, scope) VALUES (?, 1, 'Old scope'), (?, 2, 'Port lease revenue'), (?, 3, NULL)`, CASE, CASE, CASE);
+  const m = byId(w.read("alice"));
+  const c = m["FINDING::newer-capture-affects-reference::RN-C"], q = m["FINDING::newer-capture-affects-reference::RN-Q"],
+    n = m["FINDING::newer-capture-affects-reference::RN-N"];
+  assert.ok(c && q && n, "the three notices are raised");
+  assert.equal(c.summary, word("queue.newer-capture-affects-reference.summary", { target: "Council notice", holder: "Port lease revenue" }));
+  assert.ok(!c.summary.includes("CASE-"), "no case id in the sentence");
+  assert.equal(q.summary, word("queue.newer-capture-affects-reference.summary", { target: "Council notice", holder: "Did the clerk stamp the contract?" }));
+  assert.ok(q.summary.includes("Did the clerk stamp the contract?"), "a question holder still by its title");
+  /* the control: a case that states no scope anywhere keeps its id, the only name it has */
+  assert.ok(n.summary.includes("CASE-2026-4007"));
+});
+
 test("R43 (R35, R2): the plural forms are read too: an unnumbered refused entry that failed two checks reads .detail.unnumbered.other, and a cardinality group of two instances under an at-most-one bound reads .detail.atmost.other", () => {
   const IMP = "f".repeat(64);
   const h = { import: IMP, group: "g2", case: "CASE-I", set_by: "alice", seq: null, seen_at: iso(NOW - DAY) };

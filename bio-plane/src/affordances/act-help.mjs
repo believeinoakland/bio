@@ -40,7 +40,7 @@
  *   - `selftest` (FR-40, K4190): the word list holds `act.selftest.does` for the updates screen (DEC-376), but this module's reads
  *     list (R62) does not give it and no act this module draws is `selftest` (instance-setup's probe), so it is held none.
  * A retired op is not held. */
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { MEMBERSHIP_CHECKS } from "../membership/index.mjs";
 
 /** T51 (K4248; U421, DEC-387): the declared ops whose `act.<op>.does` words the design's reads list for this module gives (R62), held
@@ -144,11 +144,14 @@ export const T51_OWED_OPS = Object.freeze(["expertisewithdraw", "declareorigin",
  *  captureseenin, scanmirror, officeconfirm), so they are held in `T51_DESIGN_OPS`; kept as an empty frozen value for the tests that import it. */
 export const T51_LIST_ONLY_OPS = Object.freeze([]);
 
-/** T51 (K4900, fix round 9; `capture` R113; K4968, DEC-431): the declared ops held under a `localize` default while the word list held no
- *  sentence for them. `captureuploadbegin`, `captureuploadpart`, `captureuploadcomplete` and `captureuploadabort`, the steps the page takes
- *  to send a file in parts, had their design rows landed (DEC-431), so they are held in `T51_DESIGN_OPS` and read by key; kept as an empty
- *  frozen value for the tests that import it. */
-export const T51_STANDIN_HELP = Object.freeze({});
+/** T51 (K4900, fix round 9; `capture` R113; K4968, DEC-431; K5164): the declared ops held under a `localize` default while the word list
+ *  held no sentence for them. `captureupload*` had their design rows land (DEC-431), so they are held in `T51_DESIGN_OPS` and read by key.
+ *  K5164: `authority` (provenance's read, R80) and `ruleservicesstate` (answers' read) are held here, each under its own `act.<op>.does` key
+ *  with a plain English default until the design stream's row lands, so `op-declarations` R34 finds an explanation for each. */
+export const T51_STANDIN_HELP = Object.freeze({
+  authority: localize("act.authority.does", "Lists, for each captured file of this document, who issued it as the record now stands, with the dated basis, and whether a member reviewed it and could not tell. Changes nothing."),
+  ruleservicesstate: localize("act.ruleservicesstate.does", "Says whether the rule services are switched on, so a screen draws their control only while they are. Changes nothing."),
+});
 export const T51_STANDIN_OPS = Object.freeze(Object.keys(T51_STANDIN_HELP));
 
 /** The ops held, in the design's order (R48, R61). */

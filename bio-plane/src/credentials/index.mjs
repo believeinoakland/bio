@@ -122,21 +122,27 @@ const ROOT = Membership.ROOT_ADMIN;
 
 export class Credentials {
   /* `accounts` is `ai-accounts`' instance on the same storage, made by `credentialsOf` with the seal secret (R72). */
-  constructor({ sql, core = null, membership = null, accounts = null } = {}) {
+  constructor({ sql, core = null, membership = null, accounts = null, now = null } = {}) {
     this.sql = sql;
     this.core = core;
     this.membership = membership;
     this.accounts = accounts;
+    this.now = typeof now === "function" ? now : null;   /* K5148: the clock handed in (`credentialsOf`), else the wall clock */
     this.env = null;   /* K5132: the store's environment, set by `credentialsOps` (`#nowMs`) */
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
 
-  /* K5132 (fix round 10, cause 1; R-CLOCK): the instance clock, read as the other modules read it: the store's environment
-     (`env.BIO_NOW_MS`, handed in by `credentialsOps`), else the wall clock. Every instant this module records, and every
-     judgement of one, reads it; a duration measured for a reply (R9's `timings`) stays on the wall clock. */
+  /* K5132 (fix round 10, cause 1; R-CLOCK; K5148): the instance clock. The clock this instance was handed (`now`, a
+     function of milliseconds) answers first; else the store's environment (`env.BIO_NOW_MS`, handed in by `credentialsOps`);
+     else the wall clock. Every instant this module records, and every judgement of one, reads it; a duration measured for a
+     reply (R9's `timings`) stays on the wall clock. */
   #nowMs() {
+    if (this.now) {
+      const handed = Number(this.now());
+      if (Number.isFinite(handed) && handed >= 0) return handed;
+    }
     const raw = this.env ? this.env.BIO_NOW_MS : undefined;
     if (raw !== undefined && raw !== null && raw !== "") {
       const v = Number(raw);
@@ -2042,9 +2048,10 @@ export class Credentials {
 
 /* K61: the one Credentials of a Durable Object's storage, made on first use over its `sql`, reaching record-core and
    membership by their factories on the same `ctx`; its first construction registers the seam (R16, R17). `record` and
-   `membership` (a test's own) are read on the first call only. */
+   `membership` (a test's own) are read on the first call only. `now` (K5148) is the instance clock, read on the first call
+   only, as retrieval's and capture-requests' are; none handed, the store's environment or the wall clock answers. */
 const OF = new WeakMap();
-export function credentialsOf(ctx, { record = null, membership = null, sealSecret = null } = {}) {
+export function credentialsOf(ctx, { record = null, membership = null, sealSecret = null, now = null } = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let c = OF.get(storage);
   if (!c) {
@@ -2052,7 +2059,7 @@ export function credentialsOf(ctx, { record = null, membership = null, sealSecre
     const m = membership ?? membershipOf(ctx, { record });
     /* R72 (T48; `ai-accounts` R32): `ai-accounts` is made here, first, with the seal secret this module is given */
     const accounts = aiAccountsOf(ctx, { record: core, membership: m, sealSecret });
-    c = new Credentials({ sql: storage.sql, core, membership: m, accounts });
+    c = new Credentials({ sql: storage.sql, core, membership: m, accounts, now });
     OF.set(storage, c);
     c.start();
   }

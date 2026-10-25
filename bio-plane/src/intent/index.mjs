@@ -1022,9 +1022,10 @@ export class Intent {
   /* R12, R13, R28 (N209, K338, N323): the first `max` aspirations the viewer may see, in id order, held or retired and
      of any scope, walked a page at a time and read one past so a cut says so; answers the held ones among them. An
      aspiration the viewer may not see (a project's, of a project hidden from the viewer) is skipped and never counted,
-     so a cut says nothing of it (DEC-36, K391). */
+     so a cut says nothing of it (DEC-36, K391). The retired ones among them are answered beside (R37), each with what
+     pursuing it taught and its dead ends. */
   #heldAspirations(viewer, max = ASPIRATIONS_MAX) {
-    const out = [];
+    const out = [], gone = [];
     let after = "", read = 0, truncated = false;
     for (;;) {
       const page = this.record.listByType({ type: ASPIRATION, after, limit: 200 });
@@ -1034,11 +1035,13 @@ export class Intent {
         if (read === max) { truncated = true; break; }
         read += 1;
         if (a.head.currentState === "held") out.push(this.#aspirationView(a));
+        else if (a.head.currentState === "retired")
+          gone.push({ ...this.#aspirationView(a), taught: readSection(a.text, "Taught"), dead_ends: deadEndsOf(a.text) });
       }
       if (truncated || page.ids.length < 200 || !page.cursor) break;
       after = page.cursor;
     }
-    return { held: out, truncated };
+    return { held: out, retired: gone, truncated };
   }
 
   #aspirationView(a) {
@@ -1064,13 +1067,20 @@ export class Intent {
 
   /** R12: the aspirations in force for a project, a member, or (neither named) the group, each with its scope. The
    *  group's less any departure, each departure listed with its reason; no precedence is stated or implied. Those in
-   *  force are taken among the first ASPIRATIONS_MAX aspirations the viewer may see, held or retired (N323). */
-  aspirationsFor({ project = null, member = null, viewer = null } = {}) {
+   *  force are taken among the first ASPIRATIONS_MAX aspirations the viewer may see, held or retired (N323). R37: with
+   *  `retired: true` it lists instead the project's retired aspirations and the named member's own, in id order, each
+   *  with `taught` and its `dead_ends`, over the same bounded read; the default read is unchanged. */
+  aspirationsFor({ project = null, member = null, viewer = null, retired = false } = {}) {
     if (project != null && project !== "") {
       const p = this.#project(project, viewer);
       if (p.refused) return p.refused;
     }
-    const { held, truncated } = this.#heldAspirations(viewer);
+    const { held, retired: gone, truncated } = this.#heldAspirations(viewer);
+    if (retired === true)
+      return { ok: true, project: project || null, member: member || null, retired: true,
+               aspirations: gone.filter((a) => (project && a.scope === "project" && a.owner === project)
+                                              || (member && a.scope === "member" && a.owner === str(member))),
+               limit: ASPIRATIONS_MAX, truncated };
     const dep = project ? this.#departures(project) : { latest: new Map(), truncated: false };
     const departed = dep.latest;
     const group = held.filter((a) => a.scope === "group" && !departed.has(a.id));
@@ -1712,7 +1722,8 @@ export function intentOps(i, url, body) {
     aspirationdepart: () => i.departFrom({ ...b, viewer: qp("viewer") }),
     aspirationdeadend: () => i.recordDeadEnd({ ...b, viewer: qp("viewer") }),
     aspirationretire: () => i.retireAspiration({ ...b, viewer: qp("viewer") }),
-    aspirations: () => i.aspirationsFor({ project: qp("project"), member: qp("member"), viewer: qp("viewer") }),
+    aspirations: () => i.aspirationsFor({ project: qp("project"), member: qp("member"), viewer: qp("viewer"),
+                                          retired: qp("retired") === "true" }),
     aspirationcontacts: () => i.contacts({ viewer: qp("viewer") }),
     pursuit: () => i.pursuitOf({ aspiration: qp("id"), viewer: qp("viewer") }),
     intentproposals: () => i.proposals({ project: qp("project"), viewer: qp("viewer") }),

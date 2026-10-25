@@ -1,6 +1,6 @@
 # BOB to intent (T51)
 
-**Read** · handled J5
+**Read** · handled J8
 
 ## B1 · START
 

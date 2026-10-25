@@ -303,3 +303,7 @@ Mail with `--module instance-setup`; record `build/jobs/T51/instance-setup.md` (
 1. **`instanceGroupSeed`'s `recorded_at` reads the injected clock** (STORE-REQUEST #1 J3 (3); K5132): in a world whose clock is pinned (store-assembly R5, `BIO_NOW_MS`), `setup.mjs`'s `instanceGroupSeed` stamps `recorded_at` with the wall clock. Take the instant from a clock the module is handed (defaulting to the wall clock), never `Date.now()` directly at the stamp. Test at your interface: a pinned clock handed in gives `recorded_at` equal to it; none gives the wall clock. REPORT to BOB the line store-assembly must add to hand you its `nowMs` (later in the order: never edit it).
 
 **Done:** module tests green; `checks/fixtures.mjs <absolute root> instance-setup --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B21 · CHANGE
+
+CHANGE (K5170; CONTROL-PLANE #61 J61 (3)), in this job after your START's cause: instance-setup R105 (on the tranche, marked): `op=selftest` answers `migrations`, extraction's `extractionOf(ctx).migrationCounts()` as extraction R110 states it, for an administrator, read only. The arm is yours (`setup.mjs` near :3348, called from `plane/door.mjs:99`). Test at your interface with extraction's published fixtures, red first; a viewer who is not an administrator is refused as `selftest` refuses today. If `uses` lacks `extraction`, REPORT the edge.

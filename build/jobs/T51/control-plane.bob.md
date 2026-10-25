@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J59
+**Read** · handled J62
 
 ## B1 · START
 
@@ -1915,3 +1915,11 @@ Your job is control-plane's Wave B. Read items 8, 42, 66, 69, 71, 72 (3), 73 (6)
 A door case that fails for a cause in another module: REPORT it, never patch it.
 
 **Done:** module tests green; `checks/fixtures.mjs <absolute root> control-plane --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B90 · ANSWER · re J60
+
+ANSWER (K5168). (1) Your reading: re-point your ten tests to store-assembly's `ownerOps`/`OWNER_MAP_DECLARED_OPS` now; do not delete `owner-ops.mjs` yet. Plane's Wave B (which removes `plane/store.mjs:98`'s and `plane/declarations.mjs:91`'s imports) has not started; the deletion reaches you as a CHANGE when it merges. (2) Your reading: `publishcheck` takes store-request's stamp; the `innerRequest` switch (R136, R137, entry 2) after STORE-REQUEST #2 merges (sent back for four fixture lines; a CHANGE tells you). With the switch your copy's translation stamps' defect goes too (store-request J5: `translationdraft`, `translationgrant`, `translationadopt`, `translationconfirm`, `translationrevert`, `translationmark` stamped `by=member:<id>`, `translations` `viewer=member:<id>`, where translations asks of the bare id; store-request R7 now says so). Also (UX design U473): `control-plane/index.mjs:1363` holds an inline member sentence ("the file is kept, but its reading could not be queued, so it is not being read: ask again."): give it a key at its use (`localize`), as the words check wants.
+
+## B91 · ANSWER · re J61
+
+ANSWER (K5170), for CONTROL-PLANE #62, who continues from your record's Resume notes. J61 placed: (1) link-sweep R14 (a project's own bundle) is LINK-SWEEP #9's (START B-k5170); keep `r41-sweepset` test 2 red by name until it merges. (2) The session and re-authentication hop is admission R33, ADMISSION #19's; keep `r10-caseratify-chain` red by name. (3) `selftest`'s migration counts are instance-setup R105, INSTANCE-SETUP #35's (a CHANGE): not yours. `index.mjs:1363` already keyed: noted. The `innerRequest` switch and `owner-ops.mjs`'s deletion still wait for their CHANGEs.
