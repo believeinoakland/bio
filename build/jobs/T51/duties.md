@@ -121,3 +121,29 @@ Tests and checks on the merged tree:
 Nothing changed in code since J5 (01ddb3a60c); this round is the merge only. Nothing deferred. Ruling K3990 remains proposed for BOB to record.
 
 Size (session_015fij5CNkGX79gtEuBYtYeY): test runs 7, module lines 2210.
+
+## J7 · COMPLETE
+
+Fix round 10, Wave A batch 2 (B7): done. No code or requirement of duties changed; tests only.
+
+Fixtures published in `bio-plane/test/m/duties/fixtures.mjs` (new), each made by the real code at test time, each with a test in `fixtures.test.mjs` naming its requirements:
+- `occurrencesOf` (R9, R10, R12): a met and an overdue occurrence over real events, an undetermined one, and NO_SUCH_DUTY.
+- `occurrences` (R9, R11): the read without a window; NO_SUCH_DUTY for an absent id and for a viewer naming no member (`unseen`). The real method is `occurrencesOf` and it requires `asOf`; following's stand-in omits it, so its re-point must pass `asOf`.
+- `recordTransitionsAnswers` (R13): an empty pass, an unfinished pass `{done:false, cursor:"DUT-..."}`, and the finishing pass from that cursor.
+- `transitionsUnknownDuty` (R14), in place of the asked `transitionsRefusal`: see the finding below.
+
+**Finding for BOB (K4426, a real path gives none):** `transitionsOf` never answers NO_SUCH_DUTY. For an unknown duty it answers `{ok:true, transitions:[], count:0}`, and requirements R14 state no refusal. So `transitionsRefusal` cannot be made by real code. plan-work's `takeup.test.mjs`:175, 221 and its fixture.mjs hand-build `{ok:false, reason:"NO_SUCH_DUTY"}` for it, an answer no provider gives. I published the real answer as `transitionsUnknownDuty`. plan-work should take that (its `met_at` case for an unreadable reading), or, if it must test a failing read, treat it as a fault (a throw, which its code already covers). If BOB wants `transitionsOf` to refuse an unknown duty, that is a requirements change (R14) first.
+
+Own line: standards/bindsAt, `policies.test.mjs`:207: the Proxy over `standards.bindsAt` is gone. The test now records a real adoption (a council ordinance adopts a company's policy through the real `standards.adoptionRecord`) and the real `bindsAt` answers; the council is bound, the clerk is refused NOT_ACTING_FOR_PUBLIC as before.
+
+Markers added: no `fixtures-own`, no `fixtures-generic`, no `fixtures-contract`.
+
+Tests and checks:
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/duties/*.test.mjs`: 79 pass, 0 fail.
+- `checks/fixtures.mjs . duties --list`: 0 failures, answer 0 (was 1).
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs . duties`: 0 failures. `checks/coverage.mjs . duties`: 34 of 34 named. `checks/words.mjs . duties`: 0 failures. `checks/ownership.mjs . duties tranche/T51 job/T51/duties`: 0 failures.
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 1 of 178 (duties), 2 test files, both run above.
+
+Other modules (P9, not changed): none new beyond the plan-work item above.
+
+Size (session_0183nvKGgohACwBMciK6jGZB): test runs 5, module lines 2210.
