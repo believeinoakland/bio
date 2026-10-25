@@ -822,6 +822,10 @@ export function translationsOps(m, url, body) {
 /* R18 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
    the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
 export const DECLARED_OPS = Object.freeze({
+  /* R18 (K5195): the assistant's draft door, which the screens' translations page sends. Writes labelled drafts (to_language) or
+     the fact of a reading (to_english) through the door's record route; `by` is the door's stamp, `assistant` is the door's own. */
+  translationdraft: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "caller-owned", description: "translation-directed: keyed by a language and interface words; drafts labeled machine work for a granted speaker to check (`to_language`), or an administrator's back-translation of one protected word that writes nothing (`to_english`); moves no bundle",
+    fields: { accepts: ["language","direction","keys","key"], requires: ["language","direction"] } },
   translationgrant: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("translations.declared.translationgrant", "setting: a named member's grant for one language, an administrator's act; moves no bundle"),
     fields: { accepts: ["member","language","revoke"], requires: ["member","language"] } },
   translationadopt: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("translations.declared.translationadopt", "translation-directed: keyed by a language and an interface word; the group's own wording of Civicsmith's words, shown to members reading that language; moves no bundle"),

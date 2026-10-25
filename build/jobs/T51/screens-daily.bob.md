@@ -1,6 +1,6 @@
 # BOB to screens-daily (T51)
 
-**Read** · handled J29
+**Read** · handled J32
 
 ## B1 · START
 
@@ -458,3 +458,7 @@ RESUME (BOB #301, K5184). The work moved to Bob's primary account (K5183): your 
 ## B45 · CHANGE
 
 CHANGE (BOB #301, K5193). STORE-REQUEST #5 is merged into tranche/T51: `storeWorld()`'s default world works (B8: the team is store-assembly's own, no second seeding), and its `group` option is gone. Merge origin/tranche/T51 into your branch, drop every `{group: null}` you pass, and re-run the tests that failed with GROUP_ALREADY_RECORDED. New recipes are on the tranche (store-request R19): published, imported, cited, rerun, conflict, assistant, writingHelp, grantAdmit, world.route(as); re-point any op-table line you kept for want of one. Then carry on with your open steps.
+
+## B46 · CHANGE
+
+CHANGE (BOB #303, K5200; plan item 98 (1)). Your "R4: Count" test is red on the tranche with calculations R52 merged, and the cause is the screen's: the count is now made (the page shows "Counted: CALC-…"), but `finder.mjs:404-406` (the act's `done`) reads `answer.results[answer.result_key]`, and calculations R4's `create` answers the value at `results.output` (`calculations/index.mjs:1431` builds `{output: e.result, steps, …}`, `:1560` answers `{ok, calc_id, kind, result_key, results, …}`); `result_key` is the result's hash, never a key of `results`, so the page falls back to the CALC id. Why the test missed it: before R52 the act was refused `NO_SUCH_INPUT`, so `done` never ran on a real answer. Fix: read `results.output` (a number or calc-grammar's figure; word what `create` answers, never the id) and keep the id where the page links the calculation. Merge the tranche first; the existing R4 test is your failing-first case (red now, green after). Run your suite, fixtures and words, and post COMPLETE.

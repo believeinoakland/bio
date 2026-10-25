@@ -1,6 +1,6 @@
 # docket (T51)
 
-**Status** · session_01LYRnnKMee8tichiXQJP812 · depth 2 · COMPLETE · handled B4
+**Status** · session_01QvBDcErVJLBYZXanqpFNrH · depth 2 · COMPLETE · handled B7
 
 ## Completion (T51-162, R8)
 
@@ -182,3 +182,53 @@ Size (session_01LYRnnKMee8tichiXQJP812): test runs 10, module lines 1657
 ## J6 · COMPLETE
 
 COMPLETE: B6 cause 1 (diag2-10b C4). docketFile keeps the filed summary for every kind; docketPrepare uses it when none named. Met: R1, R4 (BOB strikes marks). docket 93/0; dependents green; screens-publish R24, R22 G54 fail inherited. Checks all 0. Door case (K5138) for control-plane walk10b-docket: not added by me. Record: build/jobs/T51/docket.md.
+
+## Fix round 10, plan item 95 (B7, DOCKET #16, session_01QvBDcErVJLBYZXanqpFNrH)
+
+**Entries applied (K5195; docket R30, the untested clause).** The code did not do what R30 says. `#markedBy` (`bio-plane/src/docket/index.mjs`) named the author whenever `membership.memberFacts` had a row, so a member revoked after marking was still named with her handle. Membership keeps a revoked member's row (`status='revoked'`), so the row's status decides. Now `by` is `{member, handle}` only for an active member, and null otherwise: no roster row, or a status other than active. The mark itself is kept.
+
+**Decision for BOB (recorded here, detailed decision of this job).** Real acts can only make a mark whose author is not a member by revoking her after she marked: `docketPressure` refuses a non-joined or non-member author at mark time (K4557), so no real act records one otherwise. "Not a member" therefore reads as membership's own test, `status = 'active'` (the same test `member-roster` and `membership` apply at their member checks). A former member is not named. The alternative, that she stays named as the author of a past mark, contradicts R30's text, so I followed the text. BOB may strike or amend this in `build/rulings.md`.
+
+**Failing first.** `reads.test.mjs`, new test "R30 (T51; DEC-340) a mark whose author is no longer a member answers by null; the mark itself is kept": a real pressure mark by bob, read by alice as `{member:'bob', handle:'h_bob'}` (control), then `membership.memberSet({memberId:'bob', status:'revoked', by:'erin'})` (erin an active administrator seeded in the test), then `by` must be null. Red before the fix: `actual { member: 'bob', handle: 'h_bob' }, expected null`. Green after.
+
+**Why the tests missed it.** The R30 test made marks only by active members and never revoked one, and the verify-marks row (`build/plan/verify-marks.md`, docket R30) took the code's comment at `index.mjs:989` as the behaviour. The comment said null; the code returned a name for every row.
+
+**Met ids (BOB strikes the mark):** R30.
+
+**Suites and checks (absolute root `/home/user/bio`).**
+- Docket suite `bio-plane/test/m/docket/*.test.mjs`: 94 tests, 94 pass, 0 fail. The run exits by itself; no `--test-force-exit` used.
+- Dependents that read docket marks or revoke members (`action-holds/*`, `screens-publish/t51` and `fix3`, `queue-producers/*`, `plan-work/stands`, `network-notices/*`): 326 pass, 0 fail.
+- `checks/format.mjs`: 178 modules, 0 failures. `checks/architecture.mjs docket`: 17 product files, 0 failures. `checks/coverage.mjs docket`: 31 of 31 live ids named, 0 failures. `checks/words.mjs docket`: 0 failures; I added no English sentence.
+- `checks/fixtures.mjs docket --list`: 0 failures. No `fixtures-own` or `fixtures-generic` marker added.
+- `checks/ownership.mjs docket <merge-base of origin/tranche/T51> HEAD`: 3 files changed by docket, 0 failures.
+- `checks/run.mjs`: product-wide failures, none under `src/docket` or `test/m/docket` (the failing lines are in screens-publish, interface-shell, store-assembly and others, not caused by this job).
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules affected, 0 of 2981 test files (it reads committed HEAD; the dependents above were run by hand).
+- Note: `impact.mjs tranche/T51 HEAD` fails with "unknown revision" in this clone; the `origin/` form works.
+
+**Commit.** `f1dc951459` on `job/T51/docket` (code and test only; the record is a separate commit).
+
+**Deferred:** none. **Found in other modules:** none caused by this job.
+
+Size (session_01QvBDcErVJLBYZXanqpFNrH): test runs 4, module lines 1661
+
+## J7 · COMPLETE
+
+COMPLETE, DOCKET #16 (B7; plan item 95, K5195). Docket R30's untested clause.
+
+What changed: `bio-plane/src/docket/index.mjs` `#markedBy` (around line 991). The code did not do what R30 says: it named a revoked member with her handle, since membership keeps a revoked member's row. Now `by` is `{member, handle}` only for an active member; otherwise null (no row, or a status other than active). The mark is kept. Commit f1dc951459.
+
+Test: `bio-plane/test/m/docket/reads.test.mjs`, "R30 (T51; DEC-340) a mark whose author is no longer a member answers by null; the mark itself is kept". A real pressure mark by bob, read by alice as {member:'bob', handle:'h_bob'} (control), then a real `membership.memberSet` revocation of bob, then by must be null. Red before the fix (actual {member:'bob', handle:'h_bob'}, expected null); green after.
+
+Decision for BOB (in the record, not in rulings.md): "not a member" = membership's own test, status active. Real acts can only produce such a mark by revoking the author after she marked (docketPressure refuses a non-joined author, K4557).
+
+Met ids: R30 (strike the mark).
+
+Suites and checks: docket 94 pass / 0 fail (exits by itself); dependents (action-holds, screens-publish t51 and fix3, queue-producers, plan-work stands, network-notices) 326 / 0; format 0 (178 modules), architecture 0, coverage 31 of 31, words 0, fixtures docket --list 0, ownership 0 (3 files by docket), run.mjs: no finding in docket's files.
+
+Markers added: none (no fixtures-own or fixtures-generic).
+
+Deferred: none. Found in other modules: none caused by this job.
+
+Note: `impact.mjs tranche/T51 HEAD` fails in this clone (unknown revision); `origin/tranche/T51` works.
+
+Size (session_01QvBDcErVJLBYZXanqpFNrH): test runs 4, module lines 1661

@@ -9,6 +9,7 @@ import { createHash } from "node:crypto";
 import { M, world, call } from "./harness.mjs";
 import { INLINE_MAX } from "../../../src/promotion/index.mjs";
 import { archiveDocuments, promoteArchive, PROV_EMBED_MAX } from "../../../src/control-plane/archive.mjs";
+import { archiveAnswer } from "../acquisition/fixtures.mjs";
 const { CAPTURE_SCREEN } = await import("../../../src/screens-intake/capture.mjs");
 const { deliverOwedRender } = await import("../../../src/control-plane/index.mjs");
 const { captureOf } = await import("../../../src/capture/index.mjs");
@@ -41,17 +42,20 @@ function archiveWorld(answer) {
                   gatedOp: async (ctx) => (ctx.op === "acquire" ? M.json(answer, 200) : undefined) };
   return { ...w, hooks };
 }
-const members = (extra) => [doc(S("b"), { container: { archive_sha256: S("a"), index: 0, path: "one.csv" }, ...extra }),
-                            doc(S("c"), { container: { archive_sha256: S("a"), index: 1, path: "two.csv" } })];
-const archiveDoc = (extra) => doc(S("a"), { file: "snapshots/archive", locator: "https://example.org/a.zip", ...extra });
+/* acquisition's real answer to an archive locator (its published fixture): the archive's document and the two members its unpack filed;
+   `archiveOf` lays on each the reading the door's own read would leave (`readings`: the archive's, the first member's, the second's). Names: a, b, c. */
+const fetched = (await archiveAnswer({ memberBytes: [64, 64] })).body;
+const [A, B, C] = [fetched.document.capture.sha256, ...fetched.unpack.documents.map((d) => d.capture.sha256)];
+const archiveOf = ([onArchive, onFirst, onSecond]) => ({ ...fetched, document: { ...fetched.document, ...onArchive },
+  unpack: { ...fetched.unpack, documents: [{ ...fetched.unpack.documents[0], ...onFirst }, { ...fetched.unpack.documents[1], ...onSecond }] } });
 
 test("R58 (G43; K4651): an archive's document or a member the door promotes carrying a reading too large to embed is filed without it, so `data/provenance.json` is under promotion's inline bound; the digests are followed (asked of `readHeld`) and the answer's shape is as it was (control: a reading that fits is embedded, indented as before)", async () => {
   const big = readingOf(INLINE_MAX + 500000);
-  const w = archiveWorld({ ok: true, existed: false, document: archiveDoc(big), unpack: { ok: true, archive: { sha256: S("a") }, documents: members(readingOf(2 * INLINE_MAX)) } });
+  const w = archiveWorld(archiveOf([big, readingOf(2 * INLINE_MAX), {}]));
   const r = await call(w.env, { op: "acquire", token: w.S.ann, method: "POST", hooks: w.hooks, body: { address: "https://example.org/a.zip", project: "PROJ-2026-0001" } });
   assert.equal(r.status, 200, r.text.slice(0, 300));
   const promotes = w.env.calls.filter((c) => c.route === "promote");
-  assert.deepEqual(promotes.map((c) => c.body.register[0].sha256), [S("a"), S("b"), S("c")]);
+  assert.deepEqual(promotes.map((c) => c.body.register[0].sha256), [A, B, C]);
   for (const p of promotes) {
     const f = provOf(p);
     assert.ok(f.bytes <= PROV_EMBED_MAX, `${f.bytes} bytes embedded`);
@@ -60,16 +64,16 @@ test("R58 (G43; K4651): an archive's document or a member the door promotes carr
     const d = JSON.parse(f.text).documents[0];
     assert.deepEqual([d.reading, d.text_units, d.capture.sha256], [undefined, undefined, p.body.register[0].sha256], "no reading embedded");
   }
-  assert.deepEqual(r.json.promoted.map((x) => x.sha256), [S("a"), S("b"), S("c")]);
+  assert.deepEqual(r.json.promoted.map((x) => x.sha256), [A, B, C]);
   assert.deepEqual(Object.keys(r.json.promoted[0]).sort(), ["bundleId", "sha256"]);
   assert.deepEqual(r.json.not_promoted, []);
   /* the readings that were left out follow: the archive's own and the first member's, each asked of `readHeld` (its digest has no home yet) and written down as owed;
      the second member carried none, and since G162 (R134, K4980) every member the door filed is followed, so it is followed too */
   const follows = (route) => w.env.calls.filter((c) => c.route === route).map((c) => c.params.sha256 ?? c.params.sha);
-  assert.deepEqual(follows("readheldfor").sort(), [S("a"), S("b"), S("c")]);
-  assert.deepEqual(follows("pendingadd").sort(), [S("a"), S("b"), S("c")]);
+  assert.deepEqual(follows("readheldfor").sort(), [A, B, C].sort());
+  assert.deepEqual(follows("pendingadd").sort(), [A, B, C].sort());
   /* control: a reading that fits stays in the file, the indent unchanged */
-  const small = archiveWorld({ ok: true, existed: false, document: archiveDoc(readingOf(2000)), unpack: { ok: true, archive: { sha256: S("a") }, documents: members(readingOf(2000)) } });
+  const small = archiveWorld(archiveOf([readingOf(2000), readingOf(2000), {}]));
   const s = await call(small.env, { op: "acquire", token: small.S.ann, method: "POST", hooks: small.hooks, body: {} });
   assert.equal(s.status, 200, s.text.slice(0, 300));
   const kept = small.env.calls.filter((c) => c.route === "promote").map((p) => [p, JSON.parse(provOf(p).text).documents[0]]).filter(([, d]) => d.text_units);
@@ -80,7 +84,7 @@ test("R58 (G43; K4651): an archive's document or a member the door promotes carr
   }
   /* G162 (R134, K4980): every member filed is followed, so the two members are, though their readings were embedded; the archive's own document, whose reading was not dropped, is not */
   const followed = small.env.calls.filter((c) => c.route === "readheldfor" || c.route === "pendingadd").map((c) => c.params.sha256 ?? c.params.sha);
-  assert.deepEqual([...new Set(followed)].sort(), [S("b"), S("c")], "the members are followed, the archive's own document is not");
+  assert.deepEqual([...new Set(followed)].sort(), [B, C].sort(), "the members are followed, the archive's own document is not");
 });
 
 test("R58 (G43): a document that carries no reading, or only a large field that is not a reading, is filed whole; `promoteArchive` hands back only the documents it filed without their reading (`onDropped`), after a promotion that stood", async () => {

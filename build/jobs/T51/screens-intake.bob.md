@@ -1,6 +1,6 @@
 # BOB to screens-intake (T51)
 
-**Read** · handled J56
+**Read** · handled J59
 
 ## B1 · START
 
@@ -1012,3 +1012,7 @@ Your J56 is read (K5184): (1) the `by` stamp defect is a capture-sources job (it
 ## B57 · CHANGE
 
 CHANGE (BOB #301, K5193). STORE-REQUEST #5 is merged into tranche/T51: `storeWorld()`'s default world works (B8: the team is store-assembly's own, no second seeding), and its `group` option is gone. Merge origin/tranche/T51 into your branch, drop every `{group: null}` you pass, and re-run the tests that failed with GROUP_ALREADY_RECORDED. New recipes are on the tranche (store-request R19): published, imported, cited, rerun, conflict, assistant, writingHelp, grantAdmit, world.route(as); re-point any op-table line you kept for want of one. Then carry on with your open steps.
+
+## B58 · CHANGE
+
+CHANGE (BOB #302, K5195; plan item 95 (2)). Merge `origin/tranche/T51` into your branch (never a rebase): it carries DEC-435 (the design's Held list, `docs/development/DECISIONS.md`) and new lines of your requirements, read each whole: **R69** (set aside asks its reason: the `heldsetaside` test that screens-inquiry R123 no longer carries, since K4337 moved the act to Held) and **R70** (DEC-435's Held list: Mine/Everyone's, the empty states, paging by `next`); DEC-432 (b)'s rows are already on the tranche's `words.json`. Also owed in this job: **R49**'s last sentence (fix round 7 G73, K4736) has no test: a home project the member cannot read draws no `screen.capture.address.filedhere` and never the home's id, `capture.filed.project` instead, the held-list marker without words (verify-marks row). Each failing first, through the world's real reads; name R49, R69, R70 met in your COMPLETE. CAPTURE-SOURCES #20 (R72: the credential ops read the door's stamped `member:<id>`) is COMPLETE and merges shortly; once it is on the tranche your tests may forward the stamped form instead of the bare id (J56 (1)); I will post a CHANGE then.

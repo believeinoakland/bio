@@ -10,6 +10,7 @@ import { hasWord, word as WORD } from "../../../src/setup-words/index.mjs";
 import { WORD_KEYS, say, keysRead } from "../../../src/retrieval-browse/words.mjs";
 import { RECORDED_NONE_REGISTERED, FIND_MATCHERS, matchDates, extentOfSource } from "../../../src/retrieval-browse/index.mjs";
 import { world, V } from "./fixture.mjs";
+import { namingInRefused } from "../entities/fixtures.mjs";
 
 const READS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words-reads.json", import.meta.url), "utf8"))
   .modules["retrieval-browse"].reads;
@@ -57,13 +58,14 @@ test("R1, R2, R3, R4 (plan rule 6): the sentences the module answers are the lis
   assert.equal(table.table.column_why, WORD("retrieval.column_why"));
   /* The followed people cannot be read: no entities were handed. */
   assert.deepEqual(kindOf(ans, "people").not_read.map((n) => n.why), [WORD("retrieval.unread.read_followed_people")]);
-  const broken = world({ deps: { recorders, entities: { namingIn: () => ({ ok: false, reason: "BROKEN" }) } } });
+  const refusal = namingInRefused(); // entities' real namingIn refusal
+  const broken = world({ deps: { recorders, entities: { namingIn: () => refusal } } });
   const d = broken.cap("b.pdf", "b bytes");
   broken.doc("INFO-B", {}, { captures: [d] });
   broken.reading(d.sha, "INFO-B");
   broken.unit(d.sha, "INFO-B", 0, "Text.", para(0));
   const refused = broken.rb.findIn({ viewer: V("vera"), scope: { capture: d.sha }, kinds: ["people"] });
-  assert.deepEqual(kindOf(refused, "people").not_read.map((n) => n.why), [WORD("retrieval.unread.read_followed_people_offices", { ans: " (BROKEN)" })]);
+  assert.deepEqual(kindOf(refused, "people").not_read.map((n) => n.why), [WORD("retrieval.unread.read_followed_people_offices", { ans: ` (${refusal.reason})` })]);
   /* "Nothing here": every capture read, none matched. */
   const nothing = broken.rb.findIn({ viewer: V("vera"), scope: { capture: d.sha }, kinds: ["money"] });
   assert.deepEqual([kindOf(nothing, "money").nothing, kindOf(nothing, "money").says], [true, WORD("state.empty")]);

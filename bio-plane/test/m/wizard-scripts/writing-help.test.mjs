@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { seeded, registration, V, MACHINE, STEPS, step, SCREENS, OPS, MACHINE_REFUSED, MACHINE_DRAFTS } from "./fixture.mjs";
 import * as wz from "../../../src/wizard-scripts/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { limitsUnreadable } from "../answers/fixtures.mjs";
 
 const F = V("frank");
 const ON = { on: true, account: { kind: "own", level: "member" } };   /* as the door resolves it: never the key (B4) */
@@ -208,13 +209,15 @@ test("R20 T34's rows: WIZARD_VIA_REFUSED and the eight writing-help rows are C-1
     for (const word of [/this instance/i, /the instance/i, /this copy/i, /this plane/i, /the plane/i, /\bserver\b/i]) assert.ok(!word.test(r.translation), `${code}: ${word}`);
 });
 
-test("R27 (T41; N812, K2373) the door's refusals of the account and its limit, ai-use R3's AI_LIMIT_REACHED and ai-accounts' AI_USE_SWITCHED_OFF (and a fail-closed one), are answered as given, after R24's codes and WRITING_HELP_NOTHING_TOLD and before any model turn; a door's AI_NO_ACCOUNT at R24 item 1's place; the retired ceiling codes are named nowhere", () => {
+test("R27 (T41; N812, K2373) the door's refusals of the account and its limit, ai-use R3's AI_LIMIT_REACHED and ai-accounts' AI_USE_SWITCHED_OFF (and a fail-closed one), are answered as given, after R24's codes and WRITING_HELP_NOTHING_TOLD and before any model turn; a door's AI_NO_ACCOUNT at R24 item 1's place; the retired ceiling codes are named nowhere", async () => {
   const w = helped();
   const before = w.snapshot();
   const limit = { ok: false, reason: "AI_LIMIT_REACHED", code: "AI_LIMIT_REACHED", check: "C-143.3", translation: "Your limit is reached.",
                   whose: "member", scope: "draft", unit: "usd", period: "day" };
   const off = { ok: false, reason: "AI_USE_SWITCHED_OFF", code: "AI_USE_SWITCHED_OFF", check: "C-29.40", translation: "Switched off.", use: "draft" };
-  const unreadable = { ok: false, reason: "LIMITS_UNREADABLE", code: "LIMITS_UNREADABLE" };
+  /* answers' published fixture (its R30): the account's paying limits cannot be judged, so the refusal is answers' own */
+  const unreadable = await limitsUnreadable();
+  assert.equal(unreadable.reason, "LIMITS_UNREADABLE", "answers' fixture answers LIMITS_UNREADABLE");
   const none = { ok: false, reason: "AI_NO_ACCOUNT", code: "AI_NO_ACCOUNT", check: "C-22.1", translation: "No account serves you." };
   const ask = (refusal, x = {}) => w.wz.writingHelp({ op: "notewrite", field: "text", told: "The gate was locked.", by: F, viewer: F,
                                                       assistant: { on: true, account: ON.account, refusal }, ...x });

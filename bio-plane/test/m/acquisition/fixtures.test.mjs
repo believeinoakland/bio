@@ -52,7 +52,7 @@ test("fixtures owedFetchAnswer R105 R111 R116: a parked fetch run by the alarm e
   }
   const sr = await owedFetchAnswer({ kind: "final", reason: "SOURCE_REFUSED" });
   assert.deepEqual([sr.done, sr.final, sr.reason], [true, true, "SOURCE_REFUSED"]);
-  await assert.rejects(() => owedFetchAnswer({ kind: "final", reason: "NOT_A_FINAL" }), /no final reason/);
+  await assert.rejects(() => owedFetchAnswer({ kind: "final", reason: "NOT_A_FINAL" }), /no final reason/); // fixtures-own: input a bad code fed to this module's own owedFetchAnswer, to prove it throws; no provider's answer
   await assert.rejects(() => owedFetchAnswer({ kind: "nope" }), /no kind/);
 });
 

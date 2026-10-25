@@ -138,7 +138,7 @@ function renderHeld(cs, view) {
   /* R4 (fix round 10, cause 33): the way between the pages. The sentence that more are waiting is drawn only with its door to the next page (the answer's `next`),
      and a door back when the member is past the first; the doors are the page read again (`heldcaptures`), the next one from the answer's `next`. */
   const pg = U.heldPage && U.heldPage.who === (U.who === "all" ? "all" : "mine") ? U.heldPage : null;
-  /* a word by its own key where the words table holds it, else the nearest held row (K4269); the rows owed: screen.held.who, .who.mine, .who.all, .next, .back */
+  /* a word by its own key where the words table holds it, else the nearest held row (K4269); the rows owed: screen.held.who, .who.mine, .who.all, .next, .back, .empty.mine */
   const held_ = (k, alt) => (cs.w(k) !== k ? k : alt);
   const doors = (v) => {
     const next = v.truncated === true && typeof v.next === "string" && v.next ? v.next : "";
@@ -168,7 +168,7 @@ function renderHeld(cs, view) {
       + `<span class="meta">${cs.w("state.item.review.name")} · ${r._full ? `${grade(r)} ` : ""}${[r._full ? age(r.age_days) : "", projectOf(r)].filter(Boolean).join(" · ")}`
       + source(r) + "</span>"
       + alsoHere(r) + (r._full ? eligibility(r) + asked(r) + files(r) : "")],
-  }) + doors(v), { empty: "screen.held.empty" });
+  }) + doors(v), { empty: me && U.who !== "all" ? held_("screen.held.empty.mine", "screen.held.empty") : "screen.held.empty" });
   /* R13: the "Set aside" list: who set each aside, when, and why, as `set_aside` answers it; `heldrestore` with a reason in
      its row's panel, and in the hold strip for picked rows */
   const asideSec = cs.sec("screen.held.setaside", (Array.isArray(U.waiting) && U.waiting.length

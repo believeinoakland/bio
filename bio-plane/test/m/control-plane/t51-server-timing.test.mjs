@@ -80,6 +80,7 @@ test("R121 control: an answer in time carries no `timings.door`, a phase that ra
     if (ctx.op !== "acquire") return undefined;
     await ctx.stub.fetch("http://x/acquire", { method: "POST", body: "{}" });
     await ctx.stub.fetch("http://x/extractread", { method: "POST", body: "{}" });
+    // fixtures-own: synthetic a finished acquire the handler gives in time; the test is that the door leaves it untouched
     return M.json({ ok: true, result: { ok: true, done: true } });
   } };
   const quick = await call(w.env, { op: "acquire", token: w.S.ann, method: "POST", hooks, body: { locator: "https://example.org/small" } });
