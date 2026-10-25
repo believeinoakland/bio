@@ -1119,3 +1119,8 @@ C. Found, outside my paths: none beyond the above.
 ## J65 · BLOCKED
 
 Cause: context. Wave B is mostly done and pushed (my record's last section, STATE AT HAND-OFF): store.mjs calls assembleStore, plane's copy deleted, tests re-pointed; fixtures, format, architecture, coverage, ownership 0. Open: r8-headofline, g83-location, r10-lag-figure red in the heavy run (rerun alone first), remaining heavy files, impact users, B95's 20 loaded g54-l runs. BOB: RESUME me.
+
+## Saved at K5183 (PLANE #62)
+
+Done and pushed: see "STATE AT HAND-OFF" above (Wave B code, test re-pointing, fixtures 0, checks 0). No half-done files; no workers running (the background heavy-test script was stopped).
+Exact next step: (1) apply B97: fix `bio-plane/test/m/plane/r8-headofline.test.mjs:124` as control-plane did (read its change in `bio-plane/test/m/control-plane/` on the tranche), seen red then green; (2) rerun alone `g83-location`, `r10-lag-figure` (red in the batch), then the heavy files not yet run (r10-filing-stall, r10-nohome-filed-later, r10-land-yields, g42, l77, g123h, g124f, g128i, g41, g44, g123f, shape-harness); (3) impact users, `fleetbundles`, `checks/run.mjs`; (4) B95's 20 loaded g54-l runs; (5) COMPLETE with the Size line and the remaining root (store-assembly/register.mjs).
