@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { storeWorld, WORLD_TOKENS } from "./fixtures.mjs";
 
 const caps = { capabilities: ["contribute"] };
-// fixtures-own: the secret is an input the test feeds the door and then looks for in every answer; the key is the instance's own secret, which no call ever sends
+// the secret is an input the test feeds the door and then looks for in every answer; the key is the instance's own secret, which no call ever sends
 const SECRET = "tok-world-capture-secret-5d1a9e07c3b8";
 const KEY = "world-capture-credentials-key-7e2b4f90a1c6d385";
 
