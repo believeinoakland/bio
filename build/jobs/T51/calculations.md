@@ -427,3 +427,26 @@ R4 says: `count` over rows; the others over the stated `column`; `share` and `ra
 - `ratio`: the same part, over the rows that are not it (count of rows equal to `part` : count of rows not equal).
 - `difference`: needs `column` AND `part` too: rows equal to `part` minus rows not equal.
 The part is a row count, not a sum. If you mean `column` as a numeric column summed (share = sum over the part's rows / sum over all; difference = something over `column` alone), or `difference` over `column` alone with a different meaning (e.g. the sum less the count), say which. Until you answer I build the reading above; a missing `column` is refused `NO_COLUMN` naming `column`, a missing `part` for share, ratio and difference `NO_PART` naming `part`.
+
+## J24 · COMPLETE
+
+Fix round 10, follow-up 58 (B31, K5131): two causes. Branch job/T51/calculations (tranche/T51 merged first, no rebase). R4 and R41 met; ids named: R4, R41.
+
+**Cause 1: work it out with no recipe (R4).**
+- Root cause: `#kindPlan` composed a recipe only for estimate-over-visits, unit cost, budget comparison and ranking, so `count`/`total`/`share`/`ratio`/`difference` with no `recipe` reached `checkRecipe(null)` and answered `RECIPE_INVALID ... a recipe is an object`.
+- Fix: `#defaultRecipe` composes the recipe in the closed grammar over the one input table: `count` over rows; `total` the sum of `column`; `share`/`ratio`/`difference` over the rows whose `column` equals `part` and those that do not (share of rows; ratio part:rest; difference part minus rest). `create` and `evaluate` take top-level `column` and `part` (`calculationcreate`'s accepts gains both). Refusals: `NO_COLUMN` (`field: "column"`), `NO_SUCH_COLUMN`, `NO_PART` (`field: "part"`), `KIND_INPUTS` (input not a table). A recipe given runs as before.
+- Why missed: every module test passed `recipe`. Test: new `r15-default-recipe.test.mjs` (real acts: `w.table` then `create` with the screen's body), seen red (RECIPE_INVALID, 0 of 4 pass) with the source change stashed, now 4 of 4.
+- Open: the meaning of share/ratio/difference over one column is my reading (QUESTION J23, unanswered when I finished); it is in `#defaultRecipe` alone, so a different answer is a one-function change.
+- Platform check: none needed (pure code).
+
+**Cause 2: a visit on one's own testimony (R41).**
+- Root cause: `memberOf` answers null for a bare handle other than the founder, so `sameMember` refused `NOT_YOUR_TESTIMONY` for every member; `testify` stamps the bare handle, `by` arrives `member:bob`.
+- Fix: `sameMember` compares `stampMember`, which is `memberOf` else the bare handle (`[A-Za-z0-9._-]`, never a machine identity, which carries a colon). `memberOf` itself is unchanged, so sight stays closed to a bare string.
+- Why missed: the module test hand-stamped `member:` on both sides. Test: new `r15-bare-handle.test.mjs` (real `testify` as bob; visit as bob counted, as alice and ben refused, a machine matches nothing), seen red, now green.
+- Platform check: none needed.
+
+**Fixture markers added:** none. `fixtures.mjs <root> calculations --list`: 0 failures.
+
+**Tests and checks.** calculations module 151/151 pass (151 tests, 0 fail). Users: 20 non-calculations test files naming `calculationcreate`/`recordVisit`/`spotcheckvisit`: 221/221 pass. format 0 failures; architecture 0; coverage 49 of 49; words 0; fixtures 0; ownership 1 file, 0 failures (before commit of the working tree).
+**Deferred.** Nothing. **Found in another module.** Nothing new.
+Size (session_017WZeneCFenmdMXwGaZTxaK): test runs 9, module lines 4245

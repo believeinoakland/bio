@@ -96,9 +96,11 @@ const LINK_KIND_FIELDS = Object.freeze(["kind", "link_kind", "relation", "relati
 const GRADES = Object.freeze(["A", "B", "C", "D"]);
 const TESTIMONY = "D";
 const SHA = /^[0-9a-f]{64}$/;
+const BARE_HANDLE = /^[A-Za-z0-9._-]{1,128}$/;   /* a member id spelled bare, as `testify` stamps an author (K5131) */
 const CALC_RE = idPattern("CALC");
 const MONEY_RE = idPattern("MNY");
 const READ_LIMIT_MAX = 1000;
+const BUILT_IN_KINDS = Object.freeze(["count", "total", "share", "ratio", "difference"]);   /* R4 (K5131): kinds that compose a default recipe */
 const TABLE_CACHE_CHARS = 24 * 1024 * 1024;   /* the held tables' text kept at hand, at most (R1: one 20 MiB table fits) */
 /** R14 (G45): a value of an ingest's record (`rows`, `written`, `not_written`) stays in `calc_ingests` while its UTF-8 length is at most
  *  this; above it the column holds the marker `{parts, bytes, count}` and the text is in `calc_ingest_parts`, in chunks of at most
@@ -164,8 +166,11 @@ export function memberOf(stamp) {
   if (p.member) return p.member;
   return stamp === Membership.ROOT_ADMIN ? Membership.ROOT_ADMIN : null;
 }
+/* K5131: the member a stamp names in a comparison of authors: `testify` stamps a testimony's author as the bare handle (`bob`), which names member
+   `bob` as `member:bob` does; a machine identity (it carries a colon) is no handle. Sight (`memberOf`) stays closed to a bare handle. */
+const stampMember = (stamp) => memberOf(stamp) ?? (typeof stamp === "string" && BARE_HANDLE.test(stamp) && !isMachineIdentity(stamp) ? stamp : null);
 /** R41: whether two stamps name the one same member (a machine, or no member, matches nothing). */
-const sameMember = (a, b) => { const m = memberOf(a); return m !== null && m === memberOf(b); };
+const sameMember = (a, b) => { const m = stampMember(a); return m !== null && m === stampMember(b); };
 const isMachine = (by) => typeof by === "string" && isMachineIdentity(by);
 const stamped = (by) => typeof by === "string" && by.trim() !== "";
 
@@ -1123,7 +1128,7 @@ export class Calculations {
   }
 
   /* R16–R18: a kind's own conditions over the recipe and its inputs, and the recipe it composes when none is given. */
-  #kindPlan(kind, recipe, terms, described, bound) {
+  #kindPlan(kind, recipe, terms, described, bound, { column = null, part = null } = {}) {
     if (!CALCULATION_KINDS.includes(kind)) return no("UNKNOWN_KIND", `a calculation's kind is one of ${CALCULATION_KINDS.join(", ")}. Nothing was written.`);
     const money = described.filter((d) => d.kind === "money");
     if (kind === "estimate") {
@@ -1193,7 +1198,33 @@ export class Calculations {
       if (!last || last.op !== "sort") return no("NOT_A_RANKING", "a ranking's answer is a sort by its one stated quantity. Nothing was written.");
       return { ok: true, recipe, ranking: { quantity: str(quantity), scope: str(terms.scope), period: terms.period } };
     }
+    if (BUILT_IN_KINDS.includes(kind) && (recipe === null || recipe === undefined)) return this.#defaultRecipe(kind, described, bound, column, part);
     return recipe ? { ok: true, recipe } : null;
+  }
+
+  /* R4 (K5131): the recipe a built-in kind composes when none is given, in the closed grammar, over its one input table: `count` over its rows;
+     `total` the sum of the stated `column`; `share`, `ratio` and `difference` over the rows whose `column` equals the stated `part` and the rows that
+     do not (a share of the rows, a ratio of the first to the second, their difference). A column (or a part) not stated is refused naming it. */
+  #defaultRecipe(kind, described, bound, column, part) {
+    const t = described.length === 1 ? bound[described[0].name] : null;
+    if (!plain(t) || !Array.isArray(t.fields))
+      return no("KIND_INPUTS", localize("calculations.index.a_kind_without_a_recipe", "a {kind} calculation without a recipe is worked out over one table; the input given is not one. Nothing was written.", { kind: String(kind) }));
+    const name = described[0].name;
+    const input = { name, kind: "table" };
+    if (kind === "count") return { ok: true, recipe: { method: METHOD, inputs: [input], steps: [{ op: "count", from: name, as: "count" }], output: "count" } };
+    const col = str(column);
+    if (!col) return no("NO_COLUMN", localize("calculations.index.the_column_is_not_stated", "a {kind} is worked out over a column of the table, and none is stated; name the column. Nothing was written.", { kind: String(kind) }), { field: "column" });
+    if (!t.fields.some((f) => f.name === col))
+      return no("NO_SUCH_COLUMN", localize("calculations.index.the_table_has_no_such_column", "the table has no column \"{column}\". Nothing was written.", { column: col }), { field: "column" });
+    if (kind === "total") return { ok: true, recipe: { method: METHOD, inputs: [input], steps: [{ op: "sum", from: name, field: col, as: "total" }], output: "total" } };
+    const value = typeof part === "string" ? part.trim() : Number.isSafeInteger(part) ? part : "";
+    if (value === "") return no("NO_PART", localize("calculations.index.the_part_is_not_stated", "a {kind} is of the rows whose {column} is one value, and none is stated; name the part. Nothing was written.", { kind: String(kind), column: col }), { field: "part" });
+    const rows = (test, as) => ({ op: "select", from: name, where: [{ field: col, test, value }], as });
+    if (kind === "share") return { ok: true, recipe: { method: METHOD, inputs: [input], steps: [rows("eq", "part_rows"), { op: "share", part: "part_rows", whole: name, as: "share" }], output: "share" } };
+    return { ok: true, recipe: { method: METHOD, inputs: [input], steps: [rows("eq", "part_rows"), rows("ne", "other_rows"),
+      { op: "count", from: "part_rows", as: "part_count" }, { op: "count", from: "other_rows", as: "other_count" },
+      kind === "ratio" ? { op: "ratio", numerator: "part_count", denominator: "other_count", as: "ratio" }
+        : { op: "difference", a: "part_count", b: "other_count", as: "difference" }], output: kind } };
   }
 
   /* R33–R36: what a recipe of application reads beside its inputs (a change's date, a target, a provision), then its
@@ -1305,14 +1336,14 @@ export class Calculations {
 
   /* The whole computation of R4–R7, R12, R15–R18, for `create` and `evaluate`: refusals in R4's order, else what
      `create` stores. */
-  async #compute({ kind = null, recipe = null, inputs = null, threshold = null, period = null, terms = null, viewer, requireKind = true }) {
+  async #compute({ kind = null, recipe = null, inputs = null, threshold = null, period = null, terms = null, column = null, part = null, viewer, requireKind = true }) {
     if (!Array.isArray(inputs) || !inputs.length) return no("NO_INPUTS", "a calculation names its inputs: declared tables, money facts, cited figures, other calculations or frozen sets. Nothing was written.");
     const b = await this.#bind(inputs, viewer, { threshold });
     if (!b.ok) return b;
     const th = this.#threshold(threshold, period || {}, viewer);
     if (!th.ok) return th;
     const plan = kind === null && !requireKind ? null : APPLICATION_KINDS.includes(kind)
-      ? this.#applicationPlan(kind, recipe, terms, b, viewer, period || {}) : this.#kindPlan(kind, recipe, terms, b.inputs, b.bound);
+      ? this.#applicationPlan(kind, recipe, terms, b, viewer, period || {}) : this.#kindPlan(kind, recipe, terms, b.inputs, b.bound, { column, part });
     if (plan && !plan.ok) return plan;
     const r = plan && plan.recipe ? plan.recipe : recipe;
     if (plain(r)) {
@@ -1433,12 +1464,12 @@ export class Calculations {
   /** R4: `create({question, terms, period, inputs, recipe, kind, threshold?, methodNote?, evidences?, project, by})`.
    *  Async (inputs may be read from the evidence store). */
   async create({ question = null, terms = null, period = null, inputs = null, recipe = null, kind = null, threshold = null,
-                 methodNote = null, evidences = null, project = null, by = null } = {}) {
+                 methodNote = null, evidences = null, project = null, column = null, part = null, by = null } = {}) {
     if (!stamped(by)) return no("NO_AUTHOR", "a calculation is recorded under the control plane's stamp. Nothing was written.");
     if (!str(question)) return no("NO_QUESTION", "a calculation states the question it answers. Nothing was written.");
     const p = periodOf(period);
     if (!p) return no("NO_PERIOD", "a calculation states its period: {from, to}, each a date YYYY-MM-DD or null (not both), or a period key. Nothing was written.");
-    const c = await this.#compute({ kind, recipe, inputs, threshold, period: p, terms, viewer: by });
+    const c = await this.#compute({ kind, recipe, inputs, threshold, period: p, terms, column, part, viewer: by });
     if (!c.ok) return c;
     /* after R4's ordered refusals, the fields it adds: */
     if (project !== null && project !== undefined && (!str(project) || !this.#sees(project, by)))
@@ -1485,10 +1516,10 @@ export class Calculations {
 
   /** R7: `evaluate({recipe, inputs, viewer, kind?, threshold?, period?, terms?})`: what `create` would store, writing
    *  nothing. */
-  async evaluate({ recipe = null, inputs = null, viewer = null, kind = null, threshold = null, period = null, terms = null } = {}) {
+  async evaluate({ recipe = null, inputs = null, viewer = null, kind = null, threshold = null, period = null, terms = null, column = null, part = null } = {}) {
     if (!stamped(viewer)) return no("NO_VIEWER", "an evaluation is asked under the control plane's stamp.");
     const p = period === null || period === undefined ? {} : periodOf(period) || {};
-    const c = await this.#compute({ kind, recipe, inputs, threshold, period: p, terms, viewer, requireKind: false });
+    const c = await this.#compute({ kind, recipe, inputs, threshold, period: p, terms, column, part, viewer, requireKind: false });
     if (!c.ok) return { ...c, detail: String(c.detail || "").replace(/ Nothing was written\.$/, "") };
     return { ok: true, writes: "nothing", result_key: c.result_key, results: c.results, method_version: METHOD, recipe: c.recipe };
   }
@@ -2822,7 +2853,7 @@ export const DECLARED_OPS = Object.freeze({
   tabledeclare: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("calculations.declared.tabledeclare", "table-directed: keyed by a table's digest; writes calculations' rows and moves no bundle"),
     fields: { accepts: ["source","schema","header","roles","vintage"], requires: ["source","schema","header"] } },
   calculationcreate: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("calculations.declared.calculationcreate", "calculation-directed: keyed by a new CALC- id; writes calculations' rows and moves no bundle"),
-    fields: { accepts: ["question","terms","period","inputs","recipe","kind","threshold","methodNote","evidences","project"], requires: ["question","period","inputs","kind"] } },
+    fields: { accepts: ["question","terms","period","inputs","recipe","kind","threshold","methodNote","evidences","project","column","part"], requires: ["question","period","inputs","kind"] } },
   moneyingestread: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("calculations.declared.moneyingestread", "read: a money ingest's stored lists, a page at a time, with true counts and whether the ingest is complete (`calculations` R14); writes nothing"),
     fields: { accepts: ["ingest","kind","after","limit"], requires: ["ingest"] } },
   calculationaccept: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("calculations.declared.calculationaccept", "calculation-directed: keyed by calculation; a member's acceptance after an agreeing recompute"),
