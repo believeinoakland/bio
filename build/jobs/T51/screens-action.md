@@ -449,3 +449,7 @@ Merged `origin/tranche/T51`. I passed no `{group: null}`, so nothing to drop. Th
 **Not mine:** store-assembly's 15 words failures and the duplicate `plane.declared.readtranslate` sentence (above).
 
 Size (session_014Xi3cMqxUmon661x8n29a3): test runs 5, module lines 5078
+
+## J33 · COMPLETE
+
+COMPLETE (re B40). Merged tranche/T51 @ 195b11dc45; suite 295 pass, 0 fail. format 0, architecture 0, coverage 55 of 55, ownership 0, words screens-action 0. fixtures.mjs: the same 7 kept lines + 2 accepted as in Round 11; the new recipes give the refusals of writinghelp but never `text` (no model), so those 3 lines stay scripted; the other 4 have no recipe. checks/run.mjs: no finding in my module, but 16 words failures in store-assembly (ask.mjs, wiring.mjs, wizards.mjs, declared.mjs:16), and setup-words build --check refuses on plane.declared.readtranslate, which has two sentences (plane/declared.mjs:13 and store-assembly/declared.mjs:16): not mine, REPORT. Other REPORTs are in my record (Round 11 and 12). Met ids: R3, R5, R6, R18, R32, R50.
