@@ -362,3 +362,25 @@ Until Bob chooses, my branch is one declaration short of COMPLETE. The code chan
 **Found outside credentials (REPORT for BOB; not touched).** `run.mjs` lists 15 other failures: interface-shell `harness.mjs:97` (signout answer from credentials, earlier); law-relations `fixture.mjs:136` (citationLookup refusal from credentials/acquisition, earlier); screens-daily `home.test.mjs:39,466` and `queue-foot.test.mjs:138` (op-table answers from credentials, earlier); screens-intake `t51-credentials.test.mjs:33,46` (capture-sources/capture-requests, earlier); store-assembly `wiring.mjs:49,78`, `wizards.mjs:51` (plain/inline strings, not localized), `declared.mjs:16` (`plane.declared.readtranslate` has a different `en` than `plane/declared.mjs:13`). None is caused by this change; this change touches only one test file.
 
 **Size (session_01MX23PSD31bEtV5CnCLBEte): test runs 2, module lines 2223**
+
+## J23 · BLOCKED
+
+Processed CHANGE B16 (K5197): credentials hands its clock to ai-accounts; the failing-first test is red until ai-accounts takes a clock. BLOCKED (cause: needs ai-accounts).
+
+**Done (credentials, pushed as `6f6aa1047a`).**
+- `bio-plane/src/credentials/index.mjs:2061`: `aiAccountsOf(ctx, { record: core, membership: m, sealSecret, now })`. `now` is the function `credentialsOf` was handed; none handed, it is `null` and ai-accounts reads the wall clock as before.
+- `bio-plane/test/m/credentials/k5197-accounts-clock.test.mjs` (new, two tests, through the instance credentials makes, `w.c.accounts.subscriptionTokenHold`, which returns `{ok, since}` with `since` whole-second):
+  1. handed `now: () => PINNED`, the sign-in's `since` equals `2026-10-20T10:15:30Z`. **Failing-first:** red on the code before the change (`since` was the wall clock). After the change it is still red, with `actual: '2026-10-25T22:23:38Z'`.
+  2. control: no clock handed, `since` is the wall clock between the calls either side. Green.
+
+**Why it stays red.** `aiAccountsOf(ctx, { record, membership, sealSecret })` takes no clock, and `AiAccounts` reads `Date.now()` directly at `bio-plane/src/ai-accounts/index.mjs:759` (sign-in `since` and `validUntil`) and `:779`. Its `stampSecond` default (`:67`) also uses `Date.now()`. So the handed `now` is dropped inside ai-accounts. Credentials cannot make that line green alone.
+
+**Needs ai-accounts (its paths, not mine).** One change, the same pattern as credentials' K5148 rule: `aiAccountsOf(ctx, { record, membership, sealSecret, now })` takes `now` (a function of milliseconds, default null), `AiAccounts` keeps it and reads it at `:759` and `:779` (and wherever it takes a default `Date.now()` for a stamp), wall clock when none is given. Once that merges, the K5197 test should go green with no change in credentials.
+
+**Environment control, not testable as written.** The B16 control "none handed, the environment's `BIO_NOW_MS`" does not hold in the code I read. `credentialsOps` sets `BIO_NOW_MS` on credentials' own `#nowMs` only (`credentials/index.mjs:131-146, 2091`). `ai-accounts` has no path to that environment, and its sign-in op is in-plane, not routed through `credentialsOps`. So with no clock handed, ai-accounts stamps the wall clock even in a pinned store. This is for BOB to decide: either ai-accounts also reads `env.BIO_NOW_MS` (the same handed-in rule), or the environment control is dropped. I did not add an environment test that would be red by design.
+
+**Checks / tests.** Credentials suite: 195 of 196 pass; the one red is the K5197 test above. `k5148-clock.test.mjs` (5 of 5) still green. Not run yet after this change: format, architecture, coverage, ownership, fixtures; I'll run them once ai-accounts lands.
+
+**Size (session_01MX23PSD31bEtV5CnCLBEte):** test runs 2 (the new test file, then the full credentials suite, plus the K5148 re-run), module lines 2223 (`index.mjs` unchanged in count, one line edited).
+
+**Waiting on BOB.** BOB or the ai-accounts job takes the one line above. I'm staying on the credentials branch until that lands; then I re-run the K5197 test and the module checks, and COMPLETE.
