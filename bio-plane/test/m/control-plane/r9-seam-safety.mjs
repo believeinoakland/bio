@@ -35,8 +35,10 @@ export function sections(kit, counting) {
   const k = makeKit({ tag: "r9safety", serviceBindings: { FILE_SCANNER: scanner } });
   after(() => k.mf.dispose());
   const owner = () => k.ownerOf("r9s-ann").then((o) => o.auth);
-  /* upload, file, and wait until the scanner has been asked about the digest and the member's state has left "waiting" */
-  async function scanned(bytes, { name, type }) {
+  /* upload, file, and wait until the work the case asserts on is done: the note it names is written (the scanner's verdict is a call and then a write, so
+     "the scanner was asked" says nothing of the note; on a slow machine the two are seconds apart), or, for a file the plane judges from its structure
+     and sends nowhere (`note` omitted), the member's state has left "waiting" */
+  async function scanned(bytes, { name, type, note = null }) {
     const auth = await owner();
     const { up } = await put(k, auth, bytes, { name, type });
     assert.equal(up.ok, true, JSON.stringify(up).slice(0, 300));
@@ -46,7 +48,7 @@ export function sections(kit, counting) {
     await k.until(async () => {
       os = (await k.get(auth, { op: "originalstate", capture: sha })).result;
       notes = ((await k.get(auth, { op: "verdictnotes", capture: sha })).result || {}).notes || [];
-      return (os && os.not_scanned) || (calls.includes(sha) && (notes.length || (os && os.may_open === true))) ? true : null;
+      return note ? (notes.some((n) => n.result === note) ? true : null) : (os && os.not_scanned) ? true : null;
     }, 150000, 2000);
     return { auth, sha, os, notes };
   }
@@ -59,13 +61,13 @@ export function sections(kit, counting) {
     for (const b of [zip, docx]) verdicts.set(sha256(b), { result: "encrypted" });
     const bad = [];
     for (const [label, bytes, type] of [["zip", zip, "application/zip"], ["docx", docx, "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]]) {
-      const r = await scanned(bytes, { name: `enc.${label}`, type });
+      const r = await scanned(bytes, { name: `enc.${label}`, type, note: label === "zip" ? "encrypted" : null });
       if (!(r.os && r.os.why === "NOT_SCANNED" && r.os.not_scanned === "ENCRYPTED" && r.os.may_open === false)) bad.push(`${label}: originalstate is ${JSON.stringify(r.os).slice(0, 240)}`);
       /* the scanner is asked about a ZIP and says encrypted; an encrypted Word file is known so from its structure and is not sent to the scanner (file-safety R54): its state is the answer, no note is owed */
       if (label === "zip" && !r.notes.some((n) => n.result === "encrypted")) bad.push(`${label}: no note says encrypted: ${JSON.stringify(r.notes).slice(0, 500)}; originalstate ${JSON.stringify(r.os).slice(0, 200)}`);
       if (r.notes.some((n) => n.result === "clean")) bad.push(`${label}: a note says clean`);
     }
-    const control = await scanned(text, { name: "ok.txt", type: "text/plain" });
+    const control = await scanned(text, { name: "ok.txt", type: "text/plain", note: "clean" });
     if (!(control.os && !control.os.not_scanned && control.os.may_open === true)) bad.push(`control: a clean text opens: ${JSON.stringify(control.os).slice(0, 240)}`);
     if (control.notes.some((n) => ["encrypted", "unscannable"].includes(n.result))) bad.push("control: a note says it could not be scanned");
     assert.deepEqual(bad, []);
@@ -74,7 +76,7 @@ export function sections(kit, counting) {
   test("R9 seam §16 (G136a, G136b, SCAN D13, I21; R100 R123): a scan that hit a limit (the scanner answers `unknown`, reason `LIMIT:ScanTime`) is the note `unscannable` with the limit named, not a permanent `NOT_SCANNED` with the reason lost", { timeout: 900000 }, async () => {
     const bytes = Buffer.from(`minutes that exhaust the scan time ${uniq()}\n`);
     verdicts.set(sha256(bytes), { result: "unknown", reason: "LIMIT:ScanTime" });
-    const r = await scanned(bytes, { name: "slow.txt", type: "text/plain" });
+    const r = await scanned(bytes, { name: "slow.txt", type: "text/plain", note: "unscannable" });
     const shown = JSON.stringify([r.os, r.notes]);
     const note = r.notes.find((n) => n.result === "unscannable");
     assert.ok(note, "the note says unscannable: " + shown.slice(0, 1400));
