@@ -298,3 +298,7 @@ Record: `build/jobs/T51/capture-requests.md`, section "Completion (B10 ...)". Me
 **Why the tests missed it (for the record).** The module's tests never called the `capturerequests` op through the registry's declaration. `declared-ops.test.mjs` covered only `capturerequest` and `capturerequestretry` (R57, R58), so an undeclared read passed every test.
 
 **Size (session_01LzS8HvjY3FmLTxLbvbfkTu): test runs 9, module lines 2599.** (Test runs: the first red run, the first green run, the full module run, the declared-ops run after the localize change, the registry-reader run, the affordances and store-request run, the same run on the tranche baseline in a temporary worktree, and the module run after the tranche merge. Module lines: `bio-plane/src/capture-requests/*.mjs`, all files of the module.)
+
+## J11 · COMPLETE
+
+COMPLETE: capture-requests, B11 (K5182, fix round 10, plan item 89). R59 is met: capturerequests is declared in DECLARED_OPS (bio-plane/src/capture-requests/index.mjs, lines 1904-1914) as a read, its failing-first test is in declared-ops.test.mjs. Module suite 132 of 132 pass; registry readers 411 of 411 pass. Checks format, architecture, coverage, ownership, fixtures and words are clean for this module. One finding outside my paths, not caused by this change: 45 tests in affordances/ and store-request/ fail identically on the tranche before this job (storeWorld's GROUP_ALREADY_RECORDED); REPORT in the record. Full detail and the Size line are in build/jobs/T51/capture-requests.md.
