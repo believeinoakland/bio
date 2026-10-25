@@ -32,10 +32,13 @@ test("R50 (T51 fix round 6; G53; K4691; amends R49) the vendored registry.json i
   assert.equal(wz.SCREEN_REGISTRY_SOURCE.sha256, createHash("sha256").update(readFileSync(DESIGN_REGISTRY, "utf8"), "utf8").digest("hex"), "and the generated registry names that file's sha256");
 });
 
-test("R50 (T51 fix round 6; G53; DEC-419; amends R49) the registry is re-taken at f72b2f8a4c: SCREEN_REGISTRY_SOURCE names that commit, with 84 screens and 609 acts (448 declared, 83 function, 78 owed); projectjoin is a registered act on start-send, request and action; the new screen registers has no page and registers its declared acts; every act the earlier file at 43379a1a44 registered is still registered; build-data.mjs --check passes", () => {
-  assert.equal(SOURCES.registry.commit, "f72b2f8a4c");
-  assert.equal(wz.SCREEN_REGISTRY_SOURCE.commit, "f72b2f8a4c");
-  assert.deepEqual([wz.SCREEN_REGISTRY.length, acts.length, count("declared"), count("function"), count("owed")], [84, 609, 448, 83, 78]);
+test("R50 (T51 fix round 6; G53; DEC-419; amends R49) the registry is re-taken at c752a602da (R52, after f72b2f8a4c): SCREEN_REGISTRY_SOURCE names that commit, with 84 screens and 609 acts (448 declared, 83 function, 78 owed); projectjoin is a registered act on start-send, request and action; the new screen registers has no page and registers its declared acts; every act the earlier file at 43379a1a44 registered is still registered; build-data.mjs --check passes", () => {
+  assert.equal(SOURCES.registry.commit, "c752a602da");
+  assert.equal(wz.SCREEN_REGISTRY_SOURCE.commit, "c752a602da");
+  assert.deepEqual([wz.SCREEN_REGISTRY.length, acts.length, count("declared"), count("function"), count("owed")], [91, 652, 448, 83, 121]);
+  const f72 = at("registry-f72b2f8a4c.json");
+  assert.equal(f72.screens.length, 84, "the registry at f72b2f8a4c is kept whole beside it: 84 screens, 609 acts");
+  assert.equal(f72.screens.reduce((n, s) => n + s.acts.length, 0), 609);
   for (const id of ["start-send", "request", "action"])
     assert.ok(wz.SCREEN_REGISTRY.find((s) => s.id === id).acts.includes("projectjoin"), `${id}: projectjoin is registered`);
   const registers = wz.SCREEN_REGISTRY.find((s) => s.id === "registers");
@@ -49,7 +52,7 @@ test("R50 (T51 fix round 6; G53; DEC-419; amends R49) the registry is re-taken a
     for (const a of s.acts.filter((x) => x.status !== "owed")) assert.ok(now.acts.includes(a.op), `${s.id}: ${a.op} still registered`);
   }
   const added = acts.length - 564;
-  assert.equal(added, 45, "control: the diff adds acts only (564 to 609)");
+  assert.equal(added, 88, "control: the diff adds acts only (564 to 652)");
   assert.equal(run("--check").status, 0, "the carried generated files are what their sources give");
 });
 
@@ -59,7 +62,7 @@ test("R50 control: a one-byte change to the generated registry fails --check, an
     for (const f of GENERATED) copyFileSync(join(GEN_DIR, f), join(dir, f));
     assert.equal(run("--check", "--out", dir).status, 0, "the copies of the carried files pass");
     const path = join(dir, "screen-registry.mjs");
-    writeFileSync(path, readFileSync(path, "utf8").replace("f72b2f8a4c", "f72b2f8a4d"));
+    writeFileSync(path, readFileSync(path, "utf8").replace("c752a602da", "c752a602db"));
     const r = run("--check", "--out", dir);
     assert.equal(r.status, 1, "a one-byte change to the generated registry fails --check");
     assert.match(r.stderr, /screen-registry\.mjs is stale/);

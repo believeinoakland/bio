@@ -26,7 +26,7 @@ const lines = (list) => `[\n${list.map((x) => `  ${JSON.stringify(x)},`).join("\
 
 /** R41, R42: the files the carried data is generated from, each by its commit and the name it has in `--from`'s directory. */
 export const SOURCES = Object.freeze({
-  registry: Object.freeze({ commit: "f72b2f8a4c", file: "registry.json" }),
+  registry: Object.freeze({ commit: "c752a602da", file: "registry.json" }),
   library: Object.freeze({ commit: "d129238bf3", file: "library.json" }),
   newer: Object.freeze(["e08cd35ecb", "3660c18803", "3f40899950", "a0fab7abf0", "f90b187c7b", "4664e8efd4", "7be06eb4cb", "20c8001300", "2a64c5ae77", "1cc4a957f0"]
     .map((commit) => Object.freeze({ commit, file: `library-${commit}.json` }))),
