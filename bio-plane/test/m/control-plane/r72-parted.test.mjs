@@ -8,7 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bucket, sha } from "../capture/fixture.mjs";
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
-import { controlPlaneOwnerOps } from "../../../src/control-plane/owner-ops.mjs";
+import { ownerOps as controlPlaneOwnerOps } from "../../../src/store-assembly/owner-ops.mjs";
 import { PARTED_PART_BYTES } from "../../../src/capture/index.mjs";
 import { world, call, opCalls, aik, cred, FORGED } from "./harness.mjs";
 
