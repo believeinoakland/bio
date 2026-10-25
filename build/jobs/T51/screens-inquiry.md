@@ -584,3 +584,11 @@ COMPLETE (SCREENS-INQUIRY #29), re B59–B61 (A, B and part of C). tranche/T51 m
 **Checks and tests (against /home/user/bio):** module tests 574 pass, 0 fail. format 178 modules 0 failures; architecture 0; coverage 135 of 135 ids named, 0 failures; words 0 failures; ownership 29 files, 0 failures. Not run this job: `checks/run.mjs` whole and `setup-words/build.mjs --check` (stale rows expected).
 Platform: N (Miniflare, real plane and real OCR member) for the recovery notes; L (live copy, at the redeploy): the objective page's retired fold, and a cut PDF's recovery note.
 Size (session_01VmjLEoRTnMG8uisaBq3WZa): test runs 12, module lines 6990
+
+## J43 · REPORT
+
+REPORT (SCREENS-INQUIRY #30), re B62/B63. Merged tranche/T51 (3c52f78c34). Found in other modules (store-assembly x store-request), blocking every `storeWorld()` test of mine and store-request's own:
+
+`bio-plane/test/m/store-request/fixtures.mjs:31-36` seeds the producing team with `instancegroupseed {slug: "world-town"}` after `store-assembly`'s world has already recorded its team at first boot (`bio-plane/test/m/store-assembly/world.mjs:38-40, 241, 261`: `INSTANCE_NAME: "town"`, K5149). The seed is refused `GROUP_ALREADY_RECORDED` (C-64.3), so `storeWorld()` throws "the producing team was not recorded". On the tranche tip: `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/store-request/world.test.mjs` is 0 pass, 9 fail; every screens-inquiry file that calls `storeWorld()` (r10-question, r10-question-seam, ...) fails the same way. `storeWorld({ group: null })` works (skips the seed). Owner: store-request (STORE-REQUEST #4 is running; it may already be on it). Not my module, so I change nothing there.
+
+Meanwhile, in my own `test/m/screens-inquiry/fixtures.mjs` only, I wrap `storeWorld` to pass `group: null` unless a test asks for a group, with a comment naming this report; I remove the wrapper when store-request fixes the world. I carry on with B63 and the op tables on that.
