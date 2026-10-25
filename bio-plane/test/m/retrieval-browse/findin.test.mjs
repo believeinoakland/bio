@@ -112,7 +112,7 @@ test("R1: a scope of each form — a capture, a selection (read under its owner 
   const sel = { handle: w.selection("sel-ab", { owner: V("vera"), ids: ["INFO-A", "INFO-B"] }) };
   const bySel = run(w, { scope: { selection: sel.handle }, kinds: ["term"], term: "page" });
   assert.deepEqual([bySel.ok, bySel.scope.captures], [true, 2]);
-  assert.equal(run(w, { scope: { selection: sel.handle }, kinds: ["term"], term: "page", owner: V("ann") }).reason, "NOT_YOURS");
+  assert.equal(run(w, { scope: { selection: sel.handle }, kinds: ["term"], term: "page", owner: V("ann") }).reason, "SELECTION_NOT_YOURS");
   w.selections.delete(sel.handle);
   assert.equal(run(w, { scope: { selection: sel.handle }, kinds: ["term"], term: "page" }).reason, "NO_SUCH_SELECTION", "released or expired");
   const byProj = w.rb.findIn({ viewer: V("ann"), scope: { project: proj }, kinds: ["money"] });
