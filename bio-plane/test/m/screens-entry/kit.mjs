@@ -15,11 +15,31 @@ import { WORD_ROWS, word, hasWord } from "../../../src/setup-words/index.mjs";
 import { OPS, SESSION_OPS, NEEDS } from "../../../src/op-declarations/index.mjs";
 import { SCREENS, SCREEN_WORDS } from "../../../src/screens-entry/index.mjs";
 import { storeWorld } from "../store-request/fixtures.mjs";
+import { scanner } from "../file-safety/fixture.mjs";
 export { SCREENS, SCREEN_WORDS, word, hasWord };
 
 /** A fresh world over the real store (store-request R16–R19): claimed by the founder, or unclaimed when a test walks the claim.
  *  `group: null` because store-assembly's base already records the team (REPORT 1, J11; store-request's default seeds it again). */
 export const worldOf = ({ claimed = true, ...o } = {}) => storeWorld({ group: null, claimed, ...o });
+/** The binding `FILE_SCANNER` as a platform double: file-safety's own scanner stand-in (its `fixture.mjs`, answering as `file-scanner`'s
+ *  Provides state), reached by an address or a `Request` as a service binding is. `script` is that double's (`signatures`, `test`, ...). */
+export function scannerBinding(script = {}) {
+  const s = scanner(script);
+  return { calls: s.calls, fetch: (input, init) => s.fetch(input instanceof Request ? input : new Request(input, init)) };
+}
+/** The sealing secret a team's keys are kept under (a binding of the platform, which a world is given when a test keeps a key). */
+export const SEAL = "a-long-seal-secret-for-the-test-only";
+/** A member made by the founder's real acts on a team the page itself claimed (a world's own `signIn` needs a team the world claimed): her
+ *  `memberadd` (an administrator's, with the password asked again first), the invitation's `enroll` with a password of her own, then
+ *  `login`. Answers `{handle, token, password}`. */
+export async function enrol(world, founder, founderPassword, handle, { admin = false } = {}) {
+  await act(world, founder, "reauth", { body: { password: founderPassword } });
+  const added = await act(world, founder, "memberadd", { body: { memberId: handle, cover: `the world's member ${handle}`, ...(admin ? { role: "admin" } : {}) } });
+  const password = `${handle}-world-passphrase`;
+  await act(world, null, "enroll", { body: { invite: added.invite, handle, password } });
+  const login = await act(world, null, "login", { body: { handle, password, device: "own" } });
+  return { handle, token: login.token, password };
+}
 /** A 1×1 PNG, the logo a team sets. */
 export const LOGO_PNG = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAHnOcQAAAAABJRU5ErkJggg==";
 /** The world's team as the founder's real acts make it: a name, a public description, a logo (each only when asked), the founder
