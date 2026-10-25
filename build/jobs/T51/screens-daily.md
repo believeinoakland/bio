@@ -534,3 +534,7 @@ BLOCKED (cause: context-free, needs BOB's modules.json): R6's second half is don
 
 Merged `tranche/T51` (`answers` now in `uses`, K5142). architecture 0 failures (121 imports); ownership 0; format 0; coverage 101/101, 0; answers and contract tests 21 pass, 0 fail (the full module run, 297 pass, was before the merge, which changed no file of mine). B38's R6 first half and B39's second half are both done.
 Size (session_01GykapzvyLDepprUbDPaXny): test runs 13, module lines 4264
+
+## J28 · COMPLETE
+
+COMPLETE (B38, B39, B40): R6 met in both halves. Ask-as-search sends only admitted searches (fields and passages read apart, no OR); ruleanswer drawn only while ruleservicesstate reads on (both states on answers' fixture, red first). After merging tranche/T51: architecture, ownership, format, coverage 0 failures; module tests 297 pass. fixtures --list: 249, all op-table (waiting). Record: build/jobs/T51/screens-daily.md.
