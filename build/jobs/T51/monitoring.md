@@ -111,3 +111,17 @@ COMPLETE for T51 monitoring, batch C job 52, G140's consumer half (session sessi
 **Deferred:** none. **Found in another module:** only the `office-readers` path above.
 
 Size (session_01PCKo5gn3rH8ZDaWARPfr8H): test runs 9, module lines 3300 (non-blank, non-comment lines in src/monitoring/*.mjs; 4116 in all)
+
+## J7 · QUESTION
+
+QUESTION (J1) · monitoring · fix round 10 batch 5 · the four `intentWorld` / `publicationWorld` lines (fixture.mjs:210, :211; each a declaration and a use)
+
+What stands: the other lines of the START are re-pointed or marked (see my record when I post COMPLETE); the three fixtures are published and tested; 172 module tests pass. These four findings remain.
+
+The stand-ins are `stubIntent` (intent R7's `watchSet` and `registerSource`) and `stubPublication` (publication R42's `restingCapturesOf`). 14 tests use them, in `understanding.test.mjs` (R33) and `watch.test.mjs` (R70). Each test states, per project, which capture digests the project's objective or findings rest on, and the digests are the ones of documents that monitoring's own world holds (so `watched()` can map a digest to its bundle). Some tests set several projects, a watch set longer than two pages, a `watchSet` that throws for one project, and `gaps` / `progress` overrides for investigation.
+
+Why the published fixtures do not fit: `intentWorld()` and `publicationWorld()` each build one project in their own database with digests of their own making (`ent-1-need` and the like, `sha("the text of <doc>")`), and the two worlds name different project ids. A test cannot say "project P1 rests on this document's capture" and "P2 on that one", and `watched({project})` asks both providers about one project id.
+
+My best reading: re-pointing needs the providers to publish a fixture parameterised by what the user holds, for instance intent `watchSetOf({[projectKey]: [digest, ...]})` (a real intent whose projects' conditions read those digests, made by real acts) and publication `restingOf([{finding, projects, digests}])` over the same project ids. Then my `world()` takes those and the stubs go.
+
+What I will do unless you say otherwise: leave these four lines at `stay` in my COMPLETE, named with this reason, and re-point on a CHANGE once intent and publication publish such fixtures. Alternative if you prefer it now: I re-point R33's objective half only onto `intentWorld()` (its three digests, documents made to hold them); that leaves the stub for the rest, so it does not clear the four findings.
