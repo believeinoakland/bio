@@ -543,3 +543,23 @@ REPORT · other modules. (a) Plane R24 is NOT green after the re-take, and not b
 ## J26 · COMPLETE
 
 COMPLETE · B23 (K5069): registry re-taken at c752a602da: 91 screens, 652 acts (448 declared, 83 function, 121 owed naming 105 ops), the f72b2f8a4c file kept whole beside it; build-data.mjs --check passes; pins moved in library, t47, t48, t50, t51, t51fr3, t52g53. Module suite 140/140; format, architecture, coverage 51/51, ownership green; words 1 (handlist r51.test.mjs:9, see REPORT); fixtures 1 left (LIMITS_UNREADABLE, FIX-E). Plane R24: RED, cause in the REPORT (missing words), not the registry. Users: interface-shell, screens-wizards, translations, instance-setup, affordances, control-plane green; op-declarations R73 and screens-settings R39 red per REPORT; plane 599/601. Proposed R52 line in my record. No fixtures-own/generic markers added. Record: build/jobs/T51/wizard-scripts.md.
+
+## J27 · COMPLETE
+
+COMPLETE · B24 (fix round 10, follow-up 10; K5078). Commit 59d0c64d7b on job/T51/wizard-scripts.
+
+**Change (test file only).** `bio-plane/test/m/wizard-scripts/r51.test.mjs` no longer hand-lists the 45 admin acts. R51's list is read from R51's own line in `build/requirements/wizard-scripts.md` (the backquoted names between "on the team:" and "(45 names)"); the test asserts `ADMIN_ACTS` equals it, in order, with 45 members, frozen. Control: the join screen's first act in `source/registry.json` (`enroll`) is not an administrator's act. R51 is still named in the test title. The other two R51 tests are unchanged.
+
+**Judgement, for BOB.** The requirement's list is the contract, so it is the source I derive from. The admin classes themselves sit in `op-declarations` (`DECLARED_OPS`, `classes`); deriving from them would need a test-only `uses` edge from wizard-scripts to op-declarations in `build/modules.json`. That is BOB's call, so I did not add it. If BOB adds it, the test can be re-pointed in a later job.
+
+**Lines.** The FIX-E line `writing-help.test.mjs:217` (`LIMITS_UNREADABLE`, provider in a later batch) stays, as B24 says. No `fixtures-own` or `fixtures-generic` markers added. No deferrals. Nothing found in another module.
+
+**Checks** (absolute root /home/user/bio):
+- module tests `bio-plane/test/m/wizard-scripts/*.test.mjs`: 140 pass, 0 fail
+- words: 0 failures (handlist 0)
+- format: 0 failures
+- architecture: 0 failures
+- coverage: 51 of 51 live ids named, 0 failures
+- ownership vs origin/tranche/T51: 0 failures
+
+Size (session_01CnwJQiXshRasgJ9ErXumcK): test runs 3, module lines 2730
