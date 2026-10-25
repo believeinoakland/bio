@@ -316,3 +316,7 @@ No `fixtures-own`, no `fixtures-contract`.
 **Checks and tests.** queue-producers `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit` 154 tests, 154 pass, 0 fail. `impact.mjs origin/tranche/T51 HEAD`: "queue-producers 24/24, affected modules: 1 of 178" (tests only; no user to run). `checks/format.mjs`: 178 modules, 0 failures. `checks/coverage.mjs queue-producers`: 41 of 41, 0 failures. `checks/ownership.mjs queue-producers tranche/T51`: 16 files, 0 failures. `checks/words.mjs queue-producers`: 0 failures. `checks/fixtures.mjs queue-producers`: answer 3 (3 op-table), stub 0, code 0, contract 0, accepted 2; 3 failures (the three waiting lines). `checks/architecture.mjs queue-producers`: 1 failure (above).
 
 Size (session_016R48b4KURUGUt3h76T2fsb): test runs 14, module lines 3630
+
+## J17 · REPORT
+
+Owed by reevaluation (found in another module; described against its fixture, K5060). `noticesRead({several: true})` (bio-plane/test/m/reevaluation/fixtures.mjs) publishes three holders' four notices, but no second newer version of one holder's target. queue-producers R52 requires "a newer version of the same target is a new item"; my test for it was hand-built and is removed (K4990: no hand-built answers). Owed: reevaluation publishes a real answer in which one holder's target has two newer versions (two notices, different newer_capture), so R52's control can be taken from it. Until then R52's control is untested here.
