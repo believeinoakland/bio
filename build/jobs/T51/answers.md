@@ -93,3 +93,19 @@ Order: the job branch was fast-forwarded to `origin/job/T51/answers` and `mail s
 - `node checks/ownership.mjs /home/user/bio answers tranche/T51 job/T51/answers`: run after the commit below (result in COMPLETE).
 
 Size (session_01X6LaydCKjbEtyPkjE9aDG2): test runs 2, module lines 1919
+
+## J4 · COMPLETE
+
+Follow-up 38 applied (B4). Commit c2b4db9755 on job/T51/answers, pushed.
+
+**Export published:** `standingAnswersHeldBack({ member = "bob", finds = "Budget held" } = {})` in `bio-plane/test/m/answers/fixtures.mjs` (async). It makes the real acts (a standing question by `member`, a first run, a document holding `finds`, the copy's AI switch off by an administrator, then the finding run) and returns the real `standingAnswersFor({ member })` answer: `{ ok: true, cursor, entries }`, one entry per find, `answer: null`, `finds: { ids: ["INFO-2026-…"] }`, `held_back: { condition: "switch_off", switch: "copy" }`, label = STANDING_LABEL. Tests: 2 in `fixtures.test.mjs` (R19 R20; R20 with carol).
+
+**For queue, a shape correction:** B4 gives `held_back: "ai_off"`. No product value is that string; a held-back run answers an object, and with the copy's switch off it is `{ condition: "switch_off", switch: "copy" }`. Queue's re-point should take the object. I have not changed queue's test.
+
+**Markers:** none added (no fixtures-own, no fixtures-generic). **Lines left:** none. **Product code:** unchanged.
+
+**Checks:** answers tests 71/71 (fixtures.test 4/4); `checks/fixtures.mjs /home/user/bio answers --list`: answer 0 failures; format 178 modules 0 failures; architecture 24 files 0 failures; coverage 36 of 36 0 failures; ownership (after the commit) 3 files, 0 failures; `checks/run.mjs /home/user/bio`: words 0 failures, no finding names answers; setup-words `--check`: the basis-version-grammar stale-rows note only.
+
+**Order note:** `mail start` ran after the fast-forward of the job branch and before the tranche merge (B4 asked for the fetch and merge first). The merge of origin/tranche/T51 followed (deeae59476, clean). `mail start` only set the Status line.
+
+Size (session_01X6LaydCKjbEtyPkjE9aDG2): test runs 2, module lines 1919
