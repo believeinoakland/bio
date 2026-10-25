@@ -1,6 +1,6 @@
 # docket (T51)
 
-**Status** · session_01XN4PpTaXJFq2tHmnnK6J94 · depth 2 · COMPLETE · handled B4
+**Status** · session_01AfpNQasnQVjYv36UwxUmau · depth 2 · COMPLETE · handled B4
 
 ## Completion (T51-162, R8)
 
@@ -114,3 +114,48 @@ Note for BOB (K4426): every real `statement` item carries its edition (`docket_r
 Checks: docket suite 91 pass / 0 fail; fixtures.test 4 / 0; users named by impact (58 files) 388 / 0; checks fixtures (docket) 0, format 0, architecture 0, coverage 31 of 31, words 0, ownership 0; run.mjs: product-wide fixture failures in other modules only (none in docket's files); setup-words stale-rows note only.
 
 Size (session_01XN4PpTaXJFq2tHmnnK6J94): test runs 5, module lines 0
+
+## Fix round 10, follow-up 43 (B5, DOCKET #14, session_01AfpNQasnQVjYv36UwxUmau)
+
+**Done.** Test files only; no product code changed. `coreDueKinds()` (`bio-plane/test/m/docket/fixtures.mjs`) gains a third project R, managed by `hank` (a new member, who is no member of P or Q), with case `CASE-2026-0303` (`caseR`): edition 1 and edition 2 ratified with its "What changed" statement ("Dropped a date."), and an open tension on its load-bearing finding `INQ-2026-0004-hall` (`CAND-4`). Every row is written by publication's `publish` as before; the tension list gains `CAND-4`. Its answers are added as `hankDue` (hank's real `coreDue({viewer})`, edition:2 and tension:CAND-4) and `unseenDue` (alice's real `coreDue({case: caseR, viewer})`, empty). The existing `due`, `otherDue` and `caseQ`/`CASE` answers are unchanged (the old fixture tests pass as before).
+
+**Added to the fixture (for queue-producers' R30 controls):**
+- (a) a case of a project whose owner is not the viewer: `caseR`, read by alice (`unseenDue`: `{ok: true, items: [], count: 0, wrote: false}`), by dave (no item of it), and by its manager hank (`hankDue`).
+- (b) a case with no project: **not made**. The real schema forbids it: publication's `cases.project_id` is `NOT NULL` (`bio-plane/src/publication/schema.mjs`, the `cases` table). The new test asserts the constraint (`INSERT ... NULL` throws `NOT NULL`), so the state is not a real answer and nothing in the fixture fakes it.
+
+**Markers.** None added.
+
+**Tests.** `fixtures.test.mjs`: the existing four plus one new test, `R9 fixtures: coreDueKinds: a case of a project alice cannot see is told to its manager alone …`.
+
+**Note for queue-producers (its own job).** `fixtures.mjs` returns `hankDue` and `unseenDue` for its controls; its `real` list (`due` + `otherDue`) is unchanged, so its current assertions are unaffected by this addition.
+
+**Deferred:** none.
+
+**Found in other modules:** none caused by this job. `setup-words/build.mjs --check` reports a stale `rows.mjs` (its first mismatch is `basis-version-grammar.grammar.name_one_of_the_five`), not docket's.
+
+**Ran.**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/docket/` and `bio-plane/test/m/queue-producers/docket.test.mjs`: 94 pass, 0 fail.
+- `checks/fixtures.mjs /home/user/bio docket --list`: 3336 test files read; 0 failures.
+- `checks/format.mjs /home/user/bio`: 178 modules, 0 failures.
+- `checks/architecture.mjs /home/user/bio docket`: 17 product files, 0 failures.
+- `checks/coverage.mjs /home/user/bio docket`: 31 of 31 live requirement ids named by a test, 0 failures.
+- `checks/words.mjs /home/user/bio docket`: inline 0, plain 0, testcopy 0, missingkey 0, handlist 0; 0 failures.
+- `checks/ownership.mjs /home/user/bio docket tranche/T51`: 0 failures.
+
+Size (session_01AfpNQasnQVjYv36UwxUmau): test runs 3, module lines 1657
+
+## J5 · COMPLETE
+
+COMPLETE, follow-up 43 (fix round 10). Test files only; no product code changed. Commit e192f002bf on job/T51/docket.
+
+Added to coreDueKinds() (bio-plane/test/m/docket/fixtures.mjs), keeping every answer it gives now:
+- (a) a case of a project whose owner is not the viewer: CASE-2026-0303 (caseR), project R managed by hank (a new member). Real acts: edition 1 and edition 2 ratified ("Dropped a date."), an open tension CAND-4 on INQ-2026-0004-hall. New returned fields: hankDue (hank's real coreDue: edition:2, tension:CAND-4) and unseenDue (alice's real coreDue for caseR: empty, wrote false).
+- (b) a case with no project: NOT made. Real schema forbids it: publication's cases.project_id is NOT NULL (bio-plane/src/publication/schema.mjs). A new test asserts the constraint, so the state is not faked.
+
+Test: fixtures.test.mjs new test "R9 fixtures: coreDueKinds: a case of a project alice cannot see ...". Markers added: none.
+
+Ran: docket suite and queue-producers docket.test.mjs 94 pass, 0 fail; checks fixtures (docket) 0 failures, format 0, architecture 0, coverage 31/31, words 0, ownership 0. setup-words --check: stale rows.mjs from basis-version-grammar, not docket's.
+
+Deferred: none. Found in other modules: none caused by this job.
+
+Size (session_01AfpNQasnQVjYv36UwxUmau): test runs 3, module lines 1657
