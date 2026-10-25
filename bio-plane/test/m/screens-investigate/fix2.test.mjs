@@ -103,7 +103,7 @@ test("R4 C8 a figure read in for a trail is proposed to that trail (the money pr
   await world.recipes.profiles(me, ["oakland-alameda"]);
   const project = await world.recipes.project(me, "Records office budget");
   const held = await world.recipes.hold(me, "Adopted budget.txt", "The overhead allocation from the Sewer Fund to the General Fund was 310,000 dollars.", project);
-  const trail = await world.recipes.trail(me, project, "Sewer fund transfers, FY2022");
+  const trail = await world.recipes.trail(me, project, "Overhead allocation trail, FY2022");
   const money = "/app/money/" + trail;
   const p = await openAs(world, me, money);
   await choose(p, "mf-doc", held.sha);
@@ -140,7 +140,7 @@ test("R4 C8 control: a figure read where no trail is open sends no propose; a re
   const none = await openAs(world, me, "/app/money/" + project);
   assert.equal(none.doc.getElementById("mf-amount"), null, "a project with no trail offers no figure form");
   assert.equal(none.byOp("moneysetpropose").length, 0);
-  const trail = await world.recipes.trail(me, project, "Sewer fund transfers, FY2022");
+  const trail = await world.recipes.trail(me, project, "Overhead allocation trail, FY2022");
   /* the owner refuses the proposal (a fault the page cannot cause: the trail it names is the one open) */
   const refused = await openAs(world, me, "/app/money/" + trail, { plane: { moneysetpropose: refusedIn("NO_SUCH_SET", "There is no such trail.") } });
   await choose(refused, "mf-doc", held.sha);
