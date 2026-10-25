@@ -174,12 +174,16 @@ test("R51 R70.12 Standard: a version known in force through a day is drawn with 
   assert.ok(!/member:/.test(main(p).textContent), "no stamp");
   /* the answer that states who recorded it (`known_through`, `standards` R51; the op does not answer it yet: reported) */
   const states = rewrite(world, me, (req, a) => (req.query && req.query.date && a.json && a.json.result && a.json.result.state === "in_force"
-    ? { ...a, json: { ...a.json, result: { ...a.json.result, known_through: { through: "2026-09-30", source: "page 1", by: "member:" + me.member } } } } : a));
+    ? { ...a, json: { ...a.json, result: { ...a.json.result, known_through: { through: "2026-09-30", source: { captureSha: L.memo.sha, extent: L.mu[0].extent }, by: "member:" + me.member } } } } : a));
   const q = await openAs(world, me, `/app/standard/${L.pol}`, { plane: { standardinforce: states } });
   fill(q, { "st-inforce-day": "2026-09-01" });
   await press(q, "standardinforce");
   await settled(q);
   const drawn = main(q).querySelector("[data-inforce]").textContent;
-  assert.ok(drawn.includes(word("standard.inforce.known", { through: "September 30, 2026", source: "page 1", author: me.handle })), "the member by name, her handle");
+  assert.ok(drawn.includes(word("standard.inforce.known", { through: "September 30, 2026", source: "Policy.txt", author: me.handle })), "the member by name, her handle");
   assert.ok(!drawn.includes("recorded by admin"), "never her id");
+  assert.ok(!drawn.includes(L.memo.sha.slice(0, 12)), "the source is the document's title, never its fingerprint");
 });
+
+/* K5178: `standardinforce` does not yet answer `known_through` (STANDARDS' merge); the test over the world's own answer follows it */
+test.todo("K5178 R51 the world's own standardinforce answer carries known_through {through, source: {captureSha, extent}, by}, and the screen draws the member by name and the source by title");

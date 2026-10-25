@@ -121,8 +121,14 @@ function render(cs, view) {
     const r = view.ui.inforce;
     /* R8 (K5148; R70.12): a version known in force through a day is worded by `standard.inforce.known` with the member who recorded it by name
        (never the stamp the plane's sentence was composed with) */
+    /* K5178: the owner answers the source as `{captureSha, extent}`; it is drawn as the held document's title, never its fingerprint (R34) */
+    const heldDocs = P.docsAll(cs, view).rows;
+    const sourceTitle = (src) => {
+      const row = heldDocs.find((x) => x && x.capture && src && typeof src === "object" && x.capture.sha256 === src.captureSha);
+      return row && typeof row.title === "string" && row.title ? row.title : P.plain(cs, "screen.held.untitled");
+    };
     const known = r && r.state === "in_force" && r.known && typeof r.known.through === "string" && typeof r.known.by === "string" && r.known.by
-      ? cs.w("standard.inforce.known", { through: { html: cs.date(r.known.through) }, source: String(r.known.source || ""), author: P.who(cs, r.known.by) }) : "";
+      ? cs.w("standard.inforce.known", { through: { html: cs.date(r.known.through) }, source: sourceTitle(r.known.source), author: P.who(cs, r.known.by) }) : "";
     const whyHtml = (w) => (known ? known : typeof w === "string" ? cs.esc(w) : w && typeof w === "object" ? P.why(cs, w) : "");
     const per = (s && s.period) || {};
     /* B419 (DEC-387): the state is drawn by its key, "On {date} it was: {state}"; a state the owner gives that no key names is undetermined */
