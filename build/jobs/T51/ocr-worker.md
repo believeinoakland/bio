@@ -121,3 +121,27 @@ Proposal for the requirement wording (BOB writes): R26 gains "a turn the engine 
 **Deferred:** none. **Found in another module:** none beyond the following, for the consumers: the answer shape changed for reading-pipeline (jobs 27, 40) and extraction (28, 41) once the bundle is rebuilt: a PDF page's ok answer now carries `legibility` and a note under 0.8; `image` carries `turned_deg`; new refusal reasons `PAGE_NOT_LEGIBLE` and `UNEXPECTED_FAILURE` (both 200 `ok:false`), and `BAD_PSM` (503, a bad instance setting, not a document finding). **Platform checks that are BOB's:** G125g P (the member's memory on biosmoke8, a fixture OCR'd and read back), SCAN D9 and the corpus cases.
 
 Size (session_013TN9a2nLFBoZdJj1D23BjD): test runs 12, module lines 1092
+
+## J7 · BLOCKED
+
+FIX-ROUND-10 (B8) · cause R7 (R26), fixtures, markers. Cause fixed in source; BLOCKED (tests) only on the picture cases, which wait for pdf-pixels' R6. Nothing else open.
+
+**Cause R7 (member.mjs, after the claim-driven turn):** a page that would be refused (nothing read, or share under R25's 0.2) is now read at each quarter turn not yet tried; the better reading is kept (higher share, equal share broken by the mean of the engine's word ratings), so an upright sparse page whose claim is wrong keeps its reading, and a page that reads is never read four ways. Tests: new `ocr-worker/test/r10-sparse-pages.test.mjs` (real engine, real renderers, the member's own handler). The PDF scan case `{pages:2,lines:3,kinds:["scan"],rotate:{every:1,angle:90}}` was red first (PAGE_NOT_LEGIBLE on page 0) and is green (ok, `turned_deg` 270, words read). The four picture cases (upright control, turned 90/180/270) are red here for a cause that is not mine: pdf-pixels' preparation answers `prepared.text_found:false` for a 3-line picture (its R6, placement-R10-b), so the member answers NOTHING_TRANSCRIBED before the engine runs (R24). Seen with the preparation off (scratch run, not committed): all four reach `ok` with the right `turned_deg` (0, 270, 180, 90) on this fix, and red on the old code. They go green once pdf-pixels' R6 is on `tranche/T51`; please send a CHANGE then (merge tranche, re-run).
+
+**Finding for BOB (threshold):** the fix-round text asks `legibility.share >= 0.5`. On the walker's recipe (`seed rw9-A-8`/`rw9-A-7`, 3 lines) the engine rates only 2 of 6 words at 0.6 or over even for the UPRIGHT control (share 0.33) and for page 1 and 3 of the scan whichever turn is read, though every line's word is read right. So 0.5 is not reachable on those pages by any reading order; I assert R25's floor (share >= 0.2, i.e. not refused) plus the words actually read (at least 2 of 3 lines' words) and the turn. If 0.5 is a requirement, it is pdf-pixels' preparation for PDF scan pages (not applied to a PDF page today) or the engine's rating that must move; say which.
+
+**Fixtures published** (`ocr-worker/test/fixtures.mjs`, tests in `fixtures.test.mjs`, 7 tests green, each calls the fixture and checks the real answer): `memberRefusal(reason)` (PAGE_NOT_LEGIBLE, PIXELS_UNREADABLE, ENGINE_FAILED, UNEXPECTED_FAILURE, from the member's real handler over a real PDF page; a reason it does not give is refused), `pageNotRenderable({renderReason})` (NOT_A_PDF, EMPTY_FILE; the real page renderer refuses the bytes), `memberWorker({mode, name})` (the real member under workerd behind a front that logs pages and applies throw / refuse / version / stray to its real answers). Runs: `// fixtures-run: extraction memberRefusal`, `// fixtures-run: reading-pipeline pageNotRenderable`, `// fixtures-run: reading-pipeline memberWorker`.
+
+**Markers added:** `ocr-worker/test/ocr-worker.test.mjs:205` `// fixtures-own: harness` (the engine seam of makeMember); `ocr-worker/test/fixtures.mjs:42` `// fixtures-own: harness` (same seam, for the refusals above). No fixtures-generic.
+
+**Lines left (waiting):** `ocr-worker.test.mjs:220` (renderedPage) and `:983` (pixelRefusal) wait on pdf-pixels publishing those fixtures: `pdf-worker/test/fixtures.mjs` on `tranche/T51` holds only `tier2Answer` and pdf-pixels' branch has none yet, and the checker calls pdf-pixels earlier so a `fixtures-contract` marker is refused (contract-not-later). I re-point them in a CHANGE once they are merged.
+
+**Existing tests changed by the amended R26** (not weakened): the three that counted the engine's reads of a refused page (1 read, turns [0,270]) now expect the other turns read too (4 reads, turns [0,270,90,180]).
+
+**Stale generated artifact:** `ocr-worker/dist/` is stale against `src/member.mjs` (R19's manifest-hash test fails on it); BOB regenerates it at the round's close.
+
+**Words:** the sideways wording is UX-DESIGN's (fix-round-10-words.md); no new sentence was added (the refusal reasons are unchanged).
+
+**Checks:** format 0 failures; architecture 0 failures; coverage 31 of 31 ids named, 0 failures; ownership 0 failures. Module tests (`ocr-worker/test/ocr-worker.test.mjs`, before my test edit and rebuilt-dist question): 456 passed, 4 failed (3 are the counts above, now updated; 1 is R19 on the stale bundle). `fixtures.mjs --list` for ocr-worker: 3 lines, 2 waiting as above, 1 accepted (own).
+
+Size (session_012f28ABxU8SxXmiGjV5KtjB): test runs 14, module lines 1117
