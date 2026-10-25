@@ -514,11 +514,21 @@ test("R8 C61 the project's list of held standards is headed by its own key and s
 });
 
 test("R4 C8 a figure a member proposed to the trail is drawn by the member-proposal key; control: a machine's proposal keeps the other", async () => {
-  const prop = (by) => TRAIL({ proposals: [{ proposal_id: 1, fact_id: M1, method: "m", by, at: "2026-10-21T09:00:00Z", label: "proposed", trail: { from: { stated: true }, to: { stated: true }, moved: { state: "undetermined" }, gaps: [] } }], inclusions: [], exclusions: [] });
-  const row = (p) => main(p).querySelectorAll("tr.cs-r").find((r) => r.querySelector(`[data-id="${M1}"]`));
-  const mem = await open(PATHS.money, { plane: { moneyset: ok(prop("member:mai")) } });
+  const { world, me } = await inWorld();
+  await world.recipes.profiles(me, ["oakland-alameda"]);
+  const project = await world.recipes.project(me, "Records office budget");
+  const held = await world.recipes.hold(me, "Adopted budget.txt", "The adopted budget for the records office in fiscal year 2026 is 4,200,000.00 dollars.", project);
+  const trail = await world.recipes.trail(me, project, "Records office budget, FY2026");
+  const fact = (await me.act("recordfact", { body: { amount: "4200000.00", as_read: "4,200,000", currency: "USD", sign: "+", precision: "exact", kind: "expenditure", phase: "adopted", basis: "budgetary",
+    period: { from: "2025-07-01", to: "2026-06-30" }, source: { capture_sha: held.sha, extent: { kind: "document" } } } })).fact_id;
+  await me.act("moneysetpropose", { body: { setId: trail, factId: fact, method: "member:recordfact" } });
+  const row = (p) => main(p).querySelectorAll("tr.cs-r").find((r) => r.querySelector(`[data-id="${fact}"]`));
+  const mem = await openAs(world, me, "/app/money/" + trail);
   drew(row(mem), "screen.money.proposed.member");
-  const bot = await open(PATHS.money, { plane: { moneyset: ok(prop("class:daemon")) } });
+  /* a proposal by a machine (a class, not a member): the live copy holds one that a member's session does not make */
+  const byMachine = rewrite(world, me, (req, a) => (a && a.json && a.json.result && Array.isArray(a.json.result.proposals) && req.url.includes("op=moneyset")
+    ? { ...a, json: { ...a.json, result: { ...a.json.result, proposals: a.json.result.proposals.map((x) => ({ ...x, by: "class:daemon" })) } } } : a));
+  const bot = await openAs(world, me, "/app/money/" + trail, { plane: { moneyset: byMachine } });
   drew(row(bot), "screen.money.proposed");
   assert.ok(!row(bot).textContent.includes(word("screen.money.proposed.member")));
 });

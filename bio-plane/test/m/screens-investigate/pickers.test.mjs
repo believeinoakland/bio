@@ -25,7 +25,8 @@ async function projectCiting(world, me, title, targets) {
  *  she sets aside; a standard over the lease, a person, a court case, a trail with one figure, a calculation over the table, and a matter in a progression.
  *  Answers the screens' paths as the world gave their ids. */
 async function scene() {
-  const { world, me } = await inWorld();
+  /* a member of her own (the founder's session names no member, and setting aside is a member's own act) */
+  const { world, me } = await inWorld({ handle: "rosa", founder: false });
   await world.recipes.profiles(me, ["oakland-alameda"]);
   const ent = async (kind, label, note, more = {}) => (await me.act("entitycreate", { body: { kind, label, note, ...more } })).entity_id;
   const org = await ent("office", "Public Works Director", "The city's office for repairs.");

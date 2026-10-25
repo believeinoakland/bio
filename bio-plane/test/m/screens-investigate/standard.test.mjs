@@ -85,9 +85,9 @@ test("R19 the project's proposals are read from standardproposals (the project, 
   assert.ok(main(all).textContent.includes(machine.cite) && main(all).textContent.includes(crews.cite), "all lists both");
   assert.ok(main(p).textContent.includes(machine.cite), "the project's own proposal is listed");
   const other = await openAs(world, me, "/app/standard/" + lights);
-  console.log("OTHER", main(other).textContent);
-  assert.ok(!main(other).textContent.includes(machine.cite) && !main(other).textContent.includes(crews.cite), "a proposal of another project is not listed");
-  assert.ok(main(other).textContent.includes("Street lights are checked monthly"), "control: it is listed on its own project");
+  const theirs = main(other).querySelectorAll("section").find((x) => x.querySelector("h2").textContent === word("screen.standard.proposals"));
+  assert.ok(!theirs.textContent.includes(machine.cite) && !theirs.textContent.includes(crews.cite), "a proposal of another project is not listed");
+  assert.ok(theirs.textContent.includes("Street lights are checked monthly"), "control: it is listed on its own project");
 });
 
 test("R19 the section is drawn whether or not the assistant is reachable; truncated is said", async () => {
