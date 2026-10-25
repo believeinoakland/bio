@@ -15,6 +15,7 @@ const DEEMING = "run R-1 under member:ann/tok1, paid by instance";
 function scopeCheck(sweeps) {
   const asked = [];
   const inScope = (a, p) => a === p || (a.startsWith(p) && (p.endsWith("/") || a[p.length] === "/"));
+  // fixtures-contract: link-sweep sweep-scope
   const fn = ({ sweep, locators, run, target }) => {
     asked.push({ sweep, locators, run, target });
     const s = sweeps[sweep];
