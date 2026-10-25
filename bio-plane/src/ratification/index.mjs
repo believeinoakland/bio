@@ -1755,6 +1755,6 @@ export const DECLARED_OPS = Object.freeze({
   /* R53 (K5196; BOB's B23): `publishat`, the case ceremony's "Publish at…" door op (R40), served here and sent by the screens. Its
      class, weight and description are op-declarations' and op-grades' rows (weight `irreversible`), its fields are the caseratify
      payload plus `at`, which `publishat` requires. */
-  publishat: { classes: ["admin","member","probe"], machineClasses: [], mutating: true, weight: "irreversible", description: "act.publishat.does",
+  publishat: { classes: ["admin","member","probe"], machineClasses: [], mutating: true, weight: "irreversible", description: "case-directed: keyed by a case edition (case, edition), reached from the publication ceremony's last step; signs now and publishes at the set time only if every check passes again then",
     fields: { accepts: ["caseId","edition","expectedSha","sig","members","at"], requires: ["caseId","edition","expectedSha","sig","at"] } },
 });
