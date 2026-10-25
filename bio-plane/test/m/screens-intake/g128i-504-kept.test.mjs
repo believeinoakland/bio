@@ -7,7 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, run } from "../acquisition/fixture.mjs";
 import { openCaptures } from "../../../src/acquisition/index.mjs";
-import { open as openPage, main, fill, press, ok, says, DOCUMENT_STUB } from "../screens-intake/page.mjs";
+import { open as openPage, main, fill, press, ok, says, DOCUMENT_STUB } from "./page.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 
 const MIB = 1024 * 1024;

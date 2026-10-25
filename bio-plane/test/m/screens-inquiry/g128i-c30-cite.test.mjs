@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "../citation/fixture.mjs";
 import { ok } from "../interface-shell/harness.mjs";
-import { main, fill, press, says, word, plane, SCREENS, Q, D, P } from "../screens-inquiry/fixtures.mjs";
+import { main, fill, press, says, word, plane, SCREENS, Q, D, P } from "./fixtures.mjs";
 import { boot } from "../interface-shell/harness.mjs";
 
 process.env.TZ = "UTC";

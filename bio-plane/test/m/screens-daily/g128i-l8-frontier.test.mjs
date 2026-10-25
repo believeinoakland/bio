@@ -6,7 +6,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "../retrieval/fixture.mjs";
-import { open as openRaw, ok, text, press, settle, word, withScreens } from "../screens-daily/page.mjs";
+import { open as openRaw, ok, text, press, settle, word, withScreens } from "./page.mjs";
 
 const GOT = { found: true, built: true, never_looked: [], never_looked_count: 0, tally: { LOOKED_FOUND: 4, LOOKED_ABSENT: 1 }, note: "" };
 const AT = (i) => `2026-09-27T01:${String(i % 60).padStart(2, "0")}:00Z`;
