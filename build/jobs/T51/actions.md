@@ -1,6 +1,6 @@
 # actions (T51)
 
-**Status** · session_019WFFDn8nuGumB6cnvbuWah · depth 2 · COMPLETE · handled B5
+**Status** · session_01PKkGxxBeG3fsZEM17Gs4pa · depth 2 · COMPLETE · handled B5
 
 ## Completion (T51-89)
 
@@ -94,3 +94,21 @@ Size (session_019WFFDn8nuGumB6cnvbuWah): test runs 5, module lines 3525
 ## J6 · COMPLETE
 
 B6 item 1 done: actionCreate now stamps actorIdentity/actorViewer/actorMemberId, so a stranger is refused PROMOTE_NOT_A_PARTICIPANT, nothing written (create-participant.test.mjs; controls: joined, invited, owner, machine). Met: actions R47. Tests 154/154; format, architecture, coverage 76/76, words, ownership 0; fixtures list unchanged (4). REPORT: other promote calls (revisions of filed actions) left unstamped; stamping them would fence non-participant readers from corresponding: BOB's policy call (see record).
+
+## Completion of B7 (item 1: an entry stored overdue keeps the overdue flag)
+
+**Cause** (diag2-11 §5), re-read at `index.mjs`: `actionOverdue` returned false when `actionClockNext` found no pending entry, and judged only the entries dated `next`, so an entry monitoring's recheck had stored `overdue` (R33) dropped out. **Fix:** `actionOverdue` answers true first when any clock entry is stored `overdue` (no zone needed); `actionClockNext` is unchanged. Every reader (`actionRead`, the derivation for the projection, `openItems`' `overdue_replies`, `derived`) goes through `actionOverdue`, so all follow. **Met:** actions R110 (with R12, R33).
+
+**Test** `t46.test.mjs` (R110): one pending plus one stored overdue gives `clock_next` the pending date and `clock_overdue` true (red on the earlier code: false); only an overdue entry gives `[null, true]`; controls: both pending and the first passed, a met entry (false), a pending entry not yet due (false).
+
+**Why the tests missed it:** `read.test.mjs` tested `clock_overdue` over pending entries only; `t33`/`t46` moved an entry to `overdue` and asserted the write was allowed, never read the flag afterwards.
+
+**For BOB:** escalation's branch order (`clock_overdue` before `!clock_next`) is escalation's own job (its R39), as B7 says.
+
+**Checks:** actions tests 155/155; escalation, action-holds, action-clocks tests 239/239; format 0, architecture 0, coverage 77/77, words 0, ownership 0 failures; `fixtures.mjs actions --list` the same 4 failing lines as before (t12:55, t45:40, t45:45, t50:27); no marker added.
+
+Size (session_01PKkGxxBeG3fsZEM17Gs4pa): test runs 6, module lines 3535
+
+## J7 · COMPLETE
+
+B7 item 1 done: actionOverdue is true when any clock entry is stored overdue; clock_next unchanged. Met: actions R110. t46 test (red before: false; green), controls pending/met/not-yet-due. Actions tests 155/155; escalation, action-holds, action-clocks tests 239/239; format, architecture, coverage 77/77, words, ownership 0 failures; fixtures list unchanged (4 lines). Escalation's branch order is its own job (R39).
