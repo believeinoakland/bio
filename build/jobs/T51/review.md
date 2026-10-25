@@ -359,3 +359,27 @@ Size (session_01M2YpYVJJ3a8nqiAq2D2WTS): test runs 8, module lines 1716
 ## J16 · COMPLETE
 
 COMPLETE for the final pass's cause 1 (plan item 78 (5); K5148): sharedDraftsByProject binds at most 64 ids (+ the gate's arguments), not 200, under the plane's 100-variable bound (D-36). Failing-first tests: bio-plane/test/m/review/ceiling.test.mjs (2 new, red at 'too many SQL variables' before, green after; both name R43). Review's fixture now caps variables at the ceiling; the module suite is 102/102 under it. format, architecture, coverage (45 of 45), words, fixtures, ownership: 0 failures. Met id: R43 (for BOB to strike). Deferred: none. Found in another module: none. Full record: build/jobs/T51/review.md, section 'fix round 10, B20 START'. Size (session_01M2YpYVJJ3a8nqiAq2D2WTS): test runs 8, module lines 1716.
+
+## Completion record (fix round 10, B21 START, K5195; REVIEW #28, session_01DzCepFNdeysrrMTS9qDDpn)
+
+COMPLETE for B21 (plan item 95). `origin/tranche/T51` was merged into `job/T51/review` at the start (it was ahead of the branch), never rebased. `mail start` and `mail done --through B21` ran before the work.
+
+**Job (K5195, the orphaned run).** Deleted `// fixtures-run: case-inputs no-review-copy` at `bio-plane/test/m/review/fixtures.test.mjs:10`, the line the B21 START names as `review/fixtures.test.mjs:10` (the module's test path is `bio-plane/test/m/review/`). The run's user, case-inputs, holds the marker `fixtures-contract: review no-review-copy` at `bio-plane/test/m/case-inputs/fixtures.mjs:41`, which its own job (CASE-INPUTS #11) deletes; the two merge together. The test body, its `noReviewCopy()` assertions and the R10 comment above it are unchanged, so the R10 test still runs and checks the same dead answer. No source changed; no requirement was edited. Evidence: `build/plan/verify-marks.md` row for case-inputs (the run became an orphan once the marker's line became a real call).
+
+**Met ids.** None struck here; the job changes no requirement. The R10 test names R10 and is unchanged.
+
+**Tests and checks (from `/home/user/bio`, absolute root):**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/review/*.test.mjs`: tests 102, pass 102, fail 0.
+- `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio review --list`: 0 failures, 3520 test files read.
+- `node /home/user/civicos-process/checks/format.mjs /home/user/bio`: 0 failures.
+- `node /home/user/civicos-process/checks/architecture.mjs /home/user/bio review`: 0 failures.
+- `node /home/user/civicos-process/checks/coverage.mjs /home/user/bio review`: 45 of 45 live requirement ids named by a test, 0 failures.
+- `node /home/user/civicos-process/checks/run.mjs /home/user/bio`: the run reports failures, none in review's paths (`src/review`, `test/m/review`). 1502 FAIL lines, mostly `answer` op-table mismatches owned by other modules (screens-daily, screens-publish, store-assembly and others), plus a words report of 16 failures in store-assembly. The words count was not raised by this change (only a line of a test file was removed).
+- `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio review <merge-base> HEAD`: 1 file changed by review, 0 failures.
+- `build/plan/impact.mjs` (`origin/tranche/T51 HEAD`): affected modules 0 of 178, affected test files 0 of 2981.
+
+**Found outside my paths:** none new from this job. The run.mjs failures above belong to other modules' fixture owners and are reported for BOB to route, not fixed here.
+
+**Deferred:** nothing.
+
+Size (session_01DzCepFNdeysrrMTS9qDDpn): test runs 1, module lines 1716
