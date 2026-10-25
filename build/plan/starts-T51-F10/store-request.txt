@@ -19,3 +19,5 @@ Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-CLOCK; R-NOLOAD; R-WORDS (
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** entries (1) to (5) built and tested; the parity test green; the measured suite times in your record; any import you needed from a later module reported; tests, words, fixtures, architecture, coverage, ownership and format checks green; `Size` line; COMPLETE.
+
+**Added (STORE-ASSEMBLY #1 J3 (4); K5139).** R70's consumer builds an edition's case file through public-read's published plane, which only plane's `index.mjs` binds (`bindPublishedPlane`); a world with no Worker leaves it unbound, so the case-file sweep cannot build in a world. Your world binds it (as store-assembly's `g54-sweep.test.mjs` does, with answer-envelope's real helpers and the store's own namespace), or your COMPLETE says why it cannot.
