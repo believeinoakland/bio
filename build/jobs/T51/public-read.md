@@ -1,6 +1,6 @@
 # public-read (T51)
 
-**Status** · session_0117cYK5Yq6yKMxRK124CAvs · depth 2 · COMPLETE · handled B35
+**Status** · session_0117cYK5Yq6yKMxRK124CAvs · depth 2 · WAITING ON BOB (J34) · handled B35
 
 ## J1 · QUESTION
 
