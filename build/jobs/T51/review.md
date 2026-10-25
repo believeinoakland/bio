@@ -383,3 +383,7 @@ COMPLETE for B21 (plan item 95). `origin/tranche/T51` was merged into `job/T51/r
 **Deferred:** nothing.
 
 Size (session_01DzCepFNdeysrrMTS9qDDpn): test runs 1, module lines 1716
+
+## J17 · COMPLETE
+
+COMPLETE for B21 (K5195): deleted the orphaned run `fixtures-run: case-inputs no-review-copy` at bio-plane/test/m/review/fixtures.test.mjs:10 (case-inputs owns the marker and deletes it in its own job). No source or requirement changed. Review tests 102/102 green; fixtures 0 failures; format, architecture, coverage (45/45 ids), ownership 0. run.mjs has no failure in review's paths (its 1502 FAIL lines are other modules'). Record: build/jobs/T51/review.md, commit 9b6282bde5, pushed to job/T51/review. Size (session_01DzCepFNdeysrrMTS9qDDpn): test runs 1, module lines 1716.
