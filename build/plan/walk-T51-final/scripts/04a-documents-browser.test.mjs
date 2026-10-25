@@ -190,10 +190,12 @@ test("WALK-FINAL-04A browser half", { timeout: 3600000 }, async () => {
       await pg.waitForTimeout(2500);
       const t0 = await body(pg);
       const s0 = await shot(pg, "document-pdf", width);
-      const nexts = await pg.locator("button:has-text('Next page')").count();
+      const btns = (await pg.$$eval("button,a", (els) => els.map((e) => (e.innerText || "").trim()).filter((x) => x && x.length < 50))).join(" | ");
+      const pagey = (await lines(pg)).filter((x) => /page|Showing|Read (in|\d)|words/i.test(x)).slice(0, 12).join(" / ");
+      const nexts = await pg.getByText("Next page", { exact: true }).count();
       let moved = "no Next page control";
-      if (nexts) { const before = await lines(pg); await pg.locator("button:has-text('Next page')").first().click(); await pg.waitForTimeout(2500); moved = fresh(before, await lines(pg)).slice(0, 300); }
-      return [/Next page/.test(t0) ? "WORKS" : "BROKEN", `no sideways ${await noSideways(pg)}; Next page controls ${nexts}; Showing: ${(t0.match(/Showing[^.]{0,60}/) || ["none"])[0]}; reading words: ${(t0.match(/(Read in full|Read in part|being read|Unread)[^.]{0,80}/) || ["none"])[0]}; after Next page new: ${moved}`, s0];
+      if (nexts) { const before = await lines(pg); for (let i = 0; i < 19; i++) { await pg.getByText("Next page", { exact: true }).first().click().catch(() => {}); await pg.waitForTimeout(500); } await pg.waitForTimeout(1500); const after = await lines(pg); moved = "after 19 presses: " + after.filter((x) => /Page \d+ of|Next page|20-p20/.test(x)).join(" / ").slice(0, 300); }
+      return [nexts ? "WORKS" : "BROKEN", `buttons on the page: ${btns.slice(0, 700)}; lines about pages/words: ${pagey}; no sideways ${await noSideways(pg)}; Next page controls ${nexts}; Showing: ${(t0.match(/Showing[^.]{0,60}/) || ["none"])[0]}; reading words: ${(t0.match(/(Read in full|Read in part|being read|Unread)[^.]{0,80}/) || ["none"])[0]}; after Next page new: ${moved}`, s0];
     });
     await check("R46", "UI: the held list: documents listed, selection, project filter, 'showing N of M'", W, "member (ann)", "open /app/held", async () => {
       await goto(pg, "/app/held");

@@ -455,6 +455,7 @@ async function sectionD(c) {
     const ps = R(await k.get(ann, { op: "pdfstructure", sha256: sha, ocr: "1" }));
     const bid = c.scan30Bundle;
     const tr = await k.post(ann, "transcribe", { bundleId: bid, page: 0, text: "Typed by hand: the clerk stamped it." });
+    rec("R33", "a 60-page scan, a progressive-JPEG scan and the typed-page confirmation by a second member", "n/a (door)", "member", "not made", "NOT REACHED", "the typed-page act answered TRANSCRIBE_NO_PORTION to my arguments (it needs a section/portion of the page that the Add screen does not send; the act belongs to the Document page's 'Type a page's words yourself'); the 60-page scan, the progressive JPEG (imggen writes none) and the second member's confirmation were not made in this sitting");
     return `pdfstructure ocr=1 -> ${short(ps, 450)}; transcribe (typed page) -> ${tr.status} ${short(R(tr.body), 450)}`;
   });
 }
@@ -542,7 +543,9 @@ async function sectionE(c) {
     const bu = await upload(ann, bb, { name: `huge-${tag}.xlsx`, type: big.type });
     await fileIt(ann, bu.up, { title: `huge-${tag}`, project: projA });
     const refused = await k.post(ann, "addworkbook", { captureSha: bu.up.capture.sha256, question: q, project: projA, period: "2026" });
-    return `addworkbook ok-path: ${ok.status} ${short(R(ok.body), 400)}; oversize (${bb.length} B): ${refused.status} ${short(R(refused.body), 400)}`;
+    const okb = R(ok.body), rb = R(refused.body);
+    const refusedByName = rb.ok === false && /TOO_LARGE/.test(String(rb.reason));
+    return [okb.ok === true && refusedByName ? "WORKS" : "BROKEN", `addworkbook of the 20,000-cell workbook: ok ${okb.ok} sheets ${short(okb.sheets, 200)}; the 221,376-cell workbook (${bb.length} B; the coverage row expects WORKBOOK_TOO_LARGE with count and bound): ok ${rb.ok}, reason ${rb.reason}, answer ${short(rb, 500)}`];
   });
   /* R37 */
   const kinds = [["docx", { kind: "docx", seed: 371, size: { units: 6 }, parts: ["footnote", "comment", "deleted"], table: { rows: 2, cols: 2 } }], ["pptx", { kind: "pptx", seed: 372, size: { units: 4 }, parts: ["notes", "hidden"] }], ["odt", { kind: "odt", seed: 373, size: { units: 6 } }], ["odp", { kind: "odp", seed: 374, size: { units: 4 } }], ["html", { kind: "html", seed: 375, size: { units: 6 } }]];
@@ -560,7 +563,7 @@ async function sectionE(c) {
       if (m) hit = await k.until(async () => ((await findIn(ann, sha, String(m))).length ? true : null), 60000, 2000);
       const r = await reading(ann, sha);
       const os = R(await k.get(ann, { op: "originalstate", capture: sha }));
-      return [m ? (hit ? "WORKS" : "BROKEN") : "WORKS", `${b.length} B; mark ${short(m, 40)} found ${hit}; reading keys ${Object.keys(r || {}).join(",")}; kind/profile ${short(r && { kind: r.kind, document_kind: r.document_kind, profile: r.profile, handler: r.handler }, 300)}; completeness ${short(r && r.completeness && { state: r.completeness.state, counts: r.completeness.counts }, 200)}; originalstate path ${os && os.path} may_open ${os && os.may_open}`];
+      return [m ? (hit ? "WORKS" : "BROKEN") : "WORKS", `${b.length} B; mark ${short(m, 40)} found ${hit}; format ${short(r && r.format, 120)}; content_type ${r && r.content_type}; reader_found ${short(r && r.reader_found, 100)}; reading ${short(r && r.reading, 250)}; completeness ${short(r && r.completeness && { state: r.completeness.state, counts: r.completeness.counts }, 200)}; originalstate path ${os && os.path} may_open ${os && os.may_open}`];
     });
   }
   for (const [label, bytes, type, name] of [["RTF", te("{\\rtf1\\ansi RTF words for the walk RTF" + tag + "\\par}"), "application/rtf", `r-${tag}.rtf`], ["email (.eml)", te(`From: clerk@example.gov\r\nTo: a@b.c\r\nSubject: Records\r\n\r\nEmail body EML${tag}\r\n`), "message/rfc822", `m-${tag}.eml`], ["legacy .doc (OLE header)", Buffer.concat([Buffer.from("D0CF11E0A1B11AE1", "hex"), Buffer.alloc(600)]), "application/msword", `old-${tag}.doc`]]) {
@@ -571,7 +574,7 @@ async function sectionE(c) {
       await later(4000);
       const r = await reading(ann, u.up.capture.sha256);
       const os = R(await k.get(ann, { op: "originalstate", capture: u.up.capture.sha256 }));
-      return `reading keys ${Object.keys(r || {}).join(",")}; kind/profile ${short(r && { kind: r.kind, profile: r.profile, handler: r.handler }, 300)}; completeness state ${r && r.completeness && r.completeness.state}, failure ${short(r && r.completeness && r.completeness.failure, 300)}, final ${short(r && r.final, 200)}; originalstate path ${os && os.path} may_open ${os && os.may_open}`;
+      return `format ${short(r && r.format, 120)}; content_type ${r && r.content_type}; reader_found ${short(r && r.reader_found, 100)}; reading ${short(r && r.reading, 300)}; completeness state ${r && r.completeness && r.completeness.state}, failure ${short(r && r.completeness && r.completeness.failure, 300)}, final ${short(r && r.final, 200)}; originalstate path ${os && os.path} may_open ${os && os.may_open}`;
     });
   }
   await check("R37", "a ZIP of 30 documents with a locked entry: opened, summary line, each entry's state, 30 reading rows, vouch/set aside with one reason", "member (ann)", "makeZip 30 text members + 1 encrypted; upload; archivelist", async () => {
