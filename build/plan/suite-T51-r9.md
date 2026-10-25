@@ -1,9 +1,15 @@
-# Suite T51 round 9 (PARTIAL, run still going)
+# Suite T51 round 9 — whole-suite run (SUITE #2)
 
-Commit tested: 1253f585c574b4c2556c18720700ea176afb0395 (origin/tranche/T51)
+**Commit tested:** `1253f585c574b4c2556c18720700ea176afb0395` (`origin/tranche/T51`), branch `prep/suite-2`. Packages: `npm ci --ignore-scripts` in all 9 directories with a tracked lockfile. Node v26.10.0, 4 cores, the container held nothing else.
 
-Module lines so far (module-tests.mjs):
+**Counts:** 176 modules with tests; 164 pass, 12 fail (bundler, promotion, capture-sources, wizard-scripts, op-grades, machinery-producers, screens-settings, screens-investigate, screens-publish, installer, journey-check, plane).
 
+## How it ran
+- `node .github/scripts/module-tests.mjs` ran 169 modules in 2 h and was stopped at the bound inside `control-plane` (the 170th). The 7 modules not reached were run with the same runner (`module-tests.mjs` with a module filter): `control-plane` passed, `installer-steps`, `site`, `stewards` passed, `installer` and `journey-check` failed.
+- **`plane` was not run as one module.** Its single-process run did not finish in the 2-hour window; `bio-plane/test/system/migrate-released.test.mjs` alone takes 2344 s. So `plane` ran file by file (88 files + `migrate-released`), each with `--max-old-space-size=6144`: 600 tests pass, 2 fail (`g54-l`, `release`). Its pass/fail line below is the sum of those files.
+- Each failing file was then run alone twice (a1, a2) and twice on one core (`taskset -c 0`, c1, c2). `journey-check`'s other files not listed below were not re-run (they passed in the module run or are listed here).
+
+## Every module's pass/fail line
 ```
 setup-words: pass 21 fail 0 (71s)
 record-grammar: pass 107 fail 0 (3s)
@@ -15,9 +21,6 @@ test-support: pass 129 fail 0 (86s)
 runtime-limits: pass 60 fail 0 (2s)
 signatures: pass 87 fail 0 (4s)
 bundler: pass 168 fail 1 (112s)
-  ✖ bio-plane/test/system/deploybindings.test.mjs (121.001728ms)
-  ✖ failing tests:
-  ✖ bio-plane/test/system/deploybindings.test.mjs (121.001728ms)
 court-citations: pass 18 fail 0 (24s)
 id-spaces: pass 37 fail 0 (2s)
 subresources: pass 38 fail 0 (1s)
@@ -50,17 +53,11 @@ project-roster: pass 112 fail 0 (4s)
 ai-accounts: pass 131 fail 0 (3s)
 credentials: pass 186 fail 0 (48s)
 promotion: pass 162 fail 1 (45s)
-  ✖ bio-plane/test/system/row-census.test.mjs (3330.009787ms)
-  ✖ failing tests:
-  ✖ bio-plane/test/system/row-census.test.mjs (3330.009787ms)
 host-governor: pass 57 fail 0 (37s)
 provenance: pass 179 fail 0 (43s)
 attestation: pass 33 fail 0 (2s)
 provenance-routes: pass 49 fail 0 (2s)
 capture-sources: pass 125 fail 1 (23s)
-  ✖ R69: every failed answer carries elapsed_ms (the close included), failure_class and detail; a session refused, rate-limited or not opened in time is transient, the rest permanent (1069.766875ms)
-  ✖ failing tests:
-  ✖ R69: every failed answer carries elapsed_ms (the close included), failure_class and detail; a session refused, rate-limited or not opened in time is transient, the rest permanent (1069.766875ms)
 acquisition: pass 347 fail 0 (83s)
 capture: pass 354 fail 0 (121s)
 doorbell: pass 97 fail 0 (4s)
@@ -156,21 +153,10 @@ following: pass 127 fail 0 (12s)
 link-sweep: pass 41 fail 0 (3s)
 scheduler: pass 185 fail 0 (112s)
 wizard-scripts: pass 136 fail 1 (10s)
-  ✖ R50 (T51 fix round 6; G53; K4691; amends R49) the vendored registry.json is the design's registry.json on the tranche, byte for byte, so a design-files merge that moves the registry fails here until the generated registry is re-taken (the gap: the screens' contract tests read the design file, the shell reads the generated copy) (7.047342ms)
-  ✖ failing tests:
-  ✖ R50 (T51 fix round 6; G53; K4691; amends R49) the vendored registry.json is the design's registry.json on the tranche, byte for byte, so a design-files merge that moves the registry fails here until the generated registry is re-taken (the gap: the screens' contract tests read the design file, the shell reads the generated copy) (7.047342ms)
 op-grades: pass 148 fail 2 (6s)
-  ✖ R13 R53 G55 (calculations R14) moneyingestread is a read: a NON_ACTS reason beginning "read: " no rung, no ground, not a machine refusal, no consequence statement, phone true; control: moneyingest keeps its rung, reason and backing (7.959263ms)
-  ✖ R13 R3: every op T33 publishes is graded — each write its rung or one ground, each read a `read:` NON_ACT, every gated op its reason; each `reversible` taken back by a graded act and each `reasoned` backed by a code of the family; none a machine refusal (4.428261ms)
-  ✖ failing tests:
-  ✖ R13 R53 G55 (calculations R14) moneyingestread is a read: a NON_ACTS reason beginning "read: " no rung, no ground, not a machine refusal, no consequence statement, phone true; control: moneyingest keeps its rung, reason and backing (7.959263ms)
-  ✖ R13 R3: every op T33 publishes is graded — each write its rung or one ground, each read a `read:` NON_ACT, every gated op its reason; each `reversible` taken back by a graded act and each `reasoned` backed by a code of the family; none a machine refusal (4.428261ms)
 affordances: pass 287 fail 0 (115s)
 tasks: pass 134 fail 0 (5s)
 machinery-producers: pass 37 fail 1 (3s)
-  ✖ R16: the grade note of a capture held in three parts is one, its whole's, never one per register row (43.255887ms)
-  ✖ failing tests:
-  ✖ R16: the grade note of a capture held in three parts is one, its whole's, never one per register row (43.255887ms)
 action-producers: pass 53 fail 0 (4s)
 queue-producers: pass 154 fail 0 (14s)
 notice-producers: pass 151 fail 0 (18s)
@@ -188,23 +174,50 @@ interface-shell: pass 369 fail 0 (151s)
 screens-entry: pass 96 fail 0 (5s)
 screens-wizards: pass 75 fail 0 (41s)
 screens-settings: pass 265 fail 1 (58s)
-  ✖ R39 words by key: the module holds no row, every key it reads is a word of the list (hasWord), the design's reads list is met and its retired row is gone (10.164075ms)
-  ✖ failing tests:
-  ✖ R39 words by key: the module holds no row, every key it reads is a word of the list (hasWord), the design's reads list is met and its retired row is gone (10.164075ms)
 screens-intake: pass 374 fail 0 (143s)
 screens-daily: pass 294 fail 0 (107s)
 screens-inquiry: pass 539 fail 0 (236s)
 screens-investigate: pass 248 fail 1 (303s)
-  ✖ R4 C8 (the figure) Money, the real plane: a figure read in with its period's dates is a row of the trail that draws what the plane holds: its amount, its source and its period (not 'the source states no end to its period' under the end the member typed) (63517.009755ms)
-  ✖ failing tests:
-  ✖ R4 C8 (the figure) Money, the real plane: a figure read in with its period's dates is a row of the trail that draws what the plane holds: its amount, its source and its period (not 'the source states no end to its period' under the end the member typed) (63517.009755ms)
 screens-publish: pass 282 fail 2 (61s)
-  ✖ R24 the module holds no English: every key it reads (the design stream's reads list for it, and the keys R22 and R23 name) is a word setup-words holds, each screen's words are keys only, and it has no rows of its own (2.388693ms)
-  ✖ R22 G54 (screens-publish) a complete edition with no built case file draws its state's and its code's sentence by key where the download is not drawn, and the verify press answers them, sending nothing (606.971087ms)
-  ✖ failing tests:
-  ✖ R24 the module holds no English: every key it reads (the design stream's reads list for it, and the keys R22 and R23 name) is a word setup-words holds, each screen's words are keys only, and it has no rows of its own (2.388693ms)
-  ✖ R22 G54 (screens-publish) a complete edition with no built case file draws its state's and its code's sentence by key where the download is not drawn, and the verify press answers them, sending nothing (606.971087ms)
 screens-action: pass 278 fail 0 (43s)
+control-plane: pass 680 fail 0 (1738s)
+installer-steps: pass 121 fail 0 (7s)
+installer: pass 233 fail 15 (34s)
+site: pass 35 fail 0 (14s)
+stewards: pass 23 fail 0 (2s)
+journey-check: pass 105 fail 24 (1474s)
+plane: pass 600 fail 2 (file by file; the module run did not finish in the window)
 ```
 
-Reruns and classification: pending the end of the run.
+## Failing files: four runs and classification
+
+Classes: RED-ALWAYS (red in all four: alone twice and on one core twice), RED-ONE-CORE-ONLY, RED-FULL-RUN-ONLY (green in all four alone, red in the full run). Results are fail counts in a1 / a2 / c1 / c2. "Not instrumented": per K4966 these were not reproduced under named load; none is a timing-class red (all are red alone).
+
+| Module | File | a1 a2 c1 c2 | Class | Assertion (first failing) |
+|---|---|---|---|---|
+| bundler | `bio-plane/test/system/deploybindings.test.mjs` | file-level fail ×4 | RED-ALWAYS | "the real config states an explicit subrequest ceiling the release path derives" |
+| promotion | `bio-plane/test/system/row-census.test.mjs` | file-level fail ×4 | RED-ALWAYS | R50 "the tree holds the pin, the rows awaiting stamp listed — any other difference fails naming the row"; CENSUS MOVED: arrived with no record, C-102.34 … C-130.22 (many rows) |
+| capture-sources | `bio-plane/test/m/capture-sources/browserrender.test.mjs` | 0 0 0 0 (17 pass each) | **RED-FULL-RUN-ONLY** | R69 "every failed answer carries elapsed_ms (the close included), failure_class and detail…" failed in the full run (1069.8 ms); the assertion text was not kept by the module runner and it does not reproduce alone |
+| wizard-scripts | `bio-plane/test/m/wizard-scripts/t52g53.test.mjs` | 1 1 1 1 | RED-ALWAYS | `t52g53.test.mjs:31` R50 strict equal: the vendored `registry.json` is not the design's `registry.json` byte for byte |
+| op-grades | `bio-plane/test/m/op-grades/g55.test.mjs` | 1 1 1 1 (file-level, 0 pass) | RED-ALWAYS | `g55.test.mjs:25` `assert.ok(NON_ACTS.moneyingestread.startsWith("read: "))` falsy |
+| op-grades | `bio-plane/test/m/op-grades/owners.test.mjs` | 1 1 1 1 | RED-ALWAYS | `owners.test.mjs:200` R13 R3 deep-equal: the graded op list lacks `moneyingestread` |
+| machinery-producers | `bio-plane/test/m/machinery-producers/whole-rows.test.mjs` | 1 1 1 1 | RED-ALWAYS | `whole-rows.test.mjs:42` "one note, for the whole": an extra row for capture_sha 30de53c7… |
+| screens-settings | `bio-plane/test/m/screens-settings/contract.test.mjs` | 1 1 1 1 | RED-ALWAYS | `contract.test.mjs:75` "act.captureuploadabort.does is a key this module reads" |
+| screens-investigate | `bio-plane/test/m/screens-investigate/fix4-seam.test.mjs` | 1 1 1 1 | RED-ALWAYS | `fix4-seam.test.mjs:107` "the figure the member read in is a row of the trail, proposed by a member (the plane names her `admin`, not `member:admin`)" actual undefined, expected true |
+| screens-publish | `bio-plane/test/m/screens-publish/common.test.mjs` | 1 1 1 1 | RED-ALWAYS | `common.test.mjs:144` "refusal.NOT_RECORDED is listed by a screen that may draw it" (R24) |
+| screens-publish | `bio-plane/test/m/screens-publish/g54-page.test.mjs` | 1 1 1 1 | RED-ALWAYS | `g54-page.test.mjs:114` strict equal: actual "…couldn&#39;t be built yet…" (HTML-escaped apostrophe), expected "…couldn't…" (R22) |
+| installer | `newgroup/test/wizard.test.mjs` | file-level fail ×4 | RED-ALWAYS | the script dies at `wizard.test.mjs:232` (`sourceOf`, called at :552): TypeError "Cannot read properties of undefined (reading 'init')"; before it, FAILs "verification hit the new address", "the check was actually retried", "the refused upload is retried exactly once want [3,true,true,false] got [2,true,true]" and the module's 15 R33/R8/R11/R20/R44/R55/R61/R71/G54 reds follow |
+| plane | `bio-plane/test/m/plane/g54-l.test.mjs` | 1 1 1 1 | RED-ALWAYS | `g54-l.test.mjs:151` strict equal: actual 'built', expected 'retrying' (K4941, K4966: not instrumented under load here; it is red alone and on one core) |
+| plane | `bio-plane/test/m/plane/release.test.mjs` | 1 1 1 1 | RED-ALWAYS | `release.test.mjs:78` R24 "screen.objective.purpose is held by the words list" — **the known red accepted by name (K4276)**; classed RED-ALWAYS |
+| journey-check | `…/journey-check/plane-cron.test.mjs` | 3 3 3 3 | RED-ALWAYS | `plane-cron.test.mjs:124` actual "the plane's script croninstall is not in the account", expected null (R1 (a) G1 ×3) |
+| journey-check | `…/journey-check/account-installer.test.mjs` | 3 3 3 3 (0 pass) | RED-ALWAYS | `account-installer.test.mjs:62` "the helper programs step finished" actual undefined; also "agent-runner AgentRunner: an application on docker.io/civicsmith/agent-runner@sha256:78b09547…" (R1 (a) ×3) |
+| journey-check | `…/journey-check/group.test.mjs` | 1 1 1 1 | RED-ALWAYS | `group.test.mjs:22` R17 deep-equal: rows that say "group" for a team (e.g. `ai-accounts.index.the_request_names_no_owner`, `capture.index.parted_unavailable`) |
+| journey-check | `…/journey-check/live.test.mjs` | 4 4 4 4 (pass 11/11/10/11) | RED-ALWAYS | `live.test.mjs:191` "journey-check (live): 18 steps, 2 failures"; the R12, R12 control, R20 live-arm and R20 control live-arm tests (each ~100 s) |
+| journey-check | `…/journey-check/journey.test.mjs` | 13 13 13 13 | RED-ALWAYS | "journey-check (local): 3 steps, 1 failures": `journey 28 · install: the installer's first page` fails with `locator.fill: Timeout 30000ms exceeded`; the 13 dependent tests (R1 (a), R9, R20, R10, R11, R7, R13, R16/18, R22, R23, R25, R27) follow |
+| journey-check | `…/journey-check/route-encoding.test.mjs` | 0 0 0 0 | passes | not a failing file (rerun only because the title match was ambiguous) |
+
+**Result: 21 failing files; 20 RED-ALWAYS (including plane `release.test.mjs` R24, accepted red by name, K4276), 1 RED-FULL-RUN-ONLY (capture-sources `browserrender.test.mjs` R69); no RED-ONE-CORE-ONLY.**
+
+The three installer/journey-check clusters (`newgroup/test/wizard.test.mjs`, journey-check `journey`/`live`/`account-installer`/`plane-cron`) share one visible symptom, the installer's first page and its fake account answers (a container application and the plane's cron script absent), so one cause is likely; this run did not isolate it.
+
+The raw logs are in the session scratchpad only (not committed).
