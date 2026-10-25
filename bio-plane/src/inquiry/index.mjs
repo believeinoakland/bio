@@ -1366,8 +1366,9 @@ export class Inquiry {
    *  (`waiting`, `due`, `ended` or `undetermined` as R55 states them; a look is the setter's own and is not answered
    *  here), the setter's handle (`members.handle`, membership R120; null for a setter with none, a machine), and the
    *  project it was set in, `{id, name}`, only while that project is discoverable (membership R85) and the viewer's
-   *  sight of it is not NONE (R44): otherwise no `set_in`, exactly as for a wait set in no project. The answer carries
-   *  `projects` (R60, leg-earning R14). R55's due notice and R56's look stay the setter's alone. Writes nothing; never
+   *  sight of it is not NONE (R44): otherwise no `set_in`, exactly as for a wait set in no project. The answer also
+   *  carries R58's for that question, `document_waits` and `history`, as `documentWaits` gives them (`null` both, with
+   *  `document_waits_why`, when capture's read cannot be read), and `projects` (R60, leg-earning R14). R55's due notice and R56's look stay the setter's alone. Writes nothing; never
    *  throws. */
   questionWaits(args = {}) {
     const { question = null, viewer = null, asOf = null } = args && typeof args === "object" ? args : {};
@@ -1390,7 +1391,11 @@ export class Inquiry {
                    set_by_handle: typeof w.handle === "string" && w.handle ? w.handle : null, set_at: w.set_at,
                    ...(shown ? { set_in: shown } : {}), ...(ended ? { inquiry_state: b.current_state } : {}) };
         });
-      return { ok: true, question, zone, waits, ...this.#projectsField(question, viewer) };
+      const set = this.documentWaits({ questions: [question], viewer }).questions?.[0] ?? null;
+      return { ok: true, question, zone, waits,
+               document_waits: set ? set.waits : [], history: set ? set.history : [],
+               ...(set && set.state === "undetermined" ? { document_waits_why: set.why } : {}),
+               ...this.#projectsField(question, viewer) };
     } catch { return absent; }
   }
 

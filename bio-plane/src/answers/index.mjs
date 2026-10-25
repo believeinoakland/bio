@@ -227,6 +227,13 @@ export class Answers {
     return { ok: true, on: on === true };
   }
 
+  /** R7 (K5131): whether the rule services are on, for any signed-in member (the control plane's class gate admits the
+   *  caller), so a screen draws their control only while on. A read: writes nothing; the services stay off until the
+   *  administrator's switch (K1505 (14)). */
+  ruleServicesState() {
+    return { ok: true, on: this.record.getSetting(RULE_SERVICES_SETTING) === true };
+  }
+
   /** R7: one rule service's answer, as of `at` (now when absent), recorded in the read log of the grant it was asked
    *  under. Non-mutating; never throws. (R35; K3089) `use` (`ask` or `draft`; absent or any other: `ask`) opens the
    *  grant's read log with it when this is the grant's first read, so a draft grant first read by `op=rule` is scrubbed

@@ -164,7 +164,7 @@ test("R7 (interface-shell R13): each refusal word an act names is a listed word"
 });
 
 test("R7: after an act the screen re-reads what it changed: an act names only its own screen's reads to re-read, or all of them", () => {
-  const readsOf = { home: ["group", "queue", "projects", "doors", "looked", "members", "boot", "places", "languages", "aiuse", "directory", "requests", "held"], elsewhere: ["door"], projects: ["projects", "themes", "directory", "requests"], queue: ["queue", "muted", "held", "inbox", "roster", "answered", "aside"], finder: ["search", "selection", "frontier_document", "frontier_content", "frontier_meaning", "frontier_internet", "lookedat", "themes", "theme", "browse"], "find-in": ["questions"], answers: ["search"] };
+  const readsOf = { home: ["group", "queue", "projects", "doors", "looked", "members", "boot", "places", "languages", "aiuse", "directory", "requests", "held"], elsewhere: ["door"], projects: ["projects", "themes", "directory", "requests"], queue: ["queue", "muted", "held", "inbox", "roster", "answered", "aside"], finder: ["search", "selection", "frontier_document", "frontier_content", "frontier_meaning", "frontier_internet", "lookedat", "themes", "theme", "browse"], "find-in": ["questions"], answers: ["search", "passages"] };
   for (const s of SCREENS) for (const a of s.acts) for (const r of a.rereads || []) assert.ok(readsOf[s.id].includes(r), `${s.id}.${a.op} rereads ${r}`);
   // R94 (interface-shell R113): the queue's acts each name the reads they change (the item resolved or muted leaves the list, R3), not all.
   for (const a of byId.queue.acts) assert.ok(Array.isArray(a.rereads) && a.rereads.length > 0 && a.rereads.includes(a.op === "release" ? "held" : "queue"), `queue.${a.op} names what it changes`);

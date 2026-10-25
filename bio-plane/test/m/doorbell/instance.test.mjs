@@ -11,6 +11,7 @@ import { CAPTURE_EXEMPT_TABLES, CAPTURE_PURGED_TABLES } from "../../../src/captu
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
+import { tableDeclarationRefusals } from "../record-core/fixtures.mjs";
 
 const SIX = ["inbox", "knock_rate", "knock_key", "knocker_key", "doorbell_tally", "doorbell_limit_last"];
 
@@ -73,10 +74,13 @@ test("R25: any other refusal of the declaration throws, naming the table, before
   assert.throws(() => doorbellOf(h.ctx, { capture: lone }), /TABLE_DECLARED \(inbox\)/);
   /* any other refusal of record-core's, by its reason */
   const s = storage();
-  const refusing = { declarePurge: () => ({ ok: false, reason: "TABLE_NAME_INVALID", table: "knock_rate" }), transact: (fn) => fn() };
-  assert.throws(() => new Doorbell(s, { capture: { env: {} }, record: refusing }).migrate(), /TABLE_NAME_INVALID \(knock_rate\)/);
+  /* record-core's own refusals, as its published fixture makes them (K5044) */
+  const refusals = tableDeclarationRefusals("inbox", { by: "capture" });
+  const refusing = { declarePurge: () => refusals.invalidName, transact: (fn) => fn() };
+  assert.throws(() => new Doorbell(s, { capture: { env: {} }, record: refusing }).migrate(), new RegExp(`${refusals.invalidName.reason} \\(${refusals.invalidName.table}\\)`));
   /* T43 (N864): no held arm: a TABLE_DECLARED naming capture throws alike */
-  const held = { declarePurge: () => ({ ok: false, reason: "TABLE_DECLARED", table: "inbox", declaredBy: "capture" }), transact: (fn) => fn() };
+  assert.equal(refusals.declaredAgainByPurge.declaredBy, "capture");
+  const held = { declarePurge: () => refusals.declaredAgainByPurge, transact: (fn) => fn() };
   assert.throws(() => new Doorbell(storage(), { capture: { env: {} }, record: held }).migrate(), /TABLE_DECLARED \(inbox\)/);
   /* negative control: an admitted declaration makes the instance */
   const admits = { declarePurge: () => ({ ok: true }), transact: (fn) => fn() };

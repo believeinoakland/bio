@@ -1,6 +1,6 @@
 # BOB to store-door (T51)
 
-**Read** · handled J12
+**Read** · handled J13
 
 ## B1 · START
 
@@ -146,3 +146,18 @@ Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . store-door --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/store-door.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B12 · START
+
+START · STORE-DOOR #19 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 49, a cause the final pass found (plan build/plan/fix-round-10-T51.md §3; K5129)
+
+Depth 2 (BOB #294 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/store-door tranche/T51`; if a local `job/T51/store-door` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/store-door stale/store-door-local && git checkout -b job/T51/store-door origin/job/T51/store-door`. If `job/T51/store-door` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module store-door`; record `build/jobs/T51/store-door.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993). Each cause carries K4426's four fields in your COMPLETE: root cause with evidence, why the tests missed it (that gap fixed), a test of the walker's exact case through its real entry seen failing then passing, and any platform check.
+
+**Two causes (WALK-FINAL-04B, row R39; placement in K5129).** Your R7 is amended (K5129, read it whole).
+1. **Holder null.** `bio-plane/src/store-door/pull.mjs:117-118` calls `doorbell.pullKnock` and `inboxResolve` without `viewer`, though `pullAndFile` receives it (`:110`); doorbell's `#sees` (`doorbell/index.mjs:715`) is false for a missing viewer, so `holder` is always null when the same bytes were already held. Why missed: `pull.test.mjs` asserts no `holder`. Test: two knocks of the same bytes, the second pulled by a member who may see the first's bundle: `existed: true` and `holder` that bundle, for both the pull and the resolve arm; a viewer who may not see it: `holder` null.
+2. **Raw knock id in the title.** `pull.mjs:33` titles the bundle with the row `store-door.title.material_handed_doorbell` ("Material handed in at the doorbell ({knock_id})"), and every list draws the stored title (`screens-intake` R54), which R32 (3) bars. Write the title at its use as `localize("store-door.title.material_handed_doorbell_on", "Material handed in at the doorbell on {date}", {date})` with the knock's instant as a date a member reads (K3930: the table wins; UX-DESIGN reviews the new row through `words-unreviewed.json`); the old key is left to the round-end regeneration. Test: the pulled document's title holds no `KNOCK-` id, through `pullAndFile`; `op=list`'s title likewise if a test of yours reaches the door.
+
+**Done:** R7's two marked clauses met (name them; BOB strikes the marks); `checks/fixtures.mjs <absolute root> store-door --list` 0 failing; module tests green; format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.

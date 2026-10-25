@@ -240,7 +240,7 @@ const tallyRows = (rows) => rows(`SELECT day, refused, limit_reached FROM doorbe
 test("R19 R10 R17: every knock the doorbell turns away is counted by its UTC day, the envelope, a required argument, base64, empty, size, a weak secret and either rate limit, and every knockAttempt refusal; an admitted knock and a GET are not", async () => {
   const { send, c, rows } = setup();
   const day = new Date().toISOString().slice(0, 10);
-  await send(null, { raw: "x".repeat(KNOCK.maxBytes + 4097) });
+  await send(null, { raw: "x".repeat(KNOCK.maxEnvelope + 1) });
   await send(null, { raw: "not json" });
   await send({ contentB64: "!!!" });
   await send({ contentText: "" });

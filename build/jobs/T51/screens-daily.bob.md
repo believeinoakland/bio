@@ -1,6 +1,6 @@
 # BOB to screens-daily (T51)
 
-**Read** · handled J25
+**Read** · handled J26
 
 ## B1 · START
 
@@ -383,3 +383,21 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 ## B37 · ANSWER · re J24
 
 ANSWER (K5090): `record-core` is now in screens-daily's `uses` on the tranche (37 precedes 167; `order.mjs --check` clean). Merge `tranche/T51` into your branch, run architecture and your tests, and post COMPLETE. Your `find-in.test.mjs` `fixtures-contract: retrieval-browse findin-term-part` marker may stay listed `contract-no-run`: retrieval-browse publishes the run in follow-up 22.
+
+## B38 · START
+
+START · SCREENS-DAILY #21 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 57, a cause the final pass found (plan build/plan/fix-round-10-T51.md §3; K5131)
+
+Depth 2 (BOB #294 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/screens-daily tranche/T51`; if a local `job/T51/screens-daily` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/screens-daily stale/screens-daily-local && git checkout -b job/T51/screens-daily origin/job/T51/screens-daily`. If `job/T51/screens-daily` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module screens-daily`; record `build/jobs/T51/screens-daily.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993). Each cause carries K4426's four fields in your COMPLETE: root cause with evidence, why the tests missed it (that gap fixed), a test of the walker's exact case through its real entry seen failing then passing, and any platform check.
+
+**The cause (WALK-FINAL-09 row R84 "Ask as search", D1; K5131).** `bio-plane/src/screens-daily/answers.mjs:21` and `:225` turn plain words into `(w) OR (passage:w)`, which `retrieval` R88 refuses `ROUTES_CROSSED` (an `OR` joining a passage route to a fields route), so Ask-as-search finds nothing. Your R6 is amended (read it whole): send a search retrieval admits (your R56 already changed Find this way: follow it). Why missed: `answers.test.mjs:123` asserts the crossed string against a stub. Test with the real search (retrieval's published fixture or the seam kit): words the documents hold are found; seen red first.
+Then (a CHANGE after ANSWERS #15 merges, follow-up 57): "Show how this was counted" drawn only while `answers`' `ruleservicesstate` reads `on` (R6 as amended), on answers' published fixture.
+
+**Done:** the marked requirement met (name the ids; BOB strikes the marks); `node /home/user/civicos-process/checks/fixtures.mjs <absolute root> screens-daily --list` 0 failing; module tests green; format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B39 · CHANGE
+
+CHANGE (K5138): ANSWERS #15 is merged on the tranche: `ruleservicesstate` → `{ok: true, on}` and its fixture `ruleServicesState({on})` in `bio-plane/test/m/answers/fixtures.mjs`. Merge `origin/tranche/T51`, then R6's second half: "Show how this was counted" (`ruleanswer`) is drawn only while `ruleservicesstate` reads `on`; while off it is not drawn. Test on answers' fixture (both states), seen red first. Then COMPLETE (R6's mark is struck at that merge).

@@ -85,7 +85,7 @@ test("R10 R19: knock is a POST; the refusals are tried in order and a refused kn
   assert.equal((await send(knock(null, { method: "GET" }))).status, 405);
   assert.deepEqual([st.calls.length, tallied(rows)], [0, 0], "a method other than POST is not a knock and is not counted");
   /* envelope before JSON: an oversize body that is also not JSON */
-  const env1 = await send(knock(null, { raw: "x".repeat(KNOCK.maxBytes + 4097) }));
+  const env1 = await send(knock(null, { raw: "x".repeat(KNOCK.maxEnvelope + 1) }));
   assert.equal(env1.body.reason, "KNOCK_ENVELOPE_TOO_LARGE");
   /* not JSON / no content string */
   assert.equal((await send(knock(null, { raw: "not json" }))).body.reason, "REQUIRED_ARGUMENT_MISSING");
@@ -163,9 +163,9 @@ test("R5: the instance limit of 10, RATE_GLOBAL 429 with its row and stated boun
   assert.equal(resp.status, 429); assert.equal((await resp.json()).stated, KNOCK.statedGlobal);
 });
 
-test("R6: an envelope over 8 MiB + 4 KiB is refused 413 before it is parsed, with its row and maxBytes, and the store is asked only to count it (R19)", async () => {
+test("R6: an envelope over the base64 length of 8 MiB + 4 KiB is refused 413 before it is parsed, with its row and maxBytes, and the store is asked only to count it (R19)", async () => {
   const { send, st } = setup();
-  const r = await send(knock(null, { raw: "{" + "x".repeat(KNOCK.maxBytes + 4096) }));
+  const r = await send(knock(null, { raw: "{" + "x".repeat(KNOCK.maxEnvelope) }));
   assert.equal(r.status, 413);
   assert.deepEqual([r.body.reason, r.body.code, r.body.check, r.body.translation, r.body.maxBytes],
                    ["KNOCK_ENVELOPE_TOO_LARGE", "KNOCK_ENVELOPE_TOO_LARGE", row("KNOCK_ENVELOPE_TOO_LARGE").check,
@@ -173,6 +173,30 @@ test("R6: an envelope over 8 MiB + 4 KiB is refused 413 before it is parsed, wit
   assert.deepEqual(st.calls, ["/doorbellrefused"], "only the tally's count");
   assert.equal((await send(knock(null, { raw: JSON.stringify({ contentText: "x".repeat(KNOCK.maxBytes + 4000) }) }))).body.reason,
                "KNOCK_PAYLOAD_TOO_LARGE", "just under the envelope is read");
+});
+
+test("R1 R6 R7 (K5129): a file sent as contentB64 reaches the payload check: 7 MiB and exactly 8 MiB are kept; 8 MiB + 1 B is KNOCK_PAYLOAD_TOO_LARGE, not the envelope; a body of 11,188,909 bytes is the envelope", async () => {
+  const MiB = 1024 * 1024;
+  const envelopeBound = 11_188_908;   // base64 length of 8 MiB (11,184,812) + 4 KiB, as R6 states it
+  const b64 = (n) => Buffer.alloc(n, 0x61).toString("base64");
+  assert.equal(b64(8 * MiB).length, 11_184_812);
+  const t = setup();
+  for (const n of [7 * MiB, 8 * MiB]) {
+    const r = await t.send(knock({ contentB64: b64(n) }, { ip: `198.51.100.${n % 200}` }));
+    assert.deepEqual([r.status, r.body.ok, r.body.bytes], [200, true, n], `${n} bytes as contentB64 are kept`);
+  }
+  assert.equal(inboxRows(t.rows), 2);
+  const over = setup();
+  const p = await over.send(knock({ contentB64: b64(8 * MiB + 1) }));
+  assert.deepEqual([p.status, p.body.reason, p.body.maxBytes], [413, "KNOCK_PAYLOAD_TOO_LARGE", 8 * MiB], "over the cap: the payload refusal, not the envelope");
+  /* the envelope's own edge: exactly the bound is read (and refused as payload, being no JSON content), one over is the envelope */
+  const edge = (n) => '{"contentB64":"' + "A".repeat(n - '{"contentB64":""}'.length) + '"}';
+  assert.equal(edge(envelopeBound).length, envelopeBound);
+  const atBound = await over.send(knock(null, { raw: edge(envelopeBound) }));
+  assert.equal(atBound.body.reason, "KNOCK_PAYLOAD_TOO_LARGE", "a body of exactly the bound is read, not refused as envelope");
+  const tooBig = await over.send(knock(null, { raw: edge(envelopeBound + 1) }));
+  assert.deepEqual([tooBig.status, tooBig.body.reason, tooBig.body.maxBytes], [413, "KNOCK_ENVELOPE_TOO_LARGE", 8 * MiB]);
+  assert.equal(KNOCK.maxEnvelope, envelopeBound);
 });
 
 test("R7: decoded content over the cap this instance applies is refused 413 with maxBytes, the detail only without an evidence store", async () => {

@@ -1,6 +1,6 @@
 # BOB to inquiry (T51)
 
-**Read** · handled J10
+**Read** · handled J12
 
 ## B1 · START
 
@@ -119,3 +119,16 @@ Mail with `--module inquiry`; record `build/jobs/T51/inquiry.md` (append a new s
 CHANGE · follow-up 9 (K5109), in this job beside B11, test files only.
 
 basis-versions has merged (K5109): its `own-reading.test.mjs` "R51, R3 (K5077)" concludes, through the real `conclude({reading})`, a question of one labelled ground and one unlabelled supporting (necessary) leg. That is the half of R85 your `necessary-leg.test.mjs:64` holds as a `test.todo`; inquiry cannot import basis-versions (later in the order), so the arm is proven there. Remove that `test.todo` and leave a one-line comment citing basis-versions' test by name. Your other R85 tests stay. Merge `origin/tranche/T51` first. Report in your COMPLETE that `necessary-leg.test.mjs` holds no R85 todo; BOB strikes R85 at your merge.
+
+## B13 · START
+
+START · INQUIRY #29 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 55, a cause the final pass found (plan build/plan/fix-round-10-T51.md §3; K5130)
+
+Depth 2 (BOB #294 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/inquiry tranche/T51`; if a local `job/T51/inquiry` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/inquiry stale/inquiry-local && git checkout -b job/T51/inquiry origin/job/T51/inquiry`. If `job/T51/inquiry` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module inquiry`; record `build/jobs/T51/inquiry.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993). Each cause carries K4426's four fields in your COMPLETE: root cause with evidence, why the tests missed it (that gap fixed), a test of the walker's exact case through its real entry seen failing then passing, and any platform check.
+
+**The cause (WALK-FINAL-05 row R38, both rows; K5130).** A document an open question waits on is set aside; the asker's question screen reads `op=questionwaits` (`screens-inquiry/question.mjs:31`, its R2: "what it waits on, with who set a document aside and their reason"), but `questionWaits` (`bio-plane/src/inquiry/index.mjs:1372`) answers only dated waits; R58's `documentWaits` (the set-aside wait and its `history`) is reached by no op (only `investigation` calls it). R55's `questionWaits` amendment is extended (K5130: read the new first bullet under R55, and R58, whole): `questionWaits`'s answer also carries `document_waits` and `history` for that question, exactly as `documentWaits({questions: [question], viewer})` gives them (an unreadable capture read answered `undetermined` as R58 says). Why missed: the screen's tests use a hand-built `questionwaits` fixture (`screens-inquiry/fixtures.mjs:115`) of a shape the real op never gave. Test, through the real acts (a question; a document cited to it; another member sets it aside with a reason; `questionWaits` as the asker reads the wait with by and reason; a restore ends it, both in `history`; a viewer who may not see the document gets neither); seen red first. Publish a fixture of this answer made by your real code (`questionWaitsSetAside(...)`) in your tests' `fixtures.mjs`, for screens-inquiry's re-point (follow-up 35's CHANGE).
+
+**Done:** the marked requirement met (name the ids; BOB strikes the marks); `node /home/user/civicos-process/checks/fixtures.mjs <absolute root> inquiry --list` 0 failing; module tests green; format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.

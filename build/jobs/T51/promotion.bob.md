@@ -1,6 +1,6 @@
 # BOB to promotion (T51)
 
-**Read** · handled J11
+**Read** · handled J12
 
 ## B1 · START
 
@@ -160,3 +160,17 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 ## B10 · CHANGE
 
 membership is merged (K5070) and publishes projectActRefusals in bio-plane/test/m/membership/fixtures.mjs. Merge the tranche branch and re-point fixtures.mjs:163 and :166 to it (add membership to your imports only if modules.json lists it in your uses; otherwise ask). Fixtures check with the absolute path; then record COMPLETE again.
+
+## B11 · START
+
+START · PROMOTION #54 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 51, a cause the final pass found (plan build/plan/fix-round-10-T51.md §3; K5130)
+
+Depth 2 (BOB #294 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/promotion tranche/T51`; if a local `job/T51/promotion` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/promotion stale/promotion-local && git checkout -b job/T51/promotion origin/job/T51/promotion`. If `job/T51/promotion` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module promotion`; record `build/jobs/T51/promotion.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993). Each cause carries K4426's four fields in your COMPLETE: root cause with evidence, why the tests missed it (that gap fixed), a test of the walker's exact case through its real entry seen failing then passing, and any platform check.
+
+**The cause (WALK-FINAL-10A rows R92 and R171 (5), BLOCKER; K5130).** Signing a case whose finding reaches a member's own testified observation is refused `GATE_REFUSED` with `PLANE_MISSING_BYTES`. `provenance`'s `testify` (`bio-plane/src/provenance/index.mjs:1905-1990`) holds the observation's bytes only in the bundle, as the inline file `snapshots/observation-<sha16>.txt`, registered with that `capture_sha`; ratification's `hasCapture` (`ratification/index.mjs:511-530`) heads only the evidence bucket, and `runGate` (`bio-plane/src/gate.mjs:1426-1428`) turns the miss into `PLANE_MISSING_BYTES` without looking at the image, which holds those very bytes (provenance's own `registerRows` counts such a row `live`, `:848-865`). Your R28 is amended (read it whole): a register row whose `path` in `image` holds bytes hashing to its `capture_sha`, of its registered size, is present; one whose image bytes differ is still refused as before. Why missed: the gate's tests give every register row a bucket answer. Test (`bio-plane/test/m/promotion/`): `runGate` over an image whose register row names an inline file with matching bytes and a `hasCapture` that answers absent: admitted; the same with one byte changed in the file: `PLANE_MISSING_BYTES` (or `PLANE_SIZE`); seen red first. The case through the real door (testify, then caseratify) is ratification's seam test after your merge (follow-up 52): not yours.
+Not in this job: follow-up 32 (the stamp, `CATALOG_VERSION` and `ROW_CENSUS`): a later session, the round's last merge.
+
+**Done:** the marked requirement met (name the ids; BOB strikes the marks); `node /home/user/civicos-process/checks/fixtures.mjs <absolute root> promotion --list` 0 failing; module tests green; format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
