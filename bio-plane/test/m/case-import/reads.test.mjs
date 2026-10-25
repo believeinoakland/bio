@@ -33,7 +33,7 @@ test("R4 importedCases lists every import with its source group, case, lens, edi
   const unseen = { group_fields: null, group_fields_note: GROUP_FIELDS_NONE, publisher: null, publisher_note: NO_MOVE_SEEN, last_read: null };
   /* R26: each edition also names its importer and counts its findings by the latest recreation */
   const counted = { findings: 3, recreated: 3, recreated_in_part: 0, did_not_recreate: 0 };
-  assert.deepEqual(byId[a.import], { import: a.import, group: SOURCE, case: CASE, lens: LENS, latest_edition: 2, editions: [
+  assert.deepEqual(byId[a.import], { import: a.import, group: SOURCE, case: CASE, scope: null, lens: LENS, latest_edition: 2, editions: [
     { edition: 1, imported_at: "2026-10-03T09:00:00Z", imported_by: "alice", importer: { member: "alice", handle: "h_alice" }, ...counted, ...unseen },
     { edition: 2, imported_at: "2026-10-04T09:00:00Z", imported_by: "bob", importer: { member: "bob", handle: "h_bob" }, ...counted, ...unseen }],
     watch: null, docket_entries: [] });
