@@ -112,7 +112,7 @@ Terms. A **theme** is `{theme_id, name, test, at}` and its declarer, `theme_id` 
 
 **Its declared ops** (T51; K4168, K4202)
 - **R71** (T51; K4168, K4190, K4202; `op-declarations` R80, `op-grades` R49) The module states, as `DECLARED_OPS` beside its ops map, each op it serves that a screen sends or that this tranche adds: `connect`, `connectionassert`, `connectionchoose`, `stepsource`, `stepsourcewithdraw`, `themedeclare`, `themeplace`, `themepropose`, `themeread` and `themewithdraw`. Each row carries the op's classes, `mutating`, weight and description as `op-declarations` and `op-grades` already give them, and `fields: {accepts, requires}` read from the op's arm (the door's stamps, among them `viewer`, `author`, `member`, `declarer`, `placer`, `proposer`, `actor`, `administer`, and `connect`'s `assertedBy`, are not fields). A test holds each declaration true by calling the op as the door does (`test-support` R15). Item 3's census line is this same R71: the ten ops are one declaration.
-- **R72** *(not yet met: T51)* (K5157; walk-T51-final 06 §12) A target the viewer cannot see (R20) is answered with connections' own refusal code and catalogue row, whose sentence speaks of a document or record and never of an inquiry, not with hypotheses' `NO_SUCH_BUNDLE` (one code, one site, DEC-49).
+- **R72** (K5157; walk-T51-final 06 §12) A target the viewer cannot see (R20) is answered with connections' own refusal code and catalogue row, whose sentence speaks of a document or record and never of an inquiry, not with hypotheses' `NO_SUCH_BUNDLE` (one code, one site, DEC-49).
 
 ## Private
 

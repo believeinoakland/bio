@@ -154,7 +154,7 @@ async function otherFamilies() {
     const abs = join(REPO, p);
     if (!existsSync(abs)) return;
     if (statSync(abs).isDirectory()) { for (const f of readdirSync(abs)) if (!["node_modules", "dist", "test"].includes(f)) await walk(join(p, f)); return; }
-    if (!p.endsWith(".mjs")) return;
+    if (!p.endsWith(".mjs") || p.startsWith("bio-plane/src/store-assembly/")) return; // K5164: a second composition root (plan item 80)
     const ns = await import(abs);
     for (const [k, v] of Object.entries(ns))
       if (/_CHECKS$/.test(k) && v && typeof v === "object" && !Array.isArray(v)) out.push({ file: p, family: k, rows: v });

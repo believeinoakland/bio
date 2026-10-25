@@ -1,6 +1,6 @@
 # connections (T51)
 
-**Status** · session_01KkQy33QFAKvdUAn9HUSQ1C · depth 2 · COMPLETE · handled B7
+**Status** · session_01KxwDp4ty9H6XwcoGUpKoBx · depth 2 · COMPLETE · handled B9
 
 ## J1 · REPORT
 
@@ -89,3 +89,35 @@ Also in the record: the hand rows that can go; assertedBy left out of connect's 
 ## J4 · COMPLETE
 
 Batch 6 done on job/T51/connections: 6 of 6 own fixture lines (4 contract markers: answer-envelope door-helpers, store-door store-replies x3; OVERLOADED 503 -> STORE_INTERNAL_ERROR 500; unheldStructure replaces the 404 hand-build). fixtures --list 0 failures. No fixtures-own/generic markers. 146 connections tests, users 39 pass; format, words, architecture, coverage, ownership 0. Requirement lines: none new. Record has Size line.
+
+## Fix round 10, the final pass's causes (CONNECTIONS #19, session_01KxwDp4ty9H6XwcoGUpKoBx)
+
+**Cause 1 · a document's citers read with an inquiry's refusal sentence (diag2-06 §12; R72).**
+- (1) Test, red first on the missing export then on the old code: `test/m/connections/no-such-document.test.mjs` (3 tests, named R72, R20): `backlinks` of a target the viewer cannot see and of one not held, `asserted` of a hidden document and `assert` naming an absent one, each answer `reason`/`code` `NO_SUCH_DOCUMENT` with the row's `check` and `translation` (equal to `NO_SUCH_DOCUMENT_CHECKS`, and found by `dec49Row`), the translation never saying "inquiry"; control: a visible target answers as before.
+- (2) Fix: new family `NO_SUCH_DOCUMENT_CHECKS` in `connections/checks.mjs` (code `NO_SUCH_DOCUMENT`, check `C-155.1`, `where` `src/connections/index.mjs noSuchDocument > is-no-such-document`, sentence `localize('connections.checks.no_such_document', 'There is no document or record here by that id that you can see.')`). The code sits at one literal site, the helper `noSuchDocument(target, detail)` in `index.mjs`, used by all four former `NO_SUCH_BUNDLE` sites (`backlinks`, `projectLinks`, `assert`, `asserted`). Existing tests that asserted `NO_SUCH_BUNDLE` for these four answers now assert `NO_SUCH_DOCUMENT` (asserted, converts-links, declared-ops, edges tests).
+- (3) Why the tests missed it: connections tests assert `reason`, never the door's decoration by code, and the old code was shared with hypotheses, so the wrong sentence came from another module's row.
+- **Code to name in R20 and R72 (BOB words them):** `NO_SUCH_DOCUMENT` (C-155.1). R20's line still reads `NO_SUCH_BUNDLE`. Check id C-155 was unused in the product at this commit; BOB confirms it is not minted elsewhere this round.
+- **Met:** R72 (and R20 as amended).
+
+**Found in other modules.** (a) `screens-inquiry/document.mjs:95` lists `NO_SUCH_BUNDLE` among its held states; `backlinks` and `connectionsasserted` now answer `NO_SUCH_DOCUMENT`, which that screen draws through the answer's own `translation` (the door sets it), so the screen still shows a sentence, but its held list should name `NO_SUCH_DOCUMENT` too. (b) `strength/index.mjs:697`, `actions/index.mjs:1531`, `action-holds/index.mjs:214` still answer bare `NO_SUCH_BUNDLE` (diagnosed in §12, not mine). (c) answer-envelope's tests fail 16 of 52 on this tranche with and without my change (`op-declarations: adminendorse: a second registration (R81)`): not mine.
+
+**Tests and checks run** (job branch after commit):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/connections/*.test.mjs`: 149 tests, 149 pass, 0 fail.
+- Users: screens-inquiry, affordances plane, screens-investigate explore, basis-versions d216-sharing, op-grades t48, store-request inner-request, explore real-connections: 640 pass, 0 fail.
+- `checks/format.mjs /home/user/bio`: 178 modules, 0 failures. `architecture connections`: 0 failures. `coverage connections`: 72 of 72, 0 failures. `words connections`: 0 failures. `ownership connections tranche/T51 job/T51/connections`: 0 failures. `fixtures connections --list`: 0 failures, 5 accepted, no marker added.
+
+**Size (session_01KxwDp4ty9H6XwcoGUpKoBx): test runs 6, module lines 2394.**
+
+## J5 · COMPLETE
+
+B8 done on job/T51/connections. Cause 1 (R72, R20): connections' own code NO_SUCH_DOCUMENT (C-155.1, family NO_SUCH_DOCUMENT_CHECKS, one literal site noSuchDocument) replaces NO_SUCH_BUNDLE at backlinks, projectLinks, assert and asserted; sentence is a localize stand-in about a document or record. Met: R72, R20 as amended (name NO_SUCH_DOCUMENT in R20 and R72; R20 still reads NO_SUCH_BUNDLE). 149 connections tests pass; users 640 pass; format, architecture, coverage 72/72, words, ownership 0; no fixtures marker added. Other modules: screens-inquiry/document.mjs:95 held list should name NO_SUCH_DOCUMENT; strength, actions, action-holds still answer bare NO_SUCH_BUNDLE; answer-envelope tests are 16 red with or without my change (op-declarations adminendorse registered twice). Check id C-155 was unused at my commit: confirm. Size line in record.
+
+## J6 · B9 handled (CONNECTIONS #19)
+
+Merged `origin/tranche/T51`. `no-such-document.test.mjs` no longer imports answer-envelope: it reads connections' own `NO_SUCH_DOCUMENT_CHECKS` row (the door's decoration is answer-envelope's to test). connections 149 pass; architecture, coverage 72/72, words, format, ownership 0 failures.
+
+Size (session_01KxwDp4ty9H6XwcoGUpKoBx): test runs 8, module lines 2394.
+
+## J7 · COMPLETE
+
+B9 done: tranche merged; no-such-document.test.mjs no longer imports answer-envelope (reads connections' own NO_SUCH_DOCUMENT_CHECKS row). connections 149 pass; architecture, coverage 72/72, words, format, ownership 0.

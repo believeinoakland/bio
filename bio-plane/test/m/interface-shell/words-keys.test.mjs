@@ -9,6 +9,7 @@ import { wordsOf } from "../../../src/interface-shell/index.mjs";
 import { WORD_ROWS, word, hasWord } from "../../../src/setup-words/index.mjs";
 import { boot, ok, refused, httpError, textNodes } from "./harness.mjs";
 import { ALL, FIXTURE_WORDS } from "./screens.fixture.mjs";
+import { inWorld, bootAs, obligations } from "./world.mjs";
 
 /* the keys the module reads: the design's list for it (`words-reads.json`, DEC-258: this module's own declaration of what it
    reads), and the families it builds a key from */
@@ -46,14 +47,16 @@ function drawn(p) {
 const HELD = ok({ items: [{ id: "h1", title: "Minutes", at: "2026-10-01" }] });
 
 test("R70 over fixtures, what the page draws for a sample of its keys equals word(key, vars): the frame, the masthead, the rail, the tabs and the band", async () => {
-  const p = await boot({ screens: ALL, plane: { projectdirectory: ok({ projects: [] }), groupidentity: ok({ ok: true, group: "g", display_name: null }), queue: ok({ items: [{ id: "q1", class: "OBLIGATION" }, { id: "q2", class: "OBLIGATION" }] }) } });
+  const { world, me } = await inWorld();
+  const items = await obligations(world, me, 2);
+  const p = await bootAs(world, me, { screens: ALL });
   const seen = drawn(p);
   const has = (key, vars) => assert.ok(seen.has(word(key, vars)), key);
   for (const k of ["shell.sections", "shell.path", "shell.search", "shell.menu.signout", "shell.appearance", "shell.appearance.device", "shell.appearance.light", "shell.appearance.dark",
     "shell.width", "shell.level.button.prompt", "tab.more.name", "mark.path.working.name", "shell.band.working", "shell.mark"]) has(k);
   for (const k of RAIL) has("rail." + k + ".name");
-  has("shell.todo", { n: 2 });
-  has("shell.you", { handle: "mai" });
+  has("shell.todo", { n: items.length });
+  has("shell.you", { handle: me.handle });
   assert.equal(p.root().querySelector(".cs-mast .mk-grp").textContent, word("shell.group.unnamed"));
 });
 

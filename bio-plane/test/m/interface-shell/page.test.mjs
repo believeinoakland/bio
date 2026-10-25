@@ -9,6 +9,7 @@ import { OPS } from "../../../src/op-declarations/index.mjs";
 import { randomBytes } from "node:crypto";
 import { boot, ok, scriptOf } from "./harness.mjs";
 import { ALL, HOME, DOCUMENT } from "./screens.fixture.mjs";
+import { inWorld, bootAs, translated } from "./world.mjs";
 import { documentOf, textNodes } from "./dom.mjs";
 
 const scripts = (html) => [...html.matchAll(/<script\b([^>]*)>/gi)].map((m) => m[1]);
@@ -35,13 +36,17 @@ test("R1 R56 one document: <html lang> en until the member's language is read, i
   const before = documentOf(html);
   assert.deepEqual(textNodes(before.body).map((t) => t.data.trim()).filter(Boolean), [], "no text but the script's words");
   assert.equal(/<title>([^<]*)<\/title>/.exec(html)[1], "", "even the title is drawn from the words");
-  const p = await boot({ screens: ALL, path: "/app/document/c1", plane: { image: IMAGE, interfacewords: ok({ ok: true, language: "es", words: [{ key: "rail.home.name", text: "Inicio", en: "Home", fallback: false }] }) } });
+  const { world, me } = await inWorld({ founder: true });
+  const words = await translated(me, "es", [["rail.home.name", "Inicio"]]);
+  assert.equal(words.length, 1, "the store holds the one adopted word");
+  const p = await bootAs(world, me, { screens: ALL, path: "/app/document/c1", plane: { image: IMAGE } });
   assert.equal(p.doc.documentElement.getAttribute("lang"), "es");
   const uses = p.root().querySelectorAll("use").map((u) => u.getAttribute("href"));
   assert.ok(uses.length > 5);
   for (const u of uses) assert.match(u, /^\/app\/assets\/icons\.svg#i-[a-z-]+$/);
   /* control: before the language is read the page says en */
-  const q = await boot({ screens: ALL, plane: { interfacewords: ok({ ok: true, language: null, words: [] }) } });
+  const bare = await inWorld();
+  const q = await bootAs(bare.world, bare.me, { screens: ALL });
   assert.equal(q.doc.documentElement.getAttribute("lang"), "en");
 });
 

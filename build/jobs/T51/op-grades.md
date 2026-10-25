@@ -1,6 +1,6 @@
 # op-grades (T51)
 
-**Status** · session_01T9Q1bzf8ZbBrV2wLLGqZoT · depth 2 · COMPLETE · handled B35
+**Status** · session_01FQzZSFC8jvCf4w2KhSK6C5 · depth 2 · COMPLETE · handled B37
 
 ## J1 · QUESTION
 
@@ -394,3 +394,30 @@ Size (session_01T9Q1bzf8ZbBrV2wLLGqZoT): test runs 5, module lines 1
 
 1. `bio-plane/test/m/affordances/register-owners.mjs` registers three owners by hand (`case-inputs`, `case-import`, `contradiction`), so affordances' R12 totality does not see other owners' declared ops. Fix belongs in affordances' test: register every owner's `DECLARED_OPS` found from `build/modules.json`.
 2. `plane.declared.readtranslate` has two sentences (`bio-plane/src/plane/declared.mjs:13` and `bio-plane/src/store-assembly/declared.mjs:16`); `setup-words build.mjs --check` refuses on it.
+
+## J31 · COMPLETE
+
+**COMPLETE** · fix round 10, the final pass's causes: B37 (1) and (2) (K5159, K5148), and B36 (K5157). Branch `job/T51/op-grades` at `262b68d99e`, pushed; tranche merged first (fast-forward of six commits, no conflict; no rebase).
+
+**B36 (`ruleservicesstate`, item 73 (2)):** already applied by OP-GRADES #27 in J29 at `8ca0fef5ad`, which is an ancestor of this branch. Not redone here; `done` through B37 covers B36 as well.
+
+**Cause 1 (B37 (1)): `namedrequests` graded Reasoned though monitoring declares a read.** `bio-plane/src/op-grades/marks.mjs:140` now reads `["namedrequests", "Reversible", "read"]`, the read's ruling as `versionnotice` takes it (R42, R46; K4259). Its header comment lists it. (1) Failing first: `bio-plane/test/m/op-grades/k5159.test.mjs` (new; names R42), red on the old row with `namedrequests (monitoring) is a read, so Reversible at most: actual 'Reasoned'`, then green. It checks every read an owner declares that `MARKS` holds, not only this one. (2) Fix where the cause is: `marks.mjs`, one row and the comment. (3) Why missed: `MARKS` is a hand table, and the R42 test (`t48.test.mjs`) compares each mark with the kit's weight, never with its owner's declared weight; the R46 test compares with the kit too. No test compared a mark with the owner's `weight`, so a declared read graded Reasoned passed.
+
+**Cause 2 (B37 (2)): a declared read with no grade row unseen.** `bio-plane/test/m/op-grades/owners.test.mjs` gains an R13 test (K5159). It reads every owner's declared reads (`collectDeclaredOps`) for the owners R13 names, taken from R13's own text by `tickedAll(reqText(13))`, not typed here (`events`, `lines`, `money`, `money-checks`, `duties`, `people`, `explore`, `hypotheses`, `answers`, `following`, `calculations`); each must be a `NON_ACTS` row, so a missing row fails. The existing `ownerReads(T33_NON_ACTS)` path is unchanged. (1) Failing first: with `ruleservicesstate`'s row removed from `bio-plane/src/op-grades/t33.mjs`, the test fails naming `'ruleservicesstate'` (I restored the file, which matches HEAD). Green with the row. (2) Fix: the test, where the gap is (`owners.test.mjs`; `declared.mjs` is unchanged). (3) Why missed: `ownerReads` filters T33's own keys, so a declared read with no T33 row is never looked for; the registered-instance tests grade declared rows by registration (R49), so they pass with no hand row; affordances' R12 is the only check that sees it, and its `register-owners.mjs` registers three owners by hand (already reported in J30).
+
+**Tests run** (from `/home/user/bio`, `node --import ./bio-plane/test/platform-sqlite.mjs --test`, run without `--test-force-exit`, exited by itself):
+- `k5159.test.mjs`: red on the old row, then green (1 test each run).
+- `owners.test.mjs` with `k5159.test.mjs`: 15 pass, 0 fail.
+- `bio-plane/test/m/op-grades/*.test.mjs` (22 files), `bio-plane/test/m/affordances/t33.test.mjs`, `bio-plane/test/m/monitoring/declared-ops.test.mjs`, `bio-plane/test/m/monitoring/named-requests.test.mjs`: 190 pass, 0 fail, 0 cancelled.
+
+**Checks** (ABSOLUTE root `/home/user/bio`): format 0 failures (178 modules); architecture `op-grades` 0; coverage `op-grades` 53 of 53 live ids named, 0; words `op-grades` 0 failures (unkeyed 29, as before); fixtures `op-grades` 0 failures, no marker added; ownership `tranche/T51 job/T51/op-grades` 0 failures (4 files changed by op-grades).
+
+**Met ids:** R13 (named by `owners.test.mjs` and `k5159.test.mjs`) and R42 (named by `k5159.test.mjs`). BOB strikes the marks as it judges.
+
+**Deferred (why):** the R13 check covers the owners R13 names by their modules; the ops T33 adds to earlier modules have no owner in R13's text, so this check does not reach them. 37 declared reads of other owners have no hand `NON_ACTS` row; they are graded by registration (R49) and are not in R13's scope, so I left them as they are.
+
+**REPORT (for BOB):**
+1. `interface-shell`: the R11 "no read above Reversible" test moved to its `r10.test.mjs` for `namedrequests` (B37 asked for it to return to `fixround2`). It can return now: `MARKS.namedrequests` is `Reversible` at `262b68d99e`.
+2. Still open from J30, unchanged here: `bio-plane/test/m/affordances/register-owners.mjs` registers three owners by hand, so affordances' R12 does not see other owners' declared ops (the fix belongs in affordances' test); and `plane.declared.readtranslate` has two sentences (`bio-plane/src/plane/declared.mjs:13`, `bio-plane/src/store-assembly/declared.mjs:16`), which `setup-words build.mjs --check` refuses.
+
+Size (session_01FQzZSFC8jvCf4w2KhSK6C5): test runs 8, module lines 5
