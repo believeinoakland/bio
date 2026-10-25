@@ -1,6 +1,6 @@
 # publish-schedule (T51)
 
-**Status** · session_01FnxkCbBeJJRcy2fLBbUddA · depth 2 · NEEDS BOB · handled B6
+**Status** · session_01FnxkCbBeJJRcy2fLBbUddA · depth 2 · NEEDS BOB · handled B7
 
 ## J1 · REPORT
 
