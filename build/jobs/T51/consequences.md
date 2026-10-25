@@ -42,3 +42,7 @@ Needs BOB: architecture reports 2 failures, `fixture.mjs` imports `retrieval/fix
 Checks: module tests 71 of 71 pass; format 0; coverage 26 of 26, 0; words 0; fixtures 0; ownership 0; architecture 2 (above). `impact.mjs` run below.
 Impact: consequences 12/12 files, affordances 2/29 (t45-backing, backing; they import consequences' fixture.mjs): both green.
 Size (session_013DS3NRGfi1kF5LfgamSg1s): test runs 3, module lines 2114
+
+## J3 · COMPLETE
+
+COMPLETE fix round 10 Wave A batch 4. Published fixtures.mjs (consequencesOfRefusal, successRecordRead) with fixtures.test.mjs; re-pointed all 5 own lines (retrieval noSelection, sources rungOf, case-inputs carryOutcome x2, promotion groupUndetermined); fixtures --list at 0; no fixtures-own or fixtures-generic marker added. Module tests 71/71; impact users (affordances backing, t45-backing) green; format, coverage, words, fixtures, ownership 0. NEEDS BOB: architecture has 2 failures: fixture.mjs imports retrieval/fixtures.mjs and sources/fixtures.mjs, and retrieval and sources are not in consequences' uses in modules.json (not mine to edit); adding both clears them. Details in the record.
