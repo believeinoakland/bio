@@ -183,3 +183,26 @@ Merged `tranche/T51`; re-pointed the five `homeOf` lines (see COMPLETE below, J8
 **Tests.** Tasks suite, each file run alone: 134 tests, 134 pass, 0 fail (the R25 seam test, red in J6, now passes: provenance R72 is merged).
 
 Size (session_014XtwY7rHcgXEW5Z93bYUjK): test runs 14, module lines 1702
+
+## J9 · COMPLETE · re B10
+
+**COMPLETE: TASKS #19, fix round 10, follow-up 30 (B10): the re-point to provenance's published fixture.** Branch `job/T51/tasks` at `89089ef839`; tranche `tranche/T51` (9c09ef1c89) merged first; `mail start` run at depth 2.
+
+**Entries applied.** Follow-up 30 (test files only). `world.mjs` no longer answers `homeOf` from a hand map of `PROJ-` ids: a project is made by provenance's real `homeOfProject` (promoted with no chosen id; the record mints its `PROJ-` id), and `w.homes({label: project})` takes that project's own real `homeOf` answer for the capture. `projectOf(title, labels)` is the one helper. Every project id a test names now comes from `projectOf(...).projectId`, not a literal: `authority.mjs`, `check.test.mjs`, `declared-ops.test.mjs`, `reads.test.mjs`, `sign.test.mjs`, `inbox.test.mjs` (the `HOMES` project a2 is the minted one), `ledger.test.mjs` (`PRJ-H`, `PRJ-A` too). In the citing-edge test the withdrawn and the live project are the two minted ids in sort order, so "the withdrawn one sorts first by id" still holds.
+
+**No markers added (K5060).** No `fixtures-own` or `fixtures-generic` marker; the fixtures checker is clean.
+
+**Deferred.** Nothing in my module. No module code, no requirements, no test removed or weakened.
+
+**Found in other modules.** None new.
+
+**Checks and tests.**
+- Tasks suite, each file run alone (the glob run in one process reports an unstable count, 109 to 134 across runs, so I summed per file): 134 tests, 134 pass, 0 fail. Per file: check 23, decide 8, declared-ops 7, grammar 45, inbox 30, ledger 5, reads 6, seam-r25 2, sign 8.
+- `checks/fixtures.mjs /home/user/bio tasks --list`: 0 failures.
+- `checks/format.mjs /home/user/bio`: 0 failures.
+- `checks/architecture.mjs /home/user/bio tasks`: 0 failures.
+- `checks/coverage.mjs /home/user/bio tasks`: 25 of 25 live requirement ids named, 0 failures.
+- `checks/words.mjs /home/user/bio tasks`: 0 failures.
+- `checks/ownership.mjs /home/user/bio tasks tranche/T51 job/T51/tasks`: 0 failures (`bio-plane/test/m/tasks/`).
+
+Size (session_014SW3dszWfYfXnSrCtVu4CS): test runs 27, module lines 1702
