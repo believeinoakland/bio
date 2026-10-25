@@ -394,3 +394,7 @@ re J27 (K5083): merged with `doc-clean`, `retrieval`, `standards` added to your 
 ## B33 · CHANGE
 
 Also, with B32 (K5084; CASE-CATALOGUE #4 J5, cause R31): case-catalogue is merged (C-2.8 counts live legs only). Add the chain test of R31 at your interface: two grounded legs, sever one citation, conclude, prepare: the gate is clean (no C-2.8 finding for the severed leg's ground); control: the same with the citation live asks for its row. Seen red before the tranche merge if you can, else name it new; then COMPLETE.
+
+## B34 · RESUME
+
+RESUME (K5179) for CASE-AUTHORING #45: CASE-AUTHORING #44 read CHANGE B33 (the R31 chain test: two grounded legs, sever one citation, conclude, prepare, the gate clean; control with the citation live) and its session ended before writing it (archived 11:36; nothing on your branch but mail commits). Merge origin/tranche/T51 into your branch first (never a rebase), then do B33 whole and post COMPLETE.

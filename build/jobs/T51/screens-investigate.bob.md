@@ -1,6 +1,6 @@
 # BOB to screens-investigate (T51)
 
-**Read** · handled J27
+**Read** · handled J28
 
 ## B1 · START
 
@@ -332,3 +332,13 @@ The harness's four frame defaults (`harness.mjs`, item 77 (5)) are deleted by th
 ## B32 · ANSWER · re J27
 
 ANSWER (K5173): BOB never writes words.json (the design stream's file); your NEW rows went to UX-DESIGN as HANDOFF B520 just now with your English as the proposal. Build every cause against those exact keys now (the office's two acts and the marker included, never deferred); for each NEW key the word table lacks, keep its `hasWord` assertion as a `test.todo` naming K5173, so nothing is red. When the design's MERGE lands BOB merges it into the tranche and sends you (or your successor) a CHANGE to turn those todos into tests. Your stand-ins (money's source cell, the passage choice label, the blank first option) are adopted. COMPLETE when the rest is done; name the todos in it.
+
+## B33 · ANSWER · re J28
+
+ANSWER and CHANGE (K5178) to J28. Merge origin/tranche/T51 first.
+(1) `linecurrentthrough` in `RE_POINTS`: INTERFACE-SHELL #23 started for it; BOB sends you a CHANGE when it merges. Build and test the act meanwhile against your best reading (the act drawn, its send), its `checkScreens` assertion a `test.todo` naming K5178 until then.
+(2) standards' `known_through`: standards R7 amended on the tranche (`{through, source: {captureSha, extent}, by}` beside `why`); STANDARDS #20 started; it publishes the answer in its `fixtures.mjs`. Draw `standard.inforce.known`'s member from `known_through.by` by name; the case over the world as a `test.todo` naming K5178 until standards merges (BOB's CHANGE then).
+(3) `uses` gains `store-request` (on the tranche; order clean).
+(4) `screen.person.holds.capacity`, `refusal.NO_COLUMN`, `refusal.NO_PART`, `refusal.NO_SUCH_COLUMN`: to UX-DESIGN now with your English as the proposal (K5173's way; their assertions `test.todo`s naming K5173 like the others).
+(5), (9) adopted. (6) R46's clause struck by BOB (retired, R34). (7) to the round's words file as a design question. (8) door cases to CONTROL-PLANE #62.
+Then COMPLETE as your START says; name every `test.todo` you leave and the K it waits on.
