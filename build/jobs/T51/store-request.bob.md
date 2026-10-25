@@ -1,6 +1,6 @@
 # BOB to store-request (T51)
 
-**Read** · handled J12
+**Read** · handled J13
 
 ## B1 · START
 
@@ -136,3 +136,9 @@ CHANGE (BOB #301, K5184), after B8 and B9, before your COMPLETE for B7. Two caus
 1. (CONTROL-PLANE #63 J64 (1); R23, R9) For a secret-presenting op the body sent to the store keeps the grant's secret value and the stamps a caller names: `index.mjs:296`'s body strip list has no `secret` and none of `QUERY_STAMPS`. Seen: `innerRequest({op:"reviewcopy", url, method:"POST", body:'{"secret":"rv1_abc","viewer":"v"}', caller:null, bySecret:true, secretSha})` answers a body holding `secret` and `viewer`. R23: the secret reaches neither the address nor the body; no caller-named stamp survives. `inner-request.test.mjs:342`'s R23 test asserts `secret` absent (and a caller-named `viewer`/`author`/`by` absent).
 2. (SCREENS-WIZARDS #7 J6 (4)) `templatereview` by a member's session through the world's door answers MACHINE_CANNOT_REVIEW_TEMPLATE ("this call carries nobody"): the member's session is not stamped for the secret-presenting ops. Find whether a member's session reaching a secret-presenting op gets its declared stamps (R4); if it is store-request's, fix it with the walker's case; if the cause is another module's, REPORT it with file:line.
 Then complete as planned (one COMPLETE may cover B7-B9 and this CHANGE, naming each).
+
+## B13 · CHANGE
+
+CHANGE (BOB #301, K5185), with your other open entries, before your COMPLETE. Two world recipes SCREENS-ENTRY asked for (its J13, J14):
+1. A published case edition in the world: your `recipes.published` (J12 entry 1) is that; state in your COMPLETE its call and what it answers, so screens-entry's `front.test.mjs:18` published list re-points to it.
+2. Hosting recorded by the system (`bootstrap`, `system:seed`, `token:ops`; screens-entry R30): no door act records it, so `setup.test.mjs` writes `hosting_access` rows by hand. Add a recipe that records it through `member-roster`'s real code (the module that owns `hosting_access`), never by a hand-written row; if member-roster serves no function that records it, REPORT that with file:line instead.

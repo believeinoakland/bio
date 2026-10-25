@@ -148,6 +148,7 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 
 - **R70** (K2524; canon `BIO_Investigation_v0_1.md` "keep watching the sources and reopen the work when something arrives"; `investigation` R18) For each project `investigation.watchedProjects()` answers, this module watches the sources `intent` R7 names for it at their own cadence; when a look records something new on such a source (a change tick), it calls `investigation.watchArrival({project, source, at})` once for that look, deciding nothing about what the change means (Intake Doctrine §4). A project no longer watched is no longer reported.
 - **R79** (K5157; walk-T51-final 06 §1) A copy the tick files (R9) is filed with its provenance document entry (locator, content type, digest) and a `reading` job owed for it through the capture's registrar, as an entry by `promote` is (control-plane R123), so the newer copy is read and its notice graded.
+- **R80** *(not yet met: T51)* (T51 fix round 10; CONTROL-PLANE #63 J64 (2), (3); K5186; amends R79; `provenance` R46, `reading-pipeline` R1) The copy's provenance document entry (R79) carries what acquisition's entry for the same capture carries (`acquisition/index.mjs` ~1853): its `provenance_chain` (one hop, the monitor tick's fetch) and the capture's `profile`, so the register files a vouched document's copy (never `PROVENANCE_REGISTER_REFUSED`, C-18.9 `chain-absent`) and a textual copy is read as text, the reading owed and registered after Check now.
 
 ## Private
 
