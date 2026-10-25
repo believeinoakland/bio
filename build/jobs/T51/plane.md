@@ -1,6 +1,6 @@
 # plane (T51)
 
-**Status** · session_01J62mKtsqgL6Mp8fpdgGVVo · depth 2 · RUNNING until 2026-10-25T10:10:58Z (g54-l overlap harness, 20 trials under L-PIN) · handled B91
+**Status** · session_01J62mKtsqgL6Mp8fpdgGVVo · depth 2 · RUNNING until 2026-10-25T10:28:01Z (stall test under L-PIN, native vs JS hash, 6 runs) · handled B91
 
 ## Record (PLANE #41, T51-125)
 
