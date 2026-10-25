@@ -486,3 +486,25 @@ Size (session_01ML8hpkf2vrUZPMLJcMVCtD): test runs 5, module lines 4207
 **Not done here, as the START says:** R45 (the basis version per finding) is a CHANGE once case-authoring's R87 merges; `publishedcase` tests for R45 wait for it.
 
 Size (session_0117cYK5Yq6yKMxRK124CAvs): test runs 5, module lines 4209 (public-read `src/`, `publication/worker.mjs`, `container.mjs`, `inband.mjs`, `wc -l`)
+
+## J34 · BLOCKED
+
+**BLOCKED (B36, K5198): cause, needs Bob.** I did not change the code. The hop the CHANGE asks me to remove is the case-file puts' sliding window, and removing it breaks R44's own peak-concurrency rule.
+
+**What I measured (no code changed; HEAD `270330087d`).** Running `control-plane/r10-caseratify-chain.test.mjs` gives **13** against the bar 11, not 12 as B36 has it. I dumped the door's call timeline (a temporary copy of the test, deleted after). The longest chain runs `… PUBLISHED.put → do:recordcasefile → r2:PUBLISHED.get → r2:PUBLISHED.put → r2:PUBLISHED.put → do:recordcasemanifest`: the assembly's share is five hops, as B36 says.
+
+**Why the named candidates do not come out.**
+- `recordcasefile` (the `building` ledger write) is not removable: `casefilefacts` starts at the same point and is the same length, so removing `building` alone still gives 13 (simulated).
+- The materials read (`get`) needs the facts, so it stays.
+- The second put is the hop. The case file writes 11 objects (10 files plus the manifest) through `inWindow` with width 8 (`public-read/casefile.mjs:37`, `CASEFILE_GROUP`). The ninth call starts only when one of the first eight ends, so it counts as a hop. Simulating all puts issued together gives 10.
+
+**The conflict.** R44 (G121b, `build/requirements/public-read.md:115`) requires the window of 8 and says "never over 8" (`r8-assemble.test.mjs`: peak concurrency never over 8). Getting the chain to 11 or fewer while keeping the container byte for byte means one of:
+1. Widen the window so all puts start together. That breaks R44's peak-concurrency control. It needs a requirement change, which is BOB's.
+2. Fold the manifest's put into the `recordcasemanifest` call. That changes a store contract and needs its owner's job (`publication`), not this module's paths.
+3. Accept a chain of 13 and have `ratification` (or BOB) take the bar to 13, or split the door's counting another way. That is a requirement decision.
+
+**Recommendation.** Option 3 is the smallest change to the requirements; option 1 is the cleanest if R44's "never over 8" is only a memory bound (it is not stated as one). Your call; I will not widen the window without it.
+
+**Left as it is:** code, tests and the record's other entries. Chain test in `public-read/chain.test.mjs` still passes at 4 (its scene has 8 objects or fewer).
+
+NEEDS BOB: choose one of options 1–3 above.
