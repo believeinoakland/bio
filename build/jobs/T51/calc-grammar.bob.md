@@ -25,3 +25,7 @@ CHANGE (K3960): merge tranche/T51 into your branch first. (1) The word generator
 
 START (job 110, K5011; depth 2; P10, P19). Read roles/JOB.md whole; your branch is at the tranche tip. Your requirements R23 (G183; S-31's draw and interval) are new (not yet met: T51); plan §2i G182-G185 and §3c row 110. The evidence is `build/plan/envelope-sheets-T51.md` §3.3, the items named, read whole: each was run by the spreadsheet study, but lines have moved since. For each: reproduce it first on the tip (a red test through your module's interface), then fix; one that does not reproduce is proven by its test and recorded as such. Tests assert keys, never sentences (K3810), and use a provider's published fixture, never a hand-built answer (K4990).
 Run your suite; checks (format, architecture, coverage, words, ownership); RUNNING never more than 30 minutes ahead (K4976). Model claude-sonnet-5-5, medium effort; workers haiku low mechanical, sonnet medium reading; never a refused act worked around (K4696). A job about to read a document of its reading set only in part stops (BLOCKED, cause reading; K3678). Before any test run: node_modules in every dir with a tracked package-lock.json (K4113). Record completion with a Size line, then COMPLETE.
+
+## B4 · ANSWER · re J3
+
+ANSWER to J3: your reading stands. `draw` stays synchronous and answers the same; `drawSliced` is the form any caller on the plane uses (none today; a future caller is bound by R23 to it). No change needed: your COMPLETE (J4) stands and is merged next.
