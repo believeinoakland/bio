@@ -511,3 +511,7 @@ Size (session_019XFUSYv3eS4JuzAcTX5AsX): test runs 9, module lines 2900
 ## J23 · REPORT
 
 REPORT · other modules. (1) wizard-scripts t52g53 R50 fails on tranche/T51 as merged: the design's registry.json now has owed installregion K4746 and installaddress K4937 that the carried source/registry.json lacks; re-take (build-data.mjs, counts, pin sites) is not in my entry, left for your call. (2) plane R24 (DEC-149 T34-87) fails on tranche/T51 too, likely the same stale registry. (3) plane R87 G54 L failed once in a full-directory run, passes alone; not reproduced.
+
+## J24 · COMPLETE
+
+COMPLETE · K5046 (c): ADMIN_ACTS (45) and ADMIN_SCREENS copied verbatim into wizard-scripts/admin.mjs and exported; registration unchanged (R40 test forbids defaulting; plane re-points in its job). Fixture noSuchWizard published and tested. r51.test.mjs 4/4; module 140/141 (the t52g53 R50 red, see REPORT, not mine). format, architecture, coverage 51/51, ownership green. Fixtures list: 1 left, LIMITS_UNREADABLE (FIX-E, answers). No fixtures-own/generic markers added. Users' suites green except the plane reds in the REPORT. Record: build/jobs/T51/wizard-scripts.md.
