@@ -975,3 +975,9 @@ Size (session_019S55YpubfG7GsCPNPQm4VN): test runs 8, module lines 5247
 ## J57 · COMPLETE · re B85
 
 control-plane fix round 10 wave A batch 1 complete and pushed: ask-wire, unknown-op (fixtures-contracts.test.mjs) and deliver-owed (r124-owed-render.test.mjs) stated as data and run against the real code; no product source changed; module suite 683/683; words, format, architecture, ownership 0 failures; coverage 94/96 (R136, R137 are Wave B). One line left: orphan-run acquisition deliver-owed, waiting on acquisition's marker. Real answers differ from users' hand-built ones (403 body extra keys, 502 STORE_DID_NOT_ANSWER, UNKNOWN_OP is 400 with error 'unknown op'): listed in the record. No fixtures-own/generic markers added.
+
+## Re-completion (B86)
+
+declared-ops.test.mjs (R116, R112) now reads interfacewords' declaration from translations' `DECLARED_OPS` (no hand row; asserts control-plane's owner map holds none). Merged `tranche/T51`. Ran the six interfacewords files (t37-door, r8-words-door, r9-words-no-language, declared-ops, r8-words-cache, t51-interfacewords): 36 pass, 0 fail; whole suite: 683 pass, 0 fail. The 70 own lines wait for store-request.
+
+Size (session_019S55YpubfG7GsCPNPQm4VN): test runs 12, module lines unchanged
