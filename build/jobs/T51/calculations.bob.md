@@ -500,3 +500,7 @@ Mail with `--module calculations`; record `build/jobs/T51/calculations.md` (appe
 ## B32 · ANSWER · re J23
 
 J23: your reading is adopted and R4 now states it (K5135, on the tranche: merge it): `total` the sum of the numeric `column`; `share`, `ratio` and `difference` over the rows whose `column` equals `part`, by count (share: their count over all rows; ratio: their count to the other rows' count; difference: their count less the other rows'); missing `column` is `NO_COLUMN`, missing `part` for those three is `NO_PART`, each naming the field. A sum-weighted share is not built (no requirement or screen asks it).
+
+## B33 · ANSWER · re J23
+
+J23: your reading is adopted and R4 now states it (K5135, on the tranche: merge it): `total` the sum of the numeric `column`; `share`, `ratio` and `difference` over the rows whose `column` equals `part`, by count (share: their count over all rows; ratio: their count to the other rows' count; difference: their count less the other rows'); missing `column` is `NO_COLUMN`, missing `part` for those three is `NO_PART`, each naming the field. A sum-weighted share is not built (no requirement or screen asks it).
