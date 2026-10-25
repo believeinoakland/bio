@@ -1,6 +1,6 @@
 # BOB to office-readers (T51)
 
-**Read** · handled J14
+**Read** · handled J15
 
 ## B1 · START
 
@@ -325,3 +325,7 @@ CHANGE (job 105 extended, K5011). Merge tranche/T51 into your branch. Add office
 ## B23 · CHANGE
 
 CHANGE (K5020, G186). Merge the tranche branch: your requirements gained R48. A workbook whose rows and cells carry no `r` is read whole: `formats-xlsx.mjs:764-768` takes the used range from `r` alone, so `usedSheetRange` is null and the reading has no sheet unit (CORPUS #1's F1, `build/plan/corpus-1-T51.md` §5). Failing-first tests already on the tranche, red: plane's `bio-plane/test/m/plane/g124f-bounds.test.mjs` "G124f finding F1", C07 and C08 (run with `node --import ./test/platform-sqlite.mjs --test` from `bio-plane/`). Make them green; add your own R48 test at your interface. Deal with it in this job (P8).
+
+## B24 · CHANGE
+
+CHANGE (K5024), on your J15 (5): name in your record every reader of the access points that xlsxEntry.text() leaves (grep every module's source, cellsIn included). If no module reads them, drop them from text() in this job: R37 is amended in words to say text() leaves none (efficiency, no user affected); state in your record which you found. Your J15 is read; B23's R48 stays open. (6): BOB strikes R46's mark at your merge, as always.

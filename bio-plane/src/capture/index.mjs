@@ -40,8 +40,7 @@
  * already holds an address or a digest and whether the source has since changed. The basis sentences of R88's vouched
  * rows and of R96's `changed` are held here as inline builder diagnostics: the screens draw their own keyed words from
  * the answer's `state` (words.json is the design stream's, and WORD_KEYS is its `reads` list for this module). */
-import { isPublicHttpsLocator, createSha256, isMachineIdentity, parseFrontmatter } from "../record-grammar/index.mjs";
-import { createResumableSha256 } from "./sha256-resume.mjs";
+import { isPublicHttpsLocator, createSha256, createResumableSha256, isMachineIdentity, parseFrontmatter } from "../record-grammar/index.mjs";
 import { normalizeAddress } from "../subresources.mjs";
 import { RENDERED_METHOD } from "../render.mjs";
 import { CAPTURE_CHECKS } from "./checks.mjs";
@@ -385,6 +384,12 @@ function registerFigures(c) {
   const answer = record.registerCounts("capture", [...Capture.COUNT_KEYS], (hid) => c.counts(hid));
   if (answer && answer.ok === false)
     throw new Error(`capture: record-core refused its figures: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
+}
+
+/* R114 (G180): a row's snapshot taken up by record-grammar's stream, which throws on a state it did not write; that answers null, so the caller
+   says the digest is lost (R113's UPLOAD_LOST) rather than hashing on from a wrong state. */
+function resumedOf(state) {
+  try { return createResumableSha256(state); } catch { return null; }
 }
 
 export class Capture {
@@ -1076,7 +1081,7 @@ export class Capture {
     const held = row.parts.length, have = this.#parted.get(row.upload);
     if (have && have.next === held) return have;
     if (held === 0) return have ?? null;
-    const hasher = typeof row.hash_state === "string" ? createResumableSha256(row.hash_state) : null;
+    const hasher = typeof row.hash_state === "string" ? resumedOf(row.hash_state) : null;
     if (!hasher || hasher.length !== row.parts.reduce((n, p) => n + p.bytes, 0)) return null;
     const live = { hasher, next: held, busy: have ? have.busy : false, whole: null };
     this.#parted.set(row.upload, live);

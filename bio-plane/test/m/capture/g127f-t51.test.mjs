@@ -12,6 +12,7 @@ import { makeZip } from "../../make-zip.mjs";
 import { byteLedger, PLATFORM_FIGURES } from "../../../src/byte-ledger.mjs";
 import { CAPTURE_MAX } from "../../../src/acquisition/index.mjs";
 import { Capture, PARTED_PART_BYTES, PARTED_UPLOAD_TTL_MS } from "../../../src/capture/index.mjs";
+import { createResumableSha256 } from "../../../src/record-grammar/index.mjs";
 
 const MiB = 1024 * 1024;
 const STATEMENT = "a file the clerk handed me at the counter";
@@ -403,6 +404,20 @@ test("R113 (G173, an instance taken out of memory between parts): the next part 
   const mismatch = await restarted(w).completePartedUpload({ upload: b2.upload, parts: [qs[0], qs[1], bad].map((p) => sha(p)), by: "m1", at: AT });
   assert.deepEqual([mismatch.ok, mismatch.reason, mismatch.status], [false, "WHOLE_DIGEST_MISMATCH", 400]);
   assert.equal(w.b.openUploads(), 0, "and the refused upload holds nothing");
+});
+
+test("R114 (G180): a parted upload interrupted after its second part and resumed from the row's snapshot files the digest of the whole; the snapshot is the one record-grammar's stream takes up", async () => {
+  const w = setup();
+  const file = varied(3000, 21), ps = partsOf(file, 1000);
+  const b = await begin(w.c, file);
+  assert.equal((await put(w.c, b.upload, 0, ps[0])).ok, true);
+  assert.equal((await put(w.c, b.upload, 1, ps[1])).ok, true);
+  /* the object is taken out of memory after its second part: the row's snapshot is all that is kept of the digest so far */
+  const row = w.s.db.prepare(`SELECT hash_state FROM parted_uploads WHERE upload = ?`).get(b.upload);
+  assert.equal(createResumableSha256(row.hash_state).length, 2000, "the snapshot holds the bytes of the two parts");
+  assert.equal((await put(restarted(w), b.upload, 2, ps[2])).ok, true);
+  const done = await restarted(w).completePartedUpload({ upload: b.upload, parts: ps.map((p) => sha(p)), by: "m1", at: AT });
+  assert.deepEqual([done.ok, done.capture?.sha256], [true, sha(file)], JSON.stringify(done).slice(0, 300));
 });
 
 test("R113 (G173, UPLOAD_LOST only when the digest cannot be told): an open upload whose row keeps no digest of its parts (begun before it was kept) or one that does not describe the parts held is aborted and answered UPLOAD_LOST, nothing held; a begin of the same file again by the same member abandons the first", async () => {

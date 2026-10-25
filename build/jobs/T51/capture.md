@@ -1,6 +1,6 @@
 # capture (T51)
 
-**Status** · session_01FX1ovW6LH2kvYSQidSdP3i · depth 2 · COMPLETE · handled B38
+**Status** · session_012fgH9vTfzdHdBqQC1UfCpA · depth 2 · COMPLETE · handled B39
 
 ## J1 · COMPLETE
 
@@ -870,3 +870,27 @@ Size (session_01FX1ovW6LH2kvYSQidSdP3i): test runs 16, module lines 5113
 
 COMPLETE (CAPTURE #58, job 104, B38; R113 amended, G176). putUploadPart now reads and discards a part's body (at most the part size; a larger body is still cut there) before any answer that keeps nothing, so a client still sending reads the JSON answer, not ECONNRESET. Red first seen under L-PAR4 (4 copies + 3 burners: 2/7, 1/7, 1/7, 5/7 passing, ECONNRESET); green after, 12 of 12 copies 7/7 over three rounds. Platform check L passed. Capture suite 344/344; checks (format, architecture, coverage, words, ownership) 0 failures.
 FOR YOU: control-plane's test/m/control-plane/r72-parted.test.mjs line 156 asserts pulled === 0 for an over-size declared part; that contradicts the amended R113 and now fails (1 of 60 users). It is control-plane's to restate (see my record). Also seen, not mine: setup-words --check reports rows.mjs stale at content.extent-core.a_part_extent_names_neither.
+
+## J38 · COMPLETE
+
+**COMPLETE**, B39 (job 113, K5020; G180's second half; R114, amends R113). Commit `a031bf3aae` on `job/T51/capture`, merged with `tranche/T51` (`ba24dacd90`) first.
+
+**Entries applied**
+1. **Snapshot formats compared** (the check B39 asks for): `record-grammar`'s `createResumableSha256` (`sha256.mjs` `core().state()` and `parseSnapshot`) and `sha256-resume.mjs` write and accept the same string, `{"h":[eight unsigned words],"t":<bytes>,"b":"<held-back bytes, lowercase hex>"}`, with the same validity rules. A row's `hash_state` the former code wrote is taken up unchanged. Checked by a fixture: the former stream's snapshot after 70 of 100 bytes (written by the removed file before it was deleted) is taken up by the new stream, which finishes to the digest of the whole (`r114.test.mjs`, second test).
+2. **One difference, handled at the caller:** record-grammar's stream throws a `TypeError` on a state it did not write; capture's old one answered `null`. `index.mjs` now has `resumedOf(state)`, which answers `null` on that throw, so `#liveOf` still answers the digest lost and `UPLOAD_LOST` is answered as before (R113 unchanged).
+3. **Re-point:** `import` of `createResumableSha256` now comes from `../record-grammar/index.mjs` (the existing edge, merged into the import line already there); `sha256-resume.mjs` and `sha256-resume.test.mjs` are removed. Both are in `bio-plane/src/capture` and `bio-plane/test/m/capture`, capture's own paths.
+4. **Red first:** `r114.test.mjs` "no file of the module computes SHA-256 rounds" failed on the tip (`sha256-resume.mjs computes SHA-256 rounds`), and passes now.
+5. **Interrupted-and-resumed test** (R114, in `g127f-t51.test.mjs`): begin, parts 0 and 1, the row's `hash_state` taken up by record-grammar's stream (2000 bytes held), part 2 put by a restarted instance, completion's digest the declared one. The source-text check is the requirement's own test (R114 names it); no other test in the module reads source text.
+
+**Deferred:** none.
+
+**Found in other modules:** nothing new from this job.
+
+**Rows owed:** none (no sentence added or changed).
+
+**Tests and checks**
+- `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/capture/` (bio-plane): 352 tests, 352 pass, 0 fail.
+- `test/m/control-plane/r72-parted.test.mjs` (a user of R113): 8 pass, 0 fail.
+- `checks/format.mjs /home/user/bio`: 176 modules, 0 failures. `checks/architecture.mjs /home/user/bio capture`: 0 failures. `checks/coverage.mjs /home/user/bio capture`: 67 of 67 live ids named, 0 failures. `checks/words.mjs /home/user/bio capture`: 0 failures (missingkey 0, inline 0, testcopy 0). `checks/ownership.mjs /home/user/bio capture tranche/T51 job/T51/capture`: 6 files changed by capture, 0 failures.
+
+Size (session_012fgH9vTfzdHdBqQC1UfCpA): test runs 4, module lines 5011
