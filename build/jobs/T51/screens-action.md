@@ -345,3 +345,10 @@ COMPLETE (G52): merged tranche/T51 (G53); contract.test.mjs:34 green on the real
 ## J27 · QUESTION
 
 QUESTION (re B32): the work of B32 is pushed (a20e9835ba) and green, but one check fails that only you can clear. plan.test.mjs now takes the real 502 STORE_DID_NOT_ANSWER from answer-envelope/fixtures.mjs (storeSilentParsed), and `checks/architecture.mjs` refuses it: screens-action's `uses` in build/modules.json does not list answer-envelope. Please add it to screens-action's uses (modules.json is not mine), or tell me to keep the hand-built value instead. Done meanwhile: BREACH_ON_HYPOTHESIS replaced by the real ACTION_NO_DETERMINATION from actions' own promote; LEG_ON_ACTION replaced by a real finding {check C-2.10, detail}; two fixtures-generic markers; plan-screen-shape contract run (passes). Left, waiting on the storeWorld CHANGE: plan-t51:209, send-t51:35,286, real.mjs:54 and the 50 op-table entries. Suite 279/0. Details in my record, section Round 10.
+
+## Round 10 · completion (after B33)
+
+Merged `tranche/T51` (answer-envelope now in `uses`). Checks: format 0, architecture 0, coverage 55 of 55, ownership 0, words 0. Suite 279 pass, 0 fail.
+Markers added: `join-t51.test.mjs:63` `fixtures-generic: BAD` (a failing roster read, any code); `plan.test.mjs:233` `fixtures-generic: CODE_NO_ONE_HAS_A_WORD_FOR` (a code the design has no word for, on purpose). `fixtures-run: screens-inquiry plan-screen-shape` in `plan-screen-shape.test.mjs` shows `orphan-run` until screens-inquiry's marker (`project.test.mjs:185`) is merged.
+Left, waiting on the storeWorld CHANGE (store-request batch 3, interface-shell `boot({door})` batch 6): `plan-t51.test.mjs:209`, `send-t51.test.mjs:35,286`, `real.mjs:54` (stays listed), the 50 op-table entries.
+Size (session_016qFZjYBx2pPnvC1xZPvJ5B): test runs 14, module lines 4960
