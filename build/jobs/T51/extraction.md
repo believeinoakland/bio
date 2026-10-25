@@ -893,3 +893,7 @@ COMPLETE after CHANGE B59: merged tranche/T51; relays storageAbsent from capture
 - Fixtures list: failing only `t48.test.mjs:30`, plus that orphan-run line. Tests: module `ℹ tests 391`, `ℹ pass 391`, `ℹ fail 0`. Checks: format 0, architecture 0, coverage 87 of 87, words 0, ownership 0.
 
 Size (session_01Jvm3Svfx7hGZ595k1aGkp6): test runs 5, module lines 4980
+
+## J46 · COMPLETE
+
+COMPLETE follow-up 28. Done: (1) five codes in t44/t46/t50; (3) MODEL_REFUSED/MODEL_SILENT at the worker's real answers (502, model_error/model_status), t50's invented busy replaced, SOME_OTHER_CODE and busy only under fixtures-generic (t44:165-166, t46:153-154). NOT DONE, QUESTION: (2) AGENT_WORKER_UNBOUND, EVIDENCE_ABSENT, NO_PAGE_RENDERED are plane's transcriber answers (plane/transcribe.mjs:104-131), not extraction's own; extraction cannot produce them with no answer handed in, so I kept the marker fixtures-contract: agent-worker transcribe-not-sent (t44:92). Wanted: a plane fixtures-run: extraction transcribe-not-sent, then I re-point to plane. REPORT for BOB: agent-worker/test/fixtures-contracts.test.mjs:84 (transcribe-declined) is now an orphan-run, remove it; :101 stays until (2) is decided. Fixtures list fails only t48:30 plus that orphan. Module 391/391; format, architecture, coverage 87/87, words, ownership 0. Record: build/jobs/T51/extraction.md
