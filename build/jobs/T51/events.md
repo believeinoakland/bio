@@ -1,6 +1,6 @@
 # events (T51)
 
-**Status** · session_01DAv9PSDWrsm3wEZhdCb73f · depth 2 · WORKING · handled B4
+**Status** · session_01DAv9PSDWrsm3wEZhdCb73f · depth 2 · COMPLETE · handled B4
 
 ## Completion (CR-7, events)
 
