@@ -5,17 +5,28 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
 import { open, main, actsIn, button, fill, press, rawKeys, inquiryMd, INQUIRY_REFS, LEGS, says, section, word, P, Q } from "./fixtures.mjs";
+import { importedNamed } from "../case-import/fixtures.mjs";
+import { V, F1, F2 } from "../case-import/fixture.mjs";
 
 const at = "/app/question/" + Q;
-const IMP = "ab".repeat(32);
-const F1 = "INQ-2026-0100-rent-was-late", F2 = "INQ-2026-0101-not-accepted";
-const REF1 = `imported:${IMP}/${F1}`;
-const accepted = { by: "dev", at: "2026-10-09T09:00:00Z", reason: "We checked the ledger." };
-const IMPORTS = ok({ ok: true, count: 1, imports: [{ import: IMP, group: "springfield-tenants", case: "CASE-2026-0003", latest_edition: 2, editions: [{ edition: 1 }, { edition: 2 }] }] });
-const IMPORTED = ok({ ok: true, import: IMP, group: "springfield-tenants", case: "CASE-2026-0003", editions: [{ edition: 1 }, { edition: 2 }],
-  edition: { edition: 2, findings: [
-    { finding: F1, ref: REF1, title: "Rent was paid late in nine of twelve months", origin: { acceptance: accepted, flags: [] } },
-    { finding: F2, ref: `imported:${IMP}/${F2}`, title: "The deposit was never returned", origin: { acceptance: null, flags: [] } }] } });
+/* another team's case, imported by the real `case-import` (its published `importedNamed`) and its first finding accepted by the module's own act:
+ * the page is shown the answers of `importedcases` and `importedcase` as that module gives them. `NOT_ACCEPTED` is the same import with nothing accepted. */
+const TITLES = { [F1]: "Rent was paid late in nine of twelve months", [F2]: "The deposit was never returned" };
+async function importedAccepting(accepting) {
+  const x = await importedNamed({ titles: TITLES });
+  if (accepting) {
+    const a = x.ci.acceptImported({ import: x.import, edition: 1, findings: [F1], checked: "every passage against its document", reason: "We checked the ledger.", by: V("alice"), viewer: V("alice") });
+    assert.equal(a.ok, true, JSON.stringify(a));
+  }
+  return { import: x.import, list: x.ci.importedCases({ viewer: V("alice") }), one: x.ci.importedCase({ import: x.import, viewer: V("alice") }) };
+}
+const HELD = await importedAccepting(true);
+const NOT_ACCEPTED = await importedAccepting(false);
+const IMP = HELD.import;
+const EDITION = HELD.list.imports[0].latest_edition;
+const REF1 = HELD.one.edition.findings.find((x) => x.finding === F1).ref;
+const IMPORTS = ok(HELD.list);
+const IMPORTED = ok(HELD.one);
 const withImports = (o = {}) => ({ plane: { importedcases: IMPORTS, importedcase: IMPORTED, ...(o.plane || {}) }, ...(o.images ? { images: o.images } : {}) });
 const choose = (p, id, value) => { p.doc.getElementById(id).querySelectorAll("input").find((i) => i.getAttribute("value") === value).checked = true; };
 const KEY = "act.owed_citeimported.label.question";
@@ -28,8 +39,8 @@ test("R110 \"Cite another team's finding\" is chosen among the findings the team
   assert.equal(p.byOp("importedcases").length, 1);
   assert.equal(p.byOp("importedcase")[0].query.import, IMP);
   const opts = p.doc.getElementById("question-imp-finding").querySelectorAll("option").map((o) => o.getAttribute("value"));
-  assert.deepEqual(opts, ["", `${IMP}|2|${F1}`], "only the accepted finding, at the edition accepted");
-  assert.ok(s.textContent.includes("Rent was paid late in nine of twelve months") && !s.textContent.includes("The deposit was never returned"));
+  assert.deepEqual(opts, ["", `${IMP}|${EDITION}|${F1}`], "only the accepted finding, at the edition accepted");
+  assert.ok(s.textContent.includes(TITLES[F1]) && !s.textContent.includes(TITLES[F2]));
   assert.ok(says(s, "screen.imported.citeimp.inherit1") && says(s, "screen.imported.citeimp.inherit2"));
   assert.deepEqual(rawKeys(p.root()), []);
 });
@@ -40,25 +51,25 @@ test("R110 citeimported sends the question, the import, the finding, the edition
   const p = await open(at, withImports({ plane: { citeimported: ok({ ok: true, inquiry: Q, cited: [REF1], alreadyCited: [] }) } }));
   await press(p, "citeimported", { reason: "x" });
   assert.equal(p.byOp("citeimported").length, 0, "nothing chosen, nothing sent");
-  fill(p, { "question-imp-finding": `${IMP}|2|${F1}` });
+  fill(p, { "question-imp-finding": `${IMP}|${EDITION}|${F1}` });
   await press(p, "citeimported", { reason: "x" });
   assert.equal(p.byOp("citeimported").length, 0, "no role chosen, nothing sent");
   choose(p, "question-imp-role", "cuts_against");
   fill(p, { "question-imp-note": "Their ledger disagrees with ours." });
   await press(p, "citeimported", { reason: "x" });
-  assert.deepEqual(sent(p), { inquiry: Q, import: IMP, finding: F1, edition: 2, role: "cuts_against", note: "Their ledger disagrees with ours." }, "the guard accepted exactly these fields");
+  assert.deepEqual(sent(p), { inquiry: Q, import: IMP, finding: F1, edition: EDITION, role: "cuts_against", note: "Their ledger disagrees with ours." }, "the guard accepted exactly these fields");
   const q = await open(at, withImports({ plane: { citeimported: ok({ ok: true }) } }));
-  fill(q, { "question-imp-finding": `${IMP}|2|${F1}` });
+  fill(q, { "question-imp-finding": `${IMP}|${EDITION}|${F1}` });
   choose(q, "question-imp-role", "supports");
   await press(q, "citeimported", { reason: "x" });
-  assert.deepEqual(sent(q), { inquiry: Q, import: IMP, finding: F1, edition: 2, role: "supports" }, "the note is optional");
+  assert.deepEqual(sent(q), { inquiry: Q, import: IMP, finding: F1, edition: EDITION, role: "supports" }, "the note is optional");
 });
 
 test("R110 IMPORTED_NOT_ACCEPTED, carried inside BASIS_REFUSED or answered alone, is drawn by its words; control: another BASIS_REFUSED draws its first finding's own detail", async () => {
   const refused = (findings) => ({ status: 200, json: { ok: true, result: { ok: false, reason: "BASIS_REFUSED", code: "BASIS_REFUSED", findings } } });
   const go = async (answer) => {
     const p = await open(at, withImports({ plane: { citeimported: answer } }));
-    fill(p, { "question-imp-finding": `${IMP}|2|${F1}` });
+    fill(p, { "question-imp-finding": `${IMP}|${EDITION}|${F1}` });
     choose(p, "question-imp-role", "supports");
     return press(p, "citeimported", { reason: "x" });
   };
@@ -73,7 +84,7 @@ test("R110 \"Take it back\" is offered on a leg on another team's finding only: 
   const p = await open(at, { ...withImports(rested), plane: { ...withImports().plane, withdrawimported: ok({ ok: true, inquiry: Q, withdrawn: [REF1] }) } });
   const rows = main(p).querySelectorAll("[data-imported]");
   assert.equal(rows.length, 1);
-  assert.ok(rows[0].textContent.includes("Rent was paid late in nine of twelve months"), "the leg is named by the finding's title, never its ref");
+  assert.ok(rows[0].textContent.includes(TITLES[F1]), "the leg is named by the finding's title, never its ref");
   assert.deepEqual(actsIn(main(p)).filter((o) => o === "withdrawimported"), ["withdrawimported"]);
   assert.ok(!p.requests.some((r) => r.op === "image" && String(r.query.id).startsWith("imported:")), "no document is read for it");
   await press(p, "withdrawimported", { reason: "Their case was withdrawn." });
@@ -89,7 +100,7 @@ test("R110 a finding the question already rests on is not offered again; with no
   assert.equal(section(p, KEY), undefined, "the one accepted finding is already cited");
   const none = await open(at);
   assert.equal(section(none, KEY), undefined, "the team holds no import: no section");
-  const unaccepted = await open(at, withImports({ plane: { importedcase: ok({ ok: true, import: IMP, group: "g", editions: [{ edition: 1 }], edition: { edition: 1, findings: [{ finding: F2, ref: `imported:${IMP}/${F2}`, title: "x", origin: { acceptance: null } }] } }) } }));
+  const unaccepted = await open(at, withImports({ plane: { importedcase: ok(NOT_ACCEPTED.one) } }));
   assert.equal(section(unaccepted, KEY), undefined, "nothing accepted: nothing to cite");
   const bad = await open(at, { plane: { importedcases: refusedIn("SOME_REFUSAL", "The plane refused this read.") } });
   assert.ok(section(bad, KEY).querySelector('[data-state="failed"]'), "drawn failed, never as none");

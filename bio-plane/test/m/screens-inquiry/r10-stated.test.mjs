@@ -160,7 +160,7 @@ const notesOf = (reading) => (reading.reading && reading.reading.recovery_notes)
 const NOTE_VARS = (n) => (n.note === "pages_missing" ? { missing: String(n.missing), of: String(n.of) } : {});
 
 test("R9 R62 (the real plane) a PDF cut at 70 per cent: each recovery note the reading lists is drawn by the design's key, with the pages missing and the total; a sound PDF draws none", async () => {
-  const cut = await probe(await bytesOf({ kind: "pdf", seed: "rw9-A-5b", size: { pages: 4 }, truncate: 0.7 }), "cut.pdf", "application/pdf");
+  const cut = await probe(await bytesOf({ kind: "pdf", seed: "b60-recovery-cut", size: { pages: 4 }, truncate: 0.7 }), "cut.pdf", "application/pdf");
   const notes = notesOf(cut.reading);
   assert.ok(notes.length > 0, "the plane lists the repair a cut file needed: " + JSON.stringify(cut.reading.reading).slice(0, 300));
   for (const n of notes) {
