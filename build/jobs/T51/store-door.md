@@ -204,3 +204,7 @@ COMPLETE · fix round 10 batch 5: internalErrorAnswer fixture + store-replies co
 Commit 48dc5eff2b, pushed.
 
 Size (session_0131u5PSNZMenR2zaqE2ZTaU): test runs 6, module lines 12
+
+## J13 · COMPLETE
+
+COMPLETE · B12 applied: R7's two marked clauses met (viewer passed to the doorbell so holder is answered; title names the knock's date, new row store-door.title.material_handed_doorbell_on, old key left to regeneration). Both seen failing then passing in pull.test.mjs. Suite 61/61; impact 719 tests, 1 red = plane release R24 (stale words rows). Checks 0 failures; fixtures: 2 orphan-run waiting on host-governor and doorbell markers. Details in my record, commit 48dc5eff2b. Size (session_0131u5PSNZMenR2zaqE2ZTaU): test runs 6, module lines 12
