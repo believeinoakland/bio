@@ -103,6 +103,9 @@ export const RECOVERY_CODE_COUNT = 10;
 export const SESSION_DEVICES = Object.freeze(["own", "shared"]);
 export const SESSION_LIMITS = Object.freeze({ sharedIdle: 15 * 60e3, ownLock: 30 * 60e3, ownEndAfterLock: 12 * 3600e3,
   ownMax: 30 * 24 * 3600e3 });
+/* R65 (fix round 10, cause 24 (a); K5057): `last_active` is kept at this grain, in ms: a foreground read writes it only when the
+   stored value is older, so a read is not a write on every request and an idle ending moves by at most one grain. */
+export const ACTIVITY_GRAIN_MS = 60e3;
 /* R66 (T47; K3061 D3): the window the password asked again opens, in ms (BOB's, P17). */
 export const REAUTH_WINDOW_MS = 5 * 60e3;
 /* R69 (T47; K3060 D4): an administrator's reset link lives this many days. */
@@ -562,7 +565,10 @@ export class Credentials {
     const state = Credentials.#stateOf(s, now);
     if (state === "ended") { this.#tx(() => this.#endSessions([sha])); return null; }
     const locked = state === "locked";
-    if (!locked && background !== true) this.sql.exec(`UPDATE sessions SET last_active=? WHERE token_sha=?`, now, sha);
+    /* R65 (fix round 10): written only once the stored value is older than the grain (or none is recorded). */
+    const stored = s.last_active === null || s.last_active === undefined ? NaN : Number(s.last_active);
+    if (!locked && background !== true && !(now - stored < ACTIVITY_GRAIN_MS))
+      this.sql.exec(`UPDATE sessions SET last_active=? WHERE token_sha=?`, now, sha);
     const r = this.membership.sessionRights(s.role) || {};
     return { role: s.role, expires: s.expires, capabilities: locked ? [] : r.capabilities ?? [],
              administer: !locked && r.administer === true, member: r.member ?? null, handle: r.handle ?? null,
