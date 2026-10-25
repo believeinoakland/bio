@@ -15,6 +15,7 @@ import {
 } from "../../../src/content/index.mjs";
 import { sha256HexSync, canonicalJson } from "../../../src/record-grammar/index.mjs";
 import { getFormat } from "../../../src/formats.mjs";
+import { readReal, readingFacts } from "./realread.mjs";
 
 const BOOK = "INFO-2026-8500-workbook", TEXT = "INFO-2026-8500-document", DECK = "INFO-2026-8500-deck";
 const hex64 = /^[0-9a-f]{64}$/;
@@ -633,4 +634,26 @@ test("R62: at mint a pdf-page over a Word capture, a cell over a PDF and a slide
   for (const [id, extent] of [[TEXT, R62_SAMPLES["doc-para"]], [BOOK, R62_SAMPLES["pdf-page"]], [DECK, R62_SAMPLES["doc-para"]]])
     assert.equal(mint(id, extent).ok, true, JSON.stringify(extent));
   assert.equal(w.count("content"), 3);
+});
+
+test("R7, R42 (K5161; reading-pipeline R63): over a three-paragraph text the real pipeline read, paragraph 99 is C-45.1 naming the count and paragraph 3 resolves", async () => {
+  const bytes = "The council met on Tuesday.\n\nThe budget was adopted.\n\nThe meeting adjourned at nine.";
+  const fmt = { format: "txt", ct: "text/plain; charset=utf-8", fromText: true };
+  const out = await readReal(bytes, fmt);
+  assert.equal(out.reading.container_extent.paragraphs, 3, "the reading states the count (the pipeline's, not stated here)");
+  const w = world();
+  const cap = w.cap("minutes", bytes); w.doc(TEXT, [cap]);
+  w.read(cap.sha, readingFacts(out.reading, fmt.format));
+  const mint = (para) => w.content.mint({ bundleId: TEXT, captureSha: cap.sha, extent: { kind: "doc-para", para }, mintedBy: V("bo") });
+  const past = mint(99);
+  assert.deepEqual([past.ok, past.code, past.check], [false, "CONTENT_EXTENT_OUT_OF_RANGE", "C-45.1"]);
+  assert.ok(past.detail.includes("99") && past.detail.includes("3"), past.detail);
+  assert.equal(w.count("content"), 0);
+  const last = mint(2), first = mint(0);
+  assert.deepEqual([last.ok, first.ok], [true, true], "the last paragraph and the first mint");
+  const edge = mint(3);
+  assert.equal(edge.code, "CONTENT_EXTENT_OUT_OF_RANGE", "one past the count is refused");
+  const cited = w.content.citationRefusals([{ target: TEXT, extent_kind: "doc-para", extent_para: 99 }]);
+  assert.deepEqual(cited.map((e) => e.code), ["CONTENT_EXTENT_OUT_OF_RANGE"]);
+  assert.deepEqual(w.content.citationRefusals([{ target: TEXT, extent_kind: "doc-para", extent_para: 2 }]), []);
 });
