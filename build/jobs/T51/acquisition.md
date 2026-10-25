@@ -1,6 +1,6 @@
 # acquisition (T51)
 
-**Status** · session_01QSsP9bjU3egDoknVjvNuYp · depth 2 · COMPLETE · handled B44
+**Status** · session_01Lv37K3RbyQhtwcLT3uXGvx · depth 2 · COMPLETE · handled B45
 
 ## J1 · REPORT
 
@@ -730,3 +730,28 @@ Checks (run in this session)
 - format 0 failures; architecture 0; coverage 76 of 76, 0; words 0 failures (acquisition: inline 0, plain 0, testcopy 0); ownership: acquisition's changed files, 0 failures after commit.
 
 Size (session_01QSsP9bjU3egDoknVjvNuYp): test runs 9, module lines 4432
+
+## Round 9, batch D: R17 amended (G174; K5001), session_01Lv37K3RbyQhtwcLT3uXGvx
+
+Applied
+- `profileOf` (`acquisition/index.mjs` about 2063): on `origin: "fetch"`, a declared text type over stored bytes that `textTypeOf` (R102) judges not text is dropped: the bytes are not read as text, `ct`, the `content-type` header and a declared text type no longer reach `identify`/`doctypeFor`/`detectFormat`. `source_content_type` still records the source's own statement. The upload (capture R107) and the knock's pull (origin `member`) are unchanged.
+- Requirement R17 already carried the amendment (BOB's); no requirement file edit.
+- Reproduction: binary bytes (NULs, no signature) served `text/plain` / `text/csv` at `.csv`, `.txt`, `.bin`: format and `content_type` were unchanged, but `profiled_from_text` was `true` (and `text_encoding`, digests basis read as text) where the same bytes served `application/octet-stream` give `false`. That was the red; fixed.
+
+Tests: `r17-fetch-declared.test.mjs` (2 tests; red first: test 1 red on `data.csv` declared `text/plain`, control green). Control: text bytes declared `text/csv` still profile `csv` from text.
+
+The four fields
+- cause: the fetch handed the server's content type to `profileOf` and `profileOf` read any bytes under a textual type as text.
+- why missed: the upload judged text by `textTypeOf` at its door (capture); the fetch had no such judgement and no test fed non-text bytes under a text type.
+- red first: `profiled_from_text` true vs false for the same bytes, as above; green after.
+- platform check: N.
+
+Checks (this session)
+- acquisition suite: tests 342, pass 342, fail 0. Users of `profileOf` (impact: 112 modules): capture and doorbell suites 441/441, fail 0.
+- format 0 failures; architecture 0; coverage 0 (6927 of 6927); words 0 (acquisition: inline 0, plain 0, testcopy 0); ownership 0. No sentence added; no word row owed.
+
+Size (session_01Lv37K3RbyQhtwcLT3uXGvx): test runs 4, module lines 2658
+
+## J44 · COMPLETE
+
+G174 done: fetch no longer reads a declared text type over non-text bytes as text (profiled_from_text was true, now false, as the same bytes declared octet-stream); format and content_type were already unchanged. Test r17-fetch-declared.test.mjs, red first. Acquisition 342/342, capture+doorbell 441/441; format, architecture, coverage, words, ownership 0 failures. Record: build/jobs/T51/acquisition.md (Round 9 batch D).

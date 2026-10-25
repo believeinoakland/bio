@@ -2060,7 +2060,8 @@ export async function profileOf({ ev, sha, ct = null, total = 0, multipart = fal
                                   origin = null, parts = null, firstPart = null, unread = null, name = null, declaredType = null }) {
   /* R17 (G170): the file's name and the type its sender declared go to `detectFormat` beside the bytes (format-registry R31's name pass) */
   const fileName = typeof name === "string" && name ? name : null;
-  const declared0 = (typeof declaredType === "string" && declaredType ? declaredType : null) || ct || null;
+  const sourceCt = ct;
+  let declared0 = (typeof declaredType === "string" && declaredType ? declaredType : null) || ct || null;
   const pv = view || { view: undefined, ids: null };
   let profileText = "", profileBytes = null, textEncoding = null;
   if (profilesAsText(ct, total, multipart)) {
@@ -2068,6 +2069,14 @@ export async function profileOf({ ev, sha, ct = null, total = 0, multipart = fal
       const pobj = await ev.get(sha);
       if (pobj) {
         profileBytes = new Uint8Array(await pobj.arrayBuffer());
+        /* R17 (G174; K5001): on a fetch as on an upload (capture R107), a declared text type over bytes the one rule (`textTypeOf`, R102) judges not text
+           contradicts the bytes: it decides neither the format nor the text content type. The source's own statement stays recorded as `source_content_type`. */
+        if (origin === "fetch" && textTypeOf({ bytes: profileBytes, type: ct }) === null) {
+          profileBytes = null; ct = null; headers = { ...headers }; delete headers["content-type"];
+          if (declared0 && profilesAsText(declared0, 0, false)) declared0 = null;
+        }
+      }
+      if (pobj && profileBytes) {
         /* R120: one decode for an upload, a fetch and a part; a text it cannot decode is stated, never replacement characters with no failure */
         const d = decodeAs(profileBytes, (headers && typeof headers["content-type"] === "string" && headers["content-type"]) || ct, { kind: /html/i.test(ct || "") ? "html" : /xml/i.test(ct || "") ? "xml" : undefined });
         if (d.ok) { profileText = d.text; textEncoding = { encoding: d.encoding, assumed: d.assumed, replaced: d.replaced, replaced_ratio: d.replaced_ratio }; }
@@ -2094,7 +2103,7 @@ export async function profileOf({ ev, sha, ct = null, total = 0, multipart = fal
     content_type_confidence: docType.confidence, content_type_signals: docType.signals, contract: docType.type.contract || null,
     normalised: (typeof stackId.handler.rules === "function" ? stackId.handler.rules(profCtx) : []).map((r) => ({ region: r.region, label: r.label })),
     boundary: !!(typeof stackId.handler.boundary === "function" && stackId.handler.boundary(profCtx)),
-    source_content_type: ct || null,
+    source_content_type: sourceCt || null,
     profiled_from_text: !!profileText,
     ...(textEncoding ? { text_encoding: textEncoding } : {}),
     /* R17 (N3, N10): which jurisdiction view the content type was judged under. */
