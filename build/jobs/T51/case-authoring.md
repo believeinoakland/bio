@@ -557,3 +557,16 @@ COMPLETE for G112b (B30 START). Record: build/jobs/T51/case-authoring.md, 'Fix r
 **Tests and checks.** `bio-plane/test/m/case-authoring/` under the preload: 257 tests, 257 pass, 0 fail. `impact.mjs origin/tranche/T51 HEAD`: 5 modules (case-authoring 42/42, review 1/13, case-check 1/5, affordances 2/29, screens-publish 3/26); users' 49 files minus mine: 55 tests, 54 pass, 1 fail (screens-publish, pre-existing on the tranche, above). `fixtures.mjs . case-authoring --list`: 1 failure (preflight.test.mjs:409, waiting), 6 accepted(generic). Checks: format 0 failures; ownership 0 failures; coverage 58 of 58 ids named, 0 failures; architecture 3 failures (the `uses` rows above).
 
 Size (session_01JY7NQfdWnfdhovvoytMtwy): test runs 9, module lines 3102
+
+## J27 · COMPLETE
+
+COMPLETE (START B31, fix round 10 Wave A batch 4). Record: build/jobs/T51/case-authoring.md, 'Fix round 10, Wave A batch 4', pushed.
+
+Published bio-plane/test/m/case-authoring/fixtures.mjs: preflightAnswer (real publishPreflight: blocked = BELOW_PROJECT_STRENGTH first with other shortfalls in blockers; machine = MACHINE_CANNOT_PUBLISH; notOwner = NOT_THE_PROJECT_OWNER), checked by fixtures.test.mjs (R34).
+Re-pointed 7 of 8: copy-now.test.mjs:115 (ENCRYPTED via doc-clean encryptedRefusal), fixture.mjs:209 (retrieval noSelection), fixture.mjs:531 (case-import's real IMPORT_NO_SUCH_EDITION), g47-refusal.test.mjs:43 (publication storeCaseDocumentRefusal), rests.test.mjs:136 (openFlagsUnread flags), standards.test.mjs:34 (standardReadWorld), timeline.test.mjs:190 (events timelineRefusal).
+LEFT, waiting: preflight.test.mjs:409 (ratification/preflightRefusal): the provider's fixtures.mjs is only on job/T51/ratification, not on tranche/T51 yet. Re-point it after that merges (CHANGE).
+Markers added (6, K5060): disclosures.test.mjs:68,69,70,71,72,73, trailing `// fixtures-generic: H|T|S|M|A|F` (the made-up one-letter refusal code per pre-flight step, proving their order; no module's answer).
+NEEDS BOB'S FILE: build/modules.json case-authoring `uses` lacks doc-clean, retrieval, standards; the architecture check fails 3 (copy-now.test.mjs, fixture.mjs, standards.test.mjs import their fixtures.mjs). I did not edit modules.json.
+Tests: case-authoring 257/257; users (review, case-check, affordances, screens-publish) 54/55: the one failure, screens-publish g54-page "no built case file", fails the same on tranche/T51. Checks: format, ownership, coverage 0 failures; architecture 3 (the uses rows). fixtures --list: 1 left (409, waiting), 6 accepted.
+Not mine: setup-words rows.mjs stale (--check fails on control-plane.declared.subscriptionsignin).
+Size (session_01JY7NQfdWnfdhovvoytMtwy): test runs 9, module lines 3102
