@@ -182,7 +182,7 @@ Terms. A **rung** is one of `RUNG_LADDER`. A **ground** is one of `RUNG_ABSENCE_
 - **R38** (T48; N880, N882, N670; R3, R5; `op-declarations` R64)
   - `actionreplyquoting` (`action-replies` R10): `RUNGS` assigns `reversible` (a later record takes it back, and it asks no reason). It is an `ACTS` row on an action target as `actionreplybearing` is (`affordances` R51), so `MACHINE_REFUSALS` gains it with `MACHINE_CANNOT_RECORD_QUOTING`; its `NON_ACTS` sentence, where it keeps one, is "action-directed: keyed by an action and one received reply; a member's record that the reply asks not to be quoted, or its withdrawal; a declaration that refuses nothing; moves no bundle".
   - `proceedingdates` (`following` R30): a read, `NON_ACTS` "read: …".
-  - `readtranslate` (`plane` R50): it writes nothing, so it takes no rung; `NON_ACTS` gives it a sentence beginning "draft: …": a machine translation of one passage of the group's own writing into the member's language, labelled machine work, the original one tap away, held nowhere. By R18 it carries `phone: true`.
+  - `readtranslate` (`store-assembly` R53): it writes nothing, so it takes no rung; `NON_ACTS` gives it a sentence beginning "draft: …": a machine translation of one passage of the group's own writing into the member's language, labelled machine work, the original one tap away, held nowhere. By R18 it carries `phone: true`.
   - `followregister` (with `following` R29's `proceeding`) and `reviewgrant` (with `review` R34's `until`) keep their grades.
   - `IRREVERSIBLE_WEIGHT` and `CONSEQUENCE_STATEMENTS` gain none.
 - **R39** (T48; N1042; K3149; amends R2, R16, R22, R27; amended T51, K4210) Two ops are drawn by `interface-shell` R11 with no weight and no reason asked, since none is an act on the record:

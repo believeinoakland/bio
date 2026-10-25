@@ -141,5 +141,5 @@ None: the split is BOB's (K617, K624).
 
 ## Decided by BOB (for rulings)
 
-- The seam (K624 (2)): the credential and admission path is this module's, each gate with the R that states its refusal; the op tables it reads are `op-declarations`'; the door, the stamps (`control-plane` R17, R18, R29), the bootstrap claim (R15), the replay (R16), the review doors (R20) and the gate order (R28) stay `control-plane`'s.
+- The seam (K624 (2)): the credential and admission path is this module's, each gate with the R that states its refusal; the op tables it reads are `op-declarations`'; the door, the stamps (`store-request` R3, R4, R6, R7; `control-plane` R18, R29), the bootstrap claim (R15), the replay (R16), the review doors (R20) and the gate order (R28) stay `control-plane`'s.
 - R32's rows split with the gates that raise them: the admission families here (R14); C-69.1, C-69.2, the internal-error rows, C-68.2–C-68.4 and C-66.6 stay `control-plane`'s.

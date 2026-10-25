@@ -72,7 +72,7 @@ Terms. The **slug** is the copy's name, and becomes its worker name, its address
 - **R46** *(retired: moved to `installer-steps` R30, T51, K624; K3893)*
 
 **The copy's own hosts** (N745, its share; K2038)
-- **R47** The install binds `OWN_HOSTS`, plain text: the copy's own host names, comma-separated (its `workers.dev` address, R14, and any other address the installer gave it), so the copy knows its own hosts before a group domain is claimed (`plane` R28; `capture` R73, `capture-sources` R65). The update restates it from the address it finds. When R14 left the copy without an address, `OWN_HOSTS` is not written and the page says so.
+- **R47** The install binds `OWN_HOSTS`, plain text: the copy's own host names, comma-separated (its `workers.dev` address, R14, and any other address the installer gave it), so the copy knows its own hosts before a group domain is claimed (`store-assembly` R25; `capture` R73, `capture-sources` R65). The update restates it from the address it finds. When R14 left the copy without an address, `OWN_HOSTS` is not written and the page says so.
 
 **Reporting abuse of Civicsmith, and what a group holds** (T45; N894; v0.2 rule 21; Bob, K2782)
 - **R48** (T45; N894; Actions D28e; v0.2 rule 21; K2782) The installer's README (`newgroup/README.md`) publishes, in plain words a founder can read before installing:
