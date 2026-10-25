@@ -2697,6 +2697,11 @@ export class InstanceSetup {
     const by = this.#one(`SELECT by_member, by_name FROM update_decisions WHERE version = ? AND kind = 'start' ORDER BY seq DESC LIMIT 1`, version);
     return { version, installed_at: seen ? seen.first_seen_at : null, allowed_by: by ? by.by_name ?? by.by_member : null };
   }
+  /* R106: the release the copy was set up with, the oldest `running_releases` records (R88's first sighting), or null. */
+  #setupOut() {
+    const first = this.#one(`SELECT version, first_seen_at FROM running_releases ORDER BY seq ASC LIMIT 1`);
+    return first ? { version: first.version, installed_at: first.first_seen_at } : null;
+  }
   /** R95 (T51; N1239; K3777): what this copy already holds, as the seven flat scalars `op=bootstrap` states to a
    *  credentialed caller (the door's to ask, `bootstrapReport`). The team's name as its members read it (R10); the instant
    *  the running release was first seen (R88); the newest activity of any session held (`credentials` R65); and the
@@ -2801,7 +2806,7 @@ export class InstanceSetup {
           viewerHolds = holder ? this.#namesMember(holder.holders, who) : false;
         }
       } catch { holder = null; viewerHolds = null; }
-      return { ok: true, running, last_check: last ? { at: last.at, outcome: last.outcome } : null, ready, earlier,
+      return { ok: true, running, setup: this.#setupOut(), last_check: last ? { at: last.at, outcome: last.outcome } : null, ready, earlier,
                earlier_limit: UPDATE_EARLIER_MAX, earlier_truncated: rest.length > UPDATE_EARLIER_MAX, holder, viewer_holds: viewerHolds };
     } catch (e) { return this.#updateSilence(localize("instance-setup.setup.what_the_updates", "the updates of your team's Civicsmith"), e); }
   }
