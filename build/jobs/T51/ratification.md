@@ -406,3 +406,40 @@ Size (session_016UGXAT7b4bSBYAh8LnmNAf): test runs 5, module lines 0 (the new te
 - `checks/format.mjs`: 0 failures (178 modules). `checks/coverage.mjs ratification`: 59 of 59 live ids named, 0 failures. `checks/words.mjs ratification`: 0 failures.
 
 Size (session_016UGXAT7b4bSBYAh8LnmNAf): test runs 5, module lines 0
+
+## J23 · BLOCKED
+
+Cause: tests; needs Bob (the R21, R29, R32 naming ruling). R18 waits on case-catalogue R6.
+
+**R61 is done and green. The job is blocked on tests, and one of the three remaining red groups needs Bob's ruling.** Commit `3f47220787` on `job/T51/ratification`.
+
+**What changed**
+- `bio-plane/src/ratification/index.mjs:1096` (`#memberBasisAtPins`): each member is now handed `{basis, references}` at its pinned bytes (references default to `[]`), as case-catalogue R6 asks. Its callers (`:660`, `:1004`) are unchanged.
+- New `bio-plane/test/m/ratification/r61-member-basis.test.mjs` (4 tests, names R61). Failing-first: the three R61 tests were red on the old code (the gate was handed a bare array), and the absent-pin control was already green. All four are green now.
+
+**Suite (ratification, 339 tests, 34 files)**
+- Before the change: 333 pass, 6 fail (R21, R29, R32 and three R61).
+- After the change: 335 pass, 4 fail.
+- The 4 failures:
+  1. **R18 (`preflight.test.mjs:199`)** is expected to stay red until case-catalogue's R6 lands. The test checks that the pinned member's testimony leg reaches C-2.8. case-catalogue at this tranche still reads only a bare array (`checks.mjs:920`), so the object is dropped. case-catalogue's job (`job/T51/case-catalogue`, just started, nothing pushed yet) owns the fix. I did not pass bare arrays to meet it.
+  2. **R21, R29, R32 (`release.test.mjs`, `retire.test.mjs`)** were already red on the tranche before my change, so they are not caused by R61. The cause is a name mismatch. Retrieval answers `SELECTION_NOT_YOURS` (`bio-plane/src/retrieval/index.mjs:1419`, `:1439`, `:1536`; its R99). Ratification R21, R29 and R32 and their tests expect `NOT_YOURS`. Which name is right is a requirement question, so **this needs Bob's ruling**. My recommendation: keep `SELECTION_NOT_YOURS`, since it is retrieval's R99 contract, and amend ratification R21/R29/R32 and their tests to it.
+
+**Other suites I ran**
+- Caller tests (60 files in control-plane, plane, case-*, publication, promotion that exercise the case ceremony or gate): 388 of 391 pass.
+  - `control-plane/r10-caseratify-chain.test.mjs`: the chain is 13 calls against a bar of 11. I ran it on the pre-change `index.mjs` and it fails the same way (13), so this predates R61.
+  - Two money-ingest timing tests (R105 G61, G63) fail. They do not touch the case gate; I did not check them against the baseline.
+
+**Checks** (absolute root `/home/user/bio`)
+- `checks/format.mjs`: 0 failures (178 modules, 178 requirements files).
+- `checks/architecture.mjs ratification`: 0 failures (46 product files, 248 relative imports).
+- `checks/coverage.mjs ratification`: 60 of 60 live ids named by a test, 0 failures.
+- `checks/ownership.mjs ratification tranche/T51`: 3 files changed by ratification (index.mjs, the new test, this record), 0 failures.
+- `checks/fixtures.mjs ratification --list`: 0 failures. No `fixtures-own`, `fixtures-generic` or `fixtures-contract` marker added.
+- `checks/run.mjs`: 16 words failures, all in other modules (store-assembly, screens-*, and so on); none in ratification's paths. My change adds no member-facing prose.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 49 of 178 modules. The change is private and changes only the basis the case gate is handed, so I ran the caller tests above instead of all 1,094.
+
+**Waiting on**
+1. Bob: the `NOT_YOURS` / `SELECTION_NOT_YOURS` ruling (R21, R29, R32).
+2. The case-catalogue job's R6 change to land, then the R18 test should pass and the chain test (case-authoring R31) can re-run.
+
+Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 9, module lines 4056
