@@ -129,7 +129,7 @@ Beside the 72, **16 variations at every round end**: 8 fixed seeds and 8 derived
 ---
 
 
-[envelope-scans-T51.md 5.1: imggen.mjs]
+[envelope-scans-T51-s4-s7.md 5.1: imggen.mjs]
 ### 5.1 How it is made
 
 **One generator, seeded, that knows its own truth.** `imggen.mjs` under **test-support** (layer 1, beside PDF #1's `pdfgen.mjs`; BOB adds the path), no dependency on the network:
@@ -158,7 +158,7 @@ Beside the 72, **16 variations at every round end**: 8 fixed seeds and 8 derived
 **What passing means.** A file passes when all of SI1-SI14 hold for it, or, for a refusal file, when SI2, SI3 and SI6 hold with exactly the statement its truth names and nothing else is read wrongly. "At the platform's shape" means: the plane in a 128 MB child with the bytes inside it; the OCR member at its stated frame bound; the CPU of one core; no timing taken from the object's clock (R-CLOCK); and the R-CLOCK exemption that the test, outside the object, times the OCR wait.
 
 
-[envelope-scans-T51.md 5.2 F: the 8 fixed seeds]
+[envelope-scans-T51-s4-s7.md 5.2 F: the 8 fixed seeds]
 **F. Seeded variations** (16 a round end: 8 fixed, 8 derived)
 
 The fixed seeds 1-8 cover the joint space once, chosen so each axis value appears at least twice:
