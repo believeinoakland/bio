@@ -6,7 +6,9 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { browser } from "../../../src/journey-check/run.mjs";
-import { Walk, FAIL } from "../../../src/journey-check/walker.mjs";
+import { Walk, FAIL, StepFailed } from "../../../src/journey-check/walker.mjs";
+import { firstPage, pageNumbersProblem, NO_PAGE_NOTE } from "../../../src/journey-check/investigation.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { pageZero } from "../../../src/journey-check/words.mjs";
 import { titleLimits, weightLimits, mastheadLimits, coverLimits, projectsLimits, noConnectionLimits, publicPages, wordOf, DEC340 } from "../../../src/journey-check/checks.mjs";
 import { escapedIn, escapedOnPage, pseudoBody } from "../../../src/journey-check/pseudo.mjs";
@@ -119,4 +121,36 @@ test("R27 (K4086, K4111; R29): the document step requires document.read.title; t
   const { requireWord } = await import("../../../src/journey-check/words.mjs");
   await on(`<main id="cs-main"><h2>${word("document.read.title")}</h2></main>`, (p) => requireWord(p, "document.read.title", { within: "#cs-main", timeout: 2000 }));
   await on('<main id="cs-main"><h2>Passages</h2></main>', async (p) => { await assert.rejects(requireWord(p, "document.read.title", { within: "#cs-main", timeout: 600 }), /does not draw the word document\.read\.title/); });
+});
+
+/* R23: the step on the document the walk captured, over a fixture page drawn in the real screen's words and its picker's markup
+   (a `<select id="document-unread-page">` whose choices are pages numbered from 1) */
+async function firstPageOn(main) {
+  const walk = new Walk({ out: join(dir, String(Math.random()).slice(2)), arm: "local" });
+  const ctx = await B.newContext();
+  await ctx.route("http://doc.test/**", (r) => r.fulfill({ status: 200, contentType: "text/html", body: `<!doctype html><html><head><title>x</title><link rel="stylesheet" href="/app/assets/civicsmith.css"></head><body><main id="cs-main" data-screen="document">${main}</main></body></html>` }));
+  const p = walk.watch(await ctx.newPage());
+  try { await firstPage(walk, p, "http://doc.test/app/document/D1"); } catch (e) { if (!(e instanceof StepFailed)) throw e; } finally { await ctx.close(); }
+  return walk;
+}
+const bar = (n, count = 3) => `<div class="mk-pagebar" data-pagebar="1"><span>${word("document.read.page", { n, count })}</span></div>`;
+const place = (page) => `<blockquote class="mk-passage rec">“Some words.” <span class="mk-small">${word("screen.document.passage.where", { page })}</span></blockquote>`;
+const picker = (...pages) => `<select id="document-unread-page">${pages.map((n) => `<option value="${n}">${n}</option>`).join("")}</select>`;
+
+test("R23: the document's first page reads Page 1 in the page bar, in the passage's place and in the picker of unread pages; control: a bar, a place or a picker that reads 0 fails by name, and a capture that states no page is noted", async () => {
+  const good = await firstPageOn(bar(1) + place(1) + picker(2, 3));
+  assert.deepEqual(good.failures, [], JSON.stringify(good.failures));
+  assert.deepEqual(good.notes, []);
+  const zeroBar = await firstPageOn(bar(0) + place(1));
+  assert.ok(zeroBar.failures.some((f) => f.kind === FAIL.STEP && f.detail.includes(pageNumbersProblem({ bar: 0, place: null, picker: [] }))), JSON.stringify(zeroBar.failures));
+  assert.ok(zeroBar.failures.some((f) => f.kind === FAIL.PAGE_ZERO), "and the scan for a page numbered 0 finds it");
+  const zeroPlace = await firstPageOn(bar(1) + place(2));
+  assert.ok(zeroPlace.failures.some((f) => f.detail.includes(pageNumbersProblem({ bar: null, place: 2, picker: [] }))), JSON.stringify(zeroPlace.failures));
+  const zeroPicker = await firstPageOn(bar(1) + place(1) + picker(0, 2));
+  assert.ok(zeroPicker.failures.some((f) => f.detail.includes(pageNumbersProblem({ bar: null, place: null, picker: ["0"] }))), JSON.stringify(zeroPicker.failures));
+  const none = await firstPageOn("<p>The capture states no page.</p>");
+  assert.deepEqual(none.failures, [], JSON.stringify(none.failures));
+  assert.deepEqual(none.notes, [NO_PAGE_NOTE]);
+  assert.equal(pageNumbersProblem({ bar: 1, place: 1, picker: ["1", "4"] }), null);
+  assert.equal(pageNumbersProblem({ bar: 1, place: null, picker: ["x"] }), localize("journey-check.investigation.the_picker_of_unread_pages_offers", "the picker of unread pages offers page {pages}, pages are numbered from 1 (screen.document.unread.page)", { pages: "x" }));
 });

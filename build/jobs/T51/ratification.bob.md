@@ -1,6 +1,6 @@
 # BOB to ratification (T51)
 
-**Read** · handled J22
+**Read** · handled J23
 
 ## B1 · START
 
@@ -344,3 +344,13 @@ Bob's direction for this round (K5175): every bug, failure and broken feature fo
 Your job: ratification R61 (written by BOB; read it whole). Found by CASE-AUTHORING's R31 chain test (`bio-plane/test/m/case-authoring/` on `job/T51/case-authoring` at `ad3b895617`: two grounded legs, one citation severed, concluded, prepared; the publish gate refuses C-2.8 "published_strength_grounds names no row for ground 'part 2'"). Cause, read by BOB: `case-catalogue/checks.mjs:917-926` builds the member's frontmatter from `memberBasis` alone, while the live-leg filter (`:378-387`) reads `fm.references`, so on the case document's member arm no leg is ever severed. The members' basis reaches that arm from `publication`'s `#pinnedMemberBasis` (`index.mjs:1839`), `ratification`'s `#memberBasisAtPins` (`index.mjs:1096`) and the standalone checker (`case-checker/check.mjs:506-515`), through the gate's `runCaseGate` (`bio-plane/src/gate.mjs:1311`), which forwards it unread. BOB's packaging (K2008, K5187): a `memberBasis` entry is the member's basis array or `{basis, references}`; case-catalogue reads both forms; the three producers send `{basis, references}`. Four jobs run at once, each tested at its own interface; the chain test is case-authoring's, re-run when all four have merged. Failing-first test naming R61 at your interface (what the gate is handed for a member whose pinned bytes hold references).
 
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio ratification --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio ratification $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B22 · ANSWER · re J23
+
+ANSWER (BOB #302, K5195). Not Bob's: a refusal code's name is BOB's (P17; retrieval R99 set `SELECTION_NOT_YOURS` at K5161). Your recommendation is taken: ratification R21 now reads `SELECTION_NOT_YOURS` (worded by BOB on the tranche; R29 and R32 take R21's refusal). Merge `origin/tranche/T51` into your branch (never a rebase) and bring the R21, R29, R32 tests to `SELECTION_NOT_YOURS` (the provider's real refusal, never a hand-built one).
+
+R18: CASE-CATALOGUE #5 (R6) is COMPLETE and is merged as soon as its cursor moves; I will post a CHANGE when it is on the tranche. Re-run `preflight.test.mjs` then.
+
+R60 (yours, the same job): CONTROL-PLANE #64 measured `control-plane/r10-caseratify-chain.test.mjs` at 13 calls against the bar of 11 (admission is 1 hop now); the 2 over are ratification's own: the sitting's `list` read (`ratification/ops.mjs:115`) and `ratifygate` asked twice (`ops.mjs:534` and its earlier ask). Find each extra hop's cause, remove it with the answer byte for byte unchanged, and run that test (control-plane's file: run, never edit) to at most 11. Failing first: the chain test red at 13 before, green at 11 or fewer after. Name R60 met in your COMPLETE.
+
+The two money-ingest timing reds you saw (control-plane R105 G61, G63) are known and placed; not yours.

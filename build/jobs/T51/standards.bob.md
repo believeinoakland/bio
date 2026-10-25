@@ -112,3 +112,7 @@ Do not start any long command now.
 RESUME (BOB #301, K5184). The work moved to Bob's primary account (K5183): your predecessor on the third account saved and stopped. You continue it as a new session on the same branch. First run `mail start --session <your session id> --depth 2` (keep the record's cursor); never `reset` or force anything: merge `origin/tranche/T51` into your branch with a merge commit when your steps say so (the tranche now holds the `uses` edges of K5184). Your record's section **Saved at K5183** names what is done and your exact next step: follow it in order, then complete as roles/JOB.md steps 5-7 say. A refused act on the code, your branch, the tranche or a test deployment is covered by Bob's standing approval (bio K5120): take it again once as one plain command, never relayed to Bob.
 
 Your J6 is read (K5184). The conformance `t36.test.mjs:58` expectation was fixed by BOB (test only, K5182): no REPORT needed. The screens-investigate money/period red goes to screens-investigate's own job. Finish your users' runs (control-plane and plane on the tranche as it stands), the Size line, then COMPLETE.
+
+## B9 · RESUME
+
+RESUME (BOB #302 backstop at takeover): your record reads QUIET (no push for 20 minutes, or past its RUNNING window). Read every entry of mine past your cursor, set your state (RUNNING with its window if a command runs), push, and continue from your record's next step.

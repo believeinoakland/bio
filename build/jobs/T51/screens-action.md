@@ -1,6 +1,6 @@
 # screens-action (T51)
 
-**Status** · session_016qFZjYBx2pPnvC1xZPvJ5B · depth 2 · COMPLETE · handled B33
+**Status** · session_014Xi3cMqxUmon661x8n29a3 · depth 2 · COMPLETE · handled B40
 
 ## J1 · REPORT
 
@@ -356,3 +356,100 @@ Size (session_016qFZjYBx2pPnvC1xZPvJ5B): test runs 14, module lines 4960
 ## J28 · COMPLETE
 
 COMPLETE (B32, fix round 10 Wave A batch 5), re B33. Merged tranche/T51. Suite 279/0; format, architecture, coverage (55/55), ownership, words all 0. Done: BREACH_ON_HYPOTHESIS -> real ACTION_NO_DETERMINATION (via actions' promote); LEG_ON_ACTION -> real finding {check C-2.10, detail}; storeSilent from answer-envelope fixtures; plan-screen-shape contract run (orphan-run until screens-inquiry's marker merges). Markers: fixtures-generic at join-t51.test.mjs:63 (BAD, failing roster read) and plan.test.mjs:233 (CODE_NO_ONE_HAS_A_WORD_FOR, no design word on purpose). Left, awaiting the storeWorld CHANGE: plan-t51:209, send-t51:35,286, real.mjs:54 (stays listed), 50 op-table entries. Suggestion for actions: publish a breachRefusal fixture. Size (session_016qFZjYBx2pPnvC1xZPvJ5B): test runs 14, module lines 4960
+
+## J29 · QUESTION
+
+QUESTION (SCREENS-ACTION #18, causes 1 to 5 built and committed on my branch, 301 tests green; two things only BOB can settle, neither stops the rest of the job):
+
+1. **`uses` edges for published fixtures (K4990).** The failing-first tests of causes 2, 3, 4 and 5 take their answers from the providers' own published fixtures, never a hand-built answer: `consequences/fixture.mjs` (a part as `consequences` answers it, and its revise), `conformance/fixture.mjs` (the determination, its list, the standard's citation as `standards` answers it), `action-holds/fixture.mjs` (a mark made by `actionpressure` and `pressurefor` over it). `checks/architecture.mjs` refuses them: `consequences`, `conformance` and `action-holds` are not in screens-action's `uses` (all three are layer 9, before this module). Please add the three edges (tests only). Until then `architecture.mjs` shows exactly these 3 failures, one per test file (`consequences-t51`, `names-t51`, `pressure-t51`); I will not hand-build their answers in their place.
+
+2. **The requirement lines.** The START says the requirements of these causes are already on the tranche, marked `(not yet met: T51)`. `build/requirements/screens-action.md` at the tranche tip holds none (R1 to R55 as before, last edit K4716; item 75 of the fix round lists no screens-action line). I built to the diagnosis text (diag2-11 §2a, §4, §6, §7a, §16, §17) and named in my tests the existing ids each cause amends: R3 (the language and the voice the prepare states: filings R43, R44), R50 (the revise form states how it is known and the question), R6 and R18 (a part's label and a determination's and standard's names), R32 (the place's name), R5 (the reply's mark, from `pressurefor`). The new sentences I drew all use existing keys: the language field is `screen.account.language.field`, the voices `voice.group` and `voice.self` with their `.means`. **Missing keys for UX-DESIGN** (nothing is drawn for them yet): the voice choice's own legend (I draw "For the team / As myself" as the legend), `names_pending` ("this names a pending measure or a candidate") and `own_doing` ticks and the audience choice (diagnosis 11 §2a, §14): the page cannot mark those until the design words them; the causation line's state words for a part ("unproven", "established": I draw the owner's own `why` for a causation not established, and nothing for an established one).
+
+## Round 10 · fix round 10, diagnosis 11 (SCREENS-ACTION #18, session_01V2UjYMTJVamFVmEpii2ZSk, B34 START)
+
+Causes 1 to 5 are built, each with its failing-first test (seen red on the tranche's code, then green) and committed on `job/T51/screens-action`; the module's suites pass (294), `checks/format.mjs` 0, `words.mjs screens-action` 0, `ownership.mjs` 0, `coverage.mjs` 55 of 55, `fixtures.mjs screens-action` 54 failures = the baseline 54 (no new line). `architecture.mjs` shows 3 failures that wait on BOB (J29: `uses` edges `consequences`, `conformance`, `action-holds`, tests only, for the published fixtures the new tests take).
+
+1. **§2a, the prepare states its marks** (R3 with filings R43, R44). `send-steps.mjs` `languagesOf`, `marksFields`, `marksBody`; `start-send.mjs` and `request.mjs` read `memberlanguage` and `grouplanguages`. The prepare body carries `language` (hers, else the team's first; a choice names the team's languages in her language, by `screen.account.language.field`) and, on a public comment, `voice` (`group` unless she chose `As myself`; `voice.group`, `voice.self`, with their `.means`). Test `marks-t51.test.mjs` (six tests; the last drives the walker's letter over the REAL filings: "The Clerk violated Clerk Procedure 4." is pointed out and its approval refused). *Why the tests missed it:* `start-send.test.mjs` pinned the body without the marks (it asserted the absence), and no test ran the page's body through filings. Not drawn, for want of the design's words (reported in J29): the `names_pending` and `own_doing` ticks and the audience (diagnosis 11 §14), the voice choice's legend.
+2. **§4, revise states how it is known** (R50). `matter.mjs` `reviseForm` offers the record form's how-it-is-known choice (`mt-r-basis`), the rationale and the question (`mt-r-cause`), and `consequencerevise` sends `basis` and `causation` when she changes them (the shapes `consequencerecord` sends). Test `consequences-t51.test.mjs` over `consequences`' own published world: a part recorded as not assessed becomes `assessed` after the page's revise. *Missed because* `matter-t51.test.mjs` scripted the answer and pinned `{id, reason, measure}`.
+3. **§6, "[object Object]"** (R6). `matter.mjs` `labelOf`, `causeOf`: the part's line draws the label's `says` and, for a causation not established, the owner's own `why`. Same test file (real `consequencesOf` shape). *Missed because* `page.mjs` had a hand-written string label.
+4. **§7a, no raw ids** (R18). `send-steps.mjs` `actName`, `citeOf`; `matter.mjs` (heading: kind, day, then "by" the office; rows and choices: the standard's citation from `standards`), `plan.mjs` (`titlesOf(cs, P, qs, ds, ss)`: a determination by day and office, a standard by citation; the offers; the "requirement it seeks" list now offers only standards with a citation), `start-send.mjs` `subjectName` (what the option rests on). Test `names-t51.test.mjs` over conformance's published scene (the real determination read, list and standard). *Missed because* `page.mjs` hand-wrote `act.event: "The 2024 rent adjustment"` (now the owner's shape: the event's id, `actor`, `when`; `event.kind` on the one read). New reads: `standards` on `plan` and `matter` (`reads-t51.test.mjs` updated), `projectquestions` on `start-send` step 1. If `standards` does not answer, a choice falls back to the id (only a choice that must have a text; a row shows nothing).
+5. **§16, §17.** `hold.mjs`: each place in "The hold is for" is its mark's note and day (test in `hold-counsel.test.mjs`). `action.mjs`: a reply's mark is read from `pressurefor` (either source) and a marked reply is not offered the choice (test in `action.test.mjs`, and `pressure-t51.test.mjs` over the real `actions` and `action-holds`). *Missed because* the fixtures scripted `entries[].pressure` in the document form, and the default `pressurefor` fixture held a mark on the reply the old test then marked again.
+
+**Left for the next session (item 6, the op tables, K5054; `build/plan/fixtures-T51/op-tables.md` §5.3, §5.5).** Not started: the 50 op-table entries (and 3 builder lines) of `checks/fixtures.mjs <abs root> screens-action --list` are to be re-pointed to `storeWorld()` (`bio-plane/test/m/store-request/fixtures.mjs`; interface-shell's `world.mjs` shows `inWorld`, `bootAs`, `obligations`), each scripted state made by real acts through `me.act`, a state the world cannot make REPORTed and its line kept. They are, by test file: matter-t51 (determine, determinations, contentmint, consequencerecord/revise, addressedrecord, successrecord, escalationattach/decline/evaluate, writinghelp, publishedcase), hold-counsel (actionhold, actionholdrelease, pressurerecord, holdnoticesent), send-t51 (templatesave, writinghelp, refusedWith), dash-action (filingapprove, taskresolve, reminderanswer, checkpointsdue, the last a door arm of control-plane: contract), actionnew(-fix) (actioncreate), plan-list, c94 (plans), plan (projectquestions), reminders-t51 and action-fix (reminderset), request(-fix) (filingrecordsent, addresseesuggest), fix4-t51 (templatesforaction, templatesave), held-pages (determinations), start-send (actionstake), contract (pressurefor), join-t51 (projectlist, accepted), real.mjs:54 (refusal NO_OWNER). The done criterion in the START is "no new failing line", which holds today (54 = the baseline).
+Size (session_01V2UjYMTJVamFVmEpii2ZSk): test runs 26, module lines 5078
+
+## J30 · BLOCKED
+
+BLOCKED (cause: context), SCREENS-ACTION #18, at the end of a step, not for tests. Causes 1 to 5 of B34 are built, tested red-then-green and pushed (record section "Round 10 · fix round 10", on `job/T51/screens-action`): the prepare states its language and a public comment's voice (R3; 6 tests, one over the real filings), the revise form states how it is known and the question (R50), a part's label is drawn by what it says (R6), a determination is named by its act and a standard by its citation on the Matter, the Plan and Start and send (R18), the hold's places are named by note and day (R32), a reply's mark is read from `pressurefor` (R5). The module's suites pass (294); format, words, ownership, coverage 0 failures; `fixtures.mjs screens-action` 54 failures, the same as the tranche's (no new line). `architecture.mjs` shows 3 failures that wait on your answer to J29 (add `consequences`, `conformance`, `action-holds` to screens-action's `uses`, tests only).
+
+**What remains is item 6, the op tables** (about 50 entries over 20 test files, each to be re-pointed to `storeWorld()` with its state made by real acts), which is a job of its own and would take me past half my window. The record lists the entries by file. Please restart me (or a successor) for it with the J29 answer: if you add the three edges, the architecture check goes green, and I then finish the op tables, run the full checks and post COMPLETE with the met ids (R3, R5, R6, R18, R32, R50 as amended by diagnosis 11; no requirement line for them exists on the tranche, see J29 (2)).
+
+## Round 11 · fix round 10, op tables (SCREENS-ACTION #19, session_01KNqRbreNMPFiyJbKTakfps, B34 START, B35 ANSWER)
+
+Merged `tranche/T51`. Causes 1 to 5 were built by #18. **Met ids (B35): R3, R5, R6, R18, R32, R50**, as amended by diagnosis 11 (no new lines).
+
+**Item 6, the op tables.** The 50 op-table/builder entries are re-pointed to store-request's `storeWorld()`, each state made by real acts, in 20 files. Helpers: `world.mjs` (`actionWorld`, `correspond`, `counselMatter`, `openIn`; import it before `page.mjs`, which reads op-declarations first), `world-A.mjs` (the matter: documents, events, question, standards, determination, consequences, escalation), `world-B.mjs` (clocks, plans, profile), `world-C.mjs` (profile, entities and offices, filings), `world-D.mjs` (questions, plans, colleagues). `real.mjs` lost its `NO_OWNER` answer (never reached). `fixtures.mjs screens-action`: 54 failures -> 7 (6 op-table, 1 builder) plus 2 accepted markers.
+
+**Still scripted, a state the world cannot make (lines kept listed):**
+- `dash-action.test.mjs:92` `taskresolve`: the real queue offers it on none of Action's three item kinds (action-producers DOORS). Possible gap against R30: REPORT.
+- `c94-t51.test.mjs:34` `plans`: a plan whose opener has no handle; every real member has one.
+- `fix4-t51.test.mjs:233` `templatesforaction` refused while `action` reads: both share one visibility gate.
+- `matter-t51.test.mjs:438,459` and `send-t51.test.mjs:428` `writinghelp`: model-backed; the world has no account or model (`NO_ACCOUNT`, `ASSISTANT_DRAFT_UNAVAILABLE`).
+- `send-t51.test.mjs:339` builder: `TEMPLATE_FROM_UNAPPROVED` (approval is never taken back) and `TEMPLATE_USE_REFUSED` (the page never sends that use).
+- Also scripted, unflagged: `checkpointsdue` "our move" (action-plans reads the wall clock; a checkpoint cannot be due today), the draft-tier-3 variant of the counsel test (only `filingprepare` sets a draft's tier and it refuses at tier 3), actionnew-fix's shapes the owner never gives, and a project's followed events in `image`.
+
+**Flaws found and fixed in my module:** `matter.mjs:254` asked `publishedcase` with `caseId`; the op wants `id` (publication/worker.mjs:753), so on a real store the Matter's published-findings picker never filled. Now `id`; matter-t51 (c) runs over a really published case.
+
+**Found, not mine / not fixed (REPORT):**
+1. `hold` (R32): after a hold is placed on a reply, `holdsdue` no longer lists it (action-holds R19), and the release form draws only for places listed, so a reply's hold cannot be released from this screen; only a counsel matter's can. Needs a design reading (the requirement names `projectholds` for the strip, which the screen does not read).
+2. The addressed/success evidence fields take typed ids; the store accepts only content ids or findings (`NO_SUCH_EVIDENCE` for an `INFO-` id).
+3. The world's clocks disagree: the pinned `BIO_NOW_MS` (2026-10-01) versus the wall clock that `action-clocks` (`remindersfor`) and `action-plans` (`opened_at`, to the second) read. Plans opened in one second tie; `world-D` waits a second per plan.
+4. A reminder's state is `undetermined` until a jurisdiction profile is active (`world-B`, `world-C` activate Oakland).
+5. `actions` could publish a `breachRefusal` fixture (from #18).
+
+**Words for UX-DESIGN (B35):** the voice choice's legend, `names_pending` and `own_doing` ticks, the audience choice, a causation's state words: drawn nothing.
+
+**Checks:** suite 295 pass, 0 fail; format 0; coverage 55 of 55; words 0; ownership 0; fixtures 7 + 2 accepted. **architecture: 2 failures, waiting on BOB (J31):** `world-A.mjs` imports `publication` and `record-core` (the published case is made by publication's own commits on `world.ctx`, as `store-assembly/g54-seed.mjs` does; a ratification signs with an SSH key no door act can).
+Size (session_01KNqRbreNMPFiyJbKTakfps): test runs 14, module lines 5078
+
+## J31 · QUESTION
+
+QUESTION (re B35): item 6 is built and pushed; suite 295/0, format/coverage/words/ownership 0, fixtures 54 -> 7 (record: Round 11 lists each kept line and why). One check fails that only you can clear: architecture.mjs, 2 failures, world-A.mjs imports publication and record-core, not in screens-action's uses (the published case is made by publication's own commits on world.ctx, as store-assembly/g54-seed.mjs does; no door act can sign a ratification). Please add both edges (tests only), or tell me another way. Also fixed in my module: matter.mjs asked publishedcase with caseId, the op wants id. REPORTs in the record: hold cannot release a reply's hold (holdsdue omits placed holds); taskresolve offered on none of Action's queue kinds (R30); world clocks disagree (pinned vs wall). I post COMPLETE after the edges.
+
+## Round 11 · after B36: the tranche's world is red (provider)
+
+Merged `tranche/T51` @ d6363abb4c. architecture, format, coverage, words, ownership all 0. The suite is 243 pass, 48 fail, and before the merge it was 295/0. Cause, not in my module: store-assembly's `38536482fc` ("the world binds INSTANCE_NAME; a bare world ... names its team", K5149) records the producing team at the world's first boot, and store-request's `storeWorld()` (fixtures.mjs:26-31) still seeds it by `instancegroupseed`, which now answers `GROUP_ALREADY_RECORDED` (C-64.3), so `storeWorld()` throws for every caller. The same throw fails interface-shell `r129-door.test.mjs` and store-request's own `world.test.mjs` (10 fail in those two files). Needed from store-request's job: stop seeding when the world already records the team (or `group: null` default). Nothing in my files changes.
+
+## J32 · BLOCKED
+
+BLOCKED (cause: tests, a provider; not my module). After merging tranche/T51 @ d6363abb4c my checks are all 0 (architecture, format, coverage, words, ownership), but the suite is 243/48 (295/0 before the merge). store-assembly 38536482fc now records the producing team at the world's first boot (INSTANCE_NAME), and store-request's storeWorld() (bio-plane/test/m/store-request/fixtures.mjs:26-31) still calls instancegroupseed, which answers GROUP_ALREADY_RECORDED, so storeWorld() throws for every caller: interface-shell r129-door and store-request world.test fail the same way (10 fail in those two files). Needs store-request's job to stop seeding when the team is already recorded. I post COMPLETE when the tranche carries that fix and my suite is green again.
+
+## Saved at K5183 (SCREENS-ACTION #19)
+
+Done: causes 1 to 5 (by #18) and item 6, the op tables (Round 11 above), all pushed on `job/T51/screens-action`; `tranche/T51` @ d6363abb4c merged. architecture, format, coverage, words, ownership 0. Nothing half done; no worker running (all four finished).
+Open: the suite is 243 pass, 48 fail on the merged tranche, only because `storeWorld()` seeds the team a second time (J32, B37): STORE-REQUEST #4 fixes it (B8), BOB merges that alone and sends a CHANGE.
+Exact next step: when the tranche carries that fix, `git merge origin/tranche/T51`, run the module suite (`node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/screens-action/*.test.mjs`, expect 295/0), the checks of the process repository (format, architecture, coverage, words, ownership, `fixtures.mjs <abs root> screens-action`: 7 lines kept as listed in Round 11), then `node checks/run.mjs /home/user/bio` and `setup-words/build.mjs --check`, then post COMPLETE naming the met ids R3, R5, R6, R18, R32, R50 and the REPORTs of Round 11.
+
+## Round 12 · SCREENS-ACTION #20 (B39 RESUME)
+
+Started (`mail start`), merged `origin/tranche/T51` @ 195b11dc45. The tranche does not yet carry the store-request fix: `storeWorld()` (store-request/fixtures.mjs:26-34) still seeds the team a second time and throws `GROUP_ALREADY_RECORDED`; my suite fails the same way as in J32. Nothing in my module changes. Next step is unchanged from the saved section: when BOB sends a CHANGE that the fix is merged, merge `origin/tranche/T51`, run the suite (expect 295/0), the checks, `checks/run.mjs`, `setup-words/build.mjs --check`, then post COMPLETE.
+
+## Round 12 · COMPLETE (B40 CHANGE; tranche/T51 @ 195b11dc45 and store-request #5 merged)
+
+Merged `origin/tranche/T51`. I passed no `{group: null}`, so nothing to drop. The suite is 295 pass, 0 fail (the 48 GROUP_ALREADY_RECORDED failures are gone).
+
+**Entries applied:** T51-122 in full (R24 to R35, DEC-340, DEC-342) and fix rounds 10 and 11 (causes 1 to 5, the op tables), as recorded above. Met ids named in the saved section: R3, R5, R6, R18, R32, R50.
+
+**Checks (process repository, product /home/user/bio):** format 0 failures; architecture 0; coverage 55 of 55; ownership 0 (41 files); words `screens-action` 0. `fixtures.mjs screens-action`: 7 failures kept and 2 accepted, as in Round 11 (see below). `checks/run.mjs`: no finding in my module; its 16 words failures are all in store-assembly (ask.mjs, wiring.mjs, wizards.mjs, declared.mjs:16); `setup-words/build.mjs --check` refuses on `plane.declared.readtranslate`, which has two sentences in plane/declared.mjs:13 and store-assembly/declared.mjs:16. Neither is mine: REPORT.
+
+**New recipes (store-request R19):** I looked at each for the 7 kept lines. `writingHelp` answers the owner's refusals but never `text`, since the model is not held, so the 3 `writinghelp` lines (matter-t51:437, :458; send-t51:428) stay scripted: they assert the drafted words reach the field. The other 4 (`plans` with an opener without a handle, `taskresolve`, `templatesforaction` refused while `action` reads, `templatesave` refused with TEMPLATE_FROM_UNAPPROVED or TEMPLATE_USE_REFUSED) have no recipe. All 7 are listed with why in Round 11.
+
+**REPORTs (full text in Round 11):** `hold` cannot release a reply's hold (`holdsdue` omits placed holds); `taskresolve` is offered on none of Action's queue kinds (R30); the world's clocks disagree (pinned vs wall); the keys and shapes for UX-DESIGN (J2 gaps); `approved_by` absent in filings.
+
+**Not mine:** store-assembly's 15 words failures and the duplicate `plane.declared.readtranslate` sentence (above).
+
+Size (session_014Xi3cMqxUmon661x8n29a3): test runs 5, module lines 5078
+
+## J33 · COMPLETE
+
+COMPLETE (re B40). Merged tranche/T51 @ 195b11dc45; suite 295 pass, 0 fail. format 0, architecture 0, coverage 55 of 55, ownership 0, words screens-action 0. fixtures.mjs: the same 7 kept lines + 2 accepted as in Round 11; the new recipes give the refusals of writinghelp but never `text` (no model), so those 3 lines stay scripted; the other 4 have no recipe. checks/run.mjs: no finding in my module, but 16 words failures in store-assembly (ask.mjs, wiring.mjs, wizards.mjs, declared.mjs:16), and setup-words build --check refuses on plane.declared.readtranslate, which has two sentences (plane/declared.mjs:13 and store-assembly/declared.mjs:16): not mine, REPORT. Other REPORTs are in my record (Round 11 and 12). Met ids: R3, R5, R6, R18, R32, R50.

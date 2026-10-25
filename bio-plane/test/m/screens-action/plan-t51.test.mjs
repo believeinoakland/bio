@@ -5,11 +5,11 @@
    fields. Behaviour at the interface only; every sentence is read by its key through `setup-words` (R19). */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { actionWorld, openIn, planIn, optionOn, refusalSentence } from "./world-D.mjs";
 import { open, main, text, ops, press, last, ok, button, fill, choose, refusedIn, beside, W, D, hasWord, DATA_PLANE, ROUTES, PLAN, PLAN_ID, DET } from "./page.mjs";
 
 const REACH = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
 const withPlan = (o) => ({ ...DATA_PLANE, plan: ok({ ...PLAN, ...o }) });
-const refusedWith = (code, fields) => ({ status: 200, json: { ok: true, result: { ok: false, reason: code, code, ...fields } } });
 const said = (p, key, vars) => assert.ok(text(p).includes(W(key, vars)), key);
 const unsaid = (p, key, vars) => assert.ok(!text(p).includes(W(key, vars)), key);
 const two = (a, b) => `${W(a)} ${W(b)}`;
@@ -198,22 +198,40 @@ test("R44 (c): a reminder (which date of the option, on what day) goes with the 
 });
 
 test("R44 (c): each refusal of a decision is drawn by its words beside the act: no reason, a reminder that is not for a choice or names no date of the option, no such option, a closed plan", async () => {
+  /* every refusal is the real owner's, made by a real state: a reason with a quotation mark (`refuseReason`), a reminder with a declining, a reminder
+     naming a day the option does not have, an option the plan does not hold (the button names another), a plan closed after the page drew */
+  const { world, me, project } = await actionWorld();
+  const plan = await planIn(world, me, project, "Repairs: closed is not repaired");
+  const inquiry = plan.subjects[0].inquiry;
+  const opt = await optionOn(me, plan.id, inquiry);
+  const date = "2026-11-30";
   const cases = [
-    ["PLAN_NO_REASON", {}, [W("screen.plan.declining.an.option.or.marking.it")]],
-    ["REMINDER_REFUSED", { disposition: "declined" }, [two("screen.plan.reminders.are.set.only.when.you", "screen.plan.choose.it.or.leave.the.reminder")]],
-    ["REMINDER_REFUSED", { arm: "entry" }, [two("screen.plan.a.reminder.names.a.date.the", "screen.plan.pick.one.of.its.dates.or")]],
-    ["NO_SUCH_OPTION", {}, [two("screen.plan.pick.at.least.one.option", "screen.plan.an.option.that.is.not.in")]],
-    ["PLAN_CLOSED", {}, [two("screen.plan.this.plan.is.closed.so.its", "screen.plan.ask.an.owner.to.reopen.it")]],
+    ["PLAN_NO_REASON", { reason: 'a "quoted" reason' }, null, [W("screen.plan.declining.an.option.or.marking.it")]],
+    ["REMINDER_REFUSED", { reason: "x", values: { "plan-rem-date": `${opt}|${date}`, "plan-rem-on": "2026-11-27" } }, null, [two("screen.plan.reminders.are.set.only.when.you", "screen.plan.choose.it.or.leave.the.reminder")]],
+    ["REMINDER_REFUSED", { reason: "x", values: { "plan-rem-date": `${opt}|2026-12-31`, "plan-rem-on": "2026-11-27" } }, "chosen", [two("screen.plan.a.reminder.names.a.date.the", "screen.plan.pick.one.of.its.dates.or")]],
+    ["NO_SUCH_OPTION", { reason: "x" }, "gone", [two("screen.plan.pick.at.least.one.option", "screen.plan.an.option.that.is.not.in")]],
+    ["PLAN_CLOSED", { reason: "x" }, "closed", [two("screen.plan.this.plan.is.closed.so.its", "screen.plan.ask.an.owner.to.reopen.it")]],
   ];
-  for (const [code, fields, drawn] of cases) {
-    const p = await open(ROUTES.plan, { ...withPlan(DATED), optiondispose: refusedWith(code, { translation: "the owner's own sentence", ...fields }) });
-    const at = await press(p, markBtn(p, "opt-1", "declined"), { reason: "x" });
-    for (const d of drawn) assert.ok(beside(p, at).includes(d), `${code} ${JSON.stringify(fields)}`);
-    assert.ok(!beside(p, at).includes("the owner's own sentence"), code);
+  for (const [code, how, variant, drawn] of cases) {
+    const w = code === "PLAN_CLOSED" ? (await actionWorld()) : { world, me, project };
+    let target = plan.id, option = opt;
+    if (code === "PLAN_CLOSED") {
+      target = (await planIn(w.world, w.me, w.project, "Repairs: closed is not repaired")).id;
+      option = await optionOn(w.me, target, (await w.me.read("plan", { query: { id: target } })).subjects[0].subject.inquiry);
+    }
+    const p = await openIn(w.world, w.me, `/app/plan/${target}`);
+    const button = markBtn(p, option, variant === "chosen" ? "chosen" : "declined");
+    if (variant === "gone") button.dataset.option = "opt-gone";
+    if (variant === "closed") await w.me.act("planclose", { query: { id: target }, body: { reason: "it is done" } });
+    const at = await press(p, button, how);
+    for (const d of drawn) assert.ok(beside(p, at).includes(d), `${code} ${variant}`);
+    const owner = await refusalSentence(w.me, "optiondispose", last(p, "optiondispose").body);
+    assert.ok(owner.length > 0, `the owner has a sentence of its own for ${code}`);
+    assert.ok(!beside(p, at).includes(owner), code);
   }
-  // control: a decision the plane takes draws none of these
-  const fine = await open(ROUTES.plan, { ...withPlan(DATED), optiondispose: ok({}) });
-  const b = await press(fine, markBtn(fine, "opt-1", "done"), { reason: "x" });
+  // control: a decision the store takes draws none of these
+  const fine = await openIn(world, me, `/app/plan/${plan.id}`);
+  const b = await press(fine, markBtn(fine, opt, "done"), { reason: "x" });
   for (const k of ["screen.plan.declining.an.option.or.marking.it", "screen.plan.pick.at.least.one.option", "screen.plan.this.plan.is.closed.so.its"]) assert.ok(!beside(fine, b).includes(W(k)), k);
 });
 

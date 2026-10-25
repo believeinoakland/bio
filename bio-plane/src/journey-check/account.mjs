@@ -67,10 +67,15 @@ export function planeScheduleProblem(account, slug) {
   return null;
 }
 
+/* The workers.dev prefix a ready account holds: the installer stops and asks for a name when the account has none and /begin
+   chooses none (installer R84 (4), newgroup `addressReady`), so the walk's account starts with one, as a person's does who has
+   used Workers. `fakeAccount({ subdomain: null })` is an account that has none (the control). */
+export const READY_PREFIX = "jtest";
+
 /* `onScript(name, {bindings, source})` is called after each script upload the account accepts, with the bindings the
    script now holds; the local arm starts or reconfigures the copy from it. `copyFetch(request)` answers a request to a
    script's workers.dev address, once it is enabled. */
-export function fakeAccount({ name = "Journey test account", onScript = async () => {}, copyFetch = null, refuseSchedules = null } = {}) {
+export function fakeAccount({ name = "Journey test account", onScript = async () => {}, copyFetch = null, refuseSchedules = null, subdomain = READY_PREFIX } = {}) {
   const ACCT = "acct" + "0".repeat(28);
   const scripts = new Map();           /* name -> {bindings, source} */
   const buckets = new Set();
@@ -84,7 +89,7 @@ export function fakeAccount({ name = "Journey test account", onScript = async ()
   const rollouts = [];
   const unanswered = [];
   const calls = [];
-  let prefix = null;
+  let prefix = subdomain;              /* a ready account holds a workers.dev prefix (installer R84 (4)); null is an account that has none */
   const refused = (script) => refuseSchedules === true || (refuseSchedules instanceof RegExp ? refuseSchedules.test(script) : typeof refuseSchedules === "function" && refuseSchedules(script));
 
   /* The consent page Cloudflare would show: what is asked, and one "Allow" that returns to the installer. */

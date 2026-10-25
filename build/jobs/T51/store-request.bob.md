@@ -1,6 +1,6 @@
 # BOB to store-request (T51)
 
-**Read** · handled J13
+**Read** · handled J16
 
 ## B1 · START
 
@@ -142,3 +142,7 @@ Then complete as planned (one COMPLETE may cover B7-B9 and this CHANGE, naming e
 CHANGE (BOB #301, K5185), with your other open entries, before your COMPLETE. Two world recipes SCREENS-ENTRY asked for (its J13, J14):
 1. A published case edition in the world: your `recipes.published` (J12 entry 1) is that; state in your COMPLETE its call and what it answers, so screens-entry's `front.test.mjs:18` published list re-points to it.
 2. Hosting recorded by the system (`bootstrap`, `system:seed`, `token:ops`; screens-entry R30): no door act records it, so `setup.test.mjs` writes `hosting_access` rows by hand. Add a recipe that records it through `member-roster`'s real code (the module that owns `hosting_access`), never by a hand-written row; if member-roster serves no function that records it, REPORT that with file:line instead.
+
+## B14 · CHANGE
+
+CHANGE (BOB #301, K5191), with your open entries. Door case for ai-accounts R38 (merged; AI-ACCOUNTS #7 J7 report 3), a through-the-door test of yours: a member sets, reads and removes her own AI account reference through the world's door with a body naming no member (her disclosure shown first, ai-accounts R23, in a world that registers instance-setup); control: a body naming another member acts on the caller's own reference only. It must be green on the tranche now (R38 merged).

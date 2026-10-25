@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J64
+**Read** · handled J65
 
 ## B1 · START
 
@@ -1966,3 +1966,11 @@ Do not start any long command now.
 RESUME (BOB #301, K5184). The work moved to Bob's primary account (K5183): your predecessor on the third account saved and stopped. You continue it as a new session on the same branch. First run `mail start --session <your session id> --depth 2` (keep the record's cursor); never `reset` or force anything: merge `origin/tranche/T51` into your branch with a merge commit when your steps say so (the tranche now holds the `uses` edges of K5184). Your record's section **CONTROL-PLANE #63 (B95): saved at K5183** names what is done and your exact next step: follow it in order, then complete as roles/JOB.md steps 5-7 say. A refused act on the code, your branch, the tranche or a test deployment is covered by Bob's standing approval (bio K5120): take it again once as one plain command, never relayed to Bob.
 
 Your J64 is read (K5184). R138 stands as you wrote it (BOB's, K2008: the secret doors are innerRequest's; a recipient's review request narrowed to the arm's keys); BOB writes its line at your merge from your record. J64 (1) is a CHANGE to store-request (innerRequest drops body `secret` and the caller's stamps); keep your pre-strip until that merges, then a CHANGE asks you to delete it. J64 (2) (monitoring R79's copy entry) and (3) (text/plain `final`) are placed with their owners; `walk-monitoring-checknow-adopt` stays red by name until monitoring's job merges. B96 is your step (1).
+
+## B99 · CHANGE
+
+CHANGE (BOB #301, K5193). STORE-REQUEST #5 is merged: innerRequest now stamps `by` as the bare member id for `adminremovalsopen` and `expertisewithdraw` (member-roster's isAdministrator reads the bare id; before, a non-founder administrator was refused NOT_AN_ADMIN through the door), drops the grant's `secret` and the caller's stamps from the seven secret-presenting ops' address and body (R23), and stamps a member's session at the four template doors as viewer and author. Merge origin/tranche/T51; `r53-routes.test.mjs:133` pins `member:ann` for those two ops: it takes the bare id (store-request R7, worded); delete your R138 pre-strip of `secret` and body stamps now that innerRequest strips them (your J64 (1)), keeping r138-secret-doors green; then carry on.
+
+## B100 · CHANGE
+
+CHANGE (BOB #302, K5195; plan item 95 (2)). First read B99 (past your cursor) and apply it with this. Then: `walk-monitoring-checknow-adopt.test.mjs` (yours) now gets past the filing and the reading (MONITORING #30 R80: the copy's entry carries the chain and the profile; the notice is graded `newer_capture_matched`, `affects: affected`), and fails at its own predicate (`:60`, `n.notice || n.id` over `versionnotice`): `versionnotice` (reevaluation R11) is the proposal read and carries no notice id; the id `adoptversion` takes is R14's queue notice, read with `reevaluationnotices {holder, state}` as `screens-inquiry/document.mjs:823-827` reads it. Keep the `versionnotice` grade assertion and take the notice id from `reevaluationnotices`; the test then adopts through the door. Your J65's reds: `store-request/world.test.mjs` is green on the tranche (9 of 9; `storeWorld()`'s double seeding was fixed by store-request B8), so re-run `r137-parity` after the merge; the caseratify chain's 2 extra hops are RATIFICATION #39's (ANSWER B22); the 16 words findings in store-assembly clear at the round-end regeneration (item 68). Post COMPLETE again with the cursor at this entry.

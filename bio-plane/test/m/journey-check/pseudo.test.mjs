@@ -21,6 +21,7 @@ const { SCREENS: SETTINGS } = await import("../../../src/screens-settings/index.
 const { SCREENS: DAILY } = await import("../../../src/screens-daily/index.mjs");
 const { WORD_ROWS, word } = await import("../../../src/setup-words/index.mjs");
 const { boot, ok, ADMIN } = await import("../interface-shell/harness.mjs");
+const { assertDeclared } = await import("./tables.mjs");
 const { world } = await import("../file-safety/fixture.mjs");
 const { default: OAKLAND } = await import("../../../../jurisdictions/profiles/oakland-alameda.mjs");
 
@@ -41,6 +42,7 @@ const POINTERS = OAKLAND.pointers;
 const ROUTE = { ok: true, scripts: [], doors: [{ door: "elsewhere", scripts: [], opens: "elsewhere" }],
   routes: [{ route: "project" }, { route: "elsewhere", pointer: { places: [OAKLAND.name], pointers: POINTERS } }] };
 
+// fixtures-own: harness journey-check walks a served plane and imports no module (K3100, K5062); the ops and codes of this table are held equal to the real ones by tables.mjs
 const PLANE = {
   whoami: ok(FOUNDER),
   bootstrap: ok({ ok: true, claimed: true, bootstrapConfigured: true, part_scanner: true, test_instance: false }),
@@ -54,6 +56,7 @@ const PLANE = {
   courtnotice: ok({ choice: null, history: [] }),
   hostingaccess: ok({ recorded: false, current: null }),
   memberlist: ok({ members: [{ member_id: "admin", handle: "rosa", founder: true, role: "admin", status: "active" }] }),
+  // fixtures-own: harness journey-check walks a served plane and imports no module (K3100, K5062); the ops and codes of this table are held equal to the real ones by tables.mjs
   entitieskind: ok({ ok: true, kind: "office", entities: [], count: 0, next: null }),
   securitytoolcatalogue: ok(CATALOGUE),
   securitytools: ok({ ok: true, tools: [] }),
@@ -172,6 +175,7 @@ test("R29 (b): `elsewhere` with the Oakland profile's pointers (names, what each
 
 test("R29 (b): Home of a team holding three languages and three places reports nothing; control: a hard-coded sentence is reported", async () => {
   /* a team at work, so Home draws its areas: projects, each with a question, and what the queue holds */
+  // fixtures-own: harness journey-check walks a served plane and imports no module (K3100, K5062); the ops and codes of this table are held equal to the real ones by tables.mjs
   const busy = { ...PLANE,
     projectlist: ok({ ok: true, count: 2, limit: 200, truncated: false, projects: [{ id: "PROJ-1", name: "Roof repairs at 14 Lakeshore Row", stage: "investigating", lastChange: "2026-10-12T15:00:00Z" },
       { id: "PROJ-2", name: "Heating at the Coliseum lots", stage: "forming", lastChange: "2026-09-20T15:00:00Z" }] }),
@@ -192,4 +196,9 @@ test("R29 (b): Home of a team holding three languages and three places reports n
   assert.ok(none.main.querySelectorAll("[data-area]").length > 0, "the areas");
   const caught = await drawn("/app", { plane: three, entered, beside: `<p id="beside-home">${SENTENCE}</p>` });
   assert.deepEqual(reported(caught.found), [`p#beside-home: ${SENTENCE}`]);
+});
+
+test("R29 (K5062): every op the pseudo walk's modelled plane answers is an op the plane declares", () => {
+  assertDeclared(PLANE, "the pseudo walk's plane");
+  assertDeclared(["projectquestions"], "the pseudo walk's busy team");
 });

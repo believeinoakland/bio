@@ -8,6 +8,8 @@ import { drawnState, sweepScreens, addressOf, adminAsName, ADMIN_WORDS } from ".
 import { FAIL } from "./walker.mjs";
 import { requireWord, wordPattern, byWord, drawsWord } from "./words.mjs";
 import { localize } from "../setup-words/index.mjs";
+import { pair, WIDTHS, viewportOf } from "./design.mjs";
+import { join, relative } from "node:path";
 
 const rand = (n) => Buffer.from(crypto.getRandomValues(new Uint8Array(n))).toString("base64url");
 export const SLUG = "lakeshore-tenants";
@@ -134,18 +136,28 @@ async function shownWord(page, key) {
   catch { throw new Error(`no link or control "${key}" on ${page.url()}`); }
 }
 
+/* The installer's first page, to the short name typed: installer R85 asks first whether she already has a Cloudflare account and
+   holds the short name's stage (`#stage-choose`, which holds `#slug`) back until it is answered; the walk's person has one (the
+   fake account), so she answers yes (`[data-guide="yes"]`, the installer's own control). A walk that came from civicsmith.org is
+   on the installer's first page already. */
+export async function installerFirstPage(p, installerOrigin) {
+  if (new URL(p.url()).origin !== installerOrigin) await p.goto(installerOrigin + "/");
+  const yes = p.locator('#stage-guide [data-guide="yes"]');
+  try { await yes.waitFor({ state: "visible", timeout: 10000 }); }
+  catch { throw new Error(`the installer's first page does not ask whether she has a Cloudflare account (no [data-guide="yes"] on ${p.url()})`); }
+  await yes.click();
+  await p.locator("#slug").fill(SLUG);
+  const profile = p.locator('input[name="profile"]').first();
+  if (await profile.count()) await profile.check();
+}
+
 /* From the installer's first page to its last: the short name, Cloudflare's consent, the progress, the checks. Answers
    the copy's address and the one-time password (kept secret by the walk). A walk that came from civicsmith.org is on the
    installer's first page already. */
 export async function walkInstaller(walk, page, installerOrigin) {
   let copy = null, boot = null;
   walk.mask.push("#out-boot", "#out-probe", '[href*="#invite="]', "[data-invite-link]", '[data-secret]');
-  await walk.step(page, "install: the installer's first page", async (p) => {
-    if (new URL(p.url()).origin !== installerOrigin) await p.goto(installerOrigin + "/");
-    await p.locator("#slug").fill(SLUG);
-    const profile = p.locator('input[name="profile"]').first();
-    if (await profile.count()) await profile.check();
-  });
+  await walk.step(page, "install: the installer's first page", (p) => installerFirstPage(p, installerOrigin));
   await walk.step(page, "install: the short name, confirmed permanent", async (p) => {
     await p.locator("#go").click();
     await p.locator("#confirm-yes").click();
@@ -457,7 +469,7 @@ export function sweepAsFounder(walk, page, base, { handle, screens = undefined }
    draws no Action block (DEC-219 (3): no empty block), which is asserted and noted, and `dash-action` is then opened by its address. */
 export const DASHBOARDS = Object.freeze(["dash-project", "dash-action"]);
 export const ACTION_BLOCK_NOT_DRAWN = localize("journey-check.journeys.action_block_not_drawn_the_team_holds", "Action block: not drawn, the team holds no action");
-export async function walkDashboards(walk, page, base) {
+export async function walkDashboards(walk, page, base, { mock = null, b = null, out = null } = {}) {
   for (const id of DASHBOARDS) {
     await walk.step(page, localize("journey-check.journeys.dashboard_id_opened_from_the_door", "dashboard {id}: opened from the door on Home", { id: String(id) }), async (p) => {
       await open(walk, p, base, "/app", "home");
@@ -478,8 +490,22 @@ export async function walkDashboards(walk, page, base) {
       const main = (await p.locator("#cs-main").innerText()).replace(/\s+/g, " ");
       if (drawsWord(main, "shell.unavailable.nothing.title")) throw new Error(`${id} draws "Nothing is here"`);
       if (await p.locator('#cs-main [data-state="failed"]').count()) throw new Error(`${id} draws the failed state`);
+      /* R6 (R22: both arms pair it): where the arm gives the design mock (the local arm; the live arm's sweep pairs every working screen), the
+         dashboard beside the design's drawing of it at both widths */
+      if (mock) await pairDashboard(walk, p, id, { mock, b, out });
     });
   }
+}
+async function pairDashboard(walk, p, id, { mock, b, out }) {
+  try {
+    for (const width of WIDTHS) {
+      await p.setViewportSize(viewportOf(width));
+      await p.reload(); await settle(p);
+      const design = await mock.draw(id, width);
+      if (!design) { walk.fail(FAIL.DESIGN, localize("journey-check.journeys.id_the_design_mock_at", "{id}: the design mock at {commit} draws no such screen", { id: String(id), commit: String(mock.commit) })); continue; }
+      walk.pairs.push(relative(out, await pair(b, await p.screenshot(), design, join(out, "pairs", `dashboard-${id}-${width}.png`), { title: `${id}, ${width}px` })));
+    }
+  } finally { await p.setViewportSize(viewportOf(WIDTHS[0])); }
 }
 
 /* R25 (K3807, K3835; control-plane R109): `/sign` is requested once on the copy, expecting 404, and answers the interface's
