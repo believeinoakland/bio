@@ -222,3 +222,7 @@ REPORT 3 (system hosting recorder; for the module that owns hostingaccess). R30:
 ## J15 · REPORT
 
 REPORT 4 (store-assembly `world.script` is process-global). `store-assembly/world.mjs`:290 `script()` pushes onto the module's `SCRIPTS` (:178), shared by every world of the process and never emptied, so one test's network script answers another test's world. My tests name a domain per team to avoid it. Fix belongs to store-assembly: scope SCRIPTS to the world.
+
+## J16 · QUESTION
+
+QUESTION (R2, paused sign-in; replaces nothing). The plane's `SIGN_IN_PAUSED` carries `stated` as a sentence (the bound: "at most 10 refused attempts from one place, and 10 for one account, in any 10 minutes", credentials R38), never an instant. R2 says the page draws `{time}` from `stated`; the plane cannot give one, so `front.mjs`:115 and `forgot.mjs`:57 draw "Try again at at most 10 refused attempts ...". Best reading: the page draws `stated` as the sentence with no "Try again at" prefix (a word row without `{time}`), or the plane adds an instant (`until`). Which? Needs a ruling and, for the first, a design word row.
