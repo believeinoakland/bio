@@ -9,7 +9,7 @@ import * as installer from "../src/index.mjs";
 import { CFG } from "../src/index.mjs";
 import { word, hasWord, KEYS } from "../src/words.mjs";
 import { bootstrapVersions } from "../../bio-plane/test/m/credentials/fixtures.mjs";
-import { fleetReports } from "../../bio-plane/test/m/instance-setup/fixtures.mjs";
+import { fleetReports, bootstrapFacts } from "../../bio-plane/test/m/instance-setup/fixtures.mjs";
 import { WAIT_BOUND_MINUTES } from "../src/steps/api.mjs";
 import { ASSISTANT_NEEDS, ASSISTANT_OFFER } from "../src/ui.mjs";
 import { partsLeftOut, leftOutNotice } from "../src/images.mjs";
@@ -38,8 +38,8 @@ const planeBase = (slug, v = "0.1.0") => [{ type: "durable_object_namespace", na
 const counted = ({ workers, containers, captured, published }) => [word(`installer.fallback.programs.${workers === 1 ? "one" : "other"}`, { n: workers }),
   word(`installer.fallback.containers.${containers === 1 ? "one" : "other"}`, { n: containers }), word(`installer.fallback.captured.${captured === 1 ? "one" : "other"}`, { n: captured }),
   word(`installer.fallback.published.${published === 1 ? "one" : "other"}`, { n: published })].join(", ");
-const TEAM = { team_name: "Lakeshore Tenants", installed_at: "2026-09-01T10:00:00Z", last_used_at: "2026-10-10", count_projects: 3, count_documents: 412,
-  count_published: 1, count_members: 6 };
+/* The facts a held copy tells (instance-setup R95): the real `bootstrapfacts` answer, for the team and counts these arms state. */
+const TEAM = await bootstrapFacts({ team: "Lakeshore Tenants", members: 6, projects: 3, documents: 412, published: 1 });
 
 /* ------------------------------------------------------------------------------------------ the two not yet met */
 
@@ -200,7 +200,7 @@ test("R63 the page draws whose it is, its release and what it holds as that copy
   const known = await run({ slug: "other-two", ...h, copy: { held: { "mine-one": TEAM } } });
   const p = strip(known.page.done);
   assert.ok(p.includes(word("screen.install.exists.whose", { team: "Lakeshore Tenants", address: "https://mine-one.grp.workers.dev" })));
-  assert.ok(p.includes(word("screen.install.exists.release", { release: "0.80.0", date: "2026-09-01", used: "2026-10-10" })));
+  assert.ok(p.includes(word("screen.install.exists.release", { release: "0.80.0", date: TEAM.installed_at.slice(0, 10), used: TEAM.last_used_at.slice(0, 10) })));
   assert.ok(p.includes(word("screen.install.exists.holds", { holdings: "3 projects, 412 documents, 1 published case, 6 members" })));
   /* Asked once, with no credential. */
   const asked = known.calls.filter((c) => c.u.includes("mine-one.grp.workers.dev"));
