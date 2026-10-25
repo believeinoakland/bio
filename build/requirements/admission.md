@@ -57,7 +57,7 @@ Terms. An **op spec**, a **class**, the **session sets** and a **capability** ar
 - **R28** (T49; K3366; DEC-257, DEC-258; `setup-words` R11–R13; amends every requirement here that quotes a member-facing sentence) **Words by key.** This module holds no member-facing English: every sentence it draws or answers is read through `setup-words` `word(key, vars)`, and the module holds only keys. Its keys are the `reads` list for it in `docs/development/ux-substrate/screens/words-reads.json` (DEC-258; its keys as R31 lists them), with any key a requirement here names. A sentence an earlier requirement here quotes means the key whose English it is: the quotation identifies the key and binds no wording, so a word changed in `words.json` changes no requirement and no code here. The 35 strings that list marks `unkeyed` (none read by a member, each with its reason) stay in source. Test: each key it reads is asserted with `setup-words` `hasWord`; over fixtures, what it draws for a sample of its keys equals `word(key, vars)`; no test holds a sentence's English.
 
 
-#### T51 fix round 8 (K4817; `build/plan/fix-round-8-T51.md`)
+#### T51 fix round 8 (K4817; `build/plan/archive/fix-round-8-T51.md`)
 
 - **R32** (fix round 8, G119; K4814 (4), K4817) **One session read per request.** One request through `gate`, `readerOf` and `liveSessionDigest` reads its session once (a memo for that request only); `doorwindow` stays (a protective limit, K1881). Test: one session read per request (red: three); through the door `groupidentity` makes three object calls.
 

@@ -79,7 +79,7 @@ Terms. A **recipe** is `calc-grammar`'s (`bio-calc/1`), evaluated only by it. A 
 - **R43** (T51 fix round 6, G24; K4571, S14; amends R22) **A pattern's denominator says when it is a sample.** When a pattern's gather stops at its bound (`UNITS_MAX`, 2,000 units), the denominator, the run's and each group's own, states `capped: true` and `of_total`, the whole counted before the cut (decided transitions, flow instances); the posting pattern states `capped: true` with `of_total: null` (the whole is not counted without reading every meeting) when it stops at the bound or when any body's meetings are listed only to `eventsFor`'s limit, and stops gathering at the bound. A denominator is never flagged when the gather was whole. `patternResults` answers these two keys inside `denominator`. Test: 2,500 decided transitions give `n` 2,000, `capped: true`, `of_total` 2,500; control: 1,500 give `n` 1,500 and neither key; the same for the flow pattern over 2,500 and 1,500 open instances. New runs only: a stored run or result keeps the denominator it was written with.
 
 
-#### T51 fix round 8 (K4817; `build/plan/fix-round-8-T51.md`)
+#### T51 fix round 8 (K4817; `build/plan/archive/fix-round-8-T51.md`)
 
 - **R44** (fix round 8, G101; K4817) **A CSV table is the file's.** `declareTable` over a `document` source whose container is `csv` reads the stored bytes with `csv-reader`'s walk, never the reading's units; such a source whose bytes are not held is refused, stated, never made from the index; other sources as before. Test: the comma CSV of 18,098 rows declares 18,098 rows and the tab twin's sha; a source with no held bytes is refused.
 
