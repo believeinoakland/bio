@@ -108,3 +108,7 @@ B6 item 1 done: actionCreate now stamps actorIdentity/actorViewer/actorMemberId,
 **Checks:** actions tests 155/155; escalation, action-holds, action-clocks tests 239/239; format 0, architecture 0, coverage 77/77, words 0, ownership 0 failures; `fixtures.mjs actions --list` the same 4 failing lines as before (t12:55, t45:40, t45:45, t50:27); no marker added.
 
 Size (session_01PKkGxxBeG3fsZEM17Gs4pa): test runs 6, module lines 3535
+
+## J7 · COMPLETE
+
+B7 item 1 done: actionOverdue is true when any clock entry is stored overdue; clock_next unchanged. Met: actions R110. t46 test (red before: false; green), controls pending/met/not-yet-due. Actions tests 155/155; escalation, action-holds, action-clocks tests 239/239; format, architecture, coverage 77/77, words, ownership 0 failures; fixtures list unchanged (4 lines). Escalation's branch order is its own job (R39).
