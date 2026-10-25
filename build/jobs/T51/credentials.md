@@ -249,6 +249,6 @@ Size (session_019Weuk3yVSt11Vsjp9xvR7M): test runs 5, module lines 2708
 
 **Deferred:** nothing. **Found in other modules:** the above only.
 
-**Tests and checks:** module `node --test` 187 + 2 new: pass, fail 0. `format` 0 failures; `architecture credentials` 0; `coverage credentials` 58 of 58; `words credentials` 0; `ownership credentials tranche/T51` 0. `impact.mjs origin/tranche/T51 HEAD` names 105 modules (the shared `index.mjs`); the users that name `last_active` or the session limits (record-core r8-bookkeeping, instance-setup t51, store-door routes) and control-plane and admission were run: see COMPLETE.
+**Tests and checks:** module `node --test` 187 + 2 new: pass, fail 0. `format` 0 failures; `architecture credentials` 0; `coverage credentials` 58 of 58; `words credentials` 0; `ownership credentials tranche/T51` 0. `impact.mjs origin/tranche/T51 HEAD` names 105 modules (the shared `index.mjs`); the users that name `last_active` or the session limits (record-core r8-bookkeeping, instance-setup t51, store-door routes) and control-plane and admission were run: tests 785, pass 785, fail 0.
 
 Size (session_015BgLFhXk6KZEKYCGLb1LEg): test runs 6, module lines 2714
