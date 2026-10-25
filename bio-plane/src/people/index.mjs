@@ -1054,7 +1054,7 @@ export class People {
              limit: READ_LIST_MAX,
              detail: "each item is cited, dated and graded, and names the cluster member it is held on; an item whose validity does "
                + "not settle the date is listed as undetermined, never as current; each identity claim on the cluster is listed "
-               + "with its id and basis, so it can be withdrawn by it; withdrawn facts are listed apart, marked withdrawn" };
+               + "with its id, so it can be withdrawn by it" };
   }
 
   /* R39 (N1032, K3145): every unwithdrawn identity claim the viewer may see (R31) with an end among `members` (the
