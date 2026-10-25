@@ -434,7 +434,7 @@ async function sectionD(c) {
   await check("R33", "a 30-page scan: OCR in ticks, completeness states, 'Read in part' names the unread pages; never silently partial", "member (ann)", "upload a 30-page image-only PDF; poll reading/ owedwork until whole or stopped", async () => {
     const u = await upload(ann, await bytesOf(scan30), { name: `scan30-${tag}.pdf`, type: "application/pdf" });
     assert.equal(u.up.ok, true, u.text.slice(0, 300));
-    await fileIt(ann, u.up, { title: `scan30-${tag}`, project: projA });
+    c.scan30Bundle = (await fileIt(ann, u.up, { title: `scan30-${tag}`, project: projA })).bundleId;
     const sha = u.up.capture.sha256; c.shas.scan30 = sha;
     let r = null;
     await k.until(async () => { r = await reading(ann, sha); const comp = r && r.completeness; return comp && (comp.state === "whole" || comp === "whole") ? true : null; }, 600000, 4000);
@@ -452,9 +452,10 @@ async function sectionD(c) {
   });
   await check("R33", "Read it now / re-read with OCR and the typed-page act (transcribe) with a second member's confirmation", "member (ann)", "pdfstructure ocr=1 on the 30-page scan; transcribe a page by hand", async () => {
     const sha = c.shas.scan30;
-    const ps = await k.post(ann, "pdfstructure", { sha, ocr: 1 });
-    const tr = await k.post(ann, "transcribe", { sha, page: 0, text: "Typed by hand: the clerk stamped it." });
-    return `pdfstructure ocr=1 -> ${ps.status} ${short(R(ps.body), 350)}; transcribe -> ${tr.status} ${short(R(tr.body), 350)}`;
+    const ps = R(await k.get(ann, { op: "pdfstructure", sha256: sha, ocr: "1" }));
+    const bid = c.scan30Bundle;
+    const tr = await k.post(ann, "transcribe", { bundleId: bid, page: 0, text: "Typed by hand: the clerk stamped it." });
+    return `pdfstructure ocr=1 -> ${short(ps, 450)}; transcribe (typed page) -> ${tr.status} ${short(R(tr.body), 450)}`;
   });
 }
 
@@ -496,13 +497,12 @@ async function sectionE(c) {
       assert.equal(u.up.ok, true, u.text.slice(0, 300));
       await fileIt(ann, u.up, { title: `${recipe.seed}-${tag}`, project: projA });
       const sha = u.up.capture.sha256; c.shas[`csv${recipe.seed}`] = sha;
-      const mark = g.truth.marks && g.truth.marks.last;
-      const markText = mark && (mark.id || mark.text || mark.mark || (typeof mark === "string" ? mark : null));
+      const mk0 = g.truth.marks; const markText = Array.isArray(mk0) ? mk0[mk0.length - 1].text : mk0 && mk0.last;
       let hit = null;
       if (markText) hit = await k.until(async () => ((await findIn(ann, sha, String(markText))).length ? true : null), 60000, 2000);
       const r = await reading(ann, sha);
-      const prof = JSON.stringify(r && (r.profile || r.document_profile || r.basis || {}));
-      return [markText ? (hit ? "WORKS" : "BROKEN") : "WORKS", `${b.length} B, upload ${u.ms} ms; last mark ${short(markText, 60)} found ${hit}; completeness ${short(r && r.completeness, 160)}; dialect/profile ${prof.slice(0, 300)}; says 'unrecognised document' ${/unrecognis/i.test(prof)}; says 'builds its pages in the browser' ${/builds its pages/i.test(prof)}`];
+      const prof = JSON.stringify(r && { keys: Object.keys(r), profile: r.profile, document_profile: r.document_profile, basis: r.basis, dialect: r.dialect, failure: r.completeness && r.completeness.failure });
+      return [hit ? "WORKS" : "BROKEN", `${b.length} B, upload ${u.ms} ms; last mark ${short(markText, 60)} found ${hit}; completeness state ${r && r.completeness && r.completeness.state} counts ${short(r && r.completeness && r.completeness.counts, 200)}; reading ${prof.slice(0, 500)}; says 'unrecognised document' ${/unrecognis/i.test(prof)}; says 'builds its pages in the browser' ${/builds its pages/i.test(prof)}`];
     });
   }
   await check("R35", "a 17 MiB CSV and a 9 MB two-part CSV: first tick under 10 s; read to the end", "member (ann)", "generate ~17 MiB CSV; upload; poll", async () => {
@@ -513,7 +513,7 @@ async function sectionE(c) {
     await fileIt(ann, u.up, { title: `big-${tag}`, project: projA });
     const sha = u.up.capture.sha256; c.shas.csvbig = sha;
     const owns = [];
-    const mk = g.truth.marks && g.truth.marks.last; const mt = mk && (mk.id || mk.text || mk.mark || (typeof mk === "string" ? mk : null));
+    const mk = g.truth.marks; const mt = Array.isArray(mk) ? mk[mk.length - 1].text : mk && mk.last;
     const done = await k.until(async () => { const w = await owed(await k.founder(), sha); for (const r of [...(w.owed || []), ...(w.last || [])]) owns.push(r.own_ms || 0); return mt ? ((await findIn(ann, sha, String(mt))).length ? true : null) : ((w.owed || []).length === 0 ? true : null); }, 900000, 3000);
     return [done && Math.max(0, ...owns) < 10000 ? "WORKS" : "BROKEN", `${(b.length / 1048576).toFixed(1)} MiB, upload ${u.ms} ms (Server-Timing ${u.st}); read to the end ${!!done}; max own_ms ${Math.max(0, ...owns)}`];
   });
@@ -536,12 +536,12 @@ async function sectionE(c) {
   await check("R36", "addworkbook into a question: bind cells (success); a 221,376-cell workbook refused WORKBOOK_TOO_LARGE with count and bound", "member (ann)", "open a question; addworkbook for the 20,000-cell workbook; for an oversize one", async () => {
     const q = await k.questionOf(ann, projA, "What did the council spend on the item?");
     const sha = c.shas.wb361;
-    const ok = await k.post(ann, "addworkbook", { project: q, capture: sha, sha });
+    const ok = await k.post(ann, "addworkbook", { captureSha: sha, question: q, project: projA, period: "2026" });
     const big = sheetgen.generate({ kind: "xlsx", seed: 364, size: { rows: 36896, cols: 6 } });
     const bb = await bytesOf(big);
     const bu = await upload(ann, bb, { name: `huge-${tag}.xlsx`, type: big.type });
     await fileIt(ann, bu.up, { title: `huge-${tag}`, project: projA });
-    const refused = await k.post(ann, "addworkbook", { project: q, capture: bu.up.capture.sha256, sha: bu.up.capture.sha256 });
+    const refused = await k.post(ann, "addworkbook", { captureSha: bu.up.capture.sha256, question: q, project: projA, period: "2026" });
     return `addworkbook ok-path: ${ok.status} ${short(R(ok.body), 400)}; oversize (${bb.length} B): ${refused.status} ${short(R(refused.body), 400)}`;
   });
   /* R37 */
@@ -560,7 +560,7 @@ async function sectionE(c) {
       if (m) hit = await k.until(async () => ((await findIn(ann, sha, String(m))).length ? true : null), 60000, 2000);
       const r = await reading(ann, sha);
       const os = R(await k.get(ann, { op: "originalstate", capture: sha }));
-      return [m ? (hit ? "WORKS" : "BROKEN") : "WORKS", `${b.length} B; mark ${short(m, 40)} found ${hit}; kind ${short(r && (r.kind ?? r.document_kind ?? (r.profile && r.profile.kind)), 80)}; completeness ${short(r && r.completeness, 140)}; originalstate ${short(os, 250)}`];
+      return [m ? (hit ? "WORKS" : "BROKEN") : "WORKS", `${b.length} B; mark ${short(m, 40)} found ${hit}; reading keys ${Object.keys(r || {}).join(",")}; kind/profile ${short(r && { kind: r.kind, document_kind: r.document_kind, profile: r.profile, handler: r.handler }, 300)}; completeness ${short(r && r.completeness && { state: r.completeness.state, counts: r.completeness.counts }, 200)}; originalstate path ${os && os.path} may_open ${os && os.may_open}`];
     });
   }
   for (const [label, bytes, type, name] of [["RTF", te("{\\rtf1\\ansi RTF words for the walk RTF" + tag + "\\par}"), "application/rtf", `r-${tag}.rtf`], ["email (.eml)", te(`From: clerk@example.gov\r\nTo: a@b.c\r\nSubject: Records\r\n\r\nEmail body EML${tag}\r\n`), "message/rfc822", `m-${tag}.eml`], ["legacy .doc (OLE header)", Buffer.concat([Buffer.from("D0CF11E0A1B11AE1", "hex"), Buffer.alloc(600)]), "application/msword", `old-${tag}.doc`]]) {
@@ -571,7 +571,7 @@ async function sectionE(c) {
       await later(4000);
       const r = await reading(ann, u.up.capture.sha256);
       const os = R(await k.get(ann, { op: "originalstate", capture: u.up.capture.sha256 }));
-      return `kind ${short(r && (r.kind ?? r.document_kind), 80)}; completeness ${short(r && r.completeness, 200)}; reading says ${short(r && (r.statement || r.final || r.basis), 250)}; originalstate ${short(os, 200)}`;
+      return `reading keys ${Object.keys(r || {}).join(",")}; kind/profile ${short(r && { kind: r.kind, profile: r.profile, handler: r.handler }, 300)}; completeness state ${r && r.completeness && r.completeness.state}, failure ${short(r && r.completeness && r.completeness.failure, 300)}, final ${short(r && r.final, 200)}; originalstate path ${os && os.path} may_open ${os && os.may_open}`;
     });
   }
   await check("R37", "a ZIP of 30 documents with a locked entry: opened, summary line, each entry's state, 30 reading rows, vouch/set aside with one reason", "member (ann)", "makeZip 30 text members + 1 encrypted; upload; archivelist", async () => {
@@ -599,7 +599,7 @@ async function sectionF(c) {
     const have = five.filter((f) => Object.hasOwn(a, f));
     const memberHas = five.filter((f) => Object.hasOwn(m, f));
     const seen = a.watchdog_seen ? Date.now() - Date.parse(a.watchdog_seen) : null;
-    return [have.length === 5 && memberHas.length === 0 ? "WORKS" : "BROKEN", `admin has ${have.join(",") || "none"}; alarm_at ${a.alarm_at}; stale ${a.stale}; watchdog_seen age ${seen} ms; member has ${memberHas.join(",") || "none"}`];
+    return [have.length === 5 && memberHas.length === 0 ? "WORKS" : "BROKEN", `(watchdog_seen is written by the platform's scheduled slot; Miniflare has none, so its freshness is NOT REACHED here) admin has ${have.join(",") || "none"}; alarm_at ${a.alarm_at}; stale ${a.stale}; watchdog_seen age ${seen} ms; member has ${memberHas.join(",") || "none"}`];
   });
   await check("R134", "held-capture relevance suggestion: absent without the assistant (built state unconfirmed)", "member (ann)", "read the question and held reads for any 'may bear on' suggestion", async () => {
     const h = R(await k.get(ann, { op: "heldcaptures", project: projA }));

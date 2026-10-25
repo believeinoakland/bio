@@ -13,6 +13,11 @@ const CP = join(HERE, "../../../../bio-plane/test/m/control-plane");
 const T = join(HERE, "../../../../bio-plane/test");
 const { makeKit } = await import(join(CP, "r8-kit.mjs"));
 const pdfgen = await import(join(T, "pdfgen.mjs"));
+const { CAPTURE_SCREEN } = await import(join(HERE, "../../../../bio-plane/src/screens-intake/capture.mjs"));
+import { readFileSync } from "node:fs";
+const PDF_BUNDLE = join(HERE, "../../../../pdf-worker/dist/pdf-worker.bundled.mjs");
+const pdfWorkerDef = () => ({ name: "pdf-worker", modules: true, modulesRoot: "/", scriptPath: PDF_BUNDLE, script: readFileSync(PDF_BUNDLE, "utf8"),
+  compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"], r2Buckets: ["CAPTURES"], bindings: { VERSION: "test" } });
 const pw = createRequire("/usr/lib/node_modules/")("playwright");
 const RECORD = join(HERE, "../04a-documents.md");
 const SHOTS = join(HERE, "../shots/04a-documents");
@@ -40,7 +45,7 @@ const outbound = async (req) => {
   return new Response(f.bytes, { status: f.status ?? 200, headers: { "content-type": f.type ?? "text/html", "content-length": String(f.bytes.length) } });
 };
 let k;
-k = makeKit({ tag: "w04ab", outbound, bindings: { DAEMON_TOKEN: "dmn-w04ab-0123456789abcdef" }, serviceBindings: { SELF: (req) => k.mf.dispatchFetch(req) } });
+k = makeKit({ tag: "w04ab", outbound, workers: [pdfWorkerDef()], bindings: { DAEMON_TOKEN: "dmn-w04ab-0123456789abcdef" }, serviceBindings: { SELF: (req) => k.mf.dispatchFetch(req), PDF_WORKER: "pdf-worker" } });
 const bytesOf = async (g) => g.bytes();
 
 test("WALK-FINAL-04A browser half", { timeout: 3600000 }, async () => {
@@ -74,10 +79,17 @@ test("WALK-FINAL-04A browser half", { timeout: 3600000 }, async () => {
   }
   const shot = async (pg, name, width) => { const f = `${name}-${width}.png`; await pg.screenshot({ path: join(SHOTS, f) }); return `shots/04a-documents/${f}`; };
   const body = async (pg) => (await pg.innerText("body")).replace(/\s+/g, " ");
+  const lines = async (pg) => (await pg.innerText("body")).split("\n").map((x) => x.trim()).filter(Boolean);
+  const fresh = (b, a) => { const set = new Set(b); return a.filter((x) => !set.has(x)).join(" / "); };
   const noSideways = (pg) => pg.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1);
   const smallTargets = (pg) => pg.evaluate(() => [...document.querySelectorAll("button,input:not([type=hidden]),select,textarea,[role=tab],nav a")].filter((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && (r.height < 44 || r.width < 44); }).length);
   const goto = async (pg, path) => { await pg.goto(url + path); await pg.waitForTimeout(2500); };
 
+  /* a 20-page PDF made by the member's own upload and filed, for the Document page */
+  const g20 = pdfgen.generate({ kind: "pdf", seed: 20, size: { pages: 20, lines: 20 } });
+  const up = await (await k.plane(`/api/?op=captureupload&statement=${encodeURIComponent("How: handed to me\nWhere: counter\nWhat: budget")}&name=w10-${tag}.pdf&type=application%2Fpdf`, { method: "POST", headers: ann, body: await g20.bytes() })).json();
+  const filed20 = await CAPTURE_SCREEN.parts.promoteDocument(k.screenCall(ann), { doc: (up.result ?? up).document, title: `w10-${tag}`, locator: (up.result ?? up).document.locator, project: projA });
+  await later(6000);
   for (const width of [1280, 390]) {
     const pg = await page(width);
     const W = `${width} px`;
@@ -92,43 +104,46 @@ test("WALK-FINAL-04A browser half", { timeout: 3600000 }, async () => {
     await check("R30", "UI: capture an address by the screen's own press (site's copy): the result line, grade note read whole once, 'Filed under', the document linked", W, "member (ann)", "type an address, press 'Capture from an address'", async () => {
       await goto(pg, "/app/capture");
       await pg.fill("#ci-address", `https://dena${width}.example.gov/pages/dena-${tag}.html`);
-      site.set(`dena-${tag}.html`, site.get(`dena-${tag}.html`));
+      const before = await lines(pg);
       const t0 = Date.now();
       await pg.click("button:has-text('Capture from an address')");
-      await pg.waitForFunction(() => /Captured:|Grade|couldn|Nothing was kept/.test(document.body.innerText), null, { timeout: 40000 }).catch(() => {});
+      await pg.waitForFunction(() => /Captured:|Already in the record|couldn|Nothing was kept/.test(document.body.innerText), null, { timeout: 40000 }).catch(() => {});
+      const took = Date.now() - t0;
       await pg.waitForTimeout(1500);
-      const t = await body(pg);
+      const d = fresh(before, await lines(pg));
       const s = await shot(pg, "add-captured", width);
-      const grade = /Captured:/.test(t);
-      return [grade ? "WORKS" : "BROKEN", `after ${Date.now() - t0} ms the page reads: ${t.slice(t.indexOf("Capture from an address") - 200, t.indexOf("Capture from an address") + 900)}`, s];
+      return [/Captured:|Already in the record/.test(d) ? "WORKS" : "BROKEN", `result drawn after ${took} ms: ${d.slice(0, 900)}`, s];
     });
     await check("R30", "UI: the same address pressed again: one sentence 'already in the record', no second bundle", W, "member (ann)", "press the same address again", async () => {
       await pg.fill("#ci-address", `https://dena${width}.example.gov/pages/dena-${tag}.html`);
+      const before = await lines(pg);
       await pg.click("button:has-text('Capture from an address')");
       await pg.waitForTimeout(4000);
-      const t = await body(pg);
+      const d = fresh(before, await lines(pg));
       const s = await shot(pg, "add-again", width);
-      return [/already|held|same/i.test(t) ? "WORKS" : "BROKEN", `page reads: ${t.slice(t.indexOf("From an address") + 20, t.indexOf("From an address") + 1100)}`, s];
+      return [/Already in the record/i.test(d) ? "WORKS" : "BROKEN", `new on the page: ${d.slice(0, 700)}`, s];
     });
     await check("R30", "UI: a refusing site is attributed to the site in words (no code, no 'disguise')", W, "member (ann)", "press an address the site refuses (403)", async () => {
       await pg.fill("#ci-address", `https://refuse${width}.example.gov/pages/refuse-${tag}.html`);
+      const before = await lines(pg);
       await pg.click("button:has-text('Capture from an address')");
       await pg.waitForTimeout(4000);
-      const t = await body(pg);
+      const d = fresh(before, await lines(pg));
       const s = await shot(pg, "add-refused", width);
-      const raw = /SOURCE_REFUSED|BAD_LOCATOR|HOST_COOLING_OFF|FETCH_FAILED/.test(t);
-      return [!raw && /refus|turn|won't|did not|didn't|declin/i.test(t) ? "WORKS" : "BROKEN", `raw code shown ${raw}; page reads: ${t.slice(t.indexOf("Capture from an address") - 400, t.indexOf("Capture from an address") + 300)}`, s];
+      const raw = /SOURCE_REFUSED|BAD_LOCATOR|HOST_COOLING_OFF|FETCH_FAILED|\b[A-Z]{3,}_[A-Z_]{3,}\b/.test(d);
+      return [!raw && d ? "WORKS" : "BROKEN", `raw code shown ${raw}; new on the page: ${d.slice(0, 800) || "NOTHING drawn"}`, s];
     });
     await check("R30", "UI: 'the page as a visitor saw it' with no render binding in the room: said in words, not a silent shell", W, "member (ann)", "choose visitor, press", async () => {
       site.set(`vis-${tag}.html`, { bytes: te(`<html><title>V</title><body>visitor ${tag}</body></html>`) });
       await pg.fill("#ci-address", `https://vis${width}.example.gov/pages/vis-${tag}.html`);
       await pg.check("#ci-render-1");
+      const before = await lines(pg);
       await pg.click("button:has-text('Capture from an address')");
-      await pg.waitForTimeout(5000);
-      const t = await body(pg);
+      await pg.waitForTimeout(6000);
+      const d = fresh(before, await lines(pg));
       const s = await shot(pg, "add-visitor", width);
       await pg.check("#ci-render-0");
-      return ["WORKS", `page reads: ${t.slice(t.indexOf("Capture from an address") - 500, t.indexOf("Capture from an address") + 500)}`, s];
+      return [d ? "WORKS" : "BROKEN", `new on the page: ${d.slice(0, 900) || "NOTHING drawn"}`, s];
     });
     await check("R30", "UI: Watched addresses and Leads tabs open; 'Show my requests for later'; 'Show the stored logins'", W, "member (ann)", "open each", async () => {
       await goto(pg, "/app/capture");
@@ -147,12 +162,12 @@ test("WALK-FINAL-04A browser half", { timeout: 3600000 }, async () => {
       await pg.setInputFiles("#ci-file", { name: `ui-minutes-${width}-${tag}.txt`, mimeType: "text/plain", buffer: Buffer.from(`The clerk stamped the contract. Marker UITXT${width}${tag}.\n`) });
       await pg.check("#ci-how-handed");
       await pg.fill("#ci-where", "the clerk's counter"); await pg.fill("#ci-what", "minutes of the meeting");
-      const s0 = await shot(pg, "add-file", width);
-      await pg.click("button:has-text('Add this file'), button:has-text('Capture this file'), button:has-text('Add the file'), button:has-text('Upload')").catch(async () => { await pg.click(".mk-acts button"); });
-      await pg.waitForTimeout(4000);
-      const t = await body(pg);
+      const before = await lines(pg);
+      await pg.click("button:has-text('Capture a file or photo')");
+      await pg.waitForTimeout(5000);
+      const d = fresh(before, await lines(pg));
       const s = await shot(pg, "add-file-done", width);
-      return [/UITXT|minutes|Filed|filed|added|Added/.test(t) ? "WORKS" : "BROKEN", `controls: ${ids.slice(0, 14).join(" ; ")}; after the press: ${t.slice(t.indexOf("A file or photo") + 20, t.indexOf("A file or photo") + 900)}`, s];
+      return [/Captured|kept|Filed|filed|Added|added|held/.test(d) ? "WORKS" : "BROKEN", `new on the page after the press: ${d.slice(0, 900) || "NOTHING drawn"}`, s];
     });
     await check("R32", "UI: 'What I saw or heard': words, where, when; record it; a future time is refused in words", W, "member (ann)", "fill the three, press; then a future time", async () => {
       await goto(pg, "/app/capture");
@@ -161,13 +176,24 @@ test("WALK-FINAL-04A browser half", { timeout: 3600000 }, async () => {
       await pg.fill("#ci-words", `I saw the stamp at counter three. UISAW${width}${tag}`); await pg.fill("#ci-where", "City Hall");
       const past = new Date(Date.now() - 86400e3).toISOString().slice(0, 16);
       await pg.fill("#ci-when", past).catch(() => {});
-      await pg.click("button:has-text('Record')"); await pg.waitForTimeout(3500);
-      const t1 = await body(pg);
+      const b1 = await lines(pg);
+      await pg.click("button:has-text('Record what you saw')"); await pg.waitForTimeout(3500);
+      const l1 = await lines(pg); const d1 = fresh(b1, l1);
       await pg.fill("#ci-words", "Another sighting"); await pg.fill("#ci-when", new Date(Date.now() + 5 * 86400e3).toISOString().slice(0, 16)).catch(() => {});
-      await pg.click("button:has-text('Record')"); await pg.waitForTimeout(2000);
-      const t2 = await body(pg);
+      await pg.click("button:has-text('Record what you saw')"); await pg.waitForTimeout(2500);
+      const d2 = fresh(l1, await lines(pg));
       const s = await shot(pg, "add-saw", width);
-      return [/UISAW|recorded|Recorded|kept|Kept/.test(t1) ? "WORKS" : "BROKEN", `controls ${ids.slice(0, 10).join(" ; ")}; first press reads ${t1.slice(t1.indexOf("What I saw or heard") + 20, t1.indexOf("What I saw or heard") + 700)}; future time reads ${t2.slice(t2.indexOf("What I saw or heard") + 20, t2.indexOf("What I saw or heard") + 700)}`, s];
+      return [/Recorded|recorded|Kept|kept|Captured/.test(d1) && d2 ? "WORKS" : "BROKEN", `first press: ${d1.slice(0, 500) || "NOTHING"}; future time: ${d2.slice(0, 400) || "NOTHING"}`, s];
+    });
+    await check("R34", "UI: the Document page of a 20-page PDF: reading state, 'By page', Next page / Previous page, 'Showing N of M'", W, "member (ann)", "open /app/document/<id>, press Next page", async () => {
+      await goto(pg, "/app/document/" + filed20.bundleId);
+      await pg.waitForTimeout(2500);
+      const t0 = await body(pg);
+      const s0 = await shot(pg, "document-pdf", width);
+      const nexts = await pg.locator("button:has-text('Next page')").count();
+      let moved = "no Next page control";
+      if (nexts) { const before = await lines(pg); await pg.locator("button:has-text('Next page')").first().click(); await pg.waitForTimeout(2500); moved = fresh(before, await lines(pg)).slice(0, 300); }
+      return [/Next page/.test(t0) ? "WORKS" : "BROKEN", `no sideways ${await noSideways(pg)}; Next page controls ${nexts}; Showing: ${(t0.match(/Showing[^.]{0,60}/) || ["none"])[0]}; reading words: ${(t0.match(/(Read in full|Read in part|being read|Unread)[^.]{0,80}/) || ["none"])[0]}; after Next page new: ${moved}`, s0];
     });
     await check("R46", "UI: the held list: documents listed, selection, project filter, 'showing N of M'", W, "member (ann)", "open /app/held", async () => {
       await goto(pg, "/app/held");
