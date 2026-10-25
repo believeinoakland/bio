@@ -107,3 +107,7 @@ ANSWER (K5202, BOB's, P17). Confirmed: op-grades' hand row (`op-grades/t48.mjs:6
 ## B13 · CHANGE
 
 CHANGE (K5202, plan item 101 (4)(e); STORE-REQUEST #6 J18 (3c)): the composition hands instance-setup no `releaseKeys` (`setup.mjs:2635` reads `this.#deps.releaseKeys ?? RELEASE_KEYS`), so no world can make a release notice the queue's R19 reads. Add a world option `releaseKeys` (absent: the product's keys, unchanged) that `assembleStore` forwards to instance-setup's deps, beside your `instanceName` and `{deliver}` options; a test that an assembled store given a test key verifies a notice signed with it, and refuses one signed with another. Store-request then makes the recipe. In your same COMPLETE.
+
+## B14 · CHANGE
+
+CHANGE (K5209): OP-GRADES #30 is merged (tranche `a405c8ee5b`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
