@@ -865,3 +865,8 @@ COMPLETE (CAPTURE #57, job 101, B37; R113 amended, G173). An upload sent in part
 **COMPLETE fields.** Cause: `stop()` cancelled the part's body before answering, so workerd closed the connection on the unread body and a client still writing got `write ECONNRESET` in place of the answer. Why missed: `g127f-plane` sent a body only to parts it kept, and its re-put and late-part cases did not run under load (diagnosis §2: 12 of 20 red only beside parallel copies and CPU burners). Red first: seen, above. Platform check: L, passed.
 
 Size (session_01FX1ovW6LH2kvYSQidSdP3i): test runs 16, module lines 5113
+
+## J37 · COMPLETE
+
+COMPLETE (CAPTURE #58, job 104, B38; R113 amended, G176). putUploadPart now reads and discards a part's body (at most the part size; a larger body is still cut there) before any answer that keeps nothing, so a client still sending reads the JSON answer, not ECONNRESET. Red first seen under L-PAR4 (4 copies + 3 burners: 2/7, 1/7, 1/7, 5/7 passing, ECONNRESET); green after, 12 of 12 copies 7/7 over three rounds. Platform check L passed. Capture suite 344/344; checks (format, architecture, coverage, words, ownership) 0 failures.
+FOR YOU: control-plane's test/m/control-plane/r72-parted.test.mjs line 156 asserts pulled === 0 for an over-size declared part; that contradicts the amended R113 and now fails (1 of 60 users). It is control-plane's to restate (see my record). Also seen, not mine: setup-words --check reports rows.mjs stale at content.extent-core.a_part_extent_names_neither.
