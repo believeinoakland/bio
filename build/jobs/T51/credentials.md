@@ -398,3 +398,27 @@ Processed ANSWER B17 (K5198). Route 1 is on the tranche: `credentials` uses `mem
 Not decided by me: the B16 environment control (`BIO_NOW_MS` reaching ai-accounts) is still open, as in J23.
 
 **Size (session_01MX23PSD31bEtV5CnCLBEte):** test runs 3, module lines 2223.
+
+## J25 · COMPLETE
+
+Processed CHANGE B18 (K5200) and ANSWER B17 (K5198). Tranche merged (`3434b26261`, a merge, no rebase). Module complete.
+
+**Applied.**
+- B15 (fixture line): `bio-plane/test/m/credentials/seam.test.mjs` takes member-roster's published `listenerRefusals()` (`:9`, `:172-175`); `:185` asserts the declared refusal by identity. Earlier, `fixtures --list` at 1 failure, now 0.
+- B16 (K5197 clock): `bio-plane/src/credentials/index.mjs:2061` passes `now` to `aiAccountsOf`. Failing-first test `bio-plane/test/m/credentials/k5197-accounts-clock.test.mjs`: red before the change, green now (since: `2026-10-20T10:15:30Z`). Control (no clock handed) green.
+- B17 (`uses`): BOB's edge on the tranche; `credentials` now uses `member-roster`.
+- B18: ai-accounts (K5199, R39) now takes `now`; the K5197 test passes on the merged tranche. The B16 environment control is dropped, as BOB directed.
+
+**Met ids.** No `**Rn**` marks were struck by me; BOB strikes the marks. Coverage: 58 of 58 live requirement ids named by a test.
+
+**Tests.** Credentials suite, all `bio-plane/test/m/credentials/*.test.mjs`: 196 of 196 pass (two consecutive full runs, 196 of 196 each; the K5197 test included). Seam file alone 8 of 8. `k5148-clock.test.mjs` 5 of 5.
+
+**One unexplained flake.** The first full run after the tranche merge reported `R1 R4 R39 R45 R46 R47 R43 the T35 routes …` (`t35-misc.test.mjs`) as failing, with no assertion output captured. That file alone passes 9 of 9, and two more full runs pass 196 of 196. I have no root cause; I'm recording it so it can be watched in the next tranche.
+
+**Checks (absolute root `/home/user/bio`).** architecture 0 failures (35 files, 110 imports); fixtures `credentials --list` 0 failures (3536 files read); format 0; coverage 0 (58 of 58); ownership 0 (4 files changed by credentials since the tranche base).
+
+**Deferred.** None in this module.
+
+**Found outside credentials.** None new this round. The 15 repo-wide `run.mjs` findings in J22 still stand, unchanged by these commits.
+
+**Size (session_01MX23PSD31bEtV5CnCLBEte): test runs 11, module lines 2223**
