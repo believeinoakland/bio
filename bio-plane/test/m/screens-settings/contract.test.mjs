@@ -10,9 +10,9 @@ import { dirname, join } from "node:path";
 import { OPS, OP_ALIASES } from "../../../src/op-declarations/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { SCREENS, SCREEN_WORDS, KEYS } from "../../../src/screens-settings/index.mjs";
-import { open, said, day } from "./kit.mjs";
+import { open, said, day, storeWorld } from "./kit.mjs";
 import { interfacePage, interfaceScript, interfaceScriptHash, checkScreens, RE_POINTS } from "../../../src/interface-shell/index.mjs";
-import { ADMIN, MEMBER, membersTable, teamaiTable, accountTable, connectTable, notesTable, groupTable, identityTable, placesTable, recoveryTable, securityTable, translationsTable, updatesTable, grouprulesTable, biasTable } from "./fixtures.mjs";
+import { teamNamed } from "./seed-common.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const PATH = "docs/development/ux-substrate/screens/registry.json";
@@ -35,12 +35,14 @@ test("the screens are the registry's, each listing exactly its registry acts, an
   assert.ok(!SCREENS.find((s) => s.id === "account").acts.some((a) => a.op === "handlechange"));
 });
 
-test("every act names an op OPS holds (owed:infolevelset's op among them, op-declarations R50), and every read too", () => {
+test("every act names an op OPS holds (owed:infolevelset's op among them, op-declarations R50), and every read too", async () => {
   for (const s of SCREENS) for (const a of s.acts) {
     const op = OP_ALIASES[a.op] || a.op;
     assert.ok(OPS[op], `${s.id}: ${a.op} is served`);
   }
-  for (const s of SCREENS) for (const [n, r] of Object.entries(s.reads({ me: ADMIN, subject: "ana" }))) {
+  // the session an administrator's page reads as: the world's own answer to `whoami`
+  const w = await storeWorld(), me = await (await w.signIn("founder")).read("whoami");
+  for (const s of SCREENS) for (const [n, r] of Object.entries(s.reads({ me, subject: "ana" }))) {
     assert.ok(OPS[r.op], `${s.id}: read ${n} (${r.op}) is served`);
   }
 });
@@ -52,16 +54,17 @@ test("the shell serves the screens: interfacePage passes its R21 check, and the 
   assert.ok(html.includes(`integrity="${interfaceScriptHash(SCREENS)}"`), "the page names its script by its hash");
   assert.ok(!/<script[^>]*nonce=/.test(html), "no inline script, no nonce");
   for (const s of SCREENS) for (const a of s.acts) assert.ok(script.includes(a.op), `${s.id}'s ${a.op} is in the script`);
-  const tables = { settings: {}, members: membersTable(), teamai: teamaiTable(), account: accountTable(ADMIN), connect: connectTable(ADMIN, "own"), notes: notesTable(ADMIN), group: groupTable(), "group-identity": identityTable(),
-    places: placesTable(), recovery: recoveryTable(), security: securityTable(), translations: translationsTable(), updates: updatesTable(), glossary: {}, grouprules: grouprulesTable(), bias: biasTable() };
+  // each screen over the team that holds what it draws, as the administrator who finds it (the 26,000 words of the list are not drawn in a test's time: seed-group's `onlyWords`)
+  const t = await teamNamed("full");
+  const tables = { translations: { translations: t.only } };
   for (const s of SCREENS) {
-    const o = await open(s.id, { me: ADMIN, table: tables[s.id], reachable: true });
+    const o = await open(s.id, { world: t.w, as: t.founder, table: tables[s.id], subject: s.id === "translations" ? "es" : null });
     assert.ok(o.text.includes(said(`screen.${s.id}.name`)), `${s.id} drawn`);
     assert.ok(!o.tree.children.some((c) => c.attrs && c.attrs["data-state"] === "failed"), `${s.id}'s render ran from its source`);
   }
   // a screen whose function reaches outside itself fails in the page, so this check would see it
   const leaky = { ...SCREENS.find((x) => x.id === "notes"), render(cs) { return cs.title() + NOT_IN_SCOPE; } };
-  const o = await open("notes", { me: ADMIN, table: tables.notes, screens: SCREENS.map((x) => (x.id === "notes" ? leaky : x)) });
+  const o = await open("notes", { world: t.w, as: t.founder, screens: SCREENS.map((x) => (x.id === "notes" ? leaky : x)) });
   assert.ok(o.html.includes('data-state="failed"'), "control: a leaky render is drawn as failed");
 });
 
@@ -94,16 +97,20 @@ test("R39 words by key: the module holds no row, every key it reads is a word of
 });
 
 test("R39 what a screen draws for a sample of its keys equals word(key, vars)", async () => {
-  const a = await open("members", { me: ADMIN, table: membersTable() });
+  const t = await teamNamed("full");
+  const a = await open("members", { world: t.w, as: t.founder });
   for (const k of ["screen.members.col.handle", "screen.members.col.status", "screen.members.invite.heading"])
     assert.ok(a.text.includes(unescapeHtml(word(k))), k);
-  assert.ok(a.text.includes(unescapeHtml(word("screen.members.count", { members: 5, administrators: 3 }))));
-  const t = await open("teamai", { me: ADMIN, table: teamaiTable() });
-  for (const k of ["screen.teamai.sub", "screen.panel.uses.heading", "screen.panel.limits.heading"]) assert.ok(t.text.includes(unescapeHtml(word(k))), k);
-  const c = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none") });
+  // the count is of the active members and of the administrators among them, as the roster lists them
+  const active = (await t.founder.read("memberlist")).members.filter((m) => m.status === "active");
+  assert.ok(a.text.includes(unescapeHtml(word("screen.members.count", { members: active.length, administrators: active.filter((m) => m.role === "admin").length }))));
+  const ai = await open("teamai", { world: t.w, as: t.founder });
+  for (const k of ["screen.teamai.sub", "screen.panel.uses.heading", "screen.panel.limits.heading"]) assert.ok(ai.text.includes(unescapeHtml(word(k))), k);
+  const c = await open("connect", { world: (await teamNamed("connect-none")).w, as: (await teamNamed("connect-none")).dev });
   for (const k of ["screen.connect.way.field", "screen.connect.way.subscription", "screen.connect.signin.step1", "connect.ifnot"]) assert.ok(c.text.includes(unescapeHtml(word(k))), k);
-  const u = await open("updates", { me: ADMIN, table: updatesTable() });
-  assert.ok(u.text.includes(unescapeHtml(word("updates.ready.release", { version: "0.84.0", date: day("2026-10-11") }))));
+  const u = await open("updates", { world: t.w, as: t.founder });
+  const ready = (await t.founder.read("updatenotice")).ready;
+  assert.ok(u.text.includes(unescapeHtml(word("updates.ready.release", { version: ready.version, date: day(ready.date) }))));
   // a word the list lacks, or a fill it names that the screen does not give, throws: it is never drawn as the key or empty
   assert.throws(() => word("screen.members.nosuchword"), (e) => e.code === "UNKNOWN_WORD");
   assert.throws(() => word("screen.members.count", { members: 1 }), (e) => e.code === "WORD_VAR_MISSING");
