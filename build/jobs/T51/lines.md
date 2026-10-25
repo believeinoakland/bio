@@ -34,3 +34,11 @@ B2 (K3995) processed: the plain-text undetermined reasons are already keyed in m
 ## J4 · COMPLETE
 
 B3 (K3997) processed: merged tranche/T51; lines tests 35 pass, 0 fail; coverage 24 of 24 ids, 0 failures. No code change. R24's nesting kept. Size (session_011tEinGypkcSqPRxnLKHDvq): test runs 16, module lines 1009
+
+## Fix round 10, Wave A batch 3 (LINES #6, B4)
+
+- **Published** `linesWorld` in `bio-plane/test/m/lines/fixtures.mjs` (new): the real `recordLine` over this module's real world answers UNKNOWN_LINE_KIND, NO_SUCH_ENTITY, SEAT_ON_ENDS, HOLDER_NOT_A_PERSON, UNKNOWN_CAPACITY, BAD_CAPACITY, MACHINE_NEEDS_IDENTIFIERS; `fixtures.test.mjs` calls it and checks each answer's `reason` and that no line is written. Its user (instance-setup 7) re-points in its own job.
+- **Own line** promotion/makePromotion (fixture.mjs:57): FIX-E, `promotionStub()` removed, `world()` takes `makePromotion().p` from `../promotion/fixtures.mjs`. `checks/fixtures.mjs . lines --list`: 0 failures. No `fixtures-own` or `fixtures-generic` marker added.
+- **Refused by architecture** (1 failure): `bio-plane/test/m/lines/fixture.mjs` imports promotion's `fixtures.mjs`, and `promotion` is not in lines' `uses` in `build/modules.json` (not my file). Needs BOB: add `promotion` to lines' `uses` (a test-only use), or rule otherwise.
+- Tests: lines 37 pass, 0 fail. Checks: format 0 failures; coverage 25 of 25 ids, 0 failures; architecture 1 failure (above). `impact.mjs`: 0 affected modules.
+- Size (session_019gxu97eKA9S3uaxE9npToS): test runs 3, module lines 0 (test files only: fixtures.mjs 23, fixtures.test.mjs 14, fixture.mjs net -3)
