@@ -2,7 +2,20 @@
 
 **Status** · IN PROGRESS (DIAG-R10-D #1 for BOB #287, T51; branch `prep/diag-r10-d`; K5047). Nothing in product code or tests is changed by this file.
 
-Method in brief: the walk records (A N2, N8; B NEW-2; C C7; D D1b, D2a, D4, D8a; E E2, E4), the code at the cause, the round-9 diagnoses, and the live copy biosmoke8 read-only through the proxy (administrator sign-in with `JOURNEY_ADMIN_*`, `op=login`, `op=list`, `op=owedwork&sha=`, `op=image`; token never printed; nothing written). One section per cause below; each is pushed as it is finished.
+Method in brief: the walk records (A N2, N8; B NEW-2; C C7; D D1b, D2a, D4, D8a; E E2, E4), the code at each cause, the round-8/9 diagnoses (`diagnosis-R8-speed.md`, `diagnosis-R9-headofline.md`), PERFORMANCE's handoff (it holds P1-P26 only, archived; nothing new for G5), and the live copy biosmoke8, **read only**, through the proxy: the administrator's `op=login` with `JOURNEY_ADMIN_*` (token kept in a file, never printed), `op=list`, `op=image`, `op=owedwork[&sha=]`, `op=whoami`, `op=groupidentity`, `op=findin` (records nothing), and Cloudflare's analytics (`api.cloudflare.com/client/v4/graphql`, account `20b533579290b9b93168345edd3b7f72`, read only: `workersInvocationsAdaptive`, `durableObjectsInvocationsAdaptiveGroups`). The copy was **quiet** when I read it (no walker running, about 07:15-07:40Z on 2026-10-25), which the walk never had (R-QUIET). Scratch scripts are in the session's scratchpad, not in the repository.
+
+## At a glance
+
+| Round-10 cause | Verdict | Root in one line | Owner (one job) |
+|---|---|---|---|
+| **R24** `do-session` 2.3-6.5 s, `whoami` 26 s, sign-in 17-20 s | **three roots, one symptom** | (a) every foreground request writes (`sessions.last_active`), and a write hop has a +33 ms floor and a 0.3-1.3 s tail on a quiet copy (measured); (b) one tick lands its units in one synchronous stretch (`indexUnits`, 4,096 units, 8,386 statements) that the next request waits behind; (c) one 54 s request (R15's profile detect) stopped the object for a minute | (a) **credentials**; (b) **extraction**; (c) DIAG-R10-B's R15 |
+| **R24** four uploads never answered | **not the copy** | the Worker saw no request longer than 43 s; the stalled uploads never reached it | none (the walk's route) |
+| **R25** `NO_HOME` three times, read after 535 s | **not a defect** | the document was filed 8 min after the upload (live: bundle created 05:08:31Z); read 49 s after | none |
+| **R26** first search on 24 MiB 18.9 s | **merged into R24 (b, c)**; plus one real inefficiency | on a quiet copy the same first search is 0.34 s wall; the 18.7 s was the queue. Separately `findIn` loads all 24 MiB of text for every search | queue: as R24; the load: **retrieval-browse** |
+| **R27** `caseratify` 2.8-3.5 s | **structural** | nine sequential object hops, then a 0.66 s copy and a 1.2 s assembly, after the commit, on the act's path | **ratification** |
+| **R27** `/app/group` `do-doorwindow` 2 s | **same as R24 (a)** | the door window writes on every public op | **admission** |
+| **R28** `alarm_at` past / null | **a consequence of R24 (b, c)**, and by the spec when null | the platform delivers the alarm only when the thread is free; `getAlarm()` is null while the handler runs | none of its own (scheduler's spec holds) |
+| **R28** lag meter `max_stretch_ms` NULL, `last_mem` NULL | **the instrument is blind where it matters** | the meter is a timer that cannot fire inside a stretch that never yields, and each run overwrites the last; `last_mem` cannot be measured on workerd | **plane** (+ a requirement for BOB) |
 
 ## R25: the first big text's reading "refused `NO_HOME` three times, read after 535 s" (D2a)
 
