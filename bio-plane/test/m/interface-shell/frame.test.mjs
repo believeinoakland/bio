@@ -6,6 +6,7 @@ import { WORD_ROWS, word } from "../../../src/setup-words/index.mjs";
 import { PATHS, FRAMES, PLACE_SCREENS } from "../../../src/interface-shell/index.mjs";
 import { fitSend, boot, ok, refused, silent, pending, httpError, STORE_KEY, tabs, SESSION } from "./harness.mjs";
 import { ALL, ASSISTANT, FRONT, DOORBELL, PUBLISHED, JOIN, PERSON } from "./screens.fixture.mjs";
+import { inWorld, bootAs, obligations } from "./world.mjs";
 
 const IMAGE = ok({ title: "A lease", pages: 3, grade: "B", why: "w", project: { id: "P1", title: "Pothole repairs" }, passages: [{ n: 1, text: "Closed" }] });
 const HELDA = ok({ items: [{ id: "h1", title: "Minutes", at: "2026-10-01" }] });
@@ -22,9 +23,12 @@ async function press(p, op) {
 }
 
 test("R7 R60 the masthead: the group's name (groupidentity, read once; \"Your group\" when it has no display name, never its slug), search opening Find, the explanation-level control, the To do count from op=queue, the member's initial; no assistant button while not reachable", async () => {
-  const p = await boot({ screens: ALL, plane: PLANE });
+  const { world, me } = await inWorld();
+  const name = (await me.act("groupnameset", { body: { name: "River Town" } })).display_name;
+  const items = await obligations(world, me, 3);
+  const p = await bootAs(world, me, { screens: ALL, plane: PLANE });
   const mast = p.root().querySelector(".cs-mast");
-  assert.equal(mast.querySelector(".mk-grp").textContent, "River Town");
+  assert.equal(mast.querySelector(".mk-grp").textContent, name);
   assert.equal(p.byOp("groupidentity").length, 1);
   await p.click('a[href="/app/settings"]');
   assert.equal(p.byOp("groupidentity").length, 1, "read once");
@@ -32,13 +36,15 @@ test("R7 R60 the masthead: the group's name (groupidentity, read once; \"Your gr
   assert.equal(m.querySelector('a[href="/app/find"]').textContent, word("shell.search"));
   assert.ok(m.querySelector('a[href="/app/find"]').classList.contains("mk-mastsearch"));
   assert.ok(m.querySelector('[data-shell="level"]').textContent.includes(word("shell.level.button.prompt")));
-  assert.equal(m.querySelector('[data-kind="todo"]').textContent, word("shell.todo", { n: 3 }), "R96: the sum of the queue's three kinds");
-  assert.equal(m.querySelector('[data-shell="menu"] [aria-hidden]').textContent, "M");
+  assert.equal(m.querySelector('[data-kind="todo"]').textContent, word("shell.todo", { n: items.length }), "R96: the sum of the queue's three kinds");
+  assert.equal(m.querySelector('[data-shell="menu"] [aria-hidden]').textContent, me.handle[0].toUpperCase());
   assert.equal(m.querySelector('[data-shell="dock"]'), null);
   /* R60: never the slug: "Your group" when no display name */
-  const q = await boot({ screens: ALL, plane: { ...PLANE, groupidentity: ok({ ok: true, group: "river-town", display_name: null }) } });
+  const bare = await inWorld();
+  const slug = (await bare.me.read("groupidentity")).group;
+  const q = await bootAs(bare.world, bare.me, { screens: ALL, plane: PLANE });
   assert.equal(q.root().querySelector(".cs-mast .mk-grp").textContent, word("shell.group.unnamed"));
-  assert.ok(!q.root().innerHTML.includes("river-town"));
+  assert.ok(!q.root().innerHTML.includes(slug));
 });
 
 test("R7 the band (mark.band.means with mark.path.working.*), the rail's seven places in order with rail.<k>.name and guidance rail.<k>.holds, one column of work, and at the phone width the five tabs Home, Queue, Add, Find, More", async () => {
@@ -316,22 +322,27 @@ test("R30 a screen of the public or published frame is drawn without a session: 
 });
 
 test("R45 a screen of the setup frame is drawn without rail, tabs or dock, with or without a record: before one, no whoami and only public ops with no header; once its own act has made one, the acts R12 allows", async () => {
-  const plane = { enroll: ok({ ok: true }), login: ok({ token: "tok-j", expires: 0 }), invitelook: ok({ ok: true }) };
-  const p = await boot({ screens: [...ALL, JOIN], path: "/app/join", session: null, plane });
+  /* the invitation is the administrator's real `memberadd`; the enrolment, the sign-in and the reads after it are the world's */
+  const { world, me } = await inWorld();
+  const { invite } = await me.act("memberadd", { body: { memberId: "newbie", cover: "the world's new member" } });
+  const p = await bootAs(world, null, { screens: [...ALL, JOIN], path: "/app/join", hash: "#invite=" + invite });
   assert.equal(p.root().querySelector("#cs-frame").getAttribute("data-frame"), "setup");
   for (const sel of [".cs-rail", ".cs-tabs", ".cs-dock", ".cs-mast"]) assert.equal(p.root().querySelector(sel), null, sel);
   assert.equal(p.byOp("whoami").length, 0);
   assert.ok(p.root().querySelector('button[data-act="enroll"]'), "a public act drawn");
   assert.equal(p.root().querySelector('button[data-act="memberlanguageset"]'), null, "a member's act is not, before a session");
   p.doc.getElementById("j-handle").value = "newbie";
+  p.doc.getElementById("j-pass").value = "pw-pw-pw-pw-pw";
   await press(p, "enroll");
   assert.equal(p.byOp("enroll")[0].headers.Authorization, undefined);
   assert.equal(p.byOp("login")[0].headers.Authorization, undefined);
-  assert.equal(p.byOp("whoami")[0].headers.Authorization, "Bearer tok-j");
+  const token = JSON.parse(p.local.get(STORE_KEY)).t;
+  assert.ok(token && !/^tok-/.test(token), "the world's own session token");
+  assert.equal(p.byOp("whoami")[0].headers.Authorization, "Bearer " + token);
   assert.equal(p.location.pathname, "/app/join", "stays on the screen");
   assert.ok(p.root().querySelector('button[data-act="memberlanguageset"]'), "R12 now allows the member's act");
   await press(p, "memberlanguageset");
-  assert.equal(p.byOp("memberlanguageset")[0].headers.Authorization, "Bearer tok-j");
+  assert.equal(p.byOp("memberlanguageset")[0].headers.Authorization, "Bearer " + token);
   /* control: R3's front does not apply: /app/join with no record draws join and sends no header */
   const q = await boot({ screens: [...ALL, JOIN, FRONT], path: "/app/join", session: null });
   assert.equal(q.root().querySelector("#cs-main").getAttribute("data-screen"), "join");

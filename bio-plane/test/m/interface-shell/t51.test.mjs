@@ -14,6 +14,7 @@ import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { boot, ok, refused, silent, bytes, fitSend, declaredFit, MEMBER, ADMIN, SESSION, STORE_KEY, Event } from "./harness.mjs";
+import { inWorld, bootAs } from "./world.mjs";
 import { ALL, DOORBELL, JOIN } from "./screens.fixture.mjs";
 
 /* an HTML-escaped sentence, as the page puts it in an explanation */
@@ -648,7 +649,9 @@ test("R102 every screen of the registry has its tab title (page.title with scree
   const home = await boot({ screens: ALL, path: "/app/members", plane: { whoami: ok(ADMIN) } });
   assert.ok(home.root().querySelector('button[data-act="memberadd"] .cs-pips'), "a working screen keeps its marks (an act that asks)");
   const long = "A very long team name that has to wrap and never be cut, however many words it takes to say it in full";
-  const wrapped = await boot({ screens: ALL, plane: { groupidentity: ok({ ok: true, display_name: long }) } });
+  const teamed = await inWorld();
+  await teamed.me.act("groupnameset", { body: { name: long } });
+  const wrapped = await bootAs(teamed.world, teamed.me, { screens: ALL });
   assert.equal(wrapped.root().querySelector(".cs-mast .mk-grp").textContent, long, "whole");
   assert.ok(!/\.mk-grp[^}]*white-space:\s*nowrap/.test(ASSET_FILES["shell.css"].body + ASSET_FILES["civicsmith.css"].body), "the design lets the name wrap, at every width (K4084)");
   assert.ok(!/\.mk-grp/.test(wrapped.html.slice(wrapped.html.indexOf("<style>"), wrapped.html.indexOf("</style>"))), "the shell carries no rule of its own for it");
@@ -723,7 +726,10 @@ test("R90 (K4073) cs.sec and cs.field take help as one key or a list, each its o
   assert.equal(tipOf(p.root().querySelector("section.cs-section h2")), "fx h1" + '<span class="why">fx h2</span>');
   const one = await boot({ screens: [{ ...SEARCHING, render: (cs) => cs.field("g", "screen.finder.t.l", { help: "screen.finder.t.h1" }) }], path: "/app/finder" });
   assert.equal(one.doc.getElementById("g-help").textContent, "fx h1");
-  const r = await boot({ screens: [SEARCHING], path: "/app/finder", plane: { search: { status: 400, json: { ok: false, code: "BAD" } } } });
+  /* the store's own refusal of a read: a selection handle it never made */
+  const refusing = { ...SEARCHING, reads: () => ({ list: { op: "selection", query: { handle: "never-made" }, refusals: { NO_SUCH_SELECTION: (r, cs) => "<i id=own>" + cs.w("screen.finder.t.h1") + "</i>" } } }) };
+  const world = await inWorld();
+  const r = await bootAs(world.world, world.me, { screens: [refusing], path: "/app/finder" });
   assert.equal(r.doc.getElementById("own").textContent, "fx h1", "the refusal drawn with the screen's own words, by the kit");
   const box = p.doc.getElementById("ck-1"); box.checked = true; p.fire(box, "change"); await p.settle();
   assert.deepEqual(JSON.parse(p.doc.getElementById("marks").textContent), ["u", "v"], "checks redraws with the boxes ticked");

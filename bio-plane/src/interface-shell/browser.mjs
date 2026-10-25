@@ -158,9 +158,14 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const held = S;
     let r;
     try { r = await win.fetch("/api/?" + qs.toString(), init); } catch { return { kind: "silent" }; }
-    if (r.status === 401 && !own && !pub) { if (S && S === held) over("ended"); return { kind: "silent" }; }
+    let j = null, read = false;
+    if (r.status === 401 && !own && !pub) {
+      /* R33: the store answers a locked session 401 with its own `SESSION_LOCKED` (admission R24); that session is locked, not ended, and falls to the lock below */
+      try { j = await r.json(); } catch { j = null; }
+      read = true;
+      if (!(j && typeof j === "object" && (j.code === "SESSION_LOCKED" || j.reason === "SESSION_LOCKED"))) { if (S && S === held) over("ended"); return { kind: "silent" }; }
+    }
     if (req.bytes) return { kind: "response", r };
-    let j = null;
     const type = r.headers && typeof r.headers.get === "function" ? String(r.headers.get("content-type") || "") : "";
     const server = r.status >= 500;
     const refusedOf = (o) => {
@@ -196,7 +201,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       if (!r.ok || (last && typeof last === "object" && last.ok === false)) return refusedOf(last && typeof last === "object" ? last : null);
       return { kind: "ok", value: events, json: events };
     }
-    try { j = await r.json(); } catch { j = null; }
+    if (!read) { try { j = await r.json(); } catch { j = null; } }
     if (j && typeof j === "object" && j.ok === false) return refusedOf(j);
     const value = j && typeof j === "object" && "result" in j ? j.result : j;
     if (value && typeof value === "object" && value.ok === false) return refusedOf(value);
