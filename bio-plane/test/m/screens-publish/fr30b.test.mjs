@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { webcrypto } from "node:crypto";
-import { open, main, drew, drewIn, ops, press, last, fill, tick, until, keptKey, answerSign, choose, day, publishedPlane, FINDING, F1, E1, DETAILS, DETAILS_PUBLIC, ok, refusedIn, word, hasWord, COPY, PREFLIGHT, P, C, DR } from "./fixtures.mjs";
+import { open, main, drew, drewIn, ops, press, last, fill, tick, until, keptKey, answerSign, choose, day, publishedPlane, FINDING, F1, E1, DETAILS, DETAILS_PUBLIC, ok, refusedIn, word, hasWord, COPY, PREFLIGHT, P, C, DR, importedCase, rerunImport } from "./fixtures.mjs";
 
 const EDITOR = `/app/case-editor/${P}/${DR}`;
 const CER = `/app/ceremony/${P}/${DR}`;
@@ -185,38 +185,44 @@ test("R53 with no reason the shell asks and nothing is sent (control); a project
   assert.ok(!none.doc.querySelector('[data-cited]') && !drew(none, "screen.case-editor.the_passages_this_case_cites"));
 });
 
-const IMPORT = (acc) => ({ importedcase: { status: 200, json: { ok: true, result: { import: "IMP-2026-0001", group: "West Oakland Neighbors", case: "CASE-2026-3549", scope: "Port lease revenue",
-  edition: { edition: 2, findings: [{ finding: "FND-W-1", title: "Port lease revenue fell short", result: "recreated", origin: acc ? { acceptance: { by: "ana", at: "2026-10-02T09:00:00Z", reason: "checked", checked: "x" } } : {} }] } } } } });
-const IMP = "/app/imported/IMP-2026-0001/2";
+/* K5202: case-import's real `importedcase` answers: an accepted import (edition 2, its first finding accepted) and a bare one (edition 1) */
+const ACCEPTED = await importedCase({ accepted: true });
+const BARE = await importedCase({ accepted: false });
+const IMPORT = (acc) => ({ importedcase: (acc ? ACCEPTED : BARE).answer });
+const IMP = `/app/imported/${ACCEPTED.import}/${ACCEPTED.edition}`;
+const BARE_IMP = `/app/imported/${BARE.import}/${BARE.edition}`;
+const FIRST = ACCEPTED.answer.json.result.edition.findings[0].finding;
 const noneChosen = (p) => p.doc.getElementById("im-lens").querySelectorAll("input").every((i) => !i.checked);
 
 test("R58 'View under another lens' offers three lenses none of them chosen; the one chosen sends importregrade with the declared fields and draws the findings that moved, the statement that moved each and the limit sentence", async () => {
-  const regrade = ok({ ok: true, import: "IMP-2026-0001", edition: 2, requested_lens: "removed", lens: "removed", limit: "A re-check re-weighs the analysis that exists.",
+  const regrade = ok({ ok: true, import: ACCEPTED.import, edition: ACCEPTED.edition, requested_lens: "removed", lens: "removed", limit: "A re-check re-weighs the analysis that exists.",
     findings: [{ finding: "FND-W-1", published: { pair: { capture: "B", connection: "B" } }, pair: { capture: "B", connection: "C" }, moved: true,
       because: [{ statement: "S-1", kind: "bias", subject: "x", text: "The source weights its own reports", touched: { target: "FND-W-1", ord: 1 } }] }] });
-  const p = await open(IMP, { plane: { ...IMPORT(false), importregrade: regrade } });
+  const p = await open(IMP, { plane: { ...IMPORT(true), importregrade: regrade } });
   assert.ok(noneChosen(p), "none is preselected");
   assert.equal(p.doc.getElementById("im-lens").querySelectorAll("input").length, 3);
   await press(p, "importregrade");
   assert.equal(p.byOp("importregrade").length, 0, "no lens chosen, nothing is sent");
   pick(p, "im-lens", "removed");
   await press(p, "importregrade");
-  assert.deepEqual(last(p, "importregrade").body, { import: "IMP-2026-0001", edition: 2, lens: "removed" });
+  assert.deepEqual(last(p, "importregrade").body, { import: ACCEPTED.import, edition: ACCEPTED.edition, lens: "removed" });
   assert.ok(drew(p, "screen.imported.lens_moved", { published: "B/B", regraded: "B/C" }));
   assert.ok(drew(p, "screen.imported.lens_because", { statement: "The source weights its own reports", part: "FND-W-1" }));
   assert.ok(main(p).textContent.includes("A re-check re-weighs the analysis that exists."));
 });
 
 test("R58 'Re-run this work in your own project' sends rerunstart with the project, the import and the edition; RERUN_ALREADY is drawn by its words; no project chosen sends nothing (controls)", async () => {
-  const p = await open(IMP, { plane: { ...IMPORT(false), rerunstart: ok({ ok: true }) } });
+  const RR = await rerunImport();
+  const p = await open(`/app/imported/${RR.import}/${RR.edition}`, { plane: { importedcase: RR.page, rerunstart: RR.answer } });
   await press(p, "rerunstart");
   assert.equal(p.byOp("rerunstart").length, 0);
   fill(p, { "im-rerun": P });
   await press(p, "rerunstart", { reason: "x" });
   /* the product registers op-declarations and op-grades together (store-assembly R83): `rerunstart` is not a reasoned act there, so the shell asks for
      no reason and the body is the declared fields alone */
-  assert.deepEqual(last(p, "rerunstart").body, { project: P, import: "IMP-2026-0001", edition: 2 });
-  const q = await open(IMP, { plane: { ...IMPORT(false), rerunstart: ok({ ok: false, code: "RERUN_ALREADY", reason: "RERUN_ALREADY" }) } });
+  assert.deepEqual(last(p, "rerunstart").body, { project: P, import: RR.import, edition: RR.edition });
+  const again = await rerunImport({ twice: true });
+  const q = await open(`/app/imported/${again.import}/${again.edition}`, { plane: { importedcase: again.page, rerunstart: again.answer } });
   fill(q, { "im-rerun": P });
   await press(q, "rerunstart", { reason: "x" });
   assert.ok(drew(q, "screen.imported.rerun_refused_already"));
@@ -232,8 +238,8 @@ test("R59 an accepted import's finding offers 'Rest one of your team's questions
   await press(p, "citeimported", { reason: "x" });
   const b = last(p, "citeimported").body;
   delete b.reason; // the shell's mark of a reasoned act
-  assert.deepEqual(b, { inquiry: "INQ-2026-0001", import: "IMP-2026-0001", finding: "FND-W-1", edition: 2, role: "supports", note: "It states the schedule." });
-  const none = await open(IMP, { plane: IMPORT(false) });
+  assert.deepEqual(b, { inquiry: "INQ-2026-0001", import: ACCEPTED.import, finding: FIRST, edition: ACCEPTED.edition, role: "supports", note: "It states the schedule." });
+  const none = await open(BARE_IMP, { plane: IMPORT(false) });
   assert.ok(!ops(none).includes("citeimported") && !drew(none, "screen.imported.citeimp.head"));
   const refused = await open(IMP, { plane: { ...IMPORT(true), citeimported: ok({ ok: false, code: "IMPORTED_NOT_ACCEPTED", reason: "IMPORTED_NOT_ACCEPTED" }) } });
   fill(refused, { "im-ci-q-0": "INQ-2026-0001" });
