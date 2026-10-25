@@ -1,6 +1,6 @@
 # signin-door (T51)
 
-**Status** · session_01QWraGRuuGWaxTVGHcshZSM · depth 2 · WORKING · handled B4
+**Status** · session_01QWraGRuuGWaxTVGHcshZSM · depth 2 · WAITING ON BOB (J6) · handled B4
 
 ## J1 · REPORT
 
