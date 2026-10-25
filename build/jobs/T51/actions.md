@@ -112,3 +112,14 @@ Size (session_01PKkGxxBeG3fsZEM17Gs4pa): test runs 6, module lines 3535
 ## J7 · COMPLETE
 
 B7 item 1 done: actionOverdue is true when any clock entry is stored overdue; clock_next unchanged. Met: actions R110. t46 test (red before: false; green), controls pending/met/not-yet-due. Actions tests 155/155; escalation, action-holds, action-clocks tests 239/239; format, architecture, coverage 77/77, words, ownership 0 failures; fixtures list unchanged (4 lines). Escalation's branch order is its own job (R39).
+
+## J8 · REPORT
+
+Two of my four fixture lines stay red. Each needs a fixture that conformance publishes, which is outside this module's paths. Cleared or changed in this job: t45:45 (consequences' published successRecordRead), t12:55 (removed, item 3), and a product defect (see COMPLETE).
+
+1. **t45.test.mjs:41 (the determinations).** Conformance's published fixtures split the states t45 reads, and none gives all of them. determinationRead gives a live noncompliant determination on a published finding, a superseded one with its successor, and an unclear one. determinationVariants gives a checked_held one, an accepted one, a compliant one, and a superseded/live pair. voidDetermination gives a void one with a recorded noncompliant outcome. The missing state is one determination that carries a checked_held and an accepted basis together (t45's NC, which R75's disclosures read as one action with two bases). Splitting NC across fixtures would drop that case, so I did not compose them. Needed from conformance: a published determination with both bases.
+2. **t50.test.mjs:27 (matter stake).** Needed: a published accepted basis that carries matter_stake (set at import; conformance's read answers it), one with none, and one whose matter stake reads "undetermined". No conformance fixture publishes a matter stake.
+3. **t12.test.mjs:55 (non-live determination with superseded_by null): removed, since conformance cannot produce it.** The only writer of determination_supersessions is conformance/index.mjs:1147, which sets superseded_by to the new determination's id. The schema makes it NOT NULL (conformance/schema.mjs:109). determinationRead sets live = !row and superseded_by from that row (index.mjs:1394). The null-successor branch of determinationSuperseded stays in actions' code and is no longer tested by this file.
+4. **consequences:** its published successRecordRead gives only a live record. t45 (e) builds the superseded read by changing the published answer's live and superseded_by in the test. Please have consequences publish a superseded record's read (its R20).
+
+Found in other modules: nothing beyond items 1, 2 and 4.
