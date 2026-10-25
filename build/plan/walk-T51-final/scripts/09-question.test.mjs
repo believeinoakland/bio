@@ -22,6 +22,8 @@ export async function check(row, name, role, did, fn) {
   try { const r = await fn(); rec(row, name, role, did, r.v, `${r.saw} (${Date.now() - t} ms)`); return r; }
   catch (e) { rec(row, name, role, did, "BROKEN", `script threw: ${String(e && e.message || e).slice(0, 400)} (${Date.now() - t} ms)`); return { v: "BROKEN", saw: String(e) }; }
 }
+import { writeFileSync as _wf } from "node:fs";
+export const dump = (n, x) => _wf("/tmp/claude-0/-home-user-bio/47c7baf3-728c-5ec2-88f1-75e6a619d7d4/scratchpad/dump-" + n + ".json", JSON.stringify(x, null, 1));
 export const J = (x) => JSON.stringify(x);
 export const short = (x, n = 420) => J(x).slice(0, n);
 export const ok = (a) => a && a.ok !== false && (a.result === undefined || a.result === null || a.result.ok !== false);
@@ -76,6 +78,12 @@ async function main() {
     cityclaim: ["The city says it fixed 94 percent of reported potholes within a week.", "Closed reports are counted when a crew first arrives."],
     typed: ["Typed by hand: the register shows the contract number as C-2026-0412."],
   };
+  /* bob and carol join the hidden project the way a team does it: the owner invites by handle (`projectinvite`), the member joins (`projectjoin`) */
+  for (const [h, m] of [["bob", W.bobM], ["carol", W.carol]]) {
+    const inv = (await post(W.alice.auth, "projectinvite", {}, { projectId: W.proj, handle: h })).body;
+    const jn = (await post(m.auth, "projectjoin", {}, { projectId: W.proj })).body;
+    rec("R12", `Invite ${h} to the project and ${h} joins`, `admin and ${h}`, "op=projectinvite then op=projectjoin", ok(inv) && ok(jn) ? "WORKS" : "BROKEN", `${short(inv, 200)} | ${short(jn, 260)}`);
+  }
   W.docs = {};
   for (const [k, paras] of Object.entries(docs)) W.docs[k] = await docOf(W.alice, W.proj, "w09-" + k, paras, { vouch: k !== "typed" });
   await section1();
@@ -83,6 +91,8 @@ async function main() {
   await section3();
   await section4();
   await section5();
+  await section6();
+  await section7();
 }
 async function section1() {
   const a = W.alice;
@@ -165,9 +175,9 @@ async function section3() {
     const r = (await post(a.auth, "inquiryground", { target: q, reason: "Restructured after seeing the strength: the minutes and the policy hold each other up.", grounds: [{ ground: "part 1", legs: [0, 1] }, { ground: "part 2", legs: [2] }] }, { reason: "Restructured after seeing the strength: the minutes and the policy hold each other up." })).body;
     return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 700) };
   });
-  await check("R80", "partitionindependence: the shared-origin read-back over the proposed partition", "admin", "op=partitionindependence target=q", async () => {
+  await check("R80", "partitionindependence over an explicit partition of the supporting legs only (the cutting leg left out)", "admin", "op=partitionindependence partition=[[0,1],[2]]", async () => {
     const r = await get(a.auth, { op: "partitionindependence", id: q, partition: J([[0, 1], [2]]) });
-    return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 700) };
+    return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 500) };
   });
   await check("R81", "Strength after the partition: capture and connection against the bar, weakest link, cutting leg named", "admin", "op=inquirystrength after cites and ground", async () => {
     const s = await get(a.auth, { op: "inquirystrength", id: q, project: P });
@@ -180,7 +190,8 @@ async function section3() {
 }
 async function section4() {
   const a = W.alice, q = W.q1, P = W.proj;
-  const concl = (o, query) => post(o.auth, "conclude", {}, query).then((r) => r.body);
+  const peek = async (l) => { const b = R(await get(a.auth, { op: "basisversions", id: q, project: P })); console.log("PEEK", l, "versions", (b.versions || []).map((v) => v.name).join(","), "current", b.current, "stance", b.conclusion_stance); };
+  const concl = (o, query) => post(o.auth, "conclude", {}, { affirmed: "part 1,part 2", ...query }).then((r) => r.body);
   const READING = "The city adopted the contract in public session, but paid more than the contract's own figure.";
   await check("R80", "Conclude with no reason is refused in words that teach", "admin", "op=conclude without reason", async () => {
     const r = await concl(a, { target: q, project: P, reading: READING, falsifier: "A closed-session minute would overturn this." });
@@ -195,6 +206,7 @@ async function section4() {
     W.concluded = ok(r);
     return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 700) };
   });
+  await peek("after conclude 1");
   await check("R80", "The conclusion read back with the project: stance and history", "admin", "op=basisversions id project", async () => {
     const r = await get(a.auth, { op: "basisversions", id: q, project: P });
     return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 900) };
@@ -203,6 +215,7 @@ async function section4() {
     const r = (await post(a.auth, "withdrawconclusion", {}, { target: q, project: P, reason: "Rechecking the amended contract first." })).body;
     return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 600) };
   });
+  await peek("after withdraw");
   await check("R80", "Withdraw again: NOTHING_TO_WITHDRAW", "admin", "op=withdrawconclusion on a withdrawn stance", async () => {
     const r = (await post(a.auth, "withdrawconclusion", {}, { target: q, project: P, reason: "again" })).body;
     return { v: ok(r) ? "BROKEN" : "WORKS", saw: "refusal wanted: " + short(r, 400) };
@@ -219,6 +232,7 @@ async function section4() {
     const r = await concl(a, { target: q, project: P, reading: READING, falsifier: "A closed-session minute would overturn this.", reason: "Rechecked: the same." });
     return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 500) };
   });
+  await peek("after reconclude");
   /* sever / reinstate: select the leg's target, then the act on the question */
   const leg = W.docs.ledger.bundle;
   const sel = async () => R(await screenCall(a.auth).call("select", { body: { ids: [leg] } }));
@@ -227,15 +241,18 @@ async function section4() {
     const r = (await post(a.auth, "sever", {}, { project: q, handle: h, reason: "The ledger page was a draft." })).body;
     return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 600) };
   });
+  await peek("after sever");
   await check("R80", "Reinstate the severed citation with a reason", "admin", "op=reinstate project=q handle", async () => {
     const h = (await sel()).handle;
     const r = (await post(a.auth, "reinstate", {}, { project: q, handle: h, reason: "The final ledger page agrees." })).body;
     return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 600) };
   });
+  await peek("after reinstate");
   await check("R80", "proposedispose: set the question aside (defer) with a reason for its project; then take it back", "admin", "op=proposedispose body {project, finding, to, reason}", async () => {
     const r = (await post(a.auth, "proposedispose", { project: P, finding: q, to: "deferred", reason: "Waiting for the audit." })).body;
     return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 600) };
   });
+  await peek("after dispose");
   await check("R80", "Read in my language (readtranslate) on a question, with no machine", "admin", "op=readtranslate subject {kind question id project}", async () => {
     const r = (await post(a.auth, "readtranslate", { subject: { kind: "question", id: q, project: P } })).body;
     return { v: "WORKS", saw: "answer: " + short(r, 500) };
@@ -246,7 +263,7 @@ async function section5() {
   let hid = null;
   await check("R82", "Hold a hunch (a suspicion about the question): declared, not counted", "admin", "op=hypothesishold {inquiry, kind other, statement, about [id]}", async () => {
     const r = (await post(a.auth, "hypothesishold", { inquiry: q, kind: "other", statement: "I suspect the paving invoice was split to stay under the limit.", about: [q] })).body;
-    hid = R(r).hypothesisId || R(r).id || (R(r).hypothesis && R(r).hypothesis.hypothesis_id) || null;
+    hid = R(r).hypothesis_id || R(r).hypothesisId || R(r).id || (R(r).hypothesis && R(r).hypothesis.hypothesis_id) || null;
     return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 600) };
   });
   await check("R82", "A where-it-went hunch (kind flow, {from, to})", "admin", "op=hypothesishold kind flow", async () => {
@@ -266,16 +283,22 @@ async function section5() {
     const s = await get(a.auth, { op: "inquirystrength", id: q, project: P });
     return { v: ok(s) ? "WORKS" : "BROKEN", saw: short(s, 900) };
   });
+  await check("R80", "partitionindependence over a written reading's groups (version=NAME): the shared-origin read-back", "admin", "op=partitionindependence id version (the reading the conclusion wrote)", async () => {
+    const bv = R(await get(a.auth, { op: "basisversions", id: q, project: P })); dump("bv2", bv);
+    W.vname = (bv.versions || []).map((v) => v.name).slice(-1)[0];
+    const r = await get(a.auth, { op: "partitionindependence", id: q, version: W.vname });
+    return { v: ok(r) ? "WORKS" : "BROKEN", saw: `version ${W.vname}: ${short(r, 700)}` };
+  });
   await check("R82", "Narrow: list the machine candidates for a leg (writes nothing)", "admin", "op=narrowcandidates target version ord", async () => {
-    const r = await get(a.auth, { op: "narrowcandidates", target: q, version: "reading-3", ord: "0" });
+    const r = await get(a.auth, { op: "narrowcandidates", target: q, version: W.vname, ord: "0" });
     return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 700) };
   });
   await check("R82", "Narrow a whole-document leg to a part: a new version one leg narrower", "admin", "op=narrow {target, version, ord, name, description, extent}", async () => {
-    const c = R(await get(a.auth, { op: "narrowcandidates", target: q, version: "reading-3", ord: "0" }));
+    const c = R(await get(a.auth, { op: "narrowcandidates", target: q, version: W.vname, ord: "0" }));
     const cand = c && c.candidates && c.candidates[0];
     if (!cand) return { v: "NOT REACHED", saw: "narrowcandidates proposed no part: " + short(c, 300) };
     const extent = cand.fields && typeof cand.fields === "object" ? cand.fields : cand.content_id ? { content_id: cand.content_id } : cand.extent;
-    const r = (await post(a.auth, "narrow", { target: q, version: "reading-3", ord: 0, name: "narrowed-first", description: "The first paragraph only.", extent })).body;
+    const r = (await post(a.auth, "narrow", { target: q, version: W.vname, ord: 0, name: "narrowed-first", description: "The first paragraph only.", extent })).body;
     return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 700) };
   });
   /* divide: a second question with its own legs */
@@ -303,6 +326,179 @@ async function section5() {
     if (!hid) return { v: "NOT REACHED", saw: "no hunch id" };
     const r = (await post(a.auth, "hypothesiswithdraw", { hypothesisId: hid, reason: "The invoices are separate." })).body;
     return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 500) };
+  });
+}
+async function section6() {
+  const a = W.alice, q = W.q1, P = W.proj, b = W.bobM, c = W.carol;
+  const T = new Date().getUTCFullYear();
+  /* ---- R83: check a claim: a held table, a calculation, a random draw, visits, acceptance ---- */
+  const rowsCsv = ["report,closed_on,days_to_fix"].concat(Array.from({ length: 60 }, (_, i) => `R${1000 + i},2026-03-${String((i % 28) + 1).padStart(2, "0")},${(i * 7) % 11}`)).join("\n");
+  let table = null, calc = null, draw = null;
+  await check("R83", "Hold the city's report table: upload a CSV, file it, declare its header (tabledeclare)", "admin", "captureupload text/csv, promote, vouch, op=tabledeclare {source, header, schema}", async () => {
+    const d = await docOf(a, P, "w09-reports", [rowsCsv], { type: "text/csv" });
+    W.docs.reports = d;
+    const mint = (await post(a.auth, "contentmint", { bundleId: d.bundle })).body; dump("contentmint", mint);
+    d.content = R(mint).id || R(mint).content_id || R(mint).contentId || null;
+    const r = (await post(a.auth, "tabledeclare", { source: d.content, header: ["report", "closed_on", "days_to_fix"], schema: { fields: [{ name: "report", type: "string" }, { name: "closed_on", type: "string" }, { name: "days_to_fix", type: "number" }] } })).body;
+    table = R(r).sha || R(r).table || null;
+    dump("tabledeclare", r);
+    return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 700) };
+  });
+  await check("R83", "calculationcreate: the Work-it-out form's built-in kinds over the held table (count, total), no recipe, as the screen sends it", "admin", "op=calculationcreate {question, period, kind, inputs[table]} for count and total", async () => {
+    const outs = [];
+    for (const kind of ["count", "total"]) {
+      const r = (await post(a.auth, "calculationcreate", { question: "How many reports did the city mark closed in March?", period: { from: "2026-03-01", to: "2026-03-31" }, kind, inputs: [{ name: "input", table }], project: P })).body;
+      outs.push(`${kind}: ${ok(r) ? "made" : (R(r).reason || R(r).code) + " " + String(R(r).detail || "").slice(0, 90)}`);
+    }
+    return { v: outs.every((x) => /made/.test(x)) ? "WORKS" : "BROKEN", saw: outs.join(" | ") };
+  });
+  await check("R83", "calculationcreate with a recipe of the closed grammar (count rows), the route that works", "admin", "op=calculationcreate with recipe", async () => {
+    const recipe = { method: "bio-calc/1", inputs: [{ name: "input", kind: "table" }], steps: [{ op: "count", from: "input", as: "n" }], output: "n" };
+    const r = (await post(a.auth, "calculationcreate", { question: "How many reports did the city mark closed in March?", period: { from: "2026-03-01", to: "2026-03-31" }, kind: "count", recipe, inputs: [{ name: "input", table }], project: P })).body;
+    calc = R(r).calc_id || null; dump("calc", r);
+    return { v: ok(r) && calc ? "WORKS" : "BROKEN", saw: short(r, 700) };
+  });
+  await check("R83", "calculationdraw: a recorded random draw of 12 reports, anyone can repeat it (seed)", "admin", "op=calculationdraw {set, n, seed, question, project}", async () => {
+    const r = (await post(a.auth, "calculationdraw", { set: table || W.docs.reports.hash, n: 12, seed: "w09-seed", question: "Were these closed within a week?", project: P })).body;
+    draw = R(r).draw || null; dump("draw", r);
+    return { v: ok(r) && draw ? "WORKS" : "BROKEN", saw: short(r, 800) };
+  });
+  await check("R83", "calculationdraw again with the same seed: the same draw (repeatable)", "admin", "op=calculationdraw same seed", async () => {
+    const r = (await post(a.auth, "calculationdraw", { set: table || W.docs.reports.hash, n: 12, seed: "w09-seed", question: "Were these closed within a week?", project: P })).body;
+    const same = R(r).draw === draw;
+    return { v: ok(r) && same ? "WORKS" : "BROKEN", saw: `same draw id: ${same}; ${short(r, 300)}` };
+  });
+  let testimony = null, item = null;
+  await check("R83", "testify: a member records what she saw at a report (place, date, words); no photo shown plainly", "member bob", "op=testify {words, observedAt}", async () => {
+    const r = (await post(b.auth, "testify", { words: "I went to the corner of 14th and Oak: the pothole was still open.", observedAt: "2026-10-20" })).body;
+    testimony = R(r).capture_sha || null; dump("testify", r);
+    return { v: ok(r) && testimony ? "WORKS" : "BROKEN", saw: short(r, 600) };
+  });
+  await check("R83", "spotcheckvisit: count the visit for the drawn report, with a finding", "member bob", "op=spotcheckvisit {draw, item, testimony, finding}", async () => {
+    const d = R(await get(a.auth, { op: "calculation", id: calc }));
+    const spot = R(await get(a.auth, { op: "spotcheck", draw }));
+    dump("spot", spot);
+    item = spot && spot.items && spot.items[0] && spot.items[0].item;
+    const r = (await post(b.auth, "spotcheckvisit", { draw, item, testimony, finding: "no" })).body;
+    return { v: ok(r) ? "WORKS" : "BROKEN", saw: `item ${item}: ${short(r, 600)}` };
+  });
+  await check("R83", "spotcheckvisit by the owner on her own testimony (control for the member's refusal)", "admin", "op=testify then op=spotcheckvisit as alice", async () => {
+    const t = (await post(a.auth, "testify", { words: "I stood at 5th and Pine: the pothole there was filled.", observedAt: "2026-10-21" })).body;
+    const sha = R(t).capture_sha;
+    const spot = R(await get(a.auth, { op: "spotcheck", draw }));
+    const r = (await post(a.auth, "spotcheckvisit", { draw, item: spot.items[1].item, testimony: sha, finding: "yes" })).body;
+    return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 500) };
+  });
+  await check("R83", "calculationaccept: accept the result", "admin", "op=calculationaccept id", async () => {
+    if (!calc) return { v: "NOT REACHED", saw: "no calculation" };
+    const r = (await post(a.auth, "calculationaccept", {}, { id: calc })).body;
+    return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 600) };
+  });
+  await check("R83", "addworkbook: hold the table's file as a workbook for the project (the workbook add gate)", "admin", "op=addworkbook {captureSha, question, period, project}", async () => {
+    const r = (await post(a.auth, "addworkbook", { captureSha: W.docs.reports.hash, question: "How many reports closed in March?", period: "2026-03", project: P })).body;
+    return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 600) };
+  });
+  await check("R83", "recordcheck: the second member records that a workbook figure agrees or disagrees", "member carol", "op=recordcheck {captureSha, project, outcome, note}", async () => {
+    const r = (await post(c.auth, "recordcheck", { captureSha: W.docs.reports.hash, project: P, outcome: "agrees", note: "I re-added the column by hand." })).body;
+    return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 600) };
+  });
+  /* ---- R85: second member's check: typed transcription attest, and the expertise route ---- */
+  await check("R85", "transcribe: the administrator types a page's words (the typed step)", "admin", "op=transcribe {bundleId, extent pdf-page 0, text}", async () => {
+    const r = (await post(a.auth, "transcribe", { bundleId: W.docs.typed.bundle, extent: { kind: "pdf-page", page: 0 }, text: "Typed by hand: the register shows the contract number as C-2026-0412." })).body;
+    dump("transcribe", r); W.typedContent = R(r).content_id;
+    return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 700) };
+  });
+  await check("R85", "transcriptionattest by the typist is refused by name", "admin", "op=transcriptionattest {contentId, note} by the typist", async () => {
+    const r = (await post(a.auth, "transcriptionattest", { contentId: W.typedContent, note: "I compared my own typing." })).body;
+    return { v: ok(r) ? "BROKEN" : "WORKS", saw: "refusal wanted: " + short(r, 500) };
+  });
+  await check("R85", "transcriptionattest by a second member (bob) with a note", "member bob", "op=transcriptionattest by bob", async () => {
+    const r = (await post(b.auth, "transcriptionattest", { contentId: W.typedContent, note: "I compared the typing with the page." })).body;
+    return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 600) };
+  });
+  await check("R85", "checkrequest: ask for a check by expertise from the question (owed per DEC-135)", "admin", "op=checkrequest {target, label, note}", async () => {
+    const r = (await post(a.auth, "checkrequest", { target: q, label: "accounting", note: "Please check the ledger arithmetic." })).body;
+    return { v: ok(r) ? "WORKS" : "NOT REACHED", saw: "(map: owed, expect absence) " + short(r, 500) };
+  });
+}
+async function section7() {
+  const a = W.alice, q = W.q1, P = W.proj, P2 = W.proj2, b = W.bobM, c = W.carol;
+  const stance = async (auth, proj) => { const r = R(await get(auth, { op: "basisversions", id: q, project: proj })); return { stance: r.conclusion_stance, n: (r.versions || []).length, history: (r.conclusion_history || []).length, raw: r }; };
+  /* ---- R81: the project's bar ---- */
+  await check("R81", "Set the project's bar (capture B, connection C) and read the phrase against it", "admin", "op=projectbarset {project, capture, connection}; op=inquirystrength", async () => {
+    const r = (await post(a.auth, "projectbarset", { project: P, capture: "B", connection: "C", reason: "Our standard for a spending finding." })).body;
+    const s = await get(a.auth, { op: "inquirystrength", id: q, project: P });
+    return { v: ok(r) ? "WORKS" : "BROKEN", saw: `bar ${short(r, 260)} | strength ${short(s, 480)}` };
+  });
+  await check("R81", "Change the bar again (a high-friction act): the phrase changes", "admin", "op=projectbarset capture A", async () => {
+    const r = (await post(a.auth, "projectbarset", { project: P, capture: "A", connection: "A", reason: "Raising the bar for the published case." })).body;
+    const l = await get(a.auth, { op: "projectquestions", project: P });
+    return { v: ok(r) ? "WORKS" : "BROKEN", saw: `bar ${short(r, 200)} | list ${short(l, 600)}` };
+  });
+  await check("R81", "versionstrength: a what-if of an unaccepted reading without making it current", "admin", "op=versionstrength id version", async () => {
+    const bv = R(await get(a.auth, { op: "basisversions", id: q, project: P }));
+    const v = (bv.versions || []).slice(-1)[0];
+    const r = await get(a.auth, { op: "versionstrength", id: q, version: v && v.name, project: P });
+    return { v: ok(r) ? "WORKS" : "BROKEN", saw: `version ${v && v.name}: ${short(r, 600)}` };
+  });
+  /* ---- R80 two projects, R167 ---- */
+  await check("R80", "Put the question into a second project (drawquestion) and conclude differently there", "admin", "op=drawquestion project=P2 inquiry=q; op=conclude project=P2", async () => {
+    const d = (await post(a.auth, "drawquestion", {}, { project: P2, inquiry: q, note: "" })).body;
+    const r = (await post(a.auth, "conclude", {}, { target: q, project: P2, reading: "The contract was adopted in closed session, so it did not meet Policy 12.4.", falsifier: "Public-session minutes for 4 March would overturn this.", reason: "The second team reads the minutes differently.", affirmed: "part 1,part 2" })).body;
+    dump("conclude-p2", r);
+    return { v: ok(d) && ok(r) ? "WORKS" : "BROKEN", saw: `draw ${short(d, 200)} | conclude ${short(r, 400)}` };
+  });
+  await check("R80", "Concluding in P2 does not move P: both stances stand", "admin", "op=basisversions project=P and project=P2", async () => {
+    const x = await stance(a.auth, P), y = await stance(a.auth, P2);
+    return { v: x.stance !== "none" && y.stance !== "none" ? "WORKS" : "BROKEN", saw: `P stance ${x.stance} (versions ${x.n}, history ${x.history}); P2 stance ${y.stance} (versions ${y.n}, history ${y.history})` };
+  });
+  await check("R80", "The tension mark between the two conclusions is read on both projects", "admin", "op=contradictionclarify / the tension read for the question", async () => {
+    const t = await get(a.auth, { op: "tensions", id: q });
+    return { v: ok(t) ? "WORKS" : "NOT REACHED", saw: short(t, 600) };
+  });
+  await check("R167", "As a non-participant of P2, the question names only what she may see; P2 is never shown", "member carol (not in P2)", "op=basisversions and op=projection as carol; search the answer for P2's id", async () => {
+    const r = await get(c.auth, { op: "basisversions", id: q });
+    const t = J(r);
+    const leak = t.includes(P2);
+    return { v: leak ? "BROKEN" : "WORKS", saw: `${leak ? "P2's id appears in carol's read: " : "P2's id does not appear: "}${short(r, 500)}` };
+  });
+  /* ---- R165: reading versions ---- */
+  const bv = R(await get(a.auth, { op: "basisversions", id: q, project: P })); dump("bv3", bv);
+  const names = (bv.versions || []).map((v) => v.name);
+  const v1 = names[0], v2 = names[1], v3 = names[names.length - 1];
+  const vact = (op, extra = {}) => post(a.auth, op, { target: q, version: extra.version, ...extra.more }).then((r) => r.body);
+  await check("R165", "versionconsider with no reason, as the screen sends it (the Weigh it control has no reason box)", "admin", "op=versionconsider {target, version} only", async () => { const r = await vact("versionconsider", { version: v1 }); return { v: ok(r) ? "WORKS" : "BROKEN", saw: `${v1}: ${short(r, 420)}` }; });
+  await check("R165", "versionconsider with a reason: an accepted reading is weighed again", "admin", "op=versionconsider with reason", async () => { const r = await vact("versionconsider", { version: v1, more: { reason: "Weighing the first reading against the second." } }); return { v: ok(r) ? "WORKS" : "BROKEN", saw: `${v1}: ${short(r, 420)}` }; });
+  await check("R165", "versionreject with no reason is refused; with a reason it stands", "admin", "op=versionreject", async () => {
+    const x = await vact("versionreject", { version: v1 });
+    const y = await vact("versionreject", { version: v1, more: { reason: "Superseded by the later reading." } });
+    return { v: !ok(x) && ok(y) ? "WORKS" : "BROKEN", saw: `no reason: ${short(x, 260)} | reason: ${short(y, 260)}` };
+  });
+  await check("R165", "versioncurrent for a rejected reading is refused VERSION_NOT_ACCEPTED", "admin", "op=versioncurrent on the rejected reading", async () => { const r = await vact("versioncurrent", { version: v1, more: { project: P } }); return { v: ok(r) ? "BROKEN" : "WORKS", saw: "refusal wanted: " + short(r, 360) }; });
+  await check("R165", "versionrevert: undo the decision", "admin", "op=versionrevert", async () => { const r = await vact("versionrevert", { version: v1 }); return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 420) }; });
+  await check("R165", "versionaccept without affirming every part is refused (VERSION_AFFIRMATION_INCOMPLETE)", "admin", "op=versionaccept on a two-part reading, no affirmed", async () => { const r = await vact("versionaccept", { version: v1 }); return { v: ok(r) ? "BROKEN" : "WORKS", saw: "refusal wanted: " + short(r, 360) }; });
+  await check("R165", "versionaccept affirming every part", "admin", "op=versionaccept affirmed=part 1,part 2", async () => { const r = await vact("versionaccept", { version: v1, more: { affirmed: "part 1,part 2" } }); return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 420) }; });
+  await check("R165", "versioncurrent: stand on this reading for project P (exactly one current per project)", "admin", "op=versioncurrent {target, version, project}", async () => { const r = await vact("versioncurrent", { version: v1, more: { project: P } }); const cur = R(await get(a.auth, { op: "basisversions", id: q, project: P })).current; return { v: ok(r) && cur && cur.version === v1 ? "WORKS" : "BROKEN", saw: `${short(r, 300)} | current now ${J(cur)}` }; });
+  await check("R165", "versioncurrent in P does not move the second project's current", "admin", "op=basisversions project=P2", async () => { const cur = R(await get(a.auth, { op: "basisversions", id: q, project: P2 })).current; return { v: cur && cur.version !== v1 ? "WORKS" : "BROKEN", saw: `P2 current ${J(cur)}` }; });
+  await check("R165", "versioncurrent by a member who has not joined the project is refused", "member dave (not joined)", "op=versioncurrent as a non-participant", async () => {
+    const dave = await person("dave");
+    const r = (await post(dave, "versioncurrent", { target: q, version: v1, project: P })).body;
+    return { v: ok(r) ? "BROKEN" : "WORKS", saw: "refusal wanted: " + short(r, 320) };
+  });
+  await check("R165", "versionhide: hide a version; it remains queryable", "admin", "op=versionhide; op=basisversions", async () => {
+    const r = await vact("versionhide", { version: v2 });
+    const after = R(await get(a.auth, { op: "basisversions", id: q, project: P }));
+    return { v: ok(r) ? "WORKS" : "BROKEN", saw: `${short(r, 240)} | still listed: ${(after.versions || []).some((x) => x.name === v2)}` };
+  });
+  await check("R165", "versionstrength (what-if) of an unaccepted version: ungraded[] in band", "admin", "op=versionstrength", async () => { const r = await get(a.auth, { op: "versionstrength", id: q, version: v1, project: P }); return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 500) }; });
+  await check("R165", "compareVersions: a two-version compare (owed per DEC-330)", "admin", "op=compareVersions", async () => { const r = await get(a.auth, { op: "compareversions", target: q, a: v1, b: v3 }); return { v: ok(r) ? "WORKS" : "NOT REACHED", saw: "(expect absence / refusal) " + short(r, 360) }; });
+  /* ---- R166: reminders to look again ---- */
+  await check("R166", "reevaluations: see what needs a second look on the concluded question", "admin", "op=reevaluations", async () => { const r = await get(a.auth, { op: "reevaluations", id: q, project: P }); dump("reeval", r); return { v: ok(r) ? "WORKS" : "BROKEN", saw: short(r, 700) }; });
+  await check("R166", "Sever a leg: reevaluations still list it and it contributes nothing", "admin", "op=sever then op=reevaluations", async () => {
+    const h = R(await screenCall(a.auth).call("select", { body: { ids: [W.docs.policy.bundle] } })).handle;
+    const sv = (await post(a.auth, "sever", {}, { project: q, handle: h, reason: "The policy page is superseded." })).body;
+    const r = await get(a.auth, { op: "reevaluations", id: q, project: P });
+    return { v: ok(sv) && ok(r) ? "WORKS" : "BROKEN", saw: `sever ${short(sv, 160)} | ${short(r, 500)}` };
   });
 }
 try { await main(); } catch (e) { rec("SETUP", "prerequisites", "admin", "founder, owner, members, project, documents by real acts", "BROKEN", String(e && e.stack || e).slice(0, 600)); }
