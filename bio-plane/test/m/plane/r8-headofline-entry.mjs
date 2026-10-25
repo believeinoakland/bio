@@ -3,7 +3,7 @@
    completed passes (`/r8/state` answers the count, so the scanner stub in the test can state how many passes had completed when it ended: an ORDER by count, never a time, R-CLOCK); `/r8/rows`
    answers the ledger's rows and the scheduler's health. Every other request is the plane's own door. */
 import { Store } from "../../../src/plane/store.mjs";
-import { pendingOf } from "../../../src/plane/pending.mjs";
+import { pendingOf } from "../../../src/store-assembly/pending.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
 import { createHash } from "node:crypto";
 import { recordOf } from "../../../src/record-core/index.mjs";

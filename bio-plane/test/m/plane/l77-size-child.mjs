@@ -1,7 +1,7 @@
 /* plane R77, L at the object's size (fix round 5, E2 (4); K4544): the child of `l77-size.test.mjs`. The real `Store`, its real ledger and alarm, extraction's real
    `readHeld` over the real readers, in a process whose old space is the object's share (`--max-old-space-size`, set by the test). One PDF is promoted as the capture
    screen files one, its reading is owed to the ledger, and the alarm is fired until the ledger holds nothing; the answer is one JSON line. */
-import "../../../src/plane/register.mjs";
+import "../../../src/store-assembly/register.mjs";
 import { createHash, randomBytes } from "node:crypto";
 import { deflateSync } from "node:zlib";
 import { store } from "./fixture.mjs";
