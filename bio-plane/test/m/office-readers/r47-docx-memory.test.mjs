@@ -11,6 +11,7 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { generate } from "../../docgen.mjs";
+import { docxEntry } from "../../../src/docx.mjs";
 import * as F from "./fixtures.mjs";
 import { capFor } from "../../../src/byte-ledger.mjs";
 import { boundOf } from "../../../src/read-bounds.mjs";
@@ -83,4 +84,27 @@ test("R44 (cause 11a) pptx control: a deck of 200,000 paragraphs is read whole, 
   assert.equal(r.refusal, null);
   assert.ok(r.documentLength > 0);
   assert.ok(r.aboveStartMB <= MARGIN, `${r.aboveStartMB.toFixed(1)} MB above start`);
+});
+
+test("R44 (cause 11a) every route: C7 is refused the same by text(bytes), text(parts) and structure(), and its parts() holds no body; A12 is read whole by each", async () => {
+  const bytes = await generate(C7).bytes();
+  const parts = await docxEntry.parts(bytes);
+  assert.equal(parts.ok, true);
+  assert.equal(parts.documentXml, null, "a refused body is not held");
+  assert.equal(parts.documentBytes ?? null, null);
+  const bound = boundOf("office", "retained_objects");
+  const refusal = (u) => u.find((x) => x.why === "TOO_MANY_OBJECTS");
+  for (const t of [await docxEntry.text(bytes), await docxEntry.text(parts)]) {
+    assert.equal(t.ok, true);
+    assert.equal(t.document, null);
+    assert.deepEqual(t.paragraphs, []);
+    const r = refusal(t.undetermined);
+    assert.ok(r && r.bound === bound && r.n > bound && r.final === true);
+  }
+  const s = await docxEntry.structure(parts);
+  const sr = refusal(s.evidentiary.undetermined);
+  assert.ok(sr && sr.bound === bound && sr.n > bound && sr.final === true);
+  const whole = await docxEntry.text(await generate(A12).bytes());
+  assert.equal(whole.paragraphs.length, 200000);
+  assert.equal(whole.undetermined.find((x) => x.why === "TOO_MANY_OBJECTS"), undefined);
 });
