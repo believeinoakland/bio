@@ -74,3 +74,7 @@ CHANGE (K5168; CREDENTIALS #28 J20, merged): credentials now takes its clock as 
 ## B9 · CHANGE
 
 CHANGE (K5171; INSTANCE-SETUP #35 J25), with B8: instance-setup reads a handed clock first (`instanceSetupOf(ctx, env, { ..., now })`). At `assemble.mjs:596` hand `now: () => nowMs(null)` as B8 does for credentials. A test: a pinned world's `instanceGroupSeed` records the pin as `recorded_at` with no `BIO_NOW_MS` relied on (red first if the env path does not already give it; else say it passes as a control).
+
+## B10 · CHANGE
+
+CHANGE (K5171), answering J6 (1), in this job with B9: find whether any producer of the ledger's answers emits `next_page` (grep every module's source, extraction and the readers first). If none does, the ledger's `next_page` reading (`pending.mjs:139` `unitOf`, `:447`) is dead in your copy: remove it and the test lines that script it (`r9-jobs.test.mjs:356`, R76 G129c), and REPORT plane's copy for its Wave B. If one does, REPORT which, and BOB asks that provider to publish the answer. Then COMPLETE.
