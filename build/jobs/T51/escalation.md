@@ -95,3 +95,13 @@ BLOCKED (cause: tests, on a provider). `actionFacts` on the tranche still answer
 Other escalation tests: 102 pass. Checks: format 0; architecture 0; coverage 39 of 39 live ids named (R39 now); words 0; fixtures --list 0; ownership 0 (3 files: module, test, record). Met id when green: R39.
 
 Size (session_011BKNexGjsvnZ8XJJ24i5W8): test runs 8, module lines 20
+
+## J7 · COMPLETE
+
+Item 74 cause 1 done. Met: R39 (strike its mark).
+
+Merged origin/tranche/T51 (actions R110 in). r39.test.mjs green; escalation suite 103 tests, 103 pass, 0 fail. The fix is in the stage-3 loop of src/escalation/index.mjs (clock_overdue tested first; storedOverdueDate); the why-missed is in J6. No marker added. Deferred: none. Found in other modules: none new.
+
+Checks (absolute root /home/user/bio): format 0; architecture 0; coverage 39 of 39; words 0; fixtures --list 0; ownership 0.
+
+Size (session_011BKNexGjsvnZ8XJJ24i5W8): test runs 10, module lines 20
