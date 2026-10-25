@@ -37,7 +37,7 @@ test("R21: store-request imports only modules earlier than itself in build/modul
     assert.ok(module && !module.startsWith("platform:") && module !== "node", `${spec}: ${module}`);
     assert.ok(order.indexOf(module) < me, `${spec} is ${module}, not earlier than store-request`);
   }
-  assert.deepEqual([...new Set(found.map((x) => x.module))].sort(), ["admission", "op-declarations", "record-grammar", "subresources"]);
+  assert.deepEqual([...new Set(found.map((x) => x.module))].sort(), ["admission", "answer-envelope", "op-declarations", "record-grammar", "setup-words", "signin-door", "skills", "subresources"]);
 });
 
 test("R21 (control): an import of a later module or of the platform is named by the census", () => {

@@ -2,7 +2,7 @@
    `storeWorld()` is `store-assembly`'s world (its R90–R94) with this module's door, sign-ins and recipes over it (R16–R19):
    the real store, the real claim and sign-in, the page's door, recipes of real acts and a pinned clock. */
 import { storeWorld as assemblyWorld, WORLD_NOW, WORLD_PASSWORD, WORLD_FOUNDER_HANDLE } from "../store-assembly/world.mjs";
-import { doorOf, bootOf, signIn, admittedAs, hold, project, trail, profiles, WORLD_UNREACHED, WORLD_ORIGIN } from "./door.mjs";
+import { doorOf, bootOf, signIn, admittedAs, hold, project, trail, profiles, queue, WORLD_UNREACHED, WORLD_ORIGIN } from "./door.mjs";
 
 export { WORLD_NOW, WORLD_PASSWORD, WORLD_FOUNDER_HANDLE, WORLD_UNREACHED, WORLD_ORIGIN, doorOf, bootOf, signIn, admittedAs };
 
@@ -40,6 +40,7 @@ export async function storeWorld({ group = WORLD_GROUP, env = {}, ...opts } = {}
       project: (as, title) => project(world, as, title),
       trail: (as, projectId, label) => trail(world, as, projectId, label),
       profiles: (as, ids) => profiles(world, as, ids),
+      queue: (spec) => queue(world, spec),
     },
   });
 }
