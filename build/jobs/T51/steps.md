@@ -38,3 +38,24 @@ Nine new ids are `steps.index.*`, each one assigned once. Its `en` is the code w
 - `bio-plane/src/setup-words/build.mjs --check`: stale-rows note only. It names the nine new `steps.index.*` ids, as expected (rows.mjs is regenerated at layer close). No refusal names steps.
 
 **Size (session_01WtREN7u96ssU34h4ftCLDF):** test runs 3, module lines 1713 (src/steps/*.mjs: index.mjs, schema.mjs, checks.mjs).
+
+## J3 · COMPLETE
+
+Fix round 10, Wave A batch 3 (steps): done. Commit is on job/T51/steps.
+
+**Fixtures published** in `bio-plane/test/m/steps/fixtures.mjs` (new), each made by the real steps over the real record (`./fixture.mjs`) when called, never stored, each with a test in `fixtures.test.mjs` that calls it and checks the real answer (R4, R23; R1, R2, R4, R5, R9):
+- `stepRead`: `{read, lookedRead, unknownAnswer, unseenAnswer, lookedStep, hiddenStep, ...}`. Note for notice-producers: steps has no `stepRead`; the real read is `step({step, viewer})` (R4). The fixture answers it for a visible step, an unknown id and an unseen step (both `NO_SUCH_STEP`, naming the id), and for a step whose look was answered later: `later_found[0].looked_at` is the look's own instant beside `at` (R23), and `laterFound({viewer}).found[0]` carries the same.
+- `stepsWorld`: `{steps, world, acts, place, work, run, machine, principal, made, ended, product, notYourRun, noWork, seen, unseen, unknownStep, hiddenStep}`. `steps` is the real module on a world of its own with `registerRunHolder`, `step`, `stepCreate`, `stepEnd`, `recordProduct`, every act recorded in `acts`, and NO run holder yet: the user registers its own (once), as ai-runs does. The sample answers are from a second world where the assistant holds RUN-1 for Ann: `STEP_NOT_YOUR_RUN`, `STEP_NO_WORK`, `NO_SUCH_STEP`, a machine `stepEnd` (the system never judges an outcome, so none is passed) and `recordProduct`. Users re-point in their own jobs.
+
+**Markers added:** no `fixtures-own`, no `fixtures-generic`. The `fixtures-contract`/`fixtures-run` rule does not apply (steps is the provider and runs earlier than its users in modules.json order only through ai-runs, capture-requests, notice-producers, which come later).
+
+**Lines:** my lines in `checks/fixtures.mjs . steps --list` are at zero (the list reports 0 failures, 0 findings; the users' lines are theirs, re-pointed in their jobs). Left: none. Waiting/stay/Wave B lines: none of mine.
+
+**Deferred:** none. **Other modules:** nothing found.
+
+**Tests and checks:**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/steps/`: `ℹ tests 48`, `ℹ pass 48`, `ℹ fail 0` (46 before, +2).
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: `affected modules: 1 of 178; affected test files: 1 of 2747` (steps only; no user's file changed, so none else to run).
+- format: `178 modules, 178 requirements files; 0 failures`. architecture: `14 product files, 43 relative imports ...; 0 failures`. coverage: `1 modules, 29 of 29 live requirement ids named by a test; 0 failures`. fixtures: `...; 0 failures`. words: `1 modules, 1878 string literals read ...; 0 failures`. ownership: `1 files changed by steps between tranche/T51 and HEAD; 0 failures` (before commit; the two test files are under steps' tests path).
+
+Size (session_01UFKvJeZoUh7patpgPQr9b3): test runs 8, module lines 0 (src/steps unchanged; 2 new test files, 112 lines)
