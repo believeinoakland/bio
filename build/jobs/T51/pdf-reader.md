@@ -1,6 +1,6 @@
 # pdf-reader (T51)
 
-**Status** · session_01HRJxJCDxgaoWS3f4CW9K9k · depth 2 · WORKING · handled B20
+**Status** · session_01HRJxJCDxgaoWS3f4CW9K9k · depth 2 · COMPLETE · handled B20
 
 ## Completion (T51-7, R39)
 
