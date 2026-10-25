@@ -134,3 +134,27 @@ Fix round 10, the final pass's cause 1 (B5; walk-T51-final 03 §12; R37) done. C
 - `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/intent/*.test.mjs`: tests 100, pass 100, fail 0 (98 + 2 new).
 - `checks/format.mjs`: `0 failures`. `checks/architecture.mjs intent`: `0 failures`. `checks/coverage.mjs intent`: `37 of 37 live requirement ids named by a test; 0 failures`. `checks/ownership.mjs /home/user/bio intent tranche/T51 job/T51/intent`: `1 files changed by intent ... 0 failures` (the count is as the tool reports it).
 - `checks/words.mjs`: 16 failures, all in store-assembly (not mine); none in intent. No new sentence.
+
+## J7 · COMPLETE · re B4, B5, B6
+
+Session session_0161cAf4uvK6FvmCyPin1KSe (INTENT #20, depth 2), started over the tranche tip (merged `origin/tranche/T51`, no rebase). The cursor stood at B3, so B4 and B5 were still unread here; both were already done on this branch and are re-checked below.
+
+**B4 (follow-up 27): done earlier, see J4.** `watchSetOf(held, { throwsFor, page })` in `bio-plane/test/m/intent/fixtures.mjs`, tested in `fixtures.test.mjs`. Named for monitoring's re-point: `watchSetOf`, whose answer is `{ world, intent, projects, viewer, calls, sources }`. No marker added.
+
+**B5 (cause 1, R37): done earlier, see J6.** `aspirationsFor({ project, member, viewer, retired: true })` lists the project's retired aspirations and the viewer's own, each with `taught` and `dead_ends`; `retiredWorld()` is published in `fixtures.mjs` for screens-inquiry. Test: `pursuits.test.mjs` "R37 …", with its controls. Met: R37 (BOB strikes the mark).
+
+**B6 (K5161, plan item 78 (5)): no change needed in intent.** The selection stand-ins named in the plan are not in intent's tests. The intent world already runs retrieval's real `selectionCreate` and `selectionResolve` (`fixture.mjs:125-136`, since J3), so no selection refusal is hand-built. The only `NOT_YOURS` in intent's tests and code is intent's own (C-111.15, a member's aspiration: `pursuits.test.mjs:85,106`, `fixtures.mjs`, `checks.mjs`), which the item keeps. Lines changed for B6: none.
+
+**Judgment carried from J6 for BOB:** R37 lists the project's and the viewer's own retired aspirations, so a retired group aspiration is listed by no read (`pursuitOf` still reads it by id). Unchanged.
+
+**Model:** the START names claude-sonnet-5-5; this session runs claude-haiku-5-5, which is the model I can serve. The work ran at that model.
+
+**Checks and tests**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/intent/*.test.mjs`: tests 100, pass 100, fail 0.
+- `checks/format.mjs /home/user/bio`: 0 failures. `checks/architecture.mjs /home/user/bio intent`: 0 failures. `checks/coverage.mjs /home/user/bio intent`: 37 of 37 live requirement ids named by a test; 0 failures. `checks/fixtures.mjs /home/user/bio intent --list`: answer 0, stub 0, code 0, contract 0, accepted 0; 0 failures. `checks/ownership.mjs /home/user/bio intent tranche/T51 job/T51/intent`: 1 file changed by intent; 0 failures.
+- `checks/words.mjs /home/user/bio`: 16 failures, none in intent (store-assembly and others).
+- `bio-plane/src/setup-words/build.mjs --check`: refusal naming `plane.declared.readtranslate`, two sentences at `bio-plane/src/plane/declared.mjs:13` and `bio-plane/src/store-assembly/declared.mjs:16`. Not intent's; for BOB to route (P9).
+
+**Deferred:** nothing. **Found in other modules (not changed):** the setup-words refusal above; the 16 words failures above.
+
+Size (session_0161cAf4uvK6FvmCyPin1KSe): test runs 1, module lines 2276
