@@ -88,7 +88,7 @@ Intro. (2) Missed: nine ceilings on one PDF's path and none the standard's (pdf 
 
 [Causes of G124 that are other jobs' and are not copied here: G124a, G124b, G124c, G124d, G124f, G124g.]
 
-**Corpus recipes for your cases (size, shape; copied verbatim from the family reports' corpus tables, which you do not read: envelope-docs-T51.md 5.3 (documents, web pages, archives)).** A row's id is the id the entry above names; `L` marks the smallest file of a family.
+**Corpus recipes for your cases (size, shape; copied verbatim from the family reports' corpus tables, which you do not read: envelope-docs-T51-s5.md 5.3 (documents, web pages, archives)).** A row's id is the id the entry above names; `L` marks the smallest file of a family.
 
 [DOCS T13] | T13 | a note that mentions `<html>`/`<!DOCTYPE html>` in the first KiB (X27) | M | read as text, not as HTML (the declared type wins when no tag structure follows) | format-registry, reading-pipeline |
 [DOCS T5] | T5 | one 3 MB line without spaces; one 3 MB line of CJK; one 300,009-char single line uploaded first (X14) | M, R | every word counted once (R35); last chunk found; **nothing cut and nothing owed that is not read** (I17) | reading-pipeline |
