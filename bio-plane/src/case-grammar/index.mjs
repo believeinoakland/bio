@@ -10,8 +10,8 @@
  * complete edition (R14, `./complete.mjs`), a finding's standing against the bar (R15, `./standing.mjs`), the
  * calculations a case rests on with their PROV-O rendering (R18, R19, `./calculations.mjs`), the published timeline
  * (R20, `./timeline.mjs`), the people a case names with its signers' ties (R21, `./people.mjs`) and a member's subject
- * (R22, `./subject.mjs`), the account, bias applications, review comments and approvals a case carries (R23–R26,
- * `./account.mjs`), the two blocks read as one and the sources that still hold (R27, R28, `./blocks.mjs`), and the
+ * (R22, `./subject.mjs`), the basis version a finding stood on (R34, `./basisversion.mjs`), the account, bias
+ * applications, review comments and approvals a case carries (R23–R26, `./account.mjs`), the two blocks read as one and the sources that still hold (R27, R28, `./blocks.mjs`), and the
  * outcomes carried into an edition (R29, `./outcomes.mjs`). It reads no table,
  * holds no store and never throws.
  *
@@ -61,6 +61,7 @@ export { CALCULATION_FIELDS, RECOMPUTE_STATUSES, calculationsLines, calculations
 export { TIMELINE_FIELDS, TIMELINE_LANES, timelineLines, timelineOf } from "./timeline.mjs";
 export { PEOPLE_FIELDS, MEMBER_TIE_FIELDS, peopleLines, memberTieLines, peopleOf, memberTiesOf } from "./people.mjs";
 export { memberSubjectOf } from "./subject.mjs";
+export { memberBasisVersionLines, memberBasisVersionOf } from "./basisversion.mjs";
 export { ACCOUNT_FIELDS, ACCOUNT_KINDS, ACCOUNT_ORIGINS, ACCOUNT_CITE_KINDS, ACCOUNT_HEAD, accountBiasMark, accountLines,
          accountOf, accountSectionLines, BIAS_APPLICATION_FIELDS, BIAS_APPLICATION_TARGETS, BIAS_APPLICATION_EFFECTS,
          biasApplicationsLines, biasApplicationsOf, REVIEW_COMMENT_FIELDS, REVIEW_COMMENTS_LEFT_OUT_KEY, reviewCommentsLines,

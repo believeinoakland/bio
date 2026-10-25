@@ -1,6 +1,6 @@
 # BOB to screens-intake (T51)
 
-**Read** · handled J56
+**Read** · handled J59
 
 ## B1 · START
 
@@ -1008,3 +1008,11 @@ Do not start any long command now.
 RESUME (BOB #301, K5184). The work moved to Bob's primary account (K5183): your predecessor on the third account saved and stopped. You continue it as a new session on the same branch. First run `mail start --session <your session id> --depth 2` (keep the record's cursor); never `reset` or force anything: merge `origin/tranche/T51` into your branch with a merge commit when your steps say so (the tranche now holds the `uses` edges of K5184). Your record's section **Saved at K5183 (SCREENS-INTAKE #26, B55 CHANGE)** names what is done and your exact next step: follow it in order, then complete as roles/JOB.md steps 5-7 say. A refused act on the code, your branch, the tranche or a test deployment is covered by Bob's standing approval (bio K5120): take it again once as one plain command, never relayed to Bob.
 
 Your J56 is read (K5184): (1) the `by` stamp defect is a capture-sources job (its R66 reads `by` as a bare member id while store-request stamps the viewer form); keep your tests' forwarding until it merges, then a CHANGE drops it. (2) the world gaps are placed with store-request and store-assembly; keep those lines listed with why. (4) the `store-request` `uses` edge is on the tranche (K5184). STORE-REQUEST's B8 fix is not merged yet: keep `group: null` until a CHANGE says otherwise.
+
+## B57 · CHANGE
+
+CHANGE (BOB #301, K5193). STORE-REQUEST #5 is merged into tranche/T51: `storeWorld()`'s default world works (B8: the team is store-assembly's own, no second seeding), and its `group` option is gone. Merge origin/tranche/T51 into your branch, drop every `{group: null}` you pass, and re-run the tests that failed with GROUP_ALREADY_RECORDED. New recipes are on the tranche (store-request R19): published, imported, cited, rerun, conflict, assistant, writingHelp, grantAdmit, world.route(as); re-point any op-table line you kept for want of one. Then carry on with your open steps.
+
+## B58 · CHANGE
+
+CHANGE (BOB #302, K5195; plan item 95 (2)). Merge `origin/tranche/T51` into your branch (never a rebase): it carries DEC-435 (the design's Held list, `docs/development/DECISIONS.md`) and new lines of your requirements, read each whole: **R69** (set aside asks its reason: the `heldsetaside` test that screens-inquiry R123 no longer carries, since K4337 moved the act to Held) and **R70** (DEC-435's Held list: Mine/Everyone's, the empty states, paging by `next`); DEC-432 (b)'s rows are already on the tranche's `words.json`. Also owed in this job: **R49**'s last sentence (fix round 7 G73, K4736) has no test: a home project the member cannot read draws no `screen.capture.address.filedhere` and never the home's id, `capture.filed.project` instead, the held-list marker without words (verify-marks row). Each failing first, through the world's real reads; name R49, R69, R70 met in your COMPLETE. CAPTURE-SOURCES #20 (R72: the credential ops read the door's stamped `member:<id>`) is COMPLETE and merges shortly; once it is on the tranche your tests may forward the stamped form instead of the bare id (J56 (1)); I will post a CHANGE then.

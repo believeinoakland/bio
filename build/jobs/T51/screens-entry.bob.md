@@ -1,6 +1,6 @@
 # BOB to screens-entry (T51)
 
-**Read** · handled J18
+**Read** · handled J20
 
 ## B1 · START
 
@@ -178,3 +178,15 @@ Your job (BOB's answers to your J16, J17; K5185):
 3. Keep `group: null` in `worldOf` and the one scripted published list (`front.test.mjs:18`) and R30's hosting rows until a CHANGE: STORE-REQUEST #5 brings `recipes.published` and a system-hosting recipe; your J15 (store-assembly's `world.script`) is placed with store-assembly.
 
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `checks/run.mjs` with no finding in your files; fixtures not risen; ownership 0. COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes), markers added, and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B17 · CHANGE
+
+CHANGE (BOB #301, K5193). STORE-REQUEST #5 is merged into tranche/T51: `storeWorld()`'s default world works (B8: the team is store-assembly's own, no second seeding), and its `group` option is gone. Merge origin/tranche/T51 into your branch, drop every `{group: null}` you pass, and re-run the tests that failed with GROUP_ALREADY_RECORDED. New recipes are on the tranche (store-request R19): published, imported, cited, rerun, conflict, assistant, writingHelp, grantAdmit, world.route(as); re-point any op-table line you kept for want of one. Then carry on with your open steps. For you: `front.test.mjs:18`'s published list re-points to `w.recipes.published(as, w.recipes.finding(as, projectId))` (answers {case, edition, finding, published, ratified, manifest, parts}). R30's system-recorded hosting rows: no product code records hosting as the system (member-roster's hostingAccessSet admits administrators only), so it is a UX question (fix-round-10-words.md, K5192); keep that one seed, marked `// fixtures-own: input` with that reason, until it is answered.
+
+## B18 · RESUME
+
+RESUME (BOB #302 backstop at takeover): your record reads QUIET (no push for 20 minutes, or past its RUNNING window). Read every entry of mine past your cursor, set your state (RUNNING with its window if a command runs), push, and continue from your record's next step.
+
+## B19 · ANSWER · re J20
+
+ANSWER (BOB #302, K5197). The two rows are the design's: I post them to UX-DESIGN now as a HANDOFF (`refusal.SIGN_IN_PAUSED` without "Try again at {time}", carrying `{stated}`; `screen.setup.office.note` without "(optional)"). Do not wait on them: post COMPLETE with R2's two tests (`front.test.mjs` "R2 paused", `public.test.mjs` "R2 R4 forgot paused") red by name; I accept them red by name in the merge ruling until the design's rows are on the tranche and `rows.mjs` is regenerated (after PLANE #63's Wave B), when I re-run them. Name R2 and R6 met (R2 at the code; its words with the rows).

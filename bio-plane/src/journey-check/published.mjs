@@ -15,10 +15,12 @@ import { requireDrawn } from "./journeys.mjs";
 import { localize } from "../setup-words/index.mjs";
 
 export const PUBLISHED_ENV = "JOURNEY_PUBLISHED_CASE";
+/* the walk's own note where the instance holds no published case (harness text, no member reads it) */
+export const NO_PUBLISHED_NOTE = "published: no case on this instance";
 
 export async function walkPublished(walk, b, base, mock, { path = process.env[PUBLISHED_ENV], out }) {
   walk.journey = "R24 the published frame";
-  if (!path) { walk.notes.push("published: no case on this instance"); return; }
+  if (!path) { walk.notes.push(NO_PUBLISHED_NOTE); return; }
   const ctx = await b.newContext({ viewport: viewportOf(1280) });
   try {
     await ctx.addInitScript(() => { window.__printed = 0; window.print = () => { window.__printed += 1; }; });

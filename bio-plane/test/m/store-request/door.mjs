@@ -13,7 +13,7 @@
    "WORLD_NO_DOOR_ARM", op}}`, never guessed. The ops the world cannot reach are a closed list, `WORLD_UNREACHED`, each with the
    cause (a part of `control-plane`'s own door, a later module), and R20's test holds the list closed.
    What the real door does that this one does not (stated, never hidden): no namespace, address or window gate (a world has
-   one object and no address to forge); no ask grant (`grantAdmit`); no reading followed after a promotion or an upload, no
+   one object and no address to forge); no reading followed after a promotion or an upload, no
    archive's members promoted after `unpack`, no draft asked after a draft-due act (the door's own steps after the forward);
    no bootstrap credential at `claim` (store-assembly R92). The helpers `control-plane` hands its arms (`sha256Hex`,
    `captureKey`, `caseReader`) are re-made from earlier modules (record-grammar, store-assembly R2's key, admission). */
@@ -201,9 +201,22 @@ async function answer(world, stub, env, page) {
   if (spec.classes === null) return publicAnswer({ world, stub, env, page, op, req, reqBody, credential, presentedAi });
 
   /* (2) admission R5–R11 in their order */
-  const admitted = await admit({ url, env, op, spec, method, presented: presentedAi, doAnswer, credential, body: reqBody,
-                                 background: url.searchParams.get("background") === "1" });
+  let admitted = await admit({ url, env, op, spec, method, presented: presentedAi, doAnswer, credential, body: reqBody,
+                               background: url.searchParams.get("background") === "1" });
   if (admitted.silent) return storeSilent(admitted.silent.op, admitted.silent.correlation);
+  /* control-plane R53: an ask's grant has a session's shape and is no session, so admission answers NOT_AUTHENTICATED; the door then asks credentials
+     whether a live grant admits the op (the ask's own four calls, off the list, by its first read). The store answers GRANT_OP_REFUSED for an op off
+     the list: a refusal for the ask's own calls, admission's answer kept for any other. */
+  if (admitted.refusal?.body?.reason === "NOT_AUTHENTICATED" && credential.token) {
+    const own = GRANT_OWN_OPS.includes(op);
+    const out = await doAnswer(stub.fetch(new Request("http://do/aigrantadmit", { method: "POST",
+      body: JSON.stringify({ token: credential.token, op: own ? "calculation" : op, write: own ? false : spec.mutating }) })));
+    if (!out.answered) return storeSilent("aigrantadmit", out.correlation);
+    const g = out.result || {};
+    if (g.ok === true) admitted = { caller: { cls: "ai", viaSession: false, member: null, viewer: null, identity: null, rights: null, caps: null,
+      aiCred: { tokenId: "grant", principal: g.viewer, grant: credential.token }, storeName: url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio" } };
+    else if (own && g.reason === "GRANT_OP_REFUSED") admitted = { refusal: { status: 403, body: g } };
+  }
   if (admitted.refusal) return json(admitted.refusal.body, admitted.refusal.status);
   const caller = { ...admitted.caller, token: credential.token };
   const { cls, viaSession, aiCred, storeName } = caller;
@@ -364,6 +377,9 @@ async function gatedArm({ req, url, env, op, cls, viaSession, sessMember, sessVi
 /* The unauthenticated ops: control-plane's relays re-made (the body fields the real door passes and nothing else), the public
    reads, the public arms `plane/door.mjs`'s `publicOp` asks in turn, and any other public store route through innerRequest with
    no caller (R23's secret digest its only stamp). */
+/** control-plane R53: the ask's own four calls, admitted under its grant though off its list. */
+const GRANT_OWN_OPS = Object.freeze(["askceiling", "askcheck", "askusage", "agentpack"]);
+const TEMPLATE_DOORS = Object.freeze(["templateread", "templatecomments", "templatereview", "templatecomment"]);
 async function publicAnswer({ world, stub, env, page, op, req, reqBody, credential, presentedAi }) {
   const { url } = page;
   const source = typeof env.KNOCK_FINGERPRINT_KEY === "string" && env.KNOCK_FINGERPRINT_KEY ? await sourceOf(req, env) : null;
@@ -414,11 +430,35 @@ async function publicAnswer({ world, stub, env, page, op, req, reqBody, credenti
   }
   /* any other public store route: innerRequest with no caller, a presented secret's digest its one stamp (R23) */
   const bySecret = credential.secret !== null;
-  const made = innerRequest({ op, url, method: page.method, body: page.method === "POST" ? page.text : undefined, caller: null,
+  /* control-plane R44: with no secret, the template doors admit a member's session (and no one else: every other caller is the dead answer);
+     the session is then the caller innerRequest stamps (R23). The review copy's three keep a session's stamp and otherwise no caller. */
+  let caller = null;
+  if (!bySecret && TEMPLATE_DOORS.includes(op)) {
+    const admitted = await admit({ url, env, op, spec: { ...OPS[op], classes: ["admin", "member"], machineClasses: [] }, method: page.method,
+                                   presented: presentedAi, doAnswer, credential, background: url.searchParams.get("background") === "1" });
+    if (admitted.silent) return storeSilent(admitted.silent.op, admitted.silent.correlation);
+    if (admitted.refusal || !admitted.caller.viaSession) return templateAnswer(world, op, innerRequest({ op, url, method: "POST", body: "{}", caller: null,
+                                                                                                    bySecret: true, secretSha: await sha256Hex("") }));
+    caller = admitted.caller;
+  }
+  const made = innerRequest({ op, url, method: page.method, body: page.method === "POST" ? page.text : undefined, caller,
                               bySecret, secretSha: bySecret ? await sha256Hex(credential.secret || "") : null });
   if (made.refusal) return json(made.refusal.body, made.refusal.status);
   if (!routesOf(world).has(new URL(made.url).pathname.slice(1))) return noArm(op);
+  if (TEMPLATE_DOORS.includes(op)) return templateAnswer(world, op, made);
   return relayAnswer(world.send({ url: made.url, body: made.body ?? null, headers: made.headers, method: page.method }), op);
+}
+
+/** control-plane R44: the template doors' answer, as `templateGrantDoor` gives it: the one dead answer `NO_TEMPLATE_GRANT` at 404 whoever built it (a caller the grant does not admit
+ *  is asked of the owner as a secret no live grant holds, the empty one, and so given the owner's own); the owner's other refusal at 404 (`NO_SUCH_TEMPLATE`) or 400; an answer enveloped flat, not as a relay. */
+async function templateAnswer(world, op, made) {
+  const out = await doAnswer(world.send({ url: made.url, body: made.body ?? null, headers: made.headers, method: "POST" }));
+  if (out.refused) return storeRefusal(out);
+  if (!out.answered) return storeSilent(op, out.correlation);
+  const r = out.result;
+  if (r?.reason === "NO_TEMPLATE_GRANT") return json({ ok: false, ...r }, 404);
+  if (!r?.ok) return json({ ok: false, ...r }, r?.reason === "NO_SUCH_TEMPLATE" ? 404 : 400);
+  return json({ ok: true, ...r }, 200);
 }
 
 /** R20: whether the world's door answers `op` through an arm or function of its own (class (b)); a store route is class (a). */
@@ -462,7 +502,8 @@ export async function signIn(world, handle, { admin = false, capabilities = null
   if (isFounder) {
     member = "admin";
   } else if (!passwords.has(handle)) {
-    const founder = world.__founderSession || (world.__founderSession = await login(founderHandle || "admin", world.password));
+    /* a session lapses by idleness as well as by its expiry (admission), so the world signs the founder in afresh for each member it adds, as a person would */
+    const founder = await login(founderHandle || "admin", world.password);
     const as = { token: founder.token };
     /* an administrator is proposed by `memberadd` with role `admin` (changing administrators asks the founder's password again,
        `reauth`, as the page's re-ask does); while the team has two or more, the proposal is an invitation only once every
@@ -503,6 +544,20 @@ export function bootOf(world, as) {
   return { door: (req) => door(req, as), session: as ? as.session : null };
 }
 
+/** R18 (K5178; SCREENS-INQUIRY #29 J42 (f)): `routeOf(world, as)` → a Playwright route handler for the page's `/api/` requests, answering each from the world's door as `as`
+ *  (her token is added when the page sends none), so a browser drawing the screens at a phone's width gets the real store's answers, not a scripted table. The handler fulfils
+ *  `route`: a JSON answer as JSON, a byte answer (a served file) with its type. The session the page holds is `world.session(as)`. */
+export function routeOf(world, as) {
+  const door = doorOf(world);
+  return async (route) => {
+    const request = route.request();
+    const body = request.postDataBuffer();
+    const answered = await door({ url: request.url(), init: { method: request.method(), headers: request.headers(), ...(body ? { body: new Uint8Array(body) } : {}) } }, as);
+    if (answered.json !== undefined) return route.fulfill({ status: answered.status, contentType: "application/json", body: JSON.stringify(answered.json) });
+    return route.fulfill({ status: answered.status, contentType: answered.type || "application/octet-stream", body: Buffer.from(answered.bytes || []) });
+  };
+}
+
 /* ---- R19: recipes of real acts ---- */
 
 export const hex = (s) => createSha256().update(typeof s === "string" ? new TextEncoder().encode(s) : s).hex();
@@ -541,13 +596,14 @@ export async function hold(world, as, name, content, project = "", { type = "tex
   return { sha, bundle, read: await as.act("readheld", { query: { sha } }) };
 }
 
-/** R19: a project, started as Home's "Start a project" starts it (`promote` of its document with no base). Answers its bundle id. */
-export async function project(world, as, title) {
+/** R19: a project, started as Home's "Start a project" starts it (`promote` of its document with no base). Answers its bundle id. It is
+ *  `discoverable` (other members may find it by name) unless `visibility` is null: a hidden project is known only to the members it holds. */
+export async function project(world, as, title, { visibility = "discoverable" } = {}) {
   const now = instant(world);
   const text = "---\nobject_type: project\ntitle: " + JSON.stringify(title) + "\nobjective: " + JSON.stringify(title) + "\ncurrent_state: forming\ncreated: \"" + now
     + "\"\nlast_updated: \"" + now + "\"\n---\n\n## Session Log\n\n### Session " + now + " | Formation | interactive\nTrigger: test\nChanges: created.\n";
   const made = await as.act("promote", { body: { base: null, snapKey: now.replace(/[-:]/g, "") + "_" + hex(title).slice(0, 8),
-    meta: { object_type: "project", title, current_state: "forming", created: now, last_updated: now }, files: [{ path: "bundle.md", text }], register: [], visibility: "discoverable" } });
+    meta: { object_type: "project", title, current_state: "forming", created: now, last_updated: now }, files: [{ path: "bundle.md", text }], register: [], ...(visibility ? { visibility } : {}) } });
   return made.bundleId;
 }
 
