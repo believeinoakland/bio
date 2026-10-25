@@ -494,3 +494,7 @@ Size (session_0177s7VkCbiDMwJSDa3V4Dzp): test runs 8, module lines 4262
 R17a draw and the two queue-states fixture lines are done and pushed (record: Completion, SCREENS-DAILY #20). One thing I need: add record-core to screens-daily's uses in build/modules.json (queue-states.test.mjs imports record-core/fixtures.mjs per the FIX-E rule; architecture fails on it only). Also: retrieval-browse publishes no find-in term-item fixture (my find-in.test.mjs carries fixtures-contract: retrieval-browse findin-term-part; it needs a fixtures-run). Stand-in words are held content.part_kind rows, not localize (render cannot call it). I COMPLETE once architecture is green.
 
 **After B37 (K5090):** merged `tranche/T51` (`record-core` now in `uses`). Architecture 0 failures; ownership 0; screens-daily suite 295/295. No open question.
+
+## J25 · COMPLETE
+
+COMPLETE (R17a draw, queue-states fixture lines), branch job/T51/screens-daily: Find in names the part of a footnote/header etc. term item (held content.part_kind rows as stand-in; none for body/null/unknown); queue-states lines 48 and 93 take record-core's perItemRetained. Failing-first red then green. Suite 295/295; architecture, coverage, words, ownership, format 0; fixtures: only op-tables remain. Users: 1019/1027, the 8 are journey-check pseudo* needing playwright-core (npm ci not run here). Markers added: one fixtures-contract retrieval-browse findin-term-part (find-in.test.mjs); no fixtures-own or fixtures-generic. R103 proposed in record. Size line in record.
