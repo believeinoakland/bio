@@ -1,6 +1,6 @@
 # standards (T51)
 
-**Status** · session_017cwPRYtTMcVjGxduRoTLMb · depth 2 · WORKING · handled B6
+**Status** · session_017cwPRYtTMcVjGxduRoTLMb · depth 2 · RUNNING until 2026-10-25T20:40:49Z (control-plane and plane tests) · handled B6
 
 ## J1 · COMPLETE
 
@@ -122,3 +122,30 @@ Size (session_01BGmyopxvDtf9nKPbPea8fa): test runs 4, module lines 3567
 ## J5 · COMPLETE · re B5
 
 B5 done: cause 1 (#memberCaptured accepts a bare id or member:<id>, never a machine identity) and cause 2 (the in-force why names the member without a member: stamp) fixed, each test seen red then green. Met ids: R41, R45. Tests 119/119; format, architecture, coverage, words, ownership 0; fixtures only the known orphan-run. Notes: the row standard.inforce.known names its var {author}, not {member} (design's to rename); the door case for a bare-id upload is control-plane's, for BOB to place; setup-words --check refuses on plane.declared.readtranslate (plane, not mine). Record: build/jobs/T51/standards.md.
+
+## Fix round 10, R7 known_through (B6) · session_017cwPRYtTMcVjGxduRoTLMb
+
+## J6 · COMPLETE · re B6
+
+T51 · standards #20 · K5178 (SCREENS-INVESTIGATE #16 J28 (2)).
+
+**What changed** (`bio-plane/src/standards/index.mjs`)
+- `#throughOf` (~1375) also answers `ref: {through, source: {captureSha, extent}, by}`, the R50 record's own fields (`by` as the record stores it, `member:<id>`, the same as `inForceThroughOf`'s `by`).
+- `#versionAtPeriod` (~1325-1365) sets `restsOnRecord` when R51's record decides the state (`validAt` `in` over `{from, to: through}`) and returns `known_through: ref` only while the final state is `in_force`; the existing record object stays as `in_force_through` (unchanged, as before).
+- `#versionAt` (~1254) is now a wrapper over `#versionAtState`: where R38's version basis or an override moves the state off `in_force`, `known_through` is dropped. A stated end, the day after `through`, codifier lag and a withdrawn record all leave none.
+- `inForceAt` (~1393, ~1409), both the standard and the key paths, and `inForce` (~1190, R7's alias) carry `known_through` beside `why` (unchanged).
+- `fixtures.mjs`: new export `inForceKnown` (made by the real act and the real reads); tested in `fixtures.test.mjs`.
+
+**Failing-first test:** `bio-plane/test/m/standards/known-through.test.mjs` (R7 R20): an R50 record made by the real act, then `standardinforce` (through `standardsOps`), `inForce` and `inForceAt`; red on the earlier code (`R7's alias: actual undefined`), green now. Controls: no record, the day after `through`, a stated end, a withdrawn record, codifier lag: none carries `known_through`. Why the tests missed it: they asserted `why`'s text, never what a screen needs to draw it.
+
+**Met ids (BOB strikes the mark):** R7.
+
+**Suite counts:** `bio-plane/test/m/standards/`: 122 tests, 0 failures. Users run: filings 165/0, action-plans 105/0, affordances 289/0, conformance 125 tests / 1 failure, screens-investigate 249 / 1 failure (both pre-existing, below); control-plane and plane: see the line below.
+
+**Found in other modules (REPORT):**
+- conformance `bio-plane/test/m/conformance/t36.test.mjs:58`: expects R3's `why` to read "recorded by member:olive"; the module's sentence (`standard.inforce.known`, author drawn without the stamp, R45 amended K5148) reads "recorded by olive". Fails identically on the tranche code without my change. The test needs the bare id.
+- screens-investigate "R4 C8 (the figure) Money, the real plane: a figure read in with its period's dates…": fails identically without my change (a money/period case, outside standards).
+
+**Checks** (absolute root `/home/user/bio`): format 0 failures; architecture (standards) 0; coverage (standards) 53 of 53, 0; ownership 0; `checks/run.mjs`: no finding in my files, words count unchanged (I added no sentence); `fixtures.mjs standards --list`: one line, `contract law-relations bio-plane/test/m/standards/fixtures.test.mjs:83 orphan-run` (the allowed one, waits for law-relations' marker merge). No `fixtures-own` or `fixtures-generic` marker added.
+
+**Deferred:** nothing.
