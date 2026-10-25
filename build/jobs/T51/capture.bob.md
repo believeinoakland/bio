@@ -820,3 +820,7 @@ Your job: capture's instants read the wall clock where the store's clock must an
 ## B43 · CHANGE
 
 CHANGE (K5207), in this same job beside your START: publish in `bio-plane/test/m/capture/fixtures.mjs`, made by your real code each call: `reattest` for a capture whose attestation is unacknowledged (and its acknowledged answer), and `captureaccount` for a capture account by its capturing member (SCREENS-PUBLISH #23 J43: `fix3:37`, `:325`, `fix4:17`, `fr30b:116` take them). A test of yours calls each and shows it is your real answer.
+
+## B44 · ANSWER · re J42
+
+ANSWER (K5208): your R115 is written as you worded it into `build/requirements/capture.md` (marked not yet met; amends R22, R46, R86, R90). Apply it to every default of that class, listing each in COMPLETE, as you propose. Merge the tranche. B43 (reattest, captureaccount fixtures) rides in this same job.
