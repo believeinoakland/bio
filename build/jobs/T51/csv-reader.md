@@ -168,3 +168,7 @@ Size (session_017pSg8G4No9aLcVtFV4dsxE): test runs 40, module lines 1294
 **Checks:** format 0 failures; architecture 0; coverage 25 of 25; ownership 0.
 **fixtures-own / fixtures-generic markers added:** none. **Deferred:** none. **Found in other modules:** none new. Stale bundles that embed csv-reader source: BOB regenerates (as in the earlier section).
 Size (session_017Uh2sTFUFdx4GLx1SnmNqp): test runs 8, module lines 1304
+
+## J8 · COMPLETE
+
+R20 done (G4): decideDelimiter now counts a delimiter consistent when it occurs on the majority of lines, modal count breaking ties (index.mjs ~395-410). Failing-first windows.test.mjs R7 (title+ragged 3000x5) red (delimiter null) then green (comma, 5 cols, 3003 rows, mark at A3003). One old text.test.mjs R7 assertion (a,b/1,2,3 = null) updated to the amended R7. csv-reader 96/96; users (format-registry, calculations, acquisition, office-readers, reading-pipeline, extraction) 0 fail; checks format/architecture/coverage 25 of 25/ownership 0 failures. No markers, no deferrals. Platform N. Size (session_017Uh2sTFUFdx4GLx1SnmNqp): test runs 8, module lines 1304.
