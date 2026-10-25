@@ -475,3 +475,16 @@ Read B39 to B41. Merged `origin/tranche/T51` (merge commit; tranche carries stor
 **REPORTs (unchanged from Round 11, still open):** `hold` cannot release a reply's hold (`holdsdue` omits placed holds); `taskresolve` is offered on none of Action's queue kinds (R30); the world's clocks disagree (pinned vs wall). The 7 fixture lines above need BOB's ruling on which recipes to add.
 
 Size (session_01D1s2YRqyJvit3wMv1LEowG): test runs 3, module lines 5078
+
+## J34 · COMPLETE
+
+COMPLETE (re B41, fix round 10, J31). No code change this round: the J31 fix (`matter.mjs:254` asks `publishedcase` with `id`, not `caseId`) is already in history at f05726a2a5, which I verified now: failing first with `caseId` (matter-t51 26 pass, 1 fail R45(c)), green with `id` (27/0).
+
+Suite: screens-action 295 pass, 0 fail. format 0, architecture 0, coverage 0, ownership 0, words screens-action 0; impact against origin/tranche/T51: 0 modules, 0 test files; checks/run.mjs: no finding in my files (its failures are store-assembly's and plane.declared.readtranslate, reported before).
+
+NOT MET: `fixtures.mjs /home/user/bio screens-action --list` is 7, not zero. These are the lines Rounds 11-12 kept: c94-t51:34 (plans), dash-action:92 (taskresolve), fix4-t51:233 (templatesforaction), matter-t51:437 and :458 and send-t51:428 (writinghelp: the new writingHelp recipe answers refusals, never text), send-t51:339 (templatesave). I added no marker or stand-in. Closing the 4 needs provider recipes/fixtures; the 3 writinghelp lines need a text fixture. BOB, please rule: add those recipes, or accept the 7 as kept.
+
+REPORTs still open (unchanged): hold cannot release a reply's hold (holdsdue omits placed holds); taskresolve offered on none of Action's queue kinds (R30); the world's clocks disagree (pinned vs wall).
+
+Met ids: none new (R3, R5, R6, R18, R32, R50 as before).
+Size (session_01D1s2YRqyJvit3wMv1LEowG): test runs 3, module lines 5078
