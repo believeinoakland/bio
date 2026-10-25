@@ -290,3 +290,25 @@ B13 (K5101) applied: R21's C-2.8 repairs arm is removed. Merged `origin/tranche/
 - Runs: citation tests 131 of 131 pass; fixtures, words, format, architecture, coverage, ownership 0 failures. No fixtures markers added.
 
 Size (session_01KjtAFrtxEtLHsjBFVS3Bgd): test runs 5, module lines 0 added (17 removed)
+
+## Fix round 10, follow-up 62 (B14; CITATION #20, session_01JfJyUVCuHWfqyMFpbcucb8)
+
+Met: citation R18 (amended K5131) as far as this module can; R16, R17 unchanged and still met.
+
+1. Root cause, with evidence. `citeimported` and `withdrawimported` (`bio-plane/src/citation/index.mjs`, `DECLARED_OPS`) declared no `stamps`, so `op-declarations` `stampsOf` gave them `["viewer"]` alone. The door (`control-plane/index.mjs`, the `OP_STAMPS[op]` loop) therefore deleted the caller's `author` and never set one; the handler read `author = null` and `#importedMemberRefusal` answered `MACHINE_CANNOT_CITE_IMPORTED` to a joined member. Seen through the real door before the fix: `ann`, a member with `contribute`, sending `citeimported` got `{"reason":"MACHINE_CANNOT_CITE_IMPORTED","inquiry":null}`. Fix: both rows now declare `stamps: ["author", "viewer"]`; with them the door sets `author` to the session's identity and the act reaches the op.
+2. Why the tests missed it, gap fixed. `declared-ops.test.mjs` checked fields only, and the module tests passed `author` straight to the handler, so no test ran the op as the door runs it. Fixed: `declared-ops.test.mjs` now holds both rows' `stamps`, and the new `imported-door.test.mjs` runs both ops through the real plane (control-plane's seam kit `r8-kit.mjs`: a member made by `memberadd`, `enroll` and `login`, her project and question by the screens' own acts).
+3. The walker's exact case through its real entry, seen red then green: `imported-door.test.mjs`, two tests named R18: `citeimported` as a joined member answers `BASIS_REFUSED` (this team has not accepted the edition, the op's own next refusal) and `withdrawimported` answers `NOT_CITED`; neither answers `MACHINE_CANNOT_CITE_IMPORTED`. Without the `stamps` change both fail (0 pass, 2 fail); with it both pass.
+4. Platform check: none needed here; the stamp is the door's own (`stampOf.author`).
+
+Not done, and why: R18 as amended also names `identity`. `op-declarations`' registered stamp list (`declared.mjs` STAMPS: author, bodyBy, by, country, member, owner, principal, proposer, session, source, viewer) has no `identity`, so a row that declared it would be refused `BAD_STAMPS` at registration. The positional `identity` stamp is set only for ops in `op-declarations`' `POSITIONAL_ACTS` (control-plane `index.mjs`, `if (POSITIONAL_ACTS.includes(op))`), a list that module owns; adding `citeimported` and `withdrawimported` to it, or letting a declared row ask for it, is op-declarations' change. Neither handler reads `identity` (both take it as a parameter and ignore it), so the walker's case does not need it; it is reported to BOB in the REPORT/COMPLETE.
+
+Tests and checks:
+- node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/citation/: tests 134, pass 134, fail 0.
+- checks/format.mjs /home/user/bio: 178 modules, 0 failures.
+- checks/architecture.mjs /home/user/bio citation: 21 product files, 0 failures.
+- checks/coverage.mjs /home/user/bio citation: 21 of 21 live ids named, 0 failures.
+- checks/words.mjs /home/user/bio citation: 0 failures.
+- checks/ownership.mjs /home/user/bio citation tranche/T51 job/T51/citation: 0 failures.
+- checks/fixtures.mjs /home/user/bio citation --list: 0 failures.
+
+Size (session_01JfJyUVCuHWfqyMFpbcucb8): test runs 8, module lines 1731

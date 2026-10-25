@@ -1166,11 +1166,11 @@ export const DECLARED_OPS = Object.freeze({
   reinstate: { classes: ["admin", "member", "probe"], mutating: true, needs: "contribute", weight: "reasoned", refusal: "NO_REASON",
     description: localize("citation.declared.reinstate", "moves a severed cites edge, or a question's severed leg, back to confirmed with the member's reason"),
     fields: { accepts: ["project", "handle", "reason"], requires: ["project", "handle", "reason"] } },
-  citeimported: { classes: ["admin", "member"], machineClasses: [], mutating: true, needs: "contribute", weight: "reversible",
+  citeimported: { classes: ["admin", "member"], machineClasses: [], mutating: true, stamps: ["author", "viewer"], needs: "contribute", weight: "reversible",
     description: localize("citation.declared.citeimported", "rests a question on another team's accepted finding at the edition shown; the grade is the edition's own, and withdrawimported takes it back"),
     fields: { accepts: ["inquiry", "import", "finding", "edition", "role", "note"],
               requires: ["inquiry", "import", "finding", "edition", "role"] } },
-  withdrawimported: { classes: ["admin", "member"], machineClasses: [], mutating: true, needs: "contribute", weight: "reasoned", refusal: "NO_REASON",
+  withdrawimported: { classes: ["admin", "member"], machineClasses: [], mutating: true, stamps: ["author", "viewer"], needs: "contribute", weight: "reasoned", refusal: "NO_REASON",
     description: localize("citation.declared.withdrawimported", "takes another team's finding off a question's answer with the member's reason; the history keeps it, and so does each version already frozen"),
     fields: { accepts: ["inquiry", "import", "finding", "reason"], requires: ["inquiry", "import", "finding", "reason"] } },
 });
