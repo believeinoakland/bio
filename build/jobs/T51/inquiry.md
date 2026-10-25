@@ -224,3 +224,33 @@ Size (session_019Sucssuvy7GkW7YhXyGe5i): test runs 6, module lines 3848
 ## J12 · COMPLETE
 
 COMPLETE B13 (follow-up 55, K5130): R55's amendment met. questionWaits now carries document_waits and history as documentWaits gives them (undetermined: null/null with document_waits_why). Published fixture questionWaitsSetAside({asker, setter, reason, restoreReason}) in test/m/inquiry/fixtures.mjs. Checks all 0; tests 238, 237 pass, 1 todo. Details in record J11.
+
+## J13 · COMPLETE
+
+Fix round 10, cause 1 (retrieval R99, `SELECTION_NOT_YOURS`) · done. Commit 5849107c4c on job/T51/inquiry; tranche/T51 merged in beforehand (no conflicts). Local job/T51/inquiry differed from origin, so it was kept as stale/inquiry-local (not reset) and the origin branch checked out, as the START directs.
+
+Entries applied
+- Cause 1, test files only: `bio-plane/test/m/inquiry/fixtures.test.mjs` (R20 R21 R22). The `notYours` refusal is the real `dispose` answer over retrieval's selection. The test no longer hand-builds `"NOT_YOURS"`; it takes the expected code from retrieval's published `selectionResolve` fixture (`bio-plane/test/m/retrieval/fixtures.mjs`), asked with an owner other than the one who made the selection, and compares. The test is now async for the fixture's `selection()`.
+- Failing first: on today's code the test was red (`+ 'SELECTION_NOT_YOURS'`, `- 'NOT_YOURS'`), then green after the change.
+- The only site in inquiry's tests that named the old code is `fixtures.test.mjs:36`; a grep of `bio-plane/test/m/inquiry` and `bio-plane/src/inquiry` finds no other `NOT_YOURS`.
+- No diagnosis section under `build/plan/walk-T51-final/diagnosis/` names R99 or this line; I acted on the cause as the START states it, re-reading the cited line and the retrieval fixture before editing.
+- No `src` change; no requirement changed; no word or English string changed.
+
+Why the tests missed it: the test pinned the old code as a literal, so when retrieval renamed its refusal (R99) the literal stayed valid in the test while the real answer moved. Asserting the provider's published answer, not a copied literal, is what keeps it in step.
+
+Met ids: none marked by this cause. The test names R20, R21 and R22, which remain met; R99 is retrieval's and is not marked by this module.
+
+Tests and checks (run from the product root, absolute path)
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/inquiry/fixtures.test.mjs`: tests 7, pass 7, fail 0 (exit 0; run without --test-force-exit; it exits by itself).
+- `--test bio-plane/test/m/inquiry/*.test.mjs`: tests 238, pass 237, fail 0, todo 1 (exit 0, no force-exit).
+- `checks/fixtures.mjs /home/user/bio inquiry --list`: answer 0, stub 0, code 0, contract 0, accepted 0; 0 failures for inquiry.
+- `checks/format.mjs /home/user/bio`: 178 modules, 178 requirements files; 0 failures.
+- `checks/architecture.mjs /home/user/bio inquiry`: 44 product files, 150 relative imports; 0 failures.
+- `checks/coverage.mjs /home/user/bio inquiry`: 58 of 58 live requirement ids named by a test; 0 failures.
+- `checks/ownership.mjs /home/user/bio inquiry tranche/T51`: 1 file changed by inquiry; 0 failures.
+- `checks/run.mjs /home/user/bio`: its failures are all in other modules (none under `bio-plane/src/inquiry` or `bio-plane/test/m/inquiry`). Words: inline 15, plain 12, testcopy 0, missingkey 0 over the whole product; none for inquiry.
+- I did not run `setup-words build --check`; that comes with the layer close.
+
+Deferred: none. Flaws found in inquiry: none. Found in another module: none new.
+
+Size (session_012iUyB6WHxSjhQz8p8rGanY): test runs 3, module lines 3849
