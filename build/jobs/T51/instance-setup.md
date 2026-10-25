@@ -419,3 +419,32 @@ COMPLETE · re B22 (K5182; plan item 89; R106)
 **Size (session_01EL6fyybXDaUbWobs5GqhCa): test runs 3, module lines 3880** (`setup.mjs`, `setup-fleet.mjs` and `livefire.mjs` together; the tests directory is 6085 lines).
 
 **Reported, not in my paths.** None found.
+
+## J29 · COMPLETE
+
+COMPLETE. Job B23 (fix round 10, PUBLIC-READ #37) done.
+
+**Changed (1 line, my module's test path):** deleted `// fixtures-run: public-read group-identity-public` at `bio-plane/test/m/instance-setup/fixtures.test.mjs:64`. The test at :65 and its body are unchanged, and no other line changed. Per verify-marks.md (the public-read row), the run marked a contract that covered nothing; its `fixtures-contract` counterpart lives in public-read's group-fields.test:18.
+
+**Failing-first:** not applicable. The change removes a marker and changes no assertion, so there was no red state to show. The module suite is green before and after.
+
+**Met ids:** none named by a `**Rn**`; BOB strikes the public-read mark.
+
+**Markers added:** none (`fixtures-own` / `fixtures-generic`: 0).
+
+**Deferred:** none.
+
+**Found in other modules:** none caused by this change. The full `checks/run.mjs` run lists failures in other modules (coverage: 10 live ids named by no test; answer refusals in actions, control-plane, plane, screens-daily and others; words: 16 failures, all in store-assembly and other modules). None names instance-setup files. Two of the fixture "accepted" lines (fixture.mjs:190 and :201, store-replies, later provider store-door) are untouched by me.
+
+**Tests and checks** (ABSOLUTE root /home/user/bio):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/instance-setup/*.test.mjs`: tests 249, pass 249, fail 0.
+- `checks/fixtures.mjs /home/user/bio instance-setup --list`: answer 0, stub 0, code 0, contract 0, accepted 2, 0 failures.
+- `checks/ownership.mjs /home/user/bio instance-setup 1da09c7d0f HEAD`: 1 file changed by instance-setup, 0 failures.
+- `checks/architecture.mjs /home/user/bio instance-setup`: 0 failures.
+- `checks/format.mjs /home/user/bio`: 0 failures.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules affected, 0 of 2981 test files.
+- `checks/run.mjs /home/user/bio`: no finding in instance-setup files; words count unchanged by this change (no string touched).
+
+**Branch:** merged `origin/tranche/T51` into `job/T51/instance-setup` (52 commits, a merge, never a rebase) before starting.
+
+Size (session_01FGLWM6793qNWhTtMEbtTSc): test runs 1, module lines 1
