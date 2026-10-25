@@ -12,6 +12,7 @@ import { timelineBodyLines } from "../../../src/case-authoring/document.mjs";
 import { timelineOf } from "../../../src/case-grammar/index.mjs";
 import { peopleOf, memberTiesOf } from "../../../src/case-disclosures/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { timelineRefusal } from "../events/fixtures.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
 const SUBJ = "ENT-2026-0001-council", E1 = "EVT-2026-0001-a", E2 = "EVT-2026-0002-b", E3 = "EVT-2026-0003-c", E4 = "EVT-2026-0004-d";
@@ -187,7 +188,7 @@ test("R57, R26: a lane events cut at its limit (truncated) is stated as stopping
   const whole = setup();
   assert.equal(bodyOf(docOf(whole.w, publish(whole.w, whole.P))).includes("stops at its bound"), false);
   /* a read that fails */
-  const failing = { ...eventsStandIn(), timeline: () => ({ ok: false, reason: "NO_SET" }) };
+  const failing = { ...eventsStandIn(), timeline: () => timelineRefusal().noSet };
   const f = setup({ events: failing });
   const fr = publish(f.w, f.P);
   assert.equal(fr.ok, true, JSON.stringify(fr).slice(0, 300));

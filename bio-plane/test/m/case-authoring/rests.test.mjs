@@ -10,6 +10,7 @@ import { CASE_DISCLOSURE_CHECKS, REPUBLISH_SENTENCE } from "../../../src/case-au
 import { DEPTH_BOUND } from "../../../src/strength/index.mjs";
 import { acceptedWorkOf } from "../../../src/case-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { openFlagsUnread } from "../case-import/fixtures.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q", Q3 = "INQ-2026-0003-q";
@@ -121,7 +122,7 @@ test("R55 (case-disclosures R13): with no acceptance in force at the leg's editi
   assert.equal(w.publish(P, "alice", [Q]).ok, true);
 });
 
-test("R55 (case-disclosures R14): an open flag on the edition is FLAG_NOT_DISCLOSED (C-120.11) until listed in flagsDisclosed, then it publishes — disclose, never block; a listed flag not open is FLAG_DISCLOSURE_NOT_STANDING (C-120.13); a failed or incomplete read FLAGS_UNDETERMINED (C-120.12); a malformed list R3's BAD_COMPLETENESS", () => {
+test("R55 (case-disclosures R14): an open flag on the edition is FLAG_NOT_DISCLOSED (C-120.11) until listed in flagsDisclosed, then it publishes — disclose, never block; a listed flag not open is FLAG_DISCLOSURE_NOT_STANDING (C-120.13); a failed or incomplete read FLAGS_UNDETERMINED (C-120.12); a malformed list R3's BAD_COMPLETENESS", async () => {
   const { w, P } = onTheirs();
   w.imports.flag(IMP, 2, { flag: "IMPFLAG-1", finding: THEIRS, issue: "page 3 is misread" });
   const before = w.snapshot();
@@ -133,7 +134,8 @@ test("R55 (case-disclosures R14): an open flag on the edition is FLAG_NOT_DISCLO
                                [[{ flag: "IMPFLAG-1", words: 'a "q"' }], "flagsDisclosed[0].words"]])
     assert.deepEqual(Object.values((({ reason, field: f }) => ({ reason, f }))(w.publish(P, "alice", [Q], { flagsDisclosed: list }))),
                      ["BAD_COMPLETENESS", field]);
-  for (const answer of [{ ok: true, complete: false, flags: [] }, { ok: false, reason: "NO_SUCH_IMPORT" }, null]) {
+  const { flags: unreadFlags } = await openFlagsUnread();
+  for (const answer of [{ ok: true, complete: false, flags: [] }, unreadFlags, null]) {
     w.imports.flagsRead = () => answer;
     refused(w.publish(P, "alice", [Q], { flagsDisclosed: [{ flag: "IMPFLAG-1" }] }), "FLAGS_UNDETERMINED");
   }

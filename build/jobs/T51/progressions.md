@@ -1,6 +1,6 @@
 # progressions (T51)
 
-**Status** · session_011v5ZCTD2aqsukHM8utVFpG · depth 2 · COMPLETE · handled B5
+**Status** · session_011v5ZCTD2aqsukHM8utVFpG · depth 2 · COMPLETE · handled B6
 
 ## J1 · COMPLETE
 
@@ -100,3 +100,10 @@ Size (session_011v5ZCTD2aqsukHM8utVFpG): test runs 12, module lines 2228.
 ## J6 · COMPLETE
 
 COMPLETE for B5: fixtures definitionRead, disposeProposalOk, disposeProposalRefusal published (fixtures.mjs + fixtures.test.mjs); own lines provenance/registeredHomes and promotion/makePromotion re-pointed; fixtures list for progressions at 0; progressions tests 90 pass; format, architecture, coverage (48/48), ownership 0 failures. No markers added. Detail in record J5.
+
+## Note on B6 (K5082)
+overdue.test.mjs:93 no longer copies the sentence: it asserts the `why` contains `word("progressions.why.captured_bound_date", {from: "registered", at})`, the `at` read from provenance. `checks/words.mjs /home/user/bio progressions`: 0 failures. Progressions tests 93 pass, 0 fail (tranche merged).
+
+## J7 · COMPLETE
+
+COMPLETE for B6: overdue.test.mjs:93 now compares through word('progressions.why.captured_bound_date', {from, at}) with the registered instant read from provenance. words check for progressions 0 failures; progressions tests 93 pass, 0 fail.

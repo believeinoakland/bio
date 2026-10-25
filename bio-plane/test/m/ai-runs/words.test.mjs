@@ -4,7 +4,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { world, stepsStub, OPEN, INQ, PROJ, ORG, agentWorker } from "./world.mjs";
+import { world, OPEN, INQ, PROJ, ORG, agentWorker } from "./world.mjs";
+import { stepsWorld } from "../steps/fixtures.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 
 const READS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words-reads.json", import.meta.url), "utf8"))
@@ -58,8 +59,9 @@ test("R9, R13, R14 (words): the open's, tick's and close's notes are words.json'
 });
 
 test("R73 (words): a system step the steps module refuses is answered with the key's note, the run not opened", async () => {
-  const w = await runWorld({ steps: stepsStub() });
-  const r = await w.runs.open(OPEN({ place: { questions: [INQ] }, work: "  " }));
+  const f = stepsWorld();
+  const w = await runWorld({ steps: f.steps });
+  const r = await w.runs.open(OPEN({ place: f.place, work: "  " }));
   assert.equal(r.started, false);
   assert.equal(r.note, word("ai-runs.note.run_step_refused"));
   assert.equal(w.count("ai_runs"), 0);
@@ -67,9 +69,10 @@ test("R73 (words): a system step the steps module refuses is answered with the k
 
 test("R73 (words): a run's step end that steps cannot be told of reads steps is not reachable, and one it did not answer reads steps did not answer", async () => {
   for (const [stepEnd, key] of [[undefined, "ai-runs.reason.steps_reachable"], [() => { throw new Error("x"); }, "ai-runs.reason.steps_did_answer"]]) {
-    const steps = { ...stepsStub(), stepEnd };
+    const f = stepsWorld();
+    const steps = { ...f.steps, stepEnd };
     const w = await runWorld({ steps });
-    assert.equal((await w.runs.open(OPEN({ place: { questions: [INQ] }, work: "find the fee schedule" }))).started, true);
+    assert.equal((await w.runs.open(OPEN({ place: f.place, work: "find the fee schedule" }))).started, true);
     const c = await w.runs.close({ run: "R1", bound: "completed", viewer: "admin", caller: ORG });
     assert.deepEqual([c.terminated, c.step_end.told, c.step_end.reason], [true, false, word(key)]);
   }
