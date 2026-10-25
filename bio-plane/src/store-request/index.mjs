@@ -76,6 +76,8 @@ const sameSpec = (a, b) => !!a && !!b && a.mutating === b.mutating && a.classes.
 /** R7: the translation family's acts, whose `by` is the bare member id. */
 export const TRANSLATION_ACTS = Object.freeze(["translationdraft", "translationgrant", "translationadopt", "translationconfirm",
   "translationrevert", "translationmark"]);
+/** R7: the member-roster acts that ask `membership` whether `by` is an administrator, which reads the bare member id. */
+export const ADMIN_ASKING_OPS = Object.freeze(["adminremovalsopen", "expertisewithdraw"]);
 export const DO_PATH = Object.freeze({ inbox: "inboxlist", publish: "publishcase", inboxpull: "inboxpullfile" });
 /** R5: the internal headers a stamped session and an ask's grant travel in (`store-door` R9). */
 export const SESSION_HEADER = "x-bio-session";
@@ -83,6 +85,7 @@ export const GRANT_HEADER = "x-bio-grant";
 /** R23: the ops that present a grant's secret, and those that issue one. */
 export const SECRET_PRESENTING_OPS = Object.freeze(["reviewcopy", "reviewcomment", "statementack", "templateread",
                                                     "templatecomments", "templatereview", "templatecomment"]);
+const TEMPLATE_DOOR_OPS = Object.freeze(["templateread", "templatecomments", "templatereview", "templatecomment"]);
 export const GRANT_ISSUING_OPS = Object.freeze(["reviewgrant", "templatereviewgrant"]);
 
 /* R6: the reads stamped with their caller's sight beside the families; R7: the positional reads (identity N). */
@@ -167,6 +170,8 @@ function make({ op, url, method = "GET", body, caller, source = null, country = 
   q.delete("identity");
   for (const k of QUERY_STAMPS) q.delete(k);
   for (const k of ["secretSha", "bySecret"]) q.delete(k);
+  const presentsSecret = SECRET_PRESENTING_OPS.includes(op), issuesGrant = GRANT_ISSUING_OPS.includes(op);
+  if (presentsSecret || issuesGrant) q.delete("secret");
   if (Object.hasOwn(BODY_ONLY, op)) for (const k of BODY_ONLY[op]) q.delete(k);
   if (ACT_CLOCK_OPS.includes(op)) q.delete("at");
   if (op === "opencaptures") for (const k of ["at", "now"]) q.delete(k);
@@ -259,6 +264,7 @@ function make({ op, url, method = "GET", body, caller, source = null, country = 
   /* R7 (J5): the translations module asks `membership` of the bare member id */
   if (TRANSLATION_ACTS.includes(op)) put("by", M);
   if (op === "translations") put("viewer", M);
+  if (ADMIN_ASKING_OPS.includes(op)) put("by", M);
   if (op === "captureupload") put("by", M);
   if (ROSTER_SELF_ACTIONS.includes(op)) put("by", M);
   if (OWN_KEY_ACTIONS.includes(op) || CAPTURE_MEMBER_ACTIONS.includes(op) || SOURCE_ACTIONS.includes(op)) put("by", M);
@@ -282,6 +288,12 @@ function make({ op, url, method = "GET", body, caller, source = null, country = 
   if (WIZARD_AUTHOR_ACTIONS.includes(op)) put("author", I);
   if (WIZARD_PROPOSAL_ACTIONS.includes(op)) put("author", A);
   if (RUN_VERB_ACTIONS.includes(op)) { q.delete("actor"); put("actor", viaSession ? sessMember : ""); }
+  /* R23: a member's session at a secret-presenting op is stamped as the door stamps it: `viewer` V, and for the template
+     doors `author` AI (the form filing-templates asks membership of); a recipient (`bySecret`) and a caller who is no session carry none */
+  if (presentsSecret && viaSession && !(bySecret === true && typeof secretSha === "string")) {
+    put("viewer", V);
+    if (TEMPLATE_DOOR_OPS.includes(op)) put("author", AI);
+  }
   /* R8: the door's verdict on a held reading's bound, and the declared length of an upload */
   if (op === "readheld") { q.delete("defer"); if (deferred === true) put("defer", "1"); }
   q.delete("declared");
@@ -293,7 +305,8 @@ function make({ op, url, method = "GET", body, caller, source = null, country = 
   const textual = typeof passBody === "string";
   if (textual && passBody) {
     const b0 = parsed(passBody);
-    const strip = [...BODY_STAMPS, "token", "secretSha", "bySecret", ...(BODY_DROPPED[op] ?? []),
+    const strip = [...BODY_STAMPS, "token", "secretSha", "bySecret", ...(presentsSecret || issuesGrant ? ["secret"] : []),
+                   ...(presentsSecret ? QUERY_STAMPS : []), ...(BODY_DROPPED[op] ?? []),
                    ...(ACT_CLOCK_OPS.includes(op) ? ["at"] : []),
                    ...(op === "inboxpull" || op === "inboxresolve" ? ["viewer"] : []),
                    ...declared.filter((k) => k === "by" || k === "viewer" || k === "session"
@@ -408,7 +421,8 @@ function make({ op, url, method = "GET", body, caller, source = null, country = 
     b[Object.hasOwn(BODY_ACTOR, op) ? BODY_ACTOR[op] : op === "standardpropose" ? "proposer" : "author"] = AI;
   });
   stampBody(LOCAL_FACTS_ACTIONS.includes(op) && post, (b) => {
-    for (const k of QUERY_STAMPS) delete b[k];
+    /* `source` is the correction's own argument (local-facts' `factconfirm` reads it from the body), never a stamp there */
+    for (const k of QUERY_STAMPS) if (k !== "source") delete b[k];
     b.by = AI;
   });
   stampPresent(op === "inboxresolve", (b) => { b.by = T; });
