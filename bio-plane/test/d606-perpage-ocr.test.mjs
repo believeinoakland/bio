@@ -40,6 +40,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { deflateSync } from "node:zlib";
 import { ocrWorkerDef } from "../../ocr-worker/test/memberworker.mjs";
+import { memberWorker } from "../../ocr-worker/test/fixtures.mjs";
 import { read } from "../src/reading-pipeline/index.mjs";
 
 const SRC = fileURLToPath(new URL("../src/plane/index.mjs", import.meta.url));
@@ -120,31 +121,6 @@ const signIn = async (mf) => {
 const acquire = async (mf, path) => (await (await mf.dispatchFetch("http://x/api/?op=acquire", { method: "POST", headers: await signIn(mf),
   body: JSON.stringify({ locator: "https://oakland.legistar.com" + path, authority: "City Clerk" }) })).json());
 
-/* THE STUB MEMBER: the real member's chunk rule (lowest page taken, the rest deferred) and envelope, and nothing else.
-   MODE picks one deviation; `GET /log` returns the page lists it was asked for, in order. */
-const STUB = `
-const log = [];
-const region = (p) => ({ text: "SCANNED PAGE " + p, confidence: { value: 0.97, basis: "engine" },
-  source: { kind: "pdf-page", ref: "p" + p, page: p, rect: [72, 700, 540, 712] } });
-const env0 = { ok: true, engine: "tesseract-wasm", version: "0.11.0", cap: "C", measured_by: "CPDF-15", confidence_floor: null };
-export default { async fetch(req, env) {
-  const u = new URL(req.url);
-  if (req.method === "GET" && u.pathname === "/log") return Response.json(log);
-  const body = await req.json();
-  const clean = [...new Set(body.pages)].filter(Number.isInteger).sort((a, b) => a - b);
-  log.push(clean);
-  const take = clean[0], deferred = clean.slice(1), M = env.MODE;
-  if (M === "throw" && take === 3) throw new Error("the 33rd invocation");
-  if (M === "refuse" && (take === 0 || take === 2))
-    return Response.json({ ok: false, reason: "PAGE_NOT_RENDERABLE", detail: "x", page: take, deferred, notes: [] });
-  const out = { ...env0, pages: [{ page: take, regions: [region(take)] }], deferred, notes: [] };
-  if (M === "version" && take === 4) out.version = "0.12.0";
-  if (M === "stray" && take === 2) out.pages = [{ page: 5, regions: [region(5)] }];
-  return Response.json(out);
-} };`;
-const stubDef = (mode) => ({ name: "ocr-stub", modules: true, script: STUB, compatibilityDate: "2026-07-01",
-  bindings: { MODE: mode } });
-
 try {
   console.log("--- 1 · the real member over D-460's committed two-page fixture ---");
   {
@@ -161,11 +137,16 @@ try {
   }
 
   /* the inline pass (`op=acquire`) asks the member nothing; the ledger's pass is `read` of the acquired document with the member bound */
-  const stubRun = async (mode, path) => {
-    const mf = new Miniflare({ workers: [planeDef("ocr-stub"), stubDef(mode)] });
+  const viaMember = async (mode, path) => {
+    /* the member is ocr-worker's published fixture `memberWorker`: the real member behind a front that logs the pages asked and applies the one named deviation */
+    const fx = await memberWorker({ mode, name: "ocr-stub", store: "bio" });
+    const mf = new Miniflare({ workers: [planeDef("ocr-stub"), ...fx.workers] });
     try {
+      await fx.prepare(mf);
       const r = await acquire(mf, path);
-      const logOf = async () => await (await (await mf.getWorker("ocr-stub")).fetch("http://s/log")).json();
+      /* the real member reads the one-page picture the fixture publishes, as the capture's page asked */
+      await (await mf.getR2Bucket("CAPTURES", fx.realName)).put(`bio/captures/${r.document.capture.sha256}`, fx.readable.bytes);
+      const logOf = () => fx.log(mf);
       const inline = await logOf();
       const bytes = DOCS[path];
       const evidence = { head: async () => ({ size: bytes.length }),
@@ -179,7 +160,7 @@ try {
 
   console.log("\n--- 2 · the budget: a 30-page scan, one call per page, at most 24 calls ---");
   {
-    const { r, rd, log, inline, inlineRd } = await stubRun("chunk", "/scan30.pdf");
+    const { r, rd, log, inline, inlineRd } = await viaMember("chunk", "/scan30.pdf");
     t("the acquire succeeds", r.ok, true);
     t("the inline pass (op=acquire) made NO call to the member; its 30 pages are owed (`ocr_left`) and none transcribed", [inline.length, inlineRd.ocr_left && inlineRd.ocr_left.pages, filledOf(inlineRd)], [0, 30, 0]);
     t("the first call asked for all 30 pages", (log[0] || []).length, 30);
@@ -194,7 +175,7 @@ try {
     t("and the capture stays a tier-3 candidate", rd.tier3_candidate, true);
   }
   {
-    const { rd, log } = await stubRun("chunk", "/scan6.pdf");
+    const { rd, log } = await viaMember("chunk", "/scan6.pdf");
     t("under the budget every page is read: 6 calls, 6 transcribed, 0 unread", [log.length, filledOf(rd), unreadOf(rd)], [6, 6, 0]);
     t("and nothing is said about a budget it did not meet", /not asked for/.test(rd.basis || ""), false);
     t("a fully read scan no longer wants OCR", rd.tier3_candidate ?? false, false);
@@ -202,7 +183,7 @@ try {
 
   console.log("\n--- 3 · failure modes: a throw, a refusal, a different build, a stray page ---");
   {
-    const { r, rd, log } = await stubRun("throw", "/scan6.pdf");
+    const { r, rd, log } = await viaMember("throw", "/scan6.pdf");
     t("a binding call that THROWS does not fail the acquire", [r.ok, !!r.document], [true, true]);
     t("the pages before it are kept (0,1,2) and the rest stay unread", [filledOf(rd), unreadOf(rd)], [3, 3]);
     t("the loop stopped at the throw", log.length, 4);
@@ -211,13 +192,13 @@ try {
     t("the basis names the page whose call failed", /the call for page 4 failed, so 3 page\(s\) from it on \(pages 4-6\) were not transcribed/.test(rd.basis || ""), true);
   }
   {
-    const { rd, log } = await stubRun("refuse", "/scan6.pdf");
+    const { rd, log } = await viaMember("refuse", "/scan6.pdf");
     t("a refused FIRST page no longer ends the document: every page is still asked", log.length, 6);
     t("the refused pages (0 and 2) keep their markers; the other four are read", [filledOf(rd), unreadOf(rd)], [4, 2]);
     t("the basis counts the declined pages", /declined 2 page\(s\)/.test(rd.basis || ""), true);
   }
   {
-    const { rd, doc } = await stubRun("version", "/scan6.pdf");
+    const { rd, doc } = await viaMember("version", "/scan6.pdf");
     t("a page answered by a different engine build is not merged", [filledOf(rd), unreadOf(rd)], [5, 1]);
     /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; extraction R5): the page is now named (0-based 4 = "page 5"). */
     t("and the basis says why", /1 page\(s\) \(page 5\) were answered under a different engine build/.test(rd.basis || ""), true);
@@ -225,7 +206,7 @@ try {
       (Array.isArray(doc?.text_source) ? doc.text_source : rd.text_source || []).filter((s) => s.step === "ocr").map((s) => s.version), ["0.11.0"]);
   }
   {
-    const { rd } = await stubRun("stray", "/scan6.pdf");
+    const { rd } = await viaMember("stray", "/scan6.pdf");
     t("a page answered to the wrong call is dropped, and the asked page stays unread", [filledOf(rd), unreadOf(rd)], [5, 1]);
     t("and the basis counts it", /1 page\(s\) the OCR member returned were not the page that call asked for/.test(rd.basis || ""), true);
   }

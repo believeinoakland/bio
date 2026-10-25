@@ -191,6 +191,7 @@ test("R4 R16: tier 3 selects pages with a routing marker and no encryption; each
 test("R4: a page after a call that throws, a declined page, one under another engine build and one not asked for are not merged, and the note names them", async () => {
   const w = fresh();
   const pages = [0, 1, 2, 3, 4].map((i) => ({ page: i, text: "", undetermined: [noText(i)] }));
+  // fixtures-generic: busy
   const ocr = member((body, n) => {
     if (n === 1) return { ...ocrAnswer([0]), deferred: [1, 2, 3, 4] };
     if (n === 2) return { ok: false, reason: "busy" };                          // page 1 declined

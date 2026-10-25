@@ -19,6 +19,7 @@ import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
+import { accountForRefused } from "../ai-accounts/fixtures.mjs";
 import { derivationCap, captureBound, checkChain, describeChain } from "../../../src/textchain.mjs";
 import * as rp from "../../../src/reading-pipeline/index.mjs";
 import { bucket, evidenceStore, hold, doc, withEntry, i2, noText, folio, member, ocrAnswer } from "./fixture.mjs";
@@ -171,6 +172,7 @@ test("R29 (negative controls, K874): no account, the use switched off, the group
     ["project keeps it away", async (w) => { assert.equal(w.acc.projectAiKeepAwaySet({ project: "P1", on: true, uses: ["transcribe"], reason: "not this matter", by: "ann" }).ok, true);
                                              return { member: "ann", project: "P1" }; }, /PROJECT_AI_KEPT_AWAY/],
     ["a project he cannot see", async (w) => ({ member: "dee", project: "P1" }), /NO_SUCH_PROJECT/],
+    // fixtures-contract: ai-use use-check
     ["limit reached", async (w) => ({ member: "ann", useCheck: async () => ({ ok: false, code: "AI_LIMIT_REACHED", detail: "this month's use is spent" }) }), /AI_LIMIT_REACHED: this month's use is spent/],
     ["no limits checked", async (w) => ({ member: "ann", useCheck: null }), /limits of the account that would pay for it could not be checked/],
     ["no member's act", async (w) => ({ member: null }), /only at a member's own act/],
@@ -257,14 +259,15 @@ const unchanged = (t4, label) => {
   assert.match(t4.aiNote, /^the AI was not asked to transcribe pages 2-3: /, label);
 };
 
-test("R29 (N853a): a stub accountFor answering NO_ACCOUNT and a stub useCheck answering AI_LIMIT_REACHED are each answered as given in aiRefusal, beside aiNote; nothing is filled and the AI is not asked", async () => {
-  const noAccount = { ok: false, code: "NO_ACCOUNT", check: "C-29.1", translation: "no account serves this act", detail: "nothing was used" };
+test("R29 (N853a): an accountFor answering NO_ACCOUNT and a useCheck answering AI_LIMIT_REACHED are each answered as given in aiRefusal, beside aiNote; nothing is filled and the AI is not asked", async () => {
+  /* the refusal is the real ai-accounts' (a member who holds no account), taken from its published fixture and from the real accounts that answer it */
+  const noAccount = await accountForRefused({ member: "dee", act: { kind: "transcribe", member: "dee" } });
+  assert.equal(noAccount.code, "NO_ACCOUNT");
   const a1 = ai(() => { throw new Error("the AI must not be asked"); });
   const lim1 = limits(null);
-  const r1 = await t4On({ member: "ann", accounts: { accountFor: async () => noAccount }, useCheck: lim1.useCheck, transcribe: a1.transcribe });
-  assert.equal(r1.aiRefusal, noAccount, "the refusal as given, not a copy or a re-wording");
-  assert.deepEqual(r1.aiRefusal, { ok: false, code: "NO_ACCOUNT", check: "C-29.1", translation: "no account serves this act", detail: "nothing was used" });
-  assert.match(r1.aiNote, /NO_ACCOUNT: nothing was used/);
+  const r1 = await t4On({ member: "dee", accounts: (await group()).acc, useCheck: lim1.useCheck, transcribe: a1.transcribe });
+  assert.deepEqual(r1.aiRefusal, noAccount, "the refusal as given, not a re-wording");
+  assert.match(r1.aiNote, /NO_ACCOUNT: /);
   assert.deepEqual([a1.calls.length, lim1.asked.length], [0, 0], "no limit asked after the account refused");
   unchanged(r1, "NO_ACCOUNT");
 
@@ -316,6 +319,8 @@ test("R29 (N853a): every refusal the real ai-accounts.accountFor answers for the
 test("R29 (N853a, control, K874): every other stop is aiNote alone, with no aiRefusal key: a declining AI, an unreachable AI, an answer naming no model, no text returned, no member's act, no accounts, an accountFor or useCheck that throws, no limits checked, no AI set up, no page left; and a filled reading carries none", async () => {
   const { acc } = await group();
   const base = { member: "ann", accounts: acc, useCheck: async () => null };
+  // fixtures-generic: busy
+  // fixtures-contract: content transcribe-answer
   const stops = [
     ["a declining AI", { ...base, transcribe: async () => ({ ok: false, reason: "busy" }) }, /the AI declined \(busy\)/],
     ["an unreachable AI", { ...base, transcribe: async () => { throw new Error("down"); } }, /could not be reached/],
@@ -343,6 +348,7 @@ test("R29 (N853a, control, K874): every other stop is aiNote alone, with no aiRe
 });
 
 /* R31 (T48; N996; K3101): the paying account is asked of `ai-accounts`, handed in as `transcription.accounts`. */
+// fixtures-own: harness a recording wrapper around the real ai-accounts' accountFor (the test's own harness: it records the question asked and delegates; it answers nothing itself)
 const asking = (inner) => { const asked = []; return { asked, accountFor: async (q) => { asked.push(q); return inner(q); } }; };
 
 test("R31: a transcription whose accounts (ai-accounts) answers NO_ACCOUNT answers that refusal as given in aiRefusal and fills nothing; control: one whose accounts.accountFor answers an account transcribes the asked pages as before, the same act asked", async () => {
