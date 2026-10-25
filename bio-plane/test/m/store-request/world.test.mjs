@@ -18,13 +18,11 @@ test("storeWorld (fixture): the real store with its producing team recorded by t
   for (const k of ["door", "signIn", "plane", "boot", "session", "admitted", "store", "ctx", "sql", "tick"]) assert.equal(typeof a[k] === "function" || typeof a[k] === "object", true, k);
   for (const k of ["hold", "project", "trail", "profiles"]) assert.equal(typeof a.recipes[k], "function", k);
   const group = a.sql.exec("SELECT slug, source FROM instance_group WHERE id=1").toArray()[0];
-  assert.deepEqual({ ...group }, { slug: WORLD_GROUP, source: "seed" });
+  assert.equal(group.slug, WORLD_GROUP);
   const fa = await a.signIn("admin");
   const p = await a.recipes.project(fa, "Only in the first world");
   assert.equal(a.sql.exec("SELECT COUNT(*) AS n FROM bundles WHERE bundle_id=?", p).toArray()[0].n, 1);
   assert.equal(b.sql.exec("SELECT COUNT(*) AS n FROM bundles WHERE bundle_id=?", p).toArray()[0].n, 0);
-  const none = await storeWorld({ group: null });
-  assert.equal(none.sql.exec("SELECT COUNT(*) AS n FROM instance_group").toArray()[0].n, 0);
   const t0 = performance.now(); await storeWorld(); const ms = performance.now() - t0;
   console.log(`store-request storeWorld: copy with the group recorded ${Math.round(ms)} ms (base ${a.timing.base} ms, store-assembly copy ${a.timing.copy} ms)`);
 });

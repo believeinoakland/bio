@@ -503,6 +503,20 @@ export function bootOf(world, as) {
   return { door: (req) => door(req, as), session: as ? as.session : null };
 }
 
+/** R18 (K5178; SCREENS-INQUIRY #29 J42 (f)): `routeOf(world, as)` → a Playwright route handler for the page's `/api/` requests, answering each from the world's door as `as`
+ *  (her token is added when the page sends none), so a browser drawing the screens at a phone's width gets the real store's answers, not a scripted table. The handler fulfils
+ *  `route`: a JSON answer as JSON, a byte answer (a served file) with its type. The session the page holds is `world.session(as)`. */
+export function routeOf(world, as) {
+  const door = doorOf(world);
+  return async (route) => {
+    const request = route.request();
+    const body = request.postDataBuffer();
+    const answered = await door({ url: request.url(), init: { method: request.method(), headers: request.headers(), ...(body ? { body: new Uint8Array(body) } : {}) } }, as);
+    if (answered.json !== undefined) return route.fulfill({ status: answered.status, contentType: "application/json", body: JSON.stringify(answered.json) });
+    return route.fulfill({ status: answered.status, contentType: answered.type || "application/octet-stream", body: Buffer.from(answered.bytes || []) });
+  };
+}
+
 /* ---- R19: recipes of real acts ---- */
 
 export const hex = (s) => createSha256().update(typeof s === "string" ? new TextEncoder().encode(s) : s).hex();
@@ -541,13 +555,14 @@ export async function hold(world, as, name, content, project = "", { type = "tex
   return { sha, bundle, read: await as.act("readheld", { query: { sha } }) };
 }
 
-/** R19: a project, started as Home's "Start a project" starts it (`promote` of its document with no base). Answers its bundle id. */
-export async function project(world, as, title) {
+/** R19: a project, started as Home's "Start a project" starts it (`promote` of its document with no base). Answers its bundle id. It is
+ *  `discoverable` (other members may find it by name) unless `visibility` is null: a hidden project is known only to the members it holds. */
+export async function project(world, as, title, { visibility = "discoverable" } = {}) {
   const now = instant(world);
   const text = "---\nobject_type: project\ntitle: " + JSON.stringify(title) + "\nobjective: " + JSON.stringify(title) + "\ncurrent_state: forming\ncreated: \"" + now
     + "\"\nlast_updated: \"" + now + "\"\n---\n\n## Session Log\n\n### Session " + now + " | Formation | interactive\nTrigger: test\nChanges: created.\n";
   const made = await as.act("promote", { body: { base: null, snapKey: now.replace(/[-:]/g, "") + "_" + hex(title).slice(0, 8),
-    meta: { object_type: "project", title, current_state: "forming", created: now, last_updated: now }, files: [{ path: "bundle.md", text }], register: [], visibility: "discoverable" } });
+    meta: { object_type: "project", title, current_state: "forming", created: now, last_updated: now }, files: [{ path: "bundle.md", text }], register: [], ...(visibility ? { visibility } : {}) } });
   return made.bundleId;
 }
 
