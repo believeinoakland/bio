@@ -1,6 +1,6 @@
 # intent (T51)
 
-**Status** · session_01BBT6yik8ZYE33ZBXj5u7xP · depth 2 · COMPLETE · handled B3
+**Status** · session_01GUj8GfroqrbB9njoTNg55o · depth 2 · COMPLETE · handled B3
 
 ## J1 · COMPLETE
 
@@ -88,3 +88,27 @@ Fix round 10, Wave A batch 4 (B3) done. Only intent's `tests` files changed (`bi
 **Found in other modules:** only the words failure above (progressions). The stored `register` table of ai-runs' test world lacks `path` (it is a partial stand-in of provenance's), which is why reasons.test.mjs uses `homeOfEmpty()`.
 
 Size (session_01BBT6yik8ZYE33ZBXj5u7xP): test runs 6, module lines 2265
+
+## J4 · COMPLETE · re B4
+
+Follow-up 27 (B4, MONITORING #26 J7) done. Test files only (`bio-plane/test/m/intent/fixtures.mjs`, `fixtures.test.mjs`); no product code changed, so no `impact.mjs` run.
+
+**Fixture published:** `watchSetOf(held, { throwsFor = [], page = null } = {})`, async, in `bio-plane/test/m/intent/fixtures.mjs`.
+- `held` is `{ [name]: [digest, ...] }`. Each name becomes a project made by real acts: promoted, a one-stage `watched` progression defined, one entity per project, each digest resolved to it and threaded into an instance, the condition set by `setCondition`. `watchSet` therefore answers exactly those digests, once each, in order. An empty list is a project with an objective and no condition (`watchSet` none, `progress` a null condition, `gaps` none).
+- `throwsFor`: names whose `watchSet` throws `Error("intent unreadable")` when asked. `page`: when set, a `watchSet` naming no `limit` is asked for `page` captures, so the real cursor is followed (monitoring's stub paged by two; `page: 2` gives that).
+- Answers `{ world, intent, projects, viewer, calls, sources }`. `projects[name]` is the project's real id: the record chooses it (a project cannot be given an id, C-59.1), so monitoring's tests take the id from here. `intent` has `watchSet`, `gaps`, `progress` (the real answers) and `registerSource` (the real registration; accepted ones also kept in `sources` as `{ kind, reader }`); `calls` is each `watchSet` asked, `{ project, after }`, as the stub's `calls` was. `viewer` is a participant of every project.
+- Note for monitoring: one stage leaves an instance's grade undetermined (intent's rule), so `progress` of a project with digests answers `satisfied: null`; its `gaps` are none. Where a test needs a met or short condition, `intentWorld` is the published fixture for it.
+
+**Tests** (`fixtures.test.mjs`, 2 new): digests held once each in order, real paging by the cursor, `calls`, a caller's `limit`, empty project, `throwsFor` (the real module still reads it), real `progress`/`gaps`, one source registers once; one digest held by two projects.
+
+**Markers added:** none (`fixtures-own` 0, `fixtures-generic` 0, `fixtures-contract` 0). My lines in `checks/fixtures.mjs /home/user/bio intent --list`: 0 (answer 0, stub 0, code 0, contract 0, accepted 0; 0 failures).
+
+**Tests and checks:** `bio-plane/test/m/intent/*.test.mjs`: tests 98, pass 98, fail 0. format 0; architecture (intent) 0; coverage `36 of 36 live requirement ids named by a test; 0 failures`; ownership `1 files changed by intent ...; 0 failures`. Whole-product `fixtures` lines still fail in other modules' files (connections, control-plane, instance-setup, filings, monitoring and others), none in intent's.
+
+**Deferred:** nothing. **Found in other modules:** nothing beyond those lines.
+
+Size (session_01GUj8GfroqrbB9njoTNg55o): test runs 4, module lines 0
+
+## J5 · COMPLETE
+
+COMPLETE follow-up 27 (B4): see record J4. Fixture: watchSetOf(held, { throwsFor, page }) in bio-plane/test/m/intent/fixtures.mjs; answers { world, intent, projects, viewer, calls, sources }; projects[name] is the real project id. Tests 98/98; format, architecture, coverage, ownership 0.
