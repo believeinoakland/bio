@@ -69,3 +69,25 @@ T51-208 (agent-steps, words pass) is complete on job/T51/agent-steps (e43c73904b
 ## J4 · COMPLETE
 
 CHANGE B4 applied. Merged tranche/T51 into job/T51/agent-steps (5713f46431). Words check on agent-steps under d424c32: 0 failures, no findings, so nothing new to key or list for the unkeyed list. Tests unchanged: plan 53, interface 70, readers 43, subsessions 35, fanout 62, r096 22, r101 12, r103 14, r107 22, t49r90 14, all 0 failed. Checks: format 0, architecture 0, coverage 49 of 49 ids, ownership 0. setup-words --check shows only the stale-rows note (expected; regenerated at layer close). Size (session_01YAwmmYXXALThsEWDUkRnFx): test runs 36, module lines 1700.
+
+## Completion (AGENT-STEPS #3, fix round 10, Wave B batch 6)
+
+**Causes done.** The 12 own fixture lines and the marker line, as follows.
+- `interface.test.mjs:36` (ai-runs/airunRefusal): the nested refusal in a 200 `airun` answer is now `airunRefusal().notPrincipal`, ai-runs' real answer; the test asserts `AI_RUN_NOT_PRINCIPAL`.
+- `interface.test.mjs:149` and `t49r90.test.mjs:94` (provenance/versionChainNoSuchVersion): the refused chain read is provenance's real `versionChain` refusal (`VERSION_CHAIN_NO_SUCH_VERSION`), replacing the invented `CHAIN_REFUSED` and the hand-built body.
+- `interface.test.mjs:207`: the refused close is ai-runs' real `AI_RUN_NOT_PRINCIPAL` (`airunRefusal().notPrincipal`), replacing `CLOSE_REFUSED`.
+- `interface.test.mjs:265,267`: the tick's refused entry takes the code the tick really gives, `AI_LOG_STATE_UNKNOWN` (C-22.1, observation-log), replacing `AI_LOG_REFUSED`.
+- FIX-L control-plane/ask-wire: `interface.test.mjs:224`, `t49r90.test.mjs:100`, `world.mjs:34,59,69,71` carry `// fixtures-contract: control-plane ask-wire`. `world.mjs`'s `refusal403` now takes either an invented code or a provider's real answer (set as the 403 body with `reason` and `code`).
+- `readers.test.mjs:130`: `// fixtures-own: input` (the host's `askPlane` answer handed to my own `driveHarness`).
+
+**Markers added** (BOB reads each at the merge, K5060): `fixtures-own` — `readers.test.mjs:130` input: a reached 403 handed as the host's `askPlane` answer to this module's own `driveHarness`, which reads it opaquely. `fixtures-generic` — none. `fixtures-contract` control-plane ask-wire — `interface.test.mjs:224`, `t49r90.test.mjs:100`, `world.mjs:17,39,65,76,79` (the refusal builder and its call sites, the airunclose refusal, UNKNOWN_OP).
+
+**Left at done, waiting.** None of mine. control-plane's `fixtures-run: agent-steps ask-wire` shows `orphan-run` in control-plane's list until these markers merge (it already ran green in its test).
+
+**For BOB's `modules.json` row.** `provenance` must be added to `agent-steps`' `uses` (the tests now import provenance's published fixture; `architecture` fails without it: "imports bio-plane/test/m/provenance/fixtures.mjs of provenance, which agent-steps does not declare in uses"). Provenance is earlier in the order (43 against 99). Checked locally with the row extended, then restored.
+
+**Checks.** `fixtures agent-steps`: 0 failures (answer 0, stub 0, code 0, contract 0, accepted 8; with the row extended, as architecture needs); `format` 0 failures; `architecture agent-steps` 0 failures with the row extended (2 failures on the current row, the missing `provenance` use above); `words agent-steps` 0 failures; `coverage agent-steps` 49 of 49 ids, 0 failures; `ownership agent-steps origin/tranche/T51` 0 failures; `impact.mjs origin/tranche/T51 HEAD` names 0 affected modules (test-only change). Tests: `interface` 70, `plan` 53, `r096` 22, `r101` 12, `r103` 14, `r107` 22, `readers` 43, `subsessions` 35, `t49r90` 14, `fanout` 62, all 0 failed.
+
+**Deferred.** None. **Another module.** Nothing found.
+
+Size (session_014Vtui2SY7G9K1v5s9sb3Cf): test runs 24, module lines 1700
