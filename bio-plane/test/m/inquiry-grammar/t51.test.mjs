@@ -79,13 +79,22 @@ test("R68 one supporting leg in a declared ground and one cutting leg with none 
   assert.deepEqual(grounded([SUP({ ground: "a" }), CUT({}), CUT({})], [G_A]), []);
 });
 
-test("R68 control: a supporting leg left out of the partition is still refused, cutting leg or none", () => {
-  for (const basis of [[SUP({ ground: "a" }), SUP({})], [SUP({ ground: "a" }), SUP({}), CUT({})]]) {
-    const r = grounded(basis, [G_A]);
-    assert.equal(r.length, 1);
-    assert.equal(r[0].check, "C-2.8");
-    assert.equal(r[0].message, localize("inquiry-grammar.grammar.unlabelled_basis_legv1_carrv2_no", "{unlabelled} basis leg{v1} carr{v2} no ground while {length} do: a basis is grouped WHOLE or not at all, because a leg nobody grouped sitting beside branches somebody did is a relationship the record would have to guess at", { unlabelled: "1", v1: "", v2: "ies", length: "1" }));
+test("R68 (fix round 10, cause 30b) one unlabelled supporting leg beside one labelled ground is clean: it is a necessary leg, and the basis is no longer grouped whole or not at all", () => {
+  for (const basis of [[SUP({ ground: "a" }), SUP({})], [SUP({}), SUP({ ground: "a" })], [SUP({ ground: "a" }), SUP({}), CUT({})],
+                       [SUP({ ground: "a" }), SUP({}), SUP({}), SUP({ ground: "b" })]]) {
+    const grounds = basis.some((l) => l.ground === "b") ? [G_A, { ...G_A, ground: "b" }] : [G_A];
+    assert.deepEqual(grounded(basis, grounds), [], JSON.stringify(basis));
   }
+});
+
+test("R68 (fix round 10, cause 30b) control: a ground no leg carries, a leg naming an undeclared ground, a duplicated row and a malformed label are each still refused", () => {
+  const noLeg = grounded([SUP({}), SUP({})], [G_A]);
+  assert.equal(noLeg.length, 1, "declared, no basis leg belongs to it");
+  assert.equal(noLeg[0].check, "C-2.8");
+  const undeclared = grounded([SUP({ ground: "a" }), SUP({})], []);
+  assert.ok(undeclared.length >= 1 && undeclared.every((x) => x.check === "C-2.8"), "a leg naming a ground no row declares");
+  assert.equal(grounded([SUP({ ground: "a" }), SUP({})], [G_A, G_A]).length, 1, "a ground declared twice");
+  assert.equal(grounded([SUP({ ground: "a" }), SUP({ ground: "b!" })], [G_A]).length >= 1, true, "a label outside the form");
 });
 
 test("R68 a cutting leg that names a ground is refused with its own finding naming the leg and the label, and the label does not count for it", () => {
