@@ -1,6 +1,6 @@
 # wizard-scripts (T51)
 
-**Status** · session_019XFUSYv3eS4JuzAcTX5AsX · depth 2 · RUNNING until 2026-10-25T11:02:18Z (plane tests after registry re-take) · handled B21
+**Status** · session_019XFUSYv3eS4JuzAcTX5AsX · depth 2 · COMPLETE · handled B21
 
 ## J1 · BLOCKED
 
