@@ -300,3 +300,7 @@ Markers added: no `fixtures-own`, no `fixtures-generic`. The two `fixtures-run` 
 Checks: `fixtures.mjs . review --list` 0 failures (both lines at zero); module tests 97 pass, 0 fail; `format` 0 failures; `architecture` 0; `coverage` 45 of 45; `ownership` 0; `impact.mjs origin/tranche/T51 HEAD`: 0 affected modules (tests only), so no user tests to run.
 
 Size (session_01MSRpgw82aZM18FqtkcrU26): test runs 3, module lines 0
+
+## J14 · COMPLETE
+
+Fix round 10 batch 5 done: 2 own fixture lines at zero (case-account registrar fixture taken), fixtures-run added for case-account review-copy-read and case-inputs no-review-copy; tests 97/97, all checks 0. Found: case-inputs' DEAD stand-in lacks the real translation/detail (see record). Record: build/jobs/T51/review.md.
