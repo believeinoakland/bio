@@ -513,3 +513,7 @@ Fix: the plain words go to `search` alone (fields route); the passages holding t
 Tests: `screens-daily/*.test.mjs` 296 tests, 296 pass, 0 fail (after the contract list update; the one first failure was that list). Checks (absolute root): format 0 failures; architecture 0; coverage 101 of 101, 0; ownership 0; words 0; fixtures `--list`: 249 failures, all `op-table` lines (waiting for the CHANGE re-pointing them to `storeWorld()`, as B-earlier said), none from the new test. `impact.mjs origin/tranche/T51 HEAD`: 0 affected modules besides mine.
 Markers added: none.
 Size (session_01GykapzvyLDepprUbDPaXny): test runs 6, module lines 4258
+
+## J26 · COMPLETE
+
+COMPLETE (B38): R6 first half met — Ask-as-search now sends plain words to search alone and the passage: terms as a second read, never joined by OR; seen red first against the real retrieval.search, green. Second half of R6 (ruleanswer drawn only while ruleservicesstate is on) waits for the CHANGE after ANSWERS #15, so R6's mark stays. Module tests 296/296, format/architecture/coverage/ownership/words 0; fixtures --list: 249, all op-table (waiting). Record: build/jobs/T51/screens-daily.md.
