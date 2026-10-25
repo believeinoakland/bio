@@ -21,6 +21,7 @@ import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 // fixtures-run: file-safety job-registrar
 // fixtures-run: extraction job-registrar
 // fixtures-run: control-plane job-registrar
+// fixtures-run: monitoring job-registrar
 // fixtures-run: acquisition keep-later
 // fixtures-run: capture keep-later
 // fixtures-run: screens-intake owed-later

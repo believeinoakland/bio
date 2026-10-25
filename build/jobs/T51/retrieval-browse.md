@@ -1,6 +1,6 @@
 # retrieval-browse (T51)
 
-**Status** · session_016H9ARBfQmEpWFFdjSd6HHm · depth 2 · COMPLETE · handled B12
+**Status** · session_01DZGdo16CETLocZnm2PWpbh · depth 2 · COMPLETE · handled B14
 
 ## Completion (T51-29)
 
@@ -178,3 +178,20 @@ Size (session_016H9ARBfQmEpWFFdjSd6HHm): test runs 2, module lines 1427
 ## J9 · COMPLETE · re B13
 
 Follow-up 22 done on job/T51/retrieval-browse (6ac1fd45c3). findin.test.mjs gains the test marked fixtures-run: screens-daily findin-term-part (R21, R17a): a footnote part's term hit answers part footnote, by the real find-in code. No source changed. Checks: format, architecture, coverage (21/21), words, ownership 0 failures; module tests 67/67. Not found: the screens-daily marker fixtures-contract: retrieval-browse findin-term-part (find-in.test.mjs:278) is on neither origin/tranche/T51 nor any origin branch I searched, so the comparison with its hand-built answer is not made; the check lists my marker as orphan-run until it merges. Left, waiting on events and entities: t36:139, t37:172, words:60. Full detail: build/jobs/T51/retrieval-browse.md, 'Completion (follow-up 22, B13)'. Size (session_016H9ARBfQmEpWFFdjSd6HHm): test runs 2, module lines 1427
+
+## Completion (fix round 10, final pass; B14)
+
+**Met:** R2's amended text (K5148; WALK-FINAL-08 D5): `matchRequirements` (`findin.mjs`) now cuts sentences with `sentencesOf`: a stop (`.` `!` `?` `;`) ends a sentence only before whitespace and a capital (a closing quote or bracket may come between) or at the end of the text; a `.` after a known abbreviation (Mr, Sec, No, Cal, Civ, v and the like) does not end one; a line break always does. So "Section 8.22.050 No landlord shall ..." is found whole from "Section", and "The Clerk shall publish it. The budget is $4.2 million." still gives one requirement sentence.
+
+**Cause 1 (root cause, why missed).** Root cause: `findin.mjs` (was :200) `/[^.!?;\n]+[.!?;]?/g` cut at any stop. Missed because every requirement fixture was plain prose with a final stop only.
+**Failing-first:** `findin.test.mjs:265` (R2, K5148), seen red on the old splitter (it answered `'050 No landlord shall increase the rent.'` for "Section 8.22.050 No landlord ..."), green on the new. A first draft of the fix looped forever at the end of the text (`"".includes` is true); caught by the module run, fixed (`findin.mjs` `sentencesOf`, the stop-run scan is bounded by the text length).
+**Existing test changed to the amended R2:** `findin.test.mjs` R2 fixture "file; the fee must be paid!" became "file; The fee must be paid!" (a `;` before a lower-case word no longer ends a sentence under R2's text); the lower-case case is now asserted as one sentence in the new test.
+**Other splitters:** grep `[^.!?;` across `bio-plane/src/` finds only this one (the generated `case-checker/program.mjs` holds none; `reading-pipeline/html.mjs:80` already requires whitespace after a stop and is a different purpose). Nothing to report.
+
+**Tests and checks.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/retrieval-browse/*.test.mjs`: 68 tests, 68 pass, 0 fail (it did not exit by itself without `--test-force-exit` in the first, looping run; the final run is with it, its count equals the files' sum). format 0 failures; architecture 0 (20 files); coverage 0 (21 of 21 ids named); ownership 0 (3 files: source, test, record); the words check lists findings only in other modules (control-plane, host-governor). `checks/fixtures.mjs /home/user/bio retrieval-browse --list`: no new line; the earlier `orphan-run` is gone; left, as before and waiting on events and entities: `t36.test.mjs:139`, `t37.test.mjs:172`, `words.test.mjs:60`. No marker added. Impact: `findin.mjs` `matchRequirements` is an internal export; `retrieval` still holds its own copy until T51-42.
+
+Size (session_01DZGdo16CETLocZnm2PWpbh): test runs 4, module lines 1449
+
+## J10 · COMPLETE
+
+B14 done on job/T51/retrieval-browse. R2 (K5148, D5) met: a stop ends a sentence only before whitespace and a capital or at the end, not inside a number/citation/after a known abbreviation; line break always ends one (findin.mjs sentencesOf). Failing-first findin.test.mjs:265 red on old splitter ('050 No landlord...'), green now. One existing R2 fixture changed to the amended text ('; the fee' -> '; The fee'). No other splitter in src/ to report. Tests 68/68 under the shim; format, architecture, coverage (21/21), ownership 0 failures; words findings only in other modules; fixtures: no new line (t36:139, t37:172, words:60 still wait on events/entities); no marker added. Size (session_01DZGdo16CETLocZnm2PWpbh): test runs 4, module lines 1449

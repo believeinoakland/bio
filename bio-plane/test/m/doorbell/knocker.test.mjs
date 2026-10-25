@@ -19,6 +19,7 @@ import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 const requiredArgument = (op, argument, shape, error) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error });
+// fixtures-contract: answer-envelope door-helpers
 const storeSilent = (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }, 502);
 const doAnswer = async (res) => { let out = null; try { out = await (await res).json(); } catch { out = null; }
   return out && out.ok === true ? { answered: true, result: out.result } : { answered: false, result: undefined }; };

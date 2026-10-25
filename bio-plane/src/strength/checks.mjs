@@ -11,7 +11,7 @@
  * those functions, their codes, numbers and translations unchanged. */
 
 import { VERSION_STATES } from "../basis-versions/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 const at = (fn, region) => `src/strength/index.mjs ${fn} > ${region}`;
 
@@ -231,5 +231,14 @@ export const STRENGTH_BAR_CHECKS = Object.freeze({
     check: 'C-107.4',
     where: at('projectBarSet', 'is-project-bar-reason'),
     translation: word('refusal.PROJECT_BAR_NO_REASON'),
+  },
+  /* R45 (T51 fix round 10; K5157): a second owner's save from a page that showed the bar before another owner changed it
+     writes nothing and says so, with the bar now held. The sentence is a stand-in until the design list holds the row
+     (K3930, K3943). */
+  BAR_STALE: {
+    check: 'C-107.5',
+    where: at('projectBarSet', 'is-project-bar-fresh'),
+    translation: localize('refusal.BAR_STALE',
+      "This project's bar changed after you opened it, so your change was not saved. The bar it holds now is shown. Read it, then set yours again if you still mean to."),
   },
 });
