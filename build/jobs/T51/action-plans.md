@@ -1,6 +1,6 @@
 # action-plans (T51)
 
-**Status** · session_0129vmmwvkC9E9jVVexUhTsz · depth 2 · COMPLETE · handled B4
+**Status** · session_01QNmwftmFAVAy2K1WHsTW8M · depth 2 · COMPLETE · handled B8
 
 ## Completion
 
@@ -101,3 +101,39 @@ Size (session_0129vmmwvkC9E9jVVexUhTsz): test runs 6, module lines 3357
 ## J4 · COMPLETE
 
 COMPLETE (B5). Published planRead fixture (planRead, checkpointsDue, plansToLookAgain) in test/m/action-plans/fixtures.mjs; ran contract plan-open-check (fixtures-run: ai-runs plan-open-check). REAL DIFFERS: the open check refuses a closed plan with PLAN_CLOSED (C-124.10), not PLAN_NOT_OPEN; ai-runs plan.test.mjs:95 must change to it. Own lines re-pointed: escalationRead (131), actionRead (180, real NO_SUCH_ACTION), retrieval (169). Marker: words.test.mjs:29 fixtures-generic: SOMEONE_ELSES (code made up on purpose as a scan control). NEEDS BOB: add 'retrieval' to action-plans' uses in modules.json (architecture.mjs fails with 1 failure until then; fixture.mjs imports test/m/retrieval/fixtures.mjs). Tests 103/0, fixtures 0 failures, words/format/coverage/ownership 0. Waiting: orphan-run on ai-runs' marker.
+
+## J5 · QUESTION
+
+B6 needs a uses edge. Reading the project's stance on a question (the row in the project's conclusions[]) means calling basis-versions: basisVersions.conclusionOf(project, inquiry, viewer) (R22), and the tests take concludeAct from its fixtures.mjs. action-plans' uses in build/modules.json does not list basis-versions (layer 6, earlier, so no cycle). Please add 'basis-versions' to action-plans' uses on tranche/T51. My reading: a lazy dep 'basisVersions' in actionPlansOf, like strength, so a host with none leaves #support's old answer for open questions and fails closed (hypothetical, concluded wording) never. Meanwhile I build and test on that reading; the architecture check will name the missing edge until you add it.
+
+## B6 (K5131, WALK-FINAL-09 R102, D6): a question concluded in the plan's project
+
+**Marked requirement met:** the Purpose paragraph's sentence (Terms: a concluded question is a suspected matter whose `why` says it is concluded in this project, not yet a determination). No numbered R id carries the mark; BOB strikes the *(not yet met: T51)* in the Purpose.
+
+**Root cause, with evidence.** `#support` (`index.mjs`, the `s.kind === "inquiry"` arm) answered every inquiry subject `hypothetical` with the one sentence for an open question, whatever the plan's project had done with it. The project's stance on a question lives in the project's document (`basis-versions` R18, R22) and is read by `basisVersions.conclusionOf(project, inquiry, viewer)`; this module never asked. Red first: the new test showed `why` "a suspected matter: a question still open, nothing decided yet" on a plan over a question the project had concluded.
+
+**Fix.** `#support` asks `basisVersions.conclusionOf(project, inquiry, viewer)`. A stance that is a conclusion keeps `support: hypothetical` (a conclusion is not a determination) and `why` is the new sentence `action-plans.why.suspected_matter_concluded`: "a suspected matter: a question concluded in this project, not yet a determination". Everything else is unchanged: an open question, a project that concluded nothing, another project's conclusion (the stance is the plan's project's alone) and a withdrawn or unrecognised stance (`conclusionOf` answers null) keep the still-open sentence. `basisVersions` is a lazy provider (`actionPlansOf` reaches `basisVersionsOf(host, base)` as it reaches strength). **The sentence is new text for UX-DESIGN to review (K3930); it has no `words.json` row yet, so `localize` answers its `en`.**
+
+**Why the tests missed it.** `open.test.mjs:61` used an open question only, and no test world held a project that had concluded anything. Gap fixed: `concluded.test.mjs` builds the world over a real basis-versions world (`world({on})` in `fixture.mjs`) so the stance is made by the real act, `bv.conclude({target, project})`, then `planOpen` and `planRead` read it; controls for an open question in the same project, a project that concluded nothing, and another project's conclusion. Seen red (both tests), then green.
+
+**Walker's case through its real entry:** `bv.conclude` in project P, then `planOpen({project: P, subjects: [{kind: "inquiry"}]})` and `planRead`: `subjects[0].why` is the concluded sentence; the same question in Q (which concluded nothing) reads the open sentence.
+
+**Platform check:** none (no runtime or deployment surface).
+
+**Fixture notes.** `fixture.mjs` gained `world({on})` (a basis-versions world's host, record, membership, promotion and clock) and builds real basis-versions on every other world (`basisVersionsOf` over stubs for the services its acts ask of inquiry, content and accepted-work, which no action-plans test reaches); on an `on` host, leg-earning cannot migrate (connections' tables already exist in another shape), so `projectsDrawingOn` reads the real `refs` rows that world's connections wrote. No `fixtures-own` or `fixtures-generic` marker added.
+
+**Needs BOB.** `build/modules.json`: action-plans' `uses` lacks `basis-versions` (layer 6, earlier; no cycle). `architecture.mjs action-plans` reports exactly two failures, both that missing edge (`index.mjs` and `fixture.mjs` import `basis-versions`). Posted as J5.
+
+**Checks** (`civicos-process/checks`, absolute root `/home/user/bio`): module suite 105 of 105 pass (after merging tranche/T51); users plan-work 52/52, following 128/128, action-producers 54/54, answer-envelope 52/52; `format` 0; `coverage` 53 of 53; `words` 0; `fixtures --list` 0 failures (1 accepted, the existing generic marker); `architecture` 2 failures awaiting the `uses` edge; `ownership` run at COMPLETE.
+
+Size (session_01QNmwftmFAVAy2K1WHsTW8M): test runs 9, module lines 3366
+
+## Change B7/B8 (K5135): the `uses` edge
+
+Merged `tranche/T51` (basis-versions is in action-plans' `uses`). `concluded.test.mjs` no longer holds the two sentences (words `testcopy` flagged them): the still-open `why` is read from the module's own answer for a question nobody concluded, and the concluded one is asserted different from it. Checks (absolute root `/home/user/bio`): module suite 105 of 105; `format` 0; `architecture` 0; `coverage` 53 of 53; `words` 0; `fixtures --list` 0 failures; `ownership` 0. No `fixtures-own` or `fixtures-generic` marker added.
+
+Size (session_01QNmwftmFAVAy2K1WHsTW8M): test runs 14, module lines 3364
+
+## J6 · COMPLETE
+
+B6 (K5131) complete on job/T51/action-plans: a question concluded in the plan's project keeps support hypothetical and its why is the new sentence action-plans.why.suspected_matter_concluded (needs UX-DESIGN review; no words.json row yet). Marked requirement: the Purpose sentence (no R id); BOB strikes the mark. 105 of 105 module tests; users plan-work, following, action-producers, answer-envelope pass; format, architecture, coverage, words, fixtures, ownership 0 failures. No fixtures markers added. Record: section B6 and Change B7/B8.
