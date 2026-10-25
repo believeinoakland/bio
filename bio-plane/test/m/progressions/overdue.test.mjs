@@ -3,6 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, MEMBER, ZONE } from "./fixture.mjs";
+import { sha as digest } from "../provenance/fixtures.mjs";
 import { readInterval } from "../../../src/progressions/index.mjs";
 
 const T = (w, placements, entityId = "ENT-1") =>
@@ -10,15 +11,17 @@ const T = (w, placements, entityId = "ENT-1") =>
 const overdueOf = (w, now, sha = "sa") =>
   (w.p.captureProgressions({ captureSha: sha, nowMs: now }).instances[0]?.findings || []).filter((f) => f.kind === "overdue_successor");
 const at = (s) => Date.parse(s);
+/* a capture registered in provenance is keyed by its sha-256 digest, as the real register holds it */
+const SA = digest("sa"), SD = digest("sd");
 
 test("R16: a missing stage is overdue only once the local day past the latest predecessor's own date plus its interval has begun in the governing zone", async () => {
   const w = seeded();
   w.define();                                   // award: within 30 days after need
   w.fact("sa", "2026-01-10");
-  w.fact("sd", "2026-01-15");                   // the LATEST own date anchors the clock
+  w.fact(SD, "2026-01-15");                   // the LATEST own date anchors the clock
   w.dates.reading.sa = "2026-08-01T00:00:00Z";  // a reading's or registration's date is never the stage's date
-  w.dates.registered.sd = "2026-08-02T00:00:00Z";
-  await T(w, [{ stage: "need", captureSha: "sa" }, { stage: "need", captureSha: "sd" }]);
+  w.registerAt(SD, "2026-08-02T00:00:00Z");
+  await T(w, [{ stage: "need", captureSha: "sa" }, { stage: "need", captureSha: SD }]);
   // 2026-01-15 + 30 local days = 2026-02-14; it ends at local midnight in New York (UTC-5 in February)
   assert.deepEqual(overdueOf(w, at("2026-02-15T04:59:59Z")), []);          // still the 14th in the zone: not overdue
   const od = overdueOf(w, at("2026-02-15T05:00:00Z"));
@@ -30,7 +33,7 @@ test("R16: a missing stage is overdue only once the local day past the latest pr
   assert.deepEqual(f.overdue_by, { amount: 1, unit: "days" });
   assert.equal(f.overdue_by_ms, 0);
   assert.deepEqual(f.predecessor_dates.map((d) => [d.capture_sha, d.own_date.value, d.own_date_source]),
-                   [["sa", "2026-01-10", "dated_fact"], ["sd", "2026-01-15", "dated_fact"]]);
+                   [["sa", "2026-01-10", "dated_fact"], [SD, "2026-01-15", "dated_fact"]].sort((x, y) => (x[0] < y[0] ? -1 : 1)));
   assert.deepEqual(overdueOf(w, at("2026-03-16T12:00:00Z"))[0].overdue_by, { amount: 30, unit: "days" });
   // an overdue stage is also a missing predecessor
   const all = w.p.captureProgressions({ captureSha: "sa", nowMs: at("2026-02-16T00:00:00Z") }).instances[0].findings;
@@ -71,35 +74,35 @@ test("R16: months and years by the calendar; a month-end with no such day is pos
 test("R16 R37: an event's own date anchors the clock in the event's zone; no own date is overdue undetermined, the capture date named as a bound only", async () => {
   const w = seeded();
   w.define();
-  w.event("EVT-2026-aaaaaaaaaaaaaaaa", { start: "2026-01-10T18:00", end: null, precision: "minute", zone: "Europe/Paris" }, ["sa"]);
-  await T(w, [{ stage: "need", captureSha: "sa", event: "EVT-2026-aaaaaaaaaaaaaaaa" }]);
+  w.event("EVT-2026-aaaaaaaaaaaaaaaa", { start: "2026-01-10T18:00", end: null, precision: "minute", zone: "Europe/Paris" }, [SA]);
+  await T(w, [{ stage: "need", captureSha: SA, event: "EVT-2026-aaaaaaaaaaaaaaaa" }]);
   // the event's local day in Paris is 2026-01-10; + 30 days = 2026-02-09, ending at 23:00Z (UTC+1)
-  assert.deepEqual(overdueOf(w, at("2026-02-09T22:59:59Z")), []);
-  assert.deepEqual(overdueOf(w, at("2026-02-09T23:00:00Z")).map((f) => [f.deadline, f.deadline_zone, f.predecessor_dates[0].own_date_source]),
+  assert.deepEqual(overdueOf(w, at("2026-02-09T22:59:59Z"), SA), []);
+  assert.deepEqual(overdueOf(w, at("2026-02-09T23:00:00Z"), SA).map((f) => [f.deadline, f.deadline_zone, f.predecessor_dates[0].own_date_source]),
                    [["2026-02-09", "Europe/Paris", "event"]]);
   // no own date: undetermined at any instant, the registration shown as a bound and never used as the date
   const u = seeded();
   u.define();
-  u.dates.registered.sa = "2026-01-02T00:00:00Z";
+  const registered = u.registerAt(SA, "2026-01-02T00:00:00Z");
   u.dates.reading.sa = "2026-01-03T00:00:00Z";
-  await T(u, [{ stage: "need", captureSha: "sa" }]);
+  await T(u, [{ stage: "need", captureSha: SA }]);
   for (const now of [at("2026-01-04T00:00:00Z"), at("2040-01-01T00:00:00Z")]) {
-    const f = overdueOf(u, now);
+    const f = overdueOf(u, now, SA);
     assert.deepEqual([f.length, f[0].overdue, f[0].deadline], [1, "undetermined", null]);
     assert.match(f[0].why, /no own date/);
-    assert.match(f[0].why, /2026-01-02T00:00:00Z, a bound only and never its date/);
-    assert.deepEqual(f[0].bounds.map((b) => [b.capture_sha, b.bound.at]), [["sa", "2026-01-02T00:00:00Z"]]);
+    assert.ok(f[0].why.includes(`${registered}, a bound only and never its date`));
+    assert.deepEqual(f[0].bounds.map((b) => [b.capture_sha, b.bound.at]), [[SA, registered]]);
   }
   assert.equal(u.p.overdueScan(at("2040-01-01T00:00:00Z")).overdue_count, 0);
   // two dated facts held and none named: no own date (a member names the one); one named: it governs
-  u.fact("sa", "2026-01-01", "DF-1");
-  u.fact("sa", "2026-01-05", "DF-2");
-  assert.match(overdueOf(u, at("2040-01-01T00:00:00Z"))[0].why, /2 dated facts/);
-  await T(u, [{ stage: "need", captureSha: "sa", datedFact: "DF-1" }]);
-  assert.deepEqual(overdueOf(u, at("2040-01-01T00:00:00Z")).map((f) => [f.overdue, f.deadline]), [[true, "2026-01-31"]]);
+  u.fact(SA, "2026-01-01", "DF-1");
+  u.fact(SA, "2026-01-05", "DF-2");
+  assert.match(overdueOf(u, at("2040-01-01T00:00:00Z"), SA)[0].why, /2 dated facts/);
+  await T(u, [{ stage: "need", captureSha: SA, datedFact: "DF-1" }]);
+  assert.deepEqual(overdueOf(u, at("2040-01-01T00:00:00Z"), SA).map((f) => [f.overdue, f.deadline]), [[true, "2026-01-31"]]);
   // a day with no governing zone is undetermined, never read in UTC
   u.tz.zone = null;
-  const nz = overdueOf(u, at("2040-01-01T00:00:00Z"));
+  const nz = overdueOf(u, at("2040-01-01T00:00:00Z"), SA);
   assert.equal(nz[0].overdue, "undetermined");
   assert.match(nz[0].why, /no time zone governs/);
 });

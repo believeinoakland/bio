@@ -1,6 +1,6 @@
 # progressions (T51)
 
-**Status** · session_01C8PvCDQYKHJx8qBYQNU9ak · depth 2 · COMPLETE · handled B4
+**Status** · session_011v5ZCTD2aqsukHM8utVFpG · depth 2 · COMPLETE · handled B5
 
 ## J1 · COMPLETE
 
@@ -76,3 +76,27 @@ Deferred: none. Found elsewhere, for BOB (not mine to change):
 - `build/requirements/progressions.md` Status line and R47's marker are yours to update with R48.
 
 Size (session_01C8PvCDQYKHJx8qBYQNU9ak): test runs 5, module lines 2228 (index.mjs 1729, schema.mjs 323, checks.mjs 176).
+
+## J5 · COMPLETE
+
+COMPLETE for B5 (fix round 10, Wave A batch 4). Branch job/T51/progressions, tranche/T51 merged in (K1991).
+
+Fixtures published (`bio-plane/test/m/progressions/fixtures.mjs`, new; each made by the real code at call time, never stored; `fixtures.test.mjs`, 3 tests, calls each and checks the real answer, with a control):
+- `definitionRead({progressionKey?, stages?, defined?})`: the real `readProgression` of a progression really defined; a key no definition holds answers `found: false`, no key is refused `NO_KEY` (checked against a fresh world's own read).
+- `disposeProposalOk(args)`: the real `disposeProposal` success for the stage asked (`progressionKey`+`stageKey`, or `key`), over a world that really holds that progression; control: version 2 is `DEFINITION_MOVED`. A spy delegates to it with what it was called with.
+- `disposeProposalRefusal()`: the real `disposeProposal({})`, `NO_KEY`.
+
+Own fixture lines done (FIX-E; both providers merged on the branch point):
+- provenance/registeredHomes, fixture.mjs:128: `world()` now builds the real provenance with `registeredHomes({host, record, membership, promotion, now})` over a `promotionOver`; a capture is registered by the real register act (`w.registerAt(sha, at)`, which answers the `registered` instant provenance holds). The three tests that set `dates.registered` (overdue.test.mjs ×2, owndates.test.mjs) register through it. The real register keys a capture by its sha-256 digest, so those tests use digests (`SA`, `SD`, ...) and `seeded()` also resolves each name by its digest to the same bundle; overdue's one predecessor_dates assertion is sorted by capture sha, the order the module answers; the registered bound is read from provenance, not copied.
+- promotion/makePromotion, integration.test.mjs:20: the `promotionStub` is `promotionOver({record, membership, host})` from promotion's published fixtures. The world also registers `producingGroup`, `citedBy` and `caseMember` on that promotion the way provenance's own world does, so a register act is not refused FACT_UNAVAILABLE.
+
+No `fixtures-own`/`fixtures-generic` marker added; no `fixtures-contract`/`fixtures-run` added (all FIX-E). Lines left in `checks/fixtures.mjs . progressions --list`: 0. Users of my fixtures re-point in their own jobs (action-records `definitionRead`, queue `disposeProposalOk`/`disposeProposalRefusal`).
+
+Tests: progressions 90 pass, 0 fail (`node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/progressions/*.test.mjs`); affordances backing.test.mjs (imports my fixture.mjs) 22 pass, 0 fail, same as before. `impact.mjs origin/tranche/T51 HEAD` on committed state names no module.
+Checks: fixtures 0 failures; format 178 modules, 0 failures; architecture progressions 22 files, 87 imports, 0 failures; coverage progressions 48 of 48 ids, 0 failures; ownership progressions 0 failures; run.mjs shows other modules' fixture lines naming progressions as a provider (action-records, queue, ...), none progressions' own.
+Deferred: none. Found elsewhere: none.
+Size (session_011v5ZCTD2aqsukHM8utVFpG): test runs 12, module lines 2228.
+
+## J6 · COMPLETE
+
+COMPLETE for B5: fixtures definitionRead, disposeProposalOk, disposeProposalRefusal published (fixtures.mjs + fixtures.test.mjs); own lines provenance/registeredHomes and promotion/makePromotion re-pointed; fixtures list for progressions at 0; progressions tests 90 pass; format, architecture, coverage (48/48), ownership 0 failures. No markers added. Detail in record J5.
