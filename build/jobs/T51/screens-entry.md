@@ -230,3 +230,11 @@ QUESTION (R2, paused sign-in; replaces nothing). The plane's `SIGN_IN_PAUSED` ca
 ## J17 · QUESTION
 
 QUESTION (R6, offices; replaces nothing). The page sends `note: null` for an office added with no note and the word calls the note "(optional)", but `entities` R1 refuses an office with no note (`ENTITY_NO_NOTE`), which the page then draws in the plane's words. Best reading: the word row must drop "(optional)" (design lane) and the page must not send an office without a note, or `entities` R1 should accept none. Which?
+
+## Completion (B15 RESUME, K5184)
+
+Merged `tranche/T51` (the `uses` edges `store-request` and `file-safety` are in). The three REPORTs (J13 published-case recipe, J14 system hosting recorder, J15 store-assembly `world.script` process-global) and two QUESTIONs (J16 SIGN_IN_PAUSED has no instant; J17 office note required but worded optional) are posted. `group: null` stays in `worldOf` until a CHANGE says otherwise (STORE-REQUEST's B8 fix not merged). No code change this round.
+
+**Tests and checks.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/screens-entry/`: tests 96, pass 96, fail 0. `checks/format.mjs`: 178 modules, 0 failures. `checks/architecture.mjs bio screens-entry`: 16 product files, 0 failures. `checks/coverage.mjs bio screens-entry`: 30 of 30 live ids named, 0 failures. `checks/ownership.mjs bio screens-entry origin/tranche/T51`: 11 files, 0 failures.
+
+Size (session_01Nwkwhy5gismLNucwdyhzuP): test runs 2, module lines 1158
