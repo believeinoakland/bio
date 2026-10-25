@@ -42997,12 +42997,6 @@
    "note": "DEC-432: B517 screens-intake R14: beside \"Clean\", under Checks"
   },
   {
-   "key": "content.part_kind.body",
-   "en": "in the main text",
-   "protected": false,
-   "note": "DEC-432: B517 screens-daily R17a (find-in.mjs:163), screens-inquiry document.mjs:313,572: after \"passage {n}\""
-  },
-  {
    "key": "content.part_kind.footnote",
    "en": "in a footnote",
    "protected": false,
@@ -43016,13 +43010,13 @@
   },
   {
    "key": "content.part_kind.header",
-   "en": "in a header",
+   "en": "in a page header",
    "protected": false,
    "note": "DEC-432: B517 screens-daily R17a (find-in.mjs:163), screens-inquiry document.mjs:313,572: after \"passage {n}\""
   },
   {
    "key": "content.part_kind.footer",
-   "en": "in a footer",
+   "en": "in a page footer",
    "protected": false,
    "note": "DEC-432: B517 screens-daily R17a (find-in.mjs:163), screens-inquiry document.mjs:313,572: after \"passage {n}\""
   },
@@ -43121,6 +43115,18 @@
    "en": "pass grounds[] — an array of { ground, legs: [ord, ...], statement? }, one entry per group, where each ord is a leg's position in this question's basis. An EMPTY array keeps the answer with no grouping: every supporting leg is then necessary, and the answer reads as its weakest leg. That is a restructuring like any other and takes a reason.",
    "protected": false,
    "note": "DEC-432: B517 inquiry R30b (K5077, DEC-32 clause 4): an empty list is kept, not a removal"
+  },
+  {
+   "key": "citation.index.repair_add_to_group",
+   "en": "Add it to the group {ground}",
+   "protected": false,
+   "note": "DEC-432: B517 screens-inquiry document.mjs:1840 reads it (fr5-document.test.mjs:72); a code row rows.mjs regeneration drops, held here word for word; a group of citations (DEC-32), not a team"
+  },
+  {
+   "key": "citation.index.repair_remove_grouping",
+   "en": "Take the grouping off, so the answer reads as its weakest citation",
+   "protected": false,
+   "note": "DEC-432: B517 screens-inquiry document.mjs:1840; held word for word, as the row above"
   },
   {
    "key": "screen.objective.purpose",

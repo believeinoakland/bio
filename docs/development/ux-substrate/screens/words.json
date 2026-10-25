@@ -152,9 +152,10 @@
   "docprofile": 1,
   "installer-steps": 1,
   "capture-sources": 8,
-  "content": 133,
+  "content": 132,
   "office-readers": 1,
   "inquiry": 21,
+  "citation": 4,
   "duties": 79,
   "basis-versions": 23,
   "filing-templates": 29,
@@ -185,7 +186,6 @@
   "workbooks": 21,
   "tasks": 7,
   "answers": 3,
-  "citation": 2,
   "action-records": 15,
   "drive": 19,
   "action-replies": 10,
@@ -236,7 +236,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19216,
+  "total": 19217,
   "protected": 1158
  },
  "words": [
@@ -81745,13 +81745,6 @@
    "note": "DEC-432: B517 screens-intake R14: beside \"Clean\", under Checks"
   },
   {
-   "key": "content.part_kind.body",
-   "en": "in the main text",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-432: B517 screens-daily R17a (find-in.mjs:163), screens-inquiry document.mjs:313,572: after \"passage {n}\""
-  },
-  {
    "key": "content.part_kind.footnote",
    "en": "in a footnote",
    "protected": false,
@@ -81767,14 +81760,14 @@
   },
   {
    "key": "content.part_kind.header",
-   "en": "in a header",
+   "en": "in a page header",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-432: B517 screens-daily R17a (find-in.mjs:163), screens-inquiry document.mjs:313,572: after \"passage {n}\""
   },
   {
    "key": "content.part_kind.footer",
-   "en": "in a footer",
+   "en": "in a page footer",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-432: B517 screens-daily R17a (find-in.mjs:163), screens-inquiry document.mjs:313,572: after \"passage {n}\""
@@ -81890,6 +81883,20 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-432: B517 inquiry R30b (K5077, DEC-32 clause 4): an empty list is kept, not a removal"
+  },
+  {
+   "key": "citation.index.repair_add_to_group",
+   "en": "Add it to the group {ground}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry document.mjs:1840 reads it (fr5-document.test.mjs:72); a code row rows.mjs regeneration drops, held here word for word; a group of citations (DEC-32), not a team"
+  },
+  {
+   "key": "citation.index.repair_remove_grouping",
+   "en": "Take the grouping off, so the answer reads as its weakest citation",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-432: B517 screens-inquiry document.mjs:1840; held word for word, as the row above"
   },
   {
    "key": "screen.objective.purpose",
