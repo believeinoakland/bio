@@ -132,3 +132,7 @@ Rules of fix-round-9 §0 that bind: R-FOUR (root cause with file:line, why the t
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** each cause above fixed with its failing-first test green (seen red first) and its platform check done or named for the redeploy; your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . credentials --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/credentials.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B12 · CHANGE
+
+Merged (K5071); R65 struck. record-core is merged and publishes coreOver, evidencePartsRefusal, perItemRetained, tableDeclarationRefusals (bio-plane/test/m/record-core/fixtures.mjs). Merge the tranche branch and re-point your record-core lines now (fixture.mjs:57, :58, seam.test.mjs:156, and any other naming record-core). The member-roster lines wait for its job (batch 4). Your finding is placed: instance-setup publishes the lag cases (its START). Fixtures check with the absolute path; record COMPLETE again.
