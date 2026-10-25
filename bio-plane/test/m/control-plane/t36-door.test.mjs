@@ -290,6 +290,7 @@ test("R62 (rev. 2 conflict (c); K1888 (3); BOB's review (8)): a member's session
   const agent = aik();
   const { env, S } = world({ creds: { [agent]: cred({ tokenId: "agent-ann", principal: "member:ann", writes: ["capture"] }) }, answer: (c) => {
     if (c.route !== "openoriginal" && c.route !== "openwithwarning") return null;
+    // fixtures-generic: answer (a refusal of file-safety's route is relayed past as given; its code is arbitrary here)
     return answer === "bytes" ? served({ "x-capture-sha256": SHA }) : ok({ ok: false, reason: answer, code: answer });
   } });
   let captureRead = 0;

@@ -90,6 +90,7 @@ test("R57 (ai-runs R48): a draft that reached the model is counted to the member
   const ok = draftWorld();
   await call(ok.env, { op: "writinghelp", token: ok.S.ann, method: "POST", hooks: packHooks(), body: { op: "notewrite", field: "text", told: "the lift was out" } });
   assert.deepEqual(counted(ok.env), [["member:ann", "draft", 2, false]]);
+  // fixtures-generic: exhausted (the door relays an ending as the object's draft gave it, whatever its word)
   const end = draftWorld(null, { ok: false, code: "exhausted", detail: "the turns ran out", grant: "GRANT-SECRET" }, 502);
   const e = await call(end.env, { op: "writinghelp", token: end.S.ann, method: "POST", hooks: packHooks(), body: { told: "x" } });
   assert.deepEqual([e.status, e.json.code, e.json.detail, e.text.includes("GRANT-SECRET")], [502, "exhausted", "the turns ran out", false]);

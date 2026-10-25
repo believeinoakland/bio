@@ -11,6 +11,7 @@ import { RECORDED_BY_MODULES, RECORDED_BY_LIMIT, RECORDED_NONE_REGISTERED } from
 import { listenerRefusal, MODULE_ORDER } from "../../../src/membership/index.mjs";
 import { canonicalExtent } from "../../../src/content/index.mjs";
 import { fresh, hold, doc, docx, wp, wr } from "../extraction/fixture.mjs";
+import { recordedByMalformedExtent } from "../events/fixtures.mjs";
 import { word as WORD } from "../../../src/setup-words/index.mjs";
 
 const page = (n) => ({ kind: "pdf-page", page: n });
@@ -136,7 +137,8 @@ test("R1 (N715): a table result is related through its table.extent by content.e
 
 test("R1, R4 (N715): recorded_read names the reads that answered; recorded_not_read names each that refused, threw, answered a promise (its rejection caught) or answered another shape, with why, and the line saying no later module is registered; such a read changes nothing else", async () => {
   const rec = quiet();
-  rec.events.recordedBy = () => ({ ok: false, reason: "EXTENT_MALFORMED", code: "EXTENT_MALFORMED" });
+  const malformed = recordedByMalformedExtent(); // events' real refusal, not a hand-built one
+  rec.events.recordedBy = () => malformed;
   rec.standards.recordedBy = () => { throw new Error("standards broke"); };
   rec.money.recordedBy = async () => { throw new Error("rejected"); };
   rec.people.recordedBy = () => ({ ok: true, items: "none" });

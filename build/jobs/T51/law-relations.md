@@ -1,6 +1,6 @@
 # law-relations (T51)
 
-**Status** · session_01WUaDP43x71LajSMPAd7ZrS · depth 2 · COMPLETE · handled B2
+**Status** · session_018WDm7E3VEq77FEdczJFfnV · depth 2 · COMPLETE · handled B4
 
 ## J1 · COMPLETE
 
@@ -54,3 +54,58 @@ RW (words round, B2) complete on `job/T51/law-relations` at `b8439ea8f2`, after 
 - `node checks/run.mjs /home/user/bio` (before the tranche merge): format 0 failures; architecture 0 failures; words 1628 failures and coverage 22 failures, all in other modules, none naming law-relations; exit 1 for those other modules only.
 
 Size (session_01WUaDP43x71LajSMPAd7ZrS): test runs 3, module lines 933
+
+## J3 · BLOCKED
+
+BLOCKED (cause: needs Bob) · fix round 10, plan item 95 (K5195), commit d6d30fa235 on job/T51/law-relations
+
+NEEDS BOB: the architecture check fails on one line. Decision: does law-relations' `uses` in build/modules.json name `acquisition`?
+
+What changed (bio-plane/test/m/law-relations/fixture.mjs only):
+- :136 `citationLookup` default: the hand-written `{ok:false, reason:"KEYED_SERVICE_OFF"}` now returns acquisition's published `keyedServiceOff()` (import at :15, from ../acquisition/fixtures.mjs). acquisition is earlier in the order (layer 3 against law-relations' 5), so the provider's fixture is the only route the fixtures check accepts (a contract marker is accepted only for a later provider).
+- :143, :144, :147, :149-:153 (the eight `hostRefusal` builder lines): each carries `// fixtures-contract: standards host-refusals`. standards (later) runs them at fixtures.test.mjs:83, so the orphan run clears.
+
+Blocker: `checks/architecture.mjs /home/user/bio law-relations` now reports
+  FAIL bio-plane/test/m/law-relations/fixture.mjs (law-relations): imports bio-plane/test/m/acquisition/fixtures.mjs of acquisition, which law-relations does not declare in uses
+Adding a test import of acquisition is a boundary, so it is Bob's, not mine (I did not edit build/modules.json).
+Options:
+  A (recommended): add "acquisition" to law-relations' uses in build/modules.json. Layer order holds (3 before 5). Keeps the fixture import and the contract markers. Clears both the fixtures check and architecture.
+  B: revert :136 to the literal. Architecture passes; the fixtures check then fails at :136 (answer, refusal, provider credentials,acquisition, earlier), so this round's "no finding" condition is not met.
+The only step I need from Bob is A or B. Once you choose, I apply it and re-run the checks.
+
+Checks run (all with absolute root /home/user/bio):
+- node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/law-relations/*.test.mjs: tests 26, pass 26, fail 0. Per file: courts 5, host 5, reads 8, relations 8 (sum 26).
+- checks/fixtures.mjs law-relations --list: 0 failures (was 10); accepted 8 (the host-refusals contract).
+- checks/format.mjs: 0 failures. checks/coverage.mjs law-relations: 21 of 21 ids named, 0 failures.
+- checks/ownership.mjs law-relations 7915a4d54b…HEAD: 1 file changed by law-relations, 0 failures.
+- checks/words.mjs law-relations: 0 failures (only comments and an import added; no string literal changed).
+- checks/architecture.mjs law-relations: 1 failure (the boundary above).
+- checks/run.mjs: the only law-relations line is that architecture failure.
+- build/plan/impact.mjs origin/tranche/T51 HEAD: 0 modules affected (test file only).
+
+Merged origin/tranche/T51 (53 commits, fast-forward) before starting, as START asked.
+Nothing deferred. Nothing found in another module.
+
+## J4 · COMPLETE · re B4
+
+COMPLETE · fix round 10 (plan item 95, K5195; answer K5198) on job/T51/law-relations at ec3f4eb7a0, after merging origin/tranche/T51 (never a rebase).
+
+Applied (the code change is d6d30fa235, unchanged by the merge):
+- bio-plane/test/m/law-relations/fixture.mjs:15: imports keyedServiceOff from ../acquisition/fixtures.mjs (acquisition is now in uses, per K5198).
+- fixture.mjs:136: citationLookup's default returns acquisition's published keyedServiceOff() instead of a hand-built KEYED_SERVICE_OFF literal.
+- fixture.mjs:143, 144, 147, 149, 150, 151, 152, 153: each hostRefusal builder line carries `// fixtures-contract: standards host-refusals` (standards, a later module, runs it at fixtures.test.mjs:83; the orphan run clears).
+- No fixtures-own or fixtures-generic marker added. Met ids: none changed (BOB strikes the marks).
+- Failing first: before the change, checks/fixtures.mjs law-relations reported 10 failures (1 answer refusal at :136, 8 builder lines, 1 orphan contract at standards fixtures.test.mjs:83). Architecture then failed on the acquisition import until uses named it.
+
+Deferred: nothing in my module. Found in another module: nothing.
+
+Tests and checks (absolute root /home/user/bio):
+- node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/law-relations/*.test.mjs: tests 26, pass 26, fail 0. Per file: courts 5, host 5, reads 8, relations 8 (sum 26).
+- checks/fixtures.mjs law-relations --list: 0 failures, accepted 8, 0 answer findings.
+- checks/architecture.mjs law-relations: 0 failures.
+- checks/format.mjs: 0 failures (178 modules).
+- checks/coverage.mjs law-relations: 21 of 21 live ids named, 0 failures.
+- checks/words.mjs law-relations: 0 failures; no string literal changed.
+- checks/ownership.mjs law-relations origin/tranche/T51 HEAD: 0 failures (the module's test file and this job record).
+
+Size (session_018WDm7E3VEq77FEdczJFfnV): test runs 6, module lines 933

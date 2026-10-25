@@ -48,7 +48,7 @@ function seams(m, fact) {
   m.registerPasswordSetter(() => ({ ok: true }), "test-password");
 }
 
-export function world({ sealSecret = SEAL } = {}) {
+export function world({ sealSecret = SEAL, now = null } = {}) {
   const db = new DatabaseSync(":memory:");
   const core = coreOf(db);
   const sql = sqlOver(db);
@@ -57,7 +57,7 @@ export function world({ sealSecret = SEAL } = {}) {
   m.migrate();
   const fact = { claimed: false };
   seams(m, fact);
-  const a = aiAccountsOf(ctx, { record: core, membership: m, sealSecret });
+  const a = aiAccountsOf(ctx, { record: core, membership: m, sealSecret, now });
   if (aiAccountsOf(ctx) !== a) throw new Error("aiAccountsOf answers one instance per storage");
   a.migrate();
   const w = {

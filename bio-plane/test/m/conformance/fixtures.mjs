@@ -61,6 +61,37 @@ export function determinationVariants() {
            viewer: V("pat"), outsider: V("quinn"), world: w };
 }
 
+/** R9, R14, R31, R32: one determination resting on a finding checked for publication and held unsigned (basis `checked_held`)
+ *  and on another group's accepted finding (basis `accepted`) together, as one action resting on both reads it. */
+export function determinationBothBases() {
+  const { w, proj, input } = scene();
+  w.inquiry(HELD, { legs: [{ target: DOC }] });
+  w.hold(HELD, proj);
+  const ref = w.accept(IMPORT_SHA, "INQ-2026-0001-theirs");
+  const both = made(w.c.determine(input({ findings: [HELD, { ref, edition: 1 }] })));
+  return { conformance: w.c, both, viewer: V("pat"), outsider: V("quinn"), world: w };
+}
+
+const MATTER_STAKE = { stake: "We gain if the contract is voided.", set_by: "alice", set_at: "2026-10-01T10:00:00Z", source: "project" };
+const GROUP_FIELDS = { group: "hayward-parents", name: "Hayward Parents for Accountability", domain: "haywardparents.org",
+                       domain_verified_at: "2026-09-01T00:00:00Z", stake: "We campaign for the measure this case examines.",
+                       detail: null, read_at: "2026-09-19T12:00:00Z" };
+
+/** R32, R41 (T50): one determination per accepted basis, each on another group's finding of an import whose source facts
+ *  are the three states case-import answers: its matter stake recorded at import, recorded with none, and not recorded at
+ *  all (so `matter_stake` reads "undetermined"). The import facts are conformance's stand-in for case-import's `importedCase`
+ *  (`w.imports.editions`), the shape its R25 records (matter-stake.test.mjs). */
+export function matterStakeBases() {
+  const { w, input } = scene();
+  const WITH = "d".repeat(64), WITHOUT = "e".repeat(64), UNDET = "f".repeat(64);
+  w.imports.editions.set(`${WITH}|1`, { group_fields: { ...GROUP_FIELDS, matter_stake: MATTER_STAKE } });
+  w.imports.editions.set(`${WITHOUT}|1`, { group_fields: { ...GROUP_FIELDS, matter_stake: null } });
+  const basisOf = (imp, finding) => made(w.c.determine(input({ findings: [{ ref: w.accept(imp, finding), edition: 1 }] })));
+  return { conformance: w.c, withStake: basisOf(WITH, "INQ-2026-0301-theirs"), withoutStake: basisOf(WITHOUT, "INQ-2026-0302-theirs"),
+           undetermined: basisOf(UNDET, "INQ-2026-0303-theirs"), matterStake: MATTER_STAKE, viewer: V("pat"), outsider: V("quinn"),
+           world: w };
+}
+
 /** R33: a determination resting on a held check whose source then lapsed: it reads void, its outcome undetermined with the
  *  recorded one beside it, still live and unedited. `control` is a published-finding determination that reads not void. */
 export function voidDetermination() {
