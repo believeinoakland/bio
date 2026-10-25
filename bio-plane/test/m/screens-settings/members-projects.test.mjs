@@ -1,4 +1,4 @@
-/* R47 (Membership v2 §7.8; membership R18; member-roster R71): the administrator's roster lists, for each member, the projects that member
+/* R80, R47 (Membership v2 §7.8; membership R18; member-roster R71): the administrator's roster lists, for each member, the projects that member
    participates in which the administrator sees in full. Over the world (store-request): the projects are made by the real acts
    (start, invite, join, hide) and the expectations are read back from what the owners answer, never copied from a literal. */
 import test from "node:test";
@@ -22,7 +22,7 @@ async function team() {
 const cellsOf = (o, m) => all(rowOf(o.tree, m.member_id, m.handle), (e) => e.tag === "td").map((c) => squash(textOf(c)));
 const projectsColumn = (o) => all(o.tree, (e) => e.tag === "th").map((th) => squash(textOf(th))).indexOf(said("screen.projects.name"));
 
-test("R47 an administrator's roster has a Projects column: each member's joined projects by name, owner of or works on; a project known only by its existence, and one only invited to, are not listed", async () => {
+test("R80 R47 an administrator's roster has a Projects column: each member's joined projects by name, owner of or works on; a project known only by its existence, and one only invited to, are not listed", async () => {
   const { w, founder: admin } = await team();
   const roster = (await admin.read("memberlist")).members, named = new Map((await admin.read("projectlist")).projects.map((p) => [p.id, p.name]));
   const o = await open("members", { world: w, as: admin });
@@ -46,7 +46,7 @@ test("R47 an administrator's roster has a Projects column: each member's joined 
   assert.deepEqual(o.p.requests.filter((r) => r.op === "projectlist").length, 1, "the names are read once");
 });
 
-test("R47 control: a member who does not administer reads the table of members with no Projects column and sends no projectlist", async () => {
+test("R80 R47 control: a member who does not administer reads the table of members with no Projects column and sends no projectlist", async () => {
   const { w, dev } = await team();
   const o = await open("members", { world: w, as: dev });
   assert.equal(projectsColumn(o), -1);
@@ -54,7 +54,7 @@ test("R47 control: a member who does not administer reads the table of members w
   assert.ok(!o.text.includes(said("screen.members.tip.workson", { project: "Street trees" })));
 });
 
-test("R47 control: a projectlist that cannot be read is drawn failed for a member who has projects, never as none, and says nothing for one who has none", async () => {
+test("R80 R47 control: a projectlist that cannot be read is drawn failed for a member who has projects, never as none, and says nothing for one who has none", async () => {
   const { w, founder: admin } = await team();
   const o = await open("members", { world: w, as: admin, table: { projectlist: "none" } });
   const col = projectsColumn(o), roster = (await admin.read("memberlist")).members;
