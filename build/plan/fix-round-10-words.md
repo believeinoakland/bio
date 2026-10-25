@@ -40,3 +40,19 @@
 
 - R5, R36: the keys exist (`reading-pipeline.index.unsupported_gif`, `_tiff`; the stored reading's own line is chosen by the module). R27a (option A) changes no sentence. R34's first-load `session.ended` sentence exists. R39: no sentence. R25 and R28a are not defects.
 - The Chromium test for R32 (1280x900 and 390x844) belongs to `interface-assets` once the rule is merged.
+
+## The final pass's words and layout (K5148; diagnoses `walk-T51-final/diagnosis/diag2-*.md`)
+
+- 04B OV-15 (`diag2-04.md` §9): "secret phrase" (29 rows, e.g. `screen.doorbell.secret.label`), "Confidential" (`screen.action.confidential`, `.scope.confidential`, `.scope.open`) and British "recognised" (`screen.doorbell.consent.refused.secret`) against the overlay's own rule (check 15).
+- 04B R146 (`diag2-04.md` §6): an authority task's Queue row carries no basis (the task grammar keeps none): what the row says.
+- 03 R20 (`diag2-020305.md` §3): step 1 "Name your team" has no sentence (screens-daily R40 gives none): one, if wanted.
+- 03 R20 (§2): the heading over the lone "Help for my own situation" door, now none (K5148).
+- 07 R60 (`diag2-07.md` §1): "Record an event" now records the form's date as the event's dated fact (K5148): the form's words.
+- 07 R158 (§9): Explore's picker offers the viewer's documents by title, newest first (K5148): its layout.
+- 08 C3, C8 (`diag2-08.md`): the relate form's label (no "content id"; a choice among the standard's passages) and the incoming-direction words for a related law ("Referred to by", "Implemented by", ...; and `rel.interprets`, `applies`, `holds_invalid`).
+- 08 C9: whether the Standard screen also offers `standardadoption` and `standardimpose` (with `bindsat`'s words); the issuer route to "binds" is fixed now (K5148).
+- 08 C13: the glossary holds no law term (standard, in force, benchmark, discretion, writ, proceeding): screens-settings R59 names two groups; a third, if wanted, with its definitions.
+- 08 C14: the records help page draws the profile's laws under "none is shown here" when a profile holds laws and no `records_help` (the first profile gains the block now, K5148).
+- 08 OV4.1: a failed read says "This could not be read. Try again in a moment." with no reason.
+- 10B C8: "Vouch for the 6 photos you captured" for documents (already `later-ux.md:19`).
+- New member sentences written at their use this round (to review through the unreviewed list): people `PERSON_ITEM_NOT_HELD`, monitoring's `unconfirmed_removal`, `moved`, `refused` and the concealment sentence, calculations' `BINDING_UNREADABLE`, `ROW_ALREADY_WRITTEN`, the published page's unrated, no-bar and verification lines.
