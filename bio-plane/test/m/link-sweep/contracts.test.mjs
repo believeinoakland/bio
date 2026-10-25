@@ -3,7 +3,7 @@
    value must equal the one stated here; where the real answer differs, the real one wins and the user changes. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { listWorld, sweepDef, SEED } from "./fixture.mjs";
+import { listWorld, sweepDef, SEED, doorQuery } from "./fixture.mjs";
 import { linkSweepOps, SWEEP_CHECKS } from "../../../src/link-sweep/index.mjs";
 import { localize } from "../../../src/setup-words/index.mjs";
 
@@ -51,12 +51,12 @@ test("R3 contract sweep-fence: the fence answers SWEEP_NOT_A_MEMBER for a non-me
 // fixtures-run: monitoring sweep-mutate
 test("R13 contract sweep-mutate: a named sweep the file lacks is refused NO_SUCH_SWEEP, and the refusal reaches the caller as given", async () => {
   const { w } = listWorld({ list: LIST, project: PROJ, sweeps: [sweepDef({ id: "minutes", ratified: false })] });
-  const q = new URLSearchParams({ op: "sweepset", author: "member:alice", viewer: "member:alice" });
+  const q = doorQuery("sweepset", "member:alice");
   const nothing = `${LIST}#nothing`;
   const before = w.manifest(LIST).length;
   const r = await linkSweepOps(w.s, new URL("http://do/?" + q), { bundle: LIST, sweep: nothing, ...FIELDS }).sweepset();
   assert.deepEqual(r, SWEEP_MUTATE.no_such_sweep(nothing));
-  const rr = await linkSweepOps(w.s, new URL("http://do/?" + new URLSearchParams({ op: "sweepratify", author: "member:alice", viewer: "member:alice" })),
+  const rr = await linkSweepOps(w.s, new URL("http://do/?" + doorQuery("sweepratify", "member:alice")),
     { sweep: nothing, ratified: true }).sweepratify();
   assert.deepEqual(rr, SWEEP_MUTATE.no_such_sweep(nothing));
   assert.equal(w.manifest(LIST).length, before, "nothing was written");
