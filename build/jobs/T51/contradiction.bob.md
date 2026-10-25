@@ -1,6 +1,6 @@
 # BOB to contradiction (T51)
 
-**Read** · handled J11
+**Read** · handled J13
 
 ## B1 · START
 
