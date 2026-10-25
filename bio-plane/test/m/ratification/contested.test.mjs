@@ -9,6 +9,7 @@ import { ratificationOf, CLASS_REASONS } from "../../../src/ratification/index.m
 import { captureOf } from "../../../src/capture/index.mjs";
 import { contradictionOf } from "../../../src/contradiction/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/index.mjs";
+import { candidateReads } from "../contradiction/fixtures.mjs";
 
 const OWNER = "o";
 const WHO = V("ann");
@@ -102,10 +103,13 @@ test("R22: a crucial and contested document is counted crucial; contested is ask
 });
 
 test("R22: a contradiction read that fails, throws or is cut short with none found counts the document contested (fail closed)", async () => {
-  for (const read of [() => ({ ok: true, candidates: [], truncated: false, undetermined: true }),
+  /* contradiction's own answers (its `fixtures.mjs`, made by its real code): the index unreadable, the page cut short (its one
+     candidate emptied, so only the cut makes the read unclean) and the read naming nothing; the throw is no answer at all */
+  const reads = candidateReads();
+  for (const read of [() => reads.undetermined,
                       () => { throw new Error("no table"); },
-                      () => ({ ok: true, candidates: [], truncated: true }),
-                      () => ({ ok: false, reason: "CANDIDATES_NO_SUBJECT" })]) {
+                      () => ({ ...reads.truncated, candidates: [] }),
+                      () => reads.noSubject]) {
     const w = setup();
     w.info("INFO-2026-0731");
     w.read = read;

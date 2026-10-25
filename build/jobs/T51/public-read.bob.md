@@ -333,3 +333,40 @@ Mail with `--module public-read`; record `build/jobs/T51/public-read.md` (append
 **Before COMPLETE:** your module's tests, `node build/plan/impact.mjs tranche/T51 HEAD` and the users it names that your change touches, then format, architecture, coverage, words and ownership (civicos-process `checks/`), each read by its failure count. Record completion (mechanics section 6 step 7) with `Size (<session id>): test runs <n>, module lines <n>` and each cause's four fields; state COMPLETE; post COMPLETE.
 
 **G121b · The case file's assembly still awaits a chain of 11 levels, 7 of them R2** (re-walk 8 B: STILL, `assemble;dur` 1.7-2.3 s, the largest phase; diagnosis item 3, Certain). (1) `publication/worker.mjs` `assembleCaseFile` makes 26 R2 calls (2 get, 12 head, 10 put, the manifest's head and put) and 4 object calls: concurrent within a step, but two group barriers, a `head` before every `put`, and the manifest's head and put after `recordcasemanifest` stay serial. (2) Missed: round 8's test counted the calls, not the awaited chain. (3) Red, by counts (R-CLOCK): an in-memory R2 that records each call's start and the promise it awaited, on the walker's one-finding case: the longest awaited chain of R2 calls (11 levels, 7 R2 today) falls to what the data dependencies require; a `head` before a `put` only where the put's correctness needs it (content-addressed keys may put unconditionally, or with R2's own conditional put), and the manifest's work overlapped where nothing depends on it. Every file of the case file is still written and verified as R-old requires. (4) **L**; **P** the re-walk's `assemble;dur` (BOB's).
+
+## B28 · START
+
+START · PUBLIC-READ #34 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 4: publish 1 fixture, re-point 10 own lines, 2 marker lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #290 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/public-read tranche/T51 && git branch -m job/T51/public-read stale/public-read-local && git checkout -b job/T51/public-read origin/job/T51/public-read`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module public-read`; record `build/jobs/T51/public-read.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `bio-plane/test/m/public-read/fixtures.mjs` (new file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `groupIdentityRegistrar` (users now: instance-setup 1): real `publicReadOf(...).registerGroupIdentity` (PROVIDER_MALFORMED, PROVIDER_DECLARED).
+
+**Your own fixture lines, done in this job** (10; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- FIX-L answer-envelope/door-helpers: docket-real.test.mjs:20; door.test.mjs:28; public-path.test.mjs:29; relay.test.mjs:30; sampling.test.mjs:29; served.mjs:28
+- FIX-L store-door/store-replies: door.test.mjs:80; relay.test.mjs:38,39
+- FIX-L instance-setup/group-identity-public: group-fields.test.mjs:18
+
+**Markers owed (K5044 (2), K5060; the audit read each line and found it no module's answer):** write on the line or up to eight lines above:
+- `// fixtures-own: input <why>` (a literal handed to your own export, a route map handed to your own dispatch, an input the module reads opaquely): dec149.test.mjs:129
+- `// fixtures-generic: <the made-up word the line carries>`: g54-attempt.test.mjs:219
+
+A `fixtures-run` you write shows `orphan-run` in your list until its user module's marker is merged, and a marker you place shows `contract-no-run` until its provider's run is merged: these are the only lines you may leave at done, each named in your record with the module it waits for.
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . public-read --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/public-read.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-haiku-5-5, medium effort.
+
+**From publication's job (K5074):** `assembleCaseContainer` and `recordCaseFileFailure` (`bio-plane/src/publication/worker.mjs`) and `public-read/casefile.mjs` are this module's paths, so publish `assembleCaseContainerRefusal`: the real build refusals MATERIAL_MISSING, BUCKET_FAILED and CASE_FILE_NOT_ASSEMBLED, made by your real code, with its test. Users: ratification `g54-paths:310`, `:455`, `g57-heal:426` (re-pointed in ratification's job). publication publishes the ledger half (`caseFileLedger`).
+
+## B29 · CHANGE
+
+Added to your START (K5083; RATIFICATION #36 J18 (2), cause R27a): the case-file assembly (`publication/worker.mjs assembleCaseContainer`, in your paths) makes 5 sequential store hops; it must make 3: fold `recordcasefile` with `casefilefacts`, and the final `recordcasemanifest` + `recordcasefile` into one, and issue the case file's bucket gets and puts in one group with the heads. Failing-first test that counts the longest chain of calls by logical sequence, never by time (K4787): red at 5, green at 3; controls: the container's bytes, the manifest and every refusal unchanged. ratification R60 needs it (the door's chain at most 10). Merge `origin/tranche/T51` first (ratification merged, its `r10-chain.test.mjs` shows the counting pattern).

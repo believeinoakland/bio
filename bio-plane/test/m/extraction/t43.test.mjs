@@ -10,6 +10,7 @@ import { WORD } from "./words.mjs";
 import { crc32 as zlibCrc } from "node:zlib";
 import { noAccount } from "../ai-accounts/fixtures.mjs";
 
+const fillWords = (key, f) => Object.entries(f).reduce((t, [k, v]) => t.replace(`{${k}}`, v), WORD(key));
 const member1 = { cls: "member", session: true, caps: ["contribute"], viewer: "class:admin", by: "member:m1" };
 const ONE_MATTER = { id: "t-set", version: 2, matters: [{ id: "m1" }] };
 
@@ -107,7 +108,9 @@ test("R71 (T43, N853a): an account or limit refusal tier 4 relays as aiRefusal i
   /* the account refusal is ai-accounts' real one; the limit refusal is `ai-use`'s `useCheck` answer, which ai-use's test runs against its real code */
   // fixtures-contract: ai-use use-check
   const refusals = [await noAccount(),
-                    { ok: false, reason: "AI_LIMIT_REACHED", code: "AI_LIMIT_REACHED", check: "C-130.1", translation: "limit" }];
+                    { ok: false, code: "AI_LIMIT_REACHED", check: "C-143.1",
+                      translation: fillWords("ai.refused.limit", { whose: WORD("ai.whose.own"), period: WORD("ai.period.day"), use: WORD("ai.use.transcribe.inline"), when: WORD("ai.when.day") }),
+                      detail: "member:ann's day limit (transcribe, in calls) is reached for the period from 2026-10-09. Nothing was started." }];
   for (const [i, refusal] of refusals.entries()) {
     const { w, d } = await heldScan();
     const tr = transcriber(i === 0 ? { account: refusal } : { limit: refusal });
