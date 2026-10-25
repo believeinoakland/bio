@@ -128,6 +128,7 @@ Terms. An **item** is `{id, class, kind, case, subject, summary, detail, basis, 
 #### T51 fix round 8 (K4817; `build/plan/archive/fix-round-8-T51.md`)
 
 - **R94** (fix round 8, G116; K4817; amends R93) **One derivation serves the list, the muted list and the count.** For one viewer at one count signature (R93's: `writeCount()`, this module's own writes, the 5-second bucket) the list, the muted list and the count are made from one derivation of the feeds, kept for the bucket at most 256 viewers as the count is; the list differs from the count only by its cut; a list after a write to this module's tables or the record is never served from before it. Each answer of `op=queue` states in its `Server-Timing` `queue-count` (`desc=hit` or `desc=miss`) and, for a miss, `rows-queue` (the producers' rows read and written and the items by producer), and a miss writes one log line with the same figures. Replaces R93's "only the count is kept" and its pinned control that the list is made on every ask. Test: one derivation (counted at the producers' read) for the three reads of one viewer at one signature; a to-do write between two list reads is seen; the marks exist.
+- **R95** *(not yet met: T51)* (K5157; walk-T51-final 03 §5) "What you answered" (R59) gains a fifth kind, `join_answer`: each join request the viewer answered (project-roster's read by `closed_by`), with the project, the requester, the answer and the day; a project the viewer can no longer see names nothing (R33).
 
 ## Private
 

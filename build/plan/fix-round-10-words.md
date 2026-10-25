@@ -59,3 +59,21 @@
 - capture-requests R46 (K5151): no screen offers "mark this host a login-gated platform" (and its withdrawal and the list of marked hosts); the ops are routed now: where a member makes the mark.
 - 06/10B (K5152): `standard.inforce.known` names its variable `{author}` where the member is meant (`{member}`).
 - people (K5153): the rows `refusal.PERSON_ITEM_NOT_HELD` and `refusal.NO_LINK_SUBJECT` (written at use) for review.
+
+## The last three diagnoses' words, layout and design questions (K5157; `diag2-03b.md`, `diag2-06.md`, `diag2-11.md`)
+- Questions where a requirement and the design disagree (no job until the design answers): 03b §9, the fork and Start forms preselect "Hidden" (screens-inquiry R29, screens-daily R30) against overlay 7 / DEC-77's "no preselected choice"; 03b §11, whether a project's owners (or the team) read a member's own aspirations (intent R9 says readable, no read lists another member's); 03b §16, whether a theme tells an outsider that something is withheld (connections R44 omits it uncounted; overlay 2 says downstream lists say so).
+- 03b §20: a placement or hunch with no note draws `: “”` (`theme.placed.by`, `theme.hunch.by`: a row without the note clause).
+- 03b §21, §22: "1 questions", "1 items wait on you": `.one`/`.other` rows for `screen.project.stage.*` and `shell.queue.waiting`.
+- 03b §23: a join request on Home reads "any member can take the next step"; it is the owners' move (a row for an item with named recipients).
+- 03b §24: the receipt after Grant or Decline reads "Done: Grant or decline." (the pressed answer's own label).
+- 03b §25: "proposed by , ·" just after "Make an owner" (the presser and the instant until the re-read supplies them).
+- 03b §26: the Proceeding page's breadcrumb loses its project (`place` from the subject; an open entity's project is unknown).
+- 03b §27: "A hidden project shows only to its own members" reads as privacy from administrators (overlay 30).
+- 03b §3, §6, §8: new sentences for a declined request with the owner's word, a member's standing request to leave (and its mark on the owners' Members row), and the bar changed by another owner (`BAR_STALE`).
+- 06 §11, §12: the sentences of retrieval's and connections' new refusal codes (another member's set of things; a record you cannot see), written at use.
+- 06 §15: an upload's source on the Document page (`document.uploaded.by` is the existing row).
+- 06 §20: "The secret is sealed and never shown again" (`screen.capture.logins.about3`, a design row) uses a retired word.
+- 06 record 9: `refusal.NO_SOURCE` is money's sentence and is also drawn for calculations' table refusal.
+- 11 §2a: where the letter's language, the For the team / As myself choice, the audience of a documenting version and the "names a pending measure or a candidate" mark sit on the Send step (the screens job builds them now with the existing words; their placement and any new words are the design's).
+- 11 §6, §7a, §16: how a consequence part's causation line, a determination's name (kind of event, day, office) and a hold's place (its note and day) read.
+- 11 §13: `refusal.STANDARD_NOT_BINDING` does not say the office must first be registered as a subject.
