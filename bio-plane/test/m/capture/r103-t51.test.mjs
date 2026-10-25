@@ -7,6 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bucket, sha } from "./fixture.mjs";
 import { MULTIPART_KEEP_MAX } from "../../../src/acquisition/index.mjs";
+import { evidencePartsRefusal } from "../record-core/fixtures.mjs";
 
 const MiB = 1024 * 1024;
 const STATEMENT = "a scan the clerk handed me at the counter";
@@ -28,6 +29,7 @@ const setup = () => { const b = multipartBucket(); const f = fresh({ evidence: b
 const wholeKey = (big) => `bio/captures/${sha(big)}`;
 const up = (c, bytes, extra = {}) => c.uploadCapture({ bytes, statement: STATEMENT, by: "m1", at: AT, ...extra });
 /* the plane's hand-off, recording what it is given (plane/pending.mjs keepLater) */
+// fixtures-contract: plane keep-later
 const handOff = (c) => { const given = []; c.keepLater = async (k) => { given.push(k); return { ok: true }; }; return given; };
 
 test("R103 (F2): with no ledger a 40 MiB upload in five parts is made whole under its digest by the store's real putFromParts, awaited inside the bound, with nothing owed", async () => {
@@ -83,13 +85,14 @@ test("R103 (F2): with no ledger a keep that does not end inside the bound is ans
 });
 
 test("R103 controls: a store that refuses or throws is owed to the plane, never a refused upload; with no store call or no hand-off the upload still files in its parts", async () => {
+  const { refused } = await evidencePartsRefusal();
   for (const how of ["refuse", "throw"]) {
     /* with the ledger the keep is handed over without being tried; with none it is tried, fails, and nothing is claimed owed */
     for (const ledger of [true, false]) {
       const { c, core } = setup();
       const given = ledger ? handOff(c) : [];
       const real = core.evidenceStore();
-      core.evidenceStore = () => ({ ...real, putFromParts: async () => { if (how === "throw") throw new Error("down"); return { ok: false, reason: "EVIDENCE_STORE_REFUSED" }; } });
+      core.evidenceStore = () => ({ ...real, putFromParts: async () => { if (how === "throw") throw new Error("down"); return refused; } });
       const big = varied(33 * MiB, 5);
       const r = await up(c, big);
       assert.equal(r.ok, true, how);

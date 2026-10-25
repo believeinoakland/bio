@@ -9,6 +9,7 @@ import { CAPTURE_CHECKS } from "../../../src/capture/checks.mjs";
 import { provenanceOf, UPLOAD_VIA } from "../../../src/provenance/index.mjs";
 import { INSTALLATION_CHECKS, firstHopWho, CAPTURE_MAX, textTypeOf } from "../../../src/acquisition/index.mjs";
 import { PLATFORM_FIGURES } from "../../../src/byte-ledger.mjs";
+import { holdsWorld } from "../provenance/fixtures.mjs";
 
 const te = new TextEncoder();
 const MiB = 1024 * 1024;
@@ -170,7 +171,8 @@ test("R86 (provenance R15): bytes the record already holds answer existed with t
   const { c, rows, prov } = setup();
   const first = await c.uploadCapture({ ...ok, by: "m1" });
   /* the first upload was filed: the register names a home for it (R86, T51 fix round 2: a receipt alone is not a home) */
-  prov.registerHolds = ({ sha: x }) => ({ ok: true, sha: x, asked: true, registered: true, acquired: true });
+  const holds = holdsWorld({ [sha(ok.bytes)]: { registered: true, acquired: true } });
+  prov.registerHolds = (a) => holds.registerHolds(a);
   let called = 0;
   const again = await c.uploadCapture({ ...ok, statement: "forwarded to me by a colleague", by: "m2", at: "2026-10-10T08:00:00Z",
                                         within: () => { called++; return { ok: true }; } });

@@ -73,6 +73,7 @@ test("R103 (G79): 17 MiB in three parts (2 MiB in the last) and exactly 32 MiB i
 test("R103 (G79): a 40 MB upload in five parts is answered once its parts are stored when the plane's ledger takes the keep: the upload asks the store for no whole and the ledger is handed the digest and the parts", async () => {
   const { c, b, core } = setup();
   const given = [];
+  // fixtures-contract: plane keep-later
   c.keepLater = async (k) => { given.push(k); return { ok: true }; };
   const real = core.evidenceStore();
   let asked = 0;
