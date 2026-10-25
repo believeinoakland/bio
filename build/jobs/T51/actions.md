@@ -90,3 +90,7 @@ COMPLETE (B5). Published fixtures actionRead, actionsForRefusal (fixtures.mjs, t
 **Checks:** actions tests 154/154 (+3); format, architecture, coverage (76/76), words, ownership 0 failures; `fixtures.mjs actions --list` 4 failing lines, the same as before (t12:55, t45:40, t45:45, t50:27); no marker added.
 
 Size (session_019WFFDn8nuGumB6cnvbuWah): test runs 5, module lines 3525
+
+## J6 · COMPLETE
+
+B6 item 1 done: actionCreate now stamps actorIdentity/actorViewer/actorMemberId, so a stranger is refused PROMOTE_NOT_A_PARTICIPANT, nothing written (create-participant.test.mjs; controls: joined, invited, owner, machine). Met: actions R47. Tests 154/154; format, architecture, coverage 76/76, words, ownership 0; fixtures list unchanged (4). REPORT: other promote calls (revisions of filed actions) left unstamped; stamping them would fence non-participant readers from corresponding: BOB's policy call (see record).
