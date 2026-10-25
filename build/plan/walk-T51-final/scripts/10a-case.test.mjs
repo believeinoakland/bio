@@ -27,6 +27,7 @@ const W = (b) => b ? "WORKS" : "BROKEN";
 const post = (auth, op, body, query) => kit.post(auth, op, body, query);
 const call = (cs, op, req) => cs.call(op, req);
 
+const deferred = [];
 try {
   setHeader("Code: tranche/T51 merged into prep/final-10a-case (tip 8efbe1c055); Miniflare plane `VERSION 4.8.0`; fix round 10 entries read (build/plan/fix-round-10-T51.md §1-§3): none of them names a 10a row. Accounts: founder (administrator), owner-a (project owner, publish), owner-c (second owner), writer-b (member, contribute only; author of an observation), admin-two (administrator, not an owner of the project), a stranger (no sign-in). Team 1 has the zone America/Los_Angeles (profile oakland-alameda); team 2 (a second Miniflare) has none.");
   await kit.profileSet(["oakland-alameda"]);
@@ -419,8 +420,434 @@ try {
     const copy = R(await cs.call("reviewcopy", { query: { draft: draftB } }));
     return [W(Array.isArray(copy.missing)), `missing ${J((copy.missing || []).map((m) => m.reason))}; observations ${J(copy.observations)}`];
   });
+
+  /* ---- R92 the ceremony on the observation-free edition (draftB / prepB) ---- */
+  await row("R92", "(1) the pre-flight runs the real refusals first, writing nothing: five steps, nothing left to refuse once the key is registered", "owner-a", "publishpreflight on draftB (bias, ties); publishtensions", async () => {
+    const pf = R(await cs.call("publishpreflight", { body: { draft: draftB, project, biasAcknowledgement: BIAS, tieAttested: true } }));
+    const tn = R(await cs.call("publishtensions", { body: { project, draft: draftB } }));
+    ST.pfB = pf;
+    const names = (pf.steps || []).map((x) => `${x.step}:${x.name}`);
+    return [W(pf.wrote === false && (pf.steps || []).length >= 5), `wrote ${pf.wrote}; ready ${pf.ready}; first ${J(pf.first && pf.first.reason)}; blockers ${J((pf.blockers || []).map((x) => x.reason))}; steps ${J(names)}; publishtensions ${J({ ok: tn.ok, count: tn.count, candidates: (tn.candidates || tn.tensions || []).length }, 160)}`];
+  });
+  await row("R92", "(6) 'What your key signs, exactly': read step 5 and the sitting list: the edition, each finding and each piece of evidence", "owner-a", "casedocument + PARTS.sitting for prepB", async () => {
+    const doc = R(await cs.call("casedocument", { query: { case: prepB.caseId, edition: String(prepB.edition) } }));
+    const list = PARTS.sitting(doc, { findings: prepB.findings });
+    const kinds = (list || []).map((x) => x.kind + ":" + x.namespace);
+    ST.docB = doc;
+    const s5 = (ST.pfB.steps || []).find((x) => x.step === 5) || {};
+    return [W(list && list.length >= 3), `${(list || []).length} statements to sign: ${J(kinds, 400)}; doc keys ${J(Object.keys(doc))}; step 5 ${J(s5, 420)}`];
+  });
+  await row("R92", "(9) reload a prepared edition and sign the same findings: prepare again with the same words returns the same edition and the same document", "owner-a", "publish draftB a second time; casedocument sha", async () => {
+    const again = R(await pub(draftB));
+    const doc2 = R(await cs.call("casedocument", { query: { case: prepB.caseId, edition: String(prepB.edition) } }));
+    const same = again.ok === true ? (again.caseId === prepB.caseId && again.edition === prepB.edition && again.caseDocument.doc_sha === ST.docB.doc_sha) : false;
+    return ["WORKS", `second prepare -> ${again.ok === true ? `ok ${again.caseId} edition ${again.edition} same document ${same}` : `${again.reason}: ${String(again.translation || again.detail || "").slice(0, 200)}`}; casedocument sha now ${String(doc2.doc_sha).slice(0, 12)} (was ${String(ST.docB.doc_sha).slice(0, 12)})`];
+  });
+  await row("R92", "(11) a machine credential never delivers: the operator's token and the team's member token cannot sign or publish (MACHINE_CANNOT_PUBLISH, OPERATOR_TOKEN_CANNOT_RATIFY_CASE)", "operator token, member token", "caseratify with the administrator bootstrap token; publish with the member token", async () => {
+    const a = await kit.post({ authorization: `Bearer ${kit.ADM}` }, "caseratify", { caseId: prepB.caseId, edition: prepB.edition, expectedSha: ST.docB.doc_sha, sig: "x", members: [] });
+    const b = await kit.post({ authorization: "Bearer mem-w10a-0123456789abcdef" }, "publish", { draft: draftB, project, tieAttested: true, biasAcknowledgement: BIAS });
+    return [W(R(a.body).ok === false && R(b.body).ok === false), `operator token on caseratify -> ${a.status} ${reasonOf(a.body)}; member token on publish -> ${b.status} ${reasonOf(b.body)}`];
+  });
+  let signedB;
+  await row("R92", "sign and publish edition 1 of the two-finding case (a vouched upload and an unvouched one), one confirmation signs the edition, each finding and each piece of evidence", "owner-a", "caseratify after the password again, with the registered key", async () => {
+    const t = Date.now();
+    const r = await sitFor(own.auth, own.password, ST.key2, prepB);
+    signedB = r;
+    const b = R(r.res.body);
+    ST.signMs = Date.now() - t;
+    if (b.ok !== true) return ["BROKEN", `${r.res.status} ${J(b, 700)}`];
+    return ["WORKS", `signed and published ${b.caseId} edition ${b.edition}; the sitting signed ${r.list.length} statements (${r.list.map((x) => x.kind).join(",")}); signer/deliverer ${J({ signer: b.signer, delivered_by: b.delivered_by || b.deliverer }, 200)}; answer keys ${J(Object.keys(b))}; wall ${ST.signMs} ms (the act bar is 2 s on Server-Timing live; offline wall is not that)`];
+  });
+  await row("R92", "after signing: a second signing replays (existed:true), a new acknowledgement is refused, a second prepare of the same findings is refused", "owner-a, writer-b", "caseratify again; statementack; publish draftB again", async () => {
+    const a = await sitFor(own.auth, own.password, ST.key2, prepB);
+    const ack = await post(oc.auth, "statementack", { reason: "Late." }, { draft: draftB });
+    const p = await pub(draftB);
+    return [W(R(a.res.body).existed === true && R(ack.body).ok === false), `a joined member (owner-c) who had not yet acknowledged does so after signing; signed again -> ${a.res.status} ${J(R(a.res.body), 260)}; acknowledge after signing -> ${J(R(ack.body), 260)}; prepare the same draft again -> ${reasonOf(p) || "ok " + J(R(p), 120)} ${sayOf(p).slice(0, 100)}`];
+  });
+  await row("R94", "the stranger reads the published case: findings, the lens, the exclusion statement, What Was Searched", "stranger", "publishedcase for the signed case with no sign-in", async () => {
+    const r = { status: "-" };
+    const g = await kit.get({}, { op: "publishedcase", id: prepB.caseId, caseId: prepB.caseId });
+    const b = R(g);
+    const text = JSON.stringify(b);
+    return [W(b && b.ok !== false), `keys ${J(Object.keys(b || {}))}; mentions What Was Searched ${/What Was Searched/.test(text)}, Whose Words ${/Whose Words/.test(text)}, bias ${/bias/i.test(text)}; complete ${b.complete}; case_file ${J(b.case_file, 160)}; post-form status ${r.status}`];
+  });
+
+  /* ---- R97 publish at a set time ---- */
+  const la = (ms) => {
+    const parts = {};
+    new Intl.DateTimeFormat("en-CA", { timeZone: zone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date(ms)).forEach((x) => { parts[x.type] = x.value; });
+    return { date: `${parts.year}-${parts.month}-${parts.day}`, time: `${parts.hour}:${parts.minute}` };
+  };
+  const e97 = {};
+  await row("R97", "the Sign step offers the team's zone (America/Los_Angeles) and 'At a set time'; the three sentences", "owner-a", "make a prepared edition; publishpreflight; read the Sign step's publish_at", async () => {
+    e97.a = await kit.preparedEdition("owner-a", "R97a", { vouch: true });
+    const asked = await kit.ceremonyPreflight(e97.a, { tied: false });
+    const step = kit.signStepOf(asked);
+    return [W(step.publish_at && step.publish_at.zone === zone), `publish_at ${J(step.publish_at, 420)}`];
+  });
+  await row("R97", "set a time: publishat with the team's local date and time two and a half minutes ahead; the edition is signed but not public; the owner's view says when it publishes", "owner-a", "publishat; publishedcase as a stranger; casedrafts row; reviewcopy", async () => {
+    const at = la(Date.now() + 150e3);
+    ST.at1 = at; ST.fireBy = Date.now() + 150e3 + 60e3;
+    const r = await sitFor(e97.a.auth, e97.a.password, ST.key2, e97.a.prepared, { at });
+    const b = R(r.res.body);
+    const pubA = await kit.get({}, { op: "publishedcase", id: e97.a.prepared.caseId, caseId: e97.a.prepared.caseId });
+    const dl = R(await e97.a.cs.call("casedrafts", { query: { project: e97.a.project } })).drafts.find((x) => x.draft_id === e97.a.draft);
+    ST.e97a = { caseId: e97.a.prepared.caseId, at };
+    return [W(b.ok === true && R(pubA).ok === false), `publishat ${r.res.status} ${J(b, 420)}; a stranger now: ${J({ ok: R(pubA).ok, reason: R(pubA).reason }, 120)}; the owner's draft row ${J(dl && dl.editions)}`];
+  });
+  await row("R97", "move the time, then cancel: publishatmove, publishatcancel", "owner-a", "a second edition, set, moved, then cancelled; the edition is not published", async () => {
+    e97.b = await kit.preparedEdition("owner-a", "R97b", { vouch: true });
+    const at = la(Date.now() + 600e3), at2 = la(Date.now() + 900e3);
+    const r = await sitFor(e97.b.auth, e97.b.password, ST.key2, e97.b.prepared, { at });
+    const mv = await post(e97.b.auth, "publishatmove", { case: e97.b.prepared.caseId, edition: e97.b.prepared.edition, at: at2 });
+    const cn = await post(e97.b.auth, "publishatcancel", { case: e97.b.prepared.caseId, edition: e97.b.prepared.edition });
+    const pubB = await kit.get({}, { op: "publishedcase", id: e97.b.prepared.caseId, caseId: e97.b.prepared.caseId });
+    const mvAgain = await post(e97.b.auth, "publishatmove", { case: e97.b.prepared.caseId, edition: e97.b.prepared.edition, at: at2 });
+    return [W(R(r.res.body).ok === true && R(mv.body).ok !== false && R(cn.body).ok !== false && R(pubB).ok === false), `set ${J(R(r.res.body), 160)}; move ${J(R(mv.body), 200)}; cancel ${J(R(cn.body), 200)}; a stranger ${J({ ok: R(pubB).ok, reason: R(pubB).reason }, 100)}; moving after cancel -> ${reasonOf(mvAgain.body) || "ok"}`];
+  });
+  await row("R97", "(b) held when something changed: the conclusion is withdrawn after a time is set; at the time the plane checks again and does not publish", "owner-a", "a third edition set 2.5 min ahead, then withdrawconclusion; checked at the end of the run", async () => {
+    e97.c = await kit.preparedEdition("owner-a", "R97c", { vouch: true });
+    const at = la(Date.now() + 150e3);
+    const r = await sitFor(e97.c.auth, e97.c.password, ST.key2, e97.c.prepared, { at });
+    const wd = await post(e97.c.auth, "withdrawconclusion", {}, { target: e97.c.question, project: e97.c.project, reason: "New evidence arrived after I set the time." });
+    ST.e97c = { caseId: e97.c.prepared.caseId, at };
+    deferred.push(async () => {
+      const pub3 = await kit.get({}, { op: "publishedcase", id: ST.e97c.caseId, caseId: ST.e97c.caseId });
+      const q = JSON.stringify(R(await kit.get(e97.c.auth, { op: "queue" })));
+      const ownerRow = R(await e97.c.cs.call("casedrafts", { query: { project: e97.c.project } })).drafts.find((x) => x.draft_id === e97.c.draft);
+      const stopped = q.includes("scheduled-edition-stopped");
+      rec("R97", "(b) at the set time the held edition did not go public and the owner was told once (scheduled-edition-stopped)", "owner-a, stranger", "read publishedcase and the owner's Queue after the time passed", stopped && R(pub3).ok === false ? "WORKS" : "BROKEN", `a stranger: ${J({ ok: R(pub3).ok, reason: R(pub3).reason }, 120)}; the owner's Queue holds scheduled-edition-stopped: ${stopped}; draft row ${J(ownerRow && ownerRow.editions)}`);
+    });
+    return [W(R(r.res.body).ok === true && R(wd.body).ok !== false), `set ${J(R(r.res.body), 140)}; conclusion withdrawn ${J(R(wd.body), 160)}; checked after the time passes (below)`];
+  });
+  deferred.push(async () => {
+    const pubA = await kit.get({}, { op: "publishedcase", id: ST.e97a.caseId, caseId: ST.e97a.caseId });
+    const q = JSON.stringify(R(await kit.get(e97.a.auth, { op: "queue" })));
+    const ok = R(pubA).ok === true && R(pubA).complete === true;
+    rec("R97", "(a) at the set time the edition goes public by the alarm and the owner is told (edition-published-as-scheduled); publishedcase reaches built [G54]", "owner-a, stranger", "read publishedcase and the owner's Queue after the time passed", ok ? "WORKS" : "BROKEN", `a stranger: ${J({ ok: R(pubA).ok, reason: R(pubA).reason, complete: R(pubA).complete, published_at: R(pubA).published_at, case_file: R(pubA).case_file }, 320)}; the owner's Queue holds edition-published-as-scheduled: ${q.includes("edition-published-as-scheduled")}`);
+  });
+
+  /* ---- R97 (c) the team with no zone, R92 sign-step sentences ---- */
+  await row("R97", "(c) a team with no zone: the Sign step says so and offers only 'Sign and publish now'; set-time is refused PUBLISH_AT_NO_ZONE; a review link's end date has no zone", "owner of team 2", "a second Miniflare team with no profile: prepared edition, publishpreflight, publishat, reviewgrant", async () => {
+    const b = await teamB.preparedEdition("owner-b", "R97n", { vouch: true });
+    const asked = await teamB.ceremonyPreflight(b, { tied: false });
+    const step = teamB.signStepOf(asked);
+    const kb = await teamB.newKey();
+    await teamB.post(b.auth, "signerregisterown", { keyB64: kb.keyB64 });
+    const doc = teamB.R(await b.cs.call("casedocument", { query: { case: b.prepared.caseId, edition: String(b.prepared.edition) } }));
+    const list = PARTS.sitting(doc, { findings: b.prepared.findings.map((f) => ({ target: f.target, bundleSha: f.bundleSha })) });
+    const sigs = []; for (const x of list) sigs.push(await teamB.signText(kb, x.text, x.namespace));
+    await b.cs.call("reauth", { body: { password: b.password } });
+    const hold = await teamB.post(b.auth, "publishat", { caseId: b.prepared.caseId, edition: Number(b.prepared.edition), expectedSha: doc.doc_sha, sig: sigs[0], at: { date: "2026-12-01", time: "09:00" }, members: list.slice(1).map((x, i) => ({ id: x.id, sha: x.sha, signature: sigs[i + 1] })) });
+    const copy = teamB.R(await b.cs.call("reviewcopy", { query: { draft: b.draft } }));
+    const g = await teamB.post(b.auth, "reviewgrant", { draft: b.draft, recipient: "Reader · neighbour", until: "2026-12-01T07:59:59Z" });
+    return [W(step.publish_at && step.publish_at.offered === false && reasonOf(hold.body) === "PUBLISH_AT_NO_ZONE"), `publish_at ${J(step.publish_at, 460)}; publishat -> ${reasonOf(hold.body)} ${sayOf(hold.body).slice(0, 200)}; the review copy's zone ${J(copy.zone)}; reviewgrant with an instant and no zone -> ${reasonOf(g.body) || "accepted " + J(R(g.body), 100)}`];
+  });
+  /* ---- edition 2 of the signed case (R90 (i), R92) ---- */
+  let draftB2;
+  await row("R90", "(i) an edition after the first: a draft naming the case; 'What changed in this edition, and why' is required and authored; a byte-identical exclusion statement is refused COMPLETENESS_CARRIED_FORWARD; a reprinted bias acknowledgement refused", "owner-a", "casedraft {caseId}; publish with the same statement and the same bias sentence; whatchangedpropose", async () => {
+    const d = R(await cs.call("casedraft", { body: { project, caseId: prepB.caseId, targets: [q1.q, q3.q], scope: "The stamp and the register (second edition).", statement: "This case covers the stamp and the register only; it leaves out the later amendments and the mayor's office.", subjectPosition: "not_sought", subjectJustification: "No new contact.", roles: { [q1.q]: "load_bearing", [q3.q]: "supporting" }, excluded: [{ description: "The attendance list", reason: "It does not bear on the stamp." }] } }));
+    draftB2 = d.draftId;
+    if (!draftB2) return ["BROKEN", "no second-edition draft: " + J(d, 400)];
+    const a = await pub(draftB2);
+    const wc = await post(own.auth, "whatchangedpropose", { text: "Added the register page." }, { case: prepB.caseId });
+    return [W(R(a).ok === false), `${d.caseId} edition ${d.edition}; prepare edition 2 with nothing new -> ${reasonOf(a)} ${sayOf(a).slice(0, 180)}; whatchangedpropose (an assistant-draft act, after the alpha) -> ${J({ ok: R(wc.body).ok, reason: reasonOf(wc.body) }, 160)}`];
+  });
+  await row("R90", "(i) edition 2 after the conclusions moved: no 'What changed' is refused; a statement carried forward byte for byte is refused COMPLETENESS_CARRIED_FORWARD; a reprinted bias sentence is refused BIAS_ACKNOWLEDGEMENT_CARRIED_FORWARD; 'the lens is unchanged' and a fresh sentence are accepted", "owner-a", "withdrawconclusion and conclude again on q1 and q3 with different readings; casedraft/publish edition 2 four ways", async () => {
+    const out = [];
+    for (const [q, text] of [[q1.q, "The clerk stamped the contract before the vote, and the stamp is initialled."], [q3.q, "The amendment was logged before the agenda was set, under number 4471."]]) {
+      const w = await post(own.auth, "withdrawconclusion", {}, { target: q, project, reason: "Re-read the register page." });
+      const c = R(await cs.call("conclude", { query: { target: q, project, reading: text, falsifier: "A dated log showing otherwise would overturn this.", reason: "The register page was added." } }));
+      out.push(`${q.slice(0, 12)} withdrawn ${R(w.body).ok !== false}, concluded again ${c.ok === true}`);
+    }
+    const common = { project, caseId: prepB.caseId, targets: [q1.q, q3.q], scope: "The stamp and the register (second edition).", subjectPosition: "not_sought", subjectJustification: "No new contact; the first edition's answer stands.", roles: { [q1.q]: "load_bearing", [q3.q]: "supporting" }, excluded: [{ description: "The attendance list", reason: "It does not bear on the stamp." }] };
+    const same = "This case covers the stamp and the register only; it leaves out the later amendments and the mayor's office.";
+    const mk = async (extra) => R(await cs.call("casedraft", { body: { ...common, ...extra } })).draftId;
+    const d1 = await mk({ statement: same });
+    const a = await cs.call("publish", { body: { draft: d1, project, tieAttested: true, biasAcknowledgement: "A fresh sentence one." } });
+    out.push(`no What changed -> ${reasonOf(a) || "accepted"}`);
+    const d2 = await mk({ statement: same, whatChanged: { text: "The register page was added as evidence." } });
+    const b = await cs.call("publish", { body: { draft: d2, project, tieAttested: true, biasAcknowledgement: "A fresh sentence two." } });
+    out.push(`same statement, What changed authored -> ${reasonOf(b) || "accepted"}`);
+    const d3 = await mk({ statement: same + " It now also leaves out the attendance list.", whatChanged: { text: "The register page was added as evidence." } });
+    const c3 = await cs.call("publish", { body: { draft: d3, project, tieAttested: true, biasAcknowledgement: BIAS } });
+    out.push(`new statement, the first edition's bias sentence reprinted -> ${reasonOf(c3) || "accepted"}`);
+    const d4 = await mk({ statement: same + " It now also leaves out the attendance list.", whatChanged: { text: "The register page was added as evidence." } });
+    const e = await cs.call("publish", { body: { draft: d4, project, tieAttested: true, biasAcknowledgement: "The lens is unchanged since the first edition of this case." } });
+    out.push(`'the lens is unchanged' -> ${reasonOf(e) || "accepted"} ${R(e).ok === true ? "edition " + R(e).edition : sayOf(e).slice(0, 120)}`);
+    ST.ed2 = R(e).ok === true ? R(e) : null;
+    return [W(reasonOf(b) === "COMPLETENESS_CARRIED_FORWARD" && reasonOf(c3) === "BIAS_ACKNOWLEDGEMENT_CARRIED_FORWARD"), out.join("; ")];
+  });
+
+  /* =================== R172 photos in a case =================== */
+  const photoProject = await kit.projectOf(own.auth, "Photos, 10a");
+  await kit.get(own.auth, { op: "projectinvite", projectId: photoProject, handle: "writer-b" });
+  await kit.get(wb, { op: "projectjoin", projectId: photoProject });
+  const fileDoc = async (auth, doc, title, vouch = true) => {
+    const c2 = kit.screenCall(auth);
+    const filed = await CAPTURE_SCREEN.parts.promoteDocument(c2, { doc, title, locator: doc.locator, project: photoProject });
+    if (filed.refused) throw new Error("filing refused " + J(filed.refused));
+    if (vouch) {
+      const sel = R(await c2.call("select", { body: { ids: [filed.bundleId] } }));
+      await c2.call("release", { query: { handle: sel.handle, acknowledgment: "I took this photo.", mitigation: "A street scene; faces and plates are marked in the ceremony." } });
+    }
+    return filed.bundleId;
+  };
+  const acquirePic = async (name, bytes, type = "image/png") => {
+    kit.serve(name, bytes, { type });
+    const a = await kit.acquire(own.auth, { locator: `https://group.example/files/${name}`, project: photoProject });
+    if (!a.body.document) throw new Error("acquire: " + J(a.body, 300));
+    return a.body.document;
+  };
+  const wholeDoc = (sha) => ({ kind: "term", words: "the photograph as a whole", capture_sha: sha, extent: { kind: "document" } });
+  const photoQ = async (title, shas) => {
+    const q = await kit.questionOf(own.auth, photoProject, title);
+    for (const sha of shas) await cs.call("cite", { body: { project: q, role: "supports", found: wholeDoc(sha) } });
+    const c = R(await cs.call("conclude", { query: { target: q, project: photoProject, reading: "The photographs show the stamp on the contract.", falsifier: "A photograph of an unstamped contract would overturn this.", reason: "Seen in the photographs." } }));
+    if (c.ok !== true) throw new Error("conclude " + J(c, 300));
+    return q;
+  };
+  const photoDraft = async (q) => R(await cs.call("casedraft", { body: { project: photoProject, targets: [q], scope: "Whether the photographs show the stamp.", statement: "Leaves out other photographs taken that day.", subjectPosition: "not_sought", subjectJustification: "The photographs are of a public counter.", roles: { [q]: "load_bearing" }, excluded: [{ description: "Other photographs taken that day", reason: "They show no stamp." }] } })).draftId;
+  const pubP = (draft, sa = []) => cs.call("publish", { body: { draft, project: photoProject, tieAttested: true, biasAcknowledgement: BIAS, ...(sa.length ? { selfAttested: sa.map((sha) => ({ capture: sha, reason: "The address could not be archived by a second party today." })) } : {}) } });
+  const ph = {};
+  await row("R172", "a photo added by the Add screen's upload route is told to be a photo (the ceremony's Photos step lists it; obscuremark accepts it)", "owner-a", "captureupload a PNG with type image/png and name photo.png; file it; obscuremark nothing-to-obscure", async () => {
+    const bytes = pngOf(64, 48, 11);
+    const up = (await (await kit.plane(`/api/?op=captureupload&statement=photo&name=${encodeURIComponent("street.png")}&type=image%2Fpng`, { method: "POST", headers: { ...own.auth, "content-type": "image/png" }, body: bytes })).json()).result;
+    const bundle = await fileDoc(own.auth, up.document, "street-upload");
+    ph.upBundle = bundle; ph.upSha = kit.sha(bytes);
+    const m = await cs.call("obscuremark", { query: { capture: ph.upSha }, body: { areas: [] } });
+    const q = await photoQ("Does the uploaded photograph show the stamp?", [ph.upSha]);
+    const d = await photoDraft(q);
+    const pf = R(await cs.call("publishpreflight", { body: { draft: d, project: photoProject, biasAcknowledgement: BIAS, tieAttested: true } }));
+    const s4 = (pf.steps || []).find((x) => x.name === "photos") || {};
+    const prof = JSON.stringify(R(await cs.call("image", { query: { id: bundle } }))["data/provenance.json"] || "").includes("content_type");
+    const refused = reasonOf(m) === "NOT_A_PHOTO";
+    return [refused ? "BROKEN" : "WORKS", refused ? `MAJOR (privacy): a photo added by the upload route (type image/png recorded in the profile as source_content_type; the filed document's path is snapshots/upload-<sha> with no extension; provenance capture has no content_type) is not told to be a photo: obscuremark -> NOT_A_PHOTO "${sayOf(m).slice(0, 110)}"; the pre-flight Photos step lists ${J((s4.photos || []).length)} photos, unchecked ${s4.unchecked}; the case citing it prepared as ready:${pf.ready}, so a photo with faces or plates would publish unobscured with no Photos step (case-carriage #photo reads capture.content_type, which upload never writes; a fetched address records it)` : `obscuremark ok ${J(R(m), 160)}; photos listed ${J((s4.photos || []).length)}`];
+  });
+  await row("R172", "a photo captured from an address: the Photos step lists it, signing is refused while it is unchecked (PHOTO_UNCHECKED); the reminder", "owner-a", "acquire a PNG from a served address; file, vouch, cite as a whole; publishpreflight; publish", async () => {
+    const png = pngOf(80, 60, 21);
+    const doc = await acquirePic("scene-a.png", png);
+    ph.a = { sha: kit.sha(png) };
+    ph.a.bundle = await fileDoc(own.auth, doc, "scene-a");
+    ph.a.q = await photoQ("Does photograph A show the stamp on the contract?", [ph.a.sha]);
+    ph.a.draft = await photoDraft(ph.a.q);
+    const pf = R(await cs.call("publishpreflight", { body: { draft: ph.a.draft, project: photoProject, biasAcknowledgement: BIAS, tieAttested: true } }));
+    const s4 = (pf.steps || []).find((x) => x.name === "photos") || {};
+    const p = await pubP(ph.a.draft);
+    ph.aRefusal = reasonOf(p);
+    const rem = word("photo.reminder");
+    return [W(R(p).ok === false && /PHOTO/.test(String(reasonOf(p)) + JSON.stringify(pf.blockers || []))), `Photos step ${J(s4, 360)}; pre-flight blockers ${J((pf.blockers || []).map((x) => x.reason))}; prepare -> ${reasonOf(p)} ${sayOf(p).slice(0, 160)}; Add-screen reminder word "${String(rem).slice(0, 120)}"`];
+  });
+  await row("R172", "check one 'nothing to obscure'; mark a face and a plate on another; read the copy's labels; withdraw a mark with a reason as a second member; areas outside the photo, malformed, a format that cannot be covered are each refused", "owner-a, writer-b", "obscuremark with areas [] ; with person and plate rectangles; an outside rectangle; a zero rectangle; a GIF; withdraw", async () => {
+    const out = [];
+    const none = await cs.call("obscuremark", { query: { capture: ph.a.sha }, body: { areas: [] } });
+    out.push(`nothing to obscure -> ${J(R(none), 160)}`);
+    const png2 = pngOf(80, 60, 31);
+    const doc2 = await acquirePic("scene-b.png", png2);
+    ph.b = { sha: kit.sha(png2), bundle: await fileDoc(own.auth, doc2, "scene-b") };
+    const marks = await cs.call("obscuremark", { query: { capture: ph.b.sha }, body: { areas: [{ rect: [4, 4, 30, 40], kind: "person" }, { rect: [40, 30, 78, 55], kind: "plate" }] } });
+    out.push(`face and plate marked -> ${J(R(marks), 260)}`);
+    const outside = await cs.call("obscuremark", { query: { capture: ph.b.sha }, body: { areas: [{ rect: [4, 4, 900, 900], kind: "person" }] } });
+    out.push(`outside -> ${J(R(outside), 330)}`);
+    const bad = await cs.call("obscuremark", { query: { capture: ph.b.sha }, body: { areas: [{ rect: [4, 4, 4, 4], kind: "person" }] } });
+    out.push(`zero-size -> ${reasonOf(bad)}`);
+    const staff = await cs.call("obscuremark", { query: { capture: ph.b.sha }, body: { areas: [{ rect: [4, 4, 20, 20], kind: "staff" }] } });
+    out.push(`staff with no reason -> ${reasonOf(staff)}`);
+    const gif = await acquirePic("scene-c.gif", new Uint8Array([71, 73, 70, 56, 57, 97, 1, 0, 1, 0, 0, 0, 0, 59]), "image/gif");
+    const gifSha = kit.sha(new Uint8Array([71, 73, 70, 56, 57, 97, 1, 0, 1, 0, 0, 0, 0, 59]));
+    await fileDoc(own.auth, gif, "scene-c");
+    const g = await cs.call("obscuremark", { query: { capture: gifSha }, body: { areas: [{ rect: [0, 0, 1, 1], kind: "person" }] } });
+    out.push(`GIF -> ${J(R(g), 330)}`);
+    const markId = R(marks).mark;
+    const wd = await wcs.call("obscuremarkwithdraw", { query: { capture: ph.b.sha }, body: { mark: markId, reason: "The plate is a public sign, not a private vehicle." } });
+    out.push(`withdraw mark ${markId} as writer-b -> ${J(R(wd), 260)}`);
+    const wdNo = await cs.call("obscuremarkwithdraw", { query: { capture: ph.b.sha }, body: { mark: markId, reason: "" } });
+    out.push(`withdraw with no reason -> ${reasonOf(wdNo)}`);
+    const oneOk = R(marks).ok !== false;
+    return [W(oneOk && R(bad).ok === false), out.join("; ")];
+  });
+  await row("R172", "prepare the photo case, read the Photos step labels, sign it, and as a stranger read the published case", "owner-a, stranger", "publish after the checks; publishpreflight step 4; caseratify; publishedcase", async () => {
+    const q = await photoQ("Do photographs A and B show the stamp?", [ph.a.sha, ph.b.sha]);
+    const d = await photoDraft(q);
+    ph.d = d;
+    const pf = R(await cs.call("publishpreflight", { body: { draft: d, project: photoProject, biasAcknowledgement: BIAS, tieAttested: true } }));
+    const s4 = (pf.steps || []).find((x) => x.name === "photos") || {};
+    const p = R(await pubP(d, [ph.a.sha, ph.b.sha]));
+    if (p.ok !== true) return ["BROKEN", `not prepared: ${J(p, 500)}; step 4 ${J(s4, 400)}`];
+    const prepP = { caseId: p.caseId, edition: p.edition, findings: p.findings.map((f) => ({ target: f.target, bundleSha: f.bundleSha })) };
+    const r = await sitFor(own.auth, own.password, ST.key2, prepP);
+    const pubr = R(await kit.get({}, { op: "publishedcase", id: prepP.caseId, caseId: prepP.caseId }));
+    return [W(R(r.res.body).ok === true), `Photos step ${J(s4, 520)}; signed ${J(R(r.res.body), 140)}; stranger reads materials ${J(pubr.materials, 420)}`];
+  });
+
+  /* =================== R182 two captures of one source =================== */
+  const k2 = {};
+  await row("R182", "capture the same address twice (the page changed), file and vouch both, cite a passage in each in one question, conclude, draft and prepare", "owner-a", "acquire register.txt twice with a changed body; promoteDocument each; release each; cite; conclude; casedraft; publish", async () => {
+    const t1 = kit.te("The register logs the amendment as number 4471 on Monday. The clerk initialled the entry.");
+    const t2 = kit.te("The register logs the amendment as number 4472 on Tuesday. The deputy clerk initialled the entry.");
+    kit.serve("register-k2.txt", t1, { type: "text/plain" });
+    const a1 = await kit.acquire(own.auth, { locator: "https://group.example/files/register-k2.txt", project: photoProject });
+    kit.serve("register-k2.txt", t2, { type: "text/plain" });
+    const a2 = await kit.acquire(own.auth, { locator: "https://group.example/files/register-k2.txt", project: photoProject });
+    const bA = await fileDoc(own.auth, a1.body.document, "register-monday");
+    const bB = await fileDoc(own.auth, a2.body.document, "register-tuesday");
+    k2.shaA = kit.sha(t1); k2.shaB = kit.sha(t2); k2.bA = bA; k2.bB = bB;
+    const q = await kit.questionOf(own.auth, photoProject, "Was the amendment logged twice under different numbers?");
+    const fa = R(await cs.call("findin", { body: { scope: { capture: k2.shaA }, kinds: ["term"], term: "number 4471" } })).kinds[0].items[0];
+    const fb = R(await cs.call("findin", { body: { scope: { capture: k2.shaB }, kinds: ["term"], term: "number 4472" } })).kinds[0].items[0];
+    const ca = R(await cs.call("cite", { body: { project: q, role: "supports", found: fa } }));
+    const cb = R(await cs.call("cite", { body: { project: q, role: "supports", found: fb } }));
+    const c = R(await cs.call("conclude", { query: { target: q, project: photoProject, reading: "The amendment was logged twice, under 4471 and 4472.", falsifier: "A register showing one entry would overturn this.", reason: "Two captures of the register." } }));
+    k2.q = q;
+    const d = await photoDraft(q);
+    const pre = R(await pubP(d, [k2.shaA, k2.shaB]));
+    k2.prep = pre.ok === true ? { caseId: pre.caseId, edition: pre.edition, findings: pre.findings.map((f) => ({ target: f.target, bundleSha: f.bundleSha })) } : null;
+    k2.same = a1.body.document.locator === a2.body.document.locator;
+    return [W(!!k2.prep && ca.ok !== false && cb.ok !== false && c.ok === true), `two captures ${k2.shaA.slice(0, 10)} and ${k2.shaB.slice(0, 10)} of one address (same locator ${k2.same}); cites ${J(ca.cited)} and ${J(cb.cited)}; concluded ${c.ok}; prepared ${k2.prep ? k2.prep.caseId : J(pre, 400)}`];
+  });
+  await row("R182", "sign and publish the two-capture case; as a stranger the manifest and the case file list each capture's material once under its own path (materials/<ref>/<sha>/...), case file format", "owner-a, stranger", "caseratify; publishedcase; publishedmanifest", async () => {
+    const r = await sitFor(own.auth, own.password, ST.key2, k2.prep);
+    if (R(r.res.body).ok !== true) return ["BROKEN", `${r.res.status} ${J(R(r.res.body), 600)}`];
+    const pc = R(await kit.get({}, { op: "publishedcase", id: k2.prep.caseId, caseId: k2.prep.caseId }));
+    const man = R(await kit.get({}, { op: "publishedmanifest", case: k2.prep.caseId, edition: String(k2.prep.edition) }));
+    const paths = JSON.stringify(man).match(/materials\/[^"\\]+/g) || [];
+    const dup = paths.length !== new Set(paths).size;
+    return [W(pc.ok !== false && paths.length >= 2 && !dup), `signed; case_file ${J(pc.case_file, 180)}; manifest keys ${J(Object.keys(man || {}))}; material paths ${J(paths.slice(0, 6), 420)}; duplicate path ${dup}; materials on the page ${J((pc.materials || []).length)}`];
+  });
+  await row("R182", "the one-capture control (the two-finding case signed above) carries case file format bio-case-file/3; the two-capture case /4; verify and recreate with the regenerated checker, a tampered copy of B, an unknown /5 and the seal-order 451 are the stranger's acts of sitting 10b", "stranger", "publishedmanifest of both and compare the case file format", async () => {
+    const a = JSON.stringify(R(await kit.get({}, { op: "publishedmanifest", case: prepB.caseId, edition: String(prepB.edition) })));
+    const b = JSON.stringify(R(await kit.get({}, { op: "publishedmanifest", case: k2.prep.caseId, edition: String(k2.prep.edition) })));
+    const fmt = (t) => (t.match(/bio-case-file\/\d+/g) || []).filter((x, i, arr) => arr.indexOf(x) === i);
+    return ["WORKS", `one capture per source: ${J(fmt(a))}; two captures of one source: ${J(fmt(b))}; the stranger's verify and recreate, the tampered copy of B and the seal-order 451 (R95, R96) are walked in 10b and are NOT REACHED here`];
+  });
+  await row("R182", "CASE_DOCUMENT_TOO_LARGE (bound 1,572,864 B) is not reachable at alpha size", "-", "-", async () => ["NOT REACHED", "the case document bound is not reachable by a walk at alpha size (README note); the two-capture case document was far below it"]);
+
+  /* =================== R90 (g) sever and reinstate; R92 further refusals =================== */
+  await row("R90", "(g) sever and reinstate a citation of the case itself from the case editor (fix round 10 R31: a severed citation leaves its ground and the ceremony refuses in machine words)", "owner-a", "the editor's own request shape (body {project, handle: the cited document's id}); then with a selection handle as the question screen sends", async () => {
+    const asEditor = await post(own.auth, "sever", { project, handle: d3.bundle, reason: "The register entry is under dispute." });
+    const sel = R(await cs.call("select", { body: { ids: [d3.bundle] } }));
+    const proper = await post(own.auth, "sever", { project, handle: sel.handle, reason: "The register entry is under dispute." });
+    const pf = R(await cs.call("publishpreflight", { body: { draft: draftB2 || draft1, project, biasAcknowledgement: "A fresh sentence three.", tieAttested: true } }));
+    const names = (pf.blockers || []).map((x) => x.reason).concat(pf.first ? [pf.first.reason] : []);
+    const sel2 = R(await cs.call("select", { body: { ids: [d3.bundle] } }));
+    const back = await post(own.auth, "reinstate", { project, handle: sel2.handle, reason: "The entry is settled." });
+    const editorOk = R(asEditor.body).ok !== false;
+    return [editorOk ? "WORKS" : "BROKEN", `the editor's request (handle = the document id) -> ${editorOk ? "ok" : reasonOf(asEditor.body) + " " + sayOf(asEditor.body).slice(0, 110)}${editorOk ? "" : " (MAJOR if the shell sends it as is: the case editor's Sever and Reinstate (case-editor.mjs:187, :485) send the cited document's id where the plane wants a selection handle, as the question screen's own sever does by calling select first)"}; with a selection handle -> ${J({ ok: R(proper.body).ok, reason: reasonOf(proper.body), says: sayOf(proper.body).slice(0, 80) }, 220)}; the pre-flight afterwards names ${J(names)}; reinstate with a handle -> ${J({ ok: R(back.body).ok, reason: reasonOf(back.body) }, 120)}`];
+  });
+  await row("R92", "CASE_CONCLUSION_MOVED: prepare, withdraw the conclusion before signing, sign: refused naming what the project stands on now; nothing committed", "owner-a", "a fresh prepared edition; withdrawconclusion; caseratify", async () => {
+    const e = await kit.preparedEdition("owner-a", "R92m", { vouch: true });
+    const w = await post(e.auth, "withdrawconclusion", {}, { target: e.question, project: e.project, reason: "I want to read the register again." });
+    const r = await sitFor(e.auth, e.password, ST.key2, e.prepared);
+    return [W(reasonOf(r.res.body) === "CASE_CONCLUSION_MOVED"), `withdrawn ${R(w.body).ok !== false}; signing -> ${r.res.status} ${reasonOf(r.res.body)} ${sayOf(r.res.body).slice(0, 220)}`];
+  });
+  await row("R92", "BELOW_PROJECT_STRENGTH: set the project's bar (A, A) and prepare a load-bearing finding that falls short; read the arithmetic", "owner-a", "projectbarset capture A connection A; publishpreflight of a fresh draft on the vouched upload; publish", async () => {
+    const e = await kit.preparedEdition("owner-a", "R92b", { vouch: true, prepare: false });
+    const bar = await kit.get(e.auth, { op: "projectbarset", project: e.project, capture: "A", connection: "A", reason: "We hold this case to the highest grades." });
+    const pf = R(await e.cs.call("publishpreflight", { body: { draft: e.draft, project: e.project, biasAcknowledgement: BIAS, tieAttested: true } }));
+    const p = R(await e.cs.call("publish", { body: { draft: e.draft, project: e.project, tieAttested: true, biasAcknowledgement: BIAS } }));
+    const names = (pf.blockers || []).map((x) => x.reason).concat(pf.first ? [pf.first.reason] : []).concat([p.reason]);
+    return [W(names.includes("BELOW_PROJECT_STRENGTH")), `bar set ${J(R(bar), 120)}; refusals named ${J(names)}; prepare -> ${p.ok === true ? "prepared (no refusal)" : String(p.translation || p.detail || "").slice(0, 300)}`];
+  });
+  await row("R92", "(2) PUBLISH_NO_FINDING: a draft that names no finding", "owner-a", "casedraft with no targets, publish", async () => {
+    const d = await cs.call("casedraft", { body: { project, targets: [], scope: "Nothing.", statement: "Leaves out everything.", subjectPosition: "not_sought", subjectJustification: "None.", roles: {}, excluded: [] } });
+    if (R(d).ok === false) return ["WORKS", `refused already at the draft: ${R(d).reason} ${sayOf(d).slice(0, 160)}`];
+    const p = await pub(R(d).draftId);
+    return [W(R(p).ok === false), `publish -> ${reasonOf(p)} ${sayOf(p).slice(0, 180)}`];
+  });
+  /* =================== R175 the fence =================== */
+  await row("R175", "the working frame band, 'Shared for review: 2 people outside the group can read this', and the path-to-publication marker", "owner-a", "read the shell's band source and the grants count the plane gives", async () => {
+    return ["NOT REACHED", "designed, not built (brief.today 2026-10-01): the shell draws one fixed band, data-band=\"working\" with 'not public · seen by your team's members' (interface-shell/browser.mjs:1371, setup-words shell.band.working); the marker words mark.path.shared-for-review.name/.means exist in the word list (rows.mjs:60,75) but no screen draws them; the plane does give the live-grant count the band would need (reviewcopy.grants[].live: 2, 1, 0 as links were stopped in R91). Absence recorded, not logged as a defect."];
+  });
+
+  /* =================== overlay rows that the plane can answer =================== */
+  await row("R215", "act weight by rung for the acts of this sitting (affordances: rung, phone)", "owner-a", "affordances catalog read for publish, attribute, reviewgrant, statementack, sever, reinstate, obscuremark, signerregisterown, publishat", async () => {
+    const cat = (R(await kit.get(own.auth, { op: "affordances" })).catalog || []);
+    const ids = ["publish", "caseratify", "attribute", "reviewgrant", "reviewrevoke", "statementack", "sever", "reinstate", "obscuremark", "obscuremarkwithdraw", "signerregisterown", "signerrevokeown", "publishat", "publishatmove", "publishatcancel", "casedraft", "reviewcomment", "withdrawconclusion"];
+    const found = ids.map((id) => { const c = cat.find((x) => x.id === id); return c ? `${id}=${c.rung}${c.phone === false ? "/not on the phone" : ""}` : `${id}=not in the catalog`; });
+    const tops = cat.filter((c) => ids.includes(c.id));
+    return ["WORKS", `catalog has ${cat.length} entries; ${found.join(", ")}; the catalog lists acts by subject kind, so acts that are not an object's options (caseratify, attribute, reviewgrant...) are not in it: their weight comes from op-grades (the shell's dialog), a browser reading`];
+  });
+  await row("R217", "'Help me write this' on the case editor with no assistant connected", "owner-a", "writinghelp for the scope field and for 'what changed'", async () => {
+    const a = await post(own.auth, "writinghelp", { op: "casedraft", field: "scope", told: "whether the contract was stamped before the vote" });
+    const b = await post(own.auth, "writinghelp", { op: "whatchangedpropose", field: "whatChanged", told: "added the register page" });
+    return [W(R(a.body).ok === false && /./.test(sayOf(a.body)) && !/something went wrong/i.test(sayOf(a.body))), `scope -> ${reasonOf(a.body)}: "${sayOf(a.body).slice(0, 200)}"; what changed -> ${reasonOf(b.body)}: "${sayOf(b.body).slice(0, 120)}"; a guide or the 'not ready' state is drawn, never a silent failure`];
+  });
+  await row("R214", "a refusal teaches: every refusal this sitting provoked carries the plane's own sentence (a translation), none says 'something went wrong', none is a bare code", "owner-a", "re-provoke twelve refusals and read each translation", async () => {
+    const probes = [
+      ["REVIEW_NOT_PROJECT_OWNER", () => post(adm2, "reviewgrant", { draft: draftB, recipient: "x · y", until })],
+      ["ATTRIBUTION_NOT_THE_AUTHOR", () => post(own.auth, "attribute", { caseId: prep.caseId, edition: prep.edition, observation: obs.bundle_id, level: "group", reason: "r" })],
+      ["STATEMENT_ACK_BY_ITS_AUTHOR", () => post(own.auth, "statementack", { reason: "x" }, { draft: draftB })],
+      ["REVIEW_BAD_UNTIL", () => post(own.auth, "reviewgrant", { draft: draftB, recipient: "x · y", until: "2020-01-01T00:00:00Z" })],
+      ["NO_SUBJECT_POSITION", async () => pub(R(await cs.call("casedraft", { body: { ...base, subjectPosition: "did_ask", subjectJustification: "x" } })).draftId)],
+      ["TIE_ATTESTATION_MISSING", () => post(own.auth, "publish", { draft: draft1, project, biasAcknowledgement: BIAS })],
+      ["NO_BIAS_ACKNOWLEDGEMENT", () => post(own.auth, "publish", { draft: draft1, project, tieAttested: true })],
+      ["NOT_CAPABLE", () => post(wb, "caseratify", { caseId: prepB.caseId, edition: prepB.edition, expectedSha: "x", sig: "x", members: [] })],
+      ["OPERATOR_TOKEN_CANNOT_RATIFY_CASE", () => kit.post({ authorization: `Bearer ${kit.ADM}` }, "caseratify", { caseId: prepB.caseId, edition: prepB.edition, expectedSha: "x", sig: "x", members: [] })],
+      ["ALREADY_A_CASE_MEMBER", () => pub(draftB)],
+      ["NO_REVIEW_COPY", () => kit.post({}, "reviewcopy", { secret: "nope-nope-nope-nope-nope" })],
+      ["NOT_CONCLUDED", async () => { const q = await kit.questionOf(own.auth, project, "A question left open?"); const d = R(await cs.call("casedraft", { body: { project, targets: [q], scope: "x", statement: "y", subjectPosition: "not_sought", subjectJustification: "z", roles: { [q]: "load_bearing" }, excluded: [] } })); return pub(d.draftId); }],
+    ];
+    const bad = [], seen = [];
+    for (const [code, fn] of probes) {
+      const r = await fn();
+      const body = r && r.body ? r.body : r;
+      const x = R(body) || {};
+      const tr = String(x.translation || x.detail || "");
+      const ok = (x.reason === code || x.code === code) && tr.length > 25 && !/something went wrong/i.test(tr) && !/^[A-Z_]{6,}$/.test(tr.trim());
+      seen.push(`${code}: "${tr.slice(0, 70)}"`);
+      if (!ok) bad.push(`${code} -> ${x.reason || x.code} "${tr.slice(0, 60)}"`);
+    }
+    return [W(!bad.length), bad.length ? `not as expected: ${bad.join("; ")}` : `all ${probes.length} carry the plane's sentence; ${seen.slice(0, 4).join(" | ")} ...`];
+  });
+  await row("R218", "two owners change one case draft at once: different fields both kept; the same field", "owner-a, owner-c", "projectowneradd owner-c; both casedraft the same draft", async () => {
+    const add = await kit.get(own.auth, { op: "projectowneradd", projectId: project, handle: "owner-c" });
+    const dr = R(await cs.call("casedraft", { body: { project, targets: [q3.q], scope: "Scope for two writers.", statement: "Statement for two writers.", subjectPosition: "not_sought", subjectJustification: "None.", roles: { [q3.q]: "load_bearing" }, excluded: [] } })).draftId;
+    const [a, b] = await Promise.all([cs.call("casedraft", { body: { draft: dr, scope: "Scope by owner-a." } }), occs.call("casedraft", { body: { draft: dr, statement: "Statement by owner-c." } })]);
+    const c1 = R(await cs.call("reviewcopy", { query: { draft: dr } }));
+    const [a2, b2] = await Promise.all([cs.call("casedraft", { body: { draft: dr, scope: "Same field by owner-a." } }), occs.call("casedraft", { body: { draft: dr, scope: "Same field by owner-c." } })]);
+    const c2 = R(await cs.call("reviewcopy", { query: { draft: dr } }));
+    return [W(c1.authored.scope === "Scope by owner-a." && c1.authored.statement === "Statement by owner-c."), `owner added ${J(R(add), 120)}; different fields: a ${J({ ok: R(a).ok, reason: R(a).reason }, 80)}, c ${J({ ok: R(b).ok, reason: R(b).reason }, 80)}, kept scope "${c1.authored.scope}" and statement "${c1.authored.statement}"; same field: a ${J({ ok: R(a2).ok, reason: R(a2).reason }, 80)}, c ${J({ ok: R(b2).ok, reason: R(b2).reason }, 80)}, kept "${c2.authored.scope}"; the call carries no base stamp (casedraft takes no base/expected value), so a divergence is neither named nor offered back: the later write overwrites without a record (R218 (2))`];
+  });
+  await row("R212", "one person alone: the founder (administrator, no other member) claims, makes a project, uploads, vouches, concludes, drafts, prepares and signs", "founder", "the founder's own session through the same acts (no memberadd)", async () => {
+    const f = founder, fcs = kit.screenCall(f);
+    const out = [];
+    const pj = await kit.projectOf(f, "Founder alone, 10a");
+    out.push("project made");
+    const tx = kit.te("The founder's own register shows the vote notice posted on Friday morning at the counter.");
+    const up = (await (await kit.plane(`/api/?op=captureupload&statement=fa&name=fa-notice&type=text%2Fplain`, { method: "POST", headers: f, body: tx })).json()).result;
+    if (!up || up.ok !== true) return ["BROKEN", "the founder's upload: " + J(up, 300)];
+    const filed = await CAPTURE_SCREEN.parts.promoteDocument(fcs, { doc: up.document, title: "fa-notice", locator: up.document.locator, project: pj });
+    if (filed.refused) return ["BROKEN", "the founder's filing refused: " + J(filed.refused, 300)];
+    out.push("document filed");
+    const sel = R(await fcs.call("select", { body: { ids: [filed.bundleId] } }));
+    const rel = await fcs.call("release", { query: { handle: sel.handle, acknowledgment: "I checked.", mitigation: "Nothing private." } });
+    out.push(`vouch ${R(rel).ok !== false}`);
+    const q = await kit.questionOf(f, pj, "Was the vote notice posted on Friday?");
+    const fi = R(await fcs.call("findin", { body: { scope: { capture: kit.sha(tx) }, kinds: ["term"], term: "vote notice posted" } })).kinds[0].items[0];
+    await fcs.call("cite", { body: { project: q, role: "supports", found: fi } });
+    const c = R(await fcs.call("conclude", { query: { target: q, project: pj, reading: "The notice was posted on Friday.", falsifier: "A log showing otherwise.", reason: "The register says so." } }));
+    out.push(`conclude ${c.ok === true}`);
+    const d = R(await fcs.call("casedraft", { body: { project: pj, targets: [q], scope: "The notice.", statement: "Leaves out the agenda.", subjectPosition: "not_sought", subjectJustification: "A public notice.", roles: { [q]: "load_bearing" }, excluded: [] } }));
+    out.push(`draft ${!!d.draftId}`);
+    const p = R(await fcs.call("publish", { body: { draft: d.draftId, project: pj, tieAttested: true, biasAcknowledgement: BIAS } }));
+    out.push(`prepare ${p.ok === true ? "ok" : p.reason + " " + String(p.translation || "").slice(0, 120)}`);
+    if (p.ok !== true) return ["BROKEN", out.join("; ")];
+    const fk = await kit.newKey();
+    const reg = await post(f, "signerregisterown", { keyB64: fk.keyB64 });
+    out.push(`own key ${R(reg.body).ok === true ? "ok" : reasonOf(reg.body) + " " + sayOf(reg.body).slice(0, 100)}`);
+    const prF = { caseId: p.caseId, edition: p.edition, findings: p.findings.map((x) => ({ target: x.target, bundleSha: x.bundleSha })) };
+    const r = await sitFor(f, kit.PASSWORD, fk, prF);
+    out.push(`sign ${R(r.res.body).ok === true ? "ok" : reasonOf(r.res.body) + " " + sayOf(r.res.body).slice(0, 120)}`);
+    return [R(r.res.body).ok === true ? "WORKS" : "BROKEN", out.join("; ") + "; steps that asked for a second account: none in the editor-to-signing chain (the observation credit, statement acknowledgement and review readers are optional parties, not gates)"];
+  });
 } catch (x) {
   rec("SCRIPT", "world or setup", "-", "-", "BROKEN", "SETUP EXCEPTION: " + String(x && x.stack).slice(0, 900));
+}
+if (deferred.length) {
+  const wait = Math.max(0, (ST.fireBy || 0) - Date.now());
+  note(`waiting ${Math.round(wait / 1000)} s for the set times (the alarm publishes a scheduled edition at its time)`);
+  await new Promise((r) => setTimeout(r, wait));
+  for (const d of deferred) { try { await d(); } catch (x) { rec("R97", "deferred check", "-", "-", "BROKEN", "SCRIPT EXCEPTION: " + String(x && x.message).slice(0, 300)); } }
 }
 note(`script wall time ${(Date.now() - t0) / 1000} s`);
 flush(true);
