@@ -3,6 +3,7 @@
 import { test, mock } from "node:test";
 import assert from "node:assert/strict";
 import { world, host, queueRead, NOW, iso } from "./world.mjs";
+import { homeOfHomed, sha } from "../provenance/fixtures.mjs";
 import { tasksOf } from "../../../src/tasks/index.mjs";
 import { viewerPredicate } from "../../../src/membership/index.mjs";
 
@@ -47,12 +48,12 @@ test("R5: under a hid, a task naming a hidden bundle by refers_to is left out; a
 });
 
 test("R5: a first boot seeds nothing and throws nothing; once seeded, a TASK id live before the ledger existed is never drawn again, even after its row is gone", (t) => {
-  const events = [{ kind: "authority-undetermined", captureSha: "a1", subject: "subject", locator: "https://x.example/d",
+  const events = [{ kind: "authority-undetermined", captureSha: sha("a1"), subject: "subject", locator: "https://x.example/d",
                     enqueued: iso(NOW), attempts: 0, lastTry: null }];
   // the instance is reached before any table exists: the start seed learns nothing and nothing throws
   const w = world({ capture: { taskEvents: queueRead(events), taskEventCount: () => events.length,
                                taskEventRemove: () => { events.length = 0; return true; } },
-                    provenance: { homeOf: () => ({ bundleId: "INFO-2026-0001-doc" }) } }, { bare: true });
+                    provenance: homeOfHomed({ [sha("a1")]: "INFO-2026-0001-doc" }) }, { bare: true });
   assert.equal(w.all(`SELECT count(*) c FROM sqlite_master WHERE name IN ('minted_ids','tasks')`)[0].c, 0);
   assert.doesNotThrow(() => w.t.seedLedger());
   w.boot();
@@ -71,11 +72,11 @@ test("R5: a first boot seeds nothing and throws nothing; once seeded, a TASK id 
 });
 
 test("R5: without an explicit seed the drain's first mint seeds first", (t) => {
-  const events = [{ kind: "authority-undetermined", captureSha: "a1", subject: "subject", locator: "https://x.example/d",
+  const events = [{ kind: "authority-undetermined", captureSha: sha("a1"), subject: "subject", locator: "https://x.example/d",
                     enqueued: iso(NOW), attempts: 0, lastTry: null }];
   const w = world({ capture: { taskEvents: queueRead(events), taskEventCount: () => events.length,
                                taskEventRemove: () => { events.length = 0; return true; } },
-                    provenance: { homeOf: () => ({ bundleId: "INFO-2026-0001-doc" }) } }, { bare: true });
+                    provenance: homeOfHomed({ [sha("a1")]: "INFO-2026-0001-doc" }) }, { bare: true });
   w.boot();
   w.bundle("INFO-2026-0001-doc");
   w.task("TASK-2026-0042-subject", "INFO-2026-0001-doc", { status: "resolved", resolvedAt: iso(NOW) });

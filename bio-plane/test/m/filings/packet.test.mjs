@@ -6,6 +6,7 @@ import { world, V, MACHINE, STRANGER, F, CASE, PROFILE, DOC, sha, WHY } from "./
 import { counselMarking, deadlineDate, Filings, INBAND_RULE, FILINGS_CHECKS, PACKET_REASON_MAX } from "../../../src/filings/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { word, WORD_ROWS } from "../../../src/setup-words/index.mjs";
+import { attestationsOfBadSha } from "../attestation/fixtures.mjs";
 
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
 const MARK = counselMarking(COUNSEL);
@@ -200,7 +201,7 @@ test("R9 an exhibit's attestations are attestation.attestationsOf's answer (its 
   assert.equal(u.coattested_why, word("filings.whether_attested_undetermined", { undetermined: "its home's register cannot be read" }));
   /* a read that fails or refuses, and no module to ask: undetermined, said so, never an empty "none recorded" */
   for (const [att, why] of [[{ attestationsOf: () => { throw new Error("down"); } }, word("filings.attestations_read")],
-                            [{ attestationsOf: () => ({ ok: false, reason: "BAD_SHA" }) }, word("filings.attestations_read")],
+                            [{ attestationsOf: () => attestationsOfBadSha() }, word("filings.attestations_read")],
                             [null, word("filings.module_answers_capture")]]) {
     const n = exhibit(att);
     assert.deepEqual([n.attestations.items, n.coattested], [[], null]);

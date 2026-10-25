@@ -127,6 +127,7 @@ section("R43 · the module reaches the plane, words its refusals and holds a mod
     refusal: () => marks.refusal, planeSilent: () => marks.planeSilent, planeRefused: () => marks.planeRefused, modelSilent: () => marks.modelSilent, modelRefused: () => marks.modelRefused };
   const run = (h, opts = {}) => driveHarness(h, {}, { runId: "R", store: "scratch", credential: AIK, account: ACCOUNT, judgements: CHECK(), maxSteps: 50, ...opts });
   t("R43: a segment's refusals are the host's, by identity: a silent plane is host.planeSilent's answer", (await run(idHost)).refusal === marks.planeSilent, true);
+  // fixtures-own: input the host's askPlane answer handed to my own driveHarness (a reached 403 whose body the module reads opaquely)
   const refusedHost = { ...idHost, askPlane: async (env, op) => (op === "airun" ? { reached: true, status: 403, body: { ok: false, reason: "X" } } : { reached: true, status: 200, body: { ok: true, result: {} } }) };
   t("R43: a refused read is host.planeRefused's", (await run(refusedHost)).refusal === marks.planeRefused, true);
   const noRun = { ...idHost, askPlane: async () => ({ reached: true, status: 200, body: { ok: true, result: { session: null } } }) };

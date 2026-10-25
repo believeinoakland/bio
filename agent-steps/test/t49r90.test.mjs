@@ -10,6 +10,9 @@ import worker from "./shell.mjs";
 import { withRecordIds } from "../src/holdings.mjs";
 import { documentHoldings } from "../../agent-harness/src/subsession.mjs";
 import { MEMBER, withAccount } from "./account.mjs";
+import { versionChainNoSuchVersion } from "../../bio-plane/test/m/provenance/fixtures.mjs";
+
+const chainRefusal = await versionChainNoSuchVersion();
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -91,12 +94,13 @@ function plane({ refuseChain = false } = {}) {
       case "search": return ok({ hits: [{ bundle_id: DOC.bundle, source_locator: DOC.address }] });
       case "versionchain":
         return refuseChain
-          ? Response.json({ ok: false, reason: "VERSION_CHAIN_NO_SUCH_VERSION", check: "C-24.2", error: "refused" }, { status: 403 })
+          ? Response.json({ ...chainRefusal, code: chainRefusal.reason }, { status: 403 })
           : ok({ address_norm: "notice.example/agenda", total: 1, truncated: false,
                  versions: [{ capture_sha: DOC.sha, bundle_id: DOC.bundle, first_retrieved: "2026-10-01" }] });
       case "airuntick": return ok({ ticked: true, appended: (body?.log || []).length, refused: [], status: "running" });
       case "airunclose": return ok({ terminated: true, bound: body?.bound ?? null });
       case "suggest": return ok({ wrote: true, version: body?.name ?? null });
+      // fixtures-contract: control-plane ask-wire (UNKNOWN_OP: an op with no spec is 400)
       default: return Response.json({ ok: false, error: "unknown op: " + op }, { status: 400 });
     }
   };

@@ -1,6 +1,6 @@
 # public-read (T51)
 
-**Status** · session_01BEeDNCorrpjXyGB6RpWrrB · depth 2 · COMPLETE · handled B31
+**Status** · session_01Xm9gZFkkLPpKbxESgv347q · depth 2 · COMPLETE · handled B32
 
 ## J1 · QUESTION
 
@@ -414,3 +414,21 @@ Size (session_01BEeDNCorrpjXyGB6RpWrrB): test runs 4, module lines 2956
 - fixtures `--list`: 4 `contract-no-run` remain, waiting on providers' `fixtures-run` (answer-envelope door-helpers, store-door store-replies, instance-setup group-identity-public). The rest are accepted.
 
 Size (session_01BEeDNCorrpjXyGB6RpWrrB): test runs 6, module lines 2956
+
+## J30 · COMPLETE
+
+**COMPLETE (B32: follow-up 29, group-fields `NO_SLUG`).** Test file only; no product code changed. Commit `78aa603b4e` on `job/T51/public-read` (tranche/T51 merged in first, `a426f5e82c`).
+
+**Entries applied.**
+- `group-fields.test.mjs:18` `NO_SLUG` (`fixtures-contract: instance-setup group-identity-public`) now has the real key `logo: false`.
+- **Deviation, for your ruling:** the value has no `detail` key. The real answer's `detail` is instance-setup's `NO_GROUP_RECORDED`. Three ways to carry it all failed: copying the sentence (K3810 forbids it); importing it from `src/setup.mjs` (architecture check: instance-setup is later in the order, FAIL); `word("instance-setup.setup.no_producing_team_is_recorded")` (words check: missingkey, the key is not in `words.json`). Ruling asked: add that key to the design's `words.json` so the test can read it by key, or accept the value without `detail`. Until then it stays as it is.
+- The assertion that the answered absence carries the source's detail is removed (it compared the sentence). The negative control stays: the detail does not include `GROUP_IDENTITY_UNDETERMINED_SENTENCE`. No other test uses `NO_SLUG`.
+
+**Deferred:** none. **Found in other modules:** none. **Markers added this job:** none (`fixtures-own` and `fixtures-generic` lines unchanged; `g54-attempt.test.mjs:222` `SOMETHING_ELSE` is J27's, accepted).
+
+**Tests and checks** (run from `/home/user/bio`, absolute root):
+- `node --test` over `bio-plane/test/m/public-read/*.test.mjs`: 310 pass, 0 fail. `group-fields.test.mjs` alone: 9 pass, 0 fail.
+- format: 178 modules, 0 failures. architecture public-read: 0 failures (after the setup.mjs import was removed; with it, 1 failure). coverage: 44 of 44 ids named, 0 failures. words public-read: 0 failures (missingkey 0). ownership vs `tranche/T51`: 1 file, 0 failures.
+- fixtures `--list`: 1 failure, `group-fields.test.mjs:18` `contract` `idle`: the provider's run (`instance-setup/fixtures.test.mjs`, `fixtures-run: public-read group-identity-public`) is on `job/T51/instance-setup`, not yet on `tranche/T51`. Waits for instance-setup's merge; named here as the one line left.
+
+Size (session_01Xm9gZFkkLPpKbxESgv347q): test runs 6, module lines 13869 (public-read `src/` and `test/m/public-read/` lines, `wc -l`)
