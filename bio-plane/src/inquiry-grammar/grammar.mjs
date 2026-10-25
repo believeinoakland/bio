@@ -839,14 +839,14 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
  *  array of objects. Exactly REC-14's `completeness`/`completeness_excluded` and
  *  REC-16's `division`/`division_apportionment` split, for the same reason.
  *
- *  THE PARTITION IS TOTAL OR ABSENT. If ANY leg names a ground, EVERY supporting leg
- *  must (R68: a leg that cuts against is never in a ground, and naming one there is refused). A half-labelled basis would leave legs nobody grouped sitting beside
- *  branches somebody did, and the honest reading of an unlabelled leg —
- *  necessary, so binding on every branch — is not what a member who labelled
- *  half a basis is likely to have meant. Refused here rather than guessed. (The
- *  derivation still treats an unlabelled leg as NECESSARY if one ever reaches it
- *  around this gate; the arithmetic's default is AND too, and the two defences
- *  are separate on purpose.)
+ *  THE PARTITION NEED NOT COVER THE LEGS (R68, fix round 10, cause 30b; DEC-32
+ *  clause 4: the default is AND, independent sufficiency is claimed per branch).
+ *  A supporting leg that names no ground, beside legs that do, is a NECESSARY
+ *  leg of the basis, and the unlabelled supporting legs together are its one
+ *  necessary part, as the strength arithmetic already computes it. It is no
+ *  finding. What stays refused is each ground's own accounting: declared once,
+ *  none empty, a leg naming a ground naming a declared one. A leg that cuts
+ *  against is never in a ground, and naming one there is refused.
  *
  *  WHAT IS DELIBERATELY NOT HERE. No per-ground FALSIFIER: DEC-32 is explicit
  *  that minting one per ground reads as more honest and is less — it converts
@@ -863,7 +863,6 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
 function checkGrounds(fm, legs, findings) {
   const rows = fm?.grounds;
   const labelled = [];        // [i, label] for every leg that names a ground
-  let unlabelled = 0;
   legs.forEach((leg, i) => {
     if (!leg || typeof leg !== 'object') return;
     const g = leg.ground;
@@ -876,7 +875,7 @@ function checkGrounds(fm, legs, findings) {
       }
       return;
     }
-    if (g === undefined || g === null || g === '') { unlabelled++; return; }
+    if (g === undefined || g === null || g === '') return;   // R68: an unlabelled supporting leg is a necessary leg, no finding
     if (typeof g !== 'string' || !GROUND_LABEL_RE.test(g)) {
       findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_ground_string_is', 'basis[{i}].ground \'{String}\' is not a ground label: up to 48 characters of letters, digits, spaces, \'-\' and \'_\', naming the branch of the argument this leg belongs to', { i: String(i), String: String(String(g).slice(0, 60)) })));
       return;
@@ -944,12 +943,6 @@ function checkGrounds(fm, legs, findings) {
       findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.grounds_i_statement_is_not', 'grounds[{i}].statement is not a string', { i: String(i) })));
     }
   });
-  /* THE PARTITION IS TOTAL OR ABSENT. */
-  if (labelled.length && unlabelled) {
-    findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.unlabelled_basis_legv1_carrv2_no', '{unlabelled} basis leg{v1} carr{v2} no ground while {length} do: a basis is grouped WHOLE or not at all, because a leg nobody grouped sitting beside branches somebody did is a relationship the record would have to guess at', { unlabelled: String(unlabelled), v1: String(unlabelled === 1 ? '' : 's'), v2: String(unlabelled === 1 ? 'ies' : 'y'), length: String(labelled.length) }),
-      [localize('inquiry-grammar.grammar.give_every_leg_a_ground', 'give every leg a ground — a leg that is needed whatever else holds belongs in every ground, so it is its own single-leg ground only if it alone can carry the conclusion'),
-       localize('inquiry-grammar.grammar.or_remove_the_grounds_and', 'or remove the grounds and let the basis read as its weakest leg')]));
-  }
   /* A LABEL WITH NO ASSERTION, and its mirror. */
   for (const [i, label] of labelled) {
     if (!declared.has(label)) {
