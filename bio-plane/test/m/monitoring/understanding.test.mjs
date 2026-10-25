@@ -229,6 +229,9 @@ test("R31 the reads answer what queue-producers publishes: flagged (R48) names e
   w.net.routes[L(2)] = serve("gone", "text/plain", 404);
   w.net.routes[L(3)] = serve("r31 v1 3");
   const ticks = {};
+  w.clock.ms -= 25 * 3600e3;                        /* R4: a removal is confirmed by a second look a day or more after the first */
+  await tick("INFO-2026-0802-gone");
+  w.clock.ms += 25 * 3600e3;
   for (const id of ["INFO-2026-0801-mod", "INFO-2026-0802-gone", "INFO-2026-0803-same"]) ticks[id] = (await tick(id)).body;
   const f = w.m.flagged({ viewer: DAEMON });
   assert.deepEqual(f.items, [
