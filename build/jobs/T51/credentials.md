@@ -303,3 +303,32 @@ COMPLETE · fix round 10, cause 1 (B13). The instance clock reads env.BIO_NOW_MS
 For store-assembly (not my paths; I did not edit it): the claim's clock now comes from a clock the credentials instance is handed, `credentialsOf(ctx, { now })`, read on the instance's first construction for a storage only. The one line store-assembly must add is at its first `credentialsOf` call for the store's storage (`bio-plane/src/store-assembly/assemble.mjs`, the first of its calls at `:203`, `:248`, `:307`, whichever runs first): `credentialsOf(ctx, { ..., now: () => nowMs(null) })`, where `nowMs` is the one `assemble.mjs:192` makes from `clockOf(env)`. Until that line lands, a pinned world's claim still reads the environment only after the store has served one request on the same storage (`credentialsOps` sets it, K5132); the same applies to `plane/store.mjs:185`, which is the same line for the plane. store-assembly is later in the order; I did not edit it.
 
 Note for BOB: `credentialsOf` caches one instance per storage, so the `now` option has to be on the first call; a later call's `now` is ignored, as its `record` and `membership` are.
+
+## J21 · COMPLETE
+
+COMPLETE · fix round 10, the final pass's cause 1 (B14; plan item 71 (3); STORE-REQUEST #1 J3 (3); K5132, K5148). The instance now takes its clock from one it is handed (`credentialsOf(ctx, { now })`, a function of milliseconds, read on the instance's first construction, as retrieval's `now` and capture-requests' are); none handed, the store's environment (`env.BIO_NOW_MS`, J17) answers, else the wall clock. A claim's `consumedAt` in a world whose clock is handed in reads that instant.
+
+**Met ids:** R1, R2 (the claim's `consumedAt` is the instant the instance was claimed, on the clock it is handed; R-CLOCK). BOB may strike R1 and R2's `not yet met: T51` marks.
+
+**Cause (K4426's four fields; the START names no diagnosis section for this cause, as J17 recorded, and re-read `credentials/index.mjs` `claim` and `#nowMs` before changing anything):**
+- **Root cause:** `#nowMs` (`index.mjs`, K5132) read only `this.env`, which only `credentialsOps` sets. A claim made through the instance directly (`credentialsOf(ctx)`, as store-assembly and plane do, `store-assembly/ask.mjs:281`, `:361`; `store-assembly/assemble.mjs:203`, `:248`, `:307`; `plane/store.mjs:185`) read the wall clock whatever the store's pinned clock said, and the instance had no other clock to read. The clock was not an input of the module, so the module could not take the store's.
+- **Why the tests missed it:** J17's test drove the claim through `credentialsOps` with `{BIO_NOW_MS}`, the door's path, and so proved only the door. No test made the instance directly with a pinned clock, and the fixture's `world()` passed no clock into `credentialsOf`.
+- **Failing-first test (seen red on today's code):** `bio-plane/test/m/credentials/k5148-clock.test.mjs`, new: `R1 R2 an instance handed a pinned clock records that instant as consumedAt, with no environment at the door` (`world({ now: () => PINNED })`, `w.claim()`). Red: `consumedAt` was `2026-10-25T18:00:55.597Z` (the wall clock) for a pin of `2026-10-20T10:15:30.000Z`. Control, green before and after: `R1 R2 control: an instance handed no clock records the wall clock at its claim`.
+- **Platform check:** not run; this change is inside the module's instance and needs no deployment. Named for the redeploy with the store-assembly line (REPORT).
+
+**Change:**
+- `bio-plane/src/credentials/index.mjs`: the constructor accepts `now` (`this.now`, a function or null); `#nowMs` reads it first, then `this.env`, then the wall clock; `credentialsOf(ctx, { …, now })` passes it to the constructor on the first construction for a storage.
+- `bio-plane/test/m/credentials/fixture.mjs`: `world({ sealSecret, now })` passes `now` to `credentialsOf` (a test's own option; default null, so no test changes).
+- `bio-plane/test/m/credentials/k5148-clock.test.mjs`: the two tests above.
+
+**Clock sites (grep of the module, after the change):** `index.mjs:118` `stampSecond`'s default `Date.now()` (no caller uses the default: every stamp passes an instant read from `#nowMs`); `:151` `#nowMs`'s wall-clock fallback; `:217` and `:525`, `:833` convert an instant already read from `#nowMs` to ISO, no wall-clock read. `index.mjs:1246`, which the START cites, is `aiRunCredentialMint` and reads no clock now (J17). Measured durations stay on the wall clock (R9's `timings`).
+
+**Deferred:** nothing. **Found in other modules:** J18 (unchanged); REPORT above (store-assembly's one line).
+
+**Tests and checks** (absolute root `/home/user/bio`):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/credentials/*.test.mjs`: 194 pass, 0 fail, exited by itself (192 before, plus the two new).
+- `format`: 178 modules, 0 failures. `architecture credentials`: 0 failures. `coverage credentials`: 58 of 58 live ids named. `ownership credentials tranche/T51`: 0 failures (1 file changed by credentials).
+- `words`: 16 failures, all outside this module (store-assembly and plane `declared.mjs`), the same 16 as J17 and the tranche.
+- `fixtures credentials --list`: one line, `seam.test.mjs:177` (member-roster's `LISTENER_MALFORMED`), the baseline's. No marker added.
+
+**Size (session_01TQdg39hRq6XmHth6mQqW3i): test runs 4, module lines 2223**
