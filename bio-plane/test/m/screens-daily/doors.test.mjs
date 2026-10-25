@@ -3,14 +3,21 @@
    Every sentence is asserted as `word(key, vars)` (R34). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, ok, refused, main, word, MEMBER } from "./page.mjs";
+import { storeWorld } from "../store-request/fixtures.mjs";
+import { open as openRaw, ok, refused, main, word } from "./page.mjs";
 
-const WHO = { whoami: ok({ ...MEMBER, capabilities: ["contribute", "create_projects"] }) };
-const HOMEISH = { ...WHO, groupidentity: ok({ ok: true, group: "lakeshore", display_name: "Lakeshore Tenants" }),
-  projectlist: ok({ ok: true, count: 1, limit: 200, truncated: false, projects: [{ id: "PROJ-1", name: "The Coliseum lease", stage: "investigating" }] }),
-  projectquestions: ok({ ok: true, project: "PROJ-1", items: [], cursor: null }), lookedsince: ok({ since: "2026-10-01T00:00:00Z" }),
-  startfrom: ok({ ok: true, scripts: [], doors: [{ door: "elsewhere", scripts: [], opens: "elsewhere" }] }),
-  queue: ok({ items: [{ id: "TSK-1", class: "OBLIGATION", kind: "check", summary: "Check it", assignee: "mai", assignee_role: "member", options: [], disposition: { instead: "taskresolve" }, subject: { kind: "bundle", id: "INF-7" } }], item_count: 1 }) };
+/* The team's Home over the REAL store (op-tables §5.3): its founder (an administrator, who may start projects), one project, one item in her queue,
+   all by the real acts (the world's clock is the page's: Home's security window is read against it); the held captures and the Inbox are the reads a test sets (a count of held captures or new knocks, a failed read). */
+let built = null;
+const world = () => (built ||= (async () => {
+  const w = await storeWorld({ group: null, now: Date.now() });
+  const admin = await w.signIn("admin");
+  await w.recipes.project(admin, "The Coliseum lease");
+  await w.recipes.queue({ obligations: 1 });
+  return { w, admin };
+})());
+const open = async (path, plane = {}) => { const { w, admin } = await world(); return openRaw(path, plane, w.boot(admin)); };
+const HOMEISH = {};
 const HELD = (n) => ok({ ok: true, held: Array.from({ length: n }, (_, i) => ({ bundle_id: "INF-H" + i, title: "Photo " + i })), state: "held", truncated: false, next: null });
 const KNOCKS = (...status) => ok({ ok: true, inbox: status.map((s, i) => ({ knock_id: "K-" + i, status: s })) });
 const doorsOf = (p) => main(p).querySelectorAll('a[href="/app/held"], a[href="/app/inbox"]');

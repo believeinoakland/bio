@@ -3,6 +3,8 @@
    6f0d88d8d5, PR #33's head as merged into `tranche/T47` at L11's START (wizard-scripts R35, K3127), so a later edit of the
    working copy does not move it. Since T48 (wizard-scripts R38) it is read at PR #34's merge, 4664e8efd4: `elsewhere` (no acts),
    the queue's `owed:updatelater`, Home's item acts. */
+import "../../sandbox.mjs";
+import { storeWorld } from "../store-request/fixtures.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -13,7 +15,7 @@ import { OPS, OP_ALIASES } from "../../../src/op-declarations/index.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
 import { checkScreens, interfacePage, RE_POINTS } from "../../../src/interface-shell/index.mjs";
 import { nestedTips, accessibleName, controls } from "../interface-shell/harness.mjs";
-import { open, main, text, ops, ok, refused, textNodes, wordChecker, MEMBER } from "./page.mjs";
+import { open as openRaw, main, text, ops, refused, textNodes, wordChecker } from "./page.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 // The registry is the design's (shell R73, N1122): read from the working copy, never a commit. An owed act (`owed:<op> K…`) is
@@ -88,23 +90,44 @@ test("R34: every key the module's requirements name is a word of the list and is
   assert.ok(read("queue").has("action.noreply.title"));
 });
 
-// Each screen drawn with data, as the harness's plane answers its reads.
-const DATA_PLANE = {
-  groupidentity: ok({ ok: true, group: "lakeshore", display_name: "Lakeshore Tenants", description: "Rents." }),
-  queue: ok({ items: [{ id: "TSK-1", class: "OBLIGATION", kind: "x", summary: "Sign the lease amendment", options: [], disposition: { instead: "taskresolve" },
-    case: { ancestors: [{ id: "PROJ-1", type: "project", title: "Pothole repairs" }] }, due: "2026-10-20" }], item_count: 1 }),
-  search: ok({ total: 1, hits: [{ bundle_id: "PROJ-1", title: "Pothole repairs", current_state: "forming" }] }),
-  projectlist: ok({ ok: true, projects: [{ id: "PROJ-1", name: "Pothole repairs", stage: "forming", members: [{ member: "M-1", handle: "mai" }], activity: [0, 1, 0, 2, 0, 1, 3, 1], lastChange: "2026-10-20T10:00:00Z" }] }),
-  projectquestions: ok({ ok: true, items: [{ inquiry: "INQ-1", title: "Is it fixed?" }], cursor: null }),
-  projectdirectory: ok({ projects: [{ id: "PROJ-9", name: "Library hours" }] }),
-  startfrom: ok({ ok: true, scripts: [{ id: "WIZ-33b5887790b7561b", version: 1, name: "Trace the deed" }],
-    doors: [{ door: "problem", scripts: ["WIZ-33b5887790b7561b"] }, { door: "elsewhere", scripts: [], opens: "elsewhere" }],
-    routes: [{ route: "elsewhere", pointer: { places: ["River Town"], pointers: [{ kind: "service", name: "Town service line", does: "Fixes one thing for you.",
-      contacts: [{ how: "phone", value: "311" }], source: "the town's website", status: "researched", basis: "2026-10-02" }] } }] }),
-  lookedsince: ok({ since: "2026-10-01T00:00:00Z" }),
+/* Each screen drawn over the REAL store (store-request's `storeWorld()`, op-tables §5.3): a team with data (its founder, the team named and described, two
+   projects, one with a participant and a question, a document held in it, an item in the founder's queue) and an empty one (its founder alone), all by the real
+   acts. The reads that fail are the world's door with those ops refused (a store that did not answer). */
+const teams = {};
+const teamOf = (kind) => (teams[kind] ||= (async () => {
+  const w = await storeWorld({ group: null, now: Date.now() });
+  const rosa = await w.signIn("admin");
+  if (kind === "empty") return { w, as: rosa, project: "PROJ-1" };
+  const shut = await w.signIn("shut", { capabilities: [] });
+  const mai = await w.signIn("mai");
+  await rosa.act("groupnameset", { body: { name: "Lakeshore Tenants" } });
+  await rosa.act("groupdescriptionset", { body: { kinds: ["community"], focus: "Rents.", purpose: "Rents.", visibility: "members" } });
+  const project = await w.recipes.project(rosa, "Pothole repairs");
+  await w.recipes.project(rosa, "Library hours");
+  await rosa.act("projectinvite", { query: { projectId: project, handle: "mai" } });
+  await mai.act("projectjoin", { query: { projectId: project } });
+  await w.recipes.question(rosa, project, { title: "Is it fixed?", text: "Is it fixed?", draw: true });
+  await w.recipes.hold(rosa, "Pothole repairs report", "A report on the potholes.", project);
+  await w.recipes.queue({ obligations: 1 });
+  return { w, as: rosa, shut, project };
+})());
+/** Opens `path` as the team `kind` sees it ("full", "empty", or "shut": the full team's member who holds no capability); `over` is on top of the world's plane. */
+const open = async (path, kind, over = {}) => {
+  const t = await teamOf(kind === "shut" ? "full" : kind);
+  return openRaw(path, over, t.w.boot(kind === "shut" ? t.shut : t.as));
 };
-const ROUTES = { home: "/app", elsewhere: "/app/elsewhere", projects: "/app/projects", queue: "/app/queue", finder: "/app/finder/pothole", "find-in": "/app/find-in/PROJ-1", answers: "/app/answers" };
-const DATA = ["Town service line", "Fixes one thing for you.", "311", "the town's website", "2 October 2026", "River Town", "Lakeshore Tenants", "Rents.", "Sign the lease amendment", "Pothole repairs", "Is it fixed?", "Library hours", "PROJ-1", "pothole", "20 October 2026", "mai", "M", "Trace the deed"];
+const routesOf = async (kind) => {
+  const { project } = await teamOf(kind);
+  return { home: "/app", elsewhere: "/app/elsewhere", projects: "/app/projects", queue: "/app/queue", finder: "/app/finder/pothole", "find-in": "/app/find-in/" + project, answers: "/app/answers" };
+};
+/** The record's own data the full team's screens draw: every string its real `startfrom` carries (the profile's pointers, its scripts), and what the acts above wrote. */
+async function dataOf() {
+  const { w, as } = await teamOf("full");
+  const strings = [];
+  (function walk(v) { if (typeof v === "string") strings.push(v); else if (v && typeof v === "object") Object.values(v).forEach(walk); })(await as.read("startfrom"));
+  const { project } = await teamOf("full");
+  return [...strings, "Lakeshore Tenants", "Rents.", "Pothole repairs", "Pothole repairs report", "Library hours", "Is it fixed?", "mai", "M", project, "pothole", "admin", "queue-member", "shut", "## Summary"];
+}
 
 test("R1–R10, R15 (interface-shell R21): the shell accepts the seven screens and serves them: each route draws its screen under its path", async () => {
   assert.equal(checkScreens(SCREENS), true);
@@ -113,8 +136,8 @@ test("R1–R10, R15 (interface-shell R21): the shell accepts the seven screens a
   assert.match(page, /<script src="\/app\/shell-[^"]+\.js" integrity="sha256-[^"]+"><\/script>/);
   assert.doesNotMatch(page, /<script(?![^>]*\bsrc=)/);
   assert.doesNotMatch(page, /nonce/);
-  for (const [id, path] of Object.entries(ROUTES)) {
-    const p = await open(path, DATA_PLANE);
+  for (const [id, path] of Object.entries(await routesOf("full"))) {
+    const p = await open(path, "full");
     assert.ok(main(p).querySelector("nav.cs-crumbs [aria-current]"), `${id} under its path (interface-shell R8)`);
     assert.ok(main(p).querySelector("h1"), `${id} has its heading`);
   }
@@ -123,35 +146,34 @@ test("R1–R10, R15 (interface-shell R21): the shell accepts the seven screens a
 test("R7 (interface-shell R21 (1)): every function is self-contained: the page runs each from its own text, with nothing else in scope", async () => {
   // The page holds each screen's functions by their source (`toSource`), run in the page's scope, where no import of this
   // module exists: a function reaching outside its parameters and `cs` would throw there, and the screen not draw.
-  for (const [id, path] of Object.entries(ROUTES)) {
-    const p = await open(path, DATA_PLANE);
+  for (const [id, path] of Object.entries(await routesOf("full"))) {
+    const p = await open(path, "full");
     assert.ok(text(p).length > 20, `${id} drew from its own source`);
   }
 });
 
 test("R7 (interface-shell R5): every text node each screen draws, with data, empty and failed, is a word (filled) or the record's own data", async () => {
-  const isWord = wordChecker(DATA);
+  const isWord = wordChecker(await dataOf());
+  const FAIL = () => refused("STORE_DID_NOT_ANSWER", null, 502);
   const planes = {
-    data: DATA_PLANE,
-    empty: { groupidentity: ok({ ok: true, display_name: "Lakeshore Tenants" }), queue: ok({ items: [] }), search: ok({ hits: [] }), projectdirectory: ok({ projects: [] }),
-      projectlist: ok({ ok: true, projects: [] }), startfrom: ok({ ok: true, scripts: [], doors: [] }), whoami: ok({ ...MEMBER, administer: true, capabilities: ["contribute"] }) },
-    failed: { queue: refused("STORE_DID_NOT_ANSWER", null, 502), search: refused("STORE_DID_NOT_ANSWER", null, 502), projectdirectory: refused("STORE_DID_NOT_ANSWER", null, 502),
-      projectlist: refused("STORE_DID_NOT_ANSWER", null, 502), startfrom: refused("STORE_DID_NOT_ANSWER", null, 502) },
+    data: ["full", {}],
+    empty: ["empty", {}],
+    failed: ["empty", { queue: FAIL(), search: FAIL(), projectdirectory: FAIL(), projectlist: FAIL(), startfrom: FAIL() }],
   };
-  for (const [state, plane] of Object.entries(planes)) for (const [id, path] of Object.entries(ROUTES)) {
-    const p = await open(path, plane);
+  for (const [state, [kind, over]] of Object.entries(planes)) for (const [id, path] of Object.entries(await routesOf(kind))) {
+    const p = await open(path, kind, over);
     for (const t of textNodes(main(p)).map((n) => n.textContent.trim()).filter((t) => t && !/^[·:,.()›→\s]+$/.test(t)))
       assert.ok(isWord(t), `${id} (${state}) draws "${t}", which is no word`);
   }
 });
 
 test("R7 (interface-shell R12, R15, R22): an act the gate refuses is absent, never greyed; no explanation sits inside another; every control has a name and every field a label", async () => {
-  for (const [id, path] of Object.entries(ROUTES)) {
-    const p = await open(path, DATA_PLANE);
+  for (const [id, path] of Object.entries(await routesOf("full"))) {
+    const p = await open(path, "full");
     assert.equal(main(p).querySelectorAll("button[disabled]").length, 0, id);
     assert.deepEqual(nestedTips(main(p)).map((e) => e.outerHTML.slice(0, 80)), [], `${id}: no explanation inside another`);
     for (const c of controls(main(p))) assert.ok(accessibleName(c, p.doc), `${id}: ${c.outerHTML.slice(0, 80)} has a name`);
-    const shut = await open(path, { ...DATA_PLANE, whoami: ok({ ...MEMBER, capabilities: [] }) });
+    const shut = await open(path, "shut");
     for (const op of ops(shut)) assert.ok(!["promote", "proposedispose", "adoptversion", "keepversion", "calculationcreate", "cite", "standarddeclare", "recordfact"].includes(op), `${id}: ${op} needs contribute`);
   }
 });

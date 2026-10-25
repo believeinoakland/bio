@@ -1,17 +1,29 @@
 /* Fix round 10 (final pass): the causes of the final walk that are this module's, at its interface. Every sentence is asserted as
    `word(key, vars)` (R34). The measured test needs playwright-core and Chromium (measure.mjs). */
+import "../../sandbox.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { ok } from "./page.mjs";
+import { storeWorld } from "../store-request/fixtures.mjs";
+import { FRAME } from "../interface-shell/harness.mjs";
 import { measure } from "./measure.mjs";
 
 /* ---------- R92 (06 §19 (d)): Find's pick boxes are 44 px at 390 ---------- */
 
-const BROWSE = ok({ ok: true, items: [{ id: "INF-1", kind: "document", title: "Work orders", new: false }, { id: "INF-2", kind: "document", title: "Memo 88-31", new: false }],
-  next: null, truncated: false, total: 2, awaiting_review: 0 });
-const SEARCH = ok({ total: 2, hits: [{ bundle_id: "INF-1", title: "Public Works work orders" }, { bundle_id: "INF-2", title: "Memo 88-31 on stormwater" }] });
-const PLANE = { lookedat: ok({ since: null }), themeread: ok({ ok: true, themes: [] }), browse: BROWSE, search: SEARCH,
-  meaningrows: ok({ ok: true, rows: [], total: 0 }), subjectsnamed: ok({ ok: true, subjects: [], count: 0 }), searchfields: ok({ ok: true, scopes: [] }) };
+/** The plane the browser's page asks: every op the page reads, answered by the REAL store's door for the member (op-tables §5.3), the frame's included. */
+function realPlane(w, as, ops) {
+  const door = (op) => (req) => w.door({ url: `/api/?${new URLSearchParams({ ...req.query, op })}`,
+    init: req.body === undefined ? { method: "GET" } : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(req.body) } }, as);
+  return Object.fromEntries([...Object.keys(FRAME).filter((op) => op !== "version"), ...ops].map((op) => [op, door(op)]));
+}
+/** A team with a member, rosa, and two documents she holds: the browse lists both, and a search for "pothole" finds both by title. */
+async function team() {
+  const w = await storeWorld({ group: null });
+  const rosa = await w.signIn("rosa", { admin: true });
+  const project = await w.recipes.project(rosa, "Street work");
+  await w.recipes.hold(rosa, "Pothole work orders", "Work orders for the potholes on Main Street.", project);
+  await w.recipes.hold(rosa, "Pothole memo 88-31", "Memo 88-31 on stormwater.", project);
+  return { w, rosa, plane: realPlane(w, rosa, ["lookedat", "themeread", "browse", "search", "meaningrows", "subjectsnamed", "searchfields"]) };
+}
 const PICKS = () => Array.from(document.querySelectorAll('#cs-main input[type=checkbox][id^="finder-pick-"]')).map((e) => {
   const r = e.getBoundingClientRect();
   return { id: e.id, cls: e.className, w: Math.round(r.width), h: Math.round(r.height) };
@@ -19,13 +31,14 @@ const PICKS = () => Array.from(document.querySelectorAll('#cs-main input[type=ch
 
 for (const [where, path] of [["the browse", "/app/finder"], ["a search", "/app/finder/pothole"]]) {
   test(`R92, R106 (06 §19 (d); ${where}): every pick box of Find's results is a 44 px target at 390 px; control: the same box at 1280 px is the desktop's`, { timeout: 120000 }, async () => {
-    const m = await measure({ path, width: 390, plane: PLANE, ready: "#cs-main .cs-row", measure: new Function(`return (${PICKS.toString()})();`) });
+    const { plane } = await team();
+    const m = await measure({ path, width: 390, plane, ready: "#cs-main .cs-row", measure: new Function(`return (${PICKS.toString()})();`) });
     assert.equal(m.length, 2, "a box on each result");
     for (const b of m) {
       assert.ok(/\bmk-pick\b/.test(b.cls), "the box carries the kit's pick class: " + JSON.stringify(b));
       assert.ok(b.w >= 44 && b.h >= 44, "44 px: " + JSON.stringify(b));
     }
-    const wide = await measure({ path, width: 1280, plane: PLANE, ready: "#cs-main .cs-row", measure: new Function(`return (${PICKS.toString()})();`) });
+    const wide = await measure({ path, width: 1280, plane, ready: "#cs-main .cs-row", measure: new Function(`return (${PICKS.toString()})();`) });
     assert.equal(wide.length, 2, "the desktop draws the same boxes");
   });
 }
