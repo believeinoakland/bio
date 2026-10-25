@@ -932,3 +932,10 @@ Met: R63 (R12 and R32 unchanged in meaning). Content-side check (paragraph 99 of
 Markers added: none. Words: no new sentence.
 Run: module + d606 + tier2-wire 442 tests (the 5 reds were the three files above, restated, now 0); extraction, content, events 673 pass, 0 fail. `impact.mjs` names 112 of 178 modules (the index file is imported widely); I ran the direct users (extraction, content, events), whose tests read a text reading. Checks (absolute root): format 0, architecture 0, coverage 0 (62 of 62), ownership 0; words 16 failures, none in reading-pipeline (store-assembly's); fixtures --list: 5 `contract-no-run` lines of transcribe/text-units, all waiting on content's run, none new.
 Size (session_01BNPtcCWBZZjhbxp45P7ECD): test runs 14, module lines 4272
+
+## J53 · COMPLETE
+
+COMPLETE: B58 done. R63 met: a text or HTML reading states container_extent {container, levels:["paragraphs"], sheets:null, paragraphs:n, slides:null}, n equal to the paragraphs `para` numbers, whole and in the first piece (null where the answer holds only a window). Red first (convert-extent, `actual: undefined`), green. Tests restated for the new field only: read.test.mjs, g48-first-tick, r7-classify-yield (every other recorded byte compared). Module 442 pass, 0 fail; extraction/content/events 673 pass, 0 fail. Checks (absolute root): format 0, architecture 0, coverage 0, ownership 0; words 16 failures, none in my module; fixtures --list no new line, no marker added.
+REPORT for BOB (K5138): the content-side check (paragraph 99 of a three-paragraph text answers CONTENT_EXTENT_OUT_OF_RANGE) is content's, a later module than mine: please place it in content/converts-extent.test.mjs, using my convert-extent text case for the reading.
+Four fields: cause and why missed in my record section B58; red first yes; platform N.
+Size (session_01BNPtcCWBZZjhbxp45P7ECD): test runs 14, module lines 4272
