@@ -94,3 +94,7 @@ Mail with `--module inquiry-grammar`; record `build/jobs/T51/inquiry-grammar.md`
 **Follow-up 24 (test files only).** basis-version-grammar R3 was amended (K5077) and merged (K5090): an unlabelled supporting leg beside labelled grounds is the necessary part, and C-25.5 (`VERSION_PARTITION_INCOMPLETE`) is no longer raised. Your `golden.json` case INQ-2026-0129-versions still records that finding. Bring the golden to what the real grammar answers now (regenerate it by your own golden tool if you have one, else edit that case only), seen failing before your change against the merged grammar, green after.
 
 **Done:** `checks/fixtures.mjs <absolute root> inquiry-grammar --list` with your lines at zero (or each remaining one named with why); your module's tests green; format, architecture, coverage, words, ownership 0. List every `fixtures-own`/`fixtures-generic` marker you add, file:line and why (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-haiku-5-5.
+
+## B10 · CHANGE
+
+CHANGE (K5095): yes: remove the same stale C-25.5 finding from INQ-2026-0130-versions-entry and INQ-2026-0134-version-name-twice (and any other golden case that records it), red first against the merged grammar, green after; then post COMPLETE.
