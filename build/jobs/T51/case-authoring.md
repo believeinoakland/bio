@@ -574,3 +574,7 @@ Size (session_01JY7NQfdWnfdhovvoytMtwy): test runs 9, module lines 3102
 **B32 CHANGE (K5083): done.** Merged `tranche/T51` (ratification's `preflightRefusal`, `doc-clean`/`retrieval`/`standards` in `uses`). `preflight.test.mjs:409` now takes `refusal` from `await preflightRefusal()` (the test async); the hand-built NO_ATTESTING_KEY entry is gone. Result: `fixtures.mjs . case-authoring --list`: 0 failures (6 accepted generic: `disclosures.test.mjs:68-73`). Module tests 257/257; format, architecture, coverage, ownership 0 failures. Nothing left or deferred.
 
 Size (session_01JY7NQfdWnfdhovvoytMtwy): test runs 12, module lines 3102
+
+## J28 · COMPLETE
+
+COMPLETE (CHANGE B32). Merged tranche/T51; preflight.test.mjs:409 now takes the refusal from ratification's preflightRefusal (test async). fixtures --list for case-authoring: 0 failures (6 accepted generic markers, disclosures.test.mjs:68-73, as you accepted). Module tests 257/257; format, architecture, coverage, ownership 0 failures; impact names no user test beyond my own. Record: build/jobs/T51/case-authoring.md, pushed. Size (session_01JY7NQfdWnfdhovvoytMtwy): test runs 12, module lines 3102
