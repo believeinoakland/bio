@@ -1,0 +1,8 @@
+# Review notes for `prep/split-plans` (K5012), from its worker
+
+Sizes: `current.md` 229,662 -> 31,697 B; `fix-round-9-T51.md` 235,979 -> 34,618 B; `k4426-check-T51-F9.md` 341,222 -> 48,624 B. Text moved whole, in order (a partition check and a multiset diff: 0 lines missing); one pointer line left where each part moved; `current.md`'s Status and Jobs lines byte-identical (190 jobs parse). Checks on the split tree: format, architecture, channels, words 0; coverage fails only on running jobs' ids; `fixplan` 0 failures (125 causes, was 244: fix round 9's merged G91-G143 are in the archive, which it does not read).
+Judgement calls to check:
+1. k4426 fit 50 KB only by also moving Table 3's LOAD-RED 2-7 and three accepted reds (plane g41-shape, g54-l, "load reds"), closed by K5005/K5006 in substance. Rows still labelled OPEN whose reason has lapsed (G125a, G125c, G136b, G137a, G171, G172: jobs 99/100 merged K5002; G135b closed by job 107, K5013) were left: close them with their evidence.
+2. Done acts archived: rule 7 (K4109), B331 and drawing gaps (B306), "After T51-126", "At R9's close", "Held for the second pass" (re-placed K4281). Kept open, unverified: the B362 merge, the `civicos` Worker removal.
+3. `build/handoff.md` (BOB #284) cites fix-round-9 §2i G171-G174 and §3c rows 99-102: now in `archive/fix-round-9-merged.md`.
+4. Still over 50 KB, out of this scope (finished rounds: archive whole): `fix-round-8-T51.md` 203 KB, `-7` 141 KB, `-6` 333 KB, `fix-round-T51.md` 56 KB, `-5` 53 KB, `k4426-check-T51-F6.md` 89 KB, `-F7` 51 KB, `-F8` 54 KB, `k4426-check-T51-F9-cells-B.md` 82 KB, and audit, envelope, census and walk files: each finished file moves to `build/plan/archive/` before K5015's gate binds, or the gate refuses at once.
