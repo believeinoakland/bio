@@ -422,7 +422,6 @@ test("R21 (R17a, fix round 10, G3; retrieval R95) a term hit names the part it l
   assert.deepEqual(partOf("quokka"), [["term", null]], "a unit stored before the kind is undetermined, never read as body");
 });
 
-// fixtures-run: screens-daily findin-term-part
 test("R21, R17a (fix round 10, follow-up 22) a find over a held document whose term hit lies in a footnote part answers a term item carrying that part, as screens-daily draws it", () => {
   const w = find();
   const c = w.cap("memo.docx", "m");
