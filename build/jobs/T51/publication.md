@@ -1,6 +1,6 @@
 # publication (T51)
 
-**Status** · session_01B2MtWpS48XnZkx7Fbo2FBa · depth 2 · COMPLETE · handled B7
+**Status** · session_01XbERoEwBuhJPVYwb5wJ3HY · depth 2 · COMPLETE · handled B10
 
 ## J1 · COMPLETE
 
@@ -185,3 +185,25 @@ Size (session_01B2MtWpS48XnZkx7Fbo2FBa): test runs 9, module lines 4645 (physica
 ## J10 · COMPLETE
 
 G54 (publication) complete: four casefile_* columns on published_cases, recordCaseFileAttempt (hop recordcasefile), caseFilesOwed, caseFileNextAt. g54-casefile.test.mjs 9/9 (red on old tree), L Miniflare test green; publication 175 (174 pass, 0 fail, 1 todo); checks 0 failures except inherited words inline 1. FOUND IN OTHER MODULE: op-declarations t33.test.mjs IN_PROCESS.publication must gain 'recordcasefile' (R19/R6 red by name). journey-check pseudo R29 red is environment (playwright-core missing). Record section 'G54 · completion' holds R15/R40 lines. Size (session_01B2MtWpS48XnZkx7Fbo2FBa): test runs 9, module lines 4645.
+
+## J11 · QUESTION
+
+Two things decide whether I can reach zero on my lines; the rest of the job is done and green (publication suite 179 pass, 0 fail, 1 todo).
+
+1. `modules.json`: add `retrieval` to publication's `uses`. My own line `fixture.mjs:137` (the hand-built `NO_SUCH_SELECTION`) is FIX-E: retrieval is earlier and publishes `noSelection` in `test/m/retrieval/fixtures.mjs`. I re-pointed it, but `checks/architecture.mjs` then fails: "bio-plane/test/m/publication/fixture.mjs imports retrieval/fixtures.mjs of retrieval, which publication does not declare in uses". Without the import the line stays hand-built; letting `inquiry` build its own lazy `retrievalOf(host)` instead fails 18 tests (the host has no retrieval tables). Please add `retrieval` (as you added `setup-words` at B3) and post a CHANGE; I will then run the check and COMPLETE.
+
+2. `assembleCaseContainerRefusal` (and the build refusals of `caseFileLedger`: MATERIAL_MISSING, BUCKET_FAILED, CASE_FILE_NOT_ASSEMBLED) cannot be published by publication: `modules.json` gives `bio-plane/src/publication/worker.mjs` (`assembleCaseContainer`, `recordCaseFileFailure`) and `public-read/casefile.mjs` to `public-read` (112, after me at 109), and a publication test may not import it. The fixtures check agrees: it names `public-read (earlier)` as the provider of the three ratification lines (g54-paths:310, :455, g57-heal:426). So `public-read` should publish it. I published the ledger half that is mine (`caseFileLedger`: the real `recordCaseFileAttempt` hop, `caseFilesOwed`, `caseFileNextAt`, `recordCaseManifest`, and the writer's own refusals MALFORMED / NO_SUCH_CASE_EDITION / NO_MANIFEST). Please move that fixture to public-read's START.
+
+## J12 · COMPLETE
+
+Fix round 10, Wave A batch 2: publication complete (only test files of my module changed; no product code).
+
+**Fixtures published** (`bio-plane/test/m/publication/fixtures.mjs`, new; each made by real code at call time; checked by `fixtures.test.mjs`, 5 tests): `caseDocumentFacts` (NO_CASE_DOCUMENT for none and for a viewer without standing; the stored unsigned and signed document), `caseFileLedger` (real `recordcasefile` hop, `caseFilesOwed`, `caseFileNextAt`, `recordCaseManifest`; the writer's own refusals MALFORMED / NO_SUCH_CASE_EDITION / NO_MANIFEST), `publicationWorld` (real `restingCapturesOf` over findings made to rest on documents by the real acts), `stampEditionRefusal` (NO_SUCH_CASE_EDITION, STAMP_NO_ORDER), `storeCaseDocumentRefusal` (MALFORMED).
+**Not mine (B10):** `assembleCaseContainerRefusal` and the build refusals: public-read publishes them.
+
+**Own lines:** fixture.mjs:137 now takes retrieval's `noSelection`; t35.test.mjs (:37, :245), t37.test.mjs:32, t47.test.mjs:24 take standards' real answer through `absentStandard` (fixture.mjs, over `standardReadWorld`). door.test.mjs:95 carries `// fixtures-contract: store-door store-replies`: the one line left, `contract-no-run`, waiting for store-door's `fixtures-run`. No `fixtures-own` or `fixtures-generic` marker added.
+
+**Runs:** publication suite under the preload: tests 180, pass 179, fail 0, todo 1 (the old one). Checks: format 0 failures; architecture 0; publication coverage 48 of 48 (the whole-tree coverage's 13 failures are other modules'); words 0; ownership 0; fixtures for publication: 1 line, the one above. Impact: the diff touches only publication's tests, so no other module's behaviour changed; I did not run the impact users' 123 test files.
+Deferred: none. Found in other modules: none.
+
+Size (session_01XbERoEwBuhJPVYwb5wJ3HY): test runs 5, module lines 190
