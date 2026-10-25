@@ -5,7 +5,7 @@
    author), held only in the evidence store, as a member's upload is; `doc-clean` runs for real. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, caseFm, makePng, sha, NOW } from "./fixture.mjs";
+import { world, caseFm, makePng, sha, NOW, supplied } from "./fixture.mjs";
 import { pdf, has, SECRETS } from "../doc-clean/fixtures.mjs";
 import { makeZip, zipChunks64 } from "../../make-zip.mjs";
 import { docx, unzipCopy, enc } from "../doc-clean/fixtures.mjs";
@@ -24,21 +24,6 @@ const docRow = (ref, s, over = {}) => ({ ref, kind: "document", sha: s, text_sha
 const copyRow = (ref, s, copy) => docRow(ref, s, { included: false, obscured: { copy, label: COPY_CLEANED_LABEL } });
 const LATER = (ms) => new Date(Date.parse(NOW) + ms).toISOString().replace(".000Z", "Z");
 
-/* A document a member supplied: its bytes only in the evidence store, registered on its own bundle as a PDF, its
-   home's provenance recording its type; `via` the receipt it arrives by (null: none, a capture with no receipt). */
-function supplied(w, id, bytes, { via = "doorbell", name = "file.pdf", type = "application/pdf", stated = null } = {}) {
-  const b = Buffer.from(bytes), s = sha(b);
-  w.doc(id, { text: `the page about ${id}` });
-  const path = `snapshots/${name}`;
-  w.st.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered) VALUES (?, ?, ?, 'binary', ?, ?)`,
-                s, id, path, stated ?? b.length, NOW);
-  w.st.sql.exec(`INSERT INTO files (bundle_id, path, content, blob_sha, bytes, sha256) VALUES (?, ?, NULL, ?, ?, ?)`, id, path, s, b.length, s);
-  w.st.sql.exec(`UPDATE files SET content=? WHERE bundle_id=? AND path='data/provenance.json'`,
-    JSON.stringify({ documents: [{ file: path, capture: { method: "acquire", sha256: s, encoding: "binary", bytes: b.length, content_type: type } }] }), id);
-  w.evidence.held.set(s, b);
-  if (via) w.receipt(s, via);
-  return s;
-}
 const queue = (w) => w.rows(`SELECT capture, queued, tried FROM document_copy_queue ORDER BY queued, capture`);
 const copies = (w) => w.rows(`SELECT capture, state, sha256, refused_code FROM document_copies ORDER BY seq`);
 
