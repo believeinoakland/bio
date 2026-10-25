@@ -301,7 +301,7 @@ function spend(n) {
   if (meter.units + n > ODF_REPEAT_EXPANSION_MAX) {
     throw new OverRepeatBound({ text: "undetermined", why: "over_repeat_bound",
       units: ODF_REPEAT_EXPANSION_MAX + 1, bound: ODF_REPEAT_EXPANSION_MAX,
-      boundName: "ODF_REPEAT_EXPANSION_MAX", metric: "expanded_repeat_units" });
+      boundName: "ODF_REPEAT_EXPANSION_MAX", metric: "expanded_repeat_units", final: true });
   }
   meter.units += n;
 }
@@ -313,7 +313,7 @@ function spendChars(n) {
   if (meter.chars + n > REPEAT_TEXT_BOUND_CHARS) {
     throw new OverRepeatBound({ text: "undetermined", why: "over_repeat_bound",
       units: REPEAT_TEXT_BOUND_CHARS + 1, bound: REPEAT_TEXT_BOUND_CHARS,
-      boundName: "MEASURED_OOXML_TEXT_BOUND_BYTES", metric: "repeated_text_chars" });
+      boundName: "MEASURED_OOXML_TEXT_BOUND_BYTES", metric: "repeated_text_chars", final: true });
   }
   meter.chars += n;
 }
@@ -405,7 +405,9 @@ function attrsOf(raw) {
     const e = s.indexOf(q === 34 ? '"' : "'", k + 1);
     if (e < 0) { i = j; continue; }
     const local = name.includes(":") ? name.slice(name.lastIndexOf(":") + 1) : name;
-    attrs[local] = decodeEntities(s.slice(k + 1, e));
+    /* R56: `calcext:value-type` (LibreOffice's refinement, "error") shares its local name with `office:value-type`, which
+       decides a cell's type whichever the file writes first; calcext's is kept apart, for a cell with no office type. */
+    attrs[name === "calcext:value-type" ? "calcext-value-type" : local] = decodeEntities(s.slice(k + 1, e));
     i = e + 1;
   }
   return attrs;
@@ -1814,6 +1816,8 @@ function sheetHiddenCols(tableXml) {
  *  million rows costs one unit. `st.hiddenRows` collects those ranges when the caller gives a state.
  *  R53: a cell's annotation is the cell's `note`, apart from its displayed value, at its first address. */
 function* sheetRows(tableXml, st) {
+  /* R56: the repeat meter counts per sheet: each sheet's walk starts its units at zero. */
+  if (meter) meter.units = 0;
   let rowIndex = 0;
   for (const row of iterNested(tableXml, ROW_NAMES)) {
     const rep = parseInt(row.attrs["number-rows-repeated"] ?? "1", 10);
@@ -1844,7 +1848,9 @@ function* sheetRows(tableXml, st) {
           inner = stripElement(inner, "annotation");
         }
       }
-      const carries = cell.attrs["value-type"] != null || cell.attrs.formula != null || inner.trim() !== "" || note != null;
+      /* R56: a typed cell with no value, no formula, no text and no note (a producer's padding to the sheet's edge) is an
+         empty run: advanced over, never expanded. */
+      const carries = valueAttrOf(cell.attrs) != null || cell.attrs.formula != null || inner.trim() !== "" || note != null;
       /* An empty repeated run holds no content and no reference worth
          emitting; skip it but still advance the address. */
       if (carries) {
@@ -1865,7 +1871,7 @@ function* sheetRows(tableXml, st) {
         rowChars += chars * nCols;
         rowLinks += hrefs.length * nCols;
         const base = {
-          valueType: cell.attrs["value-type"] ?? null,
+          valueType: cell.attrs["value-type"] ?? cell.attrs["calcext-value-type"] ?? null,
           value,
           formula: cell.attrs.formula ?? null,
           display,
