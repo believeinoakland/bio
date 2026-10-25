@@ -124,7 +124,7 @@ test("R4: selectionrelease lets the set go; \"Find in these\" opens find-in over
   await press(p, "selectionrelease");
   assert.equal(last(p, "selectionrelease").query.handle, handle);
   assert.ok(!ops(p).includes("selectionrelease"), "the set is gone from the strip");
-  assert.equal((await L.mem.read("selection", { query: { handle } })).ok, false, "the store let it go");
+  await assert.rejects(L.mem.read("selection", { query: { handle } }), /NO_SUCH_SELECTION/, "the store let it go");
   await press(p, "select", { values: { ["finder-pick-" + L.ids[0]]: true } });
   const again = last(p, "selection").query.handle;
   await press(p, "findin", { reason: R });

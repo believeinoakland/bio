@@ -14,7 +14,7 @@ const UNTITLED = word("queue.source.untitled", { date: "" }).trim();
 /** A team with rosa (administrator, owner of "Pothole repairs"), a participant ola who asked to leave it with a word, and two
  *  members (dev, mai) who asked to join it, by the real acts. */
 async function team() {
-  const w = await storeWorld();
+  const w = await storeWorld({ group: null });
   const rosa = await w.signIn("rosa", { admin: true });
   const [ola, dev, mai] = [await w.signIn("ola"), await w.signIn("dev"), await w.signIn("mai")];
   const project = await w.recipes.project(rosa, "Pothole repairs");
@@ -104,7 +104,7 @@ for (const [where, path] of [["the queue", "/app/queue"], ["Home", "/app"]]) {
 
 /* R43, R26 (03b §17): Find's Theme filter over a real theme: documents the member held, one placed, one proposed (a hunch). */
 test("R43, R26, R106 (03b §17): Find's Theme filter lists what was placed in the chosen theme, then its hunches apart, each document by its title, never its id; with no title read the plain word stands", { timeout: 120000 }, async () => {
-  const w = await storeWorld();
+  const w = await storeWorld({ group: null });
   const rosa = await w.signIn("rosa", { admin: true });
   const project = await w.recipes.project(rosa, "Pothole repairs");
   const orders = await w.recipes.hold(rosa, "Work orders", "Work orders for the potholes on Main Street.", project);

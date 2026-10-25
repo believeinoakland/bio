@@ -278,14 +278,13 @@ for (const [where, path] of screens) {
     const gate = new Promise((r) => { open1 = r; });
     // The point is a read held open: the world's own answer, given once the gate opens (only this op wraps the world's door).
     const door = w.boot(rosa).door;
-    const p = await open(w, rosa, path, { heldcaptures: counted(async (req) => { await gate; return door(req); }) });
-    await settle();
+    const p = await open(w, rosa, path, { heldcaptures: async (req) => { await gate; return door(req); } });
     assert.ok(!text(p).includes(check), "not drawn before her captures are read");
     assert.ok(!text(p).includes("Photo 1"));
     assert.ok(main(p).querySelector('[data-state="loading"]'), "it says it is loading");
     if (where === "home") assert.ok(!text(p).includes(word("screen.home.strip.you")), "no strip reading before the count is whole");
     open1();
-    await settle();
+    for (let i = 0; i < 50 && main(p).querySelector('[data-state="loading"]'); i++) { await new Promise((r) => setTimeout(r, 20)); await settle(); }
     assert.ok(text(p).includes(check) && text(p).includes("Photo 1"), "both at once");
     assert.equal(main(p).querySelectorAll('button[data-act="release"]').length, 1);
     if (where === "home") assert.ok(text(p).includes(word("screen.home.strip.you")));

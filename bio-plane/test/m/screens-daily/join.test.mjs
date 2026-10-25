@@ -16,7 +16,7 @@ const timeout = { timeout: 180000 };
  *  "Library hours" (hidden; ruth is invited), "Pothole repairs" and "Bus stops" (findable; ruth has asked for "Bus stops") and "Old"
  *  (findable; ruth asked and withdrew). All by the real acts. */
 async function team({ ruthCaps = ["contribute"] } = {}) {
-  const w = await storeWorld();
+  const w = await storeWorld({ group: null });
   const rosa = await w.signIn("rosa", { admin: true });
   const ruth = await w.signIn("ruth", { capabilities: ruthCaps });
   const make = async (title, findable) => {
@@ -78,7 +78,7 @@ test("R42: a member who may not start projects is drawn no doors and no start fo
   await settle();
   assert.ok(!text(joined).includes(word("screen.home.join.heading")));
   // With no invitation, no findable project and no request: "none" in place of the rows and the note.
-  const none = await storeWorld();
+  const none = await storeWorld({ group: null });
   const rosa2 = await none.signIn("rosa", { admin: true });
   const zed = await none.signIn("zed", { capabilities: ["contribute"] });
   const hidden = await none.recipes.project(rosa2, "Hidden work");
@@ -120,7 +120,7 @@ test("R42: Projects draws an Invited section and a Findable section, and says wh
 
 for (const path of ["/app", "/app/queue"]) {
   test(`R42 (${path}): an owner's request to join waits in Needs you and the queue with Grant and Decline, which send projectrequestanswer; an answered request is not drawn`, timeout, async () => {
-    const w = await storeWorld();
+    const w = await storeWorld({ group: null });
     const rosa = await w.signIn("rosa", { admin: true });
     const dev = await w.signIn("dev");
     const project = await w.recipes.project(rosa, "Coliseum");
@@ -143,7 +143,7 @@ for (const path of ["/app", "/app/queue"]) {
 }
 
 test("R43: Projects reads themeread and draws the Themes section under the list: each theme its name as a reference opening theme, no count, and \"Every theme\"", timeout, async () => {
-  const w = await storeWorld();
+  const w = await storeWorld({ group: null });
   const rosa = await w.signIn("rosa", { admin: true });
   await w.recipes.project(rosa, "Mine");
   const ids = {};
@@ -167,7 +167,7 @@ test("R43: Projects reads themeread and draws the Themes section under the list:
 });
 
 test("R66: Projects with no theme declared still draws the Themes section with its door to theme, and no theme rows", timeout, async () => {
-  const w = await storeWorld();
+  const w = await storeWorld({ group: null });
   const rosa = await w.signIn("rosa", { admin: true });
   await w.recipes.project(rosa, "Mine");
   const p = await open(w, rosa, "/app/projects");
