@@ -375,3 +375,22 @@ Size (session_0184YebVjUHZmj4s1SrMEH85): test runs 9, module lines 3910
 - `impact.mjs origin/tranche/T51 HEAD`: 51 modules; the changed files are imported only by the user modules listed above.
 
 Size (session_01BEeDNCorrpjXyGB6RpWrrB): test runs 4, module lines 2956
+
+## J28 · QUESTION
+
+**QUESTION (CHANGE B29: the case-file assembly to three hops).** I cannot reach three inside public-read's paths without changing a requirement. Decision for you.
+
+**Measured.** `bio-plane/test/m/public-read/chain.test.mjs` (committed red, as the failing-first step) counts the logical chain: casefilefacts, then one bucket get, then seven puts (in parallel), then recordcasemanifest, then recordcasefile (built). The chain is 5, as the CHANGE says.
+
+**Why each hop is there.** (1) The facts. (2) The reads: the files' bytes must be read before anything can be built or put. (3) The puts: they need the built content. (4) recordcasemanifest: G54 says a manifest is recorded once its files are in. (5) recordcasefile built: G54 says `built` is recorded only after the manifest's own bytes are stored.
+
+**What is reachable.**
+- Folding recordcasemanifest and recordcasefile(built) into one store op: chain 4. That op is in publication's index.mjs, outside my paths, so it needs publication's job or BOB's edit.
+- Chain 3 needs also the reads folded into casefilefacts (the store returns the bytes), a large store change, or recording the manifest before its bytes are stored, which G54 forbids.
+
+**Options.**
+(a) Amend G54 so `built` may be recorded by the manifest's own record op, fold the two store calls (publication's op), and take chain 4. Ratification's own chain then has to be at most 5, not 6, for R60's bar of 10.
+(b) Keep the requirements; the bar of 3 is unreachable, so ratification's own chain goes to 7.
+(c) Fold the reads into casefilefacts (store-side, large): chain 3.
+
+**Recommendation: (a).** Nothing else of the CHANGE is done. I did not change the assembly, since any change to it now would break G54. The module's tests are green apart from the red chain test. Waiting on BOB (J28).
