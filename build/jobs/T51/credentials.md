@@ -293,3 +293,7 @@ Size (session_01S9FGXy1ukQYTEAfDtbgonY): test runs 2, module lines 2216
 ## J18 · REPORT
 
 Found in other modules (not my paths; nothing changed there): (1) store-assembly/ask.mjs:281,361, plane/ask.mjs:281,361, store-assembly/assemble.mjs:203,248,307, plane/store.mjs:185 call credentialsOf(ctx) without an environment, so a direct service call in a pinned world reads the wall clock until the store has served one request on the same storage (credentialsOps then sets it). Passing env to credentialsOf at those sites closes it. (2) checks/words.mjs: 16 failures, all in store-assembly (ask.mjs, wiring.mjs, wizards.mjs, declared.mjs), the same 16 on origin/tranche/T51 without my change. Details: build/jobs/T51/credentials.md J17.
+
+## J19 · COMPLETE
+
+COMPLETE · fix round 10, cause 1 (B13). The instance clock reads env.BIO_NOW_MS (credentialsOps hands the store's environment in); every recorded instant and judgement of one reads it; measured durations stay on the wall clock. New tests k5148-clock.test.mjs (R1, R2, R65): red on today's code, green now. Module tests 192 pass, 0 fail; format, architecture, coverage (58 of 58), ownership 0; words 16 failures outside this module (same on the tranche). Commit 3227a15ed9 on job/T51/credentials. Record: build/jobs/T51/credentials.md J17. Met ids: R1, R2, R65 (the clock's rule R-CLOCK, K5132). Other-module finding: REPORT above.
