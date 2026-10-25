@@ -170,6 +170,7 @@ test("R72 (capture R86; op-declarations R45; K2458): `captureupload` reaches the
 
 test("R71 (steps R9): a member's capture that names a step is tied to it after it lands, through the store's internal `capturestepproduct` with the member's sight and identity; one that did not land, or names no step, ties nothing (negative controls), and the internal route is no caller's (R2)", async () => {
   let landed = true;
+  // fixtures-generic: EMPTY (any refusal of the upload: the door ties a step only to a capture that landed)
   const { env, S } = world({ answer: (c) => c.route === "captureupload" ? ok(landed ? { ok: true, document: { capture: { sha256: SHA } } } : { ok: false, reason: "EMPTY" })
     : c.route === "capturestepproduct" ? ok({ ok: true, step: "STP-1", product: { kind: "capture", id: SHA } }) : null });
   const r = await call(env, { op: "captureupload", token: S.ann, method: "POST", params: { statement: "s", step: "STP-1" }, body: "bytes" });

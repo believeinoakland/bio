@@ -17,6 +17,7 @@ const reply = (body, status = 200) => new Response(JSON.stringify(body), { statu
 /* the store's answers to a `pendingadd`, as the plane gives them */
 const KEPT = () => reply({ ok: true, result: { ok: true, existed: false, state: "queued" } });
 const NOT_KEPT = () => reply({ ok: true, result: { ok: false, reason: "PENDING_NOT_KEPT", detail: "the row was not kept" } });
+// fixtures-generic: UNKNOWN_ROUTE (a refusal of the route, any code: the registrar retries and relays whatever reason the route gave)
 const REFUSED = () => reply({ ok: false, reason: "UNKNOWN_ROUTE" }, 404);
 const SILENT = () => new Response("an error page", { status: 500 });
 
