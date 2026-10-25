@@ -257,3 +257,17 @@ COMPLETE · follow-up 70, 10A §1. Root cause as diagnosed: #isPhoto/#photo read
 - `fixtures.mjs case-carriage --list`: 0 failures; no line for this file.
 
 **Size (session_019b9mQAfKq3DmpzFv9GUmSd): test runs 6, module lines 1756**
+
+## J10 · BLOCKED
+
+BLOCKED (cause: needs Bob) — one act to unblock: add `"capture"` to the `uses` array of the case-carriage entry in `build/modules.json` (the same act as J1's setup-words).
+
+K5148 cause 1 (upload-photo.test.mjs) is done on `job/T51/case-carriage` at 277a446b75. The file takes each upload's provenance document from capture's published `uploadProvenance` (capture/fixtures.mjs), which the real `uploadCapture` writes when the test runs; only the bundle, its register and files rows and the held bytes stay in the test. The hand-built document had diverged from the real one (file path, declared type, text profile). Record section: build/jobs/T51/case-carriage.md, "Round 10 · K5148 cause 1".
+
+Tests: `--test bio-plane/test/m/case-carriage/*.test.mjs`: 110 pass, 0 fail (no --test-force-exit; exits by itself). Checks: format 0; coverage 23 of 23, 0; words 0; ownership 0; fixtures --list 0 failures, no line for this file. **Architecture: 1 FAIL**: `upload-photo.test.mjs imports bio-plane/test/m/capture/fixtures.mjs of capture, which case-carriage does not declare in uses`. The fixture import is what K4990 requires, and capture (layer 3) is earlier than case-carriage (layer 8), so the uses entry is the only fix; I may not write build/modules.json.
+
+Not a red first: the old file passed on unchanged module code. The divergence is shown by probing the real document: a real text upload filed under a `.png` path is judged a photo (`#judgePhoto` treats `undetermined` as unstated and reads the extension).
+
+REPORT / QUESTION (not blocking; no change made): (1) R1: is an undetermined text file under a `.png` path a photo? Real uploads file at `upload-<sha>`, so the upload flow cannot reach it. (2) Coverage gap: the declared-type branch of `#judgePhoto` has no test with capture's answer; I dropped the hand-built case that covered it, since an upload never declares a type.
+
+Size (session_019b9mQAfKq3DmpzFv9GUmSd): test runs 6, module lines 1756
