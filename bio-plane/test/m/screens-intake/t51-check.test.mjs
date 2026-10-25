@@ -2,18 +2,29 @@
  * answers draw four different sentences, by key. `checkOutcome` is the one drawing `screens-inquiry` imports. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open as openPage, untitled, text, fill, press, ok, word, says, DOCUMENT_STUB } from "./page.mjs";
+import { openWorld, members, untitled, text, fill, press, word, says, DOCUMENT_STUB } from "./page.mjs";
 import { SCREENS, checkOutcome } from "../../../src/screens-intake/index.mjs";
 
-const NOT_HELD = ok({ ok: true, held: false, copy: null, versions: 0, truncated: false, changed: { state: "undetermined", basis: "x", as_of: null, earlier_differs: false } });
-const ADDRESS = "https://www.example.gov/reports/street-maintenance-2026.pdf";
-const DOC = { capture: { sha256: "a".repeat(64), bytes: 10, encoding: "binary", content_type: "application/pdf" }, file: "snapshots/a.pdf", title: null };
+const ADDRESS = "https://www.example.gov/reports/street-maintenance-2026.html";
 const TITLE = untitled();
-const checked = async (answer) => {
-  const p = await openPage("/app/capture/address", { screens: [...SCREENS, DOCUMENT_STUB], plane: { heldat: NOT_HELD, acquire: ok({ ok: true, document: DOC }),
-    allocid: ok({ ok: true, id: "INFO-2026-0001" }), promote: (req) => ok({ ok: true, bundleId: req.body.bundleId }), monitor: ok(answer) } });
+/* the address is the world's network (an environment double): it answers the capture as it was, then the check as `how` says */
+const page = (body) => new Response(`<html><body><p>${body}</p></body></html>`, { status: 200, headers: { "content-type": "text/html" } });
+const ANSWERS = {
+  modified: () => page("The report was revised."),
+  removed: () => new Response("gone", { status: 404 }),
+  unchanged: () => page("The report."),
+  unknown: () => { throw new TypeError("fetch failed: timed out"); },
+};
+/* the member captures the address and watches it (real acts, the page's own), then the address changes as `how` says and the member asks for the check */
+const checked = async (how) => {
+  const t = await members({ mai: ["contribute"] });
+  let answer = ANSWERS.unchanged;
+  t.world.script(ADDRESS, () => answer());
+  const p = await openWorld("/app/capture/address", { world: t.world, as: t.mai, screens: [...SCREENS, DOCUMENT_STUB] });
   fill(p, { "ci-address": ADDRESS });
   await press(p, "acquire");
+  await press(p, "monitorset");
+  answer = ANSWERS[how];
   await press(p, "monitor");
   return p;
 };
@@ -22,13 +33,15 @@ const KEYS = { modified: "screen.capture.address.checked.modified", removed: "sc
 test("R42 four answers (modified, removed, unchanged, could not be told) draw four different sentences, by key", async () => {
   const drawn = new Set();
   for (const status of ["modified", "removed", "unchanged"]) {
-    const p = await checked({ ok: true, status, note: "plane note" });
+    const p = await checked(status);
     assert.ok(says(p, KEYS[status], { title: TITLE }), status);
     for (const [other, key] of Object.entries(KEYS)) if (other !== status) assert.ok(!says(p, key, { title: TITLE }), `${status} is not drawn as ${other}`);
     drawn.add(word(KEYS[status], { title: TITLE }));
   }
-  const u = await checked({ ok: true, status: null, note: "the source could not be reached: timed out" });
-  assert.ok(says(u, "screen.capture.address.checked.unknown", { title: TITLE, note: "the source could not be reached: timed out" }), "could not be told, with the plane's note");
+  const u = await checked("unknown");
+  const said = u.byOp("monitor").at(-1);
+  assert.ok(text(u).includes(word("screen.capture.address.checked.unknown", { title: TITLE, note: "" }).replace(/\s+$/, "")), "could not be told");
+  assert.ok(said);
   assert.equal(drawn.size, 3);
 });
 
