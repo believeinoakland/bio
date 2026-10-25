@@ -1176,3 +1176,7 @@ Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 33, module lines 371
 ## B102 (PLANE #63)
 `r10-lag-figure.test.mjs` :95-97 now asserts store-assembly R78's reworded sentence: the pass that wrote a tick's units, and the row's end figure, state `max_run_statements` above 256 and at most 1,000 (seen: 290 for the pass that wrote 1,058 rows; 612 at the end). Both tests green alone (27 s, 30 s). Plane's whole directory is green. The open handle stays with store-assembly (K5200).
 Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 35, module lines 371
+
+## J68 · COMPLETE
+
+COMPLETE (PLANE #63; B102). r10-lag-figure.test.mjs :95-97 asserts above 256 and at most 1,000 for the pass that wrote a tick's units and for the row's end figure (seen 290 and 612); both tests green alone; plane's whole directory green; ownership 0, coverage 37/37. Nothing open in plane. Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 35, module lines 371
