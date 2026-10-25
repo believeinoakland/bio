@@ -106,7 +106,8 @@ test("R28 every undetermined answer and every refusal says which kind of no and 
     ct.due({ basis: "nope" }), ct.overdueOn({ due: { undetermined: true, why: "w" }, at: "2026-10-01T00:00:00Z", side: "body" }),
     ct.span(day("2026-10-05", LA), day("2026-10-15", LA), { unit: "weeks" }),
     ct.expandRecurrence({ rrule: "FREQ=DAILY", dtstart: "2026-10-06T18:00", zone: LA, from: "2026-10-01", to: "2026-12-31" }),
-    ct.fiscalPeriod({ date: day("2026-10-05", LA), body: "nobody", view: firstView() }),
+    /* a body with no entry of its own, in a view whose fiscal years name no `*` (jurisdictions R49: `*` is every body) */
+    ct.fiscalPeriod({ date: day("2026-10-05", LA), body: "nobody", view: { ...firstView(), fiscal_year: firstView().fiscal_year.filter((f) => f.body !== "*") } }),
   ];
   for (const n of nos) {
     assert.ok(n && (n.undetermined === true || (typeof n.refused === "string" && /^[A-Z_]+$/.test(n.refused))), JSON.stringify(n));
