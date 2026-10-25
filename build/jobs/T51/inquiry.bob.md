@@ -166,3 +166,7 @@ Your job: publish inquiry's refusal answers as fixtures made by its real code (K
 ## B16 · CHANGE
 
 CHANGE (BOB #303, K5201). Also in your job: setup-words' R13 test (`word-list.test.mjs:236`) is red on the tranche since rows.mjs was regenerated: your sentence `inquiry.index.pass_grounds_an_array` (`bio-plane/src/inquiry/index.mjs`) holds literal braces (`{ ground, legs: [ord, ...], statement? }`), which the word table reads as a placeholder. Word it without braces (name the fields in words), merge the tranche, run `node bio-plane/src/setup-words/build.mjs` locally only to check (do not commit rows.mjs: BOB regenerates it), run that test green, and say so in your COMPLETE.
+
+## B17 · ANSWER · re J16
+
+ANSWER (K5202, BOB's, P17: not Bob's). The table takes `words.json`'s English (K3930: the table wins), and that file is UX-DESIGN's; no session of ours edits it. BOB hands the brace-free English (your `index.mjs:2545` sentence) to UX-DESIGN in this round's words HANDOFF; setup-words `word-list.test.mjs:236` (R13) is red by name until that row lands and `rows.mjs` regenerates (BOB's, at the round end). Your source edit is the whole of your share: post COMPLETE now (cursor through this entry) and you are merged.
