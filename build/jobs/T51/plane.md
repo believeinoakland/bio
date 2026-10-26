@@ -1288,3 +1288,19 @@ Cause: tests (r8-heal-door R102 G93, still open). Reproduced under load: 4 busy 
 Working tree problem, not mine: the shared clone at /home/user/bio shows modifications I did not make in other modules: agent-steps/src/drive.mjs, agent-worker/src/index.mjs, agent-steps/src/names.mjs, agent-steps/test/plane-meaning.mjs, bio-plane/src/run-rules/rules.mjs. They are not in my paths and I have not committed them. The stop hook will keep flagging the tree until someone owns them. Pushed so far: the tranche merge (B107) on job/T51/plane.
 
 Not done: B108 (shrink t42/t46). Needs: someone to say whether the foreign modifications are expected, and a rerun of the diagnosis on a quiet machine.
+
+## Record (PLANE #64, B107 to B109; B106 still open)
+
+**B107:** `origin/tranche/T51` merged (STORE-ASSEMBLY #5, `fb0f6cd668`).
+
+**B108 (shrink):** `bio-plane/test/m/plane/t42.test.mjs` 569 lines to 4 tests; `t46.test.mjs` 466 lines to 3 tests. Removed the composition cases that store-assembly's `t42.test.mjs` (16) and `t46.test.mjs` (10) now hold, by title (`was plane R36`, etc.), and the helpers only those tests used (`ONE_MATTER`, `PASSED`, `PNG_SIG`, `agentWorker`, `declarers`, `DOORBELL_METHODS`, `USAGE`, `WRITING`, `ITEMS`, `statusReport`, `refusing`, `REFUSED`, `ONE_MATTER`, `SCAN`, `shaOf`, `bucket`, `worker`, `scanned`, `mask`, `T46_OWNERS`, `TEST_COPY`). Kept in plane: t42 R113 (knock), R113 (op=knock at the door), R112 (gated pagetranscribe hook), R6 (gated hook principal); t46 R42 (workerd), R114 (RPC `dispatchMemberRun`), R114 (RPC `groupFields`). The three `fixtures-run: extraction transcribe-not-sent` orphans at t42 (:301, :402, :410) went with the removed cases. Result: t42 4/4, t46 3/3.
+
+**B109:** `r10-reading-ended.test.mjs` takes the unopened row's answer from `readHeldAnswer.final("NO_PROGRESS")` (published), not a stand-in; the final rows keep `readHeldAnswer.final()` (CURSOR_MISMATCH). The router keeps `fixtures-own: harness`. 2/2 green with `r-transcribe-answer` (2/2).
+
+**Checks:** format 0 failures; coverage 37/37; fixtures plane: one `orphan-run` remains (`r-transcribe-answer.test.mjs:54` `reading-pipeline transcribe-answer`), pending BOB's rename of the users' `content transcribe-answer` markers.
+
+**Working tree:** `agent-steps/src/drive.mjs`, `agent-worker/src/index.mjs`, `agent-steps/src/names.mjs`, `agent-steps/test/plane-meaning.mjs`, `bio-plane/src/run-rules/rules.mjs` show modifications that are not mine and are not committed here.
+
+**B106:** still open; see the BLOCKED (J73).
+
+Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 16, module lines 371
