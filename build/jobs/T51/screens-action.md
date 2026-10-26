@@ -664,3 +664,7 @@ Decisions and findings for BOB (no guess hidden):
 4. requirements: R57 says nothing of the days; BOB to amend (it is still "not yet met: T51"), and `screens-action` R20's text for the fold (the days, the body).
 
 Size (session_01HPNNooAJjye3pCPTVdDWud): test runs 25, module lines 11845
+
+## J47 · COMPLETE
+
+COMPLETE (re B54; K5284; R57). Pushed on job/T51/screens-action; the record's Round 16 section holds what changed (request.mjs:83, :137, :239, :258), the tests red then green (fix10-r57.test.mjs, 3 tests), suites (310 of 310), checks (format, architecture, coverage 57/57, words, ownership 0; no fixtures finding in screens-action) and the Size line. Four findings for you, none hidden: (1) the owner places a post_in only when both bounds are stated (lines R10), so the fold also asks the optional Since/Until the person screen asks, and an undated office is registered but not chosen, with the design's sentence; R57 should say so; (2) the fold is reached by picking the body and Choose the office, no preselection; a team with no body cannot name an office (a member cannot register a body): a design word is wanted; (3) the label reuses screen.matter.f.body, a row 'The body that holds it' is wanted from UX-DESIGN; (4) bodies come from the peopledirectory read already made (first 200 names), because a second entitieskind read fails the reads-once test C14.
