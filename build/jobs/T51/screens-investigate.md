@@ -1,6 +1,6 @@
 # screens-investigate (T51)
 
-**Status** · session_017vwgD1u3sEWkzivBQF15Ny · depth 2 · WORKING · handled B50
+**Status** · session_017vwgD1u3sEWkzivBQF15Ny · depth 2 · BLOCKED · handled B50
 
 ## J1 · QUESTION
 
