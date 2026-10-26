@@ -16,13 +16,14 @@
  * what you had, and it has already cost this repository a whole uncommitted
  * implementation twice in two days (CLAUDE.md's trap list, 2026-09-12).
  */
+import { TREE_TEST_DIR } from "./mutation-tree.mjs";
 import { readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 
-const DIR = dirname(fileURLToPath(import.meta.url));
+/* K5245: the control breaks a copy of the tree, never the tracked one (mutation-tree.mjs). */
+const DIR = TREE_TEST_DIR;
 const MEMBER = join(DIR, "..");
 const PEN = join(MEMBER, ".nc-cascade");
 const LOG = join(PEN, "run.out");

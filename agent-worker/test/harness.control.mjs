@@ -193,14 +193,15 @@
  * ===========================================================================
  */
 
+import { TREE_TEST_DIR } from "./mutation-tree.mjs";
 import { readFileSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 import { tmpdir } from "node:os";
 
-const HERE = dirname(fileURLToPath(import.meta.url));
+/* K5245: the control breaks a copy of the tree, never the tracked one (mutation-tree.mjs). */
+const HERE = TREE_TEST_DIR;
 const MEMBER = join(HERE, "..");
 const REPO = join(MEMBER, "..");
 const PLANE = join(REPO, "bio-plane");
@@ -721,9 +722,10 @@ arm({
     + "suggestions, FT0*, FT1/FT1b/FT1c",
   file: STEPS_WORK,
   /* RE-ANCHORED T21 (AGENT-WORKER #8): the line occurs twice since mode plan's `adjust` (K660), so this arm had NOT
-     ARMED; the anchor now includes the check-mode row's own note. */
-  find: `      if (changed) queue.unshift(state.submission);\n      out.note = changed\n        ? "the submission was changed`,
-  replace: `      if (changed) queue.unshift(state.submission); else queue.push(state.refusedSubmission);\n      out.note = changed\n        ? "the submission was changed`,
+     ARMED; the anchor now includes the check-mode row's own note.
+     RE-ANCHORED T51 (K5245): that note is `localize(...)`d in `agent-steps` since the words pass, so the anchor names its key. */
+  find: `      if (changed) queue.unshift(state.submission);\n      out.note = changed\n        ? localize("agent-steps.work.the_submission_was_changed"`,
+  replace: `      if (changed) queue.unshift(state.submission); else queue.push(state.refusedSubmission);\n      out.note = changed\n        ? localize("agent-steps.work.the_submission_was_changed"`,
   run() {
     const r = runHarness();
     const failedAsDeclared = [/^D-452: the DROPPED candidate was sent ONCE/, /^D-452: nothing was resent verbatim/,
