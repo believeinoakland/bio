@@ -1369,3 +1369,14 @@ Options for you: (a) I build the repro with a platform double for storage and th
 **Working tree:** `agent-steps/src/names.mjs`, `agent-steps/test/plane-meaning.mjs`, `bio-plane/src/run-rules/rules.mjs` are not mine; not committed.
 
 Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 60, module lines 371
+
+## J79 · COMPLETE
+
+COMPLETE (G93 resolved, B106, B114 to B116). Three results.
+
+1. Assertion: whoami is one-directional (B116): once a firing ends with a live row, an alarm must stand (r8-heal-door.test.mjs, committed). The earlier exact check was wrong: the scheduler keeps alarms for always-due consumers (19 of 22 loaded runs failed on alarms with no owed work).
+2. Repro: bio-plane/test/m/plane/r8-heal-sequence.test.mjs (committed), real Scheduler + real ledger + pinned clock. heal at t arms; the firing at t+1 leaves a live row; the read at t+2 is answered null by the throttle (scheduler/index.mjs:782); the alarm still stands from the firing's end. Control with no live row: no alarm. 2/2 green. No scheduler defect named.
+3. 30 uninstrumented whoami runs under 4 busy loops: 30 of 30 green.
+Plus owedwork: 10 of 10 green under load (its cause: the firing a read starts, scheduler/index.mjs:614, R29; the test waits for the firing to end).
+
+Open, not resolved: the first whoami failures (runs 3 and 4 of an earlier 10) did not reproduce later; their exact cause is not named. Five foreign files are not mine and not committed.
