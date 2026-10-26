@@ -101,7 +101,8 @@ function routes(hashes) {
              [worker, "publishedcase", { id }], [door, "docketpublic", { case: id }], [door, "docketfeed", { case: id }]);
   }
   out.push([store, "publishedlist", {}], [store, "publishedmanifest", {}], [store, "publicread", { name: "anything" }],
-           [door, "publishedmanifest", {}], [door, "publicread", { name: "anything" }], [door, "credit", {}]);
+           [door, "publishedmanifest", {}], [door, "publishedlist", {}], [door, "publicread", { name: "anything" }],
+           [door, "credit", {}]);
   return out;
 }
 

@@ -26,7 +26,7 @@ import { publishedRoutes } from "../publication/worker.mjs";
 import { PUBLIC_READ_NAME, PUBLIC_READ_RESERVED_PARAMS, PUBLIC_READ_NOT_REGISTERED, DOCKET_FEED_MEDIA_TYPE } from "./reads.mjs";
 import { creditPage } from "./credit.mjs";
 
-export const PUBLIC_READ_DOOR_OPS = Object.freeze(["verify", "publishedmanifest", "publishedcase", "publishedbytes",
+export const PUBLIC_READ_DOOR_OPS = Object.freeze(["verify", "publishedmanifest", "publishedlist", "publishedcase", "publishedbytes",
                                                    "publicread", "docketpublic", "docketfeed", "credit"]);
 
 /** R21 (DEC-116 item 8; DEC-100 item 2): a case's docket (`docketpublic`, JSON at 200) or its Atom feed (`docketfeed`,
@@ -142,6 +142,15 @@ export async function publicReadDoorOp(op, url, env, stub, helpers) {
     if (out.refused) return storeRefusal(out);
     if (!out.answered) return storeSilent("publishedmanifest", out.correlation);
     return json({ ok: true, result: out.result }, 200);
+  }
+  /* R2 (fix round 10, walk E R56-4; K5290): the published list is public (op-declarations `publishedlist`, classes null),
+     so the door answers it here, as `verify` answers its store read: the list's own fields spread beside `ok`, the
+     shape the screens read (`cases`, `bundles`). Unclaimed, it fell through to the bootstrap report. */
+  if (op === "publishedlist") {
+    const out = await doAnswer(stub.fetch(new Request("http://do/publishedlist")));
+    if (out.refused) return storeRefusal(out);
+    if (!out.answered) return storeSilent("publishedlist", out.correlation);
+    return json({ ok: true, ...out.result }, 200);
   }
   if (op === "publishedcase" || op === "publishedbytes") return publishedRoutes({ op, url, env, stub });
   /* R21: the docket and its feed, by case. */
