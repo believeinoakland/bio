@@ -374,3 +374,28 @@ Size (session_01VXhjMQEyP8S9vteVbYUTti): test runs 14, module lines 3159
 ## J19 · COMPLETE
 
 F-B8 kindsOf chunked by 32 (red at 34 passages, green at 300); F-B10 (a) meaningRows answers widen (no widen for a NOT, F-B10 (c) is query-language's); F-B11 meaning sentence reworded at localize id retrieval.levels.finding_rests_plain. retrieval tests 221/221; format, architecture, coverage, ownership, words 0. Found elsewhere: screens-daily must read meaningrows widen; query-language widenable with NOT. Details in my record's last section.
+
+## J20 · COMPLETE
+
+**Changed** (commit 864cb3a7ba, on `job/T51/retrieval`)
+- `bio-plane/src/retrieval/index.mjs:26`: imports `TEAM_ZONE_PATH` from local-facts beside `localFactsOf`.
+- `bio-plane/src/retrieval/index.mjs:498-504`: `#localFactsFor(teamOnly)` makes the host's local-facts instance on first use. With `teamOnly`, it is made only where local-facts' `local_fact_acts` table exists (see below); not cached while the table is absent.
+- `bio-plane/src/retrieval/index.mjs:506-530`: `#zoneRead` reads local-facts' team fact (`factStatus({path: TEAM_ZONE_PATH})`) first. A zone the team stated (`governs.origin` `corrected`) governs with source `local-facts`. The early `none("no_profiles")` now comes after that read, so a team with no place profile gets its stated zone. The profile path is unchanged. The `zone()` doc comment (R69) names the team step.
+- New `bio-plane/test/m/retrieval/team-zone.test.mjs` (R69): a team with no profile that stated `America/Chicago` through `factConfirm` (`path` `@team/time_zone`, `act` `correct`) gets `{zone: "America/Chicago", source: "local-facts", why: null}`, and the plain `zone()` the same zone. Control: nothing stated and no profile gives `{zone: null, source: null, why: "no_profiles"}` and `zone()` null.
+
+**Red, then green.** Before the change the test failed on the stated zone: actual `{zone: null, source: null, why: 'no_profiles'}`, expected `{zone: 'America/Chicago', source: 'local-facts', why: null}` (the `factConfirm` in the test answered `ok`, so the write was not the cause). After it, 1 of 1.
+
+**A second cause, found by the suite and fixed in this job.** My first version asked local-facts on every zone read. local-facts is made on its first use, and making it creates and declares its tables, which is a write. Two R32 tests failed on that: `search.test.mjs:215` ("write nothing": the table snapshot changed) and `selections.test.mjs:218`. The team read now runs only where `local_fact_acts` exists, which it must for any stated zone, so a database with none writes nothing. The profile path still makes the instance as before, so the round-7 source labels (`local-facts` for a profile's zone) are unchanged.
+
+**Suites and checks**
+- retrieval: `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/retrieval/*.test.mjs`: 222 tests, 222 pass, 0 fail (B19's count was 221; +1 new).
+- `checks/run.mjs /home/user/bio`: no finding in retrieval's files. Its exit is 1 for other modules' findings (the 89 fixture failures are stub lines in other modules; words 0 failures); this job added none.
+- ownership: `ownership: 3 files changed by retrieval between 3fdb3eb7c466df091c43f277cce599021f7ba797 and HEAD; 0 failures`.
+
+**Found in other modules (REPORT, not changed here)**
+- `local-facts`, `bio-plane/src/local-facts/index.mjs:714-724` (`localFactsOf`): the first call makes the instance, which migrates and declares its tables, a write. Any read that reaches it writes once. Retrieval avoids that for the team read by probing the table. A read-only way for a caller to ask "is a team zone stated?" (owned by local-facts) would let that probe go. BOB to decide; no change made.
+- Requirements: retrieval R69 (`build/requirements/retrieval.md`) does not yet name the team step. The code follows local-facts R21 as it is written. The R69 wording is BOB's to amend.
+
+**Deferred.** None.
+
+Size (session_014zr6jq8nx46o3HXUDoNZLH): test runs 5, module lines 3177
