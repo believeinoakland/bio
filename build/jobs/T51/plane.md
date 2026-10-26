@@ -1336,3 +1336,7 @@ The G93 test edit is uncommitted (not verified). The five foreign files are not 
 ## J76 · REPORT · re J75
 
 Final count for the G93 verification (fix-run-1 to -10, same load): owedwork 10 of 10 green. whoami 8 of 10: fails at run 3 (settled, the first-firing wait) and run 4 (r8-heal-door.test.mjs:109, the member's read did not arm after its firing ended). Nothing changed since J75; the whoami case still waits on your decision (arm at once, or when the firing ends).
+
+## J77 · REPORT · re B114
+
+whoami diagnosis: 10 instrumented runs of the member's whoami test under 4 busy loops: 10 of 10 green, nothing captured. The earlier failures (2 of 10, runs 3 and 4) did not reproduce. The instrumented copy (state before and after the firing ends: flight, rows, counters) passed each time, so the instrumentation may change the timing. No scheduler cause is named yet, so there is nothing to place with its owner. The owedwork fix is pushed and 10 of 10 green. Five foreign files are still modified in the shared clone (restore refused by the classifier; saved as a patch). Options: a longer run of the uninstrumented file to try to reproduce whoami, or a decision to accept whoami as passing under load after the owedwork fix.
