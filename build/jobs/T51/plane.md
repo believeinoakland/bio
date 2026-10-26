@@ -1355,3 +1355,17 @@ Reading of run 4: the alarm is null after the firing ended only if the reconcile
 Why no repro yet: a deterministic sequence needs an owed reading row through the real store and scheduler with an injected clock. The plane's r8 world runs under miniflare, whose time is not injectable, and the scheduler's own fixture is the scheduler module's (not mine). I have not built that world.
 
 Options for you: (a) I build the repro with a platform double for storage and the real Scheduler class, pinning Date.now as the scheduler tests do, and check the reconcile's wake at the failure instant; or (b) you accept the inference (no live row at the end, so the test's armed expectation is wrong) and I change the whoami test to assert the alarm only while work is owed. The five foreign files are not committed.
+
+## Record (PLANE #64, COMPLETE for G93, B106 and B114 to B116)
+
+**G93 resolved:**
+- `owedwork`: 10 of 10 green under the busy loops. Its cause: the founder's read starts the row's firing, and the platform answers no alarm while a firing runs (scheduler/index.mjs:614, R29). The test waits for the firing to end (`firingEnded`) before reading the alarm (r8-heal-door.test.mjs, the owedwork test).
+- `whoami`: the assertion is one-directional (B116): once the firing has ended with a live row, an alarm must stand. The earlier exact check (alarm exactly when a live row exists) was wrong, since the scheduler keeps alarms for its always-due consumers; it failed 19 of 22 loaded runs with no owed work behind them.
+- B116 repro (`bio-plane/test/m/plane/r8-heal-sequence.test.mjs`, new): the real Scheduler over a platform double, the pinned clock, the real ledger, extraction's published piece answer. Sequence: heal at t arms; firing at t+1 s leaves the row live; the read at t+2 s is answered null by the five-second throttle (scheduler/index.mjs:782), and the alarm still stands from the firing's end. Control with no live row: no alarm. Both green, so the firing's end re-arms as BOB described. No scheduler defect named.
+- 30 uninstrumented runs of the whoami file under 4 busy loops (20 processes on 4 cores at the earlier attempt; 4 this time): 30 of 30 green.
+
+**Not resolved, noted:** the first whoami failures (runs 3 and 4 of the earlier ten) did not reproduce in later runs; their exact cause (the first-firing wait in `settled`, and the member's read at old :109) is not named. The corrected assertion is the one tested in the 30 runs.
+
+**Working tree:** `agent-steps/src/names.mjs`, `agent-steps/test/plane-meaning.mjs`, `bio-plane/src/run-rules/rules.mjs` are not mine; not committed.
+
+Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 60, module lines 371
