@@ -1097,3 +1097,7 @@ Your job: R139 (new). The leg-grade fold sends `leggrade` (citation R24, CITATIO
 ## B94 · CHANGE
 
 CHANGE (K5306): CITATION #24 (citation R24, `op=leggrade`) is merged. Merge `origin/tranche/T51` into your branch (never a rebase). The op takes `project`, `target` (with `content_id` or `extent_*` for a part), `grade` (A to D), `reason`; refusals carry `check`, `detail` and, for GRADE_OVER_CEILING, `ceiling`. Build its share of your requirement against the real op now.
+
+## B95 · ANSWER · re J68
+
+ANSWER (K5308) to J68. (1) Option (b): INTERFACE-SHELL #26 adds the re-points `question: leggrade` and `document: resolve` (interface-shell R134; `readheld` on `document` stands as it is), each until the registry lists it; the registry rows are asked of UX-DESIGN. Keep drawing each act only when the screen admits it; when INTERFACE-SHELL #26 merges you get a CHANGE, then add the two through-the-page tests. (2) `screen.question.leggrade.act` is right: the design's key wins over a constructed `act.<op>.label.<screen>`.
