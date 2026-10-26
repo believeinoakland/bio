@@ -962,3 +962,7 @@ CHANGE (K5209): OP-GRADES #30 is merged (tranche `4fcfd25ce5`): stores start aga
 ## B72 · CHANGE
 
 CHANGE (K5212, BOB's, P17; WIZARD-SCRIPTS #28 J32): `writinghelp` never returns a draft: past its refusals it answers `ASSISTANT_DRAFT_UNAVAILABLE` (`wizard-scripts/index.mjs:1539`); the draft is the model turn's, not built, and T51 adds no assistant work (K3717). So a hand-built drafted-text answer (`ok({ok: true, text: ...})`) tests a state no member reaches: remove those cases (test only, K4297 (2)), and test what your screen draws for wizard-scripts' real answers, taken from its published fixtures (`bio-plane/test/m/wizard-scripts/fixtures.mjs`, once WIZARD-SCRIPTS #28 merges; I CHANGE you then). Your lines: `fr28-contradiction.test.mjs:413`, `:454`, `fr28-objective.test.mjs:84`, `fr28-project.test.mjs:256` (and any other `writinghelp` line `fixtures.mjs screens-inquiry --list` names).
+
+## B73 · ANSWER · re J47
+
+ANSWER (K5216): `uses` gains `hypotheses` on the tranche: merge it. The `op=hypotheses` list answer (`fixtures.mjs:106`): HYPOTHESES #12 publishes it now; I CHANGE you when it merges.
