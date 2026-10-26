@@ -533,3 +533,16 @@ COMPLETE · screens-investigate · fix round 10, B46 (K5271): R61 met. Commits o
 **Met ids.** R61 (and R3/R20 test amended). **Markers.** no `fixtures-own` / `fixtures-generic` added.
 
 Size (session_01RdUoM7ohaxRHbCVfJZV9x3): test runs 12, module lines 3473
+
+## J40 · COMPLETE · re B47
+
+COMPLETE · screens-investigate · fix round 10, B47 (K5276): (d) and (e) fixed, each red then green. Pushed.
+
+**(d)** `parts.mjs` graph: a `testimony:` evidence source is drawn by `screen.explore.testimony` (as Explore's chains draw it), never its spelling; the key moved to `GRAPH_SHARED` (graphwords.mjs) and out of explore's own list (listed once, common.test R30). Test: fix10-walk "R61 (4) ... testimony: source" (red: raw source drawn; green).
+**(e)** `money.mjs`: the MONEY_BAD_PERIOD handler draws the owner's `detail` alone (escaped, record data), else `refusal.MONEY_BAD_PERIOD`; `refusal.BAD_VALIDITY` is gone from the screen and its words. Test: fix10-walk "R61 (1) ... a period the owner cannot read" with no zone held and a start sent (red: BAD_VALIDITY drawn first; green). Amended `fix4-seam.test.mjs`:90, which asserted the old sentence.
+
+**Suites.** Module as one run: 305 tests, 303 pass, 1 fail (common R30: a key listed twice, then fixed), 1 todo (money's reported exclude-after-propose); after the fix common+explore+fix10 run: 44 pass, 0 fail. Users (control-plane 86 files, plane 33): 706 tests, 706 pass, 0 fail, re-run on this state.
+**Checks.** format 0; architecture 0; coverage 61 of 61 named; ownership 0 (11 files). `checks/run.mjs` last run before (d)/(e): no finding in my files.
+**Met ids.** R61. **Markers.** none added.
+
+Size (session_01RdUoM7ohaxRHbCVfJZV9x3): test runs 20, module lines 3475
