@@ -1,0 +1,98 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Alpha walk team
+S
+Working · not public · seen by your team's members
+Projects
+›
+Walk alpha D two
+›
+Publish
+Draft: What the National Park Service history page says about working landscapes.
+Show me how
+
+This draft does not name a case yet. Which case it becomes is settled when it is published.
+
+What
+Strength
+Leaves out
+People
+Photos
+Disclosures
+Bias
+Preview
+Ties
+Sign
+BEFORE PUBLISHING
+
+Put these right before you sign
+
+Something in the draft stops the signing: Say what bias this case was produced under, written for this edition. A declared bias never stops a case from publishing; a missing statement does. Nothing was published. Put it right in the case, then check again.
+Something in the draft stops the signing: A load-bearing document has no trusted timestamp and co-archive. Retry them, or acknowledge publishing it as self-attested only, with a reason. Nothing was written. Put it right in the case, then check again.
+Something in the draft stops the signing: Each member who signs a case first attests that they hold no undeclared tie to anyone or anything the case names, including those paid or paying in its money. Attest, or declare the tie first. Nothing was written. Put it right in the case, then check again.
+Check before publishing
+DOCUMENTS WITHOUT A SECOND CONFIRMATION
+
+A trusted time stamp and a copy kept by an outside archive each confirm when a document was captured.
+
+a6b4a1ef4394
+a trusted time stamp, but no outside copy
+The time stamp was asked for late: it shows the document existed by 2026-10-26T06:27:32Z, not when it was captured.
+Ask for the confirmation again
+
+Asks a trusted time-stamp service, and an outside archive, to confirm a document again. It shows the document existed by now, not when it was captured.
+
+Finish this on a larger screen: it is signed, or cannot be undone.
+
+Asking again can only show the document existed by now, not when it was captured.
+
+If it stays unconfirmed
+Publish a6b4a1ef4394 as self-attested only
+Why you publish it as self-attested only
+Readers see this reason beside the document.
+Publishing without it is refused.
+
+The case then tells readers that nobody outside the team can check when the source served these bytes.
+
+BIAS
+
+The team's own statement of any stake it has in what it examines, in its own words. Every published case carries it.
+
+This is your team's declared way of reading evidence (its lens), in force for Walk alpha D two today. It is fixed into the edition when you sign, and a later change does not alter an edition already published.
+
+What this bias means for this edition
+Say what the team's declared bias means for these findings, as of this edition.
+Write it fresh each time: the last edition's sentence cannot be reused.
+
+Declared bias never blocks publishing. If your team declared none, the case says so.
+
+YOUR TIES
+Your confirmation
+I have no undeclared tie to anyone this case concerns, including anyone paid in its money
+Confirm your ties and prepare the edition for signing
+
+Records your confirmation inside the edition you are about to sign and fixes its text, so what you sign next is exactly what was checked. It publishes nothing.
+
+Finish this on a larger screen: it is signed, or cannot be undone.
+
+The member who signs confirms this for themselves, and the confirmation is part of what they sign.
+
+SIGN AND PUBLISH
+
+Publishing makes this edition permanent and public. It can be corrected by a new edition, never removed.
+
+You sign as sparky, an owner of Walk alpha D two. The public page will read “Published by Alpha walk team · signed by sparky”. Once public, anyone can read it and check your signature without asking the team; it can be corrected by a new edition, never removed.
+
+Signing and publishing finish on a larger screen. Everything here can be read on a phone. Open Walk alpha D two on a computer to sign: the ceremony is where you left it.
+
+You have no signing key in this browser. Register one here: it is made in this browser and never sent to Civicsmith, and every use asks you to confirm. Then you come back to this step, with nothing lost.
+
+Keeping the key
+Keep this key on this device, so you can sign here again without loading it. Leave this unticked on a computer others use: you then load your key file each time you sign.
+Register a signing key in this browser
+You sign this
+Home
+Queue
+Add
+Find
+More
