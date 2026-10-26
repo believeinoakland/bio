@@ -105,10 +105,17 @@ function renderOpenFile(cs, view) {
       + `<span class="mk-small">${cs.w(yours ? "screen.open-file.high.yours" : `screen.open-file.risk.${kind}.means`)}</span></div>`
       + (reasons.length ? `<p class="mk-small">${cs.w("screen.open-file.why", { reasons: reasons.join("; ") })}</p>` : "")
       + (unreadImage ? `<p class="mk-small" data-unread-image="1">${imageUnread(t.image.type)}</p>` : "");
-    const safe = cs.sec("screen.open-file.safe", `<p class="mk-small">${cs.w("screen.open-file.safe.about")} `
+    /* F-B14 (R36): the renderer's reason beside "the reason is stated beside it": the word held for the owner's code, else `refusal.uncatalogued` with the code as given (DEC-342) */
+    const reasonBeside = (r) => !r ? "" : cs.w("refusal." + r) !== "refusal." + r ? ` <span data-renderer-reason="${cs.esc(r)}">${cs.w("refusal." + r)}</span>`
+      : ` <span data-renderer-reason="${cs.esc(r)}">${cs.w("refusal.uncatalogued")} <code>${cs.esc(r)}</code></span>`;
+    /* F-B15 (R36): a file of a kind the owner makes no safe view of (`threatof`'s `format`; file-safety R11's routes and R45's text) says so once, in place of the
+       act and of every sentence that sends the member to the safe view; the owner's refusal on a plain-text file that is not UTF-8 stays an answer to the press */
+    const hasSafeView = !(typeof t.format === "string" && !["pdf", "docx", "pptx", "odt", "odp", "xlsx", "ods", "csv", "text"].includes(t.format));
+    const safe = !hasSafeView ? cs.sec("screen.open-file.safe", `<p class="mk-small" data-nosafeview="1">${cs.w("refusal.NO_SAFE_VIEW")}</p>`)
+      : cs.sec("screen.open-file.safe", `<p class="mk-small">${cs.w("screen.open-file.safe.about")} `
       + `${cs.mark("origin", "machine")} ${cs.w("screen.open-file.safe.origin")}. ${cs.w("screen.open-file.safe.cite")}</p>`
       + `<div class="mk-acts">${cs.act("safeview", { tone: kind === "low" ? undefined : "primary" })}</div>`
-      + (U.safeRefused ? `<p class="cs-state" data-state="failed" role="alert">${U.safeRefused.key ? cs.w(U.safeRefused.key, U.safeRefused.vars) : cs.esc(U.safeRefused.text)}</p>` : "") + safeDrawn(U.safe));
+      + (U.safeRefused ? `<p class="cs-state" data-state="failed" role="alert">${U.safeRefused.key ? cs.w(U.safeRefused.key, U.safeRefused.vars) : cs.esc(U.safeRefused.text)}${reasonBeside(U.safeRefused.reason)}</p>` : "") + safeDrawn(U.safe));
     const deep = U.deeper || t.latest_deeper;
     const deeper = cs.sec("screen.open-file.deeper", `<p class="mk-small">${cs.w("screen.open-file.deeper.about")}</p>`
       + (deep && deep.state ? `<p class="mk-small">${cs.w("screen.open-file.deeper.state", { state: cs.w(`screen.open-file.deeper.${deep.state === "done" ? "done"
@@ -120,7 +127,7 @@ function renderOpenFile(cs, view) {
     } else if (kind === "high") {
       const warned = o.may_open === true && o.path === "warned";
       out += (o.may_open === true && o.path === "deeper" ? `<div class="mk-acts">${cs.act("openoriginal", { tone: "primary", data: { override: "1" } })}</div>` : "")
-        + (yours ? `<h2>${cs.w("screen.open-file.next.head")}</h2><p class="mk-note">${cs.w("screen.open-file.next.yours")}</p>` : "")
+        + (yours && hasSafeView ? `<h2>${cs.w("screen.open-file.next.head")}</h2><p class="mk-note">${cs.w("screen.open-file.next.yours")}</p>` : "")
         + safe + deeper + cs.sec("screen.open-file.checks", notesFor(unexamined))
         + (warned ? cs.sec("screen.open-file.warn", `<div class="cs-dialog"><b>${cs.w("screen.open-file.warn.title")}</b>`
           + `<p class="ends">${cs.w("screen.open-file.warn.ends")}</p>`
@@ -209,9 +216,12 @@ async function sendSafeView(view, el, cs) {
     const code = a && (a.code || a.reason), words = a && (a.translation || "");
     /* G44 (file-safety R11, R51): a file above what a preview can show says so with its size and the bound in MB (one decimal), never
        an empty table or the generic sentence alone; a refusal without the figures is drawn as before */
-    const mb = (n) => (n / 1048576).toFixed(1), drawn = (a.renderer_reason === "TOO_LARGE" || a.renderer_reason === "PREVIEW_NOT_DRAWN") && Number.isFinite(a.size) && Number.isFinite(a.bound);
+    const mb = (n) => (n / 1048576).toFixed(1), sized = a.renderer_reason === "TOO_LARGE" || a.renderer_reason === "PREVIEW_NOT_DRAWN", drawn = sized && Number.isFinite(a.size) && Number.isFinite(a.bound);
+    /* F-B14 (R36): the refusal's sentence says the reason is stated beside it, so the renderer's reason (a code of the owner's) goes beside it, drawn by its key;
+       the two size reasons are already said by the figures' sentence (or by the translation alone where the owner gave none) */
+    const reason = code === "SAFE_VIEW_FAILED" && !sized && typeof a.renderer_reason === "string" && /^[A-Z][A-Z0-9_]*$/.test(a.renderer_reason) ? a.renderer_reason : "";
     cs.set("safeRefused", code === "NO_SAFE_VIEW" ? { key: "refusal.NO_SAFE_VIEW" } : code === "SAFE_VIEW_FAILED" && drawn ? { key: "screen.open-file.safe.notdrawn", vars: { size: mb(a.size), bound: mb(a.bound) } }
-      : words ? { text: words } : { key: "shell.unread" });
+      : words ? { text: words, reason } : { key: "shell.unread" });
     return null;
   }
   cs.set("refused", null);
