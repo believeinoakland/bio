@@ -735,7 +735,7 @@
       "message": "action_basis[0] is not a leg block of {target, kind}",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      },
      {
@@ -744,7 +744,7 @@
       "message": "action_basis[1] is not a leg block of {target, kind}",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      },
      {
@@ -753,7 +753,7 @@
       "message": "action_basis[2] is not a leg block of {target, kind}",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      }
     ],
@@ -764,7 +764,7 @@
       "message": "action_basis[0] is not a leg block of {target, kind}",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      },
      {
@@ -773,7 +773,7 @@
       "message": "action_basis[1] is not a leg block of {target, kind}",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      },
      {
@@ -782,7 +782,7 @@
       "message": "action_basis[2] is not a leg block of {target, kind}",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      }
     ],
@@ -793,7 +793,7 @@
       "message": "action_basis[0] is not a leg block of {target, kind}",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      },
      {
@@ -802,7 +802,7 @@
       "message": "action_basis[1] is not a leg block of {target, kind}",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      },
      {
@@ -811,7 +811,7 @@
       "message": "action_basis[2] is not a leg block of {target, kind}",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      }
     ]
@@ -823,7 +823,7 @@
      "message": "action_basis[0] is not a leg block of {target, kind}",
      "repairable": true,
      "repairs": [
-      "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+      "point the leg at the finding it rests on, or at the question it advances"
      ]
     },
     {
@@ -832,7 +832,7 @@
      "message": "action_basis[1] is not a leg block of {target, kind}",
      "repairable": true,
      "repairs": [
-      "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+      "point the leg at the finding it rests on, or at the question it advances"
      ]
     },
     {
@@ -841,7 +841,7 @@
      "message": "action_basis[2] is not a leg block of {target, kind}",
      "repairable": true,
      "repairs": [
-      "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+      "point the leg at the finding it rests on, or at the question it advances"
      ]
     }
    ],
@@ -905,7 +905,7 @@
       "message": "action_basis[0].target 'not-an-id' is not a canonical record id",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      }
     ],
@@ -916,7 +916,7 @@
       "message": "action_basis[0].target 'not-an-id' is not a canonical record id",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      }
     ],
@@ -927,7 +927,7 @@
       "message": "action_basis[0].target 'not-an-id' is not a canonical record id",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      }
     ]
@@ -939,7 +939,7 @@
      "message": "action_basis[0].target 'not-an-id' is not a canonical record id",
      "repairable": true,
      "repairs": [
-      "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+      "point the leg at the finding it rests on, or at the question it advances"
      ]
     }
    ],
@@ -1101,7 +1101,7 @@
       "message": "action_basis[0].kind 'because' is not one of: rests_on, advances",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      }
     ],
@@ -1112,7 +1112,7 @@
       "message": "action_basis[0].kind 'because' is not one of: rests_on, advances",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      }
     ],
@@ -1123,7 +1123,7 @@
       "message": "action_basis[0].kind 'because' is not one of: rests_on, advances",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      }
     ]
@@ -1135,7 +1135,7 @@
      "message": "action_basis[0].kind 'because' is not one of: rests_on, advances",
      "repairable": true,
      "repairs": [
-      "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+      "point the leg at the finding it rests on, or at the question it advances"
      ]
     }
    ],

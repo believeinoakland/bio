@@ -21,6 +21,8 @@ export const REWORDED = [
   /* T51 fix round 10 (N7): the zero-question refusal named plane terms; its words are now plain (golden.json holds them). */
   "a request_for_comment names ZERO inquiries",
   "add an action_basis leg with kind: advances",
+  /* T51 fix round 10 (B5): the leg repairs named fields; the point-the-leg repair is now plain (golden.json holds it). */
+  "point the leg at the finding this rests on (kind: rests_on)",
 ];
 /* R13 (T41-46a): the outcome vocabulary gained `none_exists`, so C-94.5's finding, which names the vocabulary from the
    array itself, names it too (`lifecycleFindings`, and through it C-2.10's ledger arm and the audit). Each recorded

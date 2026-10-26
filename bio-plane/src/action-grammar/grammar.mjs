@@ -143,7 +143,7 @@ export const RFC_RESPONSE_WINDOW_PRECEDENT = {
  *  project asserting a deadline nobody agreed to. */
 export function actionBasisFindings(fm, findings) {
   const legs = Array.isArray(fm?.action_basis) ? fm.action_basis : [];
-  const REPAIRS = ['point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)'];
+  const REPAIRS = [localize('action-grammar.grammar.point_the_leg_at_the_finding_it', 'point the leg at the finding it rests on, or at the question it advances')];
   legs.forEach((l, i) => {
     if (!l || typeof l !== 'object' || Array.isArray(l)) {
       findings.push(f('C-2.10', 'error', `action_basis[${i}] is not a leg block of {target, kind}`, REPAIRS));
@@ -165,7 +165,7 @@ export function actionBasisFindings(fm, findings) {
     } else if (OBJECT_TYPES[target.split('-')[0]] === 'action') {
       findings.push(f('C-2.10', 'error',
         localize('action-grammar.grammar.action_basis_i_target_target', 'action_basis[{i}].target \'{target}\' is an ACTION: an action does not rest on our own action. Evidence for what we did is evidence somebody else produced (DEC-14)', { i: String(i), target: String(target) }),
-        ['point the leg at the finding or the question, not at another action']));
+        [localize('action-grammar.grammar.point_the_leg_at_the_finding_or', 'point the leg at the finding or the question, not at another action')]));
     }
     if (!ACTION_BASIS_KINDS.includes(l.kind)) {
       findings.push(f('C-2.10', 'error',

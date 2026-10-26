@@ -157,6 +157,18 @@ test("R6 by hand (DEC-13): a request_for_comment names an inquiry it advances an
   assert.deepEqual(pushed((f) => AG.actionBasisFindings(DOCS["leg-theme"], f)).findings.map((x) => x.check), ["C-81.1"]);
 });
 
+test("R6 (T51 fix round 10, B5): the leg repairs (grammar.mjs:146, :168) name no field and no plane term (kind: rests_on, kind: advances, action_basis), and the leg refusals still say what is wrong", () => {
+  const leg = (target, kind) => ({ action_kind: "other", action_basis: [{ target, kind }] });
+  const repairs = (fm) => pushed((f) => AG.actionBasisFindings(fm, f)).findings.flatMap((x) => x.repairs ?? []);
+  const notLeg = repairs(leg("not-an-id", "rests_on"));
+  const ofAction = repairs(leg("ACTN-2026-0001", "rests_on"));
+  assert.equal(notLeg.length, 1, "the leg whose target is not an id is refused");
+  assert.equal(ofAction.length, 1, "the leg onto an action is refused");
+  for (const r of [...notLeg, ...ofAction]) assert.doesNotMatch(r, /kind:|\(kind|rests_on|action_basis/, r);
+  assert.match(ofAction[0], /action/, "the repair still says the leg may not point at an action");
+  assert.equal(pushed((f) => AG.actionBasisFindings(leg("not-an-id", "rests_on"), f)).findings[0].message, "action_basis[0].target 'not-an-id' is not a canonical record id");
+});
+
 test("R6 (T51 fix round 10, N7): a request_for_comment with no advanced question is refused in plain words: its finding and its repair name no plane term (ZERO, action_basis, legs of kind), and it still says why", () => {
   const found = pushed((f) => AG.actionBasisFindings(DOCS["rfc-no-inquiry"], f)).findings.find((x) => /nothing to answer/.test(x.message));
   assert.ok(found, "the zero-question refusal is raised");
