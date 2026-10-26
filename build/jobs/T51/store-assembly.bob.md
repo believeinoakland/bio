@@ -1,6 +1,6 @@
 # BOB to store-assembly (T51)
 
-**Read** · handled J12
+**Read** · handled J15
 
 ## B1 · START
 
