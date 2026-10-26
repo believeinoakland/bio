@@ -11,6 +11,7 @@ import { M, O, world, call, opCalls, aik, cred, refused, FORGED, QUERY_STAMPS, B
 const { caseImportOps, CASE_IMPORT_OPS } = await import("../../../src/case-import/index.mjs");
 const { publicReadDoorOp } = await import("../../../src/public-read/door.mjs");
 const D = await import("../../../src/store-door/dispatch.mjs");
+const { importedCaseAnswer, importedCasesAnswer } = await import("../case-import/fixtures.mjs");
 
 const { OPS } = O;
 const U = new URL("http://do/");
@@ -129,20 +130,22 @@ test("R49, R27: `importedcases` and `importedcase` are among the reads naming no
   const membership = () => ({ visibilityOf: (id) => { asked.push(id); return id === P ? "discoverable" : "hidden"; },
                                existenceAct: (id) => (id === P ? { ok: false, reason: "PROJECT_SEEN_NOT_A_PARTICIPANT", project: id } : null) });
   // fixtures-own: synthetic a route table the store door dispatches: only that it runs the route named and relays or awaits its answer is under test
-  const store = { routes: () => ({ importedcase: () => { ran.push(1); return { ok: true, editions: [] }; },
+  /* case-import's own answer to `importedcase` (its published fixture), carried by the table's route */
+  const { answer: held } = await importedCaseAnswer();
+  const store = { routes: () => ({ importedcase: () => { ran.push(1); return held; },
                                    notices: () => ({ ok: true }) }), membership };
   const r = await (await D.dispatch(new Request(`http://do/importedcase?viewer=member:ann&import=${P}&project=${P}&id=${P}`), store)).json();
-  assert.deepEqual([r.ok, r.result, ran, asked], [true, { ok: true, editions: [] }, [1], []]);
+  assert.deepEqual([r.ok, r.result, ran, asked], [true, JSON.parse(JSON.stringify(held)), [1], []]);
   const n = await (await D.dispatch(new Request(`http://do/notices?viewer=member:ann&project=${P}`), store)).json();
   assert.equal(n.result.reason, "PROJECT_SEEN_NOT_A_PARTICIPANT");
 });
 
 test("R49, R26, R25 (K1324): case-import's map answers promises (`caseimport`, `caseimportdocument` reach case-checker's WebCrypto), and the store's door awaits each — the envelope carries the settled answer, never a promise — and a rejected one is the store's internal error with a correlation id, never its message (negative control: a plain answer is enveloped the same)", async () => {
-  const settled = { ok: true, import: "IMP-1", existed: false };
-  // fixtures-own: synthetic a route table whose entries answer promises or reject: the door must await each and carry the settled answer
+  const { answer: listed } = await importedCasesAnswer();
+  const settled = { ok: true, import: listed.imports[0].import, existed: false };
   const routes = { caseimport: () => Promise.resolve(settled),
                    caseimportdocument: () => new Promise((resolve) => setTimeout(() => resolve({ ok: false, reason: "IMPORT_DOCUMENT_NOT_MISSING" }), 5)),
-                   importedcases: () => ({ ok: true, imports: [] }),
+                   importedcases: () => listed,
                    importflag: () => Promise.reject(new Error("secret /path/to/file.mjs:12")) };
   const store = { routes: () => routes, membership: () => ({ visibilityOf: () => "hidden", existenceAct: () => null }) };
   const go = async (op, method = "POST") => {
@@ -152,7 +155,7 @@ test("R49, R26, R25 (K1324): case-import's map answers promises (`caseimport`, `
   };
   assert.deepEqual((await go("caseimport")).json, { ok: true, result: settled });
   assert.deepEqual((await go("caseimportdocument")).json, { ok: true, result: { ok: false, reason: "IMPORT_DOCUMENT_NOT_MISSING" } });
-  assert.deepEqual((await go("importedcases", "GET")).json, { ok: true, result: { ok: true, imports: [] } });
+  assert.deepEqual((await go("importedcases", "GET")).json, { ok: true, result: JSON.parse(JSON.stringify(listed)) });
   const errors = console.error;
   console.error = () => {};
   let thrown;

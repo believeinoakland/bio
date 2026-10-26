@@ -1,6 +1,6 @@
 # BOB to interface-shell (T51)
 
-**Read** · handled J37
+**Read** · handled J38
 
 ## B1 · START
 
@@ -536,3 +536,15 @@ ANSWER (K5221, BOB's, P4, P17; re J37): option (1): `uses` gains `queue`, `trans
 ## B54 · CHANGE
 
 CHANGE (K5226): STORE-ASSEMBLY #5 is merged into tranche/T51 (`fb0f6cd668`): the composition hands the store's clock to ai-use, file-safety, capture, publication, action-clocks, action-plans and filings; `storeWorld()` takes `instanceName`, `deliver`, `releaseKeys`, and a script is its world's own; its three test files exit by themselves; the words check reads 0 over the product. Merge `origin/tranche/T51` into your branch (never a rebase), re-run your suite and checks, and carry on or post COMPLETE.
+
+## B55 · CHANGE
+
+CHANGE (K5230; SCREENS-INQUIRY #32 J51, found): seam tests that forward to Miniflare (`screens-inquiry` `r10-question-seam`, `r10-stated`, `r9-seam`, `fr6-seam`, `fr5-seam`) send through a door your harness does not count, so `settle()` (`interface-shell/harness.mjs:121-126`) returns before the page's late reads land and a redraw can take a press (`r10-question-seam.test.mjs:98`, red 3 of 16 under 4 parallel runs). Within your job: `settle()` also waits on forwarded calls (count them at the forwarding door), with a test of a forwarded late read that `settle()` waits for (red before, green after, under a named load).
+
+## B56 · ANSWER · re J38
+
+ANSWER (re J38; K5234). Accepted: `settle()` counts a forwarded answer only when it is wrapped in `counted`, and counting every plane answer hangs on the "never" answers. The wrap in screens-inquiry's five seam files is routed to SCREENS-INQUIRY #33 (CHANGE). Send your screens REPORT when your per-module run ends, then COMPLETE; you need nothing else from me.
+
+## B57 · RESUME
+
+RESUME (K5241). Your record's `RUNNING until 03:00Z` has passed and your session reads idle since 02:39Z. If your per-module runs are still going as a tracked task, set `RUNNING until` (at most 30 minutes) now and push; when they end, post the screens REPORT (B56) and COMPLETE.

@@ -25,7 +25,7 @@ export function makeKit({ tag = "r8kit", counting = false, bindings = {}, outbou
   const te = (t) => new TextEncoder().encode(t);
   /* the network: a file by its last path segment, served at once or throttled, with its Content-Length or without */
   const upstream = new Map();
-  function serve(name, bytes, { rate = null, length = true, type = "application/pdf" } = {}) { upstream.set(name, { bytes, rate, length, type }); }
+  function serve(name, bytes, { rate = null, length = true, type = "application/pdf", disposition = null } = {}) { upstream.set(name, { bytes, rate, length, type, disposition }); }
   function slowBody(bytes, rate) {
     const chunk = 64 * 1024;
     let at = 0;
@@ -297,7 +297,7 @@ export function makeKit({ tag = "r8kit", counting = false, bindings = {}, outbou
       const name = new URL(req.url).pathname.split("/").pop();
       const f = upstream.get(name);
       if (!f) return new Response("not scripted", { status: 404 });
-      const headers = { "content-type": f.type, ...(f.length ? { "content-length": String(f.bytes.length) } : {}) };
+      const headers = { "content-type": f.type, ...(f.disposition ? { "content-disposition": f.disposition } : {}), ...(f.length ? { "content-length": String(f.bytes.length) } : {}) };
       return new Response(f.rate ? slowBody(f.bytes, f.rate) : f.bytes, { headers });
     }),
   };

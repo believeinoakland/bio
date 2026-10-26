@@ -1,6 +1,6 @@
 # action-holds (T51)
 
-**Status** · session_01T1F4v1RYnwRpGQBM5cYrRi · depth 2 · COMPLETE · handled B7
+**Status** · session_018Ug4LFHJzA9MxdVSoTNU9i · depth 2 · COMPLETE · handled B9
 
 ## Completion
 
@@ -178,3 +178,51 @@ Suites and checks: action-holds suite 54 pass, 0 fail (exited by itself). fixtur
 Not mine, for BOB: screens-publish `t51.test.mjs:76` hand-builds the holdsdue answer (op-table finding); it is the consumer to take `holdsDueDocketAnswer()` in its own job. store-assembly `wiring.mjs:78` and `wizards.mjs:51` words findings, present since B5.
 
 Size (session_01T1F4v1RYnwRpGQBM5cYrRi): test runs 3, module lines 0.
+
+## J9 · QUESTION
+
+QUESTION (B8 job; my best reading, I build on it meanwhile).
+
+Finding, read against the code and the screen: the hold screen (screens-action hold.mjs:34-40, :137-143) places a hold with body {project, from:{docket_entry|pressure}} and sends that SAME body to actionholdrelease. Today (1) the release/preview arms read neither `from` nor `docket_entry`/`pressure` and DECLARED_OPS lists neither (index.mjs:1078-1079), so the guard refuses a body that carries `from`; releasing by bare {project} works in code but the screen never has it once the mark leaves holdsdue (R3 drops a placed mark, even released); (2) no read lists a place once held: holdsOf needs the place in hand, pressurefor lists marks/records but no docket marks.
+
+Proposed wording (new, all marked not yet met T51):
+- R5/R6 amend: "It takes the place as R2 does, and also the placing act's `from` (R2's four kinds), read against the place as R2 reads it (a `from` naming none the author can see at that place is `HOLD_FROM_REFUSED`, asked after the place's refusals); `from` only locates, a release ends the hold at the place whatever prompted it. `holdsOf` (R2) also takes `{pressure}` (a pressure record's name, its project the place), as R19 gave it `{docket_entry}`." DECLARED_OPS: actionholdrelease and actionholdpreview (new row) accept `from`.
+- R22 new: `holdsPlaced({after?, limit?, viewer})` (`op=holdsplaced`, a read): every place at which any hold has ever been stated that the viewer may see (an action she sees; a project she may name, R2), in (place id, position) order, each {place: {target, ord|null} | {project}, hold (latest statement: in_place|released), by, at, reason, from (the refs of the statements there: {mark}|{pressure}|{docket_entry}|{counsel_matter}), projects (covered now, those she may name)}, at most 500 per page with `cursor`/`truncated` as R3's; an invisible place is absent (R13). Test: place from a docket mark, it is in holdsplaced in_place and not in holdsdue; preview shows its restarts; release; it reads `released`; control: an invisible action's place is in no page.
+Tests failing first through the real acts; published fixtures of each answer (holdsplaced, preview, release) for screens-action. Cross-module: op-declarations needs a spec for holdsplaced (and holdsdue still has none for its row beyond sessionread).
+
+## Fix round 10, START B8 (K5230; plan item 112; ACTION-HOLDS #10)
+
+**Cause (SCREENS-ACTION #22 J36).** The hold screen sends the placing body `{project, from:{docket_entry|pressure}}` to `actionholdrelease`; the release/preview arms read no `from` and `DECLARED_OPS` did not accept it, and no read listed a place once held (`holdsdue` drops a placed mark, `pressurefor` lists no docket marks). Posted as QUESTION J9 with the wording; built on it (no ANSWER read by COMPLETE).
+
+**Changed.** `index.mjs`: `#placeOf` takes a pressure record (`pressureRef`; project place, unseen/absent/malformed alike `noSuchProject`); `actionHold` reads `from` for preview and release too (`HOLD_FROM_REFUSED`; kept with the release statement and answered, so R18's record `hold` reads `released`); `holdsOf({pressure})`; new `holdsPlaced` + `op=holdsplaced`; the ops pass `from` to release/preview; `DECLARED_OPS.actionholdrelease` accepts `from`. Requirement **R22** written in `build/requirements/action-holds.md` (marked not yet met; BOB strikes), amending R2, R5, R6.
+
+**Tests (red first, then green).** `placed.test.mjs` (R22 x2, R5 R6 x2) first failed `holdsPlaced is not a function` / `HOLD_FROM_REFUSED` missing / `from` unread; now 60 pass, 0 fail in `bio-plane/test/m/action-holds/`. Published fixture `holdPlacedReleasedAnswers` (`fixtures.mjs`: `placed`, `preview`, `released`, `after`, the door's answers) with `fixtures.test.mjs` tests and control. No `fixtures-own`/`fixtures-generic` marker added.
+
+**Checks.** format 0; architecture 0; coverage 22 of 22; words 0 findings; fixtures for action-holds `--list` 0; ownership 0. Dependents: screens-action 295/0, plan-work 52/0, filings 168/0, action-producers 55/0. `run.mjs` fixtures failures listed are other modules' (extraction, file-safety, monitoring, plane, screens-intake, screens-publish `t51.test.mjs:76` holdsdue op-table, test-support).
+
+**Found in other modules (REPORT).** (1) `op-declarations`: `holdsplaced` has no spec; its `t45.test.mjs:222` is red by name ("action-holds: holdsplaced has no spec"), as is `op-grades`/`affordances` ("member ops with no text and no ground", "neither explained nor named" when I tried declaring it in `DECLARED_OPS`, so I removed that row). Needs: spec kind `sessionread` beside `holdsdue` (`op-declarations/t51.mjs:43`), an op-grades read row and text, affordances text, op-capabilities row. The `actionholdpreview` spec should accept `from` (screens-action sends it to preview and release). (2) `screens-action/hold.mjs`: after release the screen can read the place's state through `holdsplaced` (items `place`, `hold`, `from`). 
+
+**Deferred.** None.
+
+Size (session_018Ug4LFHJzA9MxdVSoTNU9i): test runs 12, module lines 1331
+
+## J10 · COMPLETE
+
+COMPLETE (B8). R22 built on my QUESTION J9 wording (no ANSWER read): release/preview take from, holdsOf takes {pressure}, new holdsPlaced/op=holdsplaced, fixtures published. Module tests 60/0; checks clean for action-holds. RED OWED BY OTHERS: op-declarations t45.test.mjs:222 'holdsplaced has no spec' (needs sessionread spec, op-grades/affordances/op-capabilities rows; actionholdpreview spec should accept from). Details and Size line in my record.
+
+## After ANSWER B9 (K5232)
+
+Merged `origin/tranche/T51` (BOB's R5, R6, R19, R22 wording; my duplicate R22 line removed, the file now equals the tranche's). As B9 says: `DECLARED_OPS` gains `actionholdpreview` (read; accepts `target, ord, project, case, from`; requires one of `target, project, case`) and `holdsplaced` (read, session only, `machineClasses: []`; accepts `after, limit`; requires nothing); `actionholdrelease` already accepts `from`. Tests: `declared-ops.test.mjs` x2 (R20 R22). Module tests 62 pass, 0 fail; format, architecture, coverage (22 of 22), words, fixtures 0 failures; screens-action 295/0.
+
+**What each later module must declare at my merge (named exactly).**
+- `op-declarations`: a spec for `holdsplaced` of kind `sessionread` beside `holdsdue` (`t51.mjs:43`: classes admin, member, probe; `machineClasses: []`; `viewer` stamped; `NEEDS` null; both session sets); `actionholdpreview` spec accepts `from` (and the release's). Red now: `t45.test.mjs:222` "holdsplaced has no spec".
+- `op-grades`: a read row and text for `holdsplaced` (as `t51.mjs:13` for `holdsdue`; "read: every place a hold was stated that the member may see, with its latest hold and what prompted it; writes nothing (action-holds R22)").
+- `affordances`: an `ACT_HELP` text or an `ACT_HELP_ABSENT` read-ground entry for `holdsplaced`. Red now in op-declarations' tests: "member ops with no text and no ground: holdsplaced", "holdsplaced: neither explained nor named".
+- `op-capabilities`: a `null` row for `holdsplaced` as for `actionholdpreview`.
+- `screens-action` (hold.mjs): send the placing body (`from` included) to `actionholdpreview` and `actionholdrelease`; read `holdsplaced` (items `place`, `hold`, `from`) to list held and released places; use the published fixture `holdPlacedReleasedAnswers` (`fixtures.mjs`).
+
+Size (session_018Ug4LFHJzA9MxdVSoTNU9i): test runs 16, module lines 1337
+
+## J11 · COMPLETE
+
+COMPLETE (after B9 ANSWER). Merged tranche; DECLARED_OPS gains actionholdpreview and holdsplaced, release/preview accept from. Module 62/0; format, architecture, coverage 22/22, words, fixtures, ownership 0. What op-declarations, op-grades, affordances, op-capabilities and screens-action must declare at my merge is named in my record ('After ANSWER B9'); op-declarations is red by name for holdsplaced until then.

@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot, ok } from "../interface-shell/harness.mjs";
-import { open, storeWorld, main, fill, press, inquiryMd, INQUIRY_REFS, LEGS, BASIS, says, word, day, lead, section, SCREENS, P, Q, D, SHA, POLICY } from "./fixtures.mjs";
+import { open, storeWorld, main, fill, press, inquiryMd, INQUIRY_REFS, LEGS, BASIS, says, word, day, lead, section, SCREENS, P, Q, D, SHA, POLICY, waitsSetAside, ASIDE_TITLE, HUNCHES, HUNCH } from "./fixtures.mjs";
 
 const at = "/app/question/" + Q;
 const refusedBody = (code, extra = {}) => ({ status: 200, json: { ok: true, result: { ok: false, reason: code, code, ...extra } } });
@@ -220,8 +220,9 @@ test("R2 C38 the page reads the strength and the partition again after a sever",
 const ROSTER = ok({ ok: true, members: [{ member_id: "admin", handle: "sparky", founder: true }, { member_id: "u-7", handle: "rosa" }, { member_id: "u-9", handle: null }] });
 const hist = (author) => JSON.stringify({ target: Q, base: null, created: "2026-10-03T10:00:00Z", author });
 const CONCLUDED_BY = (by) => (r) => ok(BASIS(r.query.project ? { conclusion: { claim: { text: "Yes." }, by, at: "2026-10-13T09:00:00Z" }, conclusion_stance: "concluded" } : {}));
-const waitsBy = (setter) => ok({ ok: true, waits: [{ document: "INFO-2026-0008", title: "2024 budget PDF", setter, reason: "wrong year", date: "2026-10-06T09:00:00Z" }] });
-const hunchBy = (held_by) => ok({ ok: true, inquiry: Q, hypotheses: [{ hypothesis_id: "HYP-1", statement: "Crews close reports when they inspect.", held_by }] });
+const waitsBy = (setter) => ok(waitsSetAside({ setter: "member:" + setter }).answer);
+/* hypotheses' real list, the live hunch held by each author in turn (fixtures-own: synthetic the author, an input that exercises the handle lookup) */
+const hunchBy = (held_by) => ok({ ...HUNCHES, hypotheses: [{ ...HUNCH, held_by: "member:" + held_by }] });
 
 test("R2 R40 R46 C94 the members the question names from the record are drawn by handle, never by id: the founder's id `admin`, another member's id; an unknown id by the plain word; control: with the roster silent, the fallback words", async () => {
   const draw = async (author, roster) => open(at, { images: { [Q]: { "bundle.md": inquiryMd(), "_history/promotion_a.json": hist("member:" + author) } },
@@ -233,7 +234,7 @@ test("R2 R40 R46 C94 the members the question names from the record are drawn by
     const s = surfaces(p);
     assert.ok(s.head.textContent.includes(word("screen.question.opened", { name: handle, date: day("2026-10-03"), project: "" }).trim()), author + ": opened by " + handle);
     assert.ok(says(s.concluded, "question.concluded.by", { who: handle, date: day("2026-10-13") }), author + ": concluded by " + handle);
-    assert.ok(says(s.waits, "screen.question.waits.setaside", { document: "2024 budget PDF", who: handle, reason: "wrong year" }), author + ": set aside by " + handle);
+    assert.ok(says(s.waits, "screen.question.waits.setaside", { document: ASIDE_TITLE, who: handle, reason: "wrong year" }), author + ": set aside by " + handle);
     assert.ok(says(s.hunches, "screen.question.hunch.by", { who: handle }), author + ": a hunch of " + handle);
     assert.doesNotMatch(main(p).textContent, /\badmin\b|\bu-7\b/, author + ": never the id");
   }
@@ -241,14 +242,14 @@ test("R2 R40 R46 C94 the members the question names from the record are drawn by
   const unk = await draw("u-99", ROSTER);
   await unk.settle();
   assert.ok(surfaces(unk).head.textContent.includes(word("screen.question.opened", { name: word("shell.card.member"), date: day("2026-10-03"), project: "" }).trim()), "unknown id: the plain word");
-  assert.ok(says(surfaces(unk).waits, "screen.question.waits.setaside", { document: "2024 budget PDF", who: word("shell.card.member"), reason: "wrong year" }));
+  assert.ok(says(surfaces(unk).waits, "screen.question.waits.setaside", { document: ASIDE_TITLE, who: word("shell.card.member"), reason: "wrong year" }));
   assert.doesNotMatch(main(unk).textContent, /\bu-99\b/);
   /* control: no handle known (the roster silent): the founder unnamed by key, any other member by the plain word */
   const quiet = ok({ ok: true, members: [] });
   const f = await draw("admin", quiet);
   await f.settle();
-  assert.ok(says(surfaces(f).waits, "screen.question.waits.setaside", { document: "2024 budget PDF", who: word("member.founder.unnamed"), reason: "wrong year" }), "the founder unnamed");
+  assert.ok(says(surfaces(f).waits, "screen.question.waits.setaside", { document: ASIDE_TITLE, who: word("member.founder.unnamed"), reason: "wrong year" }), "the founder unnamed");
   const m = await draw("u-7", quiet);
   await m.settle();
-  assert.ok(says(surfaces(m).waits, "screen.question.waits.setaside", { document: "2024 budget PDF", who: word("shell.card.member"), reason: "wrong year" }), "a member with no handle known: the fallback word");
+  assert.ok(says(surfaces(m).waits, "screen.question.waits.setaside", { document: ASIDE_TITLE, who: word("shell.card.member"), reason: "wrong year" }), "a member with no handle known: the fallback word");
 });

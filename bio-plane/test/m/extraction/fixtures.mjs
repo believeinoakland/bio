@@ -2,7 +2,7 @@
    own code when a test runs and never stored. A user's test takes the answer from here and does not write it by hand. Each is called by a test of
    extraction's own, `fixtures.test.mjs`, which checks the real answer. Each runs this module's real code over `fresh()` (its real record-core and membership
    over a real SQLite database) with a scripted evidence bucket, and the real reader (reading-pipeline's) where a read is made. */
-import { fresh, bundle, bucket, doc, sha, member, ocrAnswer, homesOver } from "./fixture.mjs";
+import { fresh, bundle, bucket, doc, sha, member, ocrAnswer, homesOver, hold, i2, noText, pageUnits, pressThenPass } from "./fixture.mjs";
 
 const lines = (n, f) => Array.from({ length: n }, (_, i) => f(i));
 /** A text of `n` lines (about 99 bytes each) ending in a mark, so a read of it goes on in pieces of 4,096 units. */
@@ -50,7 +50,7 @@ export function extractionNotice() {
  *  follow: `partial` with R90's figures); `unknown` is a digest nothing holds (`none`). `answer` is the answer for all four, as the module gives it. */
 export async function progressOf() {
   const { generate } = await import("../../pdfgen.mjs");
-  // fixtures-contract: plane job-registrar
+  // fixtures-contract: store-assembly job-registrar
   const { jobRegistrarStub } = await import("../../job-registrar-stub.mjs");
   const g = generate({ kind: "pdf", seed: "progress", fonts: ["type0"], size: { pages: 30, lines: 1 }, kinds: ["scan"] });
   const scan = await held(await g.bytes(), { ct: "application/pdf", format: "pdf", fromText: false });
@@ -76,9 +76,13 @@ export async function progressOf() {
  *  - `read()` a short text read to its end in one tick: `{ok: true, read: true, bundle_id, found}`;
  *  - `piece()` the first tick of a text that goes on: `more: true` with `detail: {read_through, total}`; `pieces(n)` the ticks of a text of `n` pieces, the
  *    last answering as `read()` does (`n` from 2 to 5, so that every piece is 4,096 units);
+ *  - `noWholeObject()` a home the register names whose object the evidence store does not hold whole (nor in parts): `{ok: true, read: false, why: "NO_WHOLE_OBJECT"}`;
  *  - `held()` a reading already held: `{ok: true, read: false, why: "READING_HELD", counters: {written, skipped}}`;
- *  - `final(why)` a read in pieces ended, stated, because the reader refuses the cursor (`why` `CURSOR_MISMATCH`; a refused `NOT_PIECEWISE` is stated
- *    partial once and answers `READING_HELD`, not final): `{ok: true, read: false, final: true, why}`;
+ *  - `final(why)` a read ended, stated: `{ok: true, read: false, final: true, why}`. `why` `CURSOR_MISMATCH`: a read in pieces whose reader refuses the cursor (a
+ *    refused `NOT_PIECEWISE` is stated partial once and answers `READING_HELD`, not final); `NO_PROGRESS`: an OCR tick whose member answered its pages with
+ *    no glyph (R101), which ends the entry on that tick, owing nothing;
+ *  - `failed()` the second tick of a text read in pieces, the evidence store failing (`head`, `get` and `put` reject `STORE_FAILED`): `{ok: true, read: false,
+ *    owed: true, why: "TRANSIENT", detail: {read_through, total, reason}}`, the cursor kept, nothing indexed, the entry owed and tried again (R101);
  *  - `killed()` an OCR tick whose member died on a page: the answer carries `killed: [page]`;
  *  the paged and killed paths, each made by the real `readHeld` over a held capture and answering the figures the ledger reads (K5139):
  *  - `windowed()` `{answer, cursor, units}`: the first tick of a text read in windows. `answer` is `more: true` with `detail: {read_through, total}` and no cursor
@@ -102,12 +106,29 @@ export const readHeldAnswer = {
     if (answers.length !== n) throw new Error(`readHeldAnswer.pieces: ${answers.length} pieces for ${n}`);
     return answers;
   },
+  async noWholeObject() { const h = await held(textOf(20), { whole: false }); return h.w.x.readHeld({ sha: h.d, kind: "reading" }); },
   async held() { const h = await held(textOf(20)); await h.w.x.readHeld({ sha: h.d, kind: "reading" }); return h.w.x.readHeld({ sha: h.d, kind: "reading" }); },
   async final(why = "CURSOR_MISMATCH") {
+    if (why === "NO_PROGRESS") {
+      /* a scan whose OCR member answers every page it is asked with words that hold no glyph: the pass reads nothing, the entry ends (R101) */
+      const { generate } = await import("../../pdfgen.mjs");
+      const g = generate({ kind: "pdf", seed: "no-progress", fonts: ["type0"], size: { pages: 3, lines: 1 }, kinds: ["scan"] });
+      const h = await held(await g.bytes(), { ct: "application/pdf", format: "pdf", fromText: false });
+      const blank = member((body) => ocrAnswer(body.pages, { text: () => "   " }));
+      await h.w.x.readHeld({ sha: h.d, kind: "reading", env: {} });
+      return h.w.x.readHeld({ sha: h.d, kind: "ocr", env: { OCR_WORKER: blank } });
+    }
     if (why !== "CURSOR_MISMATCH") throw new Error(`readHeldAnswer.final: no such reason ${why}`);
     const h = await held(textOf(9000));
     await h.w.x.readHeld({ sha: h.d, kind: "reading" });
     h.w.x.read = async () => ({ refused: { code: why, why: "the held bytes are not the ones this cursor was made from" } });
+    return h.w.x.readHeld({ sha: h.d, kind: "reading" });
+  },
+  async failed() {
+    const h = await held(textOf(9000));
+    await h.w.x.readHeld({ sha: h.d, kind: "reading" });
+    const fails = async () => { throw new Error("STORE_FAILED"); };
+    Object.assign(h.evidence, { head: fails, get: fails, put: fails });
     return h.w.x.readHeld({ sha: h.d, kind: "reading" });
   },
   async killed() {
@@ -167,3 +188,19 @@ export async function unheldStructure({ sha: digest = "e".repeat(64), cls = "mem
   return w.x.pdfStructure({ sha: digest, cls, storeName });
 }
 
+
+/** `reextraction`: a successful re-extraction of a scanned PDF's unread page by `op=pdfstructure&ocr=1` (R34, R103): `{press, pass}`. `press` is the op's own answer
+ *  (`pdfStructure`): it makes no OCR call and owes the page (`reextraction.performed: false`, `owed: true`, the candidate page `[1]`); `pass` is the ledger's pass
+ *  that the press's job asks for (`readHeld({kind: "ocr"})`), whose `reextraction` is the performed one (`performed: true`, `written: true`, `pages: [1]`). Both are
+ *  made by this module's real code over a stored two-page reading (page 1 has no text) and a scripted OCR member that reads page 1. */
+export async function reextraction() {
+  const text = i2([{ page: 0, text: "Text" }, { page: 1, text: "", undetermined: [noText(1)] }]);
+  const w = fresh();
+  bundle(w.s, "B-1");
+  const d = await hold(w.evidence, "%PDF-1.7 " + Math.random());
+  w.x.writeReading({ bundleId: "B-1", captureSha: d, reading: { content_type: "generic", reader_version: 1, read_from_text: false, found: false, entities: [], facts: {},
+    at: "2026-09-01T00:00:00Z", basis: "b", text_source: null, page_count: 2, container_extent: { container: "pdf", levels: ["images"], images: [] }, tier3_candidate: true },
+    textUnits: pageUnits(text) });
+  const { press, pass } = await pressThenPass(w, d, { OCR_WORKER: member(() => ocrAnswer([1])) });
+  return { press, pass };
+}

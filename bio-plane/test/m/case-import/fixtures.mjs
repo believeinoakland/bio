@@ -218,3 +218,11 @@ export async function citeimportedAnswer({ role = "supports", note = "the audit 
   const answer = citationOps(w.cit, new URL(`http://x/?${q}`)).citeimported();
   return { w, caseImport: caseImport.w, import: importId, finding, edition, ref, answer };
 }
+
+/* R16 (citeimported refusal; fix round 10, K5175): the door's refusal to citation's `citeimported` for a finding this import
+   never accepted: F2 at edition 1, where only F1 is accepted. Made by the real code the same way as `citeimportedAnswer`, so
+   the answer is citation's BASIS_REFUSED carrying IMPORTED_NOT_ACCEPTED (C-21.4) and nothing is written. Answers the same
+   fields as `citeimportedAnswer`. */
+export async function citeimportedRefusalAnswer() {
+  return citeimportedAnswer({ finding: F2 });
+}

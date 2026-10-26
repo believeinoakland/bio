@@ -1,6 +1,6 @@
 # extraction (T51)
 
-**Status** · session_01Jvm3Svfx7hGZ595k1aGkp6 · depth 2 · COMPLETE · handled B63
+**Status** · session_015RF4m8g84eTxBUcZNfsLxW · depth 2 · COMPLETE · handled B65
 
 ## J1 · REPORT
 
@@ -910,3 +910,57 @@ Size (session_01Jvm3Svfx7hGZ595k1aGkp6): test runs 9, module lines 5040
 ## J47 · COMPLETE
 
 COMPLETE B61-B63. (1) t44:92 marker is now fixtures-contract: plane transcribe-not-sent (plane's run owed; listed contract-no-run at t44:93). (2) K5139: readHeldAnswer gains windowed(), scanOwed(), killedWindow(), finished() (existing killed() is the page case), real readHeld over held captures, one test in fixtures.test.mjs. NOTE: the windowed answer carries NO cursor in detail (real detail is {read_through, total}); the cursor is the index state's, so windowed().cursor and killedWindow().cursor read it for the caller; the tick's own counters are {written, skipped} on READING_HELD only; {written, skipped, owed, failed} are unitsOf's. Fixtures list fails only t48:30, t44:93 (plane run), agent-worker :84 and :101 (yours). Module 392/392; format, architecture, coverage 87/87, words, ownership 0. Record: build/jobs/T51/extraction.md
+
+## J48 · COMPLETE
+
+Fix round 10, plan item 101 (4)(g) (START B64, K5227). Commit on job/T51/extraction (after the merge of tranche/T51 at a7e38d9b0a).
+
+What changed:
+- **A bug in my module, found and fixed.** `bio-plane/src/extraction/index.mjs` (`#continueOcr`, the `left(...)` after `#ocrPass`): an OCR pass whose answered pages hold no glyph answered `{ok: true, read: false, why: "NO_PROGRESS"}` with no `final`, so the job table (`store-assembly/pending.mjs` `settle`, `OCR_NOTHING_OWED` lists `OCR_NO_PROGRESS` but not `NO_PROGRESS`) tried the row again at every tick (probed: attempts 1, 2, 3, 4 with state `queued`; with `final: true` the row is `final`, `NO_PROGRESS`, one attempt, on the first tick). R101 says the entry ends and the job never loops. The answer now carries `final: true`. Test: `r101.test.mjs:195` asserts `a.final === true`.
+- (1) Fixtures lines: 12 listed by the START, now at 1 failing line plus 3 orphan runs in plane's file (below). Markers moved to the provider that now holds the code: `fixtures-contract: plane job-registrar` -> `store-assembly job-registrar` (fixture.mjs:6, fixtures.mjs:53, and r8-owe, r10-migration-counts, r10-pages-left, r103, r82:280, r99-r107, s25-pieces-chain, pdfstructure); `plane transcribe-not-sent` -> `store-assembly transcribe-not-sent` (t44.test.mjs:92); `content transcribe-answer` -> `store-assembly transcribe-answer` (t48.test.mjs:29). The other lines the START counted (`t46`, `t50`, `t43`, `relays`) were already accepted.
+- (2) `readHeldAnswer.failed()` (`fixtures.mjs`, beside `final`): the second tick of a text read in pieces with the store's `head`, `get` and `put` rejecting `STORE_FAILED`: `{ok: true, read: false, owed: true, why: "TRANSIENT", detail: {read_through, total, reason}}`, made by the real `readHeld`. Test: `fixtures.test.mjs` (R101 `failed()`). The first tick over a failing `get` answers differently (`{read: true, found: false, owed: true}`, a failed reading written); I did not publish that one, nobody asked for it.
+- (3) `readHeldAnswer.final("NO_PROGRESS")`: a scan, an OCR member answering blank text, the real `readHeld({kind: "ocr"})`: `{ok: true, read: false, final: true, why: "NO_PROGRESS"}`. Test: `fixtures.test.mjs` (R101 `final('NO_PROGRESS')`).
+- Red then green, each once: removing the `final: true` made `fixtures.test.mjs` fail 1 (the NO_PROGRESS test); changing `"TRANSIENT"` to another word in the real answer made it fail 1 (the `failed()` test); restored: 8 of 8 pass.
+
+Met ids: R101 (the NO_PROGRESS end now stated final; the two fixtures). No requirement text changed; BOB strikes marks.
+
+Tests and checks:
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/extraction/`: 394 tests, 394 pass, 0 fail (exits by itself).
+- Users that call `readHeld` or take the module's fixtures (store-assembly, retrieval, retrieval-browse, content, connections; 398 tests): 395 pass, 2 fail, neither mine: `screens-investigate/standard.test.mjs` R51 fails the same on `origin/tranche/T51` (checked), and `explore.test.mjs` R2 passes when its two files run alone (load).
+- `impact.mjs origin/tranche/T51 HEAD` names 111 of 178 modules (the shared table); I ran the callers above.
+- `checks/format.mjs /home/user/bio`: 0 failures. `architecture.mjs extraction`: 0. `coverage.mjs extraction`: 87 of 87 live ids named, 0. `ownership.mjs extraction <merge-base> HEAD`: 16 files, 0 failures. `checks/run.mjs`: words 0 failures, 1991 unkeyed (not risen by me: I added no sentence); the extraction lines in it are only the fixtures lines below.
+- `fixtures.mjs extraction --list`: no `stub` line fails; 4 failures remain, none fixable in my paths:
+  - `t48.test.mjs:30` [contract-no-run]: the `transcribe` hand-built value. The transcriber is now `store-assembly/transcribe.mjs` (not plane's, which has no `transcribe.mjs`); no `fixtures-run: extraction transcribe-answer` stands anywhere. The real answer also carries `asked`, `sent`, `unread`, `owed` (`transcribe.mjs:155`), which the hand-built value lacks. STORE-ASSEMBLY owes the run (or a published fixture); I will re-point the line when it lands.
+  - `bio-plane/test/m/plane/t42.test.mjs:301`, `:402`, `:410` [orphan-run] `fixtures-run: extraction transcribe-not-sent`: plane's twin of the lines in `store-assembly/t42.test.mjs:241`, `:342`, `:350`, now the provider's. PLANE's file: BOB makes these plain comments (item 101 (4)(d)).
+
+`fixtures-own` / `fixtures-generic` markers added: none.
+
+Found in other modules (REPORT):
+- store-assembly `pending.mjs:123` `OCR_NOTHING_OWED`: if you prefer the end to be the ledger's rule, it lacks `NO_PROGRESS`; I fixed it on my side (`final: true`), so no change is needed there.
+- Tests that hand-build extraction's answers and could take its fixtures: `screens-inquiry/fr28-document-acts.test.mjs:50` (`pdfstructure`), `fr5-document.test.mjs:121` (`readheld`), `screens-intake/t51-fix5.test.mjs:121` (`readheld`), `plane/r10-reading-ended.test.mjs:20` (stand-in `readHeld`); store-assembly's `r9-jobs.test.mjs:313` takes `readHeldAnswer.failed()` by CHANGE as the START says.
+- `test-support`'s `job-registrar-stub.mjs:23`, `:35` fail the fixtures check (the stub is the contract's user, not a fixture): BOB's.
+
+Size (session_012woGyRG5HAsMu8o2WXWekE): test runs 9, module lines 3303
+
+## EXTRACTION #49 · fix round 10 (B65, plan item 117; K5236)
+
+Changed (all test-side; no module code changed):
+- `bio-plane/test/m/extraction/fixtures.mjs`: `readHeldAnswer.noWholeObject()` (the real `readHeld` over a home the register names whose object the store does not hold: `{ok: true, read: false, why: "NO_WHOLE_OBJECT"}`); `reextraction()` (end of file): `{press, pass}` from the real `pdfStructure({ocr: "1"})` and the ledger's pass `readHeld({kind: "ocr"})` over a stored two-page reading with page 1 unread and a scripted OCR member.
+- `fixtures.test.mjs` (last two tests): each names its ids and checks the real answer. Failing first: with the capture held whole, `noWholeObject` read it (red); with no OCR member, `reextraction` did not perform (red); restored, both green.
+- `t48.test.mjs:28-33`: the `transcribe` value now has store-assembly's real shape, `{...agent-worker's answer, asked, sent, owed}` (`unread` only when a page is refused; none is here); marker `fixtures-contract: store-assembly transcribe-answer`.
+
+Met ids (BOB strikes the marks): R80 (`NO_WHOLE_OBJECT` fixture), R34, R103 (re-extraction fixture), R106's shape of `transcribe` (t48). No `fixtures-own` / `fixtures-generic` marker added.
+
+Findings for BOB:
+- The real `pdfstructure` press answers `performed: false, owed: true` (R103); `reextraction.performed: true` is the ledger pass's `readHeld({kind: "ocr"})` answer. So screens-inquiry's `fr28-document-acts.test.mjs:50` stub `pdfstructure: ok({ok: true, reextraction: {performed: true}})` is not an answer the op gives; it should take `reextraction().press` (the owed press) and, where it needs a performed re-read, `reextraction().pass.reextraction`. For screens-inquiry's `fr5-document.test.mjs:121`: `readHeldAnswer.noWholeObject()`.
+- store-assembly `t42.test.mjs:266` keeps its own copy `theirs` of the old shape (no `asked`, `sent`, `owed`), so its `deepEqual` at `:268` is red against the real answer. Run against my branch merged with `job/T51/store-assembly`: 16 of 17, the one red being that test. With `asked: q.pages, sent: q.pages, owed: []` added to `theirs` (tried in a throwaway worktree only), 17 of 17. Store-assembly must change its copy; `fixtures.mjs extraction --list` on that merge shows no extraction line other than plane's.
+- plane `t42.test.mjs:301`, `:402`, `:410` carry `fixtures-run: extraction transcribe-not-sent` and are orphan runs (the consumer, extraction `t44.test.mjs:93`, is marked `transcribe-not-sent` to store-assembly): plane's/BOB's to remove or move.
+- `checks/fixtures.mjs extraction --list` on my branch alone: `t48.test.mjs:31` [contract-no-run] until store-assembly's branch is merged (its run `// fixtures-run: extraction transcribe-answer` is at its `t42.test.mjs:266`); then zero for extraction's own lines.
+
+Ran: extraction suite 396 of 396; the 12 other test files importing `extraction/fixtures.mjs` 110 of 110; `impact.mjs origin/tranche/T51 HEAD`: 10 of 178 modules, 58 files (the users of the fixtures file); `checks/run.mjs /home/user/bio`: words 0 findings (178 modules, `testcopy 0`), channels 0, fixtures failures are the other modules' (stubs of test-support's `job-registrar-stub`, etc.); ownership 0.
+
+Size (session_015RF4m8g84eTxBUcZNfsLxW): test runs 8, module lines 4552
+
+## J49 · COMPLETE
+
+COMPLETE fix round 10 (B65). Fixtures published: readHeldAnswer.noWholeObject() and reextraction() ({press, pass}); t48 transcribe value is store-assembly's real shape. Findings (REPORT in my record, section 'EXTRACTION #49'): the real pdfstructure press answers performed:false (R103), performed:true is the ocr pass; store-assembly t42:266 keeps an old-shape copy 'theirs' and is red until it adds asked/sent/owed (17/17 with it, tried in a throwaway worktree); plane t42:301/402/410 orphan runs of transcribe-not-sent. Suite 396/396, users 110/110, ownership 0, words 0.

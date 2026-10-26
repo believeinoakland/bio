@@ -408,9 +408,9 @@ test("R105 every refusal the plane makes of the six acts is drawn beside the act
 
 /* ---- writing help (entry 25): beside the fields she words herself, never beside a reason ---- */
 
-test("R105 writinghelp: offered beside her own-words fields while the assistant is reachable, told only what she typed, its draft filled into the field as a labeled draft; none beside a reason field (control); none while the assistant is not reachable (control)", async () => {
-  /* still scripted (writinghelp): the draft is asked of the Worker's assistant object, which needs the model, so no world answer carries `text` (needed: a recipe/world whose assistant answers a draft; `recipes.writingHelp` answers only the refusals) */
-  const reach = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }), writinghelp: ok({ ok: true, text: "The notice is the later of the two.", untested: true }) };
+test("R105 writinghelp: offered beside her own-words fields while the assistant is reachable, told only what she typed; none beside a reason field (control); none while the assistant is not reachable (control)", async () => {
+  /* writinghelp never returns a draft (K5212: past its refusals it answers ASSISTANT_DRAFT_UNAVAILABLE), so no drafted text is scripted here */
+  const reach = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
   const p = await open("/app/contradiction/" + CAND, { ...view(cand()), plane: { ...view(cand()).plane, ...reach } });
   const helps = main(p).querySelectorAll('button[data-act="writinghelp"]');
   assert.deepEqual(helps.map((b) => b.getAttribute("data-field")).sort(), ["explanation", "question"]);
@@ -418,8 +418,6 @@ test("R105 writinghelp: offered beside her own-words fields while the assistant 
   fill(p, { "cd-expl": "The notice is later." });
   await p.click(helps.find((b) => b.getAttribute("data-field") === "explanation"));
   assert.deepEqual(p.byOp("writinghelp")[0].body, { op: "contradictionclarify", field: "explanation", told: "The notice is later." });
-  assert.equal(p.doc.getElementById("cd-expl").value, "The notice is the later of the two.", "the draft is filled into her field, hers to edit");
-  assert.ok(says(main(p), "draft.machine.label") && says(main(p), "ai.label.untested.writinghelp"));
   /* control: nothing told, nothing sent */
   fill(p, { "cd-q": "" });
   await p.click(main(p).querySelector('button[data-act="writinghelp"][data-field="question"]'));
@@ -450,8 +448,8 @@ test("R105 what the record cannot state is not drawn or offered: a stated date t
 });
 
 test("R105 writinghelp: beside her conclusion on a taken-up question and beside her response once the projects are named, never beside what would change it", async () => {
-  /* still scripted (writinghelp): the draft is asked of the Worker's assistant object, which needs the model, so no world answer carries `text` (needed: a recipe/world whose assistant answers a draft; `recipes.writingHelp` answers only the refusals) */
-  const reach = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }), writinghelp: ok({ ok: true, text: "Done." }) };
+  /* no drafted text is scripted (K5212) */
+  const reach = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
   const c = await open("/app/contradiction/" + CAND, { ...TAKEN(), plane: { ...TAKEN().plane, ...reach } });
   assert.deepEqual(main(c).querySelectorAll('button[data-act="writinghelp"]').map((b) => b.getAttribute("data-field")), ["conclusion"]);
   fill(c, { "cd-concl": "They differ in time." });

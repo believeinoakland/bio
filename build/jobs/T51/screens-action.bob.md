@@ -1,6 +1,6 @@
 # BOB to screens-action (T51)
 
-**Read** · handled J34
+**Read** · handled J39
 
 ## B1 · START
 
@@ -479,3 +479,15 @@ Bob's direction for this round (K5175): every bug, failure and broken feature fo
 
 Your job (read `build/plan/fix-round-10-T51.md` item 100 (2) and `build/plan/diagnosis-R10-k5200.md`'s screens-action rows whole first): A1 (R32 as worded on the tranche), A2 (R30's clause as struck on the tranche), B's seven fixtures lines, each to its provider's published fixture, now that store-request's world and store-assembly are merged; `writinghelp` (K5212): the real op never returns a draft (`wizard-scripts/index.mjs:1539`), so the drafted-text cases (`matter-t51.test.mjs:437`, `:458`, `send-t51.test.mjs:428`) are removed (test only) and your screens tested on wizard-scripts' published answers (`bio-plane/test/m/wizard-scripts/fixtures.mjs`); R9's mark (`build/requirements/screens-action.md`) met with a failing-first test. `fixtures.mjs screens-action --list` to 0, or each line left named with its provider's missing state.
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio screens-action --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-action $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B44 · ANSWER · re J35
+
+ANSWER (K5229, BOB's, P17; re J35): R30 and R32 are now worded on the tranche (merge `origin/tranche/T51`, never a rebase), each marked not yet met. R32: the release choice is the places that hold a hold, read from `pressurefor` for the screen's project where `hold` is `in_place`, each offered with `actionholdpreview` first, then `actionholdrelease` (place and reason); `holdsdue` stays the placing choice alone; its test as R32 states. R30: the `taskresolve` clause is gone (the queue offers it for none of these kinds): remove the dead arm (`dash-action.mjs:100`, `:105`, `:156-160`), `taskresolve` leaves the screen's acts, and delete the scripted `dash-action.test.mjs:92`; the test over the real queue (Needs you holds `reminderanswer`, no `taskresolve` button). The registry row (`wizard-scripts/screen-registry.mjs:38`) is generated from the design's `registry.json`: the label `act.taskresolve.label.dash-action` goes to UX-DESIGN from me, not you; if the registry's act list makes a test of yours red, name it in your COMPLETE.
+
+## B45 · ANSWER · re J36
+
+ANSWER (K5230, BOB's, P17; re J36): (1) `uses` gains `wizard-scripts` on the tranche (`order.mjs` unchanged): merge it. (2) R32 is worded (B44): your build matches it; keep it. (3) A2: the design's registry row is UX-DESIGN's: I hand it over now (the `dash-action` row loses `taskresolve`); until it lands, leave the `taskresolve` arm and `dash-action.test.mjs:92` as they are and name them in your COMPLETE; I CHANGE you when the row is on the tranche. (4) The release of a hold placed from a docket mark or a pressure record is ACTION-HOLDS #10's (started now); I CHANGE you with its answers. Post COMPLETE with the rest.
+
+## B46 · CHANGE
+
+CHANGE (K5235). Action-holds merged: merge `origin/tranche/T51`. In `hold.mjs`: list held and released places from `holdsplaced` (action-holds R22; items `place`, `hold`, `from`), send the placing body (`from` included) to `actionholdpreview` and `actionholdrelease` (R5, R6 now take it), and test on action-holds' published `holdPlacedReleasedAnswers` (its `fixtures.mjs`): a hold placed from a docket mark is listed in place, previewed, released and then listed released. Your R32's mark is struck at your merge when this is done. R30 still waits on UX-DESIGN's `dash-action` row. Post COMPLETE with this done.

@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19247 design words, 1158 protected; SHA-256
-   edd2fa03c7911cf5427f09bdc57c9bb521a04278ced4ccd61a4ef591e2444d37) followed by 7413 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   f306e086b4d5250a7c91719a0bece5755504e4b298e2cf1892d9a457ef8cbf78) followed by 7430 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "edd2fa03c7";
+export const WORDS_COMMIT = "f306e086b4";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -670,7 +670,7 @@ export const WORD_ROWS = Object.freeze([
   ["refusal.AI_RUN_CREDENTIAL_MALFORMED","The run couldn't start: the pass it needs to work for you was malformed. Nothing was sent. Try again; if it happens again, tell an administrator.","C-29.41",null,false,"design"],
   ["ai.label.untested.writinghelp","Not yet tested: this help with writing hasn't yet passed Civicsmith's tests on real matters. Read it through before you use any of it.","on writinghelp's marked answer on a test instance",null,true,"design"],
   ["refusal.SIGN_IN_REFUSED","That handle and password don't match. Check both and try again; after several tries, sign-in pauses for a while to keep others from guessing.","credentials R4; never says which handles exist",null,false,"design"],
-  ["refusal.SIGN_IN_PAUSED","Sign-in is paused for a while after too many tries from here. This keeps others from guessing passwords; it isn't a judgment on you. Try again at {time}.","credentials R38; {time} the local time the pause ends",null,false,"design"],
+  ["refusal.SIGN_IN_PAUSED","Sign-in is paused for a while after too many tries. This keeps others from guessing passwords; it isn't a judgment on you. Wait a while, then try again. The limit: {stated}.","credentials R38; DEC-436 (B525): {stated} the plane's bound as credentials R38 states it; no time, since neither tells which count was full",null,false,"design"],
   ["refusal.RECOVERY_REFUSED","That didn't work: the handle, the code or both aren't right, or the code was already used. Check them and try again. Nothing was changed.","credentials R47; one answer for every arm",null,false,"design"],
   ["refusal.NOT_SIGNED_IN","You aren't signed in here any more: your sign-in ended, or you signed out on another device. Sign in again to go back to where you were.","credentials R39",null,false,"design"],
   ["refusal.PASSWORD_TOO_SHORT","A password needs at least 12 characters. A short sentence you can remember works well. Nothing was changed.",null,null,false,"design"],
@@ -2084,7 +2084,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.setup.offices","The officials you deal with","adopted from screens-entry's own rows; DEC-259: reworded",null,false,"design"],
   ["screen.setup.offices.what","Civicsmith can fill in the public offices of {place}, and who holds each one today, from the place's own records. Check the list, then confirm it. You can add others at any time.","adopted from screens-entry's own rows; DEC-259: reworded",null,false,"design"],
   ["screen.setup.office.field","An office your team deals with","adopted from screens-entry's own rows",null,false,"design"],
-  ["screen.setup.office.note","Anything your team should know about it (optional)","adopted from screens-entry's own rows; DEC-259: reworded",null,false,"design"],
+  ["screen.setup.office.note","What your team deals with this office about","adopted from screens-entry's own rows; DEC-259: reworded",null,false,"design"],
   ["screen.setup.office.empty","Type the office's name first. Nothing was sent.","adopted from screens-entry's own rows",null,false,"design"],
   ["screen.setup.office.added","Added: {label}","adopted from screens-entry's own rows",null,false,"design"],
   ["screen.setup.assistant","The AI assistant","adopted from screens-entry's own rows; DEC-259: reworded",null,false,"design"],
@@ -19492,7 +19492,9 @@ export const WORD_ROWS = Object.freeze([
   ["action-holds.checks.a_hold_notice_is_recorded","A hold notice is recorded for a hold that is in place, and the hold at this place is not: none has been placed, or it was released. Nothing was written.",null,null,false,"code"],
   ["action-holds.checks.a_litigation_hold_is_placed","A litigation hold is placed at one place: an action, one entry of an action named by its position, or a project. This named more than one, or an entry that is not there, so nothing was written.",null,null,false,"code"],
   ["action-holds.checks.saying_whether_a_litigation_hold","Saying whether a litigation hold is in place is a member's judgement, and somebody answers for it. The credential that asked here is an automated one, so it cannot say. Sign in to record it yourself.",null,null,false,"code"],
+  ["action-holds.declared.actionholdpreview","read: what releasing one entry's hold would restart — the projects it alone covers that the viewer may see, and whether any is out of view — keyed by (action, entry ordinal); writes nothing",null,null,false,"code"],
   ["action-holds.declared.holdnoticesent","a member records that she sent the hold notice for a hold in place, held as the bytes sent or her account; it records no recipient and no one's compliance (action-holds R11)",null,null,false,"code"],
+  ["action-holds.declared.holdsplaced","read: every place a hold was stated that the member may see, with its latest hold and what prompted it; writes nothing (action-holds R22)",null,null,false,"code"],
   ["action-holds.index.a_field_is_at_most","{name} is at most {max} characters and cannot contain a quote, a backslash, or a newline",null,null,false,"code"],
   ["action-holds.index.a_hold_is_placed_at_exactly","a hold is placed at exactly one place: an action, an entry of one by its position (a whole number from zero), or a project. Nothing was written.",null,null,false,"code"],
   ["action-holds.index.a_hold_is_placed_at_one","a hold is placed at one place: pass target=<action id> (and ord=<entry position> for one entry), or project=<project id>",null,null,false,"code"],
@@ -24979,9 +24981,6 @@ export const WORD_ROWS = Object.freeze([
   ["plan-work.index.the_plan_holds_no_preparation","the plan holds no preparation item of that id. Nothing was written.",null,null,false,"code"],
   ["plan-work.index.the_plan_is_not_about","the plan is not about that matter. Nothing was written.",null,null,false,"code"],
   ["plan-work.index.this_answer_reads_the_provider","this answer reads the {provider} module, which this instance does not have; nothing is answered in its place.",null,null,false,"code"],
-  ["plane.declared.ask","member-directed: a member's own question to the assistant under their own account; no object is before them",null,null,false,"code"],
-  ["plane.declared.owedwork","what the object still owes one document, or the counts of what it owes: the keeps, readings, scan pages, supporting files and archive entries left for its alarm, each owed or ended for a stated reason; writes nothing",null,null,false,"code"],
-  ["plane.declared.readtranslate","draft: a machine translation of one passage of the group's own writing (a note, question, finding or notice) into the member's language, labeled machine work, the original one tap away; held nowhere and writes nothing (store-assembly R53)",null,null,false,"code"],
   ["progressions.checks.not_a_disposition_detail","a disposition is deferred (set aside for now) or dismissed (declined); taking a question up is a different act and is not a disposition",null,null,false,"code"],
   ["progressions.declared.discharge","exception document, keyed by (progression, entity, stage)",null,null,false,"code"],
   ["progressions.declared.progressiondefine","progression definition, keyed by progression key",null,null,false,"code"],
@@ -26487,6 +26486,24 @@ export const WORD_ROWS = Object.freeze([
   ["stewards.ui.state_dismissed","Dismissed",null,null,false,"code"],
   ["stewards.ui.state_undecided","Undecided",null,null,false,"code"],
   ["stewards.ui.state_withdrawn","Withdrawn",null,null,false,"code"],
+  ["store-assembly.ask.bad-task","{detail}. Nothing was drafted.",null,null,false,"code"],
+  ["store-assembly.ask.bearing-names-action","a bearing draft names the action the reply was received on",null,null,false,"code"],
+  ["store-assembly.ask.draft-own-act","a draft that reads records is a member's own act",null,null,false,"code"],
+  ["store-assembly.ask.infraction-names-matter","an infraction draft names the matter's plan or its actions",null,null,false,"code"],
+  ["store-assembly.ask.plan-unreadable","the plan this draft is about cannot be read here",null,null,false,"code"],
+  ["store-assembly.ask.reading-own-act","a reading is a member's own act",null,null,false,"code"],
+  ["store-assembly.ask.reading-subject","a reading names its subject as {kind, id}, kind one of {kinds}",null,null,false,"code"],
+  ["store-assembly.ask.records-unreadable","the records this draft is about cannot be read here",null,null,false,"code"],
+  ["store-assembly.ask.reply-not-received","the reply named is not an entry received on this action",null,null,false,"code"],
+  ["store-assembly.ask.reply-text-unheld","the reply's text is not held in a reading this member may read",null,null,false,"code"],
+  ["store-assembly.ask.statusreport-names-plan","a status report's draft names its plan and hands the items its report is drawn from",null,null,false,"code"],
+  ["store-assembly.declared.ask","member-directed: a member's own question to the assistant under their own account; no object is before them",null,null,false,"code"],
+  ["store-assembly.declared.owedwork","what the object still owes one document, or the counts of what it owes: the keeps, readings, scan pages, supporting files and archive entries left for its alarm, each owed or ended for a stated reason; writes nothing",null,null,false,"code"],
+  ["store-assembly.declared.readtranslate","draft: a machine translation of one passage of the group's own writing (a note, question, finding or notice) into the member's language, labeled machine work, the original one tap away; held nowhere and writes nothing (store-assembly R53)",null,null,false,"code"],
+  ["store-assembly.wiring.local-facts-unreachable","local facts are not reachable on this host",null,null,false,"code"],
+  ["store-assembly.wiring.no-organisation","no organisation was named by its entity id",null,null,false,"code"],
+  ["store-assembly.wiring.roster-read-failed","the store's read of held rosters failed ({reason})",null,null,false,"code"],
+  ["store-assembly.wizards.acts-not-list","acts is not a list",null,null,false,"code"],
   ["store-door.dispatch.a_litigation_hold_is_in","a litigation hold is in place, so the whole record cannot be cleared. Nothing was removed.",null,null,false,"code"],
   ["store-door.dispatch.asking_the_assistant_to_draft","asking the assistant to draft the team's description",null,null,false,"code"],
   ["store-door.dispatch.the_account_that_would_serve","the account that would serve this draft could not be read; nothing was used",null,null,false,"code"],
