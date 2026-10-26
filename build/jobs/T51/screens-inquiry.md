@@ -849,3 +849,28 @@ REPORT (SCREENS-INQUIRY #34), B89. Three things BOB needs to place; none changed
 1. Keys needed (design stream): `screen.document.attest.checked` ("Checked by {name}, {date}", C-M2); words for a passage answered "No" that a "Yes, because of" names, or a refusal for it (C-M5); words for a member-flagged lead (C-M13).
 2. `contradiction/index.mjs:2385`: `title: title ?? question` is raw while the document uses `fmSafe` (C-M13 refusal). Owner: `contradiction`. Not touched.
 3. C-M12 "Flags raised on this document" line not drawn (needs a key); and C-M12 and walk E S3 have no red test yet.
+
+## J62 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #34), B89 (CHANGE K5271, plan item 136). Commit 6a51112484 on `job/T51/screens-inquiry`.
+
+**Applied**
+- **C-M2 (1)** `document.mjs` (typed block, about :745-760): an attestation that `counts` (content R57) is a second member's check. A typing so checked draws no "Not yet checked", and the member who confirmed it is offered no form. The checked-by sentence has no held key, so nothing is drawn for it (see REPORT).
+- **C-M5 (2)** `question.mjs` `inquiryground` send (about :1566-1575): a passage answered "No" is never unioned into a "Yes, because of" part, so it stays a necessary leg in no ground. I did not refuse before sending: the refusal sentence has no held key, so the page does not say so (see REPORT).
+- **C-M12 (3)** `document.mjs` contradiction fold (about :1293-1300): the fold opens once a document is chosen or a passage is picked, and each pick is drawn from the page's current value, so a redraw keeps it. Not covered by a test yet.
+- **C-M13 (4)** `contradiction.mjs` (about :215): a lead a member flagged (`flagged_by`) draws no assistant sentence. The member-lead sentence has no held key (see REPORT).
+- **E S3 (5)** `document.mjs` (about :674): a "Cited" mark sits on its own line after the passage, not glued to it. Not covered by a test yet.
+
+**Tests**
+- `bio-plane/test/m/screens-inquiry/t51-fix11-b89.test.mjs`: three tests (C-M2, C-M5, C-M13 with controls). Each fails with the fixes stashed and passes with them.
+- C-M12 and S3 have no red test: I did not write one, so they are not covered. I can add them if BOB wants them before merge.
+- Module suite `bio-plane/test/m/screens-inquiry/*.test.mjs`: 599 tests, 599 pass, 0 fail.
+- Format, architecture, coverage (136 of 136), ownership: 0 failures.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 176 of 178 modules and 2913 of 3004 test files, the same as after B88. I have not run those files.
+
+**REPORT (keys needed, out of scope, or not done)** — also in a separate REPORT
+1. Keys needed from the design stream (no held row; I did not draw a false sentence): `screen.document.attest.checked` ("Checked by {name}, {date}"; C-M2); a refusal or note for a passage answered "No" that a "Yes, because of" names (C-M5); the member-lead sentence (C-M13).
+2. Out of this module: C-M13 title refusal at `contradiction/index.mjs:2385` (`title: title ?? question` should be `fmSafe(...)`). Owner: `contradiction`. Not touched.
+3. C-M12's "Flags raised on this document" line is not done (needs a key and the candidate list).
+
+Size (session_01XPqxHzozhsnQVpVqcbAkKT): test runs 9, module lines 7060
