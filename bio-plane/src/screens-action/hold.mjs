@@ -4,7 +4,7 @@
    counsel matter; it reads what still wants a hold (`holdsdue`) and the counsel matters (`projectlist`), and records pressure that
    arrived outside any action. `holdnotice`: prepares the plain-words notice and records that the member sent it by her own hand;
    the screen sends nothing and records no recipient, no read and no compliance. A hold is released here: the places that hold
-   one are read from `pressurefor` (each mark's and record's own `hold`), and what a release would restart is read first
+   one are read from `holdsplaced` (every place a hold was stated, with its latest statement), and what a release would restart is read first
    (`actionholdpreview`); no approval is asked. It holds no member-facing English (R19). Every function here is self-contained
    (interface-shell R21 (1)). */
 import { readOnly, WRITE_HELP } from "./send-steps.mjs";
@@ -26,12 +26,15 @@ export const hold = Object.freeze({
       roster: { op: "projectlist", query: {}, empty: function () { return false; } },
       projects: { op: "list", query: { type: "project", limit: "500" } },
     };
-    // R32: the places that hold a hold are those `pressurefor` states `in_place` (action-holds R18); `holdsdue` lists only what has none
-    // (for the screen's action when it is opened on one: its marks and their holds)
-    r.held = { op: "pressurefor", query: /^ACTN-/.test(String(view.subject || "")) ? { action: view.subject, limit: "500" } : { limit: "500" } };
-    // R32: what releasing the place chosen would restart, read before the release is asked (action-holds R6)
+    // R32 (action-holds R22): the places that hold a hold are those `holdsplaced` states `in_place` (`holdsdue` lists only what has none)
+    r.held = { op: "holdsplaced", query: { limit: "500" } };
+    // R32: what releasing the place chosen would restart, read before the release is asked (action-holds R6): the placing body, `from` included
     const at = view.ui && view.ui.releaseFor ? view.parts.placeIn(view.ui.releaseFor) : null;
-    if (at && (at.target || at.project)) r.preview = { op: "actionholdpreview", query: at.target ? { target: at.target, ord: String(at.ord) } : { project: at.project } };
+    if (at && (at.target || at.project)) {
+      const q = at.target ? { target: at.target, ord: String(at.ord) } : { project: at.project };
+      if (at.from) q.from = JSON.stringify(at.from);
+      r.preview = { op: "actionholdpreview", query: q };
+    }
     if (/^ACTN-/.test(String(view.subject || ""))) r.action = { op: "action", query: { id: view.subject } };
     return r;
   },
@@ -48,11 +51,15 @@ export const hold = Object.freeze({
     },
     // R32: a place held in the page, as the choice carries it
     placeIn: function (v) { try { const p = JSON.parse(String(v || "")); return p && typeof p === "object" ? p : null; } catch (e) { return null; } },
-    // R32: the place a row of `pressurefor` that holds a hold (`hold` `in_place`) is released at: the reply's entry (the only place
-    // `actionholdrelease` and `actionholdpreview` take for it); a record's hold is placed `from` it and has no entry of its own
-    heldPlaceOf: function (m) {
-      const ar = m && m.arrived ? m.arrived : {};
-      return m && m.hold === "in_place" && ar.action ? { target: ar.action, ord: Number(ar.ord) } : null;
+    // R32 (action-holds R22): each place a row of `holdsplaced` states `in_place` is released as it was placed: the place (`{target, ord}` or
+    // `{project}`) with each distinct `from` it was placed from, one choice each
+    heldPlacesOf: function (m) {
+      if (!m || m.hold !== "in_place" || !m.place) return [];
+      const place = m.place.target ? { target: m.place.target, ord: Number(m.place.ord) } : m.place.project ? { project: m.place.project } : null;
+      if (!place) return [];
+      const froms = [], seen = {};
+      (Array.isArray(m.from) ? m.from : []).forEach(function (f) { const k = JSON.stringify(f); if (f && !seen[k]) { seen[k] = true; froms.push(f); } });
+      return froms.length ? froms.map(function (f) { return Object.assign({}, place, { from: f }); }) : [place];
     },
     // C94 (R56): the member who marked it, by her handle
     who: function (cs, by) { const b = by && typeof by === "object" ? by.handle || by.member : by; const id = String(b || "").replace(/^member:/, ""); return id ? cs.memberName(id) : ""; },
@@ -113,14 +120,15 @@ export const hold = Object.freeze({
         + '<div class="mk-acts">' + cs.act("pressurerecord", {}) + helpPress + "</div>") : "";
 
       // releasing a hold: the place, the member's reason; what will start being deleted again is said first (R6). The places are those that
-      // hold a hold now (`pressurefor`'s `in_place`), the counsel matters, and what still wants a hold (to state that none is needed)
+      // hold a hold now (`holdsplaced`'s `in_place`), the counsel matters, and what still wants a hold (to state that none is needed)
       const heldRows = view.data.held && view.data.held.state === "ok" && view.data.held.value && Array.isArray(view.data.held.value.items) ? view.data.held.value.items : [];
       const dayOf = function (at) { return at ? String(cs.date(at)).replace(/<[^>]*>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&") : ""; };
       const kept = [];
       const offer = function (o) { if (!kept.some(function (k) { return k.value === o.value; })) kept.push(o); };
       heldRows.forEach(function (m) {
-        const at = P.heldPlaceOf(m);
-        if (at) offer({ value: JSON.stringify(at), text: [typeof m.note === "string" ? m.note.trim() : "", dayOf(m.at), cs.w("screen.action.held")].filter(Boolean).join(" \u00b7 ") });
+        P.heldPlacesOf(m).forEach(function (at) {
+          offer({ value: JSON.stringify(at), text: [typeof m.reason === "string" ? m.reason.trim() : "", dayOf(m.at), cs.w("screen.action.held")].filter(Boolean).join(" \u00b7 ") });
+        });
       });
       options.forEach(function (o) { offer({ value: o.value, text: o.text }); });
       const chosen = view.ui && view.ui.releaseFor && kept.some(function (k) { return k.value === view.ui.releaseFor; }) ? view.ui.releaseFor : "";

@@ -532,3 +532,9 @@ Per B45 (3) A2 is reverted to the tranche's state: `dash-action.mjs` keeps the `
 ## J38 · COMPLETE
 
 COMPLETE (re B45). A2 reverted as you said: the taskresolve arm (dash-action.mjs) and dash-action.test.mjs:92 stay until the registry row lands; the last fixtures line is that one, named here. Merged the tranche (uses has wizard-scripts). Suite 296 of 296 pass; architecture 0, ownership 0, format 0, coverage 55/55, words 0, contract green. Met: R9, R32 (R30 waits on your CHANGE). Details in my record, Round 14 addendum. Size (session_012TPANXXg4GGQVhTc5yKHd8): test runs 16, module lines 5210
+
+## Round 15 · CHANGE B46 (K5235): hold release by `holdsplaced`
+
+`hold.mjs`: the read `held` is now `holdsplaced` (action-holds R22); each `in_place` place is offered to release as it was placed, one choice per distinct `from` (`heldPlacesOf`); the preview (`actionholdpreview`) and the release (`actionholdrelease`) are sent the placing body, `from` included (the preview's `from` as JSON in the query, which the owner parses, `action-holds/index.mjs:115`). Released places are not offered. Test `hold-counsel.test.mjs` "R32 (B46...)": on action-holds' published `holdPlacedReleasedAnswers` (placed, preview, released, after): the docket mark's hold is offered, previewed with `project`+`from`, released with the same body, then the re-read (`after`) lists it released and it is no longer offered; red with the `from` line removed from the preview query, green restored. The real-world reply test of Round 14 still passes through `holdsplaced`; `reads-t51` hold read set: `holdsplaced` replaces `pressurefor`.
+Results: suite 297 of 297; format 0, architecture 0, coverage 55/55, ownership 0, words 0; fixtures: 1 failure, `dash-action.test.mjs:92` (waits on the registry row, B45). Met: R32 (R9 before); R30 waits.
+Size (session_012TPANXXg4GGQVhTc5yKHd8): test runs 19, module lines 5222

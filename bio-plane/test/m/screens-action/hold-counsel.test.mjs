@@ -3,6 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { actionWorld, correspond, counselMatter, openIn } from "./world.mjs";
+import { holdPlacedReleasedAnswers } from "../action-holds/fixtures.mjs";
 import { open, main, text, ops, press, last, ok, refusedIn, button, beside, choose, W, D, DATA_PLANE, ROUTES, ACTION, ACTION_ID, PROJECT, HOLDS_DUE, COUNSEL_PROJECT, NOTICE, PACKET, READER } from "./page.mjs";
 
 const ROUTES_AT = { hold: (a) => `/app/hold/${a}`, action: (a) => `/app/action/${a}` };
@@ -99,6 +100,27 @@ test("R32 (A1): a reply's hold, placed by the real `actionhold`, is no longer a 
   const again = await openIn(world, me, ROUTES_AT.hold(action));
   const left = again.doc.getElementById("hold-release-for");
   assert.ok(!left || !left.querySelectorAll("option").some((o) => o.value === place), "a hold that was released is no longer offered to release");
+});
+
+test("R32 (B46, action-holds R22): a hold placed from a docket mark is listed in place from `holdsplaced`, previewed and released with the body that placed it (`from` included), and then listed released", async () => {
+  const f = holdPlacedReleasedAnswers();
+  let released = false;
+  const p = await open(ROUTES.hold, { ...DATA_PLANE, holdsplaced: () => ok(released ? f.after : f.placed), actionholdpreview: ok(f.preview), actionholdrelease: () => { released = true; return ok(f.released); } });
+  const place = JSON.stringify({ project: f.body.project, from: f.body.from });
+  const choice = () => p.doc.getElementById("hold-release-for");
+  assert.ok(choice().querySelectorAll("option").some((o) => o.value === place), "the docket mark's hold is offered to release, as it was placed");
+  assert.equal(p.byOp("actionholdpreview").length, 0);
+  await choose(p, "hold-release-for", place);
+  const q = p.byOp("actionholdpreview")[0].query;
+  assert.deepEqual([q.project, JSON.parse(q.from)], [f.body.project, f.body.from], "the preview is asked with the placing body");
+  said(p, "consequence.actionholdrelease");
+  assert.ok(main(p).querySelector("ul.mk-list"), "what it restarts is named");
+  await press(p, "actionholdrelease", { values: { "hold-release-why": "no longer needed" }, reason: "x", confirm: true });
+  const b = last(p, "actionholdrelease").body;
+  assert.deepEqual([b.project, b.from, b.reason], [f.body.project, f.body.from, "no longer needed"]);
+  assert.equal(f.after.items[0].hold, "released", "the owner then lists the place released");
+  assert.equal(p.byOp("holdsplaced").length, 2, "the page re-read the places held");
+  assert.ok(!(choice() && choice().querySelectorAll("option").some((o) => o.value === place)), "a released place is no longer offered to release");
 });
 
 test("R32: pressure that arrived outside any action is recorded in a project, creating no action; `actionhold` is no longer drawn on `action`", async () => {
