@@ -334,3 +334,16 @@ COMPLETE for B15 (CHANGE K5209: OP-GRADES #30 merged; merged origin/tranche/T51 
 **Markers:** none added.
 
 **Size (session_01319VhF3CxdhogoEXvR8aRC): test runs 4 (this round), module lines 1602** (`bio-plane/src/case-inputs/*.mjs`, unchanged).
+
+## J17 · REPORT
+
+Found in screens-publish (not this module's path), per B16's direction to REPORT the day it is found:
+
+- `bio-plane/test/m/screens-publish/fr30b.test.mjs:435` hand-builds the `casedetails` answer for a case whose `related` holds a `builds_on` and a `disagrees_with`. The `run.mjs` check flags it as an op-table answer that case-inputs provides (`casedetails`).
+- `bio-plane/test/m/screens-publish/fr30b.test.mjs:437` hand-builds the `casedetailspublic` answer with `relationships: {none: true}`; the check flags it the same way.
+
+case-inputs now publishes both answers from its real code, in `bio-plane/test/m/case-inputs/fixtures.mjs`:
+- `casedetailsRelated()` returns `{recorded, publicRead}`: `recorded` is the real `caseDetails` read, `publicRead` the real `caseDetailsPublic` read, for a published case whose `related` holds the builds_on and disagrees_with.
+- `casedetailsNone()` returns `{recorded, publicRead}` for a published case with `relationships: {none: true}`.
+
+Screens-publish can take them by calling `provided.casedetailsRelated()` and `provided.casedetailsNone()` in place of the hand-built objects at `fr30b.test.mjs:435` and `:437`. This is not case-inputs' change to make.
