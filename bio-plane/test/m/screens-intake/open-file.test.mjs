@@ -554,11 +554,10 @@ test("R36 F-B14 a safe view the renderer refused draws the renderer's reason bes
   const owner = (await t.world.door({ url: `/api/?${new URLSearchParams({ op: "safeview", capture: f.sha })}` }, t.mai)).json.result;
   assert.equal(owner.reason, "SAFE_VIEW_FAILED", "the owner's own refusal: " + JSON.stringify(owner).slice(0, 300));
   assert.equal(owner.renderer_reason, "NOT_RENDERABLE", "naming why");
-  const beside = main(p).querySelectorAll("[data-renderer-reason]");
-  assert.equal(beside.length, 1, "one reason, beside the refusal");
-  assert.equal(beside[0].getAttribute("data-renderer-reason"), owner.renderer_reason);
-  /* the word held for the code, else the table's statement that it has no explanation yet, with the code as the owner gave it */
-  assert.ok(hasWord(`refusal.${owner.renderer_reason}`) ? says(p, `refusal.${owner.renderer_reason}`) : says(p, "refusal.uncatalogued") && beside[0].textContent.includes(owner.renderer_reason));
+  /* R71: the owner's reason is a whole sentence of the list (`refusal.NOT_RENDERABLE`), drawn in place of the translation, with no reason beside it */
+  assert.equal(main(p).querySelectorAll("[data-renderer-reason]").length, 0, "no second reason beside the sentence");
+  assert.ok(hasWord(`refusal.${owner.renderer_reason}`) && says(p, `refusal.${owner.renderer_reason}`));
+  assert.ok(!text(p).includes(owner.translation || "\u0000"), "the owner's translation is not drawn beside it");
   assert.ok(!text(p).includes(owner.renderer_detail || "\u0000"), "the renderer's own message is never drawn raw");
   assert.deepEqual(rawKeys(p), []);
 });
@@ -577,7 +576,8 @@ test("R36 F-B14 control: the reasons the size sentence already states draw no se
   /* the owner's spreadsheet reasons are lower-case words (`renderer_reason: s.why`), drawn like the others */
   const c = await mine({ safeview: refused("SAFE_VIEW_FAILED", "refused", 422, { renderer_reason: "no_sheets" }) });
   await press(c.p, "safeview");
-  assert.equal(main(c.p).querySelectorAll('[data-renderer-reason="no_sheets"]').length, 1);
+  assert.ok(says(c.p, "refusal.no_sheets"), "R71: the lower-case spreadsheet reason is a whole sentence of the list");
+  assert.equal(main(c.p).querySelectorAll("[data-renderer-reason]").length, 0);
 });
 
 test("R36 F-B15 a kind the owner makes no safe view of says so once and is not sent to the safe view; every kind it does make one of still is", async () => {
@@ -596,4 +596,57 @@ test("R36 F-B15 a kind the owner makes no safe view of says so once and is not s
     assert.ok(btn(p, "deepercheck"), `${name}: a deeper check is still offered`);
     assert.deepEqual(rawKeys(p), [], name);
   }
+});
+
+
+/* ---- fix round 10 (R71; DEC-439, DEC-440, DEC-441; U481-U484): the picture's risk lines and the renderer's whole-sentence refusals ---- */
+const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64");
+
+test("R71 a picture another member added draws the high line of the safe copy of the picture; a held picture the held line; a text file's lines are unchanged", async () => {
+  const u = await team({ scan: false });
+  const photo = await upload(u, u.rosa, "Photo", PNG, "image/png");
+  const real = await threat(u.mai, photo);
+  assert.equal(real.format, "image", "the owner names a picture: " + JSON.stringify(real).slice(0, 200));
+  assert.equal(real.threat, "high");
+  const high = await at(u, photo);
+  assert.ok(says(high, "screen.open-file.risk.high.means.picture"));
+  assert.ok(!says(high, "screen.open-file.risk.high.means"), "not the line about a picture of each page");
+  /* a scan hold needs a finding of the scanner: the owner's real answer, with the hold the real act would add, scripted (said here) */
+  const held = await at(u, photo, u.mai, { threatof: ok({ ...real, scan_hold: true }) });
+  assert.ok(main(held).querySelector('[data-risk="held"]'));
+  assert.ok(says(held, "screen.open-file.risk.held.means.picture"));
+  assert.ok(!says(held, "screen.open-file.risk.held.means"));
+  assert.deepEqual(rawKeys(high).concat(rawKeys(held)), []);
+  /* control: a text file's risk line is unchanged, high and held */
+  const note = await upload(u, u.rosa, "Notice", NOTICE);
+  const textReal = await threat(u.mai, note);
+  const plain = await at(u, note);
+  assert.ok(says(plain, "screen.open-file.risk.high.means") && !says(plain, "screen.open-file.risk.high.means.picture"));
+  const plainHeld = await at(u, note, u.mai, { threatof: ok({ ...textReal, scan_hold: true }) });
+  assert.ok(says(plainHeld, "screen.open-file.risk.held.means") && !says(plainHeld, "screen.open-file.risk.held.means.picture"));
+});
+
+test("R71 the renderer's refusals NOT_RENDERABLE (the real renderer's), NOT_TEXT and no_sheets are drawn by refusal.<reason>, whole, with nothing of the owner's words beside them; control: another reason keeps its sentence and its reason beside it", async () => {
+  const t = await team();
+  t.S.refuse = "NOT_RENDERABLE";
+  const f = await upload(t, t.mai, "Form", docm(), DOCM);
+  await daemon(t, "renderbatch");
+  const p = await at(t, f);
+  await press(p, "safeview");
+  assert.ok(says(p, "refusal.NOT_RENDERABLE"));
+  assert.equal(main(p).querySelectorAll("[data-renderer-reason]").length, 0);
+  /* NOT_TEXT and no_sheets are what the owner answers for a file the real acts cannot make (a text file whose start is not UTF-8 after the gate; a workbook with no sheet): scripted, each said */
+  for (const reason of ["NOT_TEXT", "no_sheets"]) {
+    const m = await mine({ safeview: refused("SAFE_VIEW_FAILED", "The owner's translation.", 422, { renderer_reason: reason }) });
+    await press(m.p, "safeview");
+    assert.ok(says(m.p, "refusal." + reason), reason);
+    assert.ok(!text(m.p).includes("The owner's translation."), reason);
+    assert.equal(main(m.p).querySelectorAll("[data-renderer-reason]").length, 0, reason);
+    assert.deepEqual(rawKeys(m.p), [], reason);
+  }
+  /* control: a reason whose row is not the whole sentence keeps the owner's sentence and the reason beside it */
+  const c = await mine({ safeview: refused("SAFE_VIEW_FAILED", "The owner's translation.", 422, { renderer_reason: "ENCRYPTED" }) });
+  await press(c.p, "safeview");
+  assert.ok(text(c.p).includes("The owner's translation."));
+  assert.equal(main(c.p).querySelectorAll('[data-renderer-reason="ENCRYPTED"]').length, 1);
 });
