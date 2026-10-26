@@ -1612,7 +1612,7 @@ export function list() {
 /** The held profile with that id, as the caller's own copy, or null. Never throws. */
 export function get(id) {
   if (typeof id !== "string" || !HELD.has(id)) return null;
-  return clone(HELD.get(id));
+  return copy(HELD.get(id));
 }
 
 /* ------------------------------------------------------------------------------------------------ */
@@ -1653,12 +1653,30 @@ function agree(given) {
   return ks.length <= 1;
 }
 
+/* A deep copy of JSON data, what `clone` makes but without the text round trip. */
+function copy(o) {
+  if (Array.isArray(o)) { const r = new Array(o.length); for (let i = 0; i < o.length; i++) r[i] = o[i] === undefined ? null : copy(o[i]); return r; }
+  if (o && typeof o === "object") { const r = {}; for (const k of Object.keys(o)) if (o[k] !== undefined) r[k] = copy(o[k]); return r; }
+  return o;
+}
+/* The answers to lists of held ids, by the ids joined; at most COMBINED_MAX lists are held. */
+const COMBINED = new Map();
+const COMBINED_MAX = 64;
+
 /**
  * Combine the active profiles, in order. `list` holds ids of held profiles or profile objects.
  * `{ok: true, view, conflicts}` or `{ok: false, errors}`. Never throws.
  */
 export function combine(listIn) {
-  try { return combineInner(listIn); }
+  /* A list of held ids is a pure function of frozen data (K5288): its answer is merged once and each caller gets
+     its own copy of it (R18). Profile objects and ids not held are merged every time. */
+  try {
+    const key = Array.isArray(listIn) && listIn.every((x) => typeof x === "string" && HELD.has(x)) ? listIn.join("\u0001") : null;
+    if (key !== null && COMBINED.has(key)) return copy(COMBINED.get(key));
+    const r = combineInner(listIn);
+    if (key !== null && r.ok) { if (COMBINED.size >= COMBINED_MAX) COMBINED.clear(); COMBINED.set(key, copy(r)); }
+    return r;
+  }
   catch (e) { return { ok: false, errors: [{ at: null, code: "INVALID_PROFILE", detail: `unreadable: ${String(e && e.message || e)}` }] }; }
 }
 

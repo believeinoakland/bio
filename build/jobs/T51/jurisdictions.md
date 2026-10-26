@@ -1,6 +1,6 @@
 # jurisdictions (T51)
 
-**Status** · session_01RFrdqSTN2GTtK4iWq17RJc · depth 2 · COMPLETE · handled B8
+**Status** · session_01TxoAFuZ99Hs6pq9XejvbMw · depth 2 · COMPLETE · handled B9
 
 ## J1 · REPORT
 
@@ -152,3 +152,19 @@ Suites: jurisdictions 180/180 (was 178). Users: `impact.mjs` names 135 of 178 mo
 Checks: `checks/fixtures.mjs /home/user/bio jurisdictions --list` 0 failures; `checks/ownership.mjs` 0 failures (4 files); `checks/run.mjs`: no finding in a jurisdictions file, words line `inline 15, plain 12, ... 16 failures`, all in other modules, no new string added by this job. No `fixtures-own`/`fixtures-generic` marker added.
 Met ids: R49 (the `*` half). verify-marks.md holds no jurisdictions row; nothing to strike from it.
 Deferred: none. Size (session_01RFrdqSTN2GTtK4iWq17RJc): test runs 9, module lines 3828
+
+## J12 · COMPLETE
+
+COMPLETE (fix round 10, K5288; START B9): `combine` of held ids is answered from a cache.
+
+Measure (first): in screens-investigate's common.test.mjs (9 page-open tests) `combine` ran 598 times for 1,936 ms; 573 of them were `combine(["oakland-alameda"])` and 25 `combine([])`, the same inputs every time. Callers (file:line, all outside my paths, each asking again for a view it or a neighbour just had): local-facts/index.mjs:476 (175), monitoring/index.mjs:667 (83), scheduler/index.mjs:1034 (81), local-facts/rules.mjs:130 (61), following/index.mjs:218 (37) and :516 (36), inquiry/index.mjs:1460 and :1468 (27 each), events/index.mjs:249 (20), :522 (10), :1443 (7), standards/index.mjs:1531 (9), affordances/facts.mjs:557 (7), actions/index.mjs:463 (3), and one each in setup, capture, money, calculations, entities, extraction, steps, notice-producers. Cost of one call, alone: `combine` 3.3 to 4.6 ms (merge of a 72 KB profile into a 100 KB view; the JSON text round trip `clone` is 1.0 ms of it), `get` 1.6 ms. So a request pays it many times, for inputs that have not changed.
+
+What changed: `jurisdictions/index.mjs` `combine` (:1669-1680): a list whose every item is a held id is merged once and kept (`COMBINED`, keyed by the ids joined, at most 64 lists, cleared when full); each call returns `copy(...)` of it (:1657), a hand deep copy of JSON data (0.15 ms, against 1.0 ms for the text round trip), so no caller shares an object (R18). Profile objects and ids not held take today's path every time; only a successful answer is kept. `get` copies the same way (:1613 area; 1.6 ms to 0.8 ms). Held profiles are frozen, so the key is the whole identity; the team's rules are not an input of `combine` (they are added after it, local-facts/rules.mjs), so nothing here keys on a version.
+After: the same test, 598 `combine` calls 206 ms (was 1,936 ms); one call 0.27 ms for both held profiles' view (was 3.3 ms).
+
+Tests: `jurisdictions/test/t51-combine-cache.test.mjs`, 4 tests. Red on today's code: "R18 combine of held ids, asked twice, canonicalises once (counted control)" (the first answer makes 13,000+ JSON.stringify calls as the control, the second made 13,263 more, 0 expected); green now (0). Also green both ways: the cached answer deep-equals the uncached merge of the held profile objects over five lists (first, test, both orders, a repeated id); each answer is the caller's own copy (two calls share no object; mutating one changes no later answer); a refusal (UNKNOWN_PROFILE, NOT_A_LIST) is never kept stale. Suite: jurisdictions 184/184 (was 180). Users run: local-facts 83/83, money 115/115, civil-time 70/70, scheduler 185/185, monitoring 179/179, events 101/101, calculations 162/162, standards 122/122, entities 165/165, actions 157/157, screens-investigate common 9/9; following 127/128 (below).
+Checks: `checks/run.mjs`: no finding in a jurisdictions file; words line `inline 0, plain 0 ... 0 failures`; fixtures `jurisdictions --list` 0 failures; ownership 0 (3 files).
+
+REPORT, another module, found now: bio-plane/test/m/following/checks.test.mjs:20 imports `../../../src/plane/register.mjs`, which does not exist, so its test "R1 C-137.1-C-137.20: following's own family ..." fails with ERR_MODULE_NOT_FOUND; identical without my change (following's job).
+Deferred: none. Callers above ask for the same view many times per request; with this cache each costs 0.3 ms, so no change is needed in them for the 2 s bar.
+Size (session_01TxoAFuZ99Hs6pq9XejvbMw): test runs 14, module lines 3839
