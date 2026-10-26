@@ -1667,3 +1667,7 @@ COMPLETE (re B59). Merged tranche/T51; removed barSaid, published.mjs draws bar_
 **Found outside my paths.** None new this round. The `fixtures.mjs --list` run also named the six `accepted(generic)` lines listed above; they are not this round's and I did not change them.
 
 Size (session_011NG1HnSXvNnQhtBzLy59au): test runs 4, module lines 3805 src
+
+## J55 · COMPLETE
+
+COMPLETE (B60, K5290; walk-T51-alpha A N-1 section 6). Share for review pressed while the review copy is loading now draws state.loading beside the button; pressed after the copy read failed, it draws the read's own refusal beside the share; nothing is sent in either case. Change: bio-plane/src/screens-publish/review-copy.mjs:145-152. Test: bio-plane/test/m/screens-publish/review-copy-share.test.mjs, 3 tests named R2; the loading and failed cases were red before and are green after; the control (press after the answer shares) passes both ways. Suite screens-publish 303 tests, 301 pass, 0 fail, 2 todo (R35, K3717). The 22 user files naming screens-publish: 179 pass, 0 fail. Checks: format, architecture, coverage 80/80, ownership, words, run.mjs: 0 findings in my files. fixtures --list: accepted 6, the same six as before this round. Size (session_011NG1HnSXvNnQhtBzLy59au): test runs 4, module lines 3805. Record: build/jobs/T51/screens-publish.md, section 'Fix round 10, plan item 143'.
