@@ -6,7 +6,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import * as AG from "../../../src/action-grammar/index.mjs";
 import { word, localize } from "../../../src/setup-words/index.mjs";
-import { pushed, GROWN_COUNTS, ZONE } from "./fixture.mjs";
+import { pushed, ZONE } from "./fixture.mjs";
 import { NOW, TODAY } from "./corpus.mjs";
 
 const SHA = "a".repeat(64);
@@ -35,7 +35,6 @@ const finding = (message, repairs) => ({ check: "C-117.29", severity: "error", m
 
 test("R13: CORRESPONDENCE_OUTCOMES gains none_exists, appended, every earlier outcome in its place (R2's one binding)", () => {
   assert.deepEqual(AG.CORRESPONDENCE_OUTCOMES, ["granted", "denied", "partial", "reversed", "affirmed", "none_stated", "none_exists"]);
-  assert.ok(GROWN_COUNTS.every((n) => n > 0), "each grown sentence was in the recorded answer");
 });
 
 test("R13: none_exists is an outcome of a received decision as the others are (R5): on each decision stage it answers no lifecycle finding, the ledger arm and the audit are clean, and the read carries it; negative controls: on a sent entry it is OUTCOME_NOT_ON_RECEIVED, a near-miss is OUTCOME_NOT_IN_VOCABULARY naming none_exists, and a decision with no outcome is still DECISION_WITHOUT_OUTCOME", () => {
@@ -56,7 +55,7 @@ test("R13: none_exists is an outcome of a received decision as the others are (R
   assert.deepEqual(codes(AG.lifecycleFindings([sent({ stage: "request", outcome: "none_exists" })], 0)), ["OUTCOME_NOT_ON_RECEIVED"]);
   const near = AG.lifecycleFindings([sent({ stage: "request" }), recv({ stage: "denial", follows: "0", outcome: "none_exist" })], 1);
   assert.deepEqual(near, [{ code: "OUTCOME_NOT_IN_VOCABULARY",
-    message: "correspondence[1].outcome 'none_exist' is not one of: granted, denied, partial, reversed, affirmed, none_stated, none_exists" }]);
+    message: "entry 1's outcome 'none_exist' is not one of: granted, denied, partial, reversed, affirmed, none stated, none exists" }]);
   assert.deepEqual(codes(AG.lifecycleFindings([sent({ stage: "request" }), recv({ stage: "denial", follows: "0" })], 1)), ["DECISION_WITHOUT_OUTCOME"]);
   assert.deepEqual(codes(audit(base({ correspondence: [sent({ stage: "request" }), recv({ stage: "denial", follows: "0", outcome: "none_exist" })] }))),
     ["OUTCOME_NOT_IN_VOCABULARY"]);

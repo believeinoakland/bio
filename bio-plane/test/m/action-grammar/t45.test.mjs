@@ -147,9 +147,9 @@ test("R6 (T45; K2845, K2849 (5)): a rests_on leg may name a success record by co
   const legs = (action_basis) => pushed((f) => AG.actionBasisFindings({ action_kind: "other", action_basis }, f)).findings.map((x) => x.message);
   assert.deepEqual(legs([{ target: "SUC-2026-0042", kind: "rests_on" }]), []);
   assert.ok(AG.SUCCESS_RECORD_ID_RE.test("SUC-2026-0042"));
-  assert.deepEqual(legs([{ target: "SUC-2026-0042", kind: "advances" }]), [localize("action-grammar.grammar.action_basis_i_target_string_is", "action_basis[{i}].target '{String}' is not a canonical record id", { i: "0", String: "SUC-2026-0042" })]);
+  assert.deepEqual(legs([{ target: "SUC-2026-0042", kind: "advances" }]), [localize("action-grammar.grammar.basis_leg_i_names_string_which", "basis leg {i} names '{String}', which is not a valid record id", { i: "0", String: "SUC-2026-0042" })]);
   for (const t of ["SUC-2026-42", "SUC-2026-00042", "SUC-26-0042", "SUC-2026-0042-slug", "suc-2026-0042", "XYZ-2026-0042"])
-    assert.deepEqual(legs([{ target: t, kind: "rests_on" }]), [localize("action-grammar.grammar.action_basis_i_target_string_is", "action_basis[{i}].target '{String}' is not a canonical record id", { i: "0", String: t })], t);
+    assert.deepEqual(legs([{ target: t, kind: "rests_on" }]), [localize("action-grammar.grammar.basis_leg_i_names_string_which", "basis leg {i} names '{String}', which is not a valid record id", { i: "0", String: t })], t);
   assert.deepEqual(audit(base({ action_basis: [{ target: "SUC-2026-0042", kind: "rests_on" }, { target: "INQ-2026-0003-question", kind: "advances" }] })), []);
 });
 
