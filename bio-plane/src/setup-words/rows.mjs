@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19246 design words, 1157 protected; SHA-256
-   641148afcaa459ad607bdaebe5a1cd86dbcccbd88254a0b40dbf295751bcf83b) followed by 7438 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   641148afcaa459ad607bdaebe5a1cd86dbcccbd88254a0b40dbf295751bcf83b) followed by 7439 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -24394,6 +24394,7 @@ export const WORD_ROWS = Object.freeze([
   ["link-sweep.sweep.undetermined","undetermined",null,null,false,"code"],
   ["link-sweep.sweep.v1_is_not_a_member","{v1} is not a member, and only a member adds, removes or changes a sweep; any writer may unratify one. Nothing was written.",null,null,false,"code"],
   ["local-facts.declared.factconfirm","fact-directed: keyed by a profile fact's path, reached from the calendar and offices; moves no bundle",null,null,false,"code"],
+  ["local-facts.index.the_team_has_not_stated","the team has not stated its time zone, and no installed place gives one; an administrator sets it",null,null,false,"code"],
   ["machinery-producers.index.a_status_is_a_fact","a status is a fact about OUR OWN machinery (D-103/D-95): this instance's governor is holding the host, which is distinguishable from the source being unreachable and must not be read as evidence about the publisher. It clears for every member when the hold expires; there is no act that ends it.",null,null,false,"code"],
   ["machinery-producers.index.a_status_is_a_fact_2","a status is a fact about OUR OWN machinery (D-491, BOB #32 item 3): this instance's renderer, render allowance or host pacing is what holds the render, which says nothing about the page. The served frame is never filed as the content, so while it waits and after it expires there is NO capture of what a visitor saw.",null,null,false,"code"],
   ["machinery-producers.index.a_sweeps_status_is_link","a sweep's status is link-sweep's (its R8, R11): derived on read from the sweep's own runs and backlog, read here and never restated. It goes to the members of the sweep's project who may see its record, and it leaves on the first read after it stops holding.",null,null,false,"code"],

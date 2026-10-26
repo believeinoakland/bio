@@ -129,7 +129,7 @@ Keeps every captured file safe to open without touching its bytes, digest or gra
 - **R37** A safe view and a safe copy are never a capture: `provenance` holds no register row, receipt or chain naming their digests, so nothing can cite them (K1929 (4): cases cite the original only). A test makes both and finds neither digest in `provenance`.
 - **R57** (fix round 9, G124; K4835 (1)) No numeric literal in this module's code is a read ceiling it keeps (`GRADE_READ_MAX`, `SAFE_VIEW_ODS_DECLARED_MAX`): each is read from `READ_BOUNDS`, and a test reads this module's `src` and finds none.
 - **R58** (fix round 10, cause 39a; K5055) **The scanner's bounds are readable by an administrator.** `scanStatus` states, for the scanner and for the renderer, the `bounds` each reports from its own `/version`; an administrator reads them with the rest of that answer, and a viewer who is not an administrator is refused as for the rest of it. Test: the scanner stub answers `/version` with the real `BOUNDS`; `scanStatus({viewer: admin})` echoes them; control: a member is refused.
-- **R59** *(not yet met: T51)* (T51 fix round 10, live walk F-B14; K5272) A render that failed finally (R12, G136b) is tried again once when the renderer answering `renderBatch` is a different release from the one that failed it (the renderer's version recorded with the failure); it is never retried against the same release.
+- **R59** (T51 fix round 10, live walk F-B14; K5272) A render that failed finally (R12, G136b) is tried again once when the renderer answering `renderBatch` is a different release from the one that failed it (the renderer's version recorded with the failure); it is never retried against the same release.
 
 ### Satisfies
 
