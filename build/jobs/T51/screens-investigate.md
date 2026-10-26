@@ -597,3 +597,11 @@ COMPLETE (re B49, K5175, K5257): R62 and R63 applied in full. Read whole: `build
 - Commit `b396cffa2b`, pushed to `job/T51/screens-investigate`.
 
 Size (session_01M1XQEdaShKDY1Gho8Xh3FA): test runs 4, module lines 3484
+
+## J44 · QUESTION
+
+QUESTION (R64, DEC-438). Read whole: R64, DEC-438, the drawing (mock-screens.js `SCR.standard`), standards R40, R43, R50, R51 and the owner's code (`standards/index.mjs` adoptionRecord :1844, impositionRecord :1968, benchmarkDeclare :2000, bindsAt :2020, standardRead :1147). Three gaps; I carry on with my best reading of each and build the four acts and the recorded-day rows now.
+
+1. No read lists a standard's adoptions, impositions or benchmarks. `bindsat` and `editioninforce` answer per body and date; `standard` answers `in_force_through` only. So the drawing's binding rows ("Binds X · Made binding by Y, recorded by Z") and the sentence `screen.standard.binds.unknown` ("No adoption or law recorded here says whom it binds", drawn when neither is recorded) cannot be drawn truthfully, and the design keeps no word for a binding row. Best reading: `standards` adds the three lists to the `standard` read (or a read `bindingsof`), UX-DESIGN gives the row words; until then I draw the section, its help, the recorded-day rows and the four acts, and I do NOT draw `binds.unknown` (it would be false after an adoption). Owner: `standards`; words: design.
+2. `standardadoption` requires `from` (a date or an event; ADOPTION `from` refused FIELD_INVALID otherwise), and the design's form has no field for it. Best reading: I send the adopting act's own period start (`standard` read of the chosen act, `period.from`); an act with none sends no `from` and the owner's refusal is drawn by its key. If a start-day field is wanted, the design adds it.
+3. "The act that adopted it: a held act or a dated event on the Timeline": I offer the team's held standards (the `standards` list, this one left out); a dated event needs a list of events and a passage that `citation` accepts (the owner takes a held standard's passage for a standard act only). Best reading: held standards only; an event as the act is a REPORT until the owner defines its citation.
