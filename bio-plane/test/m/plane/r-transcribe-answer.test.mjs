@@ -51,8 +51,6 @@ async function answerOf(pages) {
   return { answer, seen: w.seen, d };
 }
 
-// fixtures-run: reading-pipeline transcribe-answer
-// fixtures-run: extraction transcribe-answer
 test("R36 (the transcribe-answer contract, extraction and reading-pipeline): the AI path answers `{ok: true, engine, version, pages: [{page, text}]}` for the pages asked, the users' shape, with the pages sent and owed named", async () => {
   const { answer, seen, d } = await answerOf([0]);
   assert.equal(answer.ok, true, JSON.stringify(answer));
