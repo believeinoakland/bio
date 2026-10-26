@@ -1,6 +1,6 @@
 # connections (T51)
 
-**Status** · session_01Cj68FRJaNM9wJqTDmVe669 · depth 2 · COMPLETE · handled B12
+**Status** · session_017xL1y3wxLz7cviDg48w6Pm · depth 2 · COMPLETE · handled B13
 
 ## J1 · REPORT
 
@@ -208,3 +208,32 @@ Tests: connections 153 pass; screens-inquiry document + fr28-document + screens-
 Met: R70 (choose clause). Markers added: none.
 REPORT: screens-inquiry should take themeReadWithPassage() (themeread, fixtures.mjs:117) and the three connectionchoose answers (document.test.mjs:168; fr28-document.test.mjs:105,115,120) from connections' fixtures.mjs.
 Size (session_01Cj68FRJaNM9wJqTDmVe669): test runs 4, module lines 2398.
+
+## J10 · COMPLETE
+
+COMPLETE for START B13 (fix round 10; R73; plan item 144; K5297). Commit 59ea9e84a0 on job/T51/connections.
+
+**Applied (R73).** `themeLegFindings` (`bio-plane/src/connections/checks.mjs`) now words both THEME_NOT_EVIDENCE findings in plain words:
+- Target or content-id leg (checks.mjs ~305–311): "{label} names {subject}, and a theme is never the basis of a claim: it is one member's declared lens for gathering material, not evidence, so no leg can rest on it or on membership in it". `subject` is "a THEME" for a bare theme id, "membership in a THEME" for a membership. The old text named the field (`{label}.{field}`), echoed the stored value, and cited a document file and section (BIO_Content_Framework_v0_10.md §8.4). All three are gone; the caller's label leads.
+- Theme-key leg (checks.mjs ~316–320): "{label} claims its support through a THEME, and membership in a theme is never a reason a leg counts: it rests on the document or passage it cites, or on nothing". The old text named the key (`{label}.{key}`).
+- The two localize ids are renamed `connections.checks.leg_names_theme` and `connections.checks.leg_claims_through_theme`, since `localize` returns stored text for an existing id (as action-grammar found). The repairs are unchanged (their text was already plain).
+- Reading I took: R73's "words a person reads" are the finding's `message` and `repairs`. The finding's machine `check` (C-81.1) and `code` stay, as DEC-49 requires for every refusal row.
+- No other finding is worded by this module: `themeLegFindings` is its only finding producer (checked: no other `findings.push`).
+
+**Red, then green.** New `bio-plane/test/m/connections/r73-plain-words.test.mjs` (R73 named in both titles). Red on the old wording: "The basis leg.target 'THEME-…' names a THEME, … (BIO_Content_Framework_v0_10.md §8.4, …)" matched the field-name pattern. Green after the change. The sweep covers every theme leg in its corpus: a bare theme id, a membership (`#`, `/`, `:`, `?`), by target and by content id, and the `theme` and `themes` keys. It asserts that no message or repair names a field, a snake_case stored name, a DEC-/C-/D- id, a `kind:` value, or a document file or section mark, and that the rule is said ("never the basis of a claim" / "never a reason a leg counts"). `figures.test.mjs` pinned the old id and text; updated to the new id and text.
+
+**Tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/connections/*.test.mjs`: 155 tests, 155 pass, 0 fail, exit 0 (no force-exit; the run exits by itself).
+
+**Checks** (`/home/user/civicos-process/checks/…`, product `/home/user/bio`): format 178 modules, 0 failures; architecture connections 0 failures; coverage connections 73 of 73 (R73 named once the new file was `git add`ed); ownership `bac035067f`..HEAD: 4 files, 0 failures (the job record and my three files); `checks/run.mjs`: no finding in connections' files.
+
+**REPORT, other modules (not edited).**
+1. Callers pass field-style labels into `themeLegFindings`, so their findings still name fields (R73 puts the label on the caller): `bio-plane/src/inquiry-grammar/grammar.mjs:617` (`basis[${i}]`), `bio-plane/src/basis-version-grammar/grammar.mjs:343` (`basis_version_legs[${li}] (version '${name}')`), `bio-plane/src/action-grammar/grammar.mjs:158` (`action_basis[${i}]`). Each owner hands a plain label.
+2. Tests of other modules pin the old wording, so they are red after this commit (nine tests), each owner re-pins: action-grammar `test/m/action-grammar/grammar.test.mjs:138` and `:202`; basis-version-grammar `test/m/basis-version-grammar/registration.test.mjs:58`; inquiry-grammar `test/m/inquiry-grammar/grammar.test.mjs:28` and `:119`, `registration.test.mjs:38`, `t33.test.mjs:288`, `t34.test.mjs:192`, `t41.test.mjs:213`. Inquiry-grammar's `test/m/inquiry-grammar/golden.json` also pins the old THEME messages (lines 153–226 and 7955–8175). Action-grammar's J8 says it re-pinned its own two literal messages on its branch; this list is from the tranche merge as it stands.
+3. setup-words: `bio-plane/src/setup-words/rows.mjs` (generated, not mine) still holds the stale rows `connections.checks.names_a_theme` (line 21719) and `connections.checks.claims_leg_through_theme` (line 21718). Regenerate at layer close; the new ids fall back to their English until then.
+4. Checks run on the tranche (`checks/run.mjs`, not connections): 89 fixture failures (stub 73, contract 12, answer 4) and six coverage failures in other modules: action-grammar R30, conformance R44, inquiry-grammar R69, money R33, screens-action R58, screens-investigate R64. None is in connections.
+
+**R73 is met** in code and test; the "(not yet met: T51)" marker in `build/requirements/connections.md` is Bob's to clear.
+
+**Deferred.** None in this module. The REPORT items above sit with their owners.
+
+**Size (session_017xL1y3wxLz7cviDg48w6Pm): test runs 5, module lines 3081.**
