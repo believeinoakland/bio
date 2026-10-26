@@ -187,3 +187,7 @@ Deferred: none. Size (session_01SB37ZomNUisnUzz3WLTSui): test runs 8, module lin
 **Met ids:** R3, R17, R27, R43. **Markers added:** none. **REPORTed:** none. **Deferred:** none.
 
 Size (session_0194RwZ8cmBo7rAcUqnf6xx9): test runs 12, module lines 21 (source) + 29 test lines
+
+## J11 · COMPLETE
+
+COMPLETE · item 143 (E N4). Changed bio-plane/src/conformance/index.mjs: reasonText helper :2056; datesOf :626-627 and whenWords :2169-2170 draw the act event's {key,vars} reason in words; #bindings carries body_label and cite; both binding refusals draw the body's label and the standard's citation (:1079). Test red then green (t51-binding.test.mjs, 2 new: pass 5/fail 2 before, 7/7 after). Conformance 134/134; consequences 73, actions 157, action-clocks 87, filings 168, escalation 103, action-plans 110, plan-work 52, screens-action 310 green. checks/run.mjs: no conformance finding, words not risen; ownership 0. Met: R3, R17, R27, R43. No markers, no REPORT. Size (session_0194RwZ8cmBo7rAcUqnf6xx9): test runs 12, module lines 21
