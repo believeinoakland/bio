@@ -671,3 +671,14 @@ Suites: module 318 tests, 314 pass, 4 fail. Users named by impact.mjs (control-p
 REPORT (outside my paths): the 4 failing module tests (routed R75 home/queue, fix2 R85 home/queue) fail at the tranche tip without my change: A-06, queue-producers/index.mjs:146 (membersOf(host) is a second Members that was never told the copy is claimed; credentials/index.mjs:170 and membership/index.mjs:238 are the one that is). The tests are right.
 
 Size (session_01Tu7DPfm2DwNJsuukT5fZvH): test runs 22, module lines 4356
+
+## J35 · COMPLETE
+
+COMPLETE · SCREENS-DAILY #25 · B48 (CHANGE K5267, item 135 (1)). Record: build/jobs/T51/screens-daily.md "Completion (SCREENS-DAILY #25, B48)", pushed.
+
+Merged tranche/T51. F-B10 (a): the real passage route's widen is read (finder-states.mjs no-result branch); the walker's case over the real plane (household zzzqqq: passages total 0, widen above 0, fields none) draws the partial sentence, not "nothing matches": red on the earlier code, green; control draws no match.
+
+For BOB (wording): meaningrows' widen.total counts passages (retrieval/index.mjs:988) but screen.finder.widen says "Documents holding ...: {n}" (setup-words/rows.mjs:1887). I draw the partial sentence and heading for the passage reading and withhold its count rather than say a false unit; a design sentence for a passage count would let me draw it.
+
+Suites: module 319 tests, 315 pass, 4 fail (A-06 unchanged, queue-producers/index.mjs:146). Users (120 files) 714 pass, 0 fail (one file hit the 30-minute limit, passes alone 15/15). checks: format/architecture/words 0, no fixtures finding in my files, my coverage 104/104; ownership 0.
+Size (session_01Tu7DPfm2DwNJsuukT5fZvH): test runs 30, module lines 4360
