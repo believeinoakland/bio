@@ -16343,42 +16343,49 @@
       "en": "A cure is already recorded for that breach against that standard. End that link first, saying why. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/checks.mjs",
-      "line": 218
+      "line": 224
     },
     {
       "id": "conformance.checks.a_determination_is_recorded_only",
       "en": "A determination is recorded only by the determination act, and never edited: a correction is a new determination that supersedes it. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/checks.mjs",
-      "line": 222
+      "line": 228
     },
     {
       "id": "conformance.checks.a_determination_rests_on_findings",
       "en": "A determination rests on findings of three kinds: published by this project in a ratified case edition; checked for publication and held unsigned by this project; or another team's finding this team has accepted at the edition named. The finding named is none of these. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/checks.mjs",
-      "line": 94
+      "line": 96
     },
     {
       "id": "conformance.checks.an_act_is_compared_as",
       "en": "An act is compared as the act of an office or an organisation. The people who took part are recorded on the act, never as the one who acted. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/checks.mjs",
-      "line": 178
+      "line": 184
+    },
+    {
+      "id": "conformance.checks.civicsmith_cannot_yet_tell_whether",
+      "en": "Civicsmith cannot yet tell whether this standard was in force and binding on this body on the day of the act, so the act is not found noncompliant against it. Settle it in the standard first: when it was in force, and whom it binds. Nothing was written.",
+      "module": "conformance",
+      "file": "bio-plane/src/conformance/checks.mjs",
+      "line": 176
     },
     {
       "id": "conformance.checks.that_determination_reads_undetermined_a",
       "en": "That determination reads undetermined: a finding it rests on no longer stands (its check was voided, or the other team withdrew or revised the edition accepted). A member re-evaluates it by superseding it with a determination resting on findings that stand. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/checks.mjs",
-      "line": 190
+      "line": 196
     },
     {
       "id": "conformance.declared.determine",
       "en": "act-directed: a member determines a government act against named standards on published findings, keyed by (project, act); writes a CONF- bundle",
       "module": "conformance",
       "file": "bio-plane/src/conformance/index.mjs",
-      "line": 2250
+      "line": 2255
     },
     {
       "id": "conformance.index.a_determination_measures_the_act",
@@ -16420,7 +16427,7 @@
       "en": "name which side of the question states what the standard requires, a or b: your team's Civicsmith never chooses it. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/index.mjs",
-      "line": 1757
+      "line": 1762
     },
     {
       "id": "conformance.index.no_office_entity_is_held",
@@ -16448,7 +16455,7 @@
       "en": "whether {standard} binds {v1} is undetermined ({v2}), and an act is found noncompliant only against a standard that binds its body: a member settles it in standards first. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/index.mjs",
-      "line": 1071
+      "line": 1076
     },
     {
       "id": "connection-grammar.conformance.a_hunch_is_returned_with",
@@ -19178,49 +19185,49 @@
       "en": "candidate-directed: keyed by a candidate, reached where its sides are shown; records how the sides differ, or which is wrong and why, and never edits a side",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3166
+      "line": 3167
     },
     {
       "id": "contradiction.declared.contradictiondismiss",
       "en": "candidate-directed: keyed by a candidate, reached where its sides are shown; sets a lead aside for one of three stated reasons, kept, never deleted",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3164
+      "line": 3165
     },
     {
       "id": "contradiction.declared.contradictionflag",
       "en": "document-directed: keyed by a passage in each of two documents the member may see, reached from either document; sets them side by side as a contradiction for the project to settle, with the member's reason, and changes neither document",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3170
+      "line": 3171
     },
     {
       "id": "contradiction.declared.contradictionoptin",
       "en": "conflict-directed: keyed by a candidate and the member's project, reached from the conflict's notice; the project asks to resolve a conflict with a record its members cannot see, never withdrawn",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3172
+      "line": 3173
     },
     {
       "id": "contradiction.declared.contradictionrespond",
       "en": "conflict-directed: keyed by a candidate and the member's project, reached from the conflict's notice; a response disclosing only what its author chooses, relayed once the projects are named to each other",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3174
+      "line": 3175
     },
     {
       "id": "contradiction.declared.contradictiontakeup",
       "en": "candidate-directed: keyed by a candidate, reached where its sides are shown; opens one contradiction inquiry framed around one side",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3168
+      "line": 3169
     },
     {
       "id": "contradiction.flag_why",
       "en": "a member set these two documents side by side as contradicting, with their reason",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2631
+      "line": 2632
     },
     {
       "id": "contradiction.index.acceptance_not_standing_detail",
@@ -19241,7 +19248,7 @@
       "en": "this question names a contradiction the record does not hold, or one whose side its author may not see",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2741
+      "line": 2742
     },
     {
       "id": "contradiction.index.candidate_unreadable",
@@ -19304,14 +19311,14 @@
       "en": "the part of the disclosure that is not one of cover or email: {part}",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3007
+      "line": 3008
     },
     {
       "id": "contradiction.index.disclosure_not_yours_detail",
       "en": "a response may share only your own cover or your own email address",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3016
+      "line": 3017
     },
     {
       "id": "contradiction.index.dismissal_reason_detail",
@@ -19325,7 +19332,7 @@
       "en": "the question's document is not held as text",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2486
+      "line": 2487
     },
     {
       "id": "contradiction.index.evidence_not_seen_detail",
@@ -19339,35 +19346,35 @@
       "en": "{name}: {why}",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2520
+      "line": 2521
     },
     {
       "id": "contradiction.index.flag_no_reason_detail",
       "en": "say in your own words how the two disagree: no reason was given",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2586
+      "line": 2587
     },
     {
       "id": "contradiction.index.flag_passage_unheld",
       "en": "no passage you can see is held there",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2537
+      "line": 2538
     },
     {
       "id": "contradiction.index.flag_passage_unnamed",
       "en": "name the capture and the extent in it",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2526
+      "line": 2527
     },
     {
       "id": "contradiction.index.flag_same_document_detail",
       "en": "both passages are in the same document",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2581
+      "line": 2582
     },
     {
       "id": "contradiction.index.judgement_by",
@@ -19409,7 +19416,7 @@
       "en": "machine work records who proposed it; the plane stamps that from the credential that asked, so an empty one means the act arrived by a route that does not attribute it",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2701
+      "line": 2702
     },
     {
       "id": "contradiction.index.no_reason_detail",
@@ -19423,14 +19430,14 @@
       "en": "no run named '{run}' is open in this store",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2708
+      "line": 2709
     },
     {
       "id": "contradiction.index.no_run_named_detail",
       "en": "pass run=<the run whose work this is>: machine work names the run it came from",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2709
+      "line": 2710
     },
     {
       "id": "contradiction.index.no_such_detail",
@@ -19444,7 +19451,7 @@
       "en": "no contradiction you can see answers to that id for this project",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3094
+      "line": 3095
     },
     {
       "id": "contradiction.index.no_wrong_side_detail",
@@ -19458,28 +19465,28 @@
       "en": "two projects' conclusions have no wrong side and no double-speak",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2474
+      "line": 2475
     },
     {
       "id": "contradiction.index.not_a_contradiction_inquiry_detail",
       "en": "no question you can see answers to that id as one taken up from a contradiction",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2470
+      "line": 2471
     },
     {
       "id": "contradiction.index.not_a_party_detail",
       "en": "the project named does not rest on the side of this conflict you can see",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2947
+      "line": 2948
     },
     {
       "id": "contradiction.index.not_a_project_conflict_detail",
       "en": "a lead is not a conflict the record holds between projects",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2952
+      "line": 2953
     },
     {
       "id": "contradiction.index.pair_not_formed_cut_detail",
@@ -19514,28 +19521,28 @@
       "en": "recommendation {index} names '{coordinate}'",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2659
+      "line": 2660
     },
     {
       "id": "contradiction.index.recommend_no_coordinates_detail",
       "en": "name at least one respect in which the sides may differ",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2649
+      "line": 2650
     },
     {
       "id": "contradiction.index.recommend_no_reason_detail",
       "en": "recommendation {index} carries no reason",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2667
+      "line": 2668
     },
     {
       "id": "contradiction.index.recommend_not_standing_detail",
       "en": "that contradiction is not open to recommendation",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2675
+      "line": 2676
     },
     {
       "id": "contradiction.index.record_cannot_be_dismissed_detail",
@@ -19549,49 +19556,49 @@
       "en": "- {when} · {who} · resolution recorded as {kind} (contradiction {candidate})",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2492
+      "line": 2493
     },
     {
       "id": "contradiction.index.response_before_opt_in_detail",
       "en": "this project has not asked to resolve it yet",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3057
+      "line": 3058
     },
     {
       "id": "contradiction.index.response_no_text_detail",
       "en": "a response says something in the responder's own words",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3062
+      "line": 3063
     },
     {
       "id": "contradiction.index.run_not_running_detail",
       "en": "the run '{run}' has ended; its work is read against the conditions it was formed under",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2719
+      "line": 2720
     },
     {
       "id": "contradiction.index.side_no_longer_held",
       "en": "a side of this contradiction is no longer held",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2415
+      "line": 2416
     },
     {
       "id": "contradiction.index.take_up_no_frame_detail",
       "en": "choose the side the question is asked around: a or b",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2407
+      "line": 2408
     },
     {
       "id": "contradiction.index.take_up_no_question_detail",
       "en": "word the question, or accept the default shown with the candidate",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2402
+      "line": 2403
     },
     {
       "id": "contradiction.index.taken_up_detail",
@@ -19640,14 +19647,14 @@
       "en": "these two passages are already set side by side as a contradiction, and it stays as it is",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2630
+      "line": 2631
     },
     {
       "id": "contradiction.says.flag_written",
       "en": "these two passages are set side by side as a contradiction for your project to settle: a lead, not a finding. Neither document is changed",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2637
+      "line": 2638
     },
     {
       "id": "contradiction.says.two_documents_flagged",
@@ -25359,21 +25366,21 @@
       "en": "reading-directed: keyed by a capture; at a member's act, the AI reads the pages Civicsmith could not, on the account that pays and within its limits; the text is labeled the AI's reading and undetermined; moves no bundle",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3482
+      "line": 3490
     },
     {
       "id": "extraction.declared.readheld",
       "en": "reading-directed: keyed by a capture's digest; at a member's act, Civicsmith reads a document its record holds whole and holds no reading of, or holds a reading of that found nothing for want of the whole; the reading is machine-made and undetermined, the earlier one kept in the history; moves no bundle",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3487
+      "line": 3495
     },
     {
       "id": "extraction.declared.reading",
       "en": "read: keyed by a capture's digest; its reading, how far a text read in pieces has been read, and its text units a page at a time; writes nothing",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3485
+      "line": 3493
     },
     {
       "id": "extraction.drift.this_text_was_graded_under",
@@ -25429,133 +25436,133 @@
       "en": "a re-read replaces this capture's reading, its text units and the standing of content rows cited under the old one, which is a write to the record and asks the capability a promotion asks.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2918
+      "line": 2926
     },
     {
       "id": "extraction.index.a_transcription_replaces_this_captures",
       "en": "a transcription replaces this capture's reading, its text units and the standing of content rows cited under the old one, which is a write to the record and asks the capability a promotion asks.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3110
+      "line": 3118
     },
     {
       "id": "extraction.index.cells_bytes_not_held",
       "en": "the file this document was read from could not be read just now, so its cells could not be made; try again",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2220
+      "line": 2228
     },
     {
       "id": "extraction.index.cells_no_reading",
       "en": "no reading of this document is held, so none of its cells are",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2178
+      "line": 2186
     },
     {
       "id": "extraction.index.cells_not_interpretable",
       "en": "this document's cells cannot be made from its file here",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2212
+      "line": 2220
     },
     {
       "id": "extraction.index.cells_not_made",
       "en": "this document's cells could not be made ({reason})",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2224
+      "line": 2232
     },
     {
       "id": "extraction.index.cells_sheet_not_held",
       "en": "this sheet's cells were not made when it was read, and its file does not hold them to make now",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2207
+      "line": 2215
     },
     {
       "id": "extraction.index.cells_sheet_not_named",
       "en": "no sheet was named, so no cells could be made",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2180
+      "line": 2188
     },
     {
       "id": "extraction.index.cells_sheet_not_named_in",
       "en": "the reading names no sheet called {sheet}",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2208
+      "line": 2216
     },
     {
       "id": "extraction.index.length_transcription_s_were_graded",
       "en": "{length} transcription(s) were graded under a measurement a later probe found WEAKER. NOTHING HAS BEEN RE-GRADED and nothing will be automatically: this names the work so a member can do it (DEC-4)",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3260
+      "line": 3268
     },
     {
       "id": "extraction.index.no_evidence_store_set_up",
       "en": "your team's Civicsmith has no evidence store set up, so the stored bytes cannot be read again",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2818
+      "line": 2826
     },
     {
       "id": "extraction.index.no_ocr_member_is_bound",
       "en": "no OCR member is bound to this instance (the OCR_WORKER service binding is absent), so there is no tier 3 to reach. Nothing was read, called or written. An instance that installs the member later can re-read this capture then (D-115, D-319).",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2922
+      "line": 2930
     },
     {
       "id": "extraction.index.no_text_provenance_recorded",
       "en": "this reading carries no text provenance, which is not the same as its text not having been transcribed -- nobody recorded how it was produced",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1989
+      "line": 1997
     },
     {
       "id": "extraction.index.ocr_stringify_is_not_a",
       "en": "ocr={stringify} is not a value this op reads. Send ocr=1 to re-read the document with the OCR member, or leave the parameter off for the ordinary read.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2908
+      "line": 2916
     },
     {
       "id": "extraction.index.op_pagetranscribe_writes_this_captures",
       "en": "op=pagetranscribe writes this capture's reading and spends the account that pays for it, and an agent credential cannot declare that as one of its writes. A member can ask for it (D-199).",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3105
+      "line": 3113
     },
     {
       "id": "extraction.index.part_omitted",
       "en": "this document's {key} ({bytes} bytes) is not kept with its reading, which would pass {limit} bytes; its text is kept whole and every line can be searched",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1598
+      "line": 1606
     },
     {
       "id": "extraction.index.readheld_no_sha",
       "en": "a read of a held document is about one captured document, named by its fingerprint",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3468
+      "line": 3476
     },
     {
       "id": "extraction.index.reading_size",
       "en": "{mib} MiB ({bytes} bytes)",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1633
+      "line": 1641
     },
     {
       "id": "extraction.index.reading_too_large",
       "en": "this document's reading is too large to keep whole: {size}; the largest part is {key}",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1635
+      "line": 1643
     },
     {
       "id": "extraction.index.reread_candidates_frontier",
@@ -25569,42 +25576,42 @@
       "en": "the AI's part for transcribing pages has not passed its test bar here (run-rules R19), so it is not switched on. Nothing was read, rendered, sent or written, and no account was looked at.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3116
+      "line": 3124
     },
     {
       "id": "extraction.index.this_record_holds_no_reading",
       "en": "this record holds no reading of that capture that you can see, so there is nothing for a re-read to replace. A capture is read when a record carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2927
+      "line": 2935
     },
     {
       "id": "extraction.index.this_record_holds_no_reading_2",
       "en": "this record holds no reading of that capture that you can see, so there are no pages for the AI to transcribe. A capture is read when a record carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3121
+      "line": 3129
     },
     {
       "id": "extraction.why.basis_changed",
       "en": "the stored reading changed while this {act} was being made, so it was not written over; it can be asked again",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3356
+      "line": 3364
     },
     {
       "id": "extraction.why.press_owed",
       "en": "your team's Civicsmith reads {count} page(s) with its text recognition in the background, and the reading shows them as each is read",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3020
+      "line": 3028
     },
     {
       "id": "extraction.why.request_too_large",
       "en": "this file is {size} bytes, more than a request reads whole here ({limit} bytes), so it is read in the background",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3001
+      "line": 3009
     },
     {
       "id": "file-safety.checks.the_file_scanner_could_not_read",
