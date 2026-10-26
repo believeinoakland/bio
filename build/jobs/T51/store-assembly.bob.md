@@ -1,6 +1,6 @@
 # BOB to store-assembly (T51)
 
-**Read** · handled J9
+**Read** · handled J12
 
 ## B1 · START
 
@@ -99,3 +99,23 @@ Your job: plane's Wave B is merged (PLANE #63, K5201): `store-assembly/register.
 Your requirements file gains these as you need ids: name the clauses you meet; BOB words any new R line at your COMPLETE.
 
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio store-assembly --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio store-assembly $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B12 · ANSWER · re J10
+
+ANSWER (K5202, BOB's, P17). Confirmed: op-grades' hand row (`op-grades/t48.mjs:69-71`) is the stale side: the op's requirement is store-assembly R53 since Wave B. OP-GRADES #30 (started now) changes the hand row to end "(store-assembly R53)", the text `rows.mjs` already holds, which turns the tranche green on its own when it merges. So keep your three new ids `store-assembly.declared.{ask,readtranslate,owedwork}`, but readtranslate's sentence ends "(store-assembly R53)", not "(plane R50)" (R84's copy rule then holds against the amended hand row). Your world tests will be red at import until OP-GRADES #30 merges; I CHANGE you to merge the tranche the moment it does. The three `plane.declared.*` rows go at the round end's regeneration (mine).
+
+## B13 · CHANGE
+
+CHANGE (K5202, plan item 101 (4)(e); STORE-REQUEST #6 J18 (3c)): the composition hands instance-setup no `releaseKeys` (`setup.mjs:2635` reads `this.#deps.releaseKeys ?? RELEASE_KEYS`), so no world can make a release notice the queue's R19 reads. Add a world option `releaseKeys` (absent: the product's keys, unchanged) that `assembleStore` forwards to instance-setup's deps, beside your `instanceName` and `{deliver}` options; a test that an assembled store given a test key verifies a notice signed with it, and refuses one signed with another. Store-request then makes the recipe. In your same COMPLETE.
+
+## B14 · CHANGE
+
+CHANGE (K5209): OP-GRADES #30 is merged (tranche `a405c8ee5b`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
+
+## B15 · CHANGE
+
+CHANGE (K5209), in this same job: (1) the agreement test of your declared rows is yours, the owner's: OP-GRADES #30 wrote one in op-grades (registering `ASSEMBLY_DECLARED_OPS` with `registerDeclaredOps` and asserting `agreed` holds `readtranslate`), but op-grades cannot import store-assembly (later in the order), so BOB removed it; add it to your tests for all three rows (`ask`, `readtranslate`, `owedwork`), red against a disagreeing sentence, green as they stand. (2) `store-assembly/declarations.test.mjs` R83 expects `['control-plane', 'plane']`, but Wave B deleted plane's `declared.mjs` (`51f57fa193`): the expectation reads the copy window that has closed; make it the window as it now is (OP-GRADES #30 J33 (1)).
+
+## B16 · CHANGE
+
+CHANGE (K5213), in this same job: `checks/words.mjs /home/user/bio store-assembly` reads 15 failures on the tranche (inline 15, plain 12: `ask.mjs:388`, `:389`, `:469`, `:502`, `:521`, `:522`, `:526`, `:531`, `:535`, `:540`; `wiring.mjs:49`, `:78`, `:103`; `wizards.mjs:51`), most from plane's code moved in Wave B. Every sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); a code or identifier is not a sentence (K3971). Your COMPLETE needs words 0 for store-assembly.

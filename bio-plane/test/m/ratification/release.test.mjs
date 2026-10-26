@@ -118,7 +118,7 @@ test("R20: an acknowledgment, then a mitigation, over RELEASE_ACK_MAX or holding
 
 /* ---- R21 ---- */
 
-test("R21: the selection's refusal is answered as retrieval's refuse-weight resolve gives it: NO_SUCH_SELECTION, NOT_YOURS", async () => {
+test("R21: the selection's refusal is answered as retrieval's refuse-weight resolve gives it: NO_SUCH_SELECTION, SELECTION_NOT_YOURS", async () => {
   const w = setup();
   w.info("INFO-2026-0503");
   const h = await w.select(["INFO-2026-0503"]);
@@ -126,7 +126,7 @@ test("R21: the selection's refusal is answered as retrieval's refuse-weight reso
   assert.equal(none.reason, "NO_SUCH_SELECTION");
   assert.deepEqual(none, w.retrieval.selectionResolve({ handle: "sel_nope", viewer: WHO, owner: OWNER, weight: "refuse" }));
   const theirs = w.release(h, { owner: "someone-else" });
-  assert.equal(theirs.reason, "NOT_YOURS");
+  assert.equal(theirs.reason, "SELECTION_NOT_YOURS");
   assert.deepEqual(theirs, w.retrieval.selectionResolve({ handle: h, viewer: WHO, owner: "someone-else", weight: "refuse" }));
   assert.equal(w.state("INFO-2026-0503"), "collected");
 });
