@@ -564,4 +564,4 @@ COMPLETE (re B48, K5285): `common.test.mjs` does not hang; it is slow. R10's `ti
 
 **REPORT (another module).** The time of a page open in these tests is mostly `jurisdictions/index.mjs`: `clone` (:1602, `JSON.parse(JSON.stringify())`) 5.8 s self of 24.7 s in the `proceeding` case, `canon` (:1622) 1.05 s, `merge` (:1693) 0.65 s; `combine` copies each profile entry on every call. If `combine` is called per request, a held, frozen combined result would cut about a third of every screen test's CPU. Also `store-assembly/assemble.mjs:747` `routes` 1.3 s and `store-assembly/world.mjs:59` `exec` 1.2 s.
 
-Size (session_01XAGfrWyN5W6h9CDFVRjtte): test runs 14, module lines 2,934
+Size (session_01XAGfrWyN5W6h9CDFVRjtte): test runs 14, module lines 3,475
