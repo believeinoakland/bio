@@ -356,3 +356,7 @@ Your job: Publish in `bio-plane/test/m/instance-setup/fixtures.mjs`, beside `ass
 ## B25 · CHANGE
 
 CHANGE (K5209): OP-GRADES #30 is merged (tranche `151d0d0a38`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
+
+## B26 · RESUME
+
+RESUME (K5217; mechanics §5.4: WORKING with no push for 20 minutes). Read your record and mailbox (B25: merge the tranche), continue from your next step, keep your state current, and post COMPLETE with `groupIdentityAnswer()` published.
