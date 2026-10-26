@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { inWorld, openAs, settled } from "./world.mjs";
-import { fill, press, main, word, hasWord } from "./fixtures.mjs";
+import { fill, press, main, word, hasWord, dayOf } from "./fixtures.mjs";
 
 const REASON = "The roster says so.";
 const NEW_KEYS = ["screen.person.expunge.marker", "screen.person.holds.heading", "screen.person.holds.holder", "screen.person.holds.capacity", "screen.person.holds.empty", "act.recordline.label.office",
@@ -77,7 +77,7 @@ test("R1 R149 Person: where a fact was removed for good the page draws the marke
   assert.equal(marks.length, 1, "one marker where the fact stood");
   assert.ok(!main(p).textContent.includes("12 Oak Street"), "never the value");
   assert.ok(main(p).textContent.includes("ben@example.org"), "control: the fact not removed is drawn");
-  if (hasWord("screen.person.expunge.marker")) assert.ok(marks[0].textContent.includes(word("screen.person.expunge.marker", { date: "October 1, 2026", member: me.handle })), "the day and the member by name");
+  if (hasWord("screen.person.expunge.marker")) assert.ok(marks[0].textContent.includes(word("screen.person.expunge.marker", { date: dayOf(read.removed[0].at.slice(0, 10)), member: me.handle })), "the day and the member by name");
   assert.ok(!marks[0].textContent.includes("member:"), "no stamp");
   void gone;
 });
