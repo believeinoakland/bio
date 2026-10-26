@@ -706,3 +706,28 @@ Two REPORTs:
 2. action-grammar, grammar.mjs:182-185: the finding's English ("ZERO inquiries ... action_basis legs of kind advances ... (DEC-13)") is plane jargon, not localized. I draw it unchanged; the walker's red test (no /ZERO|action_basis|legs of kind/) can pass only when action-grammar words it.
 
 Size (session_01ReWzbcE2jDSepbus9xYfCv): test runs 6, module lines 5261
+
+## J49 · COMPLETE
+
+COMPLETE (SCREENS-ACTION #28, T51, R58, re B56). Pushed on `job/T51/screens-action` at 27681f340c (on tranche/T51 bac035067f, merged).
+
+**What changed (bio-plane/src/screens-action/matter.mjs):**
+- `eventChoice` (l.229-232): a failed timeline read is drawn as failed; a project with no dated event draws `screen.matter.event.none` in place of the picker (R58, DEC-438 C2a (1)).
+- `findings` (l.292-294): with no finding to rest on, `screen.matter.determine.needscase` sits above the Record button (DEC-438 C2a (2)).
+- `findings`' apart list (l.289-290): a concluded question no published case holds carries `screen.matter.concluded.unpublished` (walk C C-M11) in place of `question.concluded.heading`.
+- `bodyChoice` (l.200-202): the body choice draws `screen.matter.f.body.help` beside it (DEC-438 C2a (a)). The entity id is still what is sent (R56).
+
+**Tests.** New `bio-plane/test/m/screens-action/matter-r58.test.mjs`, 4 tests, each titled R58, each sentence through the world's real reads (`inWorld`, `recipes.project`, `matterWorld`, a real concluded question), each with a control where its condition does not hold. The body control uses a refused `entitieskind` read with the code `NO_ENTITY`, a code the entities module answers. `fix10-t51.test.mjs` l.80 now expects `screen.matter.concluded.unpublished` (the word the design gives this case) in place of `question.concluded.heading`; its assertion otherwise unchanged.
+- Red first: the 4 new tests failed at their first sentence assertion (event.none, needscase, concluded.unpublished, body help) before the module change.
+- Green: the new file 4 of 4; the module suite `bio-plane/test/m/screens-action/*.test.mjs` 320 of 320 pass, 0 fail (run without force-exit, exits by itself).
+
+**Checks (process repo, absolute root /home/user/bio):** format 0 failures; architecture 0; coverage 58 of 58 live ids named by a test; words 0 (module); ownership 0 (4 files, all in screens-action's paths: matter.mjs, fix10-t51.test.mjs, matter-r58.test.mjs, and the record); `fixtures.mjs /home/user/bio screens-action` 0 failures (accepted 2, unchanged); `checks/run.mjs /home/user/bio`: none of its findings name screens-action's files (its 95 FAIL lines are in other modules: action-grammar R30, conformance R44, connections R73, inquiry-grammar R69, money R33, screens-investigate R64, and fixtures in acquisition, capture, store-assembly, test-support).
+
+**Deferred, with why:**
+1. `build/requirements/screens-action.md` R58 still ends "*(not yet met: T51)*". The requirements file is not in my paths (ownership 0 holds without it), so I did not remove the mark. BOB removes it, or CHANGEs me to do so.
+2. R58 says the body choice is "helped by" the sentence; I drew the help as a note beside the choice (the kit's `cs.choice` takes no help, as noted in the record's gap list).
+3. A failed timeline read in the event picker is drawn as failed (`cs.state`), not as "no dated event"; this goes beyond R58's text and is my reading of its "when the act has no dated event".
+
+**Found in other modules:** none new.
+
+Size (session_01W8SeuUT4Pp8JrNDZyDteuM): test runs 4, module lines 5265
