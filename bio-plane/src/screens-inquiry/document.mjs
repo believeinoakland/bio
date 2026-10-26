@@ -1367,8 +1367,8 @@ function render(cs, view) {
       if (r.state !== "ok" || !r.value) continue;
       const mine = (x) => x && (String(x.document || "") === id || String(x.target || "").split(/[#/:?]/)[0] === id);
       for (const m of (Array.isArray(r.value.members) ? r.value.members : []).filter(mine))
-        lines.push(`<p class="mk-small" data-theme="${cs.esc(t.theme_id)}"><b>${cs.esc(String(t.name || ""))}</b> ${pageOf(m.page) !== null ? cs.w("screen.document.theme.page", { page: String(pageOf(m.page)), name: who(m.placer_handle || ""), date: { html: m.placed_at ? cs.date(String(m.placed_at), { year: true }) : "" }, note: String(m.note || "") })
-          : cs.w("screen.document.theme.whole", { kind: T("shell.card.document"), name: who(m.placer_handle || ""), date: { html: m.placed_at ? cs.date(String(m.placed_at), { year: true }) : "" } })}`
+        lines.push(`<p class="mk-small" data-theme="${cs.esc(t.theme_id)}"><b>${cs.esc(String(t.name || ""))}</b> ${pageOf(m.page) !== null ? cs.w("screen.document.theme.page", { page: String(pageOf(m.page)), name: who(m.placed_by_handle || ""), date: { html: m.placed_at ? cs.date(String(m.placed_at), { year: true }) : "" }, note: String(m.note || "") })
+          : cs.w("screen.document.theme.whole", { kind: T("shell.card.document"), name: who(m.placed_by_handle || ""), date: { html: m.placed_at ? cs.date(String(m.placed_at), { year: true }) : "" } })}`
           + cs.act("themewithdraw", { label: "act.themewithdraw.label.document", data: { theme: String(t.theme_id), target: String(m.target || id) } }) + "</p>");
       for (const h of (Array.isArray(r.value.hunches) ? r.value.hunches : []).filter(mine))
         lines.push(`<p class="mk-small" data-hunch="${cs.esc(t.theme_id)}"><span class="cs-hunch" data-mark="hunch">${cs.w("theme.hunch.mark")}</span> <b>${cs.esc(String(t.name || ""))}</b> ${cs.w("screen.document.theme.proposed", { page: String(pageOf(h.page) === null ? "" : pageOf(h.page)), date: { html: h.proposed_at ? cs.date(String(h.proposed_at), { year: true }) : "" }, note: String(h.proposal_note || "") })}`
