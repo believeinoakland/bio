@@ -1,6 +1,6 @@
 # reading-pipeline (T51)
 
-**Status** · session_018AnPSu24P4RD3aumhsFSif · depth 2 · COMPLETE · handled B63
+**Status** · session_01SY4Lvvb9Fxt5mgvpCSvWLj · depth 2 · COMPLETE · handled B64
 
 ## J1 · COMPLETE
 
@@ -1019,3 +1019,43 @@ Size (session_018AnPSu24P4RD3aumhsFSif): test runs 17, module lines 4548
 ## J57 · COMPLETE
 
 COMPLETE (re B63, K5211): R1 and R51's new clause met. An HTML page past WHOLE_READ_MAX and within the 50 MB text bound, whole or in parts, is read by the one streaming pass in byte windows with a carry (html.mjs: dropHeadStream, streamTokenizer, visibleTextOfHtmlStream; index.mjs: textRangedHead takes a detected page, htmlVisibleByWindows decodes the windows by the head's encoding); its units equal the page read whole. Red first: r51-large.test.mjs on the old source, TOO_LARGE against 24 MiB; green after. r51-windows.test.mjs: the stream equals the whole pass for the 4 captured pages and 36 straddling shapes at every window size from 1 char, at every cut, and for 400 random pages (a mutated carry fails it). r51-large.test.mjs: a 25.04 MiB page as one object (64 KiB windows), as 8 MiB parts and in one big window gives the units of the page read whole; not-in-pieces is transient; a lost kept page is made again; 50 MB+1 is TOO_LARGE with figures; windows-1252 by meta. Suites: module+door+extraction 951 tests, 950 pass, 0 fail, 1 todo. format, architecture, coverage (62/62), words, ownership 0; fixtures --list same 5 lines, no marker added. Met ids to strike: R1, R51 (new clause). Stated limits in record B63: title judged from the head; invalid bytes in a later UTF-8 window are counted replacements; full-size memory is the corpus set's. The door case for a fetched page in parts is control-plane's (J55 b). Size (session_018AnPSu24P4RD3aumhsFSif): test runs 17, module lines 4548
+
+## J8 · COMPLETE · re B64
+
+COMPLETE (B64, fix round 10; K5175): the hand-built `transcribe` values now carry the real answer's shape, and their markers name `store-assembly transcribe-answer`. `tranche/T51` (`c44b109683`) merged into the branch first. Pushed at the branch tip.
+
+**Changes (test files only; no product source touched):**
+- `bio-plane/test/m/reading-pipeline/text-units.test.mjs:532` marker `fixtures-contract: content transcribe-answer` → `store-assembly transcribe-answer`; `:539` (the variants' marker) likewise.
+- `text-units.test.mjs:533-535` the success value `good` gains `asked: q.pages`, `sent: q.pages`, `owed: []` (the real answer's keys, store-assembly `transcribe.mjs` R106: `asked`, `sent`, `owed`; `unread` only when a page was refused, so not in a clean run).
+- `transcribe.test.mjs:323` marker re-pointed the same way.
+- `transcribe.test.mjs:81-82` the `model` helper (the success value of R29's stops and the `ai()` answers) gains `asked: pages, sent: pages, owed: []`, placed before `...extra` so a test's own override still wins. Refusal values (`{ok:false, reason}`) are untouched; they are agent-worker's relayed shape, as the t42 note says.
+
+**Failing-first.** `store-assembly/t42.test.mjs:257` ("R57 R106 transcribe-answer"), run before the edit: red, `AssertionError: the real answer also names the pages asked, sent, unread and owed`; the diff shows `asked: [0]` and `owed: []` missing from the compared value. **It is still red after my edit, and that is expected:** the assertion compares the real answer against `theirs` at `t42.test.mjs:266`, which is extraction's t48 value, not mine. My values now match the real shape (`ok, engine, version, pages, asked, sent, owed`), but the `:267` run cannot pass until EXTRACTION #49 makes its `:266` value match. I did not touch store-assembly's file.
+
+**Met ids.** No requirement status changes; the edited tests keep their named ids, and coverage still names all 62 of 62 live ids. No `fixtures-own` or `fixtures-generic` marker was added.
+
+**Tests and checks (summary lines):**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/reading-pipeline/*.test.mjs bio-plane/test/m/extraction/read.test.mjs` (from `/home/user/bio`, no force-exit): `tests 536, pass 535, fail 0, todo 1` (exit 0).
+- `store-assembly/t42.test.mjs`: 1 red at `:257`/`:267` before and after, for the extraction-side reason above.
+- `checks/format.mjs`: `178 modules, 178 requirements files; 0 failures`.
+- `checks/architecture.mjs reading-pipeline`: `100 product files, 291 relative imports; 0 failures`.
+- `checks/coverage.mjs reading-pipeline`: `62 of 62 live requirement ids named by a test; 0 failures`.
+- `checks/words.mjs reading-pipeline`: `inline 0, plain 0, testcopy 0, missingkey 0 ... 0 failures`; repo-wide word count unchanged at 19247.
+- `checks/fixtures.mjs reading-pipeline --list`: `answer 0, stub 0, code 0, contract 0, accepted 14; 0 failures`. The 14 accepted include my three contract-marked values (`text-units` :542/:543, `transcribe` :325/:327), each carrying `store-assembly transcribe-answer`.
+- `checks/run.mjs /home/user/bio`: exit 1 for the repo as a whole (its fixtures and stub failures are other modules'); no line names reading-pipeline; the words count did not rise.
+- `checks/ownership.mjs reading-pipeline <merge-base> HEAD`: `1 files changed by reading-pipeline ... 0 failures`. (Test files only; the `paths` check is clean.)
+- Users: none run. I changed no product source, so no caller's behaviour changes; `impact.mjs` not run for a test-only change.
+
+**Found in another module:** `store-assembly/t42.test.mjs:266` (extraction's `theirs` value) lacks `asked`, `sent` and `owed`, so `:267` stays red until EXTRACTION #49 lands. This is the cause; REPORT to BOB below.
+
+**Choices I made:** the commit message carries no model identifier, following the system rule; J1 made the same choice. `Claude-Session` trailer kept.
+
+Size (session_01SY4Lvvb9Fxt5mgvpCSvWLj): test runs 3, module lines 3471
+
+## J58 · REPORT
+
+Found outside my paths: store-assembly/t42.test.mjs:266 (extraction's t48 transcribe value) lacks asked, sent and owed, so the :267 run (reading-pipeline transcribe-answer) stays red until EXTRACTION #49 fixes it. Real answer: bio-plane/src/store-assembly/transcribe.mjs ~155. Mine now match the real shape.
+
+## J59 · COMPLETE
+
+COMPLETE (B64, fix round 10, K5175): the reading-pipeline transcribe fixtures carry the real answer's shape (asked, sent, owed) and point at store-assembly transcribe-answer; test files only. Module tests 536 run, 535 pass, 0 fail, 1 todo. Checks format, architecture, coverage (62/62), words, fixtures (0 failures), ownership all clean. Record: build/jobs/T51/reading-pipeline.md J8. Note: store-assembly t42:267 stays red until EXTRACTION #49 (see REPORT).
