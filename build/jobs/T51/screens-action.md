@@ -688,3 +688,21 @@ Tests: new `fix10-rewalk.test.mjs` (6: R6/R45, R56, R57/R20, R56/R53, R56 ×2). 
 Checks: screens-action suite 316 of 316 (`node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/screens-action/*.test.mjs`); `checks/run.mjs`: format 0, architecture 0, coverage 7084 of 7084, words 0 failures (marker 0); fixtures 89 failures, none in screens-action; `setup-words/build.mjs --check`: stale-rows note only; ownership 0.
 
 Size (session_01ReWzbcE2jDSepbus9xYfCv): test runs 6, module lines 5261
+
+## J48 · COMPLETE
+
+COMPLETE (SCREENS-ACTION #27, B55; commit d8e61f87ff on job/T51/screens-action; tranche/T51 9c236df30b merged). Details in my record, "Round 17".
+
+Changed (each test red at the walker's case, then green):
+- N8 matter.mjs:534: escalationopen and declinetoescalate only when the determination has a noncompliant standard; otherwise the existing `unavailable` rows. Control: noncompliant draws both.
+- N5 matter.mjs:188: the body choice reads office, institution, body, movement; a person is not offered.
+- N3 request.mjs (noBody, the fold): no body held (directory read whole) draws state.empty and the places door below it for an administrator. A truncated read says nothing.
+- Plan plan.mjs:198: the design key action-plans.says.phase_addresses_someone, never the plane's not_met judgement.
+- N7 actionnew.mjs:174, start-send.mjs:213: the owner's reasons are drawn alone, not under the code's sentence that ends "leave it out"; no reasons keeps the code's sentence.
+Suite: screens-action 316 of 316 (6 new in fix10-rewalk.test.mjs; fix2-t51, actionnew-fix, actionnew, fix10-t51, send-t51 updated for N7 and the design key). checks/run.mjs: format 0, architecture 0, coverage 7084/7084, words 0 (marker 0); fixtures 89 failures, none in screens-action; ownership 0; setup-words --check: stale-rows note only.
+
+Two REPORTs:
+1. Your note "new words by localize" cannot be done in this module: checks/words.mjs fails a localize call in a drawn-screen module (marker 2 failures when I tried), and R19 says the module holds no English. I used existing keys only. Owed to the design: N3's sentence "no body is held, and where one is added" (K5285, I draw state.empty meanwhile); N7's head over the owner's reasons, and refusal.ACTION_BASIS_REFUSED should lose "Choose again, or leave it out."
+2. action-grammar, grammar.mjs:182-185: the finding's English ("ZERO inquiries ... action_basis legs of kind advances ... (DEC-13)") is plane jargon, not localized. I draw it unchanged; the walker's red test (no /ZERO|action_basis|legs of kind/) can pass only when action-grammar words it.
+
+Size (session_01ReWzbcE2jDSepbus9xYfCv): test runs 6, module lines 5261
