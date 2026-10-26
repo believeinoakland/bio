@@ -10,3 +10,4 @@ K5298 · the alpha cut's checklist (`walk-T51-alpha/alpha-cut.md`) and the hando
 K4976 · the process tool: a quiet or dropped job is `proc status` QUIET and the platform's child-session event (civicos-process mechanics §5.4); RUNNING retired with the mailbox
 K5340 · done: the process redesign adopted and `tranche/T51b` cut; T51b's aim in `rulings-product/scope.md` (K5336, K5337), its open acts in `plan/T51b-R1.md`
 K5341 · done: civicos-process mechanics §4, §10 and `proc` (PR #11)
+K5342 · done: requirements and next.md (BOB's)
