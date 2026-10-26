@@ -2,6 +2,13 @@
 
 **Status** · session_01Tu7DPfm2DwNJsuukT5fZvH · depth 2 · RUNNING until 2026-10-26T08:48:10Z (users of screens-daily) · handled B47
 
+## Completion (SCREENS-DAILY #25, B48: CHANGE, K5267; plan item 135 (1))
+
+Merged `tranche/T51` (RETRIEVAL #32 on it). **F-B10 (a):** the real passage route's `widen` is now read (`finder-states.mjs` no-result branch: the partial sentence and its heading are drawn when either route offers a wider reading above 0). Test, the walker's case over the real plane (`round10.test.mjs`, K5267): `household zzzqqq`, words held only in passages: `meaningrows` answers total 0 and `widen.total` above 0, `search` answers none; the screen draws `screen.finder.noresult.partial`, not the no-match sentence (red on the earlier code, green); control: `qqqxxx zzzqqq` draws no match. The earlier scripted test now asserts the same.
+**REPORT / question for BOB (wording, outside my paths):** the passage route's `widen.total` counts passages (`retrieval/index.mjs:988`, meaningrows' count), but `screen.finder.widen` says "Documents holding at least one of the words: {n}" (`setup-words/rows.mjs:1887`). I therefore draw the passage reading's partial sentence and heading and withhold the count line (the fields route's count, documents, is still drawn as before). A sentence for a passage count (`{n} passages ...`) is a design row; with one, the count line can be drawn for this route too.
+Suite: module 319 tests, 315 pass, 4 fail (A-06 as above, unchanged: R75 x2, R85 x2). Users of the impact run (120 files): 714 pass, 0 fail; the run hit the 30-minute limit during `plane/g83-location.test.mjs`, which passes alone (15 of 15). `checks/run.mjs`: format 0, architecture 0, words 0, fixtures none in my files, coverage of my module 104 of 104 (8 failures listed are other modules' ids from the merge); ownership 0.
+Size (session_01Tu7DPfm2DwNJsuukT5fZvH): test runs 30, module lines 4360
+
 ## Completion (SCREENS-DAILY #25, B47: fix round 10, plan item 134; K5265)
 
 Merged `tranche/T51` first (twice: at start, and again before the impact run). Entries applied: A-02, A-17, F-B9, F-B10 (a); one flaw of my own found and fixed (Since you last looked). New tests in `round10.test.mjs`; no generated artifact edited. Each test seen red against the tranche's code (the changed source files swapped back for the run), then green.
