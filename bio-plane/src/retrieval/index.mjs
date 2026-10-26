@@ -23,7 +23,7 @@ import { observationLogOf, OBSERVATION_STATES, DEFINITIVE_STATES, CONTENT_AXIS_S
 import * as QL from "../query.mjs";
 import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MAX,
          meaningVocabulary, MEANING, cachedNotes, MEANING_AXIS_CAP } from "../query.mjs";
-import { localFactsOf } from "../local-facts/index.mjs";
+import { localFactsOf, TEAM_ZONE_PATH } from "../local-facts/index.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { normalizeType } from "../record-grammar/types.mjs";
 import { routeFinding } from "../provenance-routes/index.mjs";
@@ -480,8 +480,9 @@ export class Retrieval {
     return rows.length;
   }
 
-  /** R69: the time zone that governs on this instance: local-facts' governing value (its R2) for the active profiles'
-   *  `time_zone`, else the active profiles' own (`jurisdictions` R41, through their combined view), else null. Two
+  /** R69: the time zone that governs on this instance: the team's own zone when the team stated one (local-facts R21),
+   *  else local-facts' governing value (its R2) for the active profiles' `time_zone`, else the active profiles' own
+   *  (`jurisdictions` R41, through their combined view), else null. Two
    *  profiles governing different zones govern none. Never throws. `{why: true}` answers `{zone, source, why}` instead
    *  of the zone alone (G62's logging): `source` is `local-facts` or `profiles` (null with no zone) and, with no zone,
    *  `why` a code, `no_profiles`, `profiles_disagree` or `no_zone_stated` (null with one); no sentence. */
@@ -490,19 +491,36 @@ export class Retrieval {
     return why === true ? r : r.zone;
   }
 
+  /* local-facts' instance, made on its first use; its construction creates and declares its tables, a write. With
+     `teamOnly` it is made only where its table exists: a team's zone is stated into that table (local-facts R21), so a
+     database without it has no stated zone to read, and the read writes nothing (R32). Not cached while the table is
+     absent, so a zone stated later is read. */
+  #localFactsFor(teamOnly) {
+    if (this.#localFacts !== undefined) return this.#localFacts;
+    if (!this.#host) { this.#localFacts = null; return null; }
+    if (teamOnly && !this.#rows(`SELECT 1 AS n FROM sqlite_master WHERE type='table' AND name='local_fact_acts'`).length) return null;
+    this.#localFacts = localFactsOf(this.#host);
+    return this.#localFacts;
+  }
+
   #zoneRead() {
     const found = (zone, source) => ({ zone, source, why: null });
     const none = (why) => ({ zone: null, source: null, why });
     let ids = null;
     try { ids = this.record.getSetting("jurisdiction_profiles"); } catch { ids = null; }
-    if (!Array.isArray(ids) || !ids.length) return none("no_profiles");
     const ok = (z) => (typeof z === "string" && z !== "" ? z : null);
     try {
-      if (this.#localFacts === undefined) {
-        this.#localFacts = null;
-        if (this.#host) this.#localFacts = localFactsOf(this.#host);
+      /* local-facts R21: a zone the team stated governs first, with or without an installed place profile */
+      const lf = this.#localFactsFor(true);
+      if (lf && typeof lf.factStatus === "function") {
+        const team = lf.factStatus({ path: TEAM_ZONE_PATH });
+        const stated = team && team.ok !== false && team.governs && team.governs.origin === "corrected" ? ok(team.governs.value) : null;
+        if (stated) return found(stated, "local-facts");
       }
-      const lf = this.#localFacts;
+    } catch { /* fall through to the profiles */ }
+    if (!Array.isArray(ids) || !ids.length) return none("no_profiles");
+    try {
+      const lf = this.#localFactsFor(false);
       if (lf && typeof lf.factStatus === "function") {
         const zones = new Set();
         for (const id of ids) {
