@@ -13,11 +13,19 @@ import { word, localize } from '../setup-words/index.mjs';
 
 const at = (fn, region) => `src/credentials/index.mjs ${fn} > ${region}`;
 
+/* R38 (F3; K1881, K1934 (2)): the sign-in window's bounds, BOB's under K1881. Refused attempts are estimated per source
+   and per role over any 10 minutes by a two-bucket sliding window (capture R31's form); at `perSource` for the source,
+   or `perRole` for the role, the next attempt is paused. `SIGN_IN_STATED` is the bound as the pause states it, composed
+   from the same constants. Here, not in index.mjs, so the pause's words can read it without an import cycle. */
+export const SIGN_IN_WINDOW = Object.freeze({ perSource: 10, perRole: 10, windowMs: 10 * 60 * 1000 });
+export const SIGN_IN_STATED = word("credentials.refused_attempts_place", { per_source: String(SIGN_IN_WINDOW.perSource), per_role: String(SIGN_IN_WINDOW.perRole), window_ms: String(SIGN_IN_WINDOW.windowMs / 60000) });
+
 /* (T49; N1075, K3269) The words of `words.json` (`docs/development/ux-substrate/screens/words.json`) this module's
    refusals carry, each `en` verbatim, read by key: the translation of each of the five rows that file keys is the word
-   itself, never a copy. `{time}` in SIGN_IN_PAUSED's is left for the screen. */
+   itself, never a copy. SIGN_IN_PAUSED's `{stated}` is filled here with the bound as R38 states it (`SIGN_IN_STATED`,
+   DEC-436); no time is stated, since neither tells which count was full. */
 export const CREDENTIALS_WORDS = Object.freeze({
-  'refusal.SIGN_IN_PAUSED': word('refusal.SIGN_IN_PAUSED', { time: '{time}' }),
+  'refusal.SIGN_IN_PAUSED': word('refusal.SIGN_IN_PAUSED', { stated: SIGN_IN_STATED }),
   'refusal.NOT_SIGNED_IN': word('refusal.NOT_SIGNED_IN'),
   'refusal.RECOVERY_REFUSED': word('refusal.RECOVERY_REFUSED'),
   'refusal.CURRENT_PASSWORD_WRONG': word('refusal.CURRENT_PASSWORD_WRONG'),
