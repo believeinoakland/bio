@@ -543,7 +543,8 @@ test("R3, C75: forwarding is a choice of the group's members; forwarding to ones
   const handles = roster.filter((m) => m.status === "active" && m.handle).map((m) => m.handle);
   assert.ok(handles.includes("mai") && handles.includes("ana"), "the real roster holds both");
   assert.ok(roster.some((m) => m.status !== "active"), "control: the roster holds one who is not a choice (invited, not yet a member)");
-  assert.deepEqual(choice.querySelectorAll("option").map((o) => o.getAttribute("value")).filter(Boolean), handles, "the group's active members who have a handle");
+  const ids = roster.filter((m) => m.status === "active" && m.handle).map((m) => m.member_id);
+  assert.deepEqual(choice.querySelectorAll("option").filter((o) => o.getAttribute("value")).map((o) => [o.getAttribute("value"), o.textContent.trim()]), ids.map((id, i) => [id, handles[i]]), "the group's active members who have a handle: each by her member id, named by her handle (A-02)");
   const none = await press(p, "taskforward");
   assert.equal(p.byOp("taskforward").length, 0, "no one chosen, nothing sent");
   assert.equal(beside(p, none), word("screen.queue.fieldfirst"));

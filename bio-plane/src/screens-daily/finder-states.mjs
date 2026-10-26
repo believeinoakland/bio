@@ -107,9 +107,18 @@ export function finderStates() {
     const scope = scopeOf(view);
     const w = q.split(/\s+/).filter(Boolean);
     const plain = w.every(word);
-    const flat = q.replace(/"[^"]*"/g, '""');
-    const written = plain ? null : /passage:/.test(flat) && flat.split(/\s+/).every(function (t) { return /^passage:/.test(t); }) ? "passages" : "fields";
-    const want = plain ? ["fields", "passages", "subjects"] : [written];
+    // F-B9: the language's tokens: a term (a word, `name:value`, a quoted phrase, `name:"a phrase"`), an operator or a parenthesis. A query with no
+    // field term and no `passage:` term is asked of the passages too, each term as a passage term and the operators as written; one of passage
+    // terms alone is the passages' alone; one with a field term is the fields' (an OR never joins the routes, retrieval R88).
+    const toks = q.match(/[^\s()"]*"[^"]*"|[()]|[^\s()"]+/g) || [];
+    const operator = function (t) { return /^(AND|OR|NOT|NEAR(\/\d+)?|[()])$/.test(t); };
+    const terms = toks.filter(function (t) { return !operator(t); });
+    const sound = (q.split('"').length - 1) % 2 === 0 && terms.length > 0;
+    const passageTerm = function (t) { return /^passage:/.test(t); };
+    const fieldTerm = function (t) { return /^[^"\s]+:/.test(t) && !passageTerm(t); };
+    const written = plain ? null : !sound ? "fields" : terms.every(passageTerm) ? "passages" : terms.some(fieldTerm) || terms.some(passageTerm) ? "fields" : "words";
+    const want = plain ? ["fields", "passages", "subjects"] : written === "words" ? ["fields", "passages"] : [written];
+    const asPassages = toks.map(function (t) { return operator(t) ? t : "passage:" + t; }).join(" ").replace(/\( /g, "(").replace(/ \)/g, ")");
     const start = function (route, op, query) {
       if (ui["route:" + route] && ui["route:" + route].key === key) return;
       ui["route:" + route] = { key: key, state: "loading", value: null };
@@ -122,7 +131,7 @@ export function finderStates() {
     };
     const extra = scope ? { scope: scope } : {};
     if (want.indexOf("fields") >= 0) start("fields", "search", Object.assign({ q: plain ? w.join(" ") : q, limit: "50", snippet: "160" }, extra));
-    if (want.indexOf("passages") >= 0) start("passages", "meaningrows", Object.assign({ q: plain ? w.map(function (x) { return "passage:" + x; }).join(" ") : q, rows: "passage", limit: "200", snippet: "160" }, extra));
+    if (want.indexOf("passages") >= 0) start("passages", "meaningrows", Object.assign({ q: plain ? w.map(function (x) { return "passage:" + x; }).join(" ") : written === "words" ? asPassages : q, rows: "passage", limit: "200", snippet: "160" }, extra));
     if (want.indexOf("subjects") >= 0) start("subjects", "subjectsnamed", { q: w.join(" "), limit: "50" });
     const f = mine(view, "fields"), p = mine(view, "passages"), s = mine(view, "subjects");
     const drawn = [f, p, s].filter(Boolean);
@@ -206,11 +215,15 @@ export function finderStates() {
     if (nothing) {
       // R12: no result: the words searched, what search covers, and "Capture it".
       // R78: when the wider reading finds documents (`widen.total` above 0) the partial match is told apart from "nothing matches".
-      const widen = f && f.value && f.value.widen;
-      const wider = widen && typeof widen.total === "number" && widen.total > 0;
+      // F-B10 (a): the wider reading is the plane's of either route that answered one: the fields route's first, else the passages route's.
+      // The fields route counts documents, which the count line says; the passages route counts passages, so its reading draws the partial
+      // sentence and no document count (a count of another unit under "Documents holding ..." would be false).
+      const reading = function (r) { const x = r && r.state === "ok" && r.value && r.value.widen; return x && typeof x.total === "number" && x.total > 0 ? x : null; };
+      const widen = reading(f);
+      const wider = !!(widen || reading(p));
       return scopes + '<div class="mk-note" data-state="empty"><p><b>' + (wider ? cs.w("screen.finder.noresult.partial", { q: q }) : cs.w("screen.finder.noresult", { q: q })) + "</b> " + cs.w("screen.finder.covers") + "</p>"
         + '<p class="mk-acts"><a class="cs-btn" data-tone="quiet" data-nav href="/app/capture">' + cs.w("screen.finder.captureit") + "</a></p></div>"
-        + (wider ? '<h3 class="mk-h2">' + cs.w("screen.finder.partial.head") + '</h3><p class="mk-note">' + cs.w("screen.finder.widen", { n: String(widen.total) }) + "</p>" : "");
+        + (wider ? '<h3 class="mk-h2">' + cs.w("screen.finder.partial.head") + "</h3>" + (widen ? '<p class="mk-note">' + cs.w("screen.finder.widen", { n: String(widen.total) }) + "</p>" : "") : "");
     }
     const total = f && f.state === "ok" ? "" : "";
     return scopes + fieldsSec + passagesSec + subjectsSec + total + (drawn.length > 1 || plain ? '<p class="mk-small muted">' + cs.w("screen.finder.route.apart") + "</p>" : "") + cross;
