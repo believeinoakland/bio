@@ -163,3 +163,19 @@ Deferred, with why
 - Retired phrases still in the golden and in other modules' text (action_basis[, (DEC-14), names no earlier, is not a sha256 hash) are not in REWORDED, because they remain in those texts.
 
 Size (session_018nYF1qKRjkKTcC4XS3jWuZ): test runs 9, module lines 2576
+
+## J9 · REPORT
+
+Found outside my paths (K5175: reported the day found). Three items, none edited by me.
+
+1. The leg-finding messages of other modules still name fields. Each one starts with the label I now hand them ("basis leg N", was action_basis[N], so the label is plain), then the field: "{label}.{field} '{value}' ...".
+   - bio-plane/src/inquiry-grammar/grammar.mjs:1338 (leadLegFindings: "{label}.{field} '{v}' is a LEAD ..."; field is target or kind).
+   - bio-plane/src/connections/checks.mjs:309 and :318 (themeLegFindings: "{label}.{field}" and "{label}.{key} claims the leg through a THEME").
+   Owners: inquiry-grammar and connections. R30 of action-grammar is met at its own labels; the ".field" suffix needs their words.
+
+2. Orphan words rows in setup-words still hold the retired codes. action-grammar no longer reads refusal.OUTCOME_NOT_IN_VOCABULARY or refusal.DECISION_WITHOUT_OUTCOME (I moved both translations to localize ids under action-grammar.checks.an_outcome_is_one_of and action-grammar.checks.a_decision_carries_its_outcome, plain English). The rows still say none_exists / none_stated:
+   - bio-plane/src/setup-words/rows.mjs:13188 and :13422
+   - docs/development/ux-substrate/screens/words.json:91772 and :93410
+   Owner: setup-words. They can be retired or reworded; nothing of action-grammar's pins them now.
+
+3. The format check fails on BOB's file, not mine: build/rulings.md:5293 (K5300 records Bob's approval of a refused act with no standing-list decision line, §16). `node checks/format.mjs /home/user/bio` reports 1 failure; the other 178 modules pass.
