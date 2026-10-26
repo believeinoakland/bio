@@ -1,0 +1,61 @@
+# Deletes branches that hold nothing `main` lacks (bio K5300, Bob: "A").
+# Sessions cannot delete refs (their git proxy answers 403), so they accumulated: 2,473 by T51.
+# Started by pushing a branch `prune/<anything>` whose tree holds `build/plan/prune-request.json`:
+#   {"list": "<path to a TSV of <ref>\t<sha>[\t...] lines>", "limit": <max deletions>, "dry_run": true|false}
+# Each listed ref is deleted only if ALL hold, checked here at run time, never trusted from the list:
+#   - it is not protected (main, snapshot/*, study/*, mail/*, dist/*, prune/*);
+#   - it is not the head of an open pull request;
+#   - it still points at the listed sha (a ref that moved since the census is skipped);
+#   - GitHub's compare of main...<sha> answers `behind` or `identical` (main already holds every commit).
+# The run then deletes its own trigger branch. The TSV, committed, is the record that recreates any ref.
+name: prune-branches
+on:
+  push:
+    branches: ['prune/**']
+permissions:
+  contents: write
+  pull-requests: read
+concurrency:
+  group: prune-branches
+  cancel-in-progress: false
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: build/plan
+      - name: Prune
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          TRIGGER: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          req=build/plan/prune-request.json
+          list=$(jq -r .list "$req"); limit=$(jq -r '.limit // 0' "$req"); dry=$(jq -r 'if .dry_run == false then "false" else "true" end' "$req")
+          [ -f "$list" ] || { echo "no list $list"; exit 1; }
+          echo "list=$list limit=$limit dry_run=$dry"
+          gh api "repos/$REPO/pulls?state=open&per_page=100" --paginate -q '.[].head.ref' > open-heads.txt
+          deleted=0; skipped=0
+          while IFS=$'\t' read -r ref sha _; do
+            [ -n "$ref" ] || continue
+            [ "$limit" -gt 0 ] && [ "$deleted" -ge "$limit" ] && break
+            case "$ref" in main|snapshot/*|study/*|mail/*|dist/*|prune/*) echo "SKIP protected $ref"; skipped=$((skipped+1)); continue;; esac
+            if grep -Fxq "$ref" open-heads.txt; then echo "SKIP open PR $ref"; skipped=$((skipped+1)); continue; fi
+            cur=$(gh api "repos/$REPO/git/ref/heads/$ref" -q .object.sha 2>/dev/null || true)
+            if [ -z "$cur" ]; then echo "SKIP gone $ref"; skipped=$((skipped+1)); continue; fi
+            if [ "$cur" != "$sha" ]; then echo "SKIP moved $ref ($cur != $sha)"; skipped=$((skipped+1)); continue; fi
+            st=$(gh api "repos/$REPO/compare/main...$sha" -q .status 2>/dev/null || echo error)
+            case "$st" in behind|identical) ;; *) echo "SKIP not in main ($st) $ref"; skipped=$((skipped+1)); continue;; esac
+            if [ "$dry" = "true" ]; then echo "WOULD DELETE $ref $sha ($st)"; else gh api -X DELETE "repos/$REPO/git/refs/heads/$ref" && echo "DELETED $ref $sha ($st)"; fi
+            deleted=$((deleted+1))
+          done < "$list"
+          echo "RESULT: $( [ "$dry" = "true" ] && echo would-delete || echo deleted ) $deleted, skipped $skipped"
+      - name: Remove the trigger branch
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X DELETE "repos/${{ github.repository }}/git/refs/heads/${{ github.ref_name }}" || true
