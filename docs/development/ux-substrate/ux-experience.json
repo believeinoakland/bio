@@ -4934,14 +4934,14 @@
   },
   {
    "id": "UC-135",
-   "name": "Add the second administrator and record who holds hosting access",
+   "name": "Add another administrator; the hosting account recorded at setup",
    "layer": "Cross-cutting (membership, setup, assistant, attention)",
    "function": "Membership",
    "audience": [
     "founder",
     "administrator"
    ],
-   "goal": "Reach the two-administrator floor and note who holds the hosting account.",
+   "goal": "Add an administrator when the team wants one (a team may run with one, DEC-134); who holds the hosting account is recorded at setup, never asked here.",
    "trigger": "Setup.",
    "constructs": [
     "administrator",
@@ -5933,8 +5933,8 @@
      "basis": "fixed"
     },
     {
-     "step": "Record who holds hosting access",
-     "whoIsActing": "the group, asked when the second administrator is added",
+     "step": "Record who holds the hosting account (at setup, DEC-134)",
+     "whoIsActing": "the founder, asked at setup; never asked again when an administrator is added (member-roster R8)",
      "whatTheyKnow": "Hosting access is outside the app.",
      "decisionTheyMake": "Whom to record.",
      "whatCanGoWrong": [
@@ -5943,7 +5943,7 @@
      "howLong": "Minutes.",
      "handoffTo": "administrators",
      "feelingRisk": "None named in canon.",
-     "src": "membership R11",
+     "src": "membership R11, moved to setup by DEC-134; member-roster R8",
      "basis": "fixed, with open points listed",
      "openInThisStep": [
       "What the group is told about why this matters (the hosting account is the remedy against the founder)."
