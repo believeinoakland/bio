@@ -228,3 +228,7 @@ Fix round 10 batch 4 done: fixtures entitiesWorld, namingInRefused, unreadable p
 - `build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178, affected test files 0 of 2967.
 
 Size (session_01XoHLpj87gCyr4R1nEXhbe7): test runs 4, module lines 2598
+
+## J13 · COMPLETE
+
+B13 (fix round 10, K5207) done and pushed at ee5fb20da0. entitieskind fixture in bio-plane/test/m/entities/fixtures.mjs (real entitiesOfKind over two bodies), tested in fixtures.test.mjs (R51), red then green on purpose. entities tests 165/0; format, architecture, coverage 65/65, words, fixtures, ownership all 0 failures. Other findings (screens-publish fixture, screens-inquiry resolution stand-ins, other modules' coverage and reds) are in my record. Size: test runs 4, module lines 2598.
