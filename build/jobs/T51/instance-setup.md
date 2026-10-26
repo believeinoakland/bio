@@ -490,3 +490,18 @@ Fix round 10 (K5208): `groupIdentityAnswer()` published. The fixture is the modu
 **Tranche.** Branch fast-forwarded to `origin/job/T51/instance-setup`, and `origin/tranche/T51` merged in before `mail start` (no rebase).
 
 Size (session_01RYdDdffUXFJqk92FYWoDpE): test runs 6, module lines 3880
+
+## J31 · COMPLETE · re B25
+
+Re CHANGE B25 and RESUME B26 (K5217): origin/tranche/T51 merged into job/T51/instance-setup (merge commit 1136842447, no rebase). COMPLETE stands with `groupIdentityAnswer()` published (J30); nothing else changed.
+
+**Re-run after the merge (absolute root `/home/user/bio`).**
+- `bio-plane/test/m/instance-setup/*.test.mjs`: 250 tests, 250 pass, 0 fail, 0 cancelled.
+- `checks/format.mjs`: 178 modules, 0 failures. `checks/architecture.mjs instance-setup`: 36 product files, 0 failures.
+- `checks/coverage.mjs instance-setup`: 78 of 78 live ids named by a test, 0 failures.
+- `checks/ownership.mjs instance-setup <merge-base with tranche> HEAD`: 3 files (the two fixture files and my record), 0 failures.
+- `checks/fixtures.mjs /home/user/bio instance-setup --list`: 0 failures; accepted 2 (`fixture.mjs:190`, `:201`), unchanged.
+- `checks/run.mjs /home/user/bio`: words 19247, unchanged. 16 failures this time (15 before the merge); none in instance-setup's files. The three naming instance-setup are other modules' hand-built answers, as reported in J30 (interface-shell harness.mjs:89, screens-inquiry fixtures.mjs:120, screens-settings updates.test.mjs:136).
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: see impact line in the output; the installer-facing tests were run before the merge (13 failing, the same names on the tranche tip, not this round).
+
+Size (session_01RYdDdffUXFJqk92FYWoDpE): test runs 7, module lines 3880
