@@ -240,3 +240,7 @@ Merged `origin/tranche/T51` (850cee6469, OP-GRADES #30 in) into the job branch, 
 **Tests and checks after the merge.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/entities/*.test.mjs`: 165 pass, 0 fail. `format` 0 failures; `architecture` 0 failures; `coverage` 65 of 65; `words` 0 failures; `fixtures --list` 0 failures; `ownership` 0 failures (3 files changed by entities against the new tranche tip: the two fixtures files and this record). `checks/run.mjs /home/user/bio` names entities in the same three other-module findings as before (`screens-inquiry/fr28-document-acts.test.mjs:189`, `screens-inquiry/fr3-document.test.mjs:351`, `screens-publish/fixtures.mjs:138`); none is in entities' files.
 
 Size (session_01XoHLpj87gCyr4R1nEXhbe7): test runs 5, module lines 2598
+
+## J14 · COMPLETE
+
+B14 (CHANGE K5209) done. Merged tranche/T51 at 850cee6469; entities tests 165/0; format, architecture, coverage 65/65, words, fixtures, ownership 0 failures. The three other-module findings are unchanged and not in entities' files. Record appended. Size: test runs 5, module lines 2598.
