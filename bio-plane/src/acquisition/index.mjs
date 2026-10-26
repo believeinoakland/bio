@@ -2659,7 +2659,7 @@ export function openCaptures(store, { by = null, now = undefined } = {}) {
   try {
     if (typeof by !== "string" || !by.trim() || isMachineIdentity(by) || !store || typeof store.liveCaptureSessions !== "function") return none;
     const nowMs = typeof now === "string" && ISO_TS_RE.test(now) ? Date.parse(now) : Number.isFinite(Number(now)) && now !== null && now !== undefined ? Number(now) : instantOf(store);
-    const live = store.liveCaptureSessions(stampSecond(nowMs));
+    const live = store.liveCaptureSessions(nowMs);
     if (!Array.isArray(live)) return none;
     const mine = [];
     const asking = memberOfSpelling(by);

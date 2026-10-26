@@ -4,6 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, run, page, text, HTML, stamp } from "./fixture.mjs";
+import { openCaptures } from "../../../src/acquisition/index.mjs";
 
 const T0 = Date.parse("2001-01-01T00:00:00Z");
 const HOUR = 60 * 60 * 1000;
@@ -45,4 +46,15 @@ test("R124 (K5215): with the instance clock pinned, a capture's `retrieved` and 
   const before = Date.now();
   assert.ok(Date.parse(wall.body.document.retrieved) >= Math.floor(before / 1000) * 1000 - 1000, "control: retrieved is the wall clock when nothing is pinned");
   assert.notEqual(wall.body.document.retrieved, stamp(T0), "control: not the pinned instant");
+});
+
+test("R124 (K5218): openCaptures hands the store the instance clock in milliseconds, pinned or not, as every other call does", () => {
+  const seen = [];
+  const spy = { liveCaptureSessions: (at) => { seen.push(at); return []; }, env: { BIO_NOW_MS: String(T0) } };
+  openCaptures(spy, { by: "m1" });
+  openCaptures(spy, { by: "m1", now: "2001-01-01T00:00:05Z" });
+  assert.deepEqual(seen, [T0, Date.parse("2001-01-01T00:00:05Z")], "the pinned instance clock, and a handed ISO instant read as milliseconds");
+  const plain = [];
+  openCaptures({ liveCaptureSessions: (at) => { plain.push(at); return []; }, env: {} }, { by: "m1" });
+  assert.equal(typeof plain[0], "number", "control: with none pinned, the wall clock in milliseconds");
 });
