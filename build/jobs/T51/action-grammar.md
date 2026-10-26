@@ -214,3 +214,21 @@ Size (session_01BES6yxyp2fZZgKKdbAsgEc): test runs 6, module lines 2576
 ## J11 · REPORT
 
 Correction to J10: the ownership line was run before my commit, so it said 1 file. Rerun after the commit: 7 files changed by action-grammar (6 module files and this record), 0 failures.
+
+## Fix round 10 (K5310, ACTION-GRAMMAR #17): R30, R6, R7 after INQUIRY-GRAMMAR #15's R69
+
+Found: the label this module hands the lead and theme checkers was already the plain `basis leg {i}` (no `action_basis[i]` path reaches them on this tranche). Inquiry-grammar's R69 now words its finding around that label ("the target on basis leg 0 ('LEAD-…') is a LEAD …"), so three tests were red only because they pinned the old provider wording: R30's corpus test (`^basis leg 0` regex), R6 and R7 (golden.json's leg-lead and leg-theme entries, copied provider sentences).
+
+Changed
+- `bio-plane/src/action-grammar/grammar.mjs` (actionBasisFindings, ~l.156): the label is now `localize('action-grammar.grammar.basis_leg_label', 'basis leg {i}', { i })`, one sentence people read, handed to `leadLegFindings` and `themeLegFindings`; same words as before.
+- `bio-plane/test/m/action-grammar/fixture.mjs`: `PROVIDER_LEG_DOCS`, `providerLegFindings(id)`: the provider's own output (`leadLegFindings`, `themeLegFindings`) for the same leg and the same label, never a copied sentence (K3810).
+- `bio-plane/test/m/action-grammar/grammar.test.mjs`: R6 (the corpus loop) and R7 (the audit loop) compare the leg-lead and leg-theme documents with `providerLegFindings`, every other document still with golden.json; R30 asserts the messages equal the provider's, hold the label (by `localize` equality) and match no field/code pattern.
+- golden.json untouched: its leg-lead and leg-theme entries are no longer read by any test.
+
+Red then green: before the change R6, R7 and R30 failed (fail 3 of 84; the three named above); after, 84 of 84 pass, exit 0 (`node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/action-grammar/*.test.mjs`).
+
+Checks (/home/user/bio): `checks/run.mjs`: format 0, architecture 0, no line names action-grammar (coverage 7 and stub 89 failures are other modules'); coverage action-grammar 30 of 30; `words.mjs action-grammar` 0 failures; `setup-words/build.mjs --check`: stale-rows note naming my new id `action-grammar.grammar.basis_leg_label` (expected, BOB regenerates); ownership 0 failures.
+
+Fixtures markers: none added (the provider functions are called for real).
+
+Size (session_01QDPfykDfUPkFmsWunhUzxd): test runs 4, module lines 2578
