@@ -895,3 +895,20 @@ COMPLETE (SCREENS-INQUIRY #34), B90 (CHANGE re J61, J62; K5276). Commit 7318e9c3
 - The C-M13 title refusal at `contradiction/index.mjs:2385` is in `contradiction`, not this module.
 
 Size (session_01XPqxHzozhsnQVpVqcbAkKT): test runs 13, module lines 7062
+
+## J64 · REPORT
+
+COMPLETE (SCREENS-INQUIRY #34), B91 (CHANGE re J63; K5279). Commit f8c817ef54 on `job/T51/screens-inquiry`.
+
+**Done**
+- `t51-fix11-b89.test.mjs` no longer hand-builds the `contradictionfacts` answer. The C-M13 test does not read facts, so the override is dropped. `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio screens-inquiry --list` now shows 0 op-table failures and 0 invented answers in my files. The 4 accepted lines are the earlier ones named in the record, and they are not flagged.
+- The C-M13 test still fails on the pre-fix `contradiction.mjs` and passes with the fix.
+
+**REPORT (for BOB to place)**
+- The member-flagged candidate is still hand-built. `contradictioncandidates` (the `answer(c)` helper in `t51-fix11-b89.test.mjs`) carries `flagged_by`, and `bio-plane/test/m/contradiction/fixtures.mjs` publishes no candidate with `flagged_by` (only `candidateReads` and `readRefusals`). The checker does not flag this, but the exact missing fixture is a member-flagged candidate in `candidatesFor`'s answer, for contradiction to publish.
+
+**Checks**
+- Module suite: 601 of 601 pass.
+- Format, architecture, coverage (136 of 136), ownership: 0 failures.
+
+Size (session_01XPqxHzozhsnQVpVqcbAkKT): test runs 17, module lines 7062
