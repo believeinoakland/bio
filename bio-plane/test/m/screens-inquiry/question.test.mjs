@@ -4,8 +4,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { registerDeclaredOps as registerOps } from "../../../src/op-declarations/index.mjs";
 import { boot, ok, refusedIn } from "../interface-shell/harness.mjs";
+import { holdRefusals } from "../hypotheses/fixtures.mjs";
 import { open, storeWorld, WORLD_FOUNDER_HANDLE, main, actsIn, button, fill, press, rawKeys, inquiryMd, INQUIRY_REFS, LEGS, BASIS, plane, says, section, lead, word, day, POLICY,
-  SCREENS, P, Q, D } from "./fixtures.mjs";
+  SCREENS, P, Q, D, ASIDE_TITLE } from "./fixtures.mjs";
 
 /* K4245 (test-support R17): every owner's declarations registered once, before the first read, by the one registrar */
 
@@ -105,7 +106,7 @@ test("R2 R34 Supports lists every passage the question cites from its own legs, 
   assert.equal(cut.querySelector(".cs-grade").getAttribute("data-scale"), "testimony");
   assert.ok(cut.querySelector('a.cs-ref[href="/app/document/INFO-2026-0006"]'));
   const waits = section(p, "screen.question.waits.head");
-  assert.ok(says(waits, "screen.question.waits.setaside", { document: "2024 budget PDF", who: "ben", reason: "wrong year" }));
+  assert.ok(says(waits, "screen.question.waits.setaside", { document: ASIDE_TITLE, who: "ben", reason: "wrong year" }));
   const hunches = section(p, "screen.question.hunches.head");
   assert.ok(says(hunches, "screen.question.hunch.by", { who: "dev" }) && hunches.textContent.includes("Crews close reports when they inspect."));
 });
@@ -481,13 +482,13 @@ test("R2 cite chooses its passage in Find in over the question's project; Find a
 });
 
 test("R2 controls: a hunch, a check and a narrowing with nothing written are refused by their words; a refused act keeps the form", async () => {
-  const p = await open(at, { ...A, plane: { hypothesishold: refusedIn("SOME_REFUSAL", "Write the hunch.") } });
+  const p = await open(at, { ...A, plane: { hypothesishold: ok(holdRefusals().HYPOTHESIS_NO_STATEMENT) } });
   assert.ok(says(await press(p, "hypothesishold"), "screen.question.hunch.empty"));
   assert.ok(says(await press(p, "checkrequest"), "screen.question.check.empty"));
   assert.equal(p.byOp("hypothesishold").length + p.byOp("checkrequest").length + p.byOp("narrow").length, 0);
   fill(p, { "question-hunch": "x" });
   const slot = await press(p, "hypothesishold");
-  assert.ok(slot.textContent.includes("Write the hunch."));
+  assert.ok(slot.textContent.includes(holdRefusals().HYPOTHESIS_NO_STATEMENT.translation), "the refusal in the words the owner gives it");
   assert.equal(p.doc.getElementById("question-hunch").value, "x");
 });
 

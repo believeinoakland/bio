@@ -1221,17 +1221,20 @@ function render(cs, view) {
     }).join("");
     const shown = got.pages.slice(0, page + 1).reduce((s, p) => s + p.rows.reduce((t, r) => t + 1 + (Array.isArray(r.files) ? r.files.length : 0), 0), 0);
     const total = got.pages[page] ? got.pages[page].total : null;
-    const line = total !== null ? W("screen.list.showing", { shown: String(shown), total: String(total) })
-      : got.more ? (pickHeld("screen.document.pick.more") ? W("screen.document.pick.more", { count: String(shown) }) : W("screen.people.more", { n: String(shown) })) : "";
+    /* R137: while a page is unread, nothing read so far matching the text is not "none found": more follow, and the line says so (never `pick.none`) */
+    const unmatched = !!needle && !rows.length && got.state !== "loading";
+    const saysMore = got.more && (total === null || unmatched);
+    const line = saysMore ? (pickHeld("screen.document.pick.more") ? W("screen.document.pick.more", { count: String(shown) }) : W("screen.people.more", { n: String(shown) }))
+      : total !== null ? W("screen.list.showing", { shown: String(shown), total: String(total) }) : "";
     const pager = [...(page > 0 ? [{ value: String(page - 1), key: "document.read.prev", on: false }] : []), ...(got.more ? [{ value: String(page + 1), key: "document.read.next", on: false }] : [])];
-    const none = needle && !rows.length && got.state !== "loading"
+    const none = unmatched && !got.more
       ? `<p class="cs-state" data-state="empty" data-pick-none="1">${pickHeld("screen.document.pick.none") ? W("screen.document.pick.none", { text: needle }) : W("state.empty")}</p>` : "";
     return `<div data-picker="${cs.esc(kind)}"${chosen ? ` data-chosen="${cs.esc(chosen)}"` : ""}><p><b>${W(labelKey)}</b></p>`
       + cs.field("document-pick-find-" + kind, pickHeld("screen.document.pick.find") ? "screen.document.pick.find" : "shell.search",
         { value: needle, typing: (c, v, value) => c.set(findKey, String(value || "")), ...(pickHeld("screen.document.pick.find.help") ? { help: "screen.document.pick.find.help" } : {}) })
       + none + groupHtml
       + (got.state === "loading" ? cs.state({ state: "loading" }, () => "") : got.state === "failed" ? cs.state(got.failed, () => "") : "")
-      + (line || pager.length ? `<div class="mk-small" data-pick-pages="${cs.esc(kind)}">${line ? `<p>${line}</p>` : ""}`
+      + (line || pager.length ? `<div class="mk-small" data-pick-pages="${cs.esc(kind)}">${line ? `<p${saysMore ? ` data-pick-more="1"` : ""}>${line}</p>` : ""}`
         + (pager.length ? cs.checks("document-pick-page-" + kind, "shell.more", pager, { radio: true, redraw: pageKey }) : "") + "</div>" : "")
       + "</div>";
   };

@@ -7,8 +7,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { registerDeclaredOps as registerOps } from "../../../src/op-declarations/index.mjs";
-import { boot, ok, refusedIn, fieldMismatches, collectOwnerRows } from "../interface-shell/harness.mjs";
+import { boot, ok, fieldMismatches, collectOwnerRows } from "../interface-shell/harness.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
+import { holdRefusals } from "../hypotheses/fixtures.mjs";
+import { groundAnswers } from "../inquiry/fixtures.mjs";
 import { open, storeWorld, main, actsIn, button, fill, press, rawKeys, inquiryMd, INQUIRY_REFS, LEGS, BASIS, says, section, word, POLICY, SCREENS, P, Q, D } from "./fixtures.mjs";
 
 /* K4245 (test-support R17): every owner's declarations registered once, before the first read, by the one registrar */
@@ -131,7 +133,7 @@ test("R88 control: a send without about is a mismatch of the owner's declaration
   const row = collectOwnerRows().hypothesishold;
   assert.deepEqual(fieldMismatches({ query: {}, body: { inquiry: Q, kind: "other", statement: "x" } }, row).map((m) => m.field), ["about"]);
   assert.deepEqual(fieldMismatches({ query: {}, body: { inquiry: Q, kind: "other", statement: "x", about: [Q] } }, row), []);
-  const p = await open(at, { ...A, plane: { hypothesishold: refusedIn("BAD_ABOUT") } });
+  const p = await open(at, { ...A, plane: { hypothesishold: ok(holdRefusals().BAD_ABOUT) } });
   fill(p, { "question-hunch": "x" });
   const slot = await press(p, "hypothesishold");
   assert.ok(says(slot, "refusal.BAD_ABOUT"));
@@ -328,16 +330,20 @@ test("R114 pressing Conclude in any state the screen draws either succeeds or na
 /* ------------------------------------------------------------------------------------------------------------------ R117 */
 
 test("R117 a BASIS_REFUSED partition draws the first finding's detail by the refusal's findings, and not the generic sentence; one with no findings draws the generic sentence", async () => {
-  const refused = (findings) => ({ status: 200, json: { ok: true, result: { ok: false, reason: "BASIS_REFUSED", code: "BASIS_REFUSED", ...(findings ? { findings } : {}) } } });
+  /* inquiry's real refusal of a partition that names a leg cutting against the answer: one finding, its detail the owner's own words */
+  const real = groundAnswers().cutsAgainst;
+  const first = real.findings[0];
+  const { findings: _held, ...bare } = real;
   const go = async (answer) => {
-    const p = await open(at, { plane: { inquiryground: answer } });
+    const p = await open(at, { plane: { inquiryground: ok(answer) } });
     assert.ok(main(p).querySelector("[data-state=ask], #state-b"), "state b: the question asks what each passage carries");
     return press(p, "inquiryground", { reason: "my answers" });
   };
-  const named = await go(refused([{ check: "C-25.1", detail: "Say what the first passage carries.", ord: 0 }, { check: "C-25.2", detail: "an unrelated second finding" }]));
-  assert.ok(named.textContent.includes("Say what the first passage carries."), "the first finding's detail");
+  /* fixtures-own: synthetic the second finding is an input added to inquiry's real refusal, so the screen is seen to draw only the first */
+  const named = await go({ ...real, findings: [first, { check: "C-9.9", detail: "an unrelated second finding" }] });
+  assert.ok(named.textContent.includes(first.detail), "the first finding's detail");
   assert.ok(!named.textContent.includes("an unrelated second finding"), "only the first");
   assert.ok(!says(named, "refusal.BASIS_REFUSED"), "not the generic sentence");
-  assert.ok(says(await go(refused(null)), "refusal.BASIS_REFUSED"), "control: no findings, the generic sentence");
-  assert.ok(says(await go(refused([])), "refusal.BASIS_REFUSED"), "control: an empty list, the generic sentence");
+  assert.ok(says(await go(bare), "refusal.BASIS_REFUSED"), "control: no findings, the generic sentence");
+  assert.ok(says(await go({ ...bare, findings: [] }), "refusal.BASIS_REFUSED"), "control: an empty list, the generic sentence");
 });

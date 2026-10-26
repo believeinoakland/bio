@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
 import { importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
+import { rerunPairAnswer } from "../case-import/fixtures.mjs";
 import { open, main, actsIn, button, fill, press, says, section, word, P, Q, Q2 } from "./fixtures.mjs";
 
 /* every owner's declarations, registered once before the first read (test-support R17, K4245) */
@@ -13,6 +14,10 @@ import { open, main, actsIn, button, fill, press, says, section, word, P, Q, Q2 
 
 
 const at = "/app/project/" + P;
+/* case-import's real answers of `rerunpair` (R30): the pairing made, the pairing withdrawn, and the refusal of a finding that is none of the project's */
+const PAIRED = (await rerunPairAnswer()).answer;
+const WITHDRAWN = (await rerunPairAnswer({ withdraw: true })).answer;
+const NOT_OWN = (await rerunPairAnswer({ own: "INQ-2026-9999-none" })).answer;
 const IMPORT = "a".repeat(64);
 const F1 = "INQ-2026-0004-port-paid-less", F2 = "INQ-2026-0005-council-not-told";
 const ref = (f) => importedFindingRef(IMPORT, f);
@@ -72,7 +77,7 @@ test("R107 pairing sends rerunpair with the project, the source finding's refere
   const read = () => ok(RERUN({}, paired ? { findings: [
     { finding: F1, ref: ref(F1), role: "supports", source: { pair: PAIR("B", "B"), lens_statements: [] }, paired: true, pairings: [{ own_finding: Q, pair: PAIR("B", "C"), agree: false }] },
     { finding: F2, ref: ref(F2), role: "supports", source: { pair: PAIR("C", "C"), lens_statements: [] }, paired: true, pairings: [{ own_finding: Q2, pair: PAIR("C", "C"), agree: true }] }] } : {}));
-  const p = await open(at, { plane: { rerunread: read, rerunpair: () => { paired = true; return ok({ ok: true }); } } });
+  const p = await open(at, { plane: { rerunread: read, rerunpair: (r) => { paired = true; return ok(r.body && r.body.withdraw ? WITHDRAWN : PAIRED); } } });
   await tab(p);
   /* control: nothing chosen sends nothing and says so */
   assert.ok(says(await press(p, "rerunpair", { within: rowOf(p, F2) }), "screen.project.cmp_pair_none"));
@@ -99,7 +104,7 @@ test("R107 the refusals of a pairing are drawn by their words with what to do ne
   };
   const member = await draw(refusedIn("PROJECT_ACT_NOT_A_PARTICIPANT"));
   assert.ok(says(member, "screen.project.cmp_refused_member") && says(member, "screen.project.cmp_refused_member_next"));
-  const own = await draw(refusedIn("NO_SUCH_OWN_FINDING", "That is not a finding of this project."));
+  const own = await draw(ok(NOT_OWN));
   assert.ok(says(own, "screen.project.cmp_refused_own") && says(own, "screen.project.cmp_refused_own_next"));
   const other = await draw(refusedIn("NOT_A_RERUN", "This project is declared no rerun of that edition."));
   assert.ok(other.textContent.includes("This project is declared no rerun of that edition."));
