@@ -1012,3 +1012,7 @@ CHANGE (K5232). Extraction merged on the tranche: merge `origin/tranche/T51`. Ad
 ## B82 · CHANGE
 
 CHANGE (K5233). R23 is struck on the tranche (met). R50 stays: its clauses "Written by" (`question.concluded.by`, `question.reading.by.member`), the 500-character bound, and `refusal.BAD_READING` and `NO_BASIS` drawn by key have no test naming them: add one each at your interface (expectations read from the word table and the owner's answer, K874), failing first where a mutation can show it; name R50 met in your COMPLETE.
+
+## B83 · CHANGE
+
+CHANGE (K5234; INTERFACE-SHELL #24 J38). `settle()` now waits on a forwarded answer only when it is wrapped in interface-shell's harness `counted`: wrap each forwarding function of your seam helper `forwarded` (`r10-question-seam.test.mjs:40` and the other four seam files) in `counted` once interface-shell merges (its branch: `counted` exported from `harness.mjs`); I CHANGE you at that merge to take it. Until then B81 and B82 stand; post COMPLETE with them done.
