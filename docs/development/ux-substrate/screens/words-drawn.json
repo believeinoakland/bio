@@ -10286,7 +10286,7 @@
   },
   {
    "key": "queue.signer-self-registered.detail",
-   "en": "A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and withdraw the key; if you did, mark it done.",
+   "en": "A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and revoke the key. If you did, answer that you know about it.",
    "protected": false,
    "note": "DEC-329: B303 (10): queue-producers/index.mjs:1779; DEC-384: B411 T-15: it named a revoke it did not offer, so it says where; the item carries the door queue.signer-self-registered.members"
   },
@@ -20480,7 +20480,7 @@
   },
   {
    "key": "refusal.NO_SUCH_RULE",
-   "en": "No rule in your places' rules states a deadline for this kind of action, so none was set. Pick one of the deadlines your rules do list, in the box below, or see your places' rules. Nothing was written.",
+   "en": "No rule in your places' rules states a deadline for this kind of action, so none was set. Nothing was written.",
    "protected": false,
    "note": "DEC-342: deadline rule missing or unknown for the action's kind; B411 E6: a box to name the deadline and a door"
   },
@@ -42080,7 +42080,7 @@
   },
   {
    "key": "money.index.the_period_states_no_zone",
-   "en": "The period names no time zone, and your team's profiles give none.",
+   "en": "The period names no time zone, and your team has not set one. A member sets it under Settings, Your team.",
    "protected": false,
    "note": "DEC-424: B495 money R29 detail drawn beside MONEY_BAD_PERIOD"
   },
@@ -43316,7 +43316,7 @@
   },
   {
    "key": "screen.timeline.nozone",
-   "en": "Some times here are placed nowhere: your team has not chosen the places whose rules apply, so Civicsmith has no time zone to place them in. An administrator chooses them under Places and languages.",
+   "en": "Some times here are placed nowhere: your team has not set its time zone. A member sets it under Settings, Your team.",
    "protected": false,
    "note": "DEC-435: B523: a hint on Timeline when the team has no active place (zone null); drawn once above the events it touches"
   },
@@ -43529,6 +43529,336 @@
    "en": "Concluded. It becomes a finding once a case that carries it is published.",
    "protected": false,
    "note": "DEC-438: C-M11, B532 (2): a concluded question not yet in a published case"
+  },
+  {
+   "key": "queue.signer-self-registered.known",
+   "en": "I know about this key",
+   "protected": false,
+   "note": "DEC-439: A-03: the answer that ends the item; owed: its op (queue-producers)"
+  },
+  {
+   "key": "screen.setup.zone",
+   "en": "Your team's time zone",
+   "protected": false,
+   "note": "DEC-439: D-B1: the setup step (factconfirm, path @team/time_zone)"
+  },
+  {
+   "key": "screen.setup.zone.help",
+   "en": "Dates and deadlines are counted in it. You can skip this and set it later under Settings, Your team; until it is set, sharing for review, Money and dated searches wait for it.",
+   "protected": false,
+   "note": "DEC-439: D-B1: its help"
+  },
+  {
+   "key": "screen.question.leggrade.head",
+   "en": "What this passage earns",
+   "protected": false,
+   "note": "DEC-439: D-M1, C-M4: the fold on a cited passage; its act waits on BOB naming the op"
+  },
+  {
+   "key": "screen.question.leggrade.help",
+   "en": "Grade how well the copy your team holds shows this passage, up to the most the record allows ({ceiling}), and say why.",
+   "protected": false,
+   "note": "DEC-439: D-M1, C-M4: {ceiling} the record's ceiling, a letter"
+  },
+  {
+   "key": "screen.question.leggrade.act",
+   "en": "Record this grade",
+   "protected": false,
+   "note": "DEC-439: D-M1, C-M4: the act's label until the op is named"
+  },
+  {
+   "key": "screen.case-editor.save",
+   "en": "Save these details",
+   "protected": false,
+   "note": "DEC-439: D-M2: casedraft on the drafted state"
+  },
+  {
+   "key": "screen.case-editor.unsaved",
+   "en": "Changes here are not saved yet.",
+   "protected": false,
+   "note": "DEC-439: D-M2: drawn once a field of the drafted state is edited"
+  },
+  {
+   "key": "act.resolve.label.document",
+   "en": "Find the people and offices it names",
+   "protected": false,
+   "note": "DEC-439: D-M3, C-M7: resolve on Document"
+  },
+  {
+   "key": "screen.document.people.none",
+   "en": "Civicsmith found no name in this document it could match to a person or an office.",
+   "protected": false,
+   "note": "DEC-439: D-M3, C-M7: after resolve finds none"
+  },
+  {
+   "key": "screen.review_copy.save.ready",
+   "en": "The file is ready. Save it to your device.",
+   "protected": false,
+   "note": "DEC-439: D-M4: beside the second button, after \"Save the file\""
+  },
+  {
+   "key": "screen.case-editor.ack.none",
+   "en": "This case states that it leaves nothing material out. Acknowledge that you checked this and agree.",
+   "protected": false,
+   "note": "DEC-439: D-M5: the acknowledgement when nothing is left out"
+  },
+  {
+   "key": "screen.case-editor.ack.none.help",
+   "en": "Say why you agree that nothing material is left out.",
+   "protected": false,
+   "note": "DEC-439: D-M5: its reason field's help"
+  },
+  {
+   "key": "screen.published.verify.detail",
+   "en": "Anyone can check that these files are the ones your team signed, using the signature and the public key shown here. A check proves the files were not changed after signing. It does not prove that what they say is true.",
+   "protected": false,
+   "note": "DEC-439: D-M6 (a): e.verification.detail and the worker's VERIFY_TEXT"
+  },
+  {
+   "key": "screen.published.strength.unrated",
+   "en": "Not graded: no member has graded this yet.",
+   "protected": false,
+   "note": "DEC-439: D-M6 (b): an unrated axis"
+  },
+  {
+   "key": "screen.published.strength.undetermined",
+   "en": "Not known: what it rests on could not be read when the case was published.",
+   "protected": false,
+   "note": "DEC-439: D-M6 (b): an undetermined axis"
+  },
+  {
+   "key": "screen.published.bar.declared",
+   "en": "The standard of evidence this case was held to, as stated when it was published. Each finding below met it.",
+   "protected": false,
+   "note": "DEC-439: D-M6 (c): bar_detail when a bar is declared (K5270)"
+  },
+  {
+   "key": "screen.capture.attest.pending",
+   "en": "The time stamp and the outside archive copy were asked for after the document was kept, and have not answered yet. The document is kept; the proof of when it was kept follows when they answer.",
+   "protected": false,
+   "note": "DEC-439: D-M6 (d): attestNote"
+  },
+  {
+   "key": "screen.document.attest.checked",
+   "en": "Checked by {name}, {date}",
+   "protected": false,
+   "note": "DEC-439: C-M2: a typed page a second member confirmed"
+  },
+  {
+   "key": "screen.contradiction.lead.member",
+   "en": "A member raised this lead. It is not a finding: it asks the team to read both passages and say whether they contradict.",
+   "protected": false,
+   "note": "DEC-439: C-M13: a member-flagged lead"
+  },
+  {
+   "key": "screen.question.yes.setaside",
+   "en": "Set aside: it names passage {n}, which was answered \"No\".",
+   "protected": false,
+   "note": "DEC-439: C-M5: a \"Yes, because of\" overruled; {n} the passage's number"
+  },
+  {
+   "key": "screen.question.reinstate.otherside",
+   "en": "Put it on the other side",
+   "protected": false,
+   "note": "DEC-439: C-M6: the role choice beside Reinstate (citation R23)"
+  },
+  {
+   "key": "screen.question.reinstate.otherside.help",
+   "en": "Reinstate it as cutting against, where it supported, or as supporting, where it cut against.",
+   "protected": false,
+   "note": "DEC-439: C-M6: its help"
+  },
+  {
+   "key": "screen.document.flag.recorded",
+   "en": "Flag recorded. The two passages are set side by side as a lead for the team to read.",
+   "protected": false,
+   "note": "DEC-439: C-M12: after \"Say these two contradict\""
+  },
+  {
+   "key": "screen.document.flag.already",
+   "en": "These two passages are already set side by side as a contradiction. Nothing changed.",
+   "protected": false,
+   "note": "DEC-439: C-M12: the answer's already"
+  },
+  {
+   "key": "screen.document.flags.head",
+   "en": "Flags raised on this document",
+   "protected": false,
+   "note": "DEC-439: C-M12: the list (its read is BOB's to name)"
+  },
+  {
+   "key": "screen.action.law.none",
+   "en": "Your team's places list no law for this kind of action. Name the law yourself: its level and its citation.",
+   "protected": false,
+   "note": "DEC-439: E H1b: on the action page and Request"
+  },
+  {
+   "key": "screen.action.law.level",
+   "en": "Level",
+   "protected": false,
+   "note": "DEC-439: E H1b: state, city, county or federal"
+  },
+  {
+   "key": "screen.action.law.citation",
+   "en": "Citation",
+   "protected": false,
+   "note": "DEC-439: E H1b: as the law cites itself"
+  },
+  {
+   "key": "screen.due-date.nodeadlines.summary",
+   "en": "When your rules list no deadline at all",
+   "protected": false,
+   "note": "DEC-439: the mockup fold"
+  },
+  {
+   "key": "screen.due-date.nodeadlines",
+   "en": "Your places' rules list no deadline for this kind of action. A member can draft one as your team's own rule, under Your team's own rules.",
+   "protected": false,
+   "note": "DEC-439: E H2: drawn when the refusal carries no deadlines"
+  },
+  {
+   "key": "screen.request.office.body",
+   "en": "The body that holds it",
+   "protected": false,
+   "note": "DEC-439: R57, E H1: the Request fold (in place of screen.matter.f.body)"
+  },
+  {
+   "key": "screen.request.office.nobody",
+   "en": "Your team has no body listed yet, so no office can be named here. Bodies come from the places your team chose, under Places and offices.",
+   "protected": false,
+   "note": "DEC-439: N3, R57: a team with no body entity"
+  },
+  {
+   "key": "screen.request.office.undated",
+   "en": "An office named without a Since and an Until is recorded, but it is offered as an addressee only once both are stated.",
+   "protected": false,
+   "note": "DEC-439: R57: an undated office"
+  },
+  {
+   "key": "screen.action.resolution.said.complied",
+   "en": "Resolved: the office complied.",
+   "protected": false,
+   "note": "DEC-439: K12: the outcome drawn back on the action"
+  },
+  {
+   "key": "screen.action.resolution.said.denied",
+   "en": "Resolved: the office denied it.",
+   "protected": false,
+   "note": "DEC-439: K12: the outcome drawn back on the action"
+  },
+  {
+   "key": "screen.action.resolution.said.escalated",
+   "en": "Resolved: it was escalated.",
+   "protected": false,
+   "note": "DEC-439: K12: the outcome drawn back on the action"
+  },
+  {
+   "key": "screen.action.resolution.said.withdrawn",
+   "en": "Resolved: your team withdrew it.",
+   "protected": false,
+   "note": "DEC-439: K12: the outcome drawn back on the action"
+  },
+  {
+   "key": "screen.action.resolution.said.completed",
+   "en": "Resolved: your team carried it out.",
+   "protected": false,
+   "note": "DEC-439: K12: the outcome drawn back on the action"
+  },
+  {
+   "key": "screen.plan.press.empty.role",
+   "en": "State the person's role at the outlet. Nothing was written.",
+   "protected": false,
+   "note": "DEC-439: K4, C-M17: addressee_left_part_empty, {empty} role"
+  },
+  {
+   "key": "screen.plan.press.empty.organisation",
+   "en": "State the outlet. Nothing was written.",
+   "protected": false,
+   "note": "DEC-439: K4, C-M17: {empty} organisation"
+  },
+  {
+   "key": "screen.plan.press.empty.both",
+   "en": "State the outlet and the person's role there. Nothing was written.",
+   "protected": false,
+   "note": "DEC-439: K4, C-M17: {empty} role and organisation"
+  },
+  {
+   "key": "screen.question.carried",
+   "en": "A published case carries this question.",
+   "protected": false,
+   "note": "DEC-439: E I2"
+  },
+  {
+   "key": "screen.start-send.sent.next",
+   "en": "Sent. The action is still planned: open it and move it to active.",
+   "protected": false,
+   "note": "DEC-439: E H2: after \"I have sent it\" (actionmove is on the action page)"
+  },
+  {
+   "key": "refusal.NOT_RENDERABLE",
+   "en": "Civicsmith cannot make a safe view of this kind of file. It is kept as it was handed in. Nothing was shown.",
+   "protected": false,
+   "note": "DEC-439: file-safety (K5272)"
+  },
+  {
+   "key": "refusal.NOT_TEXT",
+   "en": "This file holds no text that can be shown, so no safe view was made. It is kept as it was handed in.",
+   "protected": false,
+   "note": "DEC-439: file-safety (K5272)"
+  },
+  {
+   "key": "refusal.no_sheets",
+   "en": "This spreadsheet holds no sheet to show, so no safe view was made. It is kept as it was handed in.",
+   "protected": false,
+   "note": "DEC-439: file-safety (K5272)"
+  },
+  {
+   "key": "screen.open-file.risk.high.means.picture",
+   "en": "High risk: it opens in the safe view, a safe copy of the picture, until a deeper check passes. Its grade and its place in the record are unchanged.",
+   "protected": false,
+   "note": "DEC-439: B531 (2): a picture"
+  },
+  {
+   "key": "screen.open-file.risk.held.means.picture",
+   "en": "Held: a scanner found something. The original stays closed; the safe copy of the picture, its grade and its place in the record are unchanged.",
+   "protected": false,
+   "note": "DEC-439: B531 (2): a picture"
+  },
+  {
+   "key": "screen.finder.widen.passages",
+   "en": "Passages holding at least one of the words: {n}.",
+   "protected": false,
+   "note": "DEC-439: F-B10 (a): the passage route's widen.total"
+  },
+  {
+   "key": "act.search.label.finder.widen",
+   "en": "Search for any of the words",
+   "protected": false,
+   "note": "DEC-439: F-B10 (a): the act under the widened reading"
+  },
+  {
+   "key": "screen.standard.more.passages",
+   "en": "{n} more passages of this document are not shown.",
+   "protected": false,
+   "note": "DEC-439: B531 (5): in place of screen.timeline.more.people"
+  },
+  {
+   "key": "screen.start-send.risk.door",
+   "en": "State its risk",
+   "protected": false,
+   "note": "DEC-439: J43: the door to the action's risk tier (risk.title stays the field's label)"
+  },
+  {
+   "key": "screen.action.basis.refused.head",
+   "en": "What this action rests on or advances was not accepted, for the reasons below. Nothing was written.",
+   "protected": false,
+   "note": "DEC-439: N7: the head over the owner's reasons"
+  },
+  {
+   "key": "screen.timeline.doc.noproject",
+   "en": "Only this project's documents are offered here. A document added without a project is not: add it from this project's own Add a document.",
+   "protected": false,
+   "note": "DEC-439: B533 (4)"
   }
  ],
  "rewrite": {
@@ -43717,6 +44047,7 @@
   "screen.money.f.contract": "The contract, for committed against paid",
   "screen.money.f.nocontract": "Choose the contract.",
   "screen.held.more": "{count} shown here. More are on the next page.",
-  "refusal.STANDARD_NOT_BINDING": "This standard is held as a benchmark for this body, not a rule that binds it, so the act cannot be found out of conformance with it. To measure the act against it, ask the question on this project and cite the standard there. Nothing was written."
+  "refusal.STANDARD_NOT_BINDING": "This standard is held as a benchmark for this body, not a rule that binds it, so the act cannot be found out of conformance with it. To measure the act against it, ask the question on this project and cite the standard there. Nothing was written.",
+  "action-plans.time_zone_held_place": "no time zone is held for your team, so the plan's dates cannot be checked against the day. A member sets it under Settings, Your team"
  }
 }
