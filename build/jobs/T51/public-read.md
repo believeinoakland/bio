@@ -1,6 +1,6 @@
 # public-read (T51)
 
-**Status** · session_01HPeMsK2U9rvs16rEGDCexd · depth 2 · COMPLETE · handled B39
+**Status** · session_01TcHc26898m1HrcsW2GWfXH · depth 2 · COMPLETE · handled B40
 
 ## J1 · QUESTION
 
@@ -572,3 +572,25 @@ Size (session_01HPeMsK2U9rvs16rEGDCexd): test runs 4, module lines 4209
 **Deferred:** none. **Found in other modules:** unchanged from J37 (screens-publish's three hand-built public-read answers).
 
 Size (session_01HPeMsK2U9rvs16rEGDCexd): test runs 5, module lines 4209
+
+## J39 · COMPLETE · re B40
+
+**COMPLETE (B40: D-M6, the public case page's standard sentence).** Commit `87bcde68af` on `job/T51/public-read` (tranche/T51 merged first, fast-forward to `2b5aa5de94`).
+
+**Changed.**
+- `bio-plane/src/public-read/index.mjs:1293`: `bar_detail` is the DEC-72 sentence only when `state.bar` is non-null and its `declared` is `true` (or `"true"`, as line 115 reads it). An undeclared bar object (`declared: false`) now answers `word("public-read.bar_recorded_case")`, the same words a null bar gets. `bar` itself is served as before. Comment added at the site (D-M6, K5265).
+- `bio-plane/test/m/public-read/convert-publishedcase.test.mjs`: `publishedWorld` takes an optional `bar`; new test "R3 (D-M6) a case that declares no bar says no bar was recorded...".
+
+**Red then green.** Red on the prior code: `an undeclared bar answers the no-bar words` (the DEC-72 sentence was served). Green after the fix. The declared-bar control (`bar_detail` equals the DEC-72 sentence for `declared: true`) is the existing assertion at line 112, still green.
+
+**Suite counts.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/public-read/*.test.mjs`: 319 tests, 319 pass, 0 fail, 0 cancelled (was 318 + the new test). `screens-publish/public.test.mjs` (the users that draw this page): 29 pass, 0 fail.
+
+**Checks** (absolute root `/home/user/bio`): format 0 failures (178 modules); architecture public-read 0; coverage public-read 45 of 45 ids named, 0 failures; words public-read 0 failures (missingkey 0, inline 0, plain 0); fixtures `public-read --list`: 0 failures, 0 invented answers, 0 contract markers; ownership vs `origin/tranche/T51`: 3 files changed by public-read, 0 failures. `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules affected (run before the commit; the change is inside public-read's own paths).
+
+**Met.** D-M6 (the case with `bar.declared: false` no longer says it was held to a standard). The new test names R3, the public case answer's requirement, as the one it checks.
+
+**Markers added:** none. **Deferred:** none. **Found in other modules:** none. **REPORT for BOB:** `checks/run.mjs` was not re-run on the whole product in this job (its failures are other modules'). The screens-publish side of D-M6 (the screen drawing `bar_detail` by key, `screens-publish/published.mjs:90`) is screens-publish's; this module's answer now carries the right words.
+
+**Note for BOB:** the START named model claude-sonnet-5-5; this job ran on claude-haiku-5-5 (the session's model). No model was changed.
+
+Size (session_01TcHc26898m1HrcsW2GWfXH): test runs 4, module lines 14062 (src/public-read/*.mjs 2981 plus test/m/public-read/*.mjs 11081, `wc -l`)

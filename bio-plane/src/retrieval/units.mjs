@@ -10,6 +10,8 @@ export const PART_KINDS = Object.freeze(["body", "footnote", "endnote", "header"
 export const PARTIAL_LISTED_MAX = 20;
 
 const IN_CHUNK = 100;
+/* The plane binds at most 100 variables a statement (D-36): a unit's address binds three, so its chunk is a third of that. */
+const KIND_CHUNK = 32;
 const PROGRESS_CALL = 500;   // extraction R108: at most this many shas a call
 
 /** The unit's address, as `capture_text`'s own key. */
@@ -24,8 +26,8 @@ export function kindsOf(rows, units) {
   const want = [...new Map(units.filter((u) => u && u.capture_sha != null).map((u) => [unitKey(u), u])).values()];
   for (const u of want) out.set(unitKey(u), null);
   if (!want.length || !hasKind(rows)) return out;
-  for (let i = 0; i < want.length; i += IN_CHUNK) {
-    const part = want.slice(i, i + IN_CHUNK);
+  for (let i = 0; i < want.length; i += KIND_CHUNK) {
+    const part = want.slice(i, i + KIND_CHUNK);
     const found = rows(`SELECT capture_sha, extent_kind, extent, kind FROM capture_text
                          WHERE (capture_sha, extent_kind, extent) IN (VALUES ${part.map(() => "(?,?,?)").join(",")})`,
       ...part.flatMap((u) => [u.capture_sha, u.extent_kind, u.extent]));

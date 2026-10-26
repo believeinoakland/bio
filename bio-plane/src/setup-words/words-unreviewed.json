@@ -19696,7 +19696,7 @@
       "en": "the file is kept, but its reading could not be queued, so it is not being read: ask again.",
       "module": "control-plane",
       "file": "bio-plane/src/control-plane/index.mjs",
-      "line": 1255
+      "line": 1266
     },
     {
       "id": "corpus-export.declared.export",
@@ -41249,21 +41249,21 @@
       "en": "a published case is a CONTAINER over one or more FINDINGS (DEC-44). Each finding carries its OWN conclusion, falsifier, basis and its own frozen PAIR of strengths; the case carries the scope that brought them together, the completeness assertion, and the team's acknowledgement of the bias the case was produced under — the last of these is a DISCLOSURE the reader weighs, never a verdict this team's Civicsmith reached (DEC-20, DEC-46). There is deliberately no case-level strength: composing two findings' strengths into one letter is the substitution R2 forbids.",
       "module": "public-read",
       "file": "bio-plane/src/public-read/index.mjs",
-      "line": 1405
+      "line": 1407
     },
     {
       "id": "public-read.index.a_ratified_record_that_is",
       "en": "this is a RATIFIED RECORD that is not a member of any published case: it was never published as a finding, so it carries no case identity, no scope statement, no completeness assertion and no bias acknowledgement — those are claims a CASE makes, and this is not one. Its bytes are verifiable by hash exactly as any other ratified bytes are.",
       "module": "public-read",
       "file": "bio-plane/src/public-read/index.mjs",
-      "line": 1918
+      "line": 1920
     },
     {
       "id": "public-read.index.bundleid_is_a_published_finding",
       "en": "{bundleId} is a published finding of {length} cases ({cases}). A finding can serve many cases (DEC-72 clause 6), and each case is its own artifact with its own scope and completeness assertion — so this read cannot choose one for you. Ask again naming the case you mean.",
       "module": "public-read",
       "file": "bio-plane/src/public-read/index.mjs",
-      "line": 1958
+      "line": 1960
     },
     {
       "id": "public-read.index.could_not_compute_this_block",
@@ -41284,7 +41284,7 @@
       "en": "each finding's serves[] is what this surface may hand over — every entry names a published edition. names[] is what it may only NAME. unresolved[] is an edge classified servable at publication with no published edition behind it now, stated rather than dropped; it should be empty.",
       "module": "public-read",
       "file": "bio-plane/src/public-read/index.mjs",
-      "line": 1406
+      "line": 1408
     },
     {
       "id": "public-read.index.every_hash_here_is_verifiable",
@@ -41347,7 +41347,7 @@
       "en": "the standard of evidence this case was held to, read from its publishing project at the moment of publication and frozen here (DEC-72). It is the CASE's property: no bar attaches to any finding, and nothing composed it across projects. Each member's own derived pair is printed beside it inside findings[], and a member may exceed it.",
       "module": "public-read",
       "file": "bio-plane/src/public-read/index.mjs",
-      "line": 1294
+      "line": 1296
     },
     {
       "id": "public-read.worker.a_court_order_this_team",
@@ -41900,35 +41900,35 @@
       "en": "{arm}: {stringify} compares a full-text field; {arm_2}: matches text and does not order it",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1667
+      "line": 1676
     },
     {
       "id": "query-language.query.arm_stringify_compares_subname_against",
       "en": "{arm}: {stringify} compares {subName} against nothing",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1603
+      "line": 1612
     },
     {
       "id": "query-language.query.arm_stringify_has_no_word",
       "en": "{arm}: {stringify} has no word in it to match",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1706
+      "line": 1715
     },
     {
       "id": "query-language.query.arm_stringify_is_both_claims",
       "en": "{arm}: {stringify} is both {claims}; say {map}",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1635
+      "line": 1644
     },
     {
       "id": "query-language.query.arm_unknown_sub_field_stringify",
       "en": "{arm}: unknown sub-field {stringify}; known: {keys}",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1620
+      "line": 1629
     },
     {
       "id": "query-language.query.capture_letter_bounded",
@@ -41942,21 +41942,21 @@
       "en": "({col} IS NULL) ASC, {col_2} {sortDir}, b.bundle_id ASC",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 2462
+      "line": 2471
     },
     {
       "id": "query-language.query.compiling_it_drops_v1_so",
       "en": "compiling it drops {v1}, so what would be saved is not what would run",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 2998
+      "line": 3007
     },
     {
       "id": "query-language.query.facets_stringify_can_hold_many",
       "en": "facets: {stringify} can hold many values per record; not a facet",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 2545
+      "line": 2554
     },
     {
       "id": "query-language.query.field_this_is_the_value",
@@ -41970,35 +41970,35 @@
       "en": "fields: {stringify} is not a field; ignored",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 2021
+      "line": 2030
     },
     {
       "id": "query-language.query.fields_stringify_is_not_a_2",
       "en": "fields: {stringify} is not a table, a key and a column; read as before",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 2025
+      "line": 2034
     },
     {
       "id": "query-language.query.fm_path_stringify_is_not",
       "en": "fm: path {stringify} is not a frontmatter path",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1497
+      "line": 1506
     },
     {
       "id": "query-language.query.from_scope_s_rowjoin_join",
       "en": "FROM scope s {rowJoin}\n JOIN {table} m ON m.{key} = b.bundle_id{ftsJoin}{joined}\nWHERE {sql}{refSql}{ftsWhere}",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 2802
+      "line": 2811
     },
     {
       "id": "query-language.query.has_unknown_field_stringify",
       "en": "has: unknown field {stringify}",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1480
+      "line": 1489
     },
     {
       "id": "query-language.query.how_the_unit_was_read",
@@ -42012,91 +42012,91 @@
       "en": "{name}: {stringify} ends before it starts; dropped",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1822
+      "line": 1831
     },
     {
       "id": "query-language.query.name_stringify_is_not_a",
       "en": "{name}: {stringify} is not a calendar date; dropped",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1796
+      "line": 1805
     },
     {
       "id": "query-language.query.name_stringify_is_not_one",
       "en": "{name}: {stringify} is not one of money's {words} ({words_2}); dropped",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1760
+      "line": 1769
     },
     {
       "id": "query-language.query.name_stringify_names_a_local",
       "en": "{name}: {stringify} names a local day and no time zone is given; dropped",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1803
+      "line": 1812
     },
     {
       "id": "query-language.query.name_stringify_why_dropped",
       "en": "{name}: {stringify}: {why}; dropped",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1809
+      "line": 1818
     },
     {
       "id": "query-language.query.select_name_as_field_fieldref",
       "en": "SELECT '{name}' AS field, {fieldRef} AS value, count(*) AS n\n  FROM scope s {rowJoin}\n  WHERE {sql} AND {fieldRef_2} IS NOT NULL GROUP BY {fieldRef_3}",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 2565
+      "line": 2574
     },
     {
       "id": "query-language.query.sort_stringify_can_hold_many",
       "en": "sort: {stringify} can hold many values per record; not a sort",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1845
+      "line": 1854
     },
     {
       "id": "query-language.query.sort_stringify_is_not_a",
       "en": "sort: {stringify} is not a sort key",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 2992
+      "line": 3001
     },
     {
       "id": "query-language.query.sort_unknown_field_stringify",
       "en": "sort: unknown field {stringify}",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1846
+      "line": 1855
     },
     {
       "id": "query-language.query.sql_select_r_capture_sha",
       "en": "{sql}\nSELECT r.capture_sha AS capture_sha, r.registered AS registered,\n       ex.state AS extract_state, ex.condition AS extract_condition,\n       ex.detail AS extract_detail,\n       ix.state AS index_state, ix.bound AS index_bound,\n       ix.detail AS index_detail,\n       EXISTS (SELECT 1 FROM readings rd WHERE rd.capture_sha = r.capture_sha) AS has_reading\nFROM scope s {rowJoin}\n JOIN register r ON r.bundle_id = b.bundle_id\n LEFT JOIN observation_log ex ON ex.seq = (SELECT MAX(seq) FROM observation_log\n      WHERE level = 'content' AND subject_kind = 'capture'\n        AND authority_kind = 'extract' AND subject = r.capture_sha)\n LEFT JOIN observation_log ix ON ix.seq = (SELECT MAX(seq) FROM observation_log\n      WHERE level = 'content' AND subject_kind = 'capture'\n        AND authority_kind = 'derive' AND subject = r.capture_sha)\nWHERE {sql_2}\nORDER BY r.capture_sha ASC LIMIT ?",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 2752
+      "line": 2761
     },
     {
       "id": "query-language.query.stringify_is_not_available_here",
       "en": "{stringify} is not available here; read as nothing",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1749
+      "line": 1758
     },
     {
       "id": "query-language.query.tf_i_fid_tf_as",
       "en": "tf{i}(fid, tf) AS (SELECT fid, {map} FROM (SELECT rowid AS fid, {hs} FROM bundles_fts WHERE bundles_fts MATCH ? AND rowid IN (SELECT fid FROM scope)))",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1958
+      "line": 1967
     },
     {
       "id": "query-language.query.unknown_field_stringify_read_as",
       "en": "unknown field {stringify}; read as free text",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1514
+      "line": 1523
     },
     {
       "id": "queue-producers.index.a_bounded_number_of_shared",
@@ -46317,28 +46317,28 @@
       "en": "read: what a scope holds of the kinds asked, each match with its words and extent, found by search; it records nothing; writes nothing",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1865
+      "line": 1878
     },
     {
       "id": "retrieval.declared.list",
       "en": "read: the bundles the viewer may see, in id order, each with its standing route; writes nothing",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1875
+      "line": 1888
     },
     {
       "id": "retrieval.declared.select",
       "en": "selection lifecycle, owned by the credential that made it",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1867
+      "line": 1880
     },
     {
       "id": "retrieval.declared.selectionrelease",
       "en": "selection lifecycle, owned by the credential that made it",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1869
+      "line": 1882
     },
     {
       "id": "retrieval.frontier.acquire_not_here",
@@ -46373,133 +46373,140 @@
       "en": "the action facts are registered once",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 298
+      "line": 302
     },
     {
       "id": "retrieval.index.an_enumeration_this_large_is",
       "en": "an enumeration this large is refused rather than quietly turned into a query selection, because that would change what the operator's click meant. Select by query instead.",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1352
+      "line": 1365
     },
     {
       "id": "retrieval.index.content_reaches_layer",
       "en": "content: reaches the CONTENT layer -- the passages somebody has cited or marked citable: content:pdf-page by extent kind, content:stale for citations made under a transcription the record has replaced, content:machine by who minted it, content:ocr by the chain's last step, content:cap<C by the derivation cap, content:uncited for marked-but-unused passages",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1131
+      "line": 1144
     },
     {
       "id": "retrieval.index.content_searches_citations",
       "en": "content: does NOT search the text of the documents -- it searches what has been cited or marked citable in them, so an empty answer is a fact about citation and never about what a document says",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1132
+      "line": 1145
     },
     {
       "id": "retrieval.index.enumerated_needs_one_id",
       "en": "an enumerated selection needs at least one id",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1349
+      "line": 1362
     },
     {
       "id": "retrieval.index.field_compare_range",
       "en": "field:>value, field:<value, field:a..b compare and range",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1125
+      "line": 1138
     },
     {
       "id": "retrieval.index.field_registered_once",
       "en": "a field is registered once",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 407
+      "line": 411
     },
     {
       "id": "retrieval.index.meaning_arm_takes",
       "en": "a meaning arm takes a bare word (leg:cuts_against), a sub-field (leg:ground=*) or a comparison (resolves:>=B on the bare field, leg:grade>=B or content:cap<C on a named one)",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1137
+      "line": 1150
     },
     {
       "id": "retrieval.index.no_meaning_of_the_kind",
       "en": "no meaning of the kind {stringify} is held. The kinds that are: {map}",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 960
+      "line": 964
     },
     {
       "id": "retrieval.index.no_record_matches_all",
       "en": "no record matches all of these terms; this many match any of them",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 902
+      "line": 906
     },
     {
       "id": "retrieval.index.no_saved_query_of_yours",
       "en": "no saved query of yours answers to that",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1565
+      "line": 1578
     },
     {
       "id": "retrieval.index.no_scope_called_stringify_the",
       "en": "no scope called {stringify}; the scopes are {SCOPE_KEYS}",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 784
+      "line": 788
     },
     {
       "id": "retrieval.index.op_meaningrows_answers_at_meaning",
       "en": "op=meaningrows answers at MEANING grain and must be told which: rows={known}. Each reads a different table and answers a different question, so there is no default that would not be answering something you did not ask.",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 957
+      "line": 961
     },
     {
       "id": "retrieval.index.record_no_text_index_key",
       "en": "the record has no text index key",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1160
+      "line": 1173
     },
     {
       "id": "retrieval.index.selection_kind_query_enumerated",
       "en": "a selection is 'query' or 'enumerated'",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1344
+      "line": 1357
     },
     {
       "id": "retrieval.index.selection_not_read_not_held",
       "en": "the selection could not be read, so it is answered as one not held",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1444
+      "line": 1457
     },
     {
       "id": "retrieval.index.selection_owned_by_credential",
       "en": "a selection is owned by the credential that made it",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1340
+      "line": 1353
     },
     {
       "id": "retrieval.index.selection_readable_by_credential",
       "en": "a selection is readable only by the credential that made it",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1422
+      "line": 1435
     },
     {
       "id": "retrieval.index.this_action_changes_state_so",
       "en": "this action changes state, so it will not run against a set that moved since it was selected. Look at the selection again and re-select.",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1462
+      "line": 1475
+    },
+    {
+      "id": "retrieval.levels.finding_rests_plain",
+      "en": "nobody has yet said whether a finding rests on what was found here; the Cited column beside each result says it for that result",
+      "module": "retrieval",
+      "file": "bio-plane/src/retrieval/levels.mjs",
+      "line": 105
     },
     {
       "id": "retrieval.levels.searched_so_far",
