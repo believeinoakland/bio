@@ -1,6 +1,6 @@
 # plane (T51)
 
-**Status** · session_01PjmHFtZEgQ8wUSxwtd6dLq · depth 2 · RUNNING until 2026-10-26T03:25:19Z (r8-heal-door owedwork/whoami, 10 runs under 4 busy loops) · handled B112
+**Status** · session_01PjmHFtZEgQ8wUSxwtd6dLq · depth 2 · WAITING ON BOB (J76) · handled B112
 
 ## Record (PLANE #41, T51-125)
 
