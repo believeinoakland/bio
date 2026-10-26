@@ -62,6 +62,11 @@ async function world({ scanMs = 0 } = {}) {
   return { mf, flight, get, door, member, founder, stub };
 }
 /** the first firing has ended (a row is owed and the alarm stands armed or spent): the starting position of a lost alarm */
+/** the firing a request started has ended (its health says it is not running): the same-run signal the arm is read at */
+async function firingEnded(w) {
+  for (let i = 0; i < 480; i++) { const s = await w.get("rows"); if (!s.health || !s.health.running_since) return; await sleep(250); }
+  assert.fail("the firing the read started did not end");
+}
 async function settled(w) {
   for (let i = 0; i < 480; i++) { const s = await w.get("rows"); if (s.health && s.health.last_run && !s.health.running_since && s.pending.length) return s; await sleep(250); }   /* up to 120 s: a whole-directory run is loaded, and the first firing is slower there */
   assert.fail("the first firing did not end with a row owed");
@@ -89,8 +94,9 @@ test("R102 G93 L: a row owed and the alarm deleted, one ordinary read by the fou
   await lose(w);
   const r = await w.door(w.founder, "owedwork");
   assert.equal(r.status, 200, JSON.stringify(r.body).slice(0, 200));
+  await firingEnded(w);   /* the read starts the row's firing: while it runs the platform answers no alarm (scheduler R29), so the arm is read once it ends */
   const after = await w.get("counters");
-  assert.ok(typeof after.alarm === "number", `getAlarm() is ${after.alarm}: the alarm stays lost until the next cron slot`);
+  assert.ok(typeof after.alarm === "number", `getAlarm() is ${after.alarm}: the alarm is not set once the firing the read started has ended`);
   assert.ok(after.setAlarm >= 1, "the object armed it");
 });
 
@@ -99,6 +105,7 @@ test("R102 G93 L: a member's ordinary read (op=whoami) re-arms a lost alarm as w
   await lose(w);
   const r = await w.door(w.member, "whoami");
   assert.equal(r.status, 200, JSON.stringify(r.body).slice(0, 200));
+  await firingEnded(w);   /* a read that starts a firing is read once it ends (scheduler R29) */
   assert.ok(typeof (await w.get("counters")).alarm === "number", "the member's read armed the alarm");
 });
 
