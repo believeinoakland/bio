@@ -366,3 +366,20 @@ Found outside my paths, REPORTed the day found (K5175). These tests hand-write c
 - bio-plane/test/m/screens-inquiry/fr2-document.test.mjs:164 (`cite`): not one of the five answers I was asked to publish, so no export. Owner to place.
 
 Outside my paths, seen in the `checks/run.mjs` words output on this run (15 failures, all `store-assembly`: ask.mjs:388, 389, 469, 502, 521, 522, 526, 531, 535, 540; wiring.mjs:49, 78, 103; wizards.mjs:51). I did not change them. I did not check them against the tranche before my commit, so I cannot say they are pre-existing. Their owner's job should look.
+
+## J24 · COMPLETE
+
+COMPLETE for the fix round 10 START (B18, K5175): the citation answers for screens-publish are published.
+
+Changed (my paths only, commit db2cf35a73):
+- bio-plane/test/m/citation/fixtures.mjs (new): `sever()` (a cited finding, severed through the door), `reinstate()` (the same case, severed then reinstated through the door), `citeimported()` (a question resting on case-import's real accepted import, edition 1, F1 accepted). Each builds its world on every call; nothing is stored or hand-written. `citeimported` reads case-import's acceptance through case-import's real provider, registered on the citation host's accepted work the way case-import's own `start` registers it (five handlers, each delegating to its real method). Its viewer is `alice`, a member of both worlds, because the read is viewer-gated.
+- bio-plane/test/m/citation/fixtures.test.mjs (new): calls each export and checks the real answer and the stored edge or basis; each has a control with a different reason or role.
+- Failing-first, as asked: I broke `sever()` by sending it the `reinstate` op. `R4 sever (fixtures)` went red; I restored it and it went green again.
+
+Tests: citation 137/137 (134 existing, 3 new). case-import's accept and r10-fixtures tests 20/20 (the import path works on this tranche).
+Checks (absolute root): fixtures --list 0 failures (3508 files, 178 modules); ownership 0 failures (against merge-base with origin/tranche/T51); architecture 0; coverage 22 of 22; format 0; impact 0 of 178 modules affected by origin/tranche/T51..HEAD; checks/run.mjs words: no citation finding, 15 failures in store-assembly (reported separately).
+Fixtures markers added: none (`fixtures-own` / `fixtures-generic`: 0). Met ids: none; R4, R16 and R17 are exercised by the answers and nothing in the requirements changed.
+Deviation: I ran `mail start` before the fetch and merge that the START lists first. I merged origin/tranche/T51 (20 commits) into the job branch afterwards; no conflicts. The mailbox cursor now reads through B18.
+Commit trailer: I left out the model-named Co-Authored-By line, because the model-identity rule says not to put a model identifier in commit messages. The session trailer is in place.
+
+Size (session_01AKEgagoZYqWVJvoox2SvKQ): test runs 9, module lines 1760
