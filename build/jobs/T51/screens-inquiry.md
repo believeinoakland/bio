@@ -746,3 +746,10 @@ Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 14, module lines 7041
 ## J55 · COMPLETE
 
 COMPLETE (SCREENS-INQUIRY #33), B84 done: fr5-document.test.mjs:121 takes readHeldAnswer.noWholeObject() and noHome(); fr28-document-acts.test.mjs:50 takes reextraction() (press asserted as the real owed answer, pass as performed). Module 598 pass 0 fail; format, architecture, coverage, ownership, words 0 failures; fixtures 140 -> 138 lines (both gone). Note: after an owed press the page draws no outcome sentence (R96 states none); left. B83 still waits on interface-shell. No markers added. Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 14, module lines 7041
+
+## B83/B85 applied · SCREENS-INQUIRY #33
+
+Tranche merged (interface-shell's `counted`). Every seam helper's `forwarded` now wraps each forwarding function in the harness's `counted` (`rawForwarded` kept, `forwarded` = `counted` over it), so `settle()` waits on a late forwarded read: `fr5-seam`, `fr6-seam`, `g41-document`, `r10-question-seam`, `r10-stated`, `r9-refusal`, `r9-seam` (seven files define it, not five; all done). The five-file list named `r10-question-seam.test.mjs:40` (now :44); its own busy/started `quiet` stays beside it.
+Run: the seven files in 4 parallel runs, each 32 of 32, 0 fail. Module: 598 pass, 0 fail. Checks: format, architecture, coverage (136 of 136), ownership, words 0 failures; fixtures 138 lines (STORE-REQUEST #7). Markers added: none.
+
+Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 18, module lines 7041
