@@ -76,3 +76,33 @@ Changing the zero-question refusal (commit 44abc0fcc3, action-grammar) breaks as
 The sentence now reads "A request for comment must name the specific questions it puts to the subject: add each one under 'Advances', chosen from your team's record. A comment request without specifics gives the subject nothing to answer." Line 41 (/nothing to answer/) still holds. Those four assertions need the new wording, which is actions' to make. Until they do, actions' t17 is red on the tranche once my COMPLETE merges. Owner: actions. Your call whether it goes in this round or a follow-up.
 
 Source of the change: causes-rewalk.md section 7, N7 (rewalk-E row 49). The walker's red test in screens-action is not mine to run.
+
+## J6 · COMPLETE
+
+COMPLETE for the N7 cause (causes-rewalk.md section 7; rewalk-E row 49).
+
+Applied
+- bio-plane/src/action-grammar/grammar.mjs:182 is now localize('action-grammar.grammar.a_request_for_comment_must_name', ...) in plain words: "A request for comment must name the specific questions it puts to the subject: add each one under 'Advances', chosen from your team's record. A comment request without specifics gives the subject nothing to answer." "ZERO", "action_basis", "legs of kind" and "(DEC-13)" are gone from what a person reads.
+- The same refusal's repair, grammar.mjs:183, is localized in plain words: "choose each question the request puts to the subject, and mark it 'Advances'".
+- golden.json: the 8 recorded occurrences of the old message and the 8 of the old repair are updated to the new words. fixture.mjs REWORDED gains the two retired phrases, so the suite asserts they stay gone.
+- grammar.test.mjs: new test "R6 (T51 fix round 10, N7)" (the red test). Red first: it failed with the message still "names ZERO inquiries". The R6 by-hand test's assertion moved from /names ZERO inquiries/ to /must name the specific questions/ (same check: one such finding).
+
+Commit 44abc0fcc3 on job/T51/action-grammar, pushed. The branch first took tranche/T51 at 9c236df30b (fast-forward).
+
+Tests
+- node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/action-grammar/*.test.mjs: 81 of 81 pass, exit 0 (80 before, plus the new one). No count shortfall.
+
+Checks (from the process repo, product /home/user/bio)
+- format: 178 modules, 178 requirements files; 0 failures
+- architecture action-grammar: 15 product files, 43 relative imports; 0 failures
+- coverage action-grammar: 29 of 29 live requirement ids named by a test; 0 failures
+- words action-grammar: 0 failures (after the repair was localized; before that one plain literal failed)
+- ownership tranche/T51 to HEAD: 5 files changed by action-grammar; 0 failures
+- checks/run.mjs: no line names action-grammar
+
+Deferred
+- none of N7.
+- Same class, not in N7: grammar.mjs:146 and :168 repairs still name fields ("kind: rests_on", "kind: advances"; "the finding this rests on"). They are shared by every leg refusal, so changing them rewrites each recorded leg finding in golden.json. I left them for BOB to say whether they go in this round.
+- Found in another module, reported separately (REPORT): actions' bio-plane/test/m/actions/t17.test.mjs pins the old sentence at lines 40, 44, 52 and 92.
+
+Size (session_018nYF1qKRjkKTcC4XS3jWuZ): test runs 4, module lines 2589
