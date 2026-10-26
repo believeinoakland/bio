@@ -173,7 +173,8 @@ export const actionNew = Object.freeze({
           const lines = found.map(function (f) { return f && typeof f.detail === "string" && f.detail.trim() ? "<li>" + cs.esc(f.detail.trim()) + "</li>" : ""; }).join("");
           // re-walk 10 N7: the code's sentence ends "Choose again, or leave it out", which is wrong when the owner's reason is that the action must name something;
           // with the owner's own reasons to draw, they are the answer (the owner's `detail` is the member's sentence), and the code's sentence stays for a refusal with none
-          if (lines) return '<ul class="mk-list" data-findings="refusal">' + lines + "</ul>";
+          // R59 (DEC-439 N7): the owner's reasons are drawn under the head that says nothing was written
+          if (lines) return '<p class="mk-note">' + cs.w("screen.action.basis.refused.head") + '</p><ul class="mk-list" data-findings="refusal">' + lines + "</ul>";
           return cs.w("refusal.ACTION_BASIS_REFUSED");
         } },
     },

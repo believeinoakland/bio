@@ -93,7 +93,8 @@ export const REVIEW_COPY = Object.freeze({
       out.push(cs.choice("rc-export-ack", "screen.review_copy.before.you.save.it", [{ value: "", text: "–" }, { value: "yes", key: "screen.review_copy.i.understand.that.this.file" }],
         { acts: { yes: "reviewexport" }, act: { tone: "primary", label: "screen.review_copy.save.file", data: { step: "save" } } }));
       out.push(P.said(view, "reviewexport"));
-      if (done && done.name) out.push('<div class="mk-acts" data-export-ready>' + cs.save(done.name, done.text) + "</div>");
+      // R81 (D-M4): the file is made and waits for the second press: the page says so beside the button that hands it over
+      if (done && done.name) out.push('<p class="mk-note" role="status" data-export-says>' + cs.w("screen.review_copy.save.ready") + '</p><div class="mk-acts" data-export-ready>' + cs.save(done.name, done.text) + "</div>");
       if (done && done.unstamped) out.push(P.fold(cs, "screen.review_copy.when.the.copy.can.t", "<p>" + cs.w("screen.review_copy.this.copy.could.not.be") + " " + cs.w("screen.review_copy.no.file.was.made") + "</p>"));
       if (done && done.declined) out.push(P.fold(cs, "screen.review_copy.when.this.browser.doesn.t", "<p>" + cs.w("screen.review_copy.this.browser.did.not.accept") + " " + cs.w("screen.review_copy.nothing.left.this.page") + "</p>"));
     }

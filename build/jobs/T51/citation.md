@@ -1,6 +1,6 @@
 # citation (T51)
 
-**Status** · session_01KSgpcetRPBy4G8vkWj4hYi · depth 2 · COMPLETE · handled B20
+**Status** · session_01E4bysBh5LegJubXNLSDi6P · depth 2 · COMPLETE · handled B21
 
 ## J1 · REPORT
 
@@ -421,3 +421,26 @@ Checks (absolute root): format 0, architecture 0, words 0, ownership 0; coverage
 For BOB: R23 mark can be struck. R19's line for `reinstate` lists accepts project, handle, reason; it now also accepts `role` (R23); amend if you want it stated there. Screens (screens-inquiry's "Put on the other side" control) send `role` with the reinstate. Nothing REPORTed about other modules. No fixtures-own or fixtures-generic markers added.
 
 Size (session_01KSgpcetRPBy4G8vkWj4hYi): test runs 9, module lines 1833
+
+## J28 · COMPLETE
+
+R24 `leggrade` done (fix round 10, item 147). Pushed 85955ccd87 on job/T51/citation (tranche/T51 merged in first).
+
+**What changed**
+- `bio-plane/src/citation/index.mjs:889` `legGrade({project, target, grade, reason, extent, author, viewer, identity})`; op route `leggrade` at :1312 (fields body-first as `cite`, R20; the part by `content_id` / `extent_*`); `DECLARED_OPS.leggrade` at :1343 (classes admin, member; `machineClasses: []`; stamps author, viewer; `needs: contribute`; weight `reversible`; accepts project, target, grade, reason and the part's fields; requires project, target, grade, reason).
+- `bio-plane/src/citation/splice.mjs:214` `setLegGrade`: writes grade, grade_axis `capture`, grade_source `capture` on the nth basis leg, nothing else of the leg or document touched.
+- `bio-plane/src/citation/checks.mjs:136` `CITE_LEG_GRADE_CHECKS`: MACHINE_CANNOT_GRADE_LEG C-33.60, BAD_GRADE C-33.61, LEG_NOT_GRADABLE C-33.62, LEG_GRADE_OTHER_AXIS C-33.63, GRADE_OVER_CEILING C-33.64 (next free C-33 numbers, awaiting the stamp).
+- Reasons reuse R4's NO_REASON / BAD_REASON; the citing object is R1's (absent/unseen = `noSuchProject`, `NOT_AN_INQUIRY` otherwise); the leg is found by target and part (R22), else NOT_CITED.
+- Ceiling: `inquiry.earned(...).earned.capture[target]` (leg-earning R1, R8), a service citation already uses. A letter stronger than the ceiling, or any letter where the ceiling is undetermined (no capture), is GRADE_OVER_CEILING naming `ceiling` (null when undetermined). The write (`inquiry` R11) judges the revised leg again.
+- Answer: project, citingObjectType, target, role, grade, grade_axis, grade_source, ceiling, was, why, leg, bundleSha, rowVersion. One Session Log entry (author, target, grade, ceiling, previous grade, reason).
+
+**Test red then green** `bio-plane/test/m/citation/leggrade.test.mjs` (10 tests, all titled R24): first run red (the module exported no `leggrade` / `CITE_LEG_GRADE_CHECKS`: the file failed to load, 0 of 9 passing); after the code, 10 of 10 green. They run the walker's case over the real `inquiry` booted on the host (its real `earned`, no stand-in): cite a captured document `supports`, grade B (the ceiling) and read it back by `basisFor`; C then B replaces, never adds; A refused naming B, nothing written; no capture refused with a null ceiling; machine, unnamed author, absent / not-a-question citing object, grades E / a / empty, missing and unwritable reason, absent leg and another part (R22) each refused with the document unchanged; calculation, occurrence, derived-connection and imported legs refused LEG_NOT_GRADABLE; a leg graded on another axis refused LEG_GRADE_OTHER_AXIS; whole-document leg and a `pdf-page` leg are two legs and the grade lands on the one named; body-first fields. Two existing tests that pinned the op list (declared-ops, invariants) now include `leggrade`.
+
+**Suites** citation directory 151 tests, 151 pass, 0 fail (sum of the 22 files run alone: 151). Checks, absolute root `/home/user/bio`: format 0 failures; architecture 0; coverage (citation) 24 of 24 live ids named, 0; ownership 0 (`merge-base` to HEAD); `run.mjs`: words 0 failures (testcopy 0), no finding in a citation file (its other FAILs are the `stub` findings in capture, doorbell, file-safety, monitoring, test-support, not mine).
+
+**For BOB**
+1. Reading made: the requirement says "grade not A to E"; the grade vocabulary is `BASIS_GRADES` = A, B, C, D (record-grammar), so BAD_GRADE lists A to D. "Source the member's": the capture axis admits only `capture` (and `inherited`) as a source (inquiry-grammar, REC-18; a `testimony` or `hunch` source on it is refused at the write), so the leg is written `grade_source: capture` and the member's name and reason are in the Session Log. If you meant a new source, that is inquiry-grammar's and record-grammar's change.
+2. Choice for you: a leg carries one grade, so a leg that already holds a connection or testimony grade is refused LEG_GRADE_OTHER_AXIS rather than overwritten (a document with a subject-entity resolution is graded on connection at cite). If the design wants both, that is a requirement change (a second leg on the same part is `alreadyCited`, R22).
+3. Not mine, owed: `op-grades` and `op-declarations` need the `leggrade` row (weight `reversible`) and registration (R80 `register-owners`); `setup-words` `rows.mjs` is stale until regenerated (new keys `citation.index.leggrade_*`, `citation.index.session_graded_leg` and the like, `citation.checks.*` for the five rows; `build.mjs --check` names the first); `build/modules.json` citation `uses` does not list `leg-earning` and needs none (the ceiling comes through `inquiry.earned`). R24's "(not yet met: T51)" mark can be struck. screens-inquiry R139 can draw `op=leggrade` with `project`, `target` (+ `content_id` / `extent_*` for a part), `grade`, `reason`; refusals carry `check`, `detail` and, for GRADE_OVER_CEILING, `ceiling`.
+
+Size (session_01E4bysBh5LegJubXNLSDi6P): test runs 9, module lines 2017

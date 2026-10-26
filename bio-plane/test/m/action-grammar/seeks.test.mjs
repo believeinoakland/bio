@@ -61,10 +61,11 @@ test("R13: none_exists is an outcome of a received decision as the others are (R
     ["OUTCOME_NOT_IN_VOCABULARY"]);
 });
 
-test("R13: C-94.5's translation names none_exists beside the other outcomes, so the row a member reads holds the whole vocabulary", () => {
+test("R13 (T51 fix round 10, R30): C-94.5's translation names the whole outcome vocabulary in plain words, none exists and none stated included", () => {
   const t = AG.LIFECYCLE_CHECKS.OUTCOME_NOT_IN_VOCABULARY.translation;
   assert.equal(AG.LIFECYCLE_CHECKS.OUTCOME_NOT_IN_VOCABULARY.check, "C-94.5");
-  for (const o of AG.CORRESPONDENCE_OUTCOMES) assert.ok(t.includes(o), o);
+  for (const o of ["granted", "denied", "partial", "reversed", "affirmed", "none exists", "none stated"]) assert.ok(t.includes(o), o);
+  assert.doesNotMatch(t, /none_(exists|stated)|DEC-/);
 });
 
 /* ------------------------------------------------------------------------------------------------ seeksOf */
