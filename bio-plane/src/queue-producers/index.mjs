@@ -2066,13 +2066,14 @@ export class QueueProducers {
    *  `admin` machine credential as export-performed's reader is, one OBLIGATION per key `credentials.signerList`
    *  answers `active` with `origin: "self"`, naming the key's comment and its member, aged from its `added` instant, and
    *  offering credentials R7's revoke. Every other reader gets none, and not a count. It leaves when the key is no longer
-   *  `active`: the list is read at every read, so nothing is stored to clear. */
+   *  `active`, or when its row carries `known_by` (R55; credentials R83's `signerKnown`): the list is read at every read, so nothing is stored to clear. */
   #obligationsSignerSelfRegistered(me, viewer, now) {
     const admin = me ? this.#isAdminMember(me) : viewer === `${MACHINE_CLASS_PREFIX}admin`;
     if (!admin) return [];
     const list = this.#credentials.signerList();
     const keys = QueueProducers.#answered(list, "signers", "credentials.signerList")
-      .filter((k) => k && k.status === "active" && k.origin === "self" && typeof k.key_b64 === "string" && k.key_b64);
+      .filter((k) => k && k.status === "active" && k.origin === "self" && typeof k.key_b64 === "string" && k.key_b64
+        && !k.known_by);                                       // R55: an administrator said they know of it (credentials R83)
     if (keys.length === 0) return [];
     const raisedTo = this.#activeAdmins();
     const homes = this.#homesOf([]);
