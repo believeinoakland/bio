@@ -726,3 +726,7 @@ Merged `tranche/T51` (@ 9c236df30b) first. Entry applied: causes-rewalk §5 (are
 Deferred: none. Found in other modules: none. Passage count under the heading stays withheld (K5275).
 Suite 321 of 321 (round10 12 of 12). `checks/run.mjs`: format 0; architecture 0; coverage 7084 of 7084; words 0; fixtures 89 failures, none in screens-daily files (other modules' stubs); ownership 0 (see COMPLETE).
 Size (session_018S3kJ5pPzA2ti5PEP6LAdc): test runs 5, module lines 4362
+
+## J38 · COMPLETE
+
+F-B10 (a) done: finder-states.mjs:221-229 draws, under the partial-match heading, one act (label act.search.label.finder, data-widen = the terms joined by OR) in both the fields and the passage-only case, and no bare heading; finder.mjs:331 acts[0] el.dataset.widen sets routes null and q to the OR query (F-B9 route). Test round10 'R78 (F-B10 (a), K5257)' red (no act under the heading) then green; module suite 321 of 321; format 0, architecture 0, coverage 7084/7084, words 0, ownership 0, fixtures none in my files. Label: J37 QUESTION (localize is refused in a screens module, R13), borrowed existing word. Size (session_018S3kJ5pPzA2ti5PEP6LAdc): test runs 5, module lines 4362.
