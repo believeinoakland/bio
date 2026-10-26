@@ -1,6 +1,6 @@
 # screens-daily (T51)
 
-**Status** · session_018S3kJ5pPzA2ti5PEP6LAdc · depth 2 · COMPLETE · handled B50
+**Status** · session_01G4T11MDTBxSDjEYtergKAE · depth 2 · COMPLETE · handled B54
 
 ## Completion (SCREENS-DAILY #25, B48: CHANGE, K5267; plan item 135 (1))
 
@@ -730,3 +730,31 @@ Size (session_018S3kJ5pPzA2ti5PEP6LAdc): test runs 5, module lines 4362
 ## J38 · COMPLETE
 
 F-B10 (a) done: finder-states.mjs:221-229 draws, under the partial-match heading, one act (label act.search.label.finder, data-widen = the terms joined by OR) in both the fields and the passage-only case, and no bare heading; finder.mjs:331 acts[0] el.dataset.widen sets routes null and q to the OR query (F-B9 route). Test round10 'R78 (F-B10 (a), K5257)' red (no act under the heading) then green; module suite 321 of 321; format 0, architecture 0, coverage 7084/7084, words 0, ownership 0, fixtures none in my files. Label: J37 QUESTION (localize is refused in a screens module, R13), borrowed existing word. Size (session_018S3kJ5pPzA2ti5PEP6LAdc): test runs 5, module lines 4362.
+
+## Progress (SCREENS-DAILY #28, B51: fix round 10, R107)
+
+Merged `tranche/T51` first. **Half 1 done: Finder's passage-route widen.** `finder-states.mjs` (the `nothing` branch of `routes`, lines 221-232): when only the passages route offers a wider reading (`passageWiden`), the partial heading is followed by `screen.finder.widen.passages` {n: its `widen.total`} and the act is labelled `act.search.label.finder.widen`; the documents route keeps `screen.finder.widen` and `act.search.label.finder`, and wins when both widen. `index.mjs:143` lists the two keys in the finder's words.
+**Test, red then green.** `round10.test.mjs` "R107 (F-B10 (a), DEC-439)": passages-only widen (count, act label, pressed it asks `ordinance OR zzzqqq`); controls: documents-only and both-routes cases unchanged. Red: no passage count drawn; green after the change.
+**Half 2 waiting.** The `signerknown` act on `signer-self-registered` needs the op declared (`credentials` R83, `queue` R96, jobs running): `OPS` has no `signerknown` yet (grep of `src`). I wait for BOB's CHANGE, then draw it with the item's disposition and label `queue.signer-self-registered.known` and test it red then green through the real store.
+Suite 322 of 322 (screens-daily); `checks/run.mjs`: format 0, architecture 0, coverage (screens-daily) 105 of 105, words 0, fixtures 89 failures none in screens-daily files; ownership 0.
+
+## J39 · REPORT
+
+R107 half 1 done and pushed (2c8866c625): Finder's passage-route widen draws screen.finder.widen.passages {n} and act.search.label.finder.widen (finder-states.mjs:221-232); test red then green; screens-daily 322/322; checks 0 for my files. Half 2 (the signerknown act on signer-self-registered) waits: OPS has no signerknown yet (credentials R83, queue R96 running). Send a CHANGE when they merged.
+
+## J40 · BLOCKED
+
+BLOCKED (cause: tests; another module owns the fix). R107 half 2 is written and pushed (909584166d: queue.mjs actsOf/actOf/acts, index.mjs words, test round10 'R107 (A-03)'), and the test is red at the real check: interface-shell checkScreens (bio-plane/src/interface-shell/index.mjs:197) throws "screen queue's act signerknown is not the registry's for it, nor a named re-point", because the registry entry for queue (bio-plane/src/wizard-scripts/screen-registry.mjs:42) lists neither signerknown in acts nor in owed, and RE_POINTS (interface-shell/index.mjs:150) has no queue entry. OPS already holds signerknown. Needed from its owner, either: wizard-scripts adds {op:signerknown} to queue's acts/owed (the design's registry), or interface-shell adds queue: [signerknown] to RE_POINTS until it does. Until then every screens-daily queue test fails on my branch (so do the users'); do NOT merge my branch. Also: queue-producers R55 (no known_by in src/queue-producers/index.mjs) and queue R96 (disposition acts) are not yet in the tranche, so 'the item is gone after the act' is not testable here; my act is drawn by the item's kind, and also by disposition.acts when queue R96 lands (one button, deduplicated). Half 1 (Finder) is complete and green. Send a CHANGE when the registry lists signerknown.
+
+## Completion (SCREENS-DAILY #28, B51/B52/B54: fix round 10, R107)
+
+Merged `tranche/T51` (INTERFACE-SHELL #26, CREDENTIALS #33, queue R96, queue-producers R55 in).
+**Half 1 (Finder).** `finder-states.mjs:221-232`: a widen offered only by the passages route draws `screen.finder.widen.passages` {n} and the act `act.search.label.finder.widen`; the documents route keeps `screen.finder.widen` / `act.search.label.finder` and wins when both widen. `index.mjs` finder words list both keys. Test `round10.test.mjs` "R107 (F-B10 (a), DEC-439)": red (no passage count), then green; controls: documents-only and both-routes unchanged.
+**Half 2 (signer-self-registered).** `queue.mjs`: `REGISTERED.signerknown`; `actsOf` adds `signerknown` for kind `signer-self-registered` (and by `disposition.acts`, queue R96, one button); `actOf` labels it `queue.signer-self-registered.known`; the act (`...OWED`, so a page without the op declared draws none, as `taskdecide`) sends `{keyB64: subject}`, rereads `queue`, confirms with its own label. `index.mjs` queue words list the label. Test "R107 (A-03)" over the real store: a member registers a key, the administrator's queue draws the act, pressing it calls the real `signerknown` (the key row carries `known_by`), the item is gone for the administrator (queue R55), a second key is an item again, the registrant has no such act. Red first (no act drawn), then green after the change.
+Deferred: none. Found in other modules: none new (the registry row for `signerknown` on `queue` is asked of UX-DESIGN by BOB; interface-shell R134 admits it meanwhile).
+Suites: screens-daily 323 of 323; users (control-plane, plane, journey-check: 121 files, 715 tests) 715 pass after `npm ci` in journey-check (8 pseudo failures before it were the missing playwright-core, environment only). `checks/run.mjs`: format 0, architecture 0, coverage 105 of 105 for screens-daily (the one failure is another module's), words 0, fixtures 89 failures none in screens-daily files, ownership 0.
+Size (session_01G4T11MDTBxSDjEYtergKAE): test runs 9, module lines 4375
+
+## J41 · COMPLETE
+
+R107 complete, pushed (job/T51/screens-daily). Record: build/jobs/T51/screens-daily.md, section 'Completion (SCREENS-DAILY #28, B51/B52/B54)'. Changed: finder-states.mjs:221-232 (passage-route widen: screen.finder.widen.passages {n}, act act.search.label.finder.widen; documents route unchanged); queue.mjs (REGISTERED.signerknown, actsOf/actOf, OWED act spec: 'I know about this key' = queue.signer-self-registered.known, sends keyB64); index.mjs words. Tests red then green: round10.test.mjs 'R107 (F-B10 (a), DEC-439)' and 'R107 (A-03)' (real store: act drawn, signerknown records known_by, item gone per queue R55, second key mints again, registrant has none). Suites: screens-daily 323/323; users 715/715 (after npm ci in journey-check). checks: format 0, architecture 0, coverage 105/105 for my module, words 0, ownership 0; fixtures 89 failures none in my files. Size (session_01G4T11MDTBxSDjEYtergKAE): test runs 9, module lines 4375. Fixtures markers: none added. Deferred: none.

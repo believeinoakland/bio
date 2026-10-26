@@ -279,3 +279,74 @@ test("R78 (F-B10 (a), K5257): the walker's cases `ordinance zzzqqq` (fields wide
   await settle();
   assert.ok(!text(ops).includes(word("screen.finder.partial.head")), "control: a query with operators and no count to say draws no bare heading");
 });
+
+/* ---------- R107 (F-B10 (a), DEC-439): the passage route's widen has its own count and its own act label ---------- */
+
+test("R107 (F-B10 (a), DEC-439): the walker's passages-only widen draws `screen.finder.widen.passages` {n} and the act `act.search.label.finder.widen` (pressed it asks the OR reading); control: the documents route keeps `screen.finder.widen` and `act.search.label.finder`, and wins when both routes widen", async () => {
+  const typed = "ordinance zzzqqq";
+  const w = (total) => ({ interpretation: "OR", total, q: typed, detail: "d" });
+  const drawn = async (fields, passages) => {
+    const p = await open("/app/finder/" + typed, { search: NOHITS(fields), meaningrows: PASSAGES([], { total: 0, widen: passages }) });
+    await settle();
+    return { p, t: text(p), act: main(p).querySelectorAll('button[data-act="search"]').find((x) => x.dataset.widen) };
+  };
+  const label = (a) => a.textContent.trim();
+  const only = await drawn(null, w(3));
+  assert.ok(only.t.includes(word("screen.finder.widen.passages", { n: "3" })), "the passage count: " + only.t.slice(0, 400));
+  assert.ok(!only.t.includes(word("screen.finder.widen", { n: "3" })), "never under \"Documents holding ...\"");
+  assert.ok(only.act, "the widen act");
+  assert.equal(label(only.act), word("act.search.label.finder.widen").trim());
+  assert.ok(only.t.indexOf(word("screen.finder.widen.passages", { n: "3" })) > only.t.indexOf(word("screen.finder.partial.head")), "the count follows the heading");
+  await only.p.click(only.act);
+  await settle();
+  assert.deepEqual(only.p.byOp("search").slice(-1).map((r) => r.query.q), ["ordinance OR zzzqqq"]);
+  const docs = await drawn(w(5), null);
+  assert.ok(docs.t.includes(word("screen.finder.widen", { n: "5" })), "control: the documents route's count");
+  assert.ok(!docs.t.includes(word("screen.finder.widen.passages", { n: "5" })));
+  assert.equal(label(docs.act), word("act.search.label.finder").trim(), "control: its act unchanged");
+  const both = await drawn(w(2), w(9));
+  assert.ok(both.t.includes(word("screen.finder.widen", { n: "2" })), "control: the documents route's reading wins");
+  assert.ok(!both.t.includes(word("screen.finder.widen.passages", { n: "9" })));
+  assert.equal(label(both.act), word("act.search.label.finder").trim());
+});
+
+/* ---------- R107 (A-03, DEC-439; queue R96, credentials R83): "I know about this key" ---------- */
+
+/** A fresh Ed25519 signing key in the shape `signeradd` takes (an `ssh-ed25519` public-key blob, base64). */
+async function sshKey() {
+  const { webcrypto } = await import("node:crypto");
+  const kp = await webcrypto.subtle.generateKey({ name: "Ed25519" }, true, ["sign", "verify"]);
+  const raw = new Uint8Array(await webcrypto.subtle.exportKey("raw", kp.publicKey));
+  const part = (b) => Buffer.concat([Buffer.from([0, 0, 0, b.length]), Buffer.from(b)]);
+  return Buffer.concat([part(Buffer.from("ssh-ed25519")), part(raw)]).toString("base64");
+}
+
+test("R107 (A-03): an administrator's queue draws `queue.signer-self-registered.known` on a member's self-registered key; pressing it sends the key to the real `signerknown`, which records who knows it; control: another kind of item draws no such act", timeout, async () => {
+  const w = await storeWorld();
+  const rosa = await w.signIn("rosa", { admin: true });
+  const mai = await w.signIn("mai");
+  const keyB64 = await sshKey();
+  const reg = await mai.act("signerregisterown", { body: { keyB64, comment: "mai's laptop" } });
+  assert.equal(reg.ok, true, JSON.stringify(reg).slice(0, 300));
+  await w.tick(120_000);
+  const item = (await rosa.read("queue")).items.find((i) => i.kind === "signer-self-registered");
+  assert.ok(item, "the administrator holds the item");
+  const p = await openW(w, rosa, "/app/queue");
+  await settle();
+  const known = main(p).querySelectorAll('button[data-act="signerknown"]');
+  assert.equal(known.length, 1, "one act on the item");
+  assert.equal(known[0].textContent.trim(), word("queue.signer-self-registered.known").trim(), "labelled by its key");
+  await press(p, "signerknown");
+  assert.equal(last(p, "signerknown").body.keyB64, keyB64, "the key the item is about");
+  const row = (await rosa.read("signerlist")).signers.find((s) => s.key_b64 === keyB64);
+  assert.ok(row && row.known_by, "the plane records who knows it: " + JSON.stringify(row));
+  await w.tick(120_000);
+  assert.equal((await rosa.read("queue")).items.filter((i) => i.kind === "signer-self-registered").length, 0, "the item is gone for the administrator once she says she knows it (queue R55)");
+  const second = await mai.act("signerregisterown", { body: { keyB64: await sshKey(), comment: "mai's phone" } });
+  assert.equal(second.ok, true);
+  await w.tick(120_000);
+  assert.equal((await rosa.read("queue")).items.filter((i) => i.kind === "signer-self-registered").length, 1, "control: a second self-registered key is an item again");
+  const hers = await openW(w, mai, "/app/queue");
+  await settle();
+  assert.equal(main(hers).querySelectorAll('button[data-act="signerknown"]').length, 0, "control: the member who registered it is told nothing of it, so has no such act");
+});
