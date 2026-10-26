@@ -156,3 +156,25 @@ Deferred: none. Found in another module: none new.
 Size (session_016jHoSN6Fe8DtYJkQyfT6Rr): test runs 5, module lines 0 (source unchanged; 51 test lines added)
 
 Waiting on BOB (J8) to merge; ACTIONS re-points after the merge.
+
+## J10 · COMPLETE
+
+B9 done (START #29, walk E C2a). R43 met: `determine` now answers its own code for an undetermined binding.
+
+**Changed (commit on job/T51/conformance):**
+- `bio-plane/src/conformance/index.mjs:1066-1079`: `STANDARD_NOT_BINDING` only for `binds === false` (a benchmark); a new region `is-standard-binding-determined` answers `STANDARD_BINDING_UNDETERMINED` for `binds === "undetermined"`, same `why` detail (it says why, and that a member settles it in standards first), fields `standard, body, binds`.
+- `bio-plane/src/conformance/checks.mjs:172`: new row C-113.45 `STANDARD_BINDING_UNDETERMINED`, translation `localize('conformance.checks.civicsmith_cannot_yet_tell_whether', ...)` (BOB's draft; no design key exists in words.json yet), awaiting the next promotion stamp.
+- Fixture published: `standardBindingUndetermined()` (bio-plane/test/m/conformance/fixtures.mjs:42): the walker's shape (ordinance, `period {from, to: null}`, body as text) plus the issuer-entity variant (`askedByIssuerEntity.typed`/`.picked`), `benchmarkAsked`, `bindsAsked`. screens-action draws the code through this fixture.
+
+**Tests, red then green** (`t51-binding.test.mjs`, 5 tests, all name R43): red first: 3 failed (`STANDARD_NOT_BINDING` answered where `STANDARD_BINDING_UNDETERMINED` expected; row absent), the benchmark control passed; green after the change, 5 of 5. Existing tests that encoded the old behaviour were moved to the new code (t35.test.mjs:54 area, t36.test.mjs three tests); t46-words.test.mjs's "every other row keeps its own" set leaves out the new row (its count and hash for the other 34 rows are unchanged).
+
+**Suites:** conformance 132 pass, 0 fail (127 before, +5); users run: escalation 103/103, consequences 73/73, screens-action 297/297. Impact names 45 modules, 1002 test files; the modules that read this refusal (escalation, consequences, screens-action) were run.
+**Checks (absolute root):** format 0, architecture 0, words 0 failures (conformance), ownership 0 failures; coverage: no conformance finding (the 8 failing ids are other modules'). `setup-words/build.mjs --check`: stale-rows note naming `conformance.checks.civicsmith_cannot_yet_tell_whether`, expected (BOB regenerates).
+**Inherited/expected red:** `bio-plane/test/system/row-census.test.mjs` is red with many rows from other modules (C-102.34 ... ) and now C-113.45 as well, accepted by name until the next stamp.
+**Markers:** none added (no fixtures-own, no fixtures-generic).
+
+**REPORT for BOB (other modules):**
+1. screens-action `matter.mjs` (the `determine` act, ~538-577) has no handler for the new code; it draws `refusal.<code>` when a key is held, so for `STANDARD_BINDING_UNDETERMINED` it falls back to the plane's translation. The design stream owes a `refusal.STANDARD_BINDING_UNDETERMINED` key; screens-action should draw the refusal's `detail` (the why) beside it. Causes (a) body typed as text vs an entity issuer, (b) no "known in force through" door, are screens-action / screens-investigate / standards causes in causes-E.md C2a.
+2. Generated artifacts made stale: `bio-plane/src/setup-words/rows.mjs` (new `localize` id), `bio-plane/src/case-checker/program.mjs` and `bio-plane/dist/bio-plane.bundled.mjs` (they hold conformance's refusal table).
+
+Deferred: none. Size (session_01SB37ZomNUisnUzz3WLTSui): test runs 8, module lines 14 (source) + 20 fixture lines + 66 test lines
