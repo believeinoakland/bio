@@ -986,13 +986,15 @@ export class Docket {
 
   /* ================================================================ R3: the member's read */
 
-  /* R30 (T51; DEC-340): the member who made a mark as `{member, handle}`, or null when its author is not a member. Only
-     `docketOf`, which answers a viewer who sees the project in full, names her; R27's reads never do. */
+  /* R30 (T51; DEC-340): the member who made a mark as `{member, handle}`, or null when its author is not a member: no
+     roster row, or one no longer active (a revoked member keeps her row, so her status is what decides). Only `docketOf`,
+     which answers a viewer who sees the project in full, names her; R27's reads never do. */
   #markedBy(memberId) {
     const id = str(memberId);
     if (!id) return null;
     const facts = this.#call(() => this.membership.memberFacts(id));
-    return { member: id, handle: facts && str(facts.handle) ? facts.handle : null };
+    if (!facts || facts.status !== "active") return null;
+    return { member: id, handle: str(facts.handle) ? facts.handle : null };
   }
 
   /* R14's view of one public entry. */

@@ -1,6 +1,6 @@
 # standards (T51)
 
-**Status** · session_01BGmyopxvDtf9nKPbPea8fa · depth 2 · COMPLETE · handled B5
+**Status** · session_01AttFwdpMk7hg2XJoF6Y7AX · depth 2 · COMPLETE · handled B10
 
 ## J1 · COMPLETE
 
@@ -122,3 +122,56 @@ Size (session_01BGmyopxvDtf9nKPbPea8fa): test runs 4, module lines 3567
 ## J5 · COMPLETE · re B5
 
 B5 done: cause 1 (#memberCaptured accepts a bare id or member:<id>, never a machine identity) and cause 2 (the in-force why names the member without a member: stamp) fixed, each test seen red then green. Met ids: R41, R45. Tests 119/119; format, architecture, coverage, words, ownership 0; fixtures only the known orphan-run. Notes: the row standard.inforce.known names its var {author}, not {member} (design's to rename); the door case for a bare-id upload is control-plane's, for BOB to place; setup-words --check refuses on plane.declared.readtranslate (plane, not mine). Record: build/jobs/T51/standards.md.
+
+## Fix round 10, R7 known_through (B6) · session_017cwPRYtTMcVjGxduRoTLMb
+
+## J6 · COMPLETE · re B6
+
+T51 · standards #20 · K5178 (SCREENS-INVESTIGATE #16 J28 (2)).
+
+**What changed** (`bio-plane/src/standards/index.mjs`)
+- `#throughOf` (~1375) also answers `ref: {through, source: {captureSha, extent}, by}`, the R50 record's own fields (`by` as the record stores it, `member:<id>`, the same as `inForceThroughOf`'s `by`).
+- `#versionAtPeriod` (~1325-1365) sets `restsOnRecord` when R51's record decides the state (`validAt` `in` over `{from, to: through}`) and returns `known_through: ref` only while the final state is `in_force`; the existing record object stays as `in_force_through` (unchanged, as before).
+- `#versionAt` (~1254) is now a wrapper over `#versionAtState`: where R38's version basis or an override moves the state off `in_force`, `known_through` is dropped. A stated end, the day after `through`, codifier lag and a withdrawn record all leave none.
+- `inForceAt` (~1393, ~1409), both the standard and the key paths, and `inForce` (~1190, R7's alias) carry `known_through` beside `why` (unchanged).
+- `fixtures.mjs`: new export `inForceKnown` (made by the real act and the real reads); tested in `fixtures.test.mjs`.
+
+**Failing-first test:** `bio-plane/test/m/standards/known-through.test.mjs` (R7 R20): an R50 record made by the real act, then `standardinforce` (through `standardsOps`), `inForce` and `inForceAt`; red on the earlier code (`R7's alias: actual undefined`), green now. Controls: no record, the day after `through`, a stated end, a withdrawn record, codifier lag: none carries `known_through`. Why the tests missed it: they asserted `why`'s text, never what a screen needs to draw it.
+
+**Met ids (BOB strikes the mark):** R7.
+
+**Suite counts:** `bio-plane/test/m/standards/`: 122 tests, 0 failures. Users run: filings 165/0, action-plans 105/0, affordances 289/0, conformance 125 tests / 1 failure, screens-investigate 249 / 1 failure (both pre-existing, below); control-plane and plane: see the line below.
+
+**Found in other modules (REPORT):**
+- conformance `bio-plane/test/m/conformance/t36.test.mjs:58`: expects R3's `why` to read "recorded by member:olive"; the module's sentence (`standard.inforce.known`, author drawn without the stamp, R45 amended K5148) reads "recorded by olive". Fails identically on the tranche code without my change. The test needs the bare id.
+- screens-investigate "R4 C8 (the figure) Money, the real plane: a figure read in with its period's dates…": fails identically without my change (a money/period case, outside standards).
+
+**Checks** (absolute root `/home/user/bio`): format 0 failures; architecture (standards) 0; coverage (standards) 53 of 53, 0; ownership 0; `checks/run.mjs`: no finding in my files, words count unchanged (I added no sentence); `fixtures.mjs standards --list`: one line, `contract law-relations bio-plane/test/m/standards/fixtures.test.mjs:83 orphan-run` (the allowed one, waits for law-relations' marker merge). No `fixtures-own` or `fixtures-generic` marker added.
+
+**Deferred:** nothing.
+
+## Saved at K5183
+
+Done: the whole change of J6 above (index.mjs `known_through`, `known-through.test.mjs`, `inForceKnown` fixture and its test), committed; module tests 122/0; filings, action-plans, affordances green; format, architecture, coverage, ownership 0. J6's COMPLETE is NOT posted.
+Half done: the control-plane and plane test runs were stopped unfinished; no result.
+Next step: run `bio-plane/test/m/control-plane/` and `bio-plane/test/m/plane/` (`node --import ./bio-plane/test/platform-sqlite.mjs --test <dir>`), add their counts to J6's "Suite counts" and a `Size (<session id>): test runs <n>, module lines <n>` line, commit, push, `mail state --set COMPLETE`, `mail post --as job --kind COMPLETE`, ring BOB. Also REPORT to BOB the conformance `t36.test.mjs:58` stale "member:olive" expectation (in J6). No workers to stop.
+
+## J6 completion, resumed (B8 to B10) · session_01AttFwdpMk7hg2XJoF6Y7AX
+
+Merged `tranche/T51` (as of 7efd8cb8c2) into the branch; nothing in my paths conflicted. The change of J6 is unchanged.
+
+**Users' runs, finished (absolute root, tranche as it stood at my merge).**
+- standards: 122 tests, 0 failures.
+- control-plane: 720 tests, 714 pass, 6 fail. None is mine: five (R105 G61, R105 G63, R137, R17/R29/R123 adoptversion, R60 ratification) fail identically on a clean checkout of `origin/tranche/T51` (files `r10-caseratify-chain`, `walk-monitoring-checknow-adopt`, `t51-round7-seam`, `r137-parity`); the sixth, `R9 seam §14`, names itself red until other jobs merge.
+- plane: the full-directory run stalled twice (148 passes, one failure, no output for an hour, the second time with `--test-timeout=600000`). The one failure, `door.test.mjs` "R1, R5, R67 ... thirty-six routes", fails identically on clean `origin/tranche/T51` (6 tests, 5 pass, 1 fail). The three files still running when I stopped it, `fix5-r77.test.mjs`, `fix6-pending.test.mjs`, `r9-jobs.test.mjs`, also show no result in 580 s on clean `origin/tranche/T51`, so the stall is not from my change. I did not run the rest of plane's files to completion: not verified, stated plainly.
+- filings 165/0, action-plans 105/0, affordances 289/0, conformance 125 / 1 failure (t36 line 58, fixed by BOB K5182), screens-investigate 249 / 1 failure (money/period, its own job): from J6.
+
+**B10 note:** my branch does not yet hold `fc578df959` (no store starts: `DECLARED_OP_DISAGREES`); my runs predate it and show none of that message.
+
+**Deferred:** nothing. **REPORT (other modules):** plane `door.test.mjs` R1/R5/R67 thirty-six routes, and plane `fix5-r77`, `fix6-pending`, `r9-jobs` hang, both on the tranche without my change.
+
+Size (session_01AttFwdpMk7hg2XJoF6Y7AX): test runs 12, module lines 3593
+
+## J7 · COMPLETE
+
+COMPLETE (J6, resumed): R7 known_through done (index.mjs, known-through.test.mjs, inForceKnown fixture); met id R7. standards 122/0; control-plane 714/720, plane: see record. Every red I saw fails identically on clean tranche/T51 (control-plane five, plane door.test.mjs R1/R5/R67), plus plane fix5-r77, fix6-pending, r9-jobs hang there too; the full plane directory never finished, so plane is not fully verified. Checks 0: format, architecture, coverage 53/53, ownership. No fixtures marker added. Branch lacks fc578df959; CHANGE me to merge. Size: test runs 12, module lines 3593.

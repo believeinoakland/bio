@@ -477,23 +477,28 @@ export const queue = Object.freeze({
         if (!q) return { refuse: "screen.queue.fieldfirst" };
         // `cs.w` answers HTML; the session log is text, so the entities it made are undone.
         const plain = function (t) { return String(t).replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"); };
-        const iso = new Date(cs.now()).toISOString().replace(/\.\d{3}Z$/, "Z");
-        const nonce = Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, "0");
-        // R81: `promote` takes the package fields only; the question's project is the file's own `project` line, as `project` writes one.
-        const text = "---\nobject_type: inquiry\nquestion: " + JSON.stringify(q) + (el.dataset.project ? "\nproject: " + el.dataset.project : "") + "\ncurrent_state: open\ncreated: \"" + iso
-          + "\"\nlast_updated: \"" + iso + "\"\n---\n\n## Session Log\n\n### Session " + iso
-          + " | Formation | interactive\nTrigger: " + plain(cs.w("file.trigger.queue", { item: String(el.dataset.item).replace(/[\n\r]/g, " ") })) + "\nChanges: created.\n";
-        return {
-          body: {
-            base: null, snapKey: iso.replace(/[-:]/g, "") + "_" + nonce,
-            meta: { object_type: "inquiry", title: q, current_state: "open", created: iso, last_updated: iso },
-            files: [{ path: "bundle.md", text: text }], register: [],
-          },
-        };
-      },
-      done: function (view, answer, cs) {
-        const id = answer && (answer.bundleId || (answer.result && answer.result.bundleId));
-        if (id) cs.go("question", id);
+        const clock = new Date(cs.now());
+        const iso = clock.toISOString().replace(/\.\d{3}Z$/, "Z");
+        const item = String(el.dataset.item).replace(/[\n\r]/g, " ");
+        const project = el.dataset.project || "";
+        // R81: `promote` takes the package fields only (`bundleId`, `base`, `snapKey`, `meta`, `files`); the id is the store's own (`allocid`, as the project's page asks it)
+        // and the project is the file's own `project` line.
+        cs.call("allocid", { query: { prefix: "INQ", year: String(clock.getUTCFullYear()) } }).then(function (a) {
+          const r = a && a.result !== undefined ? a.result : a;
+          if (!r || !r.id) return null;
+          const slug = q.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40).replace(/-+$/, "");
+          const id = r.id + (slug ? "-" + slug : "");
+          const heads = ["## Question", plain(cs.w("conformance.rests")), "## Conclusion", plain(cs.w("conformance.falsify")), "## Session Log", "## Review Notes"];
+          const lines = ["---", "id: " + id, "object_type: inquiry", "schema: inquiry@1", "title: " + JSON.stringify(q), "current_state: open", "prior_state: null",
+            "created: " + iso, "last_updated: " + iso].concat(project ? ["project: " + project] : [], ["produced_by:", "  mode: assisted", "  capability_tier: session", "references: []",
+            "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []", "surfaced_by: human", "---", ""]);
+          heads.forEach(function (h, i) { lines.push(h, ""); if (i === 0) lines.push(q, ""); if (i === 4) lines.push("### Session " + iso + " | Formation | interactive", "Trigger: " + plain(cs.w("file.trigger.queue", { item: item })), "Changes: created.", ""); });
+          const nonce = Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, "0");
+          return cs.call("promote", { body: { bundleId: id, base: null, snapKey: iso.replace(/[-:]/g, "") + "_" + nonce,
+            meta: { object_type: "inquiry", title: q, current_state: "open", created: iso, last_updated: iso }, files: [{ path: "bundle.md", text: lines.join("\n") }] } })
+            .then(function (p) { if (p && p.ok !== false) cs.go("question", id); });
+        }, function () { return null; });
+        return null;
       } },
     { op: "projectkeyset", label: "act.projectkeyset.label.queue", rereads: ["queue"],
       send: function (view, el, cs) {
@@ -503,8 +508,9 @@ export const queue = Object.freeze({
         return key && project ? { body: { project: project, key: key } } : { refuse: "screen.queue.fieldfirst" };
       } },
     // R13: the unsent request dropped, with the member's reason (the shell asks it: `actionmove` is reasoned).
+    // The store reads the act's fields, the reason too, from the query (`raw: ""` has the shell put the reason there).
     { op: "actionmove", label: "act.actionmove.label.queue", rereads: ["queue"],
-      send: function (view, el) { return el.dataset.action ? { body: { target: el.dataset.action, to: "abandoned" } } : null; } },
+      send: function (view, el) { return el.dataset.action ? { query: { target: el.dataset.action, to: "abandoned" }, raw: "" } : null; } },
     // R42: "Join" an invitation, and an owner's Grant or Decline of a request to join; the item leaves with the re-read.
     { op: "projectjoin", label: "act.projectjoin.label.queue", rereads: ["queue"],
       send: function (view, el) { return el.dataset.project ? { query: { projectId: el.dataset.project } } : null; },

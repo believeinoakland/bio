@@ -79,18 +79,28 @@ test("R2 R34 R96 G38 the words a leg cites on the third page of a long reading a
 
 /* a contradiction flag: a passage of this reading beside a passage of another document, each chosen among the passages the readings hold */
 const OTHER = "INFO-2026-0011", OTHER_SHA = "5".repeat(64);
+/** choose the other document in the R137 picker (one radio of the fold `kind`, not one of its page controls) */
+async function pickDoc(p, kind, value) {
+  const picker = main(p).querySelector(`[data-picker="${kind}"]`);
+  const r = picker && picker.querySelectorAll("input").find((i) => i.getAttribute("type") === "radio" && i.getAttribute("value") === value && !i.closest("[data-pick-pages]"));
+  assert.ok(r, `${value} is offered in the ${kind} picker`);
+  r.checked = true; p.fire(r, "change"); await p.settle();
+}
+/** `heldcaptures` as the plane answers it: the picker's read (sorted by project, R137) the rows given, any other read the fixture's own answer */
+const pickHeld = (base, rows) => (r) => (r.query.sort === "project" ? ok({ ok: true, held: rows, truncated: false, next: null }) : (typeof base.heldcaptures === "function" ? base.heldcaptures(r) : base.heldcaptures));
+const OTHER_ROW = { bundle_id: OTHER, title: "Rent notice, October 2026", project: P, collected_since: "2026-10-02T09:00:00Z", capture: { sha256: OTHER_SHA }, actor: "member:dev", whole: true, standing: "collected" };
 const FLAG_PLANE = (extra = {}) => {
   const base = plane();
   const own = pages(SHA), other = pages(OTHER_SHA, (n) => `Other document, page ${n + 1}.`);
   return { list: (r) => (r.query.type === "information" ? ok({ bundles: [{ bundle_id: D, object_type: "information", title: "This one" }, { bundle_id: OTHER, object_type: "information", title: "Rent notice, October 2026" }] }) : ok({ bundles: [] })),
     image: (r) => (r.query.id === OTHER ? ok({ "bundle.md": ["---", `id: ${OTHER}`, "object_type: information", "title: \"Rent notice, October 2026\"", "---", "", ""].join("\n"), "data/provenance.json": provenanceOf(OTHER_SHA) }) : base.image(r)),
-    reading: readingOf({ [SHA]: own, [OTHER_SHA]: other }), contradictionflag: ok({ ok: true, wrote: true, candidate: "c1" }), ...extra };
+    heldcaptures: pickHeld(base, [OTHER_ROW]), reading: readingOf({ [SHA]: own, [OTHER_SHA]: other }), contradictionflag: ok({ ok: true, wrote: true, candidate: "c1" }), ...extra };
 };
 const optionsOf = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => ({ value: o.getAttribute("value"), text: o.textContent }));
 
 test("R127 G38 a contradiction flag can be set on a passage of the third page of either reading: both pickers list every page's passages, and the act sends the extent the chosen one states", async () => {
   const p = await openWith(docAt, { plane: FLAG_PLANE() });
-  await choose(p, "document-flag-other", OTHER);
+  await pickDoc(p, "flag", OTHER);
   const here = optionsOf(p, "document-flag-here"), there = optionsOf(p, "document-flag-there");
   assert.equal(here.length, 1 + 6, "this reading's six passages, from all three pages, after the empty choice");
   assert.ok(here.some((o) => o.text.includes(FLAG_WORDS.slice(0, 40))), "the passage on page 3 is offered: " + JSON.stringify(here.map((o) => o.text.slice(0, 30))));
@@ -106,12 +116,12 @@ test("R127 G38 a contradiction flag can be set on a passage of the third page of
   /* control: a one-page reading offers its passages and makes one read of each */
   const one = pages(SHA)[0], oneOther = pages(OTHER_SHA)[0];
   const q = await openWith(docAt, { plane: FLAG_PLANE({ reading: readingOf({ [SHA]: [{ ...one, next: undefined }], [OTHER_SHA]: [{ ...oneOther, next: undefined }] }) }) });
-  await choose(q, "document-flag-other", OTHER);
+  await pickDoc(q, "flag", OTHER);
   assert.equal(optionsOf(q, "document-flag-here").length, 1 + 2);
   assert.equal(readsOf(q, SHA).length, 1, "a one-page reading makes one read");
   assert.equal(readsOf(q, OTHER_SHA).length, 1);
   /* control: no other document, no fold, and the pages are not read for it */
-  const alone = await openWith(docAt, { plane: FLAG_PLANE({ list: ok({ bundles: [{ bundle_id: D, object_type: "information", title: "This one" }] }) }) });
+  const alone = await openWith(docAt, { plane: FLAG_PLANE({ heldcaptures: pickHeld(plane(), []) }) });
   assert.equal(main(alone).querySelector('[data-fold="contradict"]'), null);
   assert.equal(readsOf(alone, SHA).length, 1, "no fold is drawn, so no further page is read for it");
 });

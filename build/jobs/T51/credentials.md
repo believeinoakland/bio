@@ -1,6 +1,6 @@
 # credentials (T51)
 
-**Status** · session_01TQdg39hRq6XmHth6mQqW3i · depth 2 · COMPLETE · handled B13
+**Status** · session_01MX23PSD31bEtV5CnCLBEte · depth 2 · COMPLETE · handled B18
 
 ## J1 · COMPLETE
 
@@ -332,3 +332,97 @@ COMPLETE · fix round 10, the final pass's cause 1 (B14; plan item 71 (3); STORE
 - `fixtures credentials --list`: one line, `seam.test.mjs:177` (member-roster's `LISTENER_MALFORMED`), the baseline's. No marker added.
 
 **Size (session_01TQdg39hRq6XmHth6mQqW3i): test runs 4, module lines 2223**
+
+## J22 · BLOCKED
+
+Fix round 10, plan item 95 (B15): the fixture line `seam.test.mjs:177` (LISTENER_MALFORMED) is cleared; one architecture item needs Bob.
+
+**Applied (B15).** `bio-plane/test/m/credentials/seam.test.mjs`:
+- :9 imports member-roster's published `listenerRefusals()` from `../member-roster/fixtures.mjs`.
+- :172-175 the test's membership fake answers with the published refusals: a non-function → `refusals.malformed`; a second registration → `refusals.declared`; the first → `refusals.registered`. The hand-written `{ ok: false, reason: "LISTENER_MALFORMED" }` and `"LISTENER_DECLARED"` literals are gone.
+- :185 asserts `c.start().password` is the same object as `refusals.declared` (credentials passes membership's answer through unchanged, `src/credentials/index.mjs:174`).
+
+**Tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/credentials/seam.test.mjs`: 8 of 8 pass (same count as before). `… --test bio-plane/test/m/credentials/*.test.mjs`: 194 of 194 pass, 0 fail.
+
+**Checks (absolute root `/home/user/bio`).**
+- `checks/fixtures.mjs /home/user/bio credentials --list`: 0 failures (was 1: `seam.test.mjs:177 [refusal]`).
+- `checks/format.mjs`: 0 failures.
+- `checks/coverage.mjs … credentials`: 58 of 58 live requirement ids named; 0 failures.
+- `checks/ownership.mjs … credentials <merge-base> HEAD`: 0 failures (one file changed).
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules, 0 of 2981 test files affected.
+- `checks/architecture.mjs /home/user/bio credentials`: **1 failure** (below).
+- `checks/run.mjs /home/user/bio`: the only finding in credentials' files is the architecture one. Words: 19247 words, 0 missingkey; 16 failures reported, all in other modules (listed below for BOB).
+
+**Needs Bob (one line, in `build/modules.json`, not my path).** The architecture check fails: `seam.test.mjs (credentials): imports bio-plane/test/m/member-roster/fixtures.mjs of member-roster, which credentials does not declare in uses`. The only published answer for a listener refusal is member-roster's `listenerRefusals()`, and member-roster is not in credentials' `uses` (`uses`: setup-words, record-grammar, record-core, membership, ai-accounts, test-support). Two routes:
+1. **Recommended:** add `"member-roster"` to credentials' `uses`. It is layer 2, and it is test-only (the same way the seam already imports `record-core/fixtures.mjs`, a declared use). It does not change any runtime dependency.
+2. Alternative: membership (declared already) re-publishes the same three refusals from its own `fixtures.mjs`. That is membership's job to make, and it adds a second fixture for one answer.
+
+Until Bob chooses, my branch is one declaration short of COMPLETE. The code change is already correct and committed on `job/T51/credentials`.
+
+**Found outside credentials (REPORT for BOB; not touched).** `run.mjs` lists 15 other failures: interface-shell `harness.mjs:97` (signout answer from credentials, earlier); law-relations `fixture.mjs:136` (citationLookup refusal from credentials/acquisition, earlier); screens-daily `home.test.mjs:39,466` and `queue-foot.test.mjs:138` (op-table answers from credentials, earlier); screens-intake `t51-credentials.test.mjs:33,46` (capture-sources/capture-requests, earlier); store-assembly `wiring.mjs:49,78`, `wizards.mjs:51` (plain/inline strings, not localized), `declared.mjs:16` (`plane.declared.readtranslate` has a different `en` than `plane/declared.mjs:13`). None is caused by this change; this change touches only one test file.
+
+**Size (session_01MX23PSD31bEtV5CnCLBEte): test runs 2, module lines 2223**
+
+## J23 · BLOCKED
+
+Processed CHANGE B16 (K5197): credentials hands its clock to ai-accounts; the failing-first test is red until ai-accounts takes a clock. BLOCKED (cause: needs ai-accounts).
+
+**Done (credentials, pushed as `6f6aa1047a`).**
+- `bio-plane/src/credentials/index.mjs:2061`: `aiAccountsOf(ctx, { record: core, membership: m, sealSecret, now })`. `now` is the function `credentialsOf` was handed; none handed, it is `null` and ai-accounts reads the wall clock as before.
+- `bio-plane/test/m/credentials/k5197-accounts-clock.test.mjs` (new, two tests, through the instance credentials makes, `w.c.accounts.subscriptionTokenHold`, which returns `{ok, since}` with `since` whole-second):
+  1. handed `now: () => PINNED`, the sign-in's `since` equals `2026-10-20T10:15:30Z`. **Failing-first:** red on the code before the change (`since` was the wall clock). After the change it is still red, with `actual: '2026-10-25T22:23:38Z'`.
+  2. control: no clock handed, `since` is the wall clock between the calls either side. Green.
+
+**Why it stays red.** `aiAccountsOf(ctx, { record, membership, sealSecret })` takes no clock, and `AiAccounts` reads `Date.now()` directly at `bio-plane/src/ai-accounts/index.mjs:759` (sign-in `since` and `validUntil`) and `:779`. Its `stampSecond` default (`:67`) also uses `Date.now()`. So the handed `now` is dropped inside ai-accounts. Credentials cannot make that line green alone.
+
+**Needs ai-accounts (its paths, not mine).** One change, the same pattern as credentials' K5148 rule: `aiAccountsOf(ctx, { record, membership, sealSecret, now })` takes `now` (a function of milliseconds, default null), `AiAccounts` keeps it and reads it at `:759` and `:779` (and wherever it takes a default `Date.now()` for a stamp), wall clock when none is given. Once that merges, the K5197 test should go green with no change in credentials.
+
+**Environment control, not testable as written.** The B16 control "none handed, the environment's `BIO_NOW_MS`" does not hold in the code I read. `credentialsOps` sets `BIO_NOW_MS` on credentials' own `#nowMs` only (`credentials/index.mjs:131-146, 2091`). `ai-accounts` has no path to that environment, and its sign-in op is in-plane, not routed through `credentialsOps`. So with no clock handed, ai-accounts stamps the wall clock even in a pinned store. This is for BOB to decide: either ai-accounts also reads `env.BIO_NOW_MS` (the same handed-in rule), or the environment control is dropped. I did not add an environment test that would be red by design.
+
+**Checks / tests.** Credentials suite: 195 of 196 pass; the one red is the K5197 test above. `k5148-clock.test.mjs` (5 of 5) still green. Not run yet after this change: format, architecture, coverage, ownership, fixtures; I'll run them once ai-accounts lands.
+
+**Size (session_01MX23PSD31bEtV5CnCLBEte):** test runs 2 (the new test file, then the full credentials suite, plus the K5148 re-run), module lines 2223 (`index.mjs` unchanged in count, one line edited).
+
+**Waiting on BOB.** BOB or the ai-accounts job takes the one line above. I'm staying on the credentials branch until that lands; then I re-run the K5197 test and the module checks, and COMPLETE.
+
+## J24 · BLOCKED
+
+Processed ANSWER B17 (K5198). Route 1 is on the tranche: `credentials` uses `member-roster`. Tranche merged (`ee3523dc91`, fast-forward, no rebase).
+
+**Checks now 0:** architecture (0 failures, 35 files, 110 imports); fixtures `credentials --list` (0 failures); format; coverage (58 of 58); ownership.
+
+**Still red: one test, the K5197 handed-clock test.** Credentials hands its `now` to `aiAccountsOf` (B16, pushed as `6f6aa1047a`). ai-accounts has not taken it yet: `aiAccountsOf` (`bio-plane/src/ai-accounts/index.mjs:1664`) takes no clock, and its sign-in stamp still reads `Date.now()` (`:759`; default in `stampSecond`, `:67`). The test reads `since: '2026-10-25T22:…Z'` where `2026-10-20T10:15:30Z` is expected. Credentials suite: 195 of 196 pass.
+
+**Needs ai-accounts' job** (its paths, not mine): `aiAccountsOf(ctx, {…, now})` takes the clock and `AiAccounts` reads it at `:759` and `:779`. Once it merges, I re-run the suite and COMPLETE with no further change here.
+
+Not decided by me: the B16 environment control (`BIO_NOW_MS` reaching ai-accounts) is still open, as in J23.
+
+**Size (session_01MX23PSD31bEtV5CnCLBEte):** test runs 3, module lines 2223.
+
+## J25 · COMPLETE
+
+Processed CHANGE B18 (K5200) and ANSWER B17 (K5198). Tranche merged (`3434b26261`, a merge, no rebase). Module complete.
+
+**Applied.**
+- B15 (fixture line): `bio-plane/test/m/credentials/seam.test.mjs` takes member-roster's published `listenerRefusals()` (`:9`, `:172-175`); `:185` asserts the declared refusal by identity. Earlier, `fixtures --list` at 1 failure, now 0.
+- B16 (K5197 clock): `bio-plane/src/credentials/index.mjs:2061` passes `now` to `aiAccountsOf`. Failing-first test `bio-plane/test/m/credentials/k5197-accounts-clock.test.mjs`: red before the change, green now (since: `2026-10-20T10:15:30Z`). Control (no clock handed) green.
+- B17 (`uses`): BOB's edge on the tranche; `credentials` now uses `member-roster`.
+- B18: ai-accounts (K5199, R39) now takes `now`; the K5197 test passes on the merged tranche. The B16 environment control is dropped, as BOB directed.
+
+**Met ids.** No `**Rn**` marks were struck by me; BOB strikes the marks. Coverage: 58 of 58 live requirement ids named by a test.
+
+**Tests.** Credentials suite, all `bio-plane/test/m/credentials/*.test.mjs`: 196 of 196 pass (two consecutive full runs, 196 of 196 each; the K5197 test included). Seam file alone 8 of 8. `k5148-clock.test.mjs` 5 of 5.
+
+**One unexplained flake.** The first full run after the tranche merge reported `R1 R4 R39 R45 R46 R47 R43 the T35 routes …` (`t35-misc.test.mjs`) as failing, with no assertion output captured. That file alone passes 9 of 9, and two more full runs pass 196 of 196. I have no root cause; I'm recording it so it can be watched in the next tranche.
+
+**Checks (absolute root `/home/user/bio`).** architecture 0 failures (35 files, 110 imports); fixtures `credentials --list` 0 failures (3536 files read); format 0; coverage 0 (58 of 58); ownership 0 (4 files changed by credentials since the tranche base).
+
+**Deferred.** None in this module.
+
+**Found outside credentials.** None new this round. The 15 repo-wide `run.mjs` findings in J22 still stand, unchanged by these commits.
+
+**Size (session_01MX23PSD31bEtV5CnCLBEte): test runs 11, module lines 2223**
+
+## J26 · REPORT
+
+Ring failed after COMPLETE (J25): BOB's session session_01WJsZWkoGCJqWG6874AF7LK is archived, so no doorbell could be bound to it (create_trigger: 'session not active'). The pushed J25 COMPLETE is the message; BOB's backstop reads it (mechanics §13).

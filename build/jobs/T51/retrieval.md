@@ -1,6 +1,6 @@
 # retrieval (T51)
 
-**Status** · session_016G5oBN4TFJqahHxjitiCAD · depth 2 · COMPLETE · handled B15
+**Status** · session_01M8nFpzKAppvTqqwDVd1nYV · depth 2 · COMPLETE · handled B18
 
 ## Work notes (RETRIEVAL #20)
 
@@ -290,3 +290,59 @@ Size (session_016G5oBN4TFJqahHxjitiCAD): test runs 9, module lines 3140
 ## J16 · COMPLETE
 
 COMPLETE · retrieval T51 fix round 10 final pass (B16). Met: R98 (#documentsOf chunks by 64 under the plane's 100 variables; fixture.mjs now opens with variableNumber 100, whole suite green under it; search-limit.test.mjs at 100/101/150/500 seen red then green), R99 (retrieval's own code SELECTION_NOT_YOURS, row C-33.59 in SELECTION_CHECKS, localize stand-in; used by selectionResolve R19, selectionRead R77, selectionRelease R21 — BOB words that code; selection-not-yours.test.mjs). Retrieval 210/210; format, architecture, coverage 88/88, ownership, words 0 failures; fixtures list unchanged (1 FIX-E line). For BOB: answers standingfind.test.mjs:155,:249 and citation cite-refusals.test.mjs:35 expect the old NOT_YOURS from the real retrieval (3 red until their owners re-point); retrieval-browse/inquiry/intent stand-ins of the selection refusal; the r8-kit door case (check+translation for another member's selection) is control-plane's to place; review CHUNK=200. No markers added. Record: build/jobs/T51/retrieval.md.
+
+## J17 · COMPLETE
+
+# retrieval, fix round 10 (B17, plan item 95; K5195): COMPLETE
+
+**Changed (file:line).** `bio-plane/test/m/retrieval/t51-round9.test.mjs`: the `progressStub` declaration (old :210-211, a stand-in with invented figures) is removed. The R97 test "a reading with pages owed is counted partial..." (now :213) is async and takes extraction's published `progressOf()` (`bio-plane/test/m/extraction/fixtures.mjs`, R108) through `import { progressOf } from "../extraction/fixtures.mjs"`. Its answers for the scan and the text are keyed by this test's digests, and unknown digests take the published `none` answer. The import is the only one from another module's fixtures.
+
+**Finding from the provider's real answer.** The published answer for the 30-page scan is `{state: "partial", read_through: null, total: null, owed: 6}`. The stub had asserted `through: 24, total: 30`, which the provider does not give. The test now expects `partial_reads` `[{capture_sha, through: null, total: null, owed: 6}]` and the unmeasured searched-so-far sentence (`says` begins "Searched so far: 1 capture(s)"). Retrieval's behaviour is right: `levels.mjs` states no extent it does not have. **For BOB (not changed here):** R97 names "how far the reading had got" as the sentence's content, but extraction's R108 gives read_through and total only "where R90's figures exist", so a scan with pages owed never reports its pages read. Whether a scan should state its page position is extraction's (and R97's) call, not retrieval's.
+
+**Failing-first.** Not applicable: this entry replaces a fixture stand-in with the provider's published one, no code cause. Before the swap the test passed on the stub; after it, it passes on the published answers (the expectation changed as above, from the stub's figures to the provider's).
+
+**Met ids.** None struck: no requirement text changed; R97 and R108 were already met and are re-tested against the published fixture.
+
+**Markers added.** None (`fixtures-own` / `fixtures-generic`: none).
+
+**Tests and checks** (from `/home/user/bio`; process checks run with the absolute root):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/retrieval/t51-round9.test.mjs`: 12 tests, 12 pass, 0 fail.
+- Full `--test bio-plane/test/m/retrieval/`: 210 tests, 210 pass, 0 fail, exited by itself (no force-exit).
+- `checks/fixtures.mjs /home/user/bio retrieval --list`: 0 failures (the `t51-round9.test:211` line is clear).
+- `checks/ownership.mjs /home/user/bio retrieval <merge-base> HEAD`: 1 file changed by retrieval, 0 failures.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs retrieval`: 0 failures. `checks/coverage.mjs retrieval`: 88 of 88 live ids named, 0 failures.
+- `checks/words.mjs`/`run.mjs`: no finding in retrieval's files; no retrieval string added, so the words count did not rise. Other modules' findings in the run are not mine and not read.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules affected, 0 of 2981 test files (test-only change).
+
+**Found in other modules.** None.
+**Deferred.** None.
+
+Size (session_01H4cT6VCYWg59BQwQWNnC8K): test runs 3, module lines 3141
+
+## J18 · COMPLETE
+
+# retrieval, fix round 10, R63 total (K5203): COMPLETE
+
+**Changed (file:line).** `bio-plane/src/retrieval/index.mjs`, `listBundles`: the filters for `type` and `state` are snapshotted (`counted`, :1270) before the `after` cursor is pushed, and `total` (:1282) counts that snapshot, so a typed page's total is that type's count the viewer passes, never narrowed by `after`. The doc comment above it (:1250-1253) now says what `total` counts. Untouched: the paged rows, the untyped path, the 5,000 bound.
+
+**Failing-first.** New `bio-plane/test/m/retrieval/roster-total.test.mjs`, three tests named R63, on three information bundles and one project bundle visible to the machine credential. Red on today's code: `type=information&limit=2` answered `total: 4` where 3 is right (the test's first assertion). Green after the fix: 3 tests pass. Controls: the untyped `limit=2` total stays 4 and passes; the state-filtered page and the `after` page answer 3.
+
+**Met ids.** R63 (the amended clause, K5203). BOB strikes the mark.
+
+**Markers added.** None (`fixtures-own` / `fixtures-generic`: none).
+
+**Tests and checks** (from `/home/user/bio`; process checks with the absolute root):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/retrieval/*.test.mjs`: 213 tests, 213 pass, 0 fail; exited by itself, no force-exit.
+- `checks/fixtures.mjs /home/user/bio retrieval --list`: 0 failures.
+- `checks/ownership.mjs /home/user/bio retrieval <merge-base> HEAD`: 1 file changed by retrieval, 0 failures (the new test file is in the commit as well).
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs ... retrieval`: 0 failures. `checks/coverage.mjs ... retrieval`: 88 of 88 live ids named, 0 failures.
+- `checks/run.mjs /home/user/bio`: 373 FAIL lines, none in retrieval's files (they sit in store-assembly, the screens-* modules, acquisition, capture, extraction, interface-shell, reading-pipeline, control-plane, membership, case-authoring, notice-producers and others). Not read or touched here; left for their owners.
+- `setup-words/build.mjs --check`: the stale-rows note only; no refusal naming retrieval. No new sentence, so the words count did not rise.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules affected, 0 of 2965 test files.
+
+**The START's note on OP-GRADES #30** (every store failing at import with `DECLARED_OP_DISAGREES`): the store imported and every test ran green on this tranche's tip, so nothing was written around it.
+
+**Found in other modules.** None to report from this change.
+**Deferred.** None.
+
+Size (session_01M8nFpzKAppvTqqwDVd1nYV): test runs 4, module lines 3144

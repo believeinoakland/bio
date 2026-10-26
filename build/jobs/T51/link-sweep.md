@@ -1,6 +1,6 @@
 # link-sweep (T51)
 
-**Status** · session_012fb14vSLdvVVJS3hQmqck4 · depth 2 · COMPLETE · handled B11
+**Status** · session_01LKAdrdE7uyhWnvvZNvEPDx · depth 2 · COMPLETE · handled B13
 
 ## Completion (T51-242, words)
 
@@ -211,3 +211,69 @@ B9 was LINK-SWEEP #8's and is merged (B11, K5170); only B10 applied.
 ## J8 · COMPLETE
 
 B10 done (commit d4f95d29c3, pushed): R14 met. A project's own bundle (bundleInfo type project) is its own project in sweepFence and in the closed test (R4). Tests 48 of 48 green (2 new, seen red on the old code); format, architecture, coverage, words (also with monitoring following link-sweep scheduler), ownership 0 failures; fixtures --list shows only the 2 old contracts.test.mjs lines. Door case: control-plane r41-sweepset test 2 should go green on merge, untouched. Nothing deferred, nothing found elsewhere.
+
+## Completion (fix round 10, the two fixture lines; LINK-SWEEP #10, B12, session_01UkFgnSip697B4cSDmc7tSS)
+
+**Entries applied.** B12's one job: `bio-plane/test/m/link-sweep/contracts.test.mjs:31` (`SWEEP_SCOPE.unknown`) and `:34` (`SWEEP_SCOPE.out_of_scope`) each marked `fixtures-own: harness`, with the reason that these are link-sweep's own published contract values, run against its code at :65. Marker comments only: no test, value or string changed.
+
+**Met:** nothing new (no requirement changed; BOB strikes the fixture marks).
+**Deferred:** nothing.
+**Found in another module:** three `answer` findings in `bio-plane/test/m/screens-intake/t51-watching-named.test.mjs` (lines :76, :89, :104). They hand-build the `sweepset` and `sweepratify` answers where the provider is link-sweep (earlier), and link-sweep publishes no fixture file for those two ops. Reported to BOB in a REPORT entry for placement; not touched.
+
+**Tests and checks** (absolute root `/home/user/bio`):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/link-sweep/*.test.mjs`: tests 48, pass 48, fail 0 (exited by itself, no force-exit; no shortfall).
+- `checks/format.mjs`: 0 failures. `architecture.mjs … link-sweep`: 0 failures. `coverage.mjs … link-sweep`: 15 of 15 ids named, 0 failures.
+- `checks/words.mjs … link-sweep`: 0 failures; with `monitoring`: 0 failures.
+- `checks/ownership.mjs … link-sweep 7915a4d54b HEAD`: 0 failures.
+- `checks/fixtures.mjs … link-sweep --list`: 0 failures; the two `accepted(own)` lines are the two marks above.
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178, affected test files 0 of 2981.
+- `checks/run.mjs /home/user/bio`: no finding in link-sweep's own files; its 3 findings are the screens-intake lines above.
+
+**Size (session_01UkFgnSip697B4cSDmc7tSS): test runs 1, module lines 1232.**
+
+## J9 · REPORT
+
+Found outside my paths (B12, reported the day found; not touched): fixtures.mjs answer findings in bio-plane/test/m/screens-intake/t51-watching-named.test.mjs at :76 (sweepset), :89 and :104 (sweepratify). Each hand-builds the answer (open({sweepset: ok({...})}) / open({sweepratify: ok({...})})) where the provider is link-sweep (earlier). link-sweep publishes no fixtures file for sweepset or sweepratify, so there is no published value for screens-intake to take. Two ways for BOB to place it: (a) link-sweep publishes sweepset and sweepratify fixtures (its own paths, a later job), then screens-intake takes them; (b) screens-intake's tests carry a fixtures-own marker with a reason. My recommendation is (a). Decision is BOB's.
+
+## J10 · COMPLETE
+
+COMPLETE, B12 (fix round 10, the two fixture lines). Changed: bio-plane/test/m/link-sweep/contracts.test.mjs:31 and :34 marked fixtures-own: harness (link-sweep's own SWEEP_SCOPE values, run at :65); marker comments only. Commit 0f2f591402, pushed. Met: nothing new. Deferred: nothing. Tests 48 of 48 green (the module's 8 files, one run). format, architecture, coverage, words (also with monitoring), ownership, impact all 0 failures; fixtures --list at 0 failures. Outside my paths: three screens-intake findings (:76, :89, :104), REPORTed as J9. Record section appended; Size line in the record. Waiting on BOB.
+
+## Completion (fix round 10, item 97: sweepset and sweepratify fixtures; LINK-SWEEP #11, B13, session_01LKAdrdE7uyhWnvvZNvEPDx)
+
+**Entries applied.** B13's one job: the answers of `sweepset` and `sweepratify` published as fixtures made by link-sweep's real code (K4990, K4993). New `bio-plane/test/m/link-sweep/fixtures.mjs`, commit f62e973e8d: `sweepsetAnswer()` (R13: the member's define, answered ok with the minted id, unratified, and the sweeps read back), `sweepratifyAnswer()` (R14: the owner's ratify, ok, ratified by the owner, due at the next tick), and `sweepratifyNotOwner()` (R14: the joined non-owner's refusal `SWEEP_RATIFY_NOT_AN_OWNER`, sweep left unratified). Each runs the real door (`linkSweepOps`, stamps from `doorQuery`) over a fresh `listWorld`; nothing is stored. New `bio-plane/test/m/link-sweep/fixtures.test.mjs`: 4 tests, each naming R13 or R14, each checking the answer against the real `sweeps` read of the same sweep; one checks that the answer is the same from a fresh world each time.
+
+**Consumer.** Re-checked on the tranche tip after merging `origin/tranche/T51`: `screens-intake` `t51-watching-named.test.mjs` no longer hand-builds `sweepset` or `sweepratify` answers (grep finds only the real ops and their `open`/`act` calls), so the three J9 findings (:76, :89, :104) are gone; `checks/fixtures.mjs bio screens-intake` reports no sweep finding. Nothing was edited there. No consumer marker added: no test in another module carries `fixtures-contract: link-sweep sweepset…`, so there is nothing for a `fixtures-run` to answer yet. screens-intake takes these values in its next job, if BOB places it.
+
+**Failing first.** The test file was written after its fixtures, so there was no red run on the new code. Its evidence is that each test calls the real code and compares the answer with the real read, and the four pass on the first run; a missing or hand-built fixture would fail the read comparison. Stated here so the record is plain.
+
+**Met:** nothing changed: R13, R14 and R15 unchanged (BOB strikes no mark for this job; the answers are the module's published values).
+**Markers:** none added. The two `fixtures-own: harness` marks from B12 (contracts.test.mjs:31, :34) stand, and `fixtures --list` reports 0 failures.
+**Deferred:** nothing.
+**Found in another module:** nothing new. The repo-wide `checks/run.mjs` output (saved at the scratchpad, `run-link-sweep.txt`) has no line naming link-sweep; its failures are in other modules (store-assembly words; plane.declared.readtranslate, the setup-words build id that the round-end regeneration owns, as in STANDARDS #19).
+
+**Tests and checks** (absolute root `/home/user/bio`):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/link-sweep/fixtures.test.mjs`: tests 4, pass 4, fail 0.
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/link-sweep/*.test.mjs`: tests 52, pass 52, fail 0 (exited by itself; the 48 of the last round plus these 4).
+- `checks/format.mjs /home/user/bio`: 178 modules, 0 failures. `architecture.mjs … link-sweep`: 0 failures. `coverage.mjs … link-sweep`: 15 of 15 live ids named, 0 failures. `words.mjs … link-sweep`: 0 failures.
+- `checks/fixtures.mjs /home/user/bio link-sweep --list`: 0 failures (the two accepted(own) lines are the B12 marks).
+- `checks/ownership.mjs /home/user/bio link-sweep bf6bb18293 HEAD`: 3 files changed by link-sweep; 0 failures.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 1 of 178 (link-sweep); affected test files 1 of 2986 (the new fixtures test).
+- `checks/run.mjs /home/user/bio`: exit 1 from other modules; no finding names link-sweep.
+- `bio-plane/src/setup-words/build.mjs --check`: refuses on `plane.declared.readtranslate` (plane and store-assembly disagree on its en), not this module's.
+
+**Size (session_01LKAdrdE7uyhWnvvZNvEPDx): test runs 2, module lines 1232.**
+
+## J11 · COMPLETE
+
+COMPLETE, B13 (fix round 10, item 97: the sweepset and sweepratify fixtures).
+
+Changed: bio-plane/test/m/link-sweep/fixtures.mjs (new, f62e973e8d): sweepsetAnswer (R13), sweepratifyAnswer (R14), sweepratifyNotOwner (R14 refusal), each the real door's answer over a fresh world, never stored. bio-plane/test/m/link-sweep/fixtures.test.mjs (new): 4 tests naming R13/R14, each checking the answer against the real sweeps read. Record section appended, pushed as bb6cfae0e1.
+
+Consumer: screens-intake's t51-watching-named.test.mjs no longer hand-builds these answers on the tranche tip (J9's three lines are gone); fixtures check reports no sweep finding there. No consumer marker added; nothing in another module needs a fixtures-run yet.
+
+Met: R13, R14, R15 unchanged (no mark to strike). Markers added: none. Deferred: none. Found elsewhere: none new; run.mjs has no link-sweep line; setup-words --check refuses on plane.declared.readtranslate (plane vs store-assembly en), not this module's.
+
+Tests: link-sweep 52 of 52 pass (4 new). format, architecture, coverage, words, fixtures --list, ownership: 0 failures. impact: 1 of 178 modules.
+
+Size (session_01LKAdrdE7uyhWnvvZNvEPDx): test runs 2, module lines 1232.

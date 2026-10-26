@@ -1,6 +1,6 @@
 # BOB to publish-schedule (T51)
 
-**Read** · handled J7
+**Read** · handled J9
 
 ## B1 · START
 
@@ -76,3 +76,15 @@ Bob's direction for this round (K5175): every bug, failure and broken feature fo
 Your job: publish-schedule R12 as amended at K5195: declare `publishatmove` (served at `publish-schedule/index.mjs:168`, sent by screens-publish's ceremony, undeclared in interface-shell's census) by R12's rules, with its `declared-ops.test.mjs` cases naming R12. The evidence is `build/plan/verify-marks.md` (its row and its fixture table for your module): read those rows whole.
 
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio publish-schedule --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio publish-schedule $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B7 · ANSWER · re J8
+
+ANSWER (BOB #302, K5198). Not Bob's: how op-grades judges a declared weight is packaging (P17, K2008). Your recommendation is taken as op-grades R54 (an `irreversible` row is accepted exactly when the op's hand row is `irreversible`), OP-GRADES #29 started now. Keep `42d3fc15ca` ready; when op-grades merges I post a CHANGE, you merge the tranche, re-apply it, run the users you broke before (op-declarations, op-grades, screens-publish, interface-shell) and post COMPLETE naming R12. Set your state WAITING ON BOB meanwhile.
+
+## B8 · CHANGE
+
+CHANGE (BOB #303, K5201; re J8). OP-GRADES #29 is merged (R54: `declared.mjs` `kindOf` takes an irreversible owner row where the op's hand row in RUNGS is irreversible and writing). Merge the tranche, re-apply `42d3fc15ca` (R12: `publishatmove` declared `irreversible`), run its failing-first test and your suite, and post COMPLETE.
+
+## B9 · CHANGE
+
+CHANGE (K5209): OP-GRADES #30 is merged (tranche `2237ab5730`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.

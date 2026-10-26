@@ -397,8 +397,9 @@ test("R36, R26 (N364, N381): the pull is a route of the record store's door, bes
   assert.equal(bundles().length, 2);
 });
 
-/* The promotion's answer controlled, capture and record-core real: what reaches the promotion, and when. */
-function promotionStandIn(r, decide) {
+/* The record's own promotion (`record.mjs`), watched: what reaches it, and when. A verdict other than `true` stands in front of
+   it as a fault or refusal before it is asked (a fault injection); `true` hands the package to the real promotion. */
+function promotionSpy(r, decide) {
   const seen = [];
   return {
     seen,
@@ -408,21 +409,18 @@ function promotionStandIn(r, decide) {
       const verdict = decide(at, pkg);
       if (verdict === "throw") throw new Error("a store fault");
       if (verdict !== true) return verdict;
-      /* a write the promotion makes, so its rollback in a dry run is seen */
-      r.db.prepare("CREATE TABLE IF NOT EXISTS standin_writes (id TEXT)").run();
-      r.db.prepare("INSERT INTO standin_writes VALUES (?)").run(pkg.bundleId);
-      return { ok: true, bundleId: pkg.bundleId, bundleSha: "b".repeat(64) };
+      return r.promotion.promote(pkg);
     },
   };
 }
-const standinWrites = (r) => { try { return r.db.prepare("SELECT id FROM standin_writes").all().map((x) => x.id); } catch { return []; } };
+const filedBundles = (r) => recordOf(r.ctx).listBundles().ids;
 
 test("R36 (N364, N380, N386): one pull files the capture and promotes its document as a new information bundle at collected, the puller its author — the promotion asked once, inside the pull; the instant is the second the pull was made; no contact reaches the bundle", async () => {
   const r = await record();
   const k = await r.knock("the minutes they did not publish");
-  const promotion = promotionStandIn(r, () => true);
+  const promotion = promotionSpy(r, () => true);
   let homes = 0;
-  const deps = { doorbell: doorbellOf(r.ctx), promotion, record: recordOf(r.ctx), provenance: { homeOf: () => { homes++; return null; } } };
+  const deps = { doorbell: doorbellOf(r.ctx), promotion, record: recordOf(r.ctx), provenance: { homeOf: (sha) => { homes++; return provenanceOf(r.ctx).homeOf(sha); } } };
   const now = () => Date.parse("2026-09-30T12:34:56.789Z");
   const a = await P.pullAndFile(deps, { knockId: k.knockId, by: "ann", identity: "member:ann", viewer: "member:ann", now });
   assert.equal(a.ok, true, JSON.stringify(a).slice(0, 300));
@@ -431,8 +429,8 @@ test("R36 (N364, N380, N386): one pull files the capture and promotes its docume
   /* N380: one promotion, the one inside the pull; no dry run */
   assert.equal(promotion.seen.length, 1);
   const [real] = promotion.seen;
-  assert.deepEqual(standinWrites(r), [real.bundleId]);
-  assert.deepEqual(a.bundle, { bundleId: real.bundleId, bundleSha: "b".repeat(64) });
+  assert.deepEqual(filedBundles(r), [real.bundleId]);
+  assert.deepEqual(a.bundle, { bundleId: real.bundleId, bundleSha: recordOf(r.ctx).head(real.bundleId).bundleSha });
   assert.match(real.bundleId, /^INFO-2026-0001-doorbell-knock$/);
   /* N386: the pull's instant, to the second (record-core R47's "second" spelling) */
   assert.deepEqual([a.pulled_at, real.meta.created, r.state(k.knockId).pulled_at], Array(3).fill("2026-09-30T12:34:56Z"));
@@ -462,7 +460,7 @@ test("R36 (N380, K559; doorbell R13): the pull and its promotion are one act —
     const r = await record();
     const k = await r.knock(`one act ${JSON.stringify(fault)}`);
     /* the first promotion fails; every later one lands */
-    const promotion = promotionStandIn(r, (i) => (i === 0 ? fault : true));
+    const promotion = promotionSpy(r, (i) => (i === 0 ? fault : true));
     const deps = { doorbell: doorbellOf(r.ctx), promotion, record: recordOf(r.ctx), provenance: provenanceOf(r.ctx) };
     const who = { knockId: k.knockId, by: "ann", identity: "member:ann", viewer: "member:ann" };
     const first = await P.pullAndFile(deps, who);
@@ -472,13 +470,13 @@ test("R36 (N380, K559; doorbell R13): the pull and its promotion are one act —
     if (fault === "throw") assert.equal(first.detail, PULL_WITHIN_FAILED_DETAIL);
     assert.deepEqual(heldOf(r, k.knockId, k.sha256), { status: "new", capture_sha: null, pulled_by: null, receipt: false, home: null },
                      "the pull was rolled back with its promotion");
-    assert.deepEqual(standinWrites(r), [], "no bundle filed");
+    assert.deepEqual(filedBundles(r), [], "no bundle filed");
     /* a pull made again is a new pull: it files the knock, and the id the failed promotion drew was rolled back with it */
     const again = await P.pullAndFile(deps, who);
     assert.deepEqual([again.ok, again.existed], [true, false], JSON.stringify(again).slice(0, 300));
     assert.equal(again.bundle.bundleId, promotion.seen.at(-1).bundleId);
     assert.match(again.bundle.bundleId, /-0001-doorbell-knock$/);
-    assert.deepEqual(standinWrites(r), [again.bundle.bundleId]);
+    assert.deepEqual(filedBundles(r), [again.bundle.bundleId]);
     assert.deepEqual([r.state(k.knockId).status, provenanceOf(r.ctx).registerHolds({ sha: k.sha256 }).acquired], ["pulled", true]);
   }
 });
@@ -489,24 +487,22 @@ test("R36 (N364, K559): a pulled knock no bundle holds (pulled through the doorb
     const k = await r.knock(`residue ${JSON.stringify(fault)}`);
     const pulledAround = await doorbellOf(r.ctx).pullKnock({ knockId: k.knockId, by: "bea" });
     assert.equal(pulledAround.ok, true);
-    let home = null;
-    const promotion = promotionStandIn(r, (i) => (i === 0 ? fault : true));
-    const deps = { doorbell: doorbellOf(r.ctx), promotion, record: recordOf(r.ctx), provenance: { homeOf: () => home } };
+    const promotion = promotionSpy(r, (i) => (i === 0 ? fault : true));
+    const deps = { doorbell: doorbellOf(r.ctx), promotion, record: recordOf(r.ctx), provenance: provenanceOf(r.ctx) };
     const who = { knockId: k.knockId, by: "ann", identity: "member:ann", viewer: "member:ann" };
     const first = await P.pullAndFile(deps, who);
     assert.deepEqual([first.ok, first.reason, first.knockId], [false, "PROMOTE_FAILED", k.knockId]);
     assert.match(first.detail, /already brought in/);
     assert.equal(JSON.stringify(first).includes("a store fault"), false, "a fault's message is not carried");
-    assert.deepEqual(standinWrites(r), [], "no bundle filed");
+    assert.deepEqual(filedBundles(r), [], "no bundle filed");
     assert.deepEqual([r.state(k.knockId).status, r.state(k.knockId).pulled_by], ["pulled", "bea"], "the earlier pull stands");
     /* a repeated pull: the doorbell answers existed with its document, no bundle holds the capture, so it is promoted */
     const again = await P.pullAndFile(deps, who);
     assert.deepEqual([again.ok, again.existed], [true, true]);
     assert.equal(again.bundle.bundleId, promotion.seen.at(-1).bundleId);
-    assert.deepEqual(standinWrites(r), [again.bundle.bundleId]);
+    assert.deepEqual(filedBundles(r), [again.bundle.bundleId]);
     assert.deepEqual(JSON.parse(promotion.seen.at(-1).files.find((f) => f.path === "data/provenance.json").text).documents[0], again.document);
     /* negative control: once a bundle holds the capture, a pull answers it and promotes nothing */
-    home = { bundleId: again.bundle.bundleId };
     const asked = promotion.seen.length;
     const third = await P.pullAndFile(deps, who);
     assert.deepEqual([third.ok, third.existed, third.bundle], [true, true, { bundleId: again.bundle.bundleId, bundleSha: null, existed: true }]);

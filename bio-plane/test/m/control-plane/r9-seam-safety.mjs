@@ -28,6 +28,7 @@ export function sections(kit, counting) {
     if (u.pathname === "/render") {
       const sha = body.target.capture_sha, n = (renderCalls.get(sha) || 0) + 1;
       renderCalls.set(sha, n);
+      // fixtures-generic: NOT_RENDERED (the double refuses a digest it was not told to render, with a code of its own)
       return renders.has(sha) ? renders.get(sha)(n) : json({ ok: false, code: "NOT_RENDERED" }, 422);
     }
     return json({ ok: true, name: "file-scanner", version: "1.0.0", bounds: {} });
@@ -182,6 +183,7 @@ export function sections(kit, counting) {
     const t = uniq();
     const quick = [];
     for (let i = 0; i < 8; i++) {
+      // fixtures-own: input a scripted reply of the RENDERER service binding (the browser container's wire answer), fed to the real plane
       const { r } = await visit(`quick-${t}-${i}`, { ok: false, error: "net::ERR_CONNECTION_REFUSED", failure_class: "permanent", elapsed_ms: 1000 });
       quick.push(JSON.stringify([r.status, bodyOf(r).reason]));
     }
@@ -206,6 +208,7 @@ export function sections(kit, counting) {
   test("R9 seam §17 (G137c, X23, DOCS V7; R115): a transient failure (a session refused) is tried up to three times and then reported transient; a permanent one once; a transient one that clears is filed", { timeout: 900000 }, async () => {
     const t = uniq();
     const bad = [];
+    // fixtures-own: input scripted replies of the RENDERER service binding (the browser container's wire answers), fed to the real plane
     const flaky = await visit(`flaky-${t}`, (n, u) => (n < 3 ? { ok: false, error: "session refused", failure_class: "transient", elapsed_ms: 500 } : okAnswer(u)));
     if (!(flaky.r.status === 200 && flaky.calls === 3)) bad.push(`clears on the third: status ${flaky.r.status}, ${flaky.calls} calls`);
     const down = await visit(`down-${t}`, () => ({ ok: false, error: "session refused", failure_class: "transient", elapsed_ms: 500 }));
@@ -218,6 +221,7 @@ export function sections(kit, counting) {
   test("R9 seam §17 (G137c, X23, DOCS V4; R115): the control: failures that took 40 s each do spend the day (allowance 100 s here), and the refusal shows the account", { timeout: 900000 }, async () => {
     const t = uniq();
     const slow = [];
+    // fixtures-own: input a scripted reply of the RENDERER service binding (the browser container's wire answer), fed to the real plane
     for (let i = 0; i < 4; i++) slow.push((await visit(`slow-${t}-${i}`, { ok: false, error: "navigation timeout", failure_class: "permanent", elapsed_ms: 40000 })).r);
     const deferred = slow.find((r) => bodyOf(r).reason === "RENDER_DEFERRED");
     assert.ok(deferred, "failures that took 40 s each spend the day: " + JSON.stringify(slow.map((r) => bodyOf(r).reason)));

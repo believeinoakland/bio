@@ -3,7 +3,7 @@
    the filed document is answered with `reading_pending: true` and no reading, the reading following by `readHeld` and the object's
    alarm (R75). Driven through the real door's hook (`gatedOp`) and the real object over a scripted network; the filed document is the
    one acquisition files. Controls: no hook, and a hook answering false, read as before. */
-import "../../../src/plane/register.mjs";   /* R68: the start's registration before any op table is read */
+import "../../../src/store-assembly/register.mjs";   /* R68: the start's registration before any op table is read */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { store } from "./fixture.mjs";

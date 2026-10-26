@@ -1,6 +1,6 @@
 # jurisdictions (T51)
 
-**Status** · session_01AfTJJunnDTjUWKse11VPbW · depth 2 · COMPLETE · handled B6
+**Status** · session_01RFrdqSTN2GTtK4iWq17RJc · depth 2 · COMPLETE · handled B8
 
 ## J1 · REPORT
 
@@ -135,3 +135,20 @@ Size (session_01AfTJJunnDTjUWKse11VPbW): test runs 8, module lines 3815
 ## J9 · COMPLETE
 
 COMPLETE (fix round 10, item 70): C1 and C14 built, data only. R51 met: oakland-alameda now holds proceeding_kinds (civil, writ, appeal, complaint), a flow each and five forums (Alameda Superior Court, First District Court of Appeal, Supreme Court, N.D. Cal., Public Ethics Commission), each sourced 2026-10-25. R93 met: records_help (CPRA from the Legislature's own text as amended eff. 2026-01-01, six unusual circumstances; City portal per OPD DGO M-9.1; OMC 2.20.230(A) window from the 2026-10-11 read). Failing-first jurisdictions/test/t51-proceedings.test.mjs red 0/5, green 5/5; suite 178/178; the existing R22 test now expects the records_help conflict between the two profiles (R93/R84). Checks: format, architecture, coverage 97/97, fixtures 0 failures, ownership 0; words none for jurisdictions. Consumers loading the first profile: 185 pass, 7 fail all in journey-check/pseudo.test.mjs, identical without my change. Why tests missed it: recorded. The door case (control-plane) is BOB's to place (K5138). Commit pushed on job/T51/jurisdictions. Size (session_01AfTJJunnDTjUWKse11VPbW): test runs 8, module lines 3815.
+
+## J10 · REPORT
+
+REPORT (found in another module, day found): `bio-plane/test/m/civil-time/invariants.test.mjs:109`, test "R28 every undetermined answer and every refusal says which kind of no and why", asks `ct.fiscalPeriod({date, body: "nobody", view: firstView()})` to be undetermined. It was, only because the first profile had no fiscal year for `*`; with the `*` entry this job adds (the J31 (3) fix, R49: `*` is every body) the call answers `{label: "FY2026-27", start: "2026-07-01", end: "2027-06-30"}`, which is correct, and the test fails (it passed 4/4 on tranche/T51, 3/4 now). Not mine to change. Suggested fix, civil-time's job: take the undetermined case from a view with no `*` (the first view with its `fiscal_year` filtered of `*`, or the test profile's body with no entry), not from the first profile's absence of one.
+
+Also: the State Controller's Office (`California State Controller's Office`) has no entry of its own and now falls to `*` by money's and civil-time's lookup (body, then `*`). Its fiscal year is not stated by the body in anything I could read: sco.ca.gov and leginfo.legislature.ca.gov answer a Cloudflare bot check (not worked around, K3656). Searched: both hosts, plus web search for Gov. Code 13290 ("The fiscal year shall commence on the first day of July"), found only in secondary copies (findlaw, california.public.law), not cited. If BOB wants it kept out of `*`, that is a requirement question on R49's `*` ("every body of the profile").
+
+## J11 · COMPLETE
+
+COMPLETE (fix round 10, SCREENS-INVESTIGATE #17 J31 (3); START B8): the first profile now states a fiscal year for body `*`.
+
+What changed: `jurisdictions/profiles/oakland-alameda.mjs` `fiscal_year` (the first entry, with a comment above the block): `{body: "*", start: "07-01", named_by: "start", label: "FY{start}-{end2}", status: "researched", basis: "2026-10-25 oakland-charter-s800, 2026-10-22 oaklandca.gov-fy2025-27-budget"}`. Source: the City's Charter §800, "The fiscal year for the City shall commence on the first day of July of each year" (the City's published Charter, gocodebook.com/library/us/ca/oakland/charter, Article VIII, read 2026-10-25); name and label as the City's budget writes them (the existing 2026-10-22 read). The four bodies that already had entries (Finance Department, City Council, City Auditor, Civil Grand Jury) keep theirs, found first. The State Controller's Office has none: not found stated by the body (see the REPORT of this entry).
+Tests: `jurisdictions/test/t51-fiscal.test.mjs`: "R49 the first profile states the fiscal year for body * ..." (red on today's code: `an unnamed body resolves to a fiscal year`, undefined; green now) and "R49 control: a profile with no fiscal year for * resolves none for an unnamed body" (green both ways); the old "no `*`" assertion of the second test is now "the State Controller has no entry of its own". `jurisdictions/test/jurisdictions.test.mjs` R22 test: combining the first and test profiles now has one expected conflict at `fiscal_year[*]` (both give `*`, differing by design, R22), asserted as `records_help`'s is. Why the tests missed it: T51-fiscal's test took "no `*`" as the control for an unsourced body and no test resolved a period for an unnamed body; money's lookup (`body ?? "*"`) is outside this module's tests, and money's own tests use the test profile, which has a `*`.
+Suites: jurisdictions 180/180 (was 178). Users: `impact.mjs` names 135 of 178 modules (shared table). Run the callers of the fiscal year: money 100% and budget-doctypes pass; civil-time 210/211 with one failure that is the REPORT above (civil-time/invariants.test.mjs:109), caused by this change and passing before it.
+Checks: `checks/fixtures.mjs /home/user/bio jurisdictions --list` 0 failures; `checks/ownership.mjs` 0 failures (4 files); `checks/run.mjs`: no finding in a jurisdictions file, words line `inline 15, plain 12, ... 16 failures`, all in other modules, no new string added by this job. No `fixtures-own`/`fixtures-generic` marker added.
+Met ids: R49 (the `*` half). verify-marks.md holds no jurisdictions row; nothing to strike from it.
+Deferred: none. Size (session_01RFrdqSTN2GTtK4iWq17RJc): test runs 9, module lines 3828

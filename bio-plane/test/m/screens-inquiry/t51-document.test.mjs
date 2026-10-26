@@ -6,13 +6,31 @@
  * marked BROWSER ACT below. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, fill, press, says, section, word, day, lead, READING, DOCUMENT_MD, P, Q, Q2, D, SHA, NEWER, INQUIRY_REFS, inquiryMd } from "./fixtures.mjs";
+import { ok, refusedIn, boot } from "../interface-shell/harness.mjs";
+import { open, storeWorld, SCREENS, main, actsIn, fill, press, says, section, word, day, lead, READING, DOCUMENT_MD, P, Q, Q2, D, SHA, NEWER, INQUIRY_REFS, inquiryMd } from "./fixtures.mjs";
 
 /* the clock the page draws is the browser's own; these tests run in one zone so a moment's time of day is exact */
 process.env.TZ = "UTC";
 
 const at = "/app/document/" + D;
+/* the real world (store-assembly's store with the real door; the state is made by real acts, K5054): a page as `as` reads it over the world's door, `plane` scripting only the ops it names */
+const OWN = { capabilities: ["contribute", "create_projects"] };
+async function pageOn(world, as, path, o = {}) {
+  const { door, session } = world.boot(as);
+  const p = await boot({ screens: SCREENS, door, session, path, ...o });
+  await p.settle();
+  return p;
+}
+/** A member with a PDF (or, `kind: "page"`, a web page that is read) held in her project, and a question of the project (drawn into it). */
+async function member({ kind = "pdf" } = {}) {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const project = await world.recipes.project(ann, "Pothole repairs");
+  const held = kind === "pdf" ? await world.recipes.pdf(ann, "Policy memo", { project })
+    : await world.recipes.page(ann, "Policy memo", { paragraphs: ["The Director shall repair each reported pothole within seven days."], project });
+  const q = await world.recipes.question(ann, project, { title: "Seven days", text: "Is the city repairing reported potholes within seven days?", draw: true });
+  return { world, ann, project, question: q.id, document: held.bundle, sha: held.sha, at: "/app/document/" + held.bundle };
+}
 const one = (p) => p + 1;
 /** A moment as `time.at` draws it: the day by `date.*` and the 12-hour clock by `time.clock` (DEC-335 (3)), through the words. */
 const stamp = (iso) => {
@@ -80,7 +98,7 @@ test("R65 control: an answer with no states draws only the first revision's row 
   assert.equal(s.querySelectorAll(".cs-sheet .cs-row").length, 1, "only the first revision");
   assert.equal(s.querySelector("[data-release]"), null, "a `who` that carries no Civicsmith/<version> draws no release line");
   assert.equal(s.querySelector("details"), null);
-  /* nothing in the answer, no section */
+  /* nothing in the answer, no section (still scripted: needed: a document whose record holds no revision; every document the world holds has its promotion) */
   const none = await open(at, { plane: { bundlehistory: ok({ ok: true, bundle: D, revisions: [], states: [], truncated: false }) } });
   assert.equal(record(none), undefined, "R20: a section that holds nothing is not drawn");
 });
@@ -309,7 +327,9 @@ test("R68 control: a name whose grade or basis the read does not hold draws neit
   assert.ok(row.querySelector('.cs-gap[data-gap="undetermined"]'));
   assert.ok(says(row, "screen.document.names.matched.none"), "a null basis says so by its key");
   for (const k of ["identifier", "reference_key", "label", "testimony"]) assert.ok(!says(row, "screen.document.names.matched." + k), "and draws no guess: " + k);
-  const none = await open(at, { plane: { resolutions: ok({ ok: true, names: [] }), connections: CONNS } });
+  const w = await member({ kind: "page" });
+  const none = await pageOn(w.world, w.ann, w.at, { plane: { connections: CONNS } });
+  assert.equal(none.byOp("resolutions").length, 1, "the world's own answer: the document names no one");
   assert.equal(section(none, "document.names.title"), undefined, "R20: no names, no section");
   const failed = await open(at, { plane: { resolutions: refusedIn("NO_SHA", "The names could not be read just now.") } });
   assert.ok(section(failed, "document.names.title").textContent.includes("The names could not be read just now."));
@@ -368,6 +388,7 @@ test("R69 an answer the record could not give is drawn undetermined and says it 
   assert.ok(legs(q)[0].querySelector('[data-leg="undetermined"] .cs-gap[data-gap="undetermined"]'));
 });
 
+/* still scripted (adoptversion, keepversion, versionchain): needed: a question resting on a document that has a newer capture, with the sweep's notice raised (reevaluation) */
 test("R69 a notice the sweep raised is a read of the record: its row is drawn asked from the start, with the two acts; adopting needs her reason, sends the notice and the why, and the row re-reads", async () => {
   let closed = false;
   const notices = (r) => ok({ ok: true, notices: r.query.holder === Q ? [closed ? { ...NOTICE_Q, state: "adopted", closed_by: "mai", closed_at: "2026-10-12T10:00:00Z", why: "the newer one adds the supervisor" } : NOTICE_Q] : [] });
@@ -403,9 +424,11 @@ test("R69 the plane's refusal of an adoption is drawn by its words beside the ac
 });
 
 /* ---- R78 ---- */
+/* the PDF is the world's own, held, with the question to cite into; the world reads no text from a generated PDF, so its reading is scripted (needed: a recipe for a held PDF read in part); the typing is the world's */
 test("R78 an extent of page 0 draws \"Page 1\" in the passage's place and in the picker of unread pages, a transcription of the picker's 1 sends page 0, and an extent that states no page draws no page", async () => {
-  const reading = ok({ ...READING({ unread_pages: [0] }), text_units: [{ seq: 1, extent: { kind: "pdf-page", page: 0 }, text: "1. A passage on the first page." }, { seq: 2, extent: { kind: "heading" }, text: "A heading with no page." }] });
-  const p = await open(at, { plane: { reading, transcribe: ok({ ok: true }) } });
+  const w = await member();
+  const reading = ok({ ...READING({ capture_sha: w.sha, unread_pages: [0] }), text_units: [{ seq: 1, extent: { kind: "pdf-page", page: 0 }, text: "1. A passage on the first page." }, { seq: 2, extent: { kind: "heading" }, text: "A heading with no page." }] });
+  const p = await pageOn(w.world, w.ann, w.at, { plane: { reading } });
   const q = main(p).querySelectorAll("blockquote");
   assert.ok(says(q[0], "screen.document.passage.where", { page: one(0) }));
   assert.ok(!text(q[1]).includes(word("screen.document.passage.where", { page: "" })), "control: no page stated, no page drawn");
@@ -414,11 +437,14 @@ test("R78 an extent of page 0 draws \"Page 1\" in the passage's place and in the
   fill(p, { "document-unread-page": "1", "document-unread-words": "A page typed." });
   await press(p, "transcribe");
   assert.deepEqual(p.byOp("transcribe")[0].body.extent, { kind: "pdf-page", page: 0 }, "the value sent is the record's own");
+  const typed = (await w.ann.read("transcriptions", { query: { bundleId: w.document } })).transcriptions;
+  assert.deepEqual(typed.map((t) => t.extent.page), [0], "the world holds the page typed");
   /* a citation keeps the record's page too */
-  fill(p, { "document-cite-question": Q });
+  fill(p, { "document-cite-question": w.question });
   await press(p, "cite", { within: q[0].nextElementSibling });
 });
 
+/* still scripted (themeread): the world's theme read gives a placement no page (connections' placements carry none), so this page-drawn-from-one placement cannot be made (needed: a placement of a passage with its page) */
 test("R78 a theme's placement page and the mention that counts are drawn from one", async () => {
   const p = await open(at, { plane: { themeread: (r) => ok(r.query.id ? { ok: true, members: [{ target: D, page: 0, placer_handle: "dev", placed_at: "2026-10-03T10:00:00Z", note: "backlog" }], hunches: [] }
     : { ok: true, themes: [{ theme_id: "TH-1", name: "Deferred maintenance" }] }) } });

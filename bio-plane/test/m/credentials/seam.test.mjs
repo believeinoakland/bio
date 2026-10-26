@@ -7,6 +7,7 @@ import { world, realWorld, PASSWORD, FOUNDER_HANDLE } from "./fixture.mjs";
 import { credentialsOf, CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES } from "../../../src/credentials/index.mjs";
 import { AI_ACCOUNTS_TABLES, AI_ACCOUNTS_PROJECT_TABLES, AI_ACCOUNTS_HISTORY_TABLE } from "../../../src/ai-accounts/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
+import { listenerRefusals } from "../member-roster/fixtures.mjs";
 
 const sessionsOf = (w, id) => w.rows(`SELECT token_sha FROM sessions WHERE role=?`, `member:${id}`).length;
 const keysOf = (w, id) => w.rows(`SELECT key_b64, status, status_by FROM signers WHERE member_id=? ORDER BY key_b64`, id);
@@ -170,19 +171,21 @@ test("R20 start registers setPassword as membership's password setter (its R95):
   /* membership's R95 as worded: one registration, held; a second refused by R81 */
   const held = [];
   const m = world().m;
+  /* member-roster's published R81 answers: the real registered, declared and malformed refusals of the setter's slot */
+  const refusals = listenerRefusals();
   const membership = {
     onRevoked: (mod, fn) => m.onRevoked(mod, fn), registerClaimed: (mod, fn) => ({ ok: true, module: mod }),
     memberFacts: (id) => m.memberFacts(id),
     registerPasswordSetter(fn) {
-      if (typeof fn !== "function") return { ok: false, reason: "LISTENER_MALFORMED" };
-      if (held.length) return { ok: false, reason: "LISTENER_DECLARED" };
-      held.push(fn); return { ok: true };
+      if (typeof fn !== "function") return refusals.malformed;
+      if (held.length) return refusals.declared;
+      held.push(fn); return refusals.registered;
     },
   };
   const w = world();
   const c = credentialsOf({ storage: { sql: w.sql } }, { record: { declarePurge() { return { ok: true }; } }, membership });
   assert.equal(held.length, 1, "held once, from the first start");
-  assert.deepEqual(c.start().password, { ok: false, reason: "LISTENER_DECLARED" }, "a second start is membership's refusal");
+  assert.equal(c.start().password, refusals.declared, "a second start is membership's refusal");
   /* the setter is R3's: a salted derived hash for the role, the password never stored, the answer {ok, role} */
   const r = await held[0]({ role: "member:ann", password: "ann-passphrase-x" });
   assert.deepEqual(r, { ok: true, role: "member:ann" });

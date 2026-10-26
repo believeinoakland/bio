@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J65
+**Read** · handled J70
 
 ## B1 · START
 
@@ -1266,3 +1266,33 @@ Your J64 REPORT is read and placed (K5184): A1, A2 (the following and answer-env
 ## B100 · CHANGE
 
 CHANGE (BOB #302, K5195; plan item 95 (2)), with your Wave B. (1) plane R85: `g123f-cells.test.mjs` "R85 G123f" fails at `:64` (and R84's at `:51`): `tabledeclare` answers `SOURCE_NOT_READ` ("widest line has 3") because the test declares 4 fields while `xlsxRowsDoc` builds 3-column rows (`:14`, `:51`, `:64`): a test defect in your module; make the declared fields match the generated rows, the assertion unchanged in meaning; name R85 met. (2) `fixtures-run: extraction transcribe-not-sent` in a plane test (extraction `t44.test.mjs:92` marks `fixtures-contract: plane transcribe-not-sent`, and no plane test runs it), beside item 23's `transcribe-answer` runs. (3) `door.test.mjs:143` (R1, R5, R67) counts instance-setup's routes at 36; there are 37 (`selftestmigrations`, item 85 (1)): yours in Wave B. (4) `r9-jobs.test.mjs`: its 37 tests pass and then the process does not exit (killed after 7 minutes; verify-marks side finding 4): find the open handle and close it (a load or exit defect, K4787). Name every met id in your COMPLETE.
+
+## B101 · CHANGE
+
+CHANGE (BOB #302, K5198), with B100. Add `fixtures-run: notice-producers reading-ended`: a plane test that runs the rows `notice-producers/reading-ended-seam.test.mjs` hands in (`READING_ROWS`, :19-24, and its cursor form `<ended_at>\u0001<sha>\u0001<kind>`) against your real job table's `readingsEnded` (refused, finished, final, final unopened, paged), so the seam rests on the real table (notice-producers R29).
+
+## B102 · CHANGE
+
+CHANGE (BOB #303, K5200; re J66, J67). store-assembly R78's test sentence is worded to extraction R111's yields: the pass that wrote a tick's 4,096 units states a figure above 256 and at most 1,000 (above 1,000 means a pass held the object). Merge the tranche, change `r10-lag-figure.test.mjs` :95-97 to that (both the pass that wrote and the row's end figure), run it, and post COMPLETE. The open handle (`openInstruments` setInterval not unref'd) is store-assembly's: placed with its next job (K5200), not yours.
+
+## B103 · START
+
+START · PLANE #64 · tranche T51 · product believeinoakland/bio · fix round 10 (K5202)
+
+Depth 2 (BOB #304 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/plane tranche/T51`; if a local `job/T51/plane` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/plane stale/plane-local && git checkout -b job/T51/plane origin/job/T51/plane`. If `job/T51/plane` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`, then `mail inbox --as job` and `mail done --as job --through B<n>` for this START (BOB merges a COMPLETE only when your record's cursor has read BOB's newest entry, K5171). A refused step: post BLOCKED naming it.
+Mail with `--module plane`; record `build/jobs/T51/plane.md` (append a new section). Model claude-haiku-5-5, low effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root `/home/user/bio`, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A `fixtures-own: <reason>` or `fixtures-generic: <CODE>` marker only where the value is truly your own (an input you feed, a harness, a platform double, a synthetic token), each named in your COMPLETE. A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one; REPORT the door case for BOB to place (K5138). A new sentence people read is written at its use as `localize(id, en, vars)` in a module that may (K3930, K3943); a screens module draws by key only.
+
+Bob's direction for this round (K5175): every bug, failure and broken feature found is fixed in this round; no guessing, no deferrals, no assumptions. A cause you find outside your paths is REPORTed the day you find it, with file:line.
+
+Your job: `bio-plane/test/m/plane/r10-reading-ended.test.mjs:20` hand-builds extraction's `readHeld` answers (a stand-in); extraction now publishes `readHeldAnswer` (`bio-plane/test/m/extraction/fixtures.mjs:93`, made by its real code). Take the answers from extraction's published fixture (or its real `readHeld` over a world); if a state the test needs (finished, final, unopened) is not published, REPORT it naming the state, so BOB places it with extraction. `checks/fixtures.mjs /home/user/bio plane --list` at zero for this file. Note: until OP-GRADES #30 merges (I CHANGE you then), every store fails at import with `DECLARED_OP_DISAGREES: readtranslate description` (op-grades' stale hand row); that red is not yours: write your change and your failing-first test meanwhile, and run them green after the CHANGE.
+**Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio plane --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio plane $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B104 · CHANGE
+
+CHANGE (K5202, plan item 101 (4)(a)), in this same job: add the runs `// fixtures-run: reading-pipeline transcribe-answer` and `// fixtures-run: extraction transcribe-answer` in a plane test, each running the users' marked answers against plane's real `aiPath` (`bio-plane/src/plane/transcribe.mjs`). The users' markers today read `fixtures-contract: content transcribe-answer` (`extraction/t48.test.mjs:29`, `reading-pipeline/text-units.test.mjs:531`, `:537`, `transcribe.test.mjs:323`); BOB renames them to `plane` in the round's mechanical pass, so the check pairs them then: name in COMPLETE the ids your runs use.
+
+## B105 · CHANGE
+
+CHANGE (K5209): OP-GRADES #30 is merged (tranche `8f913cced9`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.

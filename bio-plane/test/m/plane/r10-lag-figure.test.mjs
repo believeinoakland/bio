@@ -2,7 +2,7 @@
    `openInstruments`' 10 ms timer cannot fire inside a stretch that never yields, so a pass that held the thread answered `max_stretch_ms` NULL (live: 65 of 69 zero-time rows), and `noteLast` kept only the last run
    of a row, so the finishing pass overwrote the one that mattered. Beside the lag meter the object states `max_run_statements`, the most statements a reading's run ran between two turns of the event loop. On workerd
    under Miniflare, the plane's own Worker and `Store` with the REAL alarm (`r8-headofline-entry.mjs`): a 7.9 MB text is uploaded through the real door, filed, and read by the object's alarm, tick by tick; the
-   administrator's `owedwork&sha=` is read after each pass and at the end. The row states `max_run_statements`, non-NULL and above 1,000 for the pass that wrote a tick's units; it is the maximum over the row's runs,
+   administrator's `owedwork&sha=` is read after each pass and at the end. The row states `max_run_statements`, non-NULL, above 256 and at most 1,000 for the pass that wrote a tick's units (extraction R111 gives the turn back every 256 units; above 1,000 means a pass held the object); it is the maximum over the row's runs,
    so it is still there, and never lower, after the finishing pass; control: a pass that only waits (`NO_HOME`, the capture not yet filed) states its few statements. The figure is printed beside the DO analytics'
    alarm CPU for the platform check P (a 12 MB text read after the fix: the figure and the analytics agree in order of magnitude). Counts only (R-CLOCK). Heavy: run alone. */
 import { test, after } from "node:test";
@@ -72,7 +72,7 @@ test("R78 R28b L (control): a pass that only waits, the capture not yet filed (N
   assert.ok(seen.max_run_statements < 1_000, `a pass that only waits ran few statements: ${seen.max_run_statements}`);
 });
 
-test("R78 R28b L (HEAVY: run alone): a 7.9 MB text read by the real alarm states max_run_statements above 1,000 for the pass that wrote a tick's units, and keeps the maximum over its runs after the finishing pass", { timeout: 900_000 }, async () => {
+test("R78 R28b L (HEAVY: run alone): a 7.9 MB text read by the real alarm states max_run_statements above 256 and at most 1,000 for the pass that wrote a tick's units, and keeps the maximum over its runs after the finishing pass", { timeout: 900_000 }, async () => {
   const w = world(), stub = await w.bind();
   const up = await upload(w.mf, stub, 7_900_060);
   await file(stub, up);
@@ -92,8 +92,8 @@ test("R78 R28b L (HEAVY: run alone): a 7.9 MB text read by the real alarm states
   /* a tick's units are rows (`rows_written`, the platform's cursor count; `units` is stated only by owners that state them) */
   const wrote = seen.filter((s) => (Number.isFinite(s.units) && s.units >= 1_000) || (Number.isFinite(s.rows_written) && s.rows_written >= 1_000));
   assert.ok(wrote.length >= 1, `a pass that wrote a tick's units was seen: ${JSON.stringify(seen.map((s) => [s.units, s.rows_written]))}`);
-  for (const s of wrote) assert.ok(s.max_run_statements > 1_000, `the pass that wrote ${s.units ?? s.rows_written} ran ${s.max_run_statements} statements between yields`);
+  for (const s of wrote) assert.ok(s.max_run_statements > 256 && s.max_run_statements <= 1_000, `the pass that wrote ${s.units ?? s.rows_written} ran ${s.max_run_statements} statements between yields (above 256, at most 1,000: a stretch over 1,000 held the object)`);
   assert.deepEqual(figures.map((f, i) => (i === 0 ? true : f >= figures[i - 1])), figures.map(() => true), `the row never lowers its figure: ${JSON.stringify(figures)}`);
-  assert.ok(end.max_run_statements > 1_000, `after the finishing pass the row still states the maximum over its runs (${end.max_run_statements}); the finishing pass wrote ${end.rows_written} rows`);
+  assert.ok(end.max_run_statements > 256 && end.max_run_statements <= 1_000, `after the finishing pass the row still states the maximum over its runs (${end.max_run_statements}); the finishing pass wrote ${end.rows_written} rows`);
   assert.equal(end.max_run_statements, Math.max(...figures), "the figure at the end is the largest seen");
 });

@@ -11,7 +11,7 @@ import { OPS, registerDeclaredOps as registerOps } from "../../../src/op-declara
 import { boot, ok, refusedIn } from "../interface-shell/harness.mjs";
 import { CONTRADICTION_SCREEN, GAP_WORDS } from "../../../src/screens-inquiry/contradiction.mjs";
 import { SCREENS } from "../../../src/screens-inquiry/index.mjs";
-import { plane, main, press, fill, says, word, day, P, SHA, DOCUMENT_MD, storeWorld } from "./fixtures.mjs";
+import { plane, main, press, fill, says, word, day, P, SHA, DOCUMENT_MD, storeWorld, WORLD_FOUNDER_HANDLE } from "./fixtures.mjs";
 
 /* K4245 (test-support R17): every owner's declarations registered once, before the first read, by the one registrar */
 const REGISTRY = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8"));
@@ -36,8 +36,7 @@ const NOTICE = (o = {}) => ({ candidate: CAND, project: P, weight: "duty", state
 const notices = (n) => ok({ ok: true, wrote: false, project: P, notices: n ? [n] : [], truncated: false });
 const IMAGES = { [A_DOC]: { "bundle.md": docMd(A_DOC, "Lease amendment, March 2024") }, [B_DOC]: { "bundle.md": docMd(B_DOC, "Rent notice, September 2026") },
   [INQ]: { "bundle.md": ["---", `id: ${INQ}`, "object_type: inquiry", "title: \"Which date does the rent adjustment take effect?\"", `project: ${P}`, "---", ""].join("\n") } };
-const view = (c, o = {}) => ({ images: IMAGES, plane: { contradictioncandidates: answer(c), contradictionfacts: ok(FACTS), contradictionnotices: notices(null),
-  contradictionresponses: ok({ ok: true, responses: [] }), ...(o.plane || {}) } });
+const view = (c, o = {}) => ({ images: IMAGES, plane: { contradictioncandidates: answer(c), contradictionfacts: ok(FACTS), contradictionnotices: notices(null), ...(o.plane || {}) } });
 /* the other screens are served beside it, so a reference to a document or a question is a link (the kit draws a link only to a registered screen) */
 const SERVED = [...SCREENS.filter((s) => s.id !== "contradiction"), CONTRADICTION_SCREEN];
 export const open = async (path, o = {}) => { const p = await boot({ screens: SERVED, path, plane: plane(o), ...(o.boot || {}) }); await p.settle(); return p; };
@@ -315,20 +314,36 @@ test("R105 R51 ask to resolve: the candidate, her project and her words are sent
   assert.ok(!("words" in q.byOp("contradictionoptin")[0].body), "control: no words, none sent");
 });
 
-const REVEALED = () => view(null, { plane: { contradictionnotices: notices(NOTICE({ revealed: true, opted_in: { member: "dev", at: "2026-10-15T09:00:00Z", words: null }, parties: [{ id: OTHER, name: "Elsewhere" }] })),
-  contradictionresponses: ok({ ok: true, responses: [] }) } });
+/* the real world (store-assembly's store with the real door; the state is made by real acts, K5054): a page as `as` reads it over the world's door, `plane` scripting only the ops it names */
+async function pageOn(world, as, path, o = {}) {
+  const { door, session } = world.boot(as);
+  const p = await boot({ screens: SERVED, door, session, path, ...o });
+  await p.settle();
+  return p;
+}
+/** State e by real acts: a conflict between two projects (`recipes.conflict`, the team's Claude account set up by its administrator), each of the two members' projects having asked to resolve it, so the projects
+ *  are named to each other. Answers the conflict and `page(plane)`: the page of the first project's member, `plane` scripting only the ops it names. */
+const revealed = async () => {
+  const world = await storeWorld({ ai: true });
+  const admin = await world.signIn(WORLD_FOUNDER_HANDLE);
+  const c = await world.recipes.conflict(admin, { through: "revealed" });
+  const path = `/app/contradiction/${c.candidate}/${c.projects[0]}`;
+  return { world, c, path, page: (plane = {}) => pageOn(world, c.members[0], path, { plane }) };
+};
 
 test("R105 R53 respond: her words and only what she ticks to share (her cover, her email as typed) are sent; nothing ticked sends no disclosure", async () => {
-  const p = await open(`/app/contradiction/${CAND}/${P}`, REVEALED());
+  const w = await revealed();
+  const body = (extra) => ({ candidate: w.c.candidate, project: w.c.projects[0], ...extra });
+  const p = await w.page();
   fill(p, { "cd-resp": "Our notice came from the letter of September 12.", "cd-email": "dev@example.org" });
   tick(p, "cd-share", 0); tick(p, "cd-share", 1);
   await p.click(act(p, "contradictionrespond"));
-  assert.deepEqual(p.byOp("contradictionrespond")[0].body, { candidate: CAND, project: P, text: "Our notice came from the letter of September 12.", disclose: { cover: true, email: "dev@example.org" } });
-  const q = await open(`/app/contradiction/${CAND}/${P}`, REVEALED());
+  assert.deepEqual(p.byOp("contradictionrespond")[0].body, body({ text: "Our notice came from the letter of September 12.", disclose: { cover: true, email: "dev@example.org" } }));
+  const q = await w.page();
   fill(q, { "cd-resp": "Only words.", "cd-email": "typed@example.org" });
   await q.click(act(q, "contradictionrespond"));
-  assert.deepEqual(q.byOp("contradictionrespond")[0].body, { candidate: CAND, project: P, text: "Only words." }, "an address typed but not ticked is not shared");
-  const r = await open(`/app/contradiction/${CAND}/${P}`, REVEALED());
+  assert.deepEqual(q.byOp("contradictionrespond")[0].body, body({ text: "Only words." }), "an address typed but not ticked is not shared");
+  const r = await w.page();
   fill(r, { "cd-resp": "  " });
   await r.click(act(r, "contradictionrespond"));
   assert.equal(r.byOp("contradictionrespond").length, 0, "control: an empty response sends nothing");
@@ -362,13 +377,14 @@ test("R105 every refusal the plane makes of the six acts is drawn beside the act
     ["contradictionrespond", "DISCLOSURE_NOT_YOURS", [S + "you.can.share.only.your.own", S + "untick.what.is.not.yours"]],
     ["contradictionrespond", "DISCLOSURE_MALFORMED", [S + "you.can.share.only.your.own", S + "untick.what.is.not.yours"]],
   ];
+  const rev = await revealed();
   const setup = {
     contradictionclarify: async (o) => { const p = await open("/app/contradiction/" + CAND, { ...view(cand()), plane: { ...view(cand()).plane, ...o } }); tick(p, "cd-coords", 0); fill(p, { "cd-expl": "Words.", "cd-why": "Why." }); return [p, act(p, "contradictionclarify", "differs")]; },
     contradictiontakeup: async (o) => { const p = await open("/app/contradiction/" + CAND, { ...view(cand()), plane: { ...view(cand()).plane, ...o } }); return [p, act(p, "contradictiontakeup")]; },
     contradictiondismiss: async (o) => { const p = await open("/app/contradiction/" + CAND, { ...view(cand({ weight: "lead" })), plane: { ...view(cand({ weight: "lead" })).plane, ...o } }); return [p, act(p, "contradictiondismiss")]; },
     contradictionresolve: async (o) => { const p = await open("/app/contradiction/" + CAND, { ...TAKEN(), plane: { ...TAKEN().plane, ...o } }); fill(p, { "cd-concl": "C.", "cd-fals": "F." }); return [p, act(p, "contradictionresolve")]; },
     contradictionoptin: async (o) => { const p = await open(`/app/contradiction/${CAND}/${P}`, view(null, { plane: { contradictionnotices: notices(NOTICE()), ...o } })); return [p, act(p, "contradictionoptin")]; },
-    contradictionrespond: async (o) => { const p = await open(`/app/contradiction/${CAND}/${P}`, { ...REVEALED(), plane: { ...REVEALED().plane, ...o } }); fill(p, { "cd-resp": "R." }); return [p, act(p, "contradictionrespond")]; },
+    contradictionrespond: async (o) => { const p = await rev.page(o); fill(p, { "cd-resp": "R." }); return [p, act(p, "contradictionrespond")]; },
   };
   const seen = new Set();
   for (const [op, code, keys] of cases) {
@@ -393,6 +409,7 @@ test("R105 every refusal the plane makes of the six acts is drawn beside the act
 /* ---- writing help (entry 25): beside the fields she words herself, never beside a reason ---- */
 
 test("R105 writinghelp: offered beside her own-words fields while the assistant is reachable, told only what she typed, its draft filled into the field as a labeled draft; none beside a reason field (control); none while the assistant is not reachable (control)", async () => {
+  /* still scripted (writinghelp): the draft is asked of the Worker's assistant object, which needs the model, so no world answer carries `text` (needed: a recipe/world whose assistant answers a draft; `recipes.writingHelp` answers only the refusals) */
   const reach = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }), writinghelp: ok({ ok: true, text: "The notice is the later of the two.", untested: true }) };
   const p = await open("/app/contradiction/" + CAND, { ...view(cand()), plane: { ...view(cand()).plane, ...reach } });
   const helps = main(p).querySelectorAll('button[data-act="writinghelp"]');
@@ -433,13 +450,15 @@ test("R105 what the record cannot state is not drawn or offered: a stated date t
 });
 
 test("R105 writinghelp: beside her conclusion on a taken-up question and beside her response once the projects are named, never beside what would change it", async () => {
+  /* still scripted (writinghelp): the draft is asked of the Worker's assistant object, which needs the model, so no world answer carries `text` (needed: a recipe/world whose assistant answers a draft; `recipes.writingHelp` answers only the refusals) */
   const reach = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }), writinghelp: ok({ ok: true, text: "Done." }) };
   const c = await open("/app/contradiction/" + CAND, { ...TAKEN(), plane: { ...TAKEN().plane, ...reach } });
   assert.deepEqual(main(c).querySelectorAll('button[data-act="writinghelp"]').map((b) => b.getAttribute("data-field")), ["conclusion"]);
   fill(c, { "cd-concl": "They differ in time." });
   await c.click(main(c).querySelector('button[data-act="writinghelp"]'));
   assert.deepEqual(c.byOp("writinghelp")[0].body, { op: "contradictionresolve", field: "conclusion", told: "They differ in time." });
-  const e = await open(`/app/contradiction/${CAND}/${P}`, { ...REVEALED(), plane: { ...REVEALED().plane, ...reach } });
+  const w = await revealed();
+  const e = await w.page(reach);
   assert.deepEqual(main(e).querySelectorAll('button[data-act="writinghelp"]').map((b) => b.getAttribute("data-field")), ["response"]);
   fill(e, { "cd-resp": "Our notice came from the letter." });
   await e.click(main(e).querySelector('button[data-act="writinghelp"]'));

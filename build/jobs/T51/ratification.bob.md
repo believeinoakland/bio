@@ -1,6 +1,6 @@
 # BOB to ratification (T51)
 
-**Read** · handled J23
+**Read** · handled J31
 
 ## B1 · START
 
@@ -358,3 +358,37 @@ The two money-ingest timing reds you saw (control-plane R105 G61, G63) are known
 ## B23 · CHANGE
 
 CHANGE (BOB #302, K5197). CASE-CATALOGUE #5 (R6: a `memberBasis` entry is the basis array or `{basis, references}`) and PUBLICATION #42 (R79) are merged on the tranche. Merge `origin/tranche/T51` (never a rebase) and re-run `preflight.test.mjs` (R18) and your R61 tests; R18 should now pass without any change of yours. Also in this job: ratification **R53** is amended (K5196) to declare `publishat` (served by you, sent by the screens, undeclared in interface-shell's census): declare it by R53's rules, with its `declared-ops.test.mjs` cases. With B22 (R21 `SELECTION_NOT_YOURS`, R60's two hops), post COMPLETE naming R18, R21, R53, R60, R61 as met.
+
+## B24 · ANSWER · re J24
+
+ANSWER (BOB #302, K5198; re J24). Your sitting change is accepted (one gate call, each member asked once, answer byte for byte the same). Leave `reusedparts` as it is (moving an issue order is not a hop removed). The 12th hop is public-read's assembly (5 against R44's 4): a CHANGE to PUBLIC-READ #37 now; when it merges I tell you, and you re-run the chain. B23 (case-catalogue merged, R18; R53 `publishat`) is past your cursor: apply it. R53's `publishat` needs op-grades R54 (an irreversible op declared in agreement with its hand row; OP-GRADES #29, started now) before its registration can pass: write the row and its test now, and run them once I post that op-grades has merged.
+
+## B25 · CHANGE
+
+CHANGE (BOB #303, K5200; re J26, J27). R60 worded (K5200): the door's bar counts one more hop for each further window of 8 objects the case file puts (public-read R44's window); the test's case puts 11, so the bar is 12, and `r10-caseratify-chain.test.mjs` on the tranche reads 12 (BOB's test-only edit). With your sitting in one gate call the chain is 12: merge the tranche, run the chain test (green), and post COMPLETE with R60 met. R53's `publishat` registration stays as B24 says: its test runs once OP-GRADES #29 merges; COMPLETE now with that one test red by name if op-grades has not merged when you finish.
+
+## B26 · CHANGE
+
+CHANGE (BOB #303, K5201; re J28). OP-GRADES #29 is merged (R54: an irreversible op declared in agreement with its hand row registers). Merge the tranche, run `r10-caseratify-chain.test.mjs` (bar 12) and your suite, and post COMPLETE with your met ids.
+
+## B27 · ANSWER · re J30
+
+ANSWER (K5202). Confirmed: the load-time `DECLARED_OP_DISAGREES: readtranslate description` is op-grades' stale hand row (`t48.mjs:69-71` still cites plane R50; the owner's row cites store-assembly R53). It is the only disagreement on the tranche (BOB listed every one). OP-GRADES #30 (started now) amends it; I CHANGE you the moment it merges: merge the tranche, run the chain test (bar 12) and post COMPLETE with R18, R21, R53, R60, R61 as you list. Nothing else is owed by you meanwhile.
+
+## B28 · CHANGE
+
+CHANGE (K5209): OP-GRADES #30 is merged (tranche `9ec4804160`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
+
+## B29 · START
+
+START · RATIFICATION #40 · tranche T51 · product believeinoakland/bio · fix round 10 (K5214)
+
+Depth 2 (BOB #304 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/ratification tranche/T51`; if a local `job/T51/ratification` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/ratification stale/ratification-local && git checkout -b job/T51/ratification origin/job/T51/ratification`. If `job/T51/ratification` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`, then `mail inbox --as job` and `mail done --as job --through B<n>` for this START (BOB merges a COMPLETE only when your record's cursor has read BOB's newest entry, K5171). A refused step: post BLOCKED naming it.
+Mail with `--module ratification`; record `build/jobs/T51/ratification.md` (append a new section). Model claude-haiku-5-5, low effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root `/home/user/bio`, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A `fixtures-own: <reason>` or `fixtures-generic: <CODE>` marker only where the value is truly your own (an input you feed, a harness, a platform double, a synthetic token), each named in your COMPLETE. A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one; REPORT the door case for BOB to place (K5138). A new sentence people read is written at its use as `localize(id, en, vars)` in a module that may (K3930, K3943); a screens module draws by key only.
+
+Bob's direction for this round (K5175): every bug, failure and broken feature found is fixed in this round; no guessing, no deferrals, no assumptions. A cause you find outside your paths is REPORTed the day you find it, with file:line.
+
+Your job: the words check reads 1 failure on the merged tranche: `bio-plane/src/ratification/index.mjs:1758`, `DECLARED_OPS.publishat`'s `description` is a plain string ("case-directed: keyed by a case edition ..."), a sentence people read written inline. Write it at its use as `localize("ratification.declared.publishat", <the same sentence exactly>)` as every owner's declared row does (`store-assembly/declared.mjs`, K3930, K3943), so op-grades' hand-row agreement (R54) still holds (the sentence unchanged). Then `node /home/user/civicos-process/checks/words.mjs /home/user/bio ratification` at 0, `declared-ops.test.mjs` and `control-plane/r10-caseratify-chain.test.mjs` green.
+**Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio ratification --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio ratification $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.

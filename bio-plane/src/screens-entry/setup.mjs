@@ -471,7 +471,9 @@ export const setup = {
         view.ui.at = "offices";
         const label = String(cs.value("su-office") || "").trim();
         const note = String(cs.value("su-office-note") || "").trim();
-        return label ? { body: { kind: "office", label, note: note || null } } : { refuse: "screen.setup.office.empty" };
+        // R6: `entities` R1 refuses an office with no note, so one is never sent without it
+        if (!label) return { refuse: "screen.setup.office.empty" };
+        return note ? { body: { kind: "office", label, note } } : { refuse: "refusal.ENTITY_NO_NOTE" };
       },
       done(view, answer, cs) { view.ui.office = String(cs.value("su-office") || "").trim(); } },
     // on only with a reason in the founder's own words, its field the act's reason (interface-shell R11); then every

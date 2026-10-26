@@ -1,6 +1,6 @@
 # wizard-scripts (T51)
 
-**Status** · session_01CnwJQiXshRasgJ9ErXumcK · depth 2 · COMPLETE · handled B24
+**Status** · session_0143XBw7eSFoV4QcZny2VQ3i · depth 2 · COMPLETE · handled B28
 
 ## J1 · BLOCKED
 
@@ -563,3 +563,54 @@ COMPLETE · B24 (fix round 10, follow-up 10; K5078). Commit 59d0c64d7b on job/T5
 - ownership vs origin/tranche/T51: 0 failures
 
 Size (session_01CnwJQiXshRasgJ9ErXumcK): test runs 3, module lines 2730
+
+## J28 · REPORT
+
+Other modules, found this round (none changed by this job):
+
+(a) Pre-existing reds, reproduced identically on the pre-change commit (f0f365e4ea, the job branch before R52) in a clean worktree: `control-plane` `r10-caseratify-chain.test.mjs` R60 (ratification; fix round 10): the longest chain is 13 of 46 calls, bar 11 (admission 1 + ratification 6 + assembly 4); its first two are reauthdue and session. `control-plane` `r137-parity.test.mjs` R137 (R136; store-request R15): the store request differs from the world's door's. Owners: control-plane / ratification / store-request.
+
+(b) A full run of the modules that consume wizardsat (30 modules, 820 test files) in one process was cut by the 1700 s limit with 488 tests cancelled and 195 failures, spread over plane, store-assembly, screens-inquiry, screens-intake, queue, screens-daily, screens-action, screens-publish, screens-settings, journey-check and others (for example G81 R124 in a screens file, journey-check group.test.mjs). The files that reference wizardsat or wizardsAt all pass when run alone: screens-wizards, store-assembly/wizards.test.mjs and plane/wizards.test.mjs, 85 of 85. I have not verified the other failures against the pre-change commit; they look like load or timeout effects of one long process, but that is unproven. Owners should confirm.
+
+(c) Fixtures: `answer wizard-scripts writing-help.test.mjs:217` [refusal] LIMITS_UNREADABLE, still open as in FIX-E. Its provider sits in `answers` or `store-door`, not in this module, so this module cannot add the marker without an edit it may not make. Needs BOB's placement.
+
+## J29 · COMPLETE
+
+R52 done. wizardsAt now answers each row with `required` (bio-plane/src/wizard-scripts/index.mjs:1322-1326 area, in the R11 map): a library or group script carries its own `required`, and a caller's own draft carries `required: false`. Commit 800e55f934 on job/T51/wizard-scripts.
+
+Failing-first: bio-plane/test/m/wizard-scripts/r52.test.mjs (three tests, each names R52). Red before the change (3 assertions: required undefined on a required library script, on an optional one, and a row without the key). Green after.
+
+Also changed: bio-plane/test/m/wizard-scripts/reads.test.mjs R11 row shape gains `required: false` (the exact-shape assertion amended by R52).
+
+Suite: module tests 143/143 (140 before, plus three R52 tests).
+Checks (absolute root /home/user/bio): format 0 failures; architecture 0; coverage 52 of 52 live ids named; ownership 0 (e9b1be9938..HEAD); words: no wizard-scripts finding (16 failures are in store-assembly and other modules); run.mjs: one finding in my files, the open fixture below.
+impact (origin/tranche/T51 HEAD): 30 modules, 788 test files. The consumers' tests (screens-wizards, store-assembly/wizards, plane/wizards) pass alone, 85/85. Other failures reported in REPORT.
+fixtures wizard-scripts --list: 1 open, writing-help.test.mjs:217 LIMITS_UNREADABLE (FIX-E). Not zeroed: its provider is in another module. Cause and owner in REPORT (c).
+
+Met ids this round: R52. No fixtures-own or fixtures-generic markers added. No deferrals in wizard-scripts. Nothing else of mine changed.
+
+Size (session_0143XBw7eSFoV4QcZny2VQ3i): test runs 9, module lines 2903
+
+## J30 · BLOCKED
+
+CHANGE (B27) done in code; one edge is needed from you before the architecture check reads zero.
+
+Done (commit on job/T51/wizard-scripts, pushed): bio-plane/test/m/wizard-scripts/writing-help.test.mjs now takes answers' published limitsUnreadable() (bio-plane/test/m/answers/fixtures.mjs, its R30) in place of the hand-built LIMITS_UNREADABLE refusal. The R27 test is async and imports that fixture. Checks: wizard-scripts module suite 143 of 143; fixtures wizard-scripts reads 0 (was 1); format 0; coverage 52 of 52; ownership 0 failures.
+
+Blocked: architecture reads 1 failure, writing-help.test.mjs imports answers' fixture, which wizard-scripts does not declare in uses. The edge is in build/modules.json, which is not my file. I tested it locally and reverted it, nothing committed: adding "answers" to wizard-scripts' uses clears the check (0 failures).
+
+Needs Bob: add "answers" to the uses of wizard-scripts in build/modules.json (layer 6 is earlier than layer 11, so the order holds). Tell me when it is on the tranche, and I will merge it, re-run architecture, and post COMPLETE.
+
+## J31 · COMPLETE
+
+COMPLETE for CHANGE B28 (J30's blocker is cleared). Cursor moved through B28.
+
+Merged origin/tranche/T51 into job/T51/wizard-scripts (merge, never a rebase), so build/modules.json now gives wizard-scripts `answers`. Pushed.
+
+Changes this round (B27): bio-plane/test/m/wizard-scripts/writing-help.test.mjs takes answers' published limitsUnreadable() (bio-plane/test/m/answers/fixtures.mjs, its R30) for the R27 test, which is async now. Earlier this round (R52): bio-plane/src/wizard-scripts/index.mjs (wizardsAt rows carry required) and bio-plane/test/m/wizard-scripts/r52.test.mjs (new, failing-first, names R52); reads.test.mjs R11 row shape gains required: false.
+
+Checks (absolute root /home/user/bio), after the merge: architecture 0 failures; fixtures wizard-scripts 0 failures (answer 0); format 0; coverage 52 of 52 live ids named; ownership 0 failures (73209c08..HEAD); module suite 143 of 143.
+
+Met ids this round: R52. Markers: no fixtures-own or fixtures-generic added. Deferrals: none in this module. Found outside my paths earlier (REPORT J28): control-plane R60 and R137 fail identically before my change.
+
+Size (session_0143XBw7eSFoV4QcZny2VQ3i): test runs 13, module lines 2903

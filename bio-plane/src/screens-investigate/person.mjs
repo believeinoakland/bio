@@ -12,6 +12,7 @@ import { PARTS } from "./parts.mjs";
 import { GRAPH_SHARED, FORM_SHARED } from "./graphwords.mjs";
 import { WHY_KEYS } from "./whywords.mjs";
 import { rereading } from "./rereads.mjs";
+import { hasWord } from "../setup-words/index.mjs";
 
 /* R41: the subject read is `entity` (`found: false` the absence); `person` and `samepersoncandidates` are read (by `PARTS.later`,
    once the entity says its kind) only for a person or an organization, and again after each act (`view.ui.pn`). */
@@ -67,8 +68,8 @@ function render(cs, view) {
   const aliasSec = () => {
     const aliases = ((ent && ent.aliases) || []).filter((a) => !a.withdrawn);
     const aliasRow = (a) => cs.row("", `<b>${cs.esc(a.alias)}</b>`,
-      `<span class="mk-small">${/^member:/.test(String(a.declared_by || "")) ? cs.w("entity.alias.by", { who: P.who(cs, a.declared_by), date: cs.date(a.at || "", { year: true }) }) : cs.w("entity.alias.roster")}</span>`
-      + (!a.canonical && /^member:/.test(String(a.declared_by || "")) ? cs.act("aliaswithdraw", { label: "act.owed_aliaswithdraw.label.person", data: { alias: a.alias } }) : ""));
+      `<span class="mk-small">${!a.canonical && !/^(machine|class|agent):/.test(String(a.declared_by || "")) && a.declared_by ? cs.w("entity.alias.by", { who: P.who(cs, a.declared_by), date: cs.date(a.at || "", { year: true }) }) : cs.w("entity.alias.roster")}</span>`
+      + (!a.canonical && !/^(machine|class|agent):/.test(String(a.declared_by || "")) && a.declared_by ? cs.act("aliaswithdraw", { label: "act.owed_aliaswithdraw.label.person", data: { alias: a.alias } }) : ""));
     return cs.sec("entity.alias.title", (aliases.length ? cs.sheet(aliases.map(aliasRow).join("")) : "")
       + cs.field("person-alias", org ? "entity.alias.label.org" : "entity.alias.label", { help: "entity.alias.help" })
       + cs.act("entityalias", { label: "entity.alias.add" }));
@@ -128,10 +129,23 @@ function render(cs, view) {
       const held = (v.lines || []).filter((l) => l && !l.withdrawn && l.kind === "holds");
       return cs.sheet(held.map((l) => {
         const when = l.valid && l.valid.undetermined ? `${cs.mark("gap", "undetermined")} <span class="mk-small">${P.why(cs, l.valid.why)}</span>` : span(l.valid);
+        /* R1 (K5178): a holder whose post states no end is stated current through a day (`linecurrentthrough`, `lines` R21) */
+        const open = l.line_id && l.valid && !l.valid.undetermined && (l.valid.to === null || l.valid.to === undefined);
         return cs.row(gradeOf({ assertion: l.assertion }), `${P.refOf(cs, l.from, nameOf(l.from), [l.title || ""])}${when ? " · " + when : ""}`,
-          cite(l.basis && l.basis.captureSha ? { captureSha: l.basis.captureSha, extent: l.basis.extent } : null));
+          cite(l.basis && l.basis.captureSha ? { captureSha: l.basis.captureSha, extent: l.basis.extent } : null)
+          + (open ? cs.act("linecurrentthrough", { label: "act.linecurrentthrough.label.person", data: { line: l.line_id } }) : ""));
       }).join("")) + (v.truncated ? `<p class="mk-small">${cs.w("screen.people.more", { n: String(held.length) })}</p>` : "");
     })));
+    /* R1: "who holds it": a holder, her post's dates (the end optional) and what says so, a document or the member's own word (`recordline`, kind `holds`) */
+    const srcNow = view.ui["choice:ho-src"] === "own" ? "own" : "doc";
+    const CAPACITIES = ["employee", "elected", "appointed", "acting", "interim", "ex_officio", "board_member", "officer_or_director", "partner", "military_service", "volunteer", "contractor", "other"];
+    o.push(cs.sec("screen.person.holds.heading", cs.choice("ho-who", "screen.person.holds.holder", [{ value: "", text: "" }].concat(who.filter((x) => x.value !== id)), {})
+      + cs.choice("ho-cap", "screen.person.holds.capacity", [{ value: "", text: "" }].concat(CAPACITIES.map((k) => [k, "label.linecapacities." + k])), {})
+      + cs.choice("ho-src", S + "keeper.source.label", [["doc", S + "keeper.source.doc"], ["own", S + "keeper.source.own"]], { acts: {}, value: "doc" }) + `<p class="mk-small">${cs.w(S + "keeper.source.help.a")} ${cs.w(S + "keeper.source.help.b")}</p>`
+      + (srcNow === "doc" ? P.docChoice(cs, view, "ho-doc", { label: S + "keeper.doc.label", passage: false }) : cs.field("ho-statement", S + "claim.note", { area: true, rec: true }))
+      + cs.field("ho-from", S + "keeper.from.label", { type: "date" }) + cs.field("ho-to", S + "keeper.to.label", { type: "date" })
+      + cs.act("recordline", { label: "act.recordline.label.office", data: { holds: "1" } })
+      + cs.field("ho-through", "screen.person.holds.through", { type: "date" })));
     const says = [aliasSec(), tiesSec(office ? "screen.person.ties.none.office" : "screen.person.ties.none.ordinance")];
     if (!office) says.push(namingSec());
     o.push(cs.sec("entity.says.title.org", says.join(""), { help: "entity.says.help.org" }));
@@ -163,7 +177,8 @@ function render(cs, view) {
   const undet = p ? (p.undetermined || []).filter((f) => f && f.fact_id && !f.withdrawn) : [];
   const have = new Set(standing.map((f) => f.fact_id));
   const undetRows = undet.filter((f) => !have.has(f.fact_id));
-  const withdrawn = p ? (p.facts || []).concat(p.undetermined || []).filter((f) => f && f.fact_id && f.withdrawn) : [];
+  /* people R44: the withdrawn facts are answered apart from `facts` (`withdrawn_facts`) */
+  const withdrawn = p ? (p.withdrawn_facts || []).concat(p.facts || [], p.undetermined || []).filter((f) => f && f.fact_id && f.withdrawn) : [];
   const seen = new Set();
   const gone = withdrawn.filter((f) => (seen.has(f.fact_id) ? false : seen.add(f.fact_id)));
   const undetLine = (f) => {
@@ -181,7 +196,10 @@ function render(cs, view) {
       `<span class="mk-small">${cs.w(S + "facts.withdrawn.by", { name: cs.esc(String(w.handle || w.by_handle || P.who(cs, w.by))), date: cs.date(w.at || "", { year: true }), reason: cs.esc(String(w.reason || "")) })}</span>`);
   };
   const removable = standing.filter((f) => f.fact_id);
-  const factsInner = cs.state(d, () => (standing.length ? cs.sheet(standing.map(factRow).join("")) : "")
+  /* R1 (K5148; WALK-FINAL-05 R149): where a fact was removed for good, the marker the dialog promises: when, and by whom by name (never the value) */
+  const removedRows = p && Array.isArray(p.removed) ? p.removed.filter((x) => x && typeof x === "object") : [];
+  const removedMarks = removedRows.map((x) => `<p class="mk-small" data-removed="${cs.esc(String(x.ground || ""))}">${cs.w(S + "expunge.marker", { date: { html: cs.date(x.at || "", { year: true }) }, member: P.who(cs, x.by) })}</p>`).join("");
+  const factsInner = cs.state(d, () => (standing.length ? cs.sheet(standing.map(factRow).join("")) : "") + removedMarks
     + (undetRows.length ? cs.sheet(undetRows.map(undetLine).join("")) : "")
     + (gone.length ? `<details class="mk-details"><summary>${cs.w(S + "facts.withdrawn", { n: String(gone.length) })}</summary>${cs.sheet(gone.map(goneLine).join(""))}</details>` : ""))
     + cs.choice("person-fact-kind", S + "fact.kind", (orgPage ? ["name", "address", "contact"] : kinds).map((k) => [k, S + "kind." + k]), {})
@@ -338,6 +356,16 @@ const acts = rereading([
       BOUNDS_REVERSED: function (r, cs) { return cs ? cs.w("screen.person.keeper.refused.dates.a") + " " + cs.w("screen.person.keeper.refused.dates.b") : ""; },
     },
     send(view, el, cs) {
+      /* "Record who holds it" on an office's page: a `holds` line from the holder to this office (`lines` R1) */
+      if (el && el.dataset && el.dataset.holds) {
+        const holder = String(cs.value("ho-who") || "").trim();
+        const own = view.ui["choice:ho-src"] === "own", statement = String(cs.value("ho-statement") || "").trim();
+        const basis = own ? (statement ? { statement } : null) : view.parts.chosen(cs, "ho-doc");
+        const capacity = String(cs.value("ho-cap") || "").trim();
+        if (!holder || !capacity || !basis) return { refuse: "screen.person.holds.empty" };
+        const f = String(cs.value("ho-from") || "").trim(), t = String(cs.value("ho-to") || "").trim();
+        return { body: Object.assign({ kind: "holds", from: holder, to: String(view.subject || ""), capacity, basis }, f || t ? { valid: { from: f || null, to: t || null, precision: "day", zone: "UTC" } } : {}) };
+      }
       const from = String(cs.value("kp-office") || "").trim(), to = String(cs.value("kp-subject") || "").trim();
       if (!from || !to) return { refuse: "screen.person.keeper.subject.help.a" };
       const own = view.ui["choice:kp-src"] === "own";
@@ -347,6 +375,17 @@ const acts = rereading([
       const f = String(cs.value("kp-from") || "").trim(), t = String(cs.value("kp-to") || "").trim();
       const kind = String(cs.value("kp-kind") || "custodian_of") === "responsible_for" ? "responsible_for" : "custodian_of";
       return { body: Object.assign({ kind, from, to, basis }, f || t ? { valid: { from: f || null, to: t || null, precision: "day", zone: "UTC" } } : {}) };
+    },
+    done(view, answer, cs) { cs.set("pn", (view.ui.pn || 0) + 1); } },
+  /* R1 (diag2-020305 §5; K5178): "State it current through a day": a holder row's post, stated current through the day, on the holder form's source */
+  { op: "linecurrentthrough", label: "act.linecurrentthrough.label.person",
+    send(view, el, cs) {
+      const lineId = String((el && el.dataset && el.dataset.line) || "").trim();
+      const day = String(cs.value("ho-through") || "").trim();
+      const own = view.ui["choice:ho-src"] === "own", statement = String(cs.value("ho-statement") || "").trim();
+      const basis = own ? (statement ? { statement } : null) : view.parts.chosen(cs, "ho-doc");
+      if (!lineId || !day || !basis) return { refuse: "screen.person.holds.empty" };
+      return { body: { lineId, day, basis } };
     },
     done(view, answer, cs) { cs.set("pn", (view.ui.pn || 0) + 1); } },
   /* R50, B14: a statement recorded by mistake is withdrawn with a reason (the shell asks it, `lines` R8); the lines are read again */
@@ -483,7 +522,7 @@ const PERSON_KEYS = [
   "screen.person.ground.lawful_demand", "screen.person.expunge.order", "screen.person.expunge.order.help", "screen.person.expunge.reason",
   "screen.person.expunge.empty", "screen.person.expunge.noorder",
   /* R41: the pages of the other kinds */
-  "screen.person.cited", "screen.person.holders", "screen.person.ties.none.ordinance", "screen.person.ties.none.office",
+  "screen.person.cited", "screen.person.holders", ...["employee", "elected", "appointed", "acting", "interim", "ex_officio", "board_member", "officer_or_director", "partner", "military_service", "volunteer", "contractor", "other"].map((k) => "label.linecapacities." + k), "screen.person.ties.none.ordinance", "screen.person.ties.none.office",
   "screen.people.counts", "screen.people.counts.none", "screen.people.count.document", "screen.people.count.documents", "screen.people.more",
   "screen.people.today.kind.office", "screen.people.today.kind.body", "screen.people.today.kind.institution", "screen.people.today.kind.movement",
   "screen.people.today.kind.fund", "screen.people.today.kind.program",
@@ -499,7 +538,10 @@ const PERSON_KEYS = [
   "screen.person.claim.same_as.org", "screen.person.claim.not_same_as.org", "screen.person.claim.kind.same_as.org", "screen.person.claim.kind.not_same_as.org", "screen.person.claim.kind.unsure.org",
 ];
 
-const words = ["screen.person.name", "screen.person.purpose",
+/* K5173: the rows UX-DESIGN adopts (HANDOFF B520); listed once the word table holds them, drawn by key from then on */
+const NEW_KEYS = ["screen.person.expunge.marker", "screen.person.holds.heading", "screen.person.holds.holder", "screen.person.holds.capacity", "screen.person.holds.empty", "act.recordline.label.office", "screen.person.holds.through", "act.linecurrentthrough.label.person", "act.linecurrentthrough.does"].filter((k) => hasWord(k));
+
+const words = ["screen.person.name", "screen.person.purpose", ...NEW_KEYS,
   ...["explore", "recordpersonfact", "recordline", "linewithdraw", "identityclaim", "withdrawidentityclaim", "followregister", "entityalias", "relationdeclare", "resolve", "resolvetestify", "connect", "writinghelp"]
     .flatMap((op) => ["act." + op + ".label.person", "act." + op + ".does"]),
   "act.owed_aliaswithdraw.label.person", "act.owed_aliaswithdraw.does",

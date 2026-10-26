@@ -103,7 +103,7 @@ test("R11 wizardsAt answers the offered scripts whose start is the screen, each 
   const byId = Object.fromEntries(at.scripts.map((s) => [s.version, s]));
   assert.deepEqual(Object.keys(byId).sort(), [`${LIBRARY[0].id}@2`, a.version, mine.version].sort());
   assert.deepEqual(byId[a.version], { id: a.script, version: a.version, name: "On case home", steps: STEPS,
-                                      approver: { id: "alice", name: "h_alice" }, finished: 2 });
+                                      approver: { id: "alice", name: "h_alice" }, finished: 2, required: false });
   assert.deepEqual([byId[mine.version].draft, byId[mine.version].approver], [true, null]);
   assert.ok(!at.scripts.some((s) => s.version === alices.version), "another's draft is not offered");
   assert.ok(!at.scripts.some((s) => s.version === other.version), "a script starting elsewhere");
