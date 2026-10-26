@@ -1,6 +1,6 @@
 # jurisdictions (T51)
 
-**Status** · session_01TxoAFuZ99Hs6pq9XejvbMw · depth 2 · COMPLETE · handled B9
+**Status** · session_01BAZvY9Tc39zzprM7J4aUBN · depth 2 · COMPLETE · handled B11
 
 ## J1 · REPORT
 
@@ -168,3 +168,15 @@ Checks: `checks/run.mjs`: no finding in a jurisdictions file; words line `inline
 REPORT, another module, found now: bio-plane/test/m/following/checks.test.mjs:20 imports `../../../src/plane/register.mjs`, which does not exist, so its test "R1 C-137.1-C-137.20: following's own family ..." fails with ERR_MODULE_NOT_FOUND; identical without my change (following's job).
 Deferred: none. Callers above ask for the same view many times per request; with this cache each costs 0.3 ms, so no change is needed in them for the 2 s bar.
 Size (session_01TxoAFuZ99Hs6pq9XejvbMw): test runs 14, module lines 3839
+
+## Fix round 10 (START B10, R98; K5292, K5257): governingZone
+
+Entry applied: R98 `governingZone(profileIds, teamZone)`, exported, `jurisdictions/index.mjs:1687` (after `combine`). It answers `teamZone` when `isTimeZone` accepts it (R41: an IANA name the runtime knows, or `UTC`); else the `time_zone` value of `combine(profileIds)`'s view when `profileIds` is a non-empty list that combines and the view holds one; else `null`. One try/catch around the body, so it never throws (hostile getters, proxies, symbols, bigints tested).
+Test: `jurisdictions/test/t51-governing-zone.test.mjs`, 4 tests naming R98. Red before the code (the module had no export: SyntaxError, 0 run), green after (4/4): a valid team zone wins and holds with no profile (the walker's case: a copy with no place profile and `@team/time_zone` set); an invalid or absent team zone falls back to the combined view's zone; no profiles, an unknown id, non-lists and a list of non-ids answer `null` (or the team zone); never throws.
+Suites: jurisdictions 188/188 (was 184). Checks: format 0 failures; architecture 0; coverage 98/98; fixtures `jurisdictions --list` 0 failures, no marker added; ownership 0 failures (3 files); `checks/run.mjs`: no finding in a jurisdictions file once the new test was staged (coverage had named R98 until then); its other findings (words, fixtures in acquisition, capture, store-assembly) are other modules'. No words added by this job.
+Deferred: none. Found in another module: none. For BOB: build/requirements/jurisdictions.md:86 still reads "(not yet met: T51)" for R98; the requirements file is BOB's. The re-pointing of the ~20 callers is the mechanical pass after merge.
+Size (session_01BAZvY9Tc39zzprM7J4aUBN): test runs 4, module lines 2248
+
+## J13 · COMPLETE
+
+COMPLETE (fix round 10, R98; START B10/B11): governingZone(profileIds, teamZone) exported at jurisdictions/index.mjs:1687. Test jurisdictions/test/t51-governing-zone.test.mjs (4 tests) red (no export) then green. Suite 188/188; format, architecture, fixtures, ownership 0 failures; coverage 98/98; no finding in my files in checks/run.mjs. No marker added. Requirements line 86 still says 'not yet met' (yours to update). Deferred none. Size (session_01BAZvY9Tc39zzprM7J4aUBN): test runs 4, module lines 2248
