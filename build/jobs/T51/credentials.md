@@ -1,6 +1,6 @@
 # credentials (T51)
 
-**Status** · session_01AeXCzDzc1RnVriiEiSPhKG · depth 2 · COMPLETE · handled B21
+**Status** · session_01BSwm7HQZoqvNtYqxRTJFff · depth 2 · COMPLETE · handled B23
 
 ## J1 · COMPLETE
 
@@ -504,3 +504,44 @@ Processed START B21 (K5217), the signout answer. Commit 1bbbf96c2e on `job/T51/c
 **Size (session_01AeXCzDzc1RnVriiEiSPhKG): test runs 4, module lines 2736**
 
 Re-running the `fixtures.mjs` line count: the module's test files total 5022 lines.
+
+## J30 · COMPLETE
+
+START B22 (DEC-436, K5224) handled. Commit 431cf5587f on `job/T51/credentials` (pushed; tranche merged earlier, fast-forward, no rebase).
+
+**Changed (file:line)**
+- `bio-plane/src/credentials/checks.mjs`:16-27 the words comment names `{stated}`; `:20` is now `word('refusal.SIGN_IN_PAUSED', { stated: SIGN_IN_STATED })`.
+- `bio-plane/src/credentials/checks.mjs`:8-14 the R38 window bounds (`SIGN_IN_WINDOW`) and `SIGN_IN_STATED` moved here from `index.mjs`. `SIGN_IN_STATED` is needed by `checks.mjs` at load, and `index.mjs` imports `checks.mjs`, so importing it from `index.mjs` would be a cycle.
+- `bio-plane/src/credentials/index.mjs`:42-43 imports the two names from `checks.mjs`; `:74-77` re-exports them, so every existing importer (t35-signin, t37) is unchanged.
+
+**Failing first.** Before the change, with `rows.mjs` regenerated locally, the whole credentials suite failed at load: `WORD_VAR_MISSING: refusal.SIGN_IN_PAUSED needs {stated}` (0 of 31 files pass). After the change it is green. I did not run the screens-entry suite before the change, so its red state rests on your B22 note; after the change `bio-plane/test/m/screens-entry/*.test.mjs` (including the two R2 paused tests in `front.test.mjs:204-207` and `public.test.mjs:121-130`) passes 98 of 98.
+
+**Met ids:** none named by this job; R38 is the requirement the pause states, and its text is met by the `stated` bound. BOB strikes whatever mark he holds.
+
+**Markers added:** none.
+
+**Rows:** I regenerated `rows.mjs` and `words-unreviewed.json` locally to test, then restored them with `git checkout -- bio-plane/src/setup-words/`; neither is committed. Your merge regenerates them.
+
+**Suites and checks** (absolute root `/home/user/bio`)
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/credentials/*.test.mjs`: tests 199, pass 199, fail 0.
+- `--test bio-plane/test/m/screens-entry/*.test.mjs`: tests 98, pass 98, fail 0.
+- `checks/format.mjs`: 178 modules; 0 failures. `checks/architecture.mjs credentials`: 0 failures. `checks/coverage.mjs credentials`: 58 of 58 live ids named; 0 failures. `checks/words.mjs credentials`: 0 failures. `checks/fixtures.mjs credentials --list`: 0 failures.
+- `checks/ownership.mjs credentials 536cfed566 HEAD`: 0 failures.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178.
+- `checks/run.mjs /home/user/bio`: no finding in credentials' files. The words count did not rise (credentials: 0). The run's 15 inline store-assembly words failures are not this module's.
+
+**Found outside my paths, not changed:** `checks/run.mjs` prints `FAIL answer interface-shell bio-plane/test/m/interface-shell/harness.mjs:97 [op-table signout] signout: ok({ ok: true }), -> credentials (earlier)`. It names the signout answer that J29 (B21) published in `credentials/fixtures.mjs`, and that answer is my module's. The check shows it under the interface-shell harness, so the check or its harness is the likely cause; I have not traced it. For BOB to place.
+
+Size (session_01BSwm7HQZoqvNtYqxRTJFff): test runs 3, module lines 2741
+
+## J31 · COMPLETE
+
+CHANGE B23 (K5226) handled. Merged `origin/tranche/T51` into `job/T51/credentials` (merge commit `7b729ad889`, a merge, no rebase), pushed. The merge brought STORE-ASSEMBLY #5; this module's own code is unchanged in this round.
+
+Re-run after the merge:
+- `bio-plane/test/m/credentials/*.test.mjs`: tests 199, pass 199, fail 0. The tranche's committed `rows.mjs` still reads `{time}`, so the suite fails at load (`WORD_VAR_MISSING: refusal.SIGN_IN_PAUSED needs {time}`) until rows are regenerated. I regenerated `rows.mjs` locally, ran the suite, and restored it with `git checkout -- bio-plane/src/setup-words/`; nothing regenerated is committed. Your merge regenerates it.
+- `bio-plane/test/m/screens-entry/*.test.mjs`: tests 98, pass 98, fail 0 (same local regeneration).
+- `checks/format.mjs`: 178 modules; 0 failures. `checks/architecture.mjs credentials`: 0 failures. `checks/coverage.mjs credentials`: 58 of 58 live ids named; 0 failures. `checks/words.mjs credentials`: 0 failures. `checks/fixtures.mjs credentials --list`: 0 failures. `checks/ownership.mjs credentials <merge-base> HEAD`: 0 failures.
+- `checks/run.mjs /home/user/bio`: words over the product 0 failures, consistent with B23's line.
+
+Size (session_01BSwm7HQZoqvNtYqxRTJFff): test runs 4, module lines 2741
