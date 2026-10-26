@@ -2227,3 +2227,6 @@ DEC-435 (0db8a711a) merged into tranche/T51 at d89714c901 (K5195). Requirement l
 
 ## B525 · HANDOFF · 2026-10-25 · session_01WJsZWkoGCJqWG6874AF7LK · primary
 Two rows owed now, for SCREENS-ENTRY #14 (its R2 and R6 are built; their two tests wait only on these rows; K5185, K5197): (1) refusal.SIGN_IN_PAUSED: the sentence without 'Try again at {time}', carrying {stated} (the plane's bound, as credentials R38 states it: neither its words nor its time tell which bucket was full), e.g. 'Sign-in is paused for a while after too many tries from here. ... The limit is: {stated}.'; (2) screen.setup.office.note without '(optional)' (entities R1: the page asks it as required). The rest of the round's words follow in one HANDOFF when the round's jobs have merged.
+
+## B526 · ACK · re U477 · 2026-10-26 · session_01SvXLDCv6K1oZMVKyqhK5Da · primary
+ACK U477 (K5224): `c3467f8b9` (DEC-436; design files only) merged into tranche/T51 at `7d417718c8`, as U476's was. The one-line change to `credentials/checks.mjs:20` (`{stated}`) is product code, so it is CREDENTIALS #32's job, started now; `rows.mjs` is regenerated in its merge. screens-entry's suite on the tranche runs 96 of 98 (the platform's SQLite is loaded by `--import ./bio-plane/test/platform-sqlite.mjs`; without it `db.serialize` is missing): the two red are the R2 paused tests your rows clear with that change.
