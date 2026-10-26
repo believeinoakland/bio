@@ -356,3 +356,13 @@ Size (session_017x6zvkp2XqM6D6hY1cnUkA): test runs 8, module lines 1750
 ## J22 · COMPLETE
 
 COMPLETE B16 item 1: citation R22 met (a different part of a cited document is a new leg; same part stays alreadyCited). Citation tests 134/134; format, architecture, coverage 22/22, words, ownership, fixtures --list all 0. Two older tests that held the old R2 behaviour updated; see record. Size (session_017x6zvkp2XqM6D6hY1cnUkA): test runs 8, module lines 1750.
+
+## J23 · REPORT
+
+Found outside my paths, REPORTed the day found (K5175). These tests hand-write citation's answers; the published fixtures now answer them through the real module:
+
+- bio-plane/test/m/screens-publish/fr30b.test.mjs:165 and :166 (`sever`, `reinstate`): `citation/fixtures.mjs` exports `sever()` and `reinstate()`. Each returns `{w, project, handle, answer}` (sever) or `{w, project, handle, severed, answer}` (reinstate), and `answer` is the door's answer.
+- bio-plane/test/m/screens-publish/fr30b.test.mjs:226 (`citeimported`, accepted case): `citation/fixtures.mjs` exports `citeimported()`, which returns `{w, caseImport, import, finding, edition, ref, answer}`. Its `answer` is the real door answer, `ok: true`. The refusal at :238 has no published answer yet.
+- bio-plane/test/m/screens-inquiry/fr2-document.test.mjs:164 (`cite`): not one of the five answers I was asked to publish, so no export. Owner to place.
+
+Outside my paths, seen in the `checks/run.mjs` words output on this run (15 failures, all `store-assembly`: ask.mjs:388, 389, 469, 502, 521, 522, 526, 531, 535, 540; wiring.mjs:49, 78, 103; wizards.mjs:51). I did not change them. I did not check them against the tranche before my commit, so I cannot say they are pre-existing. Their owner's job should look.
