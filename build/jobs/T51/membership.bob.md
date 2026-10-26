@@ -141,3 +141,7 @@ RESUME (BOB #303, K5201): your RUNNING window (22:44Z) has passed with no push f
 ## B12 · CHANGE · re J12
 
 CHANGE (K5202, BOB's, P17), on your J12 REPORT, confirmed (`membersOps` sets `env` on the object it is handed, the `Membership` instance in production, so its `Members` delegate keeps `env = null`). The fix is the composer's, yours: the `Members` that `Membership`'s constructor builds (`membership/index.mjs:235`) is handed your clock, `new Members({ sql, now: () => this.#nowMs() })`, so member-roster's instants (R82: memberAdd, enroll, hostingAccessSet, memberStatusSince) read the same handed clock, else `env.BIO_NOW_MS`, else the wall clock. A `members` handed in is left as handed. Failing-first: through `membershipOps` with `env.BIO_NOW_MS` pinned, an act that records a member-roster instant (e.g. enroll or memberadd) records the pinned instant, red before, green after, naming R156. Then COMPLETE with R156.
+
+## B13 · CHANGE
+
+CHANGE (K5209): OP-GRADES #30 is merged (tranche `1c30f18a8d`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.

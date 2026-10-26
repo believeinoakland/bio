@@ -1,6 +1,6 @@
 # BOB to connections (T51)
 
-**Read** · handled J7
+**Read** · handled J8
 
 ## B1 · START
 
@@ -115,3 +115,11 @@ Bob's direction for this round (K5175): every bug, failure and broken feature fo
 
 Your job: connections R44 as amended (K5203; read it whole, its new clause marked not yet met): a placement whose `target_kind` is `content` carries `extent` (`content`'s `canonicalExtent` of the content id, already used at `connections/stepsources.mjs:8`) and `page` (that extent's page, from 0) when the extent has one; a whole-document placement carries neither. The view is `connections/themes.mjs:270-317` (`this.view`). Failing-first through `themeread`: a theme placed on a passage of a paged document answers its `page` (red today), a whole-document placement none (control), naming R44. Publish the answer in your `fixtures.mjs` (made by your real code) so screens-inquiry takes it. Until OP-GRADES #30 merges (I CHANGE you then), every store fails at import with `DECLARED_OP_DISAGREES: readtranslate description`: not yours; write your change meanwhile and run it green after the CHANGE.
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio connections --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio connections $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B11 · CHANGE
+
+CHANGE (K5209): OP-GRADES #30 is merged (tranche `1907da1eb3`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
+
+## B12 · CHANGE
+
+CHANGE (K5210), in this same job with B11 (merge the tranche): your J8 REPORT 2, confirmed: screens-inquiry hand-builds `connectionchoose` answers (`document.test.mjs:168`, `fr28-document.test.mjs:105`, `:115`, `:120`). Publish in your `fixtures.mjs` the real `connectionchoose` answers those lines need (read them for the states: the chosen connection, and each refusal they expect), made by your real code each call, with a test that each is your real answer. Then COMPLETE with both.
