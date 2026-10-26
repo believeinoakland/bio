@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { rowOk, door, V } from "./fixture.mjs";
-import { importedCasesAnswer, importedCaseAnswer, rerunStartAnswer, rerunPairAnswer, rerunReadAnswer } from "./fixtures.mjs";
+import { importedCasesAnswer, importedCaseAnswer, rerunStartAnswer, rerunPairAnswer, rerunReadAnswer, importRegradeAnswer } from "./fixtures.mjs";
 import { LENS_LIMIT, RERUN_DISAGREEMENT } from "../../../src/case-import/index.mjs";
 
 const RERUN_PROJECT = "PRJ-2026-0001-rerun";
@@ -60,4 +60,16 @@ test("R29 R31 each published answer builds its own world, so no answer is shared
   const b = await rerunStartAnswer();
   assert.notEqual(a.w, b.w);
   assert.deepEqual([a.w.count("case_import_reruns"), b.w.count("case_import_reruns")], [1, 1]);
+});
+
+test("R27 importregrade: the published answer is the door's answer over the real regradeImported; removed moves the lowered finding back with its statement named, as_published moves nothing, and each call builds its own world", async () => {
+  const removed = await importRegradeAnswer({ lens: "removed" });
+  assert.deepEqual(removed.answer, removed.w.ci.regradeImported({ import: removed.import, edition: 1, lens: "removed", viewer: V("alice") }),
+    "the door answers what the module answers");
+  assert.deepEqual([removed.answer.ok, removed.answer.lens, removed.answer.edition, removed.answer.wrote], [true, "removed", 1, false]);
+  const f1 = removed.answer.findings.find((f) => f.finding === "INQ-2026-0001-transfers");
+  assert.deepEqual([f1.moved, f1.because.map((c) => c.statement)], [true, ["scrutiny-official-statements"]], "the lowered grade moves under removed");
+  const published = await importRegradeAnswer({ lens: "as_published" });
+  assert.equal(published.answer.findings.some((f) => f.moved), false, "control: as published, nothing moved");
+  assert.notEqual(removed.w, published.w);
 });

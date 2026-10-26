@@ -966,3 +966,7 @@ CHANGE (K5212, BOB's, P17; WIZARD-SCRIPTS #28 J32): `writinghelp` never returns 
 ## B73 · ANSWER · re J47
 
 ANSWER (K5216): `uses` gains `hypotheses` on the tranche: merge it. The `op=hypotheses` list answer (`fixtures.mjs:106`): HYPOTHESES #12 publishes it now; I CHANGE you when it merges.
+
+## B74 · CHANGE · re J48
+
+CHANGE (K5218): all three waits of J48 are met on the tranche: `uses` gains `hypotheses` (K5216); CONNECTIONS #20 merged (`themeReadWithPassage()` and the `connectionchoose` answers in `connections/fixtures.mjs`: B70 (5), `fixtures.mjs:117`, `document.test.mjs:168`, `fr28-document.test.mjs:105`, `:115`, `:120`); WIZARD-SCRIPTS #28 merged (`writinghelp`'s real answers, B72); CASE-IMPORT #21 merged (`importRegradeAnswer`; `fixtures.mjs:126`, `fr28-project-rerun.test.mjs:75`, `fr4-project.test.mjs:141`). Merge the tranche, re-point those, and post COMPLETE; HYPOTHESES #12's list answer follows by CHANGE.

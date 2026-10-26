@@ -173,3 +173,16 @@ export async function rerunReadAnswer({ paired = true } = {}) {
   const { w, import: importId } = paired ? await rerunPairAnswer() : await rerunStartAnswer();
   return { w, import: importId, answer: door(w, "rerunread", { viewer: V(BY), project: RERUN_PROJECT }) };
 }
+
+/* K5195 (fix round 11): the answer of `importregrade`, the read of one imported edition under a lens: the source's own
+   edition with one lowered grade (F1's capture, lowered from B to C by `RERUN_APPS`' statement), read through the door
+   (`caseImportOps`) over the module's real `regradeImported` in a world this module builds when called. `lens` is one of
+   as_published, removed or own; nothing is stored, and each call builds its own world. Answers `{w, import, answer}`. */
+export async function importRegradeAnswer({ lens = "removed" } = {}) {
+  const w = seeded();
+  w.script.set(F1, { role: "load_bearing", result: "recreated", pair: { capture: g("C"), connection: g("C") } });
+  w.bar({ capture: "B", connection: "C" });
+  const a = await imp(w, caseFile({ apps: RERUN_APPS, printedLens: RERUN_STATEMENTS }));
+  if (a.ok !== true) throw new Error(`importRegradeAnswer: the import was refused: ${JSON.stringify(a).slice(0, 300)}`);
+  return { w, import: a.import, answer: door(w, "importregrade", { viewer: V(BY), import: a.import, edition: 1, lens }) };
+}

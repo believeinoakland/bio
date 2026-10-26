@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { word } from "../../../src/setup-words/index.mjs";
-import { standIn, unhtml, w } from "./standin.mjs";
+import { standIn, unhtml, w, said } from "./standin.mjs";
 import { GUIDE_OPS } from "../../../src/screens-wizards/index.mjs";
 import { team, authored, template } from "./world.mjs";
 
@@ -145,4 +145,29 @@ test("R3 audit C122 the recording's list draws each pair once, numbered once: no
   assert.equal((text.match(/(^|\s)1\./g) || []).length, 1);
   assert.equal((text.match(/(^|\s)2\./g) || []).length, 1);
   assert.ok(!/1\.\s*1\./.test(text), "the number is not doubled");
+});
+
+/** The list items of the opened chip, each with the script id its Start button names. */
+const itemsOf = (html) => [...html.matchAll(/<li>(.*?)<\/li>/gs)].map((m) => ({ id: (m[1].match(/data-script="([^"]*)"/) || [])[1], html: m[1] }));
+
+test("R7 R11 a script the row says is required is drawn Recommended on its screen, one it does not say so is not (wizardsat's `required`, never inferred)", async () => {
+  const t = await team();
+  await authored(t, { name: "Not required", steps: [{ screen: "ceremony", act: null, what: "a", why: "b" }] });
+  for (const screen of ["ceremony", "members"]) {
+    const rows = (await t.mai.read("wizardsat", { query: { screen } })).scripts;
+    assert.ok(rows.every((r) => typeof r.required === "boolean"), `${screen}: every row carries required`);
+    const g = standIn({ team: t, as: t.mai });
+    await g.enter(screen);
+    await g.control("chip");
+    const items = itemsOf(g.marks());
+    assert.equal(items.length, rows.length, `${screen}: each row is listed`);
+    for (const r of rows) {
+      const li = items.find((x) => x.id === r.id);
+      assert.ok(li, `${screen}: ${r.name} is listed`);
+      assert.equal(unhtml(li.html).includes(said("wizard.mark.recommended")), r.required, `${screen}: ${r.id} follows its row's required (${r.required})`);
+    }
+  }
+  // the publication ceremony's wizard is required in the library; the control is a script of the member's that is not
+  const ceremony = (await t.mai.read("wizardsat", { query: { screen: "ceremony" } })).scripts;
+  assert.ok(ceremony.some((r) => r.required === true), "the ceremony screen offers a required script");
 });
