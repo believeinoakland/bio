@@ -165,3 +165,19 @@ Size (session_011JT8beX7mv7RWXrkz2inzX): test runs 1, module lines 2039
 ## J8 · COMPLETE
 
 CHANGE B10 applied (K5095; test files only): the stale C-25.5 finding is removed from INQ-2026-0130-versions-entry and INQ-2026-0134-version-name-twice, the same four objects each (versions, both, nosubject, none), in golden.json. Red first: 6 differences between golden and the real merged grammars; green after: 0. Module tests 88/88; format, architecture, coverage, words, fixtures and ownership 0 failures. A first attempt over-deleted two C-2.8 findings; caught by the real-grammar comparison, redone, committed. No C-25.5 remains in golden.json. Details in my record, Completion (CHANGE B10).
+
+## J9 · REPORT
+
+R69 side effects on other modules (commit 1c825b1d5e). Nothing outside this module was edited.
+
+1. action-grammar pins this module's lead sentence. bio-plane/test/m/action-grammar/golden.json lines 1199, 1212, 1225 and 1239 hold the old text "action_basis[0].target 'LEAD-2026-0001-hunch' is a LEAD, and a lead is never evidence (MEMBER-KNOWLEDGE-DESIGN.md §5, §7)". bio-plane/test/m/action-grammar/grammar.test.mjs R6 (line 138) and R7 (line 202) fail on it. The sentence now reads "the target on <label> ('…') is a LEAD, and a lead is never evidence: …". The label is action-grammar's own argument, `action_basis[0]`, a field path: R69 asks each caller to hand a plain label, and the golden needs an exact re-pin. Owner: action-grammar.
+
+2. The inquiry module's tests pin this module's old wording, through its grammar face. Failing assertions: bio-plane/test/m/inquiry/grammar.test.mjs:36 and :33 (surfaced_by 'robot'); inquiry/promotion.test.mjs:194 (surfaced_by 'robot' is not one of: agent, human); inquiry/facts.test.mjs:160; inquiry/divide.test.mjs:72; inquiry/lifecycle-reads.test.mjs:80; inquiry/case-grammar.test.mjs:132 (a finding's bytes name a case (case_id)); inquiry/capture-bound.test.mjs:61 (/STRONGER than the C/; the sentence now says "stronger"). ratification/converted-c.test.mjs:245 (surfaced_by 'robot') and ratification/converted-d.test.mjs:490 (case_id). Owner: inquiry, ratification.
+
+3. A generated artifact is stale: bio-plane/src/case-checker/program.mjs, which the standalone case checker builds from this module's grammar. bio-plane/test/m/case-checker/program.test.mjs R13 (line 22) fails with "program.mjs is stale"; R25 also fails on the same program text. Regenerate with `node bio-plane/src/case-checker/build-program.mjs` (case-checker's owner). I did not regenerate it (mechanics §14).
+
+4. Generated artifacts are stale: bio-plane/src/setup-words/rows.mjs and words-unreviewed.json. Every changed sentence has a new localize id (suffix _p) and the old rows are retired. `node bio-plane/src/setup-words/build.mjs --check` fails; setup-words tests R10, R16 and R17 fail until it is regenerated with `node bio-plane/src/setup-words/build.mjs` (setup-words' owner). I did not write them. setup-words R13 also fails on inquiry.index.pass_grounds_an_array, a design-list row this change does not touch.
+
+5. Observed, not mine: bio-plane/test/m/store-assembly/declarations.test.mjs:36 fails on the set of modules exporting DECLARED_OPS. This module exports none. I did not look further.
+
+6. Decision for BOB: several sentences still list the stored values a field may take (grade sources, grade axes, roles, the bias effects, the surfaced-by values), as "is not one of: …". R69 names fields, codes and ids, not values, so I left these. Say if they should become plain phrases as well.
