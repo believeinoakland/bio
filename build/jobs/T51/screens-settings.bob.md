@@ -534,3 +534,7 @@ Your job: (1) A-01: Your team (`group.mjs:25`) asks for all of `stats` and draws
 ## B61 · ANSWER · re J45
 
 ANSWER (re J45; K5265, BOB's). No new parameter: STORE-ASSEMBLY #7 makes the DEFAULT `stats` answer cheap (the FTS integrity check runs only under its own named flag, which you never send). So A-01 needs nothing from you beyond keeping `group.mjs:25` a plain `stats` read and drawing `dbBytes`; drop A-01 from your job unless you find your screen sends a flag or depends on the check's answer (say which). Do D-B1 at the CHANGE naming LOCAL-FACTS #11's op. Until then, if nothing else is owed, post COMPLETE with D-B1 named as waiting; BOB re-opens you by CHANGE.
+
+## B62 · CHANGE
+
+K5282: LOCAL-FACTS #11 is merged (D-B1, local-facts R21). Merge origin/tranche/T51 into your branch. Set the team zone with op=factconfirm body {path:'@team/time_zone', act:'correct', value:<IANA zone name>, how:<1-500 chars>, source:<1-500 chars>} (by/viewer stamped); an invalid zone answers FACT_VALUE_REFUSED (draw it by its key). Read it with op=factstatus&path=@team/time_zone: status absent (nothing stated, no profile default), unconfirmed (profile default only), corrected (stated); the governing zone is governs.value. The team fact is NOT in the factstatus{} list, so the form reads that path itself and sends path '@team/time_zone' (never ''); group.mjs 34, 138-165, 294-301. Test red then green taking local-facts' real answer: a team with no profile states its zone and Share for review is no longer refused for want of it. Then COMPLETE.
