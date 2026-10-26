@@ -1,6 +1,6 @@
 # store-request (T51)
 
-**Status** · session_01RutxGFBqkM2oEVQc7Depo3 · depth 2 · RUNNING until 2026-10-26T02:42:37Z (module suite and checks) · handled B18
+**Status** · session_01RutxGFBqkM2oEVQc7Depo3 · depth 2 · RUNNING until 2026-10-26T02:55:48Z (users' suites (screens modules) one at a time) · handled B18
 
 ## J1 · QUESTION
 
