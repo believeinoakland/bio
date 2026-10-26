@@ -125,20 +125,28 @@ test("R42, R50 (A-17): Decline says \"Done: Decline\" and Grant \"Done: Grant\" 
 
 /* ---------- F-B9 (R56): OR, NOT, parentheses and quoted phrases are searched in passages too ---------- */
 
-const PASSAGES = (rows, extra = {}) => ok({ ok: true, rows, count: rows.length, total: rows.length, limit: 200, offset: 0, ...extra });
-const ROW = (n) => ({ bundle_id: "INF-" + n, snippet: "the [ordinance] says " + n, document: { bundle_id: "INF-" + n, title: "Document " + n }, extent: { passage: n }, kind: "body" });
-const EMPTY = ok({ ok: true, total: 0, hits: [], limit: 50, offset: 0 });
+/** The team: a member, her project, and two documents held and read (their passages are in the text index), by the real acts; the plane answers every route. */
+let shared = null;
+const lab = () => (shared ||= (async () => {
+  const w = await storeWorld({ now: Date.now() });
+  const mem = await w.signIn("mem", { capabilities: ["contribute", "create_projects"] });
+  const project = await w.recipes.project(mem, "Rates");
+  await w.recipes.page(mem, "Sewer rate memo", { paragraphs: ["The sewer ordinance sets the rate for every household.", "The council voted on the budget in March."], project });
+  await w.recipes.page(mem, "Zoning notes", { paragraphs: ["Nothing here concerns water."], project });
+  return { w, mem };
+})());
+const asPlane = async (path) => { const L = await lab(); return open(path, {}, { ...L.w.boot(L.mem), screens: withScreens("document", "person", "project") }); };
 const asked = (p, op) => p.byOp(op).map((r) => r.query.q);
 
-test("R56 (F-B9): a query with OR, NOT, parentheses or a quoted phrase and no field term is sent to the passages route, each term as a passage term and the operators as written; the fields route gets it as written", async () => {
+test("R56 (F-B9): a query with OR, NOT, parentheses or a quoted phrase and no field term is sent to the passages route, each term as a passage term and the operators as written; the fields route gets it as written; the subjects route is not asked", async () => {
   for (const [typed, passage] of [
     ["ordinance OR zzzqqq", "passage:ordinance OR passage:zzzqqq"],
-    ['"alpha council" budget', 'passage:"alpha council" passage:budget'],
-    ["(rent OR lease) NOT sewer", "(passage:rent OR passage:lease) NOT passage:sewer"],
-    ["budget AND council", "passage:budget AND passage:council"],
-    ['"a b"', 'passage:"a b"'],
+    ['"sewer ordinance" budget', 'passage:"sewer ordinance" passage:budget'],
+    ["(rent OR ordinance) NOT zoning", "(passage:rent OR passage:ordinance) NOT passage:zoning"],
+    ["ordinance AND council", "passage:ordinance AND passage:council"],
+    ['"every household"', 'passage:"every household"'],
   ]) {
-    const p = await open("/app/finder/" + typed, { search: EMPTY, meaningrows: PASSAGES([ROW(1)]), subjectsnamed: ok({ ok: true, subjects: [], count: 0 }) });
+    const p = await asPlane("/app/finder/" + typed);
     await settle();
     assert.deepEqual(asked(p, "meaningrows"), [passage], typed);
     assert.equal(last(p, "meaningrows").query.rows, "passage");
@@ -149,25 +157,33 @@ test("R56 (F-B9): a query with OR, NOT, parentheses or a quoted phrase and no fi
 
 test("R56 (F-B9): a query with a field term goes to the fields route alone, and an OR never joins the routes; controls: plain words and `passage:` terms are routed as before", async () => {
   for (const typed of ["capture:b OR zed", "capture:b zed", 'title:"a b" OR c']) {
-    const p = await open("/app/finder/" + typed, { search: EMPTY, meaningrows: PASSAGES([]) });
+    const p = await asPlane("/app/finder/" + typed);
     await settle();
     assert.deepEqual(asked(p, "search"), [typed]);
     assert.equal(p.byOp("meaningrows").length, 0, typed);
   }
-  const plain = await open("/app/finder/work orders", { search: EMPTY, meaningrows: PASSAGES([]), subjectsnamed: ok({ ok: true, subjects: [], count: 0 }) });
+  const plain = await asPlane("/app/finder/work orders");
   assert.deepEqual([asked(plain, "meaningrows"), asked(plain, "subjectsnamed")], [["passage:work passage:orders"], ["work orders"]]);
-  const only = await open("/app/finder/passage:a OR passage:b", { search: EMPTY, meaningrows: PASSAGES([]) });
+  const only = await asPlane("/app/finder/passage:a OR passage:b");
   assert.deepEqual([asked(only, "meaningrows"), only.byOp("search").length], [["passage:a OR passage:b"], 0]);
 });
 
-test("R56, R12 (F-B9): where the fields route holds nothing and the passages route holds some, an OR query draws the passages and never says nothing matches", async () => {
-  const p = await open("/app/finder/ordinance OR zzzqqq", { search: EMPTY, meaningrows: PASSAGES([ROW(1), ROW(2)]) });
-  await settle();
-  const t = text(p);
-  assert.ok(t.includes(word("screen.finder.route.passages.holds.other", { n: "2", m: "2" })), "the passages route: " + t.slice(0, 400));
-  assert.ok(!t.includes(word("screen.finder.noresult", { q: "ordinance OR zzzqqq" })), "no false \"nothing\"");
-  assert.ok(!t.includes(word("screen.finder.noresult.partial", { q: "ordinance OR zzzqqq" })));
+test("R56, R12 (F-B9): where the fields route holds nothing and the passages route holds some, the real plane's answer is drawn for an OR query, a quoted phrase and a NOT, never \"nothing matches\"", async () => {
+  const L = await lab();
+  for (const typed of ["ordinance OR zzzqqq", '"sewer ordinance"', "ordinance NOT zoning"]) {
+    const fields = (await L.mem.read("search", { query: { q: typed } })).total;
+    const rows = await L.mem.read("meaningrows", { query: { q: typed.replace(/[^\s()"]*"[^"]*"|[^\s()"]+/g, (t) => (/^(AND|OR|NOT)$/.test(t) ? t : "passage:" + t)), rows: "passage" } });
+    assert.ok(rows.total > 0, "the plane answers the passage question for " + typed + ": " + JSON.stringify({ ...rows, grain: undefined, gate: undefined }).slice(0, 600));
+    const p = await asPlane("/app/finder/" + typed);
+    await settle();
+    const t = text(p);
+    assert.ok(t.includes(word("screen.finder.route.passages")), "the passages section is drawn for " + typed + " (fields held " + fields + ")");
+    assert.ok(!t.includes(word("screen.finder.noresult", { q: typed })), "no false \"nothing\" for " + typed);
+  }
 });
+
+const NOHITS = (widen) => ok({ ok: true, total: 0, hits: [], limit: 50, offset: 0, widen });
+const PASSAGES = (rows, extra = {}) => ok({ ok: true, rows, count: rows.length, total: rows.length, limit: 200, offset: 0, ...extra });
 
 /* ---------- F-B10 (a) (R78): the widening is read from the passages route too ---------- */
 
@@ -175,7 +191,7 @@ test("R78 (F-B10 (a)): when no route holds a match, the wider reading of the pas
   const q = "alpha zzzqqq";
   const w = (total) => ({ interpretation: "OR", total, q, detail: "d" });
   const drawn = async (fields, passages) => {
-    const p = await open("/app/finder/" + q, { search: ok({ ok: true, total: 0, hits: [], widen: fields }), meaningrows: PASSAGES([], { total: 0, widen: passages }) });
+    const p = await open("/app/finder/" + q, { search: NOHITS(fields), meaningrows: PASSAGES([], { total: 0, widen: passages }) });
     await settle();
     return text(p);
   };
