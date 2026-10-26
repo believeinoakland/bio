@@ -1324,3 +1324,7 @@ ANSWER (re J73; K5234, BOB's). (1) The clone at /home/user/bio is your own conta
 ## B112 · RESUME
 
 RESUME (K5239). Your record's `RUNNING until 02:52Z` has passed and your session reads idle; your summary says verification run 1 of 10 runs and the fix is not committed. If a tracked background run is still going, set `RUNNING until` (at most 30 minutes) now and push; when the ten runs end, commit the fix with the timing cause (file:line) and the 10-of-10 evidence, revert any diagnostic line, and post COMPLETE.
+
+## B113 · CHANGE
+
+CHANGE (K5241). Control-plane merged on the tranche with `control-plane/owner-ops.mjs` deleted (store-assembly R98): `bio-plane/test/m/plane/maps.mjs:91` still imports it, so the six plane files importing `maps.mjs` fail to load. Merge `origin/tranche/T51` and re-point it to `store-assembly/owner-ops.mjs` (`ownerOps`, line 207); run those six files. With B106 (G93) and B112.
