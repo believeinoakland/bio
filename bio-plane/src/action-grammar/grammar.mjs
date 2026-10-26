@@ -179,10 +179,8 @@ export function actionBasisFindings(fm, findings) {
       && OBJECT_TYPES[l.target.split('-')[0]] === 'inquiry');
     if (!disclosed.length) {
       findings.push(f('C-2.10', 'error',
-        'a request_for_comment names ZERO inquiries: it must name the SPECIFIC questions it put to the subject, '
-        + 'as action_basis legs of kind advances. "We contacted them" and "we put these four claims to them" are '
-        + 'different facts, and a comment request without specifics gives the subject nothing to answer (DEC-13)',
-        ['add an action_basis leg with kind: advances for each inquiry disclosed in the request']));
+        localize('action-grammar.grammar.a_request_for_comment_must_name', "A request for comment must name the specific questions it puts to the subject: add each one under 'Advances', chosen from your team's record. A comment request without specifics gives the subject nothing to answer."),
+        [localize('action-grammar.grammar.choose_each_question_the_request', "choose each question the request puts to the subject, and mark it 'Advances'")]));
     }
     const clock = Array.isArray(fm.clock) ? fm.clock : [];
     if (!clock.length) {

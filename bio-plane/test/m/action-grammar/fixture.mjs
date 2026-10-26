@@ -18,6 +18,9 @@ export const REWORDED = [
   "The plane derives only the days",
   "' is not a kind this instance offers",
   "An action is one of the kinds this instance offers:",
+  /* T51 fix round 10 (N7): the zero-question refusal named plane terms; its words are now plain (golden.json holds them). */
+  "a request_for_comment names ZERO inquiries",
+  "add an action_basis leg with kind: advances",
 ];
 /* R13 (T41-46a): the outcome vocabulary gained `none_exists`, so C-94.5's finding, which names the vocabulary from the
    array itself, names it too (`lifecycleFindings`, and through it C-2.10's ledger arm and the audit). Each recorded

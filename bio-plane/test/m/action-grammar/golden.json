@@ -1630,10 +1630,10 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "a request_for_comment names ZERO inquiries: it must name the SPECIFIC questions it put to the subject, as action_basis legs of kind advances. \"We contacted them\" and \"we put these four claims to them\" are different facts, and a comment request without specifics gives the subject nothing to answer (DEC-13)",
+      "message": "A request for comment must name the specific questions it puts to the subject: add each one under 'Advances', chosen from your team's record. A comment request without specifics gives the subject nothing to answer.",
       "repairable": true,
       "repairs": [
-       "add an action_basis leg with kind: advances for each inquiry disclosed in the request"
+       "choose each question the request puts to the subject, and mark it 'Advances'"
       ]
      }
     ],
@@ -1641,10 +1641,10 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "a request_for_comment names ZERO inquiries: it must name the SPECIFIC questions it put to the subject, as action_basis legs of kind advances. \"We contacted them\" and \"we put these four claims to them\" are different facts, and a comment request without specifics gives the subject nothing to answer (DEC-13)",
+      "message": "A request for comment must name the specific questions it puts to the subject: add each one under 'Advances', chosen from your team's record. A comment request without specifics gives the subject nothing to answer.",
       "repairable": true,
       "repairs": [
-       "add an action_basis leg with kind: advances for each inquiry disclosed in the request"
+       "choose each question the request puts to the subject, and mark it 'Advances'"
       ]
      }
     ],
@@ -1652,10 +1652,10 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "a request_for_comment names ZERO inquiries: it must name the SPECIFIC questions it put to the subject, as action_basis legs of kind advances. \"We contacted them\" and \"we put these four claims to them\" are different facts, and a comment request without specifics gives the subject nothing to answer (DEC-13)",
+      "message": "A request for comment must name the specific questions it puts to the subject: add each one under 'Advances', chosen from your team's record. A comment request without specifics gives the subject nothing to answer.",
       "repairable": true,
       "repairs": [
-       "add an action_basis leg with kind: advances for each inquiry disclosed in the request"
+       "choose each question the request puts to the subject, and mark it 'Advances'"
       ]
      }
     ]
@@ -1664,10 +1664,10 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "a request_for_comment names ZERO inquiries: it must name the SPECIFIC questions it put to the subject, as action_basis legs of kind advances. \"We contacted them\" and \"we put these four claims to them\" are different facts, and a comment request without specifics gives the subject nothing to answer (DEC-13)",
+     "message": "A request for comment must name the specific questions it puts to the subject: add each one under 'Advances', chosen from your team's record. A comment request without specifics gives the subject nothing to answer.",
      "repairable": true,
      "repairs": [
-      "add an action_basis leg with kind: advances for each inquiry disclosed in the request"
+      "choose each question the request puts to the subject, and mark it 'Advances'"
      ]
     }
    ],
@@ -1826,10 +1826,10 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "a request_for_comment names ZERO inquiries: it must name the SPECIFIC questions it put to the subject, as action_basis legs of kind advances. \"We contacted them\" and \"we put these four claims to them\" are different facts, and a comment request without specifics gives the subject nothing to answer (DEC-13)",
+      "message": "A request for comment must name the specific questions it puts to the subject: add each one under 'Advances', chosen from your team's record. A comment request without specifics gives the subject nothing to answer.",
       "repairable": true,
       "repairs": [
-       "add an action_basis leg with kind: advances for each inquiry disclosed in the request"
+       "choose each question the request puts to the subject, and mark it 'Advances'"
       ]
      },
      {
@@ -1846,10 +1846,10 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "a request_for_comment names ZERO inquiries: it must name the SPECIFIC questions it put to the subject, as action_basis legs of kind advances. \"We contacted them\" and \"we put these four claims to them\" are different facts, and a comment request without specifics gives the subject nothing to answer (DEC-13)",
+      "message": "A request for comment must name the specific questions it puts to the subject: add each one under 'Advances', chosen from your team's record. A comment request without specifics gives the subject nothing to answer.",
       "repairable": true,
       "repairs": [
-       "add an action_basis leg with kind: advances for each inquiry disclosed in the request"
+       "choose each question the request puts to the subject, and mark it 'Advances'"
       ]
      },
      {
@@ -1866,10 +1866,10 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "a request_for_comment names ZERO inquiries: it must name the SPECIFIC questions it put to the subject, as action_basis legs of kind advances. \"We contacted them\" and \"we put these four claims to them\" are different facts, and a comment request without specifics gives the subject nothing to answer (DEC-13)",
+      "message": "A request for comment must name the specific questions it puts to the subject: add each one under 'Advances', chosen from your team's record. A comment request without specifics gives the subject nothing to answer.",
       "repairable": true,
       "repairs": [
-       "add an action_basis leg with kind: advances for each inquiry disclosed in the request"
+       "choose each question the request puts to the subject, and mark it 'Advances'"
       ]
      },
      {
@@ -1887,10 +1887,10 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "a request_for_comment names ZERO inquiries: it must name the SPECIFIC questions it put to the subject, as action_basis legs of kind advances. \"We contacted them\" and \"we put these four claims to them\" are different facts, and a comment request without specifics gives the subject nothing to answer (DEC-13)",
+     "message": "A request for comment must name the specific questions it puts to the subject: add each one under 'Advances', chosen from your team's record. A comment request without specifics gives the subject nothing to answer.",
      "repairable": true,
      "repairs": [
-      "add an action_basis leg with kind: advances for each inquiry disclosed in the request"
+      "choose each question the request puts to the subject, and mark it 'Advances'"
      ]
     },
     {

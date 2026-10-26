@@ -145,7 +145,7 @@ test("R6: actionBasisFindings and correspondenceFindings answer, for every docum
 test("R6 by hand (DEC-13): a request_for_comment names an inquiry it advances and states a window as a clock entry; a rests_on leg or an advances leg onto a non-inquiry is not a disclosure; the window's length is never compared; another kind is not asked", () => {
   const msgs = (id) => pushed((f) => AG.actionBasisFindings(DOCS[id], f)).findings.map((x) => x.message);
   assert.deepEqual(msgs("rfc-clean"), []);
-  assert.equal(msgs("rfc-no-inquiry").filter((m) => /names ZERO inquiries/.test(m)).length, 1);
+  assert.equal(msgs("rfc-no-inquiry").filter((m) => /must name the specific questions/.test(m)).length, 1);
   assert.equal(msgs("rfc-no-clock").filter((m) => /states the response window/.test(m)).length, 1);
   assert.equal(msgs("rfc-nothing").length, 2);
   assert.ok(msgs("rfc-no-clock")[0].includes(AG.RFC_RESPONSE_WINDOW_PRECEDENT.source));
@@ -155,6 +155,14 @@ test("R6 by hand (DEC-13): a request_for_comment names an inquiry it advances an
   assert.deepEqual(msgs("clean-other"), [], "another kind is not asked");
   assert.deepEqual(pushed((f) => AG.actionBasisFindings(DOCS["leg-lead"], f)).findings.map((x) => x.check), ["C-54.1"]);
   assert.deepEqual(pushed((f) => AG.actionBasisFindings(DOCS["leg-theme"], f)).findings.map((x) => x.check), ["C-81.1"]);
+});
+
+test("R6 (T51 fix round 10, N7): a request_for_comment with no advanced question is refused in plain words: its finding and its repair name no plane term (ZERO, action_basis, legs of kind), and it still says why", () => {
+  const found = pushed((f) => AG.actionBasisFindings(DOCS["rfc-no-inquiry"], f)).findings.find((x) => /nothing to answer/.test(x.message));
+  assert.ok(found, "the zero-question refusal is raised");
+  assert.match(found.message, /specific questions/);
+  assert.doesNotMatch(found.message, /ZERO|action_basis|legs of kind/);
+  assert.doesNotMatch(found.repairs.join("\n"), /action_basis|kind: advances/);
 });
 
 test("R7: checkActionExtension reports, for every document under every instance kind set, the findings it reported before the move", () => {
