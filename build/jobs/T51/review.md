@@ -470,3 +470,19 @@ COMPLETE for B23 · review. Branch job/T51/review. `origin/tranche/T51` merged i
 **Deferred:** nothing.
 
 Size (session_01NYhxjj1BEgs71XesoJ5bcq): test runs 12, module lines 4935
+
+## J19 · COMPLETE
+
+COMPLETE for CHANGE B23 (K5209) · review. Branch job/T51/review @ 2ed2770a21, pushed. `origin/tranche/T51` merged in (f680e3b511), never rebased. Record: build/jobs/T51/review.md, section "Completion record (CHANGE B23, K5209...)".
+
+**Entries applied:** the merge; the reviewcopy gate refusal now comes from case-authoring's published preflightAnswer().blocked.first (fixtures.mjs:47), replacing my own literal, which checks/fixtures.mjs flagged as a hand-built answer of another module. No other change.
+
+**Failing-first / break-once:** setting the gate to { ok: true } turned the reviewcopy answer test red; restored; green. An earlier attempt using .blocked whole gave gates "passed" (its ok is true), so the refusal is taken from .first.
+
+**Tests and checks** (merged tree): review suite 106 of 106 pass, 0 fail. checks/fixtures.mjs review --list: 0 failures. checks/ownership.mjs (origin/tranche/T51..HEAD): 0 failures. checks/architecture: 0 failures. checks/coverage: 45 of 45 live ids named, 0 failures. checks/format: 0 failures. impact origin/tranche/T51 HEAD: see the record.
+
+**Markers:** none added.
+**Found outside my paths:** none new. The op-table findings in screens-inquiry and screens-publish from the fix-round-10 record stand for their owners.
+**Deferred:** nothing.
+
+Size (session_01NYhxjj1BEgs71XesoJ5bcq): test runs 12, module lines 4932
