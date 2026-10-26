@@ -197,8 +197,9 @@ export const matter = Object.freeze({
         });
       });
       if (current && !opts.some(function (o) { return o.value === current; })) opts.push({ value: current, text: current });
+      // R58 (DEC-438 C2a (a)): the body's help sits beside the choice
       return cs.choice("mt-d-body", "screen.matter.f.body", [{ value: "", text: "" }].concat(opts), { value: current })
-        + (opts.length ? "" : '<p class="mk-note">' + cs.w("screen.request.nooffice.admin") + "</p>");
+        + P.note(cs, "screen.matter.f.body.help") + (opts.length ? "" : '<p class="mk-note">' + cs.w("screen.request.nooffice.admin") + "</p>");
     },
     // R45 (C6): the event the act was part of, chosen among the events the project's document follows (the timeline's own set), never typed
     eventChoice: function (cs, view, k, current) {
@@ -225,8 +226,10 @@ export const matter = Object.freeze({
       });
       if (current && !opts.some(function (o) { return o.value === current; })) opts.push({ value: current, text: P.actName(cs, k.d) || current });
       if (tl.state === "loading" || doc.state === "loading") return "";
+      if (tl.state === "failed") return cut + cs.state(tl);
+      // R58 (DEC-438 C2a (1)): a project with no dated event says so, and where one is recorded
       return opts.length ? cs.choice("mt-d-event", "screen.matter.the_event_it_was_part_of", [{ value: "", text: "" }].concat(opts), { value: current }) + cut
-        : cut + '<p class="mk-small">' + cs.w("screen.matter.the_event_it_was_part_of") + '</p><p class="cs-state" data-state="empty">' + cs.w("state.empty") + "</p>";
+        : cut + '<p class="mk-small">' + cs.w("screen.matter.the_event_it_was_part_of") + '</p><p class="cs-state" data-state="empty">' + cs.w("screen.matter.event.none") + "</p>";
     },
     // R45 (C6): the passages that show the act, chosen among the project's documents (a passage is a whole document, as `docChoice` offers it)
     passageChoice: function (cs, view, k) {
@@ -284,10 +287,11 @@ export const matter = Object.freeze({
       (k.d && Array.isArray(k.d.findings) ? k.d.findings : []).forEach(function (x) { add(x.finding || x.id, ""); });
       const notYet = qs.filter(function (q) { return q && q.stance === "concluded" && q.inquiry && !opts.some(function (o) { return o.value === q.inquiry; }); });
       const apart = notYet.length ? '<ul class="mk-list" data-list="concluded-unpublished">' + notYet.map(function (q) {
-        return "<li>" + cs.esc(q.title || q.inquiry) + ' <span class="meta">' + cs.w("question.concluded.heading") + "</span></li>";
+        return "<li>" + cs.esc(q.title || q.inquiry) + ' <span class="meta">' + cs.w("screen.matter.concluded.unpublished") + "</span></li>";
       }).join("") + "</ul>" : "";
+      // R58 (DEC-438 C2a (2)): with no finding to rest on, the determination says so, above its Record button
       return (opts.length ? cs.checks("mt-d-findings", "screen.matter.f.findings", opts)
-        : '<p class="mk-small">' + cs.w("screen.matter.f.findings") + '</p><p class="cs-state" data-state="empty">' + cs.w("state.empty") + "</p>") + apart;
+        : '<p class="mk-small">' + cs.w("screen.matter.f.findings") + '</p><p class="cs-state" data-state="empty">' + cs.w("screen.matter.determine.needscase") + "</p>") + apart;
     },
     // R50: what the breach did, recorded
     consForm: function (cs, view, k) {
