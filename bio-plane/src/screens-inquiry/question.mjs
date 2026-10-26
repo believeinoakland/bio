@@ -1564,13 +1564,16 @@ const acts = [
       const parent = new Map(legs.map((l) => [l.ord, l.ord]));
       const root = (x) => { while (parent.get(x) !== x) x = parent.get(x); return x; };
       const asserting = new Set();
+      /* T51 fix round 10 (B89, C-M5): a passage answered "No" is necessary, so a "Yes, because of X" never joins X to its part: X is left out of the
+         union and stays a necessary leg. (The sentence that says so is not held: REPORTed.) */
+      const answeredNo = new Set(legs.filter((l) => (cs.value("ask-" + l.ord) || []).includes("no")).map((l) => l.ord));
       for (const l of legs) {
         const said = cs.value("ask-" + l.ord) || [];
         if (!said.includes("yes")) continue;
         asserting.add(l.ord);
         for (const o of cs.value("ask-which-" + l.ord) || []) {
           const n = Number(o);
-          if (parent.has(n)) parent.set(root(n), root(l.ord));
+          if (parent.has(n) && !answeredNo.has(n)) parent.set(root(n), root(l.ord));
         }
       }
       const groups = new Map();
