@@ -40,7 +40,7 @@ test("R57 (walk E H1/H3): an office named from Request with its body is recorded
   assert.equal(again.length, 1);
 });
 
-test("R57: control: an office named with no body is refused naming the field, and nothing is sent or recorded", async () => {
+test("R57, R59 (DEC-439 R57): control: an office named with no body is refused naming the field, and nothing is sent or recorded", async () => {
   const { world, me, project } = await actionWorld();
   const body = await entityOf(me, "body", "City of Port Ellery");
   const p = await openIn(world, me, `/app/request/${project}`);
@@ -48,11 +48,11 @@ test("R57: control: an office named with no body is refused naming the field, an
   await until(p, () => p.doc.getElementById("req-noff-name"), "the fold that names an office");
   const b = await press(p, "entitycreate", { values: { "req-noff-name": "Records Office", "req-noff-note": "It keeps the city's records." } });
   assert.equal(p.byOp("entitycreate").length, 0, "nothing is sent");
-  assert.ok(beside(p, b).includes(W("findin.fieldneeded", { field: W("screen.matter.f.body") })), "the field is named");
+  assert.ok(beside(p, b).includes(W("findin.fieldneeded", { field: W("screen.request.office.body") })), "the field is named");
   assert.equal((await me.read("entitieskind", { query: { kind: "office", limit: "200" } })).entities.length, 0, "no office was registered");
 });
 
-test("R57: an office named with its body but no day stated is registered and its body recorded, the owner places it on no day, so it is not offered and the screen says why", async () => {
+test("R57, R59 (DEC-439 R57): an office named with its body but no day stated is registered and its body recorded, the owner places it on no day, so it is not offered and the screen says why", async () => {
   const { world, me, project } = await actionWorld();
   const body = await entityOf(me, "body", "City of Port Ellery");
   const p = await openIn(world, me, `/app/request/${project}`);
@@ -60,7 +60,7 @@ test("R57: an office named with its body but no day stated is registered and its
   await until(p, () => p.doc.getElementById("req-noff-name"), "the fold that names an office");
   await press(p, "entitycreate", { values: { "req-noff-name": "Records Office", "req-noff-body": body, "req-noff-note": "It keeps the city's records." } });
   await until(p, () => p.doc.querySelector('[data-undated="1"]'), "the note that no day places it");
-  assert.ok(text(p).includes(W("screen.person.keeper.dates.note.b")));
+  assert.ok(text(p).includes(W("screen.request.office.undated")));
   assert.equal(p.doc.getElementById("req-office"), null, "not offered as chosen");
   const office = (await me.read("entitieskind", { query: { kind: "office", limit: "200" } })).entities.find((e) => e.label === "Records Office").entity_id;
   const real = await answerOf(world, me, "addresseesuggest", { query: { subject: office } });

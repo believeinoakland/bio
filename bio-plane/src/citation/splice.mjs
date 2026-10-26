@@ -206,6 +206,44 @@ export function removeBasisLegs(text, target) {
   return { text: lines.filter((_, i) => !gone.has(i)).join("\n"), editions };
 }
 
+/** R24: set the capture-axis grade of the `n`th leg of the `basis` block (its order in the block), touching nothing else
+ *  of that leg or the document: any `grade`, `grade_axis` and `grade_source` lines it held are dropped and the three
+ *  written after its `role:` line, as `spliceBasis` orders them. `target` is the target the caller read the leg by, checked
+ *  against the entry so a document that moved under the caller is not written. Answers the new text, or null when the block
+ *  is not in a shape this grammar can edit in place, holds no `n`th entry, or that entry is not on `target`. */
+export function setLegGrade(text, n, target, grade) {
+  const lines = text.split("\n");
+  if (lines[0] !== "---") return null;
+  const end = lines.indexOf("---", 1);
+  if (end === -1) return null;
+  let bi = -1;
+  for (let i = 1; i < end; i++) if (/^basis:/.test(lines[i])) { bi = i; break; }
+  if (bi === -1 || lines[bi].slice("basis:".length).trim() !== "") return null;
+  let last = bi;
+  for (let i = bi + 1; i < end; i++) {
+    if (lines[i].trim() === "") continue;
+    if (/^\s/.test(lines[i])) { last = i; continue; }
+    break;
+  }
+  const starts = [];
+  for (let i = bi + 1; i <= last; i++) if (/^ {2}- /.test(lines[i])) starts.push(i);
+  if (!Number.isInteger(n) || n < 0 || n >= starts.length) return null;
+  const from = starts[n], to = (n + 1 < starts.length ? starts[n + 1] : last + 1) - 1;
+  let found = null, roleAt = -1, targetAt = -1;
+  const entry = [];
+  for (let i = from; i <= to; i++) {
+    const t = /^\s*(?:- )?target:\s*(.+?)\s*$/.exec(lines[i]);
+    if (t && found === null) { found = t[1].replace(/^["']|["']$/g, ""); targetAt = entry.length; }
+    if (/^\s*(?:- )?(grade|grade_axis|grade_source):/.test(lines[i])) continue;
+    if (/^\s*(?:- )?role:/.test(lines[i]) && roleAt === -1) roleAt = entry.length;
+    entry.push(lines[i]);
+  }
+  if (found !== target) return null;
+  const at = roleAt === -1 ? targetAt : roleAt;
+  entry.splice(at + 1, 0, `    grade: ${grade}`, "    grade_axis: capture", "    grade_source: capture");
+  return [...lines.slice(0, from), ...entry, ...lines.slice(to + 1)].join("\n");
+}
+
 /** R23: set the `role` of every leg in the `basis` block whose `target` is in `targets`, touching nothing else of the leg
  *  or the document. Answers `{text, from}`, `from` mapping each target to the roles its legs held before (in order), or null
  *  when the block is not in a shape this grammar can edit in place, or a named target's leg has no `role:` line to

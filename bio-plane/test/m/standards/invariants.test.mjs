@@ -60,7 +60,7 @@ test("R12 no service accepts or answers a judgment of a standard's merit: a fiel
                         "supersedes", "superseded_by", "proposal", "bundleSha", "texts", "says", "instrument", "portion",
                         "requires", "copy", "current_through", "period_basis", "requires_quoted", "family", "owner", "held",
                         "version_basis", "overrides", "force_source", "designation", "edition", "designation_read", "edition_read", "access", "target", "question",
-                        "sight", "in_force_through"]);
+                        "sight", "in_force_through", "bindings"]);
   for (const answer of [r, w.s.standardRead({ id: r.id, viewer: V("carol") }), w.s.standardsIn({ viewer: V("carol") }).items[0]])
     for (const k of Object.keys(answer)) assert.ok(keys.has(k), `an answer carries only what the record holds: ${k}`);
   const words = /\b(merit|desirab|good law|bad law|unjust|fair|rating|score)\w*/i;

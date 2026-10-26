@@ -273,6 +273,8 @@ Terms. A **screen** is a registry screen (`docs/development/ux-substrate/screens
 - **R131** (K5157; walk-T51-final 06 §19 (c)) A `cs.ref` drawn in a row or list is at least 44 px to tap at 390 px (R84, R108: it is not inline there); a link inside running text stays as it is.
 - **R132** (K5157; DEC-155; walk-T51-final 03 §19, 11 §9) A double-click on the rail's edge restores its default width, 184 px, kept on the device as R26's other settings are.
 - **R133** (T51 fix round 10, live walk C/E; K5271) A fold that holds a pressed act's answer or refusal, or a control whose value the member set, stays open across a redraw, and a set control keeps its value (walk C C-M12, C-M16).
+- **R134** (T51 fix round 10; K5308; screens-entry R34, screens-inquiry R139; amends R21) R21 admits three further re-points, each until the registry lists the op on that screen (asked of the design, K5308): `factconfirm` on `setup` (DEC-439 D-B1, the time-zone step), `leggrade` on `question` (citation R24), `resolve` on `document` (entities' resolve, "Find the people and offices it names"). *(not yet met: T51)*
+- **R135** (T51 fix round 10; K5308; screens-publish R81) A choice control (a radio group, a checkbox) tells its screen of a change exactly as a typed field does, so a screen's unsaved line is drawn for it too. *(not yet met: T51)*
 
 ## Private
 

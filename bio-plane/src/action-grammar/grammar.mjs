@@ -153,9 +153,9 @@ export function actionBasisFindings(fm, findings) {
       return;
     }
     /* MK-4 / C-54.1: an action resting on a LEAD rests on nothing found. */
-    if (leadLegFindings(`action_basis[${i}]`, l, findings)) return;
+    if (leadLegFindings(`basis leg ${i}`, l, findings)) return;
     /* D-162 / C-81.1: an action resting on a THEME rests on a member's lens, not on anything found. */
-    if (themeLegFindings(`action_basis[${i}]`, l, findings)) return;
+    if (themeLegFindings(`basis leg ${i}`, l, findings)) return;
     const target = typeof l.target === 'string' ? l.target : '';
     /* T45 (K2845, K2849 (5); `actions` R93): a `rests_on` leg may name a success record, `consequences`' own row, by its id;
        accepted here until record-grammar's id table registers the prefix (N911). Whether it is live and visible is
