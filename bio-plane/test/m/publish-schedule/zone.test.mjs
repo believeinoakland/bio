@@ -11,6 +11,7 @@ const AT = { date: "2026-10-01", time: "09:00" };
 const HALIFAX = "America/Halifax", LISBON = "Europe/Lisbon";
 const TEST_PROFILE = "test-port-ellery", OAKLAND = "oakland-alameda";
 const ZONE_PATH = `${TEST_PROFILE}/time_zone`;
+const TEAM_ZONE_PATH = "@team/time_zone";
 
 /* olive owns the project; one case edition prepared over an inquiry; the group's profile held. */
 function base(profiles = [TEST_PROFILE]) {
@@ -64,6 +65,26 @@ test("R1 two active profiles whose zones disagree govern none: a set time is ref
   const w = base([TEST_PROFILE, OAKLAND]);
   const before = w.snapshot();
   assert.equal(w.ps.groupZone(), null, "Halifax and Los Angeles govern no one zone");
+  const r = set(w);
+  assert.deepEqual([r.ok, r.reason], [false, "PUBLISH_AT_NO_ZONE"]);
+  assert.deepEqual(w.snapshot(), before, "a refusal writes nothing");
+});
+
+test("R1 (D-B1, local-facts R21) a team with no place profile that stated its zone schedules on that zone's local day: a set time is read in the stated zone", () => {
+  const w = base([]);
+  const r0 = w.ps.localFacts().factConfirm({ path: TEAM_ZONE_PATH, act: "correct", by: V("olive"), how: "called the clerk",
+                                             value: LISBON, source: "the clerk's notice" });
+  assert.equal(r0.ok, true, JSON.stringify(r0));
+  assert.equal(w.ps.groupZone(), LISBON, "the team's own statement governs with no profile held");
+  const r = set(w);
+  /* 09:00 in Lisbon in October is 08:00 UTC */
+  assert.deepEqual([r.ok, r.at.zone, r.publish_at], [true, LISBON, "2026-10-01T08:00:00Z"]);
+});
+
+test("R1 (D-B1) the control: a team with no place profile and nothing stated governs no zone, so a set time is refused PUBLISH_AT_NO_ZONE and writes nothing", () => {
+  const w = base([]);
+  const before = w.snapshot();
+  assert.equal(w.ps.groupZone(), null, "nothing stated, no profile: no zone governs");
   const r = set(w);
   assert.deepEqual([r.ok, r.reason], [false, "PUBLISH_AT_NO_ZONE"]);
   assert.deepEqual(w.snapshot(), before, "a refusal writes nothing");
