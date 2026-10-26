@@ -558,3 +558,17 @@ Ring failed: the BOB session session_01WJsZWkoGCJqWG6874AF7LK is archived, so cr
 **Met ids (this round):** R21 and R39 (the new answers). R6, R23 and R34 stay met.
 
 Size (session_01HPeMsK2U9rvs16rEGDCexd): test runs 4, module lines 4209
+
+## J38 · COMPLETE
+
+**COMPLETE (re-COMPLETE after CHANGE B39; K5209).** Merged `origin/tranche/T51` into `job/T51/public-read` (merge, not rebase; head d9c60cc847). No further code change: the fixtures and tests from the earlier COMPLETE (J37) are unchanged.
+
+**Checks on the merged head, after OP-GRADES #30 merged:**
+- Module suite `bio-plane/test/m/public-read/*.test.mjs`: 318 tests, 318 pass, 0 fail, 0 cancelled. Previously the `DECLARED_OP_DISAGREES` import failure is gone.
+- `checks/fixtures.mjs … public-read --list`: 0 invented answers, 0 stubs, 0 contract markers; 0 failures.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs public-read`: 0 failures. `checks/coverage.mjs public-read`: 45 of 45 live ids named, 0 failures. `checks/ownership.mjs` against the tranche: 0 failures.
+- Not re-run here: `checks/run.mjs` (its failures are in other modules; see J37).
+
+**Deferred:** none. **Found in other modules:** unchanged from J37 (screens-publish's three hand-built public-read answers).
+
+Size (session_01HPeMsK2U9rvs16rEGDCexd): test runs 5, module lines 4209
