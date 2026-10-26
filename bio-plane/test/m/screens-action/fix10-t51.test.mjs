@@ -77,7 +77,7 @@ test("R56 (walk C C-M11): a concluded question no published case holds is drawn 
   assert.ok(!boxes.some((b) => b.getAttribute("value") === unpublished));
   const apart = main(p).querySelector('[data-list="concluded-unpublished"]');
   assert.ok(apart, "the unpublished one is drawn apart");
-  assert.ok(text(p, apart).includes("Was the memo signed in March?") && text(p, apart).includes(W("question.concluded.heading")));
+  assert.ok(text(p, apart).includes("Was the memo signed in March?") && text(p, apart).includes(W("screen.matter.concluded.unpublished")));
   assert.ok(!main(p).querySelector('[data-list="concluded-unpublished"] input'), "with nothing to tick");
   // control: with nothing concluded and unpublished there is no such list
   const q = await matterWorld();
