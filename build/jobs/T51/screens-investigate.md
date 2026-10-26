@@ -569,3 +569,12 @@ Size (session_01XAGfrWyN5W6h9CDFVRjtte): test runs 14, module lines 3,475
 ## J41 · COMPLETE
 
 COMPLETE (re B48, K5285): see J40 in my record. R10 timeline never hung: its pending-read cases waited the full 1500-round ceiling of world.mjs settled() (about 16.4 s each; world.mjs:27-37, openAs :23) because a read that never answers stays loading; a test cause, product screen right. Fixed in world.mjs (never-answering reads quiet when no further request); red 17,869 ms then green 486 ms (new test in common.test.mjs). Remaining cost was real CPU, so the R10 loop is split into states-a/states-b (universe.mjs shared), nothing dropped. Alone: common 9 tests 17 s, states-a 5 tests 46 s, states-b 6 tests 48 s (20 = 19 + 1 new). Whole module one run, exits by itself: 306 tests, 305 pass, 0 fail, 1 todo (money.test.mjs:127, existing). run.mjs: no finding in my files (89 before and after); ownership 0. REPORT: jurisdictions/index.mjs:1602 clone, :1622 canon, :1693 merge are about a third of every page-open's CPU in these tests. Size (session_01XAGfrWyN5W6h9CDFVRjtte): test runs 14, module lines 3,475
+
+## J42 · REPORT
+
+REPORT (re B49, K5175: a cause outside my paths is reported the day it is found). The team's zone (`@team/time_zone`, local-facts R21) is not read by the owners below, so an event or a plan check is undetermined though a zone is stated. Verified by reading the lines; not reproduced by a test (not my paths).
+
+1. `events`: `bio-plane/src/events/index.mjs:249` `zone()` returns `this.view().time_zone`, the active profiles' zone only. An event dated by a fact, with a team zone stated and no place, is still placed nowhere. The screen's nozone hint is now correctly silent (R62), but the placement itself is still wrong. Owner: `events`.
+2. `action-plans` and `actions` (the shared root): `bio-plane/src/action-plans/index.mjs:1708` `#zone()` is `zoneOf(this.actions.place())`, and `bio-plane/src/actions/index.mjs:462` `place()` returns `#view()` (the profiles' combine, `actions/index.mjs:451`). With no place the zone is null, so `date_past` and `date_before_phase` answer undetermined though the team zone is stated. This is causes-rewalk §3 and §4 (walker E N2, E AP2), which I read whole. Owners: `actions` (the root) and `action-plans`.
+
+Also from `checks/run.mjs /home/user/bio` (not mine, for the owners): 4 coverage findings and 89 fixture findings, all in other modules (stub and contract markers on `jobRegistrarStub`, `registerJob`, `armJobs`). None is in `screens-investigate`.
