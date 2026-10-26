@@ -2,7 +2,7 @@
    from the module it stands for (K4990, K5044). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { acquireRefusal, storageNotConfigured, captureArm, heldActsUnreadable, heldSetAside, partRefusal, recordReuseVerdicts, uploadProvenance, UPLOAD_PNG, sha } from "./fixtures.mjs";
+import { acquireRefusal, storageNotConfigured, captureArm, heldActsUnreadable, heldSetAside, partRefusal, recordReuseVerdicts, uploadProvenance, UPLOAD_PNG, sha, reattest, captureAccount } from "./fixtures.mjs";
 
 test("fixture acquireRefusal: the real refusals of a render, by code: deferred (429, render state deferred), no renderer (501), host cooling off (429); nothing is fetched or filed", async () => {
   const d = await acquireRefusal({ code: "RENDER_DEFERRED" });
@@ -92,4 +92,26 @@ test("fixture uploadProvenance: the document capture's real uploadCapture writes
   const t = await uploadProvenance({ bytes: new TextEncoder().encode("the minutes of the meeting"), name: "notes.png" });
   assert.notEqual(t.profile.format.format, "png", "the bytes decide what the file is, not its name");
   assert.equal("content_type" in t.capture, false);
+});
+
+test("fixture reattest: the real answer of reattest for a held capture: unacknowledged by default (every authority refused, no attestation, the attempts appended late), acknowledged when an authority grants and the archive replays the same bytes", async () => {
+  const u = await reattest();
+  assert.deepEqual([u.ok, u.attested, "attestation" in u && u.attestation != null], [true, false, false]);
+  assert.deepEqual([...new Set(u.late_attestations.map((o) => o.ok))], [false]);
+  assert.ok(u.late_attestations.length > 0 && u.late_attestations.every((o) => o.late === true && ["timestamp", "co_archive"].includes(o.kind)));
+  const a = await reattest({ acknowledged: true });
+  assert.deepEqual([a.ok, a.attested, a.attestation.over, a.attestation.kind], [true, true, a.captureSha, "rfc3161"]);
+  assert.deepEqual(a.late_attestations.map((o) => [o.kind, o.ok]).filter(([, ok]) => ok), [["timestamp", true], ["co_archive", true]]);
+  assert.equal(a.late_attestations.find((o) => o.kind === "co_archive").matches, true);
+  assert.match(u.captureSha, /^[0-9a-f]{64}$/, "the held capture's digest");
+});
+
+test("fixture captureAccount: the real answer of recordCaptureAccount by the capturing member is the first account, signed over the statement with the member's key, and captureAccountsOf reads it back; a member who did not capture it is refused", async () => {
+  const r = await captureAccount();
+  assert.deepEqual([r.ok, r.seq], [true, 1]);
+  assert.match(r.key_b64, /\S+/);
+  const back = r.capture.captureAccountsOf(r.captureSha).accounts;
+  assert.deepEqual(back.map((a) => [a.seq, a.by, a.text]), [[1, "m1", "I saved this page from the clerk's site at 9:14, logged in as myself."]]);
+  const other = await captureAccount({ text: "another account", by: "m2" });
+  assert.equal(other.ok, true, "whoever the capture's actor is, by that member");
 });
