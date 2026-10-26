@@ -2,7 +2,7 @@
    this module's real accepted import. Each check reads the answer the module's own data gives. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { citeimportedAnswer } from "./fixtures.mjs";
+import { citeimportedAnswer, citeimportedRefusalAnswer } from "./fixtures.mjs";
 import { F1, F2 } from "./fixture.mjs";
 
 test("R16 citeimported: the published answer is citation's door answer that cites this import's accepted finding at the edition shown, with the acceptance as case-import states it", async () => {
@@ -22,4 +22,15 @@ test("R16 citeimported: the published answer is citation's door answer that cite
 test("R16 citeimported (control): a finding this import never accepted is refused, so no citation is made", async () => {
   const { answer } = await citeimportedAnswer({ finding: F2 });
   assert.equal(answer.ok, false, "control: an unaccepted finding is not cited");
+});
+
+test("R16 citeimported refusal: a finding this import never accepted is refused BASIS_REFUSED with IMPORTED_NOT_ACCEPTED on its own reference, at the edition shown", async () => {
+  const { answer, ref, edition } = await citeimportedRefusalAnswer();
+  assert.equal(answer.ok, false, "the citation is refused");
+  assert.equal(answer.reason, "BASIS_REFUSED", "the refusal is citation's basis refusal");
+  assert.equal(answer.findings.length, 1, "one leg, one refusal");
+  assert.equal(answer.findings[0].check, "C-21.4", "the refusal is the accepted-work check");
+  assert.equal(answer.findings[0].code, "IMPORTED_NOT_ACCEPTED", "the refusal names the unaccepted finding");
+  assert.equal(answer.findings[0].ref, ref, "the refusal names the reference case-import builds for the finding");
+  assert.equal(answer.findings[0].edition, edition, "the refusal is at the edition shown");
 });
