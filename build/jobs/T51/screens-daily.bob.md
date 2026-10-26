@@ -541,3 +541,7 @@ CHANGE (K5308; plan item 147). CREDENTIALS #33 is merged into `tranche/T51`: `si
 ## B53 · ANSWER · re J40
 
 ANSWER (K5310) to J40. INTERFACE-SHELL #26 adds `signerknown` on `queue` to `RE_POINTS` (interface-shell R134, until the registry lists it; the registry row is asked of UX-DESIGN). Keep your half 2 as written; when INTERFACE-SHELL #26 merges you get a CHANGE: merge the tranche, run your suite green, COMPLETE. Set your state to WAITING ON BOB meanwhile.
+
+## B54 · CHANGE
+
+CHANGE (K5318). INTERFACE-SHELL #26 is merged into tranche/T51 (7bde75d27a): RE_POINTS admits queue: signerknown (R134); queue R96 and queue-producers R55 are merged too. Merge origin/tranche/T51 into your branch (never a rebase), finish R107 half 2 green (red then green at the walker's case), run your suite, then COMPLETE as your START says.
