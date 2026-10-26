@@ -45,12 +45,12 @@ import { provenanceOf } from "../provenance/index.mjs";
 import { LOCAL_FACTS_CHECKS, refusal } from "./checks.mjs";
 import { GroupRules } from "./rules.mjs";
 import { LOCAL_FACTS_TABLE_CLASSES, migrateLocalFacts } from "./schema.mjs";
-import { factPath, parseFactPath, officesToken } from "./paths.mjs";
+import { factPath, parseFactPath, officesToken, TEAM_ZONE_PATH } from "./paths.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 
 export { LOCAL_FACTS_CHECKS, LOCAL_FACTS_WORDS } from "./checks.mjs";
 export { LOCAL_FACTS_SCHEMA, LOCAL_FACTS_TABLES, LOCAL_FACTS_TABLE_CLASSES } from "./schema.mjs";
-export { LOCAL_FACT_KINDS, factPath, parseFactPath } from "./paths.mjs";
+export { LOCAL_FACT_KINDS, factPath, parseFactPath, TEAM_ZONE_PATH } from "./paths.mjs";
 export { RULE_SECTIONS, RULE_STATES, RULE_REASON_MAX, RULE_STATEMENT_MAX, GROUP_PROFILE, RULE_FIELDS, EFFECTIVE_FROM } from "./rules.mjs";
 
 /** R7: a member's three acts on a fact. */
@@ -169,6 +169,11 @@ function withValue(p, parts, value) {
   return q;
 }
 
+/* R21: the profile `jurisdictions.validate` is given to judge a zone the team states: the team's zone is held to the
+   one rule a profile's `time_zone` is (R41), so the module keeps no second list of zone names. Null for a non-string. */
+const teamZoneProbe = (value) => (typeof value === "string"
+  ? { id: "team", name: "Team", covers: ["Team"], test: true, time_zone: { value, status: "ruled", basis: "TEST" } } : null);
+
 /* ===================================================================== *
  * The module
  * ===================================================================== */
@@ -261,11 +266,26 @@ export class LocalFacts {
     return isObj(p) && isObj(p.time_zone) && typeof p.time_zone.value === "string" ? p.time_zone.value : null;
   }
 
+  /* R21: the zone held by the active profiles when they agree on one (each as it governs here, `#zone`), else null. It is
+     the team's zone until the team states its own. */
+  #profileZone(active) {
+    const zones = new Set();
+    for (const id of active.held.keys()) { const z = this.#zone(id, active); if (z) zones.add(z); }
+    return zones.size === 1 ? [...zones][0] : null;
+  }
+
+  /* R21: the team's zone as it governs here: its latest correction (a team zone stated), else the profiles' default. */
+  #teamZone(active) {
+    const fixed = [...this.#acts(TEAM_ZONE_PATH)].reverse().find((a) => a.act === "correct");
+    return fixed && typeof fixed.value === "string" ? fixed.value : this.#profileZone(active);
+  }
+
   /* R3 (T45; jurisdictions R74): the zone an office fact's days are counted in. An office's `hours` and its own
      `time_zone` count on that office's local day when the profile holds its own zone (as it governs here: a member's
      latest correction of it, else the held value); otherwise on the profile's (`#zone`). Every other fact counts on the
      profile's. */
   #zoneOf(parts, active) {
+    if (parts.team) return this.#teamZone(active);
     if (isObj(parts.office) && (parts.fact === "hours" || parts.fact === "time_zone")) {
       const path = factPath({ profile: parts.profile, fact: "time_zone", office: parts.office });
       const fixed = path ? [...this.#acts(path)].reverse().find((a) => a.act === "correct") : null;
@@ -320,7 +340,8 @@ export class LocalFacts {
     const base = { path, fact: parts, latest: said(latest), acts: acts.length };
     if (!inView) {
       return { ...base, status: "absent", due: false, profile: null, governs: null,
-               why: held ? word("local-facts.why.active_jurisdiction_profiles")
+               why: parts.team ? localize("local-facts.index.the_team_has_not_stated", "the team has not stated its time zone, and no installed place gives one; an administrator sets it")
+                   : held ? word("local-facts.why.active_jurisdiction_profiles")
                          : word("local-facts.why.active_jurisdiction_profile") };
     }
     const correction = [...acts].reverse().find((a) => a.act === "correct") || null;
@@ -376,6 +397,14 @@ export class LocalFacts {
   #resolve(path, active) {
     const parts = parseFactPath(path);
     if (!parts) return { named: false };
+    if (parts.team) {
+      /* R21: always a fact, installed profile or none; `held` is the default the profiles give (value null when none),
+         and the view's fact exists once the team has a default or has stated a zone */
+      const value = this.#profileZone(active);
+      const z = active.view && isObj(active.view.time_zone) ? active.view.time_zone : {};
+      const held = { value, status: value ? z.status ?? null : null, basis: value ? z.basis ?? null : null };
+      return { named: true, parts, p: null, held, inView: value !== null || this.#acts(path).length ? held : null };
+    }
     const p = active.held.get(parts.profile);
     if (!p) return { named: false, parts };
     const held = factIn(p, parts, parts.profile);
@@ -396,6 +425,8 @@ export class LocalFacts {
     const active = this.#active();
     const r = path && !LocalFacts.#blind(b.viewer) ? this.#resolve(path, active) : { named: false };
     if (!r.named || !r.held) return noSuchFact(path);
+    /* R21: nothing governs a team with no zone yet, so there is nothing to confirm or dispute until one is stated */
+    if (r.parts.team && b.act !== "correct" && !this.#teamZone(active)) return noSuchFact(path);
     const act = b.act;
     /* DEC-49 REGION is-fact-act */
     if (!LOCAL_FACT_ACTS.includes(act))
@@ -410,7 +441,7 @@ export class LocalFacts {
     let value = null, source = null;
     if (act === "correct") {
       source = str(b.source);
-      const q = b.value === undefined ? null : withValue(r.p, r.parts, b.value);
+      const q = b.value === undefined ? null : r.parts.team ? teamZoneProbe(b.value) : withValue(r.p, r.parts, b.value);
       const v = q ? this.validate(q) : null;
       /* DEC-49 REGION is-fact-correction */
       if (!source || source.length > SOURCE_MAX || !v || !v.ok)
@@ -429,7 +460,7 @@ export class LocalFacts {
     return this.record.transact(() => {
       this.sql.exec(`INSERT INTO local_fact_acts (path, profile, act, how, value_json, source, by_member, at)
                      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-                    path, r.parts.profile, act, how, canonicalJson(value), source, by, at);
+                    path, r.parts.team ? "@team" : r.parts.profile, act, how, canonicalJson(value), source, by, at);
       return { ok: true, path, act, at };
     });
   }
@@ -459,6 +490,9 @@ export class LocalFacts {
   /* Every fact of the active profiles, once each, with its status. */
   #all(active) {
     const out = new Map();
+    /* R21: the team's own zone, first, whether or not a profile is installed */
+    const team = this.#resolve(TEAM_ZONE_PATH, active);
+    out.set(TEAM_ZONE_PATH, this.#status(TEAM_ZONE_PATH, team.parts, team.held, team.inView, active));
     for (const p of active.held.values()) for (const parts of factsOf(p)) {
       const path = factPath(parts);
       if (!path || out.has(path)) continue;
