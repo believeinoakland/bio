@@ -590,3 +590,32 @@ Finding outside my paths, found while running the words and process checks after
 
 1. `bio-plane/test/m/op-grades/owners.test.mjs:250` (testcopy, [code]): the test holds a plain copy of the publishat sentence (`assert.equal(NON_ACTS.publishat, "case-directed: keyed by a case edition ...")`). Now that the sentence is written as `localize("ratification.declared.publishat", ...)`, `checks/words.mjs` flags this copy. The sentence is unchanged and the test still passes (`owners.test.mjs`: 14 of 14). Owner: op-grades. Proposed: op-grades compares against the localized sentence instead of a code copy, or BOB rules otherwise.
 2. `checks/run.mjs /home/user/bio` reports 369 FAIL lines across other modules (store-assembly and others). None is in ratification. I did not work them.
+
+## J33 · COMPLETE
+
+COMPLETE. Round 10 (K5214): the words failure in ratification is fixed. Met ids: none new; no requirement mark changed.
+
+**What changed (file:line)**
+- `bio-plane/src/ratification/index.mjs:1758` `DECLARED_OPS.publishat`: `description` is now `localize("ratification.declared.publishat", "<the same sentence exactly>")`, as every owner's declared row is written (K3930, K3943). Commit `a5f69fe7ac`, pushed.
+
+**Failing-first.** The words check was red before the change (`index.mjs:1758`, plain, 1 failure) and is green after (0 failures, 19247 words, unchanged count). No new test was written: the sentence is unchanged, so the existing declared-ops test was already the test of it. Its result is green before and after.
+
+**Suite and tests**
+- Ratification module: 340 of 340 pass (38 test files).
+- `bio-plane/test/m/ratification/declared-ops.test.mjs`: 4 of 4 pass.
+- `bio-plane/test/m/control-plane/r10-caseratify-chain.test.mjs` (the file lives under `m/control-plane/`, not `control-plane/`): 2 of 2 pass.
+- `bio-plane/test/m/op-grades/owners.test.mjs` (the copy flagged below): 14 of 14 pass.
+
+**Checks** (absolute root `/home/user/bio`)
+- `checks/words.mjs /home/user/bio ratification`: 0 failures.
+- `checks/run.mjs /home/user/bio`: no finding in ratification's files; the words count did not rise. It reports 369 FAIL lines in other modules, and 1 testcopy in op-grades, both in my REPORT.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules affected. (`tranche/T51` as a bare name does not resolve in this checkout; I used `origin/tranche/T51`.)
+- `checks/fixtures.mjs /home/user/bio ratification --list`: 0 failures; answer 0, stub 0, code 0, contract 0, accepted 12 (existing).
+- `checks/ownership.mjs ... $(git merge-base origin/tranche/T51 HEAD) HEAD`: 1 file changed by ratification, 0 failures.
+- No `fixtures-own`, `fixtures-generic` or `fixtures-contract` marker added.
+
+**Findings outside my paths:** reported in the REPORT above (op-grades `owners.test.mjs:250`).
+
+**Notes.** I made a stray file at the filesystem root, `/tmp-scratch-run.txt`, by mistake (an output path I mis-typed). It is outside the repository. A safety check refused the removal, so it is still there; it can be deleted by hand.
+
+Size (session_01KixRhLYyLMAPyuUebw2EAv): test runs 5, module lines 4102
