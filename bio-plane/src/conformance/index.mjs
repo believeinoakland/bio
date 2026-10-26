@@ -77,7 +77,7 @@ import { calculationsOf } from "../calculations/index.mjs";
 import { caseCheckOf } from "../case-check/index.mjs";
 import { acceptedWorkOf } from "../accepted-work/index.mjs";
 import { caseImportOf } from "../case-import/index.mjs";
-import { localDay } from "../civil-time/index.mjs";
+import { localDay, reasonText as civilReasonText } from "../civil-time/index.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 import { isMachineIdentity, proposalLabel, normalizeType, deriveInquiryTitle, idPattern } from "../record-grammar/index.mjs";
 import { CONFORMANCE_CHECKS, refusal } from "./checks.mjs";
@@ -623,8 +623,8 @@ export class Conformance {
     const w = act.when;
     const nowhere = (why) => [{ date: null, why }];
     if (w === null || w === undefined)
-      return nowhere(word("conformance.act_event_placed", { why: String(act.why ? ` (${act.why})` : ": no attestation of it is dated") }));
-    if (!isObj(w)) return nowhere(word("conformance.act_event_date", { why: String(act.why ? ` (${act.why})` : "") }));
+      return nowhere(word("conformance.act_event_placed", { why: String(act.why ? ` (${reasonText(act.why)})` : ": no attestation of it is dated") }));
+    if (!isObj(w)) return nowhere(word("conformance.act_event_date", { why: String(act.why ? ` (${reasonText(act.why)})` : "") }));
     const day = (instant, back = false) => {
       if (typeof instant !== "string" || !w.zone) return null;
       const t = Date.parse(instant);
@@ -806,7 +806,10 @@ export class Conformance {
       const why = binds === "undetermined"
         ? (open ? open.why : word("conformance.binds_body_end"))
         : answers.map((x) => x.why).filter(Boolean).join("; ") || null;
-      out.set(id, { body, binds, why, rests_on: answers.flatMap((x) => x.rests_on).slice(0, 20),
+      let std = null;
+      try { std = this.standards.standardRead({ id, viewer }); } catch { std = null; }
+      out.set(id, { body, body_label: bodyLabel, cite: std && std.ok !== false && str(std.cite) ? std.cite : null, binds, why,
+                    rests_on: answers.flatMap((x) => x.rests_on).slice(0, 20),
                     label: bindingLabel(binds, bodyLabel ?? "the body") });
     }
     return out;
@@ -1066,14 +1069,14 @@ export class Conformance {
                          label: b.label });
       /* DEC-49 REGION is-standard-binding */
       if (x.outcome === "noncompliant" && b.binds === false)
-        return refusal("STANDARD_NOT_BINDING", `${x.standard} does not bind ${b.body} (${b.label}), so the act is not found noncompliant against it: record `
+        return refusal("STANDARD_NOT_BINDING", `${b.cite ?? x.standard} does not bind ${b.body_label ?? b.body} (${b.label}), so the act is not found noncompliant against it: record `
             + "the comparison as a benchmark (below, slower than, or above). Nothing was written.", { standard: x.standard, body: b.body, binds: b.binds });
       /* END DEC-49 REGION is-standard-binding */
       /* R43 (walk E C2a): a bindingness Civicsmith cannot tell is its own refusal, never read as a benchmark */
       /* DEC-49 REGION is-standard-binding-determined */
       if (x.outcome === "noncompliant" && b.binds !== true)
         return refusal("STANDARD_BINDING_UNDETERMINED",
-          localize("conformance.index.whether_standard_binds_v1_is", "whether {standard} binds {v1} is undetermined ({v2}), and an act is found noncompliant only against a standard that binds its body: a member settles it in standards first. Nothing was written.", { standard: String(x.standard), v1: String(b.body ?? "the body"), v2: String(b.why ?? "not recorded") }), { standard: x.standard, body: b.body, binds: b.binds });
+          localize("conformance.index.whether_standard_binds_v1_is", "whether {standard} binds {v1} is undetermined ({v2}), and an act is found noncompliant only against a standard that binds its body: a member settles it in standards first. Nothing was written.", { standard: String(b.cite ?? x.standard), v1: String(b.body_label ?? b.body ?? "the body"), v2: String(b.why ? reasonText(b.why) : "not recorded") }), { standard: x.standard, body: b.body, binds: b.binds });
       /* END DEC-49 REGION is-standard-binding-determined */
     }
     const said = (Array.isArray(questions) ? questions : []).map((x) => (isObj(x) ? x.question : x));
@@ -2048,6 +2051,16 @@ export class Conformance {
   }
 }
 
+/* R3, R27: a `why` in words. A reason is `{key, vars}` (events R54, civil-time's), drawn by its key through the word
+   table; a string is already words; nothing is never `[object Object]`. */
+function reasonText(why) {
+  if (typeof why === "string") return why;
+  if (isObj(why) && typeof why.key === "string") {
+    try { return word(why.key, why.vars ?? {}); } catch { return civilReasonText(why); }
+  }
+  return "";
+}
+
 /* R27 (DEC-145 (2)): a standard's bindingness on the body in the members' words. */
 function bindingLabel(binds, bodyLabel) {
   if (binds === true) return `Standard · binds ${bodyLabel}`;
@@ -2153,8 +2166,8 @@ function refuseNoSuchComparison(id) {
 
 /* R3, R17: the act event's `when` in words, as the author read it. */
 function whenWords(w, why) {
-  if (w === null || w === undefined) return `placed nowhere${why ? ` (${oneLine(why)})` : ""}`;
-  if (!isObj(w)) return `its date undetermined${why ? ` (${oneLine(why)})` : ""}`;
+  if (w === null || w === undefined) return `placed nowhere${why ? ` (${oneLine(reasonText(why))})` : ""}`;
+  if (!isObj(w)) return `its date undetermined${why ? ` (${oneLine(reasonText(why))})` : ""}`;
   if (w.precision === "upper_bound") return `on or before ${w.value}${w.zone ? ` (${w.zone})` : ""}`;
   return `${w.precision === "day" || w.precision === "edtf" ? "in" : "at"} ${w.value}${w.zone ? ` (${w.zone})` : ""}`;
 }
