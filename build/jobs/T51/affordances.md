@@ -520,3 +520,17 @@ QUESTION (re B28). Which route clears the holdsplaced reds: an ACT_HELP text, or
 3. Wait for the design stream to write `act.holdsplaced.does` into mock-acts.js, then re-generate ACT_HELP (R70's pattern). Nothing for me to change until then.
 
 **Recommendation.** Option 1 now, option 3 later. Tell me 1, 2 or 3. I have changed no file yet; the job branch is merged with tranche/T51 and the cursor is at B28.
+
+## J33 · COMPLETE · re B29
+
+COMPLETE (re B29, K5237). No change to affordances: I changed no file in this round.
+
+**What changed (file:line):** none. `holdsplaced` gets no ACT_HELP entry, because no design text exists (`mock-acts.js` has no `holdsplaced`; the word list has no `act.holdsplaced.does`), so affordances R48 and R70 hold none. op-declarations adds it to its `ACT_HELP_ABSENT` read ground beside `holdsdue`, per your CHANGE to OP-DECLARATIONS #39.
+
+**Entries applied:** B29 (option 1). Deferred: none. Found in other modules: none new; the op-declarations change is theirs.
+
+**Tests and checks:** none run, because no file changed. The module's suite stands as last recorded (289 pass, 0 fail, in the J31 record).
+
+**Met ids:** none. **Markers added:** none. **Session:** session_011xzzNYHFupDKfrTnE3KwiM, archived without a merge, as B29 says.
+
+Size (session_011xzzNYHFupDKfrTnE3KwiM): test runs 0, module lines 0
