@@ -232,3 +232,11 @@ Size (session_01XoHLpj87gCyr4R1nEXhbe7): test runs 4, module lines 2598
 ## J13 · COMPLETE
 
 B13 (fix round 10, K5207) done and pushed at ee5fb20da0. entitieskind fixture in bio-plane/test/m/entities/fixtures.mjs (real entitiesOfKind over two bodies), tested in fixtures.test.mjs (R51), red then green on purpose. entities tests 165/0; format, architecture, coverage 65/65, words, fixtures, ownership all 0 failures. Other findings (screens-publish fixture, screens-inquiry resolution stand-ins, other modules' coverage and reds) are in my record. Size: test runs 4, module lines 2598.
+
+## Completion (B14, CHANGE K5209; ENTITIES #22)
+
+Merged `origin/tranche/T51` (850cee6469, OP-GRADES #30 in) into the job branch, never a rebase. Stores import again; the entities fixtures are unchanged.
+
+**Tests and checks after the merge.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/entities/*.test.mjs`: 165 pass, 0 fail. `format` 0 failures; `architecture` 0 failures; `coverage` 65 of 65; `words` 0 failures; `fixtures --list` 0 failures; `ownership` 0 failures (3 files changed by entities against the new tranche tip: the two fixtures files and this record). `checks/run.mjs /home/user/bio` names entities in the same three other-module findings as before (`screens-inquiry/fr28-document-acts.test.mjs:189`, `screens-inquiry/fr3-document.test.mjs:351`, `screens-publish/fixtures.mjs:138`); none is in entities' files.
+
+Size (session_01XoHLpj87gCyr4R1nEXhbe7): test runs 5, module lines 2598
