@@ -197,6 +197,7 @@ Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queu
 - **R11** No answer names a bundle the viewer may not see, and no count reveals one (REC-30, DEC-36).
 - **R12** A CONDITION earns an item only where a member's act can change it (NOTIFICATIONS, the item contract).
 - **R13** No place is named in this module's behaviour or outward text.
+- **R55** (T51 fix round 10; DEC-439, DEC-440, DEC-441; UX-DESIGN U481-U484; K5303; A-03; amends R14; `credentials` R83) R14 mints no `signer-self-registered` item for a key whose row carries `known_by` (`credentials` R83), so an administrator's "I know about this key" ends the item for every administrator. Test: the item is minted, `signerknown` is called, the next feed holds none; control: a second self-registered key still mints one. *(not yet met: T51)*
 
 ### Satisfies
 
