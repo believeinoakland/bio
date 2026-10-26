@@ -1690,4 +1690,4 @@ COMPLETE (B60, K5290; walk-T51-alpha A N-1 section 6). Share for review pressed 
 
 **Deferred.** None in my paths.
 
-Size (session_01RxWsaACDwtn8crGboLcaNB): test runs 9, module lines 3830 src
+Size (session_01RxWsaACDwtn8crGboLcaNB): test runs 9, module lines 3796 src
