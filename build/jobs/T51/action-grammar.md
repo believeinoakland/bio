@@ -62,3 +62,17 @@ Accepted red, per K4049: R28's census arm (test/m/action-grammar/t47.test.mjs) f
 Checks: format 0 failures; architecture 0 failures; coverage 29 of 29 ids named; words 0 failures for action-grammar.
 
 Size (session_01Wkof3P16pbHsMX1b882161): test runs 14, module lines 2600 (src/action-grammar, its own code).
+
+## J5 · REPORT
+
+Found outside my paths (K5175: reported the day found).
+
+Changing the zero-question refusal (commit 44abc0fcc3, action-grammar) breaks assertions in another module's test, which I have not edited (it is actions'):
+- bio-plane/test/m/actions/t17.test.mjs:40 asserts /request_for_comment names ZERO inquiries/ on f[0].message
+- bio-plane/test/m/actions/t17.test.mjs:44 asserts /ZERO inquiries/ on x.detail
+- bio-plane/test/m/actions/t17.test.mjs:52 asserts /ZERO inquiries/ on x.message
+- bio-plane/test/m/actions/t17.test.mjs:92 asserts /ZERO inquiries/ on x.detail (the neither case)
+
+The sentence now reads "A request for comment must name the specific questions it puts to the subject: add each one under 'Advances', chosen from your team's record. A comment request without specifics gives the subject nothing to answer." Line 41 (/nothing to answer/) still holds. Those four assertions need the new wording, which is actions' to make. Until they do, actions' t17 is red on the tranche once my COMPLETE merges. Owner: actions. Your call whether it goes in this round or a follow-up.
+
+Source of the change: causes-rewalk.md section 7, N7 (rewalk-E row 49). The walker's red test in screens-action is not mine to run.
