@@ -1,8 +1,0 @@
-{
-  "autoMode": {
-    "allow": [
-      "$defaults",
-      "Allow exactly one plain git push from the scratch worktree of commit 3b700a92a5 to refs/heads/prune/k5300-all (git push -u origin HEAD:refs/heads/prune/k5300-all), approved by Bob under K5120. No force push, no ref deletion, no other branches."
-    ]
-  }
-}
