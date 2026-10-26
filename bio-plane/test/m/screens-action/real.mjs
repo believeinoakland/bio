@@ -23,6 +23,8 @@ export function realWorld(profile = "oakland-alameda") {
   /* action-clocks (the due date a member adopts and the reminders), the real one, on the same host */
   x.clocks = actionClocksOf(x.w.host, { record: x.w.record, membership: x.w.membership, actions: x.actions, conformance: x.conformance,
     now: () => Date.parse(x.w.clock.now) });
+  /* R57: the lines an office she names is recorded in (`post_in`), the real `lines` on the same host, its tables made as the object does at boot */
+  x.actions.lines.migrate();
   return x;
 }
 
@@ -31,7 +33,13 @@ export function realWorld(profile = "oakland-alameda") {
  *  stamping `by` (the member's id) for them as it does for a roster act (E9, K4557). */
 export function realPlane(x, member = V("olive"), base = DATA_PLANE, { roster = false } = {}) {
   const owners = [(url, body) => filingsOps(x.f, url, body), (url, body) => actionsOps(x.actions, url, body), (url, body) => entitiesOps(x.ents, url, body),
-    (url, body) => actionClocksOps(x.clocks, url, body)];
+    (url, body) => actionClocksOps(x.clocks, url, body),
+    // R57: the lines the Request screen records for an office it names (`post_in`): the real `lines` of the world's host, the instance `actions` reads them from
+    (url, body) => {
+      const l = x.actions.lines, q = (k) => url.searchParams.get(k);
+      return { linerecord: () => l.recordLine(body || {}),
+        linesof: () => l.linesOf({ entity: q("entity"), kinds: q("kinds") ? q("kinds").split(",") : undefined, direction: q("direction") || "both", limit: q("limit"), viewer: q("viewer") }) };
+    }];
   if (roster) owners.push((url, body) => membershipOps(x.w.membership, url, body, {}), (url, body) => projectRosterOps(x.roster, url, body, {}));
   const plane = {};
   const names = new Set();
@@ -46,6 +54,8 @@ export function realPlane(x, member = V("olive"), base = DATA_PLANE, { roster = 
       if (roster) url.searchParams.set("by", String(member).replace(/^member:/, ""));
       const body = req.body && typeof req.body === "object" ? { ...req.body } : req.body;
       if (op === "entitycreate" && body && typeof body === "object") body.declaredBy = member;
+      /* the door stamps the author of a line (`lines` R4: the statement is hers) */
+      if (op === "recordline" && body && typeof body === "object") body.by = member;
       for (const make of owners) {
         const ops = make(url, body);
         const arm = Object.hasOwn(OP_ALIASES, op) ? OP_ALIASES[op] : op;

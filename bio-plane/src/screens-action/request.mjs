@@ -78,6 +78,14 @@ export const request = Object.freeze({
       });
       return out;
     },
+    // R57: the bodies the team holds, each by its name: the rows of the same `peopledirectory` read carry their kind (`{entity, kind, name}`), so the
+    // choice of the body that holds an office she names needs no read of its own
+    bodiesOf: function (view) {
+      const r = view.data.names;
+      const rows = r && r.state === "ok" && r.value && Array.isArray(r.value.rows) ? r.value.rows : [];
+      return rows.filter(function (x) { return x && x.kind === "body" && typeof x.entity === "string" && typeof x.name === "string" && x.name; })
+        .map(function (x) { return { value: x.entity, text: x.name }; });
+    },
     // C64, C64-law: the records laws the active profiles name (`jurisdictions` R7), each with its own first-request window (R96)
     recordsLaws: recordsLawsOf,
     // C64: where requests go, as `entities` R63 holds it: `{kind: address|email|portal, value}`, by its form; none when left empty
@@ -125,6 +133,13 @@ export const request = Object.freeze({
           + '<p class="mk-note">' + cs.w("screen.request.nameoffice.note") + "</p>"
           + cs.field("req-noff-name", "screen.request.nameoffice.name", { help: "screen.request.nameoffice.name.help" })
           + cs.field("req-noff-role", "screen.request.nameoffice.role", { help: "screen.request.nameoffice.role.help" })
+          // R57: the body that holds the office, chosen among the team's bodies (the entity id is what is kept)
+          + cs.choice("req-noff-body", "screen.matter.f.body", [{ value: "", text: "" }].concat(P.bodiesOf(view)))
+          // R57: from when to when the body has held it (the person screen's own two days): an office with no day stated is registered but placed on no day
+          + cs.field("req-noff-since", "screen.person.keeper.from.label", { type: "date" }) + cs.field("req-noff-until", "screen.person.keeper.to.label", { type: "date" })
+          + '<p class="mk-small">' + cs.w("screen.person.keeper.dates.note.a") + " " + cs.w("screen.person.keeper.dates.note.b") + "</p>"
+          + (view.ui.bodyrefused ? '<p class="mk-note" role="status">' + view.ui.bodyrefused + "</p>" : "")
+          + (view.ui.undated === true ? '<p class="mk-note" role="status" data-undated="1">' + cs.w("screen.person.keeper.dates.note.b") + "</p>" : "")
           + cs.field("req-noff-where", "screen.request.nameoffice.where", { help: "screen.request.nameoffice.where.help" })
           // the note `entities` R1 requires, in her own words (DEC-412)
           + cs.field("req-noff-note", "screen.request.nameoffice.why", { area: true, rec: true, help: "screen.request.nameoffice.why.help" })
@@ -221,8 +236,12 @@ export const request = Object.freeze({
         if (!agency) return { refuse: "findin.fieldneeded", fills: { field: { html: cs.w("screen.request.nameoffice.name") } } };
         const within = String(cs.value("req-noff-role") || "").trim();
         const role = within || agency;
+        // R57: an office is recorded with the body that holds it; none chosen is refused naming the field
+        const holder = String(cs.value("req-noff-body") || "").trim();
+        if (!holder) return { refuse: "findin.fieldneeded", fills: { field: { html: cs.w("screen.matter.f.body") } } };
         // what she typed, for `done`: the answer's label is the entity's, which a first naming may have written another way
-        view.ui.officeForm = { agency: agency, role: role };
+        view.ui.officeForm = { agency: agency, role: role, holder: holder, note: String(cs.value("req-noff-note") || "").trim(),
+          since: String(cs.value("req-noff-since") || "").trim() || null, until: String(cs.value("req-noff-until") || "").trim() || null };
         const label = within && within.toLowerCase() !== agency.toLowerCase() ? agency + ", " + within : agency;
         const body = { kind: "office", label: label, note: String(cs.value("req-noff-note") || "").trim() };
         const contact = view.parts.contactOf(cs.value("req-noff-where"));
@@ -234,11 +253,29 @@ export const request = Object.freeze({
         return { body: body };
       },
       rereads: [],
-      done: function (view, answer, cs) {
+      // R57: the office is recorded with its body (a `post_in` line from the office to the body, on her word: her note, between the days she states: a bound left empty is unstated and places the office on no day), unless the record
+      // already holds one for it; then what `actions` answers for the office (R111) is what is offered, so it can be chosen in this visit
+      done: async function (view, answer, cs) {
         const r = answer && answer.result !== undefined ? answer.result : answer;
         const f = view.ui.officeForm;
         if (!r || typeof r.entity_id !== "string" || !f) return;
-        cs.set("offices", [{ addressee: { state: "named", kind: "office", role: f.role, body: f.agency, entity_id: r.entity_id } }]);
+        const plain = function (a) { return a && a.result !== undefined ? a.result : a; };
+        const held = plain(await cs.call("linesof", { query: { entity: r.entity_id, kinds: "post_in", direction: "from", limit: "20" } }).then(function (x) { return x; }, function () { return null; }));
+        const lines = held && Array.isArray(held.lines) ? held.lines.filter(function (l) { return l && !l.withdrawn; }) : null;
+        if (lines && !lines.length) {
+          const made = plain(await cs.call("recordline", { body: { kind: "post_in", from: r.entity_id, to: f.holder, basis: { statement: f.note || f.agency }, valid: { from: f.since, to: f.until, precision: "day", zone: "UTC" } } }).then(function (x) { return x; }, function () { return null; }));
+          if (!made || made.ok === false) {
+            cs.set("bodyrefused", cs.esc(String((made && (made.translation || made.code)) || "")));
+            return;
+          }
+        }
+        cs.set("bodyrefused", "");
+        const asked = plain(await cs.call("addresseesuggest", { query: { subject: r.entity_id } }).then(function (x) { return x; }, function () { return null; }));
+        const named = asked && Array.isArray(asked.offices) ? asked.offices.filter(function (o) { return o && o.addressee && o.addressee.entity_id === r.entity_id; }) : [];
+        // the owner's answer decides: an office it cannot place on a day (a bound unstated) is registered but not offered, and the screen says why
+        cs.set("undated", !named.length);
+        if (!named.length) return;
+        cs.set("offices", named);
         cs.set("office", 0);
         cs.set("chosen", true);
         cs.set("named", true);
