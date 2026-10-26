@@ -1,6 +1,6 @@
 # Plan T51 · T50's finish
 
-**Status** · OPEN · BOB #312 · session_01SBQoo2pCXzij9QryZw5Gen · depth 1
+**Status** · OPEN · BOB #313 · session_018r9K5wgMTUrdGRUqami37X · depth 1
 
 **Jobs** · op-capabilities: OP-CAPABILITIES #2 session_017sAW1bggJ9h87rgBcmunao; screens-daily: SCREENS-DAILY #28 session_01G4T11MDTBxSDjEYtergKAE; screens-entry: SCREENS-ENTRY #15 session_01JdJGDMdqKM21B8AxsWMQLp; interface-shell: INTERFACE-SHELL #26 session_011MRtDNeEfHW1QMz44tMXAY; journey-check: JOURNEY-CHECK #16 session_01VvoLW4xgehrDkpb1tbnzdp
 
