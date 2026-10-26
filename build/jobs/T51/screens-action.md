@@ -615,3 +615,7 @@ c. Outside my module: `action-plans` `date_before_phase` check should carry `sta
 ## J44 · REPORT
 
 REPORT (re B50). Merged tranche/T51; item (1) now draws the refusal's own `detail` (matter.mjs:572), pushed. The C2a test runs the real conformance answer (an ordinance declared with a start and no end, the body picked as its issuer entity): green; it fails on the old code. Suite 306 of 307; the one red is the H1 test, which waits on ACTIONS #R111 (the owner of an office entity still answers no office). Key to REPORT: `refusal.STANDARD_BINDING_UNDETERMINED` (design, B530) is not held; I draw the detail. Waiting for your CHANGE on actions R111.
+
+## J45 · QUESTION
+
+QUESTION (re B52). Merged tranche/T51 and applied it (pushed): item 10 now takes the owner's `ADDRESSEE_INCOMPLETE` (drawn by its `detail`, the local check is gone; plan.mjs `refusals`), and `date_before_phase` is worded from `start`. Both tests take the owner's answer from action-plans (`dateBeforePhase()` and its real `optionAdd` refusal), so they import `bio-plane/test/m/action-plans/fixtures.mjs` and `fixture.mjs`. `architecture.mjs` fails on those two imports: `screens-action`'s `uses` in build/modules.json does not list `action-plans` (the requirements' Uses names it). Please add `action-plans` to `uses` (tests only; no new edge in source), or tell me another way to take a real refusal (a hand-built one is forbidden, K4990). Everything else is green: suite 306 of 307, the one red the H1 test (waits on ACTIONS #28); format 0, coverage 56/56, words 0, ownership 0.
