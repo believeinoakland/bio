@@ -1,5 +1,5 @@
-/* screens-investigate R8: a standard the city set itself (Projects › <project> › Standard; registry screen `standard`,
- * its 3 acts). Reads the standard (`standards`' `standard`: its words as written, its source passage, its issuer, kind and
+/* screens-investigate R8, R64: a standard the city set itself (Projects › <project> › Standard; registry screen `standard`,
+ * its acts). Reads the standard (`standards`' `standard`: its words as written, its source passage, its issuer, kind and
  * when it is in force), its relations to laws (`lawrelations`) and the project's proposals (`standardproposals`, R19: drawn whether or
  * not the assistant is reachable, a member's among them), each labelled with who proposed it, machine work marked, "not a standard until a member adopts it". */
 
@@ -33,7 +33,9 @@ function reads(view) {
   const state = mode === "adopted" || mode === "all" ? mode : "open";
   const out = { docs: { op: "heldcaptures", query: { limit: "200", state: "held_and_vouched", fields: "picker" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
     /* R8 (K5148; WALK-FINAL-08 D9): the registered bodies "Who set it" chooses among */
-    bodies: { op: "entitieskind", query: { kind: "body", limit: "200" } }, institutions: { op: "entitieskind", query: { kind: "institution", limit: "200" } } };
+    bodies: { op: "entitieskind", query: { kind: "body", limit: "200" } }, institutions: { op: "entitieskind", query: { kind: "institution", limit: "200" } },
+    /* R64: the team's offices, beside its bodies, are what "Whom it binds" chooses a body among */
+    offices: { op: "entitieskind", query: { kind: "office", limit: "200" } } };
   if (/^STD-/.test(id)) {
     out.standard = { op: "standard", query: { id }, subject: true };
     out.relations = { op: "lawrelations", query: { id } };
@@ -73,6 +75,11 @@ function render(cs, view) {
     const body = bodies.find((b) => b.value === held || (x && x.owner && b.value === x.owner.entity));
     if (body) return body.text;
     return held && !/^ENT-/.test(held) ? held : P.plain(cs, "connection.node.unnamed");
+  };
+  /* K5178: the owner answers a source as `{captureSha, extent}`; it is drawn as the held document's title, never its fingerprint (R34) */
+  const sourceTitle = (src) => {
+    const row = P.docsAll(cs, view).rows.find((x) => x && x.capture && src && typeof src === "object" && x.capture.sha256 === src.captureSha);
+    return row && typeof row.title === "string" && row.title ? row.title : P.plain(cs, "screen.held.untitled");
   };
   const out = [cs.title(s ? s.cite || id : cs.w("screen.standard.name"), { thing: { kind: "standard", facts: s ? [s.kind || "", issuerOf(s)] : [] } })];
   if (/^STD-/.test(id)) out.push(cs.state("standard", view, (v) => {
@@ -138,12 +145,6 @@ function render(cs, view) {
     const r = view.ui.inforce;
     /* R8 (K5148; R70.12): a version known in force through a day is worded by `standard.inforce.known` with the member who recorded it by name
        (never the stamp the plane's sentence was composed with) */
-    /* K5178: the owner answers the source as `{captureSha, extent}`; it is drawn as the held document's title, never its fingerprint (R34) */
-    const heldDocs = P.docsAll(cs, view).rows;
-    const sourceTitle = (src) => {
-      const row = heldDocs.find((x) => x && x.capture && src && typeof src === "object" && x.capture.sha256 === src.captureSha);
-      return row && typeof row.title === "string" && row.title ? row.title : P.plain(cs, "screen.held.untitled");
-    };
     const known = r && r.state === "in_force" && r.known && typeof r.known.through === "string" && typeof r.known.by === "string" && r.known.by
       ? cs.w("standard.inforce.known", { through: { html: cs.date(r.known.through) }, source: sourceTitle(r.known.source), author: P.who(cs, r.known.by) }) : "";
     const whyHtml = (w) => (known ? known : typeof w === "string" ? cs.esc(w) : w && typeof w === "object" ? P.why(cs, w) : "");
@@ -157,6 +158,41 @@ function render(cs, view) {
     out.push(cs.sec(S + "inforce.heading", cs.field("st-inforce-day", S + "inforce.day.label", { type: "date", help: S + "inforce.day.help" })
       + cs.act("standardinforce", { label: "act.standardinforce.label.standard" }) + answer
       + `<details class="mk-details"><summary>${cs.w(S + "inforce.refused.summary")}</summary><p>${cs.w(S + "inforce.refused.body")} ${cs.w(S + "inforce.refused.body2")}</p></details>`, { help: S + "inforce.help" }));
+  }
+  /* R64 (DEC-438): "Whom it binds, and until when": the days the standard is recorded known in force through (`standard`'s `in_force_through`, each beside its
+     withdrawal), said plainly when none is recorded and no end is stated, and the four acts that record what the documents show, each in its own fold */
+  if (/^STD-/.test(id)) {
+    const records = s && Array.isArray(s.in_force_through) ? s.in_force_through.filter((x) => x && x.id && !x.withdrawn) : [];
+    const per = (s && s.period) || {};
+    const note = (k) => `<p class="mk-small">${cs.w(k)}</p>`;
+    const blankFirst = (list) => [blank].concat(list);
+    /* the held standards a choice of act or law offers (this one left out), by citation; and the passages of the one chosen, by their words, read once each */
+    const heldActs = view.parts.options(view, "laws", (v) => v.items, (x) => ({ value: x.id, text: x.cite || P.plain(cs, "connection.node.unnamed") })).filter((o) => o.value !== id);
+    const actChoice = (cid, label, help, passageId) => {
+      if (!heldActs.length) return P.emptyChoice(cs, cid, label);
+      const made = view.ui["choice:" + cid];
+      const at = heldActs.some((o) => o.value === made) ? made : heldActs[0].value;
+      const rd = P.later(cs, view, "std:" + at, "standard", { query: { id: at } });
+      const opts = rd.state === "ok" && rd.value ? P.textOptions(cs, view, rd.value.texts) : [];
+      return cs.choice(cid, label, heldActs, { acts: {} }) + (help ? note(help) : "")
+        + (opts.length ? cs.choice(passageId, S + "f.passage", blankFirst(opts), {}) : rd.state === "loading" ? cs.state(rd, () => "") : P.emptyChoice(cs, passageId, S + "f.passage"));
+    };
+    const actors = ["offices", "bodies"].flatMap((n) => (view.data[n] && view.data[n].state === "ok" && view.data[n].value && Array.isArray(view.data[n].value.entities) ? view.data[n].value.entities : []))
+      .filter((e) => e && e.entity_id && e.label).map((e) => ({ value: e.entity_id, text: e.label }));
+    const bodyChoice = (cid) => (actors.length ? cs.choice(cid, S + "f.body", blankFirst(actors), {}) + note(S + "f.body.help") : P.emptyChoice(cs, cid, S + "f.body"));
+    const fold = (op, inner) => `<details class="mk-details"><summary>${cs.w("act." + op + ".label.standard")}</summary>${inner}${cs.act(op, { label: "act." + op + ".label.standard", tone: "primary" })}</details>`;
+    const project = /^PROJ-/.test(mode || "") ? mode : "";
+    out.push(cs.sec(S + "binds.head",
+      (records.length ? cs.sheet(records.map((x) => cs.row("", `<span data-through-record="${cs.esc(x.id)}">${cs.w(S + "through.recorded", { through: { html: cs.date(x.through) }, source: sourceTitle(x.source), name: P.who(cs, x.by) })}</span>`,
+        cs.act("standardinforcethroughwithdraw", { label: "act.standardinforcethroughwithdraw.label.standard", data: { record: x.id } }))).join(""))
+        : per.from && !per.to ? `<details class="mk-details"><summary>${cs.w(S + "through.none.summary")}</summary>${cs.mark("gap", "undetermined", { reason: cs.w(S + "through.unknown", { from: { html: cs.date(per.from) } }) })}</details>` : "")
+      + fold("standardinforcethrough", cs.field("st-thr-day", S + "f.through", { type: "date", help: S + "f.through.help" })
+        + P.docChoice(cs, view, "st-thr-doc", { label: S + "f.source", help: S + "f.source.help", passage: false, drive: true, project })
+        + P.passagePick(cs, view, "st-thr-doc", "st-thr-passage", P.later))
+      + fold("standardadoption", actChoice("st-ad-act", S + "f.act", S + "f.act.help", "st-ad-passage") + cs.field("st-ad-edition", S + "f.edition", { help: S + "f.edition.help" })
+        + cs.choice("st-ad-mode", S + "f.mode", blankFirst(["by_reference", "voluntary", "by_accreditation"].map((k) => [k, S + "mode." + k])), {}))
+      + fold("standardimpose", bodyChoice("st-im-body") + actChoice("st-im-law", S + "f.law", "", "st-im-passage"))
+      + fold("standardbenchmark", bodyChoice("st-bm-body")), { help: S + "binds.help" }));
   }
   /* C61: the standards the record holds, on the project's screen, each a door to its page (keeping the project in the path) */
   if (/^PROJ-/.test(id)) out.push(`<div data-held-standards>` + cs.sec(S + "held", cs.state("held", view, (v) => {
@@ -224,6 +260,33 @@ const acts = rereading([
       return { body: { proposal } };
     },
     done(view, answer, cs) { const r = answer && answer.result !== undefined ? answer.result : answer; if (r && r.id) cs.go("standard", r.id); } },
+  /* R64 (DEC-438): the four acts of "Whom it binds, and until when"; each sends what the page holds and the owner refuses what it will not take, drawn by its key */
+  { op: "standardinforcethrough", label: "act.standardinforcethrough.label.standard",
+    send(view, el, cs) {
+      const at = view.parts.chosen(cs, "st-thr-doc", "st-thr-passage");
+      return { body: Object.assign({ standard: String(view.subject || "").split("/")[0], through: String(cs.value("st-thr-day") || "").trim() }, at ? { source: { captureSha: at.captureSha, extent: at.extent } } : {}) };
+    } },
+  { op: "standardinforcethroughwithdraw", label: "act.standardinforcethroughwithdraw.label.standard",
+    send(view, el, cs) {
+      const record = String((el && el.dataset && el.dataset.record) || "").trim();
+      return record ? { body: { record } } : null;
+    } },
+  /* the adopting act's own start is the day the adoption runs from (`from`, the owner's); an act that states none sends none, and the owner refuses it */
+  { op: "standardadoption", label: "act.standardadoption.label.standard",
+    send(view, el, cs) {
+      const act = String(cs.value("st-ad-act") || "").trim();
+      const read = view.ui.later && view.ui.later["std:" + act];
+      const from = read && read.state === "ok" && read.value && read.value.period && typeof read.value.period.from === "string" ? read.value.period.from : "";
+      return { body: Object.assign({ standard: String(view.subject || "").split("/")[0], act, edition: String(cs.value("st-ad-edition") || "").trim(), mode: String(cs.value("st-ad-mode") || "").trim(), citation: String(cs.value("st-ad-passage") || "").trim() }, from ? { from } : {}) };
+    } },
+  { op: "standardimpose", label: "act.standardimpose.label.standard",
+    send(view, el, cs) {
+      return { body: { standard: String(view.subject || "").split("/")[0], body: String(cs.value("st-im-body") || "").trim(), law: String(cs.value("st-im-law") || "").trim(), citation: String(cs.value("st-im-passage") || "").trim() } };
+    } },
+  { op: "standardbenchmark", label: "act.standardbenchmark.label.standard",
+    send(view, el, cs) {
+      return { body: { standard: String(view.subject || "").split("/")[0], body: String(cs.value("st-bm-body") || "").trim() } };
+    } },
   { op: "lawrelate", label: "act.lawrelate.label.standard",
     send(view, el, cs) {
       const to = String(cs.value("st-to") || "").trim(), citation = String(cs.value("st-citation") || "").trim();
@@ -233,7 +296,7 @@ const acts = rereading([
       /* D2: the standard's own id, the subject before any `/` (a standard opened from its project's list carries the project after it) */
       return { body: Object.assign({ type, from: String(view.subject || "").split("/")[0], to, citation }, effective ? { effective } : {}) };
     } },
-], ["standard", "relations", "laws", "project", "proposals", "held", "bodies", "institutions"]);
+], ["standard", "relations", "laws", "project", "proposals", "held", "bodies", "institutions", "offices"]);
 
 const STANDARD_KEYS = [
   "screen.timeline.more.people",
@@ -251,6 +314,11 @@ const STANDARD_KEYS = [
   "screen.standard.inforce.heading", "screen.standard.inforce.day.help", "screen.standard.inforce.result.meta", "screen.standard.inforce.refused.summary",
   "screen.standard.inforce.refused.body", "screen.standard.inforce.refused.body2", "screen.standard.inforce.help", "crumb.project.unjoined",
   "screen.standard.inforce.day.label", "screen.standard.inforce.result.line", "standard.inforce.known",
+  /* R64 (DEC-438) */
+  "screen.standard.binds.head", "screen.standard.binds.help", "screen.standard.through.unknown", "screen.standard.through.recorded", "screen.standard.through.none.summary",
+  "screen.standard.f.through", "screen.standard.f.through.help", "screen.standard.f.source", "screen.standard.f.source.help", "screen.standard.f.body", "screen.standard.f.body.help",
+  "screen.standard.f.act", "screen.standard.f.act.help", "screen.standard.f.edition", "screen.standard.f.edition.help", "screen.standard.f.mode", "screen.standard.mode.by_reference",
+  "screen.standard.mode.voluntary", "screen.standard.mode.by_accreditation", "screen.standard.f.passage", "screen.standard.f.law", "screen.held.untitled", "connection.node.unnamed",
   "screen.person.source", "screen.standard.inforce.state.in_force", "screen.standard.inforce.state.not_in_force", "screen.standard.inforce.state.overridden", "screen.standard.inforce.state.undetermined",
 ];
 
@@ -258,7 +326,7 @@ const STANDARD_KEYS = [
 const INCOMING = ["implements", "refers_to", "amends", "repeals", "renumbers", "recodifies", "defines", "excepts", "incorporates"].map((k) => "screen.standard.rel.in." + k).filter((k) => hasWord(k));
 
 const words = ["screen.standard.name", "screen.standard.purpose", ...INCOMING,
-  ...["standardinforce", "standarddeclare", "standardadopt", "lawrelate"].flatMap((op) => ["act." + op + ".label.standard", "act." + op + ".does"]),
+  ...["standardinforce", "standarddeclare", "standardadopt", "lawrelate", "standardinforcethrough", "standardinforcethroughwithdraw", "standardadoption", "standardimpose", "standardbenchmark"].flatMap((op) => ["act." + op + ".label.standard", "act." + op + ".does"]),
   "mark.origin.machine.name", "mark.origin.machine.means", "mark.gap.undetermined.name", "mark.gap.undetermined.means",
   "mark.gap.withheld.name", "mark.gap.withheld.means", ...WHY_KEYS, "state.empty", "state.loading", "state.failed", ...FORM_SHARED, ...STANDARD_KEYS];
 
