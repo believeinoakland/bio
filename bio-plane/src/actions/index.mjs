@@ -2615,9 +2615,18 @@ export class Actions {
     const now = this.#nowMs(nowMs);
     /* R25, R100: the clock and the lifecycle day are read in the action's zone. */
     const view = this.governingView();
+    /* R111: each row also carries, from the entry as the record holds it (the table keeps none of these), its stage,
+       outcome, exemptions, due date and citation and quote, each null when the entry states none. */
+    const held = Array.isArray(fm.correspondence) ? fm.correspondence : [];
     const ledger = this.#rows(
       `SELECT ord, direction, at, medium, party, artifact_bundle_id, artifact_sha, account, author, recorded_at
-         FROM correspondence WHERE bundle_id=? ORDER BY ord`, row.bundle_id);
+         FROM correspondence WHERE bundle_id=? ORDER BY ord`, row.bundle_id).map((r) => {
+      const e = held[r.ord] && typeof held[r.ord] === "object" && !Array.isArray(held[r.ord]) ? held[r.ord] : {};
+      const of = (k) => (e[k] === undefined || e[k] === null || String(e[k]).trim() === "" ? null : String(e[k]).trim());
+      return { ...r, stage: of("stage"), outcome: of("outcome"), exemptions: of("exemptions"),
+               due_by: of("due_by"), due_cite: of("due_cite"), quote_amount: of("quote_amount"),
+               quote_currency: of("quote_currency"), quote_basis: of("quote_basis") };
+    });
     const legs = this.#rows(
       `SELECT ord, target_id, target_type, kind, note, at, extent_capture FROM action_basis WHERE bundle_id=? ORDER BY ord`,
       row.bundle_id).map((l) => ({ ...l, extent_capture: l.extent_capture ?? null,
@@ -2986,7 +2995,18 @@ export class Actions {
     if (!at) at = localToday(this.#nowMs(null), zoneOf(this.place())) ?? instantOf(this.#nowMs(null));
     let entities;
     if (ENTITY_ID_RE.test(subj)) {
-      if (!this.#entityKind(subj)) return noSuchEntity(subj, { end: "subject" });
+      const kind = this.#entityKind(subj);
+      if (!kind) return noSuchEntity(subj, { end: "subject" });
+      /* R111 (amends R62): a subject that is itself an office is the office, answered as named. */
+      if (kind === "office") {
+        const r = this.entities.readEntity({ entityId: subj });
+        const role = r && r.found && r.entity ? r.entity.label : null;
+        const { body, why } = this.#officeBody(subj, at, viewer);
+        const named = body ? [{ addressee: { state: "named", kind: "office", role, body, entity_id: subj }, concerns: subj, line: null }] : [];
+        return { ok: true, subject: subj, at, at_basis: basis, offices: named,
+                 undetermined: body ? [] : [{ office: subj, concerns: subj, line: null, why }], suggestion: true,
+                 says: word("actions.says.offices_record_holds") };
+      }
       entities = [subj];
     } else {
       const b = this.#visibleAction(subj, viewer);
@@ -3001,13 +3021,7 @@ export class Actions {
     const seen = new Set();
     const label = (id) => { let r = null; try { r = this.entities.readEntity({ entityId: id }); } catch { r = null; }
                             return r && r.found && r.entity ? r.entity.label : null; };
-    const bodyOf = (office) => {
-      let r = null;
-      try { r = lines.structureAt({ entity: office, at, kinds: ["post_in"], viewer }); } catch { r = null; }
-      const held = r && r.ok ? (r.held || []).filter((l) => l.from === office) : [];
-      return held.length === 1 ? { body: label(held[0].to) } : { why: held.length ? word("actions.why.office_held_body")
-        : word("actions.why.line_date_places") };
-    };
+    const bodyOf = (office) => this.#officeBody(office, at, viewer);
     for (const e of entities.slice(0, 50)) {
       let r = null;
       try { r = lines ? lines.structureAt({ entity: e, at, kinds: ["custodian_of", "responsible_for"], viewer }) : null; } catch { r = null; }
@@ -3029,6 +3043,20 @@ export class Actions {
              says: offices.length || undetermined.length
                ? word("actions.says.offices_record_holds")
                : word("actions.says.record_holds_custodian") };
+  }
+
+  /* R62, R111: the body an office is a post in on a day (`lines.structureAt`, `post_in`), or why none is read. */
+  #officeBody(office, at, viewer) {
+    let r = null;
+    try { r = this.lines.structureAt({ entity: office, at, kinds: ["post_in"], viewer }); } catch { r = null; }
+    const held = r && r.ok ? (r.held || []).filter((l) => l.from === office) : [];
+    return held.length === 1 ? { body: this.#entityLabel(held[0].to) } : { why: held.length ? word("actions.why.office_held_body")
+      : word("actions.why.line_date_places") };
+  }
+  #entityLabel(id) {
+    let r = null;
+    try { r = this.entities.readEntity({ entityId: id }); } catch { r = null; }
+    return r && r.found && r.entity ? r.entity.label : null;
   }
 
   /* R66, R67: the visible actions, each with its document, in id order (the sources read the group's own acts). */
