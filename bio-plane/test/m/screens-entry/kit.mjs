@@ -14,9 +14,22 @@
 import { WORD_ROWS, word, hasWord } from "../../../src/setup-words/index.mjs";
 import { OPS, SESSION_OPS, NEEDS } from "../../../src/op-declarations/index.mjs";
 import { SCREENS, SCREEN_WORDS } from "../../../src/screens-entry/index.mjs";
+import { toSource } from "../../../src/interface-shell/index.mjs";
 import { storeWorld } from "../store-request/fixtures.mjs";
 import { scanner } from "../file-safety/fixture.mjs";
 export { SCREENS, SCREEN_WORDS, word, hasWord };
+
+/** A screen as the served page holds it (interface-shell R21, "self-contained"): every function by its own text, evaluated outside the
+ *  module, so a name the module declares at its own scope is not there (a `ReferenceError` when the function runs, as in the page). */
+export function served(spec) {
+  const back = (v) => {
+    if (typeof v === "function") return (0, eval)("(" + toSource(v) + ")");
+    if (Array.isArray(v)) return v.map(back);
+    if (v && typeof v === "object") return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, back(x)]));
+    return v;
+  };
+  return back(spec);
+}
 
 /** A fresh world over the real store (store-request R16–R19): claimed by the founder, or unclaimed when a test walks the claim.
  */
@@ -56,11 +69,12 @@ const memo = new Map();
 /** `scenes(full)`: each screen drawn in the states the module draws it, once (the pages are read-only; a test that presses opens its own),
  *  over the real store: a team with every part the founder can set already set (`full`), or with nothing set. Answers
  *  `{pages: [{label, id, o}], acted: [{label, id, o}] (after an act), places}`; `places` the plane's own place names, record data. */
-export function scenes(full) {
-  if (!memo.has(full)) memo.set(full, buildScenes(full));
-  return memo.get(full);
+export function scenes(full, page = false) {
+  const key = full + ":" + page;
+  if (!memo.has(key)) memo.set(key, buildScenes(full, page));
+  return memo.get(key);
 }
-async function buildScenes(full) {
+async function buildScenes(full, served = false) {
   const env = { ACCOUNT_SEAL_SECRET: SEAL, FILE_SCANNER: scannerBinding() };
   const FPW = "a founder long password";
   const mk = async () => {
@@ -90,7 +104,7 @@ async function buildScenes(full) {
   const unclaimed = await worldOf({ claimed: false, env });
   const old = await oldFounder({ env });
   const pages = [], acted = [];
-  const page = async (label, id, opts) => { pages.push({ label, id, o: await open(id, opts) }); };
+  const page = async (label, id, opts) => { pages.push({ label, id, o: await open(id, { ...opts, page: served }) }); };
   await page("front", "front", { world });
   await page("front signedout", "front", { world, session: { state: "signedout", handle: "mai" } });
   await page("front ended", "front", { world, session: { state: "ended", handle: "mai" } });
@@ -113,7 +127,7 @@ async function buildScenes(full) {
   await lockedTeam.world.tick(31 * 60e3);
   await page("front locked", "front", { world: lockedTeam.world, as: lou, session: { state: "locked", handle: "lou" } });
   // the states only an act reaches: the codes shown, a handle chosen, an administrator invited, a password set, a member enrolled
-  const press = async (label, id, opts, op, values) => { const o = await open(id, opts); await o.press(op, { values }); acted.push({ label: id + " after " + op, id, o }); };
+  const press = async (label, id, opts, op, values) => { const o = await open(id, { ...opts, page: served }); await o.press(op, { values }); acted.push({ label: id + " after " + op, id, o }); };
   const fresh = await worldOf({ claimed: false, env });
   await press("claim", "setup", { world: fresh, fragment: { boot: "otp" } }, "claim", { "su-handle": "rivera", "su-pw": "a long password!", "su-pw2": "a long password!" });
   const old2 = await oldFounder({ env });
@@ -247,9 +261,10 @@ const NOT_FOUND = /^NO_SUCH_|_NOT_FOUND$|^NOT_FOUND$/;
  * from the address (`view.fragment`), `world` the plane behind it and `as` the member signed in (her whoami is `view.me`),
  * `table` the faults only (op → `"pending"`, `"none"`), `subject` the address's subject.
  */
-export async function open(id, { table = {}, session = { state: "none" }, fragment = {}, me = null, subject = null, world = null, as = null } = {}) {
-  const spec = SCREENS.find((s) => s.id === id);
-  if (!spec) throw new Error("no screen " + id);
+export async function open(id, { table = {}, session = { state: "none" }, fragment = {}, me = null, subject = null, world = null, as = null, page = false } = {}) {
+  const found = SCREENS.find((s) => s.id === id);
+  if (!found) throw new Error("no screen " + id);
+  const spec = page ? served(found) : found;
   const o = { spec, requests: [], signins: [], gone: [], wizards: [], saves: [], copies: [], timers: [], now: 0, refused: null, token: as ? as.token : session.state === "live" || session.state === "locked" ? "tok-locked" : null };
   const ui = {};
   const data = {};
