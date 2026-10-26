@@ -15,7 +15,7 @@ import * as A from "../../../src/affordances.mjs";
 import * as G from "../../../src/op-grades/index.mjs";
 import { MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 import { word, hasWord, WORD_ROWS } from "../../../src/setup-words/index.mjs";
-import { T51_DESIGN_OPS, T51_OWED_OPS, T51_LIST_ONLY_OPS, T51_STANDIN_OPS, T51_STANDIN_HELP } from "../../../src/affordances/act-help.mjs";
+import { T51_DESIGN_OPS, T51_OWED_OPS, T51_LIST_ONLY_OPS, T51_STANDIN_OPS, T51_STANDIN_HELP, T51_STANDARD_OPS } from "../../../src/affordances/act-help.mjs";
 
 const { ACT_HELP, ACT_HELP_KEYS, BROWSER_ACTS, affordancesAnswer } = A;
 const SCREENS = new URL("../../../../docs/development/ux-substrate/screens/", import.meta.url);
@@ -72,7 +72,8 @@ const opOf = (key) => {
 const OWED_HELD = [...OWED_NOW, ...OWED_NOW_T50, "aliaswithdraw", ...R69_ACTS, ...T51_OWED_OPS];
 /* T51 (B14, K4376): the ops op-declarations' registration left without an explanation. `T51_LIST_ONLY_OPS` reads a key the reads list
    does not give; `T51_STANDIN_OPS` reads a `localize` default, the word list holding no sentence for them yet (one QUESTION to BOB). */
-const B14_KEYS = [...T51_LIST_ONLY_OPS, ...T51_STANDIN_OPS].map((op) => `act.${op}.does`);
+/* R71 (K5303): the five Standard acts, words the list holds that its reads list (a generation behind) does not yet give */
+const B14_KEYS = [...T51_LIST_ONLY_OPS, ...T51_STANDIN_OPS, ...T51_STANDARD_OPS].map((op) => `act.${op}.does`);
 /* the reads list's act keys this module holds */
 const readsHeld = (key) => /^act\.[^.]+\.does$/.test(key) && !NOT_HELD_READS.includes(key)
   && !(key.startsWith("act.owed_") && !OWED_HELD.includes(key.slice("act.owed_".length, -".does".length)));
@@ -82,7 +83,7 @@ const expected = () => {
     const op = opOf(key);
     if (!out.has(op)) out.set(op, word(key));
   }
-  for (const op of T51_LIST_ONLY_OPS) out.set(op, word(`act.${op}.does`));
+  for (const op of [...T51_LIST_ONLY_OPS, ...T51_STANDARD_OPS]) out.set(op, word(`act.${op}.does`));
   for (const op of T51_STANDIN_OPS) out.set(op, T51_STANDIN_HELP[op]);
   out.set("handlechange", HANDLE_REFUSAL);
   return out;

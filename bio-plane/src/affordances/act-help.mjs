@@ -35,6 +35,10 @@
  *     held in `T51_DESIGN_OPS` (`readheld` was a stand-in until its design row landed);
  *   - T51 (K4900; `capture` R113): `captureuploadbegin`, `captureuploadpart`, `captureuploadcomplete` and `captureuploadabort`, the steps the
  *     page takes to send a large file in parts, are held in `T51_DESIGN_OPS` (stand-ins until DEC-431 gave their rows, K4968);
+ *   - T51 (R71; DEC-438 to DEC-441, K5303): the five acts Standard draws, `standardinforcethrough`, `standardinforcethroughwithdraw`,
+ *     `standardadoption`, `standardimpose` and `standardbenchmark`, are held in `T51_STANDARD_OPS`, each `act.<op>.does`. `leggrade` is
+ *     held in `T51_STANDIN_HELP` under its own key until the design's row lands; `signerknown` (`credentials` R83) is held when a CHANGE
+ *     says it is declared;
  *   - T51 (R69): the seven browser acts, `BROWSER_ACTS`, are held under their own names from `act.owed_<name>.does`;
  *   - `projectownervotes` has no text in the design and is held none (`op-declarations` names it in `ACT_HELP_ABSENT`, R61);
  *   - `selftest` (FR-40, K4190): the word list holds `act.selftest.does` for the updates screen (DEC-376), but this module's reads
@@ -133,6 +137,11 @@ export const T51_DESIGN_OPS = Object.freeze([
   "captureuploadpart",
 ]);
 
+/** T51 (R71; DEC-438, K5303): the declared ops Standard's four acts and Matter's benchmark send, whose `act.<op>.does` words the word list holds
+ *  (the design's ACT_HELP, `mock-acts.js`); not yet in the design's reads list, which is a generation behind. Exported so the tests can name them. */
+export const T51_STANDARD_OPS = Object.freeze(["standardinforcethrough", "standardinforcethroughwithdraw", "standardadoption", "standardimpose",
+  "standardbenchmark"]);
+
 /** T51 (B14, K4376; `op-declarations` J22): the declared ops whose `act.owed_<op>.does` words the design's reads list gives, held under
  *  their ops (R61; KEY_EXCEPTIONS below). Exported so the tests can name them. */
 export const T51_OWED_OPS = Object.freeze(["expertisewithdraw", "declareorigin", "capturecredentiallist", "capturecredentialsupply", "capturecredentialwithdraw",
@@ -146,10 +155,11 @@ export const T51_LIST_ONLY_OPS = Object.freeze([]);
 
 /** T51 (K4900, fix round 9; `capture` R113; K4968, DEC-431; K5164): the declared ops held under a `localize` default while the word list
  *  held no sentence for them. `captureupload*` had their design rows land (DEC-431), so they are held in `T51_DESIGN_OPS` and read by key.
- *  K5164: `authority` (provenance's read, R80) and `ruleservicesstate` (answers' read) are held here, each under its own `act.<op>.does` key
+ *  K5164: `authority` (provenance's read, R80) and `ruleservicesstate` (answers' read) are held here; T51 (R71, K5303): `leggrade` (citation R24) likewise, each under its own `act.<op>.does` key
  *  with a plain English default until the design stream's row lands, so `op-declarations` R34 finds an explanation for each. */
 export const T51_STANDIN_HELP = Object.freeze({
   authority: localize("act.authority.does", "Lists, for each captured file of this document, who issued it as the record now stands, with the dated basis, and whether a member reviewed it and could not tell. Changes nothing."),
+  leggrade: localize("act.leggrade.does", "Records how well your team's copy of a cited document shows the passage cited for this question, as a grade from A to D with your reason. The grade can be no higher than the record's own ceiling for that copy, and nothing else changes."),
   ruleservicesstate: localize("act.ruleservicesstate.does", "Says whether the rule services are switched on, so a screen draws their control only while they are. Changes nothing."),
 });
 export const T51_STANDIN_OPS = Object.freeze(Object.keys(T51_STANDIN_HELP));
@@ -212,6 +222,7 @@ export const ACT_HELP_OPS = Object.freeze([
   "holdnoticeprepare", "counselpacket", "noticeprepare", "noticepost", "signeradd", "versionnotice", "actionholdrelease",
   ...T51_DESIGN_OPS,
   ...T51_OWED_OPS,
+  ...T51_STANDARD_OPS,
   ...T51_LIST_ONLY_OPS,
   ...T51_STANDIN_OPS,
 ]);
