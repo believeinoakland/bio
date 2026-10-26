@@ -552,3 +552,34 @@ I have not measured the chain on this tranche, so the count (12, bar 12) still s
 **What I need from you**: store-assembly to agree `readtranslate`'s description with its hand row (or you rule who moves). After that I re-run the chain test and post COMPLETE with R18, R21, R53, R60, R61 met, if it is at or under 12.
 
 Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 11, module lines 4102
+
+## J31 · COMPLETE
+
+COMPLETE. Met ids: **R18, R21, R53, R60, R61**.
+
+**Merged** the tranche (`origin/tranche/T51`, never rebased); branch pushed.
+
+**What changed in this job (file:line)**
+- `bio-plane/src/ratification/index.mjs:1096` `#memberBasisAtPins`: each member's `{basis, references}` at its pinned bytes (R61; case-catalogue R6).
+- `bio-plane/src/ratification/index.mjs` `ratifygate` arm (store half): a body `{members: [...]}` gates a whole sitting in one call (R52, R60).
+- `bio-plane/src/ratification/ops.mjs` `readSitting` (new) and `readFinding` `batched` option: the sitting's gate is asked once, answered per member in the sitting's order (R60).
+- `bio-plane/src/ratification/index.mjs:1758` `DECLARED_OPS.publishat`: classes, `machineClasses: []`, mutating, weight `irreversible`, description = op-grades' hand sentence exactly (R53, R54 agreement).
+- Tests: `release.test.mjs`, `retire.test.mjs`: `SELECTION_NOT_YOURS` (R21, R29, R32). `sitting.test.mjs`: counts member gates carried in the one call; each member's gate still asked once (R60). `declared-ops.test.mjs`: `publishat` case, with a registered hold reader (R45). New `r61-member-basis.test.mjs`: 4 tests (R61).
+
+**Failing-first.** R61: red before the change (gate handed a bare array), green after. R60's chain: red at 13 before this round's batch, 12 after; the test now passes on the tranche.
+
+**Suite and tests**
+- Ratification: 340 of 340 pass.
+- `control-plane/r10-caseratify-chain.test.mjs`: 2 of 2 pass.
+- `declared-ops.test.mjs`: 4 of 4 pass.
+
+**Checks** (absolute root `/home/user/bio`)
+- format: 0 failures (178 modules, 178 requirements files).
+- architecture: 0 failures (47 product files, 249 relative imports).
+- coverage: 60 of 60 live ids named by a test, 0 failures.
+- ownership vs `origin/tranche/T51`: 8 files changed by ratification, 0 failures.
+- No `fixtures-own`, `fixtures-generic` or `fixtures-contract` marker added.
+
+**Notes.** Behaviour I did not change: public-read's assembly stays at its own count (BOB's bar), and the `reusedparts` ordering stays as BOB ruled.
+
+Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 12, module lines 4102
