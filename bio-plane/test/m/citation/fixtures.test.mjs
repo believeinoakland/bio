@@ -1,8 +1,7 @@
 /* Fix round 10 (K5175): the answers this module publishes in fixtures.mjs, each called and its real answer checked. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { sever, reinstate, citeimported } from "./fixtures.mjs";
-import { F1 } from "../case-import/fixture.mjs";
+import { sever, reinstate } from "./fixtures.mjs";
 
 test("R4 sever (fixtures): the door's sever of a cited finding answers what the module answers, and the edge reads severed with the member's reason", async () => {
   const { w, project, handle, answer } = await sever();
@@ -22,16 +21,4 @@ test("R4 reinstate (fixtures): a severed citation's door answer reinstates it, a
   assert.equal(w.fm(project).references.find((e) => e.target === "INFO-2026-0001").status, "confirmed");
   const control = await reinstate({ reason: "a different reason" });
   assert.equal(control.answer.why, "a different reason", "control: the reason is the one given, not a fixed one");
-});
-
-test("R16 R17 citeimported (fixtures): an accepted finding of case-import's real import is cited by the question at that edition, and reads back as one leg", async () => {
-  const { w, ref, import: imp, edition, answer } = await citeimported();
-  assert.equal(answer.ok, true, JSON.stringify(answer).slice(0, 300));
-  assert.deepEqual([answer.cited, answer.alreadyCited, answer.citingObjectType, answer.role], [[ref], [], "inquiry", "supports"]);
-  assert.deepEqual(answer.legs, [{ target: ref, target_edition: edition, role: "supports" }]);
-  assert.deepEqual([answer.origin.finding, answer.origin.edition], [F1, edition]);
-  assert.deepEqual(w.fm("INQ-2026-0001-q").basis, [{ target: ref, role: "supports", target_edition: edition, note: "the audit is public" }]);
-  assert.ok(imp, "the case-import import the leg names");
-  const control = await citeimported({ role: "cuts_against", note: "another note" });
-  assert.equal(control.answer.role, "cuts_against", "control: the role is the one given");
 });

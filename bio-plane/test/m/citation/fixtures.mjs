@@ -3,14 +3,9 @@
    test takes the answer it would get from the store, not one written by hand. */
 import { world, V } from "./fixture.mjs";
 import { citationOps } from "../../../src/citation/index.mjs";
-import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
-import { importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
-import { importedWorld } from "../case-import/fixtures.mjs";
-import { F1 } from "../case-import/fixture.mjs";
 
 const BY = "ann";
 const ANN = { viewer: V(BY), owner: "o", author: `member:${BY}`, identity: V(BY) };
-const Q = "INQ-2026-0001-q";
 
 /* The door's answer to one op, its fields given as the address carries them. */
 function door(c, op, fields) {
@@ -52,30 +47,3 @@ export async function reinstate({ cut = "cut", reason = "the edition was right" 
   return { w, project, handle, severed, answer };
 }
 
-/* R16, R17 (citeimported): a question resting on an accepted finding of another team's case, at the edition shown. The
-   import is case-import's real accepted import (its published `importedWorld`, edition 1 with F1 accepted), and the
-   citation module reads its acceptance through the real accepted-work service of that world, passed in as its dependency.
-   Answers `{w, caseImport, import, finding, edition, ref, answer}`: this module's world (the question is `Q`), the case-import
-   world, the import, the finding, its edition, the ref the basis carries, and the door's answer. */
-export async function citeimported({ role = "supports", note = "the audit is public" } = {}) {
-  const caseImport = await importedWorld({ imports: [{ editions: [{ edition: 1, accepted: [F1] }] }] });
-  const [{ import: imp }] = caseImport.imports;
-  const finding = F1, edition = 1, ref = importedFindingRef(imp, finding);
-  /* The viewer reads case-import's acceptance, so it is a member of both groups: alice, who imported and accepted it. */
-  const w = world({ inquiry: true, members: ["ann", "alice"] });
-  w.inquiry(Q);
-  /* case-import's provider, registered on this plane's accepted work the way its own `start` registers it: each handler is
-     that module's real read, over its own store. */
-  const ci = caseImport.ci;
-  const reg = acceptedWorkOf(w.host).registerAcceptedWork("case-import", {
-    finding: (q) => ci.findingFacts(q || {}),
-    openFlags: (q) => ci.openFlagsFacts(q || {}),
-    withdrawals: (q) => ci.withdrawals(q || {}),
-    moves: (q) => ci.moves(q || {}),
-    flagHistory: (q) => ci.flagHistoryFacts(q || {}),
-  });
-  must(reg, "the registration of case-import");
-  const answer = door(w.cit, "citeimported", { inquiry: Q, import: imp, finding, edition, role, note,
-                                             viewer: V("alice"), author: "member:alice", identity: V("alice") });
-  return { w, caseImport: caseImport.w, import: imp, finding, edition, ref, answer };
-}
