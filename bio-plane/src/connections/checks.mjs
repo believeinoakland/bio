@@ -305,8 +305,9 @@ export function themeLegFindings(label, leg, findings) {
   for (const field of ['target', 'content_id']) {
     const v = typeof l[field] === 'string' ? l[field].trim() : '';
     if (v && THEME_REF_RE.test(v)) {
+      /* R73: the label is the caller's plain words; the message names no field, no stored value and no document file. */
       findings.push(refusal("THEME_NOT_EVIDENCE",
-        localize('connections.checks.names_a_theme', "{label}.{field} '{value}' names a THEME{membership}, and a theme is never the basis of a claim (BIO_Content_Framework_v0_10.md §8.4, fence 4): it is a member's declared lens, not evidence, so no leg can rest on it or on membership in it", { label: String(label), field: String(field), value: String(v.slice(0, 80)), membership: THEME_ID_RE.test(v) ? '' : ' membership' }), REPAIRS));
+        localize('connections.checks.leg_names_theme', "{label} names {subject}, and a theme is never the basis of a claim: it is one member's declared lens for gathering material, not evidence, so no leg can rest on it or on membership in it", { label: String(label), subject: THEME_ID_RE.test(v) ? 'a THEME' : 'membership in a THEME' }), REPAIRS));
       return true;
     }
   }
@@ -315,7 +316,7 @@ export function themeLegFindings(label, leg, findings) {
     const named = typeof v === 'string' ? v.trim() !== '' : Array.isArray(v) ? v.length > 0 : v != null && v !== false;
     if (named) {
       findings.push(refusal("THEME_NOT_EVIDENCE",
-        localize('connections.checks.claims_leg_through_theme', "{label}.{key} claims the leg through a THEME, and membership in a theme is never a reason a leg counts (BIO_Content_Framework_v0_10.md §8.4, fence 4): the leg rests on its target or on nothing", { label: String(label), key: String(key) }),
+        localize('connections.checks.leg_claims_through_theme', "{label} claims its support through a THEME, and membership in a theme is never a reason a leg counts: it rests on the document or passage it cites, or on nothing", { label: String(label) }),
         REPAIRS));
       return true;
     }

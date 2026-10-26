@@ -979,6 +979,9 @@ export class Money {
     if (!set) return refusal("NO_SUCH_SET", localize("money.index.no_money_set_string_is_2", "no money set {String} is held", { String: String(String(setId ?? "").slice(0, 60)) }));
     const fact = this.#factRow(factId, by ?? "");
     if (!fact) return noSuchFact(factId);
+    /* R33 (T51; K5300): the latest member act on the figure stands; a proposal of a figure already included or excluded is not held. */
+    const latest = this.#one(`SELECT act FROM money_set_acts WHERE set_id=? AND fact_id=? ORDER BY act_id DESC LIMIT 1`, setId, fact.fact_id);
+    if (latest) return { ok: true, set_id: setId, fact_id: fact.fact_id, already: latest.act === "include" ? "included" : "excluded" };
     const at = this.#now();
     this.#sql.exec(`INSERT INTO money_set_proposals (set_id, fact_id, method, by, at) VALUES (?,?,?,?,?)`, setId, fact.fact_id, clip(method), by ?? null, at);
     return { ok: true, set_id: setId, fact_id: fact.fact_id, proposal_id: this.#one(`SELECT max(proposal_id) AS id FROM money_set_proposals`).id,
