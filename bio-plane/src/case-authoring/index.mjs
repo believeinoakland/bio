@@ -79,7 +79,7 @@ import { membershipOf, viewerPredicate, noSuchProject } from "../membership/inde
 import { observationLogOf } from "../observation-log/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
-import { basisVersionsOf } from "../basis-versions/index.mjs";
+import { basisVersionsOf, BASIS_VERSIONS_LIMIT_MAX } from "../basis-versions/index.mjs";
 import { strengthOf, STRENGTH_AXES } from "../strength/index.mjs";
 import { biasOf } from "../bias/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
@@ -97,7 +97,7 @@ import { caseCarriageOf } from "../case-carriage/index.mjs";
 import { ratificationOf, SUBJECT_POSITIONS, completenessFields } from "../ratification/index.mjs";
 import { networkNoticesOf } from "../network-notices/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, OBJECT_TYPES, BASIS_GRADES,
-         isPublicHttpsLocator, idPattern } from "../record-grammar/index.mjs";
+         isPublicHttpsLocator, idPattern, sha256HexSync } from "../record-grammar/index.mjs";
 /* R63, R69 (N839, K2608): the account's machinery is `case-account`'s, asked in R69's order. */
 import { caseAccountOf } from "../case-account/index.mjs";
 /* B10 (K4240): `capture`, the one instance on the host, which records the members who captured each capture (its R69). */
@@ -1147,6 +1147,8 @@ export class CaseAuthoring {
       frozen, manifest, acks, citations,
       /* R60: each member's subject as its pinned bytes state it. */
       subjects: new Map(prepared.map((p) => [p.id, subjectStated(p.fm)])),
+      /* R87: each member's project's basis version, written on its `case_roles:` row (null where the project named none). */
+      basisVersions: new Map(prepared.map((p) => [p.id, p.basisVersion])),
       attributions,
       /* R55: each tension entry, the owner's words marked as the owner's, acknowledged by the `author` stamp at this act. */
       tensions: read.entries.map((e) => ({ ...e, words: listed.byCandidate.get(e.candidate).words,
@@ -1447,9 +1449,23 @@ export class CaseAuthoring {
         const rel = this.caseTensions.caseRelation(id);
         const recorded = rel && rel.member ? this.ratification.editionsRecordingConclusion(id, rel, conc) : null;
         prepared.push({ id, b, fm, bundleSha: head ? head.bundleSha : null, conclusion: conc, warrant: recorded,
-                        preparedIn: rel && rel.prepared ? rel.prepared.case_id ?? null : null });
+                        preparedIn: rel && rel.prepared ? rel.prepared.case_id ?? null : null,
+                        basisVersion: this.#basisVersionOf(proj, id, viewer) });
       }
     return { ok: true, prepared };
+  }
+
+  /** R87 (case-grammar R34): the basis version the project `proj` stands on for finding `id` at this prepare, as
+   *  `{name, identity}`: the name basis-versions' `currentOf` answers, and the identity the SHA-256 of that version's
+   *  composition (basis-version-grammar R5). Null when the project names no version for the finding, or the version is
+   *  not in the listing (never filled). */
+  #basisVersionOf(proj, id, viewer) {
+    const current = this.basisVersions.currentOf(proj, id, viewer);
+    if (!current) return null;
+    const listed = this.basisVersions.basisVersions({ id, viewer, limit: BASIS_VERSIONS_LIMIT_MAX });
+    const version = listed.ok ? listed.versions.find((v) => v.name === current.version) : null;
+    if (!version || typeof version.composition !== "string") return null;
+    return { name: current.version, identity: sha256HexSync(version.composition) };
   }
 
   /** R72 (T45; N892; Actions D4; v0.2 rule 15; `project-roster` R23; `publication` R78): the publishing project and the
