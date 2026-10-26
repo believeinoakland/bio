@@ -293,3 +293,18 @@ Size (session_01JdJGDMdqKM21B8AxsWMQLp): test runs 9, module lines 1197
 
 COMPLETE (B22). tranche/T51 merged (interface-shell R134 on it); no local patch; the shell is the real one. screens-entry tests with journey-check's pseudo.test.mjs: 109 run, 108 pass. The one red is journey-check's 'R29 (b), (c): setup drawn with the real catalogue' (its modelled plane has no factstatus; JOURNEY-CHECK #16 not yet on the tranche; passes once it is). The screens-entry suite itself: 101/101. format 0, architecture 0, coverage 31/31, words 0, ownership 0, no finding in my files from checks/run.mjs. R34 met; BOB strikes its mark. Markers added: none.
 Size (session_01JdJGDMdqKM21B8AxsWMQLp): test runs 11, module lines 1197
+
+## Completion (fix round 10, S-1: B24)
+
+**What changed.** `bio-plane/src/screens-entry/setup.mjs`: the module-level `ZONE_PATH` and `ZONES` are gone (a comment at the top says why); `reads` (`:39`) and the `factconfirm` act body (`:495`) carry the path `"@team/time_zone"` as a literal, and `render` (`:57-61`) declares `ZONES` at its head, where `zoneName` and `zoneStep` use it. Nothing else in the module changed. No other screen file declares a module-scope value (`front`, `tour`, `forgot`, `reset`, `join` hold only their exported object).
+
+**Tests, each red then green** (`bio-plane/test/m/screens-entry/`; kit: `served(spec)` rebuilds a screen with every function from its served text, `toSource` evaluated outside the module, and `open(id, {page: true})` / `scenes(full, true)` draw from it):
+- `setup.test.mjs` "R34 setup: the founder's reads, the zone step and its act, as the served page holds them": the walker's case, a signed founder with a handle; `reads` asks `factstatus` and the rest, `render` draws the zone step, the `factconfirm` act sends the path and writes the zone. Red: `ReferenceError: ZONE_PATH is not defined`. Control "R34 control: from the served source a zone that is not one of the named seven …".
+- `served.test.mjs`, every screen of `SCREENS` (front, tour, forgot, reset, setup, join), "interface-shell R21 <id>: no function the screen serves names a value of the module's own scope": a probe makes each served function (reads, render, closed, every act's send, done and refusals) inside a scope where only the platform's globals exist, runs it with ghost arguments and again with a signed founder's view, and lists any other name it looks up; its own control proves it finds one. Red on `setup`: `reads` and `act[6].send` name `ZONE_PATH`, `render` names `ZONES`. Green after the fix.
+- `served.test.mjs` "interface-shell R21 R34: every screen drawn in each of its states from the served source equals what the module's own functions draw": all of `scenes()`' pages and acted states, both teams. Red before the fix (`ZONE_PATH` ReferenceError), green after.
+
+**Suite and checks.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/screens-entry/`: tests 111, pass 111, fail 0 (was 103 plus 8). Process repository, absolute root: `format` 178 modules, 0 failures; `architecture screens-entry` 0 failures; `coverage screens-entry` 31 of 31 live requirement ids named, 0 failures; `ownership` 0 failures; `run.mjs`: format, architecture and words 0 failures, no line names screens-entry (its rc 1 is other modules').
+
+**Deferred.** Nothing. **Found in other modules.** The sweep was run over this module's screens only; the diagnosis's hardening (interface-shell `readAll`'s `catch { specs = {} }` hides a failed `reads`) is the shell's, not done here. Other screen modules were not swept; the probe in `served.test.mjs` is written against any `SCREENS` list and could be copied.
+
+Size (session_01HPbxRrBFoxDBNSYkhtnFYP): test runs 12, module lines 1197
