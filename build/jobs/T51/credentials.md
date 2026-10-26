@@ -573,3 +573,7 @@ Deferred: nothing.
 `control-plane`'s suite (135 files) did not finish in 30 minutes and was stopped; it calls no new service of mine (only the ops map and `signerList`'s extra two fields), so I report it unrun.
 
 Size (session_01FkqUZX9YzCShmHaoauY6tK): test runs 6, module lines 2799
+
+## J33 · COMPLETE
+
+R83 signerKnown (op=signerknown) done and green; see J32 in the record. credentials suite 207/207; run.mjs, ownership, coverage, fixtures 0 failures. Two reds in op-declarations from the new declared op (t35.test.mjs:210-211 hand list; t36.test.mjs:318 needs affordances R71's act text), REPORTed in J32; control-plane suite unrun (too long).
