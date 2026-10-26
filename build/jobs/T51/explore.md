@@ -1,6 +1,6 @@
 # explore (T51)
 
-**Status** · session_017reTzAgYSiDVCzRpif7dhJ · depth 2 · WORKING · handled B6
+**Status** · session_017reTzAgYSiDVCzRpif7dhJ · depth 2 · WORKING · handled B7
 
 ## Completion (EXPLORE #7)
 
