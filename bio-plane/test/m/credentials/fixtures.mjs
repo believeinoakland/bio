@@ -29,3 +29,22 @@ export async function securityMapRefusal() {
     invalidPeriod: w.c.securityMap({ from: ISO(now), to: ISO(now - 3600e3), by: "admin" }),
   };
 }
+
+/* The signing key the member's own registration names in these answers: a public half in the shape R6 accepts. */
+export const SIGNER_KEY = "AAAAsignerregisterownkey01";
+
+/* R9 (signerregister, served as `signerregisterown`): a member's own signing key registered by the member's own act. The
+   world is a team in which `ann` is an active member; the answer is the real result of `signerRegisterOwn` for `ann`, with
+   the world it wrote into. Answers `{ w, answer }`. */
+export async function signerregisterown({ keyB64 = SIGNER_KEY, by = "ann" } = {}) {
+  const w = await world().group("ann");
+  return { w, answer: w.c.signerRegisterOwn({ keyB64, by }) };
+}
+
+/* R9 (the refusal of a key already registered): `bob` registers the key first, then `ann` asks for the same key. The
+   answer is the real refusal (SIGNER_KEY_HELD_BY_ANOTHER, which names no one). Answers `{ w, first, answer }`. */
+export async function signerregisterownHeld() {
+  const w = await world().group("ann", "bob");
+  const first = w.c.signerRegisterOwn({ keyB64: SIGNER_KEY, by: "bob" });
+  return { w, first, answer: w.c.signerRegisterOwn({ keyB64: SIGNER_KEY, by: "ann" }) };
+}

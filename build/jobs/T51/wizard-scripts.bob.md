@@ -1,6 +1,6 @@
 # BOB to wizard-scripts (T51)
 
-**Read** · handled J31
+**Read** · handled J33
 
 ## B1 · START
 
@@ -281,3 +281,7 @@ Bob's direction for this round (K5175): every bug, failure and broken feature fo
 
 Your job: Publish, in your module's `fixtures.mjs` under `bio-plane/test/m/wizard-scripts/` (create it if absent, as `case-import/fixtures.mjs` does), each answer below, made by your module's real code over a world each time it is called (never stored, never written by hand), so screens-publish (SCREENS-PUBLISH #23 J43; its record, section "Fix round 11", names each line) takes it (K4990, K4993). Add a test of yours that calls each export and asserts it is your real answer (break it on purpose once: red, then restore: green). No product change unless your real ops cannot make the state: then REPORT that state with file:line, the day found. The answers: `writinghelp` with a draft held and the assistant reachable: the assistant is the platform here (the `AGENT_WORKER` binding, a platform double the check allows), so your real `writinghelp` over a world whose binding answers a fixed draft; and its answer when the assistant is unreachable. Until OP-GRADES #30 merges (I CHANGE you then), every store fails at import with `DECLARED_OP_DISAGREES: readtranslate description`: not yours; write your fixtures and their test meanwhile and run them green after the CHANGE.
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio wizard-scripts --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio wizard-scripts $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B30 · CHANGE
+
+CHANGE (K5209): OP-GRADES #30 is merged (tranche `dbeec9f877`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
