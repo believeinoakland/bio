@@ -105,3 +105,19 @@ Fix round 10, Wave A batch 5 (B8): the 12 own lines re-pointed and the 4 contrac
 **Checks.** fixtures `--list agent-worker`: 0 failures (answer 0, stub 0, code 0, contract 0; accepted 3: the two ask-wire markers and the t47 generic). words: 0 failures. format: 0. coverage: 68 of 68, 0 failures. ownership: 0. impact.mjs origin/tranche/T51 HEAD: 0 affected modules. Tests: `node --test agent-worker/test/*.test.mjs`: 23 files, 22 pass; the one red is requirements.test R45 (committed bundle stale against src; BOB regenerates at L6 close; the same red as before this job). **architecture: 2 failures, both mine and both one cause: ask.test.mjs imports `ai-use`'s fixtures and requirements.test.mjs imports `provenance`'s, neither in agent-worker's `uses`.** BOB, edit `modules.json`: add `ai-use` and `provenance` to agent-worker's uses (retrieval, ai-runs, run-productions, agent-runner already are).
 
 Size (session_01Q1D6kBgnDn6yvv4dNUHmVW): test runs 5, module lines 2598
+
+### Fix round 10 · mutation controls on a copy (B9 START; plan item 125; K5245)
+
+**What changed.** New `agent-worker/test/mutation-tree.mjs` (39 lines): copies every member directory but `build`, `docs`, `release`, `newgroup`, `site` (without `.git`, linking each `node_modules` to the real one) into `mkdtemp(os.tmpdir()/bio-mutation-)`, exports `TREE_TEST_DIR`, deletes the copy on exit and on SIGINT/SIGTERM/SIGHUP. Each of the nine `*.control.mjs` takes `HERE`/`DIR` from it instead of its own location (`agent-worker.control.mjs`:42, `cascade`:25, `harness`:203, `t41`:17, `t42`:19, `t46`:18, `t47`:19, `versions`:27, `wire-vocabulary`:85), so every mutation, suite run, pen and restore happens in the copy; the tracked tree is never written. The sha256/cmp restore proofs are kept (they now guard the copy). Also found and fixed: `harness.control.mjs` arm D2 had not armed since the words pass keyed `agent-steps/src/work.mjs`'s note (the anchor ended in the old English sentence); re-anchored on the key (`harness.control.mjs`:~725).
+
+**Kill proof.** `t41.control.mjs` started, SIGKILLed after 5 s: `git status` clean outside my own files (no product file touched); only `/tmp/bio-mutation-*` is left behind.
+
+**Controls, each against the mutated copy** (a control sees its mutation red, the restored copy green): t41 9/9, t42 17/17, t46 13/13, t47 12/12, cascade 4 as declared / 0 not, versions (baseline 20/0; arms as declared), wire-vocabulary exit 0 (all verdicts AS DECLARED), agent-worker 15/15 as declared, harness 12 as declared + D2 (re-run alone after the fix) AS DECLARED, 0 findings.
+Before the change two of them had been unable to run against a copy (missing `sheet-worker`, `dist/SECRETS.txt`, `@modelcontextprotocol/sdk`): the copy now takes all members; `npm ci --ignore-scripts` in `agent-runner/` was needed in this container (K4113; untracked).
+
+**Module tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test agent-worker/test/*.test.mjs`: 22 of 23 files pass; `requirements.test.mjs` 302 pass, 2 fail (R45, both the stale bundle: `agent-worker/dist/agent-worker.bundled.mjs` was built before `bio-plane/src/acquisition/index.mjs` changed; mechanics §14: BOB regenerates, I do not write it). Not caused by this job (it changes tests only).
+**Checks.** `impact.mjs origin/tranche/T51 HEAD`: 0 affected modules; `checks/run.mjs`: no finding in my files, words 0 failures (unchanged: 19247 words); `fixtures.mjs agent-worker --list`: 0 failures (3 `accepted` entries are not mine, `requirements.test.mjs`:837, :852, `t47.test.mjs`:211); ownership 0; format 0.
+**Markers added:** none. **Met ids:** none changed (test harness only).
+**Deferred:** none.
+
+Size (session_01CyvgYqub3REugx5Xk8A3Yu): test runs 22, module lines 39
