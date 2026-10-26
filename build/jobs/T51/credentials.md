@@ -533,3 +533,15 @@ START B22 (DEC-436, K5224) handled. Commit 431cf5587f on `job/T51/credentials` (
 **Found outside my paths, not changed:** `checks/run.mjs` prints `FAIL answer interface-shell bio-plane/test/m/interface-shell/harness.mjs:97 [op-table signout] signout: ok({ ok: true }), -> credentials (earlier)`. It names the signout answer that J29 (B21) published in `credentials/fixtures.mjs`, and that answer is my module's. The check shows it under the interface-shell harness, so the check or its harness is the likely cause; I have not traced it. For BOB to place.
 
 Size (session_01BSwm7HQZoqvNtYqxRTJFff): test runs 3, module lines 2741
+
+## J31 · COMPLETE
+
+CHANGE B23 (K5226) handled. Merged `origin/tranche/T51` into `job/T51/credentials` (merge commit `7b729ad889`, a merge, no rebase), pushed. The merge brought STORE-ASSEMBLY #5; this module's own code is unchanged in this round.
+
+Re-run after the merge:
+- `bio-plane/test/m/credentials/*.test.mjs`: tests 199, pass 199, fail 0. The tranche's committed `rows.mjs` still reads `{time}`, so the suite fails at load (`WORD_VAR_MISSING: refusal.SIGN_IN_PAUSED needs {time}`) until rows are regenerated. I regenerated `rows.mjs` locally, ran the suite, and restored it with `git checkout -- bio-plane/src/setup-words/`; nothing regenerated is committed. Your merge regenerates it.
+- `bio-plane/test/m/screens-entry/*.test.mjs`: tests 98, pass 98, fail 0 (same local regeneration).
+- `checks/format.mjs`: 178 modules; 0 failures. `checks/architecture.mjs credentials`: 0 failures. `checks/coverage.mjs credentials`: 58 of 58 live ids named; 0 failures. `checks/words.mjs credentials`: 0 failures. `checks/fixtures.mjs credentials --list`: 0 failures. `checks/ownership.mjs credentials <merge-base> HEAD`: 0 failures.
+- `checks/run.mjs /home/user/bio`: words over the product 0 failures, consistent with B23's line.
+
+Size (session_01BSwm7HQZoqvNtYqxRTJFff): test runs 4, module lines 2741
