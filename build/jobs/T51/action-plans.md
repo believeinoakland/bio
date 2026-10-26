@@ -161,3 +161,7 @@ Fix round 10 (R54) complete on job/T51/action-plans. optionStart now records the
 Each `date_before_phase` check now carries `start`: the ISO local day its phase can start (`index.mjs`, the dated check), or `null` on the undetermined check (no zone held; the key is present). A field added, meaning unchanged. Published in `fixtures.mjs` as `dateBeforePhase()` (both reads). Test `t51.test.mjs` (R54, last test): red (`start` undefined), then green. Module 110 pass; plan-work + screens-action 349 pass (same on the prior commit); format, architecture, coverage 54/54, words, fixtures, ownership 0. A screen can read `start` with its own words; action-plans' English `says` is unchanged.
 
 Size (session_014Agc8497kfuRj2581PQ8Yu): test runs 13, module lines 3390
+
+## J8 · COMPLETE
+
+B10 applied: every date_before_phase check carries start (ISO local day, null when undetermined), published in fixtures.mjs dateBeforePhase(); t51 test red then green. Module 110 pass; plan-work and screens-action 349 pass; format, architecture, coverage, words, fixtures, ownership 0. R54 now fully met. Record updated.
