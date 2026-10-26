@@ -61,7 +61,20 @@ function render(cs, view) {
   const s = view.data.standard && view.data.standard.state === "ok" ? view.data.standard.value : null;
   /* R57: the text `place` names an unreadable project by (plain, the path escapes it itself) */
   view.ui.unjoined = P.plain(cs, "crumb.project.unjoined");
-  const out = [cs.title(s ? s.cite || id : cs.w("screen.standard.name"), { thing: { kind: "standard", facts: s ? [s.kind || "", s.issuer || ""] : [] } })];
+  /* R8 (K5148; WALK-FINAL-08 D9): the registered bodies "Who set it" chooses among */
+  const bodies = ["bodies", "institutions"].flatMap((n) => (view.data[n] && view.data[n].state === "ok" && view.data[n].value && Array.isArray(view.data[n].value.entities) ? view.data[n].value.entities : []))
+    .filter((e) => e && e.entity_id && e.label).map((e) => ({ value: e.entity_id, text: e.label }));
+  /* R61 (2): the issuer is drawn by its label, never by the entity id the store holds when a registered body was chosen: the label the standard's own answer gives (`owner`),
+     else the registered body of that id, else the name as typed; an id nothing names is `connection.node.unnamed` */
+  const issuerOf = (x) => {
+    const label = x && x.owner && typeof x.owner.label === "string" ? x.owner.label.trim() : "";
+    if (label && !/^ENT-/.test(label)) return label;
+    const held = x && typeof x.issuer === "string" ? x.issuer.trim() : "";
+    const body = bodies.find((b) => b.value === held || (x && x.owner && b.value === x.owner.entity));
+    if (body) return body.text;
+    return held && !/^ENT-/.test(held) ? held : P.plain(cs, "connection.node.unnamed");
+  };
+  const out = [cs.title(s ? s.cite || id : cs.w("screen.standard.name"), { thing: { kind: "standard", facts: s ? [s.kind || "", issuerOf(s)] : [] } })];
   if (/^STD-/.test(id)) out.push(cs.state("standard", view, (v) => {
     const texts = (Array.isArray(v.texts) ? v.texts : (v.text || []).map((c) => ({ content_id: c }))).slice(0, 5);
     const per = v.period || {};
@@ -75,16 +88,20 @@ function render(cs, view) {
       if (!c) return cq.state === "failed" ? cs.state(cq, () => "") : "";
       const rd = P.later(cs, view, "reading:" + c.capture_sha, "reading", { query: { sha256: c.capture_sha } });
       const units = rd.state === "ok" && rd.value && Array.isArray(rd.value.text_units) ? rd.value.text_units.filter((u) => u && String(u.text || "").trim()) : [];
-      const hit = c.extent && c.extent.kind !== "document" ? units.filter((u) => same(u.extent, c.extent)) : units.slice(0, 3);
-      const words = hit.map((u) => String(u.text).trim()).join(" ").slice(0, 800);
+      /* R61 (2): a passage that is the whole document is drawn whole, to a stated bound (PASSAGE_UNITS text units); past it a gap mark says how many were left, never a cut with no mark */
+      const hit = c.extent && c.extent.kind !== "document" ? units.filter((u) => same(u.extent, c.extent)) : units;
+      const PASSAGE_UNITS = 100;
+      const words = hit.slice(0, PASSAGE_UNITS).map((u) => String(u.text).trim()).join(" ");
+      const left = hit.length - PASSAGE_UNITS;
       const row = heldRows.find((r) => r && r.capture && r.capture.sha256 === c.capture_sha);
-      return (words ? `<blockquote class="mk-passage rec">${cs.esc(words)}</blockquote>` : "")
+      return (words ? `<blockquote class="mk-passage rec" data-words>${cs.esc(words)}</blockquote>` : "")
+        + (left > 0 ? `<p class="mk-small" data-passage-more>${cs.mark("gap", "undetermined", { reason: cs.w("screen.timeline.more.people", { n: String(left) }) })}</p>` : "")
         + `<p class="mk-small">${P.refOf(cs, c.capture_sha, (row && row.title) || P.plain(cs, "screen.person.source"), [t.standing || ""], "capture")}</p>`;
     };
     /* R8 (K5148; WALK-FINAL-08 D4): the words the plane composes for the standard (`standards` R45), each as the plane gave it, beside the passages */
     const says = v.says && typeof v.says === "object" ? ["owner", "held", "cited_by_words", "searched_words", "access", "copy", "public", "release_by_words", "note"]
       .filter((k) => typeof v.says[k] === "string" && v.says[k].trim()).map((k) => `<p class="mk-small" data-says="${k}">${cs.esc(v.says[k])}</p>`).join("") : "";
-    return `<p class="mk-sub">${cs.w(S + "sub", { kind: cs.w(S + "kind." + (KINDS.includes(v.kind) ? v.kind : "standard")), issuer: v.issuer || "" })}`
+    return `<p class="mk-sub">${cs.w(S + "sub", { kind: cs.w(S + "kind." + (KINDS.includes(v.kind) ? v.kind : "standard")), issuer: issuerOf(v) })}`
       + ` · ${per.from ? cs.w(per.to ? S + "inforce.span" : S + "inforce.since", { from: cs.date(per.from), to: per.to ? cs.date(per.to) : "" }) : cs.mark("gap", "undetermined", { reason: cs.w(S + "inforce.none") })}</p>`
       + says
       + (v.reason ? `<blockquote class="mk-passage rec">${cs.esc(v.reason)}</blockquote>` : "")
@@ -145,7 +162,7 @@ function render(cs, view) {
   if (/^PROJ-/.test(id)) out.push(`<div data-held-standards>` + cs.sec(S + "held", cs.state("held", view, (v) => {
     const items = (Array.isArray(v.items) ? v.items : []).filter((x) => x && /^STD-/.test(String(x.id)));
     return (items.length ? cs.sheet(items.map((x) => cs.row("", `<a class="cs-ref" data-standard-door data-nav href="/app/standard/${encodeURIComponent(x.id)}/${encodeURIComponent(id)}">${cs.esc(x.cite || x.id)}</a>`,
-      `<span class="mk-small">${cs.w(S + "sub", { kind: cs.w(S + "kind." + (KINDS.includes(x.kind) ? x.kind : "standard")), issuer: x.issuer || "" })}</span>`)).join(""))
+      `<span class="mk-small">${cs.w(S + "sub", { kind: cs.w(S + "kind." + (KINDS.includes(x.kind) ? x.kind : "standard")), issuer: issuerOf(x) })}</span>`)).join(""))
       : `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`)
       + (v.truncated ? `<p class="mk-small" data-held-more>${cs.w(S + "held.more")}</p>` : "");
   })) + `</div>`);
@@ -165,8 +182,6 @@ function render(cs, view) {
     })));
   /* "Hold this as a standard", from a passage the member chooses on the document by its words (R34; K5148 D6); the kind opens with nothing chosen (D10)
      and offers every kind the store accepts (D7); "Who set it" chooses a registered body or takes a typed name (D9) */
-  const bodies = ["bodies", "institutions"].flatMap((n) => (view.data[n] && view.data[n].state === "ok" && view.data[n].value && Array.isArray(view.data[n].value.entities) ? view.data[n].value.entities : []))
-    .filter((e) => e && e.entity_id && e.label).map((e) => ({ value: e.entity_id, text: e.label }));
   out.push(cs.sec(S + "declare", cs.field("st-cite", S + "cite", { help: S + "cite.help" })
     + cs.choice("st-kind", S + "kindpick", [blank].concat(KINDS.map((k) => [k, S + "kind." + k])), {})
     + (bodies.length ? cs.choice("st-issuer-body", S + "issuer", [blank].concat(bodies), {}) : "") + cs.field("st-issuer", S + "issuer", {})
@@ -221,6 +236,7 @@ const acts = rereading([
 ], ["standard", "relations", "laws", "project", "proposals", "held", "bodies", "institutions"]);
 
 const STANDARD_KEYS = [
+  "screen.timeline.more.people",
   "screen.standard.sub", "screen.standard.held", "screen.standard.held.more", "screen.standard.kind.statute", "screen.standard.kind.regulation", "screen.standard.kind.ordinance",
   "screen.standard.kind.court", "screen.standard.kind.policy", "screen.standard.kind.commitment", "screen.standard.kind.standard",
   "screen.standard.inforce.since", "screen.standard.inforce.span", "screen.standard.inforce.none", "screen.standard.words", "screen.standard.laws",

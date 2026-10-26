@@ -333,7 +333,11 @@ export const PARTS = Object.freeze({
     }).join("");
     const stepList = drawn.map((s) => {
       const c = classOf(s);
-      const ev = (Array.isArray(s.evidence) ? s.evidence : []).map((e) => (e.capture_sha ? cs.ref("capture", e.capture_sha, cs.w(o.words.cited), []) : e.source ? cs.esc(String(e.source)) : "")).filter(Boolean).join(" ");
+      /* R61 (4): evidence is a capture (`capture_sha`, or a source spelt `capture:<64 hex>`) drawn as a reference to the document, as Explore's chains draw it (`explore.mjs`), never its fingerprint */
+      const ev = (Array.isArray(s.evidence) ? s.evidence : []).map((e) => {
+        const spelt = /^capture:([0-9a-f]{64})$/.exec(String(e.source || ""));
+        return e.capture_sha || spelt ? cs.ref("capture", e.capture_sha || spelt[1], cs.w(o.words.cited), []) : e.source ? cs.esc(String(e.source)) : "";
+      }).filter(Boolean).join(" ");
       const letter = s.grade && /^[A-D]$/.test(s.grade.assertion || "") ? cs.grade("connection", s.grade.assertion) : "";
       /* R35, R17: a step a member backed with a passage shows who attached it and when beside its citation, */
       const by = s.kind === "step_source" && s.attached_by

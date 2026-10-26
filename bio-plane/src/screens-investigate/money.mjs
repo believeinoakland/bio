@@ -62,6 +62,9 @@ function render(cs, view) {
   out.push(cs.title(set ? set.label || id : id, { thing: { kind: "record", facts: set ? [cs.w(S + "startedby", { by: P.who(cs, set.by) })] : [] } }));
   out.push(`<div class="mk-acts">${cs.act("recordfact", { label: S + "read", tone: "primary" })}${cs.act("createset", { label: "act.createset.label.money" })}${cs.act("committedagainstpaid", { label: "act.committedagainstpaid.label.money" })}</div>`);
   if (ui.proposeRefusal) out.push(P.said(cs, ui.proposeRefusal));
+  /* R61 (1): a figure read with no period start is refused here, before anything is sent: the start field named, and, when the team holds no time zone, the setting */
+  if (ui.periodRefusal) out.push(`<p class="cs-gap" data-gap="refused" role="alert" data-refusal="NO_PERIOD"><b>${cs.w(S + "f.periodfrom")}</b>: ${cs.w("money.index.a_period_states_its_start")}`
+    + (ui.periodRefusal.zone ? ` ${cs.w("money.index.the_period_states_no_zone")} <a class="cs-ref" href="/app/group" data-nav data-screen="group">${cs.w("screen.group.name")} · ${cs.w("screen.group.timezone")}</a>` : "") + "</p>");
   /* the rows: every fact the trail holds, included or left out, and those read here not yet in it */
   const entries = t && t.state === "ok"
     ? (t.value.inclusions || []).map((x) => ({ key: x.fact_id, state: "included", reason: x.reason, trail: x.trail }))
@@ -204,7 +207,7 @@ const acts = rereading([
     refusals: { MONEY_BAD_PERIOD: function (refusal, cs) {
       return cs ? cs.w("refusal.BAD_VALIDITY") + (typeof refusal.detail === "string" && refusal.detail.trim() ? " " + cs.esc(refusal.detail.trim()) : "") : "";
     } },
-    send(view, el, cs) {
+    async send(view, el, cs) {
       const amount = String(cs.value("mf-amount") || "").trim(), as_read = String(cs.value("mf-asread") || "").trim();
       const src = view.parts.chosen(cs, "mf-doc", "mf-passage");
       if (el && el.dataset && el.dataset.fact && !amount) { cs.set("readFor", el.dataset.fact); return null; }
@@ -212,6 +215,17 @@ const acts = rereading([
       const phase = String(cs.value("mf-phase") || "adopted"), stage = String(cs.value("mf-stage") || "none");
       const fiscal = String(cs.value("mf-fiscal") || "").trim(), pf = String(cs.value("mf-from-date") || ""), pt = String(cs.value("mf-to-date") || "");
       const payer = String(cs.value("mf-payer") || "").trim(), payee = String(cs.value("mf-payee") || "").trim();
+      view.ui.periodRefusal = null;
+      /* R61 (1) (money R1: a money fact states its period): no fiscal key and no start is refused before sending; whether the team holds a time zone (`factstatus`, as Settings
+         reads it: an active place's own `time_zone` fact) says whether the setting is named too; a read that did not answer claims nothing */
+      if (!fiscal && !pf) {
+        const f = await cs.call("factstatus", {});
+        const r = f && f.result !== undefined ? f.result : f;
+        const facts = r && r.ok !== false && Array.isArray(r.facts) ? r.facts : null;
+        const held = facts ? facts.some((x) => x && x.fact && x.fact.fact === "time_zone" && !x.fact.office && x.governs && typeof x.governs.value === "string") : true;
+        cs.set("periodRefusal", { zone: !held });
+        return null;
+      }
       const party = (x) => (!x ? null : /^ENT-/.test(x) ? { entity: x } : { as_written: x });
       return { body: Object.assign({ amount, as_read, currency: String(cs.value("mf-currency") || "USD").trim(), sign: String(cs.value("mf-sign") || "+"),
         precision: "exact", kind: String(cs.value("mf-kind") || "other"), phase, basis: String(cs.value("mf-basis") || "undetermined").replace("modified_accrual", "modified accrual"),
@@ -226,6 +240,7 @@ const acts = rereading([
       const setId = String(view.subject || "").split("/")[0];
       view.ui.readFor = null;
       view.ui.proposeRefusal = null;
+      view.ui.periodRefusal = null;
       if (!(r && r.fact_id && /^MSR-/.test(setId))) return null;
       return cs.call("moneysetpropose", { body: { setId, factId: r.fact_id, method: "member:recordfact" } }).then((a) => {
         const x = a && a.result !== undefined ? a.result : a;
@@ -377,7 +392,7 @@ const MONEY_KEYS = [
   "screen.money.g.hunch", "screen.money.g.nosource",
 ];
 
-const words = ["screen.money.name", "screen.money.purpose", "refusal.BAD_VALIDITY", "contradiction.text.row_table",
+const words = ["screen.money.name", "screen.money.purpose", "refusal.BAD_VALIDITY", "contradiction.text.row_table", "money.index.a_period_states_its_start", "money.index.the_period_states_no_zone", "screen.group.name", "screen.group.timezone",
   ...["recordfact", "createset", "include", "exclude", "reconcile", "committedagainstpaid", "authoritychain", "findin", "actioncreate", "createevent", "gradenote", "acquire", "checkrequest", "hypothesishold"]
     .flatMap((op) => ["act." + op + ".label.money", "act." + op + ".does"]),
   ...["figure", "from", "to-where-it-went", "when-it-moved", "stage", "period", "amount", "source", "in-this-trail"].flatMap((c) => ["column.money." + c + ".name", "column.money." + c + ".shows"]),
