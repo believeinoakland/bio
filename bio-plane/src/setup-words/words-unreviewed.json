@@ -46583,42 +46583,42 @@
       "en": "review copy: its subject is a DRAFT CASE keyed draft_id, beside publish and never a bundle in a state — the answer names op=reviewcopy",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 1398
+      "line": 1409
     },
     {
       "id": "review.declared.casedrafts",
       "en": "read: the drafts of one project (BIO_Publication §6A.4), fenced exactly like reading one draft (BOB #32); each row names op=reviewcopy for its draft, and nothing is written",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 1415
+      "line": 1426
     },
     {
       "id": "review.declared.reviewcomment",
       "en": "review-directed: keyed by a review copy; a reader's comment for the case's owner",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 1425
+      "line": 1436
     },
     {
       "id": "review.declared.reviewcopy",
       "en": "read: a review copy of one draft, or one per draft named in drafts, through a live grant or as a member with standing; any other reader gets the one dead answer; writes nothing",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 1420
+      "line": 1431
     },
     {
       "id": "review.declared.reviewgrant",
       "en": "review copy: its subject is a DRAFT CASE keyed draft_id and its product is a grant keyed grant_id, not a move of any bundle",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 1403
+      "line": 1414
     },
     {
       "id": "review.declared.reviewrevoke",
       "en": "review copy: its subject is a GRANT keyed grant_id, not a bundle in a state",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 1408
+      "line": 1419
     },
     {
       "id": "review.index.a_batch_names_at_most",
@@ -46632,21 +46632,21 @@
       "en": "a comment says something: at least one character and at most {REVIEW_TEXT_MAX}.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 974
+      "line": 985
     },
     {
       "id": "review.index.a_readers_end_date_is",
       "en": "a reader's end date is an instant in the record's form, after this act's own: YYYY-MM-DDTHH:MM:SSZ or YYYY-MM-DDTHH:MM:SS.sssZ. Nothing was written.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 713
+      "line": 724
     },
     {
       "id": "review.index.a_review_copy_is_an",
       "en": "a review copy is an addressed act: somebody in this team hands a draft to a named person and the record says who. A machine credential may prepare the material and may not put the team's draft in front of anyone. Sign in as a member.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 591
+      "line": 602
     },
     {
       "id": "review.index.act_tiestated_this_is_the",
@@ -46660,21 +46660,21 @@
       "en": "an approval is given by a member the team's approval rule names, of a case whose project they can see; a case you cannot see is answered exactly as one that does not exist. Nothing was recorded.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 1174
+      "line": 1185
     },
     {
       "id": "review.index.an_approval_rule_names_one",
       "en": "an approval rule names one or more active members of the team by member id, at most {APPROVERS_MAX}; approvers: null turns the rule off. Nothing was changed.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 1151
+      "line": 1162
     },
     {
       "id": "review.index.an_approvals_reason_is_at",
       "en": "an approval's reason is at most {APPROVAL_REASON_MAX} characters. Nothing was recorded.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 1192
+      "line": 1203
     },
     {
       "id": "review.index.authoring_a_draft_is_editing",
@@ -46695,7 +46695,7 @@
       "en": "Case {case_id}, edition {edition}",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 450
+      "line": 461
     },
     {
       "id": "review.index.handing_the_teams_draft_to",
@@ -46709,35 +46709,35 @@
       "en": " It also ends at {end}.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 729
+      "line": 740
     },
     {
       "id": "review.index.its_author_has_chosen_no",
       "en": "its author has chosen no level for {caseId} edition {edition}; the edition cannot be signed until they do (op=attribute)",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 944
+      "line": 955
     },
     {
       "id": "review.index.name_the_person_or_team",
       "en": "name the person or team this copy is addressed to, in one line of at most {REVIEW_RECIPIENT_MAX} characters. An addressed act with no addressee is not attributed, and the grant is the record of who was handed what.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 696
+      "line": 707
     },
     {
       "id": "review.index.no_case_of_owning_s",
       "en": "no case of {owning}'s answers to {named}. A draft names an EXISTING case to be its next edition, and a case this project did not publish is answered exactly as one that does not exist.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 643
+      "line": 654
     },
     {
       "id": "review.index.no_document_of_cid_edition",
       "en": "no document of {cid} edition {v1} has that approval digest (its sha without the approvals block); an approval names the document it approves. Nothing was recorded.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 1186
+      "line": 1197
     },
     {
       "id": "review.index.no_review_copy_answers_to",
@@ -46751,49 +46751,49 @@
       "en": "set the team's approval rule",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 1142
+      "line": 1153
     },
     {
       "id": "review.index.the_read_secrets_fingerprint_is",
       "en": "the read secret's fingerprint is set by the control plane and was absent.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 702
+      "line": 713
     },
     {
       "id": "review.index.the_review_copys_authoring_acts",
       "en": "the review copy's authoring acts are draft, grant and revoke.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 598
+      "line": 609
     },
     {
       "id": "review.index.this_draft_is_project_id",
       "en": "this draft is {project_id}'s production, and a case does not change hands (DEC-72). Draft this material as a new case under the other project instead.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 620
+      "line": 631
     },
     {
       "id": "review.index.this_draft_names_a_finding",
       "en": "this draft names a finding its editor cannot read, or one that does not exist.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 426
+      "line": 437
     },
     {
       "id": "review.index.this_grant_reads_caseidentitysentence_and",
       "en": "this grant reads {caseIdentitySentence} and nothing else. It ends when it is revoked, and when that edition is published and signed.{v1}",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 729
+      "line": 740
     },
     {
       "id": "review.index.undetermined_statement_by",
       "en": "UNDETERMINED: this draft predates the recording of the statement's author, and its last editor is not evidence of who wrote the statement",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 903
+      "line": 914
     },
     {
       "id": "review.index.v1_a_project_draft_or",
