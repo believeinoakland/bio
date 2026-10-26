@@ -254,3 +254,11 @@ SCREENS-INVESTIGATE #17 J31 (B13) done: `exclude` now closes a figure's open pro
 **Other:** merged `origin/tranche/T51` (11 commits, a merge commit, no rebase) into the job branch before the start. Commit `5029bb5c49` on `job/T51/money`.
 
 Size (session_019EsZQTWhoRebUjdPxoj29x): test runs 8, module lines 3 (lines changed in money/index.mjs: 2 added, 1 removed).
+
+## J17 · REPORT
+
+REPORT (outside my paths): a stale `test.todo` in screens-investigate's test.
+
+The defect it records is fixed in money. `bio-plane/test/m/screens-investigate/money.test.mjs:125-135` is a `test.todo` ("a figure proposed and then excluded is one row of the trail, not two"), reported to money at its line 127. Money's `exclude` now closes the figure's open proposal as `include` does (`bio-plane/src/money/index.mjs:965-973`, requirement R32, commit 5029bb5c49, with R32's test in `bio-plane/test/m/money/sets.test.mjs` at 67658cd75f).
+
+I did not edit that file (it is screens-investigate's), and I have not run the todo as a live test. Screens-investigate should convert it to a live test and run it, and it should then pass or show a new cause in its own record.
