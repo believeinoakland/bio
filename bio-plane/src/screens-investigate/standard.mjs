@@ -315,10 +315,10 @@ const STANDARD_KEYS = [
   "screen.standard.inforce.refused.body", "screen.standard.inforce.refused.body2", "screen.standard.inforce.help", "crumb.project.unjoined",
   "screen.standard.inforce.day.label", "screen.standard.inforce.result.line", "standard.inforce.known",
   /* R64 (DEC-438) */
-  "screen.standard.binds.head", "screen.standard.binds.help", "screen.standard.through.unknown", "standard.inforce.known", "screen.standard.through.none.summary",
+  "screen.standard.binds.head", "screen.standard.binds.help", "screen.standard.through.unknown", "screen.standard.through.none.summary",
   "screen.standard.f.through", "screen.standard.f.through.help", "screen.standard.f.source", "screen.standard.f.source.help", "screen.standard.f.body", "screen.standard.f.body.help",
   "screen.standard.f.act", "screen.standard.f.act.help", "screen.standard.f.edition", "screen.standard.f.edition.help", "screen.standard.f.mode", "screen.standard.mode.by_reference",
-  "screen.standard.mode.voluntary", "screen.standard.mode.by_accreditation", "screen.standard.f.passage", "screen.standard.f.law", "screen.held.untitled", "connection.node.unnamed",
+  "screen.standard.mode.voluntary", "screen.standard.mode.by_accreditation", "screen.standard.f.passage", "screen.standard.f.law", "connection.node.unnamed",
   "screen.person.source", "screen.standard.inforce.state.in_force", "screen.standard.inforce.state.not_in_force", "screen.standard.inforce.state.overridden", "screen.standard.inforce.state.undetermined",
 ];
 

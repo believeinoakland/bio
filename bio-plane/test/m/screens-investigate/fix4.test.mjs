@@ -167,7 +167,8 @@ const OWN = {
   help: {},
   proceeding: { entitieskind: 2, affordances: 1, entity: 1, partiesof: 1, proceedingdates: 1, follows: 1, heldcaptures: 1, peopledirectory: 1, standards: 1, dutiesof: 2, reading: 1 },
   "due-date": { action: 1, clockproposals: 1, clocksics: 1 },
-  standard: { heldcaptures: 1, standard: 1, lawrelations: 1, standards: 1, content: 1, entitieskind: 2, reading: 2 },
+  /* R64: the offices beside the bodies (`entitieskind`), and the first held act's own standard with its passage's content and reading, which the adoption and the imposition choose a passage among */
+  standard: { heldcaptures: 1, standard: 2, lawrelations: 1, standards: 1, content: 2, entitieskind: 3, reading: 3 },
   ties: { memberties: 1, peopledirectory: 1 },
   themeOne: { themeread: 1, image: 3 },
   matter: { image: 1, peopledirectory: 1, list: 1, heldcaptures: 1, affordances: 1, instance: 1 },
