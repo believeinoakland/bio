@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19246 design words, 1157 protected; SHA-256
-   641148afcaa459ad607bdaebe5a1cd86dbcccbd88254a0b40dbf295751bcf83b) followed by 7432 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   641148afcaa459ad607bdaebe5a1cd86dbcccbd88254a0b40dbf295751bcf83b) followed by 7433 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -21452,6 +21452,7 @@ export const WORD_ROWS = Object.freeze([
   ["citation.index.bad_ground","a new citation can join only a group its question already declares, and this one names {ground}; a case has no groups. Nothing was written.",null,null,false,"code"],
   ["citation.index.changes_basis_legs_added","Changes: basis legs added for {listed}, each with role {role}. Grades: {graded} filled from the record's own resolutions to this question's subject; {ungraded} left undetermined and stated.{note}\n",null,null,false,"code"],
   ["citation.index.changes_basis_legs_on","Changes: basis legs on {listed} moved to '{to}', each leg kept as it was. Reason: {why}.\n",null,null,false,"code"],
+  ["citation.index.changes_basis_legs_role_moved","Changes: basis legs on {listed} moved to '{to}', each leg kept as it was except the role of {moved}, which moves from {from} to {role}. Reason: {why}.\n",null,null,false,"code"],
   ["citation.index.changes_cites_edges_added","Changes: cites edges added to {listed}.{note}\n",null,null,false,"code"],
   ["citation.index.changes_cites_edges_to","Changes: cites edges to {listed} moved to '{to}'. Reason: {why}.\n",null,null,false,"code"],
   ["citation.index.changes_imported_leg_added","Changes: basis leg added for {ref} at edition {edition}, role {role}. Grade: as that edition published it, none of its own.{note}\n",null,null,false,"code"],
