@@ -50,6 +50,8 @@
 - N1275 · site, installer (with UX-DESIGN) · (K5039, K5043) Fix-round-10 entries 2 and 3: `/start`'s fourth "What you need" bullet ("No Cloudflare account yet? ...") and the installer's "Questions people ask" block under its two buttons are drawn only on the design stream's branch, not at `SITE_COMMIT` `2a64c5ae77` nor on `main`; the site and installer jobs draw them once that drawing is on `main` (a DEC folds only once on `main`, K945). hard reason: Bob's: his UX design stream's drawing, merged to `main` at T51's close (K1177).
 - N1276 · agent-runner (R20; AGENT-RUNNER #16 J6, K5088) · `POST /signout` never answers 502 `SIGNOUT_FAILED`: no code path reports a logout the binary fails, so R20's failure half is unmet (and no fixture gives it) · hard reason: Bob's (K3717, N1220)
 
+- entities / op-grades: `resolve` is declared `weight: reasoned` but takes no `reason` field; the act works (K5314). P19 (1): after the alpha, by Bob's order (K5311, K5313).
+
 ## Tests assert the word key, never the English: first after the alpha's deployment (Bob, K5313; P19 (1): after the release, by Bob's order)
 - The sweep (K5313): every finding and refusal carries its code, word key and values; every test and saved expected output asserts those, never a sentence or a fragment; the words check refuses sentence fragments in tests; one mechanical pass (§5.10), a module needing judgment its own job.
 - The §5.10 pass of fix round 10 (items 101 (4), 122 (3), 127 (3), 128 of `fix-round-10-T51.md`): marker re-points, the `DECLARED_OPS` rename, orphan runs, the node-vs-null assertions; the 89 fixtures lines remaining.
