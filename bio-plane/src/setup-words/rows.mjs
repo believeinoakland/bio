@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (19358 design words, 1157 protected; SHA-256
-   351528305b688e7c0bd6786ef68f15016866d16d307d6790edcaf3941a71f4d9) followed by 7495 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (19364 design words, 1157 protected; SHA-256
+   0511dbc5b56d08e250b7c7d120b991f5898de3c7c51937d71d2cfb6761fc9b9f) followed by 7495 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "351528305b";
+export const WORDS_COMMIT = "0511dbc5b5";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -11914,6 +11914,12 @@ export const WORD_ROWS = Object.freeze([
   ["screen.contradiction.doctype.budget_book","Budget book","DEC-440: the kind of document a passage comes from, by the reader's registered id (content_type); an id with no row draws no row",null,false,"design"],
   ["screen.contradiction.doctype.budget_table","Budget line-item table","DEC-440: the kind of document a passage comes from, by the reader's registered id (content_type); an id with no row draws no row",null,false,"design"],
   ["screen.document.flags.pair","{a} and {b}","DEC-440: R138: a row of the flags list, the two passages' names, linked to the contradiction; screen.contradiction.flagged.by beneath it",null,false,"design"],
+  ["screen.standard.binding.adoption","Adopted by {body} in {act}, edition {edition}","DEC-442: R63 adoption: {act} the adopting act's name or the event's, {edition} as recorded",null,false,"design"],
+  ["screen.standard.binding.adoption.meta","{mode} · in force from {from} · recorded by {author}, {date}","DEC-442: R63 adoption, beneath it: {mode} the held screen.standard.mode.<mode> label, {from} the day it took effect",null,false,"design"],
+  ["screen.standard.binding.adoption.meta.nofrom","{mode} · recorded by {author}, {date}","DEC-442: R63 adoption with no from",null,false,"design"],
+  ["screen.standard.binding.imposition","Binds {body}: made binding by {law}","DEC-442: R63 imposition: {law} the law's name",null,false,"design"],
+  ["screen.standard.binding.benchmark","A benchmark for {body}, not binding on it","DEC-442: R63 benchmark declaration",null,false,"design"],
+  ["screen.standard.binding.recorded","Recorded by {author}, {date}","DEC-442: beneath an imposition or a benchmark: {author} the member (by), {date} the day (at)",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false,"design"],
