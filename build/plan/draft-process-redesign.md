@@ -1,0 +1,23 @@
+# Draft: the process redesign before T52 (Bob, K5319, K5323, K5326)
+
+**Status** · Draft, BOB #313, 2026-10-26. Built after the alpha cut, certified by a dry run (P3) before T52 opens. Mechanics and tools are BOB's (P17); a change to a principle, and the hooks in `.claude/settings.json` (Bob writes that file, K1702), go to Bob.
+
+## Why (K5319, K5322)
+From Oct 25 the process erred far more: fix round 10 opened 488 job STARTs (earlier rounds 14-104); the merge's cursor check (K5171) turned a two-command COMPLETE/`done` into a ring and a turn each (cursor events 3 a day, then 34, then 58); and the active rules were cut from 64 KB to 25 KB (K5012), 117 lines of operating detail archived where no one reads them, the cap since forcing each new rule to push out an old one (K5258 never placed). BOBs then re-learned by mistakes. Doorbells were late (a ring set 9 minutes out), or rang an archived BOB.
+
+## Principles applied (Claude Code best practices; Bob, K5326: "Follow all of these best practices.")
+1. **The always-read file is short and stable** (Claude Code: under 200 lines; "Would removing this cause Claude to make mistakes? If not, cut it."): an index by situation that names what to read whole when that situation arises (Bob, K5323). Not a running list: it changes only when the process does.
+2. **Situational procedures are skills**, loaded on demand and read whole then (progressive disclosure: descriptions always visible, bodies only when used). One skill per situation.
+3. **Steps that must always happen are code**, never instructions (Bob, K5326: "Step that must aways happen belong in code, not instructions!"): in the mail tool, the merge script, the checks, or Claude Code hooks (deterministic; a PreToolUse hook can refuse an act, a Stop hook can refuse to end a turn).
+4. **Bob's product rulings live apart from process rules**, by subject, each subject file read whole by the work that touches it (Bob, K5323).
+5. **BOB keeps a small context**: bulk reading (mail, logs, walk output) goes to helpers that return summaries; BOB waits on real signals (a watcher over git, background tasks), the doorbell only a backup.
+6. **Fewer, larger jobs**: one job per module per round, started once the modules it uses have merged; no cap unless usage risks running out (K5323).
+
+## Work, in order
+1. **Inventory** (reading worker, running): every rule and procedure in `roles/*.md`, the mechanics, `rulings-active.md`, the K5012 dropped file and the handoff, classed CODE, SKILL, INDEX, PRODUCT or RETIRE, with its source. Output reviewed by BOB.
+2. **CODE first**, in the mail tool and scripts (no one's approval needed), each with a fixture test: `post --kind COMPLETE` moves the cursor or refuses; `ring` (new) schedules the doorbell for the next whole minute to the address read at that moment, refusing an archived session; `takeover` (new) runs §5.1 whole and prints what remains; `merge` (premerge.mjs moved into the tool) also pushes, strikes, writes the ruling line, archives with the row and retires; `change` (new) posts, rings and starts the watcher; `watch` (new) blocks until a named job has something for BOB; `handoff` (new) refuses while a step is half done and checks every Bob ruling is placed; refusal of any `-f` push and of a ring time not the next minute.
+3. **Hooks** for what the tool cannot see (Bob adds them to the settings files; BOB writes them and walks him through it): SessionStart runs `takeover` / the job's `start`; PreToolUse refuses `git push --force`/`-f` and a `create_trigger` doorbell not at the next minute; Stop refuses a job's turn ending with COMPLETE posted and the cursor behind.
+4. **Skills** (in the process repository's `.claude/skills/`, read by every session that attaches it): one per situation from the inventory; each under 500 lines, read whole when it loads.
+5. **The index**: `roles/BOB.md` and `roles/JOB.md` become the short index (situation → skill or file); `rulings-active.md` holds only standing judgments, Bob's process policies; Bob's product rulings move to `build/rulings-product/<subject>.md`, each cited by the requirements and STARTs that need them.
+6. **Certify** (P3): a dry run in `dryrun/` with two jobs exercising takeover, start, question, change, complete, merge, a lost doorbell, a forgotten cursor (now impossible) and a handoff; recorded in `dryrun/RUNS.md`.
+7. **Report to Bob**: what changed, measured against today's failure list; the hooks he adds; any principle text that changed (P13's short-session and refresh wording), rendered, with options.
