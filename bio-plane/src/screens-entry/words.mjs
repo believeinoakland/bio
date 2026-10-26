@@ -76,6 +76,12 @@ export const READS = Object.freeze({
     "setup.member.heading", "setup.member.sub", "setup.member.home",
     "setup.codes.once", "setup.codes.copy", "setup.codes.save", "setup.claimed.heading", "setup.claimed.sub", "refusal.ALREADY_CLAIMED", "refusal.ENTITY_NO_NOTE",
     "setup.skip", "setup.skip_does", "setup.admin.invite", "setup.admin.invite_does",
+    /* R34: the team's time zone, in the words Settings draws it by (screens-settings R45) */
+    "screen.setup.zone", "screen.setup.zone.help", "screen.group.timezone", "screen.group.timezone.how",
+    "screen.group.timezone.source", "screen.group.timezone.source.help", "screen.group.timezone.governs.local", "act.factconfirm.label.group",
+    "act.factconfirm.does",
+    ...["America/Los_Angeles", "America/Denver", "America/Phoenix", "America/Chicago", "America/New_York", "America/Anchorage", "Pacific/Honolulu"]
+      .map((z) => "label.timezones." + z),
     /* R26: the website file; R30: who recorded the hosting account, when it was the setup or the system */
     ...DOMAINFILE, "shell.copy", "screen.group.hosting.now.setup", "screen.group.hosting.now.system",
     /* R33: the scanner holding no signatures, in the words file-safety's `scanstatus` carries by key (its R46) */

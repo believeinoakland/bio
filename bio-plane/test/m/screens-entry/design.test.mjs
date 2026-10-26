@@ -98,7 +98,8 @@ test("R12 drawn over an empty team no screen shows an empty section, an empty st
     assert.doesNotMatch(s.text, /(^|[^\w.-])0([^\w.:-]|$)/, `${id}: a zero drawn`);
   }
   const empty = (await drawings(false)).find((d) => d.label === "front").o;
-  assert.deepEqual(empty.view.data.published.value, { bundles: [], cases: [] }, "the team has published nothing");
+  /* the owner's answer also says `ok`; what is asserted is that it lists nothing */
+  assert.deepEqual({ bundles: empty.view.data.published.value.bundles, cases: empty.view.data.published.value.cases }, { bundles: [], cases: [] }, "the team has published nothing");
   lacks(empty, "screen.front.published");
   /* the ten recovery codes, spent one by one by the real `recover`: the page spends the last, and says so without a count; the page that
      spends one with codes left counts them */

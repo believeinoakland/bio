@@ -1,6 +1,6 @@
 # screens-entry (T51)
 
-**Status** · session_0143bTM29139UynmAYarEGQM · depth 2 · COMPLETE · handled B19
+**Status** · session_01JdJGDMdqKM21B8AxsWMQLp · depth 2 · COMPLETE · handled B23
 
 ## Completion (T51-114)
 
@@ -272,3 +272,24 @@ BLOCKED (cause: tests; needs UX-DESIGN's word row, same as J19). B17 applied: tr
 ## J21 · COMPLETE
 
 COMPLETE (B16, B17, B19). Drew: key refusal.SIGN_IN_PAUSED, variable {stated} (the plane's bound), no time: front.mjs:113-117, forgot.mjs:55-59. R6: setup.mjs:474-478 sends no office without its note, shows refusal.ENTITY_NO_NOTE (held row, listed in words.mjs). B17: no {group: null}; front.test.mjs reads a case published by recipes.published (kit.mjs worldOf). Failing-first, red then green: setup.test.mjs 'R6 an office is never sent without its note' (green); front.test.mjs 'R2 paused' and public.test.mjs 'R2 R4 forgot paused' (red on old source; red by name now on the design's row, accepted per B19). Module 98 tests, 96 pass, 2 fail (those two). format, architecture, coverage 30/30, ownership 0 failures; checks/run.mjs no finding in screens-entry; impact users r137-parity, pseudo, door fail 9/15 identically before and after. Met: R2 (code), R6. Markers added: none (the R30 hosting seed is not flagged, so a marker would be idle). Size (session_0143bTM29139UynmAYarEGQM): test runs 11, module lines 1156
+
+## J22 · REPORT
+
+REPORT (R34), four things outside screens-entry that the time-zone step needs; the step is built and tested, but cannot be served until the first is merged.
+1. interface-shell (blocks serving): `checkScreens` (bio-plane/src/interface-shell/index.mjs:188) refuses `setup`'s act `factconfirm` ("not the registry's for it, nor a named re-point"), so `interfacePage` throws and no page is served. DEC-439 (D-B1) gave the step its words and names `factconfirm`, but the design's registry lists no `factconfirm` for `setup`. Needs: interface-shell's RE_POINTS gains `setup: ["factconfirm"]` (the precedent is `explore`/`stepsourcewithdraw`, "until the registry lists it"), and the design's registry lists it for `setup`; then wizard-scripts re-takes the registry. I proved the module green (101/101) with that one entry patched in locally, then reverted it; it is not in my commit. Do not merge my branch before the re-point.
+2. journey-check: its modelled plane (bio-plane/test/m/journey-check/pseudo.test.mjs:46-71) answers no `factstatus`; with the step, 'R29 (b), (c): `setup` drawn with the real catalogue' draws no tool (0 !== 20). It needs `factstatus` for path @team/time_zone in its PLANE (and tables.mjs). Passes against the tranche's screens-entry, fails with mine.
+3. Design words: `screen.group.timezone.how.help` says "the city's own website" and trips R10's place guard, so setup draws the "how" field without a help (the source field keeps its help). The step has only `screen.setup.zone` and `.help`; it reuses Settings' rows for the zone choice, how, source, "corrected by your team" and the act label `act.factconfirm.label.group`. Ask UX-DESIGN for step rows (neutral how-help; an act label for setup).
+4. Edge: the R34 test reads the zone where `governingZone` reads it (setting `team_time_zone`, local-facts R22) but cannot import `jurisdictions.governingZone` without `jurisdictions` in screens-entry's `uses`; add the edge if you want that call in the test.
+
+## J23 · COMPLETE
+
+COMPLETE (B20: R34), with the dependency in REPORT item 1 named: without interface-shell's re-point the page does not build (my suite shows 9 reds by that one cause); with it patched in locally: module tests 101/101.
+What changed: setup.mjs: read `zone` (factstatus @team/time_zone); a time-zone step inside part 3 ("Where your team works"): title screen.setup.zone with .help, the zone choice, how and where checked, the act factconfirm (body act correct, value, how, source, path); done mark (screen.setup.state.done, data-state zonedone) and screen.group.timezone.governs.local once the team itself has stated a zone (governs.origin corrected), and then no act; a zone only a place gives is not done; a failed read is drawn failed, never done. words.mjs: the keys. Tests (setup.test.mjs, red then green): 'R34 setup carries the step...' (the act writes team_time_zone, step done), 'R34 control...' (stated zone done and no act; place zone not done; missing how refused and nothing written; failed read never done), 'R34 the step sits in part 3...' (skip). Existing tests: common.test.mjs R9 and setup.test.mjs 'R6 ...registry's act' allow factconfirm on setup until the registry lists it (named, self-retiring); design.test.mjs and front.test.mjs 'the real store has published nothing' asserted the whole answer, which now also says ok: they assert the empty lists (these two were red at the tranche tip, now green).
+Checks: format 0, architecture 0, coverage 31/31, words 0, fixtures none in screens-entry, ownership 0. Users (impact, 119 files, shell re-point patched): 713/714; the one red is journey-check, REPORT item 2.
+Markers added: none. R34's mark is yours to strike once the re-point merges.
+Size (session_01JdJGDMdqKM21B8AxsWMQLp): test runs 9, module lines 1197
+
+## J24 · COMPLETE
+
+COMPLETE (B22). tranche/T51 merged (interface-shell R134 on it); no local patch; the shell is the real one. screens-entry tests with journey-check's pseudo.test.mjs: 109 run, 108 pass. The one red is journey-check's 'R29 (b), (c): setup drawn with the real catalogue' (its modelled plane has no factstatus; JOURNEY-CHECK #16 not yet on the tranche; passes once it is). The screens-entry suite itself: 101/101. format 0, architecture 0, coverage 31/31, words 0, ownership 0, no finding in my files from checks/run.mjs. R34 met; BOB strikes its mark. Markers added: none.
+Size (session_01JdJGDMdqKM21B8AxsWMQLp): test runs 11, module lines 1197

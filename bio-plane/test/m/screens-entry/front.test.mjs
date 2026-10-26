@@ -80,7 +80,8 @@ test("R1 each read in its four states: loading, empty, could not read (refused, 
   }
   /* the real empty: a team that has published nothing (the world's own answer) */
   const empty = await open("front", { world });
-  assert.deepEqual(empty.view.data.published.value, { bundles: [], cases: [] }, "the real store has published nothing");
+  /* the owner's answer also says `ok`; what is asserted is that it lists nothing */
+  assert.deepEqual({ bundles: empty.view.data.published.value.bundles, cases: empty.view.data.published.value.cases }, { bundles: [], cases: [] }, "the real store has published nothing");
   // R12: nothing published draws no section
   lacks(empty, "screen.front.published"); lacks(empty, "state.empty");
   assert.equal(all(empty.tree, (e) => e.attrs["data-state"] === "failed").length, 0, "an empty read is never drawn as failed");
