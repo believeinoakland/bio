@@ -1680,6 +1680,20 @@ export function combine(listIn) {
   catch (e) { return { ok: false, errors: [{ at: null, code: "INVALID_PROFILE", detail: `unreadable: ${String(e && e.message || e)}` }] }; }
 }
 
+/**
+ * The team's governing time zone (R98, K5292): `teamZone` when it is an R41 value; else the `time_zone` of the view
+ * `combine(profileIds)` gives; else `null`. The one site every module that needs the zone asks. Never throws.
+ */
+export function governingZone(profileIds, teamZone) {
+  try {
+    if (isTimeZone(teamZone)) return teamZone;
+    if (!Array.isArray(profileIds) || profileIds.length === 0) return null;
+    const r = combine(profileIds);
+    const v = r && r.ok && r.view && r.view.time_zone ? r.view.time_zone.value : null;
+    return isTimeZone(v) ? v : null;
+  } catch { return null; }
+}
+
 function combineInner(listIn) {
   if (!Array.isArray(listIn)) return { ok: false, errors: [{ at: null, code: "NOT_A_LIST", detail: "combine takes a list of profile ids or profiles" }] };
   const errors = [];
