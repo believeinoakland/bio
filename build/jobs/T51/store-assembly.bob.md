@@ -119,3 +119,7 @@ CHANGE (K5209), in this same job: (1) the agreement test of your declared rows i
 ## B16 · CHANGE
 
 CHANGE (K5213), in this same job: `checks/words.mjs /home/user/bio store-assembly` reads 15 failures on the tranche (inline 15, plain 12: `ask.mjs:388`, `:389`, `:469`, `:502`, `:521`, `:522`, `:526`, `:531`, `:535`, `:540`; `wiring.mjs:49`, `:78`, `:103`; `wizards.mjs:51`), most from plane's code moved in Wave B. Every sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); a code or identifier is not a sentence (K3971). Your COMPLETE needs words 0 for store-assembly.
+
+## B17 · CHANGE
+
+CHANGE (K5220; MEMBERSHIP #46 J14, SCREENS-SETTINGS #20 J40): three of your test files (moved from plane in Wave B) print every test passing and then do not exit within 400 s on the merged tree: `fix5-r77` (6 of 6), `fix6-pending` (10 of 10), `r9-jobs` (34 of 35, one cancelled by the kill). A handle left open after the tests (a timer or interval not unref'd, an alarm or a store not closed). Within your B11-B16 unref work: each of the three exits by itself after its tests (run each alone, without `--test-force-exit`), the one cancelled `r9-jobs` test passing; name the handle and its file:line in your COMPLETE.

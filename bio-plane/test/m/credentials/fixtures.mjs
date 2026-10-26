@@ -1,6 +1,6 @@
 /* The answers this module publishes for its users' tests (K4990, K4993, K4995, K5044): each is made by this module's real
    code when the test runs, never stored. A user's test takes its value from here instead of building the answer by hand. */
-import { world } from "./fixture.mjs";
+import { world, PASSWORD } from "./fixture.mjs";
 import { credentialsOps } from "../../../src/credentials/index.mjs";
 
 const ISO = (ms) => new Date(ms).toISOString();
@@ -47,4 +47,13 @@ export async function signerregisterownHeld() {
   const w = await world().group("ann", "bob");
   const first = w.c.signerRegisterOwn({ keyB64: SIGNER_KEY, by: "bob" });
   return { w, first, answer: w.c.signerRegisterOwn({ keyB64: SIGNER_KEY, by: "ann" }) };
+}
+
+/* R39 (`op=signout`, which interface-shell's frame reads): a member's live session ended by the real `signout` arm of the
+   door, over a world each call builds. `ann` signs in through `login`, and the answer is the arm's result for that token
+   (`{ ok: true, ended: 1 }`); the session is then gone from the store. Answers `{ w, token, answer }`. */
+export async function signout() {
+  const w = await world().group("ann");
+  const { token } = await w.c.login({ handle: "ann", password: PASSWORD("ann") });
+  return { w, token, answer: w.ops(`session=${encodeURIComponent(token)}`).signout() };
 }

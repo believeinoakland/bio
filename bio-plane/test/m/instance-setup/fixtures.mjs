@@ -29,6 +29,14 @@ export async function instanceGroupAnswer({ group = "river-town" } = {}) {
   return { recorded, none };
 }
 
+/** `groupIdentityAnswer`: the real `groupidentity` answer (R11, `groupIdentity()`) of a group that recorded its slug at first boot and its display name by
+ *  an administrator, with no domain claimed. Made over a world each time it is called, never stored. */
+export async function groupIdentityAnswer() {
+  const w = await boot({ env: { INSTANCE_NAME: "river-town", VERSION: "1.4.0" }, now: () => Date.parse("2026-10-10T08:00:00Z") });
+  w.m.groupNameSet({ name: "River Town", by: "admin" });
+  return w.m.groupIdentity();
+}
+
 /** `selftestAnswer`: the real `selftest` body of a copy whose store binding is not bound: `{ok: false, bindings: {STORE: false, ...}, ...}`, answered at status
  *  500. `status` is the status the Worker answers it at. */
 export async function selftestAnswer({ tokens = { ADMIN_TOKEN: "a-live-admin-token-0123456789", PROBE_TOKEN: "a-live-probe-token-0123456789" } } = {}) {

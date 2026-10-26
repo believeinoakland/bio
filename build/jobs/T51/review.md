@@ -1,6 +1,6 @@
 # review (T51)
 
-**Status** · session_01DzCepFNdeysrrMTS9qDDpn · depth 2 · COMPLETE · handled B21
+**Status** · session_01NYhxjj1BEgs71XesoJ5bcq · depth 2 · COMPLETE · handled B23
 
 ## Completion record (fix round 4, B13 START, K4429; REVIEW #22)
 
@@ -387,3 +387,102 @@ Size (session_01DzCepFNdeysrrMTS9qDDpn): test runs 1, module lines 1716
 ## J17 · COMPLETE
 
 COMPLETE for B21 (K5195): deleted the orphaned run `fixtures-run: case-inputs no-review-copy` at bio-plane/test/m/review/fixtures.test.mjs:10 (case-inputs owns the marker and deletes it in its own job). No source or requirement changed. Review tests 102/102 green; fixtures 0 failures; format, architecture, coverage (45/45 ids), ownership 0. run.mjs has no failure in review's paths (its 1502 FAIL lines are other modules'). Record: build/jobs/T51/review.md, commit 9b6282bde5, pushed to job/T51/review. Size (session_01DzCepFNdeysrrMTS9qDDpn): test runs 1, module lines 1716.
+
+## Completion record (fix round 10, K5207; START B22)
+
+COMPLETE for fix round 10 · review (BOB's B22, K5175: every bug found is fixed in this round). Branch job/T51/review. `tranche/T51` merged in, never rebased (the local job branch was behind origin and was moved aside to `stale/review-local` before recreating it from origin, as the START directs).
+
+**Entries applied**
+- **Fixtures published** in `bio-plane/test/m/review/fixtures.mjs` (new). Each export builds its own world over the real `standard()` fixture and answers the real op's answer through `reviewOps`, never a stored or hand-written value:
+  - `casedraft()` (line 35): a draft over a concluded question (its front matter holds the conclusion; state `concluded`), made by the `casedraft` op.
+  - `reviewcopy()` (line 40): that draft's copy, read as a member with standing, with the publish gates refused (the case-authoring double answers a refusal, so the copy carries `gates: "refused"` and `missing`).
+  - `reviewrevoke()` (line 50): a grant made by `reviewgrant` and revoked by its maker through `reviewrevoke`.
+  - `reviewcomment()` (line 58): an outside reader's comment through a live grant, at the reader's door (`bySecret`, the link's fingerprint in the body).
+- **Test** `bio-plane/test/m/review/fixtures-answers.test.mjs` (new, 4 tests): calls each export and asserts its real shape and values (`casedraft` ok and a `DRAFT-` id; `reviewcopy` gates refused, one missing, its finding concluded; `reviewrevoke` ok, `existed: false`, revoked by ann; `reviewcomment` ok, author kind `recipient`, author the grant id).
+- **No product change.** The real ops make each state, so none was REPORTed as unreachable.
+
+**Failing-first check (break once, red, then restore green)**
+- Broke `reviewcopy()`'s gate to `{ ok: true }` (the publish gates pass): the `reviewcopy` test went red at its `gates === "refused"` assertion. Restored the refusal; the four tests pass again.
+
+**Markers added:** none (`fixtures-own` and `fixtures-generic`: none; every value is the module's real answer).
+
+**Tests and checks** (from /home/user/bio)
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/review/*.test.mjs`: tests 106, pass 106, fail 0 (the four new ones included).
+- `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio review --list`: 0 failures (3508 test files read, 178 modules; answer 0, stub 0, code 0, contract 0).
+- `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio review 86f668d6175d9ed25d4704ca9281c1e1f0eb9a5e HEAD`: 0 failures (one file changed by review: the new fixtures file, within `paths`).
+- `node /home/user/civicos-process/checks/run.mjs /home/user/bio`: no finding in review's own files. Its findings that name review as the provider (`[op-table reviewcopy]`, `[op-table casedraft]`, `[op-table reviewrevoke]`, `[op-table reviewcomment]`, `[op-table casedrafts]`) are in screens-inquiry and screens-publish tests, which hand-build those answers; they are their fixture owners' to take from this file (the answers are published here now). The words total is unchanged: the new files add no sentence a person reads. Its other failures are store-assembly's inline sentences, not in review.
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: run after the commit (see below).
+
+**Found outside my paths:** none new from this round. The consumers' hand-built answers named above are reported for BOB to route to screens-inquiry and screens-publish.
+
+**Deferred:** nothing.
+
+Size (session_01NYhxjj1BEgs71XesoJ5bcq): test runs 7, module lines 4932
+
+## J18 · COMPLETE
+
+COMPLETE for fix round 10 (B22, K5207; K5175: every bug found is fixed this round) · review. Branch job/T51/review @ 107f530dc8, pushed. `tranche/T51` merged in, not rebased. Record: build/jobs/T51/review.md, section "Completion record (fix round 10, K5207; START B22)".
+
+**Entries applied**
+- Published in bio-plane/test/m/review/fixtures.mjs (new), each made by the real ops over a world built per call, never stored: casedraft() (line 35, a draft over a concluded question), reviewcopy() (line 40, that copy as a member with the publish gates refused: gates "refused", one missing), reviewrevoke() (line 50, grant revoked by its maker), reviewcomment() (line 58, an outside reader's comment through a live grant at the reader's door).
+- Test bio-plane/test/m/review/fixtures-answers.test.mjs (new, 4 tests): each export's real shape and values.
+- No product change: the real ops make each state, so nothing is REPORTed as unreachable.
+
+**Failing-first:** broke reviewcopy()'s gate to { ok: true }: the reviewcopy test went red at its gates assertion; restored; green.
+
+**Markers:** none added (no fixtures-own, no fixtures-generic).
+
+**Tests and checks**
+- review suite: tests 106, pass 106, fail 0.
+- checks/fixtures.mjs review --list: 0 failures.
+- checks/ownership.mjs review (merge-base..HEAD): 0 failures.
+- checks/run.mjs: no finding in review's files. Its op-table findings naming review (screens-inquiry t51-dashproject.test.mjs:99,100,181; screens-publish drafts:85, fix2:233, fr30:12, fr30:224, style:57) are other modules' hand-built answers that these fixtures are for; reported for you to route. Words total unchanged.
+- impact HEAD~1..HEAD: 1 of 178 modules (review only).
+
+**Found outside my paths:** none new. The consumers above are yours to route to screens-inquiry and screens-publish.
+
+**Deferred:** nothing.
+
+Size (session_01NYhxjj1BEgs71XesoJ5bcq): test runs 7, module lines 4932
+
+**Ring (J18):** the COMPLETE entry is posted (J18) and the state is COMPLETE. The ring to BOB's session (`session_01AnYAfLkcBeNLm6b2t6AWgR`) was refused three times by the scheduler with `run_once_at must be in the future`, for 22:58, 23:00 and 23:10 UTC (the container clock read 22:5x UTC). The posted entry is the message; BOB's backstop reads it (mechanics §13).
+
+## Completion record (CHANGE B23, K5209: merge of tranche T51 at OP-GRADES #30)
+
+COMPLETE for B23 · review. Branch job/T51/review. `origin/tranche/T51` merged in (`f680e3b511`), never rebased; the DECLARED_OP_DISAGREES block is gone.
+
+**Entries applied**
+- `fixtures.mjs` `reviewcopy()` (line 47): the gate's refusal is now the `first` refusal of case-authoring's published `preflightAnswer().blocked` (`bio-plane/test/m/case-authoring/fixtures.mjs`), not a literal of this module's own. The earlier literal was flagged by `checks/fixtures.mjs` as a hand-built answer of another module (answer, class refusal, provider case-authoring); the published one is the provider's real answer.
+- The other three exports and the four tests are unchanged.
+
+**Failing-first:** an earlier attempt that used `preflightAnswer().blocked` whole gave `gates: "passed"` (its `ok` is true, `ready` false), so the reviewcopy test went red; the refusal is taken from `first`. Break-once check repeated on the final gate: gate set to `{ ok: true }`, the answers test went red (1 fail); restored; 4 of 4 green.
+
+**Tests and checks** (from /home/user/bio, merged tree)
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/review/*.test.mjs`: tests 106, pass 106, fail 0.
+- `checks/fixtures.mjs /home/user/bio review --list`: 0 failures (3517 test files, 178 modules; answer 0, stub 0, code 0, contract 0).
+- `checks/ownership.mjs /home/user/bio review origin/tranche/T51 HEAD`: 0 failures (3 files changed by review: the two fixtures files and this record).
+- `checks/architecture.mjs`: 0 failures. `checks/coverage.mjs`: 45 of 45 live ids named, 0 failures. `checks/format.mjs`: 0 failures.
+
+**Markers:** none added.
+
+**Found outside my paths:** none new. The earlier op-table findings in screens-inquiry and screens-publish (see the fix-round-10 record) stand for their owners.
+
+**Deferred:** nothing.
+
+Size (session_01NYhxjj1BEgs71XesoJ5bcq): test runs 12, module lines 4935
+
+## J19 · COMPLETE
+
+COMPLETE for CHANGE B23 (K5209) · review. Branch job/T51/review @ 2ed2770a21, pushed. `origin/tranche/T51` merged in (f680e3b511), never rebased. Record: build/jobs/T51/review.md, section "Completion record (CHANGE B23, K5209...)".
+
+**Entries applied:** the merge; the reviewcopy gate refusal now comes from case-authoring's published preflightAnswer().blocked.first (fixtures.mjs:47), replacing my own literal, which checks/fixtures.mjs flagged as a hand-built answer of another module. No other change.
+
+**Failing-first / break-once:** setting the gate to { ok: true } turned the reviewcopy answer test red; restored; green. An earlier attempt using .blocked whole gave gates "passed" (its ok is true), so the refusal is taken from .first.
+
+**Tests and checks** (merged tree): review suite 106 of 106 pass, 0 fail. checks/fixtures.mjs review --list: 0 failures. checks/ownership.mjs (origin/tranche/T51..HEAD): 0 failures. checks/architecture: 0 failures. checks/coverage: 45 of 45 live ids named, 0 failures. checks/format: 0 failures. impact origin/tranche/T51 HEAD: see the record.
+
+**Markers:** none added.
+**Found outside my paths:** none new. The op-table findings in screens-inquiry and screens-publish from the fix-round-10 record stand for their owners.
+**Deferred:** nothing.
+
+Size (session_01NYhxjj1BEgs71XesoJ5bcq): test runs 12, module lines 4932

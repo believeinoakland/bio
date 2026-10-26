@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { boot } from "./fixture.mjs";
-import { assistantState, instanceGroupAnswer, selftestAnswer, fleetReports, bootstrapFacts } from "./fixtures.mjs";
+import { assistantState, instanceGroupAnswer, groupIdentityAnswer, selftestAnswer, fleetReports, bootstrapFacts } from "./fixtures.mjs";
 import { NO_GROUP_RECORDED, BOOTSTRAP_FACT_KEYS } from "../../../src/setup.mjs";
 
 test("fixture bootstrapFacts (R95): the real seven facts of an instance set up by real acts, the team named and the counts as the caller states", async () => {
@@ -34,6 +34,16 @@ test("fixture instanceGroupAnswer: {ok, group} for a recorded group, {ok, group:
   const { recorded, none } = await instanceGroupAnswer();
   assert.deepEqual(recorded, { ok: true, group: "river-town" });
   assert.deepEqual(none, { ok: true, group: null, detail: NO_GROUP_RECORDED });
+});
+
+test("fixture groupIdentityAnswer (R11): the real groupidentity answer of a group that recorded its name and claimed no domain, made again on each call", async () => {
+  const a = await groupIdentityAnswer();
+  assert.deepEqual([a.ok, a.group, a.display_name, a.display_name_recorded, a.domain, a.domain_claim, a.logo], [true, "river-town", "River Town", "River Town", null, null, false]);
+  assert.deepEqual([a.domain_checks, a.domain_checks_truncated], [[], false]);
+  assert.equal("detail" in a, false, "a recorded group carries no detail");
+  const b = await groupIdentityAnswer();
+  assert.deepEqual(b, a, "the same world gives the same answer");
+  assert.notEqual(b, a, "a new answer each call, never one kept");
 });
 
 test("fixture selftestAnswer: a copy whose store binding is not bound is not healthy, its STORE binding false, answered at 500", async () => {
