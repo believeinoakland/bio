@@ -310,6 +310,15 @@
      "modules": [
       "credentials"
      ]
+    },
+    {
+     "op": "factconfirm",
+     "label": "Save the time zone",
+     "status": "declared",
+     "modules": [
+      "local-facts",
+      "op-declarations"
+     ]
     }
    ],
    "journeys": [
@@ -1843,6 +1852,15 @@
      "modules": [
       "op-declarations"
      ]
+    },
+    {
+     "op": "signerknown",
+     "label": "I know about this key",
+     "status": "declared",
+     "onTranche": "origin/tranche/T51",
+     "modules": [
+      "credentials"
+     ]
     }
    ],
    "journeys": [
@@ -2519,6 +2537,17 @@
      "op": "owed:registersearch DEC-406",
      "label": "Search the registers",
      "status": "owed"
+    },
+    {
+     "op": "resolve",
+     "label": "Find the people and offices it names",
+     "status": "declared",
+     "modules": [
+      "entities",
+      "op-declarations",
+      "queue",
+      "record-core"
+     ]
     }
    ],
    "journeys": [
@@ -3334,6 +3363,15 @@
      "modules": [
       "connections",
       "op-declarations"
+     ]
+    },
+    {
+     "op": "leggrade",
+     "label": "Record this grade",
+     "status": "declared",
+     "onTranche": "origin/tranche/T51",
+     "modules": [
+      "citation"
      ]
     },
     {

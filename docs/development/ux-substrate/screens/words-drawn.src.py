@@ -2214,7 +2214,7 @@ W.append(dict(key='queue.signer-self-registered.summary', en='{member} registere
 W.append(dict(key='queue.signer-self-registered.summary.comment', en='{member} registered a signing key for themselves: {comment}', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1778; {member} {comment}'))
 W.append(dict(key='queue.signer-self-registered.summary.unnamed', en='A member registered a signing key for themselves', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1778'))
 W.append(dict(key='queue.signer-self-registered.summary.unnamed.comment', en='A member registered a signing key for themselves: {comment}', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1778; {comment}'))
-W.append(dict(key='queue.signer-self-registered.detail', en='A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and withdraw the key.', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1779; DEC-384: B411 T-15: it named a revoke it did not offer, so it says where; the item carries the door queue.signer-self-registered.members'))
+W.append(dict(key='queue.signer-self-registered.detail', en='A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and withdraw the key. If you did, answer that you know about this key.', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1779; DEC-384: B411 T-15: it named a revoke it did not offer, so it says where; the item carries the door queue.signer-self-registered.members'))
 # (10) attribution-unchosen
 W.append(dict(key='queue.attribution-unchosen.summary', en='Case {case} uses your observation {observation}: choose how it credits you', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1854; {case} {observation} (observation is the title, else the id)'))
 W.append(dict(key='queue.attribution-unchosen.detail', en="Edition {edition} of this case, which is being prepared, reaches what you observed, and you haven't chosen how it shows who said it: your team, your project, your cover or your name. Nothing is published until it is signed, and nobody else is told you are the author. You are told this once; it leaves when you choose, when the edition stops using it, or when it is signed or replaced.", protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1855; {edition}'))
@@ -8092,7 +8092,6 @@ w439('screen.setup.zone', "Your team's time zone", 'D-B1: the setup step (factco
 w439('screen.setup.zone.help', 'Dates and deadlines are counted in it. You can skip this and set it later under Settings, Your team.', 'D-B1: its help')
 w439('screen.question.leggrade.head', 'What this passage earns', 'D-M1, C-M4: the fold on a cited passage; its act waits on BOB naming the op')
 w439('screen.question.leggrade.help', 'Grade how well the copy your team holds shows this passage, up to the most the record allows ({ceiling}), and say why.', 'D-M1, C-M4: {ceiling} the record\'s ceiling, a letter')
-w439('screen.question.leggrade.act', 'Record this grade', 'D-M1, C-M4: the act\'s label until the op is named')
 w439('screen.case-editor.save', 'Save these details', 'D-M2: casedraft on the drafted state')
 w439('screen.case-editor.unsaved', 'Changes here are not saved yet.', 'D-M2: drawn once a field of the drafted state is edited')
 w439('act.resolve.label.document', 'Find the people and offices it names', 'D-M3, C-M7: resolve on Document')
@@ -8164,6 +8163,11 @@ w442('screen.standard.binding.adoption.meta.nofrom', '{mode} · recorded by {aut
 w442('screen.standard.binding.imposition', 'Binds {body}: made binding by {law}', "R63 imposition: {law} the law's name")
 w442('screen.standard.binding.benchmark', 'A benchmark for {body}, not binding on it', 'R63 benchmark declaration')
 w442('screen.standard.binding.recorded', 'Recorded by {author}, {date}', 'beneath an imposition or a benchmark: {author} the member (by), {date} the day (at)')
+
+# DEC-443: B538 (K5308): the setup time-zone step's own rows
+W.append(dict(key='screen.setup.zone.how.help', en='Required. For example: read it on a government website for your area, or asked a public office.', protected=False, note='DEC-443: B538 (2), at setup, where no place is chosen yet (screen.group.timezone.how.help names the city\'s website)'))
+W.append(dict(key='screen.document.people.none.summary', en='When it finds no name', protected=False, note='DEC-443: the mockup fold over screen.document.people.none'))
+W.append(dict(key='control-plane.reading.not_registered', en='The file is kept, but its reading could not be started, so it is not being read. Ask again.', protected=False, note='DEC-443: control-plane R130, the stated refusal READING_NOT_REGISTERED (its stand-in replaced)'))
 
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
