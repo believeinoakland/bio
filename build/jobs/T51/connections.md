@@ -1,6 +1,6 @@
 # connections (T51)
 
-**Status** · session_01KxwDp4ty9H6XwcoGUpKoBx · depth 2 · COMPLETE · handled B9
+**Status** · session_01Cj68FRJaNM9wJqTDmVe669 · depth 2 · COMPLETE · handled B12
 
 ## J1 · REPORT
 
@@ -121,3 +121,90 @@ Size (session_01KxwDp4ty9H6XwcoGUpKoBx): test runs 8, module lines 2394.
 ## J7 · COMPLETE
 
 B9 done: tranche merged; no-such-document.test.mjs no longer imports answer-envelope (reads connections' own NO_SUCH_DOCUMENT_CHECKS row). connections 149 pass; architecture, coverage 72/72, words, format, ownership 0.
+
+## Completion record (B10, the R44 clause: a passage placement's extent and page; CONNECTIONS #20, session_01Cj68FRJaNM9wJqTDmVe669)
+
+**Applied.** R44 as amended (K5203): a placement whose `target_kind` is `content` carries `extent` (the content row's stored `extent`, which is `canonicalExtent` of the content id, parsed as `readThemes` already parses stored extents) and `page` (that extent's page from 0) when the extent has one; a whole-document placement carries neither. Taken-back placements carry the same view, since R43 defines them as `{…placement's view, …}`.
+- `bio-plane/src/connections/themes.mjs:250-278`: one private helper `#passage(r)` (content only; one read of `content.extent` by `content_id`; `page` only when `Number.isInteger(extent.page)`), spread into `view` and `endedView`.
+- `bio-plane/test/m/connections/themes.test.mjs` (new test, R44): a pdf-page passage on page 1 answers `page: 1` and `extent.kind`/`extent.page`; a whole-document placement carries no `page` and no `extent`; a taken-back passage keeps `page`.
+- `bio-plane/test/m/connections/fixtures.mjs` (new, the published fixture): `themeReadWithPassage()` runs connections' real `declareTheme`, `placeInTheme` and `readThemes` over `fixture.mjs`'s world and returns the answer `themeread` gives (one theme, one passage on page 1 of a paged document, one whole document).
+- `bio-plane/test/m/connections/fixtures.test.mjs` (new): checks that answer against the real code (the passage's `page` is 1; the document has neither key).
+
+**Failing first.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/connections/themes.test.mjs`: red before the change (`AssertionError: the extent's page, counted from 0 — actual: undefined, expected: 1`); green after it (12 of 12).
+
+**Met.** R44 (T51 clause: the content placement's `extent` and `page`; whole-document placements carry neither). Stays met on a fresh read of the fixture and the test. BOB strikes the mark.
+
+**Fixture markers added.** None (`fixtures-own` / `fixtures-generic`: none).
+
+**Tests and checks run** (on the job branch at 84f65666ab):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/connections/*.test.mjs`: 151 tests, 151 pass, 0 fail (149 before, plus the R44 test and the fixture test).
+- Users, impact-named (`node build/plan/impact.mjs origin/tranche/T51 HEAD`: 92 modules, which is the shared-table case): `bio-plane/test/m/screens-daily/*.test.mjs` and `bio-plane/test/m/screens-inquiry/*.test.mjs`: 114 tests, 22 pass, 92 fail. Every failure is `DECLARED_OP_DISAGREES: readtranslate description` (182 mentions; the start of this round named it as OP-GRADES #30's, pending) or 4 `MiniflareCoreError` runtime start failures. None names connections; the themes and stepsources paths were not reached. Re-run after the OP-GRADES CHANGE.
+- `checks/format.mjs /home/user/bio`: 178 modules, 178 requirements files, 0 failures.
+- `checks/architecture.mjs /home/user/bio connections`: 28 product files, 0 failures.
+- `checks/coverage.mjs /home/user/bio connections`: 72 of 72 live requirement ids named by a test, 0 failures.
+- `checks/words.mjs /home/user/bio connections`: 0 failures; no new sentence added (the change adds keys and data only).
+- `checks/fixtures.mjs /home/user/bio connections --list`: 0 failures, 5 accepted (the existing converts-links contract markers).
+- `checks/run.mjs /home/user/bio`: no finding in connections' files; the words count is the same as before (no new sentence).
+- `checks/ownership.mjs /home/user/bio connections $(git merge-base origin/tranche/T51 HEAD) HEAD`: 5 files, 0 failures (the 4 code and test files, plus the job record).
+
+**Found in other modules (REPORT to BOB, the day found).**
+1. `bio-plane/test/m/screens-inquiry/fixtures.mjs:117` hand-builds `themeread: ok({ ok: true, themes: [] })` and `bio-plane/test/m/screens-inquiry/fr4-question.test.mjs:119` and `t51-document.test.mjs:449` hand-build `themeread` members as `{document}` only. `checks/fixtures.mjs` names them as `[op-table themeread] ... -> connections (earlier)`: connections is earlier in the order, so those tests should take connections' published `themeReadWithPassage()` (fixtures.mjs) instead. screens-inquiry is the one to take it; it draws the page (its R56, R78) once it does. Not written here (not my paths).
+2. `checks/fixtures.mjs` also names `screens-inquiry/document.test.mjs:168` and `fr28-document.test.mjs:105,115,120` as hand-built `connectionchoose` answers, `-> connections (earlier)`. connections publishes no `connectionchoose` answer yet; a published one from this module is the fix for those tests, for BOB to place as a next job (not in this round's R44 scope, so not built here).
+
+**Deferred.** None.
+
+**Size (session_01Cj68FRJaNM9wJqTDmVe669): test runs 5, module lines 2398.** The module-lines count is the non-blank, non-comment lines of `bio-plane/src/connections/*.mjs` (same method as the round's earlier records, counted at this commit).
+
+## J8 · COMPLETE
+
+COMPLETE: B10 done on job/T51/connections (head a53a3df16a; code 84f65666ab).
+
+What changed:
+- bio-plane/src/connections/themes.mjs:250-278: a content placement's view (and a taken-back one's) carries `extent` (the stored canonical extent of the content id) and, where the extent has one, `page` from 0 (helper #passage). A whole-document placement carries neither.
+- bio-plane/test/m/connections/themes.test.mjs: new R44 test (red first: "the extent's page, counted from 0 — actual undefined, expected 1"; green after).
+- bio-plane/test/m/connections/fixtures.mjs (new, published): themeReadWithPassage(), the real themeread answer for a passage on page 1 and a whole document. fixtures.test.mjs (new) checks it against the real code.
+
+Met: R44 (T51 clause). Markers added: none.
+
+Tests and checks: connections 151 pass, 0 fail. screens-daily + screens-inquiry: 22 pass, 92 fail, all DECLARED_OP_DISAGREES readtranslate description (OP-GRADES #30 pending) or 4 MiniflareCoreError; none names connections; re-run after the CHANGE. format 178 modules 0 failures; architecture 0; coverage 72 of 72; words 0 (no new sentence); fixtures list 0 failures; run.mjs no finding in connections; ownership 0.
+
+REPORT (other modules):
+1. screens-inquiry/fixtures.mjs:117 and fr4-question.test.mjs:119, t51-document.test.mjs:449 hand-build themeread; connections is earlier, so they should take connections' published themeReadWithPassage() (fixtures.mjs). screens-inquiry draws the page (R56, R78) once it does.
+2. checks/fixtures.mjs names screens-inquiry document.test.mjs:168 and fr28-document.test.mjs:105,115,120 as hand-built connectionchoose answers (-> connections, earlier). connections publishes no connectionchoose answer yet; a published one is the fix, for BOB to place as a next job (not built here).
+
+Size (session_01Cj68FRJaNM9wJqTDmVe669): test runs 5, module lines 2398.
+
+## Completion record (B11 and B12: the tranche merged; the connectionchoose fixtures; CONNECTIONS #20, session_01Cj68FRJaNM9wJqTDmVe669)
+
+**B11 (CHANGE K5209, OP-GRADES #30 merged).** `origin/tranche/T51` merged into the job branch (merge commit 6a5bbcd080, not a rebase). Stores start again: `DECLARED_OP_DISAGREES` is gone.
+
+**B12 (CHANGE K5210, J8 REPORT 2).** `bio-plane/test/m/connections/fixtures.mjs` publishes two `connectionchoose` answers, each made by connections' real `choose` through the ops map over `fixture.mjs`'s world on each call:
+- `connectionChooseMention()`: a member chooses the second of two mentions of one subject in a document (the one with an occurrence key). Answer: `ok`, `wrote: true`, `chosen.ref` and `chosen.occurrence` set. The screen tests at `document.test.mjs:168` and `fr28-document.test.mjs:105,115` need this state.
+- `connectionChooseUnplaced()`: a member chooses a mention the document reads at no recorded place, sent with no occurrence. Answer: `ok`, `wrote: true`, `chosen.ref` set. `fr28-document.test.mjs:120` needs this state.
+
+The screen tests need no other state: each expects a success, not a refusal. No refusal answer is published, because none of those three lines asks for one. `fixtures.test.mjs` checks each answer against the real code (R70 named in both titles).
+
+**Met.** R70 (its choose clause; unchanged text). R44 stays met.
+
+**Fixture markers added.** None.
+
+**Tests and checks** (on the job branch at a644b72ae8):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/connections/*.test.mjs`: 153 tests, 153 pass, 0 fail.
+- Users now that the stores start: `screens-inquiry/document.test.mjs`, `screens-inquiry/fr28-document.test.mjs`, `screens-daily/*.test.mjs`: 353 tests, 353 pass, 0 fail. The screen tests still hand-build their `connectionchoose` answers (`{ok: true}`) and `themeread` (`{ok: true, themes: []}`), which is screens-inquiry's to change, so the published fixtures are not yet used there.
+- `checks/format.mjs /home/user/bio`: 178 modules, 0 failures. `architecture connections`: 0 failures. `coverage connections`: 72 of 72. `words connections`: 0 failures. `fixtures connections`: 0 failures, 5 accepted. `checks/run.mjs /home/user/bio`: no finding in connections' files.
+- `checks/ownership.mjs /home/user/bio connections $(git merge-base origin/tranche/T51 HEAD) HEAD`: 5 files, 0 failures.
+
+**REPORT for screens-inquiry (not mine).** To take the published answers, `fixtures.mjs:117` (`themeread`) and the three `connectionchoose` lines (`document.test.mjs:168`, `fr28-document.test.mjs:105,115,120`) should use `themeReadWithPassage()`, `connectionChooseMention()` and `connectionChooseUnplaced()` from `bio-plane/test/m/connections/fixtures.mjs`, instead of their hand-built `ok({...})` answers.
+
+**Deferred.** None.
+
+**Size (session_01Cj68FRJaNM9wJqTDmVe669): test runs 4, module lines 2398.** Same counting method as the earlier records.
+
+## J9 · COMPLETE
+
+COMPLETE: B11 and B12 done on job/T51/connections (head 8726105de1).
+B11: tranche merged (6a5bbcd080); OP-GRADES #30 in: stores start. B12: fixtures.mjs publishes connectionChooseMention() (chosen mention with its occurrence) and connectionChooseUnplaced() (chosen with no occurrence), each the real choose answer; fixtures.test.mjs checks both (R70).
+Tests: connections 153 pass; screens-inquiry document + fr28-document + screens-daily 353 pass. Checks: format, architecture, coverage 72/72, words, fixtures, run.mjs (no connections finding), ownership 0.
+Met: R70 (choose clause). Markers added: none.
+REPORT: screens-inquiry should take themeReadWithPassage() (themeread, fixtures.mjs:117) and the three connectionchoose answers (document.test.mjs:168; fr28-document.test.mjs:105,115,120) from connections' fixtures.mjs.
+Size (session_01Cj68FRJaNM9wJqTDmVe669): test runs 4, module lines 2398.

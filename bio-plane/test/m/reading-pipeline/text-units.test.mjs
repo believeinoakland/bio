@@ -90,11 +90,12 @@ test("R32 (control) R1 R21: a capture read as text whose text holds no glyph ans
   }
 });
 
-test("R32 (control) R1: a capture not read as text answers no text_units: a multipart capture, a capture over the profile's text bound or of a non-textual type (profiled_from_text false), and a capture whose bytes are not held", async () => {
+test("R32 (control) R1: a capture not read as text answers no text_units: a multipart capture of a non-textual type, a capture over the profile's text bound or of a non-textual type (profiled_from_text false), and a capture whose bytes are not held", async () => {
   const w = fresh();
   const words = "words that would be a unit\n\nand another";
   const d = await hold(w.evidence, words);
-  const multi = await w.read(doc({ digest: d, bytes: words.length, ct: "text/plain", format: "undetermined", fromText: true, headers: [],
+  /* R1 (fix round 10): "single part" is no condition; a textual capture held in parts is read (r1-parts.test.mjs). A capture in parts of no text type still is not. */
+  const multi = await w.read(doc({ digest: d, bytes: words.length, ct: "application/octet-stream", format: "undetermined", fromText: false, headers: [],
     parts: [{ index: 0, sha256: d, bytes: words.length }] }));
   assert.equal("text_units" in multi, false);
   assert.match(multi.reading.basis, /not read as text/);
@@ -167,7 +168,7 @@ test("R33 (control) R32: a reading with no text units has no chain: a capture wh
   assert.equal(blank.text_container, undefined);
   const words = "words that would be a unit";
   const d = await hold(w.evidence, words);
-  const multi = (await w.read(doc({ digest: d, bytes: words.length, ct: "text/plain", format: "undetermined", fromText: true, headers: [],
+  const multi = (await w.read(doc({ digest: d, bytes: words.length, ct: "application/octet-stream", format: "undetermined", fromText: false, headers: [],
     parts: [{ index: 0, sha256: d, bytes: words.length }] }))).reading;
   const absent = (await w.read(doc({ digest: "e".repeat(64), ct: "text/plain", format: "undetermined", fromText: true, headers: [] }))).reading;
   for (const r of [multi, absent]) assert.equal(r.text_source, undefined);
@@ -334,7 +335,7 @@ test("R34 R21 (control): a failed reading carries no title, absent and never nul
     (await w.read({ capture: {} })).reading,
     (await w.read(doc({ digest: "e".repeat(64), ct: "text/html", format: "html", fromText: true }))).reading,
     (await w.read(doc({ digest: d, ct: "text/html", format: "html", fromText: false }))).reading,
-    (await w.read(doc({ digest: d, ct: "text/html", format: "html", fromText: true, parts: [{ index: 0, sha256: d, bytes: 5 }] }))).reading,
+    (await w.read(doc({ digest: d, ct: "application/octet-stream", format: "html", fromText: false, parts: [{ index: 0, sha256: d, bytes: 5 }] }))).reading,
     await withEntry({ format: "r34none", text: async () => null }, async () => (await w.read(doc({ digest: d, format: "r34none", ct: "application/x" }))).reading),
     await withEntry({ format: "r34boom", text: async () => { throw new Error("boom"); } }, async () => (await w.read(doc({ digest: d, format: "r34boom", ct: "application/x" }))).reading),
   ];

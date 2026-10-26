@@ -1,8 +1,10 @@
 /* capture's published fixtures (K4990, K4993, K4995, K5044): each is made by capture's real code when a test runs and never stored. A later module's test
    takes the answer from here instead of hand-building capture's answer (a refusal with a code, a scripted arm, an unreadable set-aside history). Each is
    checked by `fixtures.test.mjs`, which calls it and compares the real answer. A test that needs the instance itself takes it from the fixture's return. */
-import { fresh, bucket, network, sha, H, register, receipt } from "./fixture.mjs";
-import { Capture } from "../../../src/capture/index.mjs";
+import { fresh, bucket, network, sha, H, register, receipt, governor, granted, newKey, sshsign, signer } from "./fixture.mjs";
+import { Capture, captureAccountStatement } from "../../../src/capture/index.mjs";
+import { NS_RATIFY } from "../../../src/sshsig.mjs";
+import { ARCHIVE_SAVE_BASE, TSA_ENDPOINTS } from "../../../src/tsa.mjs";
 
 export { sha };
 
@@ -139,4 +141,43 @@ export async function uploadProvenance({ bytes = UPLOAD_PNG, name = "street.png"
   const r = await w.c.uploadCapture({ bytes, statement, name, by, at });
   if (r.ok !== true) throw new Error(`uploadProvenance: the upload was refused ${r.reason}`);
   return r.document;
+}
+
+const REATTEST_LOCATOR = "https://a.example/page";
+const REATTEST_ARCHIVED = "https://web.archive.org/web/20260930110001/https://a.example/page";
+const REATTEST_REPLAY = "https://web.archive.org/web/20260930110001id_/https://a.example/page";
+
+/** `reattest`: the real answer of capture's `reattest({captureSha, locator, by})` for a held capture, made when the test runs over attestation's real
+ *  `attest` and a scripted network. By default the capture's attestation is unacknowledged: every timestamp authority refuses and the archive's save is
+ *  refused, so the answer is `{ok: true, attested: false, late_attestations: [...failed attempts, late], note}` with no `attestation`. With
+ *  `acknowledged: true` the first authority grants a token bound to the digest and the archive saves and replays the same bytes, so the answer is
+ *  `{ok: true, attested: true, attestation, late_attestations: [timestamp ok, co_archive ok and matching], note}`. `captureSha` is the held capture's digest. */
+export async function reattest({ acknowledged = false, by = "m1" } = {}) {
+  const b = bucket();
+  const w = fresh({ evidence: b, gov: governor(), env: { INSTANCE_NAME: "i" } });
+  const bytes = new TextEncoder().encode("the captured page");
+  const captureSha = sha(bytes);
+  b.held.set(`bio/captures/${captureSha}`, bytes);
+  const n = network((url) => {
+    const i = TSA_ENDPOINTS.indexOf(url);
+    if (i >= 0) return acknowledged && i === 0 ? new Response(granted(captureSha)) : new Response("", { status: 500 });
+    if (url === ARCHIVE_SAVE_BASE + REATTEST_LOCATOR)
+      return acknowledged ? new Response("", { headers: { "content-location": REATTEST_ARCHIVED.replace("https://web.archive.org", "") } }) : new Response("", { status: 523 });
+    if (url === REATTEST_REPLAY && acknowledged) return new Response(bytes);
+    return null;
+  });
+  try { return { ...(await w.c.reattest({ captureSha, locator: REATTEST_LOCATOR, by })), captureSha }; } finally { n.restore(); }
+}
+
+/** `captureAccount`: the real answer of capture's `recordCaptureAccount` for a capture's actor: `{ok: true, captureSha, seq: 1, key_b64, ...}`. The capture is
+ *  recorded as `by`'s, `by` holds an attesting key, and the account is signed over `captureAccountStatement(captureSha, text)` in the ratify namespace. The
+ *  answer is the member's first account of that capture, and `capture` is the instance, to read `captureAccountsOf` back. */
+export async function captureAccount({ text = "I saved this page from the clerk's site at 9:14, logged in as myself.", by = "m1", at = "2026-09-02T00:00:00Z" } = {}) {
+  const w = fresh({ env: ENV });
+  const captureSha = H("c1");
+  w.c.recordCaptureActor({ captureSha, actor: by, at: "2026-09-01T00:00:00Z" });
+  const key = await newKey();
+  signer(w.s, by, key.keyB64);
+  const signature = await sshsign(key, captureAccountStatement(captureSha, text), NS_RATIFY);
+  return { ...(await w.c.recordCaptureAccount({ captureSha, text, signature, by, at })), captureSha, capture: w.c };
 }

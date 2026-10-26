@@ -39,3 +39,13 @@ export function unreadable({ kind = "office" } = {}) {
   w.st.sql.exec(`DROP TABLE entities`);
   return w.e.entitiesOfKind({ kind, viewer: "member:ann" });
 }
+
+/** `entitieskind`: the real `entitiesOfKind({kind: "body"})` over a world holding two bodies the fixture registers (`w.bodies`, in entity id order):
+ *  each an organisation kind, so each item carries its `sector` (undetermined here) and `forum_kind` (`null`). Nothing else is registered, so the
+ *  list is exactly those two, `truncated` false, `next` null. */
+export function entitieskind({ kind = "body" } = {}) {
+  const w = world({ profiles: PROFILES });
+  const made = (label) => w.e.createEntity({ note: NOTE, kind, label }).entity_id;
+  const bodies = [made("Harbour Review Board"), made("Marlow Ward Council")].sort();
+  return { ...w.e.entitiesOfKind({ kind, viewer: "member:ann" }), bodies };
+}

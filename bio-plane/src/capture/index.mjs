@@ -357,7 +357,7 @@ export function captureOf(ctx, opts = {}) {
   if (opts.env != null && !given.has("env")) { c.env = opts.env; given.add("env"); }
   if (opts.governor != null && !given.has("governor")) { c.governor = opts.governor; given.add("governor"); }
   if (opts.ownHosts != null && !given.has("ownHosts")) { c.ownHosts = Capture.hostsOf(opts.ownHosts); given.add("ownHosts"); }
-  if (typeof opts.now === "function" && !given.has("now")) { c.clock = opts.now; given.add("now"); }
+  if (typeof opts.now === "function" && !given.has("now")) { c.clock = opts.now; c.clockHanded = true; given.add("now"); }
   c.adoptReputation(opts);
   return c;
 }
@@ -411,6 +411,9 @@ export class Capture {
        later caller's (R58). An act that must be judged at the server's instant (`op=sourcereach`) reads it, never a
        request's. */
     this.clock = typeof now === "function" ? now : Date.now;
+    this.clockHanded = typeof now === "function";
+    /* R115: the store's environment as the ops map was handed it, the source of `BIO_NOW_MS` when no clock was handed. */
+    this.clockEnv = null;
     this.provenance = provenance;
     /* R73 (K1224): attestation's instance, which the acquisition act reaches as `cap.attestation` (its R4's
        `signReceipt`). */
@@ -480,12 +483,23 @@ export class Capture {
   /* membership's instance for this storage (R101's project fence, its `projectAuthority`), reached when first needed. */
   #membership() { return membershipOf({ storage: this.#storage }, { record: this.core }); }
 
-  /* R90: this module's clock read once, epoch milliseconds; an answer that is not a finite number (a clock at fault)
-     reads the platform's. */
+  /* R115 (K5132; R90): this module's clock read once, epoch milliseconds: the function `captureOf` was handed as `now`, else the
+     store's environment's `BIO_NOW_MS` (as the ops map was handed it, else as the instance was built), else the wall clock.
+     An answer that is not a finite number (a clock at fault, a binding that is no number) reads the next. A duration measured
+     for a reply stays on the wall clock. */
   #instant() {
-    let t;
-    try { t = Number(this.clock()); } catch { t = NaN; }
-    return Number.isFinite(t) ? t : Date.now();
+    if (this.clockHanded || this.clock !== Date.now) {
+      let t;
+      try { t = Number(this.clock()); } catch { t = NaN; }
+      if (Number.isFinite(t)) return t;
+    }
+    for (const env of [this.clockEnv, this.env]) {
+      const raw = env ? env.BIO_NOW_MS : undefined;
+      if (raw === undefined || raw === null || raw === "") continue;
+      const v = Number(raw);
+      if (Number.isFinite(v) && v >= 0) return v;
+    }
+    return Date.now();
   }
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
@@ -976,7 +990,7 @@ export class Capture {
        content-addressed and named by nothing, and its retry must file them. */
     const registered = !!(holds && holds.registered === true);
     const existed = registered || !!(holds && holds.acquired === true);
-    const when = typeof at === "string" && ISO_INSTANT.test(at) ? at : stampSecond();
+    const when = typeof at === "string" && ISO_INSTANT.test(at) ? at : stampSecond(this.#instant());
     const address = `upload:${sha}`;
     const writeReceipt = () => {
       let r;
@@ -1397,7 +1411,7 @@ export class Capture {
   recordCaptureActor({ captureSha, actor, at = null } = {}) {
     if (typeof captureSha !== "string" || !HEX64.test(captureSha) || typeof actor !== "string" || !actor) return { recorded: false };
     this.#tx(() => this.#sql.exec(`INSERT OR IGNORE INTO capture_actors (capture_sha, actor, at) VALUES (?, ?, ?)`,
-                                  captureSha, actor, at && ISO_INSTANT.test(at) ? at : stampSecond()));
+                                  captureSha, actor, at && ISO_INSTANT.test(at) ? at : stampSecond(this.#instant())));
     return { recorded: true };
   }
 
@@ -1414,7 +1428,7 @@ export class Capture {
       if (typeof question !== "string" || !question.trim() || [...question].length > CAPTURED_FOR_QUESTION_MAX) return { recorded: false };
       if (typeof by !== "string" || !memberIdOf(by).trim() || isMachineIdentity(by)) return { recorded: false };
       this.#tx(() => this.#sql.exec(`INSERT OR IGNORE INTO captured_for (capture_sha, question, asker, at) VALUES (?, ?, ?, ?)`,
-                                    captureSha, question, memberIdOf(by), at && ISO_INSTANT.test(at) ? at : stampSecond()));
+                                    captureSha, question, memberIdOf(by), at && ISO_INSTANT.test(at) ? at : stampSecond(this.#instant())));
       return { recorded: true };
     } catch { return { recorded: false }; }
   }
@@ -1472,7 +1486,7 @@ export class Capture {
       if (typeof project !== "string" || !project.trim() || [...project].length > SEEN_IN_PROJECT_MAX) return { recorded: false };
       if (typeof by !== "string" || !memberIdOf(by).trim() || isMachineIdentity(by)) return { recorded: false };
       this.#tx(() => this.#sql.exec(`INSERT OR IGNORE INTO seen_in (capture_sha, project, by, at) VALUES (?, ?, ?, ?)`,
-                                    captureSha, project, memberIdOf(by), at && ISO_INSTANT.test(at) ? at : stampSecond()));
+                                    captureSha, project, memberIdOf(by), at && ISO_INSTANT.test(at) ? at : stampSecond(this.#instant())));
       return { recorded: true };
     } catch { return { recorded: false }; }
   }
@@ -1559,7 +1573,7 @@ export class Capture {
       return { ok: false, reason: `SIG_${reason}`, ...rest, captureSha: sha, status: 400,
                detail: localize("capture.index.signature_not_verified", "the signature does not verify over this account's statement against a key of yours that attests, so nothing was written") };
     }
-    const when = at && ISO_INSTANT.test(at) ? at : stampSecond();
+    const when = at && ISO_INSTANT.test(at) ? at : stampSecond(this.#instant());
     const seq = this.#tx(() => {
       const n = Number(this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM capture_accounts WHERE capture_sha = ?`, sha).n) + 1;
       this.#sql.exec(`INSERT INTO capture_accounts (capture_sha, seq, by, text, signature, key_b64, at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -1628,7 +1642,7 @@ export class Capture {
      service, whether it answered, its instant, `late: true` and the sentence of what it proves, a timestamp's token digest and
      size, a co-archive's locator and whether its replay hashes to the capture. */
   async #lateOutcomes(sha, attempts) {
-    const now = stampSecond();
+    const now = stampSecond(this.#instant());
     const outcomes = [];
     for (const a of attempts) {
       const at = typeof a.attempted === "string" && ISO_INSTANT.test(a.attempted) ? a.attempted : typeof a.at === "string" && ISO_INSTANT.test(a.at) ? a.at : now;
@@ -2114,7 +2128,7 @@ export class Capture {
       }
     }
     const page = kept.slice(0, cap), truncated = kept.length > cap, last = page[page.length - 1];
-    const at = now != null && Number.isFinite(Date.parse(now)) ? Date.parse(now) : Date.now();
+    const at = now != null && Number.isFinite(Date.parse(now)) ? Date.parse(now) : this.#instant();
     /* R77 (T51; C14): what the page's rows need of the store is read for the whole page at once, never for each row in turn. */
     const facts = this.#pageFacts(page.map((r) => r.bundle_id), { aside, vouched, picker: shape === "picker" });
     /* R77 (T51 fix round 2; C10): whether the evidence store holds an object under each row's fingerprint. */
@@ -2667,7 +2681,7 @@ export class Capture {
   /* R79, R81, R84: append one act per document, in one transaction, each recorded with the questions `questionsOf(id)`
      names (R79's waiting questions; R81's, those of the set-aside it undoes), one row per (act, question). */
   #appendHeld(ids, act, reason, author, questionsOf = () => []) {
-    const at = stampSecond();
+    const at = stampSecond(this.#instant());
     this.#tx(() => {
       for (const id of new Set(ids)) {
         const n = Number(this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM held_acts WHERE bundle_id = ?`, id).n) + 1;
@@ -2807,7 +2821,7 @@ export class Capture {
    *  admission plus reservation, so a render that never reports cannot hold one for ever. */
   renderAdmit({ allowanceMs, reserveMs = 0, cap = null, at = null } = {}) {
     return this.#tx(() => {
-      const now = at || stampSecond();
+      const now = at || stampSecond(this.#instant());
       const day = now.slice(0, 10);
       const allowance = Number.isFinite(Number(allowanceMs)) ? Math.max(0, Math.floor(Number(allowanceMs))) : 0;
       /* CEILED, never floored: a reservation rounded DOWN is short of the cost it stands for. */
@@ -2838,7 +2852,7 @@ export class Capture {
       else this.#sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, 0, ?, 1, 0, ?)`, day, reserve, now);
       const slot = crypto.randomUUID();
       this.#sql.exec(`INSERT INTO render_slots (slot, admitted_at, expires_ms) VALUES (?, ?, ?)`,
-                     slot, now, (Number.isFinite(nowMs) ? nowMs : Date.now()) + reserve);
+                     slot, now, (Number.isFinite(nowMs) ? nowMs : this.#instant()) + reserve);
       return { state: "admitted", day, spent_ms: spent, reserved_ms: reserved + reserve, reserve_ms: reserve,
                allowance_ms: allowance, renders: (cur ? cur.renders : 0) + 1, deferred: cur ? cur.deferred : 0,
                slot, cap: capN };
@@ -2851,7 +2865,7 @@ export class Capture {
   renderSpend({ ms, releaseMs = 0, slot = null, at = null } = {}) {
     return this.#tx(() => {
       if (typeof slot === "string" && slot) this.#sql.exec(`DELETE FROM render_slots WHERE slot = ?`, slot);
-      const now = at || stampSecond();
+      const now = at || stampSecond(this.#instant());
       const day = now.slice(0, 10);
       const n = typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? Math.ceil(ms) : null;
       const rel = Number.isFinite(Number(releaseMs)) ? Math.max(0, Math.ceil(Number(releaseMs))) : 0;
@@ -2880,7 +2894,7 @@ export class Capture {
   recordLinks({ sourceCapture, sourceBundle = null, capturedAt, links = [] } = {}) {
     return this.#tx(() => {
       if (!sourceCapture) return { recorded: 0 };
-      const now = stampSecond();
+      const now = stampSecond(this.#instant());
       /* Filed in place: a row this capture already holds is updated and keeps `first_seen`, a new one takes now, and
          the rows the new set no longer names are removed after. The first of two links with one key is the one kept. */
       const kept = new Set();
@@ -2960,7 +2974,7 @@ export class Capture {
     if (!rows.length) return { sourceCapture, resolved: 0, links: [], limit: cap, truncated, next };
     /* N133: the source's retrieval instant, spelled whole-second UTC as the receipts are (provenance R48), so the
        bracket is decided in SQL by comparing text. */
-    const T = stampSecond(Date.parse(rows[0].captured_at) || Date.parse(at || "") || Date.now());
+    const T = stampSecond(Date.parse(rows[0].captured_at) || Date.parse(at || "") || this.#instant());
     const out = [];
     const tally = { linked: 0, offsite: 0, intra: 0, anchor: 0, refused: 0 };
     const verdicts = { contemporaneous: 0, superseded: 0, undetermined: 0 };
@@ -3049,7 +3063,7 @@ export class Capture {
   recordLinkVerdict({ sourceCapture, addressNorm, verdict, basis, targetBundle = null, targetCapture = null, detail = null,
                       at = null, limit = null } = {}) {
     return this.#tx(() => {
-      const now = at || stampSecond();
+      const now = at || stampSecond(this.#instant());
       this.#sql.exec(
         `INSERT INTO link_verdicts (source_capture, address_norm, verdict, basis, target_bundle, target_capture, at, detail)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING`,
@@ -3154,7 +3168,7 @@ export class Capture {
       this.#sql.exec(`INSERT INTO link_chrome (host, address_norm, state, pages, basis, at) VALUES (?, ?, ?, ?, ?, ?)`,
         host, a, n >= 2 ? "chrome" : "undetermined", n,
         n >= 2 ? localize("capture.index.contained_in_a_chrome_region", "contained in a chrome region and recurred on {n} distinct pages of {host}", { n: String(n), host: String(host) })
-               : localize("capture.index.contained_in_a_chrome_region_2", "contained in a chrome region on one page of {host} only: whether it is the site's navigation or that page's own is undetermined until another page of the host carries it", { host: String(host) }), at || stampSecond());
+               : localize("capture.index.contained_in_a_chrome_region_2", "contained in a chrome region on one page of {host} only: whether it is the site's navigation or that page's own is undetermined until another page of the host carries it", { host: String(host) }), at || stampSecond(this.#instant()));
     }
   }
 
@@ -3188,7 +3202,7 @@ export class Capture {
           ORDER BY capture_sha LIMIT ?`,
         from, `https://${h}/`.length, `https://${h}/`, `http://${h}/`.length, `http://${h}/`, cap + 1);
       const page = found.slice(0, cap);
-      const at = stampSecond();
+      const at = stampSecond(this.#instant());
       for (const r of page) this.#chromeDeriveCapture(r.capture_sha, at);
       const truncated = found.length > cap;
       return { host: h, captures: page.length, derived: page.map((r) => r.capture_sha), limit: cap, truncated,
@@ -3261,7 +3275,7 @@ export class Capture {
    *  here: it is in the store under its own digest. */
   saveCaptureSession({ session, locator, primarySha, primaryFile, base, state, ttlMs = 3600000, at = null } = {}) {
     return this.#tx(() => {
-      const now = at ? new Date(at) : new Date();
+      const now = at ? new Date(at) : new Date(this.#instant());
       const iso = (d) => stampSecond(d.getTime());
       if (!session || !state) return { session: null, saved: false };
       const cur = this.#one(`SELECT ticks FROM capture_sessions WHERE session = ?`, session);
@@ -3281,7 +3295,7 @@ export class Capture {
 
   loadCaptureSession({ session, at = null } = {}) {
     return this.#tx(() => {
-      const now = at ? new Date(at) : new Date();
+      const now = at ? new Date(at) : new Date(this.#instant());
       const r = this.#one(`SELECT * FROM capture_sessions WHERE session = ?`, session);
       if (!r) return { session, found: false, note: say("capture.note.capture_session_either") };
       let state = null;
@@ -3301,7 +3315,7 @@ export class Capture {
   /** R46: every live session, for `queue`'s partial-capture condition. Writes nothing, never throws. */
   liveCaptureSessions(now) {
     try {
-      const at = typeof now === "string" ? now : stampSecond(Number.isFinite(Number(now)) ? Number(now) : Date.now());
+      const at = typeof now === "string" ? now : stampSecond(now != null && Number.isFinite(Number(now)) ? Number(now) : this.#instant());
       return this.#rows(`SELECT * FROM capture_sessions WHERE expires > ? ORDER BY session`, at).map((r) => {
         let state = null; try { state = JSON.parse(r.state); } catch { state = null; }
         return { session: r.session, locator: r.locator, primarySha: r.primary_sha, primaryFile: r.primary_file,
@@ -3363,7 +3377,7 @@ export class Capture {
   recordSiteAssets({ host, primarySha, observations = [], at = null, limit = null } = {}) {
     return this.#tx(() => {
       if (!host || !primarySha) return { host: null, recorded: 0 };
-      const now = at || stampSecond();
+      const now = at || stampSecond(this.#instant());
       const cap = limitOf(limit);
       let truncated = false;
       let added = 0, changedCount = 0;
@@ -3445,7 +3459,7 @@ export class Capture {
    *  refusals are collected and reported, never thrown. */
   recordReuseVerdicts({ bundleId = null, verdicts = [], at = null } = {}) {
     return this.#tx(() => {
-      const now = at || stampSecond();
+      const now = at || stampSecond(this.#instant());
       let recorded = 0;
       const refusals = [];
       for (const v of verdicts) {
@@ -3528,7 +3542,7 @@ export class Capture {
    *  that MOVED keeps the old value and the date ("51 until Tuesday, now 1000" is the fact worth acting on). */
   recordCaptureLimit({ runtime = "subrequests", observed = null, at = null } = {}) {
     return this.#tx(() => {
-      const now = at || stampSecond();
+      const now = at || stampSecond(this.#instant());
       const cur = this.#one(`SELECT * FROM capture_limits WHERE runtime = ?`, runtime);
       if (observed == null) {
         if (cur) this.#sql.exec(`UPDATE capture_limits SET since_probe = since_probe + 1 WHERE runtime = ?`, runtime);
@@ -3568,7 +3582,7 @@ export class Capture {
       return { ok: false, reason: "BAD_CAPTURE_SHA", detail: localize("capture.index.sha_identifies_event", "a capture sha256 identifies the event; a record does not exist yet at capture time") };
     const text = boundedSubject(subject) || say("capture.text.capture_whose_authority");
     const loc = typeof locator === "string" && locator.length <= 2000 ? locator : null;
-    const now = at && ISO_INSTANT.test(at) ? at : stampSecond();
+    const now = at && ISO_INSTANT.test(at) ? at : stampSecond(this.#instant());
     const existing = this.#tx(() => {
       const held = this.#one(`SELECT capture_sha FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha);
       if (!held)
@@ -3617,7 +3631,7 @@ export class Capture {
       return this.#tx(() => {
         if (!this.#one(`SELECT 1 AS x FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha)) return { found: false };
         this.#sql.exec(`UPDATE task_queue SET attempts = attempts + 1, last_try = ? WHERE kind=? AND capture_sha=?`,
-                       at ?? stampSecond(), kind, captureSha);
+                       at ?? stampSecond(this.#instant()), kind, captureSha);
         return { found: true };
       });
     } catch { return { found: false }; }
@@ -3648,7 +3662,7 @@ export class Capture {
       this.#tx(() => this.#sql.exec(`INSERT INTO capture_validators (address_norm, capture_sha, etag, last_modified, at) VALUES (?, ?, ?, ?, ?)
                                      ON CONFLICT(address_norm, capture_sha) DO UPDATE SET etag = excluded.etag,
                                        last_modified = excluded.last_modified, at = excluded.at`,
-                                    addressNorm, captureSha, etag || null, lastModified || null, at && ISO_INSTANT.test(at) ? at : stampSecond()));
+                                    addressNorm, captureSha, etag || null, lastModified || null, at && ISO_INSTANT.test(at) ? at : stampSecond(this.#instant())));
       return { recorded: true };
     } catch { return { recorded: false }; }
   }
@@ -3693,7 +3707,7 @@ export class Capture {
     if (typeof addressNorm !== "string" || addressNorm === "") return { ok: false, reason: "NO_ADDRESS" };
     if (!SOURCE_OUTCOMES.includes(outcome))
       return { ok: false, reason: "BAD_OUTCOME", detail: localize("capture.index.outcome_must_be_one_of", "outcome must be one of: {SOURCE_OUTCOMES}", { SOURCE_OUTCOMES: String(SOURCE_OUTCOMES.join(", ")) }) };
-    const now = at && ISO_INSTANT.test(at) ? at : stampSecond();
+    const now = at && ISO_INSTANT.test(at) ? at : stampSecond(this.#instant());
     const st = Number.isInteger(status) ? status : null;
     this.#tx(() => {
       this.#sql.exec(`INSERT INTO source_reachability (address_norm, updated_at) VALUES (?, ?) ON CONFLICT(address_norm) DO NOTHING`, addressNorm, now);
@@ -3785,6 +3799,8 @@ export function captureOwns(t) {
    `acquire` as its `opts.timings` when given. N90: every read a route answers is bounded here, whatever the caller omits (`limit`
    defaults to READ_LIMIT's), and pages by `after`. */
 export function captureOps(c, url, body, env, h = {}) {
+  /* R115: the store's environment is the instance clock's source (`BIO_NOW_MS`), so every op this map answers reads it */
+  if (env && typeof env === "object") c.clockEnv = env;
   const q = (k) => url.searchParams.get(k);
   const viewerOf = () => (url.searchParams.has("viewer") ? q("viewer") : undefined);
   const page = { limit: q("limit") || READ_LIMIT.default, after: q("after") || null };
