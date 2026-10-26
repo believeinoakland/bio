@@ -953,3 +953,7 @@ Markers
 Deferred: none.
 
 Size (session_01JhzuHffwXuC8DT86HxHdZC): test runs 4, module lines 3067
+
+## J55 · REPORT
+
+Correction to J54: the Size line's module lines is wrong. It should read module lines 4485 (wc -l of bio-plane/src/acquisition/*.mjs), not 3067. Size (session_01JhzuHffwXuC8DT86HxHdZC): test runs 4, module lines 4485.
