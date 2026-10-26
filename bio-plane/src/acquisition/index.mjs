@@ -2620,7 +2620,7 @@ export async function owedFetch(cap, entry, opts = {}) {
           cap.saveCaptureSession({ session: entry.session, locator: ld.locator, primarySha: ld.primarySha, primaryFile: ld.primaryFile, base: ld.base,
             state: { queue: [{ fetch: true }], opened_by: opener, ...(typeof st.project === "string" ? { project: st.project } : {}), cls: st.cls, store: st.store,
                      fetch_pending: { ...(st.fetch_pending && typeof st.fetch_pending === "object" ? st.fetch_pending : {}), failed: why, failed_at: stampSecond() } },
-            ttlMs: OWED_SESSION_TTL_MS });
+            ttlMs: OWED_SESSION_TTL_MS, at: instantOf(cap) });
         } catch { /* the entry still ends, stated */ }
         return final(why, given);
       }
