@@ -26,7 +26,7 @@ function drafted(x) {
 }
 const approveBy = (f, d, text) => op(f, "filingapprove", { author: V("bo"), viewer: V("bo") }, { filing: d.id, text });
 
-test("K5202 K5132 an approval recorded under a pinned BIO_NOW_MS, with no clock handed in, stamps the pinned instant", async () => {
+test("R70 (K5202, K5132) an approval recorded under a pinned BIO_NOW_MS, with no clock handed in, stamps the pinned instant", async () => {
   const x = world();
   const { d, text } = drafted(x);
   /* the store's environment reaches filings at its constructor (filingsOf's `env`); no `now` is handed */
@@ -36,7 +36,7 @@ test("K5202 K5132 an approval recorded under a pinned BIO_NOW_MS, with no clock 
   assert.equal(ap.at, PINNED_ISO, "the approval's instant reads the pinned clock");
 });
 
-test("K5202 K5132 control: a clock handed in answers before the store's BIO_NOW_MS", async () => {
+test("R70 (K5202, K5132) control: a clock handed in answers before the store's BIO_NOW_MS", async () => {
   const x = world();
   const { d, text } = drafted(x);
   const handed = x.filingsWith({ env: { BIO_NOW_MS: PINNED } });   /* the fixture hands its own `now` */
@@ -45,7 +45,7 @@ test("K5202 K5132 control: a clock handed in answers before the store's BIO_NOW_
   assert.equal(ap.at, NOW, "the handed clock beats the environment");
 });
 
-test("K5202 K5132 control: with neither a handed clock nor an environment, the approval stamps the wall clock", async () => {
+test("R70 (K5202, K5132) control: with neither a handed clock nor an environment, the approval stamps the wall clock", async () => {
   const x = world();
   const { d, text } = drafted(x);
   const bare = x.filingsWith({ now: null, env: null });
