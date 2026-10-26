@@ -1,6 +1,6 @@
 # screens-investigate (T51)
 
-**Status** · session_017vwgD1u3sEWkzivBQF15Ny · depth 2 · BLOCKED · handled B52
+**Status** · session_017vwgD1u3sEWkzivBQF15Ny · depth 2 · RUNNING until 2026-10-26T15:52:02Z (module suite in a scratch copy) · handled B52
 
 ## J1 · QUESTION
 
