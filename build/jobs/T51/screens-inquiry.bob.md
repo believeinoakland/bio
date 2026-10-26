@@ -1008,3 +1008,7 @@ Your job: (1) `r10-stated.test.mjs` A7 and A8 (the real plane, the real OCR memb
 ## B81 · CHANGE
 
 CHANGE (K5232). Extraction merged on the tranche: merge `origin/tranche/T51`. Add to your job: `fr28-document-acts.test.mjs:50` (`pdfstructure`) and `fr5-document.test.mjs:121` (`readheld`) hand-build extraction's answers: take extraction's published fixtures (`bio-plane/test/m/extraction/fixtures.mjs`); a state it does not publish, REPORT with file:line.
+
+## B82 · CHANGE
+
+CHANGE (K5233). R23 is struck on the tranche (met). R50 stays: its clauses "Written by" (`question.concluded.by`, `question.reading.by.member`), the 500-character bound, and `refusal.BAD_READING` and `NO_BASIS` drawn by key have no test naming them: add one each at your interface (expectations read from the word table and the owner's answer, K874), failing first where a mutation can show it; name R50 met in your COMPLETE.
