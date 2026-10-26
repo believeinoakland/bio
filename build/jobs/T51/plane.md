@@ -1,6 +1,6 @@
 # plane (T51)
 
-**Status** · session_01XqR8bbBrQezZtH2cTDie6Q · depth 2 · COMPLETE · handled B102
+**Status** · session_01PjmHFtZEgQ8wUSxwtd6dLq · depth 2 · WAITING ON BOB (J82) · handled B116
 
 ## Record (PLANE #41, T51-125)
 
@@ -1180,3 +1180,203 @@ Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 35, module lines 371
 ## J68 · COMPLETE
 
 COMPLETE (PLANE #63; B102). r10-lag-figure.test.mjs :95-97 asserts above 256 and at most 1,000 for the pass that wrote a tick's units and for the row's end figure (seen 290 and 612); both tests green alone; plane's whole directory green; ownership 0, coverage 37/37. Nothing open in plane. Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 35, module lines 371
+
+## Record (PLANE #64, fix round 10; B103, on the tranche merged at 315ca3677b)
+
+**Start:** `job/T51/plane` was behind origin by 1,301 commits and holds no work of its own: the stale local tip is kept as `stale/plane-local`, the job branch set to `origin/job/T51/plane`, `tranche/T51` merged into it (merge commit). `mail start` at depth 2; inbox read through B103 (B99 RESUME, B100 to B102 CHANGE: already answered by J66 to J68 of PLANE #63, nothing new).
+
+**Entries applied**
+- B103: `bio-plane/test/m/plane/r10-reading-ended.test.mjs` no longer hand-builds extraction's `readHeld` answers. The two answers are extraction's published fixture: `readHeldAnswer.read()` (read to its end: `finished`) and `readHeldAnswer.final()` (the reader refuses the cursor: `final`, `CURSOR_MISMATCH`), both made by its real code (`bio-plane/test/m/extraction/fixtures.mjs:93`). The override is a harness that routes the job table's asks by digest to those answers; it carries `// fixtures-own: harness` (the same form as `watchdog.test.mjs:127`).
+- Consequence in the assertions: the two final rows (`final`, and `unopened` with member null) now state `CURSOR_MISMATCH` as the reader's reason, in place of the stand-in's `PASSWORD_REQUIRED` and `NO_PROGRESS`. The assertions' meaning is unchanged: a final row's why is the reader's reason; a row no member opened names no one.
+- The `fixtures-run: notice-producers reading-ended` marker is unchanged (B101).
+
+**Published states not available (REPORT to BOB, for extraction):**
+- A final answer with `why: "NO_PROGRESS"` is not published. `NO_PROGRESS` is the job table's own stop when a tick progresses nothing (`pending.mjs:446`), so the test now takes the published `CURSOR_MISMATCH` final for the unopened row. If the seam should rest on a reader answer that carries NO_PROGRESS, extraction would publish it.
+- `readHeldAnswer` is keyed on no digest, so the job table's registrations take the digest-routed harness above; a published answer keyed by a registered digest would remove the harness.
+
+**Tests and checks**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/plane/r10-reading-ended.test.mjs`: 0 pass, 1 fail, before the change and after it: the store fails at import with `DECLARED_OP_DISAGREES: readtranslate description` (op-grades' stale hand row, not this module). Not run green yet; to run after OP-GRADES #30 merges (its CHANGE).
+- Failing-first: the test cannot reach the job table until that import passes, so the red is the import error; the green run is owed after the CHANGE.
+- `checks/fixtures.mjs /home/user/bio plane --list`: 0 failures (the first draft flagged the readHeld stand-in as `fail` at line 23; the `fixtures-own: harness` marker clears it; stub 0).
+- format 0 failures; architecture 0 failures; coverage 37 of 37; ownership (tranche/T51 → HEAD) 0 failures.
+- Not run: `build/plan/impact.mjs` and `checks/run.mjs` (the change is test-only and touches no service; both need the store to import, so they wait with the module tests).
+
+**Deferred:** none.
+
+**Found in other modules (REPORT)**
+- op-grades: `DECLARED_OP_DISAGREES: readtranslate description` (its hand row) makes every store in bio-plane fail at import on `tranche/T51` at 315ca3677b. Blocks every plane test run until OP-GRADES #30 merges.
+- extraction: the `NO_PROGRESS` final answer is not published (see above).
+
+**Deferred:** none in plane.
+
+Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 1, module lines 371
+
+## J69 · REPORT · re B103
+
+B103 applied (commit 7431437678 on job/T51/plane). r10-reading-ended.test.mjs takes extraction's published readHeld answers (readHeldAnswer.read for finished, readHeldAnswer.final for the cursor-refused final); the override is a fixtures-own harness router, as watchdog.test.mjs:127. fixtures plane --list: 0 failures; format, architecture, coverage 37/37, ownership 0.
+
+NOT GREEN YET: the module's tests cannot import the store. Every run fails at import with DECLARED_OP_DISAGREES: readtranslate description (op-grades' stale hand row, tranche/T51 at 315ca3677b). Waiting for OP-GRADES #30 to merge; I then run the file green and post COMPLETE.
+
+Found in other modules: (1) extraction does not publish a final answer with why NO_PROGRESS (plane's table stops on it at pending.mjs:446 when a tick progresses nothing); the unopened row now takes the published CURSOR_MISMATCH final, the assertion's meaning unchanged. (2) op-grades: readtranslate description, as above.
+
+## Record (PLANE #64, B104; on job/T51/plane after the DONE of B103)
+
+**Entries applied (B104, K5202, plan item 101 (4)(a))**
+- New `bio-plane/test/m/plane/r-transcribe-answer.test.mjs`, with `// fixtures-run: reading-pipeline transcribe-answer` and `// fixtures-run: extraction transcribe-answer`. It runs the users' contract (`{ok: true, engine, version, pages: [{page, text}]}`) against the REAL AI path (`transcriberOf(...).transcription(...).transcribe`) over a held scan, with agent-worker's `/transcribe` answering the shape the users state. Two tests, both naming R36: the answer's shape and fields (each page `{page, text}`, `sent`, `asked`, `owed`); and the page order / a page the scan lacks (never answered as text).
+- Path correction: the CHANGE names `bio-plane/src/plane/transcribe.mjs`; the AI path is in `bio-plane/src/store-assembly/transcribe.mjs` (`aiPath`, :101; the transcriber, :168 on). Used there; the test imports `transcriberOf` from it.
+- Marker names: the runs use `reading-pipeline` and `extraction` with id `transcribe-answer`, as the CHANGE says. Current users' markers still read `content transcribe-answer` (extraction t48:29, reading-pipeline text-units:531, :537, transcribe:323), so the pairing lands at BOB's rename.
+
+**Tests and checks**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/plane/r-transcribe-answer.test.mjs`: fails at import, the same `DECLARED_OP_DISAGREES: readtranslate description` (op-grades #30, not merged). Not run green yet.
+- `checks/fixtures.mjs /home/user/bio plane`: 0 failures. format 0 failures; coverage 37 of 37; ownership 0 failures.
+
+**Deferred:** none.
+
+**Found in other modules:** none new. The op-grades row in J69 still blocks every plane run.
+
+Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 2, module lines 371
+
+## J70 · REPORT · re B104
+
+B104 applied (job/T51/plane). New bio-plane/test/m/plane/r-transcribe-answer.test.mjs carries fixtures-run reading-pipeline transcribe-answer and fixtures-run extraction transcribe-answer. It runs your transcribe-answer shape {ok, engine, version, pages: [{page, text}]} against the real AI path (transcriberOf(...).transcription(...).transcribe, store-assembly/transcribe.mjs, since the path is there, not plane/transcribe.mjs), with agent-worker's /transcribe answering that shape. Two tests, both naming R36. fixtures plane: 0 failures; format, coverage 37/37, ownership 0.
+
+NOT GREEN YET: same blocker as J69, DECLARED_OP_DISAGREES: readtranslate description (op-grades #30). I run it green after OP-GRADES merges.
+
+Your users' markers still read content transcribe-answer (extraction t48:29, reading-pipeline text-units:531 and :537, transcribe.test:323); the pairing lands with your rename.
+
+## Record (PLANE #64, B105; OP-GRADES #30 merged)
+
+**Entries applied:** merged `origin/tranche/T51` (never a rebase). OP-GRADES #30 is in, so the stores import again.
+- `r10-reading-ended.test.mjs` (B103): the expected reason of the final rows is now the published final answer's own `why` (`readHeldAnswer.final()`: the reader's sentence, not the code `CURSOR_MISMATCH`), taken from the answer, not written in the test. First run after the merge failed on that assertion alone; fixed and green.
+- `r-transcribe-answer.test.mjs` (B104): green against the real AI path, 2 tests.
+
+**Tests and checks**
+- The two new files: 4 tests, 4 pass.
+- The whole `bio-plane/test/m/plane/*.test.mjs` directory: run in the background; result below.
+- `checks/fixtures.mjs /home/user/bio plane`: 2 failures, both `orphan-run` for `r-transcribe-answer.test.mjs:54` and `:55` (`reading-pipeline transcribe-answer`, `extraction transcribe-answer`). They are the B104 pairing: the users' markers still read `content transcribe-answer` until BOB's rename.
+- format 0 failures; architecture 0; coverage 37 of 37; ownership (tranche/T51 → HEAD) 0.
+- Not run: `checks/run.mjs` and `build/plan/impact.mjs` (waiting on the directory run).
+
+**Deferred:** none.
+
+Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 6, module lines 371
+
+## Record (PLANE #64, whole-directory run; r8-heal-door R102 G93)
+
+**Whole directory** (`bio-plane/test/m/plane/*.test.mjs`): 303 tests, 302 pass, 1 fail: `r8-heal-door` "R102 G93 L: a row owed and the alarm deleted, one ordinary read by the founder (op=owedwork)". Its failure is the setup's `settled` helper: the first firing did not end with a row owed inside its 30 s wait, under the parallel load of the directory run. The test passes alone.
+
+**Applied (partial):** `settled` waits up to 120 s (480 polls of 250 ms) instead of 30 s. Assertions unchanged. Not verified: under load, two of the five loop runs still failed, so the flake is not fully resolved. Next: find out why a firing outlasts 120 s under load, or confirm with a directory run that the change holds.
+
+Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 9, module lines 371
+
+## J71 · REPORT · re B105
+
+B105 acted on (job/T51/plane, merged origin/tranche/T51; pushed). OP-GRADES is in; stores import. Status:
+- r10-reading-ended and r-transcribe-answer: green (4 of 4). The reader's final reason is taken from the published answer.
+- Whole plane directory: 303 run, 302 pass, 1 fail: r8-heal-door R102 G93 (owedwork). Cause: its setup wait for the first firing was 30 s and the directory run is loaded. Pushed a partial fix: wait up to 120 s. The test passes alone, but under load 2 of 5 loop runs still failed, so the flake is not fully resolved.
+- Fixtures: 2 orphan-run lines for r-transcribe-answer (reading-pipeline and extraction transcribe-answer), which pair only after your rename of content transcribe-answer.
+Not COMPLETE: the flake and the open run are still mine. Next: find why a firing exceeds 120 s under load, then rerun the directory and checks/run.mjs.
+
+## J72 · BLOCKED
+
+Cause: tests. The plane directory run is 302 of 303 green; the one red is r8-heal-door R102 G93 (the owedwork test, and its siblings in the same file). It is intermittent: standalone runs pass about 3 in 5 (5 loops: fail 2, 1, 0, 0, 0; then 6 captured runs with 1 fail of 2 captured in the next loop). The pushed partial fix (settled waits 120 s, not 30) did not clear it: the failures now show the first firing never ends with a row owed inside 120 s (settled, r8-heal-door.test.mjs:67). A single diagnostic run passed, so the state at the timeout is not yet captured. I have not weakened any assertion. Tried: widened wait; repeated runs; a temporary diagnostic (reverted). Need: a load-free diagnosis of the first firing (the scanner stub and the alarm state at the timeout), or a decision on whether this test may be quarantined to a slower lane. I have not done either.
+
+## J73 · BLOCKED
+
+Cause: tests (r8-heal-door R102 G93, still open). Reproduced under load: 4 busy loops on the 4 cores, the file in a loop of 5: fail 0, 1, 1, 0, 2 (3 of 5). The diagnosis at the timeout is NOT captured: my instrumented run was killed at its background limit before it reached the timeout, and its output ran 85 tests (not the one named), so it is no evidence. My temporary diagnostic is reverted; the test file matches the committed one.
+
+Working tree problem, not mine: the shared clone at /home/user/bio shows modifications I did not make in other modules: agent-steps/src/drive.mjs, agent-worker/src/index.mjs, agent-steps/src/names.mjs, agent-steps/test/plane-meaning.mjs, bio-plane/src/run-rules/rules.mjs. They are not in my paths and I have not committed them. The stop hook will keep flagging the tree until someone owns them. Pushed so far: the tranche merge (B107) on job/T51/plane.
+
+Not done: B108 (shrink t42/t46). Needs: someone to say whether the foreign modifications are expected, and a rerun of the diagnosis on a quiet machine.
+
+## Record (PLANE #64, B107 to B109; B106 still open)
+
+**B107:** `origin/tranche/T51` merged (STORE-ASSEMBLY #5, `fb0f6cd668`).
+
+**B108 (shrink):** `bio-plane/test/m/plane/t42.test.mjs` 569 lines to 4 tests; `t46.test.mjs` 466 lines to 3 tests. Removed the composition cases that store-assembly's `t42.test.mjs` (16) and `t46.test.mjs` (10) now hold, by title (`was plane R36`, etc.), and the helpers only those tests used (`ONE_MATTER`, `PASSED`, `PNG_SIG`, `agentWorker`, `declarers`, `DOORBELL_METHODS`, `USAGE`, `WRITING`, `ITEMS`, `statusReport`, `refusing`, `REFUSED`, `ONE_MATTER`, `SCAN`, `shaOf`, `bucket`, `worker`, `scanned`, `mask`, `T46_OWNERS`, `TEST_COPY`). Kept in plane: t42 R113 (knock), R113 (op=knock at the door), R112 (gated pagetranscribe hook), R6 (gated hook principal); t46 R42 (workerd), R114 (RPC `dispatchMemberRun`), R114 (RPC `groupFields`). The three `fixtures-run: extraction transcribe-not-sent` orphans at t42 (:301, :402, :410) went with the removed cases. Result: t42 4/4, t46 3/3.
+
+**B109:** `r10-reading-ended.test.mjs` takes the unopened row's answer from `readHeldAnswer.final("NO_PROGRESS")` (published), not a stand-in; the final rows keep `readHeldAnswer.final()` (CURSOR_MISMATCH). The router keeps `fixtures-own: harness`. 2/2 green with `r-transcribe-answer` (2/2).
+
+**Checks:** format 0 failures; coverage 37/37; fixtures plane: one `orphan-run` remains (`r-transcribe-answer.test.mjs:54` `reading-pipeline transcribe-answer`), pending BOB's rename of the users' `content transcribe-answer` markers.
+
+**Working tree:** `agent-steps/src/drive.mjs`, `agent-worker/src/index.mjs`, `agent-steps/src/names.mjs`, `agent-steps/test/plane-meaning.mjs`, `bio-plane/src/run-rules/rules.mjs` show modifications that are not mine and are not committed here.
+
+**B106:** still open; see the BLOCKED (J73).
+
+Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 16, module lines 371
+
+## J74 · REPORT · re B110
+
+B107, B108, B109 done and pushed on job/T51/plane (commit with B108/B109). Tranche merged. t42 shrunk to 4 tests (R112, R113 x2, R6 hook), t46 to 3 (R42 workerd, R114 x2 RPC); the 16 and 10 composition cases are in store-assembly's t42/t46 by title, the 3 t42 orphan runs gone. r10-reading-ended takes readHeldAnswer.final('NO_PROGRESS') for the unopened row. t42 4/4, t46 3/3, r10 2/2, r-transcribe 2/2. format 0; coverage 37/37. Fixtures: one orphan-run left, r-transcribe-answer:54 (reading-pipeline transcribe-answer), pending your rename of content transcribe-answer.
+
+B106 (G93 timing, under load) is still open; I'm diagnosing it now (reproduced under 4 busy loops, 3 of 5). Working tree: names.mjs, plane-meaning.mjs, run-rules/rules.mjs, agent-steps/drive.mjs, agent-worker/index.mjs show changes that are not mine; not committed.
+
+## Record (PLANE #64, B113 and the G93 verification, RESUME B112)
+
+**B113:** `origin/tranche/T51` merged (control-plane's `owner-ops.mjs` deleted). `bio-plane/test/m/plane/maps.mjs:91` now imports `ownerOps` from `store-assembly/owner-ops.mjs` (same signature as `controlPlaneOwnerOps(getters, url, body)`), and its control-plane entry (:207) calls it. Only two files in the tree import `maps.mjs` (`store.test.mjs`, `t46.test.mjs`) and both pass: 9 of 9 (door.test.mjs 6 of 6 also loads).
+
+**G93, verification of the fix (10 runs under busy loops, 20 loop processes on 4 cores, heavier than BOB's named 4):** the owedwork and whoami tests, `fix-run-1` to `-10` (`/tmp/claude-0/-home-user-bio/`). owedwork passed in every run that completed. whoami failed twice: run 3 in `settled` (the 120 s wait for the first firing to end with a row owed, not reached), run 4 at r8-heal-door.test.mjs:109 (the member's read did not arm the alarm once the firing ended). So the fix is NOT 10 of 10 and is not committed.
+
+**The timing cause, measured:** the founder's owedwork read starts the row's firing (before the read: running_since null, alarm_at null, the row due; after the read: running_since set and running true). While a firing runs the platform answers no alarm (scheduler/index.mjs:614, R29), so the old immediate assertion at r8-heal-door.test.mjs:93 read the firing, not the arm. The test now waits for the firing to end (`firingEnded`) before reading the alarm. Applied to the whoami test too. That is the owedwork fix; the whoami failure at :109 shows the arm after a firing is not yet explained (a read during a firing, or a look within HEAL_EVERY_MS: scheduler `heal()` returns null when firing or looked recently, :807). Not diagnosed.
+
+**Working tree:** the G93 test edit (`r8-heal-door.test.mjs`) is uncommitted; the five foreign files (names.mjs, plane-meaning.mjs, run-rules/rules.mjs, drive.mjs, agent-worker index.mjs) are not mine and are not committed (patch saved at /tmp/claude-0/-home-user-bio/foreign-changes.patch).
+
+Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 30, module lines 371
+
+## J75 · BLOCKED · re B113
+
+Cause: tests (G93, r8-heal-door R102). B113 done and pushed: maps.mjs re-pointed to store-assembly's ownerOps; the two importers pass 9 of 9 (door.test 6 of 6).
+
+G93 is NOT 10 of 10. Ten runs under busy loops (20 loop processes on 4 cores, heavier than the 4 named): owedwork passed in every completed run; whoami failed twice: run 3 in settled (the 120 s wait for the first firing to end, not reached) and run 4 at r8-heal-door.test.mjs:109 (the member's read did not arm the alarm after its firing ended).
+
+Measured cause for owedwork: the founder's read starts the row's firing; the platform answers no alarm while it runs (scheduler/index.mjs:614, R29), so the old immediate assertion read the firing, not the arm. The test now waits for the firing to end (firingEnded) before reading the alarm; the same wait is on whoami. The whoami :109 failure is not yet explained: the read during or just after a firing, or a look inside HEAL_EVERY_MS (scheduler heal(), :807).
+
+The G93 test edit is uncommitted (not verified). The five foreign files are not mine and are not committed (patch: /tmp/claude-0/-home-user-bio/foreign-changes.patch). Need: a decision on the whoami case (is a member read after a firing expected to arm at once, or to arm when the firing ends?), or permission to continue diagnosing it.
+
+## J76 · REPORT · re J75
+
+Final count for the G93 verification (fix-run-1 to -10, same load): owedwork 10 of 10 green. whoami 8 of 10: fails at run 3 (settled, the first-firing wait) and run 4 (r8-heal-door.test.mjs:109, the member's read did not arm after its firing ended). Nothing changed since J75; the whoami case still waits on your decision (arm at once, or when the firing ends).
+
+## J77 · REPORT · re B114
+
+whoami diagnosis: 10 instrumented runs of the member's whoami test under 4 busy loops: 10 of 10 green, nothing captured. The earlier failures (2 of 10, runs 3 and 4) did not reproduce. The instrumented copy (state before and after the firing ends: flight, rows, counters) passed each time, so the instrumentation may change the timing. No scheduler cause is named yet, so there is nothing to place with its owner. The owedwork fix is pushed and 10 of 10 green. Five foreign files are still modified in the shared clone (restore refused by the classifier; saved as a patch). Options: a longer run of the uninstrumented file to try to reproduce whoami, or a decision to accept whoami as passing under load after the owedwork fix.
+
+## J78 · BLOCKED · re B115
+
+G93 whoami, B115 (deterministic repro): NOT built yet, and G93 is NOT resolved, so no COMPLETE.
+
+What I checked in the code (bio-plane/src/scheduler/index.mjs, file:line):
+- heal() returns null while a firing runs (:782 `if (this.#firing || now - this.#healedAt < HEAL_EVERY_MS) return null`), and sets #healedAt at the look (:783). Your sequence (1)-(3) is consistent with that.
+- The firing's end reconciles EXACTLY over the full registry before it clears running_since (:658 `#reconcile(now, reg, true, answers)`, then the beat write at :661). So after firingEnded (running_since null) the alarm is the one that reconcile set.
+- #reconcile sets the alarm to the earliest consumer wake, and DELETES it when no consumer wants a wake (`if (!wants.length) deleteAlarm`). The ledger's wake (pending.mjs:780) is the first live row's due instant, or `at` while a row is started, or null when no row is live.
+
+Reading of run 4: the alarm is null after the firing ended only if the reconcile found no wake, i.e. no live row. If that is right, the failing assertion was asserting an alarm with no owed work, which is a test expectation, not a missed re-arm. I have NOT confirmed this: I did not capture the rows at the failing assertion (the diagnostic runs passed), so it is an inference.
+
+Why no repro yet: a deterministic sequence needs an owed reading row through the real store and scheduler with an injected clock. The plane's r8 world runs under miniflare, whose time is not injectable, and the scheduler's own fixture is the scheduler module's (not mine). I have not built that world.
+
+Options for you: (a) I build the repro with a platform double for storage and the real Scheduler class, pinning Date.now as the scheduler tests do, and check the reconcile's wake at the failure instant; or (b) you accept the inference (no live row at the end, so the test's armed expectation is wrong) and I change the whoami test to assert the alarm only while work is owed. The five foreign files are not committed.
+
+## Record (PLANE #64, COMPLETE for G93, B106 and B114 to B116)
+
+**G93 resolved:**
+- `owedwork`: 10 of 10 green under the busy loops. Its cause: the founder's read starts the row's firing, and the platform answers no alarm while a firing runs (scheduler/index.mjs:614, R29). The test waits for the firing to end (`firingEnded`) before reading the alarm (r8-heal-door.test.mjs, the owedwork test).
+- `whoami`: the assertion is one-directional (B116): once the firing has ended with a live row, an alarm must stand. The earlier exact check (alarm exactly when a live row exists) was wrong, since the scheduler keeps alarms for its always-due consumers; it failed 19 of 22 loaded runs with no owed work behind them.
+- B116 repro (`bio-plane/test/m/plane/r8-heal-sequence.test.mjs`, new): the real Scheduler over a platform double, the pinned clock, the real ledger, extraction's published piece answer. Sequence: heal at t arms; firing at t+1 s leaves the row live; the read at t+2 s is answered null by the five-second throttle (scheduler/index.mjs:782), and the alarm still stands from the firing's end. Control with no live row: no alarm. Both green, so the firing's end re-arms as BOB described. No scheduler defect named.
+- 30 uninstrumented runs of the whoami file under 4 busy loops (20 processes on 4 cores at the earlier attempt; 4 this time): 30 of 30 green.
+
+**Not resolved, noted:** the first whoami failures (runs 3 and 4 of the earlier ten) did not reproduce in later runs; their exact cause (the first-firing wait in `settled`, and the member's read at old :109) is not named. The corrected assertion is the one tested in the 30 runs.
+
+**Working tree:** `agent-steps/src/names.mjs`, `agent-steps/test/plane-meaning.mjs`, `bio-plane/src/run-rules/rules.mjs` are not mine; not committed.
+
+Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 60, module lines 371
+
+## J79 · COMPLETE
+
+COMPLETE (G93 resolved, B106, B114 to B116). Three results.
+
+1. Assertion: whoami is one-directional (B116): once a firing ends with a live row, an alarm must stand (r8-heal-door.test.mjs, committed). The earlier exact check was wrong: the scheduler keeps alarms for always-due consumers (19 of 22 loaded runs failed on alarms with no owed work).
+2. Repro: bio-plane/test/m/plane/r8-heal-sequence.test.mjs (committed), real Scheduler + real ledger + pinned clock. heal at t arms; the firing at t+1 leaves a live row; the read at t+2 is answered null by the throttle (scheduler/index.mjs:782); the alarm still stands from the firing's end. Control with no live row: no alarm. 2/2 green. No scheduler defect named.
+3. 30 uninstrumented whoami runs under 4 busy loops: 30 of 30 green.
+Plus owedwork: 10 of 10 green under load (its cause: the firing a read starts, scheduler/index.mjs:614, R29; the test waits for the firing to end).
+
+Open, not resolved: the first whoami failures (runs 3 and 4 of an earlier 10) did not reproduce later; their exact cause is not named. Five foreign files are not mine and not committed.

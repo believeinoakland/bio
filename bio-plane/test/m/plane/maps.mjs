@@ -88,7 +88,7 @@ import { fileSafetyOf, fileSafetyOps } from "../../../src/file-safety/index.mjs"
 import { aiUseOf, aiUseOps } from "../../../src/ai-use/index.mjs";
 import { readingGuidesOf, readingGuidesOps } from "../../../src/reading-guides/index.mjs";
 import { publishScheduleOps } from "../../../src/publish-schedule/index.mjs";
-import { controlPlaneOwnerOps } from "../../../src/control-plane/owner-ops.mjs";
+import { ownerOps } from "../../../src/store-assembly/owner-ops.mjs";
 import { ownerGettersOf } from "../../../src/store-assembly/owners.mjs";
 import { stepsOf } from "../../../src/steps/index.mjs";
 import { investigationOf } from "../../../src/investigation/index.mjs";
@@ -204,7 +204,7 @@ export const MODULE_MAPS = [
     .filter(([op]) => !Object.hasOwn(translationsOps(translationsOf(c), u, b), op)))],
   ["admission", (c, u, b) => admissionOps(admissionOf(c), u, b)],
   /* plane R35 (K2585): control-plane's own map for owners with no arm (its R71, R72), over each owner's one instance */
-  ["control-plane", (c, u, b, e) => controlPlaneOwnerOps(ownerGettersOf(c, e), u, b)],   /* the getters the store hands (plane/owners.mjs), not a copy of them (K4435) */
+  ["control-plane", (c, u, b, e) => ownerOps(ownerGettersOf(c, e), u, b)],   /* the getters the store hands (plane/owners.mjs), not a copy of them (K4435) */
   ["store-door", (c, u, b) => controlPlaneRoutes(c, u, b)],
 ];
 
