@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7786,
+  "screen": 7804,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -236,7 +236,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19341,
+  "total": 19359,
   "protected": 1157
  },
  "words": [
@@ -82751,6 +82751,132 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-439: B533 (4)"
+  },
+  {
+   "key": "screen.contradiction.doctype.meeting_calendar",
+   "en": "Meeting calendar",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-440: the kind of document a passage comes from, by the reader's registered id (content_type); an id with no row draws no row"
+  },
+  {
+   "key": "screen.contradiction.doctype.meeting_minutes",
+   "en": "Meeting minutes",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-440: the kind of document a passage comes from, by the reader's registered id (content_type); an id with no row draws no row"
+  },
+  {
+   "key": "screen.contradiction.doctype.meeting_agenda",
+   "en": "Meeting agenda",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-440: the kind of document a passage comes from, by the reader's registered id (content_type); an id with no row draws no row"
+  },
+  {
+   "key": "screen.contradiction.doctype.staff_report",
+   "en": "Staff report",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-440: the kind of document a passage comes from, by the reader's registered id (content_type); an id with no row draws no row"
+  },
+  {
+   "key": "screen.contradiction.doctype.regulation",
+   "en": "Ordinance or resolution",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-440: the kind of document a passage comes from, by the reader's registered id (content_type); an id with no row draws no row"
+  },
+  {
+   "key": "screen.contradiction.doctype.policy",
+   "en": "Numbered policy",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-440: the kind of document a passage comes from, by the reader's registered id (content_type); an id with no row draws no row"
+  },
+  {
+   "key": "screen.contradiction.doctype.staff_directory",
+   "en": "Staff directory",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-440: the kind of document a passage comes from, by the reader's registered id (content_type); an id with no row draws no row"
+  },
+  {
+   "key": "screen.contradiction.doctype.generic",
+   "en": "Other document",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-440: the kind of document a passage comes from, by the reader's registered id (content_type); an id with no row draws no row"
+  },
+  {
+   "key": "screen.contradiction.doctype.legistar_api",
+   "en": "Legistar record",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-440: the kind of document a passage comes from, by the reader's registered id (content_type); an id with no row draws no row"
+  },
+  {
+   "key": "screen.contradiction.doctype.staff_roster",
+   "en": "Staff or membership roster",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-440: the kind of document a passage comes from, by the reader's registered id (content_type); an id with no row draws no row"
+  },
+  {
+   "key": "screen.contradiction.doctype.org_chart",
+   "en": "Organization chart",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-440: the kind of document a passage comes from, by the reader's registered id (content_type); an id with no row draws no row"
+  },
+  {
+   "key": "screen.contradiction.doctype.courtlistener_docket",
+   "en": "CourtListener docket",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-440: the kind of document a passage comes from, by the reader's registered id (content_type); an id with no row draws no row"
+  },
+  {
+   "key": "screen.contradiction.doctype.cpuc_proceeding",
+   "en": "CPUC proceeding record",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-440: the kind of document a passage comes from, by the reader's registered id (content_type); an id with no row draws no row"
+  },
+  {
+   "key": "screen.contradiction.doctype.ecourt_roa",
+   "en": "eCourt register of actions",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-440: the kind of document a passage comes from, by the reader's registered id (content_type); an id with no row draws no row"
+  },
+  {
+   "key": "screen.contradiction.doctype.financial_report",
+   "en": "Annual financial report",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-440: the kind of document a passage comes from, by the reader's registered id (content_type); an id with no row draws no row"
+  },
+  {
+   "key": "screen.contradiction.doctype.budget_book",
+   "en": "Budget book",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-440: the kind of document a passage comes from, by the reader's registered id (content_type); an id with no row draws no row"
+  },
+  {
+   "key": "screen.contradiction.doctype.budget_table",
+   "en": "Budget line-item table",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-440: the kind of document a passage comes from, by the reader's registered id (content_type); an id with no row draws no row"
+  },
+  {
+   "key": "screen.document.flags.pair",
+   "en": "{a} and {b}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-440: R138: a row of the flags list, the two passages' names, linked to the contradiction; screen.contradiction.flagged.by beneath it"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",

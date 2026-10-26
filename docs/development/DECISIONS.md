@@ -6784,3 +6784,19 @@ the design: 58 rows in `words-drawn.src.py`'s DEC-439 block, each noting its ite
 verified: on tranche/T51 at its tip with these words files, rows.mjs regenerated: words 0, format 0; queue-producers, money, screens-investigate, action-plans no new failure (action-plans' `t47.test.mjs` asserts "no time zone is held", kept in the new sentence); screens-daily's two seam files red as on the tranche alone.
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-439's block, three rows edited in place, REWRITE); `screens/mock-screens.js` (`due-date`); `ux-experience.json` (journey (a) step 5, UC-135); `screens/parked-T52.md`.
 owed: BOB: merge this commit (MERGE); the jobs read these keys; BOB names the op for a leg's capture grade (D-M1, C-M4) and the read for a document's flags (C-M12), and the op for the signing-key item's "I know about this key" (A-03); the code fix of the Timeline's participant drawn as an id (C-M9's re-walk); T52: `parked-T52.md`'s DEC-439 lines.
+
+### DEC-440 · decided
+raised: 2026-10-26 · the UX design session with Bob (session_01FfxzNZtq7F8arhiJhGFggR, UX design #41) (BOB's B535; SCREENS-INQUIRY #35 J66, K5297)
+for: design (T51; words a running job asked for)
+question: The Contradiction screen drew a passage's document kind as the reader's raw id ("generic · generic"); only two of the 17 registered kinds have a word, keyed by file name, worded with an article. Document's flags list (R138; its read, `contradictioncandidates` by bundle, exists) has no row. A recorded flag draws the owner's sentence.
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: reuse the readers' own labels ("a policy of a numbered series"); not taken: they are keyed by file name, not by the id the screen holds, and read as sentences, not a column.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-26 · the design session (P17)
+the design: every registered reader id gets a label, `screen.contradiction.doctype.<id>` (17: meeting calendar, minutes and agenda; staff report; ordinance or resolution; numbered policy; staff directory; "Other document" for `generic`; Legistar record; staff or membership roster; organization chart; CourtListener docket; CPUC proceeding record; eCourt register of actions; annual financial report; budget book; budget line-item table); an id with no row draws no row. The flags list: its head `screen.document.flags.head` (DEC-439), each row `screen.document.flags.pair` "{a} and {b}" linked to the contradiction, with `screen.contradiction.flagged.by` beneath; the list is drawn only when a flag exists. A recorded flag draws `screen.document.flag.recorded` (DEC-439) in place of the owner's sentence. B535's carried items are DEC-439's rows.
+verified: on tranche/T51 at its tip with these words files, rows.mjs regenerated: words 0, format 0; screens-inquiry's contradiction tests no failure.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-440's block).
+owed: BOB: merge this commit (MERGE); SCREENS-INQUIRY reads the labels by id and draws the list; the C-M12 ask in U481 is answered by B535 (the read exists).

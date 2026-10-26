@@ -8144,6 +8144,18 @@ REWRITE.update({
  'action-plans.time_zone_held_place': "no time zone is held for your team, so the plan's dates cannot be checked against the day. A member sets it under Settings, Your team",
 })
 
+# DEC-440: B535 (SCREENS-INQUIRY #35 J66, K5297): the document kinds on Contradiction, keyed by the reader's id; Document's flags list
+def w440(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-440: ' + note))
+for i, en in [('meeting_calendar', 'Meeting calendar'), ('meeting_minutes', 'Meeting minutes'), ('meeting_agenda', 'Meeting agenda'),
+              ('staff_report', 'Staff report'), ('regulation', 'Ordinance or resolution'), ('policy', 'Numbered policy'),
+              ('staff_directory', 'Staff directory'), ('generic', 'Other document'), ('legistar_api', 'Legistar record'),
+              ('staff_roster', 'Staff or membership roster'), ('org_chart', 'Organization chart'), ('courtlistener_docket', 'CourtListener docket'),
+              ('cpuc_proceeding', 'CPUC proceeding record'), ('ecourt_roa', 'eCourt register of actions'), ('financial_report', 'Annual financial report'),
+              ('budget_book', 'Budget book'), ('budget_table', 'Budget line-item table')]:
+    w440('screen.contradiction.doctype.' + i, en, 'the kind of document a passage comes from, by the reader\'s registered id (content_type); an id with no row draws no row')
+w440('screen.document.flags.pair', '{a} and {b}', 'R138: a row of the flags list, the two passages\' names, linked to the contradiction; screen.contradiction.flagged.by beneath it')
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
