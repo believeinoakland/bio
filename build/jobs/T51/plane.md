@@ -1268,3 +1268,11 @@ Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 6, module lines 371
 **Applied (partial):** `settled` waits up to 120 s (480 polls of 250 ms) instead of 30 s. Assertions unchanged. Not verified: under load, two of the five loop runs still failed, so the flake is not fully resolved. Next: find out why a firing outlasts 120 s under load, or confirm with a directory run that the change holds.
 
 Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 9, module lines 371
+
+## J71 · REPORT · re B105
+
+B105 acted on (job/T51/plane, merged origin/tranche/T51; pushed). OP-GRADES is in; stores import. Status:
+- r10-reading-ended and r-transcribe-answer: green (4 of 4). The reader's final reason is taken from the published answer.
+- Whole plane directory: 303 run, 302 pass, 1 fail: r8-heal-door R102 G93 (owedwork). Cause: its setup wait for the first firing was 30 s and the directory run is loaded. Pushed a partial fix: wait up to 120 s. The test passes alone, but under load 2 of 5 loop runs still failed, so the flake is not fully resolved.
+- Fixtures: 2 orphan-run lines for r-transcribe-answer (reading-pipeline and extraction transcribe-answer), which pair only after your rename of content transcribe-answer.
+Not COMPLETE: the flake and the open run are still mine. Next: find why a firing exceeds 120 s under load, then rerun the directory and checks/run.mjs.
