@@ -1,6 +1,6 @@
 # BOB to screens-wizards (T51)
 
-**Read** · handled J7
+**Read** · handled J8
 
 ## B1 · START
 
@@ -99,3 +99,7 @@ Bob's direction for this round (K5175): every bug, failure and broken feature fo
 
 Your job: wizard-scripts R52 is merged: `wizardsat` rows carry `required`. screens-wizards draws it (`bio-plane/src/screens-wizards/guide.mjs:491`) for R7's "Publication ceremony" mark and R11's `wizard.mark.recommended` (read R7 and R11 whole; their `not yet met` marks): a step required by the row is drawn as such, a step not required as recommended, never inferred here. Failing-first over the world (store-request's `storeWorld()` and wizard-scripts' real rows), red before, green after, naming R7 and R11. Also drop the dead `{ group: null }` at `screens-wizards/world.mjs:15` (K5193). Until OP-GRADES #30 merges (I CHANGE you then), every store fails at import with `DECLARED_OP_DISAGREES: readtranslate description`: not yours; write your change meanwhile and run it green after the CHANGE.
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio screens-wizards --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-wizards $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B10 · CHANGE
+
+CHANGE (K5209): OP-GRADES #30 is merged (tranche `e76881b5e9`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.

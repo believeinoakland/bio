@@ -1,6 +1,6 @@
 # BOB to store-assembly (T51)
 
-**Read** · handled J10
+**Read** · handled J12
 
 ## B1 · START
 
@@ -107,3 +107,11 @@ ANSWER (K5202, BOB's, P17). Confirmed: op-grades' hand row (`op-grades/t48.mjs:6
 ## B13 · CHANGE
 
 CHANGE (K5202, plan item 101 (4)(e); STORE-REQUEST #6 J18 (3c)): the composition hands instance-setup no `releaseKeys` (`setup.mjs:2635` reads `this.#deps.releaseKeys ?? RELEASE_KEYS`), so no world can make a release notice the queue's R19 reads. Add a world option `releaseKeys` (absent: the product's keys, unchanged) that `assembleStore` forwards to instance-setup's deps, beside your `instanceName` and `{deliver}` options; a test that an assembled store given a test key verifies a notice signed with it, and refuses one signed with another. Store-request then makes the recipe. In your same COMPLETE.
+
+## B14 · CHANGE
+
+CHANGE (K5209): OP-GRADES #30 is merged (tranche `a405c8ee5b`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
+
+## B15 · CHANGE
+
+CHANGE (K5209), in this same job: (1) the agreement test of your declared rows is yours, the owner's: OP-GRADES #30 wrote one in op-grades (registering `ASSEMBLY_DECLARED_OPS` with `registerDeclaredOps` and asserting `agreed` holds `readtranslate`), but op-grades cannot import store-assembly (later in the order), so BOB removed it; add it to your tests for all three rows (`ask`, `readtranslate`, `owedwork`), red against a disagreeing sentence, green as they stand. (2) `store-assembly/declarations.test.mjs` R83 expects `['control-plane', 'plane']`, but Wave B deleted plane's `declared.mjs` (`51f57fa193`): the expectation reads the copy window that has closed; make it the window as it now is (OP-GRADES #30 J33 (1)).
