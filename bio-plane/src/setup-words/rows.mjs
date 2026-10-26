@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (19247 design words, 1158 protected; SHA-256
-   f306e086b4d5250a7c91719a0bece5755504e4b298e2cf1892d9a457ef8cbf78) followed by 7430 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (19246 design words, 1157 protected; SHA-256
+   641148afcaa459ad607bdaebe5a1cd86dbcccbd88254a0b40dbf295751bcf83b) followed by 7430 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "f306e086b4";
+export const WORDS_COMMIT = "641148afca";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -17881,7 +17881,6 @@ export const WORD_ROWS = Object.freeze([
   ["act.themewithdraw.label.theme","Take out or reject, with a reason",null,"Takes a placement out of a theme (the member who placed it, or an administrator) or rejects a hunch (any member). Your reason is required and stays on record.",true,"design"],
   ["act.filingapprove.label.dash-action","Approve the text",null,"Approves this exact text for sending. Changing it afterwards needs approving again.",true,"design"],
   ["act.reminderanswer.label.dash-action","Answer a reminder",null,"Answers a reminder you set, for example that a reply came or a deadline passed.",true,"design"],
-  ["act.taskresolve.label.dash-action","Start the next step",null,"Marks this item done where nothing more is asked of you, and it leaves your queue. An item that needs you to read, check or decide has its own button for that, and stays until you have.",true,"design"],
   ["act.actioncreate.label.dash-action","Start an action",null,"Starts the records request as an action the team follows to its reply.",true,"design"],
   ["act.release.label.dash-project","Vouch for photos",null,"Vouches that each copy is what its source gave, unaltered. It is signed with your name; it can be corrected later, never silently undone.",true,"design"],
   ["act.adoptversion.label.dash-project","Adopt the newer version",null,"Moves your citations to the newer version of this document. You see what changed first.",true,"design"],
