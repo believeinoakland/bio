@@ -22,7 +22,7 @@ import { readingProvenance, describePages, yieldNow } from "./readingprov.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 import { boundOf, statement } from "../read-bounds.mjs";
 import { decodeText } from "../ooxml.mjs";
-import { decodeReferences, visibleTextOfHtml, visibleTextOfHtmlYielding } from "./html.mjs";
+import { decodeReferences, visibleTextOfHtml, visibleTextOfHtmlYielding, visibleTextOfHtmlStream } from "./html.mjs";
 
 export { visibleTextOfHtml };
 
@@ -2132,10 +2132,10 @@ async function csvRangedHead(evidence, doc, { recorded, declared }) {
    50 MB) is read from its first piece by range, as a CSV is: the head (the first window) gives the reading's facts and the grain, and each piece is a byte window with
    a carry (`textWindowTick`), so neither the object nor its text is held whole. UTF-8 and US-ASCII only; another encoding of such a size is stated against the whole-read
    ceiling. `null` when the capture is not one: it is read, or refused, as before. */
-async function textRangedHead(evidence, doc, { recorded, declared, textual, charset }) {
+async function textRangedHead(evidence, doc, { recorded, declared, textual, charset, htmlOnly = false }) {
   const src = rangeSource(evidence, doc);
   if (!(Number.isInteger(src.size) && src.size > WHOLE_READ_MAX && src.size <= boundOf("text", "bytes"))) return null;
-  if (!textual || !(recorded === null || recorded === "undetermined" || recorded === "text" || recorded === "json" || recorded === "xml")) return null;
+  if (!textual || !(recorded === null || recorded === "undetermined" || recorded === "text" || recorded === "json" || recorded === "xml" || recorded === "html")) return null;
   const want = Math.min(src.size, WINDOW_BYTES + 4);
   const probe = await src.readRange(0, want);
   if (!(probe instanceof Uint8Array) || probe.length < want) return null;
@@ -2143,13 +2143,47 @@ async function textRangedHead(evidence, doc, { recorded, declared, textual, char
   if (!bom16 && probe.includes(0) && !/^utf-16/i.test(charset || "")) {
     /* a NUL in the head: UTF-16 without a BOM, only if the decode says so below; a binary file is no text */
   }
-  const d = decodeText(probe.subarray(0, probe.length - (probe.length % 2)), { declared: charset, name: charset, kind: "text" });
+  /* R51 (fix round 10; K5211): a web page is read here too, by the one streaming pass in windows (`htmlWindows`); its own meta charset is the page's declaration */
+  const isHtml = !bom16 && !probe.includes(0) && detectFormat(probe, declared).format === "html";
+  if (htmlOnly && !isHtml) return null;
+  const d = decodeText(probe.subarray(0, probe.length - (probe.length % 2)), { declared: charset, name: charset, kind: isHtml ? "html" : "text" });
   if (!d.ok || d.replaced_ratio > REPLACED_TOLERANCE || !windowEncodable(d.encoding)) return null;
   const en = d.encoding === "us-ascii" ? "utf-8" : d.encoding;
   if (!/^utf-16/.test(en) && probe.includes(0)) return null;
-  if (!/^utf-16/.test(en) && detectFormat(probe, declared).format !== "undetermined") return null;
+  if (!isHtml && !/^utf-16/.test(en) && detectFormat(probe, declared).format !== "undetermined") return null;
   const bm = en === "utf-8" ? (probe.length >= 3 && probe[0] === 0xef && probe[1] === 0xbb && probe[2] === 0xbf ? 3 : 0) : /^utf-16/.test(en) ? (bom16 ? 2 : 0) : 0;
-  return { src, size: src.size, head: probe, bm, text: d.text, decoded: d, en: en === "utf-8" ? undefined : en, grain: grainOf(d.text, false) };
+  return { src, size: src.size, head: probe, bm, text: d.text, decoded: d, en: en === "utf-8" ? undefined : en, grain: grainOf(d.text, isHtml), ...(isHtml ? { html: true } : {}) };
+}
+
+/* R51 (fix round 10; K5211): the visible text of a web page past a whole read, made by the one streaming pass (html.mjs) from the page's byte windows, each decoded by the head's
+   encoding (a character cut by a window's end goes on with the next) and handed on with the carry the pass keeps. The page is never held as one string or one byte array.
+   `stats.replaced` counts the replacement characters the windows decoded (R49). Answers null when a window is not held (the caller states it, transient). */
+async function htmlVisibleByWindows(rt, windowBytes, stats) {
+  const A = adapterFor(rt.en), size = rt.size;
+  let gone = false;
+  async function* chunks() {
+    let off = rt.bm, rest = new Uint8Array(0);
+    while (off < size || rest.length) {
+      const len = Math.min(windowBytes, size - off);
+      let got = new Uint8Array(0);
+      if (len > 0) {
+        const r = await rt.src.readRange(off, len);
+        if (!(r instanceof Uint8Array && r.length === len)) { gone = true; return; }
+        got = r; off += len;
+      }
+      let buf = got;
+      if (rest.length) { buf = new Uint8Array(rest.length + got.length); buf.set(rest, 0); buf.set(got, rest.length); }
+      const eof = off >= size;
+      const end = eof ? buf.length : A.end(buf, 0, buf.length);
+      rest = buf.slice(end);
+      if (!end) { if (eof) return; continue; }
+      const text = A.lenient(buf.subarray(0, end));
+      if (stats) for (let at = text.indexOf("\ufffd"); at >= 0; at = text.indexOf("\ufffd", at + 1)) stats.replaced++;
+      yield text;
+    }
+  }
+  const visible = await visibleTextOfHtmlStream(chunks(), { yieldNow });
+  return gone ? null : visible;
 }
 
 /* --- a PDF -------------------------------------------------------------------------------------------------------------- */
@@ -2894,9 +2928,12 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   if (rangedCsv) fmt = "csv";
   /* R50: a text, JSON or XML past a whole read's bound and within the text bound is read by range from its first piece too */
   const textual = profile.profiled_from_text === true || TEXT_TYPE.test(profile.source_content_type || ct || "");
-  const rangedTxt = !rangedCsv && (!piecesOn || pieceAsk.cursor === null) && !held
-    ? await textRangedHead(evidence, doc, { recorded: fmt, declared: profile.source_content_type || ct || null, textual,
+  /* a later piece of a page is cut from its visible text, made again from the windows when the object lost the one it kept (R51) */
+  const laterOfText = piecesOn && pieceAsk.cursor !== null && (unb64(pieceAsk.cursor) || {}).k === "t";
+  const rangedTxt = !rangedCsv && (!piecesOn || pieceAsk.cursor === null || laterOfText) && !held
+    ? await textRangedHead(evidence, doc, { recorded: fmt, declared: profile.source_content_type || ct || null, textual, htmlOnly: laterOfText,
         charset: charsetOf([headers["content-type"], ct, profile.source_content_type].find((t) => charsetOf(t)) || "") }).catch(() => null) : null;
+  if (rangedTxt && rangedTxt.html) fmt = "html";
   if (rangedTxt && !piecesOn)
     return early(failed(doc, null, localize("reading-pipeline.index.text_in_pieces", "this file is {size} bytes, more than a whole read holds ({limit}), so it is read in pieces and none of it is read yet", { size: String(rangedTxt.size), limit: String(WHOLE_READ_MAX) }), { failure: FAILURE_TRANSIENT }));
   const got = held ? { bytes: HELD_OPEN } : rangedCsv ? { bytes: rangedCsv.head } : rangedTxt ? { bytes: rangedTxt.head } : await bytesOf(evidence, doc, { kind: fmt, textual }).catch(() => ({ bytes: null, failure: FAILURE_TRANSIENT, why: word("acquisition.why.evidence_store_read") }));
@@ -2937,7 +2974,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   if (piecesOn && pieceAsk.cursor !== null && bytes && textRead) {
     const e0 = fmt && fmt !== "undetermined" ? getFormat(fmt) : null;
     if (!(e0 && (typeof e0.text === "function" || typeof e0.structure === "function"))) {
-      const visible = await visibleOfYielding(text, fmt === "html", true);
+      const visible = rangedTxt && rangedTxt.html ? await htmlVisibleByWindows(rangedTxt, pieceAsk.windowBytes, null) : await visibleOfYielding(text, fmt === "html", true);
+      if (visible === null) return early(failed(doc, null, localize("reading-pipeline.index.bytes_not_held", "the capture's bytes are not held in the evidence store, so nothing was read"), { failure: FAILURE_TRANSIENT }));
       const p = textPieceAnswer(visible, { html: fmt === "html", sha, ...pieceAsk });
       if (p.refused) return p;
       if (fmt === "html") heldHtml = p.fields.more ? { sha, visible } : null;
@@ -2991,6 +3029,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   let reading, classifiedText = null, member = null;
   let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null, readDialect, emitted = null, heldCounts = null, joinedDropped = false;
   let pieceInfo = null, pieceWords = null, rangeScope = null, pieceBase = null;
+  let ranged_replaced = 0;   /* R51, R49: the replacement characters the windows of a page read by range decoded */
   let textParas = null;   /* R63: the paragraphs the text numbers (`para` takes 0..n-1); null where this answer does not hold the whole text */
 
   if (!wireable && textRead) {
@@ -3004,7 +3043,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     if (piecesOn) {
       /* R40: the first piece; the totals are of the whole
          text, so the reading says how much of it the piece holds. */
-      if (rangedTxt) {
+      if (rangedTxt && !rangedTxt.html) {
         /* R50: the first piece of a text read by range: its units are the windows' from the start; the head gave the reading's facts and the grain, and what only
            the whole could give (the document's words) is stated by the last piece or not at all */
         const w = await textWindowTick(evidence, sha, { m: "t", s: sha, n: rangedTxt.size, ob: rangedTxt.bm, bm: rangedTxt.bm, g: rangedTxt.grain === "lines" ? 1 : 0, p: 0, q: 0, r: 0, ro: 1, wr: 0, ...(rangedTxt.en ? { en: rangedTxt.en } : {}) }, pieceAsk, rangedTxt.src);
@@ -3014,7 +3053,11 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
         pieceInfo = { ...w.fields, piece: w.piece };
         pieceWords = { words_total: null, words_read: w.piece.words };
       } else {
-      const html = fmt === "html", visible = await visibleOfYielding(text, html, true);
+      const html = fmt === "html", replacedStats = { replaced: 0 };
+      /* R51 (fix round 10): a page past a whole read is made visible by the streaming pass in windows; the head is the text the reader is handed (R50), the units are the page's */
+      const visible = rangedTxt && rangedTxt.html ? await htmlVisibleByWindows(rangedTxt, pieceAsk.windowBytes, replacedStats) : await visibleOfYielding(text, html, true);
+      if (visible === null) return early(failed(doc, null, localize("reading-pipeline.index.bytes_not_held", "the capture's bytes are not held in the evidence store, so nothing was read"), { failure: FAILURE_TRANSIENT }));
+      if (replacedStats.replaced) ranged_replaced = replacedStats.replaced;
       const p = textPieceAnswer(visible, { html, sha, ...pieceAsk });
       if (p.refused) return p;
       if (html) heldHtml = p.fields.more ? { sha, visible } : null;
@@ -3078,6 +3121,11 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       if (sampled) { reading.classified_over = sampled; reading.basis = reading.basis ? `${reading.basis} — ${classifiedOverSentence(sampled)}` : classifiedOverSentence(sampled); } }
     Object.assign(reading, encodingFacts(decoded));
     if (decoded && decoded.ok && decoded.replaced_ratio > REPLACED_TOLERANCE) reading.units_skipped = (reading.units_skipped || 0) + 1;
+    /* R51, R49: the windows of a page read by range past its head decoded these replacement characters: counted, and over the tolerance the reading is partial as a text's is */
+    if (ranged_replaced && rangedTxt) {
+      reading.encoding_replaced = (reading.encoding_replaced || 0) + ranged_replaced;
+      if (ranged_replaced / rangedTxt.size > REPLACED_TOLERANCE && !(decoded && decoded.replaced_ratio > REPLACED_TOLERANCE)) reading.units_skipped = (reading.units_skipped || 0) + 1;
+    }
     if (textUnits) {
       const container = fmt && fmt !== "undetermined" ? fmt : "text";
       reading.text_source = layerChainFor(null, { tier: null, container });
