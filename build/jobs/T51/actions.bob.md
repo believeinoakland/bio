@@ -137,3 +137,7 @@ Bob (K5257, K5258): the live walk before the alpha found this; it is fixed now, 
 
 Your job: (1) Walk E H3: the ledger read (`actions/index.mjs:2619`) selects none of stage, outcome, exemptions, due and quote, so a recorded reply's fee estimate is not shown back; meet R111's first sentence from each entry's front matter (`fm.correspondence[i]`). (2) Walk E H1 (1): `addresseeSuggest` (`:2972-3030`) never answers an office handed as the subject; meet R111's second sentence. Tests red then green: a reply recorded with stage fee estimate and 12 USD reads back in `correspondence[0]`; an office entity as subject answers `named`. Tests red then green.
 **Done:** each test red then green; your module's tests green; the users `node build/plan/impact.mjs origin/tranche/T51 HEAD` names that exercise what you changed, green; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` no new finding in your files; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio actions $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each test red then green, suite counts, anything REPORTed, the met requirement ids, and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B11 · RESUME
+
+RESUME (K5276): your record says RUNNING until 08:41Z but your session went idle at 08:46Z. Read the affected-suite run's output if it finished; if it was lost, rerun only the users of what you changed, in pieces, each RUNNING at most 30 minutes; then COMPLETE (or BLOCKED).
