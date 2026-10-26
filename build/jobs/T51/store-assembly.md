@@ -262,3 +262,15 @@ After 1-4: rerun the module suite without `--test-force-exit`, `checks/run.mjs` 
 **Markers added:** none.
 
 Size (session_01TZ1hRYK6oq2r9ft3RFiNHd): test runs 8, module lines 3750
+
+## STORE-ASSEMBLY #6 · B19 (K5232; plan item 113)
+
+**Entries applied.**
+- (1) `r9-jobs.test.mjs` R76 G129b (~:309-325): the hand-built `storeFailedTransient()` is gone (and its import); the second tick's answer is extraction's published `readHeldAnswer.failed()`, made by the real `readHeld` (`{ok: true, read: false, owed: true, why: "TRANSIENT"}`). The test asserts that answer, then that the ledger retries from it (the row is neither ended nor finished at ticks 3 and 4, `last_why` equals the answer's `why`, asked again at the same cursor), then finishes whole. It was green at once: the ledger already retries an `owed` answer (`pending.mjs` `stillOwed`), so this was a re-point, not a fix; no failing-first state exists for it. The `R2_HICCUP` `fixtures-generic` line stays (its own).
+- (2) `t42.test.mjs:257` "R57 R106 transcribe-answer" with `// fixtures-run: extraction transcribe-answer` (:266): extraction's `t48.test.mjs:29` value (copied as data, the keys and values it states) against the real `transcribe` answer for the same page of a held scan. RED by the stated cause only: the real answer also carries `asked: [0]`, `sent: [0]`, `owed: []` (and `unread: [{page, reason}]` when a page is refused). REPORT J17 names it. Extraction's marker there still reads `plane`, not `store-assembly`: the run is `orphan-run` until it is re-pointed.
+- (3) `OCR_NOTHING_OWED` (`pending.mjs:123`) does NOT need `NO_PROGRESS`: R76 (1) ends a step that advances nothing `final`, and `settle` (`pending.mjs` first lines) ends any answer with `final: true` before that list is read. New test `r9-jobs.test.mjs` "R76 G129a: extraction's own answer ... NO_PROGRESS": the real `readHeldAnswer.final("NO_PROGRESS")` through an `ocr` row ends it `final`, `NO_PROGRESS`, asked once. Green at once (nothing to add).
+- (4) not started, as told.
+
+**Tests.** Module suite without `--test-force-exit`, exit by itself in 226 s: tests 428, pass 426, fail 1 (the transcribe-answer run, by the cause above), todo 1 (R98, `owner-ops.mjs`).
+**Checks.** `checks/run.mjs`: format, architecture, coverage and ownership clean for this module (ownership 0); words 0 for store-assembly; fixtures `--list`: 13 `orphan-run` (12 as before: the users' markers still read `plane`, test-support's `job-registrar`; plus the new `extraction transcribe-answer`), none of another kind.
+**Markers added:** none (`fixtures-run` line `t42.test.mjs:266`).
