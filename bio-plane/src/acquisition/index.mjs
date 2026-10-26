@@ -85,6 +85,12 @@ export { unpack, archiveList, memberOf, membersOf, openedAmong, notArchivesAmong
 
 const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const stampSecond = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
+/* K5132's rule for the capture sessions this act reads and saves (K5205): a handed instant (milliseconds) answers first, then the store's
+   environment (`BIO_NOW_MS`), else the wall clock. Capture's sessions expire and list on the instant they are given. */
+const instantOf = (cap, at = null) => {
+  const handed = at ?? (cap && cap.env ? cap.env.BIO_NOW_MS : undefined);
+  return handed !== undefined && handed !== null && handed !== "" && Number.isFinite(Number(handed)) ? Number(handed) : Date.now();
+};
 
 /* Full 64-hex SHA-256 of a string or a byte view: what docprofile's `digests()` calls to name each normalised
    variant, over the SAME raw bytes for `identity`, which must equal the capture sha. */
@@ -1152,7 +1158,7 @@ async function acquireRun(cap, body0, opts0, t) {
   /* R46 (K4853): a new press of an address whose parked fetch ended in a stated refusal replaces that session: its refusal is no longer listed */
   if (askingMember && typeof cap.liveCaptureSessions === "function") {
     try {
-      for (const x of cap.liveCaptureSessions(stampSecond()) || [])
+      for (const x of cap.liveCaptureSessions(instantOf(cap)) || [])
         if (x && x.locator === locator && x.state && x.state.fetch_pending && x.state.fetch_pending.failed && x.state.opened_by === askingMember)
           cap.dropCaptureSession({ session: x.session });
     } catch { /* a session that cannot be dropped stays listed until its day passes */ }
@@ -1359,7 +1365,7 @@ async function acquireRun(cap, body0, opts0, t) {
   let mayPark = !!fetchOwe && !!askingMember && !captureRequest && !archiveMemento && !renderAsked && opts.inlineFetch !== true;
   const parkFetch = async ({ declared, why }) => {
     try {
-      const live = typeof cap.liveCaptureSessions === "function" ? cap.liveCaptureSessions(stampSecond()) : [];
+      const live = typeof cap.liveCaptureSessions === "function" ? cap.liveCaptureSessions(instantOf(cap)) : [];
       const twin = Array.isArray(live) ? live.find((x) => x && x.locator === documentAddress && x.state && x.state.fetch_pending && x.state.opened_by === askingMember) : null;
       const fp = twin ? { session: twin.session, ...twin.state.fetch_pending }
         : { session: `fp_${(await sha256Hex(`${documentAddress}\n${askingMember}`)).slice(0, 16)}_${Date.now().toString(36)}`, since: stampSecond(), declared_bytes: declared, why };
@@ -1370,7 +1376,7 @@ async function acquireRun(cap, body0, opts0, t) {
         const saved = cap.saveCaptureSession({ session: fp.session, locator: documentAddress, primarySha: NO_PRIMARY, primaryFile: "snapshots/pending-fetch", base: documentAddress,
           state: { queue: [{ fetch: true }], opened_by: askingMember, ...(project ? { project } : {}), cls, store: storeName,
                    fetch_pending: { since: fp.since, declared_bytes: fp.declared_bytes, why: fp.why }, body: carried },
-          ttlMs: OWED_SESSION_TTL_MS });
+          ttlMs: OWED_SESSION_TTL_MS, at: instantOf(cap) });
         if (!(saved && saved.saved !== false) || !(await fetchOwe({ kind: "fetch", session: fp.session }))) {
           try { cap.dropCaptureSession({ session: fp.session }); } catch { /* harmless */ }
           return null;
@@ -1772,7 +1778,7 @@ async function acquireRun(cap, body0, opts0, t) {
       const owe = oweOf(cap, opts);
       const saved = cap.saveCaptureSession({ session: sid, locator, primarySha: sha, primaryFile: `snapshots/${name}`, base: renderDeferred.pageUrl,
         state: { queue: [{ render: true }], ...(actor ? { opened_by: actor } : {}), render_pending: { since: retrieved, body: carried } },
-        ...(owe ? { ttlMs: OWED_SESSION_TTL_MS } : {}) });
+        ...(owe ? { ttlMs: OWED_SESSION_TTL_MS } : {}), at: instantOf(cap) });
       /* R100: the render still to be finished is owed work too */
       if (owe && saved) owedRow = await owe({ kind: "subresources", sha, session: sid });
     } catch { /* the render still returns; the member captures again */ }
@@ -1965,7 +1971,7 @@ function persistRender(cap, sid, a, owed) {
     const st = ld && ld.found && ld.state && typeof ld.state === "object" ? ld.state : null;
     if (!st || !st.render_pending || st.render_pending.answer) return;
     cap.saveCaptureSession({ session: sid, locator: ld.locator, primarySha: ld.primarySha, primaryFile: ld.primaryFile, base: ld.base,
-      state: { ...st, render_pending: { ...st.render_pending, answer } }, ...(owed ? { ttlMs: OWED_SESSION_TTL_MS } : {}) });
+      state: { ...st, render_pending: { ...st.render_pending, answer } }, ...(owed ? { ttlMs: OWED_SESSION_TTL_MS } : {}), at: instantOf(cap) });
   } catch { /* the render is begun afresh when it is finished */ }
 }
 
@@ -2323,7 +2329,7 @@ async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, loca
        under `opened_by`; a session parked by any other caller records none. */
     const state = typeof openedBy === "string" && openedBy ? { ...subs.resumeState, opened_by: openedBy } : subs.resumeState;
     try { subs.session = cap.saveCaptureSession({ session: sid, locator, primarySha: sha, primaryFile: `snapshots/${name}`, base, state,
-                                                  ...(owe ? { ttlMs: OWED_SESSION_TTL_MS } : {}) }); }
+                                                  ...(owe ? { ttlMs: OWED_SESSION_TTL_MS } : {}), at: instantOf(cap) }); }
     catch { /* the caller starts over; the capture did not fail */ }
     /* R100: what is outstanding is owed work, finished by the plane's alarm and never ended by the session's hour */
     if (owe && subs.session) await owe({ kind: "subresources", sha, session: sid });
@@ -2415,7 +2421,7 @@ async function finishRender(cap, { session, opts, t, inRequest = false }) {
           const state = { queue: [], ...(session.state && typeof session.state.opened_by === "string" ? { opened_by: session.state.opened_by } : {}),
                           render_done: { sha256: out.body.document.capture.sha256, since: stampSecond(), document: out.body.document } };
           const saved = cap.saveCaptureSession({ session: session.session, locator: session.locator, primarySha: session.primarySha,
-            primaryFile: session.primaryFile, base: session.base, state, ttlMs: OWED_SESSION_TTL_MS });
+            primaryFile: session.primaryFile, base: session.base, state, ttlMs: OWED_SESSION_TTL_MS, at: instantOf(cap) });
           kept = !!(saved && saved.saved !== false);
         } catch { kept = false; }
       }
@@ -2589,7 +2595,7 @@ export async function owedFetch(cap, entry, opts = {}) {
           return { ok: true, done: false, outstanding: 1, reason };
         try {
           cap.saveCaptureSession({ session: entry.session, locator: ld.locator, primarySha: ld.primarySha, primaryFile: ld.primaryFile, base: ld.base,
-            state: { ...st, fetch_pending: { ...st.fetch_pending, failed: reason, failed_at: stampSecond() } }, ttlMs: OWED_SESSION_TTL_MS });
+            state: { ...st, fetch_pending: { ...st.fetch_pending, failed: reason, failed_at: stampSecond() } }, ttlMs: OWED_SESSION_TTL_MS, at: instantOf(cap) });
         } catch { /* the entry still ends, stated */ }
         return final(reason);
       }
@@ -2600,7 +2606,7 @@ export async function owedFetch(cap, entry, opts = {}) {
                    /* B33: the delivery reads `fetch_pending` to know this was a parked fetch (control-plane records the member's fetch-done by it); saving replaces the state whole, so it is kept */
                    ...(st.fetch_pending && typeof st.fetch_pending === "object" ? { fetch_pending: { since: st.fetch_pending.since, declared_bytes: st.fetch_pending.declared_bytes, why: st.fetch_pending.why } } : {}),
                    fetch_done: made },
-          ttlMs: OWED_SESSION_TTL_MS });
+          ttlMs: OWED_SESSION_TTL_MS, at: instantOf(cap) });
       } catch { /* delivered below; a failed delivery then fetches again */ }
     }
     const given = await opts.deliver({ answer: made.answer, session: entry.session });
@@ -2614,7 +2620,7 @@ export async function owedFetch(cap, entry, opts = {}) {
           cap.saveCaptureSession({ session: entry.session, locator: ld.locator, primarySha: ld.primarySha, primaryFile: ld.primaryFile, base: ld.base,
             state: { queue: [{ fetch: true }], opened_by: opener, ...(typeof st.project === "string" ? { project: st.project } : {}), cls: st.cls, store: st.store,
                      fetch_pending: { ...(st.fetch_pending && typeof st.fetch_pending === "object" ? st.fetch_pending : {}), failed: why, failed_at: stampSecond() } },
-            ttlMs: OWED_SESSION_TTL_MS });
+            ttlMs: OWED_SESSION_TTL_MS, at: instantOf(cap) });
         } catch { /* the entry still ends, stated */ }
         return final(why, given);
       }

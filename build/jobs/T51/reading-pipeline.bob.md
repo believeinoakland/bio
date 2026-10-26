@@ -1,6 +1,6 @@
 # BOB to reading-pipeline (T51)
 
-**Read** · handled J54
+**Read** · handled J55
 
 ## B1 · START
 
@@ -1330,3 +1330,11 @@ Bob's direction for this round (K5175): every bug, failure and broken feature fo
 
 Your job: reading-pipeline R1's amendment (K5200 (4), marked not yet met: read R1 whole, with R32 and R49): a textual capture within the profile's text bound that is held in parts (a fetch stored in parts) is read as text whole, its parts joined in order and decoded as an upload is (R49), with R32's text units; never "not read as text" for being in parts. Failing-first test through `read` over a capture held in two or more parts (the shape a real fetch stores; extraction's or capture's published fixtures where one exists), red before, green after, naming R1; with a single-part control. Note: until OP-GRADES #30 merges (I CHANGE you then), every store fails at import with `DECLARED_OP_DISAGREES: readtranslate description` (op-grades' stale hand row); that red is not yours: write your change and your failing-first test meanwhile, and run them green after the CHANGE.
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio reading-pipeline --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio reading-pipeline $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B62 · CHANGE
+
+CHANGE (K5209): OP-GRADES #30 is merged (tranche `269d7de61f`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
+
+## B63 · CHANGE · re J55
+
+CHANGE (K5211, BOB's, P17), on your J55 REPORT (a), with B62 (merge the tranche): HTML's bound is the standard's text bound (R50's 50 MB, as `plan()` already reads it; K4630: a file within its kind's bound is never refused for size). R51 is amended on the tranche (read it whole; its new clause marked not yet met): an HTML page past `WHOLE_READ_MAX` and within the bound, whole or in parts, is read by the one streaming pass in byte windows with a carry, its units equal to the same page read whole; above the bound refused with its figure. Failing-first as R51's new test says, red today (TOO_LARGE against 24 MiB), green after. (b) the door case is placed with control-plane's list. Then COMPLETE with R1 and R51.

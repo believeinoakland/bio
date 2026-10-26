@@ -193,9 +193,9 @@ export function captureStore({ core, env = {}, gov = null, prov = null, failures
       return { address_norm: addressNorm, known: true, ...r, fallback_eligible: eligible,
                basis: eligible ? word("capture.basis.consecutive_failures_produced", { consecutive_failures: String(r.consecutive_failures), failures: String(failures) }) : word("capture.basis.eligible_threshold_met") };
     },
-    /* capture R22 */
+    /* capture R22; as capture's own does (capture R22, K5205), a handed `at` (milliseconds) is the instant the session is saved at */
     saveCaptureSession(s) { state.sessionSaves.push(s); const cur = state.sessions.get(s.session);
-      const now = state.clockMs ?? Date.now();
+      const now = s.at != null ? Number(s.at) : (state.clockMs ?? Date.now());
       state.sessions.set(s.session, { ...s, ticks: cur ? cur.ticks + 1 : 1, created: cur ? cur.created : stamp(now), updated: stamp(now),
                                       expires: stamp(now + (Number(s.ttlMs) || 3600000)) });
       return { session: s.session, saved: true, ticks: cur ? cur.ticks + 1 : 1 }; },
