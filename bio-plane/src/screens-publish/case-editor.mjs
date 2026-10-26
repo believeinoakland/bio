@@ -159,6 +159,7 @@ export const CASE_EDITOR = Object.freeze({
     // row (R44): what is left out and why, or the claim that nothing material is. The acknowledgement is drawn once something is left out.
     out.push(P.sec(cs, "screen.case-editor.leavesout", cs.state(copy, function (v) {
       const ex = Array.isArray(v.authored && v.authored.excluded) ? v.authored.excluded : v.authored && v.authored.excluded ? [v.authored.excluded] : [];
+      const stated = !!(v.authored && typeof v.authored.statement === "string" && v.authored.statement.trim());
       const acks = v.statement_acknowledgements && Array.isArray(v.statement_acknowledgements.acknowledgements) ? v.statement_acknowledgements.acknowledgements : [];
       return (ex.length ? cs.sheet(ex.map(function (e) {
         return cs.row("", '<span class="rec">' + cs.esc(typeof e === "string" ? e : e.description || e.target || "") + "</span>",
@@ -171,7 +172,8 @@ export const CASE_EDITOR = Object.freeze({
         + cs.field("ce-exwhy", "screen.case-editor.why_it_is_left_out", { help: ["screen.case-editor.required_for_each_item", "screen.case-editor.what_is_left_out_and_why"] })
         + (ex.length ? "" : cs.checks("ce-exnone", { text: "" }, [["none", "screen.case-editor.this_case_leaves_nothing_material_out", false]])
           + '<p class="mk-small">' + cs.w("screen.case-editor.an_empty_list_is_a_claim") + "</p><p class=\"mk-small\">" + cs.w("screen.case-editor.silence_is_not_say_either_what") + "</p>")
-        + (ex.length || acks.length ? cs.field("ce-ackreason", "screen.case-editor.ack.reason", { area: true, help: "screen.case-editor.ack.reason.help" })
+        // D-M5 (2): what is acknowledged is the statement (case-inputs R1, C-82.5), so it is offered whenever the case has one, with or without a list
+        + (ex.length || acks.length || stated ? cs.field("ce-ackreason", "screen.case-editor.ack.reason", { area: true, help: "screen.case-editor.ack.reason.help" })
           + '<div class="mk-acts">' + cs.act("statementack") + "</div>" + P.said(view, "statementack") : "");
     })));
 
