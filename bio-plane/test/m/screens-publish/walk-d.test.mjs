@@ -59,11 +59,11 @@ test("R6 D-M1 the published page names a document its unrated sentence lists by 
   assert.equal(main(plain).querySelector('[data-ungraded="capture"]').textContent, UNRATED("INFO-2026-0001-b"), "control: no title held, the sentence as signed");
 });
 
-test("R6 D-M6 a case that declared no bar draws the sentence of its bar, never the sentence of a standard it was held to", async () => {
-  const NOBAR = "This case declares no required evidentiary strength.", HELD = "The bar sentence of a case that has one.";
-  const e = { ...PUBLISHED_CASE, bar: { declared: false, source: "none", capture: null, connection: null, detail: NOBAR }, bar_detail: HELD };
+test("R6 D-M6 a case that declared no bar draws public-read's no-bar words (its bar_detail when bar.declared is false), never a standard it was held to", async () => {
+  const NOBAR = word("public-read.bar_recorded_case"); // what public-read's publishedcase answers for an undeclared bar (K5267)
+  const e = { ...PUBLISHED_CASE, bar: { declared: false, source: "none", capture: null, connection: null, detail: "x" }, bar_detail: NOBAR };
   const p = await show(e);
-  assert.ok(text(p, main(p).querySelector("[data-bar-none]")).includes(NOBAR) && !text(p).includes(HELD), "the bar's own sentence");
-  const q = await show({ ...PUBLISHED_CASE, bar: null, bar_detail: "No standard of evidence was recorded for this case." });
-  assert.ok(text(q, main(q).querySelector("[data-bar-none]")).includes("No standard of evidence was recorded"), "control: a case with no bar object keeps bar_detail");
+  assert.equal(main(p).querySelectorAll("[data-bar-none]").length, 1);
+  assert.ok(text(p, main(p).querySelector("[data-bar-none]")).includes(NOBAR.slice(0, 40)), "the no-bar words");
+  assert.ok(!/held to|DEC-72/.test(text(p)), "no standard is said to have been applied");
 });

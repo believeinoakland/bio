@@ -1633,3 +1633,8 @@ Red then green: walk-d.test.mjs, 4 tests. Changed one old assertion: fr30b.test.
 Suite: screens-publish 300 tests, 298 pass, 0 fail, 2 todo. Users (control-plane, plane; 121 files): 741 pass, 0 fail. Checks: format 0, architecture 0, coverage 80/80, ownership 0, words 0, fixtures --list 0, run.mjs no finding in my files. Markers added: none.
 REPORT (D-M6, sentences with no key, owners): bar_detail public-read/index.mjs:1293-1296 (also chosen by state.bar, not bar.declared); verification.detail publication/worker.mjs:961; strength[].detail strength/arithmetic.mjs:139,172-177 (ids frozen into the signed prose). Design stream: no sentence for the 'nothing left out' acknowledgement state.
 Size (session_01XJUFJNZiz3mKqghrzkmAZs): test runs 10, module lines 3803
+
+## CHANGE B59 (K5270) · D-M6 left to public-read
+
+Merged `tranche/T51` (PUBLIC-READ #39). Removed my `barSaid` preference (`published.mjs:88-90`): the page draws `bar_detail` as before, which public-read now answers as the no-bar words when `bar.declared` is false. The walk-d D-M6 test now asserts `word("public-read.bar_recorded_case")` and no "held to"/"DEC-72". It could not be made red on the old tranche: public-read publishes no fixture for an undeclared-bar `publishedcase` (its world is private to its own test), so the test feeds the answer shape; PUBLIC-READ could publish one. Other three items stand. Suite 300 tests, 298 pass, 0 fail, 2 todo; format, architecture, coverage 80/80, ownership, words, fixtures all 0.
+Size (session_01XJUFJNZiz3mKqghrzkmAZs): test runs 12, module lines 3800 src

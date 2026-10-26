@@ -86,10 +86,8 @@ export const PUBLISHED = Object.freeze({
     // R37: each finding is the way to its own page; R38 and R39 come after the case's acts
     // 10B C5 (R94 a): a case that declared no bar says so, in the plane's own sentence (`bar_detail`); null here is no standard, not a bar of zero
     const bare = !e.bar || typeof e.bar !== "object" || e.bar.declared === false || (!e.bar.capture && !e.bar.connection);
-    // D-M6: a case that declared no bar says so in the bar's own sentence (`bar.detail`); `bar_detail` then tells of a standard it was held to
-    const barSaid = e.bar && e.bar.declared === false && typeof e.bar.detail === "string" && e.bar.detail.trim() ? e.bar.detail : e.bar_detail;
     out.push(P.sec(cs, "screen.published.findings", findings.map(function (f, i) { return P.card(cs, view, f, i + 1, e, caseId, { link: true }); }).join("")
-      + (findings.length && bare && typeof barSaid === "string" && barSaid.trim() ? '<p class="mk-note" data-bar-none>' + cs.esc(barSaid) + "</p>" : "")));
+      + (findings.length && bare && typeof e.bar_detail === "string" && e.bar_detail.trim() ? '<p class="mk-note" data-bar-none>' + cs.esc(e.bar_detail) + "</p>" : "")));
 
     // Its timeline, the people it names and its evidence, as the edition carries them.
     const timeline = e.method && Array.isArray(e.method.timeline) ? e.method.timeline : Array.isArray(e.timeline) ? e.timeline : [];
