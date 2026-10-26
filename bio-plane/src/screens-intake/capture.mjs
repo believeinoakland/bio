@@ -501,7 +501,7 @@ function renderCapture(cs, view) {
           : (got.finish === "done" ? `<p class="mk-note" role="status" data-finish="done">${cs.w("screen.capture.address.done", { title: bare(got.title) })}</p>`
           : said(got.existed ? "screen.capture.address.existed" : "screen.capture.address.done", { title: bare(got.title) })) + made(got)) + supportingLine(got)
           /* a render still being made and an attestation not yet answered, in the plane's own notes; the capture is kept */
-          + [got.renderNote, got.attestNote].filter(Boolean).map((n) => `<p class="mk-small muted" role="status">${cs.esc(n)}</p>`).join("") + pendingLine(got)) : "")
+          + [got.renderNote ? cs.esc(got.renderNote) : "", got.attestNote ? cs.w("screen.capture.attest.pending") : ""].filter(Boolean).map((n) => `<p class="mk-small muted" role="status">${n}</p>`).join("") + pendingLine(got)) : "")
       + refusedPromotion("address");
     /* R47 (C20; DEC-381): "A source that asked for a login": each request a source turned away for a login, a username and a secret
        field (the secret is typed into a password field, sent once and never drawn back), the login given and the request tried
@@ -737,12 +737,12 @@ async function doneAcquire(view, answer, cs) {
   /* G7 (fix round 6): "the reading follows" is drawn only when the answer carries no reading of its own */
   const waiting = a.reading_pending === true && !view.parts.readingOf(a, doc).own;
   /* a render still being made (`render_pending`) and an attestation that had not answered (`attestation_attempts[].pending`) are said
-     as they stand, in the plane's own notes: the capture is kept either way */
+     as they stand: the render in the plane's own note, the attestation by `screen.capture.attest.pending` (R71, D-M6); the capture is kept either way */
   const rp = doc.render_pending && typeof doc.render_pending === "object" ? doc.render_pending : a.render_pending && typeof a.render_pending === "object" ? a.render_pending : null;
-  const later = (Array.isArray(doc.attestation_attempts) ? doc.attestation_attempts : []).find((x) => x && x.pending === true && typeof x.note === "string" && x.note);
+  const later = (Array.isArray(doc.attestation_attempts) ? doc.attestation_attempts : []).find((x) => x && x.pending === true);
   /* G19 (fix round 6; S10): the plane's count of the supporting files kept and skipped */
   const supporting = a.supporting && typeof a.supporting === "object" ? a.supporting : doc.supporting && typeof doc.supporting === "object" ? doc.supporting : null;
-  const pend = { ...(supporting ? { supporting } : {}), renderNote: rp && typeof rp.note === "string" ? rp.note : "", attestNote: later ? later.note : "" };
+  const pend = { ...(supporting ? { supporting } : {}), renderNote: rp && typeof rp.note === "string" ? rp.note : "", attestNote: !!later };
   cs.set("working", false);
   cs.set("promoteRefused", null);
   /* R31: a continuation (`continued`) files nothing new: its supporting files join the capture it resumed */

@@ -101,8 +101,11 @@ function renderOpenFile(cs, view) {
     const unexamined = listed.some((r) => /^(encrypted|format_unchecked|unread|unscannable|active:vba-project)$/.test(String(r.code)));
     /* R68 (G7; file-safety R56): a TIFF, HEIC or BMP is not read, and its structure was not examined */
     const unreadImage = !!(t.image && typeof t.image === "object" && t.image.read === false);
+    /* R71 (DEC-439 B531 (2)): for a picture (`threatof`'s `format: "image"`) the high and the held lines speak of the safe copy of the picture, not of a
+       picture of each page; the low line and a text file's lines are unchanged */
+    const picture = t.format === "image" && kind !== "low";
     let out = `<div class="row"><span class="cs-risk" data-risk="${kind}" tabindex="0">${cs.w(`screen.open-file.risk.${kind}`)}</span>`
-      + `<span class="mk-small">${cs.w(yours ? "screen.open-file.high.yours" : `screen.open-file.risk.${kind}.means`)}</span></div>`
+      + `<span class="mk-small">${cs.w(yours ? "screen.open-file.high.yours" : `screen.open-file.risk.${kind}.means${picture ? ".picture" : ""}`)}</span></div>`
       + (reasons.length ? `<p class="mk-small">${cs.w("screen.open-file.why", { reasons: reasons.join("; ") })}</p>` : "")
       + (unreadImage ? `<p class="mk-small" data-unread-image="1">${imageUnread(t.image.type)}</p>` : "");
     /* F-B14 (R36): the renderer's reason beside "the reason is stated beside it": the word held for the owner's code, else `refusal.uncatalogued` with the code as given (DEC-342) */
@@ -220,8 +223,12 @@ async function sendSafeView(view, el, cs) {
     /* F-B14 (R36): the refusal's sentence says the reason is stated beside it, so the renderer's reason (a code of the owner's) goes beside it, drawn by its key;
        the two size reasons are already said by the figures' sentence (or by the translation alone where the owner gave none) */
     const reason = code === "SAFE_VIEW_FAILED" && !sized && typeof a.renderer_reason === "string" && /^[A-Za-z][A-Za-z0-9_]*$/.test(a.renderer_reason) ? a.renderer_reason : "";
+    /* R71 (DEC-439; file-safety K5272): a renderer reason whose row is the whole sentence (a kind it cannot make a view of, a file with no text, a spreadsheet
+       with no sheet: file-safety's `renderer_reason`) is drawn by `refusal.<reason>` in place of the owner's translation and with no reason beside it; a screen
+       function is self-contained (it runs in the browser), so the three reasons are listed here */
+    const whole = code === "SAFE_VIEW_FAILED" && ["NOT_RENDERABLE", "NOT_TEXT", "no_sheets"].includes(a.renderer_reason) && cs.w("refusal." + a.renderer_reason) !== "refusal." + a.renderer_reason;
     cs.set("safeRefused", code === "NO_SAFE_VIEW" ? { key: "refusal.NO_SAFE_VIEW" } : code === "SAFE_VIEW_FAILED" && drawn ? { key: "screen.open-file.safe.notdrawn", vars: { size: mb(a.size), bound: mb(a.bound) } }
-      : words ? { text: words, reason } : { key: "shell.unread" });
+      : whole ? { key: "refusal." + a.renderer_reason } : words ? { text: words, reason } : { key: "shell.unread" });
     return null;
   }
   cs.set("refused", null);
