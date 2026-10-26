@@ -261,10 +261,13 @@ function render(cs, view) {
   const flagOf = (k) => !!rv0 && (rv0[k] === true || (!!rdObj && rdObj[k] === true));
   const failure = rv0 ? String((rdObj && rdObj.failure) || rv0.failure || "") : "";
   const isMore = flagOf("more"), isRepairable = flagOf("repairable");
+  /* T51 fix round 10 (BOB B88, R96 fix round 6): a whole reading that found no words, whose reason is not a size, holds its statement (`completeness.why`, else `basis`)
+     and is drawn as that statement, never as a bare "Undetermined / Held" */
+  const wholeStated = compState === "whole" && !!((comp && typeof comp.why === "string" && comp.why.trim()) || (rdObj && typeof rdObj.basis === "string" && rdObj.basis.trim()));
   const textState = !sha ? "" : reading.state === "empty" ? "unread"
     : rv0 ? (isMore ? "reading" : compState === "stated" && !isRepairable ? "stated"
       : words0.length ? (compState === "partial" ? "cut" : blind0.length ? "partial" : "full")
-      : isRepairable ? "repairable" : failure === "final" ? "stated" : compState === "partial" ? "cut" : "none") : "";
+      : isRepairable ? "repairable" : failure === "final" || wholeStated ? "stated" : compState === "partial" ? "cut" : "none") : "";
   /* G13 (R96): while the text is being read the page asks for it again on the page clock, at most every 10 seconds (as the dock does, R8), keeping what is
      drawn until the new answer arrives; a whole reading is not asked again. */
   if (isMore && sha && !ui.readPoll) {
@@ -552,7 +555,8 @@ function render(cs, view) {
       : textState === "stated" && reasonSaid ? reasonSaid
       : textState === "repairable" && heldWord("screen.document.reading.repairable") ? cs.w("screen.document.reading.repairable")
       : comp && typeof comp.why === "string" && comp.why.trim() ? cs.esc(comp.why.trim()) : basisWords ? cs.esc(basisWords) : undetermined("");
-    const statedHtml = noReader && unreadNote ? unreadNote : textState === "stated" || textState === "repairable" ? `<p class="mk-note" data-reading="stated">${statedSaid}</p>` : "";
+    /* T51 fix round 10 (B88): a whole reading that states its own reason (not a size) draws that statement beside its words, as a stated one does */
+    const statedHtml = noReader && unreadNote ? unreadNote : textState === "stated" || textState === "repairable" || (wholeStated && stateReason !== "TOO_LARGE") ? `<p class="mk-note" data-reading="stated">${statedSaid}</p>` : "";
     /* G13 (R96): a text still being read says how far it has come (R90), and what is drawn of it is never stated as the whole: the passages drawn so far
        ("Passages: N of M", the nearest held words; the row owed is `screen.document.reading.firstn`), with the more act the page bar's own control (the
        choice redraws the page and the next page is read: `op=reading` with `after`). Search and Cite cover what is read, which is what is drawn and stored. */
@@ -662,7 +666,7 @@ function render(cs, view) {
       + cs.checks("document-read-page", { key: "document.read.page", fills: { n: String(cur), count: String(total) } },
           (cur > 1 ? [{ value: String(cur - 1), key: "document.read.prev", on: false }] : []).concat(cur < total ? [{ value: String(cur + 1), key: "document.read.next", on: false }] : []),
           { radio: true, redraw: "readpage" }) + "</div>" : tabs;
-    return originalCard + (textState === "stated" ? statedHtml : "") + moreNote + `<p class="mk-small">${cs.w("document.read.select")}</p>` + bar + (shown.length ? "" : `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`) + shown.map(([p, i]) => {
+    return originalCard + (textState === "stated" || (wholeStated && stateReason !== "TOO_LARGE") ? statedHtml : "") + moreNote + `<p class="mk-small">${cs.w("document.read.select")}</p>` + bar + (shown.length ? "" : `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`) + shown.map(([p, i]) => {
       const extent = p.extent && typeof p.extent === "object" ? p.extent : null;
       /* R78: the record's page 0 is drawn "Page 1"; the extent a citation sends keeps the record's own number */
       const page = extent && Number.isInteger(extent.page) ? pg(extent.page) : null;
