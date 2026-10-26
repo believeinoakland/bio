@@ -548,3 +548,11 @@ COMPLETE (re B30, B31; R71, K5303), as far as the ops that exist. `signerknown` 
 **Deferred:** none. Found in other modules: the two items above.
 
 Size (session_01FZVnUzKGadGvoQL6wLCbSU): test runs 14, module lines 3150
+
+## J35 · COMPLETE · re B32
+
+COMPLETE (re B32; R71 whole). Merged `origin/tranche/T51` (no rebase). `signerknown` (credentials R83) is now held under `act.signerknown.does` in `T51_STANDIN_HELP` (`act-help.mjs`), the K5164 route, plain default: an administrator says they know about a member's self-registered signing key; it records who and when, nothing else changes. With J34: five Standard acts by key, `leggrade` and `signerknown` by stand-in.
+**Test:** `t51-r71.test.mjs` gains the `signerknown` test (credentials declares it; explained by its word or the stand-in); red first, then green. Affordances 293 pass, 0 fail. Architecture 0, coverage 55 of 55, ownership 0, `checks/run.mjs`: no finding in my files.
+**For BOB:** `checks/format.mjs` shows 1 failure, not mine: `build/rulings.md:5301`, K5308 records Bob's approval of a refused act but states no standing-list decision (§16). op-declarations' R34 stays red for the 5 Standard ops until OP-DECLARATIONS #40 drops them (and `signerknown`/`leggrade` if it names them) from `ACT_HELP_ABSENT`; UX-DESIGN rows still asked (K5308). Deferred: none.
+
+Size (session_01FZVnUzKGadGvoQL6wLCbSU): test runs 22, module lines 3153
