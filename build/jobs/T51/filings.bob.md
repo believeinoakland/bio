@@ -167,3 +167,7 @@ Your job: filings' clock (K5132's rule, as `credentials`' and `membership`'s `#n
 ## B15 · ANSWER · re J14
 
 ANSWER (K5208): your R70 is written as you worded it into `build/requirements/filings.md` (marked not yet met). `filingsOps` takes no environment: the constructor's `env` (`filingsOf`) is the route. Merge the tranche, name R70 in `clock.test.mjs`, and post COMPLETE once OP-GRADES #30 merges and your suite is green.
+
+## B16 · CHANGE
+
+CHANGE (K5209): OP-GRADES #30 is merged (tranche `effb7b434e`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.

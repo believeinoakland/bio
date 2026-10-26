@@ -68,7 +68,7 @@ export const T48_NON_ACTS = {
     + "already dates and what is followed (following R30)"),
   readtranslate: "draft: a machine translation of one passage of the group's own writing (a note, question, finding or "
     + "notice) into the member's language, labeled machine work, the original one tap away; held nowhere and writes "
-    + "nothing (plane R50)",
+    + "nothing (store-assembly R53)",
   /* R40 */
   updateskip: "release-directed: keyed by a verified release notice, reached from Settings › Updates and the "
     + "administrators' queue; an administrator's choice, recorded with who and when; installs nothing (the installer "
