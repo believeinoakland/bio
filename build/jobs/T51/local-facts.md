@@ -1,6 +1,6 @@
 # local-facts (T51)
 
-**Status** · session_01TwA2g3SpTvu1uEcFVRLefh · depth 2 · COMPLETE · handled B6
+**Status** · session_0173wYyJecMfho8UMa2bzEeh · depth 2 · COMPLETE · handled B7
 
 ## Completion (T51-158)
 
@@ -103,3 +103,28 @@ D-B1 done (R21). Team zone = fact at path @team/time_zone; set with op=factconfi
 ## J5 · COMPLETE · re B6
 
 D-B1 is done and J4 (COMPLETE) is already on origin/job/T51/local-facts; this answers B6. For SCREENS-SETTINGS #23: set the team zone with op=factconfirm body {path:'@team/time_zone', act:'correct', value:<IANA zone name>, how:<1-500 chars>, source:<1-500 chars>} (by/viewer stamped); an invalid zone answers FACT_VALUE_REFUSED. Read it with op=factstatus&path=@team/time_zone: status absent (nothing stated, no profile default), unconfirmed (profile default only), corrected (stated); the governing zone is governs.value. The team fact is NOT in the factstatus{} list, so the screen must read that path itself (it should send path '@team/time_zone' instead of '' when no profile holds a time_zone). The other readers to carry (review 381, retrieval 502, publish-schedule 59, screens-daily find-in 17) are in my record. Size (session_01TwA2g3SpTvu1uEcFVRLefh): test runs 12, module lines 1560.
+
+## Fix round 10 · R22 (plan item 144; K5292; walk E N2, AP2) · LOCAL-FACTS #12
+
+**What changed**
+- `bio-plane/src/local-facts/index.mjs:287` `#syncTeamZone()`: sets record-core's setting `team_time_zone` to the latest `correct` of `@team/time_zone` when the setting differs (by the act's member); answers `setSetting`'s refusal or null.
+- `:477` `factConfirm`: after the act's INSERT, inside the same `record.transact`, a `correct` of the team path calls it; a refusal rolls the act back. A refused correction (`FACT_VALUE_REFUSED`, `FACT_HOW_REFUSED`) returns before the transaction, so sets nothing.
+- `:316` `#active()` calls it first, so the first read or write of any kind (`factStatus`, `factsDue`, `factConfirm`) backfills a copy that holds a correction and no setting (biosmoke8). R21's governing value is unchanged.
+- New test file `bio-plane/test/m/local-facts/r22.test.mjs` (5 tests, R22): correction sets it and a second replaces it (`getSetting`); confirm, dispute and a profile fact's correction leave it; refused corrections set nothing and keep the old value; backfill by each of three reads; backfill by a write. Marker: `fixtures-own` (acts for the backfill case written into this module's own table).
+
+**Red then green:** with `index.mjs` stashed, `r22.test.mjs`: 0 pass, 5 fail (setting stays null); with the change: 5 pass.
+
+**Tests and checks** (from `/home/user/bio`; process repository `8be32ff`)
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/local-facts/*.test.mjs`: 88 pass, 0 fail (files run alone sum to 88).
+- Direct users, run once: screens-settings 273, retrieval 222, review 109, publish-schedule 37, progressions 96, duties 80, all 0 fail.
+- format 0 failures; architecture 0 failures; coverage local-facts 22 of 22; words local-facts 0 failures; ownership 0 failures (3 files).
+- Not run: the whole `checks/run.mjs` tranche-wide list (other modules' findings are not mine).
+
+**Found in other modules:** none new. Readers still taking the zone from profiles alone are listed in `causes-rewalk.md` §3; R22's setting is what lets them read settings alone (`jurisdictions.governingZone`, R98).
+**Deferred:** none. R22's "(not yet met: T51)" mark in `build/requirements/local-facts.md` is BOB's to lift.
+
+Size (session_0173wYyJecMfho8UMa2bzEeh): test runs 10, module lines 1575
+
+## J6 · COMPLETE
+
+R22 done (fix round 10, item 144). A correction of @team/time_zone now also sets record-core setting team_time_zone in the same transaction (index.mjs:477 via #syncTeamZone :287); #active() (:316) backfills a copy with a correction and no setting at the first read or write (biosmoke8 case). Refused corrections set nothing. New r22.test.mjs, 5 tests: red (0/5) without the change, green with it. local-facts 88 pass 0 fail; direct users screens-settings, retrieval, review, publish-schedule, progressions, duties green. format/architecture/words/ownership 0 failures, coverage 22 of 22. R22's 'not yet met' mark is yours to lift. Size (session_0173wYyJecMfho8UMa2bzEeh): test runs 10, module lines 1575

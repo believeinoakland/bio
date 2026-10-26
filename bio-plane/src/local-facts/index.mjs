@@ -280,6 +280,17 @@ export class LocalFacts {
     return fixed && typeof fixed.value === "string" ? fixed.value : this.#profileZone(active);
   }
 
+  /* R22: record-core's setting `team_time_zone` holds the team's latest correction, so a module that reads settings alone
+     (or sits earlier in the order) takes the team's zone from it. Sets it when it differs from the latest correction;
+     the answer is the refusal of `setSetting`, or null. A copy holding a correction and no setting is backfilled by the
+     first read or write that comes here (`#active`); a correction writes it in its own transaction (`factConfirm`). */
+  #syncTeamZone() {
+    const fixed = [...this.#acts(TEAM_ZONE_PATH)].reverse().find((a) => a.act === "correct");
+    if (!fixed || typeof fixed.value !== "string" || this.record.getSetting("team_time_zone") === fixed.value) return null;
+    const r = this.record.setSetting("team_time_zone", fixed.value, str(fixed.by) || "local-facts");
+    return r && r.ok === false ? r : null;
+  }
+
   /* R3 (T45; jurisdictions R74): the zone an office fact's days are counted in. An office's `hours` and its own
      `time_zone` count on that office's local day when the profile holds its own zone (as it governs here: a member's
      latest correction of it, else the held value); otherwise on the profile's (`#zone`). Every other fact counts on the
@@ -302,6 +313,7 @@ export class LocalFacts {
   /* The active profiles: their ids as held, and the combined view (record-core R26, jurisdictions R12–R16). A profile
      the instance names but cannot resolve, or a list that does not combine, gives no fact. */
   #active() {
+    this.#syncTeamZone();
     const ids = this.record.getSetting("jurisdiction_profiles");
     const held = new Map();
     if (Array.isArray(ids)) for (const id of ids) {
@@ -461,6 +473,9 @@ export class LocalFacts {
       this.sql.exec(`INSERT INTO local_fact_acts (path, profile, act, how, value_json, source, by_member, at)
                      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                     path, r.parts.team ? "@team" : r.parts.profile, act, how, canonicalJson(value), source, by, at);
+      /* R22: a correction of the team's zone sets the setting in the same transaction (a refusal rolls the act back) */
+      const set = r.parts.team && act === "correct" ? this.#syncTeamZone() : null;
+      if (set) return set;
       return { ok: true, path, act, at };
     });
   }
