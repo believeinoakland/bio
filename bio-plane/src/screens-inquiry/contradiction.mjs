@@ -193,7 +193,12 @@ function render(cs, view) {
   const fact = (name, icon) => {
     const f = facts.find((x) => x && x.fact === name && x.undetermined !== true && x.a !== null && x.b !== null && x.a !== undefined && x.b !== undefined);
     if (!f) return "";
-    const show = (v) => (name === "stated_date" ? cs.date(String(v), { year: true }) : E(String(v)));
+    /* T51 fix round 13 (B92, C-M13 MINOR): a doctype is drawn by its held label, never by the id the reader states ("generic · generic"); a doctype
+       the design holds no label for draws no row (REPORT: the labels it lacks) */
+    const doctypeLabel = (id) => "doctypes." + String(id) + ".label";
+    const heldLabel = (v) => W(doctypeLabel(v)) !== doctypeLabel(v);
+    if (name === "doctype" && ![f.a, f.b].every(heldLabel)) return "";
+    const show = (v) => (name === "stated_date" ? cs.date(String(v), { year: true }) : name === "doctype" ? W(doctypeLabel(v)) : E(String(v)));
     return `<div data-fact="${name}">${cs.row(cs.icon(icon), `<span class="mk-data">${show(f.a)} · ${show(f.b)}</span>`, "")}</div>`;
   };
   const m = c.machine && typeof c.machine === "object" ? c.machine : null;

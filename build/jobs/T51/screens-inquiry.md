@@ -929,3 +929,29 @@ COMPLETE (SCREENS-INQUIRY #34), B91 (CHANGE re J63; K5279). Commit f8c817ef54 on
 - Format, architecture, coverage (136 of 136), ownership: 0 failures.
 
 Size (session_01XPqxHzozhsnQVpVqcbAkKT): test runs 17, module lines 7062
+
+## J66 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #35), B92: fix round 10 (plan item 144; K5292): (1) R138, (2) C-M13's MINOR. Red first, then green. Branch `job/T51/screens-inquiry`, merged with `origin/tranche/T51` (a merge commit, no rebase) before work.
+
+**Applied**
+- **R138 (re-walk C, C-M12 new 4)**, `bio-plane/src/screens-inquiry/document.mjs`, the `contradictionflag` act (about :1861-1880): a `done` now draws the answer's own sentence (`says`) beside the act as `outcome.contradictionflag`, for a flag recorded (`wrote: true`) and for a pair already held (`already: true`). The sentence is escaped once by `cs.esc`. A refusal is drawn beside the act by the shell, as before (its owner's key). Test: `bio-plane/test/m/screens-inquiry/t51-fix13-b92.test.mjs`, two R138 tests (the recorded and already cases, with a control before any press; the refusal with its control). Red: the first failed on the base source, since nothing was drawn; green after.
+- **C-M13 MINOR, "generic · generic"**, `bio-plane/src/screens-inquiry/contradiction.mjs` (`fact()`, about :193-206). Cause: `show()` drew a doctype fact's raw id (the reader's `content_type`, `generic`) for both sides. The fix draws a doctype only by its held label, `doctypes.<id>.label`, when `cs.w` holds it, and draws no doctype row otherwise, so the id never shows. Only `doctypes.generic.label` and `doctypes.policy.label` exist in `setup-words/rows.mjs`, and neither is held in the words the product serves, so for the walked case no row is drawn. Test: `t51-fix13-b92.test.mjs`, the C-M13 test (the row is absent, the text has no `generic`, control: the passages stay drawn). Red on the base source: the id row is drawn.
+- **Two assertions changed** in `bio-plane/test/m/screens-inquiry/fr28-contradiction.test.mjs` (the state-a test at :83, and the R105 control at :447): they asserted the drawn id row (`[data-fact="doctype"]` present). They are now "no row without a held label", the new contract. The other assertions in both tests are unchanged. BOB, please confirm this is the right change to a test that encoded the defect.
+- Note for the team: a screen's `render` is shipped to the browser as text (its self-contained functions), so a module-level constant is not in scope inside it. My first version failed for that reason; the constants are now inside `fact()`.
+
+**REPORT (keys and reads the design or other modules must supply; none invented)**
+1. R138's list clause is not met. "The flag in the page's list of flags raised on it" needs (a) a held key for that list's heading and its rows (none in `rows.mjs`: nothing for "flags raised on this document"), and (b) a read on the Document page: the page reads no contradiction candidates for the document. The candidate read exists (`contradictioncandidates` with `bundle`, `contradiction/index.mjs:1596`), so the read is in place once the key is held. Until then the act draws its own sentence, and the list is not drawn.
+2. Doctype labels: the design holds none beyond `doctypes.generic.label` and `doctypes.policy.label`, and those are not in the served words. Any other doctype a reader states draws no row on the contradiction screen. Owner of the keys: the design stream. Please say whether the labels for the reader's doctype ids should be held.
+3. The sentence drawn for a recorded flag is the owner's own (`contradiction.says.flag_written`, `contradiction/index.mjs:2625`, the module's `localize`); the design holds no key for it. R138 asks for the owner's sentence, so I drew it; a held key would replace it.
+4. Carried from B89/B90/B91 (already reported in J61-J65, unchanged): the keys for the checked-by sentence, the "No passage in a Yes-because-of part" refusal, the member-lead sentence, "Put on the other side", and the member-flagged candidate fixture for `contradiction`.
+
+**Tests and checks** (after the commit)
+- Module suite `bio-plane/test/m/screens-inquiry/*.test.mjs`: 604 tests, 604 pass, 0 fail (601 before, plus the three new).
+- Contradiction-related suites (`t51-fix13-b92`, `fr28-contradiction`, `fr3-contradiction`): 32 pass, 0 fail. The R105 tests in `fr3-contradiction` pass again: they failed while my contradiction edit kept the screen's constants at module level, and pass with the constants inside `fact()`.
+- `checks/format.mjs /home/user/bio`: 0 failures. `checks/architecture.mjs ... screens-inquiry`: 0 failures. `checks/coverage.mjs`: 137 of 137 live ids named by a test (R138 is named by the new tests' titles; the clause that is not met is REPORT 1). `checks/words.mjs`: 0 failures. `checks/fixtures.mjs ... --list`: 0 failures in the module (4 accepted, earlier ones named in the record).
+- `checks/run.mjs /home/user/bio`: 89 failures, none in screens-inquiry (the same 89 as before, all in other modules).
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: run after the commit (see the commit's own COMPLETE line below).
+- Ownership: run after the commit; see the line below.
+
+Size (session_01XFsEBnM285mo6rZxqptTvL): test runs 15, module lines 7075
