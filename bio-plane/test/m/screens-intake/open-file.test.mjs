@@ -565,11 +565,11 @@ test("R36 F-B14 a safe view the renderer refused draws the renderer's reason bes
 
 test("R36 F-B14 control: the reasons the size sentence already states draw no second reason; a reason with a held word draws that word", async () => {
   /* scripted: the owner's TOO_LARGE answer carries the figures it draws from (g44 draws the same answer from the real owner); ENCRYPTED needs a file nothing here can make */
-  const a = await mine({ safeview: refused("SAFE_VIEW_FAILED", "The file is above what a safe view reads.", 422, { renderer_reason: "TOO_LARGE", size: 50 * 1048576, bound: 20 * 1048576 }) });
+  const a = await mine({ safeview: refused("SAFE_VIEW_FAILED", "refused", 422, { renderer_reason: "TOO_LARGE", size: 50 * 1048576, bound: 20 * 1048576 }) });
   await press(a.p, "safeview");
   assert.ok(says(a.p, "screen.open-file.safe.notdrawn", { size: "50.0", bound: "20.0" }));
   assert.equal(main(a.p).querySelectorAll("[data-renderer-reason]").length, 0);
-  const b = await mine({ safeview: refused("SAFE_VIEW_FAILED", "The file is encrypted.", 422, { renderer_reason: "ENCRYPTED" }) });
+  const b = await mine({ safeview: refused("SAFE_VIEW_FAILED", "refused", 422, { renderer_reason: "ENCRYPTED" }) });
   await press(b.p, "safeview");
   assert.ok(hasWord("refusal.ENCRYPTED"));
   assert.equal(main(b.p).querySelectorAll('[data-renderer-reason="ENCRYPTED"]').length, 1);
