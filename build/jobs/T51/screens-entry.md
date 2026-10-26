@@ -1,6 +1,6 @@
 # screens-entry (T51)
 
-**Status** · session_01JdJGDMdqKM21B8AxsWMQLp · depth 2 · WORKING · handled B20
+**Status** · session_01JdJGDMdqKM21B8AxsWMQLp · depth 2 · RUNNING until 2026-10-26T16:28:16Z (impact tests of users (control-plane, plane, journey-check)) · handled B20
 
 ## Completion (T51-114)
 
