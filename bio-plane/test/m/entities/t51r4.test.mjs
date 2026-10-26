@@ -38,10 +38,10 @@ test("R65 naming the same office again answers the first entry, existed: true, a
   }
   assert.deepEqual([rows(w), aliasRows(w)], before, "no entity and no alias written");
   assert.equal(op(w, "entity", { query: { id: first.entity_id, viewer: "member:ann" } }).entity.named_by_member, true, "the mark is untouched by a repeat");
-  /* control: an administrator (or a machine) registers what she means to, as before: two offices of one name are hers to make
-     (a Town Clerk of each of two towns), and a member naming it then finds the first */
+  /* R66: an administrator naming it again finds the first too (her twin is no longer a second entry); a machine still registers
+     what it names, as before */
   const twin = make(w, "ada", "Office of the City Clerk");
-  assert.equal(twin.ok && twin.existed === undefined && twin.entity_id !== first.entity_id, true, JSON.stringify(twin));
+  assert.equal(twin.ok && twin.existed === true && twin.entity_id === first.entity_id, true, JSON.stringify(twin));
   assert.equal(make(w, "bea", "Office of the City Clerk").entity_id, first.entity_id);
 });
 

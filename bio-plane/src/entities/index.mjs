@@ -612,9 +612,10 @@ export class Entities {
     /* R63: an office a member who is not an administrator registers is marked until an administrator confirms it; one an
        administrator or a machine registers is not. Which screen may send the act is the door's (`op-grades`), not asked here. */
     const marked = k === "office" ? (by !== null && !isMachine(by) && !this.#administers(by) ? 1 : 0) : null;
-    /* R65: an office a member names again is the held one (`existed: true`), found by its folded name among the live aliases of an office
-       that does not state another law; nothing is written, so her repeat neither makes another entry nor clears a mark. */
-    if (marked === 1) {
+    /* R65, R66: an office a member or an administrator names again is the held one (`existed: true`), found by its folded name among the
+       live aliases of an office that does not state another law; nothing is written, so a repeat neither makes another entry nor clears
+       a mark. A machine's office is registered as before. */
+    if (k === "office" && by !== null && !isMachine(by)) {
       const held = this.#rows(`SELECT DISTINCT e.entity_id, e.label, e.law FROM entities e JOIN entity_aliases a ON a.entity_id=e.entity_id
                                    WHERE e.kind='office' AND a.alias_norm=? AND a.withdrawn_at IS NULL ORDER BY e.entity_id`, normAlias(name))
         .filter((r) => !lawKey || !r.law || r.law === lawKey);
