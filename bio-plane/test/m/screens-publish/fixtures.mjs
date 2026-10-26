@@ -175,6 +175,30 @@ export async function openWorld(path, o = {}) {
   return Object.assign(p, { world, as, answered: (op) => { const a = got.filter((x) => x.op === op).at(-1); return a && a.answer.json ? (a.answer.json.result !== undefined ? a.answer.json.result : a.answer.json) : undefined; } });
 }
 
+/* K5202 (case-import's published answers, K5175): the `importedcase` answer as case-import's real code makes it, over a world it builds
+ * when called (imported lazily: its fixtures register nothing until a test asks). `accepted`: the import whose latest edition (2) has its
+ * findings accepted and one flagged; else a bare import whose only edition (1) has nothing accepted. Answers `{import, edition, answer}`,
+ * the answer in the plane's shape (`ok`). */
+export async function importedCase({ accepted = true } = {}) {
+  const ci = await import("../case-import/fixtures.mjs");
+  if (accepted) {
+    const r = await ci.importedCaseAnswer();
+    return { import: r.import, edition: 2, answer: ok(r.answer) };
+  }
+  const u = await ci.importedWorld({ imports: [{ editions: [{ edition: 1 }] }] });
+  const id = u.imports[0].import;
+  return { import: id, edition: 1, answer: ok(u.ci.importedCase({ import: id, edition: 1, viewer: "member:alice" })) };
+}
+
+/* K5202: case-import's real `rerunstart` answer over its rerun world (`twice`: the second, refused declaration), with the import and
+ * edition the page is opened at (`edition` 1) and the page's own `importedcase` answer for them. Answers `{import, edition, answer, page}`. */
+export async function rerunImport({ twice = false } = {}) {
+  const ci = await import("../case-import/fixtures.mjs");
+  const r = await ci.rerunStartAnswer({ twice });
+  const page = ok(r.w.ci.importedCase({ import: r.import, edition: 1, viewer: "member:alice" }));
+  return { import: r.import, edition: 1, answer: ok(r.answer), page };
+}
+
 /** The served page at `path` with this module's screens, over the plane. */
 export async function open(path, o = {}) {
   const p = await boot({ screens: SCREENS, plane: plane(o.plane || {}), path, ...(o.boot || {}) });

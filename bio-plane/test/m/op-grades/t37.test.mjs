@@ -21,7 +21,7 @@ const R27_READS = ["photomarks", "translations", "interfacewords"];
 const R27_REASONS = {
   obscuremark: declaredSentence("case-carriage", "obscuremark"),
   setpassword: declaredSentence("credentials", "setpassword"),
-  subscriptionsignin: declaredSentence("control-plane", "subscriptionsignin"),
+  subscriptionsignin: declaredSentence("signin-door", "subscriptionsignin"),
   translationgrant: declaredSentence("translations", "translationgrant"),
   translationdraft: "translation-directed: keyed by a language and interface words; drafts labeled machine work for a "
     + "granted speaker to check (`to_language`), or an administrator's back-translation of one protected word that "
