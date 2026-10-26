@@ -1,6 +1,6 @@
 # store-request (T51)
 
-**Status** · session_01RutxGFBqkM2oEVQc7Depo3 · depth 2 · RUNNING until 2026-10-26T02:10:21Z (module tests baseline) · handled B18
+**Status** · session_01RutxGFBqkM2oEVQc7Depo3 · depth 2 · RUNNING until 2026-10-26T02:14:58Z (workers investigating states; recipes (a)-(d) done and pushed) · handled B18
 
 ## J1 · QUESTION
 
