@@ -1,0 +1,86 @@
+# Re-walk 10, area C (collecting evidence and making connections): re-walker C, 2026-10-26
+
+Copy https://biosmoke8.believeinoakland.workers.dev (plane 0.86.0 per the page's `cs-version`), tranche tip `c5f792eb26` deployed per the brief. Through the environment's proxy only (Chromium from /opt/pw-browsers via playwright-core, `proxy: HTTPS_PROXY`). One browser context per role and width (admin 1280, admin 390, member 1280, member 390); each signed in through the sign-in screen. Project "Walk T51 rewalk10 C" (`PROJ-2026-7206-walk-t51-rewalk10-c`, hidden, owner sparky; walker invited and joined). Files generated locally (`corpus.mjs` seeds `rewalk10-C-*`, `rw10C-*`; plain text files written by hand for the exact C-M14 case). Other re-walkers were acting at the same time, so no time below is from a quiet copy. Wall times are what the script saw through the proxy; ST is `Server-Timing`.
+
+No ledger was asked of me (the brief gives it to area D). I changed no setting, secret or other project. One notice: the member's saved session lapsed ("Locked after 30 minutes away") once; I signed in again through the sign-in screen.
+
+Leftovers: documents INFO-2026-0206 to 0225 (generated; 0206-0222, 0224 handed in without a project, 0223 and 0225 into the project); question `INQ-2026-0014-did-public-works-pay-oak-roofing-more-th` with citations on memo.txt, ordinance.txt, payments.csv and minutes390.txt (two moved from "cuts against" to "supports"); two contradiction leads taken up as questions (the second is `INQ-2026-0016-contradiction`); two typed pages (INFO-2026-0221 and 0222, each confirmed by walker); one `payment` event on the timeline with Oak Roofing LLC as a party.
+
+## Rows
+
+Format: row | width | role | what I did | verdict | what I saw | time
+
+### C-M1: a vouched OCR reading is kept after promotion (the live scan's `at: null` case)
+Case: a scanned PDF (image-only page, `kinds:["scan"]`, 1 page, 6 lines), uploaded, OCR left to run, then "Vouch for this copy" (`release`), which re-promotes the bundle. Original: after vouching `reading_history` gained seq 3, tier 1 `plane`, 0 characters; OCR text gone, nothing owed.
+
+- C-M1 | 1280 | admin | uploaded `pdf-dfaa030b94b619b0a1a923f3.pdf` (INFO-2026-0210); OCR read it within the first minute ("Read 12 of 12 words ... Read in full. Every line of this file can now be searched and cited."); read `op=reading` before vouching: `reading_history` seq 2 tier 3 `ocr-worker` 161 characters, seq 1 tier 1 `plane` 0 characters (the acquire-time reading); vouched with both boxes filled; read it again | FIXED | after the vouch `reading_history` is still `[[2, tier 3, 161], [1, tier 1, 0]]` (no seq 3 written), text 161 characters, `owedwork&sha=` `owed []`, the page says "Read in full", the "Held until you vouch" band is gone ("Vouched for by sparky"). The acquire-time reading is the seq 1 row with tier 1 and no text: the re-submitted reading was recognised as one the history already holds. Screenshot shots/rewalk-C/m1-after-vouch-admin-1280.png | upload 6.1 s wall; vouch 5 s wall (script wait) | -
+- C-M1 | 390 | admin | second scan `pdf-d62b9557bbc7224f083342fa.pdf` (INFO-2026-0224), same steps | FIXED | before vouch `[[2,tier3,210ch],[1,tier1,0ch]]` 210 characters; after vouch the same, 210 characters, `owed []`, "Read in full" shown, no "can't be found or cited". shots/rewalk-C/m1-after-vouch-admin-390.png | 12:22:30 to 12:22:39Z | -
+- Member: the original had admin only; not walked as member.
+- Did I confirm the `at: null` case itself? The live acquire-time reading is the one stored as seq 1 (tier 1, `text_sha256: null`); I did not read the provenance document's `reading.at` (`op=image`), so "`at: null`" is not read back directly. The outcome (nothing rewritten on `release`) is the walker's case and it holds at both widths.
+
+### C-M2: a typed page, the second member's confirmation
+Case: administrator types a page's words ("Type a page's words yourself"); the member opens the same Document page and confirms ("Confirm that this typing matches the page"). Original: after the confirmation the page still said "Not yet checked by a second member" and still offered the form to the member.
+
+To get the typing form on a scan whose OCR no longer fails (C-M1 keeps the text, so the original's route no longer exists) I used a three-page PDF `kinds:["text","scan","text"]` with `scan:{dpi:20}, lines:6`: page 2 is unreadable, `Read 24 of 24 words`, the "Type a page's words yourself" button is drawn (INFO-2026-0221 at 1280, INFO-2026-0222 at 390).
+
+- C-M2 | 1280 | admin then member | admin typed "rewalk ten typed words for page two of the minutes" (`transcribe`: "Your typing was recorded for page 2, labeled as yours."); before confirmation both the typist and walker read "Not yet checked by a second member. What sparky typed is sparky's own reading of the page, and counts for no more than sparky's word until someone else checks it against the page." (true), walker is offered "What you compared" and "Confirm that this typing matches the page"; walker confirmed (`transcriptionattest` 4.6 s wall); both read the page again | FIXED | after the confirmation neither walker nor sparky is drawn "Not yet checked"; walker is offered no confirm form again (0 `transcriptionattest` buttons); the typed words are still drawn under "A page typed by a member / Page 2, typed by sparky, October 26, 2026". shots/rewalk-C/m2-before-confirm-member-1280.png, m2-after-confirm-member-1280.png, m2-after-confirm-admin-1280.png | confirm 4.6 s wall | see the two remarks below
+- C-M2 | 390 | admin then member | same on INFO-2026-0222 | FIXED | the same: "Not yet checked" before, gone after, no form for walker afterwards. shots m2-*-390.png | 4.6 s | same remarks
+- Remark (MINOR, known to BOB: "the word for checked by X on D is not held"): after the confirmation the page says nothing positive about it: no "Checked by walker, <date>" line. The status line is simply gone. The typed words still show no "Cite this".
+
+### C-M5: "No, my answer falls" is not overridden
+Case: the question's "What each passage carries": memo answered "Yes, because of others I cite" ticking the ordinance, the ordinance answered "No, my answer falls". Original: the ordinance then read "your answer still holds, because of ... memo".
+
+- C-M5 | 1280 | admin | memo.txt "Yes", ticked ordinance.txt; ordinance.txt "No"; "Say what each passage carries" with a reason | FIXED | after the send the page reads, for every cited passage, "If this turned out to be wrong: your answer falls", and "Your answer fails if any one of these fails: memo.txt · Paragraph 1 ... ordinance.txt · Paragraph 4"; nowhere "your answer still holds, because of". shots/rewalk-C/m5-after-press-admin-1280.png (taken before the reason was sent), question-admin-1280.png | 4 s | -
+- C-M5 | 390 | admin | the same case through "Change what a passage carries...", this time with a third passage (payments.csv) answered "No" as well | FIXED | all three passages read "your answer falls"; no "still holds". shots/rewalk-C/m5-after-send-admin-390.png | 5 s | -
+- Remark (MINOR, the "C-M5 note" BOB lists as not yet worded): the memo's "Yes, because of others" is turned into "falls" with no sentence saying that its "Yes" was set aside because the ordinance it named was answered "No".
+
+### C-M6 and citation `reinstate` with a role: a passage cited on the wrong side
+Case: cite payments.csv "Cuts against" by mistake, "Remove a citation" with a reason, then put it on "Supports".
+
+- reinstate with a role (the op, R23) | 1280 | admin | removed payments.csv (cited "Cuts against") with a reason (reason shown: "Removed from the question: ..."; "Reinstate" offered); pressed "Reinstate" with its reason, the screen's own request with `role: "supports"` added to the body (the screen has no control for it, see below) | FIXED | the leg is drawn under SUPPORTS: "payments.csv  If this turned out to be wrong: your answer falls", and "WHAT YOUR ANSWER RESTS ON" lists it; the CUTS AGAINST heading is gone. shots/rewalk-C/m6-after-sever-admin-1280.png, m6-after-reinstate-role-admin-1280.png | 4.5 s | -
+- reinstate with a role | 390 | admin | minutes390.txt ¶2 cited "Cuts against", removed, reinstated with `role: "supports"` | FIXED | the leg moves to SUPPORTS (listed with memo.txt, ordinance.txt, payments.csv); shots m6-*-390.png | 4.5 s | -
+- C-M6 (the screen: "Put on the other side" beside "Reinstate") | 1280 and 390 | admin | pressed "Reinstate" on a removed citation and read its form | NOT FIXED (on the screen) | the Reinstate form holds only "Your reason", "Send with this reason" and "Cancel": no choice of side. A member who cites on the wrong side still cannot move it from the screen; only a request with a `role` moves it. Known and owed: screens-inquiry #34's control "only with a held key" (K5276). shots/rewalk-C/m6-reinstate-form-admin-1280.png | - | MAJOR (unchanged from the walk until the screen's control arrives; severity of the row, not new)
+- Not walked: `BAD_ROLE` and `ROLE_NOT_APPLICABLE` (module tests, not the walker's case).
+
+### C-M8: document and event nodes named in Explore and the person's Connect
+Case: Oak Roofing LLC's person page, "Connect the documents that name them" and Explore. Original: "Oak Roofing LLC -> was a party to -> Not yet named" and a source shown as `capture:<64 hex>`.
+
+- C-M8 | 1280 | admin | recorded one `payment` event on the timeline from my own note.txt (INFO-2026-0223, handed in under the project: a document handed in with no project is not offered by the timeline's "Which document", which says "Nothing here"), added Oak Roofing LLC as "A party"; opened the person page, pressed "Connect the documents that name it", opened `/app/explore/ENT-2026-0002` | FIXED for events and sources | the far end of "was a party to" is drawn "payment · undated" (kind and date), never "Not yet named" (0 "Not yet named" on the page); the sources are drawn as the cited passage's own title ("Council memo of March 2, 2026, paragraph 1", "the cited passage"), no `capture:` string and no 64 hex characters on the page; no `ENT-`, `EVT-` or `INFO-` code on the page. Also the timeline's event pickers read "payment · Undated · note.txt". shots/rewalk-C/m8-connect-ENT-2026-0002-admin-1280.png, m8-explore-admin-1280.png | connect 5 s wall | -
+- C-M8 | 390 | admin | `/app/explore/ENT-2026-0002` | FIXED (same) | the same five connections named "payment · undated" / "award · undated"; scroll width 390/390. shots m8-explore-admin-390.png, m8-explore-390-admin-390.png | 4.5 s | -
+- C-M8 | 1280 and 390 | member walker | the same Explore and person page | FIXED (same) | the same names; no code shown | 5 s | -
+- NOT SHOWN (the half of the row about document nodes named by title, and "hidden from a viewer who may not see them"): no document node arose on this copy. Document nodes enter the graph through money figures; `Money trail` could not be used (see the finding below), and "Mentioned together", "Stated in a source" and "Money" explored alone answer "We looked and it is positively not there". So document-by-title and the hidden-viewer case were not seen, at either width or role. I do not call that half fixed or not fixed.
+
+### C-M12: the contradiction flag form folds shut and drops picks
+Case: Document page, "This contradicts another document": choose "the passage here", find and choose the other document, choose its passage, say why, "Say these two contradict".
+
+- C-M12 | 1280 | admin | opened the fold; picked "The passage here"; typed in "Find a document"; picked the other document (radio) | FIXED | the fold stays open after each redraw (`details[data-fold=contradict]` open at every step); "The passage here" keeps its pick (value 0) after the search text and after choosing the other document; the other document stays checked; the search text is kept ("payments.csv"). The fold opens only when I open it (closed at load). shots/rewalk-C/m12-flag-admin-1280.png | 2.5 s per pick | -
+- C-M12 | 390 | admin | same, on minutes390.txt | FIXED | the same at every step. shots m12-flag-admin-390.png | 2.5 s | -
+- `contradictionflag` pressed with a reason in "How they disagree": 200, `ST` 0.14 s; a lead exists and is reached from the Queue item and `/app/contradiction/<id>/<project>`.
+- STILL (MINOR): after "Say these two contradict" the Document page says nothing at all, neither "recorded" nor, when the pair is already flagged, the plane's sentence "these two passages are already set side by side as a contradiction, and it stays as it is" (answered 200 `already: true`, not drawn, at both widths: 3 presses). The Document page still lists no flag raised on it (the cause file's "Flags raised on this document" line is not drawn). A member cannot tell whether the press did anything.
+
+### C-M13: contradiction screen's words, and "Take it up as a question"
+- C-M13 | 1280 | admin | opened the lead made from the Document page; pressed "Take it up as a question" with the default question (it holds double quotes: `Can both of these hold, and if not, which is so: "csv!A1:E3" and "¶1"?`) | FIXED | the words read "a member set these two documents side by side as contradicting, with their reason" and "sparky said these two contradict, October 26, 2026"; the "the assistant's guess" sentence is gone. The take-up is accepted (no `ENVELOPE_TITLE_DISAGREES`): "TAKEN UP: ... sparky took this up as a question, Can both of these hold, and if not, which is so: 'csv!A1:E3' and '¶1'?, on October 26, 2026." (the quotes became apostrophes). shots/rewalk-C/m13-contradiction-admin-1280.png | take-up under 6 s wall | MINOR left: the fact row "generic · generic" is still drawn
+- C-M13 | 390 | admin | a second lead (minutes390.txt ¶1 against note.txt ¶1), the default question `"¶1" and "¶1"?` | FIXED | same words; take-up answered `ok`, `taken_up`, inquiry `INQ-2026-0016-contradiction` (6.1 s wall); page then reads "TAKEN UP ... '¶1' and '¶1'" with quotes as apostrophes. shots m13-contradiction-admin-390.png, m13-takeup-admin-390.png | 6.1 s | -
+- Member: the original was administrator only; not walked as member.
+
+### csv bounds (C-M14): plain text read as CSV
+Case: a `.txt` of three plain lines with three commas each (`City of Walkton, Council minutes, March 2, 2026.` / `Item 7: ... contract, Oak Roofing LLC, not to exceed $48,500.` / `Miguel Alvarez, Director of Public Works, reported no change orders, none issued.`), vouched, opened. Original: one csv passage with the commas gone, "$48,500" cited as "$48 500".
+
+- csv bounds | 1280 | admin | `minutes2.txt` (INFO-2026-0211); control `table.txt` (6 rows, 5 columns, comma and space separated) INFO-2026-0212 | FIXED | `op=reading`: format `undetermined`, content type `generic`, 3 units `¶1`, `¶2`, `¶3`, each a line as written with its commas; the Document page shows three passages, "$48,500" intact ("Item 7: the Council approved the roof contract, Oak Roofing LLC, not to exceed $48,500."). Control: the 6-row table is read as `csv` (`csv!A1:E6`, one passage). (A first file of mine, `minutes.txt`, with 2 or 3 commas a line, was also read by lines.) shots/rewalk-C/m14-2026-0211-admin-1280.png, m14-2026-0212-admin-1280.png | - | -
+- csv bounds | 390 | admin | `minutes390.txt` (INFO-2026-0225), same shape of text | FIXED | 3 units `¶1` to `¶3`, "$52,500" intact. shots/rewalk-C/m14-2026-0225-admin-390.png | - | -
+- Remark (MINOR, unchanged): a real csv is still one passage ("csv!A1:E6") drawn as one run-on line without columns.
+
+## New findings
+
+1. MAJOR: Money trail (`/app/money/<project>`) cannot be used at all to confirm the row's neighbours: on this copy the screen offers only "The trail's name" and "Start a money trail"; I did not press it (D-B1's team zone is area A's setting, which I am told not to change). Not a re-walk row; recorded so BOB knows document nodes in Explore could not be reached from here.
+2. MINOR: documents captured through "Add > A file or photo" without a project (as the original walk did) are not offered on a project's Timeline ("Which document: Nothing here"); a file added from the project's own link `/app/capture/file/<project>` is. The screen gives no hint that the first group of documents is unavailable. (Not a regression: not checked at the original walk.)
+3. MAJOR: Timeline, after "Add who took part", draws the participant as a code: "A party: ENT-2026-0002" (screens-investigate `timeline.mjs`); a member would not know who that is. (The original found no participant drawn at all, so this is progress, but it is not yet readable.) shots/rewalk-C/m8-timeline-event-admin-1280.png
+4. MINOR: no sentence on the Document page after "Say these two contradict" (see C-M12 above).
+
+## Layout at 390
+
+Question, both Document pages (text and typed), Explore, person and contradiction screens: scroll width 390 = 390 at each, no horizontal overflow.
+
+## Result
+
+Rows fixed of rows walked: 8 of 9 (C-M1, C-M2, C-M5, C-M12, C-M13, csv bounds, reinstate with a role, C-M8 fixed for events and sources; C-M6's on-screen control NOT FIXED, known and owed). Two partial remarks inside the fixed rows: C-M8's document-by-title half could not be shown on this copy; C-M12 and C-M13 leave a MINOR each.
