@@ -127,3 +127,6 @@ Session session_01SFAL7sJC5Fupe7Dt1e2o6Y (QUERY-LANGUAGE #14). Tranche T51 merge
 **For BOB.** R13's text ("the same query compiled with `implicitOp: "or"` is its wider reading") does not yet say a NOT atom stays a restriction there; the test names R13. Your wording.
 
 **Tests and checks.** query-language 60 pass, 0 fail; retrieval 213 pass, 0 fail; agent-steps 10 pass, 0 fail; agent-worker: see the J entry. format 0; architecture 0; coverage 34 of 34, 0; ownership 0.
+
+agent-worker (users run): 21 of 23 files pass; `requirements.test.mjs` (R45 bundle byte-identity/static check: the bundle holds `query.mjs`, stale for this change, regenerate at the layer close, manifest §14; also red on the unchanged tranche) and `t47.test.mjs` (`@modelcontextprotocol/sdk` not installed in `agent-runner/`, no `node_modules` in this container) fail, neither from the change.
+Size (session_01SFAL7sJC5Fupe7Dt1e2o6Y): test runs 7, module lines 3015
