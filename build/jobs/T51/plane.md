@@ -1280,3 +1280,11 @@ Not COMPLETE: the flake and the open run are still mine. Next: find why a firing
 ## J72 · BLOCKED
 
 Cause: tests. The plane directory run is 302 of 303 green; the one red is r8-heal-door R102 G93 (the owedwork test, and its siblings in the same file). It is intermittent: standalone runs pass about 3 in 5 (5 loops: fail 2, 1, 0, 0, 0; then 6 captured runs with 1 fail of 2 captured in the next loop). The pushed partial fix (settled waits 120 s, not 30) did not clear it: the failures now show the first firing never ends with a row owed inside 120 s (settled, r8-heal-door.test.mjs:67). A single diagnostic run passed, so the state at the timeout is not yet captured. I have not weakened any assertion. Tried: widened wait; repeated runs; a temporary diagnostic (reverted). Need: a load-free diagnosis of the first firing (the scanner stub and the alarm state at the timeout), or a decision on whether this test may be quarantined to a slower lane. I have not done either.
+
+## J73 · BLOCKED
+
+Cause: tests (r8-heal-door R102 G93, still open). Reproduced under load: 4 busy loops on the 4 cores, the file in a loop of 5: fail 0, 1, 1, 0, 2 (3 of 5). The diagnosis at the timeout is NOT captured: my instrumented run was killed at its background limit before it reached the timeout, and its output ran 85 tests (not the one named), so it is no evidence. My temporary diagnostic is reverted; the test file matches the committed one.
+
+Working tree problem, not mine: the shared clone at /home/user/bio shows modifications I did not make in other modules: agent-steps/src/drive.mjs, agent-worker/src/index.mjs, agent-steps/src/names.mjs, agent-steps/test/plane-meaning.mjs, bio-plane/src/run-rules/rules.mjs. They are not in my paths and I have not committed them. The stop hook will keep flagging the tree until someone owns them. Pushed so far: the tranche merge (B107) on job/T51/plane.
+
+Not done: B108 (shrink t42/t46). Needs: someone to say whether the foreign modifications are expected, and a rerun of the diagnosis on a quiet machine.
