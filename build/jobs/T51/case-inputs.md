@@ -314,3 +314,23 @@ COMPLETE for B14 (fix round 10, K5207; the details fixtures, K5175).
 The answers they should take: `casedetails().recorded`, `casedetailsset().set` and `.notOwner`, `casedetailspublic().published` and `.unpublished`.
 
 **Size (session_01319VhF3CxdhogoEXvR8aRC): test runs 6, module lines 1602** (module lines = `bio-plane/src/case-inputs/*.mjs`, the module's source; the new test lines are 104 in the two test files).
+
+## J16 · COMPLETE
+
+COMPLETE for B15 (CHANGE K5209: OP-GRADES #30 merged; merged origin/tranche/T51 at 32996b4b0d into job/T51/case-inputs as a merge commit, no rebase; pushed).
+
+**Suite after the merge:** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/case-inputs/*.test.mjs`: 81 tests, 81 pass, 0 fail. The stores start again; no `DECLARED_OP_DISAGREES` now.
+
+**Checks (absolute root /home/user/bio):**
+- `checks/fixtures.mjs /home/user/bio case-inputs --list`: 0 failures (answer 0, contract 0, stub 0).
+- `checks/ownership.mjs`: 0 failures.
+- `checks/architecture.mjs /home/user/bio case-inputs`: 0 failures.
+- `checks/coverage.mjs /home/user/bio case-inputs`: 0 failures, 29 of 29 live requirement ids named by a test.
+- `checks/format.mjs /home/user/bio`: 0 failures.
+- `checks/run.mjs /home/user/bio`: the case-inputs findings are the same six screens-publish lines reported in J15 (`fixtures.mjs:134–135`, `fr30b.test.mjs:300, 339, 354, 399`); they are not this module's files, and I added no sentence, so the words count is unchanged.
+
+**Met ids:** unchanged from J15 (R20, R22, R23, R24).
+
+**Markers:** none added.
+
+**Size (session_01319VhF3CxdhogoEXvR8aRC): test runs 4 (this round), module lines 1602** (`bio-plane/src/case-inputs/*.mjs`, unchanged).
