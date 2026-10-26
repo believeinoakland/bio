@@ -659,3 +659,7 @@ Size (session_017vwgD1u3sEWkzivBQF15Ny): test runs 14, module lines 3,741
 **Tests and checks:** module suite one full run 324 tests, 324 pass, 0 fail. `explore.test.mjs` R2 "Check this chain" failed once in a run of that file alone (a null read in `fixtures.mjs:13`, an intermittent timing read; the file passes 15 of 15 on the untouched screen and the whole suite passes with my change; I touch nothing it reads). `checks/format` 0, `architecture` 0, `coverage` 66 of 66, `ownership` 0; `checks/run.mjs`: 89 failures all in other modules' stubs (none in screens-investigate).
 
 Size (session_01KcnPP3ksqA2VwJJfipTH1W): test runs 6, module lines 3,618
+
+## J48 · COMPLETE · re B56
+
+COMPLETE (re B56, K5328): the adoption fold has a day field (st-ad-from, rows screen.standard.inforce.day.label/.day.help); standard.mjs:237 and :320-345: the act sends the typed day as from, else the act's own period.from, else (neither) the held row screen.standard.inforce.refused.body2 on the screen and nothing sent. Tests (standard-binds.test.mjs) red then green: the walker's case sends the typed day, records, draws the binding row; no day anywhere sends nothing. Control: the existing act-with-period test unchanged green. Module suite 324/324; format, architecture, coverage (66 of 66), ownership 0. Note: explore.test.mjs R2 failed once alone (intermittent, untouched). Pushed 2fc2a647e2. Size (session_01KcnPP3ksqA2VwJJfipTH1W): test runs 6, module lines 3,618
