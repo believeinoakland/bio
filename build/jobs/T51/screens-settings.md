@@ -598,3 +598,10 @@ Size (session_01TDZDRXt6aSdG9rueQLukTW): test runs 3, module lines 5477
 
 COMPLETE (re B58, K5232). Merged origin/tranche/T51 (never a rebase); `translations` is now in screens-settings.uses. architecture over screens-settings: 0 failures; run.mjs: no finding in my files; ownership 0; fixtures --list 0 failures. Module tests 272, pass 269, fail 3: R58 (older installation, group null), R69 group, R69 control, red by name until store-request's older-installation recipe merges; I stay open for that CHANGE. No change to my files since J42; no fixtures-own/generic marker added.
 Size (session_01TDZDRXt6aSdG9rueQLukTW): test runs 4, module lines 5470
+
+## J44 · COMPLETE
+
+COMPLETE (re B59, K5245). Merged origin/tranche/T51 (no rebase); committed only my three named files (no `commit -a`).
+Changed: seed-group.mjs `team({ env, instanceName })` (was a `group` option the world no longer takes) -> storeWorld({ instanceName }); null binds none = store-request's olderInstallation recipe. identity.test.mjs R58 older installation: `team({ instanceName: null })`; group.test.mjs R69 control: `team({ instanceName: null })`; R69 group: `team({ instanceName: <slug> })` (both slugs). Each test goes through the real world and its expectation is read from the owner's answer (groupidentity group null; the well_known body's group equals the slug); red before (the 3 failures of J42/J43), green after.
+Suite: 272 tests, 272 pass, 0 fail, 0 skipped. Met ids: R58, R69 (BOB strikes). Checks: fixtures --list 0 failures; architecture 0; ownership 0; run.mjs no finding in my files; impact names screens-settings alone (6 of 24 files). No fixtures-own/generic marker added.
+Size (session_01TDZDRXt6aSdG9rueQLukTW): test runs 6, module lines 5470
