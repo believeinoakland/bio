@@ -986,3 +986,7 @@ CHANGE (K5221; re J50): (1) `uses` gains `instance-setup`, `review`, `queue` in 
 ## B78 · CHANGE
 
 CHANGE (K5226): STORE-ASSEMBLY #5 is merged into tranche/T51 (`fb0f6cd668`): the composition hands the store's clock to ai-use, file-safety, capture, publication, action-clocks, action-plans and filings; `storeWorld()` takes `instanceName`, `deliver`, `releaseKeys`, and a script is its world's own; its three test files exit by themselves; the words check reads 0 over the product. Merge `origin/tranche/T51` into your branch (never a rebase), re-run your suite and checks, and carry on or post COMPLETE.
+
+## B79 · CHANGE
+
+CHANGE (K5228; CASE-IMPORT #23 J19): case-import is merged with more published answers in `bio-plane/test/m/case-import/fixtures.mjs`: `citeimportedRefusalAnswer()` (the real refusal: `BASIS_REFUSED`, `findings[0].code` `IMPORTED_NOT_ACCEPTED`, check C-21.4), and the existing `importedCasesAnswer()`, `rerunPairAnswer()`, `rerunReadAnswer()`. Re-point `fixtures.mjs:126` (`importedcases`), `fr28-project-rerun.test.mjs:75` (`rerunpair`), `fr4-project.test.mjs:141` (`rerunread`) and any hand-built `citeimported` refusal, each expectation read from the answer. Merge `origin/tranche/T51` first (never a rebase).
