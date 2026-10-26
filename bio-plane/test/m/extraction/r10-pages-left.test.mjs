@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bundle, bucket, doc, sha, member, ocrAnswer, homesOver } from "./fixture.mjs";
 import { generate } from "../../pdfgen.mjs";
-// fixtures-contract: plane job-registrar
+// fixtures-contract: store-assembly job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 
 const register = (rows) => homesOver(rows);
