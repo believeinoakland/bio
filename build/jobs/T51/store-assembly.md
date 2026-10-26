@@ -302,3 +302,5 @@ COMPLETE (STORE-ASSEMBLY #7, B21: A-01, walk T51 alpha, K5257/K5258).
 **Suite.** store-assembly module: 430 tests, 428 pass, 1 fail (R83 above), 1 todo (R98). Users that read `stats` (the other suites naming it): see below. Checks: format 0, architecture 0, coverage 0 (7070 of 7070), words 0 new (unkeyed 1991, round-end regeneration's), ownership 0; fixtures `run.mjs` 89 failures, all stubs/orphan-runs of other modules' markers (none new from this job; I added no marker).
 
 Size (session_01MHfM4Jg8WvCFNaPQUvxaFk): test runs 6, module lines 3800
+
+**J20 addendum (users).** The 24 other test files naming `stats` (outside store-assembly and record-core): 170 tests, 169 pass, 1 fail: `bio-plane/test/system/migrate-released.test.mjs`, which ran 1,106 s before failing. It only asserts `op=stats` answers `ok !== false` (line 435); I did not establish its cause and did not rerun it on the bare tranche, so I cannot say it is unrelated: BOB please have it checked (it is plane's/system's, not in my paths).
