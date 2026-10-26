@@ -53,12 +53,20 @@ function render(cs, view) {
   if (proj && proj.state === "ok" && mode === "progression") return out.join("") + P.progressionDef(cs, view, id);
   /* an event's date, as precise as its source states it: a day, a month marked "month known", "on or before" */
   const when = (w) => P.when(cs, w);
+  /* R63: a participant is drawn by its entity's label (`entity`, one read per entity, shared by every item that names it), never its id;
+     a label that cannot be read is the design's word for an unnamed node */
+  const nameOf = (id) => {
+    const r = P.later(cs, view, "ent:" + id, "entity", { query: { id } });
+    if (r.state === "loading") return P.plain(cs, "state.loading");
+    const e = r.state === "ok" && r.value && r.value.found ? r.value.entity : null;
+    return e && typeof e.label === "string" && e.label ? e.label : P.plain(cs, "connection.node.unnamed");
+  };
   /* R20: who took part and the event's grade, as `timeline` answers them for the item (no read per event) */
   const detail = (it) => {
     const ps = Array.isArray(it.participants) ? it.participants : [];
     const total = Number(it.participants_total) || ps.length;
     const people = ps.map((x) => cs.w(S + "role", { role: cs.w(S + "roles." + (["decider", "voted", "signatory", "actor", "party", "present", "speaker", "author"].includes(x.role) ? x.role : "actor")) })
-      + " " + P.refOf(cs, x.entity_id, x.entity_id, [x.role || ""]) + (x.role === "voted" && x.vote_value ? " (" + cs.esc(x.vote_value) + ")" : "")
+      + " " + P.refOf(cs, x.entity_id, nameOf(x.entity_id), [x.role || ""]) + (x.role === "voted" && x.vote_value ? " (" + cs.esc(x.vote_value) + ")" : "")
       + (x.grades && /^[A-D]$/.test(x.grades.attestation || "") ? " " + cs.grade("capture", x.grades.attestation) : "")).join("; ");
     /* K3996, events R54: an event placed nowhere gives its `grade_why` as `{key, vars}`, drawn by its word */
     const grade = /^[A-D]$/.test(it.grade || "") ? cs.grade("capture", it.grade)
@@ -111,9 +119,10 @@ function render(cs, view) {
   else if (docsLoading) out.push(cs.state("docs", view, () => ""));
   else if (!tl) out.push(`<p>${cs.w(S + "noset")}</p>`);
   else out.push(cs.state(tl, (v) => {
-    /* R60: a team with no active place holds no time zone, so an event dated by a fact is placed in none; the hint is said once above those events */
-    const pq = ((v.world || {}).placed_nowhere || []).length ? P.later(cs, view, "profiles", "profiles", { query: {} }) : null;
-    const nozone = pq && pq.state === "ok" && pq.value && Array.isArray(pq.value.profiles) && !pq.value.profiles.length;
+    /* R60, R62: an event placed in no zone is said once above those events, when no team zone governs: `factstatus` of `@team/time_zone`
+       answers `absent` (as find-in reads it), with or without an active place */
+    const zq = ((v.world || {}).placed_nowhere || []).length ? P.later(cs, view, "zone", "factstatus", { query: { path: "@team/time_zone" } }) : null;
+    const nozone = zq && zq.state === "ok" && zq.value && zq.value.status === "absent";
     const dated = v.dated && Array.isArray(v.dated.items) ? v.dated.items : [];
     if (!((v.world || {}).items || []).length && !((v.world || {}).placed_nowhere || []).length && !dated.length
         && !((v.ours || {}).sources || []).some((x) => (x.items || []).length)) return `<p class="cs-state" data-state="empty">${cs.w(S + "empty")}</p>`;
