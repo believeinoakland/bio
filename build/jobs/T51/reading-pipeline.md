@@ -1051,3 +1051,7 @@ COMPLETE (B64, fix round 10; K5175): the hand-built `transcribe` values now carr
 **Choices I made:** the commit message carries no model identifier, following the system rule; J1 made the same choice. `Claude-Session` trailer kept.
 
 Size (session_01SY4Lvvb9Fxt5mgvpCSvWLj): test runs 3, module lines 3471
+
+## J58 · REPORT
+
+Found outside my paths: store-assembly/t42.test.mjs:266 (extraction's t48 transcribe value) lacks asked, sent and owed, so the :267 run (reading-pipeline transcribe-answer) stays red until EXTRACTION #49 fixes it. Real answer: bio-plane/src/store-assembly/transcribe.mjs ~155. Mine now match the real shape.
