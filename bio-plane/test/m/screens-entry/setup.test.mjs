@@ -7,7 +7,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { open, has, lacks, said, date, all, texts, textOf, actOps, links, word, sentence, unescape, squash, SCREENS, worldOf, act, viaDoor, scannerBinding, SEAL, enrol } from "./kit.mjs";
+import { open, served, has, lacks, said, date, all, texts, textOf, actOps, links, word, sentence, unescape, squash, SCREENS, worldOf, act, viaDoor, scannerBinding, SEAL, enrol } from "./kit.mjs";
 
 const OTP = "otp-sentinel-5d1e";
 const PW = "founder long password";
@@ -25,9 +25,9 @@ async function oldFounder(opts) {
 /* the founder's password asked again, as the shell asks it before an act that changes administrators or keeps a key (credentials R66) */
 const reauth = (world, as) => act(world, as, "reauth", { body: { password: PW } });
 
-async function claimed({ env, after } = {}) {
+async function claimed({ env, after, page } = {}) {
   const world = await fresh({ env });
-  const o = await open("setup", { fragment: { boot: OTP }, world });
+  const o = await open("setup", { fragment: { boot: OTP }, world, page });
   await o.press("claim", { values: { "su-handle": HANDLE, "su-pw": PW, "su-pw2": PW } });
   o.world = world; o.as = { token: o.token };
   // what the team already holds when the founder comes back to a part: made by her own real acts, then the page reads again
@@ -939,6 +939,34 @@ test("R34 setup carries the step screen.setup.zone with its help; its act writes
   assert.equal(zoneHeld(o.world), "America/Denver", "the setting jurisdictions.governingZone reads");
   assert.equal(zoneMark(o).length, 1, "a confirmed zone draws the step done");
   has(o, "screen.group.timezone.governs.local", { zone: said("label.timezones.America/Denver") });
+});
+
+/* S-1 (re-walk 11): the page holds each screen function as its own text, so a name the module declares at its own scope is not there.
+   The step is drawn, read and acted from the served source, for a signed founder with a handle (the walker's case). */
+test("R34 setup: the founder's reads, the zone step and its act, as the served page holds them (self-contained, interface-shell R21)", async () => {
+  const setup = SCREENS.find((s) => s.id === "setup");
+  const me = { session: true, member: "m1", handle: "rivera", rootOfTrust: true, administer: true };
+  const page = served(setup);
+  assert.deepEqual(Object.keys(page.reads({ me })).sort(), Object.keys(setup.reads({ me })).sort(), "every read is asked");
+  assert.deepEqual(page.reads({ me }).zone, setup.reads({ me }).zone);
+  const o = await claimed({ page: true });
+  assert.ok(o.requests.some((r) => r.op === "factstatus"), "the zone is read");
+  assert.ok(o.requests.some((r) => r.op === "recoverycodesstate"), "the founder's other reads are asked");
+  has(o, "screen.setup.zone"); has(o, "screen.setup.zone.help");
+  assert.equal(zoneMark(o).length, 0);
+  const r = await o.press("factconfirm", { values: ZONE });
+  assert.equal(r.refused, false);
+  assert.equal(r.sent[0].body.path, "@team/time_zone");
+  assert.equal(zoneHeld(o.world), "America/Denver");
+  assert.equal(zoneMark(o).length, 1, "the confirmed zone draws the step done");
+  has(o, "screen.group.timezone.governs.local", { zone: said("label.timezones.America/Denver") });
+});
+
+test("R34 control: from the served source a zone that is not one of the named seven is still drawn by its own name", async () => {
+  const done = await returned({ after: ({ world, as }) => act(world, as, "factconfirm", { body: { act: "correct", value: "America/Boise", how: "how-given", source: "source-given", path: "@team/time_zone" } }) });
+  const page = await open("setup", { world: done.world, as: done.as, page: true });
+  assert.equal(zoneMark(page).length, 1);
+  assert.ok(textOf(partOf(page, "places")).includes("Boise"));
 });
 
 test("R34 control: a zone confirmed before draws the step done and offers no act; a zone only a place gives, or none, is not done; a refusal sends nothing more", async () => {

@@ -19,9 +19,8 @@
    radios and checkboxes, watched on the page's clock (`cs.later`) as `join` watches its handle, and the screen redrawn
    when one changes. Self-contained (interface-shell R21). */
 
-/* R34: the fact the team's time zone is stated on (local-facts R21) and the zones the design names (`label.timezones.<id>`) */
-const ZONE_PATH = "@team/time_zone";
-const ZONES = ["America/Los_Angeles", "America/Denver", "America/Phoenix", "America/Chicago", "America/New_York", "America/Anchorage", "Pacific/Honolulu"];
+/* The page holds each function below as its own text, so no value is declared at this module's scope: R34's fact path and zones
+   are written inside each function that uses them (S-1). */
 
 export const setup = {
   id: "setup",
@@ -39,7 +38,7 @@ export const setup = {
       codes: { op: "recoverycodesstate" },
       profiles: { op: "profiles" },
       // R34: the team's own time zone as it governs (local-facts R21), on the fact's own path
-      zone: { op: "factstatus", query: { path: ZONE_PATH } },
+      zone: { op: "factstatus", query: { path: "@team/time_zone" } },
       place: { op: "placewantedstate" },
       offices: { op: "entitieskind", query: { kind: "office", limit: "500" }, empty: (v) => !(v && Array.isArray(v.entities) && v.entities.length) },
       keepaway: { op: "aikeepawaystate" },
@@ -56,6 +55,8 @@ export const setup = {
 
   render(cs, view) {
     const W = cs.w, E = cs.esc, S = "screen.setup.";
+    // R34: the zones the design names (`label.timezones.<id>`)
+    const ZONES = ["America/Los_Angeles", "America/Denver", "America/Phoenix", "America/Chicago", "America/New_York", "America/Anchorage", "Pacific/Honolulu"];
     const ui = view.ui || {};
     const data = view.data || {};
     const ok = (r) => (r && r.state === "ok" ? r.value : null);
@@ -495,7 +496,7 @@ export const setup = {
     { op: "factconfirm", rereads: ["zone"],
       send(view, el, cs) {
         view.ui.at = "places";
-        return { body: { act: "correct", value: String(cs.value("su-zone") || "").trim(), how: String(cs.value("su-zone-how") || "").trim(), source: String(cs.value("su-zone-src") || "").trim(), path: ZONE_PATH } };
+        return { body: { act: "correct", value: String(cs.value("su-zone") || "").trim(), how: String(cs.value("su-zone-how") || "").trim(), source: String(cs.value("su-zone-src") || "").trim(), path: "@team/time_zone" } };
       } },
     { op: "placewanted", rereads: ["place"],
       send(view, el, cs) { view.ui.at = "places"; const name = String(cs.value("su-place") || "").trim(); return name ? { body: { name } } : { refuse: "screen.setup.place.empty" }; } },
