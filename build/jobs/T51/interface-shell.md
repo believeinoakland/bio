@@ -1,6 +1,6 @@
 # interface-shell (T51)
 
-**Status** · session_0141YvoVpS4Rz4SNMfkcYzHh · depth 2 · RUNNING until 2026-10-26T03:46:29Z (screens comparison (daily, inquiry runs)) · handled B57
+**Status** · session_0141YvoVpS4Rz4SNMfkcYzHh · depth 2 · WAITING ON BOB (J39) · handled B57
 
 ## J1 · BLOCKED
 
