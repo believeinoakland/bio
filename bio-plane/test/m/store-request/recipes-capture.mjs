@@ -24,7 +24,6 @@ export function makeRenderer() {
     r.calls.push(asked);
     if (r.gate) await r.gate.promise;
     if (r.failure) return new Response(JSON.stringify(r.failure));
-    // fixtures-own: platform the browser's answer to a render request (the RENDERER binding is the platform's, a double)
     return new Response(JSON.stringify({ ok: true, html: r.pages.get(asked.url) ?? VISITOR_PAGE, elapsed_ms: 12, engine: "Chrome", engine_version: "1", viewport: { width: 1280, height: 800 },
       dpr: 1, locale: "en-US", timezone: "UTC", navigated_to: asked.url, status: 200, requests: [], scripts: [], wait: { asked: { until: "networkidle", timeout_ms: 15000 }, fired: "networkidle" } }));
   };

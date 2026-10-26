@@ -161,9 +161,10 @@ function inlineVerdictOf(document) {
 export async function followReading(world, entries, storeName = "bio") {
   const stub = stubOf(world);
   const ask = async (route, init) => { try { return await doAnswer(stub.fetch(new Request(`http://do/${route}`, init))); } catch { return { answered: false }; } };
+  /* whether the store kept the row (`pendingadd` answers `{ok: true}`); a refusal or a silence is a row not kept */
   const register = async (sha, kind) => {
     const a = await ask(`pendingadd?kind=${kind}&sha=${sha}&store=${encodeURIComponent(storeName)}`, { method: "POST" });
-    return a.answered && a.result && a.result.ok === true ? { ok: true } : { ok: false, reason: a.answered && a.result && typeof a.result.reason === "string" ? a.result.reason : "PENDING_NOT_KEPT" };
+    return a.answered && a.result && a.result.ok === true;
   };
   let pending = false, inline = 0;
   const refused = [];
@@ -177,12 +178,12 @@ export async function followReading(world, entries, storeName = "bio") {
     /* R132: a document over its kind's whole-read ceiling is stated from its sizes by the reader: no row is registered for it, and it is never deferred */
     if (verdict === "stated") { await readHeld(e.sha); continue; }
     const reg = await register(e.sha, "reading");
-    const owe = () => { if (reg.ok) pending = true; else refused.push(e.sha); };
+    const owe = () => { if (reg) pending = true; else refused.push(e.sha); };
     if (inline >= READING_FOLLOWED_MAX || verdict === "deferred") { owe(); continue; }
     inline++;
     const held = await readHeld(e.sha);
     if (held && (held.read === true || held.why === "READING_HELD")) {
-      if (held.owed === true) { const ocr = await register(e.sha, "ocr"); if (ocr.ok) pending = true; else refused.push(e.sha); }
+      if (held.owed === true) { if (await register(e.sha, "ocr")) pending = true; else refused.push(e.sha); }
       if (held.more === true) owe();
       continue;
     }
