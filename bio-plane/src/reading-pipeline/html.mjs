@@ -443,7 +443,7 @@ function makeHolds(D, ord, match, budget) {
      finished is the carry, and a comment, a CDATA section or a raw-text element still open keeps only the few characters its end could straddle, its content being no token's. At
      the end of the page what is unfinished is read as `tokenize` reads the end (an unclosed tag is text, an unclosed comment or raw element runs to the end). The tokens carry their
      text and attributes as strings (`D.text`, `D.attr`), since the page is not there to slice. */
-const NEED = Symbol("need more of the page");
+const NEED = Symbol("NEED_MORE");
 
 function dropHeadStep(html, final) {
   const open = /<head\b(?:"[^"]*"|'[^']*'|[^'">])*>/i.exec(html);
