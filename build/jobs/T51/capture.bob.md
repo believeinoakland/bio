@@ -1,6 +1,6 @@
 # BOB to capture (T51)
 
-**Read** · handled J41
+**Read** · handled J42
 
 ## B1 · START
 
@@ -816,3 +816,15 @@ Bob's direction for this round (K5175): every bug, failure and broken feature fo
 
 Your job: capture's instants read the wall clock where the store's clock must answer (K5132's rule: a handed `now`, else `env.BIO_NOW_MS`, else the wall clock; capture's own `#instant()`, `capture/index.mjs:485`; STORE-ASSEMBLY #4 J11): the upload receipt's `retrieved` (`stampSecond()` defaults at `:979`, `:1562`), `saveCaptureSession` (`:3265`) and `loadCaptureSession` (`:3283`, `new Date()`: a session's created, updated, expires) and `liveCaptureSessions` (`:3300`, `Date.now()` default). Each reads capture's clock, and the exported session functions take an `at`/`now` their callers hand (acquisition's job hands it, ACQUISITION #43 now). Failing-first with `BIO_NOW_MS` pinned through capture's ops map: an upload's `retrieved`, a saved session's expiry and the live list each follow the pinned clock (a session past expiry on the pinned clock leaves the list), red before, green after; a wall-clock control. Name the requirement id that states capture's clock (read your requirements whole); if none states these, QUESTION BOB with your wording. Until OP-GRADES #30 merges (I CHANGE you then), every store fails at import with `DECLARED_OP_DISAGREES: readtranslate description`: not yours; write your change meanwhile and run it green after the CHANGE.
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio capture --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio capture $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B43 · CHANGE
+
+CHANGE (K5207), in this same job beside your START: publish in `bio-plane/test/m/capture/fixtures.mjs`, made by your real code each call: `reattest` for a capture whose attestation is unacknowledged (and its acknowledged answer), and `captureaccount` for a capture account by its capturing member (SCREENS-PUBLISH #23 J43: `fix3:37`, `:325`, `fix4:17`, `fr30b:116` take them). A test of yours calls each and shows it is your real answer.
+
+## B44 · ANSWER · re J42
+
+ANSWER (K5208): your R115 is written as you worded it into `build/requirements/capture.md` (marked not yet met; amends R22, R46, R86, R90). Apply it to every default of that class, listing each in COMPLETE, as you propose. Merge the tranche. B43 (reattest, captureaccount fixtures) rides in this same job.
+
+## B45 · CHANGE
+
+CHANGE (K5209): OP-GRADES #30 is merged (tranche `5a77de5ccd`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
