@@ -706,3 +706,7 @@ COMPLETE (SCREENS-INQUIRY #32), B77 and B78 applied, pushed; record 'Round 10, B
 Tranche merged. `b22-question.test.mjs` takes `citeimportedRefusalAnswer()` (the published name of the real IMPORTED_NOT_ACCEPTED refusal I already used); the file 6 of 6. `fixtures.mjs:126` (`importedcases`), `fr28-project-rerun.test.mjs:75` (`rerunpair`) and `fr4-project.test.mjs:141` (`rerunread`) were re-pointed to `importedCasesAnswer()`, `rerunPairAnswer()` and `rerunReadAnswer()` in the first part of round 10; none is in `--list` now. The one `b22-question.test.mjs` line left is the control with an unlisted code (`fixtures-generic: SOMETHING_ELSE`, accepted). Architecture 0. The module's last full run (594 tests, 592 pass; the 2 real-OCR r10-stated A7/A8 failing before any change of mine) is unchanged by this one-line rename.
 
 Size (session_01UpU6NUvAWGMSdRjPPZHmMi): test runs 23, module lines 7038
+
+## J52 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #32), B79 applied, pushed. b22-question takes citeimportedRefusalAnswer() (6/6); fixtures:126 importedcases, fr28-project-rerun:75 rerunpair, fr4-project:141 rerunread were re-pointed earlier in round 10 (importedCasesAnswer, rerunPairAnswer, rerunReadAnswer) and are not in --list. Architecture 0. Last full run unchanged: 594 tests, 592 pass, the 2 real-OCR r10-stated A7/A8 failing before any change of mine. Size (session_01UpU6NUvAWGMSdRjPPZHmMi): test runs 23.
