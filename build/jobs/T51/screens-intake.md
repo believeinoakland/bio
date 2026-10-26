@@ -1,6 +1,6 @@
 # screens-intake (T51)
 
-**Status** · session_01K6YtavmZMNJKgbSR9wXhWz · depth 2 · COMPLETE · handled B60
+**Status** · session_01614NduQ3cDoS863WMb4H6Z · depth 2 · COMPLETE · handled B61
 
 ## Record
 
@@ -928,3 +928,19 @@ Size (session_01K6YtavmZMNJKgbSR9wXhWz): test runs ~14, module lines 3170
 ## J61 · COMPLETE
 
 COMPLETE (SCREENS-INTAKE #29, B60). F-B14 open-file.mjs sendSafeView/reasonBeside: a SAFE_VIEW_FAILED draws the owner's renderer_reason beside its sentence (refusal.<REASON> where held, else refusal.uncatalogued + the code); size reasons add none. F-B15 open-file.mjs hasSafeView/safe: a kind with no safe view (threatof format outside pdf, docx, pptx, odt, odp, xlsx, ods, csv, text) says refusal.NO_SAFE_VIEW once, with no act and no 'Read it in the safe view below'; the deeper check stays. Tests (open-file.test.mjs) red on the tranche's file, green with the fix: F-B14 (real docm, renderer double refuses NOT_RENDERABLE, owner's own answer read), F-B14 control, F-B15 (five real uploads compared with the owner's safeview answer). Module 388/388; users 204/206: the 2 red are screens-inquiry r10-stated.test.mjs A7, A8 (OCR PNG readings), red identically at the tranche's open-file.mjs: not mine. Checks: format, architecture, coverage 69/69, ownership 0; run.mjs nothing new in my files, words 0. REPORTED (details in my record): (1) file-safety words: refusal.SAFE_VIEW_FAILED (rows.mjs:13470) still promises a reason; no held words for NOT_RENDERABLE, NOT_TEXT, no_sheets; (2) threatof carries format but no 'has a safe view' flag, so the screen holds the list (file-safety/formats.mjs:30-33 + R45 text), guarded by the F-B15 test; (3) screen.open-file.risk.high.means / .held.means say 'opens in the safe view' for a picture too: row owed; (4) no sibling row of next.yours for a kind with no safe view. Size (session_01K6YtavmZMNJKgbSR9wXhWz): test runs ~14, module lines 3170.
+
+## SCREENS-INTAKE #30 · fix round 10 · R71 (plan item 147; K5303; START B61)
+
+**R71 applied.** (1) `capture.mjs` (:504, :742-745): an attestation attempt with `pending: true` draws `screen.capture.attest.pending`; the plane's note is no longer drawn (D-M6). (2) `open-file.mjs` (:104-108): a picture (`threatof` `format: "image"`) high or held draws `screen.open-file.risk.{high,held}.means.picture`; low and text files unchanged; a file she added keeps `high.yours` (my reading: that line already replaces the means line; BOB to confirm). (3) `open-file.mjs` (`sendSafeView`): `renderer_reason` `NOT_RENDERABLE`, `NOT_TEXT`, `no_sheets` is drawn whole by `refusal.<reason>` (translation and the beside-reason dropped for these three; other reasons unchanged). The three-reason list is inline because screen functions run in the browser.
+
+**Tests (red on the old code, green now).** `open-file.test.mjs`: two new R71 tests (picture lines high/held with text-file control; the three refusals with an ENCRYPTED control; NOT_RENDERABLE through the real renderer double, NOT_TEXT, no_sheets and the held-picture hold scripted, each said); two older F-B14 assertions moved to the whole-sentence behaviour. `t51-fix2.test.mjs`: the R50 attestation test now asserts the key and not the note; its control is the real answer with `pending` removed (the real plane sets `pending` by timing, so a real control is flaky).
+
+**Suite and checks.** Module suite: tests 390, pass 390, fail 0, skipped 0 (run without force-exit). `checks/run.mjs`: format 0, architecture 0, words 0 failures; coverage 70 of 70 ids named, 0 failures; ownership 0 failures. The fixtures check lists 89 failures, one naming screens-intake: `store-assembly/r10-fixtures-run.test.mjs:27` (owed-later orphan), in store-assembly's file, not mine; none in my files.
+
+**Deferred:** none. **Found in other modules:** none new.
+
+Size (session_01614NduQ3cDoS863WMb4H6Z): test runs 7, module lines 3160
+
+## J62 · COMPLETE
+
+COMPLETE · R71 (fix round 10, plan item 147). Changed: capture.mjs:504,742-745 (pending attestation by screen.capture.attest.pending); open-file.mjs:104-108 (picture high/held lines by .means.picture; a file she added keeps high.yours: confirm), sendSafeView (NOT_RENDERABLE, NOT_TEXT, no_sheets drawn whole by refusal.<reason>). Tests red then green (open-file.test.mjs two new, t51-fix2 R50 test reworked, two F-B14 assertions moved). Module suite 390 pass 0 fail; format, architecture, words, coverage (70/70), ownership 0 failures; the only fixtures line naming screens-intake is store-assembly/r10-fixtures-run.test.mjs:27 (not my file). Size (session_01614NduQ3cDoS863WMb4H6Z): test runs 7, module lines 3160.

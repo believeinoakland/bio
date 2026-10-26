@@ -53,30 +53,6 @@ export const PUBLISHED_PARTS = Object.freeze({
     return name || page ? '<span class="rec" data-document>' + cs.esc(name) + "</span>" + (page ? ' <span class="meta" data-place>' + page + "</span>" : "") : "";
   },
 
-  /* D-M1 (2): the plane's sentence about an axis names the documents it lists by their ids (`strength` frozen into the signed case); the page draws it
-     as signed, with the title of each document the finding's own legs name (`document.name`, else the title of the edition a served leg cites) beside
-     its id, once. Escaped text; an id no leg titles stays alone. */
-  titled: function (cs, f, sentence) {
-    const names = {};
-    (f && Array.isArray(f.basis) ? f.basis : []).forEach(function (l) {
-      if (!l || typeof l.target !== "string" || !l.target) return;
-      const t = l.document && typeof l.document.name === "string" && l.document.name.trim() ? l.document.name.trim()
-        : l.served === true && l.cited_edition && typeof l.cited_edition.title === "string" && l.cited_edition.title.trim() ? l.cited_edition.title.trim() : "";
-      if (t && !names[l.target]) names[l.target] = t;
-    });
-    const ids = Object.keys(names).sort(function (a, b) { return b.length - a.length; });
-    const text = cs.esc(sentence);
-    if (!ids.length) return text;
-    const pattern = new RegExp(ids.map(function (i) { return cs.esc(i).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }).join("|"), "g");
-    const done = {};
-    return text.replace(pattern, function (m) {
-      const id = ids.find(function (i) { return cs.esc(i) === m; });
-      if (!id || done[id]) return m;
-      done[id] = true;
-      return m + ' <span class="rec" data-doc-title>(' + cs.esc(names[id]) + ")</span>";
-    });
-  },
-
   /* A finding's grade on `axis` as a letter (A to D), or "" when its frozen pair does not state one. */
   gradeOf: function (f, axis) {
     const st = f && Array.isArray(f.strength) ? f.strength : [];
@@ -144,9 +120,13 @@ export const PUBLISHED_PARTS = Object.freeze({
     const docs = o && (o.link || o.open) ? P.legs(f).map(function (l) { return P.docLine(cs, l); }).filter(Boolean) : [];
     return '<article class="mk-finding" data-finding="' + cs.esc(id) + '">' + head + '<p class="rec mk-fbody">' + cs.esc(P.claimOf(view, f) || body.question || f.title || "")
       + "</p><p>" + line + "</p>"
-      // 10B C5 (R94 a): an axis the frozen pair does not grade says so, in the plane's own sentence (`strength[].detail`)
-      + (Array.isArray(f.strength) ? f.strength.filter(function (x) { return x && (x.state === "unrated" || x.state === "undetermined") && typeof x.detail === "string" && x.detail.trim(); })
-        .map(function (x) { return '<p class="mk-small" data-ungraded="' + cs.esc(String(x.axis || "")) + '">' + P.titled(cs, f, x.detail) + "</p>"; }).join("") : "")
+      // R81 (D-M6 (b)): an axis the frozen pair does not grade as a letter says so by the design's words, never nothing: "Undetermined" when its
+      // state is that, else "Not graded yet"
+      + (Array.isArray(f.strength) ? ["capture", "connection"].filter(function (a) { return !P.gradeOf(f, a); }).map(function (a) {
+        const x = f.strength.find(function (y) { return y && y.axis === a; });
+        return '<p class="mk-small" data-ungraded="' + a + '"><b>' + cs.w("mark.scale." + a + ".name") + "</b> "
+          + cs.w(x && x.state === "undetermined" ? "screen.published.strength.undetermined" : "screen.published.strength.unrated") + "</p>";
+      }).join("") : "")
       + (why ? '<p class="mk-small" data-falsifier><b>' + cs.w("screen.published.what.would.overturn.it") + '</b> <span class="rec">' + cs.esc(why) + "</span></p>" : "")
       + (docs.length ? '<p class="mk-small"><b>' + cs.w("screen.published.evidence") + '</b></p><ul class="mk-list" data-evidence-names>'
         + docs.map(function (d) { return "<li>" + d + "</li>"; }).join("") + "</ul>" : "")
