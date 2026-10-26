@@ -115,3 +115,15 @@ Size (session_01Uv26d4DQG2M8TmwzaWeGkF): test runs 9, module lines 3006
 ## J6 · COMPLETE
 
 T51 query-language · fix round 9 batch D (B6): R34 done, on job/T51/query-language (pushed; tranche/T51 merged in). Entries applied: R34: every page hit carries snippet_unit, the rowid of the unit the passage snippet was cut from (one shared unit selection, same order as R33), else null. Tests: R34 x2 (red first, then green); query-language suite 59 pass, 0 fail. Checks: format 0, architecture 0, coverage 34/34 ids named 0, ownership 0, words: no finding naming query-language. impact: retrieval, agent-steps, agent-worker run. FOUND IN OTHER MODULES: (1) retrieval search.test.mjs:30 (R6) lists hit keys exactly and now fails on snippet_unit: retrieval job 30 must add it (R95/R96). (2) retrieval's three R94 tests and agent-worker R45 (bundle byte-identity, static check) fail on the unchanged tranche too (inherited). (3) agent-worker's bundle includes query.mjs: stale for this change, regenerate at layer close. Deferred: none. Size (session_01Uv26d4DQG2M8TmwzaWeGkF): test runs 9, module lines 3006.
+
+## Completion · fix round 10 (B7): F-B10 (c) the OR reading keeps NOT a restriction (K5257, K5258)
+
+Session session_01SFAL7sJC5Fupe7Dt1e2o6Y (QUERY-LANGUAGE #14). Tranche T51 merged into the branch first.
+
+**Changed.** `bio-plane/src/query.mjs` `parseTokens`' `andExpr` (the implicit-run return, was `:1388`): under `implicitOp: "or"` the positive atoms are ORed and each `NOT` atom stays an AND-ed restriction, `(a OR b) AND NOT c`; no positive atom leaves the NOT atoms alone; an explicit AND, the AND reading and `widenable` (R13) are unchanged. So retrieval's widened count no longer counts the whole record for `a b NOT c`.
+
+**Test, red then green.** `grammar.test.mjs` "R13 the OR reading keeps a NOT atom a restriction (F-B10 c)": red before the change (`water NOT main` under `implicitOp: "or"` answered A B C D, expected B), green after; it covers NOT and `-`, several NOTs, a lone NOT, no positive, a positive that matches nothing, and the case of the live walk (strict answer empty, wider answer the documents no NOT excludes).
+
+**For BOB.** R13's text ("the same query compiled with `implicitOp: "or"` is its wider reading") does not yet say a NOT atom stays a restriction there; the test names R13. Your wording.
+
+**Tests and checks.** query-language 60 pass, 0 fail; retrieval 213 pass, 0 fail; agent-steps 10 pass, 0 fail; agent-worker: see the J entry. format 0; architecture 0; coverage 34 of 34, 0; ownership 0.
