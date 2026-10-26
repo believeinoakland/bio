@@ -2,7 +2,7 @@
    the fixture is only worth publishing while it is the real answer. Each test names the requirement ids it checks. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { extractionNotice, progressOf, readHeldAnswer, transcribeRefusal, unheldStructure } from "./fixtures.mjs";
+import { extractionNotice, progressOf, readHeldAnswer, transcribeRefusal, unheldStructure, reextraction } from "./fixtures.mjs";
 import { REEXTRACT_CHECKS } from "../../../src/extraction/index.mjs";
 import { evidenceAbsent } from "../../../src/capture/ops.mjs";
 
@@ -106,4 +106,19 @@ test("R101 (fixture `readHeldAnswer.failed()`): the store failing at a later pie
   assert.ok(a.detail.read_through > 0 && a.detail.total > a.detail.read_through, "the cursor's figures are kept");
   assert.equal(typeof a.detail.reason, "string");
   assert.match(a.detail.reason, /STORE_FAILED/);
+});
+
+test("R80 (fixture `readHeldAnswer.noWholeObject()`): a home the register names whose object the store does not hold is `{ok: true, read: false, why: NO_WHOLE_OBJECT}`, nothing owed or written; control: the same capture held whole is read", async () => {
+  const a = await readHeldAnswer.noWholeObject();
+  assert.deepEqual([a.ok, a.read, a.why, a.owed, a.final], [true, false, "NO_WHOLE_OBJECT", undefined, undefined], JSON.stringify(a));
+  const read = await readHeldAnswer.read();
+  assert.deepEqual([read.read, read.why], [true, undefined], "control: held whole, it is read");
+});
+
+test("R34 R103 (fixture `reextraction`): the press owes the unread page and performs nothing; the ledger's pass performs and writes the re-extraction of that page", async () => {
+  const { press, pass } = await reextraction();
+  const owed = press.body.reextraction;
+  assert.deepEqual([press.status, press.body.ok, owed.performed, owed.written, owed.owed, owed.candidate], [200, true, false, false, true, [1]], JSON.stringify(press));
+  const done = pass.reextraction;
+  assert.deepEqual([pass.ok, done.performed, done.written, done.pages], [true, true, true, [1]], JSON.stringify(pass));
 });

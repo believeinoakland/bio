@@ -3,7 +3,7 @@
  * this case"; and a failed read's words, never the builder's `detail`. Each sentence is asserted by its key (R24). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, main, tipOf, drew, drewIn, day, word, hasWord, ops, press, ok, refusedIn, refused, PREFLIGHT, P, DR, C } from "./fixtures.mjs";
+import { provided, open, main, tipOf, drew, drewIn, day, word, hasWord, ops, press, ok, refusedIn, refused, PREFLIGHT, P, DR, C } from "./fixtures.mjs";
 
 const PATH = `/app/ceremony/${P}/${DR}`;
 const withSign = (o) => { const pre = PREFLIGHT(); Object.assign(pre.steps[7], o); return { publishpreflight: ok(pre) }; };
@@ -69,14 +69,16 @@ test("R42 requests that could not be read draw only signing.openrequest.unread u
 /* ---------- R43: the docket's pressure marks ---------- */
 
 const MARK = (o = {}) => ({ kind: "legal", note: "A letter threatening to sue over Edition 2", at: "2026-10-01T09:00:00Z", by: { member: "dev", handle: "dev" }, ...o });
+/* the docket entry the mark is on is the one action-holds' real `holdsdue` lists: `due.answer` before a hold, `due.placed` after one */
+const due = await provided.holdsDueDocket();
 const docketWith = (mark, extra = {}) => ({ docket: ok({ case: C, project: P, entries: [
-  { shelf: "record", entry: 2, kind: "court-order", summary: "Order of 20 November: seal exhibit 4", proposed: "public", state: "filed", filed_at: "2026-11-20T09:00:00Z", pressure: mark },
+  { shelf: "record", entry: due.entry, kind: "court-order", summary: "Order of 20 November: seal exhibit 4", proposed: "public", state: "filed", filed_at: "2026-11-20T09:00:00Z", pressure: mark },
 ], wrote: false }), ...extra });
 const DOCKET = `/app/docket/${P}/${C}`;
-const DUE = (entries) => ({ holdsdue: ok({ ok: true, items: entries.map((e) => ({ arrived: { docket_entry: e, case: C }, note: "x", marked_at: "2026-10-01T09:00:00Z", project: P })), limit: 500, truncated: false, cursor: null }) });
+const DUE = (listed) => ({ holdsdue: listed ? due.answer : due.placed });
 
 test("R43 docket draws \"Pressure marked on this case\" after the record: a legal mark with no hold draws its date, who made it, the note, the no-hold sentence, the counsel sentence and the way to the hold", async () => {
-  const p = await open(DOCKET, { plane: docketWith(MARK(), DUE([2])) });
+  const p = await open(DOCKET, { plane: docketWith(MARK(), DUE(true)) });
   const sec = sectionOf(p, "screen.docket.pressure.heading");
   assert.ok(sec, "the section");
   const order = main(p).querySelectorAll("h2").map((h) => h.textContent);
@@ -93,12 +95,12 @@ test("R43 docket draws \"Pressure marked on this case\" after the record: a lega
 });
 
 test("R43 a mark with a hold placed is not said to have none; a mark by someone who is no member draws no maker; another kind is named by its own word; no mark draws no heading and no read (controls)", async () => {
-  const held = await open(DOCKET, { plane: docketWith(MARK(), DUE([])) });
+  const held = await open(DOCKET, { plane: docketWith(MARK(), DUE(false)) });
   assert.ok(sectionOf(held, "screen.docket.pressure.heading") && !drew(held, "screen.hold.nohold"));
-  const anon = await open(DOCKET, { plane: docketWith(MARK({ by: null }), DUE([2])) });
+  const anon = await open(DOCKET, { plane: docketWith(MARK({ by: null }), DUE(true)) });
   const sa = sectionOf(anon, "screen.docket.pressure.heading");
   assert.ok(sa.textContent.includes("A letter threatening") && !/\bnull\b/.test(sa.textContent));
-  const other = await open(DOCKET, { plane: docketWith(MARK({ kind: "retaliation" }), DUE([2])) });
+  const other = await open(DOCKET, { plane: docketWith(MARK({ kind: "retaliation" }), DUE(true)) });
   const so = sectionOf(other, "screen.docket.pressure.heading");
   assert.ok(drewIn(so, "screen.action.pressure.retaliation") && drewIn(so, "screen.action.pressuremark.by", { who: "dev" }) && !drewIn(so, "screen.docket.pressure.mark", { member: "dev" }));
   const unread = await open(DOCKET, { plane: docketWith(MARK(), { holdsdue: refusedIn("SOME_REFUSAL", "x") }) });

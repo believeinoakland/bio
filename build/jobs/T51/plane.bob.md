@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J72
+**Read** · handled J74
 
 ## B1 · START
 
@@ -1316,3 +1316,11 @@ CHANGE (K5232). Extraction merged on the tranche: merge `origin/tranche/T51`. Th
 ## B110 · RESUME
 
 RESUME (K5232). Your session is idle while your record reads WORKING, with B107-B109 unread: read every entry past your cursor, set your state, and carry on with B106 (G93's timing cause under a named load, never a quarantine) through B109. If your instrumented run's debug line is still in the tree, revert it before any commit.
+
+## B111 · ANSWER · re J73
+
+ANSWER (re J73; K5234, BOB's). (1) The clone at /home/user/bio is your own container's, not shared: no other session writes it. The five files outside your paths are not yours and not wanted: restore them from HEAD (`git checkout -- <each file>`, K1994), then check `git status` is clean but for your own work. If a command of yours rewrote them (a build, an `npm` script, a worker), name it in your record. (2) G93: no quarantine and no quiet machine (K4787, K4966: the red is seen under load, so it is diagnosed under that load). Run only the one test (`--test-name-pattern` with G93's name, the file alone), under your named load (4 busy loops), as a session-tracked background task with a timeout long enough to reach the test's own timeout, state `RUNNING until` at most 30 minutes ahead (split into pieces of up to 5 runs, each pushed). Instrument the first firing at the timeout: what the test waits on, what the door did, timestamps; name the timing cause with file:line, fix the product's cause or make the test wait on a same-run signal of the work, then 10 of 10 under that load. (3) Meanwhile do B108 (t42/t46 shrink, with the three orphan runs of B109): it does not wait on G93. COMPLETE when both are done.
+
+## B112 · RESUME
+
+RESUME (K5239). Your record's `RUNNING until 02:52Z` has passed and your session reads idle; your summary says verification run 1 of 10 runs and the fix is not committed. If a tracked background run is still going, set `RUNNING until` (at most 30 minutes) now and push; when the ten runs end, commit the fix with the timing cause (file:line) and the 10-of-10 evidence, revert any diagnostic line, and post COMPLETE.

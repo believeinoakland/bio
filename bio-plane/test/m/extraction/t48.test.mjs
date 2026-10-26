@@ -26,9 +26,11 @@ function transcriber(services, { away = null } = {}) {
     transcription: ({ member, project, at }) => ({ member, project, at, act: `transcribe:t48:${at}`,
       ...Object.fromEntries(Object.keys(services).map((name) => [name, service(name)])),
       useCheck: async () => null,
-      // fixtures-contract: plane transcribe-answer
+      /* store-assembly's real answer (R106): agent-worker's, with the pages asked, those sent and those owed; `unread` only when a page was refused (none is here) */
+      // fixtures-contract: store-assembly transcribe-answer
       transcribe: async (q) => { calls.transcribe.push(q);
-        return { ok: true, engine: "claude-test", version: "2026-01", pages: q.pages.map((p) => ({ page: p, text: `AI text of page ${p}` })) }; } }),
+        return { ok: true, engine: "claude-test", version: "2026-01", pages: q.pages.map((p) => ({ page: p, text: `AI text of page ${p}` })),
+                 asked: q.pages, sent: q.pages, owed: [] }; } }),
   };
   return { t, calls };
 }

@@ -229,9 +229,11 @@ test("R3, R8 (C64-template): when the kind holds no template the request says so
   unsaid(read, "screen.request.text.help");
   const offered = await open(REQUEST, fedPlane({ templatesforaction: ok(TEMPLATES) }));
   said(offered, "screen.request.text.help");
-  // a template that cannot be read is never claimed
-  const failed = await open(REQUEST, fedPlane({ templatesforaction: { status: 200, json: { ok: false, code: "NO_SUCH_ACTION" } } }));
-  unsaid(failed, "screen.request.text.help");
+  // a template that cannot be read is never claimed: over the real store, an action that is not there is refused by `action` and by `templatesforaction` alike (filings R65's one gate)
+  const { world, me } = await actionWorld();
+  const absent = await openIn(world, me, `/app/request/${ACTION_ID}`);
+  await assert.rejects(me.read("templatesforaction", { query: { action: ACTION_ID } }), /NO_SUCH_ACTION/, "the owner refuses");
+  unsaid(absent, "screen.request.text.help");
 });
 
 test("R16, R54, R4 (C64-law): 'Change the law…' on a records request lists the records laws and sends the chosen law's own level; a law that states no level asks for one; control: other kinds list their deadlines' laws as before", async () => {

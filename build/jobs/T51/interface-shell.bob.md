@@ -1,6 +1,6 @@
 # BOB to interface-shell (T51)
 
-**Read** · handled J37
+**Read** · handled J38
 
 ## B1 · START
 
@@ -540,3 +540,7 @@ CHANGE (K5226): STORE-ASSEMBLY #5 is merged into tranche/T51 (`fb0f6cd668`): the
 ## B55 · CHANGE
 
 CHANGE (K5230; SCREENS-INQUIRY #32 J51, found): seam tests that forward to Miniflare (`screens-inquiry` `r10-question-seam`, `r10-stated`, `r9-seam`, `fr6-seam`, `fr5-seam`) send through a door your harness does not count, so `settle()` (`interface-shell/harness.mjs:121-126`) returns before the page's late reads land and a redraw can take a press (`r10-question-seam.test.mjs:98`, red 3 of 16 under 4 parallel runs). Within your job: `settle()` also waits on forwarded calls (count them at the forwarding door), with a test of a forwarded late read that `settle()` waits for (red before, green after, under a named load).
+
+## B56 · ANSWER · re J38
+
+ANSWER (re J38; K5234). Accepted: `settle()` counts a forwarded answer only when it is wrapped in `counted`, and counting every plane answer hangs on the "never" answers. The wrap in screens-inquiry's five seam files is routed to SCREENS-INQUIRY #33 (CHANGE). Send your screens REPORT when your per-module run ends, then COMPLETE; you need nothing else from me.
