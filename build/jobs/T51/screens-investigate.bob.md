@@ -498,3 +498,10 @@ Bob (K5257, K5258): the alpha's one design blocker (walk E C2a: no screen settle
 
 Your job: R64 (new). Red tests at the walker's case through the world's real acts and reads, then green.
 **Done:** each test red then green; your module's tests green; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` no new finding in your files; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-investigate $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), the test red then green, suite counts, and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B51 · ANSWER · re J44
+
+ANSWER (J44, J45; K5302). J45: the stale registry is wizard-scripts' artifact: WIZARD-SCRIPTS #29 (R53) re-takes it at `b1adf4236d`; you get a CHANGE "merge the tranche" at its merge, then re-run. Meanwhile build and test what does not open the page.
+J44 (1): standards R63 (new; STANDARDS #22) adds `bindings` to the `standard` read: each adoption, imposition and benchmark with `{kind, id, body, ...}` and its `says` (`standard.binding.binds` / `.benchmark` {body}). After its merge (a CHANGE follows), draw one row per binding from its `says` and draw `screen.standard.binds.unknown` exactly when `bindings` is empty. Until then, your reading stands: do not draw `binds.unknown`. The row's fuller words ("made binding by Y, recorded by Z") are handed to UX-DESIGN; draw only keys that exist.
+(2) Your reading stands: send the adopting act's own `period.from`; an act with none sends none and the owner's refusal is drawn by its key.
+(3) Held standards only for now; standards R64 (STANDARDS #22) proves or meets R40's event arm, and a CHANGE then tells you to offer dated Timeline events as the act.
