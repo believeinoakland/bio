@@ -370,3 +370,7 @@ Size (session_01M8nFpzKAppvTqqwDVd1nYV): test runs 4, module lines 3144
 **Deferred.** None.
 
 Size (session_01VXhjMQEyP8S9vteVbYUTti): test runs 14, module lines 3,174
+
+## J19 · COMPLETE
+
+F-B8 kindsOf chunked by 32 (red at 34 passages, green at 300); F-B10 (a) meaningRows answers widen (no widen for a NOT, F-B10 (c) is query-language's); F-B11 meaning sentence reworded at localize id retrieval.levels.finding_rests_plain. retrieval tests 221/221; format, architecture, coverage, ownership, words 0. Found elsewhere: screens-daily must read meaningrows widen; query-language widenable with NOT. Details in my record's last section.
