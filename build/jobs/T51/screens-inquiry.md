@@ -742,3 +742,7 @@ Tranche merged. `fr5-document.test.mjs:121` takes extraction's `readHeldAnswer.n
 Tests: module 598 pass, 0 fail (exits by itself). Checks: format, architecture, coverage (136 of 136), ownership, words 0 failures; fixtures 140 -> 138 lines. Markers added: none.
 
 Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 14, module lines 7041
+
+## J55 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #33), B84 done: fr5-document.test.mjs:121 takes readHeldAnswer.noWholeObject() and noHome(); fr28-document-acts.test.mjs:50 takes reextraction() (press asserted as the real owed answer, pass as performed). Module 598 pass 0 fail; format, architecture, coverage, ownership, words 0 failures; fixtures 140 -> 138 lines (both gone). Note: after an owed press the page draws no outcome sentence (R96 states none); left. B83 still waits on interface-shell. No markers added. Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 14, module lines 7041
