@@ -469,3 +469,38 @@ The two reds B20 names are not this module's: `control-plane/r10-caseratify-chai
 Nothing else changed. Commit: `ea6985ef0f`.
 
 Size (session_01TjMsDy8TyBi31BGv64B9Ln): test runs 3, module lines 2736
+
+## J29 · COMPLETE
+
+Processed START B21 (K5217), the signout answer. Commit 1bbbf96c2e on `job/T51/credentials`; the tranche (origin `tranche/T51`) is merged in, earlier, by a merge commit, never a rebase.
+
+**Changed (file:line)**
+- `bio-plane/test/m/credentials/fixtures.mjs`:4 imports `PASSWORD`; the new export `signout()` at the end of the file. It builds a world with `ann` active, signs `ann` in through `login`, and answers the real `signout` arm of the door (`w.ops("session=<token>").signout()`), with `{ w, token, answer }`. Never stored, built on each call.
+- `bio-plane/test/m/credentials/fixtures-answers.test.mjs`:6-7 imports; :29-33 new test, naming R39: the answer is `{ ok: true, ended: 1 }` and the session's row is gone from `sessions`.
+
+**Failing first.** The expectation was first set wrong (`ended: 2`): the test failed (1 of 3 red), then restored: green.
+
+**Suites and checks** (absolute root `/home/user/bio`)
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/credentials/fixtures-answers.test.mjs`: 3 of 3 pass (green), red with the wrong expectation, green again.
+- `--test bio-plane/test/m/credentials/*.test.mjs`: tests 199, pass 199, fail 0.
+- `checks/fixtures.mjs /home/user/bio credentials --list`: 3515 test files read; 0 failures in credentials.
+- `checks/format.mjs`: 178 modules, 178 requirements files; 0 failures. `checks/architecture.mjs credentials`: 0 failures. `checks/coverage.mjs credentials`: 58 of 58 live ids named; 0 failures. `checks/words.mjs credentials`: 0 failures.
+- `checks/ownership.mjs ... credentials 6928920478 HEAD`: 1 file changed by credentials... (the two files named above, 0 failures).
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178.
+- `checks/run.mjs /home/user/bio`: no finding in credentials' files.
+
+**Met ids.** None struck; no `**Rn**` mark here was open for this job. R39 is named by the new test.
+
+**Markers.** None added (no `fixtures-own`, no `fixtures-generic`).
+
+**Found in other modules (REPORT, for BOB to place; not changed here)**
+- `bio-plane/test/m/interface-shell/harness.mjs:97` still hand-builds `signout: ok({ ok: true })` as a frame default. `fixtures --list` names it as an answer FAIL `[op-table signout] -> credentials`. Its owner should take `signout()` from `credentials/fixtures.mjs` (its `answer` is `{ ok: true, ended: 1 }`).
+- `bio-plane/test/m/screens-publish/fix3.test.mjs:276` hand-builds `signerregisterown` (J27's REPORT, unchanged). Its owner should take `signerregisterown()` / `signerregisterownHeld()`.
+- `bio-plane/test/m/screens-settings/updates.test.mjs:250, :270, :342` hand-build the `bootstrap` answer. Credentials already publishes `bootstrapVersions()` in `fixtures.mjs` for this; the owner should take it.
+- Repo-wide (`checks/run.mjs`), the answer FAILs above are the only ones naming credentials as provider; the rest are in other modules' files.
+
+**Deferred.** Nothing.
+
+**Size (session_01AeXCzDzc1RnVriiEiSPhKG): test runs 4, module lines 2736**
+
+Re-running the `fixtures.mjs` line count: the module's test files total 5022 lines.
