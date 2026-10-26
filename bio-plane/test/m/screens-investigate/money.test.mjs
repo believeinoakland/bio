@@ -122,9 +122,8 @@ test("R4 a filter keeps only the rows with something undetermined (its address),
   assert.ok(main(p).querySelector(`a[href="/app/money/${trail}"]`));
 });
 
-/* REPORTED to the money module (moneyset): `exclude` does not close the figure's open proposal as `include` does (src/money/index.mjs, the `act === "include"` test), so a
-   figure proposed to the trail and then left out is listed by `moneyset` in both `proposals` and `exclusions`, and the page draws it as two rows. */
-test.todo("REPORTED: a figure proposed and then excluded is one row of the trail, not two", async () => {
+/* R32 of money (K5300): a figure proposed and then left out is closed as an open proposal, so the trail draws it once. */
+test("a figure proposed and then excluded is one row of the trail, not two (money R32)", async () => {
   const { world, me, trail, F } = await moneyWorld();
   await me.act("moneysetpropose", { body: { setId: trail, factId: F.other, method: "member:recordfact" } });
   const held = await trailOf(me, trail);
