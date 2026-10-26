@@ -84,8 +84,16 @@ const acts = [
   { op: "clockpropose", label: "act.clockpropose.label.due-date",
     /* R59: a refusal that no rule states a deadline for this kind of action keeps the deadlines its answer carries, to be picked from */
     refusals: { NO_SUCH_RULE: function (refusal, cs) {
-      if (cs) cs.set("rules", Array.isArray(refusal.deadlines) ? refusal.deadlines : []);
-      return cs ? cs.w("refusal.NO_SUCH_RULE") : "";
+      const listed = Array.isArray(refusal.deadlines) ? refusal.deadlines : [];
+      if (cs) cs.set("rules", listed);
+      if (!cs) return "";
+      /* R61 (5): `refusal.NO_SUCH_RULE` says "in the box below"; with no deadline listed no box is drawn, so that sentence is not drawn: the owner's own reason is
+         (record data, as `detail`), else the label of the case, and the door to the places' rules; the design holds no sentence for "your rules list none" (REPORTed) */
+      if (!listed.some((d) => d && typeof d.rule === "string" && d.rule)) {
+        const why = typeof refusal.detail === "string" && refusal.detail.trim() ? cs.esc(refusal.detail.trim()) : cs.w("screen.due-date.rule.summary");
+        return why + ` <a class="cs-ref" href="/app/places" data-nav data-screen="places">${cs.w("screen.due-date.rule.go")}</a>`;
+      }
+      return cs.w("refusal.NO_SUCH_RULE");
     } },
     send(view, el, cs) {
       const id = String(view.subject || "").split("~")[0];

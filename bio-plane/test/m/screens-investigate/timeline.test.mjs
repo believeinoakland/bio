@@ -146,7 +146,9 @@ test("R3 reads timeline over the project's set (the people and events its docume
   const p = await pageOf(s);
   assert.equal(p.byOp("image")[0].query.id, s.project);
   assert.equal(p.byOp("timeline")[0].query.set, s.org);
-  assert.equal(p.byOp("event").length, 0, "R20: participants and grades come with the timeline, one read, not one per event");
+  /* R20: participants and grades come with the timeline's one read; R61 (3): the one `event` read of each event the forms offer names it by its document's title (the timeline's items name none) */
+  const offered = [...(await timelineOf(s)).world.items, ...(await timelineOf(s)).world.placed_nowhere].map((i) => i.event_id).sort();
+  assert.deepEqual(p.byOp("event").map((r) => r.query.id).sort(), offered, "R61 (3): one read for each event the forms offer, none more");
   const crumbs = p.root().querySelector(".cs-crumbs").textContent;
   assert.ok(crumbs.includes("Pothole repairs") && crumbs.includes(word("screen.timeline.name")), "the path: the project as read, then the screen");
 });

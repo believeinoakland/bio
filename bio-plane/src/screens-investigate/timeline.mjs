@@ -130,7 +130,8 @@ function render(cs, view) {
       + ourFails.map((s) => cs.mark("gap", "undetermined", { reason: cs.w(S + "lane.failed", { source: s.source || "" }) })).join("") + "</section></div>";
     return lanes
       + ((world.placed_nowhere || []).length && nozone ? `<p class="mk-note" data-nozone>${cs.w(S + "nozone")}</p>` : "")
-      + ((world.placed_nowhere || []).length ? cs.sec(S + "undated.head", cs.sheet(world.placed_nowhere.map((x) => cs.row("", P.refOf(cs, x.event_id, x.kind ? cs.w(S + "kind", { kind: x.kind }) : x.event_id, [x.status || "", cs.w(S + "undated.apart")], "event"), `<span class="mk-small">${cs.w(S + "undated.apart")}</span>${x.grade_why ? ` <span class="mk-small">${P.why(cs, x.grade_why)}</span>` : ""}`)).join(""))) : "")
+      /* R61 (3): an event no date places is drawn with who took part (a link to each) and its grade, as a dated one is (`detail`), listed apart and never guessed into place */
+      + ((world.placed_nowhere || []).length ? cs.sec(S + "undated.head", cs.sheet(world.placed_nowhere.map((x) => `<div data-event="${cs.esc(x.event_id)}">` + cs.row("", P.refOf(cs, x.event_id, x.kind ? cs.w(S + "kind", { kind: x.kind }) : x.event_id, [x.status || "", cs.w(S + "undated.apart")], "event"), `<span class="mk-small">${cs.w(S + "undated.apart")}</span> ${detail(x)}`) + "</div>").join(""))) : "")
       ;
   }));
   /* R33 (1): the matters the project follows through a progression, each a reference to its steps (state b) */
@@ -147,7 +148,20 @@ function render(cs, view) {
   if (datedAll.length) out.push(cs.sec("timeline.dated.title", cs.sheet(datedAll.map(datedRow).join("")), { help: "timeline.dated.tip" }));
   /* the acts: each from a passage the member names (its fingerprint, and its page) */
   const evs = tl && tl.state === "ok" ? ((tl.value.world || {}).items || []).concat((tl.value.world || {}).placed_nowhere || []) : [];
-  const evChoice = (fid, key) => cs.choice(fid, key, evs.map((e) => ({ value: e.event_id, text: (e.kind || "") + " · " + e.event_id })), {});
+  /* R61 (3): an event is named by its kind, its date (or "Undated") and the title of the document that attests it, never its id: the kind by the design's word where it holds one, else
+     the vocabulary's own; the date as the lanes draw it; the document from the event's own read (`event`, one for each event the forms offer: `timeline`'s items name no
+     document), its governing attestation's capture, else the first that names one, by the title the project's documents carry */
+  const kindWord = (k) => (cs.w(S + "evkind." + k) !== cs.esc(S + "evkind." + k) ? P.plain(cs, S + "evkind." + k)
+    : String((vk && vk.words && vk.words[k] && vk.words[k].word) || k || ""));
+  const evName = (e) => {
+    const L = P.later(cs, view, "evdoc:" + e.event_id, "event", { query: { id: e.event_id } });
+    const ev = L.state === "ok" && L.value && L.value.event ? L.value.event : null;
+    const atts = ev && Array.isArray(ev.attestations) ? ev.attestations.filter((a) => a && typeof a.capture_sha === "string" && a.capture_sha) : [];
+    const att = atts.find((a) => a.attestation_id === ev.governing) || atts[0];
+    const date = e.when ? P.when(cs, e.when).replace(/&(amp|lt|gt|quot|#39);/g, (m, c) => ({ amp: "&", lt: "<", gt: ">", quot: "\"", "#39": "'" }[c])) : P.plain(cs, S + "undated.head");
+    return [kindWord(e.kind), date, att ? titleOf(att.capture_sha) : ""].filter(Boolean).join(" · ");
+  };
+  const evChoice = (fid, key) => cs.choice(fid, key, evs.map((e) => ({ value: e.event_id, text: evName(e) })), {});
   const qs = view.data.questions && view.data.questions.state === "ok" && Array.isArray(view.data.questions.value.bundles) ? view.data.questions.value.bundles : [];
   const cited = doc ? doc.refs.filter((r) => /^INQ-/.test(String(r.target || "")) && r.status !== "severed").map((r) => r.target) : [];
   const qChoice = cited.map((q) => { const b = qs.find((x) => x.bundle_id === q); return { value: q, text: (b && b.title) || q }; });

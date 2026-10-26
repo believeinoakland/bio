@@ -254,7 +254,7 @@ const EXPLORE_KEYS = [
   "screen.explore.follow", "screen.explore.follow.holds", "screen.explore.follow.legend", "screen.explore.to", "screen.explore.to.any",
   "screen.explore.at", "screen.explore.at.help", "screen.explore.at.empty", "screen.explore.preset", "screen.explore.chains",
   "screen.explore.chains.holds", "screen.explore.lead", "screen.explore.evidenced", "screen.explore.declared", "screen.explore.cited",
-  "screen.explore.page", "screen.explore.testimony", "screen.explore.nosource", "screen.explore.atdate", "screen.explore.nochains",
+  "screen.explore.page", "screen.explore.nosource", "screen.explore.atdate", "screen.explore.nochains",
   "screen.explore.noscore", "screen.explore.stopped", "screen.explore.verify.matches", "screen.explore.verify.differs", "screen.explore.promoted",
   "screen.explore.assert.head",
   "screen.explore.graph", "screen.explore.graph.holds", "screen.explore.groups.empty", "screen.explore.hop", "screen.explore.hop.unnamed",

@@ -1,6 +1,6 @@
 # screens-investigate (T51)
 
-**Status** · session_01WPDZpswNMiVXDQapJTbjk9 · depth 2 · COMPLETE · handled B45
+**Status** · session_01RdUoM7ohaxRHbCVfJZV9x3 · depth 2 · COMPLETE · handled B47
 
 ## J1 · QUESTION
 
@@ -510,3 +510,39 @@ COMPLETE · screens-investigate · fix round 10, B44 (K5250): the money file's s
 **Met ids.** None changed. **Markers added.** No `fixtures-own` / `fixtures-generic`. **Reported to others.** Nothing outside my paths. Other modules' tests may hold the same `assert.equal(<node>, null)` form (interface-shell's harness users); BOB may tell their jobs.
 
 Size (session_01WPDZpswNMiVXDQapJTbjk9): test runs 14, module lines 3416
+
+## J39 · COMPLETE · re B46
+
+COMPLETE · screens-investigate · fix round 10, B46 (K5271): R61 met. Commits on job/T51/screens-investigate (pushed).
+
+**Changed (bio-plane/src/screens-investigate/).**
+- (1) `money.mjs` recordfact send (async): no fiscal key and no period start → nothing is sent; `ui.periodRefusal` drawn at the top beside the act (`data-refusal="NO_PERIOD"`): `screen.money.f.periodfrom` + `money.index.a_period_states_its_start`; with no time zone held (`factstatus`: no active place's own `time_zone` fact, as Settings reads it; a read that fails claims nothing) also `money.index.the_period_states_no_zone` and a door to `/app/group` (`screen.group.name`, `screen.group.timezone`). An end alone is no start. `BAD_VALIDITY` is no longer drawn for a missing start (the MONEY_BAD_PERIOD handler is unchanged for the owner's other period refusals).
+- (2) `standard.mjs`: `issuerOf` (owner.label, else the registered body of the id, else the typed name, else `connection.node.unnamed`; never ENT-) on the title card, the sub line and the project's list. The whole-document passage is drawn whole to PASSAGE_UNITS = 100 text units (the 3-unit and 800-character cuts gone); past it a gap mark with "and {n} more" (`screen.timeline.more.people`, stand-in).
+- (3) `timeline.mjs`: the event pickers name each event "{kind word} · {date | Undated} · {document title}" from one `event` read per offered event (the `timeline` items carry no attestation, events/index.mjs:1121-1122); undated events are drawn with `detail` (participants as links, grade) and `data-event`.
+- (4) `parts.mjs` graph: a `capture:<64 hex>` evidence source is a reference as in explore.mjs:76-78.
+- (5) `due-date.mjs`: NO_SUCH_RULE with no deadline listed draws the owner's own `detail` (record data) else `screen.due-date.rule.summary`, and the door to Places, never `refusal.NO_SUCH_RULE`'s "in the box below".
+
+**Tests, red then green** (`fix10-walk.test.mjs`, 8 tests, each titled R61): money start (x2), standard issuer, standard whole document (old code cut at the third line), timeline names, undated detail, graph capture source (old code: raw), due-date. Each failed before its change for the stated reason. Edited existing tests: `timeline.test.mjs` R3 (one `event` read per offered event instead of none) and `fix4.test.mjs` read inventory (timeline: event 2).
+
+**Suites.** Module as one run: 303 tests before the fix4 edit, 301 pass, 1 fail (the inventory), 1 todo (money's reported exclude-after-propose); after it fix4+timeline+fix10 run: 36 pass, 0 fail. Users (`impact.mjs`: control-plane 86 files, plane 33 files): 706 tests, 706 pass, 0 fail.
+
+**Checks.** format 0; architecture 0; coverage 61 of 61 ids named; ownership 0; `checks/run.mjs`: words 0 failures, fixtures lines are other modules' (89), none in my files.
+
+**REPORTED / for BOB.** (a) Words missing, design: a sentence for "your rules list no deadline" (due date; stand-in: the owner's `detail`); "{n} more passages of this document are not shown" (stand-in `screen.timeline.more.people`); one sentence that names the start field of a money period and the time-zone setting (composed from existing keys). (b) events `timeline` items (events/index.mjs:1121) carry no attesting capture: adding it would save the per-event reads. (c) The bound 100 units is mine: fold it into R61 or name another. (d) Same raw defect remains for a `testimony:` source in the graph (parts.mjs, unasked). (e) money.mjs MONEY_BAD_PERIOD still draws `refusal.BAD_VALIDITY` before the owner's detail for end-before-start and zone refusals.
+
+**Met ids.** R61 (and R3/R20 test amended). **Markers.** no `fixtures-own` / `fixtures-generic` added.
+
+Size (session_01RdUoM7ohaxRHbCVfJZV9x3): test runs 12, module lines 3473
+
+## J40 · COMPLETE · re B47
+
+COMPLETE · screens-investigate · fix round 10, B47 (K5276): (d) and (e) fixed, each red then green. Pushed.
+
+**(d)** `parts.mjs` graph: a `testimony:` evidence source is drawn by `screen.explore.testimony` (as Explore's chains draw it), never its spelling; the key moved to `GRAPH_SHARED` (graphwords.mjs) and out of explore's own list (listed once, common.test R30). Test: fix10-walk "R61 (4) ... testimony: source" (red: raw source drawn; green).
+**(e)** `money.mjs`: the MONEY_BAD_PERIOD handler draws the owner's `detail` alone (escaped, record data), else `refusal.MONEY_BAD_PERIOD`; `refusal.BAD_VALIDITY` is gone from the screen and its words. Test: fix10-walk "R61 (1) ... a period the owner cannot read" with no zone held and a start sent (red: BAD_VALIDITY drawn first; green). Amended `fix4-seam.test.mjs`:90, which asserted the old sentence.
+
+**Suites.** Module as one run: 305 tests, 303 pass, 1 fail (common R30: a key listed twice, then fixed), 1 todo (money's reported exclude-after-propose); after the fix common+explore+fix10 run: 44 pass, 0 fail. Users (control-plane 86 files, plane 33): 706 tests, 706 pass, 0 fail, re-run on this state.
+**Checks.** format 0; architecture 0; coverage 61 of 61 named; ownership 0 (11 files). `checks/run.mjs` last run before (d)/(e): no finding in my files.
+**Met ids.** R61. **Markers.** none added.
+
+Size (session_01RdUoM7ohaxRHbCVfJZV9x3): test runs 20, module lines 3475
