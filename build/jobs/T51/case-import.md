@@ -1,6 +1,6 @@
 # case-import (T51)
 
-**Status** · session_01G3wefEYjZyUQh5J8yzoutu · depth 2 · COMPLETE · handled B17
+**Status** · session_01XhXogLsaNXvRTwSopMot47 · depth 2 · COMPLETE · handled B19
 
 ## J1 · COMPLETE
 
@@ -373,3 +373,50 @@ Re B17 (ANSWER, K5220): merged origin/tranche/T51 into job/T51/case-import (merg
 **Deferred.** None.
 
 **Size (session_01G3wefEYjZyUQh5J8yzoutu): test runs 9, module lines 2701.**
+
+## J19 · COMPLETE
+
+T51 K5222 (fix round 10, plan item 105): citeimported's refusal published beside `citeimportedAnswer()`. Done; tests green.
+
+**Changed.**
+- `bio-plane/test/m/case-import/fixtures.mjs:` new export `citeimportedRefusalAnswer()` (end of file), the door's real refusal to citation's `citeimported` for F2, a finding the import never accepted (only F1 is accepted). Made by `citeimportedAnswer({ finding: F2 })` on each call; the answer is `BASIS_REFUSED` carrying `IMPORTED_NOT_ACCEPTED` (check C-21.4), with nothing written. Its own marker is none (no `fixtures-own` or `fixtures-generic` added).
+- `bio-plane/test/m/case-import/fixtures-citeimported.test.mjs:` imports the new export; new test "R16 citeimported refusal: ..." checks `ok === false`, `reason === BASIS_REFUSED`, one finding, `check === C-21.4`, `code === IMPORTED_NOT_ACCEPTED`, `ref` equal to the reference case-import builds, and `edition === 1`.
+- Commits: `ca7beae0c8` (the change), `0660e9c24f` (merge of `origin/tranche/T51` into the job branch; it touched none of this module's paths). Pushed to `origin/job/T51/case-import`.
+
+**Test, failing first.** Broke the fixture once (`citeimportedRefusalAnswer` built with F1, which is accepted): `fixtures-citeimported.test.mjs` red, 1 failing (the new refusal test), 2 passing. Restored: 3 of 3 green.
+
+**Suites.**
+- `fixtures-citeimported.test.mjs`: 3 pass, 0 fail.
+- Whole module `test/m/case-import/*.test.mjs` (21 files): 177 pass, 0 fail, both before and after the merge.
+- Users of this fixture, whole suites: `case-authoring/*`, `case-disclosures/*`, `conformance/*`, `monitoring/*` 684 pass, 0 fail; the five test files importing it directly (`case-authoring/rests`, `case-disclosures/imported`, `monitoring/docket`, `screens-inquiry/b22-question`, `screens-publish/fr30b`) 60 pass, 0 fail. `screens-publish/fr30b.test.mjs:257` still hand-builds its IMPORTED_NOT_ACCEPTED answer; it is screens-publish's to switch to `citeimportedRefusalAnswer()`. I did not touch it.
+- `fixtures.mjs bio case-import --list`: 0 failures.
+- `format.mjs`: 178 modules, 0 failures. `architecture.mjs case-import`: 0 failures. `coverage.mjs case-import`: 33 of 33 live ids named by a test, 0 failures.
+- `ownership.mjs case-import tranche/T51 job/T51/case-import`: 3 files, 0 failures.
+- `impact.mjs origin/tranche/T51 HEAD` (run with the `origin/` ref; the bare `tranche/T51` form fails in this checkout): 21 modules, 170 test files affected. Additive change only; the run above covers every test file that imports this fixture module.
+- `run.mjs /home/user/bio`: format and architecture 0 failures, coverage 178 modules 7069 of 7069 ids. Words: 15 failures, all in other modules (`store-assembly` inline strings; no case-import file among them). Failures naming case-import as the answer provider are in other modules' test fixtures (see Found below). None are in this module's files.
+
+**Met ids.** R16 (citeimported: the refusal half; the answer half was already met by J-K5218). Bob may strike the mark.
+
+**Found in another module (for BOB, P9; not changed here).**
+1. `bio-plane/test/m/screens-publish/fr30b.test.mjs:257` hand-builds `{ ok: false, code: "IMPORTED_NOT_ACCEPTED", reason: ... }`. The real answer is `BASIS_REFUSED` with `findings[0].code === "IMPORTED_NOT_ACCEPTED"`; the screen's refusal path (`screens-inquiry/question.mjs:1271`) reads the findings list. screens-publish should take `citeimportedRefusalAnswer()` from `case-import/fixtures.mjs`, which is ready now.
+2. `run.mjs` op-table failures that name case-import as the provider: `screens-inquiry/fixtures.mjs:126` (`importedcases` hand-built as `{ imports: [], count: 0 }`), `screens-inquiry/fr28-project-rerun.test.mjs:75` (`rerunpair`), `screens-inquiry/fr4-project.test.mjs:141` (`rerunread`). Screens-inquiry should take `importedCasesAnswer()`, `rerunPairAnswer()`, `rerunReadAnswer()` from `case-import/fixtures.mjs`. This was already the case before this job; not investigated further.
+
+**Deferred.** Nothing in my module.
+
+**Generated artifacts.** None made stale: the change is in test files only; `bio-plane/dist/bio-plane.bundled.mjs` bundles src, not tests.
+
+Size (session_01XhXogLsaNXvRTwSopMot47): test runs 5, module lines 7051.
+
+## J20 · COMPLETE
+
+T51 CHANGE B19 (K5226): merged `origin/tranche/T51` (`fb0f6cd668`, STORE-ASSEMBLY #5) into the job branch as a merge commit, no rebase. The merge changed none of this module's paths.
+
+**Re-run after the merge.**
+- `test/m/case-import/*.test.mjs`: 177 pass, 0 fail.
+- `format.mjs`: 178 modules, 0 failures. `architecture.mjs case-import`: 0 failures. `coverage.mjs case-import`: 33 of 33 live ids named, 0 failures.
+- `fixtures.mjs bio case-import --list`: 0 failures.
+- `ownership.mjs case-import tranche/T51 job/T51/case-import`: 3 files, 0 failures. Against the merge base with HEAD: 3 files, 0 failures.
+
+**Changes.** None to the module since the last COMPLETE (ca7beae0c8 fixture and test; the merge commit is the only new commit). Pushed to `origin/job/T51/case-import`. The earlier figures in J19 (the failing-first red then green, the 684 and 60 user-suite counts, and the other checks) still hold.
+
+Size (session_01XhXogLsaNXvRTwSopMot47): test runs 6, module lines 7051.
