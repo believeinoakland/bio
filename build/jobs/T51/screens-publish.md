@@ -1,6 +1,6 @@
 # screens-publish (T51)
 
-**Status** · session_01DimduLub16HP55LgN9zZ6R · depth 2 · COMPLETE · handled B57
+**Status** · session_01XJUFJNZiz3mKqghrzkmAZs · depth 2 · COMPLETE · handled B59
 
 ## J1 · QUESTION
 
@@ -1601,3 +1601,44 @@ COMPLETE (SCREENS-PUBLISH #26, session_01DimduLub16HP55LgN9zZ6R), B57 applied; `
 **Deferred:** none.
 
 Size (session_01DimduLub16HP55LgN9zZ6R): test runs 4, module lines 3760 (src/screens-publish .mjs; the module's tests are 5333 lines)
+
+## Fix round 10 (B58 · plan item 134, K5257, K5258) · SCREENS-PUBLISH #27 (session_01XJUFJNZiz3mKqghrzkmAZs)
+
+Read whole: `causes-D.md`, the requirements, `ceremony.mjs`, `case-editor.mjs`, `published.mjs`, `published-parts.mjs`, `parts.mjs`. `tranche/T51` merged at the START.
+
+**Applied (file:line, at this commit)**
+1. D-M5 (1), `ceremony.mjs`: the refusal of "Confirm your ties and prepare the edition for signing" is said with the stop list (`P.said(view, "stops")`, after "Check again"), in both shapes: a refusal inside a success (`done`: `refused` says it under the Ties box as before and now also at the stops) and a refusal in form (new `failed` hook on `publish`). Both forget the later reads (`forget`; `cs.set("later", …)` for the hook), so the pre-flight, disclosures and the rest are read again with what the member attested. The next press clears it (`unsay`).
+2. D-M5 (2), `case-editor.mjs` (the "leaves out" section): the acknowledgement (`ce-ackreason`, `statementack`) is offered when the draft has a statement (`authored.statement`), as well as when something is listed or acknowledged. No new sentence (the design's "nothing left out" wording has no key: reported below).
+3. D-M1 (2), `published-parts.mjs` `titled` (used by `card`): the plane's unrated/undetermined sentence is drawn as signed, with the title of each document the finding's own legs name (`document.name`, else a served leg's `cited_edition.title`) beside its id, once.
+4. D-M6, `published.mjs`: a case whose `bar.declared` is false draws `bar.detail` (the bar's own sentence), not `bar_detail`, which `public-read` fills with "held to a standard" whenever `state.bar` is non-null.
+
+**Failing first, then green** (`walk-d.test.mjs`, 4 tests, all red before and green after): R3/R5/R10 D-M5 (stops read again, refusal at the stop list, both shapes; control: no refusal, none said); R1 D-M5 (statement with nothing left out is acknowledged; control: no statement); R6 D-M1 (id and title; control: no title, sentence as signed); R6 D-M6 (bar sentence; control: no bar object keeps `bar_detail`). One existing assertion changed, because it held the old gate: `fr30b.test.mjs` "R44 a left-out row…" said no acknowledgement is drawn when nothing is left out although the draft has a statement; it now says it is drawn, and a draft with no statement draws none.
+
+**D-M6, REPORT: plane sentences with no key** (the answers carry text only; the sentences are `code`-origin rows, no design wording, so they are drawn as the plane gives them):
+- `bar_detail`, `public-read/index.mjs:1293-1296` (drawn at `published.mjs:88-92`). Also `index.mjs:1293` picks it by `state.bar`, not `bar.declared`; this job draws `bar.detail` for the undeclared case.
+- `verification.detail`, `publication/worker.mjs:961` ("tamper-EVIDENT … sha256 in the manifest …"), drawn at `published.mjs:195`.
+- `strength[].detail`, `strength/arithmetic.mjs:139` (`nlb` = ids frozen into prose) and `:172-177` (unrated), `:150-` (undetermined), drawn at `published-parts.mjs:125`. The owner should publish a key and vars (and the documents' titles), so the page draws by key and no id is frozen into the signed text.
+- Design stream: the "nothing material left out" acknowledgement state has no sentence (causes-D D-M5 part 2).
+
+**Tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/screens-publish/*.test.mjs`: 300 tests, 298 pass, 0 fail, 2 todo (R35's two presses, K3717); exits by itself. Users `impact.mjs origin/tranche/T51 HEAD` names (control-plane 88/135, plane 33/56; 121 files): 741 tests, 741 pass, 0 fail.
+**Checks (root /home/user/bio).** format 0 failures; architecture screens-publish 0; coverage 80 of 80, 0; ownership 0 (7 files, all mine); words 0 failures (testcopy 0); fixtures `--list` 0 (answer 0, stub 0, code 0, contract 0, accepted 6, none added by me); `run.mjs`: no finding naming screens-publish. Markers added: none.
+
+Size (session_01XJUFJNZiz3mKqghrzkmAZs): test runs 10, module lines 3803 src
+
+## J53 · COMPLETE
+
+COMPLETE (SCREENS-PUBLISH #27, session_01XJUFJNZiz3mKqghrzkmAZs), B58 applied; tranche/T51 merged. Detail: section 'Fix round 10 (B58 ...)' in build/jobs/T51/screens-publish.md.
+Applied: (1) D-M5(1) ceremony.mjs: a refused 'Confirm your ties' (both answer shapes) is said with the stop list and the pre-flight and other later reads are read again. (2) D-M5(2) case-editor.mjs: statementack offered whenever the draft has a statement. (3) D-M1(2) published-parts.mjs titled(): the unrated sentence is drawn as signed with each leg's document title beside its id. (4) D-M6 published.mjs: a case with bar.declared false draws bar.detail, not bar_detail.
+Red then green: walk-d.test.mjs, 4 tests. Changed one old assertion: fr30b.test.mjs R44 (it held the old gate).
+Suite: screens-publish 300 tests, 298 pass, 0 fail, 2 todo. Users (control-plane, plane; 121 files): 741 pass, 0 fail. Checks: format 0, architecture 0, coverage 80/80, ownership 0, words 0, fixtures --list 0, run.mjs no finding in my files. Markers added: none.
+REPORT (D-M6, sentences with no key, owners): bar_detail public-read/index.mjs:1293-1296 (also chosen by state.bar, not bar.declared); verification.detail publication/worker.mjs:961; strength[].detail strength/arithmetic.mjs:139,172-177 (ids frozen into the signed prose). Design stream: no sentence for the 'nothing left out' acknowledgement state.
+Size (session_01XJUFJNZiz3mKqghrzkmAZs): test runs 10, module lines 3803
+
+## CHANGE B59 (K5270) · D-M6 left to public-read
+
+Merged `tranche/T51` (PUBLIC-READ #39). Removed my `barSaid` preference (`published.mjs:88-90`): the page draws `bar_detail` as before, which public-read now answers as the no-bar words when `bar.declared` is false. The walk-d D-M6 test now asserts `word("public-read.bar_recorded_case")` and no "held to"/"DEC-72". It could not be made red on the old tranche: public-read publishes no fixture for an undeclared-bar `publishedcase` (its world is private to its own test), so the test feeds the answer shape; PUBLIC-READ could publish one. Other three items stand. Suite 300 tests, 298 pass, 0 fail, 2 todo; format, architecture, coverage 80/80, ownership, words, fixtures all 0.
+Size (session_01XJUFJNZiz3mKqghrzkmAZs): test runs 12, module lines 3800 src
+
+## J54 · COMPLETE
+
+COMPLETE (re B59). Merged tranche/T51; removed barSaid, published.mjs draws bar_detail again. walk-d D-M6 test asserts public-read's no-bar words (word public-read.bar_recorded_case) and no 'held to'. Could not be red on the old tranche: public-read publishes no fixture for an undeclared-bar publishedcase (PUBLIC-READ could publish one). Other three items stand. Suite 300 tests, 298 pass, 0 fail, 2 todo; format, architecture, coverage 80/80, ownership, words, fixtures --list all 0. Size (session_01XJUFJNZiz3mKqghrzkmAZs): test runs 12, module lines 3800

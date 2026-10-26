@@ -48,7 +48,7 @@ test("R2: governor-holding-host is the governor's own cool-off, read at the read
     ["determined", [["INQ-1", 2], ["INQ-2", 1], ["PRJ-1", 1]]], "homed through the walk from the documents behind it");
   assert.deepEqual([gov.basis.source, gov.basis.host, gov.basis.refusals, gov.basis.last_refusal_status, gov.basis.cooloff_until,
     gov.basis.retry_in_ms, gov.basis.last_refusal_at], ["host_governor", HOST, 1, 429, NOW + 90000, 90000, NOW - 30000]);
-  assert.deepEqual([gov.basis.detail.includes("OUR OWN machinery"), gov.summary.includes("PACED, not broken"),
+  assert.deepEqual([gov.basis.detail.includes("OUR OWN machinery"), gov.summary.includes("paced, not broken"),
     gov.detail.includes(HOST)], [true, true, true],
     "what a condition is for: our machinery, distinguishable from the source failing (D-104)");
   assert.deepEqual([gov.subject.kind, gov.subject.host, gov.subject.id, gov.subject.bundles], ["host", HOST, null, ["INFO-88"]]);
@@ -62,6 +62,28 @@ test("R2: governor-holding-host is the governor's own cool-off, read at the read
     assert.equal(byId(w.read(who, `member:${who}`, { now: after }))[`CONDITION::governor-holding-host::${HOST}`], undefined,
       `the hold expires and it is gone from ${who}'s feed`);
   }
+});
+
+test("R2 (T51 A-04): the governor-holding-host item says it in plain words: its summary is the design's reviewed sentence, its detail the wait in minutes and seconds, with no status code, no milliseconds and no internal term", () => {
+  const { w, holds } = corpus();
+  holds.push({ host: HOST, cooloff_until: NOW + 90000, refusals: 1, last_refusal_status: 429, last_refusal_at: NOW - 30000,
+               appetite_per_min: 60, granted: 4, refused_total: 1 });
+  const gov = byId(w.read("carol"))[`CONDITION::governor-holding-host::${HOST}`];
+  const key = "observation-log.vocabulary.condition_governor_holding_host";
+  assert.equal(hasWord(key), true, "the design's reviewed sentence is a held word");
+  assert.equal(gov.summary, word(key), "the summary is that sentence, read by key");
+  assert.match(gov.detail, /^[A-Z]/, "the detail starts with a capital letter");
+  assert.match(gov.detail, /again in 1 minute and 30 seconds\./, "the wait is in minutes and seconds, rounded up to the second");
+  assert.match(gov.detail, new RegExp(HOST.replace(/\./g, "\\.")), "the detail names the host");
+  for (const s of [gov.summary, gov.detail])
+    assert.doesNotMatch(s, /governor|cool-?off|PACED|\d+ ?ms|\b4\d\d\b/, `no internal term, unit or status code: "${s}"`);
+  // a wait under a minute, and a wait of whole minutes, read the same way
+  holds[0].cooloff_until = NOW + 45000;
+  assert.match(byId(w.read("carol"))[`CONDITION::governor-holding-host::${HOST}`].detail, /again in 45 seconds\./);
+  holds[0].cooloff_until = NOW + 120000;
+  assert.match(byId(w.read("carol"))[`CONDITION::governor-holding-host::${HOST}`].detail, /again in 2 minutes\./);
+  // the numbers stay in the basis, where a member's record keeps them
+  assert.equal(byId(w.read("carol"))[`CONDITION::governor-holding-host::${HOST}`].basis.retry_in_ms, 120000);
 });
 
 test("R2: partial-capture-outstanding is the capture ledger's own row, about the document its bytes were registered under; withheld whole from a viewer who may not see it; gone when the session is", () => {

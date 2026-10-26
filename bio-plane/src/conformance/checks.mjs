@@ -36,7 +36,9 @@
  * K3123): C-113.6 `NO_FINDINGS` names R2's three kinds of finding, BOB's draft until the design stream gives
  * `refusal.NO_FINDINGS`, then read by key like R38's rows; code, number and `where` unmoved; awaiting T49's stamp. T50-76
  * (R40, DEC-232): the design stream gave `refusal.NO_FINDINGS`; C-113.6 now reads it by key, as do C-113.38–C-113.43,
- * all seven through `setup-words`' `word` (their copies are gone); awaiting T51's stamp (plan rule 5 (2)). */
+ * all seven through `setup-words`' `word` (their copies are gone); awaiting T51's stamp (plan rule 5 (2)). T51 fix round 10 (R43; walk E C2a, K5271): C-113.45 `STANDARD_BINDING_UNDETERMINED`
+ * is the refusal of a noncompliant outcome against a standard whose binding on the body is undetermined, its translation
+ * BOB's draft until the design stream gives a key; C-113.32 is kept for a benchmark; awaiting the next stamp. */
 
 import { word, localize } from "../setup-words/index.mjs";
 
@@ -168,6 +170,10 @@ export const CONFORMANCE_CHECKS = Object.freeze({
   STANDARD_NOT_BINDING: {
     check: 'C-113.32', where: at("#determine", "is-standard-binding"),
     translation: word('refusal.STANDARD_NOT_BINDING'),
+  },
+  STANDARD_BINDING_UNDETERMINED: {
+    check: 'C-113.45', where: at("#determine", "is-standard-binding-determined"),
+    translation: localize('conformance.checks.civicsmith_cannot_yet_tell_whether', 'Civicsmith cannot yet tell whether this standard was in force and binding on this body on the day of the act, so the act is not found noncompliant against it. Settle it in the standard first: when it was in force, and whom it binds. Nothing was written.'),
   },
   BENCHMARK_CALLED_NONCONFORMING: {
     check: 'C-113.33', where: at("#benchmarkWords", "is-benchmark-worded"),

@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19246 design words, 1157 protected; SHA-256
-   641148afcaa459ad607bdaebe5a1cd86dbcccbd88254a0b40dbf295751bcf83b) followed by 7431 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   641148afcaa459ad607bdaebe5a1cd86dbcccbd88254a0b40dbf295751bcf83b) followed by 7433 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -21452,6 +21452,7 @@ export const WORD_ROWS = Object.freeze([
   ["citation.index.bad_ground","a new citation can join only a group its question already declares, and this one names {ground}; a case has no groups. Nothing was written.",null,null,false,"code"],
   ["citation.index.changes_basis_legs_added","Changes: basis legs added for {listed}, each with role {role}. Grades: {graded} filled from the record's own resolutions to this question's subject; {ungraded} left undetermined and stated.{note}\n",null,null,false,"code"],
   ["citation.index.changes_basis_legs_on","Changes: basis legs on {listed} moved to '{to}', each leg kept as it was. Reason: {why}.\n",null,null,false,"code"],
+  ["citation.index.changes_basis_legs_role_moved","Changes: basis legs on {listed} moved to '{to}', each leg kept as it was except the role of {moved}, which moves from {from} to {role}. Reason: {why}.\n",null,null,false,"code"],
   ["citation.index.changes_cites_edges_added","Changes: cites edges added to {listed}.{note}\n",null,null,false,"code"],
   ["citation.index.changes_cites_edges_to","Changes: cites edges to {listed} moved to '{to}'. Reason: {why}.\n",null,null,false,"code"],
   ["citation.index.changes_imported_leg_added","Changes: basis leg added for {ref} at edition {edition}, role {role}. Grade: as that edition published it, none of its own.{note}\n",null,null,false,"code"],
@@ -21592,6 +21593,7 @@ export const WORD_ROWS = Object.freeze([
   ["conformance.checks.a_determination_is_recorded_only","A determination is recorded only by the determination act, and never edited: a correction is a new determination that supersedes it. Nothing was written.",null,null,false,"code"],
   ["conformance.checks.a_determination_rests_on_findings","A determination rests on findings of three kinds: published by this project in a ratified case edition; checked for publication and held unsigned by this project; or another team's finding this team has accepted at the edition named. The finding named is none of these. Nothing was written.",null,null,false,"code"],
   ["conformance.checks.an_act_is_compared_as","An act is compared as the act of an office or an organisation. The people who took part are recorded on the act, never as the one who acted. Nothing was written.",null,null,false,"code"],
+  ["conformance.checks.civicsmith_cannot_yet_tell_whether","Civicsmith cannot yet tell whether this standard was in force and binding on this body on the day of the act, so the act is not found noncompliant against it. Settle it in the standard first: when it was in force, and whom it binds. Nothing was written.",null,null,false,"code"],
   ["conformance.checks.that_determination_reads_undetermined_a","That determination reads undetermined: a finding it rests on no longer stands (its check was voided, or the other team withdrew or revised the edition accepted). A member re-evaluates it by superseding it with a determination resting on findings that stand. Nothing was written.",null,null,false,"code"],
   ["conformance.declared.determine","act-directed: a member determines a government act against named standards on published findings, keyed by (project, act); writes a CONF- bundle",null,null,false,"code"],
   ["conformance.index.a_determination_measures_the_act","a determination measures the act against at least one standard the record holds (R14). Nothing was written.",null,null,false,"code"],
@@ -24405,13 +24407,13 @@ export const WORD_ROWS = Object.freeze([
   ["machinery-producers.index.no_interval_can_be_derived","no interval can be derived for it ({v1}), so no check is scheduled.",null,null,false,"code"],
   ["machinery-producers.index.on_its_last_run_these","on its last run these could not be fetched: {list}. The sweep's other pages were read; each one's reachability is on the basis.",null,null,false,"code"],
   ["machinery-producers.index.our_own_attempts_at","our own attempts at this address have failed enough times, for long enough, that the archive fallback may fetch a replay in its place. This is a fact about our attempts, not a finding about the publisher.",null,null,false,"code"],
+  ["machinery-producers.index.pacing_wait_in_words","Civicsmith will try {host} again in {wait}. It has been turned away {refusals} time{v1} in a row, so it is waiting before it sends more. This says nothing about whether the site is working.",null,null,false,"code"],
   ["machinery-producers.index.request_completion_unreadable","the request row carries a completion stamp this producer cannot read as an instant",null,null,false,"code"],
   ["machinery-producers.index.request_stamp_unreadable","the request row carries a request stamp this producer cannot read as an instant",null,null,false,"code"],
   ["machinery-producers.index.session_created_unreadable","the session row carries a created stamp this producer cannot read as an instant",null,null,false,"code"],
   ["machinery-producers.index.sweep_status_no_instant","the sweep's status carries no instant this producer can read",null,null,false,"code"],
   ["machinery-producers.index.the_ledger_is_scratch_and","the ledger is SCRATCH and not record: it names a work list with an expiry, the primary capture is complete from the first tick, and the row is dropped by the capture path itself when nothing is left. It therefore clears for every member when the capture finishes or the session expires.",null,null,false,"code"],
   ["machinery-producers.index.the_notice_has_been_dormant","the notice has been Dormant at its last monthly attestation, and a second Dormant month with no revision lapses it. A revision or a stop answers this; so does the lapse itself.",null,null,false,"code"],
-  ["machinery-producers.index.the_per_host_governor_is","the per-host governor is in cool-off for {host} for another {max}ms after {refusals} consecutive refusal{v1}{v2}. Nothing about the source is being claimed here.",null,null,false,"code"],
   ["machinery-producers.index.the_plan_is_monitorings_its","the plan is monitoring's (its R16, R32); this item is our own machinery falling behind or unable to schedule, and it clears when the check runs or a cadence is set.",null,null,false,"code"],
   ["machinery-producers.index.the_primary_document_is_captured","the primary document is captured and its bytes are in the store; the platform's subrequest ceiling was reached before its support material was fetched, and the remainder is parked for another tick (tick {ticks}, expires {expires}).",null,null,false,"code"],
   ["machinery-producers.index.the_to_do_is_derived","the to-do is derived on read from the signed notice your team's Civicsmith already holds. It goes to every administrator and leaves every administrator's queue when one of them updates, puts it aside until a later day or skips it, or when your team is running that release or a newer one.",null,null,false,"code"],
@@ -25334,7 +25336,7 @@ export const WORD_ROWS = Object.freeze([
   ["queue-producers.index.the_export_log_row_carries","the export log row carries an instant this producer cannot read",null,null,false,"code"],
   ["queue-producers.index.the_flag_carries_no_instant","the flag carries no instant this producer can read",null,null,false,"code"],
   ["queue-producers.index.the_item_carries_no_instant","the item carries no instant this producer can read for when it fell due",null,null,false,"code"],
-  ["queue-producers.index.the_key_is_credentials_own","the key is credentials' own row (its R8), registered by its member (its R9) and read here at every read: it is told to every administrator and to nobody else, and it leaves when the key is no longer active, by an administrator's revoke (its R7) or otherwise.",null,null,false,"code"],
+  ["queue-producers.index.the_key_is_credentials_own","the key is credentials' own row (its R8), registered by its member (its R9) and read here at every read: it is told to every administrator but the one who registered the key, and to nobody else, and it leaves when the key is no longer active, by an administrator's revoke (its R7) or otherwise.",null,null,false,"code"],
   ["queue-producers.index.the_keys_row_carries_an","the key's row carries an added stamp this producer cannot read as an instant",null,null,false,"code"],
   ["queue-producers.index.the_lens_in_force_when","the lens in force when it opened",null,null,false,"code"],
   ["queue-producers.index.the_lens_it_was_handed","the lens it was handed",null,null,false,"code"],
