@@ -23,7 +23,7 @@ const REACH = { assistantstate: ok({ on: true }), accountreference: ok({ held: t
 
 /* ---------- R41 (C70; amends R3) ---------- */
 
-test("R41: filingprepare answered FILING_TIER_UNDETERMINED draws its refusal words and, beside them, a reference to the action's risk (risk.title) that opens the action screen on this action; control: success and other refusals draw none", async () => {
+test("R41, R59 (DEC-439 J43): filingprepare answered FILING_TIER_UNDETERMINED draws its refusal words and, beside them, a reference to the action's risk (risk.title) that opens the action screen on this action; control: success and other refusals draw none", async () => {
   assert.ok(hasWord("risk.title") && hasWord("refusal.FILING_TIER_UNDETERMINED"));
   /* the owner's own refusals: an action whose tier no member has stated is refused FILING_TIER_UNDETERMINED, one at tier 3 TIER3_COUNSEL_PACKET */
   const { world, me, action } = await actionWorld();
@@ -36,7 +36,7 @@ test("R41: filingprepare answered FILING_TIER_UNDETERMINED draws its refusal wor
   assert.ok(door, "a door beside the words");
   assert.equal(door.getAttribute("href"), `/app/action/${action}`);
   assert.ok(door.hasAttribute("data-nav"));
-  assert.equal(door.textContent.trim(), W("risk.title"));
+  assert.equal(door.textContent.trim(), W("screen.start-send.risk.door"));
   // control: another refusal draws its words and no door
   await me.act("actionrisktier", { body: { target: action, tier: 3, reason: "the office has fought requests before" } });
   const q = await openIn(world, me, at);
@@ -47,7 +47,7 @@ test("R41: filingprepare answered FILING_TIER_UNDETERMINED draws its refusal wor
   const s = await open(STEP2, { ...DATA_PLANE, filingprepare: ok({ id: FILING, text: "From the template.", blanks: [] }) });
   const d = await press(s, "filingprepare");
   assert.equal(slot(s, d).querySelector("a"), null);
-  assert.equal(main(s).querySelectorAll(`a[href="/app/action/${ACTION_ID}"]`).filter((a) => a.textContent.trim() === W("risk.title")).length, 0);
+  assert.equal(main(s).querySelectorAll(`a[href="/app/action/${ACTION_ID}"]`).filter((a) => a.textContent.trim() === W("screen.start-send.risk.door")).length, 0);
 });
 
 /* ---------- R42 (C71; B11; amends R3) ---------- */

@@ -301,6 +301,8 @@ export function sendSteps(cs, view, filings, o) {
     const proposal = nx && typeof nx.to === "string" && nx.to && typeof nx.says === "string" && nx.says ? '<p class="mk-note" data-proposed="next-state">' + cs.esc(nx.says) + "</p>" : "";
     return wasReleased + proposal + '<p class="mk-note" role="status">' + cs.w("screen.start-send.sent", { date: { html: cs.date(s.sent_on || s.at) } })
       + (s.reference ? " · " + cs.w("screen.start-send.reference", { reference: s.reference }) : "") + "</p>"
+      // R59 (DEC-439 E H2): the sending moves no state; the action's move is on the action page
+      + '<p class="mk-note">' + cs.w("screen.start-send.sent.next") + "</p>"
       + '<a class="cs-ref" href="/app/action/' + encodeURIComponent(view.subject) + '" data-nav>' + cs.w("screen.start-send.openaction") + "</a>" + keep + joinFirst;
   }
   if (joinFirst) return joinFirst + nosend;
@@ -448,7 +450,7 @@ export const PREPARE_FILING = Object.freeze({
       const id = typeof refusal.action === "string" ? refusal.action : "";
       // R56 (walk E K10): the door is its own control after the sentence, never run on from it ("A member states the tier first. Its risk")
       return cs.w("refusal.FILING_TIER_UNDETERMINED")
-        + (id ? '<div class="mk-acts"><a class="cs-ref" href="/app/action/' + encodeURIComponent(id) + '" data-nav>' + cs.w("risk.title") + "</a></div>" : "");
+        + (id ? '<div class="mk-acts"><a class="cs-ref" href="/app/action/' + encodeURIComponent(id) + '" data-nav>' + cs.w("screen.start-send.risk.door") + "</a></div>" : "");
     },
   },
   send: function (view, el, cs) {

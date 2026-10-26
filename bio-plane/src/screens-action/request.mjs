@@ -139,14 +139,16 @@ export const request = Object.freeze({
           + cs.field("req-noff-name", "screen.request.nameoffice.name", { help: "screen.request.nameoffice.name.help" })
           + cs.field("req-noff-role", "screen.request.nameoffice.role", { help: "screen.request.nameoffice.role.help" })
           // R57: the body that holds the office, chosen among the team's bodies (the entity id is what is kept)
-          + cs.choice("req-noff-body", "screen.matter.f.body", [{ value: "", text: "" }].concat(P.bodiesOf(view)))
+          + cs.choice("req-noff-body", "screen.request.office.body", [{ value: "", text: "" }].concat(P.bodiesOf(view)))
           // re-walk 10 N3: a team with no body is told so, in the design's word for nothing held; the door where one is added is the places door below (an administrator's)
-          + (P.noBody(view) ? '<p class="cs-state" data-state="empty" data-nobody="1">' + cs.w("state.empty") + "</p>" : "")
+          // R59 (DEC-439 N3): a team with no body says so, and where bodies are listed
+          + (P.noBody(view) ? '<p class="cs-state" data-state="empty" data-nobody="1">' + cs.w("screen.request.office.nobody") + "</p>" : "")
           // R57: from when to when the body has held it (the person screen's own two days): an office with no day stated is registered but placed on no day
           + cs.field("req-noff-since", "screen.person.keeper.from.label", { type: "date" }) + cs.field("req-noff-until", "screen.person.keeper.to.label", { type: "date" })
           + '<p class="mk-small">' + cs.w("screen.person.keeper.dates.note.a") + " " + cs.w("screen.person.keeper.dates.note.b") + "</p>"
           + (view.ui.bodyrefused ? '<p class="mk-note" role="status">' + view.ui.bodyrefused + "</p>" : "")
-          + (view.ui.undated === true ? '<p class="mk-note" role="status" data-undated="1">' + cs.w("screen.person.keeper.dates.note.b") + "</p>" : "")
+          // R59 (DEC-439 R57): an office with no day stated is recorded, and offered as an addressee only once both are stated
+          + (view.ui.undated === true ? '<p class="mk-note" role="status" data-undated="1">' + cs.w("screen.request.office.undated") + "</p>" : "")
           + cs.field("req-noff-where", "screen.request.nameoffice.where", { help: "screen.request.nameoffice.where.help" })
           // the note `entities` R1 requires, in her own words (DEC-412)
           + cs.field("req-noff-note", "screen.request.nameoffice.why", { area: true, rec: true, help: "screen.request.nameoffice.why.help" })
@@ -245,7 +247,7 @@ export const request = Object.freeze({
         const role = within || agency;
         // R57: an office is recorded with the body that holds it; none chosen is refused naming the field
         const holder = String(cs.value("req-noff-body") || "").trim();
-        if (!holder) return { refuse: "findin.fieldneeded", fills: { field: { html: cs.w("screen.matter.f.body") } } };
+        if (!holder) return { refuse: "findin.fieldneeded", fills: { field: { html: cs.w("screen.request.office.body") } } };
         // what she typed, for `done`: the answer's label is the entity's, which a first naming may have written another way
         view.ui.officeForm = { agency: agency, role: role, holder: holder, note: String(cs.value("req-noff-note") || "").trim(),
           since: String(cs.value("req-noff-since") || "").trim() || null, until: String(cs.value("req-noff-until") || "").trim() || null };

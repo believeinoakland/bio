@@ -113,7 +113,7 @@ test("R56 (walk E K-words): a date check that cannot be told for want of a day n
   for (const c of starts) assert.ok(!drawn.includes(c.date) && !drawn.includes(c.start), "no ISO day");
 });
 
-test("R56 (walk E K4; walk C C-M17): an option to an office, the press or an organization with its role or its body empty draws the owner's refusal naming the empty part", async () => {
+test("R56, R59 (walk E K4; walk C C-M17; DEC-439 K4): an option to an office, the press or an organization with its role or its body empty draws the owner's refusal naming the empty part", async () => {
   const w = seeded();
   opened(w, [w.SI, w.S1]);
   const refusal = (addressee) => w.ap.optionAdd({ plan: w.PL, summary: "Tell the story", category: "awareness", subjects: [w.S1], addressee, author: V("bob"), viewer: V("bob") });
@@ -127,7 +127,8 @@ test("R56 (walk E K4; walk C C-M17): an option to an office, the press or an org
     const b = await press(p, "optionadd", { values: { "plan-opt-summary": "Tell the story", "plan-opt-category": "awareness", "plan-opt-adk": kind, "plan-opt-arole": addressee.role,
       "plan-opt-abody": addressee.organisation ?? addressee.body }, reason: "x" });
     assert.equal(p.byOp("optionadd").length, 1, `case ${i}: the plane is asked`);
-    assert.ok(beside(p, b).includes(real.detail.replace(/\s+/g, " ").trim()), `case ${i}: the owner's sentence, naming the part`);
+    const key = real.empty.length === 2 ? "both" : real.empty[0];
+    assert.ok(beside(p, b).includes(W("screen.plan.press.empty." + key)), `case ${i}: the design's sentence, naming the part (R59)`);
     assert.ok(!beside(p, b).includes(W("refusal.ADDRESSEE_REFUSED")), "not the sentence about a private individual");
   }
 });
