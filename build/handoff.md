@@ -45,4 +45,4 @@ ACTION-GRAMMAR #16 (R30), INQUIRY-GRAMMAR #15 (R69), CONNECTIONS #21 (R73), SCRE
 
 - Mail tool and checks: civicos-process `prep/retire-K5296` (`f70c1a2`, adds `retire` and one-fetch `check`; 238 of 238 tests) until T51's close, as `prep/jobbranch-K4385` was.
 - `rulings-active.md` ~78 lines, ~25.2 KB (NEAR): a new rule replaces a line. `fix-round-10-T51.md` ~48 KB of 51.2 KB: move finished items whole to `build/plan/archive/fix-round-10-T51-done-items.md` before additions (§17).
-- Channel: read through U480; B533-B535 posted. Lanes: no new HANDOFF entries this session.
+- Channel: read through U480; B533-B535 posted. **Unread, arrived 14:41Z after this handoff was written: U481, U482** (MERGE `27c53d2b93`, DEC-439: the alpha walk's words and controls for B529-B534, with three asks of BOB): read and merge first after takeover (design files only, K5224). Lanes: no new HANDOFF entries this session.

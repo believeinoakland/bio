@@ -2214,7 +2214,7 @@ W.append(dict(key='queue.signer-self-registered.summary', en='{member} registere
 W.append(dict(key='queue.signer-self-registered.summary.comment', en='{member} registered a signing key for themselves: {comment}', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1778; {member} {comment}'))
 W.append(dict(key='queue.signer-self-registered.summary.unnamed', en='A member registered a signing key for themselves', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1778'))
 W.append(dict(key='queue.signer-self-registered.summary.unnamed.comment', en='A member registered a signing key for themselves: {comment}', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1778; {comment}'))
-W.append(dict(key='queue.signer-self-registered.detail', en='A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and withdraw the key; if you did, mark it done.', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1779; DEC-384: B411 T-15: it named a revoke it did not offer, so it says where; the item carries the door queue.signer-self-registered.members'))
+W.append(dict(key='queue.signer-self-registered.detail', en='A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and withdraw the key.', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1779; DEC-384: B411 T-15: it named a revoke it did not offer, so it says where; the item carries the door queue.signer-self-registered.members'))
 # (10) attribution-unchosen
 W.append(dict(key='queue.attribution-unchosen.summary', en='Case {case} uses your observation {observation}: choose how it credits you', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1854; {case} {observation} (observation is the title, else the id)'))
 W.append(dict(key='queue.attribution-unchosen.detail', en="Edition {edition} of this case, which is being prepared, reaches what you observed, and you haven't chosen how it shows who said it: your team, your project, your cover or your name. Nothing is published until it is signed, and nobody else is told you are the author. You are told this once; it leaves when you choose, when the edition stops using it, or when it is signed or replaced.", protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1855; {edition}'))
@@ -3982,7 +3982,7 @@ W.append(dict(key='refusal.NO_SUCH_PATTERN', en='No built-in pattern has that na
 W.append(dict(key='refusal.NO_SUCH_REFERENCE', en="That captured document's reading holds no such reference, or you cannot see the document, so there is nothing to resolve or read. Nothing was written.", protected=False, note='DEC-342: reference or capture digest not found for resolving'))
 W.append(dict(key='refusal.NO_SUCH_RELATION', en='No declared step with that number is held, or it has been withdrawn. Nothing was written.', protected=False, note='DEC-342: relation id unknown or already withdrawn'))
 W.append(dict(key='refusal.NO_SUCH_ROW', en='The table has no row with that number, so no money fact was recorded for it. Nothing was written.', protected=False, note='DEC-342: money ingest row number not in table'))
-W.append(dict(key='refusal.NO_SUCH_RULE', en="No rule in your places' rules states a deadline for this kind of action, so none was set. Pick one of the deadlines your rules do list, in the box below, or see your places' rules. Nothing was written.", protected=False, note="DEC-342: deadline rule missing or unknown for the action's kind; B411 E6: a box to name the deadline and a door"))
+W.append(dict(key='refusal.NO_SUCH_RULE', en="No rule in your places' rules states a deadline for this kind of action, so none was set. Nothing was written.", protected=False, note="DEC-342: deadline rule missing or unknown for the action's kind; B411 E6: a box to name the deadline and a door"))
 W.append(dict(key='refusal.NO_SUCH_SET', en="That set of money figures is not in your team's record. Check which set you meant. Nothing was written.", protected=False, note='DEC-342: money set id unknown'))
 W.append(dict(key='refusal.NO_SUCH_STEP_SOURCE', en='No source by that number is attached to that step where you can see it, so none was withdrawn. Nothing was written.', protected=False, note='DEC-342: withdraw step source unknown, withdrawn or unseen'))
 W.append(dict(key='refusal.NO_SUCH_TABLE', en='No table matches that fingerprint here, or you may not see it, or its contents are not held. Nothing was written.', protected=False, note='DEC-342: table for binding or ingest not found or hidden'))
@@ -7813,7 +7813,7 @@ w424('money.index.a_periods_end_is_a', "A period's end must be written to the sa
 w424('money.index.a_periods_precision_is_day', "A period's precision must be day, minute or second.", "money R29 detail drawn beside MONEY_BAD_PERIOD")
 w424('money.index.the_active_profiles_hold_no', "Your team's profiles hold no fiscal year for {body}, so {fiscal} can't be turned into dates.", "money R29 detail drawn beside MONEY_BAD_PERIOD; {body} {fiscal}")
 w424('money.index.the_period_ends_before_it', "The period ends before it starts.", "money R29 detail drawn beside MONEY_BAD_PERIOD")
-w424('money.index.the_period_states_no_zone', "The period names no time zone, and your team's profiles give none.", "money R29 detail drawn beside MONEY_BAD_PERIOD")
+w424('money.index.the_period_states_no_zone', "The period names no time zone, and your team has not set one. It is set under Settings, Your team.", "money R29 detail drawn beside MONEY_BAD_PERIOD")
 w424('money.index.the_periods_end_why', "The end of the period: {why}", "money R29 detail drawn beside MONEY_BAD_PERIOD; {why} the reason the date was refused, as the code gives it")
 w424('money.index.the_periods_start_why', "The start of the period: {why}", "money R29 detail drawn beside MONEY_BAD_PERIOD; {why} the reason the date was refused, as the code gives it")
 w424('money.index.the_profiles_fiscal_year_for', "Your team's profile for {body} has no fiscal year {fiscal}.", "money R29 detail drawn beside MONEY_BAD_PERIOD; {body} {fiscal}")
@@ -8043,7 +8043,7 @@ w435('screen.person.holds.capacity', 'In what capacity', "B523: the field on a h
 w435('refusal.NO_COLUMN', 'Choose the column of the table to work from. Nothing was written.', "B523: calculations, the column not given")
 w435('refusal.NO_PART', 'Type the value to count in that column. Nothing was written.', 'B523: calculations, the value not given')
 w435('refusal.NO_SUCH_COLUMN', 'That column is not in the table. Choose one of its columns. Nothing was written.', 'B523: calculations, a column the table does not have')
-w435('screen.timeline.nozone', 'Some times here are placed nowhere: your team has not chosen the places whose rules apply, so Civicsmith has no time zone to place them in. An administrator chooses them under Places and languages.', "B523: a hint on Timeline when the team has no active place (zone null); drawn once above the events it touches")
+w435('screen.timeline.nozone', 'Some times here are placed nowhere: your team has not set its time zone. It is set under Settings, Your team.', "B523: a hint on Timeline when the team has no active place (zone null); drawn once above the events it touches")
 
 # DEC-438: B530 item 1 (the alpha's blocker, walk E C2a; K5271, K5274): whom a standard binds, and until when, settled on Standard; Matter's sentences
 def w438(key, en, note):
@@ -8056,14 +8056,13 @@ w438('act.standardbenchmark.label.standard', 'Hold it only as a benchmark for a 
 w438('screen.standard.binds.head', 'Whom it binds, and until when', 'the section on Standard')
 w438('screen.standard.binds.help', "An act is found out of conformance only with a standard that was in force on the act's day and binding on the body that acted. Record here what the documents show.", 'its help, once, under the head')
 w438('screen.standard.through.unknown', 'No end is stated, and no member has recorded a day it was still in force, so Civicsmith cannot tell whether it was in force after {from}.', '{from} the day its period began; drawn when the period is open and no day is recorded')
-w438('screen.standard.through.recorded', 'Known to be in force through {through}, from {source}, recorded by {name}', 'a recorded day, as the read gives it')
 w438('screen.standard.binds.unknown', 'No adoption or law recorded here says whom it binds.', 'drawn when neither is recorded')
 w438('screen.standard.f.through', 'The last day it is known to be in force', 'standardinforcethrough: the day')
 w438('screen.standard.f.through.help', 'A day on or before the day the source was last checked.', 'its help')
 w438('screen.standard.f.source', 'Where it shows', 'standardinforcethrough: the passage')
 w438('screen.standard.f.source.help', 'Choose the passage, in a document your team holds, that shows it still in force.', 'its help')
 w438('screen.standard.f.body', 'The body', 'standardimpose, standardbenchmark: an office or organization chosen from the list')
-w438('screen.standard.f.body.help', "Choose the office or organization. Your team's offices and bodies come from the places it chose, under Places and offices.", 'its help')
+w438('screen.standard.f.body.help', "Choose the office or body. Your team's offices and bodies come from the places it chose, under Settings › Places and offices.", 'its help')
 w438('screen.standard.f.act', 'The act that adopted it', 'standardadoption: a held act or a dated event')
 w438('screen.standard.f.act.help', 'An ordinance, resolution or other act your team holds, or a dated event on the Timeline.', 'its help')
 w438('screen.standard.f.edition', 'The edition adopted', 'standardadoption')
@@ -8076,7 +8075,7 @@ w438('screen.standard.f.passage', 'The passage that says so', 'standardadoption,
 w438('screen.standard.f.law', 'The law that makes it binding', 'standardimpose: a held law')
 w438('screen.standard.f.reason', 'Your reason', 'each of the four acts')
 w438('refusal.STANDARD_BINDING_UNDETERMINED', 'Civicsmith cannot yet tell whether this standard was in force and binding on this body on the day of the act, so the act is not found out of conformance with it. Settle it on the standard\'s page, under "Whom it binds, and until when", then record the determination again. Nothing was written.', 'B531 item 6; conformance C-113.45 (K5274)')
-w438('screen.matter.f.body.help', 'Choose the office or body whose act this is, from your team\'s offices and bodies. They come from the places your team chose, under Places and offices.', 'C2a (a): the body is chosen, never typed, so it matches the standard\'s issuer')
+w438('screen.matter.f.body.help', 'Choose the office or body whose act this is, from your team\'s offices and bodies. They come from the places your team chose, under Settings › Places and offices.', 'C2a (a): the body is chosen, never typed, so it matches the standard\'s issuer')
 w438('screen.standard.through.none.summary', 'When no day is recorded', 'the mockup fold over the unknown state')
 w438('screen.matter.event.none.summary', 'When the project has no dated event', 'the mockup fold')
 w438('screen.matter.determine.needscase.summary', 'When no finding is published yet', 'the mockup fold')
@@ -8084,6 +8083,77 @@ w438('screen.matter.event.none', "This project has no dated event yet. Record th
 w438('screen.matter.determine.needscase', 'No finding is here to rest on yet. Publish a case that carries this project\'s findings, or accept a finding from another team, then record the determination.', 'C2a (2): above Record a determination when the project has no published finding')
 w438('screen.matter.concluded.unpublished', 'Concluded. It becomes a finding once a case that carries it is published.', 'C-M11, B532 (2): a concluded question not yet in a published case')
 REWRITE.update({'refusal.STANDARD_NOT_BINDING': 'This standard is held as a benchmark for this body, not a rule that binds it, so the act cannot be found out of conformance with it. To measure the act against it, ask the question on this project and cite the standard there. Nothing was written.'})
+
+# DEC-439: B529 to B534 (the live walk before the alpha and re-walk 10; K5265, K5271, K5276, K5290, K5292): the words the fix jobs found no row for
+def w439(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-439: ' + note))
+w439('queue.signer-self-registered.known', 'I know about this key', 'A-03: the answer that ends the item; owed: its op (queue-producers)')
+w439('screen.setup.zone', "Your team's time zone", 'D-B1: the setup step (factconfirm, path @team/time_zone)')
+w439('screen.setup.zone.help', 'Dates and deadlines are counted in it. You can skip this and set it later under Settings, Your team.', 'D-B1: its help')
+w439('screen.question.leggrade.head', 'What this passage earns', 'D-M1, C-M4: the fold on a cited passage; its act waits on BOB naming the op')
+w439('screen.question.leggrade.help', 'Grade how well the copy your team holds shows this passage, up to the most the record allows ({ceiling}), and say why.', 'D-M1, C-M4: {ceiling} the record\'s ceiling, a letter')
+w439('screen.question.leggrade.act', 'Record this grade', 'D-M1, C-M4: the act\'s label until the op is named')
+w439('screen.case-editor.save', 'Save these details', 'D-M2: casedraft on the drafted state')
+w439('screen.case-editor.unsaved', 'Changes here are not saved yet.', 'D-M2: drawn once a field of the drafted state is edited')
+w439('act.resolve.label.document', 'Find the people and offices it names', 'D-M3, C-M7: resolve on Document')
+w439('screen.document.people.none', 'Civicsmith found no name in this document it could match to a person or an office.', 'D-M3, C-M7: after resolve finds none')
+w439('screen.review_copy.save.ready', 'The file is ready. Save it to your device.', 'D-M4: beside the second button, after "Save the file"')
+w439('screen.case-editor.ack.none', 'This case states that it leaves nothing material out. Confirm that you checked this.', 'D-M5: the acknowledgement when nothing is left out')
+w439('screen.case-editor.ack.none.help', 'Say why you agree that nothing material is left out.', 'D-M5: its reason field\'s help')
+w439('screen.published.verify.detail', 'Anyone can check that these files are the ones your team signed, using the signature and the public key shown here. A check proves the files were not changed after signing. It does not prove that what they say is true.', 'D-M6 (a): e.verification.detail and the worker\'s VERIFY_TEXT')
+w439('screen.published.strength.unrated', 'Not graded yet: no member has graded this.', 'D-M6 (b): an unrated axis')
+w439('screen.published.strength.undetermined', 'Undetermined: what it rests on could not be read when the case was published.', 'D-M6 (b): an undetermined axis')
+w439('screen.published.bar.declared', 'The standard of evidence this case was held to, as stated when it was published. Each finding below met it.', 'D-M6 (c): bar_detail when a bar is declared (K5270)')
+w439('screen.capture.attest.pending', 'The time stamp and the outside archive copy were asked for after the document was kept, and have not answered yet. The document is kept; the proof of when it was kept follows when they answer.', 'D-M6 (d): attestNote')
+w439('screen.document.attest.checked', 'Checked by {name}, {date}', 'C-M2: a typed page a second member confirmed')
+w439('screen.contradiction.lead.member', 'A member raised this lead. It is not a finding: it asks the team to read both passages and say whether they contradict.', 'C-M13: a member-flagged lead')
+w439('screen.question.yes.setaside', 'Set aside: it names passage {n}, which was answered "No".', 'C-M5: a "Yes, because of" overruled; {n} the passage\'s number')
+w439('screen.question.reinstate.otherside', 'Put it on the other side', 'C-M6: the role choice beside Reinstate (citation R23)')
+w439('screen.question.reinstate.otherside.help', 'Reinstate it as cutting against, where it supported, or as supporting, where it cut against.', 'C-M6: its help')
+w439('screen.document.flag.recorded', 'Flag raised. The two passages are set side by side as a lead for the team to read.', 'C-M12: after "Say these two contradict"')
+w439('screen.document.flag.already', 'These two passages are already set side by side as a contradiction. Nothing was written.', 'C-M12: the answer\'s already')
+w439('screen.document.flags.head', 'Flags raised on this document', 'C-M12: the list (its read is BOB\'s to name)')
+w439('screen.action.law.none', "Your team's places list no law for this kind of action. Name the law yourself: its level and its citation.", 'E H1b: on the action page and Request')
+w439('screen.action.law.level', 'Level', 'E H1b: state, city, county or federal')
+w439('screen.action.law.citation', 'Citation', 'E H1b: as the law cites itself')
+w439('screen.due-date.nodeadlines.summary', 'When your rules list no deadline at all', 'the mockup fold')
+w439('screen.due-date.nodeadlines', "A member can draft a deadline as your team's own rule, under Your team's own rules.", 'E H2: drawn when the refusal carries no deadlines')
+w439('screen.request.office.body', 'The body that holds it', 'R57, E H1: the Request fold (in place of screen.matter.f.body)')
+w439('screen.request.office.nobody', 'Your team has no body listed yet, so no office can be named here. Bodies come from the places your team chose, under Settings › Places and offices.', 'N3, R57: a team with no body entity')
+w439('screen.request.office.undated', 'An office named without both a Since and an Until date is recorded, but it is offered as an addressee only once both are stated.', 'R57: an undated office')
+for k, en in [('complied', 'Resolved: the office complied.'), ('denied', 'Resolved: the office denied it.'), ('escalated', 'Resolved: it was escalated.'), ('withdrawn', 'Resolved: your team withdrew it.'), ('completed', 'Resolved: your team carried it out.')]:
+    w439('screen.action.resolution.said.' + k, en, 'K12: the outcome drawn back on the action')
+w439('screen.plan.press.empty.role', "State the person's role at the outlet. Nothing was written.", 'K4, C-M17: addressee_left_part_empty, {empty} role')
+w439('screen.plan.press.empty.organisation', 'State the outlet. Nothing was written.', 'K4, C-M17: {empty} organisation')
+w439('screen.plan.press.empty.both', "State the outlet and the person's role there. Nothing was written.", 'K4, C-M17: {empty} role and organisation')
+w439('screen.question.carried', 'A published case carries this question.', 'E I2')
+w439('screen.start-send.sent.next', 'Sent. The action is still planned: open it and move it to active.', 'E H2: after "I have sent it" (actionmove is on the action page)')
+w439('refusal.NOT_RENDERABLE', 'Civicsmith cannot make a safe view of this kind of file. It is kept as it was handed in. Nothing was shown.', 'file-safety (K5272)')
+w439('refusal.NOT_TEXT', 'This file holds no text that can be shown, so no safe view was made. It is kept as it was handed in.', 'file-safety (K5272)')
+w439('refusal.no_sheets', 'This spreadsheet holds no sheet to show, so no safe view was made. It is kept as it was handed in.', 'file-safety (K5272)')
+w439('screen.open-file.risk.high.means.picture', 'High risk: it opens in the safe view, a safe copy of the picture, until a deeper check passes. Its grade and its place in the record are unchanged.', 'B531 (2): a picture')
+w439('screen.open-file.risk.held.means.picture', 'Held: a scanner found something. The original stays closed; the safe copy of the picture, its grade and its place in the record are unchanged.', 'B531 (2): a picture')
+w439('screen.finder.widen.passages', 'Passages holding at least one of the words: {n}.', 'F-B10 (a): the passage route\'s widen.total')
+w439('act.search.label.finder.widen', 'Search for any of the words', 'F-B10 (a): the act under the widened reading')
+w439('screen.standard.more.passages', '{n} more passages of this document are not shown.', 'B531 (5): in place of screen.timeline.more.people')
+w439('screen.start-send.risk.door', 'State its risk', 'J43: the door to the action\'s risk tier (risk.title stays the field\'s label)')
+w439('screen.action.basis.refused.head', 'What this action rests on or advances was not accepted, for the reasons below. Nothing was written.', 'N7: the head over the owner\'s reasons')
+w439('screen.timeline.doc.noproject', "Only this project's documents are offered here. A document added without a project is not: add it from this project's own Add a document.", 'B533 (4)')
+REWRITE.update({
+ 'action-plans.time_zone_held_place': "no time zone is held for your team, so the plan's dates cannot be checked against the day. It is set under Settings, Your team",
+})
+
+# DEC-440: B535 (SCREENS-INQUIRY #35 J66, K5297): the document kinds on Contradiction, keyed by the reader's id; Document's flags list
+def w440(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-440: ' + note))
+for i, en in [('meeting_calendar', 'Meeting calendar'), ('meeting_minutes', 'Meeting minutes'), ('meeting_agenda', 'Meeting agenda'),
+              ('staff_report', 'Staff report'), ('regulation', 'Ordinance or resolution'), ('policy', 'Numbered policy'),
+              ('staff_directory', 'Staff directory'), ('generic', 'Other document'), ('legistar_api', 'Legistar record'),
+              ('staff_roster', 'Staff or membership roster'), ('org_chart', 'Organization chart'), ('courtlistener_docket', 'CourtListener docket'),
+              ('cpuc_proceeding', 'CPUC proceeding record'), ('ecourt_roa', 'eCourt register of actions'), ('financial_report', 'Annual financial report'),
+              ('budget_book', 'Budget book'), ('budget_table', 'Budget line-item table')]:
+    w440('screen.contradiction.doctype.' + i, en, 'the kind of document a passage comes from, by the reader\'s registered id (content_type); an id with no row draws no row')
+w440('screen.document.flags.pair', '{a} and {b}', 'R138: a row of the flags list, the two passages\' names, linked to the contradiction; screen.contradiction.flagged.by beneath it')
 
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})

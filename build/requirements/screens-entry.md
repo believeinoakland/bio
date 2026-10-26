@@ -101,6 +101,7 @@ The screens drawn without a member session, in the public frame (`front`, `tour`
 
 - **R8** No password, one-time password, recovery code, reset or invitation link typed or shown here is written to the browser's storage, an address, a log or a later request; every fragment is removed on load. Test: sentinels across every flow.
 - **R10** (Invariant) No place is named in this module's behaviour or words.
+- **R34** (T51 fix round 10; DEC-439, DEC-440, DEC-441; UX-DESIGN U481-U484; K5303); D-B1) Setup carries the step `screen.setup.zone` with `.help`: the team's time zone confirmed through `factconfirm` on `@team/time_zone` (local-facts R22). Test: the step is drawn and its act writes the zone that `jurisdictions.governingZone` then reads; control: a confirmed zone draws the step done. *(not yet met: T51)*
 
 ### Satisfies
 
