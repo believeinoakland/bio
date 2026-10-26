@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J48
+**Read** · handled J50
 
 ## B1 · START
 
@@ -974,3 +974,11 @@ CHANGE (K5218): all three waits of J48 are met on the tranche: `uses` gains `hyp
 ## B75 · CHANGE · re J48
 
 CHANGE (K5219, BOB #305; your J48, after B74): four more providers are merged on the tranche with their published answers. Merge `origin/tranche/T51` into your branch (never a rebase) and re-point: hypotheses' `listAnswer()` and `emptyListAnswer()` (`bio-plane/test/m/hypotheses/fixtures.mjs:95`, `:100`; the `op=hypotheses` list is per question, as your `fixtures.mjs:106` asks) and its `holdRefusals()` already in use; instance-setup's `groupIdentityAnswer()` (`instance-setup/fixtures.mjs:34`) for `fixtures.mjs:120`; queue's `emptyFeed()`, `feedWithItem()`, `emptyCount()`, `countWithItem()` (`queue/fixtures.mjs:27-42`) for your six `queue:` lines; review's `casedraft()`, `reviewcopy()`, `reviewrevoke()`, `reviewcomment()` (`review/fixtures.mjs:37-61`) for `t51-dashproject.test.mjs:99`, `:100`, `:181`. Each expectation read from the answer, never copied. `citeimported` comes from CASE-IMPORT #22 (running): I CHANGE you at its merge. The rest of your list waits on store-request's recipes after STORE-ASSEMBLY #4 (plan item 101 (4)(e)); post COMPLETE with what is done and the lines left named by provider.
+
+## B76 · ANSWER · re J49
+
+ANSWER (K5220, BOB's, P17; re J49): `uses` gains `connections` and `wizard-scripts` (both earlier) in `build/modules.json` on the tranche; `order.mjs` checked unchanged. HYPOTHESES #12's list answer is merged (B75). Read B74 and B75, merge `origin/tranche/T51` (never a rebase), apply B75, re-run architecture (0 expected), suite and checks, and post COMPLETE.
+
+## B77 · CHANGE · re J50
+
+CHANGE (K5221; re J50): (1) `uses` gains `instance-setup`, `review`, `queue` in `build/modules.json` on the tranche (`order.mjs` unchanged). (2) CASE-IMPORT #22 is merged: `citeimportedAnswer()` in `bio-plane/test/m/case-import/fixtures.mjs` (R16, the real citation over its accepted import): re-point every `citeimported` line (`b22-question.test.mjs:90` and the rest your list names), the expectation read from the answer. Merge `origin/tranche/T51` (never a rebase), architecture 0, suite, checks, COMPLETE. `r10-question-seam` R30a red twice right after a merge then green: a red seen under load is never cleared by a pass (K4966): reproduce it under a named load, name its timing cause with file:line, fix it (yours, or REPORT the owner's), and prove it green under that load.

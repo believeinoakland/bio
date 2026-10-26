@@ -1,0 +1,1 @@
+ANSWER (K5220, BOB's, P17; re J17): `uses` gains `citation` (earlier, layer 6) in `build/modules.json` on the tranche; `order.mjs` checked unchanged. Merge `origin/tranche/T51` into your branch (never a rebase), re-run `checks/architecture.mjs` (0 expected) and your suite, and post COMPLETE.
