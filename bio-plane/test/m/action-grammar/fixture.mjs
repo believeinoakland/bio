@@ -18,18 +18,17 @@ export const REWORDED = [
   "The plane derives only the days",
   "' is not a kind this instance offers",
   "An action is one of the kinds this instance offers:",
-];
-/* R13 (T41-46a): the outcome vocabulary gained `none_exists`, so C-94.5's finding, which names the vocabulary from the
-   array itself, names it too (`lifecycleFindings`, and through it C-2.10's ledger arm and the audit). Each recorded
-   sentence with the one it reads now, applied to the golden file as it is compared. Not a re-wording, so it is not
-   REWORDED's (its test asks that no old phrase remains, and this one is the start of its successor). */
-export const GROWN = [
-  ["is not one of: granted, denied, partial, reversed, affirmed, none_stated\"", "is not one of: granted, denied, partial, reversed, affirmed, none_stated, none_exists\""],
-];
+  /* T51 fix round 10 (N7): the zero-question refusal named plane terms; its words are now plain (golden.json holds them). */
+  "a request_for_comment names ZERO inquiries",
+  "add an action_basis leg with kind: advances",
+  /* T51 fix round 10 (B5): the leg repairs named fields; the point-the-leg repair is now plain (golden.json holds it). */
+  "point the leg at the finding this rests on (kind: rests_on)",
+  /* T51 fix round 10 (B6): the finding messages named fields and codes; each is now plain (golden.json holds it). */
+  "correspondence[", "clock[]", "is an ACTION:", "is not one of: rests_on, advances",
+  "carries NEITHER", "carries BOTH", "carries an account with no author", "(D-148)", "(DEC-13)", "(YYYY-MM-DD)", 
+  "record a non-response as direction", "is not a leg block", "not a stage of a", ];
 export const RECORDED = readFileSync(new URL("./golden.json", import.meta.url), "utf8");
-export const GOLDEN = JSON.parse(GROWN.reduce((text, [was, now]) => text.split(was).join(now), RECORDED));
-/** How many times each grown sentence occurs in the golden file as recorded. */
-export const GROWN_COUNTS = GROWN.map(([was]) => RECORDED.split(was).length - 1);
+export const GOLDEN = JSON.parse(RECORDED);
 
 /** JSON's view of a value, so a comparison with the golden file sees exactly what it holds. */
 export const plain = (v) => (v === undefined ? { undefined: true } : JSON.parse(JSON.stringify(v)));

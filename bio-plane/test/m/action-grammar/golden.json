@@ -732,28 +732,28 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "action_basis[0] is not a leg block of {target, kind}",
+      "message": "basis leg 0 is not a complete entry: it must name a record, and say whether the action rests on it or advances a question",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "action_basis[1] is not a leg block of {target, kind}",
+      "message": "basis leg 1 is not a complete entry: it must name a record, and say whether the action rests on it or advances a question",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "action_basis[2] is not a leg block of {target, kind}",
+      "message": "basis leg 2 is not a complete entry: it must name a record, and say whether the action rests on it or advances a question",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      }
     ],
@@ -761,28 +761,28 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "action_basis[0] is not a leg block of {target, kind}",
+      "message": "basis leg 0 is not a complete entry: it must name a record, and say whether the action rests on it or advances a question",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "action_basis[1] is not a leg block of {target, kind}",
+      "message": "basis leg 1 is not a complete entry: it must name a record, and say whether the action rests on it or advances a question",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "action_basis[2] is not a leg block of {target, kind}",
+      "message": "basis leg 2 is not a complete entry: it must name a record, and say whether the action rests on it or advances a question",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      }
     ],
@@ -790,28 +790,28 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "action_basis[0] is not a leg block of {target, kind}",
+      "message": "basis leg 0 is not a complete entry: it must name a record, and say whether the action rests on it or advances a question",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "action_basis[1] is not a leg block of {target, kind}",
+      "message": "basis leg 1 is not a complete entry: it must name a record, and say whether the action rests on it or advances a question",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "action_basis[2] is not a leg block of {target, kind}",
+      "message": "basis leg 2 is not a complete entry: it must name a record, and say whether the action rests on it or advances a question",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      }
     ]
@@ -820,28 +820,28 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "action_basis[0] is not a leg block of {target, kind}",
+     "message": "basis leg 0 is not a complete entry: it must name a record, and say whether the action rests on it or advances a question",
      "repairable": true,
      "repairs": [
-      "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+      "point the leg at the finding it rests on, or at the question it advances"
      ]
     },
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "action_basis[1] is not a leg block of {target, kind}",
+     "message": "basis leg 1 is not a complete entry: it must name a record, and say whether the action rests on it or advances a question",
      "repairable": true,
      "repairs": [
-      "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+      "point the leg at the finding it rests on, or at the question it advances"
      ]
     },
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "action_basis[2] is not a leg block of {target, kind}",
+     "message": "basis leg 2 is not a complete entry: it must name a record, and say whether the action rests on it or advances a question",
      "repairable": true,
      "repairs": [
-      "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+      "point the leg at the finding it rests on, or at the question it advances"
      ]
     }
    ],
@@ -902,10 +902,10 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "action_basis[0].target 'not-an-id' is not a canonical record id",
+      "message": "basis leg 0 names 'not-an-id', which is not a valid record id",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      }
     ],
@@ -913,10 +913,10 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "action_basis[0].target 'not-an-id' is not a canonical record id",
+      "message": "basis leg 0 names 'not-an-id', which is not a valid record id",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      }
     ],
@@ -924,10 +924,10 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "action_basis[0].target 'not-an-id' is not a canonical record id",
+      "message": "basis leg 0 names 'not-an-id', which is not a valid record id",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      }
     ]
@@ -936,10 +936,10 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "action_basis[0].target 'not-an-id' is not a canonical record id",
+     "message": "basis leg 0 names 'not-an-id', which is not a valid record id",
      "repairable": true,
      "repairs": [
-      "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+      "point the leg at the finding it rests on, or at the question it advances"
      ]
     }
    ],
@@ -1000,7 +1000,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "action_basis[0].target 'ACTN-2026-0005-earlier' is an ACTION: an action does not rest on our own action. Evidence for what we did is evidence somebody else produced (DEC-14)",
+      "message": "basis leg 0 points at 'ACTN-2026-0005-earlier', which is an action. An action does not rest on our own action: evidence for what we did is evidence somebody else produced",
       "repairable": true,
       "repairs": [
        "point the leg at the finding or the question, not at another action"
@@ -1011,7 +1011,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "action_basis[0].target 'ACTN-2026-0005-earlier' is an ACTION: an action does not rest on our own action. Evidence for what we did is evidence somebody else produced (DEC-14)",
+      "message": "basis leg 0 points at 'ACTN-2026-0005-earlier', which is an action. An action does not rest on our own action: evidence for what we did is evidence somebody else produced",
       "repairable": true,
       "repairs": [
        "point the leg at the finding or the question, not at another action"
@@ -1022,7 +1022,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "action_basis[0].target 'ACTN-2026-0005-earlier' is an ACTION: an action does not rest on our own action. Evidence for what we did is evidence somebody else produced (DEC-14)",
+      "message": "basis leg 0 points at 'ACTN-2026-0005-earlier', which is an action. An action does not rest on our own action: evidence for what we did is evidence somebody else produced",
       "repairable": true,
       "repairs": [
        "point the leg at the finding or the question, not at another action"
@@ -1034,7 +1034,7 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "action_basis[0].target 'ACTN-2026-0005-earlier' is an ACTION: an action does not rest on our own action. Evidence for what we did is evidence somebody else produced (DEC-14)",
+     "message": "basis leg 0 points at 'ACTN-2026-0005-earlier', which is an action. An action does not rest on our own action: evidence for what we did is evidence somebody else produced",
      "repairable": true,
      "repairs": [
       "point the leg at the finding or the question, not at another action"
@@ -1098,10 +1098,10 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "action_basis[0].kind 'because' is not one of: rests_on, advances",
+      "message": "basis leg 0 must say whether the action rests on a finding or advances a question, not 'because'",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      }
     ],
@@ -1109,10 +1109,10 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "action_basis[0].kind 'because' is not one of: rests_on, advances",
+      "message": "basis leg 0 must say whether the action rests on a finding or advances a question, not 'because'",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      }
     ],
@@ -1120,10 +1120,10 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "action_basis[0].kind 'because' is not one of: rests_on, advances",
+      "message": "basis leg 0 must say whether the action rests on a finding or advances a question, not 'because'",
       "repairable": true,
       "repairs": [
-       "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+       "point the leg at the finding it rests on, or at the question it advances"
       ]
      }
     ]
@@ -1132,10 +1132,10 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "action_basis[0].kind 'because' is not one of: rests_on, advances",
+     "message": "basis leg 0 must say whether the action rests on a finding or advances a question, not 'because'",
      "repairable": true,
      "repairs": [
-      "point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"
+      "point the leg at the finding it rests on, or at the question it advances"
      ]
     }
    ],
@@ -1630,10 +1630,10 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "a request_for_comment names ZERO inquiries: it must name the SPECIFIC questions it put to the subject, as action_basis legs of kind advances. \"We contacted them\" and \"we put these four claims to them\" are different facts, and a comment request without specifics gives the subject nothing to answer (DEC-13)",
+      "message": "A request for comment must name the specific questions it puts to the subject: add each one under 'Advances', chosen from your team's record. A comment request without specifics gives the subject nothing to answer.",
       "repairable": true,
       "repairs": [
-       "add an action_basis leg with kind: advances for each inquiry disclosed in the request"
+       "choose each question the request puts to the subject, and mark it 'Advances'"
       ]
      }
     ],
@@ -1641,10 +1641,10 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "a request_for_comment names ZERO inquiries: it must name the SPECIFIC questions it put to the subject, as action_basis legs of kind advances. \"We contacted them\" and \"we put these four claims to them\" are different facts, and a comment request without specifics gives the subject nothing to answer (DEC-13)",
+      "message": "A request for comment must name the specific questions it puts to the subject: add each one under 'Advances', chosen from your team's record. A comment request without specifics gives the subject nothing to answer.",
       "repairable": true,
       "repairs": [
-       "add an action_basis leg with kind: advances for each inquiry disclosed in the request"
+       "choose each question the request puts to the subject, and mark it 'Advances'"
       ]
      }
     ],
@@ -1652,10 +1652,10 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "a request_for_comment names ZERO inquiries: it must name the SPECIFIC questions it put to the subject, as action_basis legs of kind advances. \"We contacted them\" and \"we put these four claims to them\" are different facts, and a comment request without specifics gives the subject nothing to answer (DEC-13)",
+      "message": "A request for comment must name the specific questions it puts to the subject: add each one under 'Advances', chosen from your team's record. A comment request without specifics gives the subject nothing to answer.",
       "repairable": true,
       "repairs": [
-       "add an action_basis leg with kind: advances for each inquiry disclosed in the request"
+       "choose each question the request puts to the subject, and mark it 'Advances'"
       ]
      }
     ]
@@ -1664,10 +1664,10 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "a request_for_comment names ZERO inquiries: it must name the SPECIFIC questions it put to the subject, as action_basis legs of kind advances. \"We contacted them\" and \"we put these four claims to them\" are different facts, and a comment request without specifics gives the subject nothing to answer (DEC-13)",
+     "message": "A request for comment must name the specific questions it puts to the subject: add each one under 'Advances', chosen from your team's record. A comment request without specifics gives the subject nothing to answer.",
      "repairable": true,
      "repairs": [
-      "add an action_basis leg with kind: advances for each inquiry disclosed in the request"
+      "choose each question the request puts to the subject, and mark it 'Advances'"
      ]
     }
    ],
@@ -1728,10 +1728,10 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the team; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from and is not a constant this record enforces (DEC-13)",
+      "message": "a request for comment states the response window it gave, as a dated entry with its own basis. The team sets the window; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from, and nothing here enforces it",
       "repairable": true,
       "repairs": [
-       "add a clock[] entry: the date the response was due, and the basis it derives from"
+       "add a response date: the date the response was due, and the basis it comes from"
       ]
      }
     ],
@@ -1739,10 +1739,10 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the team; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from and is not a constant this record enforces (DEC-13)",
+      "message": "a request for comment states the response window it gave, as a dated entry with its own basis. The team sets the window; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from, and nothing here enforces it",
       "repairable": true,
       "repairs": [
-       "add a clock[] entry: the date the response was due, and the basis it derives from"
+       "add a response date: the date the response was due, and the basis it comes from"
       ]
      }
     ],
@@ -1750,10 +1750,10 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the team; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from and is not a constant this record enforces (DEC-13)",
+      "message": "a request for comment states the response window it gave, as a dated entry with its own basis. The team sets the window; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from, and nothing here enforces it",
       "repairable": true,
       "repairs": [
-       "add a clock[] entry: the date the response was due, and the basis it derives from"
+       "add a response date: the date the response was due, and the basis it comes from"
       ]
      }
     ]
@@ -1762,10 +1762,10 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the team; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from and is not a constant this record enforces (DEC-13)",
+     "message": "a request for comment states the response window it gave, as a dated entry with its own basis. The team sets the window; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from, and nothing here enforces it",
      "repairable": true,
      "repairs": [
-      "add a clock[] entry: the date the response was due, and the basis it derives from"
+      "add a response date: the date the response was due, and the basis it comes from"
      ]
     }
    ],
@@ -1826,19 +1826,19 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "a request_for_comment names ZERO inquiries: it must name the SPECIFIC questions it put to the subject, as action_basis legs of kind advances. \"We contacted them\" and \"we put these four claims to them\" are different facts, and a comment request without specifics gives the subject nothing to answer (DEC-13)",
+      "message": "A request for comment must name the specific questions it puts to the subject: add each one under 'Advances', chosen from your team's record. A comment request without specifics gives the subject nothing to answer.",
       "repairable": true,
       "repairs": [
-       "add an action_basis leg with kind: advances for each inquiry disclosed in the request"
+       "choose each question the request puts to the subject, and mark it 'Advances'"
       ]
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the team; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from and is not a constant this record enforces (DEC-13)",
+      "message": "a request for comment states the response window it gave, as a dated entry with its own basis. The team sets the window; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from, and nothing here enforces it",
       "repairable": true,
       "repairs": [
-       "add a clock[] entry: the date the response was due, and the basis it derives from"
+       "add a response date: the date the response was due, and the basis it comes from"
       ]
      }
     ],
@@ -1846,19 +1846,19 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "a request_for_comment names ZERO inquiries: it must name the SPECIFIC questions it put to the subject, as action_basis legs of kind advances. \"We contacted them\" and \"we put these four claims to them\" are different facts, and a comment request without specifics gives the subject nothing to answer (DEC-13)",
+      "message": "A request for comment must name the specific questions it puts to the subject: add each one under 'Advances', chosen from your team's record. A comment request without specifics gives the subject nothing to answer.",
       "repairable": true,
       "repairs": [
-       "add an action_basis leg with kind: advances for each inquiry disclosed in the request"
+       "choose each question the request puts to the subject, and mark it 'Advances'"
       ]
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the team; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from and is not a constant this record enforces (DEC-13)",
+      "message": "a request for comment states the response window it gave, as a dated entry with its own basis. The team sets the window; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from, and nothing here enforces it",
       "repairable": true,
       "repairs": [
-       "add a clock[] entry: the date the response was due, and the basis it derives from"
+       "add a response date: the date the response was due, and the basis it comes from"
       ]
      }
     ],
@@ -1866,19 +1866,19 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "a request_for_comment names ZERO inquiries: it must name the SPECIFIC questions it put to the subject, as action_basis legs of kind advances. \"We contacted them\" and \"we put these four claims to them\" are different facts, and a comment request without specifics gives the subject nothing to answer (DEC-13)",
+      "message": "A request for comment must name the specific questions it puts to the subject: add each one under 'Advances', chosen from your team's record. A comment request without specifics gives the subject nothing to answer.",
       "repairable": true,
       "repairs": [
-       "add an action_basis leg with kind: advances for each inquiry disclosed in the request"
+       "choose each question the request puts to the subject, and mark it 'Advances'"
       ]
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the team; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from and is not a constant this record enforces (DEC-13)",
+      "message": "a request for comment states the response window it gave, as a dated entry with its own basis. The team sets the window; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from, and nothing here enforces it",
       "repairable": true,
       "repairs": [
-       "add a clock[] entry: the date the response was due, and the basis it derives from"
+       "add a response date: the date the response was due, and the basis it comes from"
       ]
      }
     ]
@@ -1887,19 +1887,19 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "a request_for_comment names ZERO inquiries: it must name the SPECIFIC questions it put to the subject, as action_basis legs of kind advances. \"We contacted them\" and \"we put these four claims to them\" are different facts, and a comment request without specifics gives the subject nothing to answer (DEC-13)",
+     "message": "A request for comment must name the specific questions it puts to the subject: add each one under 'Advances', chosen from your team's record. A comment request without specifics gives the subject nothing to answer.",
      "repairable": true,
      "repairs": [
-      "add an action_basis leg with kind: advances for each inquiry disclosed in the request"
+      "choose each question the request puts to the subject, and mark it 'Advances'"
      ]
     },
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the team; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from and is not a constant this record enforces (DEC-13)",
+     "message": "a request for comment states the response window it gave, as a dated entry with its own basis. The team sets the window; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from, and nothing here enforces it",
      "repairable": true,
      "repairs": [
-      "add a clock[] entry: the date the response was due, and the basis it derives from"
+      "add a response date: the date the response was due, and the basis it comes from"
      ]
     }
    ],
@@ -2075,51 +2075,51 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] is not an entry block"
+      "message": "entry 0 of the correspondence is not a complete entry"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1] is not an entry block"
+      "message": "entry 1 of the correspondence is not a complete entry"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2] is not an entry block"
+      "message": "entry 2 of the correspondence is not a complete entry"
      }
     ],
     "product": [
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] is not an entry block"
+      "message": "entry 0 of the correspondence is not a complete entry"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1] is not an entry block"
+      "message": "entry 1 of the correspondence is not a complete entry"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2] is not an entry block"
+      "message": "entry 2 of the correspondence is not a complete entry"
      }
     ],
     "test-profile": [
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] is not an entry block"
+      "message": "entry 0 of the correspondence is not a complete entry"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1] is not an entry block"
+      "message": "entry 1 of the correspondence is not a complete entry"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2] is not an entry block"
+      "message": "entry 2 of the correspondence is not a complete entry"
      }
     ]
    },
@@ -2128,17 +2128,17 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[0] is not an entry block"
+     "message": "entry 0 of the correspondence is not a complete entry"
     },
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[1] is not an entry block"
+     "message": "entry 1 of the correspondence is not a complete entry"
     },
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[2] is not an entry block"
+     "message": "entry 2 of the correspondence is not a complete entry"
     }
    ],
    "quotes": [
@@ -2218,10 +2218,10 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0].direction 'outbound' is not one of: sent, received, no_response",
+      "message": "entry 0 is marked 'outbound', but it must be sent, received, or no response",
       "repairable": true,
       "repairs": [
-       "record a non-response as direction: no_response with the date it was due (DEC-13)"
+       "record a non-response as a no response entry, dated by when the reply was due"
       ]
      }
     ],
@@ -2229,10 +2229,10 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0].direction 'outbound' is not one of: sent, received, no_response",
+      "message": "entry 0 is marked 'outbound', but it must be sent, received, or no response",
       "repairable": true,
       "repairs": [
-       "record a non-response as direction: no_response with the date it was due (DEC-13)"
+       "record a non-response as a no response entry, dated by when the reply was due"
       ]
      }
     ],
@@ -2240,10 +2240,10 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0].direction 'outbound' is not one of: sent, received, no_response",
+      "message": "entry 0 is marked 'outbound', but it must be sent, received, or no response",
       "repairable": true,
       "repairs": [
-       "record a non-response as direction: no_response with the date it was due (DEC-13)"
+       "record a non-response as a no response entry, dated by when the reply was due"
       ]
      }
     ]
@@ -2253,10 +2253,10 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[0].direction 'outbound' is not one of: sent, received, no_response",
+     "message": "entry 0 is marked 'outbound', but it must be sent, received, or no response",
      "repairable": true,
      "repairs": [
-      "record a non-response as direction: no_response with the date it was due (DEC-13)"
+      "record a non-response as a no response entry, dated by when the reply was due"
      ]
     }
    ],
@@ -2337,36 +2337,36 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0].at 'June' is not a date: an entry in this ledger is dated, including a non-response, which is dated by when the reply was due"
+      "message": "entry 0's date 'June' is not a date. Every entry is dated, including a non-response, which is dated by when the reply was due"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1].at 'undefined' is not a date: an entry in this ledger is dated, including a non-response, which is dated by when the reply was due"
+      "message": "entry 1's date 'undefined' is not a date. Every entry is dated, including a non-response, which is dated by when the reply was due"
      }
     ],
     "product": [
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0].at 'June' is not a date: an entry in this ledger is dated, including a non-response, which is dated by when the reply was due"
+      "message": "entry 0's date 'June' is not a date. Every entry is dated, including a non-response, which is dated by when the reply was due"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1].at 'undefined' is not a date: an entry in this ledger is dated, including a non-response, which is dated by when the reply was due"
+      "message": "entry 1's date 'undefined' is not a date. Every entry is dated, including a non-response, which is dated by when the reply was due"
      }
     ],
     "test-profile": [
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0].at 'June' is not a date: an entry in this ledger is dated, including a non-response, which is dated by when the reply was due"
+      "message": "entry 0's date 'June' is not a date. Every entry is dated, including a non-response, which is dated by when the reply was due"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1].at 'undefined' is not a date: an entry in this ledger is dated, including a non-response, which is dated by when the reply was due"
+      "message": "entry 1's date 'undefined' is not a date. Every entry is dated, including a non-response, which is dated by when the reply was due"
      }
     ]
    },
@@ -2375,12 +2375,12 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[0].at 'June' is not a date: an entry in this ledger is dated, including a non-response, which is dated by when the reply was due"
+     "message": "entry 0's date 'June' is not a date. Every entry is dated, including a non-response, which is dated by when the reply was due"
     },
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[1].at 'undefined' is not a date: an entry in this ledger is dated, including a non-response, which is dated by when the reply was due"
+     "message": "entry 1's date 'undefined' is not a date. Every entry is dated, including a non-response, which is dated by when the reply was due"
     }
    ],
    "quotes": [
@@ -2476,11 +2476,11 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] carries BOTH an artifact_sha and an account: what came back is CAPTURED, not summarised (DEC-13). The bytes are what the team can defend; a paraphrase beside them is what a reader would quote instead",
+      "message": "entry 0 carries both a kept document and a named account. What came back is kept as it arrived, not summarised. The document is what the team can defend; a paraphrase beside it is what a reader would quote instead",
       "repairable": true,
       "repairs": [
-       "capture the artifact and record its sha256 (op=capture), or",
-       "record a named account: account with the member who is testifying to it"
+       "keep the document itself, so its exact bytes can be produced later, or",
+       "name the member who is testifying that the exchange happened"
       ]
      }
     ],
@@ -2488,11 +2488,11 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] carries BOTH an artifact_sha and an account: what came back is CAPTURED, not summarised (DEC-13). The bytes are what the team can defend; a paraphrase beside them is what a reader would quote instead",
+      "message": "entry 0 carries both a kept document and a named account. What came back is kept as it arrived, not summarised. The document is what the team can defend; a paraphrase beside it is what a reader would quote instead",
       "repairable": true,
       "repairs": [
-       "capture the artifact and record its sha256 (op=capture), or",
-       "record a named account: account with the member who is testifying to it"
+       "keep the document itself, so its exact bytes can be produced later, or",
+       "name the member who is testifying that the exchange happened"
       ]
      }
     ],
@@ -2500,11 +2500,11 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] carries BOTH an artifact_sha and an account: what came back is CAPTURED, not summarised (DEC-13). The bytes are what the team can defend; a paraphrase beside them is what a reader would quote instead",
+      "message": "entry 0 carries both a kept document and a named account. What came back is kept as it arrived, not summarised. The document is what the team can defend; a paraphrase beside it is what a reader would quote instead",
       "repairable": true,
       "repairs": [
-       "capture the artifact and record its sha256 (op=capture), or",
-       "record a named account: account with the member who is testifying to it"
+       "keep the document itself, so its exact bytes can be produced later, or",
+       "name the member who is testifying that the exchange happened"
       ]
      }
     ]
@@ -2514,11 +2514,11 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[0] carries BOTH an artifact_sha and an account: what came back is CAPTURED, not summarised (DEC-13). The bytes are what the team can defend; a paraphrase beside them is what a reader would quote instead",
+     "message": "entry 0 carries both a kept document and a named account. What came back is kept as it arrived, not summarised. The document is what the team can defend; a paraphrase beside it is what a reader would quote instead",
      "repairable": true,
      "repairs": [
-      "capture the artifact and record its sha256 (op=capture), or",
-      "record a named account: account with the member who is testifying to it"
+      "keep the document itself, so its exact bytes can be produced later, or",
+      "name the member who is testifying that the exchange happened"
      ]
     }
    ],
@@ -2599,11 +2599,11 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] carries NEITHER an artifact_sha nor an account: it asserts an exchange and offers no way to check that it happened",
+      "message": "entry 0 carries neither a kept document nor a named account: it claims an exchange and gives no way to check that it happened",
       "repairable": true,
       "repairs": [
-       "capture the artifact and record its sha256 (op=capture), or",
-       "record a named account: account with the member who is testifying to it"
+       "keep the document itself, so its exact bytes can be produced later, or",
+       "name the member who is testifying that the exchange happened"
       ]
      }
     ],
@@ -2611,11 +2611,11 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] carries NEITHER an artifact_sha nor an account: it asserts an exchange and offers no way to check that it happened",
+      "message": "entry 0 carries neither a kept document nor a named account: it claims an exchange and gives no way to check that it happened",
       "repairable": true,
       "repairs": [
-       "capture the artifact and record its sha256 (op=capture), or",
-       "record a named account: account with the member who is testifying to it"
+       "keep the document itself, so its exact bytes can be produced later, or",
+       "name the member who is testifying that the exchange happened"
       ]
      }
     ],
@@ -2623,11 +2623,11 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] carries NEITHER an artifact_sha nor an account: it asserts an exchange and offers no way to check that it happened",
+      "message": "entry 0 carries neither a kept document nor a named account: it claims an exchange and gives no way to check that it happened",
       "repairable": true,
       "repairs": [
-       "capture the artifact and record its sha256 (op=capture), or",
-       "record a named account: account with the member who is testifying to it"
+       "keep the document itself, so its exact bytes can be produced later, or",
+       "name the member who is testifying that the exchange happened"
       ]
      }
     ]
@@ -2637,11 +2637,11 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[0] carries NEITHER an artifact_sha nor an account: it asserts an exchange and offers no way to check that it happened",
+     "message": "entry 0 carries neither a kept document nor a named account: it claims an exchange and gives no way to check that it happened",
      "repairable": true,
      "repairs": [
-      "capture the artifact and record its sha256 (op=capture), or",
-      "record a named account: account with the member who is testifying to it"
+      "keep the document itself, so its exact bytes can be produced later, or",
+      "name the member who is testifying that the exchange happened"
      ]
     }
    ],
@@ -2722,21 +2722,21 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0].artifact_sha 'sha256:zz' is not a sha256 hash"
+      "message": "entry 0's kept document has the fingerprint 'sha256:zz', which is not a sha256 hash"
      }
     ],
     "product": [
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0].artifact_sha 'sha256:zz' is not a sha256 hash"
+      "message": "entry 0's kept document has the fingerprint 'sha256:zz', which is not a sha256 hash"
      }
     ],
     "test-profile": [
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0].artifact_sha 'sha256:zz' is not a sha256 hash"
+      "message": "entry 0's kept document has the fingerprint 'sha256:zz', which is not a sha256 hash"
      }
     ]
    },
@@ -2745,7 +2745,7 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[0].artifact_sha 'sha256:zz' is not a sha256 hash"
+     "message": "entry 0's kept document has the fingerprint 'sha256:zz', which is not a sha256 hash"
     }
    ],
    "quotes": [
@@ -2861,10 +2861,10 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] is a no_response carrying an artifact_sha: nothing arrived, so there are no bytes to hash. A non-response is recorded as a named account with its date (DEC-13)",
+      "message": "entry 0 is a no response but carries a kept document. Nothing arrived, so there is nothing to keep. A non-response is recorded as a named account with its date",
       "repairable": true,
       "repairs": [
-       "record the non-response as an account: what was due, when, and that nothing came"
+       "record the non-response as a named account: what was due, when, and that nothing came"
       ]
      }
     ],
@@ -2872,10 +2872,10 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] is a no_response carrying an artifact_sha: nothing arrived, so there are no bytes to hash. A non-response is recorded as a named account with its date (DEC-13)",
+      "message": "entry 0 is a no response but carries a kept document. Nothing arrived, so there is nothing to keep. A non-response is recorded as a named account with its date",
       "repairable": true,
       "repairs": [
-       "record the non-response as an account: what was due, when, and that nothing came"
+       "record the non-response as a named account: what was due, when, and that nothing came"
       ]
      }
     ],
@@ -2883,10 +2883,10 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] is a no_response carrying an artifact_sha: nothing arrived, so there are no bytes to hash. A non-response is recorded as a named account with its date (DEC-13)",
+      "message": "entry 0 is a no response but carries a kept document. Nothing arrived, so there is nothing to keep. A non-response is recorded as a named account with its date",
       "repairable": true,
       "repairs": [
-       "record the non-response as an account: what was due, when, and that nothing came"
+       "record the non-response as a named account: what was due, when, and that nothing came"
       ]
      }
     ]
@@ -2896,10 +2896,10 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[0] is a no_response carrying an artifact_sha: nothing arrived, so there are no bytes to hash. A non-response is recorded as a named account with its date (DEC-13)",
+     "message": "entry 0 is a no response but carries a kept document. Nothing arrived, so there is nothing to keep. A non-response is recorded as a named account with its date",
      "repairable": true,
      "repairs": [
-      "record the non-response as an account: what was due, when, and that nothing came"
+      "record the non-response as a named account: what was due, when, and that nothing came"
      ]
     }
    ],
@@ -2980,21 +2980,21 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] carries an account with no author: testimony is somebody's, and an unattributed account is a claim nobody stands behind"
+      "message": "entry 0 names an account with no member standing behind it: testimony is somebody's, and an unattributed account is a claim nobody stands behind"
      }
     ],
     "product": [
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] carries an account with no author: testimony is somebody's, and an unattributed account is a claim nobody stands behind"
+      "message": "entry 0 names an account with no member standing behind it: testimony is somebody's, and an unattributed account is a claim nobody stands behind"
      }
     ],
     "test-profile": [
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] carries an account with no author: testimony is somebody's, and an unattributed account is a claim nobody stands behind"
+      "message": "entry 0 names an account with no member standing behind it: testimony is somebody's, and an unattributed account is a claim nobody stands behind"
      }
     ]
    },
@@ -3003,7 +3003,7 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[0] carries an account with no author: testimony is somebody's, and an unattributed account is a claim nobody stands behind"
+     "message": "entry 0 names an account with no member standing behind it: testimony is somebody's, and an unattributed account is a claim nobody stands behind"
     }
    ],
    "quotes": [
@@ -3206,7 +3206,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] carries a quote on a 'sent' entry: a quote is what a body SENT BACK, so it rides a received entry (D-148)",
+      "message": "entry 0 carries a quote, but it is marked 'sent'. A quote is what a body sent back, so it belongs on a received entry",
       "code": "QUOTE_NOT_ON_RECEIVED"
      }
     ],
@@ -3214,7 +3214,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] carries a quote on a 'sent' entry: a quote is what a body SENT BACK, so it rides a received entry (D-148)",
+      "message": "entry 0 carries a quote, but it is marked 'sent'. A quote is what a body sent back, so it belongs on a received entry",
       "code": "QUOTE_NOT_ON_RECEIVED"
      }
     ],
@@ -3222,7 +3222,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] carries a quote on a 'sent' entry: a quote is what a body SENT BACK, so it rides a received entry (D-148)",
+      "message": "entry 0 carries a quote, but it is marked 'sent'. A quote is what a body sent back, so it belongs on a received entry",
       "code": "QUOTE_NOT_ON_RECEIVED"
      }
     ]
@@ -3232,7 +3232,7 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[0] carries a quote on a 'sent' entry: a quote is what a body SENT BACK, so it rides a received entry (D-148)",
+     "message": "entry 0 carries a quote, but it is marked 'sent'. A quote is what a body sent back, so it belongs on a received entry",
      "code": "QUOTE_NOT_ON_RECEIVED"
     }
    ],
@@ -3240,7 +3240,7 @@
     [
      {
       "code": "QUOTE_NOT_ON_RECEIVED",
-      "message": "correspondence[0] carries a quote on a 'sent' entry: a quote is what a body SENT BACK, so it rides a received entry (D-148)"
+      "message": "entry 0 carries a quote, but it is marked 'sent'. A quote is what a body sent back, so it belongs on a received entry"
      }
     ]
    ],
@@ -3322,13 +3322,13 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1].quote_amount 'ten' is not a number: the amount is recorded as quoted, and a quote whose amount cannot be read as one cannot be set beside another",
+      "message": "entry 1's quoted amount 'ten' is not a number: the amount is kept as quoted, and an amount that cannot be read as a number cannot be set beside another",
       "code": "QUOTE_AMOUNT_NOT_A_NUMBER"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2].quote_amount '1,00' is not a number: the amount is recorded as quoted, and a quote whose amount cannot be read as one cannot be set beside another",
+      "message": "entry 2's quoted amount '1,00' is not a number: the amount is kept as quoted, and an amount that cannot be read as a number cannot be set beside another",
       "code": "QUOTE_AMOUNT_NOT_A_NUMBER"
      }
     ],
@@ -3336,13 +3336,13 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1].quote_amount 'ten' is not a number: the amount is recorded as quoted, and a quote whose amount cannot be read as one cannot be set beside another",
+      "message": "entry 1's quoted amount 'ten' is not a number: the amount is kept as quoted, and an amount that cannot be read as a number cannot be set beside another",
       "code": "QUOTE_AMOUNT_NOT_A_NUMBER"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2].quote_amount '1,00' is not a number: the amount is recorded as quoted, and a quote whose amount cannot be read as one cannot be set beside another",
+      "message": "entry 2's quoted amount '1,00' is not a number: the amount is kept as quoted, and an amount that cannot be read as a number cannot be set beside another",
       "code": "QUOTE_AMOUNT_NOT_A_NUMBER"
      }
     ],
@@ -3350,13 +3350,13 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1].quote_amount 'ten' is not a number: the amount is recorded as quoted, and a quote whose amount cannot be read as one cannot be set beside another",
+      "message": "entry 1's quoted amount 'ten' is not a number: the amount is kept as quoted, and an amount that cannot be read as a number cannot be set beside another",
       "code": "QUOTE_AMOUNT_NOT_A_NUMBER"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2].quote_amount '1,00' is not a number: the amount is recorded as quoted, and a quote whose amount cannot be read as one cannot be set beside another",
+      "message": "entry 2's quoted amount '1,00' is not a number: the amount is kept as quoted, and an amount that cannot be read as a number cannot be set beside another",
       "code": "QUOTE_AMOUNT_NOT_A_NUMBER"
      }
     ]
@@ -3366,13 +3366,13 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[1].quote_amount 'ten' is not a number: the amount is recorded as quoted, and a quote whose amount cannot be read as one cannot be set beside another",
+     "message": "entry 1's quoted amount 'ten' is not a number: the amount is kept as quoted, and an amount that cannot be read as a number cannot be set beside another",
      "code": "QUOTE_AMOUNT_NOT_A_NUMBER"
     },
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[2].quote_amount '1,00' is not a number: the amount is recorded as quoted, and a quote whose amount cannot be read as one cannot be set beside another",
+     "message": "entry 2's quoted amount '1,00' is not a number: the amount is kept as quoted, and an amount that cannot be read as a number cannot be set beside another",
      "code": "QUOTE_AMOUNT_NOT_A_NUMBER"
     }
    ],
@@ -3381,13 +3381,13 @@
     [
      {
       "code": "QUOTE_AMOUNT_NOT_A_NUMBER",
-      "message": "correspondence[1].quote_amount 'ten' is not a number: the amount is recorded as quoted, and a quote whose amount cannot be read as one cannot be set beside another"
+      "message": "entry 1's quoted amount 'ten' is not a number: the amount is kept as quoted, and an amount that cannot be read as a number cannot be set beside another"
      }
     ],
     [
      {
       "code": "QUOTE_AMOUNT_NOT_A_NUMBER",
-      "message": "correspondence[2].quote_amount '1,00' is not a number: the amount is recorded as quoted, and a quote whose amount cannot be read as one cannot be set beside another"
+      "message": "entry 2's quoted amount '1,00' is not a number: the amount is kept as quoted, and an amount that cannot be read as a number cannot be set beside another"
      }
     ],
     []
@@ -3529,7 +3529,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1] carries a quote with no quote_currency: the currency is recorded as quoted and is never inferred",
+      "message": "entry 1 carries a quote with no currency: the currency is kept as quoted and is never inferred",
       "code": "QUOTE_NO_CURRENCY"
      }
     ],
@@ -3537,7 +3537,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1] carries a quote with no quote_currency: the currency is recorded as quoted and is never inferred",
+      "message": "entry 1 carries a quote with no currency: the currency is kept as quoted and is never inferred",
       "code": "QUOTE_NO_CURRENCY"
      }
     ],
@@ -3545,7 +3545,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1] carries a quote with no quote_currency: the currency is recorded as quoted and is never inferred",
+      "message": "entry 1 carries a quote with no currency: the currency is kept as quoted and is never inferred",
       "code": "QUOTE_NO_CURRENCY"
      }
     ]
@@ -3555,7 +3555,7 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[1] carries a quote with no quote_currency: the currency is recorded as quoted and is never inferred",
+     "message": "entry 1 carries a quote with no currency: the currency is kept as quoted and is never inferred",
      "code": "QUOTE_NO_CURRENCY"
     }
    ],
@@ -3564,7 +3564,7 @@
     [
      {
       "code": "QUOTE_NO_CURRENCY",
-      "message": "correspondence[1] carries a quote with no quote_currency: the currency is recorded as quoted and is never inferred"
+      "message": "entry 1 carries a quote with no currency: the currency is kept as quoted and is never inferred"
      }
     ]
    ],
@@ -3663,19 +3663,19 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1].quote_answers '5' names no earlier sent entry: a quote answers a request this ledger holds, and the request's own text is its scope",
+      "message": "entry 1 answers entry '5', which is not an earlier sent entry: a quote answers a request this record holds, and the request's own text is its scope",
       "code": "QUOTE_ANSWERS_NO_SENT"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2].quote_answers '1' names no earlier sent entry: a quote answers a request this ledger holds, and the request's own text is its scope",
+      "message": "entry 2 answers entry '1', which is not an earlier sent entry: a quote answers a request this record holds, and the request's own text is its scope",
       "code": "QUOTE_ANSWERS_NO_SENT"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[3].quote_answers '' names no earlier sent entry: a quote answers a request this ledger holds, and the request's own text is its scope",
+      "message": "entry 3 answers entry '', which is not an earlier sent entry: a quote answers a request this record holds, and the request's own text is its scope",
       "code": "QUOTE_ANSWERS_NO_SENT"
      }
     ],
@@ -3683,19 +3683,19 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1].quote_answers '5' names no earlier sent entry: a quote answers a request this ledger holds, and the request's own text is its scope",
+      "message": "entry 1 answers entry '5', which is not an earlier sent entry: a quote answers a request this record holds, and the request's own text is its scope",
       "code": "QUOTE_ANSWERS_NO_SENT"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2].quote_answers '1' names no earlier sent entry: a quote answers a request this ledger holds, and the request's own text is its scope",
+      "message": "entry 2 answers entry '1', which is not an earlier sent entry: a quote answers a request this record holds, and the request's own text is its scope",
       "code": "QUOTE_ANSWERS_NO_SENT"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[3].quote_answers '' names no earlier sent entry: a quote answers a request this ledger holds, and the request's own text is its scope",
+      "message": "entry 3 answers entry '', which is not an earlier sent entry: a quote answers a request this record holds, and the request's own text is its scope",
       "code": "QUOTE_ANSWERS_NO_SENT"
      }
     ],
@@ -3703,19 +3703,19 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1].quote_answers '5' names no earlier sent entry: a quote answers a request this ledger holds, and the request's own text is its scope",
+      "message": "entry 1 answers entry '5', which is not an earlier sent entry: a quote answers a request this record holds, and the request's own text is its scope",
       "code": "QUOTE_ANSWERS_NO_SENT"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2].quote_answers '1' names no earlier sent entry: a quote answers a request this ledger holds, and the request's own text is its scope",
+      "message": "entry 2 answers entry '1', which is not an earlier sent entry: a quote answers a request this record holds, and the request's own text is its scope",
       "code": "QUOTE_ANSWERS_NO_SENT"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[3].quote_answers '' names no earlier sent entry: a quote answers a request this ledger holds, and the request's own text is its scope",
+      "message": "entry 3 answers entry '', which is not an earlier sent entry: a quote answers a request this record holds, and the request's own text is its scope",
       "code": "QUOTE_ANSWERS_NO_SENT"
      }
     ]
@@ -3725,19 +3725,19 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[1].quote_answers '5' names no earlier sent entry: a quote answers a request this ledger holds, and the request's own text is its scope",
+     "message": "entry 1 answers entry '5', which is not an earlier sent entry: a quote answers a request this record holds, and the request's own text is its scope",
      "code": "QUOTE_ANSWERS_NO_SENT"
     },
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[2].quote_answers '1' names no earlier sent entry: a quote answers a request this ledger holds, and the request's own text is its scope",
+     "message": "entry 2 answers entry '1', which is not an earlier sent entry: a quote answers a request this record holds, and the request's own text is its scope",
      "code": "QUOTE_ANSWERS_NO_SENT"
     },
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[3].quote_answers '' names no earlier sent entry: a quote answers a request this ledger holds, and the request's own text is its scope",
+     "message": "entry 3 answers entry '', which is not an earlier sent entry: a quote answers a request this record holds, and the request's own text is its scope",
      "code": "QUOTE_ANSWERS_NO_SENT"
     }
    ],
@@ -3746,19 +3746,19 @@
     [
      {
       "code": "QUOTE_ANSWERS_NO_SENT",
-      "message": "correspondence[1].quote_answers '5' names no earlier sent entry: a quote answers a request this ledger holds, and the request's own text is its scope"
+      "message": "entry 1 answers entry '5', which is not an earlier sent entry: a quote answers a request this record holds, and the request's own text is its scope"
      }
     ],
     [
      {
       "code": "QUOTE_ANSWERS_NO_SENT",
-      "message": "correspondence[2].quote_answers '1' names no earlier sent entry: a quote answers a request this ledger holds, and the request's own text is its scope"
+      "message": "entry 2 answers entry '1', which is not an earlier sent entry: a quote answers a request this record holds, and the request's own text is its scope"
      }
     ],
     [
      {
       "code": "QUOTE_ANSWERS_NO_SENT",
-      "message": "correspondence[3].quote_answers '' names no earlier sent entry: a quote answers a request this ledger holds, and the request's own text is its scope"
+      "message": "entry 3 answers entry '', which is not an earlier sent entry: a quote answers a request this record holds, and the request's own text is its scope"
      }
     ]
    ],
@@ -3899,13 +3899,13 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1].quote_revises '0' names no earlier quote: a revision names the quote it revises, and both entries stand",
+      "message": "entry 1 revises entry '0', which is not an earlier quote: a revision names the quote it revises, and both entries stand",
       "code": "QUOTE_REVISES_NO_QUOTE"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2].quote_revises 'x' names no earlier quote: a revision names the quote it revises, and both entries stand",
+      "message": "entry 2 revises entry 'x', which is not an earlier quote: a revision names the quote it revises, and both entries stand",
       "code": "QUOTE_REVISES_NO_QUOTE"
      }
     ],
@@ -3913,13 +3913,13 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1].quote_revises '0' names no earlier quote: a revision names the quote it revises, and both entries stand",
+      "message": "entry 1 revises entry '0', which is not an earlier quote: a revision names the quote it revises, and both entries stand",
       "code": "QUOTE_REVISES_NO_QUOTE"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2].quote_revises 'x' names no earlier quote: a revision names the quote it revises, and both entries stand",
+      "message": "entry 2 revises entry 'x', which is not an earlier quote: a revision names the quote it revises, and both entries stand",
       "code": "QUOTE_REVISES_NO_QUOTE"
      }
     ],
@@ -3927,13 +3927,13 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1].quote_revises '0' names no earlier quote: a revision names the quote it revises, and both entries stand",
+      "message": "entry 1 revises entry '0', which is not an earlier quote: a revision names the quote it revises, and both entries stand",
       "code": "QUOTE_REVISES_NO_QUOTE"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2].quote_revises 'x' names no earlier quote: a revision names the quote it revises, and both entries stand",
+      "message": "entry 2 revises entry 'x', which is not an earlier quote: a revision names the quote it revises, and both entries stand",
       "code": "QUOTE_REVISES_NO_QUOTE"
      }
     ]
@@ -3943,13 +3943,13 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[1].quote_revises '0' names no earlier quote: a revision names the quote it revises, and both entries stand",
+     "message": "entry 1 revises entry '0', which is not an earlier quote: a revision names the quote it revises, and both entries stand",
      "code": "QUOTE_REVISES_NO_QUOTE"
     },
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[2].quote_revises 'x' names no earlier quote: a revision names the quote it revises, and both entries stand",
+     "message": "entry 2 revises entry 'x', which is not an earlier quote: a revision names the quote it revises, and both entries stand",
      "code": "QUOTE_REVISES_NO_QUOTE"
     }
    ],
@@ -3958,13 +3958,13 @@
     [
      {
       "code": "QUOTE_REVISES_NO_QUOTE",
-      "message": "correspondence[1].quote_revises '0' names no earlier quote: a revision names the quote it revises, and both entries stand"
+      "message": "entry 1 revises entry '0', which is not an earlier quote: a revision names the quote it revises, and both entries stand"
      }
     ],
     [
      {
       "code": "QUOTE_REVISES_NO_QUOTE",
-      "message": "correspondence[2].quote_revises 'x' names no earlier quote: a revision names the quote it revises, and both entries stand"
+      "message": "entry 2 revises entry 'x', which is not an earlier quote: a revision names the quote it revises, and both entries stand"
      }
     ],
     []
@@ -4268,25 +4268,25 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0].stage 'denial' is not a stage of a 'sent' entry: one of request, fee_waiver_request, appeal, court_filing",
+      "message": "entry 0 is marked as the 'denial' stage, which a 'sent' entry cannot be: one of request, fee_waiver_request, appeal, court_filing",
       "code": "STAGE_NOT_OF_DIRECTION"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] is a 'denial' naming no entry it follows: each stage after the request names the entry it answers or follows, so the lifecycle reads as one chain",
+      "message": "entry 0 is a 'denial' that names no entry it follows: each stage after the request names the entry it answers or follows, so the record reads as one chain",
       "code": "FOLLOWS_NO_ENTRY"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1].stage 'request' is not a stage of a 'received' entry: one of acknowledgement, fee_estimate, fee_waiver_decision, extension_notice, production, denial, appeal_decision, court_decision",
+      "message": "entry 1 is marked as the 'request' stage, which a 'received' entry cannot be: one of acknowledgement, fee_estimate, fee_waiver_decision, extension_notice, production, denial, appeal_decision, court_decision",
       "code": "STAGE_NOT_OF_DIRECTION"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2].stage 'request' is not a stage of a 'no_response' entry: a non-response carries no stage, it names what it awaited by follows",
+      "message": "entry 2 is marked as the 'request' stage, which a 'no response' entry cannot be: a non-response has no stage; it names the entry it awaited",
       "code": "STAGE_NOT_OF_DIRECTION"
      }
     ],
@@ -4294,25 +4294,25 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0].stage 'denial' is not a stage of a 'sent' entry: one of request, fee_waiver_request, appeal, court_filing",
+      "message": "entry 0 is marked as the 'denial' stage, which a 'sent' entry cannot be: one of request, fee_waiver_request, appeal, court_filing",
       "code": "STAGE_NOT_OF_DIRECTION"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] is a 'denial' naming no entry it follows: each stage after the request names the entry it answers or follows, so the lifecycle reads as one chain",
+      "message": "entry 0 is a 'denial' that names no entry it follows: each stage after the request names the entry it answers or follows, so the record reads as one chain",
       "code": "FOLLOWS_NO_ENTRY"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1].stage 'request' is not a stage of a 'received' entry: one of acknowledgement, fee_estimate, fee_waiver_decision, extension_notice, production, denial, appeal_decision, court_decision",
+      "message": "entry 1 is marked as the 'request' stage, which a 'received' entry cannot be: one of acknowledgement, fee_estimate, fee_waiver_decision, extension_notice, production, denial, appeal_decision, court_decision",
       "code": "STAGE_NOT_OF_DIRECTION"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2].stage 'request' is not a stage of a 'no_response' entry: a non-response carries no stage, it names what it awaited by follows",
+      "message": "entry 2 is marked as the 'request' stage, which a 'no response' entry cannot be: a non-response has no stage; it names the entry it awaited",
       "code": "STAGE_NOT_OF_DIRECTION"
      }
     ],
@@ -4320,25 +4320,25 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0].stage 'denial' is not a stage of a 'sent' entry: one of request, fee_waiver_request, appeal, court_filing",
+      "message": "entry 0 is marked as the 'denial' stage, which a 'sent' entry cannot be: one of request, fee_waiver_request, appeal, court_filing",
       "code": "STAGE_NOT_OF_DIRECTION"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] is a 'denial' naming no entry it follows: each stage after the request names the entry it answers or follows, so the lifecycle reads as one chain",
+      "message": "entry 0 is a 'denial' that names no entry it follows: each stage after the request names the entry it answers or follows, so the record reads as one chain",
       "code": "FOLLOWS_NO_ENTRY"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1].stage 'request' is not a stage of a 'received' entry: one of acknowledgement, fee_estimate, fee_waiver_decision, extension_notice, production, denial, appeal_decision, court_decision",
+      "message": "entry 1 is marked as the 'request' stage, which a 'received' entry cannot be: one of acknowledgement, fee_estimate, fee_waiver_decision, extension_notice, production, denial, appeal_decision, court_decision",
       "code": "STAGE_NOT_OF_DIRECTION"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2].stage 'request' is not a stage of a 'no_response' entry: a non-response carries no stage, it names what it awaited by follows",
+      "message": "entry 2 is marked as the 'request' stage, which a 'no response' entry cannot be: a non-response has no stage; it names the entry it awaited",
       "code": "STAGE_NOT_OF_DIRECTION"
      }
     ]
@@ -4348,25 +4348,25 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[0].stage 'denial' is not a stage of a 'sent' entry: one of request, fee_waiver_request, appeal, court_filing",
+     "message": "entry 0 is marked as the 'denial' stage, which a 'sent' entry cannot be: one of request, fee_waiver_request, appeal, court_filing",
      "code": "STAGE_NOT_OF_DIRECTION"
     },
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[0] is a 'denial' naming no entry it follows: each stage after the request names the entry it answers or follows, so the lifecycle reads as one chain",
+     "message": "entry 0 is a 'denial' that names no entry it follows: each stage after the request names the entry it answers or follows, so the record reads as one chain",
      "code": "FOLLOWS_NO_ENTRY"
     },
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[1].stage 'request' is not a stage of a 'received' entry: one of acknowledgement, fee_estimate, fee_waiver_decision, extension_notice, production, denial, appeal_decision, court_decision",
+     "message": "entry 1 is marked as the 'request' stage, which a 'received' entry cannot be: one of acknowledgement, fee_estimate, fee_waiver_decision, extension_notice, production, denial, appeal_decision, court_decision",
      "code": "STAGE_NOT_OF_DIRECTION"
     },
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[2].stage 'request' is not a stage of a 'no_response' entry: a non-response carries no stage, it names what it awaited by follows",
+     "message": "entry 2 is marked as the 'request' stage, which a 'no response' entry cannot be: a non-response has no stage; it names the entry it awaited",
      "code": "STAGE_NOT_OF_DIRECTION"
     }
    ],
@@ -4379,23 +4379,23 @@
     [
      {
       "code": "STAGE_NOT_OF_DIRECTION",
-      "message": "correspondence[0].stage 'denial' is not a stage of a 'sent' entry: one of request, fee_waiver_request, appeal, court_filing"
+      "message": "entry 0 is marked as the 'denial' stage, which a 'sent' entry cannot be: one of request, fee_waiver_request, appeal, court_filing"
      },
      {
       "code": "FOLLOWS_NO_ENTRY",
-      "message": "correspondence[0] is a 'denial' naming no entry it follows: each stage after the request names the entry it answers or follows, so the lifecycle reads as one chain"
+      "message": "entry 0 is a 'denial' that names no entry it follows: each stage after the request names the entry it answers or follows, so the record reads as one chain"
      }
     ],
     [
      {
       "code": "STAGE_NOT_OF_DIRECTION",
-      "message": "correspondence[1].stage 'request' is not a stage of a 'received' entry: one of acknowledgement, fee_estimate, fee_waiver_decision, extension_notice, production, denial, appeal_decision, court_decision"
+      "message": "entry 1 is marked as the 'request' stage, which a 'received' entry cannot be: one of acknowledgement, fee_estimate, fee_waiver_decision, extension_notice, production, denial, appeal_decision, court_decision"
      }
     ],
     [
      {
       "code": "STAGE_NOT_OF_DIRECTION",
-      "message": "correspondence[2].stage 'request' is not a stage of a 'no_response' entry: a non-response carries no stage, it names what it awaited by follows"
+      "message": "entry 2 is marked as the 'request' stage, which a 'no response' entry cannot be: a non-response has no stage; it names the entry it awaited"
      }
     ]
    ],
@@ -4502,19 +4502,19 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1] is a 'acknowledgement' naming no entry it follows: each stage after the request names the entry it answers or follows, so the lifecycle reads as one chain",
+      "message": "entry 1 is a 'acknowledgement' that names no entry it follows: each stage after the request names the entry it answers or follows, so the record reads as one chain",
       "code": "FOLLOWS_NO_ENTRY"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2].follows '7' names no earlier entry of this ledger: a stage names the entry it answers or follows by its position, counted from zero",
+      "message": "entry 2 names entry '7', which is not an earlier entry in this record. Each stage names the entry it answers or follows, by its position counted from zero",
       "code": "FOLLOWS_NO_ENTRY"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[3].follows 'x' names no earlier entry of this ledger: a stage names the entry it answers or follows by its position, counted from zero",
+      "message": "entry 3 names entry 'x', which is not an earlier entry in this record. Each stage names the entry it answers or follows, by its position counted from zero",
       "code": "FOLLOWS_NO_ENTRY"
      }
     ],
@@ -4522,19 +4522,19 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1] is a 'acknowledgement' naming no entry it follows: each stage after the request names the entry it answers or follows, so the lifecycle reads as one chain",
+      "message": "entry 1 is a 'acknowledgement' that names no entry it follows: each stage after the request names the entry it answers or follows, so the record reads as one chain",
       "code": "FOLLOWS_NO_ENTRY"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2].follows '7' names no earlier entry of this ledger: a stage names the entry it answers or follows by its position, counted from zero",
+      "message": "entry 2 names entry '7', which is not an earlier entry in this record. Each stage names the entry it answers or follows, by its position counted from zero",
       "code": "FOLLOWS_NO_ENTRY"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[3].follows 'x' names no earlier entry of this ledger: a stage names the entry it answers or follows by its position, counted from zero",
+      "message": "entry 3 names entry 'x', which is not an earlier entry in this record. Each stage names the entry it answers or follows, by its position counted from zero",
       "code": "FOLLOWS_NO_ENTRY"
      }
     ],
@@ -4542,19 +4542,19 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1] is a 'acknowledgement' naming no entry it follows: each stage after the request names the entry it answers or follows, so the lifecycle reads as one chain",
+      "message": "entry 1 is a 'acknowledgement' that names no entry it follows: each stage after the request names the entry it answers or follows, so the record reads as one chain",
       "code": "FOLLOWS_NO_ENTRY"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2].follows '7' names no earlier entry of this ledger: a stage names the entry it answers or follows by its position, counted from zero",
+      "message": "entry 2 names entry '7', which is not an earlier entry in this record. Each stage names the entry it answers or follows, by its position counted from zero",
       "code": "FOLLOWS_NO_ENTRY"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[3].follows 'x' names no earlier entry of this ledger: a stage names the entry it answers or follows by its position, counted from zero",
+      "message": "entry 3 names entry 'x', which is not an earlier entry in this record. Each stage names the entry it answers or follows, by its position counted from zero",
       "code": "FOLLOWS_NO_ENTRY"
      }
     ]
@@ -4564,19 +4564,19 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[1] is a 'acknowledgement' naming no entry it follows: each stage after the request names the entry it answers or follows, so the lifecycle reads as one chain",
+     "message": "entry 1 is a 'acknowledgement' that names no entry it follows: each stage after the request names the entry it answers or follows, so the record reads as one chain",
      "code": "FOLLOWS_NO_ENTRY"
     },
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[2].follows '7' names no earlier entry of this ledger: a stage names the entry it answers or follows by its position, counted from zero",
+     "message": "entry 2 names entry '7', which is not an earlier entry in this record. Each stage names the entry it answers or follows, by its position counted from zero",
      "code": "FOLLOWS_NO_ENTRY"
     },
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[3].follows 'x' names no earlier entry of this ledger: a stage names the entry it answers or follows by its position, counted from zero",
+     "message": "entry 3 names entry 'x', which is not an earlier entry in this record. Each stage names the entry it answers or follows, by its position counted from zero",
      "code": "FOLLOWS_NO_ENTRY"
     }
    ],
@@ -4591,19 +4591,19 @@
     [
      {
       "code": "FOLLOWS_NO_ENTRY",
-      "message": "correspondence[1] is a 'acknowledgement' naming no entry it follows: each stage after the request names the entry it answers or follows, so the lifecycle reads as one chain"
+      "message": "entry 1 is a 'acknowledgement' that names no entry it follows: each stage after the request names the entry it answers or follows, so the record reads as one chain"
      }
     ],
     [
      {
       "code": "FOLLOWS_NO_ENTRY",
-      "message": "correspondence[2].follows '7' names no earlier entry of this ledger: a stage names the entry it answers or follows by its position, counted from zero"
+      "message": "entry 2 names entry '7', which is not an earlier entry in this record. Each stage names the entry it answers or follows, by its position counted from zero"
      }
     ],
     [
      {
       "code": "FOLLOWS_NO_ENTRY",
-      "message": "correspondence[3].follows 'x' names no earlier entry of this ledger: a stage names the entry it answers or follows by its position, counted from zero"
+      "message": "entry 3 names entry 'x', which is not an earlier entry in this record. Each stage names the entry it answers or follows, by its position counted from zero"
      }
     ]
    ],
@@ -4726,7 +4726,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2] is an appeal following entry 1, which is not a decision: an appeal names the decision it appeals, a received entry carrying an outcome",
+      "message": "entry 2 is an appeal of entry 1, which is not a decision: an appeal names the decision it appeals, a received entry with an outcome",
       "code": "APPEAL_NAMES_NO_DECISION"
      }
     ],
@@ -4734,7 +4734,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2] is an appeal following entry 1, which is not a decision: an appeal names the decision it appeals, a received entry carrying an outcome",
+      "message": "entry 2 is an appeal of entry 1, which is not a decision: an appeal names the decision it appeals, a received entry with an outcome",
       "code": "APPEAL_NAMES_NO_DECISION"
      }
     ],
@@ -4742,7 +4742,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2] is an appeal following entry 1, which is not a decision: an appeal names the decision it appeals, a received entry carrying an outcome",
+      "message": "entry 2 is an appeal of entry 1, which is not a decision: an appeal names the decision it appeals, a received entry with an outcome",
       "code": "APPEAL_NAMES_NO_DECISION"
      }
     ]
@@ -4752,7 +4752,7 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[2] is an appeal following entry 1, which is not a decision: an appeal names the decision it appeals, a received entry carrying an outcome",
+     "message": "entry 2 is an appeal of entry 1, which is not a decision: an appeal names the decision it appeals, a received entry with an outcome",
      "code": "APPEAL_NAMES_NO_DECISION"
     }
    ],
@@ -4767,7 +4767,7 @@
     [
      {
       "code": "APPEAL_NAMES_NO_DECISION",
-      "message": "correspondence[2] is an appeal following entry 1, which is not a decision: an appeal names the decision it appeals, a received entry carrying an outcome"
+      "message": "entry 2 is an appeal of entry 1, which is not a decision: an appeal names the decision it appeals, a received entry with an outcome"
      }
     ]
    ],
@@ -4876,25 +4876,25 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] carries an outcome on a 'sent' entry: an outcome is what the body decided and sent back, so it rides a received entry",
+      "message": "entry 0 carries an outcome but is marked 'sent': an outcome is what the body decided and sent back, so it belongs on a received entry",
       "code": "OUTCOME_NOT_ON_RECEIVED"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1].outcome 'maybe' is not one of: granted, denied, partial, reversed, affirmed, none_stated",
+      "message": "entry 1's outcome 'maybe' is not one of: granted, denied, partial, reversed, affirmed, none stated, none exists",
       "code": "OUTCOME_NOT_IN_VOCABULARY"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2] carries exemptions on a 'sent' entry: the exemptions are the ones the body cited, so they ride a received entry",
+      "message": "entry 2 carries exemptions but is marked 'sent': the exemptions are the ones the body cited, so they belong on a received entry",
       "code": "OUTCOME_NOT_ON_RECEIVED"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[3] is a 'fee_waiver_decision' with no outcome: a decision carries its outcome as the body gave it, and none_stated when it gave none",
+      "message": "entry 3 is a 'fee_waiver_decision' with no outcome: a decision carries the outcome the body gave, and 'none stated' when it gave none",
       "code": "DECISION_WITHOUT_OUTCOME"
      }
     ],
@@ -4902,25 +4902,25 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] carries an outcome on a 'sent' entry: an outcome is what the body decided and sent back, so it rides a received entry",
+      "message": "entry 0 carries an outcome but is marked 'sent': an outcome is what the body decided and sent back, so it belongs on a received entry",
       "code": "OUTCOME_NOT_ON_RECEIVED"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1].outcome 'maybe' is not one of: granted, denied, partial, reversed, affirmed, none_stated",
+      "message": "entry 1's outcome 'maybe' is not one of: granted, denied, partial, reversed, affirmed, none stated, none exists",
       "code": "OUTCOME_NOT_IN_VOCABULARY"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2] carries exemptions on a 'sent' entry: the exemptions are the ones the body cited, so they ride a received entry",
+      "message": "entry 2 carries exemptions but is marked 'sent': the exemptions are the ones the body cited, so they belong on a received entry",
       "code": "OUTCOME_NOT_ON_RECEIVED"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[3] is a 'fee_waiver_decision' with no outcome: a decision carries its outcome as the body gave it, and none_stated when it gave none",
+      "message": "entry 3 is a 'fee_waiver_decision' with no outcome: a decision carries the outcome the body gave, and 'none stated' when it gave none",
       "code": "DECISION_WITHOUT_OUTCOME"
      }
     ],
@@ -4928,25 +4928,25 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] carries an outcome on a 'sent' entry: an outcome is what the body decided and sent back, so it rides a received entry",
+      "message": "entry 0 carries an outcome but is marked 'sent': an outcome is what the body decided and sent back, so it belongs on a received entry",
       "code": "OUTCOME_NOT_ON_RECEIVED"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1].outcome 'maybe' is not one of: granted, denied, partial, reversed, affirmed, none_stated",
+      "message": "entry 1's outcome 'maybe' is not one of: granted, denied, partial, reversed, affirmed, none stated, none exists",
       "code": "OUTCOME_NOT_IN_VOCABULARY"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2] carries exemptions on a 'sent' entry: the exemptions are the ones the body cited, so they ride a received entry",
+      "message": "entry 2 carries exemptions but is marked 'sent': the exemptions are the ones the body cited, so they belong on a received entry",
       "code": "OUTCOME_NOT_ON_RECEIVED"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[3] is a 'fee_waiver_decision' with no outcome: a decision carries its outcome as the body gave it, and none_stated when it gave none",
+      "message": "entry 3 is a 'fee_waiver_decision' with no outcome: a decision carries the outcome the body gave, and 'none stated' when it gave none",
       "code": "DECISION_WITHOUT_OUTCOME"
      }
     ]
@@ -4956,25 +4956,25 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[0] carries an outcome on a 'sent' entry: an outcome is what the body decided and sent back, so it rides a received entry",
+     "message": "entry 0 carries an outcome but is marked 'sent': an outcome is what the body decided and sent back, so it belongs on a received entry",
      "code": "OUTCOME_NOT_ON_RECEIVED"
     },
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[1].outcome 'maybe' is not one of: granted, denied, partial, reversed, affirmed, none_stated",
+     "message": "entry 1's outcome 'maybe' is not one of: granted, denied, partial, reversed, affirmed, none stated, none exists",
      "code": "OUTCOME_NOT_IN_VOCABULARY"
     },
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[2] carries exemptions on a 'sent' entry: the exemptions are the ones the body cited, so they ride a received entry",
+     "message": "entry 2 carries exemptions but is marked 'sent': the exemptions are the ones the body cited, so they belong on a received entry",
      "code": "OUTCOME_NOT_ON_RECEIVED"
     },
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[3] is a 'fee_waiver_decision' with no outcome: a decision carries its outcome as the body gave it, and none_stated when it gave none",
+     "message": "entry 3 is a 'fee_waiver_decision' with no outcome: a decision carries the outcome the body gave, and 'none stated' when it gave none",
      "code": "DECISION_WITHOUT_OUTCOME"
     }
    ],
@@ -4989,25 +4989,25 @@
     [
      {
       "code": "OUTCOME_NOT_ON_RECEIVED",
-      "message": "correspondence[0] carries an outcome on a 'sent' entry: an outcome is what the body decided and sent back, so it rides a received entry"
+      "message": "entry 0 carries an outcome but is marked 'sent': an outcome is what the body decided and sent back, so it belongs on a received entry"
      }
     ],
     [
      {
       "code": "OUTCOME_NOT_IN_VOCABULARY",
-      "message": "correspondence[1].outcome 'maybe' is not one of: granted, denied, partial, reversed, affirmed, none_stated"
+      "message": "entry 1's outcome 'maybe' is not one of: granted, denied, partial, reversed, affirmed, none stated, none exists"
      }
     ],
     [
      {
       "code": "OUTCOME_NOT_ON_RECEIVED",
-      "message": "correspondence[2] carries exemptions on a 'sent' entry: the exemptions are the ones the body cited, so they ride a received entry"
+      "message": "entry 2 carries exemptions but is marked 'sent': the exemptions are the ones the body cited, so they belong on a received entry"
      }
     ],
     [
      {
       "code": "DECISION_WITHOUT_OUTCOME",
-      "message": "correspondence[3] is a 'fee_waiver_decision' with no outcome: a decision carries its outcome as the body gave it, and none_stated when it gave none"
+      "message": "entry 3 is a 'fee_waiver_decision' with no outcome: a decision carries the outcome the body gave, and 'none stated' when it gave none"
      }
     ],
     []
@@ -5150,7 +5150,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1] is a fee_estimate carrying no quote: a fee estimate IS D-148's quote, the amount and currency as quoted",
+      "message": "entry 1 is a fee estimate with no quote: a fee estimate is a quote, the amount and currency as quoted",
       "code": "FEE_ESTIMATE_WITHOUT_QUOTE"
      }
     ],
@@ -5158,7 +5158,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1] is a fee_estimate carrying no quote: a fee estimate IS D-148's quote, the amount and currency as quoted",
+      "message": "entry 1 is a fee estimate with no quote: a fee estimate is a quote, the amount and currency as quoted",
       "code": "FEE_ESTIMATE_WITHOUT_QUOTE"
      }
     ],
@@ -5166,7 +5166,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1] is a fee_estimate carrying no quote: a fee estimate IS D-148's quote, the amount and currency as quoted",
+      "message": "entry 1 is a fee estimate with no quote: a fee estimate is a quote, the amount and currency as quoted",
       "code": "FEE_ESTIMATE_WITHOUT_QUOTE"
      }
     ]
@@ -5176,7 +5176,7 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[1] is a fee_estimate carrying no quote: a fee estimate IS D-148's quote, the amount and currency as quoted",
+     "message": "entry 1 is a fee estimate with no quote: a fee estimate is a quote, the amount and currency as quoted",
      "code": "FEE_ESTIMATE_WITHOUT_QUOTE"
     }
    ],
@@ -5190,7 +5190,7 @@
     [
      {
       "code": "FEE_ESTIMATE_WITHOUT_QUOTE",
-      "message": "correspondence[1] is a fee_estimate carrying no quote: a fee estimate IS D-148's quote, the amount and currency as quoted"
+      "message": "entry 1 is a fee estimate with no quote: a fee estimate is a quote, the amount and currency as quoted"
      }
     ],
     []
@@ -5304,19 +5304,19 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] states a due date with no citation: a due date is stated with the citation it comes from, one of the action's governing laws, or not at all",
+      "message": "entry 0 gives a due date with no citation: a due date is stated with the citation it comes from, one of the action's governing laws, or not at all",
       "code": "DUE_HALF_STATED"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1] states a citation with no due date: a due date is stated with the citation it comes from, one of the action's governing laws, or not at all",
+      "message": "entry 1 gives a citation with no due date: a due date is stated with the citation it comes from, one of the action's governing laws, or not at all",
       "code": "DUE_HALF_STATED"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2].due_by 'soon' is not a date (YYYY-MM-DD)",
+      "message": "entry 2's due date 'soon' is not a date in the form year-month-day",
       "code": "DUE_NOT_A_DATE"
      }
     ],
@@ -5324,19 +5324,19 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] states a due date with no citation: a due date is stated with the citation it comes from, one of the action's governing laws, or not at all",
+      "message": "entry 0 gives a due date with no citation: a due date is stated with the citation it comes from, one of the action's governing laws, or not at all",
       "code": "DUE_HALF_STATED"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1] states a citation with no due date: a due date is stated with the citation it comes from, one of the action's governing laws, or not at all",
+      "message": "entry 1 gives a citation with no due date: a due date is stated with the citation it comes from, one of the action's governing laws, or not at all",
       "code": "DUE_HALF_STATED"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2].due_by 'soon' is not a date (YYYY-MM-DD)",
+      "message": "entry 2's due date 'soon' is not a date in the form year-month-day",
       "code": "DUE_NOT_A_DATE"
      }
     ],
@@ -5344,19 +5344,19 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] states a due date with no citation: a due date is stated with the citation it comes from, one of the action's governing laws, or not at all",
+      "message": "entry 0 gives a due date with no citation: a due date is stated with the citation it comes from, one of the action's governing laws, or not at all",
       "code": "DUE_HALF_STATED"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[1] states a citation with no due date: a due date is stated with the citation it comes from, one of the action's governing laws, or not at all",
+      "message": "entry 1 gives a citation with no due date: a due date is stated with the citation it comes from, one of the action's governing laws, or not at all",
       "code": "DUE_HALF_STATED"
      },
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[2].due_by 'soon' is not a date (YYYY-MM-DD)",
+      "message": "entry 2's due date 'soon' is not a date in the form year-month-day",
       "code": "DUE_NOT_A_DATE"
      }
     ]
@@ -5366,19 +5366,19 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[0] states a due date with no citation: a due date is stated with the citation it comes from, one of the action's governing laws, or not at all",
+     "message": "entry 0 gives a due date with no citation: a due date is stated with the citation it comes from, one of the action's governing laws, or not at all",
      "code": "DUE_HALF_STATED"
     },
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[1] states a citation with no due date: a due date is stated with the citation it comes from, one of the action's governing laws, or not at all",
+     "message": "entry 1 gives a citation with no due date: a due date is stated with the citation it comes from, one of the action's governing laws, or not at all",
      "code": "DUE_HALF_STATED"
     },
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[2].due_by 'soon' is not a date (YYYY-MM-DD)",
+     "message": "entry 2's due date 'soon' is not a date in the form year-month-day",
      "code": "DUE_NOT_A_DATE"
     }
    ],
@@ -5391,19 +5391,19 @@
     [
      {
       "code": "DUE_HALF_STATED",
-      "message": "correspondence[0] states a due date with no citation: a due date is stated with the citation it comes from, one of the action's governing laws, or not at all"
+      "message": "entry 0 gives a due date with no citation: a due date is stated with the citation it comes from, one of the action's governing laws, or not at all"
      }
     ],
     [
      {
       "code": "DUE_HALF_STATED",
-      "message": "correspondence[1] states a citation with no due date: a due date is stated with the citation it comes from, one of the action's governing laws, or not at all"
+      "message": "entry 1 gives a citation with no due date: a due date is stated with the citation it comes from, one of the action's governing laws, or not at all"
      }
     ],
     [
      {
       "code": "DUE_NOT_A_DATE",
-      "message": "correspondence[2].due_by 'soon' is not a date (YYYY-MM-DD)"
+      "message": "entry 2's due date 'soon' is not a date in the form year-month-day"
      }
     ]
    ],
@@ -14683,7 +14683,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "action_basis[1].target 'ACTN-2026-0005-earlier' is an ACTION: an action does not rest on our own action. Evidence for what we did is evidence somebody else produced (DEC-14)",
+      "message": "basis leg 1 points at 'ACTN-2026-0005-earlier', which is an action. An action does not rest on our own action: evidence for what we did is evidence somebody else produced",
       "repairable": true,
       "repairs": [
        "point the leg at the finding or the question, not at another action"
@@ -14694,7 +14694,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "action_basis[1].target 'ACTN-2026-0005-earlier' is an ACTION: an action does not rest on our own action. Evidence for what we did is evidence somebody else produced (DEC-14)",
+      "message": "basis leg 1 points at 'ACTN-2026-0005-earlier', which is an action. An action does not rest on our own action: evidence for what we did is evidence somebody else produced",
       "repairable": true,
       "repairs": [
        "point the leg at the finding or the question, not at another action"
@@ -14705,7 +14705,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "action_basis[1].target 'ACTN-2026-0005-earlier' is an ACTION: an action does not rest on our own action. Evidence for what we did is evidence somebody else produced (DEC-14)",
+      "message": "basis leg 1 points at 'ACTN-2026-0005-earlier', which is an action. An action does not rest on our own action: evidence for what we did is evidence somebody else produced",
       "repairable": true,
       "repairs": [
        "point the leg at the finding or the question, not at another action"
@@ -14717,7 +14717,7 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "action_basis[1].target 'ACTN-2026-0005-earlier' is an ACTION: an action does not rest on our own action. Evidence for what we did is evidence somebody else produced (DEC-14)",
+     "message": "basis leg 1 points at 'ACTN-2026-0005-earlier', which is an action. An action does not rest on our own action: evidence for what we did is evidence somebody else produced",
      "repairable": true,
      "repairs": [
       "point the leg at the finding or the question, not at another action"

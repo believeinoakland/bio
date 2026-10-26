@@ -29,6 +29,8 @@ function f(check, severity, message, repairs, code) {
   if (code) out.code = code;
   return out;
 }
+/** A direction as a person reads it: the code `no_response` is written "no response". */
+function plainDirection(d) { return d === 'no_response' ? 'no response' : String(d); }
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 /** T45 (K2845, K2849 (5)): a success record's id as `consequences` mints it, `SUC-<year>-<4 digits>`, which a `rests_on`
  *  leg may name until record-grammar registers the prefix (N911). */
@@ -143,10 +145,11 @@ export const RFC_RESPONSE_WINDOW_PRECEDENT = {
  *  project asserting a deadline nobody agreed to. */
 export function actionBasisFindings(fm, findings) {
   const legs = Array.isArray(fm?.action_basis) ? fm.action_basis : [];
-  const REPAIRS = ['point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)'];
+  const REPAIRS = [localize('action-grammar.grammar.point_the_leg_at_the_finding_it', 'point the leg at the finding it rests on, or at the question it advances')];
   legs.forEach((l, i) => {
     if (!l || typeof l !== 'object' || Array.isArray(l)) {
-      findings.push(f('C-2.10', 'error', `action_basis[${i}] is not a leg block of {target, kind}`, REPAIRS));
+      findings.push(f('C-2.10', 'error',
+        localize('action-grammar.grammar.basis_leg_i_is_not_a', 'basis leg {i} is not a complete entry: it must name a record, and say whether the action rests on it or advances a question', { i: String(i) }), REPAIRS));
       return;
     }
     /* MK-4 / C-54.1: an action resting on a LEAD rests on nothing found. */
@@ -161,15 +164,15 @@ export function actionBasisFindings(fm, findings) {
     if (success) { /* a success record: no canonical-id finding */ }
     else if (!BUNDLE_ID_RE.test(target)) {
       findings.push(f('C-2.10', 'error',
-        localize('action-grammar.grammar.action_basis_i_target_string_is', "action_basis[{i}].target '{String}' is not a canonical record id", { i: String(i), String: String(l.target).slice(0, 40) }), REPAIRS));
+        localize('action-grammar.grammar.basis_leg_i_names_string_which', "basis leg {i} names '{String}', which is not a valid record id", { i: String(i), String: String(l.target).slice(0, 40) }), REPAIRS));
     } else if (OBJECT_TYPES[target.split('-')[0]] === 'action') {
       findings.push(f('C-2.10', 'error',
-        localize('action-grammar.grammar.action_basis_i_target_target', 'action_basis[{i}].target \'{target}\' is an ACTION: an action does not rest on our own action. Evidence for what we did is evidence somebody else produced (DEC-14)', { i: String(i), target: String(target) }),
-        ['point the leg at the finding or the question, not at another action']));
+        localize('action-grammar.grammar.basis_leg_i_points_at_an_action', "basis leg {i} points at '{target}', which is an action. An action does not rest on our own action: evidence for what we did is evidence somebody else produced", { i: String(i), target: String(target) }),
+        [localize('action-grammar.grammar.point_the_leg_at_the_finding_or', 'point the leg at the finding or the question, not at another action')]));
     }
     if (!ACTION_BASIS_KINDS.includes(l.kind)) {
       findings.push(f('C-2.10', 'error',
-        `action_basis[${i}].kind '${l.kind}' is not one of: ${ACTION_BASIS_KINDS.join(', ')}`, REPAIRS));
+        localize('action-grammar.grammar.basis_leg_i_must_say', "basis leg {i} must say whether the action rests on a finding or advances a question, not '{String}'", { i: String(i), String: String(l.kind).slice(0, 40) }), REPAIRS));
     }
   });
 
@@ -179,16 +182,14 @@ export function actionBasisFindings(fm, findings) {
       && OBJECT_TYPES[l.target.split('-')[0]] === 'inquiry');
     if (!disclosed.length) {
       findings.push(f('C-2.10', 'error',
-        'a request_for_comment names ZERO inquiries: it must name the SPECIFIC questions it put to the subject, '
-        + 'as action_basis legs of kind advances. "We contacted them" and "we put these four claims to them" are '
-        + 'different facts, and a comment request without specifics gives the subject nothing to answer (DEC-13)',
-        ['add an action_basis leg with kind: advances for each inquiry disclosed in the request']));
+        localize('action-grammar.grammar.a_request_for_comment_must_name', "A request for comment must name the specific questions it puts to the subject: add each one under 'Advances', chosen from your team's record. A comment request without specifics gives the subject nothing to answer."),
+        [localize('action-grammar.grammar.choose_each_question_the_request', "choose each question the request puts to the subject, and mark it 'Advances'")]));
     }
     const clock = Array.isArray(fm.clock) ? fm.clock : [];
     if (!clock.length) {
       findings.push(f('C-2.10', 'error',
-        localize('action-grammar.grammar.a_request_for_comment_states', 'a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the team; {source} is the precedent to reason from and is not a constant this record enforces (DEC-13)', { source: String(RFC_RESPONSE_WINDOW_PRECEDENT.source) }),
-        ['add a clock[] entry: the date the response was due, and the basis it derives from']));
+        localize('action-grammar.grammar.request_for_comment_states_window', 'a request for comment states the response window it gave, as a dated entry with its own basis. The team sets the window; {source} is the precedent to reason from, and nothing here enforces it', { source: String(RFC_RESPONSE_WINDOW_PRECEDENT.source) }),
+        [localize('action-grammar.grammar.add_a_response_date', 'add a response date: the date the response was due, and the basis it comes from')]));
     }
   }
 }
@@ -222,47 +223,44 @@ export function correspondenceFindings(fm, findings) {
   const entries = Array.isArray(fm?.correspondence) ? fm.correspondence : [];
   entries.forEach((e, i) => {
     if (!e || typeof e !== 'object' || Array.isArray(e)) {
-      findings.push(f('C-2.10', 'error', `correspondence[${i}] is not an entry block`));
+      findings.push(f('C-2.10', 'error', localize('action-grammar.grammar.correspondence_i_is_not_an', 'entry {i} of the correspondence is not a complete entry', { i: String(i) })));
       return;
     }
     if (!CORRESPONDENCE_DIRECTIONS.includes(e.direction)) {
       findings.push(f('C-2.10', 'error',
-        `correspondence[${i}].direction '${e.direction}' is not one of: ${CORRESPONDENCE_DIRECTIONS.join(', ')}`,
-        ['record a non-response as direction: no_response with the date it was due (DEC-13)']));
+        localize('action-grammar.grammar.correspondence_i_direction_is_not', "entry {i} is marked '{String}', but it must be sent, received, or no response", { i: String(i), String: String(e.direction).slice(0, 40) }),
+        [localize('action-grammar.grammar.record_a_non_response_as_direction', 'record a non-response as a no response entry, dated by when the reply was due')]));
     }
     if (!DATE_RE.test(String(e.at ?? '').slice(0, 10))) {
       findings.push(f('C-2.10', 'error',
-        `correspondence[${i}].at '${String(e.at).slice(0, 40)}' is not a date: an entry in this ledger is `
-        + 'dated, including a non-response, which is dated by when the reply was due'));
+        localize('action-grammar.grammar.correspondence_i_at_string_is_not', "entry {i}'s date '{String}' is not a date. Every entry is dated, including a non-response, which is dated by when the reply was due", { i: String(i), String: String(e.at).slice(0, 40) })));
     }
     const sha = typeof e.artifact_sha === 'string' ? e.artifact_sha.trim() : '';
     const account = typeof e.account === 'string' ? e.account.trim() : '';
     const author = typeof e.author === 'string' ? e.author.trim() : '';
     const CHOICE = [
-      'capture the artifact and record its sha256 (op=capture), or',
-      'record a named account: account with the member who is testifying to it',
+      localize('action-grammar.grammar.choice_capture', 'keep the document itself, so its exact bytes can be produced later, or'),
+      localize('action-grammar.grammar.choice_testify', 'name the member who is testifying that the exchange happened'),
     ];
     if (sha && account) {
       findings.push(f('C-2.10', 'error',
-        localize('action-grammar.grammar.correspondence_i_carries_both_an', 'correspondence[{i}] carries BOTH an artifact_sha and an account: what came back is CAPTURED, not summarised (DEC-13). The bytes are what the team can defend; a paraphrase beside them is what a reader would quote instead', { i: String(i) }), CHOICE));
+        localize('action-grammar.grammar.entry_carries_both_a_kept', "entry {i} carries both a kept document and a named account. What came back is kept as it arrived, not summarised. The document is what the team can defend; a paraphrase beside it is what a reader would quote instead", { i: String(i) }), CHOICE));
     } else if (!sha && !account) {
       findings.push(f('C-2.10', 'error',
-        `correspondence[${i}] carries NEITHER an artifact_sha nor an account: it asserts an exchange and `
-        + 'offers no way to check that it happened', CHOICE));
+        localize('action-grammar.grammar.correspondence_i_carries_neither', 'entry {i} carries neither a kept document nor a named account: it claims an exchange and gives no way to check that it happened', { i: String(i) }), CHOICE));
     } else if (sha) {
       if (!CONTENT_HASH_RE.test(sha) && !/^[0-9a-f]{64}$/i.test(sha)) {
         findings.push(f('C-2.10', 'error',
-          `correspondence[${i}].artifact_sha '${sha.slice(0, 24)}' is not a sha256 hash`));
+          localize('action-grammar.grammar.correspondence_i_artifact_sha_string_is', "entry {i}'s kept document has the fingerprint '{String}', which is not a sha256 hash", { i: String(i), String: sha.slice(0, 24) })));
       }
       if (e.direction === 'no_response') {
         findings.push(f('C-2.10', 'error',
-          localize('action-grammar.grammar.correspondence_i_is_a_no', 'correspondence[{i}] is a no_response carrying an artifact_sha: nothing arrived, so there are no bytes to hash. A non-response is recorded as a named account with its date (DEC-13)', { i: String(i) }),
-          ['record the non-response as an account: what was due, when, and that nothing came']));
+          localize('action-grammar.grammar.non_response_carries_a_kept', 'entry {i} is a no response but carries a kept document. Nothing arrived, so there is nothing to keep. A non-response is recorded as a named account with its date', { i: String(i) }),
+          [localize('action-grammar.grammar.record_the_non_response_as_an', 'record the non-response as a named account: what was due, when, and that nothing came')]));
       }
     } else if (!author) {
       findings.push(f('C-2.10', 'error',
-        `correspondence[${i}] carries an account with no author: testimony is somebody's, and an unattributed `
-        + 'account is a claim nobody stands behind'));
+        localize('action-grammar.grammar.correspondence_i_carries_an_account', "entry {i} names an account with no member standing behind it: testimony is somebody's, and an unattributed account is a claim nobody stands behind", { i: String(i) })));
     }
     /* D-148: the QUOTE arm, one rule shared with op=actioncorrespond (quoteFindings below). */
     for (const q of quoteFindings(entries, i)) findings.push(f('C-2.10', 'error', q.message, null, q.code));
@@ -320,20 +318,17 @@ export function quoteFindings(entries, i) {
   if (!isQuoteEntry(e)) return out;
   if (e.direction !== 'received') {
     out.push({ code: 'QUOTE_NOT_ON_RECEIVED', message:
-      `correspondence[${i}] carries a quote on a '${e.direction}' entry: a quote is what a body SENT BACK, so it `
-      + 'rides a received entry (D-148)' });
+      localize('action-grammar.grammar.quote_i_is_on_a_sent', "entry {i} carries a quote, but it is marked '{String}'. A quote is what a body sent back, so it belongs on a received entry", { i: String(i), String: plainDirection(e.direction) }) });
     return out;
   }
   if (quoteValue(e.quote_amount) === null) {
     out.push({ code: 'QUOTE_AMOUNT_NOT_A_NUMBER', message:
-      `correspondence[${i}].quote_amount '${String(e.quote_amount ?? '').slice(0, 40)}' is not a number: the `
-      + 'amount is recorded as quoted, and a quote whose amount cannot be read as one cannot be set beside another' });
+      localize('action-grammar.grammar.quote_i_amount_string_is', "entry {i}'s quoted amount '{String}' is not a number: the amount is kept as quoted, and an amount that cannot be read as a number cannot be set beside another", { i: String(i), String: String(e.quote_amount ?? '').slice(0, 40) }) });
   }
   const cur = e.quote_currency === null || e.quote_currency === undefined ? '' : String(e.quote_currency).trim();
   if (!cur) {
     out.push({ code: 'QUOTE_NO_CURRENCY', message:
-      `correspondence[${i}] carries a quote with no quote_currency: the currency is recorded as quoted and is `
-      + 'never inferred' });
+      localize('action-grammar.grammar.quote_i_carries_a_quote_with', 'entry {i} carries a quote with no currency: the currency is kept as quoted and is never inferred', { i: String(i) }) });
   }
   const ordOf = (v) => (v === null || v === undefined || !ORD_RE.test(String(v).trim()))
     ? null : Number(String(v).trim());
@@ -341,16 +336,14 @@ export function quoteFindings(entries, i) {
   const sent = a !== null && a < i ? entries[a] : null;
   if (!sent || typeof sent !== 'object' || sent.direction !== 'sent') {
     out.push({ code: 'QUOTE_ANSWERS_NO_SENT', message:
-      `correspondence[${i}].quote_answers '${String(e.quote_answers ?? '').slice(0, 20)}' names no earlier sent `
-      + 'entry: a quote answers a request this ledger holds, and the request\'s own text is its scope' });
+      localize('action-grammar.grammar.quote_i_answers_string_which', "entry {i} answers entry '{String}', which is not an earlier sent entry: a quote answers a request this record holds, and the request's own text is its scope", { i: String(i), String: String(e.quote_answers ?? '').slice(0, 20) }) });
   }
   if (e.quote_revises !== undefined && e.quote_revises !== null && e.quote_revises !== '') {
     const r = ordOf(e.quote_revises);
     const prior = r !== null && r < i ? entries[r] : null;
     if (!prior || typeof prior !== 'object' || prior.direction !== 'received' || !isQuoteEntry(prior)) {
       out.push({ code: 'QUOTE_REVISES_NO_QUOTE', message:
-        `correspondence[${i}].quote_revises '${String(e.quote_revises).slice(0, 20)}' names no earlier quote: a `
-        + 'revision names the quote it revises, and both entries stand' });
+        localize('action-grammar.grammar.quote_i_revises_string_which', 'entry {i} revises entry \'{String}\', which is not an earlier quote: a revision names the quote it revises, and both entries stand', { i: String(i), String: String(e.quote_revises).slice(0, 20) }) });
     }
   }
   return out;
@@ -412,7 +405,7 @@ export function lifecycleFindings(entries, i) {
     const legal = CORRESPONDENCE_STAGES[e.direction] || [];
     if (!legal.includes(stage)) {
       out.push({ code: 'STAGE_NOT_OF_DIRECTION', message:
-        localize('action-grammar.grammar.correspondence_i_stage_stage_is', 'correspondence[{i}].stage \'{stage}\' is not a stage of a \'{direction}\' entry: {v1}', { i: String(i), stage: String(stage.slice(0, 40)), direction: String(e.direction), v1: String(legal.length ? `one of ${legal.join(', ')}` : 'a non-response carries no stage, it names what it awaited by follows') }) });
+        localize('action-grammar.grammar.entry_stage_is_not_one', 'entry {i} is marked as the \'{stage}\' stage, which a \'{direction}\' entry cannot be: {v1}', { i: String(i), stage: String(stage.slice(0, 40)), direction: plainDirection(e.direction), v1: String(legal.length ? `one of ${legal.join(', ')}` : localize('action-grammar.grammar.a_non_response_has_no', 'a non-response has no stage; it names the entry it awaited')) }) });
     }
   }
   let prior = null;
@@ -421,53 +414,45 @@ export function lifecycleFindings(entries, i) {
     prior = n !== null && n < i ? entries[n] : null;
     if (!prior || typeof prior !== 'object') {
       out.push({ code: 'FOLLOWS_NO_ENTRY', message:
-        `correspondence[${i}].follows '${follows.slice(0, 20)}' names no earlier entry of this ledger: a stage `
-        + 'names the entry it answers or follows by its position, counted from zero' });
+        localize('action-grammar.grammar.correspondence_i_follows_string_names', "entry {i} names entry '{follows}', which is not an earlier entry in this record. Each stage names the entry it answers or follows, by its position counted from zero", { i: String(i), follows: String(follows.slice(0, 20)) }) });
       prior = null;
     }
   } else if (stage && stage !== 'request') {
     out.push({ code: 'FOLLOWS_NO_ENTRY', message:
-      `correspondence[${i}] is a '${stage}' naming no entry it follows: each stage after the request names the `
-      + 'entry it answers or follows, so the lifecycle reads as one chain' });
+      localize('action-grammar.grammar.correspondence_i_is_a_naming', "entry {i} is a '{stage}' that names no entry it follows: each stage after the request names the entry it answers or follows, so the record reads as one chain", { i: String(i), stage: String(stage) }) });
   }
   if (stage === 'appeal' && follows && prior
       && !(prior.direction === 'received' && str(prior.outcome))) {
     out.push({ code: 'APPEAL_NAMES_NO_DECISION', message:
-      `correspondence[${i}] is an appeal following entry ${follows}, which is not a decision: an appeal names the `
-      + 'decision it appeals, a received entry carrying an outcome' });
+      localize('action-grammar.grammar.correspondence_i_is_an_appeal', 'entry {i} is an appeal of entry {follows}, which is not a decision: an appeal names the decision it appeals, a received entry with an outcome', { i: String(i), follows: String(follows) }) });
   }
   if (outcome) {
     if (e.direction !== 'received') {
       out.push({ code: 'OUTCOME_NOT_ON_RECEIVED', message:
-        `correspondence[${i}] carries an outcome on a '${e.direction}' entry: an outcome is what the body decided `
-        + 'and sent back, so it rides a received entry' });
+        localize('action-grammar.grammar.correspondence_i_carries_an_outcome', "entry {i} carries an outcome but is marked '{String}': an outcome is what the body decided and sent back, so it belongs on a received entry", { i: String(i), String: plainDirection(e.direction) }) });
     } else if (!CORRESPONDENCE_OUTCOMES.includes(outcome)) {
       out.push({ code: 'OUTCOME_NOT_IN_VOCABULARY', message:
-        `correspondence[${i}].outcome '${outcome.slice(0, 40)}' is not one of: ${CORRESPONDENCE_OUTCOMES.join(', ')}` });
+        localize('action-grammar.grammar.correspondence_i_outcome_string_is', "entry {i}'s outcome '{String}' is not one of: granted, denied, partial, reversed, affirmed, none stated, none exists", { i: String(i), String: String(outcome.slice(0, 40)) }) });
     }
   } else if (DECISION_STAGES.includes(stage) && e.direction === 'received') {
     out.push({ code: 'DECISION_WITHOUT_OUTCOME', message:
-      `correspondence[${i}] is a '${stage}' with no outcome: a decision carries its outcome as the body gave it, `
-      + 'and none_stated when it gave none' });
+      localize('action-grammar.grammar.correspondence_i_is_a_with', "entry {i} is a '{stage}' with no outcome: a decision carries the outcome the body gave, and 'none stated' when it gave none", { i: String(i), stage: String(stage) }) });
   }
   if (exemptions && e.direction !== 'received') {
     out.push({ code: 'OUTCOME_NOT_ON_RECEIVED', message:
-      `correspondence[${i}] carries exemptions on a '${e.direction}' entry: the exemptions are the ones the body `
-      + 'cited, so they ride a received entry' });
+      localize('action-grammar.grammar.correspondence_i_carries_exemptions', "entry {i} carries exemptions but is marked '{String}': the exemptions are the ones the body cited, so they belong on a received entry", { i: String(i), String: plainDirection(e.direction) }) });
   }
   if (stage === 'fee_estimate' && e.direction === 'received' && !isQuoteEntry(e)) {
     out.push({ code: 'FEE_ESTIMATE_WITHOUT_QUOTE', message:
-      `correspondence[${i}] is a fee_estimate carrying no quote: a fee estimate IS D-148's quote, the amount and `
-      + 'currency as quoted' });
+      localize('action-grammar.grammar.correspondence_i_is_a_fee', 'entry {i} is a fee estimate with no quote: a fee estimate is a quote, the amount and currency as quoted', { i: String(i) }) });
   }
   if (!!dueBy !== !!dueCite) {
-    out.push({ code: 'DUE_HALF_STATED', message:
-      `correspondence[${i}] states ${dueBy ? 'a due date with no citation' : 'a citation with no due date'}: a `
-      + 'due date is stated with the citation it comes from, one of the action\'s governing laws, or not at all' });
+    out.push({ code: 'DUE_HALF_STATED', message: dueBy
+      ? localize('action-grammar.grammar.correspondence_i_states_a_due', "entry {i} gives a due date with no citation: a due date is stated with the citation it comes from, one of the action's governing laws, or not at all", { i: String(i) })
+      : localize('action-grammar.grammar.correspondence_i_states_a_citation', "entry {i} gives a citation with no due date: a due date is stated with the citation it comes from, one of the action's governing laws, or not at all", { i: String(i) }) });
   } else if (dueBy && !/^\d{4}-\d{2}-\d{2}$/.test(dueBy)) {
     out.push({ code: 'DUE_NOT_A_DATE', message:
-      `correspondence[${i}].due_by '${dueBy.slice(0, 40)}' is not a date (YYYY-MM-DD)` });
+      localize('action-grammar.grammar.correspondence_i_due_by_string_is', "entry {i}'s due date '{String}' is not a date in the form year-month-day", { i: String(i), String: String(dueBy.slice(0, 40)) }) });
   }
   return out;
 }
-

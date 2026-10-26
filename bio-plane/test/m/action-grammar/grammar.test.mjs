@@ -145,7 +145,7 @@ test("R6: actionBasisFindings and correspondenceFindings answer, for every docum
 test("R6 by hand (DEC-13): a request_for_comment names an inquiry it advances and states a window as a clock entry; a rests_on leg or an advances leg onto a non-inquiry is not a disclosure; the window's length is never compared; another kind is not asked", () => {
   const msgs = (id) => pushed((f) => AG.actionBasisFindings(DOCS[id], f)).findings.map((x) => x.message);
   assert.deepEqual(msgs("rfc-clean"), []);
-  assert.equal(msgs("rfc-no-inquiry").filter((m) => /names ZERO inquiries/.test(m)).length, 1);
+  assert.equal(msgs("rfc-no-inquiry").filter((m) => /must name the specific questions/.test(m)).length, 1);
   assert.equal(msgs("rfc-no-clock").filter((m) => /states the response window/.test(m)).length, 1);
   assert.equal(msgs("rfc-nothing").length, 2);
   assert.ok(msgs("rfc-no-clock")[0].includes(AG.RFC_RESPONSE_WINDOW_PRECEDENT.source));
@@ -155,6 +155,48 @@ test("R6 by hand (DEC-13): a request_for_comment names an inquiry it advances an
   assert.deepEqual(msgs("clean-other"), [], "another kind is not asked");
   assert.deepEqual(pushed((f) => AG.actionBasisFindings(DOCS["leg-lead"], f)).findings.map((x) => x.check), ["C-54.1"]);
   assert.deepEqual(pushed((f) => AG.actionBasisFindings(DOCS["leg-theme"], f)).findings.map((x) => x.check), ["C-81.1"]);
+});
+
+test("R6 (T51 fix round 10, B5): the leg repairs (grammar.mjs:146, :168) name no field and no plane term (kind: rests_on, kind: advances, action_basis), and the leg refusals still say what is wrong", () => {
+  const leg = (target, kind) => ({ action_kind: "other", action_basis: [{ target, kind }] });
+  const repairs = (fm) => pushed((f) => AG.actionBasisFindings(fm, f)).findings.flatMap((x) => x.repairs ?? []);
+  const notLeg = repairs(leg("not-an-id", "rests_on"));
+  const ofAction = repairs(leg("ACTN-2026-0005-earlier", "rests_on"));
+  assert.equal(notLeg.length, 1, "the leg whose target is not an id is refused");
+  assert.equal(ofAction.length, 1, "the leg onto an action is refused");
+  for (const r of [...notLeg, ...ofAction]) assert.doesNotMatch(r, /kind:|\(kind|rests_on|action_basis/, r);
+  assert.match(ofAction[0], /action/, "the repair still says the leg may not point at an action");
+  assert.equal(pushed((f) => AG.actionBasisFindings(leg("not-an-id", "rests_on"), f)).findings[0].message, "basis leg 0 names 'not-an-id', which is not a valid record id");
+});
+
+/* T51 fix round 10 (B6): what a person reads of this module's findings, over the corpus: no message or repair names a field
+   (`action_basis[0]`, `clock[]`, `quote_amount`, `due_by`, `kind:`, `rests_on`) or a code (DEC-13, C-2.10, a `none_exists`). The
+   lead and theme legs are asked of other modules (inquiry-grammar, connections), so their documents are not this module's words. */
+const FIELD_OR_CODE = /\w+\[\d*\]|\bquote_\w+|\bdue_(by|cite)\b|\bartifact_sha\b|\bkind:|\(kind|\brests_on\b|\bno_response\b|\bnone_(stated|exists)\b|\bDEC-\d|\bD-\d|\bC-\d/;
+const plainWords = (api) => {
+  const words = [];
+  for (const [id, fm] of Object.entries(DOCS)) {
+    if (/^leg-(lead|theme)/.test(id)) continue;
+    for (const x of pushed((f) => api.actionBasisFindings(fm, f)).findings) words.push(x.message, ...(x.repairs ?? []));
+    for (const x of pushed((f) => api.correspondenceFindings(fm, f)).findings) words.push(x.message, ...(x.repairs ?? []));
+    const entries = Array.isArray(fm?.correspondence) ? fm.correspondence : [];
+    entries.forEach((_, i) => { for (const x of [...api.quoteFindings(entries, i), ...api.lifecycleFindings(entries, i)]) words.push(x.message); });
+  }
+  return words;
+};
+test("R6 (T51 fix round 10, B6): every finding and repair of the leg, correspondence, quote and lifecycle arms is in plain words: none names a field or a code", () => {
+  const words = plainWords(AG);
+  assert.ok(words.length > 40, "the corpus reaches the findings");
+  assert.deepEqual(words.filter((w) => FIELD_OR_CODE.test(w)), []);
+  assert.ok(words.every((w) => w.trim().length > 0));
+});
+
+test("R6 (T51 fix round 10, N7): a request_for_comment with no advanced question is refused in plain words: its finding and its repair name no plane term (ZERO, action_basis, legs of kind), and it still says why", () => {
+  const found = pushed((f) => AG.actionBasisFindings(DOCS["rfc-no-inquiry"], f)).findings.find((x) => /nothing to answer/.test(x.message));
+  assert.ok(found, "the zero-question refusal is raised");
+  assert.match(found.message, /specific questions/);
+  assert.doesNotMatch(found.message, /ZERO|action_basis|legs of kind/);
+  assert.doesNotMatch(found.repairs.join("\n"), /action_basis|kind: advances/);
 });
 
 test("R7: checkActionExtension reports, for every document under every instance kind set, the findings it reported before the move", () => {
@@ -332,7 +374,7 @@ test("R9 by hand: the rows are exactly C-32.3, .4, .18, .19, .20, .21; C-33.3–
 test("R6, R8 (K899 (1)): text a member reads says record, never bundle: actionBasisFindings' target finding and respondsToEdgeFindings' repair are re-worded, and no row, finding, repair or reading over the corpus holds the word", () => {
   assert.ok(REWORDED.every((was) => !RECORDED.includes(was)), "the recorded answer holds the words the product holds");
   const legs = pushed((f) => AG.actionBasisFindings(DOCS["leg-bad-target"], f)).findings;
-  assert.deepEqual(legs.map((x) => x.message), ["action_basis[0].target 'not-an-id' is not a canonical record id"]);
+  assert.deepEqual(legs.map((x) => x.message), ["basis leg 0 names 'not-an-id', which is not a valid record id"]);
   const refs = pushed((f) => AG.respondsToEdgeFindings(DOCS["refs-bad"], f)).findings;
   for (const x of refs) assert.deepEqual(x.repairs, ["point the edge at the ACTN- record whose correspondence this answers",
     "or use relates_to, which claims nothing about an exchange"]);
