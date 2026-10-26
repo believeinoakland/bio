@@ -199,6 +199,20 @@ test("R6 (T51 fix round 10, N7): a request_for_comment with no advanced question
   assert.doesNotMatch(found.repairs.join("\n"), /action_basis|kind: advances/);
 });
 
+/* T51 fix round 10 (R30; K5297): no finding, repair or translation a person reads names a field, a stored code or a decision id.
+   The basis-leg label this module hands to the lead and theme checkers is a plain name of the entry; the rest of those two
+   checkers' words are theirs (inquiry-grammar, connections), so the leg documents are read for the label only. */
+test("R30 (T51 fix round 10; K5297): over the corpus, no finding, repair or translation a person reads names a field, a stored code or a DEC- id; the basis-leg label is a plain name", () => {
+  const words = plainWords(AG);
+  words.push(AG.LIFECYCLE_CHECKS.OUTCOME_NOT_IN_VOCABULARY.translation, AG.LIFECYCLE_CHECKS.DECISION_WITHOUT_OUTCOME.translation);
+  assert.deepEqual(words.filter((w) => FIELD_OR_CODE.test(w)), []);
+  for (const id of Object.keys(DOCS).filter((d) => /^leg-(lead|theme)/.test(d))) {
+    const messages = pushed((f) => AG.actionBasisFindings(DOCS[id], f)).findings.map((x) => x.message);
+    assert.ok(messages.length > 0, id);
+    for (const m of messages) { assert.match(m, /^basis leg 0\./, m); assert.doesNotMatch(m, /action_basis/, m); }
+  }
+});
+
 test("R7: checkActionExtension reports, for every document under every instance kind set, the findings it reported before the move", () => {
   for (const id of Object.keys(DOCS)) assert.deepEqual(S.docs[id].audit, GOLDEN.docs[id].audit, id);
 });
@@ -317,10 +331,9 @@ const T41_ROWS = {
     translation: tableWord("refusal.SEEKS_REFUSED"),
   },
 };
-/* R13: C-94.5's translation, which names the outcome vocabulary, names none_exists; a changed row, awaiting T42's stamp. */
+/* R13 (T51 fix round 10, R30): C-94.5's translation names the outcome vocabulary in plain words; a changed row, awaiting T42's stamp. */
 /* T45 (K2849 (4)): C-117.19 refuses the override's reason alone; its ground's refusals are R15's (C-117.31, .32). */
 const C117_19_NOW = tableWord("refusal.PREMISE_OVERRIDE_REFUSED");
-const C94_5_NOW = tableWord("refusal.OUTCOME_NOT_IN_VOCABULARY");
 
 test("R9: the rows C-117.26 NO_SUBJECT (actions R62), and C-117.27 MACHINE_CANNOT_SET_PROCEEDING are held in ACTION_CATALOGUE_CHECKS, each {check, where, translation} exactly, in that order before T41's row, their wheres naming actions' minting sites; no other table holds them; their words name no op, ruling or check number", () => {
   const C = AG.ACTION_CATALOGUE_CHECKS;
@@ -348,7 +361,6 @@ test("R9: every row is held as before the move, number and translation unchanged
   for (const code of Object.keys(RETIRED)) delete expected.ACTION_CATALOGUE_CHECKS[code];
   Object.assign(expected.ACTION_CATALOGUE_CHECKS, structuredClone(T33_ROWS), structuredClone(T41_ROWS), structuredClone(ROWS_NOW));
   Object.assign(expected.RECORDS_LAW_FENCE_CHECKS, structuredClone(R14_ROWS));
-  expected.LIFECYCLE_CHECKS.OUTCOME_NOT_IN_VOCABULARY.translation = C94_5_NOW;
   expected.ACTION_CATALOGUE_CHECKS.PREMISE_OVERRIDE_REFUSED.translation = C117_19_NOW;
   expected.GOVERNING_LAW_CHECKS.RECORDS_LAW_REFUSED.where = "src/action-grammar/checks.mjs recordsLawRefusal > is-records-law";
   expected.ACTION_CATALOGUE_CHECKS.CONTACT_NOT_A_MEMBER.where = "src/actions/index.mjs contactNotAMember > is-contact-member";
