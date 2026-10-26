@@ -255,3 +255,7 @@ B14 done (K5241). **R17 (amends R18):** `versionChain` orders `first_retrieved, 
 **Tests/checks:** provenance folder 197 pass, 0 fail; users (content, file-safety view, control-plane walk-monitoring) 189 pass, 0 fail; `checks/run.mjs`: format 0, architecture 0, coverage 7070 of 7070, words 0 (testcopy 0); `fixtures provenance --list` 0 (one accepted marker, B10's); ownership 0. The `run.mjs` stub/answer failures listed belong to other modules.
 **Markers added:** none. Deferred: none. Found in other modules: none. Open QUESTION: none.
 Size (session_013hM79EaBNz2N4rzna8XuQt): test runs 8, module lines 3318
+
+## J16 · COMPLETE
+
+B14 done (K5241). R17 (amends R18): versionChain orders first_retrieved, register row order (rowid), capture_sha in the page, anchor index and predecessor queries (provenance/index.mjs ~1659-1702). Test 'R17, R18: versions first seen in the same second…' in convert-versionchain.test.mjs red then green. control-plane walk-monitoring-checknow-adopt.test.mjs: green (1 of 1) on my branch. Provenance folder 197 pass; users 189 pass; format, architecture, coverage, words, fixtures, ownership 0. Met ids to strike: R17 (R18 follows). Markers added: none. Record J15. Size (session_013hM79EaBNz2N4rzna8XuQt): test runs 8, module lines 3318
