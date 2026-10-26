@@ -95,3 +95,7 @@ Size (session_012PieGczCfTTKCXgZH64nqx): test runs 10, module lines 1450
 - checks: format 0 failures, architecture 0, coverage 20 of 20, words 0, ownership 0.
 
 Size (session_01TwA2g3SpTvu1uEcFVRLefh): test runs 12, module lines 1560
+
+## J4 · COMPLETE
+
+D-B1 done (R21). Team zone = fact at path @team/time_zone; set with op=factconfirm {path:'@team/time_zone', act:'correct', value:<IANA>, how, source}; read with op=factstatus&path=@team/time_zone (absent / unconfirmed(default) / corrected; governs.value). Invalid zone -> FACT_VALUE_REFUSED. New test team-zone.test.mjs 8 tests (red before, green after); local-facts 83 pass; direct users green (progressions, retrieval, publish-schedule, review, screens-settings, screens-daily, duties, ratification, action-clocks, filings); impact run 1719/1781 files, remaining reds red on the tip too. Not listed by factstatus{} (screens-settings takes the first listed time_zone). Readers for you to carry (file:line in my record): review 381, retrieval 502, publish-schedule 59, screens-settings group.mjs 34/138/294, screens-daily find-in 17. Open: admin-only needs a refusal+word (design); R21/R1 wording proposed in record; setup-words rows stale for 1 new localize id. Size (session_01TwA2g3SpTvu1uEcFVRLefh): test runs 12, module lines 1560. Fixtures: team-zone tests use fixtures-own (own store, profiles written by the test).
