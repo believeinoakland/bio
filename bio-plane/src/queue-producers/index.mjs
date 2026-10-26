@@ -67,7 +67,7 @@ import { wizardScriptsOf } from "../wizard-scripts/index.mjs";
 import { machineryProducersOf, MachineryProducers } from "../machinery-producers/index.mjs";
 import { actionProducersOf } from "../action-producers/index.mjs";
 import { projectRosterOf } from "../project-roster/index.mjs";
-import { membersOf, ROOT_ADMIN } from "../member-roster/index.mjs";
+import { ROOT_ADMIN } from "../member-roster/index.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 import { proposalFindingItems } from "./proposals.mjs";
 import { say, holds, joined, fillWord, reasonWord, dayText, localDayOf, instantText, setText } from "./words.mjs";
@@ -142,8 +142,10 @@ export class QueueProducers {
   get #publishSchedule() { return this.#dep("publishSchedule", () => publishScheduleOf(this.#host)); }
   /* T50 (R41, R42; N1091): a project's participants and requests to join are project-roster's (its R1, R14, R26, R34). */
   get #projectRoster() { return this.#dep("projectRoster", () => projectRosterOf(this.#host, { record: this.#record, membership: this.#membership })); }
-  /* T51's fix round (R46, R48): who owes an endorsement and which expertise awaits confirmation are member-roster's (its R77, R78). */
-  get #memberRoster() { return this.#dep("memberRoster", () => membersOf(this.#host)); }
+  /* T51's fix round (R46, R48): who owes an endorsement and which expertise awaits confirmation are member-roster's (its R77, R78),
+     read through the one membership instance, which delegates both: it is the roster credentials told the copy is claimed, so the
+     founder is among the administrators (a second `membersOf` instance is never told, and drops her). */
+  get #memberRoster() { return this.#dep("memberRoster", () => this.#membership); }
   /* R38: the read instance-setup registers at start (its R62), or null while none is. */
   #placeArrivals = null;
   /* R43: this read's clock, the group's zone and the current local day in it, held for the length of one `feedItems` call, so a
@@ -2074,9 +2076,11 @@ export class QueueProducers {
     if (keys.length === 0) return [];
     const raisedTo = this.#activeAdmins();
     const homes = this.#homesOf([]);
-    return keys.map((k) => {
+    const registrant = (k) => (k.registered_by && k.registered_by !== "not recorded" ? k.registered_by : k.member_id);
+    /* A-03 (K5257): the member who registered a key is told nothing of it: she did it, and has nothing to decide. */
+    return keys.filter((k) => !me || registrant(k) !== me).map((k) => {
       const addedMs = Date.parse(k.added ?? "");
-      const member = k.registered_by && k.registered_by !== "not recorded" ? k.registered_by : k.member_id;
+      const member = registrant(k);
       return {
         id: `OBLIGATION::signer-self-registered::${k.key_b64}`,
         class: "OBLIGATION",
@@ -2093,8 +2097,8 @@ export class QueueProducers {
         detail_key: "queue.signer-self-registered.detail",
         basis: { source: "credentials.signerList", key: k.key_b64, member: k.member_id ?? null, comment: k.comment ?? null,
                  registered_by: member ?? null, origin: "self", status: k.status, added: k.added ?? null,
-                 attests: k.attests === true, raised_to: raisedTo,
-                 detail: localize("queue-producers.index.the_key_is_credentials_own", "the key is credentials' own row (its R8), registered by its member (its R9) and read here at every read: it is told to every administrator and to nobody else, and it leaves when the key is no longer active, by an administrator's revoke (its R7) or otherwise.") },
+                 attests: k.attests === true, raised_to: Array.isArray(raisedTo) ? raisedTo.filter((a) => a !== member) : raisedTo,
+                 detail: localize("queue-producers.index.the_key_is_credentials_own", "the key is credentials' own row (its R8), registered by its member (its R9) and read here at every read: it is told to every administrator but the one who registered the key, and to nobody else, and it leaves when the key is no longer active, by an administrator's revoke (its R7) or otherwise.") },
         age: Number.isFinite(addedMs)
           ? { state: "determined", since: k.added, ms: Math.max(0, now - addedMs) }
           : { state: "undetermined", reason: "unparseable_added",
