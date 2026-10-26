@@ -1,6 +1,6 @@
 # plane (T51)
 
-**Status** · session_01PjmHFtZEgQ8wUSxwtd6dLq · depth 2 · WAITING ON BOB (J73) · handled B106
+**Status** · session_01PjmHFtZEgQ8wUSxwtd6dLq · depth 2 · WORKING · handled B106
 
 ## Record (PLANE #41, T51-125)
 
