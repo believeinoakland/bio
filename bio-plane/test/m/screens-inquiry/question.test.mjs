@@ -6,7 +6,7 @@ import { registerDeclaredOps as registerOps } from "../../../src/op-declarations
 import { boot, ok, refusedIn } from "../interface-shell/harness.mjs";
 import { holdRefusals } from "../hypotheses/fixtures.mjs";
 import { open, storeWorld, WORLD_FOUNDER_HANDLE, main, actsIn, button, fill, press, rawKeys, inquiryMd, INQUIRY_REFS, LEGS, BASIS, plane, says, section, lead, word, day, POLICY,
-  SCREENS, P, Q, D, ASIDE_TITLE } from "./fixtures.mjs";
+  SCREENS, P, Q, D, ASIDE_TITLE, HUNCH, HUNCH_BY, HUNCHES } from "./fixtures.mjs";
 
 /* K4245 (test-support R17): every owner's declarations registered once, before the first read, by the one registrar */
 
@@ -108,7 +108,8 @@ test("R2 R34 Supports lists every passage the question cites from its own legs, 
   const waits = section(p, "screen.question.waits.head");
   assert.ok(says(waits, "screen.question.waits.setaside", { document: ASIDE_TITLE, who: "ben", reason: "wrong year" }));
   const hunches = section(p, "screen.question.hunches.head");
-  assert.ok(says(hunches, "screen.question.hunch.by", { who: "dev" }) && hunches.textContent.includes("Crews close reports when they inspect."));
+  assert.ok(says(hunches, "screen.question.hunch.by", { who: HUNCH_BY }) && hunches.textContent.includes(HUNCH.statement), "the live hunch, by who holds it");
+  assert.deepEqual(hunches.querySelectorAll("[data-hunch]").map((h) => [h.getAttribute("data-hunch"), h.getAttribute("data-status")]), HUNCHES.hypotheses.map((h) => [h.hypothesis_id, h.status === "withdrawn" ? "withdrawn" : "live"]), "each hunch, the withdrawn one marked so");
 });
 
 test("R34 a question with two citations and no reading lists both; the strength sentence is drawn by its words, never raw grade text", async () => {

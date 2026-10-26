@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot, ok } from "../interface-shell/harness.mjs";
-import { open, storeWorld, main, fill, press, inquiryMd, INQUIRY_REFS, LEGS, BASIS, says, word, day, lead, section, SCREENS, P, Q, D, SHA, POLICY, waitsSetAside, ASIDE_TITLE } from "./fixtures.mjs";
+import { open, storeWorld, main, fill, press, inquiryMd, INQUIRY_REFS, LEGS, BASIS, says, word, day, lead, section, SCREENS, P, Q, D, SHA, POLICY, waitsSetAside, ASIDE_TITLE, HUNCHES, HUNCH } from "./fixtures.mjs";
 
 const at = "/app/question/" + Q;
 const refusedBody = (code, extra = {}) => ({ status: 200, json: { ok: true, result: { ok: false, reason: code, code, ...extra } } });
@@ -221,7 +221,8 @@ const ROSTER = ok({ ok: true, members: [{ member_id: "admin", handle: "sparky", 
 const hist = (author) => JSON.stringify({ target: Q, base: null, created: "2026-10-03T10:00:00Z", author });
 const CONCLUDED_BY = (by) => (r) => ok(BASIS(r.query.project ? { conclusion: { claim: { text: "Yes." }, by, at: "2026-10-13T09:00:00Z" }, conclusion_stance: "concluded" } : {}));
 const waitsBy = (setter) => ok(waitsSetAside({ setter: "member:" + setter }).answer);
-const hunchBy = (held_by) => ok({ ok: true, inquiry: Q, hypotheses: [{ hypothesis_id: "HYP-1", statement: "Crews close reports when they inspect.", held_by }] });
+/* hypotheses' real list, the live hunch held by each author in turn (fixtures-own: synthetic the author, an input that exercises the handle lookup) */
+const hunchBy = (held_by) => ok({ ...HUNCHES, hypotheses: [{ ...HUNCH, held_by: "member:" + held_by }] });
 
 test("R2 R40 R46 C94 the members the question names from the record are drawn by handle, never by id: the founder's id `admin`, another member's id; an unknown id by the plain word; control: with the roster silent, the fallback words", async () => {
   const draw = async (author, roster) => open(at, { images: { [Q]: { "bundle.md": inquiryMd(), "_history/promotion_a.json": hist("member:" + author) } },

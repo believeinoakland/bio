@@ -11,6 +11,8 @@ import { storeWorld as requestWorld, WORLD_FOUNDER_HANDLE } from "../store-reque
 /* the answers inquiry and case-import publish (K4990, K4993, K4995, K5200): made by their real code, never typed here */
 import { questionWaitsSetAside, readRefusals } from "../inquiry/fixtures.mjs";
 import { importedCasesAnswer } from "../case-import/fixtures.mjs";
+import { listAnswer } from "../hypotheses/fixtures.mjs";
+import { groupIdentityAnswer } from "../instance-setup/fixtures.mjs";
 
 export { SCREENS, word, WORLD_FOUNDER_HANDLE };
 export const storeWorld = requestWorld;
@@ -42,6 +44,12 @@ export const ASIDE_RECORD = { "bundle.md": ["---", `id: ${ASIDE_DOCUMENT}`, "obj
 const UNGROUPED = readRefusals().visible;
 /** case-import's real `importedcases` answer: two imports, one of them with a withdrawn acceptance (case-import R4) */
 const IMPORTS = (await importedCasesAnswer()).answer;
+/** hypotheses' real list (R3) of a question holding a live hunch and a withdrawn one; `HUNCH` is the live one, held by `HUNCH_BY` (a member id) */
+export const HUNCHES = listAnswer();
+export const HUNCH = HUNCHES.hypotheses.find((h) => h.status === "live");
+export const HUNCH_BY = HUNCH.held_by.replace(/^member:/, "");
+/** instance-setup's real `groupidentity` answer (R11): the group's slug, its recorded name, no domain, no declared stake */
+const GROUP = await groupIdentityAnswer();
 
 const projectMd = (refs) => ["---", `id: ${P}`, "object_type: project", "title: \"Pothole repairs\"",
   "objective: \"Is the city repairing reported potholes as its own policy requires?\"", "references:",
@@ -124,7 +132,7 @@ export function plane(o = {}) {
     basisversions: (r) => ok({ ...BASIS(), ...(r.query.project ? { current: { project: r.query.project, version: "main", at: "2026-10-06T09:00:00Z", by: "dev" } } : {}) }),
     versionstrength: (r) => ok({ ok: true, inquiry: r.query.id, version: r.query.version, pair: { capture: { state: "graded", grade: "B" }, connection: { state: "graded", grade: "C" } } }),
     partitionindependence: ok({ ok: true, inquiry: Q, independence: { checked: true, parts: 2, shared: [], complete: true } }),
-    hypotheses: ok({ ok: true, inquiry: Q, hypotheses: [{ hypothesis_id: "HYP-1", statement: "Crews close reports when they inspect.", held_by: "dev" }] }),
+    hypotheses: ok(HUNCHES),
     questionwaits: ok(waitsSetAside().answer),
     backlinks: (r) => ok(r.query.target === D
       ? { ok: true, target: D, backlinks: [{ from: Q, from_type: "inquiry", from_title: "Seven days?", rel: "cites" },
@@ -138,7 +146,7 @@ export function plane(o = {}) {
     themeread: ok({ ok: true, themes: [] }),
     captureprogressions: ok({ ok: true, instances: [] }),
     inquirypartition: ok(UNGROUPED),
-    groupidentity: ok({ ok: true, declared_stake: { stake: null, set_by: null, set_at: null }, declared_stake_history: [] }),
+    groupidentity: ok(GROUP),
     projectstake: ok({ ok: true, stake: null, set_by: null, set_at: null, history: [] }),
     publishedlist: ok({ bundles: [], cases: [] }),
     links: ok({ ok: true, links: [] }),
@@ -149,7 +157,7 @@ export function plane(o = {}) {
     provenanceroutes: ok({ ok: true, bundleId: D, state: "verified", objectType: "information", route: { applies: true, assessed: false, marked: false, finding: "NEVER_LOOKED" } }),
     transcriptions: ok({ ok: true, bundle_id: D, transcriptions: [], count: 0, truncated: false, cursor: null }),
     /* interface-shell R111 (C94): the roster `memberlist` answers, id to handle, for the handles these fixtures name */
-    memberlist: ok({ ok: true, members: ["dev", "mai", "rosa", "ben", "ana"].map((h) => ({ member_id: h, handle: h })) }),
+    memberlist: ok({ ok: true, members: ["dev", "mai", "rosa", "ben", "ana", HUNCH_BY].map((h) => ({ member_id: h, handle: h })) }),
     ...(o.plane || {}),
   };
 }
