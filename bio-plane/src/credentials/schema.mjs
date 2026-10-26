@@ -66,7 +66,12 @@ CREATE TABLE IF NOT EXISTS signers (
   -- changes it (R6's re-activation, R7, R10, R16), never by one that leaves it as it was. A row written before this
   -- column existed has NULL, read as not recorded: it may have changed status after it was registered, so 'added'
   -- would state a false instant for it. Never back-filled.
-  status_at TEXT
+  status_at TEXT,
+  -- R83 (T51 fix round 10; K5303): the administrator who said they know about this self-registered key, and when
+  -- ('I know about this key'). NULL for a key no administrator has said it of, and for every earlier key. Written once,
+  -- never changed, never back-filled.
+  known_by  TEXT,
+  known_at  TEXT
 );
 CREATE INDEX IF NOT EXISTS signers_member ON signers(member_id);
 
@@ -251,6 +256,9 @@ export const CREDENTIALS_ADDITIVE_COLUMNS = [
   ["signers", "origin", "TEXT"],
   ["signers", "registered_by", "TEXT"],
   ["signers", "status_at", "TEXT"],
+  /* R83 (T51): who said they know about a self-registered key, and when; NULL for every earlier key */
+  ["signers", "known_by", "TEXT"],
+  ["signers", "known_at", "TEXT"],
   ["ai_credentials", "confined_to", "TEXT"],
   ["ai_grants", "kind", "TEXT"],
   ["ai_credentials", "expires_at", "TEXT"],

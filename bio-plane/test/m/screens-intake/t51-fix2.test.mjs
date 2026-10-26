@@ -347,7 +347,7 @@ test("R7 R32 (C28) a knock's detail shows its fingerprint, labelled, before the 
 
 /* ---------- acquisition R5, R20: what was kept but is not finished ---------- */
 
-test("R50 a render RENDER-NOTE-X and an attestation that ATTEST-NOTE-X are said as they stand; a capture with neither says neither", async () => {
+test("R50 R71 a render RENDER-NOTE-X is said as it stands and an attestation not yet answered by screen.capture.attest.pending, never by the owner's ATTEST-NOTE-X; a capture with neither says neither", async () => {
   const t = await team();
   /* a render still pending and an attestation that did not finish are the owner's account of work a clock in the world does not run: the owner's real answer, with those two fields added */
   const real = await captured(t);
@@ -357,10 +357,17 @@ test("R50 a render RENDER-NOTE-X and an attestation that ATTEST-NOTE-X are said 
   fill(p, { "ci-address": ADDRESS });
   await press(p, "acquire");
   await p.settle();
-  assert.ok(text(p).includes("RENDER-NOTE-X") && text(p).includes("ATTEST-NOTE-X"));
+  assert.ok(text(p).includes("RENDER-NOTE-X"));
+  /* R71 (D-M6): the attestation is the list's sentence, never the owner's note */
+  assert.ok(says(p, "screen.capture.attest.pending") && !text(p).includes("ATTEST-NOTE-X"));
   /* control: a capture the owner finished, with no render and no attestation owed, is pressed as it is */
-  const q = await pressed(t, { body: (n) => html("Housing notice", n) });
-  assert.ok(!text(q).includes("RENDER-NOTE-X") && !text(q).includes("ATTEST-NOTE-X"));
+  /* (the owner's own attempts are `pending` only while a service has not answered, which a clock decides: the same real answer with none pending is scripted) */
+  const done = { ...real.document, attestation_attempts: real.document.attestation_attempts.map(({ pending, ...x }) => x) };
+  const q = await open(t, "/app/capture/address", { acquire: ok({ ...real, document: done }) });
+  fill(q, { "ci-address": ADDRESS });
+  await press(q, "acquire");
+  await q.settle();
+  assert.ok(!text(q).includes("RENDER-NOTE-X") && !says(q, "screen.capture.attest.pending"));
 });
 
 /* ---------- control-plane R105, R116 (K4326): what a timed-out capture kept ---------- */
