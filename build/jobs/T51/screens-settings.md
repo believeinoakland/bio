@@ -628,4 +628,4 @@ COMPLETE (B60/B61): A-01 dropped as you ruled; verified group.mjs:25 sends a pla
 - **Suites:** screens-settings 273/273. Impact users (`impact.mjs`, 190 files outside this module, 1313 tests): 1297 pass, 16 fail: 8 in `journey-check/pseudo.test.mjs` (R29) and `control-plane/t51-round9-seam.test.mjs` fail identically on tranche's own `group.mjs`, not mine; 7 files (plane `t47`, `g83-location`; screens-inquiry `fr6-seam`, `g41-document`, `question`, `r10-question-seam`, `r10-stated`) failed under the load of the full run and pass when run alone with my change.
 - **Checks:** `checks/run.mjs`: format, architecture, coverage (7083/7083), words, channels 0 failures; fixtures 89 failures, none in screens-settings; ownership 0.
 - **Not done, for BOB:** the "Share for review is no longer refused" half of B62's test crosses into screens-publish and control-plane (review-copy reads `copyZone`); I did not add a through-the-door test (K5138). Please place it.
-- Size (session_01KU5VbSaZA1BVG9g3aQn231): test runs 9, module lines 7103
+- Size (session_01KU5VbSaZA1BVG9g3aQn231): test runs 9, module lines 5483
