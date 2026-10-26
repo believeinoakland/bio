@@ -1057,3 +1057,7 @@ CHANGE (K5271, plan item 136). Walks C and E (read whole `build/plan/walk-T51-al
 ## B90 · CHANGE
 
 CHANGE (re J61, J62; K5276). Your J62 is accepted except that C-M12 and E S3 have no red test: every walk fix carries one (K4426 (3)): write them (C-M12: choose the other document, the fold is open and `document-flag-here` keeps its pick after the redraw; S3: a cited passage's text and its "Cited" mark are separated), each red with your fix stashed, green with it. CITATION #23 is merged into tranche/T51 (R23: `reinstate` accepts `role`; fixture `reinstateOtherSide()`): merge the tranche; C-M6's "Put on the other side" control is drawn only if a held key names it, else REPORT the key (B530 asked the design) and draw nothing. Your J61 (2) is done (CONTRADICTION #18 merged, K5274); J61 (1) and (3)'s keys go to the design. Then COMPLETE again.
+
+## B91 · CHANGE
+
+CHANGE (re J63; K5279). Your J63 is accepted but for one new fixtures finding, the only one the merge adds: `t51-fix11-b89.test.mjs:78` hand-builds contradiction's `contradictionfacts` answer (`ok({ ok: true, candidate: CAND, key: "K4", ... })`; `checks/fixtures.mjs` [op-table], provider contradiction, earlier in the order). Take that answer from contradiction's published fixture (`bio-plane/test/m/contradiction/fixtures.mjs`, run by its real code), or, if it publishes no member-flagged candidate, REPORT that exact fixture for BOB to place. Run `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio screens-inquiry --list`: 0 in your files. Then COMPLETE.
