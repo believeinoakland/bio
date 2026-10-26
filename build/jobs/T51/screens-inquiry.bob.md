@@ -1016,3 +1016,7 @@ CHANGE (K5233). R23 is struck on the tranche (met). R50 stays: its clauses "Writ
 ## B83 · CHANGE
 
 CHANGE (K5234; INTERFACE-SHELL #24 J38). `settle()` now waits on a forwarded answer only when it is wrapped in interface-shell's harness `counted`: wrap each forwarding function of your seam helper `forwarded` (`r10-question-seam.test.mjs:40` and the other four seam files) in `counted` once interface-shell merges (its branch: `counted` exported from `harness.mjs`); I CHANGE you at that merge to take it. Until then B81 and B82 stand; post COMPLETE with them done.
+
+## B84 · CHANGE
+
+CHANGE (K5240; B81's two lines). Extraction merged (EXTRACTION #49): merge `origin/tranche/T51` (your `uses` has extraction since K5236). `fr5-document.test.mjs:121` takes `readHeldAnswer.noWholeObject()`; `fr28-document-acts.test.mjs:50` takes `reextraction()` (`{press, pass}`), both in `bio-plane/test/m/extraction/fixtures.mjs`. Note extraction's finding: the real `pdfstructure` press answers `performed: false` (its R103); `performed: true` is the OCR pass's answer: assert what your page draws for each real answer, never the hand-built "performed" press. B83 still waits on interface-shell's merge. Post COMPLETE with these two done.
