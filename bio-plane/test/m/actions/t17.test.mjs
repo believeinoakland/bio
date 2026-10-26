@@ -37,11 +37,11 @@ test("R1 R51 a request for comment naming no inquiry is refused at the write and
   const f = errors(audit(w, vague));
   assert.equal(f.length, 1, JSON.stringify(f));
   assert.equal(f[0].check, "C-2.10");
-  assert.match(f[0].message, /request_for_comment names ZERO inquiries/);
+  assert.match(f[0].message, /must name the specific questions/);
   assert.match(f[0].message, /nothing to answer/, "it says why: without specifics there is nothing to answer");
   const r = w.promote(RFC, vague);
   assert.deepEqual([r.ok, r.reason], [false, "ACTION_BASIS_REFUSED"]);
-  assert.deepEqual(r.findings.map((x) => [x.check, /ZERO inquiries/.test(x.detail)]), [["C-2.10", true]]);
+  assert.deepEqual(r.findings.map((x) => [x.check, /must name the specific questions/.test(x.detail)]), [["C-2.10", true]]);
   assert.equal(w.record.head(RFC), null, "nothing was written");
 });
 
@@ -49,7 +49,7 @@ test("R1 R51 only an advances leg onto an inquiry is a disclosed inquiry: a rest
   const w = ground();
   for (const legs of [[leg(INQ, "rests_on")], [leg(INFO, "advances")], [leg(INFO, "rests_on"), leg(INQ, "rests_on")]]) {
     const text = rfcMd(RFC, { legs });
-    assert.ok(errors(audit(w, text)).some((x) => /ZERO inquiries/.test(x.message)), JSON.stringify(legs));
+    assert.ok(errors(audit(w, text)).some((x) => /must name the specific questions/.test(x.message)), JSON.stringify(legs));
     assert.equal(w.promote(RFC, text).reason, "ACTION_BASIS_REFUSED", JSON.stringify(legs));
   }
   /* a finding the request is built on may sit beside the disclosed inquiry. */
@@ -89,7 +89,7 @@ test("R1 R51 a request for comment stating no response window is refused at the 
   /* both missing: each part is named. */
   const neither = w.promote(RFC, rfcMd(RFC, { clock: [] }));
   assert.equal(neither.reason, "ACTION_BASIS_REFUSED");
-  assert.deepEqual(neither.findings.map((x) => /ZERO inquiries/.test(x.detail) ? "inquiry" : /response window/.test(x.detail) ? "window" : "?"),
+  assert.deepEqual(neither.findings.map((x) => /must name the specific questions/.test(x.detail) ? "inquiry" : /response window/.test(x.detail) ? "window" : "?"),
     ["inquiry", "window"]);
 });
 
