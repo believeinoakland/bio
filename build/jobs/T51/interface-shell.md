@@ -679,3 +679,17 @@ K5230: the seam's late forwarded read is now waited for by `settle()` ONLY when 
 Needed outside my paths: `screens-inquiry`'s seam helper `forwarded` (r10-question-seam.test.mjs:40, and the other four seam files) must wrap each forwarding function in `counted` from interface-shell's harness, to get the wait BOB's CHANGE describes. That is screens-inquiry's job; I have not edited it. The counting only works when the wrap is there.
 
 Screens REPORT (which screens modules relied on the removed frame defaults) follows when the per-module run finishes; I have the tranche-tip baseline running alongside it.
+
+## J39 · REPORT
+
+SCREENS REPORT (B56): the per-module screens runs, my tree (tranche merged through B54) against the tranche tip, each file run on its own. Both sides ran under heavy machine load, so the first full-process run was not usable: whole-file failures there were timeouts (settings, intake, investigate) and did not reproduce in isolation. Those files pass in isolation on my tree.
+
+Caused by removing the frame defaults (K5202 b, K5219), in other modules' tests, reading the frame's answers from my harness:
+- `bio-plane/test/m/screens-action/request.test.mjs:167` and `:185` (R21, two tests): the page draws the team's name and the test expects "River Town", which came from the removed `groupidentity` default. The test boots through `open()` with no group answer. Owner: screens-action; the answer is instance-setup's `groupIdentityAnswer()`.
+- `bio-plane/test/m/screens-publish/phone.mjs:30` spreads `FRAME` (my harness export, now without `groupidentity`, `interfacewords`, `queue`, `signout`). The publish tests that use it fail: `common.test.mjs:152` (R24), `print.test.mjs:28` and `:73` (R39), and `ceremony`, `fix2`, `public` and `review` (one or two tests each). Owner: screens-publish; the fix is the same provider answers, read from their fixtures.
+
+Not caused by the change (pass in isolation on my tree): settings, intake, and the rest of action and publish.
+
+Still running (restarted with a per-test timeout after the first runs hung): screens-daily and screens-inquiry. I will add their result to the COMPLETE. If either shows a failure that uses a removed default, I'll name it the same way.
+
+Other failures in my tree are the seam tests' `counted` wrap (screens-inquiry, SCREENS-INQUIRY #33) and nothing else in the interface-shell suite.
