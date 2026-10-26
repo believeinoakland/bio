@@ -629,3 +629,16 @@ COMPLETE (re B50, B51, B52, B53, B54; K5299, K5302–K5305). R65 and the rest of
 Markers: no new `fixtures-own`/`fixtures-generic`; my tests use the world's real acts and reads.
 
 Size (session_017vwgD1u3sEWkzivBQF15Ny): test runs 9, module lines 3,554
+
+## J47 · COMPLETE
+
+COMPLETE (re B55, K5308): R66 applied, amending R64, so R64 is now whole. Merged tranche/T51 (STANDARDS #22's R63 `bindings`, R64's event arm, DEC-442). Pushed.
+
+**R66, `bio-plane/src/screens-investigate/standard.mjs`:** each entry of the `standard` read's `bindings` is one row by kind in DEC-442's keys: adoption `screen.standard.binding.adoption` {body} {act} {edition} with `.adoption.meta` {mode} {from} {author} {date} (`.adoption.meta.nofrom` when it runs from an event, not a day; {mode} is the `screen.standard.mode.<mode>` label); imposition `.binding.imposition` {body} {law}; benchmark `.binding.benchmark` {body}; beneath those two `.binding.recorded` {author} {date}. Bodies are drawn by name (the team's offices, bodies and institutions, else a typed name, else `connection.node.unnamed`), acts and laws by citation, events by kind and day, the author by name: no id. `screen.standard.binds.unknown` is drawn exactly when `bindings` is an empty list. Dated events are offered beside the held standards in the adoption's act choice (not in the imposition's law choice): listed from the `timeline` read by the held documents' captures (the way Matter's event choice reads them); an event chosen offers the passages that date it, by their words; on the press the passage's content id is minted (`contentmint`, the way Matter mints evidence) and the adoption is sent with the event's own day as `from` (the event itself as `{event, edge: "start"}` when it has no day).
+**Tests, `r66.test.mjs` (4), red on the previous screen (4 of 4 red), green on this one (4 of 4):** the three kinds drawn exactly in the design's words from the world's own read after the three acts, no id; the nofrom variant; `binds.unknown` drawn once when none and gone with the first one recorded; the event arm end to end (the event offered by name, its passage chosen, the sent body, the owner recording it, the row drawn by the event's name).
+**Earlier fix4 note:** `fix4.test.mjs` Standard reads now include the `timeline` read (+1); the flake fix of J46 stands (10 of 10 under load).
+
+**Tests and checks:** module suite, one run to its end without `--test-force-exit`: 322 tests, 321 pass at the first run, the 1 failure the read-count line above (fixed; the file passes 3 of 3); `common`, `standard-binds`, `r66`, `r65` green. `checks/architecture` 0, `coverage` 66 of 66 ids named, 0, `words` module 0 failures, `ownership` 0, `setup-words --check` matches; `run.mjs` names nothing of mine. `checks/format.mjs` shows 1 failure that is not mine: `build/rulings.md:5301` (K5308 states no standing-list decision, §16), BOB's file.
+Markers: none new.
+
+Size (session_017vwgD1u3sEWkzivBQF15Ny): test runs 14, module lines 3,741
