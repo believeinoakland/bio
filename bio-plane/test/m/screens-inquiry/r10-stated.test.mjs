@@ -109,12 +109,14 @@ const STEM = word("screen.document.reading.stated", { size: "@@" }).split("@@")[
 const same = (a, b) => a.replace(/\s+/g, " ").trim() === b.replace(/\s+/g, " ").trim();
 const SIZE_REASON = "TOO_LARGE";
 /* what the plane's reading states of itself: its reason and, failing a word held for it, its own sentence */
-const reasonOf = (reading) => String((reading.reading && reading.reading.reason) || reading.reason || "");
+const refusedReasons = (reading) => [...new Set(((reading.reading && reading.reading.ocr_refused) || []).map((r) => String((r && r.reason) || "")).filter(Boolean))];
+const reasonOf = (reading) => String((reading.reading && reading.reading.reason) || reading.reason || refusedReasons(reading)[0] || "");
 const ownSentence = (reading) => String((reading.completeness && reading.completeness.why) || (reading.reading && reading.reading.basis) || "").trim();
 function assertOwnReading(t, reading, label) {
   assert.ok(!t.includes(STEM), `${label}: the size sentence's stem is never drawn for a reading whose reason is not a size: ${t.slice(0, 400)}`);
   const reason = reasonOf(reading);
   assert.notEqual(reason, SIZE_REASON, `${label}: the shape is a reading with no size reason`);
+  for (const c of refusedReasons(reading)) if (hasWord("refusal." + c)) assert.ok(t.includes(word("refusal." + c)), `${label}: the word held for the member's reason ${c} is drawn`);
   if (reason && hasWord("refusal." + reason)) assert.ok(t.includes(word("refusal." + reason)), `${label}: the word held for ${reason} is drawn`);
   else if (ownSentence(reading)) assert.ok(t.replace(/\s+/g, " ").includes(ownSentence(reading).replace(/\s+/g, " ")), `${label}: the statement the reading states is drawn: ${ownSentence(reading)}`);
 }
