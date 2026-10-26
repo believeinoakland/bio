@@ -1926,10 +1926,10 @@ export class ActionPlans {
         for (const oid of ph.options) {
           const o = byId.get(oid);
           if (o && ph.earliest && start === null) for (const d of o.dates || [])
-            out.push({ check: "date_before_phase", scenario: sc.scenario, phase: ph.id, option: oid, date: d.date, state: "undetermined",
+            out.push({ check: "date_before_phase", scenario: sc.scenario, phase: ph.id, option: oid, date: d.date, start: null, state: "undetermined",
               says: localize("action-plans.says.whether_regulated_date_falls", "whether {oid}'s regulated date {date} falls before phase {id} can start cannot be told: {day_undetermined}", { oid: String(oid), date: String(d.date), id: String(ph.id), day_undetermined: String(DAY_UNDETERMINED) }) });
           if (o && start) for (const d of o.dates || [])
-            if (d.date < start) out.push({ check: "date_before_phase", scenario: sc.scenario, phase: ph.id, option: oid, date: d.date,
+            if (d.date < start) out.push({ check: "date_before_phase", scenario: sc.scenario, phase: ph.id, option: oid, date: d.date, start,
               says: localize("action-plans.says.regulated_date_falls", "{oid}'s regulated date {date} falls before phase {id} can start ({start})", { oid: String(oid), date: String(d.date), id: String(ph.id), start: String(start) }) });
         }
         const miss = unbranched(ph, sc.phases);

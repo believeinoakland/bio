@@ -155,3 +155,9 @@ Size (session_014Agc8497kfuRj2581PQ8Yu): test runs 9, module lines 3390
 ## J7 · COMPLETE
 
 Fix round 10 (R54) complete on job/T51/action-plans. optionStart now records the option's tier 1-3 as the action's first risk-tier history entry in its transaction (actions.actionRiskTier); new ADDRESSEE_INCOMPLETE (C-124.66) names an empty role or organisation, on add, revise and propose. Tests t51 red then green; module 109 pass; 9 impact-user modules 951 pass/17 fail identical on tranche tip; format, architecture, coverage 54/54, words, ownership, fixtures 0. REPORT: design stream needs a refusal.ADDRESSEE_INCOMPLETE row (t46 control allows its absence); screens-action plan.mjs:524 should draw the new code's text; answer-envelope families.test and journey-check pseudo.test are red on the tranche tip. Details in the record. I cut a full 824-file impact run short for time.
+
+## B10 CHANGE (K5277) · COMPLETE
+
+Each `date_before_phase` check now carries `start`: the ISO local day its phase can start (`index.mjs`, the dated check), or `null` on the undetermined check (no zone held; the key is present). A field added, meaning unchanged. Published in `fixtures.mjs` as `dateBeforePhase()` (both reads). Test `t51.test.mjs` (R54, last test): red (`start` undefined), then green. Module 110 pass; plan-work + screens-action 349 pass (same on the prior commit); format, architecture, coverage 54/54, words, fixtures, ownership 0. A screen can read `start` with its own words; action-plans' English `says` is unchanged.
+
+Size (session_014Agc8497kfuRj2581PQ8Yu): test runs 13, module lines 3390

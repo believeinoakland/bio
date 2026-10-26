@@ -4,7 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, opened, option, choose, by, OFFICE, FIRST } from "./fixture.mjs";
 import { ACTION_PLAN_CHECKS } from "../../../src/action-plans/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { dateBeforePhase } from "./fixtures.mjs";
 
 const code = (r) => r.code ?? r.reason;
 const start = (w, opt, extra = {}) => w.ap.optionStart({ plan: w.PL, option: opt, kind: "other", ...by("bob"), ...FIRST, ...extra });
@@ -94,4 +94,14 @@ test("R54: optionRevise refuses an emptied role or organisation the same way", (
   const r = w.ap.optionRevise({ plan: w.PL, option: o, addressee: { state: "named", kind: "press", role: "Reporter", organisation: "" }, reason: "Fix", ...by("bob") });
   assert.equal(code(r), "ADDRESSEE_INCOMPLETE");
   assert.deepEqual(r.empty, ["organisation"]);
+});
+
+test("R54: each date_before_phase check carries start, the ISO local day its phase can start, or null when no zone is held; the published fixture shows both (K5277)", () => {
+  const f = dateBeforePhase();
+  const found = f.read.checks.filter((c) => c.check === "date_before_phase");
+  assert.deepEqual(found.map((c) => [c.option, c.date, c.start]), [[f.before, "2026-10-13", "2026-10-14"]]);
+  /* control: no zone held, each is undetermined and its start is null, not absent */
+  const none = f.undetermined.checks.filter((c) => c.check === "date_before_phase");
+  assert.equal(none.length, 2);
+  for (const c of none) { assert.equal(c.state, "undetermined"); assert.ok("start" in c); assert.equal(c.start, null); }
 });
