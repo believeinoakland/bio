@@ -1,5 +1,6 @@
 /* The fixtures hypotheses publishes for its op answers (K4990, K4993, K4995): what `hypothesishold`, `hypothesisrevise` and
- * `hypothesiswithdraw` answer, each ok answer and each refusal the screens draw. Each is made by hypotheses' real code when
+ * `hypothesiswithdraw` answer, each ok answer and each refusal the screens draw, and what `hypotheses` lists for a question.
+ * Each is made by hypotheses' real code when
  * it is called, over a fresh `world()`, never stored; `fixtures.test.mjs` checks each against the real code. */
 import { world, ANN, INQ, E1, E2 } from "./fixture.mjs";
 
@@ -77,4 +78,27 @@ export function withdrawRefusals() {
     HYPOTHESIS_NO_REASON: w.h.withdraw({ ...base, reason: "" }),
     MACHINE_CANNOT_HYPOTHESISE: w.h.withdraw({ ...base, by: "class:ai" }),
   };
+}
+
+/** The world the list is read over (R3): the inquiry INQ, with a hypothesis Ann holds live and one she holds and withdraws. */
+export function listWorld() {
+  const w = world();
+  w.bundle(INQ);
+  w.hold({ statement: "They act together." });
+  const withdrawn = w.hold({ statement: "They act at the same hour." });
+  w.h.withdraw({ hypothesisId: withdrawn, reason: "mistaken", by: ANN });
+  return w;
+}
+
+/** The list `op=hypotheses` answers for a question (R3): a live hypothesis and a withdrawn one, the system's proposals
+ *  beside them under their heading (none here, R16). Made by `hypothesesOf` over `listWorld()`, each call. */
+export function listAnswer() {
+  return listWorld().h.hypothesesOf({ inquiry: INQ, viewer: ANN });
+}
+
+/** The list for a question that holds no hypothesis: the empty list, the proposals' heading still beside it (R3). */
+export function emptyListAnswer() {
+  const w = world();
+  w.bundle(INQ);
+  return w.h.hypothesesOf({ inquiry: INQ, viewer: ANN });
 }
