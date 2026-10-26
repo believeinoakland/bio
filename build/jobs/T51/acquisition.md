@@ -957,3 +957,28 @@ Size (session_01JhzuHffwXuC8DT86HxHdZC): test runs 4, module lines 3067
 ## J55 · REPORT
 
 Correction to J54: the Size line's module lines is wrong. It should read module lines 4485 (wc -l of bio-plane/src/acquisition/*.mjs), not 3067. Size (session_01JhzuHffwXuC8DT86HxHdZC): test runs 4, module lines 4485.
+
+## J56 · COMPLETE
+
+CHANGE (B55, K5218) applied: head 7bd1fe8b30 on job/T51/acquisition, tranche/T51 merged (never rebased).
+
+Changed
+- bio-plane/src/acquisition/index.mjs (openCaptures, the default listing): `store.liveCaptureSessions(nowMs)` now hands the instance clock in milliseconds, as the calls at :1161 and :1368 do, instead of `stampSecond(nowMs)`. Capture's `liveCaptureSessions` accepts both forms, so the answer is the same; the change is the instant handed, as K5218 asks.
+- bio-plane/test/m/acquisition/k5205-clock.test.mjs: new case naming R124 (K5218): a spy store records what openCaptures hands it (the pinned instance clock as a number; a handed ISO instant as milliseconds; control with none pinned, a number from the wall clock).
+
+Failing first: red with the old line (the spy records a string; "R124 (K5218)" fails), green with the change.
+
+Suites
+- acquisition suite (`node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/acquisition/*.test.mjs`, no force-exit): tests 363, pass 363, fail 0.
+- Modules calling openCaptures (screens-intake r8/r9/g128i, capture t50, control-plane t51-round6-seam): 32 of 32 pass.
+- impact (origin/tranche/T51 HEAD) names 116 of 178 modules through the import graph of acquisition/index.mjs. The only changed export is openCaptures, and its callers are the modules tested above.
+
+Checks (absolute root /home/user/bio)
+- format: 178 modules, 0 failures. architecture acquisition: 0 failures. coverage acquisition: 78 of 78 ids named, 0 failures.
+- ownership (origin/tranche/T51..HEAD): 0 failures.
+- fixtures --list: 50 failures, all the `contract-no-run` lines K5215 keeps for BOB's mechanical pass.
+- run.mjs: 16 failures, none in acquisition's files; the words count is unchanged (no new sentence added).
+
+Markers: none added. Deferred: none.
+
+Size (session_01JhzuHffwXuC8DT86HxHdZC): test runs 8, module lines 4485
