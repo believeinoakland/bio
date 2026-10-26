@@ -2250,3 +2250,12 @@ HANDOFF (K5271; the live walk before the alpha, walks C and E; after B529). Diag
 6. The no-place family (with D-B1): the law on the action page when no profile lists one (E H1b; DEC-384 E3 draws neither act), the due-date refusal with no deadlines ("in the box below", E H2), the plan's date checks with no zone (E K-words; `action-plans.index.phase_id_addresses_someone_outside` is code-origin), saved offices on Request (E H1).
 7. Smaller: an action's resolution in words (E K12); a sentence per missing press-addressee part (E K4, C-M17); "a published case carries this" (E I2); "N dates are set" on the queue (E K11); after a filing is sent, the "move to active" choice (E H2).
 The jobs REPORT every key they need; BOB forwards them as they come.
+
+## B531 · HANDOFF · 2026-10-26 · session_01JmJgPapRn7Mb6tG9Cmb7pP · primary
+HANDOFF (K5276; after B530): words the walk's fix jobs need and found no row for. Each screen draws nothing false meanwhile.
+1. `queue.signer-self-registered.detail` says "mark it done", an act the item lacks; QUEUE-PRODUCERS proposes: "A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and revoke the key. Otherwise leave it: this item goes when the key is revoked." (A-03's "I know about this key" answer is in B529.)
+2. Open file: `refusal.SAFE_VIEW_FAILED` promises a reason; no rows for `NOT_RENDERABLE`, `NOT_TEXT`, `no_sheets`; `screen.open-file.risk.high.means` / `.held.means` say "opens in the safe view" for a picture too.
+3. Find: `screen.finder.widen` says "Documents holding ...: {n}" but the passage route's widen counts passages: a passage-count sentence.
+4. Document: `screen.document.attest.checked` ("Checked by {name}, {date}", C-M2); a note or refusal when a "Yes, because of" names a passage answered "No" (C-M5); a member-flagged lead on Contradiction (C-M13); "Flags raised on this document" (C-M12); "Put on the other side" beside Reinstate (C-M6; citation R23 now takes a role).
+5. Due date: "your rules list no deadline" (E H2). Standard: "{n} more passages of this document are not shown". Money: one sentence naming the period's start field and the time-zone setting (C-B1).
+6. Matter: `refusal.STANDARD_BINDING_UNDETERMINED` (conformance C-113.45; today the plane's own sentence is drawn).
