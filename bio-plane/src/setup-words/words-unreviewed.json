@@ -41858,98 +41858,98 @@
       "en": "a publishing time is a date (YYYY-MM-DD, a real day) and a 24-hour time (HH:MM, 00:00 to 23:59)",
       "module": "publish-schedule",
       "file": "bio-plane/src/publish-schedule/schedule.mjs",
-      "line": 84
+      "line": 92
     },
     {
       "id": "publish-schedule.schedule.a_publishing_time_is_moved",
       "en": "a publishing time is moved or cancelled by a member who owns the case's project, never a machine",
       "module": "publish-schedule",
       "file": "bio-plane/src/publish-schedule/schedule.mjs",
-      "line": 273
+      "line": 281
     },
     {
       "id": "publish-schedule.schedule.a_state_is_one_of",
       "en": "a state is one of {SCHEDULE_STATES}",
       "module": "publish-schedule",
       "file": "bio-plane/src/publish-schedule/schedule.mjs",
-      "line": 330
+      "line": 338
     },
     {
       "id": "publish-schedule.schedule.a_waiting_edition_names_its",
       "en": "a waiting edition names its case, a positive edition, the document's sha and the signature",
       "module": "publish-schedule",
       "file": "bio-plane/src/publish-schedule/schedule.mjs",
-      "line": 171
+      "line": 179
     },
     {
       "id": "publish-schedule.schedule.case_id_edition_ed_already",
       "en": "case {id} edition {ed} already waits to be published; move or cancel that time",
       "module": "publish-schedule",
       "file": "bio-plane/src/publish-schedule/schedule.mjs",
-      "line": 188
+      "line": 196
     },
     {
       "id": "publish-schedule.schedule.case_id_edition_ed_is",
       "en": "case {id} edition {ed} is already signed and published, and a signed edition answers forever",
       "module": "publish-schedule",
       "file": "bio-plane/src/publish-schedule/schedule.mjs",
-      "line": 180
+      "line": 188
     },
     {
       "id": "publish-schedule.schedule.no_edition_of_that_case",
       "en": "no edition of that case waits to be published",
       "module": "publish-schedule",
       "file": "bio-plane/src/publish-schedule/schedule.mjs",
-      "line": 274
+      "line": 282
     },
     {
       "id": "publish-schedule.schedule.no_unsigned_case_document_of",
       "en": "no unsigned case document of {id} edition {ed} is held at that sha",
       "module": "publish-schedule",
       "file": "bio-plane/src/publish-schedule/schedule.mjs",
-      "line": 177
+      "line": 185
     },
     {
       "id": "publish-schedule.schedule.only_an_owner_of_the",
       "en": "only an owner of the case's project moves or cancels its time",
       "module": "publish-schedule",
       "file": "bio-plane/src/publish-schedule/schedule.mjs",
-      "line": 286
+      "line": 294
     },
     {
       "id": "publish-schedule.schedule.that_edition_no_longer_waits",
       "en": "that edition no longer waits: it is {state}",
       "module": "publish-schedule",
       "file": "bio-plane/src/publish-schedule/schedule.mjs",
-      "line": 281
+      "line": 289
     },
     {
       "id": "publish-schedule.schedule.that_editions_time_has_come",
       "en": "that edition's time has come, so it is being published or stopped",
       "module": "publish-schedule",
       "file": "bio-plane/src/publish-schedule/schedule.mjs",
-      "line": 283
+      "line": 291
     },
     {
       "id": "publish-schedule.schedule.that_time_is_not_after",
       "en": "that time is not after now; publishing now is the ceremony's own commit",
       "module": "publish-schedule",
       "file": "bio-plane/src/publish-schedule/schedule.mjs",
-      "line": 95
+      "line": 103
     },
     {
       "id": "publish-schedule.schedule.the_team_holds_no_time",
       "en": "the team holds no time zone, so a local time cannot be read; it is never read as UTC",
       "module": "publish-schedule",
       "file": "bio-plane/src/publish-schedule/schedule.mjs",
-      "line": 88
+      "line": 96
     },
     {
       "id": "publish-schedule.schedule.the_teams_time_zone_zone",
       "en": "the team's time zone ({zone}) cannot be read",
       "module": "publish-schedule",
       "file": "bio-plane/src/publish-schedule/schedule.mjs",
-      "line": 92
+      "line": 100
     },
     {
       "id": "query-language.query.arm_stringify_compares_a_full",
@@ -46373,28 +46373,28 @@
       "en": "read: what a scope holds of the kinds asked, each match with its words and extent, found by search; it records nothing; writes nothing",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1878
+      "line": 1896
     },
     {
       "id": "retrieval.declared.list",
       "en": "read: the bundles the viewer may see, in id order, each with its standing route; writes nothing",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1888
+      "line": 1906
     },
     {
       "id": "retrieval.declared.select",
       "en": "selection lifecycle, owned by the credential that made it",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1880
+      "line": 1898
     },
     {
       "id": "retrieval.declared.selectionrelease",
       "en": "selection lifecycle, owned by the credential that made it",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1882
+      "line": 1900
     },
     {
       "id": "retrieval.frontier.acquire_not_here",
@@ -46436,35 +46436,35 @@
       "en": "an enumeration this large is refused rather than quietly turned into a query selection, because that would change what the operator's click meant. Select by query instead.",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1365
+      "line": 1383
     },
     {
       "id": "retrieval.index.content_reaches_layer",
       "en": "content: reaches the CONTENT layer -- the passages somebody has cited or marked citable: content:pdf-page by extent kind, content:stale for citations made under a transcription the record has replaced, content:machine by who minted it, content:ocr by the chain's last step, content:cap<C by the derivation cap, content:uncited for marked-but-unused passages",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1144
+      "line": 1162
     },
     {
       "id": "retrieval.index.content_searches_citations",
       "en": "content: does NOT search the text of the documents -- it searches what has been cited or marked citable in them, so an empty answer is a fact about citation and never about what a document says",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1145
+      "line": 1163
     },
     {
       "id": "retrieval.index.enumerated_needs_one_id",
       "en": "an enumerated selection needs at least one id",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1362
+      "line": 1380
     },
     {
       "id": "retrieval.index.field_compare_range",
       "en": "field:>value, field:<value, field:a..b compare and range",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1138
+      "line": 1156
     },
     {
       "id": "retrieval.index.field_registered_once",
@@ -46478,84 +46478,84 @@
       "en": "a meaning arm takes a bare word (leg:cuts_against), a sub-field (leg:ground=*) or a comparison (resolves:>=B on the bare field, leg:grade>=B or content:cap<C on a named one)",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1150
+      "line": 1168
     },
     {
       "id": "retrieval.index.no_meaning_of_the_kind",
       "en": "no meaning of the kind {stringify} is held. The kinds that are: {map}",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 964
+      "line": 982
     },
     {
       "id": "retrieval.index.no_record_matches_all",
       "en": "no record matches all of these terms; this many match any of them",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 906
+      "line": 924
     },
     {
       "id": "retrieval.index.no_saved_query_of_yours",
       "en": "no saved query of yours answers to that",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1578
+      "line": 1596
     },
     {
       "id": "retrieval.index.no_scope_called_stringify_the",
       "en": "no scope called {stringify}; the scopes are {SCOPE_KEYS}",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 788
+      "line": 806
     },
     {
       "id": "retrieval.index.op_meaningrows_answers_at_meaning",
       "en": "op=meaningrows answers at MEANING grain and must be told which: rows={known}. Each reads a different table and answers a different question, so there is no default that would not be answering something you did not ask.",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 961
+      "line": 979
     },
     {
       "id": "retrieval.index.record_no_text_index_key",
       "en": "the record has no text index key",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1173
+      "line": 1191
     },
     {
       "id": "retrieval.index.selection_kind_query_enumerated",
       "en": "a selection is 'query' or 'enumerated'",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1357
+      "line": 1375
     },
     {
       "id": "retrieval.index.selection_not_read_not_held",
       "en": "the selection could not be read, so it is answered as one not held",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1457
+      "line": 1475
     },
     {
       "id": "retrieval.index.selection_owned_by_credential",
       "en": "a selection is owned by the credential that made it",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1353
+      "line": 1371
     },
     {
       "id": "retrieval.index.selection_readable_by_credential",
       "en": "a selection is readable only by the credential that made it",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1435
+      "line": 1453
     },
     {
       "id": "retrieval.index.this_action_changes_state_so",
       "en": "this action changes state, so it will not run against a set that moved since it was selected. Look at the selection again and re-select.",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1475
+      "line": 1493
     },
     {
       "id": "retrieval.levels.finding_rests_plain",
