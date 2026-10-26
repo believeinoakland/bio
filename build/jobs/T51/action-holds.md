@@ -222,3 +222,7 @@ Merged `origin/tranche/T51` (BOB's R5, R6, R19, R22 wording; my duplicate R22 li
 - `screens-action` (hold.mjs): send the placing body (`from` included) to `actionholdpreview` and `actionholdrelease`; read `holdsplaced` (items `place`, `hold`, `from`) to list held and released places; use the published fixture `holdPlacedReleasedAnswers` (`fixtures.mjs`).
 
 Size (session_018Ug4LFHJzA9MxdVSoTNU9i): test runs 16, module lines 1337
+
+## J11 · COMPLETE
+
+COMPLETE (after B9 ANSWER). Merged tranche; DECLARED_OPS gains actionholdpreview and holdsplaced, release/preview accept from. Module 62/0; format, architecture, coverage 22/22, words, fixtures, ownership 0. What op-declarations, op-grades, affordances, op-capabilities and screens-action must declare at my merge is named in my record ('After ANSWER B9'); op-declarations is red by name for holdsplaced until then.
