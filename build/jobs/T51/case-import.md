@@ -353,3 +353,23 @@ Round 10 (B16, K5218): `citeimported`'s answer is published by case-import's fix
 **Deferred.** None.
 
 **Size (session_01G3wefEYjZyUQh5J8yzoutu): test runs 6, module lines 2701.**
+
+## J18 · COMPLETE
+
+Re B17 (ANSWER, K5220): merged origin/tranche/T51 into job/T51/case-import (merge 83f6e12a0b, no rebase). `uses` now carries `citation`; nothing in my files changed.
+
+**Applied (unchanged from J17).** `bio-plane/test/m/case-import/fixtures.mjs` (`citeimportedAnswer`, R16) and the new `bio-plane/test/m/case-import/fixtures-citeimported.test.mjs` (R16). Failing first, broken to F2 on purpose: 1 red, 1 pass; restored (byte-identical): 2 of 2 green.
+
+**Checks** (product root `/home/user/bio`).
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/case-import/*.test.mjs`: 176 pass, 0 fail.
+- `checks/architecture.mjs case-import`: 0 failures (was 2 before K5220).
+- `checks/format.mjs`: 0 failures. `checks/coverage.mjs case-import`: 33 of 33 live ids named. `checks/fixtures.mjs case-import --list`: 0 failures. `checks/ownership.mjs ... <merge-base> HEAD`: 3 files, 0 failures.
+- Dependents from J17 (the 8 test files outside case-import that import its fixtures) passed 38 of 38 before this merge; not re-run after it.
+
+**Markers.** None added. **Met ids.** None struck: no requirement change.
+
+**Other modules (REPORT, unchanged).** screens-publish `fr30b.test.mjs:232`, `:244` and screens-inquiry still hand-build `citeimported`; they can take `citeimportedAnswer` from case-import's fixtures now that `uses` carries citation.
+
+**Deferred.** None.
+
+**Size (session_01G3wefEYjZyUQh5J8yzoutu): test runs 9, module lines 2701.**
