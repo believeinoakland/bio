@@ -940,3 +940,7 @@ COMPLETE (SCREENS-INTAKE #29, B60). F-B14 open-file.mjs sendSafeView/reasonBesid
 **Deferred:** none. **Found in other modules:** none new.
 
 Size (session_01614NduQ3cDoS863WMb4H6Z): test runs 7, module lines 3160
+
+## J62 · COMPLETE
+
+COMPLETE · R71 (fix round 10, plan item 147). Changed: capture.mjs:504,742-745 (pending attestation by screen.capture.attest.pending); open-file.mjs:104-108 (picture high/held lines by .means.picture; a file she added keeps high.yours: confirm), sendSafeView (NOT_RENDERABLE, NOT_TEXT, no_sheets drawn whole by refusal.<reason>). Tests red then green (open-file.test.mjs two new, t51-fix2 R50 test reworked, two F-B14 assertions moved). Module suite 390 pass 0 fail; format, architecture, words, coverage (70/70), ownership 0 failures; the only fixtures line naming screens-intake is store-assembly/r10-fixtures-run.test.mjs:27 (not my file). Size (session_01614NduQ3cDoS863WMb4H6Z): test runs 7, module lines 3160.
