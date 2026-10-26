@@ -4,7 +4,7 @@
  * through setup-words' `word(key, vars)` (`says`), so a word changed in `words.json` changes no test. */
 import { word } from "../../../src/setup-words/index.mjs";
 import { SCREENS } from "../../../src/screens-inquiry/index.mjs";
-import { boot, ok, textNodes } from "../interface-shell/harness.mjs";
+import { boot, ok, textNodes, counted } from "../interface-shell/harness.mjs";
 /* K4245, K5054: the op declarations are registered once, by the world (store-assembly R83: every owner's, op-declarations and op-grades), which
    this module's tests import for the acts they seed (op-tables §5.3) */
 import { storeWorld as requestWorld, WORLD_FOUNDER_HANDLE } from "../store-request/fixtures.mjs";
@@ -70,11 +70,11 @@ const CHAIN = (await MEMBERS.mai.read("versionchain", { query: { address: SEEN.a
 /** the capture the document was first held with, and the newer one the source has changed to since (`versionchain`) */
 export const SHA = CHAIN[0].capture_sha;
 export const NEWER = CHAIN[1].capture_sha;
-/** the world's door answering the request the page made, as the page's member */
-const world = (req) => {
+/** the world's door answering the request the page made, as the page's member; counted, so `settle()` waits on a late read (interface-shell K5242) */
+const world = counted((req) => {
   const headers = Object.fromEntries(Object.entries({ ...(req.init && req.init.headers), ...req.headers }).filter(([k]) => k.toLowerCase() !== "authorization"));
   return WORLD.door({ ...req, headers, init: { ...req.init, headers } }, MEMBERS.mai);
-};
+});
 
 const projectMd = (refs) => ["---", `id: ${P}`, "object_type: project", "title: \"Pothole repairs\"",
   "objective: \"Is the city repairing reported potholes as its own policy requires?\"", "references:",
