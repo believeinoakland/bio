@@ -686,3 +686,11 @@ Impact: origin/tranche/T51 to HEAD names 19 modules, 597 test files. Partial run
 Deferred: nothing in my module.
 
 Size (session_012VgFd3nsMnWwNKMK8gzKu2): test runs 7, module lines 3470
+
+## Fix round 10, item 116 (B44 CHANGE): work record
+
+B44 (K5237) asked for `holdsplaced` in the `ACT_HELP_ABSENT` read ground beside `holdsdue`, since AFFORDANCES #51 holds no text for it. Changed: `bio-plane/src/op-declarations/index.mjs` (the read ground's list, `"holderat", "holdsdue", "holdsplaced", "hypotheses"`). The R34 and R47 reds are gone.
+
+Suite (op-declarations, 249 tests): 249 pass, 0 fail. Checks: format, architecture, coverage (82 of 82), fixtures (op-declarations --list, 0 failures), words, ownership: all 0 failures.
+
+Size (session_012VgFd3nsMnWwNKMK8gzKu2): test runs 8, module lines 3471
