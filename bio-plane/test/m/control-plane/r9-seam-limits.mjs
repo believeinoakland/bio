@@ -124,7 +124,8 @@ export const ACCEPTED = Object.freeze({
   "agent-model/src/model.mjs::DEFAULT_MAX_SEGMENT_BYTES": "how much agent transcript one re-serialising segment holds (a CPU pacing figure), no file's reading",
   "agent-runner/src/ws.mjs::MAX_MESSAGE": "the largest websocket frame the agent runner accepts, a transport bound",
   "agent-worker/src/ops.mjs::TRANSCRIBE_IMAGE_MAX_BYTES": "the AI provider's per-image request limit (5 MB), a provider fact about what is sent, not a reading ceiling",
-  "bio-plane/src/plane/transcribe.mjs::TRANSCRIBE_IMAGE_MAX_BYTES": "the same provider per-image limit, held equal to agent-worker's by its test",
+  "bio-plane/src/store-assembly/transcribe.mjs::TRANSCRIBE_IMAGE_MAX_BYTES": "the same provider per-image limit, held equal to agent-worker's by its test (the plane's copy moved to the assembly with the transcription)",
+  "bio-plane/src/case-carriage/index.mjs::NATIVE_DIGEST_MIN_BYTES": "the size from which a document's bytes are digested by the platform's native SHA-256 and not the pure-JS hash, a policy threshold of the digest (case-carriage R15)",
   "agent-worker/src/transcribe.mjs::PAGE_MAX": "the characters of one page of the AI's answer a transcription accepts, an answer bound",
   "agent-worker/src/action-drafts.mjs::RECORD_MAX": "the characters of JSON of a matter's record handed to a drafting task, a task input bound",
   "bio-plane/src/acquisition/unpack.mjs::UNPACK_CALL_BYTES": "one unpack call's share of declared bytes (work pacing: the next call resumes), never a refusal of a file",
@@ -267,19 +268,20 @@ export function sections(kit, counting) {
   test("R9 seam §14b (G124b; R72, R111): the door hands `uploadCapture` its own byte ledger and the request's declared length: a 24 MiB text peaks at the file and at most two parts beyond it, and nothing is held once it is answered", { timeout: 900000 }, async () => {
     const { ownerOps: controlPlaneOwnerOps } = await import("../../../src/store-assembly/owner-ops.mjs");
     const { fresh, bucket } = await import("../capture/fixture.mjs");
-    // fixtures-contract: plane job-registrar
-    const { jobRegistrarStub } = await import("../../job-registrar-stub.mjs");
+    const { store } = await import("../store-assembly/fixture.mjs");
+    const { pendingOf } = await import("../../../src/store-assembly/pending.mjs");
     const PART = 8 * MiB;
     const b = bucket();
     b.createMultipartUpload = async (key) => { const ps = []; return { uploadPart: async (n, bytes) => { ps[n - 1] = new Uint8Array(bytes); return { partNumber: n }; },
       complete: async () => { b.held.set(key, new Uint8Array(Buffer.concat(ps))); }, abort: async () => {} }; };
     const w = fresh({ evidence: b, env: { INSTANCE_NAME: "inst", VERSION: "9.9.9" } });
     w.c.evidenceKey = (d) => `bio/captures/${d}`;
-    const j = jobRegistrarStub();
-    // fixtures-contract: plane job-registrar
-    w.c.registerJob = j.registerJob; w.c.armJobs = j.armJobs;
+    /* the job registrar is store-assembly's: the assembled store's real one, on the store's own storage */
+    const x = await store({});
+    const j = pendingOf(x.ctx);
+    w.c.registerJob = (e) => j.registerJob(e); w.c.armJobs = () => j.armJobs();
     const real = w.core.transact.bind(w.core);
-    w.core.transact = (fn) => { try { return real(() => j.transact(() => { const out = fn(); if (out && typeof out === "object" && out.ok === false) throw Object.assign(new Error("refused"), { refused: out }); return out; })); } catch (e) { if (e && e.refused) return e.refused; throw e; } };
+    w.core.transact = (fn) => { try { return real(() => x.ctx.storage.transactionSync(() => { const out = fn(); if (out && typeof out === "object" && out.ok === false) throw Object.assign(new Error("refused"), { refused: out }); return out; })); } catch (e) { if (e && e.refused) return e.refused; throw e; } };
     /* the ledger the door builds is the one capture is handed: seen through a spy on the method the owner-ops map calls */
     let seen = null, declared = null;
     const of = { capture: () => ({ uploadCapture: (a) => { seen = a.ledger; declared = a.declared; return w.c.uploadCapture(a); } }) };

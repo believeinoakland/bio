@@ -36,14 +36,15 @@ export function sections(kit) {
   const body = (a) => (a && a.result !== undefined ? a.result : a);
   const stamp = () => `${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
   /* a large PDF served at a pace under a fresh name; its address is the member's press */
-  function served(label, size, rate) {
+  function served(label, size, rate, { named = false } = {}) {
     const name = `R8-${label}-${stamp()}.pdf`;
     const bytes = pdfOf(`R8 ${label} the budget volume the clerk read ${stamp()}`, size);
     /* the kit's filler is the same for every file of a size; a delivery of a second file whose filler is the same is refused by the record (found at the first run), so each
        file's filler is made its own: 20000 bytes of the filler's stream, none of the pages' */
     let x = (Date.now() % 1000003) + Math.floor(Math.random() * 1e6) + 7;
     for (let i = 0; i < 20000; i++) { x = (x * 1664525 + 1013904223) >>> 0; bytes[3000 + (x % (bytes.length - 6000))] = 0x41 + ((x >>> 24) % 26); }
-    serve(name, bytes, { rate });
+    /* `named`: the source states the document's name (a content-disposition), so the document is stored under that name and not under its host and the day (capture R54) */
+    serve(name, bytes, { rate, ...(named ? { disposition: `attachment; filename="Budget volume ${label}.pdf"` } : {}) });
     return { name, bytes, locator: `https://www.example.gov/files/${name}`, sha: sha(bytes) };
   }
   const heldAt = async (auth, locator) => body(await get(auth, { op: "heldat", address: locator }));
@@ -162,9 +163,9 @@ export function sections(kit) {
     }
   }
   /* a project-less member's press of a large PDF on the Add screen, watched to the finished line */
-  async function pressedAndWatched(handle, label) {
+  async function pressedAndWatched(handle, label, { named = false } = {}) {
     const auth = await person(handle, "member", ["contribute"]);
-    const f = served(label, 10 * MB, 3 * MB);
+    const f = served(label, 10 * MB, 3 * MB, { named });
     const { p, asked, seen } = await addScreenOf(auth, "/app/capture/address");
     /* the real plane answers in real time: the page is given it until the field is drawn */
     await until(async () => { await p.settle(20); return p.doc.getElementById("ci-address") ? true : null; }, 60000, 300);
@@ -192,7 +193,7 @@ export function sections(kit) {
   });
 
   test("R8 (G109): a second press of the same address names the compared copy by the stored title", { timeout: 900000 }, async () => {
-    const { auth, f, p } = await pressedAndWatched("r8-gwen", "g109");
+    const { auth, f, p } = await pressedAndWatched("r8-gwen", "g109", { named: true });
     const stored = (await heldAt(auth, f.locator)).copy.title;
     assert.ok(stored && stored.length > 0, "heldat states a title for the delivered copy");
     /* the real plane answers in real time: the page is given it until the field is drawn */
