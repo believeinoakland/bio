@@ -102,6 +102,10 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
     check: 'C-124.17', where: at("#optionFields", "is-option-addressee"),
     translation: localize('action-plans.checks.an_addressee_is_an_office', 'An addressee is an office by its role and body, a reporter or outlet, an organisation or another civic organization by role and organisation, or a described audience. It is never a private individual. Nothing was written.'),
   },
+  ADDRESSEE_INCOMPLETE: {
+    check: 'C-124.66', where: at("#optionFields", "is-option-addressee"),
+    translation: localize('action-plans.checks.an_addressee_names_its_role_and_organisation', 'An addressee needs its role, and its organisation unless it is an office. Say which part is missing. Nothing was written.'),
+  },
   DATE_REFUSED: {
     check: 'C-124.18', where: at("#optionFields", "is-option-date"),
     translation: word('refusal.DATE_REFUSED'),
