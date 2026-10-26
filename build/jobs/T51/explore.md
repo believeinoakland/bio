@@ -127,3 +127,7 @@ Size (session_017Lam1WDA8ZqRqYcHHMJK64): test runs 3, module lines 1115
 **Met requirement ids.** R29 (and R25, R26, R7 unchanged and still met).
 
 Size (session_017reTzAgYSiDVCzRpif7dhJ): test runs 11 (+1 impact run of 418 files and 225 single-file reruns), module lines 1154
+
+## J7 · COMPLETE
+
+COMPLETE · fix round 10 (B7): R29 met. EVT- node named '{kind} · {date}' ('{kind} · undated'), INFO- node by document title via new deps.documents titlesOf (labels.mjs:35-70, graph.mjs:79,87, index.mjs:35,43). Test node-labels.test.mjs red then green; explore 62/62; impact 418 files: 223 of 225 flagged clean alone, the 2 red are red on the tranche tip too (store-assembly declarations R83; screens-investigate common timeout); checks 0 failures in explore. REPORT: store-assembly/assemble.mjs:277 must pass documents (bundle title, sight-aware) for INFO- titles live; event names are live now. Details in my record.
