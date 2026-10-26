@@ -276,3 +276,7 @@ Follow-up to J13 COMPLETE: the dependent-file rerun on the merged tree (228f3ecd
 Nothing in the membership suite or checks changed since J13. Pushed head: eb0a451fdd.
 
 Size (session_0134U5UywFbnrvXpAVSSZyrL): test runs 14, module lines 1668 (`bio-plane/src/membership/*.mjs`)
+
+## J15 · REPORT
+
+Correction to J14: on the merged tree `updates.test.mjs` passes (14 of 14, exit 0). Its one failure was in the pre-merge run only, and the merge (B13) cleared it. The failing `screens-settings` files on the merged tree are connect, group and identity, as J14 says.
