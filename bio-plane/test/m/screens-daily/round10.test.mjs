@@ -246,3 +246,36 @@ test("R78 (F-B10 (a), K5267): the walker's case over the real plane: words found
   await settle();
   assert.ok(text(none).includes(word("screen.finder.noresult", { q: "qqqxxx zzzqqq" })), "control");
 });
+
+/* ---------- F-B10 (a) (R78): under "When some documents hold only some of the words" a member can open them ---------- */
+
+test("R78 (F-B10 (a), K5257): the walker's cases `ordinance zzzqqq` (fields widen) and a passages-only widen draw the heading with an act under it; pressing it asks the query as `ordinance OR zzzqqq` by the F-B9 route; the heading is never drawn alone; controls: none to widen draws no heading; a query with operators draws the heading only with a count", async () => {
+  const typed = "ordinance zzzqqq";
+  const w = (total) => ({ interpretation: "OR", total, q: typed, detail: "d" });
+  const asked = (p, op) => p.byOp(op).map((r) => r.query.q);
+  const cases = [["fields widen", NOHITS(w(5)), PASSAGES([], { total: 0 })], ["passages-only widen", NOHITS(null), PASSAGES([], { total: 0, widen: w(3) })]];
+  for (const [name, search, meaningrows] of cases) {
+    const p = await open("/app/finder/" + typed, { search, meaningrows });
+    await settle();
+    const t = text(p);
+    const head = t.indexOf(word("screen.finder.partial.head"));
+    assert.ok(head >= 0, name + ": the heading: " + t.slice(0, 300));
+    const b = button(p, "search");
+    const widen = main(p).querySelectorAll('button[data-act="search"]').find((x) => x.dataset.widen);
+    assert.ok(widen, name + ": an act under the heading carries the widened query");
+    assert.equal(widen.dataset.widen, "ordinance OR zzzqqq", name);
+    assert.ok(t.indexOf(word("act.search.label.finder"), head) > head, name + ": the act's label follows the heading");
+    assert.ok(b, name);
+    await p.click(widen);
+    await settle();
+    assert.deepEqual(asked(p, "search").slice(-1), ["ordinance OR zzzqqq"], name + ": the fields route asks the OR reading");
+    assert.deepEqual(asked(p, "meaningrows").slice(-1), ["passage:ordinance OR passage:zzzqqq"], name + ": the passages route asks it too (F-B9)");
+  }
+  const none = await open("/app/finder/" + typed, { search: NOHITS(null), meaningrows: PASSAGES([], { total: 0 }) });
+  await settle();
+  assert.ok(!text(none).includes(word("screen.finder.partial.head")), "control: nothing to widen, no heading");
+  assert.ok(!main(none).querySelectorAll('button[data-act="search"]').some((x) => x.dataset.widen), "control: no widen act");
+  const ops = await open("/app/finder/(a OR b) NOT zzzqqq", { search: NOHITS(null), meaningrows: PASSAGES([], { total: 0, widen: w(3) }) });
+  await settle();
+  assert.ok(!text(ops).includes(word("screen.finder.partial.head")), "control: a query with operators and no count to say draws no bare heading");
+});
