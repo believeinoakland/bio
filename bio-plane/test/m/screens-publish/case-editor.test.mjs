@@ -3,7 +3,7 @@
  * each act sent with what its owner takes. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, drew, word, ops, press, fill, last, ok, refusedIn, P, DR, C, plane, COPY } from "./fixtures.mjs";
+import { open, main, text, drew, word, ops, press, fill, last, ok, refusedIn, P, DR, C, plane, COPY, provided, refusalWords } from "./fixtures.mjs";
 
 const PATH = `/app/case-editor/${P}`;
 
@@ -83,10 +83,16 @@ test("R1 \"Draft what changed\" only while the assistant is reachable, its answe
   assert.equal(last(p, "whatchangedpropose").body.text, "Adds the 2025 schedules.");
   const helps = main(p).querySelectorAll('button[data-act="writinghelp"]').map((b) => b.getAttribute("data-field"));
   assert.deepEqual(helps, ["scope", "whatchanged"], "writing help under the scope and what changed fields only, never under a reason");
-  p = await open(PATH, { plane: { writinghelp: ok({ ok: true, text: "Rent adjustments, 2024–2026.", untested: true }) } });
-  await press(p, "writinghelp", { values: { "ce-scope": "rents 2024 2026" } });
-  assert.equal(last(p, "writinghelp").body.field, "scope");
-  assert.ok(drew(p, "screen.case-editor.help.draft") && text(p).includes("Rent adjustments, 2024–2026.") && drew(p, "ai.label.untested.writinghelp"));
+  /* wizard-scripts' real `writinghelp` never returns a draft (K5212): past its refusals it answers ASSISTANT_DRAFT_UNAVAILABLE, so what the
+     screen draws is each refusal in its own words, under the field, and no draft */
+  for (const which of ["held", "unreachable"]) {
+    const answer = await provided.writinghelp(which);
+    p = await open(PATH, { plane: { writinghelp: answer } });
+    await press(p, "writinghelp", { values: { "ce-scope": "rents 2024 2026" } });
+    assert.equal(last(p, "writinghelp").body.field, "scope");
+    assert.ok(text(p).includes(refusalWords(answer)), `${which}: the refusal in its words`);
+    assert.ok(!drew(p, "screen.case-editor.help.draft") && !drew(p, "ai.label.untested.writinghelp"), `${which}: no draft`);
+  }
 });
 
 /* ---------- fix round 10 (K5148): R44's What-changed words, the document read for a prepared edition only, the people of a prepared new-case draft ---------- */

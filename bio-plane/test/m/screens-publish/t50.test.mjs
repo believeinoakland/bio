@@ -7,7 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ADMIN } from "../interface-shell/harness.mjs";
 import { open, main, text, tipOf, drew, drewIn, day, word, hasWord, ops, press, fill, tick, last, ok, refused, refusedIn, pending, silent, plane, rawKeys,
-  PREFLIGHT, COPY, PUBLISHED_CASE, P, DR, C, E1, B1, GRANT_UNTIL } from "./fixtures.mjs";
+  PREFLIGHT, COPY, DEFAULT, PUBLISHED_CASE, P, DR, C, E1, B1, GRANT_UNTIL } from "./fixtures.mjs";
 
 const PUBLIC = { session: null };
 const reach = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
@@ -288,7 +288,10 @@ test("R34 docket-public opens in the published frame with no session and no Auth
   assert.equal(last(p, "docketpublic").query.case, C);
   assert.ok(drew(p, "screen.docket-public.sub"));
   const t = text(p);
-  assert.ok(t.includes(`${word("screen.docket.kind.edition")} · Edition 2 published, superseding Edition 1`) && t.includes(`${word("screen.docket.kind.court-order")} · Order of 20 November: seal exhibit 4`));
+  /* each posted entry as the real `docketpublic` answer holds it: its kind's word, then what it says (its summary, else its reason) */
+  const posted = DEFAULT.docketpublic.json.result.entries;
+  assert.ok(posted.length > 0);
+  for (const e of posted) assert.ok(t.includes(`${word("screen.docket.kind." + e.fields.kind)} · ${e.fields.summary || e.fields.reason}`), `entry ${e.seq}`);
   assert.equal(main(p).querySelectorAll("button[data-act]").length, 0, "no act offered");
   assert.equal(main(p).querySelector('a[data-public-page]').getAttribute("href"), `/app/published/${encodeURIComponent(C)}`);
   assert.ok(drew(p, "screen.docket-public.back"));
