@@ -619,3 +619,28 @@ REPORT (re B50). Merged tranche/T51; item (1) now draws the refusal's own `detai
 ## J45 · QUESTION
 
 QUESTION (re B52). Merged tranche/T51 and applied it (pushed): item 10 now takes the owner's `ADDRESSEE_INCOMPLETE` (drawn by its `detail`, the local check is gone; plan.mjs `refusals`), and `date_before_phase` is worded from `start`. Both tests take the owner's answer from action-plans (`dateBeforePhase()` and its real `optionAdd` refusal), so they import `bio-plane/test/m/action-plans/fixtures.mjs` and `fixture.mjs`. `architecture.mjs` fails on those two imports: `screens-action`'s `uses` in build/modules.json does not list `action-plans` (the requirements' Uses names it). Please add `action-plans` to `uses` (tests only; no new edge in source), or tell me another way to take a real refusal (a hand-built one is forbidden, K4990). Everything else is green: suite 306 of 307, the one red the H1 test (waits on ACTIONS #28); format 0, coverage 56/56, words 0, ownership 0.
+
+## J46 · COMPLETE
+
+COMPLETE (re B49, B50, B52, B53; fix round 10, item 136; R56). Branch job/T51/screens-action, pushed; tranche merged.
+
+What changed (bio-plane/src/screens-action/):
+1. matter.mjs:183 Body is a choice among the team's office and body entities (`entitieskind`), the entity id sent; matter.mjs:572 `STANDARD_BINDING_UNDETERMINED` drawn by the refusal's own `detail` (B50).
+2. matter.mjs:445 each determination row draws its standards' outcomes; matter.mjs:580 `determine` goes to the new determination's page.
+3. matter.mjs:259 findings: tickable only as `conformance` accepts (a published case's finding, or one the determination already rests on); a concluded question no case holds is drawn apart as concluded, no box.
+4. plan.mjs:173,:181 undetermined `date_past`/`date_before_phase` by their keys with names; a determined `date_before_phase` by its key from the check's `start` (B52).
+5. send-steps.mjs:449 the risk door is its own control after the whole sentence.
+6. actionnew.mjs:156 local pre-check deleted; the plane's refusal and findings are drawn; the leg defaults to "Advances" for a request for comment.
+7. request.mjs:48,:73 the team's named offices are offered again (they answer as the office named, actions R111); request.mjs:196 an empty press is refused `findin.fieldneeded`.
+8. action.mjs:216 "Waiting on" only while not resolved or abandoned.
+9. send-steps.mjs:298,:583 the sending's proposed next state said in the owner's words, with the door to the action (B51: meets R56).
+10. plan.mjs (optionadd `refusals`) the owner's `ADDRESSEE_INCOMPLETE` drawn by its `detail`; the local check is gone (B52).
+Words: words-fix-r56.mjs.
+
+Tests, each red then green: new fix10-t51.test.mjs (10 tests named R56; all red on the old source; C2a red until conformance #29, H1 red until actions #28, now green on their real answers, K4 and date_before_phase on action-plans' real refusal and `dateBeforePhase()`). Changed to the new behaviour: actionnew.test.mjs, fix2-t51.test.mjs, matter-t51.test.mjs, seam-t51.test.mjs, reads-t51.test.mjs, page.mjs.
+Suite: 307 of 307 pass. Checks (absolute root): format 0, architecture 0, coverage 56/56, words 0, fixtures 0 (2 accepted, pre-existing), ownership 0 (16 files). impact: control-plane and plane users, 119 files, 706 of 706 pass (run before B50/B52; their changes touch the Matter and Plan screens only).
+Met: R56. No markers added.
+
+REPORTed: J43 (H2 registry rows, words wanted), J44. New: a team office named from the Request screen has no `post_in` line, so `addresseesuggest` answers it as undetermined with its why ("line_date_places"/"office_held_body") and the screen says no office is known; the second visit offers it but it cannot be chosen until a member records its body (actions R111 as built; the test records the post). For you: whether `entitycreate` from Request should record the body line.
+
+Size (session_01QhuWTsqg48Wfwk86dvqR7N): test runs 19, module lines 11691
