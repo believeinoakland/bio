@@ -8,6 +8,7 @@ import { registerDeclaredOps as registerOps } from "../../../src/op-declarations
 import { readFileSync } from "node:fs";
 import { boot, ok, refusedIn } from "../interface-shell/harness.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
+import { divideAnswers } from "../inquiry/fixtures.mjs";
 import { BUNDLE_ID_RE } from "../../../src/record-grammar/ids.mjs";
 import { open, storeWorld, WORLD_FOUNDER_HANDLE, main, actsIn, button, fill, press, rawKeys, inquiryMd, INQUIRY_REFS, LEGS, BASIS, plane, says, section, day, word, SCREENS, POLICY, P, Q, D } from "./fixtures.mjs";
 
@@ -160,7 +161,7 @@ test("R102 control: a missing reason, a missing question or a passage sent nowhe
   assert.equal(p.byOp("allocid").length, 0, "no number is taken for a division that cannot be sent");
   /* a question whose 40th character falls on a hyphen (the owner's refusal is its own answer, scripted over the world: the real act refuses only what already exists) */
   const long = "Did the city close every one of the reported potholes - on time";
-  const q = await w.page({ plane: { inquirydivide: refusedIn("CHILD_EXISTS") } });
+  const q = await w.page({ plane: { inquirydivide: ok(divideAnswers().childExists) } });
   const f = main(q).querySelector("details[data-divide]");
   fill(q, { "question-divide-reason": "r", "question-divide-q1": long, "question-divide-q2": "Two?" });
   for (const o of [0, 1, 2]) { q.doc.getElementById(`question-divide-leg-${o}-0`).checked = true; q.doc.getElementById(`question-divide-leg-${o}-1`).checked = true; }
