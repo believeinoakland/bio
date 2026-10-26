@@ -1332,3 +1332,7 @@ G93 is NOT 10 of 10. Ten runs under busy loops (20 loop processes on 4 cores, he
 Measured cause for owedwork: the founder's read starts the row's firing; the platform answers no alarm while it runs (scheduler/index.mjs:614, R29), so the old immediate assertion read the firing, not the arm. The test now waits for the firing to end (firingEnded) before reading the alarm; the same wait is on whoami. The whoami :109 failure is not yet explained: the read during or just after a firing, or a look inside HEAL_EVERY_MS (scheduler heal(), :807).
 
 The G93 test edit is uncommitted (not verified). The five foreign files are not mine and are not committed (patch: /tmp/claude-0/-home-user-bio/foreign-changes.patch). Need: a decision on the whoami case (is a member read after a firing expected to arm at once, or to arm when the firing ends?), or permission to continue diagnosing it.
+
+## J76 · REPORT · re J75
+
+Final count for the G93 verification (fix-run-1 to -10, same load): owedwork 10 of 10 green. whoami 8 of 10: fails at run 3 (settled, the first-firing wait) and run 4 (r8-heal-door.test.mjs:109, the member's read did not arm after its firing ended). Nothing changed since J75; the whoami case still waits on your decision (arm at once, or when the firing ends).
