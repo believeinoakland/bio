@@ -2382,7 +2382,8 @@ export class Contradiction {
       "basis:", ...legLines(framed, "supports"), ...legLines(other, "cuts_against"),
       "state_history: []", "---", "", "## Question", "", fmSafe(question), "", "## Session Log", "",
       word("contradiction.text.taken_up_contradiction", { at, who, candidate: row.candidate, frame }), ""].join("\n");
-    return { text, title: title ?? question };
+    /* R62: the envelope's title is the document's own safe form, or promotion's comparison refuses any quote. */
+    return { text, title: fmSafe(title ?? question) };
   }
 
   /** op=contradictiontakeup — R35: take a candidate up as a contradiction inquiry, in one act through
