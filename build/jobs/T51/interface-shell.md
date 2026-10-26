@@ -759,3 +759,9 @@ Size (session_011MRtDNeEfHW1QMz44tMXAY): test runs ~12, module lines 3437
 ## J43 · COMPLETE
 
 COMPLETE, interface-shell, T51 fix round 10 (item 149; B59): R134 (RE_POINTS: setup factconfirm, question leggrade, document resolve) and R135 (cs.checks tells its screen of a change via a typing option). Tests red then green (r134.test.mjs, 4 tests); module 384/384; screens-publish/inquiry/settings/intake/daily/investigate/action/wizards all green; screens-entry 2 fail, identical on origin/tranche/T51. Checks: architecture, coverage 130/130, ownership 0, run.mjs no finding in my files; format has 1 failure in build/rulings.md:5301 (K5308, yours). Details in my record J42. Pushed job/T51/interface-shell.
+
+## J44 · COMPLETE
+
+COMPLETE, interface-shell, T51 fix round 10 (B60, K5310): R134's fourth re-point. Merged `origin/tranche/T51`; `index.mjs` `RE_POINTS` gains `queue: ["signerknown"]` (credentials R83; the registry lists it nowhere). `r134.test.mjs` gains the `signerknown` on `queue` case (served; control: on `explore`, and another unlisted op on `queue`, still throw); `design.test.mjs` and `t50.test.mjs` deepEquals updated. Red without the source line ("signerknown is a named re-point of queue"), green with it. interface-shell 385 of 385 pass. The rest of J42 (R135, other suites, checks) stands; the change adds one table entry.
+
+Size (session_011MRtDNeEfHW1QMz44tMXAY): test runs ~16, module lines unchanged but 1 table entry

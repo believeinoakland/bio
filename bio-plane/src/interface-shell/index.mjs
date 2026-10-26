@@ -160,6 +160,8 @@ export const RE_POINTS = Object.freeze({
      the registry lists the op on that screen (the registry lists `factconfirm` on `group` and `resolve` on `person` only) */
   setup: Object.freeze(["factconfirm"]),
   question: Object.freeze(["leggrade"]),
+  /* R134 (K5310; credentials R83, screens-daily R107): `signerknown` on `queue`, until the registry lists it there */
+  queue: Object.freeze(["signerknown"]),
 });
 export const LOCKED_OPS = Object.freeze(["unlock"]);
 export const ANY_SCREEN_OPS = Object.freeze(["infolevelset"]);

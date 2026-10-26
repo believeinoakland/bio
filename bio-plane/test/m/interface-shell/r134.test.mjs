@@ -11,7 +11,7 @@ import { boot } from "./harness.mjs";
 const screen = (id, op) => ({ id, render: () => "", acts: [{ op }] });
 
 /* R134: each re-point is admitted on its screen, refused on any other, and listed by no registry screen it names */
-for (const [id, op, other] of [["setup", "factconfirm", "explore"], ["question", "leggrade", "document"], ["document", "resolve", "explore"]]) {
+for (const [id, op, other] of [["setup", "factconfirm", "explore"], ["question", "leggrade", "document"], ["document", "resolve", "explore"], ["queue", "signerknown", "explore"]]) {
   test(`R134 ${op} is a named re-point of ${id}: ${id} naming it is served; control: ${op} on ${other}, and another unlisted op on ${id}, still throw`, () => {
     assert.ok(RE_POINTS[id].includes(op), `${op} is a re-point of ${id}`);
     const reg = SCREEN_REGISTRY.find((r) => r.id === id);
