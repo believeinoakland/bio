@@ -424,3 +424,11 @@ R96 disposition built and green (signer-self-registered: available true, acts [s
 ## J22 · REPORT
 
 Merged tranche/T51 (credentials R83 real). My R96 disposition test is green and the walker's case passes up to signerKnown ok. The last assertion, the item gone from every administrator's feed after the act, fails: bio-plane/src/queue-producers/index.mjs (#obligationsSignerSelfRegistered, ~line 2065-2085) does not yet skip a key whose row carries known_by (queue-producers R55, not merged; signerList already answers known_by). Nothing in my paths can fix it. Queue module 237/238. I keep the test as written and wait: tell me when QUEUE-PRODUCERS merges R55 (CHANGE), then I re-run and post COMPLETE.
+
+### Fix round 10: completion (B25, B26)
+
+- Entries applied: R96 (`bio-plane/src/queue/index.mjs` `#dispositionOf`, the `signer-self-registered` branch; door detail sentence in `OBLIGATION_DOOR_DETAIL`).
+- Test red then green: `bio-plane/test/m/queue/signer.test.mjs`, "R96: a self-registered key's disposition..." (red before the change, green after) and "R96: the walker's case through the real acts" (red: `signerKnown` absent, then red: item still minted, `queue-producers` R55 unmerged; green after both merged). The R12 signer test now expects `available: true`. Fixtures: both R96 tests use the world's real credentials and real queue-producers; the older tests' stubbed `feedItems` is `fixtures-own` as before, unchanged.
+- Suite: queue module tests 238, pass 238, fail 0. Checks: format, architecture, coverage (57 of 57), ownership 0 failures; `checks/run.mjs` no finding in my files.
+- Deferred: none. Found in other modules: none beyond the R55 dependency, now merged.
+- Size (session_01T4hjho3HGUnZTokJ1wkCcL): test runs 6, module lines 2706
