@@ -371,3 +371,28 @@ Size (session_01VKactdh7kQCY61oFDcnvi4): test runs 8, module lines 41
 ## J19 · COMPLETE
 
 COMPLETE (B22). R95 met: What you answered gains join_answer (project-roster R44 read, window, R33 gate). project-leave registered as an OBLIGATION (kind to act projectremove; sentence queue.index.this_one_is_a_participants). Queue suite 232/232; format, architecture, coverage, words, ownership, fixtures 0 failures; no markers. With origin/job/T51/queue-producers merged locally (undone): projects.test.mjs 11/11, queue 232/232. Yours: strike R95's mark, add project-leave to R57's text; screens-daily draws join_answer; the through-the-door case is control-plane's. Details in my record.
+
+## Completion (QUEUE #39, fix round 10, K5217; START B23)
+
+**Entries applied** (K5217, Bob's direction K5175; no requirement changed, so no requirement mark is met or struck): `op=queue`'s answer published as queue's fixtures for interface-shell, made by queue's own `queueFeed` over its test world each call and never stored:
+- `bio-plane/test/m/queue/fixtures.mjs:20` `emptyFeed()`: member `mai` (viewer `member:mai`), no open item: `ok`, `member`, `items` [], `item_count` 0.
+- `bio-plane/test/m/queue/fixtures.mjs:24` `feedWithItem()`: the same member with one open task (`TASK-2026-0001-a`) assigned to her on `INF-1`: one OBLIGATION, summary "about INF-1", `item_count` 1.
+- `bio-plane/test/m/queue/fixtures.mjs:28` `emptyCount()` and `:32` `countWithItem()`: the `count: true` answer over the same two worlds (`{ok, member, count}`, 0 and 1), since the frame's bell and sidebar read the count too (R93) and the harness default served both. Added beyond the ask so interface-shell can drop its `queue` default whole.
+- `bio-plane/test/m/queue/fixtures.test.mjs`, four tests, each titled K5217: the empty feed is the real answer (ok, her name, no item, the answer's fields); the one-item feed is the real answer (one OBLIGATION with that id and summary); the counts are the real counts; each fixture is made afresh (equal in content, never the same object, a caller's change to one answer does not reach the next). The content comparison strips `feeds_ms`, `derivation` and `feeds`, which carry clock timings and the derivation's served mark and differ between two asks by design.
+
+**Failing first, then green.** The first run of `fixtures.test.mjs` failed one test (the afresh-world comparison, on the timing fields); the fix is the content comparison above. Break-once check, as K5217 asks: in `bio-plane/src/queue/index.mjs` the answer's `items` was replaced by `[]` (one line, `:1466` region, the `return { ok: true, items, suppressed, ...}` of the feed derivation): three tests went red (the one-item feed, the counts, the afresh-world test) and the empty-feed test stayed green, as it should. Restored with `git checkout` of that file (its only change was the break); the file is clean against the tranche and the four tests are green again.
+
+**Tests and checks** (absolute root `/home/user/bio`):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/queue/*.test.mjs bio-plane/test/conclude-project.test.mjs bio-plane/test/docdates.mjs`: 238 tests, 238 pass, 0 fail, exit 0 (the run exits by itself, so no count comparison was needed).
+- `checks/fixtures.mjs /home/user/bio queue --list`: answer 0, stub 0, code 0, contract 0, accepted 0; 0 failures.
+- `checks/architecture.mjs /home/user/bio queue`: 41 product files, 146 relative imports, 0 failures. `checks/coverage.mjs /home/user/bio queue`: 56 of 56 live ids, 0 failures. `checks/format.mjs /home/user/bio`: 0 failures.
+- `checks/ownership.mjs /home/user/bio queue <merge-base> HEAD`: 3 files changed by queue (my two files and this record), 0 failures.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: `queue 1/35`; affected modules 1 of 178; affected test files 1 of 2973.
+- `checks/words.mjs` (the words count, run against the working tree and against a clean worktree of `origin/tranche/T51`): 19247 words both times, so the new files add no member-facing words.
+- `checks/run.mjs /home/user/bio`: no finding in queue's files (none names `m/queue/`, `src/queue/` or `queuestate`). It reports 16 words failures, 5 coverage failures and 349 fixtures failures, all in other modules' files. See the REPORT below.
+
+**Found outside my paths (REPORT).** `checks/run.mjs` on the tranche carries, besides mine, 349 fixtures failures, almost all `op-table` answers in other modules' tests. Among them: `bio-plane/test/m/interface-shell/harness.mjs:91` `queue:` hand-built `{ok, member, count}` and `{items}` (the frame default; interface-shell removes it, K5202, and can now use `emptyFeed`/`feedWithItem`/`emptyCount`/`countWithItem` from `bio-plane/test/m/queue/fixtures.mjs`); and `screens-inquiry` `fr3-dashproject.test.mjs:41`, `fr4-question.test.mjs:120`, `t51-dashproject.test.mjs:151,177,206`, `t51-question.test.mjs:131` (each `queue:` answer hand-built). The `screens-action` `dash-action.test.mjs:92` is a `tasks` op table. These are the owners' to re-point at the published fixtures. I did not count the 5 coverage failures or the 16 words failures per module: they are outside my paths and the check output does not name them.
+
+**Markers added**: none (no `fixtures-own` or `fixtures-generic`).
+
+Size (session_01KTd17XTyLAtTuNkmbbXcVw): test runs 5, module lines 92
