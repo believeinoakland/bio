@@ -84,3 +84,17 @@ Size (session_01PydE3LcJc4wSm6cj6MDZs3): test runs 7, module lines 1124
 - **Found elsewhere, for BOB.** (1) `setup-words/rows.mjs` (generated, not written): the old `basis-versions.grammar.basis_version_legs_*` rows are stale; the new `basis-version-grammar.grammar.*` keys are not yet in it. (2) `build/rulings.md:5301` format failure (above). (3) `basis-versions/index.mjs:266` and `:320` build the same field spelling for their own findings (`basis_version_legs[{ord}] (version …)`); not this module's, not changed.
 - **Deferred:** none.
 - Size (session_01PydE3LcJc4wSm6cj6MDZs3): test runs 11, module lines 1128
+
+## J5 · COMPLETE
+
+R13 done on job/T51/basis-version-grammar (pushed, 85e913ba9e; record: build/jobs/T51/basis-version-grammar.md, section "Fix round 10, R13 (B5 CHANGE)").
+
+What changed: every sentence this module writes about a version leg now starts with the leg's place, "Leg {n} of version '{name}'", read by key (basis-version-grammar.grammar.leg_of_version) through one helper, legPlace. That covers the lead, theme, extent, target, role, grade, ground and orphan-row sentences (grammar.mjs). The lead, extent and other inquiry-grammar arms are handed the place as their label.
+
+Tests: new leg-label.test.mjs (R13, 10 tests), red first (all 10 failed on the field spelling), green after. grammar.test.mjs re-keyed to the place. The R6 golden pins version-leg findings by code and check only, as it already did for the theme finding.
+
+Results: module suite 50 pass, 0 fail; basis-versions + strength 390 pass, 0 fail. architecture, coverage (12/12), fixtures --list, ownership, words: 0. run.mjs: no finding in this module.
+
+For you: (1) format fails on build/rulings.md:5301 (K5308 records a refused act's approval with no standing-list decision). That file is yours, so I did not edit it. (2) setup-words/rows.mjs (generated, not written) still holds the old basis-versions.grammar.basis_version_legs_* rows; the new basis-version-grammar.grammar.* keys are not in it yet. (3) basis-versions/index.mjs:266 and :320 build the same field spelling for their own findings; not this module's. (4) I ran the two direct users only; the rest of the impact set was not run.
+
+Size (session_01PydE3LcJc4wSm6cj6MDZs3): test runs 11, module lines 1128
