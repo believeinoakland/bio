@@ -31,6 +31,8 @@ function scanner() {
       }
       return json({ ok: true, verdicts: out });
     }
+    /* a renderer that refuses the file, as the service does (`renderer.mjs`'s classed refusal: `{code, message}`, 422); set by a test, an environment double's setting */
+    if (u.pathname === "/render" && s.refuse) return json({ ok: false, code: s.refuse, message: "The renderer refused the file." }, 422);
     if (u.pathname === "/render") { const b = new TextEncoder().encode(`%PDF-1.4 safe view of ${body.target.capture_sha}`); return new Response(b, { status: 200, headers: { "content-type": "application/pdf", "x-derived-sha256": sha(b), "x-pages": "1", "x-source-pages": "1", "x-truncated": "false" } }); }
     if (u.pathname === "/provider/test") return json({ ok: true, passed: true, detail: "ok" });
     if (u.pathname === "/provider/scan") return json({ ok: true, verdicts: [{ capture_sha: body.target.capture_sha, tool: "scanii", engine: "scanii", engine_version: "1", scanned_at: new Date().toISOString(), result: "clean", findings: [], latency_ms: 1 }] });
@@ -451,11 +453,11 @@ test("R36 the safe view of a plain-text file is drawn as text, line by line, not
 });
 
 test("R36 a file with no safe view draws refusal.NO_SAFE_VIEW; any other refusal its own words, an answer with none the shell's — never nothing", async () => {
-  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64");
-  const a = await mine({}, { name: "Photo", content: png, type: "image/png" });
+  /* a picture is told at once (F-B15, below); a text file in another encoding passes the page's kind test and meets the owner's refusal at the press */
+  const a = await mine({}, { name: "Letter", content: Buffer.from("caf\xe9 notice \xe0 la carte\n", "latin1"), type: "text/plain" });
   await press(a.p, "safeview");
   const none = (await a.t.world.door({ url: `/api/?${new URLSearchParams({ op: "safeview", capture: a.f.sha })}` }, a.t.mai)).json.result;
-  assert.equal(none.reason, "NO_SAFE_VIEW", "the owner makes no safe view of a picture");
+  assert.equal(none.reason, "NO_SAFE_VIEW", "the owner makes no safe view of a text file that is not UTF-8");
   assert.ok(says(a.p, "refusal.NO_SAFE_VIEW"));
   /* a document whose safe view the scanner's renderer has not made yet: the owner's own refusal, in its words */
   const t = await team();
@@ -539,4 +541,59 @@ test("R5 R36 cause 14 control: source_not_fetched alone draws no empty why line 
   await scan(t);
   assert.ok((await threat(t.mai, hers)).reasons.some((r) => r.code === "encrypted"));
   assert.ok(!hasWord(INSIDE) || insideSaid(await at(t, hers)), "a fetched file with an encrypted inside says it too");
+});
+
+/* ---- fix round 10, walk-T51-alpha F-B14, F-B15 (R36): the safe view's reason, and a kind with no safe view ---- */
+test("R36 F-B14 a safe view the renderer refused draws the renderer's reason beside the sentence that says it is stated beside it — never nothing", async () => {
+  const t = await team();
+  t.S.refuse = "NOT_RENDERABLE";
+  const f = await upload(t, t.mai, "Form", docm(), DOCM);
+  await daemon(t, "renderbatch");
+  const p = await at(t, f);
+  await press(p, "safeview");
+  const owner = (await t.world.door({ url: `/api/?${new URLSearchParams({ op: "safeview", capture: f.sha })}` }, t.mai)).json.result;
+  assert.equal(owner.reason, "SAFE_VIEW_FAILED", "the owner's own refusal: " + JSON.stringify(owner).slice(0, 300));
+  assert.equal(owner.renderer_reason, "NOT_RENDERABLE", "naming why");
+  const beside = main(p).querySelectorAll("[data-renderer-reason]");
+  assert.equal(beside.length, 1, "one reason, beside the refusal");
+  assert.equal(beside[0].getAttribute("data-renderer-reason"), owner.renderer_reason);
+  /* the word held for the code, else the table's statement that it has no explanation yet, with the code as the owner gave it */
+  assert.ok(hasWord(`refusal.${owner.renderer_reason}`) ? says(p, `refusal.${owner.renderer_reason}`) : says(p, "refusal.uncatalogued") && beside[0].textContent.includes(owner.renderer_reason));
+  assert.ok(!text(p).includes(owner.renderer_detail || "\u0000"), "the renderer's own message is never drawn raw");
+  assert.deepEqual(rawKeys(p), []);
+});
+
+test("R36 F-B14 control: the reasons the size sentence already states draw no second reason; a reason with a held word draws that word", async () => {
+  /* scripted: the owner's TOO_LARGE answer carries the figures it draws from (g44 draws the same answer from the real owner); ENCRYPTED needs a file nothing here can make */
+  const a = await mine({ safeview: refused("SAFE_VIEW_FAILED", "refused", 422, { renderer_reason: "TOO_LARGE", size: 50 * 1048576, bound: 20 * 1048576 }) });
+  await press(a.p, "safeview");
+  assert.ok(says(a.p, "screen.open-file.safe.notdrawn", { size: "50.0", bound: "20.0" }));
+  assert.equal(main(a.p).querySelectorAll("[data-renderer-reason]").length, 0);
+  const b = await mine({ safeview: refused("SAFE_VIEW_FAILED", "refused", 422, { renderer_reason: "ENCRYPTED" }) });
+  await press(b.p, "safeview");
+  assert.ok(hasWord("refusal.ENCRYPTED"));
+  assert.equal(main(b.p).querySelectorAll('[data-renderer-reason="ENCRYPTED"]').length, 1);
+  assert.ok(says(b.p, "refusal.ENCRYPTED"));
+  /* the owner's spreadsheet reasons are lower-case words (`renderer_reason: s.why`), drawn like the others */
+  const c = await mine({ safeview: refused("SAFE_VIEW_FAILED", "refused", 422, { renderer_reason: "no_sheets" }) });
+  await press(c.p, "safeview");
+  assert.equal(main(c.p).querySelectorAll('[data-renderer-reason="no_sheets"]').length, 1);
+});
+
+test("R36 F-B15 a kind the owner makes no safe view of says so once and is not sent to the safe view; every kind it does make one of still is", async () => {
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64");
+  const kinds = [["Photo", png, "image/png", false], ["Page", "<html><body>Hello</body></html>", "text/html", false],
+                 ["Notice", NOTICE, "text/plain", true], ["Form", docm(), DOCM, true], ["Figures", xlsx([["A1", "x"]]), XLSX, true]];
+  for (const [name, content, type, has] of kinds) {
+    const { t, f, p } = await mine({}, { name, content, type });
+    const owner = (await t.world.door({ url: `/api/?${new URLSearchParams({ op: "safeview", capture: f.sha })}` }, t.mai)).json.result;
+    /* the page agrees with the owner: the act is drawn exactly where the owner makes a safe view */
+    assert.equal(owner.reason === "NO_SAFE_VIEW", !has, `${name}: the owner answers ${JSON.stringify(owner).slice(0, 160)}`);
+    assert.equal(!!btn(p, "safeview"), has, name);
+    assert.equal(says(p, "screen.open-file.next.yours"), has, `${name}: "Read it in the safe view below" only where there is one`);
+    assert.equal(main(p).querySelectorAll("[data-nosafeview]").length, has ? 0 : 1, `${name}: said once`);
+    assert.equal(says(p, "refusal.NO_SAFE_VIEW"), !has, name);
+    assert.ok(btn(p, "deepercheck"), `${name}: a deeper check is still offered`);
+    assert.deepEqual(rawKeys(p), [], name);
+  }
 });

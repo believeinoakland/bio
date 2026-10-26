@@ -82,7 +82,7 @@ export function busy(extra = {}) {
   w.run(`INSERT INTO cases (case_id, project_id) VALUES (?, 'PRJ-A')`, DOCKET.case);
   w.cite("PRJ-A", "INQ-S"); w.cite("PRJ-B", "INQ-S"); w.leg("INQ-S", "INF-1");
   w.run(`INSERT INTO progression_instances VALUES ('p','E','s','c1','INF-1')`);
-  w.bundle("ACT-1", "action"); w.signer("KEY-1", "alice", { comment: "laptop" });
+  w.bundle("ACT-1", "action"); w.signer("KEY-1", "kim", { comment: "laptop" });
   return w;
 }
 

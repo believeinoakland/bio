@@ -1,6 +1,6 @@
 # queue-producers (T51)
 
-**Status** · session_01DGBpwp2MkVRUms4MnyuCjB · depth 2 · COMPLETE · handled B18
+**Status** · session_011RyaZpwVopVEEDcMoEdk5n · depth 2 · COMPLETE · handled B19
 
 ## J1 · REPORT
 
@@ -405,3 +405,25 @@ COMPLETE · B18 CHANGE (K5157; plan item 75): R54 built. Commit pushed on job/T5
 **Tests/checks:** queue-producers 159 pass, 0 fail (no force-exit); impact.mjs users run: queue + screens-daily 526 pass, 0 fail. format, architecture, coverage (42 of 42), ownership, words, fixtures --list: 0 failures. Markers added: none.
 
 Size (session_01DGBpwp2MkVRUms4MnyuCjB): test runs 7, module lines 3721
+
+## J23 · COMPLETE
+
+COMPLETE · B19 START (fix round 10; plan item 134; K5265): A-06 and A-03 fixed. tranche/T51 merged first; commits pushed on job/T51/queue-producers.
+
+**What changed**
+- **A-06** (`queue-producers/index.mjs:146-148`): `#memberRoster` now takes the one `membershipOf` instance (it delegates `endorsementsOwed` and `expertiseAwaitingConfirmation`, `membership/index.mjs:1320-1321`) instead of a second `membersOf(host)`, which credentials never told the copy is claimed. The founder (`admin`) is now among the administrators: her endorsement counts in `have`, and she is owed an item for a proposal another administrator made. An injected `memberRoster` still wins (the `members` feed test is unchanged). The unused `membersOf` import is gone.
+- **A-03** (`index.mjs:2079-2083`, `:2100`): `signer-self-registered` is not raised to the member who registered the key (registrant = `registered_by`, else the key's `member_id`); `basis.raised_to` no longer names her. The admin machine credential (no member) still gets every item.
+- Requirement lines written in `build/requirements/queue-producers.md` (R14 and R46 each gained one sentence and a Test). This is the one file the ownership check lists outside paths/tests/record; accepted at merge per B4 (K4210).
+
+**Tests, red then green** (red = the module's source taken from `tranche/T51`; green with the fix)
+- `members.test.mjs`: "R46 (A-06): the founder proposes: the second administrator's item counts the founder's endorsement…" and "R46 (A-06): the second administrator proposes: the founder has the item…" (over a claimed copy, with the real membership, credentials row for `admin`): red, then green. Controls inside each: the proposer has none.
+- `action.test.mjs`: "R14 (A-03): the member who registered a key is not told of it…": red, then green; controls: another administrator and the `admin` credential still get it.
+- `screens-daily/routed.test.mjs` R75 (home) and R75 (queue), red at the start of this job (actual 0): green now (16/16 → 18/18 in that file).
+- Two older fixtures read as the registrant and so lost their item by the new rule; I moved the registrant to another member, not the assertion: `every.mjs:85` (KEY-1 registered by `kim`), `words.test.mjs:192-200` (keys by `kim`).
+
+**Suites:** queue-producers 162 pass, 0 fail (24 files, no force-exit). Near users of the module (queue, screens-daily, screens-settings, screens-wizards, store-door, store-request; 121 files): 1043 tests, 1040 pass, 2 fail, both not mine: `screens-daily/home.test.mjs:97` (R17, R28, R31 "changed before the last look: not drawn") fails identically with the module's source from `tranche/T51`; `home.test.mjs:754` (R64, "High" !== "Raised" in the security map) passes alone twice and failed only under the parallel load. I did not run the 469 files `impact.mjs` names whole: the control-plane and plane suites stalled for over ten minutes under the machine's load and I stopped them; the modules that read this module's items are the ones above.
+**Checks** (absolute root): format, architecture, coverage (7070 of 7070 ids named), channels, words: 0 failures; `fixtures`: 89 failures, all in other modules' tests (capture, doorbell, file-safety, monitoring, test-support: `job-registrar-stub`), none in queue-producers; ownership: 0 failures on my files, the requirements file listed (accepted, above).
+
+**REPORT to BOB (another module): the detail of `signer-self-registered` still tells the reader to "mark it done".** The word list's row `queue.signer-self-registered.detail` (setup-words `rows.mjs:6304`, design source `words.json`) reads "…If you did not expect it, open Members and withdraw the key; if you did, mark it done." No such act exists on this item (the only options are the revoke, and the queue draws a link to Members). I kept the key: R43's test requires the item to answer a list key, and the screen draws by key, so a sentence written here would never be read. The design stream should replace the row with: "A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and revoke the key. Otherwise leave it: this item goes when the key is revoked." Until then the item says "mark it done" and still cannot be cleared except by revoking (A-03's open question in causes-A.md: an "I know about this key" answer, which is Bob's to decide). Also for `queue`/`screens-daily`: the item's `signerset` option is not drawn on the queue (causes-A.md A-03 (2)), which is `screens-daily/queue.mjs:199`, not mine.
+
+Size (session_011RyaZpwVopVEEDcMoEdk5n): test runs 9, module lines 3706
