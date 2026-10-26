@@ -6,7 +6,7 @@
 #   - it is not protected (main, snapshot/*, study/*, mail/*, dist/*, prune/*);
 #   - it is not the head of an open pull request;
 #   - it still points at the listed sha (a ref that moved since the census is skipped);
-#   - GitHub's compare of main...<sha> answers `behind` or `identical` (main already holds every commit).
+#   - <sha> is an ancestor of main, checked with git on a full clone (main already holds every commit).
 # The run then deletes its own trigger branch. The TSV, committed, is the record that recreates any ref.
 name: prune-branches
 on:
@@ -25,35 +25,41 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
-          sparse-checkout: build/plan
+          fetch-depth: 0
       - name: Prune
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
-          TRIGGER: ${{ github.ref_name }}
         run: |
           set -euo pipefail
+          git fetch -q origin '+refs/heads/*:refs/remotes/origin/*'
           req=build/plan/prune-request.json
           list=$(jq -r .list "$req"); limit=$(jq -r '.limit // 0' "$req"); dry=$(jq -r 'if .dry_run == false then "false" else "true" end' "$req")
           [ -f "$list" ] || { echo "no list $list"; exit 1; }
           echo "list=$list limit=$limit dry_run=$dry"
           gh api "repos/$REPO/pulls?state=open&per_page=100" --paginate -q '.[].head.ref' > open-heads.txt
-          deleted=0; skipped=0
+          : > to-delete.txt; n=0; skipped=0
           while IFS=$'\t' read -r ref sha _; do
             [ -n "$ref" ] || continue
-            [ "$limit" -gt 0 ] && [ "$deleted" -ge "$limit" ] && break
+            [ "$limit" -gt 0 ] && [ "$n" -ge "$limit" ] && break
             case "$ref" in main|snapshot/*|study/*|mail/*|dist/*|prune/*) echo "SKIP protected $ref"; skipped=$((skipped+1)); continue;; esac
             if grep -Fxq "$ref" open-heads.txt; then echo "SKIP open PR $ref"; skipped=$((skipped+1)); continue; fi
-            cur=$(gh api "repos/$REPO/git/ref/heads/$ref" -q .object.sha 2>/dev/null || true)
+            cur=$(git rev-parse -q --verify "refs/remotes/origin/$ref" || true)
             if [ -z "$cur" ]; then echo "SKIP gone $ref"; skipped=$((skipped+1)); continue; fi
             if [ "$cur" != "$sha" ]; then echo "SKIP moved $ref ($cur != $sha)"; skipped=$((skipped+1)); continue; fi
-            st=$(gh api "repos/$REPO/compare/main...$sha" -q .status 2>/dev/null || echo error)
-            case "$st" in behind|identical) ;; *) echo "SKIP not in main ($st) $ref"; skipped=$((skipped+1)); continue;; esac
-            if [ "$dry" = "true" ]; then echo "WOULD DELETE $ref $sha ($st)"; else gh api -X DELETE "repos/$REPO/git/refs/heads/$ref" && echo "DELETED $ref $sha ($st)"; fi
-            deleted=$((deleted+1))
+            if ! git merge-base --is-ancestor "$sha" refs/remotes/origin/main; then echo "SKIP not in main $ref"; skipped=$((skipped+1)); continue; fi
+            echo "$ref" >> to-delete.txt; n=$((n+1))
           done < "$list"
-          echo "RESULT: $( [ "$dry" = "true" ] && echo would-delete || echo deleted ) $deleted, skipped $skipped"
+          if [ "$dry" = "true" ]; then sed 's/^/WOULD DELETE /' to-delete.txt; echo "RESULT: would-delete $n, skipped $skipped"; exit 0; fi
+          done_n=0
+          split -l 100 to-delete.txt batch_
+          for b in batch_*; do
+            [ -s "$b" ] || continue
+            git push -q origin --delete $(cat "$b")
+            done_n=$((done_n+$(wc -l < "$b"))); echo "DELETED batch $b ($(wc -l < "$b")), total $done_n"
+          done
+          sed 's/^/DELETED /' to-delete.txt
+          echo "RESULT: deleted $done_n, skipped $skipped"
       - name: Remove the trigger branch
         if: always()
         env:
