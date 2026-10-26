@@ -199,3 +199,12 @@ The screen tests need no other state: each expects a success, not a refusal. No 
 **Deferred.** None.
 
 **Size (session_01Cj68FRJaNM9wJqTDmVe669): test runs 4, module lines 2398.** Same counting method as the earlier records.
+
+## J9 · COMPLETE
+
+COMPLETE: B11 and B12 done on job/T51/connections (head 8726105de1).
+B11: tranche merged (6a5bbcd080); OP-GRADES #30 in: stores start. B12: fixtures.mjs publishes connectionChooseMention() (chosen mention with its occurrence) and connectionChooseUnplaced() (chosen with no occurrence), each the real choose answer; fixtures.test.mjs checks both (R70).
+Tests: connections 153 pass; screens-inquiry document + fr28-document + screens-daily 353 pass. Checks: format, architecture, coverage 72/72, words, fixtures, run.mjs (no connections finding), ownership 0.
+Met: R70 (choose clause). Markers added: none.
+REPORT: screens-inquiry should take themeReadWithPassage() (themeread, fixtures.mjs:117) and the three connectionchoose answers (document.test.mjs:168; fr28-document.test.mjs:105,115,120) from connections' fixtures.mjs.
+Size (session_01Cj68FRJaNM9wJqTDmVe669): test runs 4, module lines 2398.
