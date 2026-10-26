@@ -215,3 +215,7 @@ R26 met: isDelimitedText now requires the delimiter's modal count on a majority 
 - REPORTed: none new. `bio-plane/dist/bio-plane.bundled.mjs` includes csv-reader and is stale again (BOB regenerates). Door twin for control-plane (upload a `.txt` of three comma-equal prose lines through r8-kit) is for BOB to place (K5138). Not run: the remaining ~2300 impact-named files; only `isDelimitedText`'s answer for declared plain text changed.
 - Met ids: R27 (and R26, R21 still). Deferred: none.
 Size (session_01DbJ4aQ5uL3NWLi56wSCeot): test runs 8, module lines 1338
+
+## J12 · COMPLETE
+
+C-M14 fixed (R27): csv-reader/index.mjs looksTabular + call in isDelimitedText; declared plain text needs >=5 records and mean field < 40 chars. Tests red then green in delimited.test.mjs (2 new R27 tests; 4 fixtures lengthened to 5 records). csv-reader 101/101, office-readers 164/164, calculations 162/162, seam 80/81 (1 = provenance 21, unrelated). Checks: no csv-reader finding; ownership 0. dist bundle stale (BOB regenerates). Door twin for BOB to place (K5138). Met: R27. Size (session_01DbJ4aQ5uL3NWLi56wSCeot): test runs 8, module lines 1338. See record, section Fix round 10.
