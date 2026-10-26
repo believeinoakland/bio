@@ -730,3 +730,10 @@ Size (session_018S3kJ5pPzA2ti5PEP6LAdc): test runs 5, module lines 4362
 ## J38 · COMPLETE
 
 F-B10 (a) done: finder-states.mjs:221-229 draws, under the partial-match heading, one act (label act.search.label.finder, data-widen = the terms joined by OR) in both the fields and the passage-only case, and no bare heading; finder.mjs:331 acts[0] el.dataset.widen sets routes null and q to the OR query (F-B9 route). Test round10 'R78 (F-B10 (a), K5257)' red (no act under the heading) then green; module suite 321 of 321; format 0, architecture 0, coverage 7084/7084, words 0, ownership 0, fixtures none in my files. Label: J37 QUESTION (localize is refused in a screens module, R13), borrowed existing word. Size (session_018S3kJ5pPzA2ti5PEP6LAdc): test runs 5, module lines 4362.
+
+## Progress (SCREENS-DAILY #28, B51: fix round 10, R107)
+
+Merged `tranche/T51` first. **Half 1 done: Finder's passage-route widen.** `finder-states.mjs` (the `nothing` branch of `routes`, lines 221-232): when only the passages route offers a wider reading (`passageWiden`), the partial heading is followed by `screen.finder.widen.passages` {n: its `widen.total`} and the act is labelled `act.search.label.finder.widen`; the documents route keeps `screen.finder.widen` and `act.search.label.finder`, and wins when both widen. `index.mjs:143` lists the two keys in the finder's words.
+**Test, red then green.** `round10.test.mjs` "R107 (F-B10 (a), DEC-439)": passages-only widen (count, act label, pressed it asks `ordinance OR zzzqqq`); controls: documents-only and both-routes cases unchanged. Red: no passage count drawn; green after the change.
+**Half 2 waiting.** The `signerknown` act on `signer-self-registered` needs the op declared (`credentials` R83, `queue` R96, jobs running): `OPS` has no `signerknown` yet (grep of `src`). I wait for BOB's CHANGE, then draw it with the item's disposition and label `queue.signer-self-registered.known` and test it red then green through the real store.
+Suite 322 of 322 (screens-daily); `checks/run.mjs`: format 0, architecture 0, coverage (screens-daily) 105 of 105, words 0, fixtures 89 failures none in screens-daily files; ownership 0.
