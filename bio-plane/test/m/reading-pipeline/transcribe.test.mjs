@@ -79,7 +79,7 @@ function ai(answer) {
   return { calls, transcribe: async (q) => { calls.push(q); return typeof answer === "function" ? answer(q) : answer; } };
 }
 const model = (pages, extra = {}) => ({ ok: true, engine: "vision-model", version: "3",
-  pages: pages.map((p) => ({ page: p, text: `the AI read page ${p}` })), ...extra });
+  pages: pages.map((p) => ({ page: p, text: `the AI read page ${p}` })), asked: pages, sent: pages, owed: [], ...extra });
 
 /* A scanned PDF as the pdf entry reads it: page 0 a text layer, page 1 a scan, page 2 an image filling the page with
    its folio "12". Tier 3 is not bound, so pages 1 and 2 stay unread. */
@@ -320,7 +320,7 @@ test("R29 (N853a, control, K874): every other stop is aiNote alone, with no aiRe
   const { acc } = await group();
   const base = { member: "ann", accounts: acc, useCheck: async () => null };
   // fixtures-generic: busy
-  // fixtures-contract: content transcribe-answer
+  // fixtures-contract: store-assembly transcribe-answer
   const stops = [
     ["a declining AI", { ...base, transcribe: async () => ({ ok: false, reason: "busy" }) }, /the AI declined \(busy\)/],
     ["an unreachable AI", { ...base, transcribe: async () => { throw new Error("down"); } }, /could not be reached/],
