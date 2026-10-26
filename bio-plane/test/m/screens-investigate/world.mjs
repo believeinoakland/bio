@@ -19,18 +19,19 @@ export async function inWorld({ handle = "rosa", admin = true, capabilities = nu
 export async function openAs(world, me, path, { plane = {}, ...options } = {}) {
   const { door, session } = world.boot(me);
   const p = await boot({ screens: SCREENS, path, plane, door: counted(door), session, ...options });
-  await settled(p);
+  await settled(p, { never: Object.values(plane).some((a) => a && a.pending) });
   return p;
 }
 
-/** Every read the page made has answered and the page is quiet. */
-export async function settled(p) {
+/** Every read the page made has answered and the page is quiet. A test that scripted a read to never answer (`never`) leaves that read's loading state
+ *  drawn for good, so the page is quiet when it makes no further request, not when nothing is loading (else this waits for all 1500 rounds, about 16 s). */
+export async function settled(p, { never = false } = {}) {
   let last = -1, stable = 0;
   for (let i = 0; i < 1500 && stable < 8; i++) {
     await p.settle(20); await new Promise((r) => setTimeout(r, 10));
     /* looked up each time: choosing a document redraws the screen and replaces `#cs-main` */
     const main = p.doc.getElementById("cs-main");
-    const busy = main.querySelectorAll('[data-state="loading"]').length > 0;
+    const busy = !never && main.querySelectorAll('[data-state="loading"]').length > 0;
     stable = !busy && p.requests.length === last ? stable + 1 : 0; last = p.requests.length;
   }
 }
