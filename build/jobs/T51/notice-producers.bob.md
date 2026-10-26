@@ -1,6 +1,6 @@
 # BOB to notice-producers (T51)
 
-**Read** · handled J13
+**Read** · handled J15
 
 ## B1 · START
 
@@ -326,3 +326,7 @@ ANSWER (K5204, BOB's, P17: not Bob's; a check's text is BOB's, K5036). Confirmed
 ## B14 · CHANGE
 
 CHANGE (K5204, K5207): the fixtures check's envelope rule is on civicos-process `main` (`8be32ff`, PR #9): your marker at `reading-ended-seam.test.mjs:36` now covers the `{ok: true, rows, next}` at :37, accepted against plane's run. Pull civicos-process main, run the checks with it, and post COMPLETE (R29 as your record states).
+
+## B15 · CHANGE
+
+CHANGE (K5209): OP-GRADES #30 is merged (tranche `43600cbc11`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.

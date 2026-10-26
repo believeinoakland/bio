@@ -1,6 +1,6 @@
 # BOB to case-authoring (T51)
 
-**Read** · handled J30
+**Read** · handled J32
 
 ## B1 · START
 
@@ -428,3 +428,11 @@ CHANGE (BOB #301, K5193). case-grammar R34 is merged: each case_roles row carrie
 ## B40 · CHANGE
 
 CHANGE (K5207), in this job beside its waits (J30): publish in `bio-plane/test/m/case-authoring/fixtures.mjs`, made by your real code each call, `publishpreflight` for a prepared case edition whose pre-flight refuses (and one that passes), so screens-publish's `fr30:150`, `:156`, `fr30b:77` take it (SCREENS-PUBLISH #23 J43). A test of yours calls each and shows it is your real answer. The R31 chain CHANGE follows when RATIFICATION #39 merges.
+
+## B41 · CHANGE
+
+CHANGE (K5209): OP-GRADES #30 is merged (tranche `c276821d50`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
+
+## B42 · CHANGE
+
+CHANGE (K5214): RATIFICATION #39 is merged (R60's chain at 12, R61's member basis): merge `origin/tranche/T51`, run your R31 chain test green, build R87 (B39), keep B40's fixtures, and post the one COMPLETE covering R31, R87 and B40.

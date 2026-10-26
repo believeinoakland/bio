@@ -1,6 +1,6 @@
 # entities (T51)
 
-**Status** · session_01UFnpNcKqgfLJ5Ee7BwZ3WN · depth 2 · COMPLETE · handled B11
+**Status** · session_01XoHLpj87gCyr4R1nEXhbe7 · depth 2 · COMPLETE · handled B14
 
 ## Completion (T51 fix round 3, ENTITIES #18)
 
@@ -199,3 +199,48 @@ Size (session_01UFnpNcKqgfLJ5Ee7BwZ3WN): test runs 4, module lines 0 (source); t
 ## J12 · COMPLETE · re B12
 
 Fix round 10 batch 4 done: fixtures entitiesWorld, namingInRefused, unreadable published (fixtures.mjs + fixtures.test.mjs); fixture.mjs:62 now takes promotion's makePromotion; fixtures --list entities at 0. Module tests 164/164. One check fails and needs you: architecture says entities' fixture.mjs imports promotion/fixtures.mjs but modules.json entities.uses lacks "promotion" — please add it. Setup-words --check is stale on a control-plane row (not mine). Details in build/jobs/T51/entities.md.
+
+## Completion (fix round 10, K5207; ENTITIES #22, B13)
+
+**What changed.** `bio-plane/test/m/entities/fixtures.mjs:` a new export `entitieskind({kind = "body"})` (added at the end of the file): a real world (`world({profiles})`) holding two bodies registered by `createEntity`, then the real `entitiesOfKind({kind, viewer: "member:ann"})`, with the two entity ids added as `bodies` (sorted). Nothing stored, nothing hand-built. `bio-plane/test/m/entities/fixtures.test.mjs:` the import gains `entitieskind`; a new test "R51 entitieskind" calls it and checks the real answer (`ok`, kind `body`, count 2, not truncated, `next` null, the entities' ids equal `bodies`, each `kind` `body` with `forum_kind` `null`).
+
+**Red then green.** The test's count was set to 3 on purpose: red (`pass 3, fail 1`). Restored to 2: green (`pass 4, fail 0`).
+
+**Fixture markers.** None added (`fixtures-own` / `fixtures-generic`: none). The answer is entities' own real code.
+
+**Met ids.** R51 (the `entitiesOfKind` listing the answer is taken from), named by the new test. Coverage: entities 65 of 65 live ids.
+
+**Readings.** `entitieskind` answers the `entitiesOfKind` result as the op does (`entitieskind: () => e.entitiesOfKind(...)`, `src/entities/index.mjs`), not a wrapped envelope.
+
+**Deferred.** None.
+
+**Found in other modules (run.mjs over /home/user/bio, lines naming entities).** Three findings name entities as the earlier provider, all in other modules' tests, none in entities' files: `screens-publish/fixtures.mjs:138` (op-table `entitieskind`, the stand-in SCREENS-PUBLISH's re-point replaces), `screens-inquiry/fr28-document-acts.test.mjs:189` (`resolutiondefect`) and `screens-inquiry/fr3-document.test.mjs:351` (`resolvetestify`). The rest of `checks/run.mjs` is other modules' coverage and refusal findings (for example `capture`, `case-authoring`, `filings`, `membership` ids named by no test; `answer acquisition`, `answer interface-shell` reds).
+
+**Tests and checks.**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/entities/fixtures.test.mjs`: 4 pass, 0 fail (before the change: entitieskind test absent; after: green; red as above).
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/entities/*.test.mjs`: 165 pass, 0 fail.
+- `checks/format.mjs /home/user/bio`: 0 failures.
+- `checks/architecture.mjs /home/user/bio entities`: 0 failures.
+- `checks/coverage.mjs /home/user/bio entities`: 65 of 65, 0 failures.
+- `checks/words.mjs /home/user/bio entities`: 0 failures.
+- `checks/fixtures.mjs /home/user/bio entities --list`: 0 failures.
+- `checks/ownership.mjs /home/user/bio entities <merge-base> HEAD`: 1 file changed by entities, 0 failures.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178, affected test files 0 of 2967.
+
+Size (session_01XoHLpj87gCyr4R1nEXhbe7): test runs 4, module lines 2598
+
+## J13 · COMPLETE
+
+B13 (fix round 10, K5207) done and pushed at ee5fb20da0. entitieskind fixture in bio-plane/test/m/entities/fixtures.mjs (real entitiesOfKind over two bodies), tested in fixtures.test.mjs (R51), red then green on purpose. entities tests 165/0; format, architecture, coverage 65/65, words, fixtures, ownership all 0 failures. Other findings (screens-publish fixture, screens-inquiry resolution stand-ins, other modules' coverage and reds) are in my record. Size: test runs 4, module lines 2598.
+
+## Completion (B14, CHANGE K5209; ENTITIES #22)
+
+Merged `origin/tranche/T51` (850cee6469, OP-GRADES #30 in) into the job branch, never a rebase. Stores import again; the entities fixtures are unchanged.
+
+**Tests and checks after the merge.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/entities/*.test.mjs`: 165 pass, 0 fail. `format` 0 failures; `architecture` 0 failures; `coverage` 65 of 65; `words` 0 failures; `fixtures --list` 0 failures; `ownership` 0 failures (3 files changed by entities against the new tranche tip: the two fixtures files and this record). `checks/run.mjs /home/user/bio` names entities in the same three other-module findings as before (`screens-inquiry/fr28-document-acts.test.mjs:189`, `screens-inquiry/fr3-document.test.mjs:351`, `screens-publish/fixtures.mjs:138`); none is in entities' files.
+
+Size (session_01XoHLpj87gCyr4R1nEXhbe7): test runs 5, module lines 2598
+
+## J14 · COMPLETE
+
+B14 (CHANGE K5209) done. Merged tranche/T51 at 850cee6469; entities tests 165/0; format, architecture, coverage 65/65, words, fixtures, ownership 0 failures. The three other-module findings are unchanged and not in entities' files. Record appended. Size: test runs 5, module lines 2598.
