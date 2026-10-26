@@ -59,3 +59,15 @@ Size (session_01LxmnArEj3vhNdkgbYvMCRe): test runs 12, module lines 1124
 - **Found elsewhere, for BOB.** (1) Other version-leg labels still spell the field: `leadLegFindings` (`grammar.mjs:341`), `checkLegExtentGrammar` (`:391`), and the `VERSION_LEG_NOT_CITABLE` and `VERSION_GROUND_UNASSERTED` sentences (`:359`–`:405`). R12 names only the theme label, so I did not widen the change; a requirement covering them is BOB's call. (2) The corpus carries no theme leg on a version, so R12's corpus check is a guard with no version case; a version-leg corpus bundle would give it one.
 - **Deferred:** none.
 - Size (session_01PydE3LcJc4wSm6cj6MDZs3): test runs 7, module lines 1124
+
+## J4 · COMPLETE
+
+R12 done on job/T51/basis-version-grammar (pushed, 29d6f53dae; record: build/jobs/T51/basis-version-grammar.md, section "Fix round 10, R12").
+
+What changed: grammar.mjs:343 now hands connections' themeLegFindings "Leg {n} of version '{name}'" (localize, id basis-version-grammar.grammar.leg_of_version) instead of the field spelling basis_version_legs[i]. registration.test.mjs's golden pins a theme finding by code and check only (connections' words are its own, R73). New theme-label.test.mjs (R12, 4 tests): 3 red on the field spelling before the change, all green after.
+
+Suite: 40 pass, 0 fail (module); basis-versions + strength 390 pass, 0 fail. Checks: format, architecture, coverage (11/11), ownership, fixtures --list all 0; words 0 after keying the label; run.mjs no finding in this module. No fixtures-own or fixtures-generic marker added.
+
+For you: (1) impact set is 76 modules; I ran the two direct users and searched the rest for the old label, none pins it; the rest was not run. (2) Other version-leg labels still spell the field (leadLegFindings grammar.mjs:341, checkLegExtentGrammar :391, the VERSION_LEG_NOT_CITABLE and VERSION_GROUND_UNASSERTED sentences :359-405). R12 names only the theme label, so I did not widen; a requirement is your call. (3) The corpus has no theme leg on a version, so R12's corpus check has no version case.
+
+Size (session_01PydE3LcJc4wSm6cj6MDZs3): test runs 7, module lines 1124
