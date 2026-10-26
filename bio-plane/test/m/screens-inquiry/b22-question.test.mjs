@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot, ok, refusedIn } from "../interface-shell/harness.mjs";
 import { open, storeWorld, SCREENS, main, actsIn, button, fill, press, rawKeys, inquiryMd, INQUIRY_REFS, LEGS, says, section, word, P, Q } from "./fixtures.mjs";
-import { importedNamed, citeimportedAnswer } from "../case-import/fixtures.mjs";
+import { importedNamed, citeimportedRefusalAnswer } from "../case-import/fixtures.mjs";
 import { V, F1, F2 } from "../case-import/fixture.mjs";
 
 const at = "/app/question/" + Q;
@@ -86,7 +86,7 @@ test("R110 citeimported sends the question, the import, the finding, the edition
 
 test("R110 IMPORTED_NOT_ACCEPTED, carried inside BASIS_REFUSED as case-import's real citation gives it, is drawn by its words; control: another finding of the refusal draws its own detail", async () => {
   /* the real refusal of citing a finding of an import whose edition the team has not accepted (R16) */
-  const real = (await citeimportedAnswer({ finding: F2 })).answer;
+  const real = (await citeimportedRefusalAnswer()).answer;
   assert.equal(real.reason, "BASIS_REFUSED");
   assert.equal(real.findings[0].code, "IMPORTED_NOT_ACCEPTED");
   const go = async (answer) => {
