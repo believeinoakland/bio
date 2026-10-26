@@ -40,3 +40,23 @@ export function holdsDueDocketAnswer() {
   const placed = actionHoldsOps(h, url, null).holdsdue();
   return { w, h, viewer, entry, answer, direct, placed };
 }
+
+/* R5, R6, R22 (SCREENS-ACTION J36): the door's answers for a hold placed from a docket entry's legal mark, over docket's own
+   published world, made by the module's real acts: `placed` is `op=holdsplaced` after the hold, `preview` is
+   `op=actionholdpreview` with the body that placed it, `released` is `op=actionholdrelease` with the same body, and
+   `after` is `op=holdsplaced` once released (the place reads `released`). `body` is the placing body. Each call builds its own world. */
+export function holdPlacedReleasedAnswers() {
+  const d = docketEntryRead();
+  const { world: w, marked: entry, manager: viewer } = d;
+  const h = actionHoldsOf(w.host, { record: w.record, membership: w.membership, now: () => w.clock.now, ratification: null,
+                                    docket: w.docket, doorbell: null });
+  const door = (op, body = null) => actionHoldsOps(h, new URL(`https://x/?viewer=${encodeURIComponent(viewer)}&author=${encodeURIComponent(viewer)}`), body)[op]();
+  const body = { project: w.P, from: { docket_entry: entry } };
+  const placedHold = h.actionHold({ ...body, hold: "in_place", reason: "keep", viewer, author: viewer });
+  if (placedHold.ok !== true) throw new Error(`the hold was not placed: ${JSON.stringify(placedHold)}`);
+  const placed = door("holdsplaced");
+  const preview = door("actionholdpreview", body);
+  const released = door("actionholdrelease", { ...body, reason: "no longer needed" });
+  const after = door("holdsplaced");
+  return { w, h, viewer, entry, body, placed, preview, released, after };
+}
