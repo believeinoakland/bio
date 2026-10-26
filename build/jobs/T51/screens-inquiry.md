@@ -722,3 +722,12 @@ Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 4, module lines 7041
 ## J53 · COMPLETE
 
 COMPLETE (SCREENS-INQUIRY #33), B80 (1) done, pushed. A7/A8 root cause: the test helper (r10-stated.test.mjs:115 reasonOf ignored reading.ocr_refused[].reason); the page already draws refusal.NOTHING_TRANSCRIBED (document.mjs:540-551, R96/R130). Fixed in the test, red then green, 13/13. Module 594 pass 0 fail; fixtures 140 lines left, all waiting on STORE-REQUEST #7 (op-table lines); ownership 0; words 0 failures; no markers added. Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 4, module lines 7041
+
+## Round 10, B81-B83 · SCREENS-INQUIRY #33
+
+B82 applied: `r50-own-reading.test.mjs` (new, 4 tests, all named R50, expectations read from the word table, K874; the real store world): who concluded and who wrote the reading (`question.concluded.by`, `question.reading.by.member`), the 500-character bound (501 refused in place by `refusal.BAD_READING`, nothing sent; 500 and 1 sent whole as `reading`), the plane's own `BAD_READING` for a too-short reading, and `NO_BASIS` (the page's `conclude` is retargeted at the world's door to a question resting on nothing, the answer the world's own, wrapped in the harness's `counted` so `settle` waits). Failing first by mutation: `own.length > 501` fails the bound test; the "Written by" line removed fails the first; the "Concluded by" sentence swapped fails the first; `refusal.BAD_READING` swapped for another key fails the bound test. Stable 6 of 6 runs. R50 is met.
+B81 not applied; waits on BOB: (a) `extraction` is not in `uses` (`build/modules.json` line 172), so its `fixtures.mjs` cannot be imported (architecture); (b) of the two lines, extraction publishes `readHeldAnswer.noHome()` (`extraction/fixtures.mjs:97`, `why: NO_HOME`) for `fr5-document.test.mjs:121` but not `NO_WHOLE_OBJECT` (a copy held with no original object; `held(..., {whole:false})` is private at `fixtures.mjs:15`), and publishes for `pdfstructure` only `unheldStructure` (`fixtures.mjs:184`, `EVIDENCE_NOT_HELD`), not the successful re-extraction (`reextraction: {performed: true}`) `fr28-document-acts.test.mjs:50` needs.
+B83 noted: waits on interface-shell's merge.
+Tests: module 63+1 files, 598 pass, 0 fail. Checks: format, architecture, coverage (136 of 136), ownership 0 failures; words 0 failures; fixtures 140 lines (unchanged). Markers added: none.
+
+Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 9, module lines 7041
