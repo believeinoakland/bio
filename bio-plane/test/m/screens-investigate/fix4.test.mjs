@@ -161,7 +161,7 @@ const OWN = {
   person: { exploregraph: 1, affordances: 1, peopledirectory: 1, entity: 1, readingname: 1, heldcaptures: 1, reading: 1, entityidonly: 1, person: 1, samepersoncandidates: 1 },
   theme: { themeread: 1 },
   explore: { exploregraph: 1, affordances: 1, peopledirectory: 1, explorepreset: 1, entityidonly: 1, heldcaptures: 1 },
-  timeline: { image: 1, peopledirectory: 1, list: 1, heldcaptures: 1, affordances: 1, reading: 1, timeline: 1, instances: 1, sequence: 2 },
+  timeline: { image: 1, peopledirectory: 1, list: 1, heldcaptures: 1, affordances: 1, reading: 1, timeline: 1, instances: 1, sequence: 2, event: 2 },
   money: { exploregraph: 1, heldcaptures: 1, list: 1, peopledirectory: 1, moneyset: 1, reading: 1, image: 1, money: 3 },
   calculation: { calculation: 1, heldcaptures: 1, spotcheck: 1 },
   help: {},
