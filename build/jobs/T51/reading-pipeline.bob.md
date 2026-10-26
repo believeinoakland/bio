@@ -1334,3 +1334,7 @@ Your job: reading-pipeline R1's amendment (K5200 (4), marked not yet met: read R
 ## B62 · CHANGE
 
 CHANGE (K5209): OP-GRADES #30 is merged (tranche `269d7de61f`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
+
+## B63 · CHANGE · re J55
+
+CHANGE (K5211, BOB's, P17), on your J55 REPORT (a), with B62 (merge the tranche): HTML's bound is the standard's text bound (R50's 50 MB, as `plan()` already reads it; K4630: a file within its kind's bound is never refused for size). R51 is amended on the tranche (read it whole; its new clause marked not yet met): an HTML page past `WHOLE_READ_MAX` and within the bound, whole or in parts, is read by the one streaming pass in byte windows with a carry, its units equal to the same page read whole; above the bound refused with its figure. Failing-first as R51's new test says, red today (TOO_LARGE against 24 MiB), green after. (b) the door case is placed with control-plane's list. Then COMPLETE with R1 and R51.
