@@ -1,6 +1,6 @@
 # screens-daily (T51)
 
-**Status** · session_01Tu7DPfm2DwNJsuukT5fZvH · depth 2 · COMPLETE · handled B48
+**Status** · session_01Xb5vaVT3GYT19KYpW2voTC · depth 2 · COMPLETE · handled B49
 
 ## Completion (SCREENS-DAILY #25, B48: CHANGE, K5267; plan item 135 (1))
 
@@ -682,3 +682,31 @@ For BOB (wording): meaningrows' widen.total counts passages (retrieval/index.mjs
 
 Suites: module 319 tests, 315 pass, 4 fail (A-06 unchanged, queue-producers/index.mjs:146). Users (120 files) 714 pass, 0 fail (one file hit the 30-minute limit, passes alone 15/15). checks: format/architecture/words 0, no fixtures finding in my files, my coverage 104/104; ownership 0.
 Size (session_01Tu7DPfm2DwNJsuukT5fZvH): test runs 30, module lines 4360
+
+## Completion (SCREENS-DAILY #26, B49: fix round 10, item 139, D-B1)
+
+**Entries applied.** D-B1, the team's own zone: `find-in.mjs` (reads) and `find-in-forms.mjs` (`zoneOf`) read `factstatus` on `@team/time_zone` and draw its `governs.value`, not the `factstatus` list, which never lists the team's fact (local-facts R21). A team with no place profile whose zone is stated now dates its person facts in that zone; none stated sends no zone, as today. Stand-in answers in `find-in.test.mjs` and `find-in-forms.test.mjs` take the path's shape.
+
+**Test, red then green.** `find-in.test.mjs` "R47: a team with no place profile and its zone stated dates a person fact in that zone (the real local-facts answer); none stated sends no zone (control)". It runs over the real store (`storeWorld`): the team's zone is stated through the real `factconfirm` door with no profile held; the page's zone read answers local-facts' real `factstatus` for that path. Red on the list read (the stated zone never drawn: `valid.zone` undefined), green on the path read. Control: `governs` null and no `zone` key sent.
+
+**Deferred:** none in this module.
+
+**Outside my paths (REPORT to BOB, file:line):** `screens-settings/group.mjs:162` still draws `form(0, null, null)` when no active profile holds a `time_zone` fact, and `:301` sends no path, so Settings > Your team cannot record a zone for a team with no place profile (the dead end D-B1 names; local-facts' `factconfirm` on `@team/time_zone` accepts the correction, as my test shows). The settings reader should take `@team/time_zone` as this module now does. Owner: screens-settings.
+
+**Tests and checks.** `find-in.test.mjs` 23 of 23 with `find-in-forms.test.mjs` (together). Module `bio-plane/test/m/screens-daily/*.test.mjs`: 320 of 320. Users (`build/plan/impact.mjs origin/tranche/T51 HEAD --json`, control-plane, plane, journey-check: 121 files, 715 tests): 715 pass after `npm ci` in `bio-plane/src/journey-check` (before it, the 8 pseudo tests of `journey-check/pseudo.test.mjs` failed on a missing `playwright-core`, an environment fault, not code). `checks/run.mjs /home/user/bio`: format 0, architecture 0, coverage 7083 of 7083, channels 0, words 0; fixtures reports 89 failures, all in other modules (doorbell, file-safety, monitoring, test-support stubs), none in screens-daily. `checks/ownership.mjs` screens-daily 0 failures (5 files). Format, architecture and coverage for screens-daily alone: 0 failures, 104 live ids named (module coverage line unchanged).
+
+Size (session_01Xb5vaVT3GYT19KYpW2voTC): test runs 7, module lines 4355
+
+## J36 · COMPLETE
+
+COMPLETE · SCREENS-DAILY #26 · B49 (fix round 10, item 139, D-B1). Record: build/jobs/T51/screens-daily.md, section "Completion (SCREENS-DAILY #26, B49: fix round 10, item 139, D-B1)".
+
+Changed: find-in.mjs:17-18 (zone read by its own path @team/time_zone, local-facts R21); find-in-forms.mjs:23-28 (zoneOf takes governs.value of that answer). Code and tests commit d519fb2456; record commit on top.
+
+Test red then green: find-in.test.mjs "R47: a team with no place profile and its zone stated dates a person fact in that zone (the real local-facts answer); none stated sends no zone (control)", over the real store. Red on the list read (no zone drawn); green on the path read; control sends no zone.
+
+Suites: screens-daily 320/320; find-in + find-in-forms 23/23; users (control-plane, plane, journey-check: 121 files, 715 tests) 715 pass after npm ci in journey-check (the 8 pseudo failures before it were a missing playwright-core, environment only). checks/run.mjs: format 0, architecture 0, coverage 7083/7083, channels 0, words 0; fixtures 89 failures, all in other modules' stubs (doorbell, file-safety, monitoring, test-support), none in screens-daily. ownership screens-daily 0 failures.
+
+REPORT (outside my paths): screens-settings/group.mjs:162 still draws form(0, null, null) with no active profile holding a time_zone fact, and :301 sends no path, so Settings > Your team cannot record a zone for a team with no profile. The settings reader should take @team/time_zone as find-in now does; local-facts factconfirm accepts it.
+
+Size (session_01Xb5vaVT3GYT19KYpW2voTC): test runs 7, module lines 4355

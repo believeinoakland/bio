@@ -8,7 +8,7 @@ import { Event } from "../interface-shell/harness.mjs";
 const SHA = "9f2c0d1e".padEnd(64, "a");
 const R = "looking";
 const PQ = ok({ ok: true, project: "PROJ-1", items: [{ inquiry: "INQ-1", title: "Is the city repairing potholes?" }], cursor: null });
-const ZONE = (id) => ok({ ok: true, count: 1, facts: [{ path: "p.time_zone", fact: { profile: "p1", fact: "time_zone" }, status: "confirmed", governs: { value: id, origin: "profile" } }] });
+const ZONE = (id) => ok({ ok: true, path: "@team/time_zone", status: "confirmed", governs: { value: id, origin: "profile" } });
 const kinds = (list) => ok({ ok: true, scope: { form: "project", project: "PROJ-1", captures: 3, title: "The Coliseum lease" }, kinds: list });
 const PERSON = { kind: "people", items: [{ kind: "people", words: "Dana Reyes, director", capture_sha: SHA, title: "Housing code", extent: { passage: 3 }, entity: "ENT-9", recorded: [] }], count: 1 };
 const PLANE = (list, zone = "America/Los_Angeles") => ({ memberlist: ok({ members: [{ member_id: "u-mai", handle: "Mai", status: "active" }] }), projectquestions: PQ, factstatus: ZONE(zone), findin: kinds(list), image: ok({ "bundle.md": '---\ntitle: "The Coliseum lease"\n---\n' }) });
