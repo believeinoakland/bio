@@ -1,6 +1,6 @@
 # action-plans (T51)
 
-**Status** · session_01QNmwftmFAVAy2K1WHsTW8M · depth 2 · COMPLETE · handled B8
+**Status** · session_014Agc8497kfuRj2581PQ8Yu · depth 2 · COMPLETE · handled B10
 
 ## Completion
 
@@ -137,3 +137,31 @@ Size (session_01QNmwftmFAVAy2K1WHsTW8M): test runs 14, module lines 3364
 ## J6 · COMPLETE
 
 B6 (K5131) complete on job/T51/action-plans: a question concluded in the plan's project keeps support hypothetical and its why is the new sentence action-plans.why.suspected_matter_concluded (needs UX-DESIGN review; no words.json row yet). Marked requirement: the Purpose sentence (no R id); BOB strikes the mark. 105 of 105 module tests; users plan-work, following, action-producers, answer-envelope pass; format, architecture, coverage, words, fixtures, ownership 0 failures. No fixtures markers added. Record: section B6 and Change B7/B8.
+
+## Fix round 10 (B9 START; K5271) · COMPLETE
+
+**Met: R54** (both sentences).
+1. Walk E K10-1: `optionStart` (`index.mjs`, inside its `record.transact`, right after `actionCreate`) calls `actions.actionRiskTier` with the option's stated tier 1, 2 or 3, by the starter, with a keyed reason (`action-plans.index.tier_stated_by_the_option`). The action's first `risk_tier_history` entry is the tier; no tier or `undetermined` writes nothing. A refusal of the tier write rolls back the whole start; the preview rolls it back too.
+2. Walk E K4, walk C C-M17: new `ADDRESSEE_INCOMPLETE` (C-124.66, `checks.mjs`), minted at `#optionFields`' addressee site, so optionAdd, optionRevise and optionPropose all answer it. It names each empty part in `detail` and in `empty` (`values.mjs` `addresseeEmptyFields`: `role`, and `organisation` for press, organisation, group). Absent fields, unknown kinds and private-person shapes stay `ADDRESSEE_REFUSED`.
+
+**Tests** (`t51.test.mjs`, four tests, red before the change, green after): tier 1/2/3 recorded with history by the starter (controls: no tier, undetermined, awareness option); preview leaves no entry; ADDRESSEE_INCOMPLETE for the walker's shape, partial and blank cases (controls: whole addressee lands, `{name}` and absent-field shapes stay REFUSED); optionRevise. `words.test.mjs` reaches the new code; `t46.test.mjs` R47's control now allows one code without a words.json row (below).
+
+**Counts.** Module: 109 pass, 0 fail. Impact users (plan-work, screens-action, answer-envelope, op-declarations, op-grades, following, actions, tasks, action-producers; 107 files): 951 pass, 17 fail, identical on `origin/tranche/T51`, so none is from this change. A wider run of all 824 impact files was cut short for time. Checks: format 0, architecture 0, coverage 54 of 54, words 0, ownership 0, fixtures 0; `checks/run.mjs` shows no finding in action-plans (tree-wide failures elsewhere).
+
+**REPORT for BOB.** (a) The design stream needs a `refusal.ADDRESSEE_INCOMPLETE` row in words.json; until then the sentence is `localize('action-plans.checks.an_addressee_names_its_role_and_organisation', …)` and t46's control lists it. (b) Preexisting reds outside this module: answer-envelope `families.test.mjs` and journey-check `pseudo.test.mjs` fail identically on the tranche tip. (c) Screens: `screens-action/plan.mjs:524` draws one fixed sentence for every addressee fault; it should draw `translation`/`detail` for the new code (screens-action's job).
+
+Size (session_014Agc8497kfuRj2581PQ8Yu): test runs 9, module lines 3390
+
+## J7 · COMPLETE
+
+Fix round 10 (R54) complete on job/T51/action-plans. optionStart now records the option's tier 1-3 as the action's first risk-tier history entry in its transaction (actions.actionRiskTier); new ADDRESSEE_INCOMPLETE (C-124.66) names an empty role or organisation, on add, revise and propose. Tests t51 red then green; module 109 pass; 9 impact-user modules 951 pass/17 fail identical on tranche tip; format, architecture, coverage 54/54, words, ownership, fixtures 0. REPORT: design stream needs a refusal.ADDRESSEE_INCOMPLETE row (t46 control allows its absence); screens-action plan.mjs:524 should draw the new code's text; answer-envelope families.test and journey-check pseudo.test are red on the tranche tip. Details in the record. I cut a full 824-file impact run short for time.
+
+## B10 CHANGE (K5277) · COMPLETE
+
+Each `date_before_phase` check now carries `start`: the ISO local day its phase can start (`index.mjs`, the dated check), or `null` on the undetermined check (no zone held; the key is present). A field added, meaning unchanged. Published in `fixtures.mjs` as `dateBeforePhase()` (both reads). Test `t51.test.mjs` (R54, last test): red (`start` undefined), then green. Module 110 pass; plan-work + screens-action 349 pass (same on the prior commit); format, architecture, coverage 54/54, words, fixtures, ownership 0. A screen can read `start` with its own words; action-plans' English `says` is unchanged.
+
+Size (session_014Agc8497kfuRj2581PQ8Yu): test runs 13, module lines 3390
+
+## J8 · COMPLETE
+
+B10 applied: every date_before_phase check carries start (ISO local day, null when undetermined), published in fixtures.mjs dateBeforePhase(); t51 test red then green. Module 110 pass; plan-work and screens-action 349 pass; format, architecture, coverage, words, fixtures, ownership 0. R54 now fully met. Record updated.
