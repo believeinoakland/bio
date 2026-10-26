@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { actionWorld, openIn, planIn, colleague } from "./world-D.mjs";
-import { open, main, text, ok, W, D, DATA_PLANE, ROUTES, ACTION, ACTION_ID, PRESSURE, PROJECT, PLAN, TEMPLATES, GUIDES, HOLDS_DUE, STAKE } from "./page.mjs";
+import { open, main, text, ok, W, D, DATA_PLANE, ROUTES, ACTION, ACTION_ID, PRESSURE, PROJECT, TEMPLATES, GUIDES, HOLDS_DUE, STAKE } from "./page.mjs";
 
 const ROSTER = ok({ members: [{ member_id: "admin", handle: "sparky", founder: true }, { member_id: "u-2", handle: "rosa" }, { member_id: "u-3", handle: null }] });
 const NOBODY = W("shell.card.member");
@@ -13,7 +13,7 @@ const said = (p, key, vars) => assert.ok(text(p).includes(W(key, vars)), key + "
 const noIds = (p, ids = ["admin", "u-2", "u-3"]) => { const t = text(p); for (const id of ids) assert.ok(!new RegExp("(^|[^\\w-])" + id + "([^\\w-]|$)").test(t), "an id is drawn: " + id); };
 const links = (p) => main(p).querySelectorAll("a").map((a) => a.getAttribute("href"));
 
-test("R1, R25 (C94): the plan names who opened it by her handle, on its page and in the project's list; a member with no handle is the kit's word", async () => {
+test("R1, R25 (C94): the plan names who opened it by her handle, on its page and in the project's list", async () => {
   /* the founder's id is `admin`, her handle the world's; rosa opens a plan of her own: both are named by handle, in the plan and in the list */
   const { world, me, project } = await actionWorld({ founder: true });
   const rosa = await colleague(world, me, project, "rosa");
@@ -22,18 +22,11 @@ test("R1, R25 (C94): the plan names who opened it by her handle, on its page and
   const mine = await openIn(world, me, `/app/plan/${mineRow.id}`);
   said(mine, "screen.plan.opened", { date: D(mineRow.opened_at), name: me.handle });
   noIds(mine, ["admin"]);
-  /* (a member with no handle known cannot be made by real acts: every member the store holds has one; this page stays over a scripted plan) */
-  const bare = await open(ROUTES.plan, { ...PLANE, plan: ok({ ...PLAN, opened_by: "member:u-3" }) });
-  said(bare, "screen.plan.opened", { date: D("2026-10-03"), name: NOBODY });
-  noIds(bare);
+  /* (a member with no handle known cannot be made by real acts: every member the store holds has one; the kit's word for an id it has no handle for is interface-shell R111's, proved by its own test) */
   const list = await openIn(world, me, `/app/plan/${project}`);
   said(list, "screen.plan.opened", { date: D(mineRow.opened_at), name: me.handle });
   said(list, "screen.plan.opened", { date: D(rosaRow.opened_at), name: "rosa" });
   noIds(list, ["admin"]);
-  const row = (id, by) => ({ id, project: PROJECT, title: "T " + id, state: "open", opened_by: by, opened_at: "2026-10-03T10:00:00Z", subjects: [] });
-  const nameless = await open(`/app/plan/${PROJECT}`, { ...PLANE, plans: ok({ ok: true, items: [row("PLN-2026-a-plan", "member:u-3"), row("PLN-2026-b-plan", "member:u-3")], truncated: false, cursor: null, limit: 200 }) });
-  said(nameless, "screen.plan.opened", { date: D("2026-10-03"), name: NOBODY });
-  noIds(nameless);
 });
 
 test("R12, R17, R31 (C94): an action names who sent it, who marked pressure, who approved a template or a guide, who stated its laws and who set its risk by handle; an agent is not a member", async () => {
