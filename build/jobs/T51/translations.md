@@ -1,6 +1,6 @@
 # translations (T51)
 
-**Status** · session_01KFtq9Cm6EqDrBRK4KzWp2Y · depth 2 · COMPLETE · handled B7
+**Status** · session_013fsGnfsXmN9WkNCN2pULce · depth 2 · COMPLETE · handled B8
 
 ## Change B4 (K4822, from control-plane J47)
 
@@ -198,3 +198,38 @@ Ran (root /home/user/bio): module suite 46/46 pass; fixtures check 0 failures (t
 REPORT, other modules (not edited here): (1) interface-shell `bio-plane/test/m/interface-shell/harness.mjs:88` still hand-builds an `interfacewords` answer; to re-point to `interfaceWordsAnswer` (its R5, R7, R10, R82, R84, R103 frame tests). (2) screens-settings `seed-common.mjs:119` and `translations.test.mjs:87` hand-build `translationdraft` answers (translations' op, R18); screens-settings to re-point.
 
 Deferred: none. Record: build/jobs/T51/translations.md, section "Completion, fix round 10, Wave A". Size (session_01KFtq9Cm6EqDrBRK4KzWp2Y): test runs 6, module lines 1027.
+
+## Completion, fix round 10, B8 (TRANSLATIONS #7, session_013fsGnfsXmN9WkNCN2pULce, START B8; K5222)
+
+**What changed.**
+- `bio-plane/test/m/translations/fixtures.mjs:38-53` (new export `translationDraftAnswer({ direction })`): the real `translationdraft` answer (R16, R18) for a reachable assistant (the group's account, `on`), over a fresh world each call, never stored. `to_language` by a granted member asks for the words still missing in `es` (the first 100, in order); `to_english` by an administrator reads back the one kept protected word.
+- `bio-plane/test/m/translations/fixtures.test.mjs` (new test, R16 R18): the real answer is `ASSISTANT_DRAFT_UNAVAILABLE` with its `check`, the words to draft, `offered_official: []`, a to_english answer for one kept word, and a second call equal but a separate object (control). Failing first: `translationDraftAnswer is not a function`. Break once (expected reason set to `AI_KEPT_AWAY`): 2 pass, 1 fail (red); restored: 3 pass, 0 fail (green).
+- No source change; no `fixtures-own` or `fixtures-generic` marker added.
+
+**The success answer does not exist on the real path (file:line).** B8 asks for the draft recorded by `translationDraftRecord` after the door's agent-worker step (`store-door/dispatch.mjs:510-517`). That step is not built: `translationdraft` in `store-door/dispatch.mjs:510-517` runs only `translationDraftRefusal` and `assistantFor` (account and keep-away), then returns `translations.translationDraft(...)`, and nothing in `store-door` calls `translationDraftRecord` or agent-worker's `/draft`. `translations/index.mjs` `translationDraft` (its end, the `draftUnavailable` return) always answers `ASSISTANT_DRAFT_UNAVAILABLE` after the gates, the same as `wizard-scripts/index.mjs:1539` for `writinghelp`. So no real path can record a draft, and I published what the real op answers instead, as B8 directs. No `AGENT_WORKER` double was needed: none is called on this path.
+
+**Results.**
+- Module suite `bio-plane/test/m/translations/*.test.mjs`: 47 tests, 47 pass, 0 fail.
+- `checks/format.mjs`: 178 modules, 0 failures. `checks/architecture.mjs translations`: 0 failures. `checks/coverage.mjs translations`: 21 of 21 live ids named, 0 failures. `checks/words.mjs translations`: 0 failures (words 19247, not risen).
+- `checks/fixtures.mjs /home/user/bio translations --list`: 0 failures; the two `fixture.mjs:78` and `:85` lines (`accepted(store-replies)`, store-door's run) are B5's, waiting on store-door.
+- `checks/ownership.mjs`: 1 file changed by translations, 0 failures.
+- `checks/run.mjs /home/user/bio`: no finding in translations' files; the two `[op-table translationdraft]` findings are screens-settings' hand-built answers (`seed-common.mjs:119`, `translations.test.mjs:87`), for screens-settings to re-point to `translationDraftAnswer` (this module's op, R18).
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules affected (fixture and test only).
+
+**Markers.** None added. **Deferred.** None.
+
+**REPORT for BOB.** (1) screens-settings `seed-common.mjs:119` and `translations.test.mjs:87` hand-build the `translationdraft` answers; screens-settings owns the re-point to `translationDraftAnswer`. (2) The door's agent-worker step for `translationdraft` is not built (`store-door/dispatch.mjs:510-517`); when it lands, the success answer (`translationDraftRecord`) needs its own fixture. Owed by BOB's plan, not this job.
+
+Size (session_013fsGnfsXmN9WkNCN2pULce): test runs 6, module lines 1027 (`bio-plane/src/translations/*.mjs`, unchanged; this round's diff is 45 added lines in the two fixture files).
+
+## J8 · COMPLETE
+
+COMPLETE, START B8 (K5222): translationdraft's real answer is published in translations' fixtures.mjs as translationDraftAnswer({ direction }) (bio-plane/test/m/translations/fixtures.mjs:38-53), made over a fresh world each call; test fixtures.test.mjs (R16, R18), red on a wrong reason, green restored. Commit 3f7757ea23 on job/T51/translations.
+
+The success answer is not on the real path: store-door/dispatch.mjs:510-517 never calls translationDraftRecord or agent-worker's /draft; translations/index.mjs translationDraft always answers ASSISTANT_DRAFT_UNAVAILABLE after the gates (as wizard-scripts/index.mjs:1539 for writinghelp). So the fixture publishes that real answer with the words to draft; no AGENT_WORKER double was needed.
+
+Results: module suite 47/47; format 0; architecture 0; coverage 21 of 21; words 0; fixtures --list 0 failures (the two fixture.mjs:78/:85 store-door contract lines are B5's); ownership 0; impact 0 of 178. No marker added (fixtures-own, fixtures-generic: none). Deferred: none.
+
+REPORT: screens-settings seed-common.mjs:119 and translations.test.mjs:87 hand-build translationdraft answers; screens-settings to re-point to translationDraftAnswer. The door's agent-worker draft step is unbuilt; a success-answer fixture waits on it.
+
+Size (session_013fsGnfsXmN9WkNCN2pULce): test runs 6, module lines 1027.
