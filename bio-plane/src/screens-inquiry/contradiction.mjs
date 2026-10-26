@@ -1,4 +1,4 @@
-/* screens-inquiry R105, R40 (FR-28 entry 22; C48; DEC-374; `contradiction` R25, R30-R36, R50-R54, R61): the screen `contradiction`, "Two documents
+/* screens-inquiry R105, R40, R139 (FR-28 entry 22; C48; DEC-374; `contradiction` R25, R30-R36, R50-R54, R61): the screen `contradiction`, "Two documents
  * in tension" (Projects › <project> › Two documents in tension; the registry's 7 acts), at `/app/contradiction/<candidate>`, or
  * `/app/contradiction/<candidate>/<project>` for a conflict the member sees half (the project is the party the notice came to).
  *
@@ -17,7 +17,9 @@
  * words being optional, the shell's own reason box asks (a shell mark, not a declared field). Every sentence is read by key (R44);
  * a design word `words.json` does not hold would be listed in `GAP_WORDS` and drawn as its key until the design stream writes it (none now).
  * A candidate a member flagged (`contradictionflag`, R61) draws her reason in her words with her name and the day, and no machine mark; a member
- * the reads name is drawn by her handle, never her id (C94; R40). Self-contained functions (interface-shell R21 (1)). */
+ * the reads name is drawn by her handle, never her id (C94; R40). Self-contained functions (interface-shell R21 (1)).
+ * T51 fix round 10 (R139; DEC-439, DEC-440): a lead a member flagged is `screen.contradiction.lead.member` (never the assistant's guess), and each side's kind is the word held
+ * for its reader id (`screen.contradiction.doctype.<id>`), an id with no row drawing nothing. */
 
 import { COMMON } from "./common.mjs";
 import { named } from "./question.mjs";
@@ -193,12 +195,16 @@ function render(cs, view) {
   const fact = (name, icon) => {
     const f = facts.find((x) => x && x.fact === name && x.undetermined !== true && x.a !== null && x.b !== null && x.a !== undefined && x.b !== undefined);
     if (!f) return "";
-    /* T51 fix round 13 (B92, C-M13 MINOR): a doctype is drawn by its held label, never by the id the reader states ("generic · generic"); a doctype
-       the design holds no label for draws no row (REPORT: the labels it lacks) */
-    const doctypeLabel = (id) => "doctypes." + String(id) + ".label";
-    const heldLabel = (v) => W(doctypeLabel(v)) !== doctypeLabel(v);
-    if (name === "doctype" && ![f.a, f.b].every(heldLabel)) return "";
-    const show = (v) => (name === "stated_date" ? cs.date(String(v), { year: true }) : name === "doctype" ? W(doctypeLabel(v)) : E(String(v)));
+    /* R139 (T51 fix round 10; DEC-440; C-M13 MINOR): each side's kind is drawn by the word held for its reader id (`screen.contradiction.doctype.<id>`), never by the id
+       the reader states ("generic · generic"); an id with no row draws nothing, and a fact with no side drawn draws no row */
+    const doctypeKey = (id) => "screen.contradiction.doctype." + String(id);
+    const heldKind = (id) => W(doctypeKey(id)) !== doctypeKey(id);
+    if (name === "doctype") {
+      const drawn = [["a", f.a], ["b", f.b]].filter(([, v]) => heldKind(v));
+      if (!drawn.length) return "";
+      return `<div data-fact="doctype">${cs.row(cs.icon(icon), drawn.map(([side, v]) => `<span class="mk-data" data-kind="${side}">${W(doctypeKey(v))}</span>`).join(" \u00b7 "), "")}</div>`;
+    }
+    const show = (v) => (name === "stated_date" ? cs.date(String(v), { year: true }) : E(String(v)));
     return `<div data-fact="${name}">${cs.row(cs.icon(icon), `<span class="mk-data">${show(f.a)} · ${show(f.b)}</span>`, "")}</div>`;
   };
   const m = c.machine && typeof c.machine === "object" ? c.machine : null;
@@ -217,9 +223,10 @@ function render(cs, view) {
     { help: [S + "help.why.these.two.were.put.together", S + "help.the.sentence.in.quotes.is.the"] }));
   if (state === "closed") return hold("closed", out.join("") + note(S + "someone.already.closed.this.and.it"));
   if (state === "a" || state === "b")
-    /* T51 fix round 10 (B89, C-M13): a lead a member flagged is not the assistant's guess (`flagged_by` is the member's, above). No word is held for a member's lead,
-       so none is drawn here: REPORTed (the key needed), never the assistant's sentence */
-    out.push(cs.sec(S + "how.strongly.it.binds", `<p>${lead && !fb ? W(S + "this.is.a.lead.the.assistant") + " " + W(S + "it.asks.nothing.of.anyone.until")
+    /* T51 fix round 10 (B89, R139; C-M13; DEC-439): a lead a member flagged is not the assistant's guess (`flagged_by` is the member's, above): it is
+       `screen.contradiction.lead.member` */
+    out.push(cs.sec(S + "how.strongly.it.binds", `<p>${lead && fb ? W("screen.contradiction.lead.member")
+      : lead ? W(S + "this.is.a.lead.the.assistant") + " " + W(S + "it.asks.nothing.of.anyone.until")
       : duty ? W(S + "this.is.a.conflict.the.record") + " " + W(S + "it.stays.open.until.someone.resolves") : ""}</p>`));
 
   const drawnFor = (field) => drafted(field);
@@ -388,7 +395,11 @@ const acts = [
 ];
 
 /** The keys the screen names beyond its own family (R44: every one a words.json word). */
-const words = Object.freeze([...BORROWED, "screen.contradiction.flagged.by", "mark.origin.machine.name", "mark.origin.machine.means", "state.undetermined", "state.empty", "draft.machine.label",
+/** R139 (DEC-440): the reader ids a side's kind has a word for, `screen.contradiction.doctype.<id>` (an id with no row is drawn nothing) */
+const DOCTYPES = Object.freeze(["meeting_calendar", "meeting_minutes", "meeting_agenda", "staff_report", "regulation", "policy", "staff_directory", "generic", "legistar_api",
+  "staff_roster", "org_chart", "courtlistener_docket", "cpuc_proceeding", "ecourt_roa", "financial_report", "budget_book", "budget_table"]);
+
+const words = Object.freeze([...BORROWED, "screen.contradiction.flagged.by", "screen.contradiction.lead.member", ...DOCTYPES.map((id) => "screen.contradiction.doctype." + id), "mark.origin.machine.name", "mark.origin.machine.means", "state.undetermined", "state.empty", "draft.machine.label",
   "ai.label.untested.writinghelp", "refusal.DISMISSAL_REASON_UNKNOWN", "act.writinghelp.label.contradiction",
   ...["clarify", "takeup", "dismiss", "resolve", "optin", "respond"].map((o) => `act.contradiction${o}.label.contradiction`)]);
 

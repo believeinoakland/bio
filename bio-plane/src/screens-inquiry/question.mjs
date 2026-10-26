@@ -1,4 +1,4 @@
-/* screens-inquiry R2, R12, R23–R27, R31, R34–R36, R38–R41, R44–R47, R71–R74, R78, R87–R89, R91, R101–R104, R110, R114, R116, R117, R120, R121:
+/* screens-inquiry R2, R12, R23–R27, R31, R34–R36, R38–R41, R44–R47, R71–R74, R78, R87–R89, R91, R101–R104, R110, R114, R116, R117, R120, R121, R139:
  * the question screen (Projects › <project> ›
  * Question; registry screen `question`).
  *
@@ -17,7 +17,12 @@
  * R11); a leg whose extent states a paragraph draws it, counted from zero in the record and drawn from one (C36; R23, R24, R34, R78); a record that
  * names no opener draws the day it was opened and no undetermined name (C44; R2); a removed citation is counted nowhere: not asked about, not saved
  * in the partition, not read back, not named among the legs the strength leaves out, and the page reads the strength and the partition again after a
- * sever (C38; R2, R23, R24); a member the record names is drawn by her handle, never by her id (C94; R40, R46). */
+ * sever (C38; R2, R23, R24); a member the record names is drawn by her handle, never by her id (C94; R40, R46).
+ *
+ * T51 fix round 10 (R139; DEC-439 to DEC-441): the leg-grade fold on a cited passage (`leggrade`, citation R24, carried once the registry admits it: admit.mjs), the "Yes,
+ * because of" a "No" set aside, "Put it on the other side" beside Reinstate (citation R23), and "A published case carries this question." */
+
+import { admitted } from "./admit.mjs";
 
 /** R2, R25, R26: the reads, each as its owner documents it. */
 function reads(view) {
@@ -122,6 +127,15 @@ function render(cs, view) {
     if (project && (projectTitle || projectWhy)) out.push(`<p class="mk-sub">${head(true)}${cs.ref("project", project, projectTitle || T("state.undetermined", { reason: projectWhy }), [])}</p>`);
     else if (!(project && loadingProject) && head(false)) out.push(`<p class="mk-sub">${head(false)}</p>`);
   }
+
+  /* R139, R72 (T51 fix round 10; DEC-439; E I2): a question a published case carries says so, beneath its head: `screen.question.carried`, from `publishedfrozen` (the
+     cases that pin it, public-read R38; R72 reads it for the section it draws below) or a published case among the citers `backlinks` answers; a question no case
+     carries draws none */
+  const frozen = later("frozen", "publishedfrozen", { id });
+  const carriedBy = (frozen.state === "ok" && frozen.value && Array.isArray(frozen.value.cases) ? frozen.value.cases.length : 0)
+    + (d.relies && d.relies.state === "ok" && d.relies.value && Array.isArray(d.relies.value.backlinks)
+      ? d.relies.value.backlinks.filter((x) => x && (x.from_type === "published" || (x.from_type === "case" && x.from_state === "published"))).length : 0);
+  if (carriedBy > 0) out.push(`<p class="mk-note" data-carried="1">${W("screen.question.carried")}</p>`);
 
   const stepsAt = out.length;
   out.push("");
@@ -603,14 +617,18 @@ function render(cs, view) {
   /* R23: what each passage carries: one choice per cited passage, the passages that would hold it up, the read-back,
      and "Save the answers"; drawn as state b, and (R24) inside "Change what a passage carries…" */
   const live1 = supports.filter(live);
+  /* R139 (T51 fix round 10; DEC-439; C-M5): the "Yes, because of" answers the last save set aside because they named a passage answered "No" (`ui.setAside`, each
+     `{yes, no}` by passage number, counted from one as the list draws them): `screen.question.yes.setaside` beneath the passage that said "Yes" and again with the read-back */
+  const setAside = Array.isArray(ui.setAside) ? ui.setAside.filter((e) => e && Number.isInteger(e.yes) && Number.isInteger(e.no)) : [];
+  const asideLines = (yes) => setAside.filter((e) => e.yes === yes).map((e) => `<p class="mk-small" data-set-aside="${e.no}">${W("screen.question.yes.setaside", { n: String(e.no) })}</p>`).join("");
   const askForm = (regroup) => {
-    const asks = live1.map((l) => {
+    const asks = live1.map((l, at) => {
       const others = live1.filter((o) => o.ord !== l.ord);
       return `<div class="mk-ev" data-ask="${l.ord}"><span class="rec">${cs.esc(legName(l))}</span>`
         + cs.checks("ask-" + l.ord, "question.ask", [["no", "question.ask.no"], ["yes", "question.ask.yes"]], { radio: true })
         + (others.length ? `<fieldset class="cs-field" id="ask-which-${l.ord}"><legend>${W("question.ask.which")}</legend>`
           + others.map((o, i) => `<label><input type="checkbox" name="ask-which-${l.ord}" id="ask-which-${l.ord}-${i}" value="${o.ord}"> ${cs.esc(legName(o))}</label>`).join("") + "</fieldset>" : "")
-        + "</div>";
+        + asideLines(at + 1) + "</div>";
     }).join("");
     /* the read-back as saved now: until the member saves, every passage is one the answer cannot do without */
     const readback = `<div class="cs-sheet" data-readback="ask"><b>${W("question.rests.any")}</b>`
@@ -676,6 +694,29 @@ function render(cs, view) {
   }
   const partOf = (l) => parts.find((p) => p.legs.some((x) => x.ord === l.ord)) || null;
 
+  /* R139 (T51 fix round 10; DEC-439; D-M1, C-M4; citation R24): "What this passage earns", a fold on a cited document passage: how well the copy the team holds shows
+     it, up to the most the record allows (the ceiling `earnedbasis` answers for the document, `leg-earning` R1: a letter, offered and no stronger one) and why, sent
+     as `leggrade` with the leg's part. Drawn only where the screen carries the act (`view.parts.leggrade`: the registry admits it), for a live document leg that holds no grade
+     on another axis and whose ceiling the record states; the read is asked only then. */
+  const GRADES = ["A", "B", "C", "D"];
+  const earnedRead = view.parts.leggrade ? later("earned", "earnedbasis", { id }) : null;
+  const ceilingOf = (target) => {
+    const c = earnedRead && earnedRead.state === "ok" && earnedRead.value && earnedRead.value.earned && earnedRead.value.earned.capture ? earnedRead.value.earned.capture[target] : null;
+    return c && c.mode === "ceiling" && GRADES.includes(c.grade) ? c.grade : "";
+  };
+  const gradeFold = (l, target) => {
+    if (!earnedRead || !l || l.fromRef || impRef(target) || !live(l)) return "";
+    const axis = String(l.grade_axis || "");
+    if (legGrade(l) && axis && axis !== "capture") return "";
+    const ceiling = ceilingOf(target);
+    if (!ceiling) return "";
+    const act = cs.act("leggrade", { label: "screen.question.leggrade.act", data: { target, ord: String(l.ord) } });
+    if (!act) return "";
+    return `<details class="mk-details" data-leggrade="${l.ord}"><summary>${W("screen.question.leggrade.head")}</summary><p class="mk-small">${W("screen.question.leggrade.help", { ceiling })}</p>`
+      + cs.checks("question-leggrade-" + l.ord, "", GRADES.slice(GRADES.indexOf(ceiling)).map((g) => ({ value: g, text: g })), { radio: true })
+      + cs.field("question-leggrade-why-" + l.ord, "shell.reason", { area: true, rec: true }) + act + "</details>";
+  };
+
   /* Supports (R34): every passage the question cites, from its own legs; R25's chooser; R23's line beneath each; R12 */
   const legRow = (l, role) => {
     const g = legGrade(l);
@@ -699,7 +740,7 @@ function render(cs, view) {
       ((() => { const r = shown && Array.isArray(shown.legs) ? shown.legs.find((x) => String(x.target_id || x.target) === target) : null;
         const words = clip(wordsOf(l, r)); return words ? `<span class="rec" data-leg-words="1">“${cs.esc(words)}”</span><br>` : ""; })())
       + `<span class="mk-small">${impRef(target) ? `<span class="rec" data-imported="1">${cs.esc(legTitle(l))}</span>` : cs.ref("document", target, legTitle(l), [legTitle(l)])}${whereOf(l) ? " · " + whereOf(l) : ""}`
-      + (severed ? ` · <span data-leg="severed">${why ? W("screen.question.leg.severed.why", { why }) : W("screen.question.leg.severed")}</span>` : "") + "</span>" + line,
+      + (severed ? ` · <span data-leg="severed">${why ? W("screen.question.leg.severed.why", { why }) : W("screen.question.leg.severed")}</span>` : "") + "</span>" + line + gradeFold(l, target),
       (() => {
         /* R87: "Narrow the question" on a live leg of the reading shown, keyed by that reading's own ordinal for it */
         const rv = shown && Array.isArray(shown.legs) ? shown.legs.find((x) => String(x.target_id || x.target) === target) : null;
@@ -709,7 +750,9 @@ function render(cs, view) {
         const imp = impRef(target);
         const first = imp ? cs.act("withdrawimported", { label: "act.owed_withdrawimported.label.question", tone: "quiet", data: { import: imp[1], finding: imp[2] } })
           : isLive ? cs.act("sever", { label: "act.sever.label.question", data: { target } })
-          : severed ? cs.act("reinstate", { label: "act.reinstate.label.question", data: { target } }) : "";
+          /* R139 (DEC-439; C-M6; citation R23): beside Reinstate, "Put it on the other side": reinstated as cutting against where it supported, as supporting where it cut against */
+          : severed ? cs.checks("question-reinstate-side-" + l.ord, "", [["other", "screen.question.reinstate.otherside", false]])
+            + `<p class="mk-small">${W("screen.question.reinstate.otherside.help")}</p>` + cs.act("reinstate", { label: "act.reinstate.label.question", data: { target, ord: String(l.ord) } }) : "";
         /* R120 (B411, H1): the group the shell's stylesheet wraps and stacks at 390 px */
         return first || narrowAct ? `<span class="mk-acts">${first}${narrowAct}</span>` : "";
       })());
@@ -755,6 +798,8 @@ function render(cs, view) {
           before: strengthOf(e.strength_before), after: e.strength_after === null || e.strength_after === undefined ? strengthOf(null) : strengthOf(e.strength_after) })
         : W("question.rests.changed", { who: whoIs(e.who), date: { html: cs.date(e.at, { year: true }) },
           reason: e.reason, before: e.before.replace(/capture |connection |testimony /g, ""), after: changes[i + 1] ? changes[i + 1].before.replace(/capture |connection |testimony /g, "") : now })}</p>`).join("")
+      /* R139: the answers the last save set aside, named by the passage that said "Yes" */
+      + setAside.map((e) => `<p class="mk-small" data-set-aside="${e.no}"><span class="rec">${cs.esc(live1[e.yes - 1] ? legName(live1[e.yes - 1]) : "")}</span> \u00b7 ${W("screen.question.yes.setaside", { n: String(e.no) })}</p>`).join("")
       /* "Change what a passage carries…" reopens R23's questions in place; the save carries her reason (NO_REASON) */
       + `<details class="mk-details" data-regroup="1"><summary>${W("question.rests.change")}</summary>`
       + `<p class="mk-small">${W("question.ask.title")}</p>` + askForm(true) + "</details>");
@@ -1000,7 +1045,7 @@ function render(cs, view) {
   /* R72: what each published case froze for this question, from `publishedfrozen` (public: no credential), beside today's strength;
      a question no case pins (cases [] or NOT_PUBLISHED, which a working question answers) draws no section; a read that fails is drawn failed */
   {
-    const fr = later("frozen", "publishedfrozen", { id });
+    const fr = frozen;
     const none = fr.state === "empty" || (fr.state === "failed" && fr.refusal && fr.refusal.code === "NOT_PUBLISHED") || (fr.state === "ok" && !(fr.value && Array.isArray(fr.value.cases) && fr.value.cases.length));
     if (fr.state === "failed" && !none) out.push(cs.sec("screen.question.say045", cs.state(fr, () => "")));
     else if (fr.state === "ok" && !none) {
@@ -1448,7 +1493,15 @@ const acts = [
       const s = await cs.call("select", { body: { ids: [String(el.dataset.target || "")] } }).then((a) => a, () => null);
       const sr = s && s.result !== undefined ? s.result : s;
       if (!s || s.ok === false || !sr || sr.ok === false || !sr.handle) return { refuse: "screen.question.leg.unselectable" };
-      return { query: { project: String(view.subject || ""), handle: String(sr.handle) }, raw: "" };
+      /* R139 (citation R23): a reinstate the member ticked "Put it on the other side" for names the other role than the leg was cited with (each function is served by its
+         own text, so the op is read from the pressed control) */
+      let role = "";
+      if (el.getAttribute("data-act") === "reinstate" && (cs.value("question-reinstate-side-" + String(el.dataset.ord || "")) || []).includes("other")) {
+        const doc = view.parts.front(view.data.inquiry && view.data.inquiry.state === "ok" ? view.data.inquiry.value["bundle.md"] : "");
+        const leg = (doc.lists.basis || []).find((l) => l && String(l.target) === String(el.dataset.target || ""));
+        role = leg ? ((leg.role || "supports") === "cuts_against" ? "supports" : "cuts_against") : "";
+      }
+      return { query: { project: String(view.subject || ""), handle: String(sr.handle), ...(role ? { role } : {}) }, raw: "" };
     } })),
   /* R102: the division of a question into two. Each child's number is minted by the plane's allocator (as "Open a question" mints
      one), its slug cut and trimmed so the id never ends in a hyphen; every passage must go to at least one of the two */
@@ -1565,22 +1618,30 @@ const acts = [
       const root = (x) => { while (parent.get(x) !== x) x = parent.get(x); return x; };
       const asserting = new Set();
       /* T51 fix round 10 (B89, C-M5): a passage answered "No" is necessary, so a "Yes, because of X" never joins X to its part: X is left out of the
-         union and stays a necessary leg. (The sentence that says so is not held: REPORTed.) */
+         union and stays a necessary leg, and the page says so (`screen.question.yes.setaside`, R139). */
       const answeredNo = new Set(legs.filter((l) => (cs.value("ask-" + l.ord) || []).includes("no")).map((l) => l.ord));
+      /* R139 (DEC-439; C-M5): each "Yes, because of" that names a passage answered "No" is set aside, and the page says so once the save is answered: the pair by passage
+         number, counted from one in the order the list draws them */
+      const setAside = [];
       for (const l of legs) {
         const said = cs.value("ask-" + l.ord) || [];
         if (!said.includes("yes")) continue;
         asserting.add(l.ord);
         for (const o of cs.value("ask-which-" + l.ord) || []) {
           const n = Number(o);
-          if (parent.has(n) && !answeredNo.has(n)) parent.set(root(n), root(l.ord));
+          if (!parent.has(n)) continue;
+          if (answeredNo.has(n)) setAside.push({ yes: legs.indexOf(l) + 1, no: legs.findIndex((x) => x.ord === n) + 1 });
+          else parent.set(root(n), root(l.ord));
         }
       }
+      view.ui.pendingAside = setAside;
       const groups = new Map();
       for (const l of legs) { const r = root(l.ord); if (!groups.has(r)) groups.set(r, []); groups.get(r).push(l.ord); }
       const grounds = [...groups.values()].filter((ords) => ords.some((o) => asserting.has(o))).map((ords, i) => ({ ground: "part " + (i + 1), legs: ords }));
       return { body: { target: String(view.subject || ""), grounds } };
-    } },
+    },
+    /* R139: what this save set aside is drawn (none, when it set nothing aside) */
+    done(view, answer, cs) { cs.set("setAside", Array.isArray(view.ui.pendingAside) ? view.ui.pendingAside : []); } },
   /* R25: the reading acts, each with the version; Stand on with the project; accept with the affirmation of every ground */
   ...["versionaccept", "versionconsider", "versionreject", "versionrevert", "versioncurrent", "versionhide"].map((op) => ({
     op, label: "act." + op + ".label.question", rereads: ["basis", "strength", "inquiry"], failed: legNamesFailed,
@@ -1670,6 +1731,28 @@ const acts = [
     } },
 ];
 
+/** R139 (T51 fix round 10; DEC-439; citation R24): a member's grade of how well the team's copy shows a cited passage, `leggrade` with the question as its citing object
+ *  (`project`), the passage's target and its part (the leg's `content_id` and `extent_*` fields), the letter chosen (none offered above the ceiling) and her reason. Held apart as the
+ *  document's `readheldActs` is: the act is carried only once the registry (or `RE_POINTS`) admits it (admit.mjs), so no screen is stopped by an act it does not yet hold. A refusal
+ *  (`GRADE_OVER_CEILING`, `NOT_CITED`, `LEG_NOT_GRADABLE`, `LEG_GRADE_OTHER_AXIS`, a machine) is drawn by the owner's own words, and the question reads its legs and strength again. */
+const legGradeActs = Object.freeze(admitted("question", "leggrade") ? [
+  { op: "leggrade", label: "screen.question.leggrade.act", reasonField: "reason", rereads: ["inquiry", "basis", "strength", "partition"],
+    send(view, el, cs) {
+      const ord = String(el.dataset.ord || ""), target = String(el.dataset.target || "");
+      const grade = String((cs.value("question-leggrade-" + ord) || [])[0] || "");
+      if (!/^[A-D]$/.test(grade)) return { refuse: "capture.fieldneeded", fills: { field: { html: cs.w("screen.question.leggrade.head") } } };
+      const reason = String(cs.value("question-leggrade-why-" + ord) || "").trim();
+      if (!reason) return { refuse: "shell.reason.needed" };
+      const doc = view.parts.front(view.data.inquiry && view.data.inquiry.state === "ok" ? view.data.inquiry.value["bundle.md"] : "");
+      const leg = (doc.lists.basis || [])[Number(ord)];
+      const part = {};
+      for (const k of ["content_id", "extent_kind", "extent_ref", "extent_page", "extent_rect", "extent_sheet", "extent_cell", "extent_slide", "extent_shape", "extent_para", "extent_run",
+        "extent_range", "extent_table", "extent_part", "extent_cited_as"]) if (leg && leg[k] !== undefined && leg[k] !== null && String(leg[k]) !== "") part[k] = String(leg[k]);
+      return { body: { project: String(view.subject || ""), target, grade, reason, ...part } };
+    },
+    done(view, answer, cs) { cs.set("legSeq", (view.ui.legSeq || 0) + 1); } },
+] : []);
+
 /** The keys the question screen may draw (R44: keys only). */
 const words = Object.freeze([
   "screen.question.name", "screen.question.purpose",
@@ -1744,6 +1827,9 @@ const words = Object.freeze([
   ...["heading", "edition", "edition.meta", "done", "done.meta", "note.label", "refused.summary", "refused.body", "refused.body2", "help", "help2"].map((k) => "screen.question.reeval." + k),
   ...["summary", "what", "case", "kept", "why", "why.help", "next", "next.link", "next.link.text", "refused.summary", "refused.noreason", "refused.badreason", "refused.notsetdown"].map((k) => "screen.question.reopen." + k),
   "act.writinghelp.does",
+  /* R139 (DEC-439): the leg-grade fold, the Yes set aside, the other side beside Reinstate, a published case carrying the question */
+  "screen.question.leggrade.head", "screen.question.leggrade.help", "screen.question.leggrade.act", "screen.question.yes.setaside", "screen.question.reinstate.otherside",
+  "screen.question.reinstate.otherside.help", "screen.question.carried", "capture.fieldneeded", "shell.reason.needed",
   /* T51 CHANGE B22 (R110) */
   "act.owed_citeimported.label.question", "act.owed_withdrawimported.label.question", "refusal.IMPORTED_NOT_ACCEPTED",
   "screen.imported.citeimp.role", "screen.imported.citeimp.role.supports", "screen.imported.citeimp.role.cuts", "screen.imported.citeimp.note",
@@ -1752,5 +1838,5 @@ const words = Object.freeze([
 
 /** The question screen (interface-shell R21), with the module's shared readers and the dock's bounds as its parts. */
 export function questionScreen(parts) {
-  return Object.freeze({ id: "question", reads, place, render, acts, words, parts: Object.freeze({ ...parts, named }) });
+  return Object.freeze({ id: "question", reads, place, render, acts: [...acts, ...legGradeActs], words, parts: Object.freeze({ ...parts, named, leggrade: legGradeActs.length > 0 }) });
 }
