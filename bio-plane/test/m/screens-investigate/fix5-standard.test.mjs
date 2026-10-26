@@ -31,7 +31,7 @@ test("R8 D2 Standard: 'Relate to a law' from a standard opened under its project
   const sent = p.byOp("lawrelate");
   assert.equal(sent.length, 1);
   assert.equal(sent[0].body.from, L.pol, "the standard's id, not its path");
-  assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "nothing refused");
+  assert.ok(!main(p).querySelector('[data-gap="refused"]'), "nothing refused");
   const held = await me.read("lawrelations", { query: { id: L.pol } });
   assert.equal(held.referential.filter((r) => !r.withdrawn).length, 1, "the relation is held");
 });

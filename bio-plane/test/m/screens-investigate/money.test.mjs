@@ -107,7 +107,7 @@ test("R4 a value its source does not state is drawn undetermined and opens the r
   assert.equal(panel.hasAttribute("hidden"), false);
   drew(panel.querySelector('[data-gap-item="to"]'), "screen.money.evidence.to");
   assert.deepEqual(actsIn(panel).sort(), ["acquire", "actioncreate", "authoritychain", "checkrequest", "createevent", "findin", "gradenote", "hypothesishold", "include", "recordfact"].sort());
-  assert.equal(rowOf(p, F.adopted).querySelector('.cs-gap[data-gap="undetermined"]'), null, "a figure stating everything carries no such mark (control)");
+  assert.ok(!rowOf(p, F.adopted).querySelector('.cs-gap[data-gap="undetermined"]'), "a figure stating everything carries no such mark (control)");
 });
 
 test("R4 a filter keeps only the rows with something undetermined (its address), and back", async () => {
@@ -168,18 +168,39 @@ test("R4 each row's panel by its kind: reconcile (a budgeted figure beside a pai
   await press(p, "checkrequest", { within: panelOf(p, F.paid), reason: "how was it read?" });
   const cr = p.byOp("checkrequest")[0].body;
   assert.deepEqual([cr.target, cr.label, cr.reason], [project, "municipal budget", "how was it read?"]);
-  assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "the store took the request");
+  assert.ok(!main(p).querySelector('[data-gap="refused"]'), "the store took the request");
   fill(p, { "mf-question": inquiry, "mf-hunch": "the Sewer Fund's share of citywide overhead" });
   await press(p, "hypothesishold", { within: panelOf(p, F.paid), reason: REASON });
   assert.deepEqual(p.byOp("hypothesishold")[0].body, { inquiry, kind: "flow", statement: "the Sewer Fund's share of citywide overhead", about: [F.paid] });
-  assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "the store held the hypothesis");
+  assert.ok(!main(p).querySelector('[data-gap="refused"]'), "the store held the hypothesis");
   panel = await openPanel(p, F.other);
   fill(p, { "mf-doc": lease.sha });
   await press(p, "createevent", { within: panelOf(p, F.other), reason: "the ledger dates it" });
   assert.deepEqual(p.byOp("createevent")[0].body.attestations, [{ captureSha: lease.sha, extent: { kind: "document" } }]);
-  assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "the store held the event");
+  assert.ok(!main(p).querySelector('[data-gap="refused"]'), "the store held the event");
   await press(p, "findin", { within: panelOf(p, F.other) });
   assert.equal(p.location.pathname, "/app/find-in/" + project);
+});
+
+test("R4 an address the site refuses (404): the owner's refusal is drawn beside the act by its word, the page answers, and the panel's other acts still work (K5253)", async () => {
+  const { world, me, project, trail, F } = await moneyWorld();
+  const address = "https://city.example/afr-2022.pdf";
+  world.script(address, async () => new Response("Not found.", { status: 404, headers: { "content-type": "text/plain" } }));
+  /* the owner's answer to the same request: the code the screen must word is read from it, never copied */
+  const owners = await refused(world, me, "acquire", { locator: address });
+  assert.equal(owners.ok, false, "the owner refuses an address the site does not serve");
+  const p = await openAs(world, me, "/app/money/" + trail);
+  const panel = await openPanel(p, F.paid);
+  assert.ok(panel, "the panel opens");
+  fill(p, { "mf-address": address });
+  await press(p, "acquire", { within: panelOf(p, F.paid) });
+  assert.deepEqual(p.byOp("acquire")[0].body, { locator: address });
+  const gap = panelOf(p, F.paid).querySelector('[data-gap="refused"]');
+  assert.ok(gap, "the refusal is drawn beside the act");
+  assert.equal(gap.textContent.trim(), word("refusal." + owners.reason), "by the owner's word for its code");
+  fill(p, { "mf-expertise": "municipal budget" });
+  await press(p, "checkrequest", { within: panelOf(p, F.paid), reason: "how was it read?" });
+  assert.deepEqual([p.byOp("checkrequest")[0].body.target, p.byOp("checkrequest")[0].body.label], [project, "municipal budget"], "the page still answers after the refusal");
 });
 
 test("R4 \"Ask the city for the record\" opens request for the project", async () => {
@@ -287,7 +308,7 @@ test("R34 the money trail's figure form chooses the document by title and sends 
   const project = await bare.world.recipes.project(bare.me, "Nothing held");
   const empty = await bare.world.recipes.trail(bare.me, project, "No documents");
   const none = await openAs(bare.world, bare.me, "/app/money/" + empty);
-  assert.equal(none.doc.getElementById("mf-doc"), null, "no document: the choice's empty state");
+  assert.ok(!none.doc.getElementById("mf-doc"),  "no document: the choice's empty state");
 });
 
 /* C8, N1 (fix round 3; R4, money R28): a project's money trails are read by what they concern and listed, newest first, so a trail

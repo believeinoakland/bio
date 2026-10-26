@@ -79,7 +79,7 @@ test("R19 the project's proposals are read from standardproposals (the project, 
   assert.ok(s2.textContent.includes(crews.cite));
   assert.ok(!s2.textContent.includes(machine.cite), "an open one is not under adopted");
   drew(s2, "screen.standard.adopted", { by: me.handle, date: dayOf(adopted.adoption.at.slice(0, 10)) });
-  assert.equal(button(q, "standardadopt"), null, "an adopted one is not adopted again");
+  assert.ok(!button(q, "standardadopt"),  "an adopted one is not adopted again");
   const all = await openAs(world, me, proj + "/all");
   assert.equal(all.byOp("standardproposals")[0].query.state, "all");
   assert.ok(main(all).textContent.includes(machine.cite) && main(all).textContent.includes(crews.cite), "all lists both");
@@ -161,13 +161,13 @@ test("R34 the standard's text is a document chosen on screen, never typed conten
   const du = await readHeld(world, me, doc.sha);
   const std = await declareStandard(me, { cite: "Ordinance 8.22", kind: "ordinance", sha: doc.sha, extent: du[0].extent });
   const p = await openAs(world, me, "/app/standard/" + std);
-  assert.equal(p.doc.getElementById("st-text"), null);
+  assert.ok(!p.doc.getElementById("st-text"));
   assert.deepEqual(p.doc.getElementById("st-doc").querySelectorAll("option").filter((o) => o.getAttribute("value") !== "").map((o) => o.textContent.split(" · ")[0]).sort(), ["Ordinance.txt", "Policy.txt"], "by title");
   assert.deepEqual(p.doc.getElementById("st-doc").querySelectorAll("option").map((o) => o.getAttribute("value")).filter(Boolean).sort(), [doc.sha, memo.sha].sort());
   /* control: a member who can read no held document */
   const guest = await world.signIn("guest", { admin: false });
   const none = await openAs(world, guest, "/app/standard/" + std);
-  assert.equal(none.doc.getElementById("st-doc"), null);
+  assert.ok(!none.doc.getElementById("st-doc"));
   fill(none, { "st-cite": "c", "st-issuer": "i" });
   await press(none, "standarddeclare", { reason: "r" });
   assert.equal(none.byOp("standarddeclare").length, 0);
@@ -204,7 +204,7 @@ test("R51 a date sends standardinforce with the declared fields and draws the ow
   shown = main(p).querySelector('[data-inforce="not_in_force"]');
   assert.ok(shown && shown.textContent.includes(before.why), "not in force is drawn with its reason");
   drew(shown, "screen.standard.inforce.result.line", { date: dayOf("2022-05-01"), state: word("screen.standard.inforce.state.not_in_force") });
-  assert.equal(main(p).querySelector('[data-inforce="in_force"]'), null);
+  assert.ok(!main(p).querySelector('[data-inforce="in_force"]'));
   const unstated = await asked(L.ord, "2026-06-15");
   assert.equal(unstated.state, "undetermined", "the world: the ordinance states no period");
   const und = await openAs(world, me, "/app/standard/" + L.ord);
@@ -219,7 +219,7 @@ test("R51 a date sends standardinforce with the declared fields and draws the ow
   assert.equal(bad.byOp("standardinforce").length, 1);
   assert.ok(main(bad).textContent.includes(word("refusal.STANDARD_DATE_INVALID")), "a refusal of the store beside the act");
   const proj = await openAs(world, me, "/app/standard/" + L.project);
-  assert.equal(proj.doc.getElementById("st-inforce-day"), null, "control: a project's page (no standard) asks no date");
+  assert.ok(!proj.doc.getElementById("st-inforce-day"),  "control: a project's page (no standard) asks no date");
 });
 
 /* R56, R57 (T51; DEC-384 I-30) */
