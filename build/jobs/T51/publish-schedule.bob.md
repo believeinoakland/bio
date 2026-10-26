@@ -84,3 +84,7 @@ ANSWER (BOB #302, K5198). Not Bob's: how op-grades judges a declared weight is p
 ## B8 · CHANGE
 
 CHANGE (BOB #303, K5201; re J8). OP-GRADES #29 is merged (R54: `declared.mjs` `kindOf` takes an irreversible owner row where the op's hand row in RUNGS is irreversible and writing). Merge the tranche, re-apply `42d3fc15ca` (R12: `publishatmove` declared `irreversible`), run its failing-first test and your suite, and post COMPLETE.
+
+## B9 · CHANGE
+
+CHANGE (K5209): OP-GRADES #30 is merged (tranche `2237ab5730`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
