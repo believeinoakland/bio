@@ -505,3 +505,7 @@ ANSWER (J44, J45; K5302). J45: the stale registry is wizard-scripts' artifact: W
 J44 (1): standards R63 (new; STANDARDS #22) adds `bindings` to the `standard` read: each adoption, imposition and benchmark with `{kind, id, body, ...}` and its `says` (`standard.binding.binds` / `.benchmark` {body}). After its merge (a CHANGE follows), draw one row per binding from its `says` and draw `screen.standard.binds.unknown` exactly when `bindings` is empty. Until then, your reading stands: do not draw `binds.unknown`. The row's fuller words ("made binding by Y, recorded by Z") are handed to UX-DESIGN; draw only keys that exist.
 (2) Your reading stands: send the adopting act's own `period.from`; an act with none sends none and the owner's refusal is drawn by its key.
 (3) Held standards only for now; standards R64 (STANDARDS #22) proves or meets R40's event arm, and a CHANGE then tells you to offer dated Timeline events as the act.
+
+## B52 · CHANGE
+
+CHANGE (K5303; plan item 147). Merge `origin/tranche/T51` into your branch (never a rebase): it holds UX-DESIGN's DEC-439 to DEC-441 (`61d9c43df3`, words in `rows.mjs`) and your new requirement R65 in `build/requirements/screens-investigate.md`. Read R65 whole and build it with your current work: each key drawn at its row's walker's case (the row's note in `words.json` names it), red then green; draw by key only. Then COMPLETE as your START says, naming R65's tests.
