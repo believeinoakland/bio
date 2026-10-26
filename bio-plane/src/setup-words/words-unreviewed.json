@@ -35950,224 +35950,224 @@
       "en": "a status is a fact about OUR OWN machinery (D-103/D-95): this instance's governor is holding the host, which is distinguishable from the source being unreachable and must not be read as evidence about the publisher. It clears for every member when the hold expires; there is no act that ends it.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 354
+      "line": 365
     },
     {
       "id": "machinery-producers.index.a_status_is_a_fact_2",
       "en": "a status is a fact about OUR OWN machinery (D-491, BOB #32 item 3): this instance's renderer, render allowance or host pacing is what holds the render, which says nothing about the page. The served frame is never filed as the content, so while it waits and after it expires there is NO capture of what a visitor saw.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 846
+      "line": 857
     },
     {
       "id": "machinery-producers.index.a_sweeps_status_is_link",
       "en": "a sweep's status is link-sweep's (its R8, R11): derived on read from the sweep's own runs and backlog, read here and never restated. It goes to the members of the sweep's project who may see its record, and it leaves on the first read after it stops holding.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 965
+      "line": 976
     },
     {
       "id": "machinery-producers.index.a_working_on_notices_state",
       "en": "a working-on notice's state is network-notices' (its R12, R13, R22), read here and never restated. It is told to the project's owners and to nobody else, and it leaves on the first read after it stops holding.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 1014
+      "line": 1025
     },
     {
       "id": "machinery-producers.index.both_principals_are_named_dec",
       "en": "BOTH PRINCIPALS ARE NAMED (DEC-27(b), DEC-55.4): the act is the daemon's, performed at the session's request, under the plane credential the run holds and paid for by the level of the Claude-account cascade the run named. Never a token value, and never a person's name on the act itself.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 651
+      "line": 662
     },
     {
       "id": "machinery-producers.index.cooloff_no_refusal_instant",
       "en": "the governor row is in cool-off but carries no instant for the refusal that started it, so how long this has been true is not derivable",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 359
+      "line": 370
     },
     {
       "id": "machinery-producers.index.eligibility_is_captures_rule",
       "en": "eligibility is capture's rule (its R8), read as the next archive tick would read it (monitoring R47); the tick itself fires the fallback, and this item clears when the address answers again.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 728
+      "line": 739
     },
     {
       "id": "machinery-producers.index.failing_run_no_first_failure",
       "en": "the failing run carries no first-failure instant this producer can read",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 732
+      "line": 743
     },
     {
       "id": "machinery-producers.index.it_was_due_at_due",
       "en": "it was due at {due_at} and is checked every {round} hours; the check has not run since. Nothing about the source is claimed here.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 762
+      "line": 773
     },
     {
       "id": "machinery-producers.index.its_last_n_runs_each",
       "en": "its last {n} runs each filed nothing, and it is not held. Its seeds or its match may no longer find what it was set up to find.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 920
+      "line": 931
     },
     {
       "id": "machinery-producers.index.its_last_run_filed_n",
       "en": "its last run filed {n} against a median of {n_2} over its recent runs. Nothing else changed: the run's note says only that the number was unusual.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 909
+      "line": 920
     },
     {
       "id": "machinery-producers.index.machine_writer_is_named",
       "en": "the machine writer is NAMED, never anonymous: the control plane deletes any caller-supplied author and stamps token:<class> for a machine credential (REC-2, closing D-61), so this is the record's own trace of an unattended write and not an inference. It clears for every member when a person authors the document again.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 565
+      "line": 576
     },
     {
       "id": "machinery-producers.index.manifest_created_unreadable",
       "en": "the manifest entry carries a created stamp this producer cannot read as an instant",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 569
+      "line": 580
     },
     {
       "id": "machinery-producers.index.n_of_its_captures_are",
       "en": "{n} of its captures are still awaiting review, at or over its backlog limit of {n_2}. It runs again when members review or set aside enough of them.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 906
+      "line": 917
     },
     {
       "id": "machinery-producers.index.no_instance_key_was_bound",
       "en": "no instance key was bound when it fell due, so your team's Civicsmith could not sign the notice's activity level. The notice shows its last attested level with that level's date until an attestation is issued; an administrator binds the key.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 1037
+      "line": 1048
     },
     {
       "id": "machinery-producers.index.no_interval_can_be_derived",
       "en": "no interval can be derived for it ({v1}), so no check is scheduled.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 763
+      "line": 774
     },
     {
       "id": "machinery-producers.index.on_its_last_run_these",
       "en": "on its last run these could not be fetched: {list}. The sweep's other pages were read; each one's reachability is on the basis.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 912
+      "line": 923
     },
     {
       "id": "machinery-producers.index.our_own_attempts_at",
       "en": "our own attempts at this address have failed enough times, for long enough, that the archive fallback may fetch a replay in its place. This is a fact about our attempts, not a finding about the publisher.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 724
+      "line": 735
+    },
+    {
+      "id": "machinery-producers.index.pacing_wait_in_words",
+      "en": "Civicsmith will try {host} again in {wait}. It has been turned away {refusals} time{v1} in a row, so it is waiting before it sends more. This says nothing about whether the site is working.",
+      "module": "machinery-producers",
+      "file": "bio-plane/src/machinery-producers/index.mjs",
+      "line": 358
     },
     {
       "id": "machinery-producers.index.request_completion_unreadable",
       "en": "the request row carries a completion stamp this producer cannot read as an instant",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 655
+      "line": 666
     },
     {
       "id": "machinery-producers.index.request_stamp_unreadable",
       "en": "the request row carries a request stamp this producer cannot read as an instant",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 850
+      "line": 861
     },
     {
       "id": "machinery-producers.index.session_created_unreadable",
       "en": "the session row carries a created stamp this producer cannot read as an instant",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 433
+      "line": 444
     },
     {
       "id": "machinery-producers.index.sweep_status_no_instant",
       "en": "the sweep's status carries no instant this producer can read",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 969
+      "line": 980
     },
     {
       "id": "machinery-producers.index.the_ledger_is_scratch_and",
       "en": "the ledger is SCRATCH and not record: it names a work list with an expiry, the primary capture is complete from the first tick, and the row is dropped by the capture path itself when nothing is left. It therefore clears for every member when the capture finishes or the session expires.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 429
+      "line": 440
     },
     {
       "id": "machinery-producers.index.the_notice_has_been_dormant",
       "en": "the notice has been Dormant at its last monthly attestation, and a second Dormant month with no revision lapses it. A revision or a stop answers this; so does the lapse itself.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 1047
-    },
-    {
-      "id": "machinery-producers.index.the_per_host_governor_is",
-      "en": "the per-host governor is in cool-off for {host} for another {max}ms after {refusals} consecutive refusal{v1}{v2}. Nothing about the source is being claimed here.",
-      "module": "machinery-producers",
-      "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 347
+      "line": 1058
     },
     {
       "id": "machinery-producers.index.the_plan_is_monitorings_its",
       "en": "the plan is monitoring's (its R16, R32); this item is our own machinery falling behind or unable to schedule, and it clears when the check runs or a cadence is set.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 767
+      "line": 778
     },
     {
       "id": "machinery-producers.index.the_primary_document_is_captured",
       "en": "the primary document is captured and its bytes are in the store; the platform's subrequest ceiling was reached before its support material was fetched, and the remainder is parked for another tick (tick {ticks}, expires {expires}).",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 422
+      "line": 433
     },
     {
       "id": "machinery-producers.index.the_to_do_is_derived",
       "en": "the to-do is derived on read from the signed notice your team's Civicsmith already holds. It goes to every administrator and leaves every administrator's queue when one of them updates, puts it aside until a later day or skips it, or when your team is running that release or a newer one.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 1158
+      "line": 1169
     },
     {
       "id": "machinery-producers.index.unscheduled_no_instant",
       "en": "an unscheduled address has no instant it fell due",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 771
+      "line": 782
     },
     {
       "id": "machinery-producers.index.words_the_request_expired_at",
       "en": "{words} The request expired at {expires} and was released; nothing was filed in the render's place, and no conclusion about the page can rest on it.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 837
+      "line": 848
     },
     {
       "id": "machinery-producers.index.words_the_request_is_held",
       "en": "{words} The request is held and asked again on every tick until {expires}; if it cannot be rendered by then it is recorded UNDETERMINED and released.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 838
+      "line": 849
     },
     {
       "id": "machinery-producers.index.your_teams_civicsmith_signed_the",
       "en": "your team's Civicsmith signed the closing into the notice's public record. An owner may still stop the notice with a handoff naming another team or an open lead. This stands for 30 days from the closing, or until an owner stops the notice.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 1063
+      "line": 1074
     },
     {
       "id": "member-roster.declared.adminendorse",
