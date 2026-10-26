@@ -1642,3 +1642,28 @@ Size (session_01XJUFJNZiz3mKqghrzkmAZs): test runs 12, module lines 3800 src
 ## J54 · COMPLETE
 
 COMPLETE (re B59). Merged tranche/T51; removed barSaid, published.mjs draws bar_detail again. walk-d D-M6 test asserts public-read's no-bar words (word public-read.bar_recorded_case) and no 'held to'. Could not be red on the old tranche: public-read publishes no fixture for an undeclared-bar publishedcase (PUBLIC-READ could publish one). Other three items stand. Suite 300 tests, 298 pass, 0 fail, 2 todo; format, architecture, coverage 80/80, ownership, words, fixtures --list all 0. Size (session_01XJUFJNZiz3mKqghrzkmAZs): test runs 12, module lines 3800
+
+## Fix round 10, plan item 143 (B60, K5290; walk-T51-alpha A N-1)
+
+**Cause (proved in causes-rewalk §6).** `review-copy.mjs` `reviewgrant` `send` returned `null` while the `reviewcopy` read in `view.ui.later.copy` was loading, or after it failed, so "Share for review" pressed in that window was dropped with no word.
+
+**Change.** `bio-plane/src/screens-publish/review-copy.mjs:145-152`:
+- no draft: `null` (as before);
+- copy read loading or not yet begun: `{ refuse: "state.loading" }`, drawn beside the button by the shell;
+- copy read failed, or answered with no copy: `P.say(…, "reviewgrant", <the read's own refusal words, else shell.unread>, false)`, drawn beside the share (`data-said="reviewgrant"`), and nothing is sent;
+- copy read answered: as before.
+
+**Test.** New `bio-plane/test/m/screens-publish/review-copy-share.test.mjs`, three cases naming R2:
+1. press while the read is pending (`pending` answer): the refusal is drawn beside the act with `state.loading`, and no `reviewgrant` is sent. Red before the fix (refusal absent); green after.
+2. control: the same press before the answer sends nothing; after the read answers, the press sends one `reviewgrant`. Green before and after.
+3. press after `reviewcopy` is refused (`NO_REVIEW_COPY`): the read's refusal is drawn at `data-said="reviewgrant"`, no `reviewgrant` sent. Red before the fix, green after.
+
+**Tests run.** Red: `review-copy-share.test.mjs`, 3 tests, 2 failing before the change. Green: 3 of 3 after. Module suite `bio-plane/test/m/screens-publish/*.test.mjs`: 303 tests, 301 pass, 0 fail, 2 todo (R35's two held presses, K3717; the same two as before). Users (the 22 test files outside this module that name screens-publish, `.test.mjs`): 179 tests, 179 pass, 0 fail. Impact `tranche/T51 HEAD` after commit: screens-publish 28/28, control-plane 88/135, plane 33/56; the 22 user files run above cover the importers.
+
+**Checks (root /home/user/bio).** format 0 failures; architecture screens-publish 0; coverage 80 of 80 live ids named, 0; ownership 0 (1 file changed by screens-publish since tranche/T51 at 9c236df30b); words 0 failures; `run.mjs`: no finding naming screens-publish or review-copy; `fixtures --list` for screens-publish: answer 0, stub 0, code 0, contract 0, accepted 6. The six `accepted` lines were in the module before this round (none added by me). Markers added: none.
+
+**Deferred.** None in this round's paths.
+
+**Found outside my paths.** None new this round. The `fixtures.mjs --list` run also named the six `accepted(generic)` lines listed above; they are not this round's and I did not change them.
+
+Size (session_011NG1HnSXvNnQhtBzLy59au): test runs 4, module lines 3805 src
