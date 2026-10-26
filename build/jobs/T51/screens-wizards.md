@@ -155,3 +155,12 @@ Next: after OP-GRADES' CHANGE, merge `tranche/T51`, run the module, do the mutat
 ## J8 · REPORT
 
 REPORT · SCREENS-WIZARDS #8 · R7/R11 required-mark test and the dead group:null are written and pushed (8f906b432b). Module code needs no change: guide.mjs:476 reads the row's required, :491 draws wizard.mark.recommended. Not yet run: every store import fails DECLARED_OP_DISAGREES until OP-GRADES #30 merges (t48.test.mjs fails at import, 1 of 1). I wait for your CHANGE, then run green, show the red by mutation (the guide made to ignore the row), run the done checks and post COMPLETE.
+
+### Batch 8 COMPLETE (after CHANGE B10, K5209)
+- Changed: `bio-plane/test/m/screens-wizards/world.mjs:15` dead `{ group: null }` dropped; `t51.test.mjs` (last test, + `said` import) "R7 R11 a script the row says is required is drawn Recommended on its screen…". No module code changed: `guide.mjs:476` reads `required` from the row, `:491` draws `wizard.mark.recommended`.
+- Red/green: with `guide.mjs:476` mutated to `required: false`, `t51.test.mjs` 8 pass / 1 fail (the new test); restored, green. (Not red by a missing field: R52 was already merged.)
+- Suites: module 76 pass, 0 fail (75 + 1), run once without `--test-force-exit`. impact: screens-wizards 9/10 only (1 of 178 modules).
+- Checks: format 0; architecture 0; coverage: no failure for this module (4 failures: capture R115, case-authoring R87, filings R70, membership R156); words: 15 failures, none in screens-wizards files; fixtures `--list` 0 failures, 1 accepted (unchanged `guide.test.mjs:204` fixtures-own: platform); ownership 0 (3 files).
+- Markers added: none.
+- Met ids: R7, R11 (with R52 of wizard-scripts); BOB strikes the marks.
+Size (session_01TFDt6wMDgqu975n41svvYp): test runs 6, module lines 941
