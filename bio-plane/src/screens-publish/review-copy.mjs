@@ -142,9 +142,13 @@ export const REVIEW_COPY = Object.freeze({
         const role = String(cs.value("rc-role") || "").trim();
         const day = String(cs.value("rc-until") || "").trim();
         if (!name || !role || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return { refuse: "screen.review-copy.reader.needed" };
+        if (!view.ui.draft) return null;
+        // The copy read is still on its way: the press says so beside the button (A N-1). A read that failed says its own refusal beside
+        // the share; the press is never dropped in silence.
         const held = view.ui.later && view.ui.later.copy;
-        const copy = held && held.state === "ok" ? held.value : null;
-        if (!view.ui.draft || !copy) return null;
+        if (!held || held.state === "loading") return { refuse: "state.loading" };
+        if (held.state !== "ok" || !held.value) { P.say(cs, view, "reviewgrant", (held.refusal && held.refusal.words) || cs.w("shell.unread"), false); return null; }
+        const copy = held.value;
         // R18, R27, R41: the end of the chosen day in the team's zone, as an instant in the record's stamp form; the zone is the
         // member door's copy answer's own, at its top level whether or not the draft has a grant (`review` R35); with none held
         // the share is refused in its fold and nothing is sent.
