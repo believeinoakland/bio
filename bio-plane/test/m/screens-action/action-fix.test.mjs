@@ -109,7 +109,7 @@ test("R52 (L21): after `reminderset` the entry shows the day the member set, by 
   assert.equal(none.byOp("reminderset").length, 0, "control: no day, nothing sent");
 });
 
-test("R54 (E3): 'Change the law…' and 'Propose another law…' share one list of laws (`law.pick`) drawn once with both acts under it; each act sends the chosen law with the fields its owner declares; control: no laws draws neither act", async () => {
+test("R54, R59 (E3; DEC-439 E H1b): 'Change the law…' and 'Propose another law…' share one list of laws (`law.pick`) drawn once with both acts under it; each act sends the chosen law with the fields its owner declares; control: no laws draws neither act", async () => {
   const p = await open(ROUTES.action, { ...DATA_PLANE, actionlaws: ok({}), actionlawspropose: ok({}) });
   const picks = main(p).querySelectorAll("select").filter((s) => s.id === "law-pick");
   assert.equal(picks.length, 1, "one list");
@@ -124,7 +124,9 @@ test("R54 (E3): 'Change the law…' and 'Propose another law…' share one list 
     for (const name of Object.keys(b)) assert.ok(DECLARED_FIELDS(op).includes(name), `${op}: ${name} is declared`);
   }
   const none = await open(ROUTES.action, { ...DATA_PLANE, profiles: ok({ ...PROFILES, view: { deadlines: [] } }) });
-  assert.ok(!ops(none).includes("actionlaws") && !ops(none).includes("actionlawspropose"), "control: no laws, neither act");
+  // R59 (DEC-439 E H1b): with no law the places list, there is no list and no change to make; the member names the law herself, so only the propose act is drawn
+  assert.ok(!ops(none).includes("actionlaws"), "control: no laws, no change");
+  assert.ok(ops(none).includes("actionlawspropose"), "the member names the law (R59)");
   assert.equal(none.doc.getElementById("law-pick"), null);
 });
 

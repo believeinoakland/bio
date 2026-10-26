@@ -539,7 +539,13 @@ export const plan = Object.freeze({
         LOBBYING_NO_REQUIREMENT: function (r, cs) { return cs.w("screen.plan.an.option.marked.as.lobbying.must") + " " + cs.w("screen.plan.choose.it.or.clear.the.mark"); },
         DATE_REFUSED: function (r, cs) { return cs.w("screen.plan.a.date.needs.the.law.order") + " " + cs.w("screen.plan.fix.the.date.and.add.again"); },
         // R56 (walk E K4; walk C C-M17): the owner's refusal names the empty part; its `detail` is the member's sentence
-        ADDRESSEE_INCOMPLETE: function (r, cs) { return cs.esc(typeof r.detail === "string" && r.detail ? r.detail : r.translation || ""); },
+        // R59 (DEC-439 K4, C-M17): the empty part is named in the design's words, by the owner's `empty` (its field names)
+        ADDRESSEE_INCOMPLETE: function (r, cs) {
+          const empty = Array.isArray(r.empty) ? r.empty : [];
+          const both = empty.includes("role") && empty.includes("organisation");
+          const key = both ? "both" : empty.length === 1 && empty[0] === "role" ? "role" : empty.length === 1 && empty[0] === "organisation" ? "organisation" : "";
+          return key ? cs.w("screen.plan.press.empty." + key) : cs.esc(typeof r.detail === "string" && r.detail ? r.detail : r.translation || "");
+        },
         ADDRESSEE_REFUSED: function (r, cs) { return cs.w("screen.plan.an.option.can.be.directed.to") + " " + cs.w("screen.plan.change.who.it.is.for"); },
       },
       send: function (view, el, cs) {

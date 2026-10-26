@@ -49,7 +49,7 @@ test("R56 (re-walk 10 N5): the body of an act is chosen among every kind conform
 
 /* ---------- Request ---------- */
 
-test("R57, R20 (re-walk 10 N3): the fold that names an office says so when the team holds no body to tie it to, and where one is added; once a body is held it is offered and the sentence is gone", async () => {
+test("R57, R20, R59 (re-walk 10 N3; DEC-439 N3): the fold that names an office says so when the team holds no body to tie it to, and where one is added; once a body is held it is offered and the sentence is gone", async () => {
   const { world, me, project } = await actionWorld();
   const org = await entityOf(me, "institution", "Oak Roofing LLC");
   const p = await openIn(world, me, `/app/request/${project}`);
@@ -60,7 +60,7 @@ test("R57, R20 (re-walk 10 N3): the fold that names an office says so when the t
   const fold = await until(p, () => p.doc.getElementById("req-noff-body"), "the fold");
   assert.deepEqual(optionTexts(p, "req-noff-body").filter(Boolean), [], "no body to choose");
   assert.ok(main(p).querySelector("[data-nobody]"), "the screen says none is held");
-  assert.equal(text(p, main(p).querySelector("[data-nobody]")), W("state.empty"), "in the design's word for nothing held");
+  assert.equal(text(p, main(p).querySelector("[data-nobody]")), W("screen.request.office.nobody"), "in the design's words for a team with no body");
   assert.ok(main(p).querySelector('a[href="/app/places"]'), "with the door where one is added (this member administers the team)");
   assert.ok(fold);
   // control: a team that holds a body offers it and does not say there is none

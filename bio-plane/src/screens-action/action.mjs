@@ -191,7 +191,10 @@ export const action = Object.freeze({
       const sub = [kindName, office ? cs.w("screen.action.to", { office: office }) : "", holder ? cs.w("screen.request.holder", { holder: holder }) : "",
         first ? cs.w("screen.action.sentby", { date: { html: cs.date(first.at) }, who: P.who(cs, first.author) }) : "",
         cs.w("screen.plan.actionstate." + state)].filter(Boolean).join(" · ");
-      const head = P.readOnly(cs, "screen.action.name") + cs.title(typeof a.title === "string" && a.title ? a.title : null) + '<p class="mk-sub">' + sub + "</p>"
+      // R59 (DEC-439 K12): a resolved action says how it was resolved, in the outcome's own sentence
+      const RESOLVED = ["complied", "denied", "escalated", "withdrawn", "completed"];
+      const said = state === "resolved" && RESOLVED.includes(a.resolution) ? '<p class="mk-note">' + cs.w("screen.action.resolution.said." + a.resolution) + "</p>" : "";
+      const head = P.readOnly(cs, "screen.action.name") + cs.title(typeof a.title === "string" && a.title ? a.title : null) + '<p class="mk-sub">' + sub + "</p>" + said
         + (a.confidential ? '<p class="mk-note">' + cs.w("screen.action.confidential") + "</p>" : "");
 
       // R10: an approved text not yet sent opens its send step.
@@ -471,9 +474,14 @@ export const action = Object.freeze({
         }).join("")) : "";
       // R54: "Change the law…" and "Propose another law…" share one list of laws, drawn once with both acts under it; with no laws
       // offered neither act is drawn (E3, DEC-384)
+      // R59 (DEC-439 E H1b): with no law the places list for this kind, the member names the law: its level and its citation
       const lawChoose = offered.length
         ? cs.choice("law-pick", "law.pick", optionsOf(offered)) + (offered.some(function (d) { return !d.level; }) ? levels("law-level") : "")
-          + '<div class="mk-acts">' + cs.act("actionlaws", { label: "law.change" }) + cs.act("actionlawspropose", { label: "law.propose" }) + "</div>" : "";
+          + '<div class="mk-acts">' + cs.act("actionlaws", { label: "law.change" }) + cs.act("actionlawspropose", { label: "law.propose" }) + "</div>"
+        : '<p class="mk-note">' + cs.w("screen.action.law.none") + "</p>"
+          + cs.choice("law-level", "screen.action.law.level", LEVELS.map(function (k) { return [k, "screen.request.level." + k]; }))
+          + cs.field("law-cite", "screen.action.law.citation")
+          + '<div class="mk-acts">' + cs.act("actionlawspropose", { label: "law.propose" }) + "</div>";
       const lawSec = cs.sec("law.title", lawsStated + lawProposed + lawChoose, { help: "law.help" });
 
       // R17: its risk: the tier in its own words, the latest revision, a revision with a reason, and the proposals apart.
@@ -612,6 +620,11 @@ export const action = Object.freeze({
         const pf = view.data.profiles;
         const a = view.data.action && view.data.action.state === "ok" ? view.data.action.value : {};
         const offered = view.parts.lawsOf(pf && pf.state === "ok" ? pf.value : null, a.kind);
+        // R59: with no law the places list, the law is the one the member names (its level and citation)
+        if (!offered.length) {
+          const named = String(cs.value("law-cite") || "").trim();
+          return named ? { body: { target: view.subject, laws: [{ level: cs.value("law-level") || "state", citation: named }] } } : null;
+        }
         const c = offered.find(function (d) { return d.citation === cs.value("law-pick"); });
         if (!c) return null;
         return { body: { target: view.subject, laws: [{ level: c.level || cs.value("law-level") || "state", citation: c.citation }] } };
