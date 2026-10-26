@@ -106,3 +106,35 @@ Deferred
 - Found in another module, reported separately (REPORT): actions' bio-plane/test/m/actions/t17.test.mjs pins the old sentence at lines 40, 44, 52 and 92.
 
 Size (session_018nYF1qKRjkKTcC4XS3jWuZ): test runs 4, module lines 2589
+
+## J7 · COMPLETE
+
+COMPLETE for CHANGE B5 (BOB #310, K5292): the leg repairs in plain words, and the J6 deferral.
+
+Applied
+- grammar.mjs:146 (the shared leg repair): localize('action-grammar.grammar.point_the_leg_at_the_finding_it', 'point the leg at the finding it rests on, or at the question it advances'). Its old text named "kind: rests_on" and "kind: advances".
+- grammar.mjs:168 (the leg-onto-an-action repair): localized in plain words under the id action-grammar.grammar.point_the_leg_at_the_finding_or; the English is unchanged, so golden.json needed no change for it.
+- golden.json: the 20 recorded occurrences of the :146 repair are updated; the 8 of :168 are unchanged in text.
+- fixture.mjs REWORDED gains the retired :146 phrase, so the suite asserts it stays gone.
+- Not touched, as BOB asked: actions' bio-plane/test/m/actions/t17.test.mjs (the J5 REPORT).
+
+Red then green
+- New test "R6 (T51 fix round 10, B5)": red first, failing on the :146 repair text. Green after the change.
+- One case in that test first named an id the record grammar does not accept, so it never reached the :168 branch. Commit 126a8339c1 corrects the case to the corpus's action id. The B5 commit 4ebd8abf19 was pushed with that case still wrong; 126a8339c1 is the fix.
+
+Tests
+- node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/action-grammar/*.test.mjs: 82 of 82 pass, exit 0.
+
+Checks (process repo, product /home/user/bio)
+- format: 178 modules, 0 failures
+- architecture action-grammar: 0 failures
+- coverage action-grammar: 29 of 29 live requirement ids named by a test; 0 failures
+- words action-grammar: 0 failures
+- ownership tranche/T51 to HEAD: 5 files changed by action-grammar; 0 failures
+
+Other findings, not changed (for BOB)
+- grammar.mjs:149 ("action_basis[i] is not a leg block of {target, kind}") and :172 ("action_basis[i].kind '...' is not one of: rests_on, advances") are messages a person reads and name fields. BOB's B5 named only the two repairs, so I left these; say the word and they go in the next round, with their golden entries.
+
+Merge: job/T51/action-grammar merged origin/tranche/T51 at fda631a17b (a merge commit, not a rebase).
+
+Size (session_018nYF1qKRjkKTcC4XS3jWuZ): test runs 4, module lines 2589
