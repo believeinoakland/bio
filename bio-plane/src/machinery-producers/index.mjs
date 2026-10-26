@@ -33,6 +33,7 @@ import { captureRequestsOf, renderHoldReason } from "../capture-requests/index.m
 import { monitoringOf } from "../monitoring/index.mjs";
 import { linkSweepOf, SWEEP_CONDITION_KINDS } from "../link-sweep/index.mjs";
 import { actionsOf, zoneOf } from "../actions/index.mjs";
+import { governingZone } from "../../../jurisdictions/index.mjs";
 import { localDay, dayRange, span, isCalendarDate } from "../civil-time/index.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 import { runPrincipalOf } from "../run-rules/index.mjs";
@@ -128,7 +129,12 @@ export class MachineryProducers {
   #instanceZone() {
     if (this.#zone === undefined) {
       let z = null;
-      try { const a = this.#actions; z = zoneOf(a && typeof a.place === "function" ? a.place() : null); } catch { z = null; }
+      try {
+        const a = this.#actions, r = this.#record;
+        /* K5292 (jurisdictions R98): the team's governing zone first, then the place's */
+        z = governingZone(r.getSetting("jurisdiction_profiles"), r.getSetting("team_time_zone"))
+          || zoneOf(a && typeof a.place === "function" ? a.place() : null);
+      } catch { z = null; }
       this.#zone = MachineryProducers.#knownZone(z);
     }
     return this.#zone;

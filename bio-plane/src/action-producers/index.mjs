@@ -31,6 +31,7 @@ import { MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../record-grammar/a
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { actionsOf, zoneOf } from "../actions/index.mjs";
+import { governingZone } from "../../../jurisdictions/index.mjs";
 import { actionHoldsOf } from "../action-holds/index.mjs";
 import { actionClocksOf } from "../action-clocks/index.mjs";
 import { escalationOf } from "../escalation/index.mjs";
@@ -178,7 +179,12 @@ export class ActionProducers {
   #instanceZone() {
     if (this.#zone === undefined) {
       let z = null;
-      try { const a = this.#actions; z = zoneOf(a && typeof a.place === "function" ? a.place() : null); } catch { z = null; }
+      try {
+        const a = this.#actions, r = this.#record;
+        /* K5292 (jurisdictions R98): the team's governing zone first, then the place's */
+        z = governingZone(r.getSetting("jurisdiction_profiles"), r.getSetting("team_time_zone"))
+          || zoneOf(a && typeof a.place === "function" ? a.place() : null);
+      } catch { z = null; }
       this.#zone = ActionProducers.#knownZone(z);
     }
     return this.#zone;

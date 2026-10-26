@@ -73,7 +73,7 @@ import { RENDERED_METHOD, RENDER_TICK_UNDETERMINED } from "../render.mjs";
 import { detectFormat } from "../formats.mjs";
 import { normalizeAddress } from "../subresources.mjs";
 import { identify, doctypeFor, assess, CONTRACT } from "../../../docprofile/registry.mjs";
-import { combine } from "../../../jurisdictions/index.mjs";
+import { combine, governingZone } from "../../../jurisdictions/index.mjs";
 import { localDay, dayRange, isCalendarDate, bounds } from "../civil-time/index.mjs";
 import { parseFrontmatter, isPublicHttpsLocator, createSha256, MACHINE_CLASS_PREFIX, MACHINE_AUTHOR_PREFIX,
          isMachineIdentity, EARNED_CAPTURE_CEILING } from "../record-grammar/index.mjs";
@@ -663,6 +663,11 @@ export class Monitoring {
    *  the active profiles' combined view's `time_zone`, or null when none is held or the view cannot be read (the
    *  profiles disagree, so it is withheld). Never the UTC day in its place. Never throws. */
   #zone() {
+    try { /* K5292 (jurisdictions R98): the team's governing zone first */
+      const g = typeof this.record.getSetting === "function"
+        ? governingZone(this.record.getSetting("jurisdiction_profiles"), this.record.getSetting("team_time_zone")) : null;
+      if (g) return g;
+    } catch { /* read the view below */ }
     let v;
     try { v = this.#view(); } catch { return null; }
     const tz = v && typeof v === "object" ? v.time_zone : null;

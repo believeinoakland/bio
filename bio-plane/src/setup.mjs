@@ -11,7 +11,7 @@
 /* The Civicsmith agent's one composer is acquisition's (its R24), read there and never copied. */
 import { civicsmithUserAgent } from "./acquisition/index.mjs";
 /* R64 (N700): a language tag is read by jurisdictions' `isLocale` (its R37), never by a reading of this module's own. */
-import { list as heldProfiles, get as heldProfile, combine as combineProfiles, isLocale } from "../../jurisdictions/index.mjs";
+import { list as heldProfiles, get as heldProfile, combine as combineProfiles, governingZone, isLocale } from "../../jurisdictions/index.mjs";
 import { recordOf, stampInstant } from "./record-core/index.mjs";
 import { membershipOf, notAnAdmin } from "./membership/index.mjs";
 import { credentialsOf } from "./credentials/index.mjs";
@@ -2889,7 +2889,11 @@ export class InstanceSetup {
   /* R90: the start of the next local day after `nowMs` in the first active profile's zone, UTC when none states one. */
   #nextLocalDay(nowMs) {
     const iso = `${new Date(nowMs).toISOString().slice(0, 19)}Z`;
-    const zones = [...this.#activeProfiles().map(({ p }) => zoneOf(p)).filter(Boolean), "UTC"];
+    /* K5292 (jurisdictions R98): the team's governing zone first, then each active profile's own */
+    const rec = this.#record();
+    let team = null;
+    try { team = governingZone(rec.getSetting("jurisdiction_profiles"), rec.getSetting("team_time_zone")); } catch { team = null; }
+    const zones = [...(team ? [team] : []), ...this.#activeProfiles().map(({ p }) => zoneOf(p)).filter(Boolean), "UTC"];
     for (const zone of zones) {
       const day = localDay(iso, zone);
       if (typeof day !== "string") continue;

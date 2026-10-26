@@ -16,7 +16,7 @@ import { entitiesOf, noEntity, noSuchEntity, notAProceeding, gradeRank } from ".
 import { readHooksOf } from "../reading-pipeline/hooks.mjs";
 import { idPattern, isHypothesisId, isMachineIdentity, sha256HexSync, canonicalJson, TESTIMONY_GRADE }
   from "../record-grammar/index.mjs";
-import { combine } from "../../../jurisdictions/index.mjs";
+import { combine, governingZone } from "../../../jurisdictions/index.mjs";
 import { registerOwner } from "../connection-grammar/index.mjs";
 import { EVENTS_SCHEMA, EVENTS_ADDED_COLUMNS } from "./schema.mjs";
 import { EVENT_CHECKS } from "./checks.mjs";
@@ -246,7 +246,15 @@ export class Events {
     const c = combine(Array.isArray(ids) ? ids : []);
     return c && c.ok ? c.view : {};
   }
-  zone() { const z = this.view().time_zone; return z && typeof z.value === "string" ? z.value : null; }
+  /* K5292 (jurisdictions R98): the team's governing zone (its stated `team_time_zone`, else the profiles'), else the view's. */
+  zone() {
+    try {
+      const g = typeof this.#record.getSetting === "function"
+        ? governingZone(this.#record.getSetting("jurisdiction_profiles"), this.#record.getSetting("team_time_zone")) : null;
+      if (g) return g;
+    } catch { /* read the view below */ }
+    const z = this.view().time_zone; return z && typeof z.value === "string" ? z.value : null;
+  }
 
   /* ---- sight (R40; membership R43) ---- */
 
