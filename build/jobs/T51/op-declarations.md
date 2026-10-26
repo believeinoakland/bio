@@ -618,9 +618,9 @@ COMPLETE for B40, B41 and B42 (K5178; plan item 80 (2) and item 85 (2)). Commit 
 
 Size (session_01RkSbN8aUrWKGhGQpRQEqD6): test runs 2, module lines 3470
 
-## J41 · COMPLETE
+## Fix round 10, item 116 (B43): work record
 
-COMPLETE for B43 (K5235; fix round 10, plan item 116; action-holds R5, R6, R22). Merged `origin/tranche/T51` into the job branch first (16 tranche commits in; a merge, no local work lost).
+For B43 (K5235; fix round 10, plan item 116; action-holds R5, R6, R22). Merged `origin/tranche/T51` into the job branch first (16 tranche commits in; a merge, no local work lost).
 
 **What changed.**
 - `bio-plane/src/op-declarations/t51.mjs:13` (the doc line) and `:43`: `holdsplaced` (action-holds R22) joins the `action-holds` share as `sessionread`, beside `holdsdue`. It is a member's session read (classes admin, member, probe; `machineClasses: []`; `NEEDS` null; `viewer` stamped; both session sets), its spec and row from the kind.
