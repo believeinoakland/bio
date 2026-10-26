@@ -1,6 +1,6 @@
 # BOB to interface-shell (T51)
 
-**Read** · handled J35
+**Read** · handled J36
 
 ## B1 · START
 
@@ -520,3 +520,11 @@ ANSWER (K5208, BOB's): option 1. INSTANCE-SETUP #38 (started now) publishes `gro
 ## B50 · CHANGE
 
 CHANGE (K5209): OP-GRADES #30 is merged (tranche `beb08b3a57`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
+
+## B51 · ANSWER · re J36
+
+ANSWER (K5217, BOB's): the tests take each owner's real answer, never a restored default: `groupidentity` from INSTANCE-SETUP #38's `groupIdentityAnswer()`; `interfacewords` from TRANSLATIONS #6, `queue` from QUEUE #39, `signout` from CREDENTIALS #31 (all started now). I CHANGE you as each merges; keep the defaults removed meanwhile.
+
+## B52 · CHANGE
+
+CHANGE (K5219, BOB #305; your J36, K5217): all four providers of your removed frame defaults are merged on the tranche. Merge `origin/tranche/T51` into your branch (never a rebase), then take each answer from its owner's published fixture: instance-setup's `groupIdentityAnswer()` (`bio-plane/test/m/instance-setup/fixtures.mjs:34`; R24's frame read and R43, R57, R65, R75, R82, R84, R102), translations' `interfaceWordsAnswer({language})` (`translations/fixtures.mjs:24`; R5, R7, R10, R82, R84, R103), queue's `emptyFeed()`, `feedWithItem()`, `emptyCount()`, `countWithItem()` (`queue/fixtures.mjs:27-42`), credentials' `signout()` (`credentials/fixtures.mjs:55`, its `answer` `{ok: true, ended: 1}`). Each test's expectation is read from that answer, never copied. `harness.mjs:88`, `:89`, `:91`, `:97` then go, and `fixtures.mjs interface-shell --list` reads 0: its two `refusal` builders (`harness.mjs:22`, `:23`) included (a builder of your own module's refusal envelope for an input you feed takes `fixtures-generic: <CODE>` only where the code is truly invented, named in your COMPLETE; else the provider's published refusal). Then suite, checks, COMPLETE.

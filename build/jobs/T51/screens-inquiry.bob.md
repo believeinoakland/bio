@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J46
+**Read** · handled J48
 
 ## B1 · START
 
@@ -958,3 +958,19 @@ Your job: re-point the hand-built answers whose providers now publish them (`nod
 ## B71 · CHANGE
 
 CHANGE (K5209): OP-GRADES #30 is merged (tranche `4fcfd25ce5`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
+
+## B72 · CHANGE
+
+CHANGE (K5212, BOB's, P17; WIZARD-SCRIPTS #28 J32): `writinghelp` never returns a draft: past its refusals it answers `ASSISTANT_DRAFT_UNAVAILABLE` (`wizard-scripts/index.mjs:1539`); the draft is the model turn's, not built, and T51 adds no assistant work (K3717). So a hand-built drafted-text answer (`ok({ok: true, text: ...})`) tests a state no member reaches: remove those cases (test only, K4297 (2)), and test what your screen draws for wizard-scripts' real answers, taken from its published fixtures (`bio-plane/test/m/wizard-scripts/fixtures.mjs`, once WIZARD-SCRIPTS #28 merges; I CHANGE you then). Your lines: `fr28-contradiction.test.mjs:413`, `:454`, `fr28-objective.test.mjs:84`, `fr28-project.test.mjs:256` (and any other `writinghelp` line `fixtures.mjs screens-inquiry --list` names).
+
+## B73 · ANSWER · re J47
+
+ANSWER (K5216): `uses` gains `hypotheses` on the tranche: merge it. The `op=hypotheses` list answer (`fixtures.mjs:106`): HYPOTHESES #12 publishes it now; I CHANGE you when it merges.
+
+## B74 · CHANGE · re J48
+
+CHANGE (K5218): all three waits of J48 are met on the tranche: `uses` gains `hypotheses` (K5216); CONNECTIONS #20 merged (`themeReadWithPassage()` and the `connectionchoose` answers in `connections/fixtures.mjs`: B70 (5), `fixtures.mjs:117`, `document.test.mjs:168`, `fr28-document.test.mjs:105`, `:115`, `:120`); WIZARD-SCRIPTS #28 merged (`writinghelp`'s real answers, B72); CASE-IMPORT #21 merged (`importRegradeAnswer`; `fixtures.mjs:126`, `fr28-project-rerun.test.mjs:75`, `fr4-project.test.mjs:141`). Merge the tranche, re-point those, and post COMPLETE; HYPOTHESES #12's list answer follows by CHANGE.
+
+## B75 · CHANGE · re J48
+
+CHANGE (K5219, BOB #305; your J48, after B74): four more providers are merged on the tranche with their published answers. Merge `origin/tranche/T51` into your branch (never a rebase) and re-point: hypotheses' `listAnswer()` and `emptyListAnswer()` (`bio-plane/test/m/hypotheses/fixtures.mjs:95`, `:100`; the `op=hypotheses` list is per question, as your `fixtures.mjs:106` asks) and its `holdRefusals()` already in use; instance-setup's `groupIdentityAnswer()` (`instance-setup/fixtures.mjs:34`) for `fixtures.mjs:120`; queue's `emptyFeed()`, `feedWithItem()`, `emptyCount()`, `countWithItem()` (`queue/fixtures.mjs:27-42`) for your six `queue:` lines; review's `casedraft()`, `reviewcopy()`, `reviewrevoke()`, `reviewcomment()` (`review/fixtures.mjs:37-61`) for `t51-dashproject.test.mjs:99`, `:100`, `:181`. Each expectation read from the answer, never copied. `citeimported` comes from CASE-IMPORT #22 (running): I CHANGE you at its merge. The rest of your list waits on store-request's recipes after STORE-ASSEMBLY #4 (plan item 101 (4)(e)); post COMPLETE with what is done and the lines left named by provider.

@@ -1,6 +1,6 @@
 # filings (T51)
 
-**Status** · session_01Xe56US2uGqhQLaVtDchwh5 · depth 2 · COMPLETE · handled B12
+**Status** · session_01JptuDDnpr35BfdJexAK5EE · depth 2 · COMPLETE · handled B16
 
 ## J1 · QUESTION
 
@@ -165,3 +165,39 @@ Size (session_01Xe56US2uGqhQLaVtDchwh5): test runs 4, module lines 3811
 ## J13 · COMPLETE
 
 Fix round 10 item 1 applied: R44 met (an absent voice on a public comment reads group; other kinds unchanged). Test t45 R44 red then green; module 165 pass; format, architecture, coverage, words, ownership, fixtures 0 failures. Details in J4 of my record.
+
+## J14 · QUESTION
+
+The clock (K5202, K5132's rule) is fixed on job/T51/filings at e33250f59a, and I need one line from you before COMPLETE.
+
+Your START (B14) asks for the requirement id that gives filings its clock. None of filings' requirements states one (I read `build/requirements/filings.md` whole). Proposed wording, to add as R70:
+
+R70 (T51; K5132, K5202) The instance clock. Every instant this module records (a draft's, approval's, sending's, second approval's, joint signature's, packet's, export's, communication's and hold notice's) reads a clock handed in; else the store's environment `BIO_NOW_MS` (handed in at the constructor, as `filingsOf` already hands `env`); else the wall clock, to the second. Test: `clock.test.mjs` (the approval under a pinned clock, a handed clock, the wall clock).
+
+Until you answer I read the line as R70 and write the test under K5202. The route: the store hands `env` to `filingsOf` already (assemble.mjs:438, K4051), so filings reads `BIO_NOW_MS` from its constructor; `filingsOps` takes no environment and needs none. Tell me if you want `filingsOps` to take it as the credentials and ai-use ops do.
+
+## J15 · COMPLETE
+
+COMPLETE, fix round 10 (K5202): filings' clock. Pushed `deb93c9631` on job/T51/filings; tranche `342e73791a` merged in (OP-GRADES #30 in, K5209).
+
+**Cause.** `bio-plane/src/filings/index.mjs:253` made the wall clock the default `now`, and `#when` (:301) read only that clock, so the store's `BIO_NOW_MS` never reached an instant the module records. The store already hands its environment to `filingsOf` (store-assembly `assemble.mjs:438`, K4051); the constructor dropped it.
+
+**Change (index.mjs).** The constructor takes `env` and keeps it as `this.env`; `this.now` is the handed clock or `null` (:253). `#when()` (:301) returns a handed `now` when it gives a string, else `env.BIO_NOW_MS` to the second (an empty or absent value is not read), else the wall clock. Every instant goes through `#when`. The module header documents `env`. `filingsOps` takes no environment (B15, K5208).
+
+**Failing-first test (`clock.test.mjs`, R70 (K5202, K5132), three tests).** Before the fix the pinned-clock approval answered the wall clock (`2026-10-25T23:40:20Z`, not `2026-10-20T10:15:30Z`): 1 of 3 red. Controls: a handed clock beats the environment (answers the fixture's `NOW`), and with neither the approval stamps the wall clock. After the fix: 3 of 3 green.
+
+**Requirement.** R70 (BOB wrote it, K5208): I name it in the test titles; BOB strikes the mark.
+
+**Why the tests missed it.** Every filings test handed a clock (the fixture's `now`), so the environment path was never exercised, and no test pinned `BIO_NOW_MS` through filings.
+
+**Suites.** `bio-plane/test/m/filings/*.test.mjs` before the merge: 168 pass, 0 fail (165 + 3). After the merge, the 37 files that pin `BIO_NOW_MS` plus all filings files: 283 tests, 281 pass, 0 fail. The five store-assembly failures seen before OP-GRADES #30 (`DECLARED_OP_DISAGREES`) are gone. I also ran the module tests that `impact.mjs origin/tranche/T51 HEAD` names (39 modules, 901 files); that run hit my 25-minute timeout (2651 tests run, 309 fail; mostly the workerd `MiniflareCoreError` and the then-stale `DECLARED_OP_DISAGREES`), so it is not a clean signal. Reasoning: the change alters an instant only where `BIO_NOW_MS` is set, and only store-assembly hands the environment; the modules without a pinned clock read filings' instant as before.
+
+**Checks** (absolute root): filings: `format` 0, `architecture` 0, `words` 0, `fixtures --list` 0, `ownership` 0 (3 files). `run.mjs` coverage's four failures (acquisition R124, capture R115, case-authoring R87, membership R156) are not filings'. `run.mjs` also reports fixtures and words findings in other modules (store-assembly's `ask.mjs` and `wiring.mjs` sentences; screens-action `fix4-t51.test.mjs:233` naming filings as the `templatesforaction` provider). Not mine; not investigated.
+
+**Markers.** No `fixtures-own` or `fixtures-generic` marker added.
+
+**Met ids.** R70 (strike its mark).
+
+**Deferred:** none. **Found in other modules:** the `ask.mjs`/`wiring.mjs` words findings and the `fix4-t51` fixture line above; none is a cause I diagnosed.
+
+Size (session_01JptuDDnpr35BfdJexAK5EE): test runs 8, module lines 3822

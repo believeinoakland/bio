@@ -115,3 +115,7 @@ CHANGE (K5209): OP-GRADES #30 is merged (tranche `a405c8ee5b`): stores start aga
 ## B15 · CHANGE
 
 CHANGE (K5209), in this same job: (1) the agreement test of your declared rows is yours, the owner's: OP-GRADES #30 wrote one in op-grades (registering `ASSEMBLY_DECLARED_OPS` with `registerDeclaredOps` and asserting `agreed` holds `readtranslate`), but op-grades cannot import store-assembly (later in the order), so BOB removed it; add it to your tests for all three rows (`ask`, `readtranslate`, `owedwork`), red against a disagreeing sentence, green as they stand. (2) `store-assembly/declarations.test.mjs` R83 expects `['control-plane', 'plane']`, but Wave B deleted plane's `declared.mjs` (`51f57fa193`): the expectation reads the copy window that has closed; make it the window as it now is (OP-GRADES #30 J33 (1)).
+
+## B16 · CHANGE
+
+CHANGE (K5213), in this same job: `checks/words.mjs /home/user/bio store-assembly` reads 15 failures on the tranche (inline 15, plain 12: `ask.mjs:388`, `:389`, `:469`, `:502`, `:521`, `:522`, `:526`, `:531`, `:535`, `:540`; `wiring.mjs:49`, `:78`, `:103`; `wizards.mjs:51`), most from plane's code moved in Wave B. Every sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); a code or identifier is not a sentence (K3971). Your COMPLETE needs words 0 for store-assembly.

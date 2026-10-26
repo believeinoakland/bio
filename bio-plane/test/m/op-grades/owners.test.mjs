@@ -247,8 +247,7 @@ test("R14 R37: publishat and publishatmove `irreversible` (publishing's own weig
   assert.deepEqual([RUNGS.publishat, RUNGS.publishatmove, RUNGS.publishatcancel],
     ["irreversible", "irreversible", "reversible"]);
   assert.notEqual(RUNGS.publishat, RUNGS.publish, "R37: publish prepares; the set time is weighed as publishing");
-  assert.equal(NON_ACTS.publishat, "case-directed: keyed by a case edition (case, edition), reached from the publication "
-    + "ceremony's last step; signs now and publishes at the set time only if every check passes again then");
+  assert.equal(NON_ACTS.publishat, declaredSentence("ratification", "publishat"));
   for (const op of ["publishatmove", "publishatcancel"]) assert.equal(NON_ACTS[op], declaredSentence("publish-schedule", "publishatcancel"), op);
   assert.ok(isRead("publishschedule"));
   assert.deepEqual(["publishat", "publishatmove", "publishatcancel"].map(phoneOf), [false, false, true]);

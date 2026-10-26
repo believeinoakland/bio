@@ -1,6 +1,6 @@
 # case-authoring (T51)
 
-**Status** · session_01JY7NQfdWnfdhovvoytMtwy · depth 2 · COMPLETE · handled B32
+**Status** · session_01PkeaPY8AiQwGQmpx2xoXoy · depth 2 · COMPLETE · handled B42
 
 ## Completion record (T51, B1 START)
 
@@ -578,3 +578,112 @@ Size (session_01JY7NQfdWnfdhovvoytMtwy): test runs 12, module lines 3102
 ## J28 · COMPLETE
 
 COMPLETE (CHANGE B32). Merged tranche/T51; preflight.test.mjs:409 now takes the refusal from ratification's preflightRefusal (test async). fixtures --list for case-authoring: 0 failures (6 accepted generic markers, disclosures.test.mjs:68-73, as you accepted). Module tests 257/257; format, architecture, coverage, ownership 0 failures; impact names no user test beyond my own. Record: build/jobs/T51/case-authoring.md, pushed. Size (session_01JY7NQfdWnfdhovvoytMtwy): test runs 12, module lines 3102
+
+## Saved at K5183 (CASE-AUTHORING #45, session_014YV25pFfG6H8Z4B6eJyWr3)
+
+**Done.** Merged `origin/job/T51/case-authoring` into the local job branch (a merge commit, no rebase, no reset). The one conflict was the Status line; the origin line (`handled B33`) was kept, and its session id is #44's, not this session's. `mail start` for #45 has not been re-run.
+
+**Not done.** B33: the R31 chain test has not been written. No R31 test is on this branch. B35 says the branch holds an R31 test commit; it does not. The only local commit not in origin's job branch before this merge was my `mail start` commit, `bef52875c1`, also kept on `backup/case-authoring-mail-start-2026-10-25`. Nothing from B33 was started in the working tree.
+
+**Half done.** None. No source or test file has been changed.
+
+**Next step.** Run `mail start --session session_014YV25pFfG6H8Z4B6eJyWr3 --depth 2` on the saved branch; then write the B33 R31 chain test, with its control, failing first (the test-first rule applies); then run the module tests and the four checks and post `COMPLETE`.
+
+**Workers stopped.** None were running.
+
+**Open for BOB.** Pushing this branch publishes its whole ancestry, including the 2,260 local commits (other modules' mail commits and tranche history, already on `origin/tranche/T51`), because the job branch had diverged from them. Confirm that this base is acceptable.
+
+## Completion record for B33 (CHANGE, resumed by B37, session_01PkeaPY8AiQwGQmpx2xoXoy)
+
+**Entries applied.** B33's R31 chain test, at the interface, in `bio-plane/test/m/case-authoring/r31-chain.test.mjs`: two tests on one chain (two grounded legs, one citation severed, concluded by the project, prepared). The severed test is red (below); its control, the same with the citation live, is green and asserts that the part 2 ground's row is frozen in the case document. The fixture (`fixture.mjs`) gains one option, `severed`, on `finding` and `inqMd`, which sets the named targets' `cites` status to `severed`; unset, the markup is unchanged.
+
+**Red, and where it sits (not this module).** The severed chain is refused at the gate. `publishPreflight` carries a `GATE_REFUSED` blocker with C-2.8: "published_strength_grounds names no row for ground 'part 2'". The same refusal comes from ratification's `caseRatifyPreflight` over the stored document text. I also ran the chain with the pre-fix `bio-plane/src/case-catalogue/checks.mjs` (`302c1d7319^`) swapped in; the refusal is identical, so the R31 fix does not reach this path. The swapped file was restored (`git checkout`), and the tree is clean.
+
+Root, by reading (no change made here): `case-catalogue/checks.mjs` lines 920–928, the case document's member arm, builds `memberFm` from `edition`, `completeness`, `published_strength`, `published_strength_grounds` and `basis` (the last is ratification's `memberBasis`, `#memberBasisAtPins`, `ratification/index.mjs` ~1096). It does not carry the member's `references`. The live-leg filter at `checks.mjs` 382–388 reads `fm.references`, so on this arm no leg is ever severed: the label `part 2` is asked for a row, and strength froze none because its only leg is severed. The control passes because nothing is severed there.
+
+Proposed fix, for BOB to assign (it crosses case-catalogue and ratification): the member's `references` from its pinned bytes reach the case document's member arm beside `basis` (ratification's member basis carries them, or a `memberReferences` context is added), and `memberFm` carries `references`. Then the severed test goes green with its control unchanged. The coverage of R31 by the case-catalogue unit test passes only because that test sets `references` on the member directly.
+
+**Deferred.** None of this module's code changed. Nothing else in case-authoring is deferred.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/case-authoring/`: 259 tests, 258 pass, 1 fail (the severed R31 chain, the only failure).
+- `node checks/format.mjs /home/user/bio`: 178 modules, 0 failures.
+- `node checks/architecture.mjs /home/user/bio case-authoring`: 0 failures.
+- `node checks/coverage.mjs /home/user/bio case-authoring`: 58 of 58 live ids named by a test.
+- `node checks/ownership.mjs /home/user/bio case-authoring tranche/T51`: run after the commit (see the BLOCKED entry).
+
+**Not complete.** COMPLETE is not posted: the chain test, which B33 asks for, is red on a cause outside this module. BLOCKED (cause: tests) is posted instead, with the root and the proposed fix above. I did not skip or weaken the test.
+
+**Size (session_01PkeaPY8AiQwGQmpx2xoXoy): test runs 13, module lines 3102** (`bio-plane/src/case-authoring/*.mjs`; this job changed no source).
+
+## J29 · BLOCKED
+
+BLOCKED (cause: tests). The R31 chain test (B33) is written and pushed (job/T51/case-authoring, a3d566ed40), and it is red on a cause outside case-authoring, so COMPLETE is not posted.
+
+The chain: two grounded legs, one citation severed, concluded, prepared. The publish's gate (publishPreflight; ratification's caseRatifyPreflight over the stored text) refuses with C-2.8: "published_strength_grounds names no row for ground 'part 2'". The control, the same with the citation live, is green and freezes the part 2 row.
+
+Root, by reading (not changed here): case-catalogue/checks.mjs 920-928 (the case document's member arm) builds memberFm without the member's references. The live-leg filter at checks.mjs 382-388 reads fm.references, so on this arm no leg is ever severed. The R31 fix (302c1d7319) is correct for its unit test but not for this path: I ran the chain with the pre-fix checks.mjs swapped in and the refusal is identical.
+
+Proposed fix, for you to assign (case-catalogue and ratification): the member's references from its pinned bytes reach that arm beside basis (ratification's memberBasis carries them, or a memberReferences context is added), and memberFm carries references. Then the severed test goes green with its control unchanged.
+
+Module tests: 258 of 259 pass; the one failure is the severed chain. format 0, architecture 0, coverage 58 of 58 named. Record: build/jobs/T51/case-authoring.md, "Completion record for B33".
+
+## Completion record for B39 (CHANGE, R87)
+
+**Entries applied.** R87 (case-grammar R34). Prepare writes each member finding's basis version on its `case_roles:` row: `basis_version` (the name) and `basis_version_identity` (the SHA-256 of the version's composition, UTF-8). The name is basis-versions' `currentOf` for the publishing project, read with the act's viewer; the composition is that version's entry in `basisVersions` listing (limit `BASIS_VERSIONS_LIMIT_MAX`, 1000). A project naming no version, or a version not in the listing, writes both null (never filled).
+
+**Reading I took (BOB may redirect).** "That finding's project" is the publishing project of this act, whose conclusion the case records (R4, R8). A member committed with another project (R72) is read against the publishing project too.
+
+**Code.** `case-authoring/index.mjs`: `#basisVersionOf`, called in `#judgeMembers`; the render passes `basisVersions`. `case-authoring/document.mjs`: the `case_roles` row takes `memberBasisVersionLines` (case-grammar). No format change: an optional field of `bio-case-document/8`.
+
+**Tests.** `bio-plane/test/m/case-authoring/r87-basis-version.test.mjs`: R87 (a finding on a named version; the identity is computed from the listed composition with node's crypto, not the module's helper), and the control (no version named: both null). Red first: with the source reverted both fail; green with the change.
+
+**R31.** Unchanged. Its test is still red on the cause in B38; the COMPLETE covers both when the four jobs merge.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/case-authoring/`: 261 tests, 260 pass, 1 fail (R31 chain, as above).
+- format 0; architecture 0; coverage 59 of 59 live ids named; ownership 0 failures.
+
+**Size (session_01PkeaPY8AiQwGQmpx2xoXoy): test runs 7, module lines 3121** (`bio-plane/src/case-authoring/*.mjs`).
+
+## J30 · REPORT
+
+REPORT for CHANGE B39 (R87). Done and pushed (job/T51/case-authoring, 5b04edf896). Prepare writes each member finding's basis version on its case_roles row: basis_version (the name, basis-versions currentOf for the publishing project) and basis_version_identity (SHA-256 of the version's composition). A project naming no version writes null for both. Reading taken: 'that finding's project' is the publishing project of this act. Failing-first test r87-basis-version.test.mjs names R87, with a control (no version: both null); red with the source reverted, green with the change. Module suite: 260 of 261 pass; the one failure is the R31 chain, which waits on the four jobs as B38 said. Checks: format 0, architecture 0, coverage 59 of 59 live ids, ownership 0. Record: build/jobs/T51/case-authoring.md, 'Completion record for B39'. R31 is unchanged; COMPLETE will cover both once the R31 CHANGE comes.
+
+## Completion record for B40 (CHANGE, K5207; screens-publish J43)
+
+**Entries applied.** `bio-plane/test/m/case-authoring/fixtures.mjs` publishes three pre-flight answers, each the real `publishPreflight` (R34) over one project with a contradiction candidate: `preflightTensionRefused()` (first TENSION_NOT_DISCLOSED, nothing written), `preflightPasses()` (the same once disclosed; first null, ready false until a key is held), and `preflightNoFinding()` (first PUBLISH_NO_FINDING). `fixtures.test.mjs` calls each and checks it equals a fresh real call, and that `wrote` is false.
+
+**For screens-publish.** fr30:150 takes `preflightNoFinding()`; fr30b:77 takes `preflightTensionRefused()`. fr30:156 cannot take a real pre-flight answer: its NO_TARGET is an action-request code, and the real pre-flight for no finding is PUBLISH_NO_FINDING (R3, R80). The control there should stay the screen's own action test.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/case-authoring/`: 262 tests, 261 pass, 1 fail (R31 chain, waiting on its CHANGE).
+- format 0; architecture 0; coverage 59 of 59; ownership 0.
+
+**Size (session_01PkeaPY8AiQwGQmpx2xoXoy): test runs 3, module lines 3121** (`bio-plane/src/case-authoring/*.mjs`; no source change this job).
+
+## J31 · REPORT
+
+REPORT for CHANGE B40 (screens-publish J43). Done and pushed (job/T51/case-authoring). fixtures.mjs publishes three real publishPreflight answers over one project: preflightTensionRefused() (first TENSION_NOT_DISCLOSED), preflightPasses() (same once disclosed; first null), preflightNoFinding() (first PUBLISH_NO_FINDING). fixtures.test.mjs checks each equals a fresh real call and writes nothing. For screens-publish: fr30:150 takes preflightNoFinding, fr30b:77 takes preflightTensionRefused. fr30:156 cannot take a real pre-flight answer: its NO_TARGET is an action-request code; the real pre-flight for no finding is PUBLISH_NO_FINDING (R3, R80). Module suite 261 of 262; the one failure is R31, awaiting its CHANGE when RATIFICATION #39 merges. Checks: format, architecture, coverage (59 of 59), ownership all 0.
+
+## J32 · REPORT
+
+REPORT for CHANGE B41 (OP-GRADES #30 merged). Merged origin/tranche/T51 into job/T51/case-authoring (merge commit, pushed). Module suite: 262 tests, 261 pass, 1 fail: the R31 chain (control-plane r10 and store-assembly R83 are not in this module). format, architecture, coverage (59 of 59), ownership all 0 failures. I am not posting COMPLETE: the R31 chain is red until RATIFICATION #39 merges and the R31 CHANGE arrives; I'll post one COMPLETE covering R31, R87 and B40 then. Waiting for that CHANGE.
+
+## Completion record for B42 (CHANGE, K5214): R31, R87, B40
+
+**Entries applied.** Merged `origin/tranche/T51` (ratification #39 in: R60's chain, R61's member basis). R31's chain test now passes green on its own: the severed chain is clean and its control is unchanged. R87 (B39) is built and green. B40's fixtures are kept (`fixtures.mjs`, with `fixtures.test.mjs` checking each answer against a fresh real call).
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/case-authoring/`: 262 tests, 262 pass, 0 fail.
+- format 0 failures; architecture 0; coverage 59 of 59 live ids named; ownership 0.
+
+**Deferred.** None.
+
+**Found, not changed.** The R31 fix needed the case-catalogue, ratification and publication merges (B38), which I did not touch.
+
+**Size (session_01PkeaPY8AiQwGQmpx2xoXoy): test runs 4, module lines 3121** (`bio-plane/src/case-authoring/*.mjs`; no source change this job).
+
+## J33 · COMPLETE
+
+COMPLETE for CHANGE B42 (K5214). Covers R31, R87 and B40. Merged origin/tranche/T51 (ratification #39 in). R31's chain test is green: severed chain clean, control unchanged. R87 (B39) built and green. B40's fixtures kept, each checked against a fresh real call. Module suite: 262 of 262 pass. format 0, architecture 0, coverage 59 of 59 live ids, ownership 0. Record: build/jobs/T51/case-authoring.md, 'Completion record for B42'.

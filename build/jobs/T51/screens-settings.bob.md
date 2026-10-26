@@ -469,3 +469,7 @@ RESUME (K5202; mechanics §5.4: your record says RUNNING, your session is idle).
 ## B53 · CHANGE
 
 CHANGE (K5209): OP-GRADES #30 is merged (tranche `2c35769d6d`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
+
+## B54 · RESUME
+
+RESUME (K5217; your record says RUNNING until 00:06Z, your session is idle). Read B53 (merge the tranche: stores start again since OP-GRADES #30), merge it, re-run the files that failed, and post COMPLETE (or QUESTION) with what remains.

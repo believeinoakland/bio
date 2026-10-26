@@ -1,6 +1,6 @@
 # citation (T51)
 
-**Status** · session_017x6zvkp2XqM6D6hY1cnUkA · depth 2 · COMPLETE · handled B17
+**Status** · session_01AKEgagoZYqWVJvoox2SvKQ · depth 2 · COMPLETE · handled B19
 
 ## J1 · REPORT
 
@@ -356,3 +356,50 @@ Size (session_017x6zvkp2XqM6D6hY1cnUkA): test runs 8, module lines 1750
 ## J22 · COMPLETE
 
 COMPLETE B16 item 1: citation R22 met (a different part of a cited document is a new leg; same part stays alreadyCited). Citation tests 134/134; format, architecture, coverage 22/22, words, ownership, fixtures --list all 0. Two older tests that held the old R2 behaviour updated; see record. Size (session_017x6zvkp2XqM6D6hY1cnUkA): test runs 8, module lines 1750.
+
+## J23 · REPORT
+
+Found outside my paths, REPORTed the day found (K5175). These tests hand-write citation's answers; the published fixtures now answer them through the real module:
+
+- bio-plane/test/m/screens-publish/fr30b.test.mjs:165 and :166 (`sever`, `reinstate`): `citation/fixtures.mjs` exports `sever()` and `reinstate()`. Each returns `{w, project, handle, answer}` (sever) or `{w, project, handle, severed, answer}` (reinstate), and `answer` is the door's answer.
+- bio-plane/test/m/screens-publish/fr30b.test.mjs:226 (`citeimported`, accepted case): `citation/fixtures.mjs` exports `citeimported()`, which returns `{w, caseImport, import, finding, edition, ref, answer}`. Its `answer` is the real door answer, `ok: true`. The refusal at :238 has no published answer yet.
+- bio-plane/test/m/screens-inquiry/fr2-document.test.mjs:164 (`cite`): not one of the five answers I was asked to publish, so no export. Owner to place.
+
+Outside my paths, seen in the `checks/run.mjs` words output on this run (15 failures, all `store-assembly`: ask.mjs:388, 389, 469, 502, 521, 522, 526, 531, 535, 540; wiring.mjs:49, 78, 103; wizards.mjs:51). I did not change them. I did not check them against the tranche before my commit, so I cannot say they are pre-existing. Their owner's job should look.
+
+## J24 · COMPLETE
+
+COMPLETE for the fix round 10 START (B18, K5175): the citation answers for screens-publish are published.
+
+Changed (my paths only, commit db2cf35a73):
+- bio-plane/test/m/citation/fixtures.mjs (new): `sever()` (a cited finding, severed through the door), `reinstate()` (the same case, severed then reinstated through the door), `citeimported()` (a question resting on case-import's real accepted import, edition 1, F1 accepted). Each builds its world on every call; nothing is stored or hand-written. `citeimported` reads case-import's acceptance through case-import's real provider, registered on the citation host's accepted work the way case-import's own `start` registers it (five handlers, each delegating to its real method). Its viewer is `alice`, a member of both worlds, because the read is viewer-gated.
+- bio-plane/test/m/citation/fixtures.test.mjs (new): calls each export and checks the real answer and the stored edge or basis; each has a control with a different reason or role.
+- Failing-first, as asked: I broke `sever()` by sending it the `reinstate` op. `R4 sever (fixtures)` went red; I restored it and it went green again.
+
+Tests: citation 137/137 (134 existing, 3 new). case-import's accept and r10-fixtures tests 20/20 (the import path works on this tranche).
+Checks (absolute root): fixtures --list 0 failures (3508 files, 178 modules); ownership 0 failures (against merge-base with origin/tranche/T51); architecture 0; coverage 22 of 22; format 0; impact 0 of 178 modules affected by origin/tranche/T51..HEAD; checks/run.mjs words: no citation finding, 15 failures in store-assembly (reported separately).
+Fixtures markers added: none (`fixtures-own` / `fixtures-generic`: 0). Met ids: none; R4, R16 and R17 are exercised by the answers and nothing in the requirements changed.
+Deviation: I ran `mail start` before the fetch and merge that the START lists first. I merged origin/tranche/T51 (20 commits) into the job branch afterwards; no conflicts. The mailbox cursor now reads through B18.
+Commit trailer: I left out the model-named Co-Authored-By line, because the model-identity rule says not to put a model identifier in commit messages. The session trailer is in place.
+
+Size (session_01AKEgagoZYqWVJvoox2SvKQ): test runs 9, module lines 1760
+
+## J25 · REPORT
+
+For your placement (P17: BOB decides the boundary). CHANGE B19 asked for `citeimported` over case-import's real accepted import through `case-import/fixtures.mjs`. The architecture check refuses that: `case-import` is later than `citation` in the order, so `citation/fixtures.mjs` and `citation/fixtures.test.mjs` may not import its test support (3 failures, the first run after the merge). Passing that check needed the import out, so I removed the `citeimported` export and its test (commit after `db2cf35a73`). The rest is unchanged: `sever()` and `reinstate()` have no later-module import.
+
+What I did to make the answer real over a world (the approach I'd recommend): a module later than both, `case-import` itself, publishes `citeimported` in its own fixtures. It builds its real accepted import, opens a citation over that plane, and registers its own provider on that plane's accepted work (its real `findingFacts`, `openFlagsFacts`, `withdrawals`, `moves`, `flagHistoryFacts`). The viewer must be a member of both groups (alice), or the read is refused. A worked version is in my earlier commit `db2cf35a73`, in `bio-plane/test/m/citation/fixtures.mjs` (lines 55 to 81). You can take it from there.
+
+Alternatives for you to choose: (a) that, placed in `case-import`'s test folder; (b) a contract marker (`fixtures-contract`) with a contract id from case-import's `fixtures-run`, which needs a change in case-import.
+
+## J26 · COMPLETE
+
+COMPLETE for CHANGE B19 (K5209): merged `origin/tranche/T51` (`73a40f0a29` and later) into the job branch, no conflicts; the merge brings the OP-GRADES change, so stores start again.
+
+Changed (my paths, after the merge): `bio-plane/test/m/citation/fixtures.mjs` and `fixtures.test.mjs` drop `citeimported` and its case-import imports, because the architecture check refuses a citation test importing a later module (see REPORT J25 for the placement choice). `sever()` and `reinstate()` are unchanged.
+
+Tests: citation 136/136 (suite includes `fixtures.test.mjs` R4 sever and reinstate, 2 new). The earlier break-and-restore check still stands for `sever` (commit `db2cf35a73`).
+Checks (absolute root, after the merge): fixtures --list 0 failures (3514 files, 178 modules); architecture 0 failures; coverage 22 of 22; format 0; ownership 0 failures (3 files, against origin/tranche/T51). `checks/run.mjs` words: no citation finding (the store-assembly failures reported in J23 are still there).
+Markers: none added. Met ids: none. Requirements unchanged.
+
+Size (session_01AKEgagoZYqWVJvoox2SvKQ): test runs 11, module lines 1760
