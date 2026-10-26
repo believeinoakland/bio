@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J71
+**Read** · handled J72
 
 ## B1 · START
 
@@ -1296,3 +1296,7 @@ CHANGE (K5202, plan item 101 (4)(a)), in this same job: add the runs `// fixture
 ## B105 · CHANGE
 
 CHANGE (K5209): OP-GRADES #30 is merged (tranche `8f913cced9`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
+
+## B106 · ANSWER · re J72
+
+ANSWER (K5221, BOB's, P17; re J72): no quarantine and no slower lane: a test is never skipped, disabled or moved to get green (K4787: no load-dependent tests; K4966: a pass never clears a red seen under load). Diagnose it yourself, now: (1) reproduce under a named load (e.g. the plane directory run beside one `node -e 'for(;;){}'` per core, or the file in a loop of 10 beside that load), so it fails on demand; (2) instrument the failing run (a temporary log, reverted after) to capture at the timeout of `r8-heal-door.test.mjs:67`: the alarm's state (armed time, fired or not), whether the first firing started and where it waits (the scanner's answer, each await of the firing), and the owed row's state; (3) name the timing cause from that capture, with file:line; (4) fix it: either the product's cause (a firing that waits on something it should not, a missed re-arm: a product defect, K4565's watchdog) or the test's (it must assert on the work done, through a same-run signal such as awaiting the firing's own promise or the alarm's completion, never on wall-clock time); (5) prove it green 10 of 10 under that same load and alone, then the directory run and checks. A product cause outside your paths: REPORT it with file:line the day you find it. Record what you measured.
