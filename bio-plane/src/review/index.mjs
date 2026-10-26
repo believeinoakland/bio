@@ -74,7 +74,7 @@ import { caseAuthoringOf, AUTHORED_FIELDS, ACT_FIELDS, MEMBER_ROLES } from "../c
 import { caseInputsOf } from "../case-inputs/index.mjs";
 import { caseAccountOf } from "../case-account/index.mjs";
 import { ratificationOf, SUBJECT_POSITIONS } from "../ratification/index.mjs";
-import { localFactsOf } from "../local-facts/index.mjs";
+import { localFactsOf, TEAM_ZONE_PATH } from "../local-facts/index.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import * as caseGrammar from "../case-grammar/index.mjs";
 import { isMachineIdentity, parseFrontmatter, HEADINGS } from "../record-grammar/index.mjs";
@@ -368,16 +368,27 @@ export class Review {
    *  R2) for the active profiles' `time_zone`, else the profiles' own (`jurisdictions` R41), else null (never UTC in its
    *  place); two profiles of different zones govern none. Never throws; writes nothing. */
   #zone() {
-    let ids = null;
-    try { ids = this.record.getSetting("jurisdiction_profiles"); } catch { ids = null; }
-    if (!Array.isArray(ids) || !ids.length) return null;
     const ok = (z) => (typeof z === "string" && z !== "" ? z : null);
     try {
       if (this.#localFacts === undefined) {
         this.#localFacts = null;
         if (this.#deps.host) this.#localFacts = localFactsOf(this.#deps.host);
       }
-      const lf = this.#localFacts;
+    } catch { this.#localFacts = null; }
+    const lf = this.#localFacts;
+    /* local-facts R21 (T51 D-B1): the team's own zone is a fact the team states with or without a profile installed, and
+       its governing value already folds in the profiles' agreed zone; read it by its path first. */
+    try {
+      if (lf && typeof lf.factStatus === "function") {
+        const team = lf.factStatus({ path: TEAM_ZONE_PATH });
+        const z = team && team.ok !== false && team.governs ? ok(team.governs.value) : null;
+        if (z) return z;
+      }
+    } catch { /* fall through to the profiles */ }
+    let ids = null;
+    try { ids = this.record.getSetting("jurisdiction_profiles"); } catch { ids = null; }
+    if (!Array.isArray(ids) || !ids.length) return null;
+    try {
       if (lf && typeof lf.factStatus === "function") {
         const zones = new Set();
         for (const id of ids) {

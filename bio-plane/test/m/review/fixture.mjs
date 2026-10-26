@@ -11,6 +11,7 @@ import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
 import { reviewOf } from "../../../src/review/index.mjs";
+import { localFactsOf } from "../../../src/local-facts/index.mjs";
 import { reviewCommentsRegistrar } from "../case-account/fixtures.mjs";
 import { approvalSubjectSha, reviewCommentsOf } from "../../../src/case-grammar/index.mjs";
 
@@ -183,6 +184,9 @@ export function world({ now = NOW, injectClock = true, localFacts, combine = () 
   /* `injectClock: false` leaves the module on its own default clock (R17's stamps as the module writes them). */
   const r = reviewOf(host, { record, membership, strength, basisVersions, publication, caseTensions, caseAuthoring,
                              caseInputs, caseAccount, ratification, caseGrammar, localFacts, combine, ...(injectClock ? { now: () => clock.now } : {}) });
+  /* the plane migrates every module before a read (R35's zone reads local-facts, even with no profile); the host's
+     local-facts is this world's own, so its table exists before any read does, as it does on the plane */
+  if (localFacts === undefined) localFactsOf(host, { record, membership }).migrate();
   let bundles = 0;
   const w = {
     st, host, record, membership, strength, r, clock, calls, ca, chosen, reach, concluded, providers, ratification, caseAuthoring,
