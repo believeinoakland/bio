@@ -35978,14 +35978,14 @@
       "en": "fact-directed: keyed by a profile fact's path, reached from the calendar and offices; moves no bundle",
       "module": "local-facts",
       "file": "bio-plane/src/local-facts/index.mjs",
-      "line": 706
+      "line": 721
     },
     {
       "id": "local-facts.index.the_team_has_not_stated",
       "en": "the team has not stated its time zone, and no installed place gives one; an administrator sets it",
       "module": "local-facts",
       "file": "bio-plane/src/local-facts/index.mjs",
-      "line": 343
+      "line": 355
     },
     {
       "id": "machinery-producers.index.a_status_is_a_fact",
