@@ -346,3 +346,27 @@ Size (session_01H4cT6VCYWg59BQwQWNnC8K): test runs 3, module lines 3141
 **Deferred.** None.
 
 Size (session_01M8nFpzKAppvTqqwDVd1nYV): test runs 4, module lines 3144
+
+## Completion (RETRIEVAL #32, alpha walk F-B8, F-B10 (a), F-B11; B19)
+
+**Changed.**
+1. **F-B8 (BLOCKER)** `units.mjs:12-14, :29-30`: `kindsOf` binds three variables per unit, so its chunk is `KIND_CHUNK = 32` (96 variables); `IN_CHUNK = 100` stays for the one-variable reads. Every other `IN (...)`/`VALUES` list in the module (`#documentsOf` 64, `unitsByRowid` and `partialReads` 100 x 1, frontier's index-state read 64, the selection items one row a statement, `ORPHAN` read one bound `LIMIT`) was read: none binds over 100 variables for any caller count. Test red then green: `passage-limit.test.mjs`, `meaningRows rows=passage limit 200` over 33, 34, 100, 101, 200, 300 passages, `withKindColumn()`, the fixture's database refusing over 100 variables: red at 34 ("too many SQL variables" at `kindsOf`), green after (6 of 6).
+2. **F-B10 (a)** `index.mjs` `meaningRows`: a conjunction that finds no rows (`plan.widenable`, `widen` not false) is re-run as OR (`implicitOp: "or"`) and answers `widen {interpretation: "OR", total, q, detail}` when the OR reading finds rows, else `widen: null` (the key is on every answer, as `search`'s is). Not offered when the OR reading would cross routes (R88). Also `holdsNot`: neither `search` nor `meaningRows` offers a widening for a conjunction holding a `NOT` (F-B10 (c): `query-language` reads its OR as everything; the cause is there, not mine; my guard stops the false count here). Test: `passage-limit.test.mjs` (R9 at meaning grain: widen 2 for `ordinance zzzqqq`, null where rows were found, one word, `widen:false`, `zzzqqq yyyppp`, and a NOT in both ops), red without the code and the guard.
+3. **F-B11** `levels.mjs:105`: the meaning level's undetermined sentence is now `localize("retrieval.levels.finding_rests_plain", "nobody has yet said whether a finding rests on what was found here; the Cited column beside each result says it for that result")`: no backtick, no query token, no "level" or "rows". Arm-neutral, since the content arm answers it too. Test: `passage-limit.test.mjs` (passage and content answers); `content-arm.test.mjs:95` (pinned the old English) and `meaningread.test.mjs:19` (`widen` joins the envelope's keys) updated.
+
+**Why the tests missed them.** F-B8: `withKindColumn` was used only with a handful of units (`t51-round9`), and without the column the statement is never built; no test ran a page over 33 units. F-B10 (a): R9 was written for `search` alone and no test asked the meaning route for a widening. F-B11: the sentence was held to its key and its placeholders, never to what a member reads.
+
+**Tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/retrieval/`: 221 tests, 221 pass (was 167+; `passage-limit.test.mjs` adds 8). Users that read a passage answer (18 files naming `meaningRows`, `meaningrows`, `kindsOf` or `levels.meaning` outside my module): 182 tests, 181 pass, 1 fail (`explore`'s `exploreverify "Check this chain"`, not mine). `screens-daily`: 308 tests, 303 pass, 5 fail; the same 5 fail with my `retrieval` files reverted (compared by name), so they are not from this change. Checks (process repo, root `/home/user/bio`): format 0 failures; architecture retrieval 0; coverage retrieval 88 of 88 live ids, 0; ownership retrieval 0 failures; `checks/run.mjs` words 0 failures, fixtures 89 failures all in other modules' stub lines ("plane (later)" contract-no-run), none in my files.
+
+**Fixture markers added.** None.
+
+**For BOB / found in other modules.**
+- `screens-daily` (`finder-states.mjs:209-210`, `:213`): reads `widen` only from the fields route; `meaningrows` now answers `widen` too, so the screen can offer the wider reading for a passage-only AND (F-B10 (a), (b)).
+- `query-language` (`query.mjs:2395-2396`, `:1388`): `widenable` accepts a conjunction holding `NOT`, and the OR reading ORs the NOT's complement (F-B10 (c)). retrieval no longer offers a widening for one; the fix belongs there.
+- Requirements (yours): R9 states `widen` for `search` only; it should state it for `meaningRows` as built here. The chunk bound (a statement binds at most 100 variables, `kindsOf` 3 per unit) is the same class as R98.
+- `retrieval.why.finding_rests_rows` is now read by nothing in `retrieval` but stays in `WORD_KEYS` because `words-reads.json` (the design stream's list) declares it; its words row can go when that list drops it. The other `why` sentences (`document_scope_hold`, `arm_answers_meaning`, ...) still say "rows" and "level"; the screen draws only `levels.meaning.why`, so I left them as the design list's.
+- Generated artifacts: `bio-plane/dist/bio-plane.bundled.mjs` is stale (retrieval source changed); BOB regenerates.
+
+**Deferred.** None.
+
+Size (session_01VXhjMQEyP8S9vteVbYUTti): test runs 14, module lines 3,174
