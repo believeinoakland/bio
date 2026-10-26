@@ -113,3 +113,25 @@ test("R9 R25 the holder of an addressed office with no line is undetermined: `wh
   assert.deepEqual([h.holder, h.undetermined, typeof h.why.key, typeof h.why.vars], [null, true, "string", "object"]);
   assert.equal(h.why.key, "actions.office_entity_held_addressee");
 });
+
+test("R111 a recorded reply reads back in the correspondence ledger with its stage, outcome, exemptions, due date and citation and quote, each null where the entry states none", () => {
+  const w = world();
+  const s = w.doc("INFO-2026-0001-d");
+  w.action("ACTN-2026-0104-fee");
+  const A = "ACTN-2026-0104-fee";
+  const c = (x) => w.a.actionCorrespond({ target: A, at: "2026-09-02", viewer: M, author: M, ...x });
+  assert.equal(c({ direction: "sent", account: "asked", stage: "request" }).ok, true);
+  const r = c({ direction: "received", artifactSha: s, quoteAmount: "12", quoteCurrency: "USD", quoteBasis: "copying", quoteAnswers: "0",
+    stage: "fee_estimate", follows: "0" });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  const rows = w.a.actionRead({ id: A, viewer: M }).correspondence;
+  const got = rows[1];
+  assert.deepEqual([got.stage, got.quote_amount, got.quote_currency, got.quote_basis, got.outcome, got.exemptions, got.due_by, got.due_cite],
+    ["fee_estimate", "12", "USD", "copying", null, null, null, null]);
+  assert.deepEqual([rows[0].stage, rows[0].quote_amount, rows[0].direction], ["request", null, "sent"]);
+  /* the lifecycle values the entry holds: outcome, exemptions */
+  const d = c({ direction: "received", artifactSha: s, stage: "denial", outcome: "denied", exemptions: "Gov. Code 7922.200", follows: "1" });
+  assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
+  const last = w.a.actionRead({ id: A, viewer: M }).correspondence[2];
+  assert.deepEqual([last.stage, last.outcome, last.exemptions], ["denial", "denied", "Gov. Code 7922.200"]);
+});
