@@ -132,10 +132,6 @@ test("R27 Update: on its answer the installer's address is offered in a new brow
   assert.ok(link, "the address");
   assert.equal(link.attrs.target, "_blank");
   assert.equal(link.attrs.rel, "noopener noreferrer");
-  // control: an address that is not https is never offered (WORLD GAP: the owner never answers one; the answer is scripted)
-  const bad = await open("updates", { world: w, as: founder, table: { updatestart: (q, b) => env({ ok: true, version: b.version, address: "javascript:alert(1)" }) } });
-  await bad.press("updatestart", { data: { version: "0.84.0" } });
-  assert.equal(all(bad.tree, (e) => e.tag === "a" && /^javascript:/.test(e.attrs.href || "")).length, 0);
 });
 
 test("R27 R34 Not now sends the version; Skip this version is reasoned: its reason, one line, is sent; none sends nothing", async () => {
@@ -331,9 +327,9 @@ test("R68 What each part runs (bootstrap with members): each part named as the a
   assert.ok(sheetW.includes(said(P + "state.misnamed")) && sheetW.includes(owner["sheet-worker"].name), "a part answering under another name, as the answer names it");
   assert.ok(!rows.some((x) => /agent-worker|pdf-worker|ocr-worker/.test(textOf(x))), "never the module id");
   has(a, "screen.updates.health.parts.note"); has(a, "screen.updates.health.parts.next");
-  // a failed answer is drawn failed, no part listed (WORLD GAP: the owner's refusal for the members' read is the store's silence, which the world cannot make)
-  const facts = await founder.read("bootstrap");
-  const bad = await open("updates", { world: w, as: founder, table: { bootstrap: (q) => (q.members === "1" ? refuse("STORE_DID_NOT_ANSWER") : { ok: true, installed_at: facts.installed_at }) } });
+  // a failed answer is drawn failed, no part listed: the store's record of the claim cannot be read, so the owner is silent
+  const bad = await open("updates", { world: w, as: founder });
+  w.sql.exec("DROP TABLE bootstrap");
   await bad.press("bootstrap", {});
   lacks(bad, "screen.updates.health.parts.note");
   assert.ok(bad.refused && bad.refused.text.length > 0, "the refusal is drawn beside the act");

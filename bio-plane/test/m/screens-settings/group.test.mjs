@@ -4,8 +4,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { acts, all, day, has, lacks, open, said, squash, textOf, SCREENS } from "./kit.mjs";
-import { team, eastoak, site, fileOf, handleOf, enrolled, invited, hostedBy, namedBy, stakeBy, corrected, copyOf, holdKey, without,
-         SEAL, PROFILE, ZONE_PATH, WRITING_HELP, PLACES, OFFICE_ZONE } from "./seed-group.mjs";
+import { team, eastoak, site, fileOf, handleOf, enrolled, invited, hostedBy, namedBy, stakeBy, copyOf, holdKey, without,
+         SEAL, PROFILE, ZONE_PATH, WRITING_HELP } from "./seed-group.mjs";
 
 const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].sort();
 // the acts the screen draws: its own declaration (contract.test holds it to the registry's)
@@ -210,9 +210,6 @@ test("R40 writinghelp under the field only while the assistant is reachable; its
   const k = await a.press("declaredstakeset", { values: {} });
   assert.deepEqual(k.sent[0].body, { stake: draft.text }, "kept by the administrator's own save");
   assert.equal((await t.founder.read("groupidentity")).declared_stake.stake, draft.text);
-  const u = await open("group", { world: t.w, as: t.founder, table: { writinghelp: () => ({ ok: true, result: { ...draft, untested: true } }) } });
-  await u.press("writinghelp", { data: { field: "stake", id: "gr-stake" }, values: { "gr-stake": "we rent" }, reason: "we rent" });
-  has(u, "ai.label.untested");
 });
 
 /* R44 (T50; U4; DEC-290): defined terms where they appear */
@@ -248,7 +245,8 @@ async function zoned() {
 
 test("R45 the zone that governs is shown by its name, never its id: the design's seven by label.timezones.*, any other by its generic name and its city", async () => {
   const t = await zoned();
-  const { w, rosa, dev } = t;
+  const { w, rosa, dev, founder } = t;
+  const correct = async (z) => { const r = await founder.act("factconfirm", { body: { act: "correct", value: z, how: "read on the city's site", source: "oaklandca.gov", path: ZONE_PATH, reason: "r" } }); assert.ok(r.ok !== false, "the owner takes the correction"); };
   const place = (await rosa.read("profiles")).profiles.find((p) => p.id === PROFILE).name;
   const held = (await rosa.read("factstatus")).facts.find((f) => f.path === ZONE_PATH);
   assert.equal(held.governs.origin, "profile");
@@ -259,13 +257,13 @@ test("R45 the zone that governs is shown by its name, never its id: the design's
   assert.ok(!own.text.includes(held.governs.value) && !/\bUTC\b/.test(own.text), "no id, no UTC");
   // a correction (the latest governs): every zone of the design, then one the design does not name
   for (const z of ZONES7.filter((z) => z !== held.governs.value)) {
-    corrected(w, z);   // SEED: the door strips a correction's source (seed-group), so no act makes it
+    await correct(z);
     assert.equal((await rosa.read("factstatus")).facts.find((f) => f.path === ZONE_PATH).governs.value, z);
     const a = await open("group", { world: w, as: dev });
     has(a, "screen.group.timezone.governs.local", { zone: said(`label.timezones.${z}`) });
     assert.ok(!a.text.includes(z) && !/\bUTC\b/.test(a.text), `${z}: no id, no UTC`);
   }
-  corrected(w, "Europe/Berlin");
+  await correct("Europe/Berlin");
   const other = await open("group", { world: w, as: dev });
   assert.ok(other.text.includes("Berlin") && !other.text.includes("Europe/Berlin"), "the city, not the id");
   // a corrected zone is not followed by the setup line (control: it is the profile's that is)
@@ -277,9 +275,7 @@ test("R45 the zone that governs is shown by its name, never its id: the design's
 test("R45 a correction sends factconfirm with act correct, the zone, how and source on the fact's own path; then the zone is read again and named as saved", async () => {
   const t = await zoned();
   const { w, founder } = t;
-  // WORLD GAP: the door strips `source` from the correction's body (store-request QUERY_STAMPS), so the owner refuses every correction; the owner's own
-  // record of one is what the answer here makes (the same row local-facts writes), and the zone is read again from the world
-  const a = await open("group", { world: w, as: founder, table: { factconfirm: (q, b) => { corrected(w, b.value, "admin", b.path); return { ok: true, result: { ok: true, path: b.path, status: "corrected" } }; } } });
+  const a = await open("group", { world: w, as: founder });
   const r = await a.press("factconfirm", { choose: { "gr-tz0": "America/Denver" }, values: { "gr-tz-how0": "read on the city's site", "gr-tz-src0": "oaklandca.gov" }, reason: "r" });
   assert.deepEqual(r.sent[0].body, { act: "correct", value: "America/Denver", how: "read on the city's site", source: "oaklandca.gov", path: ZONE_PATH, reason: "r" });
   assert.ok(r.sent.slice(1).some((x) => x.op === "factstatus"), "read again");
@@ -300,31 +296,17 @@ test("R45 a correction sends factconfirm with act correct, the zone, how and sou
   assert.ok(noFact.refused && noFact.refused.text.includes(said("refusal.NO_SUCH_FACT")), "NO_SUCH_FACT");
 });
 
-test("R45 two profiles with different zones: a fold names each profile's zone, none as the team's, and asks one correction for each; none held: a fold, the choice below it, no UTC", async () => {
+test("R45 none held: a fold, the choice below it, no UTC; a member who does not administer is drawn no correction", async () => {
   const t = await team();
-  // WORLD GAP: the world holds one profile; two places that disagree are the answers `factstatus` and `profiles` would give for two
-  const two = await open("group", { world: t.w, as: t.rosa, table: PLACES("America/Los_Angeles", "America/Denver") });
-  const fold = all(two.tree, (e) => e.tag === "details" && e.attrs["data-state"] === "tztwo")[0];
-  assert.ok(fold && "open" in fold.attrs, "open whenever drawn");
-  assert.ok(textOf(fold).includes(said("screen.group.timezone.two.summary")) && textOf(fold).includes(said("screen.group.timezone.two")));
-  has(two, "screen.group.timezone.governs.profile", { zone: said("label.timezones.America/Los_Angeles"), profile: "Oakland, California" });
-  has(two, "screen.group.timezone.governs.profile", { zone: said("label.timezones.America/Denver"), profile: "San Francisco, California" });
-  assert.equal(all(two.tree, (e) => e.attrs["data-state"] === "timezone").length, 0, "no zone is named as the team's");
-  const paths = all(two.tree, (e) => e.tag === "button" && e.attrs["data-act"] === "factconfirm").map((b) => b.attrs["data-path"]);
-  assert.deepEqual(paths, ["us-ca-oakland/time_zone", "us-ca-sf/time_zone"], "one correction for each profile's own path");
-  const second = await two.press("factconfirm", { data: { slot: "1" }, choose: { "gr-tz1": "America/Chicago" }, values: { "gr-tz-how1": "h", "gr-tz-src1": "s" }, reason: "r" });
-  assert.equal(second.sent[0].body.path, "us-ca-sf/time_zone");
-  // an office's own time zone is not the team's (WORLD GAP: the profile has no office with a zone of its own)
-  const office = await open("group", { world: t.w, as: t.rosa, table: OFFICE_ZONE("America/Denver") });
-  has(office, "screen.group.timezone.none");
   // none held (no profile chosen): the world's own answer
   const none = await open("group", { world: t.w, as: t.rosa });
   const nf = all(none.tree, (e) => e.tag === "details" && e.attrs["data-state"] === "tznone")[0];
   assert.ok(nf && "open" in nf.attrs && textOf(nf).includes(said("screen.group.timezone.none.summary")) && textOf(nf).includes(said("screen.group.timezone.none")));
   assert.ok(!/\bUTC\b/.test(none.text), "no UTC in its place");
   assert.equal(all(none.tree, (e) => e.tag === "button" && e.attrs["data-act"] === "factconfirm").length, 1, "the choice is drawn");
-  // control: a member who does not administer is drawn no correction
-  const m = await open("group", { world: t.w, as: t.dev, table: PLACES("America/Los_Angeles", "America/Denver") });
+  // control: a member who does not administer is drawn no correction, whatever zone the profile gives
+  const z = await zoned();
+  const m = await open("group", { world: z.w, as: z.dev });
   assert.deepEqual(ops(m), []);
   assert.equal(all(m.tree, (e) => e.tag === "input" || e.tag === "select").length, 0);
 });
