@@ -42,6 +42,7 @@ Moved here so that `office-readers` may use `csv-reader` and not the reverse (th
 
 Errors: none of R1–R11 ever throws. A precondition this module cannot verify is answered as a stated `undetermined`/`ok:false`, never an exception and never a guess.
 - **R26** (K5157; walk-T51-final 06 §6) For a file declared `text/plain` or named `.txt`, R7's consistent delimiter must repeat with the same count (its most common non-zero count per line) on the majority of the lines; a declared CSV or TSV (its type, or a `.csv`/`.tsv` name) keeps presence on the majority (R7). Prose with commas on most of its lines is therefore not a table: `isDelimitedText` answers false (R21).
+- **R27** *(not yet met: T51)* (T51 fix round 10, live walk C/E; K5271) Declared plain text is read as delimited only when, beyond R26, it holds at least 5 records and its fields' mean length is under 40 characters (amends R26; walk C C-M14).
 
 ## Private
 
