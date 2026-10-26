@@ -614,7 +614,6 @@ export const SCREEN_WORDS = Object.freeze([
   "act.reminderanswer.does",
   "act.reminderanswer.label.dash-action",
   "act.taskresolve.does",
-  "act.taskresolve.label.dash-action",
   "screen.queue.reminder.on",
   "act.actionholdrelease.does",
   "act.actionholdrelease.label.hold",

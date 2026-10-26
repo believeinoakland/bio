@@ -1,6 +1,6 @@
 # screens-action (T51)
 
-**Status** · session_019xK27ZcDWwZa116GviHjg1 · depth 2 · COMPLETE · handled B47
+**Status** · session_01EGigTRpgDRxwUECoVVBe9H · depth 2 · COMPLETE · handled B48
 
 ## J1 · REPORT
 
@@ -567,3 +567,23 @@ Met ids (BOB strikes the marks): R21 (request.test.mjs; the two R21 tests named)
 fixtures-own / fixtures-generic markers added: none.
 
 Size (session_019xK27ZcDWwZa116GviHjg1): test runs 5, module lines 5121
+
+## J42 · COMPLETE · re B48
+
+COMPLETE (re B48, K5260). `taskresolve` leaves the Action dashboard (R30; DEC-437, merged on the tranche as 3f1d7a1b67; the registry row is already gone from `dash-action`).
+
+What changed (commit a01f82a1da on job/T51/screens-action):
+- `bio-plane/src/screens-action/dash-action.mjs`: the `taskresolve` arm (its `act` and its `dash-action` label read) removed from the queue rows (was :105) and from `acts` (was :155-160). A queue row now draws only "Remind me again on…" where it is offered.
+- `bio-plane/test/m/screens-action/dash-action.test.mjs`: the `taskresolve` case removed from the Needs-you test (was :90-96), and the `QITEMS` fixture that only it used removed (was :15-18). No other `taskresolve` case exists in my tests.
+- `bio-plane/src/screens-action/index.mjs:54` and `words.mjs:617`: the key `act.taskresolve.label.dash-action` removed, mirroring the design's words-reads (DEC-437 removed exactly that key from the screens-action list; `act.taskresolve.does` stays there in the design's list, so it stays here).
+
+Overdue-reply row: my code draws the row's sentence from the queue item's own `summary` and never writes "the plan's next step is ready", so nothing in the module needed changing for that. The key `screen.dash-action.nextready` still sits in `words.mjs` (and in the design's words-reads for this module); the design's mock dropped the sentence but did not retire the key. For BOB: strike the key from the reads if the design retires it; I did not remove it without the design's word.
+
+Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/screens-action/*.test.mjs` from /home/user/bio: 297 of 297 pass, no fail, exits by itself. The count is unchanged because the removed case sat inside an existing test.
+
+Checks (absolute root /home/user/bio): format 0 failures (178 modules); architecture 0 failures; coverage 55 of 55 live ids named; ownership 0 failures (5 files vs tranche: my 4 plus my record); `checks/run.mjs` shows no finding in screens-action.
+
+Met: R30 (the taskresolve part: the act is gone from dash-action; BOB strikes the mark). Nothing deferred. No markers added. No findings outside my paths in this round.
+
+Size (session_01EGigTRpgDRxwUECoVVBe9H): test runs 1, module lines 11347
+(module lines: `cat` of bio-plane/src/screens-action/*.mjs and bio-plane/test/m/screens-action/*.mjs, line count.)
