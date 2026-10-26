@@ -587,3 +587,27 @@ Met: R30 (the taskresolve part: the act is gone from dash-action; BOB strikes th
 
 Size (session_01EGigTRpgDRxwUECoVVBe9H): test runs 1, module lines 11347
 (module lines: `cat` of bio-plane/src/screens-action/*.mjs and bio-plane/test/m/screens-action/*.mjs, line count.)
+
+## J43 · REPORT
+
+REPORT (re B49, fix round 10, item 136; R56). All ten entries are applied and pushed (491bb4df17 on job/T51/screens-action); two of my new tests wait on the providers, so this is not COMPLETE.
+
+Applied (bio-plane/src/screens-action/):
+1. C2a (1) `matter.mjs:572` `determine` draws `STANDARD_BINDING_UNDETERMINED` in the owner's translation then its `detail` (the why); `STANDARD_NOT_BINDING` keeps the shell's words. (2) `matter.mjs:183` the Body is a choice among the team's office and body entities (`entitieskind`), the entity id sent.
+2. C2b `matter.mjs:445` each live determination row draws its standards' `outcomes` (citation, outcome word); `matter.mjs:580` `determine` goes to the new determination's page.
+3. C-M11 `matter.mjs:259` a concluded question is tickable only when a published case holds it (or the recorded determination already rests on it); the others are drawn apart as "Concluded", with no box.
+4. K-words `plan.mjs:173`, `:181` undetermined `date_past`/`date_before_phase` by their keys with option and phase named and the design's `time_zone_held_place`; a determined `date_before_phase` by its key when the check carries `start`, else the plane's own sentence with names for ids and dates as dates.
+5. K10-2 `send-steps.mjs:449` the risk door is its own `mk-acts` control after the whole sentence.
+6. K-new `actionnew.mjs:156` local RFC pre-check deleted (the plane's refusal and findings are drawn by the existing `ACTION_BASIS_REFUSED` handler); for a request for comment the leg defaults to "Advances".
+7. H1 `request.mjs:48`, `:73` the team's named offices (`entitieskind` kind office) are offered in the name choice; `request.mjs:196` an empty press is refused `findin.fieldneeded`.
+8. K12 `action.mjs:216` "Waiting on" only while the state is not resolved or abandoned.
+9. H2 `send-steps.mjs:298`, `:583` `filingrecordsent`'s `proposed.next_state.says` is kept and said on the sent step, with the door to the action.
+10. K4/C-M17 `plan.mjs:551` an office, press or organisation addressee with its role or body empty is refused in place naming that part (`findin.fieldneeded`, the form's own labels).
+New words file `words-fix-r56.mjs`; tests: new `fix10-t51.test.mjs` (10 tests, all named R56; all 10 red on the old source, 8 green now); changed to the new behaviour: `actionnew.test.mjs` (RFC no longer refused locally), `fix2-t51.test.mjs` (determined `date_before_phase` by name), `matter-t51.test.mjs` (body chosen), `seam-t51.test.mjs` (the walker's team holds no office; a named office is offered on the next visit), `reads-t51.test.mjs` and `page.mjs` (the new read; `DATA_PLANE.entitieskind` is entities' published fixture).
+
+Waiting on providers (red now, by design): the C2a test (conformance R43: today the real conformance answers `STANDARD_NOT_BINDING` for an undetermined binding) and the H1 test (actions R111: today `addresseesuggest` of an office entity answers no office). I merge the tranche and run both when your CHANGE says each has merged. Suite now 305 of 307 pass; format 0, architecture 0, coverage 56/56, words 0, fixtures 0, ownership 0.
+
+For you (REPORTs):
+a. H2 as asked cannot be met in full: `actionmove` is not a registry act of `start-send` or `request` and `contract.test.mjs` pins each screen's acts to the registry. I draw the plane's proposed state in its own words and the door to the action (where "Move the action" is). The offer itself needs `actionmove` on `start-send` and `request` in the registry (UX-DESIGN), or your ruling that the door is enough.
+b. Words wanted, drawn meanwhile with the nearest true key: a verb-led label for the door to the risk (now `risk.title`, "Its risk"); "concluded, becomes a finding once a case is published" (now `question.concluded.heading`); `refusal.ACTION_BASIS_REFUSED` ends "Choose again, or leave it out", true for a wrong leg and misleading when a required leg is missing; the Body choice's empty case points to `screen.request.nooffice.admin`; `refusal.STANDARD_BINDING_UNDETERMINED` is the owner's translation until conformance adds the key; no sentence for "no dated event yet, record one on the Timeline" (walk E C2a (1)).
+c. Outside my module: `action-plans` `date_before_phase` check should carry `start` (the day the phase can start) so the screen words it by key; `entities/index.mjs:617` dedupes a named office only for a non-administrator (walk E H1 (3)), not in this round's providers.
