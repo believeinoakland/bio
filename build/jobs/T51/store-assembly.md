@@ -244,3 +244,21 @@ BLOCKED (cause: context; STORE-ASSEMBLY #4). I am past half my window. J14 is my
 3. B16 (K5213): `node /home/user/civicos-process/checks/words.mjs /home/user/bio store-assembly` lists 15 (inline 15, plain 12): `ask.mjs:388,389,469,502,521,522,526,531,535,540`, `wiring.mjs:49,78,103`, `wizards.mjs:51`. Write each at its use as `localize(id, en, vars)` (`setup-words`), ids `store-assembly.<file>.<slug>`; a refusal code is not a sentence (K3971). Words must read 0 for this module; do not edit `rows.mjs`; its regeneration is BOB's.
 4. B17 (K5220): `fix5-r77`, `fix6-pending`, `r9-jobs` must each exit by itself, run alone without `--test-force-exit`, `r9-jobs`'s one cancelled test passing; name the handle and its file:line in the COMPLETE. What I know: the whole module suite (425 tests) exited by itself in about 150 s on my branch after `pending.mjs:318` unref'd the lag meter's interval (before it, it did not exit in 30 minutes); the abandoned-run child test (`r78-abandoned.test.mjs`) ends in about 11 s because the scheduler's 10 s budget timer (`scheduler/index.mjs:638`) holds an abandoned run's process until the budget passes. If one of the three still holds the process, find the handle with `--test-force-exit` off and `process._getActiveHandles()` at the end of the file, and fix it in my paths or REPORT it.
 After 1-4: rerun the module suite without `--test-force-exit`, `checks/run.mjs` (words 0 for this module), `fixtures.mjs store-assembly --list`, ownership; post COMPLETE and ring (BOB is now session_01SvXLDCv6K1oZMVKyqhK5Da; `mail addr --bob` before ringing).
+
+## J16 · COMPLETE
+
+**STORE-ASSEMBLY #5 COMPLETE: B18 (a)-(c), B15, B16 and B17 applied** (code at dd96ac9587, tranche/T51 merged before the runs).
+
+**Entries applied.**
+- B18 (a): `agent-worker` is already in my `uses` on the tranche; architecture reads 0. (b) The three declared rows' ids are `store-assembly.declared.{ask,readtranslate,owedwork}` (`declared.mjs`), sentences unchanged (readtranslate's ends "(store-assembly R53)"). (c) J13's `t48-door` R92 and the two control-plane seams are CONTROL-PLANE's; not touched.
+- B15 (1): new test in `declarations.test.mjs` (R84), in a child process: all three rows register with op-grades' and op-declarations' `registerDeclaredOps`; `ask` and `readtranslate` are `agreed` with op-grades' hand rows; `owedwork` has no hand row in op-grades (it is `registered`, not `agreed`) or in op-declarations, so it has nothing to disagree with. Controls: a changed sentence is refused `DECLARED_OP_DISAGREES` (ask, readtranslate); a flipped `mutating` is refused "differs from the hand row on mutating" (ask, readtranslate). A flipped `mutating` on `owedwork` is refused for another reason (NEEDS_MISSING), so no control covers it. (2) R83 already expects `["control-plane"]`; it passes.
+- B16: 15 sentences written at their use as `localize(id, en, vars)`, ids `store-assembly.ask.*` (11), `store-assembly.wiring.*` (3), `store-assembly.wizards.acts-not-list`. `badTask` now localizes "{detail}. Nothing was drafted." (`store-assembly.ask.bad-task`). `rows.mjs` not edited. `checks/words.mjs store-assembly`: 0 failures.
+- B17: `fix5-r77` (14 s), `fix6-pending` (23 s) and `r9-jobs` (39 s, 34 pass, 0 cancelled) each run alone without `--test-force-exit` and exit 0 by themselves. The handle that held them is the lag meter's interval, `pending.mjs:318` (`t.timer.unref()`, from J14); nothing else holds a process. The abandoned-run child test (`r78-abandoned`) ends in about 11 s on the scheduler's 10 s budget timer (`scheduler/index.mjs:638`), legitimate.
+
+**Tests.** Module suite, run without `--test-force-exit`: exit 0 in 177 s, tests 426, pass 425, fail 0, cancelled 0, todo 1 (R98: `control-plane/owner-ops.mjs` not yet deleted).
+
+**Checks.** format 0; architecture 0; coverage 99 of 99, 0; ownership 0 (17 files); words 0; fixtures 16, all `orphan-run`, unchanged from J14: the users' `fixtures-contract: plane` markers (other modules' files, REPORT J12) still read `plane`, and test-support's `job-registrar` marker is missing.
+
+**Markers added:** none.
+
+Size (session_01TZ1hRYK6oq2r9ft3RFiNHd): test runs 8, module lines 3750
