@@ -2,7 +2,7 @@
  * seam4.test.mjs. A sentence is asserted by its key (R24); every request is compared with its owner's declaration (interface-shell R104). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, drew, press, ok, PREFLIGHT, F1, P, DR, rawKeys, main } from "./fixtures.mjs";
+import { open, drew, press, ok, provided, PREFLIGHT, F1, P, DR, rawKeys, main } from "./fixtures.mjs";
 
 const CER = `/app/ceremony/${P}/${DR}`;
 const B64 = "b".repeat(64);
@@ -13,8 +13,9 @@ const pre = (row) => PREFLIGHT({ steps: [...PREFLIGHT().steps.slice(0, 5), STEP3
 
 test("R74 R51 C40 after reattest the document's sentence is read again: it says 'neither' only while both proofs are missing, and no raw key is drawn", async () => {
   let again = false;
+  const REATTESTED = await provided.reattest(); // capture's real answer to reattest
   const p = await open(CER, { plane: { publishpreflight: () => ok(pre(again ? ROW({ timestamp_at: "2026-10-20T10:00:00Z", missing: ["co_archive"] }) : ROW())),
-    reattest: () => { again = true; return ok({ ok: true, captureSha: B64 }); }, captureaccounts: ok({ captureSha: B64, actors: [], accounts: [] }) } });
+    reattest: () => { again = true; return REATTESTED; }, captureaccounts: ok({ captureSha: B64, actors: [], accounts: [] }) } });
   assert.ok(drew(p, "screen.ceremony.conf.intro2", { finding: F1 }), "before: neither proof, so the sentence says so");
   await press(p, "reattest", { reason: "because" });
   assert.ok(drew(p, "screen.ceremony.conf.row.missing.co_archive"), "the proof still missing");

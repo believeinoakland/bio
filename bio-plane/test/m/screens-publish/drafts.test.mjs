@@ -5,7 +5,7 @@
  * (interface-shell R104). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, drew, day, ops, press, fill, tick, last, ok, refusedIn, word, COPY, DOCUMENT, P, DR, C, B1, GRANT_UNTIL } from "./fixtures.mjs";
+import { open, main, text, drew, day, ops, press, fill, tick, last, ok, refusedIn, word, COPY, DOCUMENT, P, DR, C, B1, GRANT_UNTIL, provided } from "./fixtures.mjs";
 
 const OLD = "RVD-2026-0000";
 const ED = `/app/case-editor/${P}`, RC = `/app/review-copy/${P}`, CER = `/app/ceremony/${P}`;
@@ -82,7 +82,8 @@ test("R2 R73 C49 the review copy lists every live review link on any draft, each
 
 test("R2 R73 C49 stopping a link on an earlier draft sends reviewrevoke with that grant and the list is read again without it", async () => {
   let gone = false;
-  const p = await open(`${RC}/${DR}`, { plane: PLANE(LIVE, { reviewrevoke: () => { gone = true; return ok({ ok: true }); },
+  const REVOKED = await provided.reviewrevoke(); // review's real answer to reviewrevoke
+  const p = await open(`${RC}/${DR}`, { plane: PLANE(LIVE, { reviewrevoke: () => { gone = true; return REVOKED; },
     reviewcopy: (req) => ok(COPY({ draft: req.query.draft, authored: { scope: req.query.draft === OLD ? SCOPE_OLD : SCOPE_NEW }, comments: [],
       grants: req.query.draft === OLD ? [G("GRT-OLD", "Ms. L. Brandt · tenant organizer", gone ? { revoked_at: "2026-10-09T10:00:00Z" } : {})] : [G("GRT-NEW", "Prof. N. Iyer · housing law")] })) }) });
   const all = [...main(p).querySelectorAll('button[data-act="reviewrevoke"]')];

@@ -4501,10 +4501,10 @@
   },
   {
    "key": "refusal.SIGN_IN_PAUSED",
-   "en": "Sign-in is paused for a while after too many tries from here. This keeps others from guessing passwords; it isn't a judgment on you. Try again at {time}.",
+   "en": "Sign-in is paused for a while after too many tries. This keeps others from guessing passwords; it isn't a judgment on you. Wait a while, then try again. The limit: {stated}.",
    "protected": false,
    "source": "DEC-200",
-   "note": "credentials R38; {time} the local time the pause ends"
+   "note": "credentials R38; DEC-436 (B525): {stated} the plane's bound as credentials R38 states it; no time, since neither tells which count was full"
   },
   {
    "key": "refusal.RECOVERY_REFUSED",
@@ -14396,7 +14396,7 @@
   },
   {
    "key": "screen.setup.office.note",
-   "en": "Anything your team should know about it (optional)",
+   "en": "What your team deals with this office about",
    "protected": false,
    "source": "DEC-252",
    "note": "adopted from screens-entry's own rows; DEC-259: reworded"

@@ -9,7 +9,7 @@
    `build/modules.json` (every module whose source exports `DECLARED_OPS` is here, or the test names it). */
 import { registerDeclaredOps as registerOpDeclarations } from "../op-declarations/index.mjs";
 import { registerDeclaredOps as registerOpGrades } from "../op-grades/index.mjs";
-import { ASSEMBLY_DECLARED_OPS } from "./declared.mjs";
+import { DECLARED_OPS as ASSEMBLY_DECLARED_OPS } from "./declared.mjs";
 import { OWNER_MAP_DECLARED_OPS } from "./owner-ops.mjs";
 import { DECLARED_OPS as recordCore } from "../record-core/index.mjs";
 import { DECLARED_OPS as membership } from "../membership/index.mjs";

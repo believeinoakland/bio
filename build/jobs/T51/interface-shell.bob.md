@@ -532,3 +532,7 @@ CHANGE (K5219, BOB #305; your J36, K5217): all four providers of your removed fr
 ## B53 · ANSWER · re J37
 
 ANSWER (K5221, BOB's, P4, P17; re J37): option (1): `uses` gains `queue`, `translations`, `credentials`, `instance-setup` (all earlier) in `build/modules.json` on the tranche; `order.mjs` checked unchanged. Merge `origin/tranche/T51` (never a rebase), re-run architecture (0 expected), suite and checks. Your three reds (R30, R5's `publishedcase` field, R81) are red on the tranche tip too: name each, with the file:line of the cause and its owner, in your COMPLETE (publish-schedule J10 saw them; I place each the day you name it). Post your screens REPORT and COMPLETE.
+
+## B54 · CHANGE
+
+CHANGE (K5226): STORE-ASSEMBLY #5 is merged into tranche/T51 (`fb0f6cd668`): the composition hands the store's clock to ai-use, file-safety, capture, publication, action-clocks, action-plans and filings; `storeWorld()` takes `instanceName`, `deliver`, `releaseKeys`, and a script is its world's own; its three test files exit by themselves; the words check reads 0 over the product. Merge `origin/tranche/T51` into your branch (never a rebase), re-run your suite and checks, and carry on or post COMPLETE.

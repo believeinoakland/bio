@@ -2245,7 +2245,7 @@ SCR.front = c => { const st = FRONT_ST[c.v] || 'a'; const sel = v => v === st ? 
       ${field('mk-sip', 'Password', '••••••••••••••', { act: 'login' })}
       ${checks('This device is', [['My own: keep me signed in (it locks after 30 minutes away; you sign in again after 12 hours)', true], ['Shared or public: sign me out after 15 minutes away', false]], { radio: true, act: 'login' })}
       <div class="st st-b"><div class="cs-gap" data-gap="refused">${I('refused')}<span>That handle and password don't match. Check both and try again; after several tries, sign-in pauses for a while to keep others from guessing.</span></div></div>
-      <div class="st st-c"><div class="cs-gap" data-gap="refused">${I('refused')}<span>Sign-in is paused for a while after too many tries from here. This keeps others from guessing passwords; it isn't a judgment on you. Try again at 10:42 AM.</span></div></div>
+      <div class="st st-c"><div class="cs-gap" data-gap="refused">${I('refused')}<span>Sign-in is paused for a while after too many tries. This keeps others from guessing passwords; it isn't a judgment on you. Wait a while, then try again. The limit: at most 10 refused attempts from one place, and 10 for one account, in any 10 minutes.</span></div></div>
       ${acts(btn('login', 'Sign in', { tone: 'primary' }), ref('Forgot your password?', 'forgot', '<b>Forgot your password?</b> · how a member gets back in'))}
       <p class="mk-small">Invited? Open the link you were sent: it brings you here to join.</p>`)}
     </div>

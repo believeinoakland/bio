@@ -6,7 +6,7 @@
  * English (R24, K3810). Every request is compared with its owner's declaration by the harness (interface-shell R104). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, drew, day, ops, press, last, fill, tick, norm, until, keptKey, answerSign, ok, refusedIn, pending, word, hasWord, COPY, DOCUMENT, PREFLIGHT, FINDING, F1, B1, P, C, DR, SHA, publishedPlane, findingPath, signDialog } from "./fixtures.mjs";
+import { open, main, text, drew, day, ops, press, last, fill, tick, norm, until, keptKey, answerSign, ok, refusedIn, pending, provided, word, hasWord, COPY, DOCUMENT, PREFLIGHT, FINDING, F1, B1, P, C, DR, SHA, publishedPlane, findingPath, signDialog } from "./fixtures.mjs";
 import { measure } from "./phone.mjs";
 import { gateRefusal } from "../case-disclosures/fixtures.mjs";
 
@@ -32,9 +32,10 @@ const HELD_BACK = gateRefusal().CO_ATTESTATION_UNACKNOWLEDGED;
 
 test("R74 R51 C40 after reattest the pre-flight is read again and the document's row says the timestamp was made late and that the outside copy is still missing", async () => {
   let again = false;
+  const REATTESTED = await provided.reattest(); // capture's real answer to reattest
   const pre = () => ok(WITH(STEP3({ not_co_attested: [again ? ROW({ timestamp_at: "2026-10-20T10:00:00Z", late: true, timestamp_late: true, late_words: LATE, missing: ["co_archive"] }) : ROW()] }),
     { ready: false, first: HELD_BACK, blockers: [] }));
-  const p = await open(CER, { plane: { publishpreflight: pre, reattest: () => { again = true; return ok({ ok: true, captureSha: B64 }); }, captureaccounts: ok({ captureSha: B64, actors: [], accounts: [] }) } });
+  const p = await open(CER, { plane: { publishpreflight: pre, reattest: () => { again = true; return REATTESTED; }, captureaccounts: ok({ captureSha: B64, actors: [], accounts: [] }) } });
   assert.ok(drew(p, "screen.ceremony.conf.row.meta"), "before: neither proof exists");
   assert.ok(!text(p).includes(LATE));
   const before = count(p, "publishpreflight");
@@ -273,7 +274,7 @@ test("R78 R15 R72 C51 a progress line is drawn while the key is made and registe
   await press(p, "signerregisterown", { reason: R });
   await until(p, () => count(p, "signerregisterown") > 0);
   assert.ok(said(p, "screen.ceremony.registering"), "the progress line is drawn while the request is out");
-  const done = await prepared({ boot: { idb: new Map() }, plane: { caseratify: refusedIn("NO_ATTESTING_KEY"), signerregisterown: ok({ ok: true, key: "k" }) } });
+  const done = await prepared({ boot: { idb: new Map() }, plane: { caseratify: refusedIn("NO_ATTESTING_KEY"), signerregisterown: await provided.signerregisterown() } });
   await until(done, () => done.doc.querySelector("[data-nokey]"));
   tick(done, "ce-keep", "keep");
   await press(done, "signerregisterown", { reason: R });
@@ -322,7 +323,7 @@ test("R79 R7 R25 R43 C94 an imported case's importer and its stake's maker, and 
 
 test("R79 R2 R51 C14 an act that changes only a later read re-reads that and not the screen's other reads; publishing re-reads the copy and the drafts", async () => {
   const pre = () => ok(WITH(STEP3({ not_co_attested: [ROW()] }), { ready: false, first: HELD_BACK, blockers: [] }));
-  const p = await open(CER, { plane: { publishpreflight: pre, reattest: ok({ ok: true, captureSha: B64 }), captureaccounts: ok({ captureSha: B64, actors: [], accounts: [] }) } });
+  const p = await open(CER, { plane: { publishpreflight: pre, reattest: await provided.reattest(), captureaccounts: ok({ captureSha: B64, actors: [], accounts: [] }) } });
   const was = Object.fromEntries(["reviewcopy", "image", "casedrafts", "groupidentity", "publishpreflight"].map((o) => [o, count(p, o)]));
   await press(p, "reattest", { reason: R });
   for (const o of ["reviewcopy", "image", "casedrafts", "groupidentity"]) assert.equal(count(p, o), was[o], o + " is not read again");

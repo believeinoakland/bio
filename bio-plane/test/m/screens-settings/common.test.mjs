@@ -23,10 +23,6 @@ const iso = (w, days) => new Date(w.now() - days * 86400000).toISOString().slice
 const again = async (t) => { t.dev = await t.w.signIn("dev"); };
 const asked = async (t) => { await reauth(t.founder); };
 const P = (team, screen, op, press = {}, o = {}) => ({ team, screen, op, press, who: "founder", ...o });
-/* WORLD GAP (reported, and proved red by connect.test's R76): ai-accounts' route reads the account's member from the body alone and the page's act names
-   none, so the team's record refuses the act NOT_YOUR_ACCOUNT; the answer the owner gives once it reads the member the door stamps (ai-accounts R35); `accountreferenceremove` likewise */
-const keyGone = () => ({ accountreferenceremove: env({ ok: true, removed: true }) });
-const keyHeld = (t) => ({ accountreferenceset: env({ ok: true, kind: "apikey", set_at: new Date(t.w.now()).toISOString() }) });
 const PRESSES = [
   P("full", "members", "memberadd", { values: { "mi-id": "x1", "mi-cover": "X", "mi-caps-0": true } }),
   P("full", "members", "membercaps", { data: { member: "dev" }, values: { "mc-dev-contribute": true } }),
@@ -61,10 +57,10 @@ const PRESSES = [
   P("connect-group", "connect", "groupkeynoticeseen", {}, { who: "dev" }),
   P("connect-undisclosed", "connect", "disclosureshown", async (t) => ({ data: { version: (await t.dev.read("disclosureof", { query: { member: "member:dev" } })).version } }), { who: "dev" }),
   P("connect-none", "connect", "subscriptionsignin", { data: { step: "code" }, values: { "mc-code0": SECRET } }, { who: "dev", secret: SECRET }),
-  P("connect-none", "connect", "accountreferenceset", { choose: { "mc-way": "apikey" }, values: { "mc-key0": "sk-ant-api03-" + SECRET } }, { who: "dev", secret: SECRET, table: keyHeld, fresh: true }),
+  P("connect-none", "connect", "accountreferenceset", { choose: { "mc-way": "apikey" }, values: { "mc-key0": "sk-ant-api03-" + SECRET } }, { who: "dev", secret: SECRET, fresh: true }),
   P("connect-own", "connect", "accountusesset", { data: { own: "1" }, values: { "mu-ask": false } }, { who: "dev" }),
   P("connect-own", "connect", "ailimitset", { data: { remove: "" }, values: { "aio-scope": "overall", "aio-amount": "9", "aio-unit": "calls", "aio-period": "day" } }, { who: "dev" }),
-  P("connect-own", "connect", "accountreferenceremove", {}, { who: "dev", table: keyGone }),
+  P("connect-own", "connect", "accountreferenceremove", {}, { who: "dev" }),
   P("connect-subscription", "connect", "subscriptiondisconnect", {}, { who: "dev" }),
   P("full", "notes", "notewrite", { values: { "mn-new": "n" } }, { who: "dev" }),
   P("full", "notes", "writinghelp", { data: { field: "new", id: "mn-new" }, values: { "mn-new": "n" } }, { who: "dev", table: (t) => writingHelp(t.dev.member) }),

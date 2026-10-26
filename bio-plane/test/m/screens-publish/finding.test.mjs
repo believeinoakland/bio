@@ -2,7 +2,7 @@
  * the finding's id, drawn in the public frame from what that answer holds and nothing more. Each sentence is asserted by its key. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, drew, drewIn, tipOf, day, word, ok, refused, refusedIn, F1, F2, C, FINDING, leg, publishedPlane, findingPath } from "./fixtures.mjs";
+import { open, main, text, drew, drewIn, tipOf, day, word, ok, refused, refusedIn, F1, F2, C, FINDING, leg, publishedPlane, findingPath, provided } from "./fixtures.mjs";
 
 const PUBLIC = { session: null };
 const sectionOf = (p, key) => main(p).querySelectorAll("h2").find((h) => h.textContent === word(key))?.closest("section") ?? null;
@@ -72,11 +72,12 @@ test("R37 a body that is unavailable still draws the finding's identity and stre
 });
 
 test("R37 a finding several cases pin draws the cases it names as references; the case page's finding is the way to its own page (controls)", async () => {
-  const several = { publishedcase: { status: 400, json: { ok: false, reason: "FINDING_IN_SEVERAL_CASES", code: "FINDING_IN_SEVERAL_CASES", target: F1, cases: [C, "CASE-2025-0001"],
-    memberships: [{ case_id: C, edition: 2 }, { case_id: "CASE-2025-0001", edition: 1 }] } } };
-  const p = await open(findingPath(F1), { boot: PUBLIC, plane: several });
+  const several = await provided.publishedCaseSeveral(); // public-read's real refusal: the finding is pinned by two cases
+  const r = several.json.result;
+  assert.equal(r.reason, "FINDING_IN_SEVERAL_CASES");
+  const p = await open(findingPath(F1), { boot: PUBLIC, plane: { publishedcase: several } });
   const links = main(p).querySelectorAll('[data-state="failed"] a').map((a) => a.getAttribute("href"));
-  assert.deepEqual(links, [`/app/published/${encodeURIComponent(`${C}/2/${F1}`)}`, `/app/published/${encodeURIComponent(`CASE-2025-0001/1/${F1}`)}`]);
+  assert.deepEqual(links, r.memberships.map((m) => `/app/published/${encodeURIComponent(`${m.case_id}/${m.edition}/${r.target}`)}`));
   assert.ok(main(p).textContent.includes(word("refusal.FINDING_IN_SEVERAL_CASES").slice(0, 40)));
   const page = await open(`/app/published/${C}`, { boot: PUBLIC, plane: FOUR() });
   const door = main(page).querySelectorAll("[data-finding-page]");
