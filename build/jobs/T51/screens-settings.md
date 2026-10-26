@@ -1,6 +1,6 @@
 # screens-settings (T51)
 
-**Status** · session_01FQ6wmxANKXEVpL3HC6BqZR · depth 2 · COMPLETE · handled B55
+**Status** · session_01TDZDRXt6aSdG9rueQLukTW · depth 2 · COMPLETE · handled B59
 
 ## J1 · QUESTION
 
@@ -576,3 +576,32 @@ Size (session_01FQ6wmxANKXEVpL3HC6BqZR): test runs 8, module lines 5470
 ## J41 · COMPLETE
 
 COMPLETE (re B55, K5220). Pushed. Fixtures lines 14 to 2. (a) common.test 28/29 and group factconfirm go through the real door. (b) removed, provider never answers: writinghelp/groupdescriptiondraft untested drafts, invented security catalogue entries, stats without dbBytes, factstatus two profiles/office zone, updatestart non-https (constant https, setup.mjs:465,2871). R68 failed bootstrap made by DROP TABLE bootstrap. (c) LINES LEFT, provider translations: seed-common.mjs:119 and translations.test.mjs:87 translationdraft success (translations/index.mjs:484 translationDraftRecord after the door's agent-worker step store-door/dispatch.mjs:510-517; no fixture published). Suite 272, 269 pass, 3 red by name R58, R69 control, R69 group (store-request recipe). format 0, architecture 0, coverage 7069/7069, ownership 0, words findings only in store-assembly. No fixtures-own/generic marker added. Size (session_01FQ6wmxANKXEVpL3HC6BqZR): test runs 8, module lines 5470
+
+## J42 · COMPLETE
+
+COMPLETE (re B56, B57; K5225, K5226). Pushed d2c3512f5a on a branch with tranche/T51 merged (fb0f6cd668).
+
+(1) The two translationdraft fixture lines are gone; `fixtures.mjs screens-settings --list`: 0 failures (accepted 3 as before: fixtures.mjs:7, security.test.mjs:127, words.test.mjs:17).
+- translations.test.mjs R16 translationdraft: the invented success answers (a drafted list, an English reading) are removed; the test takes translations' published translationDraftAnswer for to_language and to_english (the real ASSISTANT_DRAFT_UNAVAILABLE refusal), proves the bodies sent, that the refusal's own words (the answer's translation) are drawn beside the ask, that no reading is drawn, no draft stored (drafts count unchanged), nothing adopted or confirmed, and no ask while the assistant is unreachable. Its expectations are read from the fixture. The old test could not be run red against the new one: it asserted a state no member reaches.
+- common.test.mjs: the translationdraft row of PRESSES and its CHANGES entry removed (R8/R10 need a pressed act that succeeds; this one cannot for any member, K5212); seed-common.mjs: englishDraft removed (its only user).
+
+(2) Red by name, waiting on store-request's recipe for an older installation (plan item 101 (4)(e)): R58 "for an older installation answering group null…", R69 group "draws the team's website file…", R69 control "an answer with no file draws the steps…". Nothing else is red.
+
+Tests: module 272, pass 269, fail 3 (the three above), skipped 0. The users impact.mjs names: screens-settings alone (6 of 24 files). Checks: ownership 0; fixtures 0; run.mjs: one finding in my files, REPORTed next.
+
+REPORT for BOB (outside my paths): build/modules.json screens-settings.uses lacks `translations`, and translations.test.mjs now imports its published fixture (bio-plane/test/m/translations/fixtures.mjs:38, as K4990/K5225 direct); run.mjs prints "FAIL translations.test.mjs: imports bio-plane/test/m/translations/fixtures.mjs of translations, which screens-settings does not declare in uses". Please add `translations` (earlier in the order) to screens-settings.uses; I have no other way to take the owner's answer.
+
+No fixtures-own / fixtures-generic marker added.
+Size (session_01TDZDRXt6aSdG9rueQLukTW): test runs 3, module lines 5477
+
+## J43 · COMPLETE
+
+COMPLETE (re B58, K5232). Merged origin/tranche/T51 (never a rebase); `translations` is now in screens-settings.uses. architecture over screens-settings: 0 failures; run.mjs: no finding in my files; ownership 0; fixtures --list 0 failures. Module tests 272, pass 269, fail 3: R58 (older installation, group null), R69 group, R69 control, red by name until store-request's older-installation recipe merges; I stay open for that CHANGE. No change to my files since J42; no fixtures-own/generic marker added.
+Size (session_01TDZDRXt6aSdG9rueQLukTW): test runs 4, module lines 5470
+
+## J44 · COMPLETE
+
+COMPLETE (re B59, K5245). Merged origin/tranche/T51 (no rebase); committed only my three named files (no `commit -a`).
+Changed: seed-group.mjs `team({ env, instanceName })` (was a `group` option the world no longer takes) -> storeWorld({ instanceName }); null binds none = store-request's olderInstallation recipe. identity.test.mjs R58 older installation: `team({ instanceName: null })`; group.test.mjs R69 control: `team({ instanceName: null })`; R69 group: `team({ instanceName: <slug> })` (both slugs). Each test goes through the real world and its expectation is read from the owner's answer (groupidentity group null; the well_known body's group equals the slug); red before (the 3 failures of J42/J43), green after.
+Suite: 272 tests, 272 pass, 0 fail, 0 skipped. Met ids: R58, R69 (BOB strikes). Checks: fixtures --list 0 failures; architecture 0; ownership 0; run.mjs no finding in my files; impact names screens-settings alone (6 of 24 files). No fixtures-own/generic marker added.
+Size (session_01TDZDRXt6aSdG9rueQLukTW): test runs 6, module lines 5470

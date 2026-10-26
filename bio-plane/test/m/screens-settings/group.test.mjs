@@ -419,7 +419,7 @@ const VERIFIER = ["malformed", "absent", "mismatched", "undetermined", "notadmin
 
 test("R69 group draws the team's website file as instance-setup answers it (well_known), a save and a copy of it, and the steps to place it; the file follows the answer, the page builds none", async () => {
   for (const group of ["wk-sentinel-slug", "wk-other-slug"]) {
-    const t = await team({ group });
+    const t = await team({ instanceName: group });
     await t.founder.act("groupdomainset", { body: { domain: "eastoak.example" } });
     const wk = await fileOf(t.rosa);
     assert.equal(wk.body.group, group, "the file names the team the instance produces");
@@ -444,7 +444,7 @@ test("R69 group draws the team's website file as instance-setup answers it (well
 });
 
 test("R69 control: an answer with no file draws the steps without one; no claim draws no fold; a member reads the file as well, and is offered no act; groupdomainset refused draws the design's words", async () => {
-  const old = await team({ group: null });   // an installation that records no producing team: the claim has no file to look for
+  const old = await team({ instanceName: null });   // an installation that records no producing team: the claim has no file to look for
   await old.founder.act("groupdomainset", { body: { domain: "eastoak.example" } });
   assert.equal((await fileOf(old.rosa)), null);
   const o = await open("group", { world: old.w, as: old.rosa });

@@ -3,6 +3,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { acts, all, has, open, panelOf, rowOf, said, textOf } from "./kit.mjs";
+import { env } from "./fixtures.mjs";
+import { translationDraftAnswer } from "../translations/fixtures.mjs";
 import { team, holdKey, onlyWords, draftOf, englishWas, SEAL } from "./seed-group.mjs";
 
 const ops = (n) => [...new Set(acts(n).map((b) => b.attrs["data-act"]))].sort();
@@ -80,23 +82,26 @@ test("R16 the panel: translationadopt (typed, or a stored draft kept as drafted)
   assert.ok(!ops(m.tree).includes("translationrevert") && !ops(m.tree).includes("translationgrant"), "the undo and the grant are administrators'");
 });
 
-test("R16 translationdraft: the picked words' drafts while the assistant is reachable; an administrator's reading of an awaiting protected word into English, adopting nothing", async () => {
+test("R16 translationdraft: the picked words' drafts and an administrator's reading of an awaiting protected word go to the door while the assistant is reachable; the door's refusal is drawn in its words, and nothing is drafted, adopted or confirmed", async () => {
   const t = await spanish({ reachable: true });
-  // WORLD GAP: the door asks no draft after a draft-due act; the assistant's answers are the platform's, in the shape its owner gives
-  const ENGLISH = "Reversible: you can undo this, as read back from the Spanish.";
-  const table = { ...t.table, translationdraft: (q, b) => (b.direction === "to_english"
-    ? { ok: true, result: { ok: true, key: b.key, language: b.language, english: ENGLISH, label: { kind: "machine", asked_by: "member:" + t.founder.member } } }
-    : { ok: true, result: { ok: true, language: b.language, drafted: b.keys.map((k) => ({ id: 9, key: k, text: "x" })), not_drafted: [], offered_official: [] } }) };
+  // the owner's real answers (translations' published fixture): the platform's model turn is not built, so each ask is refused ASSISTANT_DRAFT_UNAVAILABLE
+  const toLanguage = await translationDraftAnswer({ direction: "to_language" }), toEnglish = await translationDraftAnswer({ direction: "to_english" });
+  assert.equal(toLanguage.code, "ASSISTANT_DRAFT_UNAVAILABLE");
+  assert.equal(toEnglish.code, "ASSISTANT_DRAFT_UNAVAILABLE");
+  const table = { ...t.table, translationdraft: (q, b) => env(b.direction === "to_english" ? toEnglish : toLanguage) };
   const a = await open("translations", { world: t.w, as: t.founder, table, subject: "es" });
   a.b.fire(a.b.doc.getElementById("pick-words-" + QUEUE), "click");
   await a.b.settle(80); a.redraw();
   const r = await a.press("translationdraft", { data: { direction: "to_language" }, reason: "for the new members" });
   const { reason, ...body } = r.sent[0].body;
   assert.deepEqual(body, { language: "es", direction: "to_language", keys: [QUEUE] });
+  assert.ok(r.refused && a.refused.text.includes(toLanguage.translation), "the refusal's own words are drawn beside the ask");
+  assert.equal((await wordOf(t.founder, QUEUE)).drafts.length, 1, "no draft was stored by the ask");
   const e = await a.press("translationdraft", { data: { key: PROTECTED, direction: "to_english" }, reason: "to confirm it" });
   const { reason: why, ...back } = e.sent[0].body;
   assert.deepEqual(back, { language: "es", direction: "to_english", key: PROTECTED });
-  assert.ok(a.text.includes(ENGLISH) && a.text.includes(said("screen.translations.reading.label", { handle: t.founder.handle })));
+  assert.ok(e.refused && a.refused.text.includes(toEnglish.translation), "the refusal's own words are drawn beside the ask");
+  assert.ok(!a.text.includes(said("screen.translations.reading.label", { handle: t.founder.handle })), "no reading is drawn for a refused ask");
   assert.ok(!e.sent.some((x) => x.op === "translationadopt" || x.op === "translationconfirm"), "it adopts nothing");
   assert.equal((await wordOf(t.founder, PROTECTED)).state, "awaiting", "nothing is confirmed");
   const off = await spanish();

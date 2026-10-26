@@ -12,9 +12,10 @@ export const ZONE_PATH = `${PROFILE}/time_zone`;
 
 /** A team: its founder (the one active administrator and the root of trust), `rosa` (an administrator who is not the founder: the owner's
  *  administrator acts of instance-setup and corpus-export refuse her, membership's accept her) and `dev` (a member who does not administer),
- *  each signed in. `group: null` records no producing team (an older installation). */
-export async function team({ env = {}, group } = {}) {
-  const w = await storeWorld({ env, ...(group !== undefined ? { group } : {}) });
+ *  each signed in. `instanceName` is the slug the installer bound for the first boot; `null` binds none, so the team records no producing team (an older
+ *  installation: `groupidentity` answers `group: null`; store-request R19's `olderInstallation`). */
+export async function team({ env = {}, instanceName } = {}) {
+  const w = await storeWorld({ env, ...(instanceName !== undefined ? { instanceName } : {}) });
   const founder = await w.signIn("founder");
   const rosa = await w.signIn("rosa", { admin: true });
   const dev = await w.signIn("dev", { capabilities: ["contribute"] });
