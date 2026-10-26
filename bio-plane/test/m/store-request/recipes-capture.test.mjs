@@ -173,13 +173,13 @@ test("R17 R19 followed: a world made with follow: true follows a promotion with 
   assert.equal(out0.promoted.reading_pending, undefined, "and says no reading is owed");
 });
 
-test("R17 R19 followed (delivery): the alarm's delivery of an owed fetch follows its filing with the reading as the door does: a small file is read at once, a file over the inline ceiling stands by its job row until the alarm reads it; control: a world that does not follow reads nothing at the filing", async () => {
+test("R17 R19 delivered (follow): the alarm's delivery promotes through the door, so a world that follows reads a small file at once and leaves a file over the inline ceiling to its job row until the alarm reads it; control: a world that does not follow has no reading for the small file either", async () => {
   const small = "<html><head><title>Budget</title></head><body><p>The budget.</p></body></html>";
   const w = await storeWorld({ deliver: true, follow: true });
   const mai = await w.signIn("mai", caps);
   const a = await w.recipes.delivered(mai, { address: "https://www.oaklandca.gov/files/short.html", body: small, type: "text/html" });
   assert.equal((await a.as.read("reading", { query: { sha256: a.copy.sha256 } })).found, true, "read at once");
-  const b = await w.recipes.delivered(mai, { address: "https://www.oaklandca.gov/files/budget.html", body: bigPage("Budget"), type: "text/html" });
+  const b = await w.recipes.delivered(a.as, { address: "https://www.oaklandca.gov/files/budget.html", body: bigPage("Budget"), type: "text/html" });
   const sha = b.copy.sha256;
   assert.equal(await jobState(w, sha), "queued", "its row stands");
   assert.equal((await b.as.read("reading", { query: { sha256: sha } })).found, false, "the reading is owed");

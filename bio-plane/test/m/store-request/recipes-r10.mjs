@@ -5,7 +5,7 @@ import { OWED_SESSION_TTL_MS } from "../../../src/acquisition/index.mjs";
 import { RELEASE_NOTICE_ADDRESS } from "../../../src/setup.mjs";
 import { releaseNoticeStatement, NS_RELEASE_NOTICE } from "../../../src/sshsig.mjs";
 import { signSshsig, signerPublicLine } from "../../../scripts/sign-sshsig.mjs";
-import { signIn, fileDocument, resultOf, followReading } from "./door.mjs";
+import { signIn, fileDocument, resultOf } from "./door.mjs";
 
 /** The release key a world made with `releaseKeys: true` verifies a notice against (the private half is a test's, `BIOKEY-RAW1` seed of 32 bytes). */
 export const WORLD_RELEASE_KEY = `BIOKEY-RAW1.bio-release.${Buffer.from(new Uint8Array(32).map((_, i) => (i * 41 + 9) % 256)).toString("base64")}`;
@@ -46,9 +46,7 @@ export function worldDelivery(world) {
     try {
       const filed = await fileDocument(world, as, title, doc, project);
       await done(filed.bundle, project);
-      /* control-plane R123: the reading follows the filing (a world made with `follow: true`): a document stored with no reading is read, or its row stands and the delivery says `reading_pending` */
-      const followed = world.__follow && !(doc.reading && typeof doc.reading === "object") ? await followReading(world, [{ sha, document: doc }]) : null;
-      return { ok: true, bundleId: filed.bundle, ...(followed && followed.pending ? { reading_pending: true } : {}) };
+      return { ok: true, bundleId: filed.bundle };
     } catch (e) {
       if (e && e.answer) return { ...resultOf(e.answer), ok: false };   /* the owner's own refusal of the promotion, as it answered it */
       throw e;
