@@ -1,6 +1,6 @@
 # screens-settings (T51)
 
-**Status** · session_0113BrTiSXZhcH7hGcpNfDSD · depth 2 · COMPLETE · handled B47
+**Status** · session_017Won73ZFYbqQngJZmEciqa · depth 2 · COMPLETE · handled B54
 
 ## J1 · QUESTION
 
@@ -495,3 +495,70 @@ Checks: format 0, coverage 79/79, words 0, ownership 0; architecture 3 failures,
 RED BY NAME (2): connect.test R5,R76 "key the page sends/removes": D1, ai-accounts route reads `member` from the body only (index.mjs:1691-1692) while the page sends none (R76): no member can set or remove an API key through the page. Owner: ai-accounts or store-request (stamp).
 REPORT for store-request: D2 `QUERY_STAMPS` holds `source`, so every `factconfirm` correction loses it (FACT_VALUE_REFUSED); world: non-founder admin refused NOT_AN_ADMIN on adminremovalsopen/expertisewithdraw, stale founder session after tick(1 day), several owners read Date.now not the pinned clock, no grantAdmit. REPORT for instance-setup: D3 `bootstrap.installed_at` is the running release's first sighting, not the set-up day (R73).
 Size (session_0113BrTiSXZhcH7hGcpNfDSD): test runs 20, module lines 5476
+
+## J37 · REPORT
+
+Re B49 (CHANGE, K5193): merged origin/tranche/T51 into job/T51/screens-settings (merge 11ec419236). `storeWorld()` now builds the default world: the GROUP_ALREADY_RECORDED failures are gone, and updates.test.mjs runs. I did not pass `{group: null}` anywhere in updates.test.mjs; the two places that still do are listed below.
+
+Done since the last record:
+- R81 (commit b76b82d5f4): the set-up release and its day come from `updatenotice`'s `setup`, never `bootstrap`'s `installed_at`. `bio-plane/src/screens-settings/updates.mjs:23-24` (reads: `updatenotice` only; the bootstrap read is gone), `:102-117` (setup from `setup`, matched by version), `:160-162` (earlier installs). The R81 test (`bio-plane/test/m/screens-settings/updates.test.mjs:243`) was red before the change (`updates.running.setup_on` not drawn) and is green after; the R27 and R37 expectations that encoded the old bootstrap meaning now follow `setup`. All 14 tests in updates.test.mjs pass.
+- Module run on the merged tree: 267 of 272 pass. Red: R5 and R76 (connect.test.mjs; still red after ai-accounts R38 merged in K5191, so please look at them with ai-accounts), R58 and R69 (see the question), and R68 (below).
+
+Outside my paths, found today, REPORTed with file:line:
+1. R68 selftest (`bio-plane/test/m/screens-settings/updates.test.mjs:284`): pressing `selftest` is refused by the door with no code (the page shows its generic refusal; the act is sent as `GET selftest` with the founder's bearer token). It passed before this merge. The merge brought in 9fd44d0f66 (K5193, store-request: `bio-plane/src/store-request/index.mjs:79-93` and `:170-173`, `:264-269`, `:288-295`) and 59997c5a81 (K5191, ai-accounts: `bio-plane/src/ai-accounts/index.mjs:1690-1694`). I have not pinned which of them refuses `selftest`; the owners of store-request and ai-accounts should look.
+2. R5, R76 (connect.test.mjs) red after ai-accounts R38 merged, see above.
+
+Affected modules (impact on the merged tree): screens-inquiry, control-plane, plane, journey-check. Their run is going now; I will report its counts in the COMPLETE.
+
+## J38 · QUESTION
+
+Question: R58 (`bio-plane/test/m/screens-settings/identity.test.mjs:87`) and R69 control (`bio-plane/test/m/screens-settings/group.test.mjs:465`) model "an older installation that recorded no producing team" with `team({group: null})`. Since K5193 that option is gone and the base world always records `town`, so the premise cannot be built from `storeWorld()`, and the test sees `'town' !== null`. Those two tests did not fail with GROUP_ALREADY_RECORDED, so I have not dropped the option: dropping it would leave the assertion checking a world that records a team.
+
+Options:
+(a) store-request adds a named recipe, e.g. `world.unrecorded()`, that makes the world's team unrecorded through the real store (the store has no real act for that, so it would be a test-only seam, which store-request would have to own).
+(b) I re-point those two tests at an older installation through an answer the store really gives (e.g. `updatenotice`/`bootstrap` with no team held), with the same expectations.
+(c) Drop the no-team cases from my module and move them to store-request.
+
+My recommendation is (a), owned by store-request, since two modules need the same premise. Please rule before I change either test.
+
+## J39 · REPORT
+
+Re B50 (ANSWER, J37 pinned as asked). Worktrees at 9fd44d0f66^, 9fd44d0f66, 59997c5a81^, 59997c5a81 (disposable; the harness was patched there only to print the door's status and body).
+
+1. R68 `selftest` (updates.test.mjs:284). Cause found, outside my paths.
+- The door answers `selftest` with status 500 and `ok:false`. The body says `r2: "MISCONFIGURED: one bucket bound without the other; the fence requires both or neither"`, set at bio-plane/src/setup.mjs:3384-3387 (the half-fence check), with `bindings.PUBLISHED: true` and `bindings.CAPTURES: "not configured"`.
+- The test world binds `PUBLISHED` without `CAPTURES`: bio-plane/test/m/store-request/fixtures.mjs:28 (`PUBLISHED: memoryBucket()`), added by 5095ad501f ("store-request: world seeds nothing twice ... world.route (B7)").
+- Reproduced identically at 9fd44d0f66^ and 9fd44d0f66, so the cause is 5095ad501f, not the merge commit itself; it arrived on the tranche in the K5193 merge. My pre-merge run passed R68, so this is the regression.
+- Owner: store-request (the fixture binds one bucket) or store-assembly (CAPTURES should be bound with it). Please forward.
+
+2. R5, R76 (connect.test.mjs:296-307).
+- The door answers the first `accountreferenceset` with 200 (`{"ok":true,"result":{"ok":true,"kind":"apikey","set_at":...},"tokenClass":"member"}`) and the following `accountreference` reads it as held: the door is correct at 9fd44d0f66^ and at 9fd44d0f66.
+- The failing step is the test's second press at connect.test.mjs:306 (a blank key, expecting `sent: []`): "no accountreferenceset button drawn". The button is drawn by `cs.act("accountreferenceset")` at bio-plane/src/screens-settings/connect.mjs:203, so the shell draws it only while the act is offered; once the key is held it is no longer offered.
+- I have not pinned which layer withdraws the offer (the act affordance, interface-shell, or ai-accounts' held state). Whether the second press should exist after a key is held is a question for BOB and ai-accounts; the test's expectation is what I have to answer to.
+- The 59997c5a81 worktrees predate BOB's K5193 store-request fix (both fail at storeWorld with GROUP_ALREADY_RECORDED), so they say nothing about R5/R76.
+
+Impact run: the one-process run on the merged tree hung after control-plane's R77 B29 seam test (last result 22:11, no further output). I am re-running the 222 affected files one per process with a 300-second timeout to isolate it; I will report the per-file summary in the COMPLETE.
+
+## J40 · COMPLETE
+
+COMPLETE (re B53/B54). Branch `job/T51/screens-settings` is pushed (head 108d9a7cf8), tranche merged (T51 `2c35769d6d`, OP-GRADES #30, STORE-REQUEST #6), working tree clean.
+
+**What changed (module paths only)**
+- `bio-plane/src/screens-settings/updates.mjs:24`: `updatenotice` is the only read; bootstrap's `installed_at` is no longer asked.
+- `:106-118`: the set-up release (`setup`, matched by version) and its day come from `updatenotice`; the running release with no member says `release_setup` only when it is the set-up release; `setup_on` is said once.
+- `:162`: an earlier install with no member says `installed_setup` only for the set-up release.
+- `bio-plane/test/m/screens-settings/updates.test.mjs:244`: R81 (R73) test over a copy set up on its oldest running release and running a later one, with the control for a member and for no `setup` held. Red before the change (`updates.running.setup_on` not drawn), green after. R27 and R37 expectations for the set-up release follow `setup`.
+- `bio-plane/test/m/screens-settings/connect.test.mjs:300`: the blank-key press moved to a fresh page before the first set (R5, R76), as BOB ruled in J39's answer. Red before, green after.
+
+**Failing-first and suites**
+- R81 red then green (above). R5/R76 red then green (above).
+- Full screens-settings suite on the merged tree: 272 tests, 269 pass, 3 fail.
+- Red by name: R58 (`identity.test.mjs`), R69 control and R69 group (`group.test.mjs`). They build a world with no producing team or with the team `town` (K5149) where the test expects `world-town`; they wait on the store-request `world` recipe (your J38 answer). R69 group is not named in your J38 answer, so please say whether it is covered by that CHANGE.
+
+**Checks (merged tree, absolute root)**: format 0 failures; architecture 0; coverage 80 of 80 live ids named; ownership 0 failures (4 files, all screens-settings); fixtures 14 findings, all `op-table` answers in tests I did not change (16 before my change; 14 after, not more); run.mjs: no new finding in my files; words not risen (no new strings).
+
+**Impact (merged tree)**: `screens-settings` 24/24 files, `screens-inquiry` 61/61, `control-plane` 87/134, `plane` 71/96, `journey-check` 4/27 (affected files, per-file runs, 300 s each).
+- Per-file sweep: 247 files; first pass 235 passed, 12 failed (5 timeouts, 7 failures). Re-run of the 12 on the merged tree: 3 pass (door, g123f-cells, g42-storage-seam), 4 files no longer exist on the tranche (plane fix5-r77, fix6-pending, r9-jobs, release), 1 timeout (`control-plane/t51-round9-seam`: a promise never resolved, 300 s).
+- Still failing on the merged tree, not in my paths, not isolated: `control-plane/t48-door` (TypeError: cannot set `env` of null, 1 of 16); `journey-check/pseudo` (8 of 8, `playwright-core` not installed in `bio-plane/src/journey-check`, an environment install); the screens-settings R58/R69 above (the only ones in my module).
+
+Size (session_017Won73ZFYbqQngJZmEciqa): test runs ~290 (21 logged runs, the 247-file sweep, the 12-file re-run and the full-suite runs), module lines 5477 (src), 7821 (tests).

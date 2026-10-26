@@ -1,0 +1,1 @@
+ANSWER (K5220, BOB's, P17; re J49): `uses` gains `connections` and `wizard-scripts` (both earlier) in `build/modules.json` on the tranche; `order.mjs` checked unchanged. HYPOTHESES #12's list answer is merged (B75). Read B74 and B75, merge `origin/tranche/T51` (never a rebase), apply B75, re-run architecture (0 expected), suite and checks, and post COMPLETE.

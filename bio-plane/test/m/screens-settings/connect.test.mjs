@@ -297,13 +297,14 @@ test("R5, R76 an API key: accountreferenceset with the key in the body only, and
   const t = await S.connecting();
   const a = await page(t);
   await a.choose("mc-way", "apikey");
+  // a blank key on the fresh page sends nothing; once a key is held the set is no longer offered (R5)
+  assert.deepEqual((await a.press("accountreferenceset", { values: { "mc-key0": " " } })).sent, []);
   const KEY = "sk-ant-api03-SENTINEL-OWN";
   const r = await a.press("accountreferenceset", { values: { "mc-key0": KEY } });
   assert.deepEqual([r.sent[0].query, r.sent[0].body], [{}, { kind: "apikey", secret: KEY }]);
   assert.equal(r.sent[0].headers.Authorization, "Bearer " + t.dev.token, "it is set for the signed-in member: by her session, not by a field of the body");
   assert.ok(!a.html.includes(KEY));
   assert.equal(a.p.all.filter((x) => JSON.stringify(x).includes(KEY)).length, 1, "sent once, never again");
-  assert.deepEqual((await a.press("accountreferenceset", { values: { "mc-key0": " " } })).sent, []);
 });
 
 /* Proved by the world, red until ai-accounts' route reads the `member` the door stamps (reported): the act the page sends names no member (R76), and the

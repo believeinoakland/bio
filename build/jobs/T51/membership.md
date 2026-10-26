@@ -1,6 +1,6 @@
 # membership (T51)
 
-**Status** · session_01PkQWxjvpvMWiosMQuytmKK · depth 2 · COMPLETE · handled B9
+**Status** · session_0134U5UywFbnrvXpAVSSZyrL · depth 2 · COMPLETE · handled B13
 
 ## J1 · COMPLETE
 
@@ -220,3 +220,63 @@ Fix round 10, Wave A batch 2 (B9; START `build/plan/starts-T51-F10/membership.tx
 **Note for BOB:** commit `3d301f571a` carries a Co-Authored-By trailer that names the model. The system rule says no model identifier in commit messages, and I missed it when I wrote the message. The commit is pushed, and rewriting it would be a force-push, so I have not amended it. Later commits omit the trailer.
 
 Size (session_01PkQWxjvpvMWiosMQuytmKK): test runs 3, module lines 1645 (`bio-plane/src/membership/*.mjs`, unchanged; this job changes only test-side files).
+
+## J12 · REPORT
+
+Progress on R156 (commit 8a7caed33b, pushed to job/T51/membership; the state commit follows it).
+
+Fix: `bio-plane/src/membership/index.mjs`. Constructor takes `now`; `#nowMs()` reads handed `now`, else `env.BIO_NOW_MS`, else the wall clock; `#nowIso()`. The eight wall-clock sites (lines 359, 411, 923, 1041, 1068, 1087, 1122, 1156) now read it. `membershipOps` already hands `env` to the instance through `membersOps`.
+
+Failing-first: `bio-plane/test/m/membership/r156-clock.test.mjs` red on the pinned-clock and handed-clock tests before the fix (wall clock read); the wall-clock control passed before and after. Green after: 3 of 3.
+
+Checks: membership suite 183 of 183 pass; format 0 failures; architecture 0; coverage 51 of 51 live ids; fixtures 0 failures (no marker added); ownership 0 failures; impact names 130 modules because it treats the shared file as a shared table, so I ran the 136 test files that pin BIO_NOW_MS or share its helpers.
+
+Dependent run: `screens-settings` connect, group, identity, updates: 5 failures, the same five on a clean checkout of origin/tranche/T51 (not mine). Store-assembly run in progress: 99 pass, 0 fail so far.
+
+Cause outside my paths (file:line): `bio-plane/src/member-roster/index.mjs:194-208` (`Members.#nowMs`) reads `this.env`, which only `membersOps` sets on the object it is given. Production composition (`plane/store.mjs:826`, `store-assembly/assemble.mjs:735`) passes the `Membership` instance, so `Membership` gets `env` and its `Members` delegate (`this.members`, used by memberAdd, enroll, hostingAccessSet, memberStatusSince) keeps `env` null. So member-roster's instants (R82) read the wall clock in production even with BIO_NOW_MS pinned. Fix belongs to member-roster (set its env where the composition hands it), so I have not touched it.
+
+## J13 · COMPLETE
+
+R156 is met (K5197, B10 START; K5202 on the Members clock, B12 CHANGE). Commits on job/T51/membership: 8a7caed33b (clock), 7e72903826 (delegate clock), 228f3ecd9d (tranche merge, B13), eb0a451fdd (state). Pushed.
+
+**Entries applied**
+- `bio-plane/src/membership/index.mjs`: `Membership` takes `now` (handed clock) and reads `env` (set by `membershipOps` through `membersOps`) in `#nowMs()`; `#nowIso()` replaces the eight wall-clock sites (359, 411, 923, 1041, 1068, 1087, 1122, 1156).
+- K5202: the `Members` delegate is built in the constructor on this instance's clock (`now: () => this.#nowMs()`); `membershipOf` no longer hands it `membersOf(ctx)` (member-roster's shared instance, which the store's environment never reached). Unused `membersOf` import removed; header comment updated.
+- `bio-plane/test/m/membership/r156-clock.test.mjs` (new): four tests, each naming R156: the project acts' instants on the pinned clock (claim, invite, join, leave, visibility, removal); with no pinned clock, the wall clock; a handed clock beats `BIO_NOW_MS`; a member-roster instant through `membershipOps` (hosting access) on the pinned clock.
+
+**Failing-first:** the test file was red before the fix: 2 of 3 (pinned and handed clock) on the first run; the delegate test red on its own (1 of 4). Green after both fixes: 4 of 4.
+
+**Deferred:** none. **Found in another module:** `member-roster`'s `Members` only gets `env` through `membersOps`, which the composition does not hand it. Fixed on membership's side (K5202). `member-roster/index.mjs` is unchanged; if member-roster's own composition ever hands `membersOps` a `Members` directly, its clock is then set there too.
+
+**Checks (merged tree, 228f3ecd9d and later):**
+- membership suite: 184 of 184 pass, exit 0
+- format: 0 failures (178 modules); architecture: 0 failures
+- coverage: 51 of 51 live ids named by a test
+- fixtures `--list`: 0 failures; accepted 6, all existing markers; none added by me
+- ownership: 0 failures
+- impact: names 130 modules because it treats the shared membership file as a shared table; I ran the 136 test files that pin `BIO_NOW_MS` or share their helpers (see below)
+
+**Dependent runs, honest status:**
+- Before the tranche merge: 98 of 104 files exit 0. Four `screens-settings` files (connect, group, identity, updates) fail 5 assertions; the same 5 fail on a clean `origin/tranche/T51` checkout, so they are not from this change.
+- `fix5-r77` and `fix6-pending` print all their tests passing (6 of 6, 10 of 10) but do not exit within the 400 s bound; that is a hang after completion, not a test failure.
+- After the merge (B13): 25 of 58 rerun files done; 21 exit 0, the same four `screens-settings` failures, and `fix5-r77` as above. The remaining 33 store-assembly and related files are not yet rerun on the merged tree, because each takes the full 400 s bound. That remaining run is still going; I'll post a short follow-up REPORT with its result.
+
+**Markers:** none added.
+
+Size (session_0134U5UywFbnrvXpAVSSZyrL): test runs 14, module lines 1668 (`bio-plane/src/membership/*.mjs`)
+
+## J14 · REPORT
+
+Follow-up to J13 COMPLETE: the dependent-file rerun on the merged tree (228f3ecd9d and later) has finished. 58 files were run, one at a time, each bounded to 400 s.
+
+- 52 files exit 0.
+- 3 `screens-settings` files (connect, group, identity) fail 4 assertions in total. The same failures appear on a clean `origin/tranche/T51`, so they predate this change. (`updates.test.mjs` also fails 1 assertion in the earlier run, on the same baseline.)
+- 3 store-assembly files (fix5-r77 6 of 6, fix6-pending 10 of 10, r9-jobs 34 of 35) report every test that ran as passing, then hit the 400 s bound without exiting. r9-jobs has one test cancelled by that kill, so it is not verified. These are hangs after completion, not failures; I have not yet confirmed the cancelled test on a clean run.
+
+Nothing in the membership suite or checks changed since J13. Pushed head: eb0a451fdd.
+
+Size (session_0134U5UywFbnrvXpAVSSZyrL): test runs 14, module lines 1668 (`bio-plane/src/membership/*.mjs`)
+
+## J15 · REPORT
+
+Correction to J14: on the merged tree `updates.test.mjs` passes (14 of 14, exit 0). Its one failure was in the pre-merge run only, and the merge (B13) cleared it. The failing `screens-settings` files on the merged tree are connect, group and identity, as J14 says.

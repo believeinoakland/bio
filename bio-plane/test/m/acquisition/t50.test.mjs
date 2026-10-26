@@ -167,8 +167,8 @@ test("R46 R19: a member session's walk that parks a session lists it for that me
   const before = JSON.stringify([...w.store.state.sessions]);
   openCaptures(w.store, { by: "m1", now });
   assert.equal(JSON.stringify([...w.store.state.sessions]), before);
-  /* the default instant is this instance's clock */
-  assert.deepEqual(openCaptures(w.store, { by: "m1" }).captures, [], "the session expired long before the real now");
+  /* the default instant is this instance's clock (R124, K5215): pinned at 07:08:09Z above, so the session is live there, whatever the wall clock says */
+  assert.equal(openCaptures(w.store, { by: "m1" }).captures.length, 1, "the default instant reads the pinned instance clock, so the session is live");
   assert.equal(openCaptures(w.store, { by: "m1", now: "2026-05-06T08:08:08Z" }).captures.length, 1, "listed to the second before it expires");
   assert.deepEqual(openCaptures(w.store, { by: "m1", now: "2026-05-06T08:08:09Z" }).captures, [], "after expiry it is not listed");
   assert.deepEqual(openCaptures(w.store, { by: "m1", now: Date.parse("2026-05-06T08:30:00Z") }).captures, [], "an instant in milliseconds reads as one");
