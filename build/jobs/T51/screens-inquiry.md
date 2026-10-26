@@ -710,3 +710,11 @@ Size (session_01UpU6NUvAWGMSdRjPPZHmMi): test runs 23, module lines 7038
 ## J52 · COMPLETE
 
 COMPLETE (SCREENS-INQUIRY #32), B79 applied, pushed. b22-question takes citeimportedRefusalAnswer() (6/6); fixtures:126 importedcases, fr28-project-rerun:75 rerunpair, fr4-project:141 rerunread were re-pointed earlier in round 10 (importedCasesAnswer, rerunPairAnswer, rerunReadAnswer) and are not in --list. Architecture 0. Last full run unchanged: 594 tests, 592 pass, the 2 real-OCR r10-stated A7/A8 failing before any change of mine. Size (session_01UpU6NUvAWGMSdRjPPZHmMi): test runs 23.
+
+## Round 10, B80 (item 112) applied · SCREENS-INQUIRY #33
+
+(1) `r10-stated.test.mjs` A7, A8: root cause is the test helper, not the page. The page draws the word held for the member's reason (`document.mjs:540` `refusedCodes`, `:551` `refusedSaid`; `refusal.NOTHING_TRANSCRIBED`, R96 round 10, R130), and the reading carries that reason in `reading.ocr_refused[].reason`; `reasonOf` (`r10-stated.test.mjs:115`) read only `reading.reason`, so it fell to the raw `basis` sentence the page rightly does not draw. Fix: `refusedReasons()` and `reasonOf` fall back to it; `assertOwnReading` asserts each held word is drawn. Red (A7, A8) then green; no wait on time was added. No code of the module changed.
+(2) The 140 fixtures lines wait on STORE-REQUEST #7 (op-table lines in `t51-*`, `fr*`, `fixtures.mjs`; provider `store-request` recipes, and as listed in B75-B79).
+Tests: module 63 files, 594 pass, 0 fail (exits by itself); `r10-stated` 13/13. Checks: run.mjs findings in my files are the same 140 answer lines; words: 0 failures, unkeyed unchanged; ownership 0; impact (my change is one test file) 111 modules named by the shared table, none run as no source changed. Markers added: none.
+
+Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 4, module lines 7041
