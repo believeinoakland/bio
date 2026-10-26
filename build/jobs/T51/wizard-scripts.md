@@ -614,3 +614,22 @@ Checks (absolute root /home/user/bio), after the merge: architecture 0 failures;
 Met ids this round: R52. Markers: no fixtures-own or fixtures-generic added. Deferrals: none in this module. Found outside my paths earlier (REPORT J28): control-plane R60 and R137 fail identically before my change.
 
 Size (session_0143XBw7eSFoV4QcZny2VQ3i): test runs 13, module lines 2903
+
+## J32 · COMPLETE
+
+COMPLETE for K5207 (fix round 10, B29). Commit 66371fa320, pushed to job/T51/wizard-scripts.
+
+Changed (file:line):
+- bio-plane/test/m/wizard-scripts/fixtures.mjs:9-27 publishes two answers, each the real writingHelp over a world built when called:
+  - writingHelpDraftHeld(): draft held, assistant reachable (own account) -> WRITING_HELP_DRAFT_HELD refusal, writes nothing.
+  - writingHelpUnreachable(): door refuses AGENT_WORKER_UNBOUND -> that refusal as given, with op casenote.
+- bio-plane/test/m/wizard-scripts/fixtures.test.mjs (new, names R24 and R27): asserts each answer and its row. Failing-first: with draftHeld set to false in the fixture the test went red (1 pass, 1 fail); restored, green (2 pass).
+
+Suite counts: fixtures.test.mjs 2 of 2; the whole module suite 145 pass, 0 fail.
+Checks (absolute root /home/user/bio): format 0 failures; architecture 0 failures; coverage 52 of 52 live ids named; ownership 0 failures; fixtures wizard-scripts --list 0 failures (answer 0); impact origin/tranche/T51 HEAD: 1 module affected, 2 of 2967 test files (wizard-scripts only); run.mjs names no finding in my files.
+
+Met ids this round: none new; R24 and R27 are named by the new test. No fixtures-own or fixtures-generic markers added. No deferrals.
+
+REPORT (cannot be made by the real code, no product change made): the screens' writinghelp op-table lines that stand a DRAFTED TEXT answer (ok({ok:true, text:...})) cannot take my fixtures, because wizard-scripts never returns a draft. writingHelp past its refusals answers ASSISTANT_DRAFT_UNAVAILABLE (bio-plane/src/wizard-scripts/index.mjs:1539) and does not call the AGENT_WORKER binding; the draft is the model turn's (N686, control-plane R57), not yet built. So a "fixed draft from the binding" state is not one this module's real code can make. run.mjs names 13 writinghelp op-table lines owned by wizard-scripts (screens-action matter-t51.test.mjs:437, :458, send-t51.test.mjs:428; screens-inquiry fr28-contradiction.test.mjs:413, :454, fr28-objective.test.mjs:84, fr28-project.test.mjs:256; screens-intake capture.test.mjs:731; screens-publish case-editor.test.mjs:86, fr30.test.mjs:249 and others). BOB to decide: whether those lines take the refusal answers (which they are not written to expect) or wait on the model turn.
+
+Size (session_01NUBiuQssQ3yVM3Be79u6Pm): test runs 9, module lines 2903
