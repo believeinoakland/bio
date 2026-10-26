@@ -1310,3 +1310,15 @@ Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 16, module lines 371
 B107, B108, B109 done and pushed on job/T51/plane (commit with B108/B109). Tranche merged. t42 shrunk to 4 tests (R112, R113 x2, R6 hook), t46 to 3 (R42 workerd, R114 x2 RPC); the 16 and 10 composition cases are in store-assembly's t42/t46 by title, the 3 t42 orphan runs gone. r10-reading-ended takes readHeldAnswer.final('NO_PROGRESS') for the unopened row. t42 4/4, t46 3/3, r10 2/2, r-transcribe 2/2. format 0; coverage 37/37. Fixtures: one orphan-run left, r-transcribe-answer:54 (reading-pipeline transcribe-answer), pending your rename of content transcribe-answer.
 
 B106 (G93 timing, under load) is still open; I'm diagnosing it now (reproduced under 4 busy loops, 3 of 5). Working tree: names.mjs, plane-meaning.mjs, run-rules/rules.mjs, agent-steps/drive.mjs, agent-worker/index.mjs show changes that are not mine; not committed.
+
+## Record (PLANE #64, B113 and the G93 verification, RESUME B112)
+
+**B113:** `origin/tranche/T51` merged (control-plane's `owner-ops.mjs` deleted). `bio-plane/test/m/plane/maps.mjs:91` now imports `ownerOps` from `store-assembly/owner-ops.mjs` (same signature as `controlPlaneOwnerOps(getters, url, body)`), and its control-plane entry (:207) calls it. Only two files in the tree import `maps.mjs` (`store.test.mjs`, `t46.test.mjs`) and both pass: 9 of 9 (door.test.mjs 6 of 6 also loads).
+
+**G93, verification of the fix (10 runs under busy loops, 20 loop processes on 4 cores, heavier than BOB's named 4):** the owedwork and whoami tests, `fix-run-1` to `-10` (`/tmp/claude-0/-home-user-bio/`). owedwork passed in every run that completed. whoami failed twice: run 3 in `settled` (the 120 s wait for the first firing to end with a row owed, not reached), run 4 at r8-heal-door.test.mjs:109 (the member's read did not arm the alarm once the firing ended). So the fix is NOT 10 of 10 and is not committed.
+
+**The timing cause, measured:** the founder's owedwork read starts the row's firing (before the read: running_since null, alarm_at null, the row due; after the read: running_since set and running true). While a firing runs the platform answers no alarm (scheduler/index.mjs:614, R29), so the old immediate assertion at r8-heal-door.test.mjs:93 read the firing, not the arm. The test now waits for the firing to end (`firingEnded`) before reading the alarm. Applied to the whoami test too. That is the owedwork fix; the whoami failure at :109 shows the arm after a firing is not yet explained (a read during a firing, or a look within HEAL_EVERY_MS: scheduler `heal()` returns null when firing or looked recently, :807). Not diagnosed.
+
+**Working tree:** the G93 test edit (`r8-heal-door.test.mjs`) is uncommitted; the five foreign files (names.mjs, plane-meaning.mjs, run-rules/rules.mjs, drive.mjs, agent-worker index.mjs) are not mine and are not committed (patch saved at /tmp/claude-0/-home-user-bio/foreign-changes.patch).
+
+Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 30, module lines 371
