@@ -693,3 +693,27 @@ Not caused by the change (pass in isolation on my tree): settings, intake, and t
 Still running (restarted with a per-test timeout after the first runs hung): screens-daily and screens-inquiry. I will add their result to the COMPLETE. If either shows a failure that uses a removed default, I'll name it the same way.
 
 Other failures in my tree are the seam tests' `counted` wrap (screens-inquiry, SCREENS-INQUIRY #33) and nothing else in the interface-shell suite.
+
+## J40 · COMPLETE
+
+COMPLETE, interface-shell, T51 (K5202, K5209, K5217, K5219, K5221, K5226, K5230). Branch pushed; HEAD is the tranche merge after B57, with the K5230 test at 087708eaa4.
+
+Changed (paths): bio-plane/src/interface-shell/index.mjs (re-export of ADMIN_ACTS and ADMIN_SCREENS deleted, lines 93-95); bio-plane/test/m/interface-shell/: harness.mjs (four frame defaults deleted; refusal builders at 22-23 marked `fixtures-own: input`), frame-answers.mjs (new: groupidentity, interfacewords, queue and signout from their owners' fixtures), k5230.test.mjs (new), screens.fixture.mjs:128 (publishedcase queried by id: the fixture sent `case`, which the op does not accept), and the tests design, cause3, frame, session, t49, t50, t51, words, fixround, kit (each reads its frame answers from frame-answers.mjs; expectations derive from them).
+
+Met: all 127 live requirement ids named by a test (coverage 127/127). Failing-first: the new k5230 test is red without the counted wrap and green with it; R24 and R114 red on the removal, green after the fixture.
+
+Suite: interface-shell 377 of 377 pass.
+
+Checks: format 0; architecture 0 (after BOB's uses edges); coverage 0; fixtures 0 failures (accepted 4, which are t50's generic codes); ownership 0; run.mjs: no finding in interface-shell's files.
+
+Reds named: R30, R5's publishedcase field, R81: their cause was screens.fixture.mjs:128, my fixture (owner: interface-shell). Fixed in the commit above. None are red now.
+
+Markers: harness.mjs:22-23 `fixtures-own: input`: the refusal envelope the harness builds for a code the test feeds it (the code is the test's input, not a module's answer).
+
+Screens (other modules): per-module runs compared to the tranche tip. Reliance on the removed defaults is in the J39 REPORT (action request.test.mjs:167, :185; publish phone.mjs:30 and its tests). screens-daily and screens-inquiry: no failure that is not on the tranche tip too (daily 5 of 5 on the tip; inquiry 2 of 2, the OCR tests, on the tip).
+
+Deferred: the seam wrap in screens-inquiry's five files (SCREENS-INQUIRY #33, K5234).
+
+Impact: 176 of 178 modules named by `build/plan/impact.mjs origin/tranche/T51 HEAD` (a shared table). Ran the screens-* per-module suites (the harness's users); the other modules' suites were not run.
+
+Size (session_0141YvoVpS4Rz4SNMfkcYzHh): test runs ~45, module lines 11828 (src 3389, tests 8439).
