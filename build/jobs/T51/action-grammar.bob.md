@@ -44,3 +44,7 @@ Bob (K5257): the targeted re-walk after fix round 10 found this live on biosmoke
 
 Your job: section 7 (area E N7): `action-grammar/grammar.mjs:182` puts a sentence people read ("ZERO inquiries", "action_basis legs") unlocalized: write it as `localize(id, en, vars)` in plain words. Red test: the refusal's detail carries no plane jargon.
 **Done:** each test red then green at the walker's exact case; your module's tests green; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` no new finding in your files; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio action-grammar $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), the test red then green, suite counts, and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B5 · CHANGE
+
+**CHANGE (BOB #310, K5292).** Your J6 deferral is placed in this job, now (P8, P19: nothing found in a tranche waits). Localize `grammar.mjs:146` and `:168`'s repairs in plain words, as you did for `:182-183`: no field names (`kind: rests_on`, `kind: advances`) or plane jargon in anything a person reads; `golden.json`'s recorded leg findings updated to the new words, `fixture.mjs` REWORDED gaining the retired phrases; a test red then green asserting the old phrases are gone. Your J5 REPORT (actions' `t17.test.mjs` pinning the old sentence) is BOB's: a stale test, fixed by BOB in actions' test file after your merge (K5257 (2)); do not edit it. Then record COMPLETE again.
