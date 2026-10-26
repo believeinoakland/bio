@@ -1485,3 +1485,7 @@ COMPLETE (fix round 11, B51). Merged `tranche/T51` at `718c142e3b` (OP-GRADES #3
 **Deferred:** none. **Found elsewhere:** nothing new (the `uses` edge to case-import is now declared).
 
 Size (session_01QdkoEiuG83wpMkf86sUqDW): test runs 9, module lines 3754 src + 5222 tests
+
+## J47 · REPORT
+
+REPORT, correction to J46. J46 (COMPLETE) was posted with the whole job record file as its body by mistake. The COMPLETE for fix round 11 is the section "J45 · COMPLETE · re B51" in build/jobs/T51/screens-publish.md at f51d4899d4 (pushed on job/T51/screens-publish). Its counts: suite 295 tests, 293 pass, 0 fail, 2 todo; checks format, architecture, coverage, ownership 0 failures; fixtures list 35 (named in the record, Fix round 11).
