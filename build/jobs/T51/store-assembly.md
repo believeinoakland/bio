@@ -304,3 +304,7 @@ COMPLETE (STORE-ASSEMBLY #7, B21: A-01, walk T51 alpha, K5257/K5258).
 Size (session_01MHfM4Jg8WvCFNaPQUvxaFk): test runs 6, module lines 3800
 
 **J20 addendum (users).** The 24 other test files naming `stats` (outside store-assembly and record-core): 170 tests, 169 pass, 1 fail: `bio-plane/test/system/migrate-released.test.mjs`, which ran 1,106 s before failing. It only asserts `op=stats` answers `ok !== false` (line 435); I did not establish its cause and did not rerun it on the bare tranche, so I cannot say it is unrelated: BOB please have it checked (it is plane's/system's, not in my paths).
+
+## J21 · COMPLETE
+
+COMPLETE (STORE-ASSEMBLY #7, B21, A-01). op=stats runs the FTS5 integrity check only on deep=1 with the capacity stamp (stats.mjs withDeepStats, assemble.mjs route spread) and in purge's proof; default answer has no textIndexOk. Test red then green (stats.test.mjs, counting sql.exec: zero checks by default, one with the flag) plus a purge-proof control. Module: 430 tests, 428 pass, 1 fail (R83 declarations: control-plane's owner-ops.mjs already deleted on the tranche; the DECLARED_OPS rename CHANGE B19 (4) has not reached me), 1 todo. Users naming stats: 170 tests, 1 fail, system/migrate-released.test.mjs (1106 s, cause not established; please check). Checks: format/architecture/coverage/ownership 0, words none new. REPORT: screens-settings group.mjs:25 should ask a size-only read; nothing sends deep=1 yet (op-declarations lists no parameter). Details in record J20. Size (session_01MHfM4Jg8WvCFNaPQUvxaFk): test runs 7, module lines 3800
