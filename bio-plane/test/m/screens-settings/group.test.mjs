@@ -272,14 +272,14 @@ test("R45 the zone that governs is shown by its name, never its id: the design's
   has(c, "screen.group.timezone.help");
 });
 
-test("R45 a correction sends factconfirm with act correct, the zone, how and source on the fact's own path; then the zone is read again and named as saved", async () => {
+test("R45 a correction sends factconfirm with act correct, the zone, how and source on the team's own path (a place's zone is only the default); then the zone is read again and named as saved", async () => {
   const t = await zoned();
   const { w, founder } = t;
   const a = await open("group", { world: w, as: founder });
   const r = await a.press("factconfirm", { choose: { "gr-tz0": "America/Denver" }, values: { "gr-tz-how0": "read on the city's site", "gr-tz-src0": "oaklandca.gov" }, reason: "r" });
-  assert.deepEqual(r.sent[0].body, { act: "correct", value: "America/Denver", how: "read on the city's site", source: "oaklandca.gov", path: ZONE_PATH, reason: "r" });
+  assert.deepEqual(r.sent[0].body, { act: "correct", value: "America/Denver", how: "read on the city's site", source: "oaklandca.gov", path: "@team/time_zone", reason: "r" });
   assert.ok(r.sent.slice(1).some((x) => x.op === "factstatus"), "read again");
-  assert.equal((await founder.read("factstatus")).facts.find((f) => f.path === ZONE_PATH).governs.value, "America/Denver");
+  assert.equal((await founder.read("factstatus", { query: { path: "@team/time_zone" } })).governs.value, "America/Denver");
   has(a, "screen.group.timezone.saved", { zone: said("label.timezones.America/Denver") });
   has(a, "screen.group.timezone.governs.local", { zone: said("label.timezones.America/Denver") });
   lacks(a, "settings.set.line.setup");
@@ -289,11 +289,11 @@ test("R45 a correction sends factconfirm with act correct, the zone, how and sou
   assert.ok(noSource.refused && noSource.refused.text.includes(said("refusal.FACT_VALUE_REFUSED")), "FACT_VALUE_REFUSED");
   const noHow = await press(t, { "gr-tz-how0": "", "gr-tz-src0": "s" });
   assert.ok(noHow.refused && noHow.refused.text.includes(said("refusal.FACT_HOW_REFUSED")), "FACT_HOW_REFUSED");
-  // no fact held: the profile is let go after the page drew it (choosing a zone would draw the page again, without the fact)
-  const noFact = await open("group", { world: w, as: founder });
+  // the team's own path is stated whether or not a place is held, so the owner no longer answers NO_SUCH_FACT to the screen's correction (local-facts R21)
+  const noPlace = await open("group", { world: w, as: founder });
   await founder.act("profilesset", { body: { profiles: [] } });
-  await noFact.press("factconfirm", { values: { "gr-tz-how0": "h", "gr-tz-src0": "s" }, reason: "r" });
-  assert.ok(noFact.refused && noFact.refused.text.includes(said("refusal.NO_SUCH_FACT")), "NO_SUCH_FACT");
+  await noPlace.press("factconfirm", { choose: { "gr-tz0": "America/Chicago" }, values: { "gr-tz-how0": "h", "gr-tz-src0": "s" }, reason: "r" });
+  assert.ok(!noPlace.refused, "a place let go after the page drew it does not refuse the correction");
 });
 
 test("R45 none held: a fold, the choice below it, no UTC; a member who does not administer is drawn no correction", async () => {
@@ -309,6 +309,26 @@ test("R45 none held: a fold, the choice below it, no UTC; a member who does not 
   const m = await open("group", { world: z.w, as: z.dev });
   assert.deepEqual(ops(m), []);
   assert.equal(all(m.tree, (e) => e.tag === "input" || e.tag === "select").length, 0);
+});
+
+const TEAM_ZONE = "@team/time_zone";
+/* D-B1 (walk-T51-alpha; local-facts R21, K5282): a team with no place chosen states its own zone from the screen */
+test("R45 D-B1 no place chosen: the zone is stated from the screen on the team's own path, the owner takes it, and the screen then names it as the team's", async () => {
+  const t = await team();
+  const { w, founder } = t;
+  assert.equal((await founder.read("factstatus", { query: { path: TEAM_ZONE } })).status, "absent", "no zone held, no place");
+  const a = await open("group", { world: w, as: founder });
+  assert.equal(all(a.tree, (e) => e.tag === "details" && e.attrs["data-state"] === "tznone").length, 1, "none held is said");
+  const r = await a.press("factconfirm", { choose: { "gr-tz0": "America/Denver" }, values: { "gr-tz-how0": "read on the city's site", "gr-tz-src0": "oaklandca.gov" }, reason: "r" });
+  assert.deepEqual(r.sent[0].body, { act: "correct", value: "America/Denver", how: "read on the city's site", source: "oaklandca.gov", path: TEAM_ZONE, reason: "r" });
+  assert.ok(!a.refused, "the owner takes it: not NO_SUCH_FACT");
+  const held = await founder.read("factstatus", { query: { path: TEAM_ZONE } });
+  assert.equal(held.status, "corrected");
+  assert.equal(held.governs.value, "America/Denver");
+  has(a, "screen.group.timezone.saved", { zone: said("label.timezones.America/Denver") });
+  has(a, "screen.group.timezone.governs.local", { zone: said("label.timezones.America/Denver") });
+  assert.equal(all(a.tree, (e) => e.tag === "details" && e.attrs["data-state"] === "tznone").length, 0, "no longer said to be none");
+  assert.ok(!/\bUTC\b/.test(a.text), "no UTC");
 });
 
 /* R52 (T50; N1106, N1183): values not set by a member, and the name acknowledged */

@@ -32,6 +32,8 @@ export const group = {
       mine: { op: "memberlanguage" },
       // R45: the zone that governs, from the facts of the active profiles; the places, to name each
       facts: { op: "factstatus" },
+      // D-B1 (local-facts R21): the team's own zone, read by its path (it is not among the facts listed without one)
+      teamzone: { op: "factstatus", query: { path: "@team/time_zone" } },
       profiles: { op: "profiles" },
     };
   },
@@ -152,8 +154,11 @@ export const group = {
       const zf = (factsV || []).filter((f) => f && f.fact && f.fact.fact === "time_zone" && !f.fact.office && f.governs && typeof f.governs.value === "string");
       const distinct = new Set(zf.map((f) => f.governs.value));
       const tzOptions = (cur) => [...ZONES, ...(cur && ZONES.indexOf(cur) < 0 ? [cur] : [])].map((z) => ({ value: z, text: zoneName(z) }));
-      // one correction: the zone chosen by name, how and where it was checked (both required by the owner), sent on this fact's own path
-      const form = (i, f, cur) => !admin ? "" : `${cs.choice("gr-tz" + i, S + "timezone", tzOptions(cur), { value: cur || ZONES[0] })}${cs.field("gr-tz-how" + i, S + "timezone.how", { help: S + "timezone.how.help", autocomplete: "off" })}${cs.field("gr-tz-src" + i, S + "timezone.source", { help: S + "timezone.source.help", autocomplete: "off" })}${A("factconfirm", { data: { path: f ? f.path : "", slot: String(i) } })}`;
+      // one correction: the zone chosen by name, how and where it was checked (both required by the owner), sent on the team's own path (local-facts R21)
+      const form = (i, f, cur) => !admin ? "" : `${cs.choice("gr-tz" + i, S + "timezone", tzOptions(cur), { value: cur || ZONES[0] })}${cs.field("gr-tz-how" + i, S + "timezone.how", { help: S + "timezone.how.help", autocomplete: "off" })}${cs.field("gr-tz-src" + i, S + "timezone.source", { help: S + "timezone.source.help", autocomplete: "off" })}${A("factconfirm", { data: { path: "@team/time_zone", slot: String(i) } })}`;
+      // D-B1: a zone the team itself stated governs (R21), whatever the places say; the correction is always made on the team's own path
+      const tz = data.teamzone && data.teamzone.state === "ok" && data.teamzone.value && data.teamzone.value.governs && data.teamzone.value.governs.origin === "corrected" && typeof data.teamzone.value.governs.value === "string" ? data.teamzone.value.governs.value : null;
+      if (tz) return `<p class="mk-note">${W(S + "timezone.help")}</p>${ui.tzSaved ? `<p data-state="tzsaved">${W(S + "timezone.saved", { zone: ui.tzSaved })}</p>` : ""}<p data-state="timezone">${W(S + "timezone.governs.local", { zone: zoneName(tz) })}</p>${form(0, null, tz)}`;
       let h = `<p class="mk-note">${W(S + "timezone.help")}</p>`;
       if (ui.tzSaved) h += `<p data-state="tzsaved">${W(S + "timezone.saved", { zone: ui.tzSaved })}</p>`;
       if (zf.length === 0) {
@@ -165,13 +170,14 @@ export const group = {
         // two places disagree: each place's zone, none named as the team's, and one correction for each place
         const rows = zf.map((f) => `<p data-state="tzplace">${W(S + "timezone.governs.profile", { zone: zoneName(f.governs.value), profile: profileName(f.fact.profile) })}</p>`).join("");
         h += `<details class="mk-details" open data-state="tztwo"><summary>${W(S + "timezone.two.summary")}</summary>${rows}<p>${W(S + "timezone.two")}</p></details>`;
-        return h + zf.map((f, i) => form(i, f, f.governs.value)).join("");
+        // one correction, on the team's own path (D-B1): stating the team's zone settles the places' disagreement
+        return h + form(0, null, null);
       }
       const f = zf[0], z = zoneName(f.governs.value);
       h += f.governs.origin === "corrected"
         ? `<p data-state="timezone">${W(S + "timezone.governs.local", { zone: z })}</p>`
         : `<p data-state="timezone">${W(S + "timezone.governs.profile", { zone: z, profile: profileName(f.fact.profile) })}</p><p class="mk-small" data-state="origin">${W("settings.set.line.setup")}</p>`;
-      return h + zf.map((g, i) => form(i, g, g.governs.value)).join("");
+      return h + form(0, f, f.governs.value);
     }));
 
     // the court notice
@@ -293,7 +299,7 @@ export const group = {
       } },
     // R45: the time zone corrected, chosen by name, with how and where it was checked, on the fact's own path as `factstatus` lists it
     // (the page composes none, local-facts R6); the owner's refusals are drawn in their words
-    { op: "factconfirm", rereads: ["facts"],
+    { op: "factconfirm", rereads: ["facts", "teamzone"],
       send(view, el, cs) {
         const i = el.dataset.slot || "0";
         const value = String(cs.value("gr-tz" + i) || "").trim();
