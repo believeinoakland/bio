@@ -205,3 +205,7 @@ Tests failing first through the real acts; published fixtures of each answer (ho
 **Deferred.** None.
 
 Size (session_018Ug4LFHJzA9MxdVSoTNU9i): test runs 12, module lines 1331
+
+## J10 · COMPLETE
+
+COMPLETE (B8). R22 built on my QUESTION J9 wording (no ANSWER read): release/preview take from, holdsOf takes {pressure}, new holdsPlaced/op=holdsplaced, fixtures published. Module tests 60/0; checks clean for action-holds. RED OWED BY OTHERS: op-declarations t45.test.mjs:222 'holdsplaced has no spec' (needs sessionread spec, op-grades/affordances/op-capabilities rows; actionholdpreview spec should accept from). Details and Size line in my record.
