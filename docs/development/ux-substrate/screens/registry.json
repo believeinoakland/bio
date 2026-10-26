@@ -1591,15 +1591,6 @@
      ]
     },
     {
-     "op": "taskresolve",
-     "label": "Start the next step",
-     "status": "declared",
-     "modules": [
-      "op-declarations",
-      "tasks"
-     ]
-    },
-    {
      "op": "actioncreate",
      "label": "Start an action",
      "status": "declared",

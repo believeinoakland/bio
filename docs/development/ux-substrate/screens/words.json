@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 1276,
+  "act": 1275,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -236,8 +236,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19247,
-  "protected": 1158
+  "total": 19246,
+  "protected": 1157
  },
  "words": [
   {
@@ -122210,12 +122210,6 @@
   {
    "key": "act.reminderanswer.label.dash-action",
    "en": "Answer a reminder",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
-   "key": "act.taskresolve.label.dash-action",
-   "en": "Start the next step",
    "protected": true,
    "source": "registry.json"
   },

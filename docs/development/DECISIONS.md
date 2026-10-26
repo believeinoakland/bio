@@ -6736,3 +6736,19 @@ the design: `refusal.SIGN_IN_PAUSED` "Sign-in is paused for a while after too ma
 verified: on tranche/T51 at its tip with rows.mjs regenerated: credentials' module fails to load until `credentials/checks.mjs:20` passes `{ stated: '{stated}' }` in place of `{ time: '{time}' }` (WORD_VAR_MISSING); with that line, credentials 199/199; screens-entry 6 pass, 92 fail as on the tranche alone (`db.serialize is not a function`); the words check 15 failures, the tranche's own.
 reasoning recorded in: this entry; `screens/words-t47.src.py` (the row, edited in place); `screens/words-drawn.src.py` (REWRITE); `screens/mock-screens.js` (`front`).
 owed: BOB: merge this commit (MERGE) together with the one-line change to `credentials/checks.mjs:20` (and its comment's `{time}`), or credentials does not load.
+
+### DEC-437 · decided
+raised: 2026-10-26 · the UX design session with Bob (session_01DtBKhrSmV3NbfCcEaygkz9, UX design #40) (BOB's B527: K5229, K5230; screens-action R30)
+for: design (T51)
+question: The Action dashboard (`dash-action`) lists `taskresolve` ("Start the next step"), which no item on it can ever offer.
+why it is Bob's: it is not (P17): a screen's acts beneath his rulings.
+provisional: as below.
+alternative: keep the act and give a dashboard item a next step to start; not taken: the clock and request items are conditions whose door is `queuemute`, the reminder an obligation whose door is `reminderanswer` (queue R12, action-producers R1, R25).
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-26 · the design session (P17)
+the design: `dash-action`'s registry row lists `filingapprove`, `reminderanswer`, `actioncreate`; `act.taskresolve.label.dash-action` is retired with it; the mockup's overdue-reply row keeps "Remind me again on…" and drops "Start the next step" and "the plan's next step is ready", which named a step it offered no way to start; `words-reads.json`'s screens-action reads drop the retired label.
+verified: on tranche/T51 at its tip with these files: the words check 0 failures (before the reads edit, 1: the retired label still listed as read).
+reasoning recorded in: this entry; `screens/registry.src.py` (`dash-action`); `screens/mock-screens.js` (`dash-action`); `screens/words-reads.json`.
+owed: BOB: merge this commit (MERGE); SCREENS-ACTION #22 drops the act and the label read.

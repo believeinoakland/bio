@@ -6831,7 +6831,6 @@
     "act.tabledeclare.does",
     "act.taskforward.does",
     "act.taskresolve.does",
-    "act.taskresolve.label.dash-action",
     "act.taskresolve.label.queue",
     "act.templatesave.does",
     "act.templatesave.label.start-send",
@@ -8086,7 +8085,7 @@
     "state.loading"
    ],
    "counts": {
-    "reads": 1824,
+    "reads": 1823,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 1051,
