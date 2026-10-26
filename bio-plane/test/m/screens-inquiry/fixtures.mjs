@@ -139,8 +139,9 @@ export function plane(o = {}) {
     image: (r) => (Object.hasOwn(images, r.query.id) ? ok(images[r.query.id]) : ok(null)),
     /* the owners' reads, answered by the world (B86): the project's stage, roster, bar, account, directory, visibility, owner votes and stake; the question's strength (single and batch),
        a reading's, and the grouping's independence; the document's held captures, version chain, grade and route; the themes; the members */
-    ...Object.fromEntries(["projectstage", "projectparticipants", "strengthbarof", "projectaccountstate", "projectdirectory", "projectvisibility", "projectownervotes", "projectstake",
-      "inquirystrength", "versionstrength", "partitionindependence", "heldcaptures", "versionchain", "capturegrade", "themeread", "provenanceroutes", "memberlist"].map((op) => [op, world])),
+    ...Object.fromEntries(["projectstage", "projectparticipants", "strengthbarof", "projectaccountstate", "projectdirectory", "projectvisibility", "projectownervotes", "projectstake"] /* the project page's reads */
+      .concat(["inquirystrength", "versionstrength", "partitionindependence"] /* the question's */, ["heldcaptures", "versionchain", "capturegrade"] /* the document's */, ["themeread", "provenanceroutes", "memberlist"] /* the themes, the route, the members */)
+      .map((op) => [op, world])),
     list: ok(QUESTIONS),
     projectquestions: ok(PROJECT_QUESTIONS),
     plans: ok({ ok: true, plans: [] }),
