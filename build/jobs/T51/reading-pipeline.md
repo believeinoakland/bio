@@ -1055,3 +1055,7 @@ Size (session_01SY4Lvvb9Fxt5mgvpCSvWLj): test runs 3, module lines 3471
 ## J58 · REPORT
 
 Found outside my paths: store-assembly/t42.test.mjs:266 (extraction's t48 transcribe value) lacks asked, sent and owed, so the :267 run (reading-pipeline transcribe-answer) stays red until EXTRACTION #49 fixes it. Real answer: bio-plane/src/store-assembly/transcribe.mjs ~155. Mine now match the real shape.
+
+## J59 · COMPLETE
+
+COMPLETE (B64, fix round 10, K5175): the reading-pipeline transcribe fixtures carry the real answer's shape (asked, sent, owed) and point at store-assembly transcribe-answer; test files only. Module tests 536 run, 535 pass, 0 fail, 1 todo. Checks format, architecture, coverage (62/62), words, fixtures (0 failures), ownership all clean. Record: build/jobs/T51/reading-pipeline.md J8. Note: store-assembly t42:267 stays red until EXTRACTION #49 (see REPORT).
