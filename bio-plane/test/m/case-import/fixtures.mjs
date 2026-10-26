@@ -3,6 +3,9 @@
 import { seeded, imp, caseFile, door, V, SOURCE, CASE, LENS, F1, F2, F3 } from "./fixture.mjs";
 import { docketAddressOf, caseImportOps } from "../../../src/case-import/index.mjs";
 import { importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
+import { world as citationWorld, V as citationV } from "../citation/fixture.mjs";
+import { citationOps } from "../../../src/citation/index.mjs";
+import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
 
 const g = (grade) => ({ state: "graded", grade });
 const BY = "alice";
@@ -185,4 +188,33 @@ export async function importRegradeAnswer({ lens = "removed" } = {}) {
   const a = await imp(w, caseFile({ apps: RERUN_APPS, printedLens: RERUN_STATEMENTS }));
   if (a.ok !== true) throw new Error(`importRegradeAnswer: the import was refused: ${JSON.stringify(a).slice(0, 300)}`);
   return { w, import: a.import, answer: door(w, "importregrade", { viewer: V(BY), import: a.import, edition: 1, lens }) };
+}
+
+/* R16 (citeimported; fix round 10, K5175): the door's answer to citation's `citeimported`, a question resting on an accepted
+   finding of this module's import at the edition shown. Citation is earlier in the order, so it cannot publish this answer
+   (its fixture would import this module's test support); this module builds it, over its own real accepted import (edition 1
+   with F1 accepted) and citation's real module on a world of its own, whose accepted-work service has this module's five
+   providers registered as `start` registers them. The viewer reads this module's acceptance, so is a member of both groups.
+   Answers `{w, caseImport, import, finding, edition, ref, answer}`: the citation world, this module's world, the import, the
+   finding, its edition, the ref the basis carries, and the door's answer. Nothing is stored; each call builds its own worlds. */
+const CITE_Q = "INQ-2026-0001-q";
+export async function citeimportedAnswer({ role = "supports", note = "the audit is public", finding: chosen = F1 } = {}) {
+  const caseImport = await importedWorld({ imports: [{ editions: [{ edition: 1, accepted: [F1] }] }] });
+  const [{ import: importId }] = caseImport.imports;
+  const finding = chosen, edition = 1, ref = importedFindingRef(importId, finding);
+  const w = citationWorld({ inquiry: true, members: ["ann", "alice"] });
+  w.inquiry(CITE_Q);
+  const ci = caseImport.ci;
+  const reg = acceptedWorkOf(w.host).registerAcceptedWork("case-import", {
+    finding: (q) => ci.findingFacts(q || {}),
+    openFlags: (q) => ci.openFlagsFacts(q || {}),
+    withdrawals: (q) => ci.withdrawals(q || {}),
+    moves: (q) => ci.moves(q || {}),
+    flagHistory: (q) => ci.flagHistoryFacts(q || {}),
+  });
+  if (reg?.ok !== true) throw new Error(`citeimportedAnswer: the registration of case-import was refused: ${JSON.stringify(reg).slice(0, 300)}`);
+  const q = new URLSearchParams({ inquiry: CITE_Q, import: importId, finding, edition: String(edition), role, note,
+                                  viewer: citationV("alice"), author: "member:alice", identity: citationV("alice") });
+  const answer = citationOps(w.cit, new URL(`http://x/?${q}`)).citeimported();
+  return { w, caseImport: caseImport.w, import: importId, finding, edition, ref, answer };
 }
