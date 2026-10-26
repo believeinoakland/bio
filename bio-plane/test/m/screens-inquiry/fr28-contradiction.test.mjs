@@ -80,7 +80,8 @@ test("R105 state a, a conflict the record holds: both passages side by side, eac
   assert.ok(!/INFO-2026/.test(a.textContent.replace(A_DOC, "")) || !a.textContent.includes(A_DOC + ")"), "no id as a title");
   const dates = m.querySelector('[data-fact="stated_date"]');
   assert.ok(dates && dates.textContent.includes(day("2024-03-04")) && dates.textContent.includes(day("2026-09-12")), "the stated dates, by cs.date");
-  assert.ok(m.querySelector('[data-fact="doctype"]'));
+  /* T51 fix round 13 (B92, C-M13): a doctype is drawn by its held label only; the design holds none for this id, so no row, never the id */
+  assert.equal(m.querySelector('[data-fact="doctype"]'), null, "no held label for the doctype: no row");
   assert.equal(m.querySelector('[data-fact="resolved_entities"]'), null, "control: a fact the record cannot state is not drawn");
   assert.ok(m.querySelector('[data-origin="machine"]'), "the assistant's judgment is marked machine work");
   assert.ok(says(m, S + "the.assistant.s.judgement.not.a") && m.textContent.includes(cand().machine.reason));
@@ -444,7 +445,8 @@ test("R105 what the record cannot state is not drawn or offered: a stated date t
   const p = await open("/app/contradiction/" + CAND, view(cand(), { plane: { contradictionfacts: ok(facts) } }));
   assert.equal(main(p).querySelector('[data-fact="stated_date"]'), null);
   assert.equal(p.doc.getElementById("cd-evid"), null);
-  assert.ok(main(p).querySelector('[data-fact="doctype"]'), "control: the kinds the record states stay");
+  assert.equal(main(p).querySelector('[data-fact="doctype"]'), null, "no held label for the doctype: no row (B92)");
+  assert.ok(main(p).querySelector('[data-side="a"]'), "control: the passages stay drawn");
 });
 
 test("R105 writinghelp: beside her conclusion on a taken-up question and beside her response once the projects are named, never beside what would change it", async () => {

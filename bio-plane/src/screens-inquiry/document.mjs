@@ -1876,6 +1876,13 @@ const acts = [
       const reason = String(cs.value("document-flag-why") || "").trim();
       if (!reason) return { refuse: "refusal.FLAG_NO_REASON" };
       return { body: { here: { capture: String(el.dataset.sha || ""), extent: here.extent }, other: { capture: otherSha, extent: there.extent }, reason } };
+    },
+    /* R138 (K5292; re-walk C, C-M12 new 4): the answer's own sentence is drawn beside the act, whether the flag was recorded (`wrote`) or the pair is
+       already held (`already`): the owner's words, escaped once here. The flag's place in the page's list of flags raised on it is not drawn yet: that
+       list needs a held key and a read, both REPORTed. */
+    done(view, answer, cs) {
+      const r = answer && answer.result !== undefined ? answer.result : answer;
+      cs.set("outcome", Object.assign({}, view.ui.outcome, { contradictionflag: { ok: true, html: cs.esc(String(r && r.says || "")) } }));
     } },
   /* R108 (C23; DEC-381): the system this document came from, declared with her name and the date (provenance R64); a second declaration is
      added beside the first and never replaces it, so each answer is kept in the list the page draws */
