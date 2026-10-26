@@ -533,12 +533,12 @@ export const queue = Object.freeze({
       done: function (view, answer, cs) { cs.set("done", "projectrequestanswer"); } },
     // R19: Not now, for every administrator (instance-setup R90).
     // R107 (credentials R83): "I know about this key" sends the key the item is about; the item leaves with the re-read (queue R55).
-    { op: "signerknown", label: "queue.signer-self-registered.known", rereads: ["queue"],
+    ...OWED({ op: "signerknown", label: "queue.signer-self-registered.known", rereads: ["queue"],
       send: function (view, el) {
         view.ui.doneFor = { op: "signerknown", label: "queue.signer-self-registered.known" };
         return el.dataset.subject ? { body: { keyB64: el.dataset.subject } } : null;
       },
-      done: function (view, answer, cs) { cs.set("done", "signerknown"); } },
+      done: function (view, answer, cs) { cs.set("done", "signerknown"); } }),
     { op: "updatelater", label: "act.owed_updatelater.label.queue", rereads: ["queue"],
       send: function (view, el) { return el.dataset.version ? { body: { version: el.dataset.version } } : null; } },
     { op: "exploreapprove", label: "act.exploreapprove.label.queue", rereads: ["queue"],

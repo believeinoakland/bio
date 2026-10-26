@@ -340,6 +340,12 @@ test("R107 (A-03): an administrator's queue draws `queue.signer-self-registered.
   assert.equal(last(p, "signerknown").body.keyB64, keyB64, "the key the item is about");
   const row = (await rosa.read("signerlist")).signers.find((s) => s.key_b64 === keyB64);
   assert.ok(row && row.known_by, "the plane records who knows it: " + JSON.stringify(row));
+  await w.tick(120_000);
+  assert.equal((await rosa.read("queue")).items.filter((i) => i.kind === "signer-self-registered").length, 0, "the item is gone for the administrator once she says she knows it (queue R55)");
+  const second = await mai.act("signerregisterown", { body: { keyB64: await sshKey(), comment: "mai's phone" } });
+  assert.equal(second.ok, true);
+  await w.tick(120_000);
+  assert.equal((await rosa.read("queue")).items.filter((i) => i.kind === "signer-self-registered").length, 1, "control: a second self-registered key is an item again");
   const hers = await openW(w, mai, "/app/queue");
   await settle();
   assert.equal(main(hers).querySelectorAll('button[data-act="signerknown"]').length, 0, "control: the member who registered it is told nothing of it, so has no such act");
