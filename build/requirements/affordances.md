@@ -214,6 +214,7 @@ Terms. An **act** is `{id, label, weight, types, applies(facts, type), prompt?}`
 - **R23** The three joined-project predicates are asked only for the caller's own member id, over projects the viewer can see.
 - **R24** `rung: null` never reaches a caller without a non-null `rung_absence` for a mutating op (R3, R11).
 - **R25** No place is named in this module's behaviour or outward text; `NON_ACTS.idmatch` names no local identifier system or publisher.
+- **R71** (T51 fix round 10; DEC-439, DEC-440, DEC-441; UX-DESIGN U481-U484; K5303; DEC-438) Act help (`act-help.mjs`'s held list) carries every op DEC-438 to DEC-441 draw that is not held yet, so `act.<op>.does` is read for each: `standardinforcethrough`, `standardinforcethroughwithdraw`, `standardadoption`, `standardimpose`, `standardbenchmark`, and `signerknown` (`credentials` R83) and `leggrade` (`citation` R24) where the design words them. Test: each op answers its `.does` key; control: an op absent from the list answers none. *(not yet met: T51)*
 
 ### Satisfies
 
