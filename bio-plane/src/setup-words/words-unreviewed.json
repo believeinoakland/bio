@@ -15478,11 +15478,25 @@
       "line": 565
     },
     {
+      "id": "citation.checks.a_grade_is_a_letter",
+      "en": "A grade is one letter from A to D. Choose one. Nothing was written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/checks.mjs",
+      "line": 145
+    },
+    {
       "id": "citation.checks.bad_ground",
       "en": "A new citation can join only a group its question already declares, and a case has no groups. Name one of the question's groups, or cite without one. Nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/checks.mjs",
       "line": 58
+    },
+    {
+      "id": "citation.checks.only_a_member_grades_a_passage",
+      "en": "Only a named member says how well your team's copy shows a passage, and this came from an automated or unnamed credential. Nothing was written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/checks.mjs",
+      "line": 140
     },
     {
       "id": "citation.checks.only_a_member_rests_a_question",
@@ -15504,6 +15518,27 @@
       "module": "citation",
       "file": "bio-plane/src/citation/checks.mjs",
       "line": 124
+    },
+    {
+      "id": "citation.checks.the_record_cannot_support_that_grade",
+      "en": "The record cannot support a grade that strong for this copy. Choose the most it allows, or a weaker one, and say why. Nothing was written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/checks.mjs",
+      "line": 160
+    },
+    {
+      "id": "citation.checks.this_passage_already_carries_a_grade",
+      "en": "This passage already carries a grade on another axis, and a passage carries one grade. Nothing was written, so that grade is kept.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/checks.mjs",
+      "line": 155
+    },
+    {
+      "id": "citation.checks.this_passage_has_no_copy_to_grade",
+      "en": "This is not a passage of a document your team holds a copy of: the record works its grade out from what it rests on, or takes it from the other team's edition, so a member does not set one. Nothing was written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/checks.mjs",
+      "line": 150
     },
     {
       "id": "citation.checks.what_material_does_for_an",
@@ -15531,616 +15566,721 @@
       "en": "cites material or a question into a case's references or a question's basis, and sever takes it back",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1220
+      "line": 1331
     },
     {
       "id": "citation.declared.citeimported",
       "en": "rests a question on another team's accepted finding at the edition shown; the grade is the edition's own, and withdrawimported takes it back",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1233
+      "line": 1348
     },
     {
       "id": "citation.declared.drawquestion",
       "en": "project-directed: keyed by a project and one question; draws the question into the project as a confirmed `cites` edge and promotes the project; moves the project's bundle",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1224
+      "line": 1335
+    },
+    {
+      "id": "citation.declared.leggrade",
+      "en": "a member's grade of how well your team's copy shows a passage a question rests on, up to the most the record supports, with the reason",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 1344
     },
     {
       "id": "citation.declared.reinstate",
       "en": "moves a severed cites edge, or a question's severed leg, back to confirmed with the member's reason",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1230
+      "line": 1341
     },
     {
       "id": "citation.declared.sever",
       "en": "moves a case's cites edge, or a question's own leg, to severed with the member's reason; nothing is deleted",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1227
+      "line": 1338
     },
     {
       "id": "citation.declared.withdrawimported",
       "en": "takes another team's finding off a question's answer with the member's reason; the history keeps it, and so does each version already frozen",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1237
+      "line": 1352
     },
     {
       "id": "citation.index.a_case_rests_on_material",
       "en": "a case rests on material, or on a question the team is asking. These members of the selection are neither, and the whole call is refused rather than narrowed to the ones that are.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 599
+      "line": 600
     },
     {
       "id": "citation.index.a_citation_points_at_material",
       "en": "a citation points at material or at a question, and these members of the selection are neither, so they carry no citation to move. The whole call is refused rather than narrowed.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 305
+      "line": 306
     },
     {
       "id": "citation.index.a_leg_of_a_questions_basis",
       "en": "a leg of a question's basis says what the material DOES for the answer, and this call does not say. It is never assumed: a leg that cuts against the case is first-class here, and guessing would put a claim about your own reasoning in the record that you did not make. State role as one of: {roles}.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 556
+      "line": 557
     },
     {
       "id": "citation.index.a_note_is_at_most",
       "en": "a note is at most 200 characters and cannot contain a quote, a backslash, or a newline",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 536
+      "line": 537
     },
     {
       "id": "citation.index.a_part_of_a_document_is",
       "en": "a part of a document is a part of ONE document, and this call would write {n} legs. Writing the same page or passage onto each of them would put claims in the record that nobody made — the extent was named once. Cite the one document this part belongs to, and cite the rest separately.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 674
+      "line": 675
     },
     {
       "id": "citation.index.a_passage_found_by_search",
       "en": "a passage found by search is cited by the document it is in, the capture it was found in and its part of that capture, and this one names no document you can see, no capture, or no part; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 475
+      "line": 476
     },
     {
       "id": "citation.index.a_question_is_drawn_into",
       "en": "a question is drawn into a case, and this is not a case. A question rests on another question through a leg of its own basis, which citing onto it writes.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 893
+      "line": 1000
     },
     {
       "id": "citation.index.a_question_rests_on_material",
       "en": "a question rests on material or on another question, and nothing else in the record can be a leg of its basis. These members of the selection are neither, and the whole call is refused rather than narrowed to the ones that are.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 594
+      "line": 595
     },
     {
       "id": "citation.index.a_reason_is_at_most",
       "en": "a reason is at most {max} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes, so those would reshape the document rather than appear in it",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 268
+      "line": 269
     },
     {
       "id": "citation.index.a_role_says_what_material",
       "en": "a role says what material does for a QUESTION's answer, and this citing object is a case. A case's citation edge carries no role, so this one would be dropped rather than recorded — refused instead, because a field stated in one place and honoured nowhere is how the record and its projections drift apart.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 277
+      "line": 278
     },
     {
       "id": "citation.index.bad_ground",
       "en": "a new citation can join only a group its question already declares, and this one names {ground}; a case has no groups. Nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 576
+      "line": 577
     },
     {
       "id": "citation.index.changes_basis_legs_added",
       "en": "Changes: basis legs added for {listed}, each with role {role}. Grades: {graded} filled from the record's own resolutions to this question's subject; {ungraded} left undetermined and stated.{note}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 827
+      "line": 828
     },
     {
       "id": "citation.index.changes_basis_legs_on",
       "en": "Changes: basis legs on {listed} moved to '{to}', each leg kept as it was. Reason: {why}.\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 390
+      "line": 391
     },
     {
       "id": "citation.index.changes_basis_legs_role_moved",
       "en": "Changes: basis legs on {listed} moved to '{to}', each leg kept as it was except the role of {moved}, which moves from {from} to {role}. Reason: {why}.\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 389
+      "line": 390
     },
     {
       "id": "citation.index.changes_cites_edges_added",
       "en": "Changes: cites edges added to {listed}.{note}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 829
+      "line": 830
     },
     {
       "id": "citation.index.changes_cites_edges_to",
       "en": "Changes: cites edges to {listed} moved to '{to}'. Reason: {why}.\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 391
+      "line": 392
+    },
+    {
+      "id": "citation.index.changes_graded_leg",
+      "en": "Changes: basis leg on {target} graded {grade} on the capture axis, up to the record's ceiling of {ceiling}; before: {was}. Reason: {why}.\n",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 969
     },
     {
       "id": "citation.index.changes_imported_leg_added",
       "en": "Changes: basis leg added for {ref} at edition {edition}, role {role}. Grade: as that edition published it, none of its own.{note}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1057
+      "line": 1164
     },
     {
       "id": "citation.index.changes_imported_leg_removed",
       "en": "Changes: basis leg on {ref} (edition {edition}) removed. Reason: {why}.\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1112
+      "line": 1219
     },
     {
       "id": "citation.index.citations_live_on_the_citing",
       "en": "citations live on the citing object, and this is neither a case nor a question, so it holds no citation to withdraw or restore. A case keeps them in its references; a question keeps them in the basis its answer rests on.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 254
+      "line": 255
     },
     {
       "id": "citation.index.citations_live_on_the_citing_object",
       "en": "citations live on the CITING object, and this is neither a case nor a question. A case keeps them in its references; a question keeps them in the basis its answer rests on (State Rules 5.2). Nothing else in the record holds either.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 521
+      "line": 522
     },
     {
       "id": "citation.index.citing_onto_a_question_needs",
       "en": "citing onto a question needs the inquiry module's role vocabulary, leg grammar and earned registry, and your team's Civicsmith was created without them, so nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 280
+      "line": 281
     },
     {
       "id": "citation.index.citing_this_many_records",
       "en": "citing this many records at once would push this {object}'s bundle.md past the 1MB inline limit. Every edge is written into the document, so the ceiling is on edges in ONE object, not on the size of a selection. Cite in smaller batches; nothing has been written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 842
+      "line": 843
     },
     {
       "id": "citation.index.drawing_references_block",
       "en": "the project's references block is not in a shape this grammar can extend in place. Drawing a question in edits only that block and never rewrites the rest of the document.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 939
+      "line": 1046
     },
     {
       "id": "citation.index.drawing_this_question_in_would",
       "en": "drawing this question in would push this case's bundle.md past the 1MB inline limit. Every edge is written into the document; nothing has been written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 951
+      "line": 1058
     },
     {
       "id": "citation.index.every_member_of_the_selection",
       "en": "every member of the selection was already cited; nothing was written{v1}",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 737
+      "line": 738
     },
     {
       "id": "citation.index.for_question_suffix",
       "en": "; for question {question}",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 816
+      "line": 817
     },
     {
       "id": "citation.index.imported_already_cited",
       "en": "this question already rests on that finding; nothing was written. Moving to a later edition is the re-evaluation's act, not a second leg.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1045
+      "line": 1152
     },
     {
       "id": "citation.index.imported_basis_block_not_editable",
       "en": "the question's basis block is not in a shape this grammar can edit in place; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1105
+      "line": 1212
     },
     {
       "id": "citation.index.imported_edition_malformed",
       "en": "an edition is a whole number of one or more, the edition of the other team's case your team accepted, because each edition is its own document with its own published grades; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1018
+      "line": 1125
     },
     {
       "id": "citation.index.imported_inherits_publication",
       "en": "citing this inherits the fact of publication, not the credibility of its content",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1071
+      "line": 1178
     },
     {
       "id": "citation.index.imported_member_only",
       "en": "only a named member rests a question on another team's finding or takes it back; this came from an automated or unnamed credential, so nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 966
+      "line": 1073
     },
     {
       "id": "citation.index.imported_not_a_question",
       "en": "{inquiry} is not a question, and another team's finding is cited from a question; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 977
+      "line": 1084
     },
     {
       "id": "citation.index.imported_not_cited",
       "en": "this question holds no leg on that finding, so there is nothing to take back. A leg on a document or a question is severed, not withdrawn.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1100
+      "line": 1207
     },
     {
       "id": "citation.index.imported_ref_malformed",
       "en": "the import and the finding named here do not spell another team's finding, so there is nothing to rest the question on; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1014
+      "line": 1121
     },
     {
       "id": "citation.index.imported_withdraw_needs_reason",
       "en": "taking another team's finding off a question records WHY, and a change with no reason is an unexplained change; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1089
+      "line": 1196
     },
     {
       "id": "citation.index.imported_withdraw_too_large",
       "en": "the reason would push this question's bundle.md past the 1MB inline limit; nothing has been written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1116
+      "line": 1223
     },
     {
       "id": "citation.index.imported_would_be_too_large",
       "en": "resting on this finding would push this question's bundle.md past the 1MB inline limit; nothing has been written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1061
+      "line": 1168
     },
     {
       "id": "citation.index.k_cannot_be_written_into",
       "en": "'{k}' cannot be written into the record as it stands: a value describing which part of a document is at most 200 characters and cannot contain a quotation mark, a backslash, a line break or a comment mark. Those characters would reshape the document rather than appear in it.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 682
+      "line": 683
+    },
+    {
+      "id": "citation.index.leggrade_bad_grade",
+      "en": "a grade is one letter, {grades}; nothing was written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 905
+    },
+    {
+      "id": "citation.index.leggrade_member_only",
+      "en": "only a named member says how well your team's copy shows a passage; this came from an automated or unnamed credential, so nothing was written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 894
+    },
+    {
+      "id": "citation.index.leggrade_needs_reason",
+      "en": "a grade records WHY, and a grade with no reason is an unexplained claim about your team's copy; nothing was written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 910
+    },
+    {
+      "id": "citation.index.leggrade_no_ceiling",
+      "en": "the record cannot say how well your team's copy of {target} shows it, so it cannot support any grade here; nothing was written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 954
+    },
+    {
+      "id": "citation.index.leggrade_not_a_question",
+      "en": "{project} is not a question, and a passage is graded where a question rests on it; nothing was written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 900
+    },
+    {
+      "id": "citation.index.leggrade_not_cited",
+      "en": "this question holds no leg on that passage, so there is nothing to grade. A different part of the same document is a different passage.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 927
+    },
+    {
+      "id": "citation.index.leggrade_not_gradable",
+      "en": "this passage is not one your team holds a copy of, so a member does not grade it: the record works its grade out from what it rests on, or takes it from the other team's edition. Nothing was written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 936
+    },
+    {
+      "id": "citation.index.leggrade_other_axis",
+      "en": "this passage already carries a grade of {grade} on the {axis} axis, and a passage carries one grade, so that grade is kept and nothing was written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 941
+    },
+    {
+      "id": "citation.index.leggrade_over_ceiling",
+      "en": "the most the record can support for your team's copy of {target} is {ceiling}, and {grade} is stronger; nothing was written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 955
+    },
+    {
+      "id": "citation.index.leggrade_too_large",
+      "en": "the reason would push this question's bundle.md past the 1MB inline limit; nothing has been written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 974
+    },
+    {
+      "id": "citation.index.leggrade_was_none",
+      "en": "no grade",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 970
     },
     {
       "id": "citation.index.log_note",
       "en": " Note: {note}.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 817
+      "line": 818
     },
     {
       "id": "citation.index.no_question_drawn_into_case",
       "en": "no question by that id is one you can see, so it cannot be drawn into this case; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 908
+      "line": 1015
     },
     {
       "id": "citation.index.no_question_kept_with_it",
       "en": "no question by that id is one you can see, so this citation cannot be kept with it; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 497
+      "line": 498
     },
     {
       "id": "citation.index.not_a_question_cited_for",
       "en": "{qid} is not a question, so it cannot be the question this was cited for; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 501
+      "line": 502
     },
     {
       "id": "citation.index.not_a_question_drawn_into",
       "en": "{qid} is not a question, so it cannot be drawn into this case as one; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 912
+      "line": 1019
     },
     {
       "id": "citation.index.part_named_written_nowhere",
       "en": ". The part of the document this call named was written NOWHERE, because no leg was written at all: making an existing citation more specific is a separate authored act on this record's own plan.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 738
+      "line": 739
     },
     {
       "id": "citation.index.projects_bundle_md_does_not_parse",
       "en": "the project's own bundle.md does not parse under the restricted grammar",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 611
+      "line": 612
     },
     {
       "id": "citation.index.projects_references_block_extend",
       "en": "the project's references block is not in a shape this grammar can extend in place. Citing edits only that block and never rewrites the rest of the document.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 760
+      "line": 761
     },
     {
       "id": "citation.index.rl_is_not_a_role",
       "en": "'{rl}' is not a role a basis leg can carry. The set is closed and is published by op=affordances beside the act: {roles}.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 284
+      "line": 285
     },
     {
       "id": "citation.index.session_cited_many_records",
       "en": "### Session {when} | Cited {count} records | {who}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 824
+      "line": 825
     },
     {
       "id": "citation.index.session_cited_one_record",
       "en": "### Session {when} | Cited 1 record | {who}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 823
+      "line": 824
+    },
+    {
+      "id": "citation.index.session_graded_leg",
+      "en": "### Session {when} | Graded {target} on the capture axis | {who}\n",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 967
     },
     {
       "id": "citation.index.session_head_many_citations",
       "en": "### Session {when} | {verb} {count} citations | {who}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 383
+      "line": 384
     },
     {
       "id": "citation.index.session_head_one_citation",
       "en": "### Session {when} | {verb} {count} citation | {who}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 382
+      "line": 383
     },
     {
       "id": "citation.index.session_rested_many_records",
       "en": "### Session {when} | Rested this question on {count} records ({role}) | {who}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 821
+      "line": 822
     },
     {
       "id": "citation.index.session_rested_on_imported",
       "en": "### Session {when} | Rested this question on another team's finding ({role}) | {who}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1055
+      "line": 1162
     },
     {
       "id": "citation.index.session_rested_one_record",
       "en": "### Session {when} | Rested this question on 1 record ({role}) | {who}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 820
+      "line": 821
     },
     {
       "id": "citation.index.session_took_imported_back",
       "en": "### Session {when} | Took another team's finding back off this question | {who}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1110
+      "line": 1217
     },
     {
       "id": "citation.index.set_had_moved_since",
       "en": " (the set had moved since it was made; citing is report-weight and proceeded)",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 810
+      "line": 811
     },
     {
       "id": "citation.index.the_part_of_the_document_label",
       "en": "the part of the document this citation names",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 715
+      "line": 716
     },
     {
       "id": "citation.index.the_part_of_the_document_refused",
       "en": "the part of the document this citation names is refused by the SAME catalog function op=promote runs at the write, so nothing was written. A citation that names no part means the whole document, which is always a legal thing to cite.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 722
+      "line": 723
     },
     {
       "id": "citation.index.the_questions_basis_block",
       "en": "the question's basis block is not in a shape this grammar can extend in place. Citing appends legs to that block and never rewrites the rest of the document.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 371
+      "line": 372
     },
     {
       "id": "citation.index.the_questions_references_block",
       "en": "the question's references block is not in a shape this grammar can extend in place. Citing edits only that block and the basis block, and never rewrites the rest of the document.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 792
+      "line": 793
     },
     {
       "id": "citation.index.the_reasons_appended_to_these",
       "en": "the reasons appended to these citations would push bundle.md past the 1MB inline limit",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 396
+      "line": 397
     },
     {
       "id": "citation.index.the_references_block_not_in_shape",
       "en": "the references block is not in a shape this grammar can edit in place",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 363
+      "line": 364
     },
     {
       "id": "citation.index.the_team_has_retired_these",
       "en": "the team has RETIRED these since the edge was severed, recording that they are superseded or no longer stand, and reinstating the edge would read to every later member as live support. Cite what superseded them, or re-collect the source as a new record and cite that. The whole call is refused rather than narrowed to the members that are not retired.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 316
+      "line": 317
     },
     {
       "id": "citation.index.the_team_has_retired_these_now",
       "en": "the team has RETIRED these, recording that they are superseded or no longer stand, and a citation made now would read to every later member as live support. Cite what superseded them, or re-collect the source as a new record and cite that. The whole call is refused rather than narrowed to the members that are not retired.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 608
+      "line": 609
     },
     {
       "id": "citation.index.the_team_has_retired_this",
       "en": "the team has RETIRED this, recording that it is superseded or no longer stands, and drawing on it now would read to every later member as live support. Draw on what superseded it.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 916
+      "line": 1023
     },
     {
       "id": "citation.index.these_targets_already_carry",
       "en": "these targets already carry a SEVERED cites edge, which is a recorded decision to cut the dependency, not the absence of one. Citing neither reverses it silently nor skips past it. Reinstating a severance is a separate action that records its own reason.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 649
+      "line": 650
     },
     {
       "id": "citation.index.this_call_names_a_passage",
       "en": "this call names a passage found by search and also a selection or a part of a document. A found passage already names its document and its part, so the record could not tell which you meant; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 458
+      "line": 459
     },
     {
       "id": "citation.index.this_call_names_fields",
       "en": "this call names {names}, which this act does not carry, so the record cannot tell what part of the document was meant. It is REFUSED rather than ignored: a field accepted and quietly dropped leaves a citation that looks like the one you made and is not. The fields this act takes are: {fields}.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 665
+      "line": 666
     },
     {
       "id": "citation.index.this_call_names_neither",
       "en": "this call names neither a selection nor a passage found by search, so there is nothing to cite; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 459
+      "line": 460
     },
     {
       "id": "citation.index.this_case_already_carries",
       "en": "this case already carries a SEVERED edge to this question, which is a recorded decision to cut the dependency, not the absence of one. Drawing on it again would neither reverse that decision silently nor skip past it. Reinstating a severance is a separate action that records its own reason.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 927
+      "line": 1034
     },
     {
       "id": "citation.index.this_case_already_draws",
       "en": "this case already draws on this question; nothing was written",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 932
+      "line": 1039
     },
     {
       "id": "citation.index.this_passage_was_found_in",
       "en": "this passage was found in capture {sha} of {doc}, and a citation of {doc_2} is pinned to {v1}, so its part could name different words. Nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 482
+      "line": 483
     },
     {
       "id": "citation.index.this_selection_resolves_to_nothing_to_cite",
       "en": "this selection resolves to no members, so there is nothing to cite. It may have named ids that do not exist, or its members may have been purged or hidden since it was made.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 729
+      "line": 730
     },
     {
       "id": "citation.index.this_selection_resolves_to_nothing_to_move",
       "en": "this selection resolves to no members, so there is nothing to move. It may have named ids that do not exist, or its members may have been purged or hidden since it was made.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 291
+      "line": 292
     },
     {
       "id": "citation.index.trigger_a_part_found_in_capture",
       "en": "Trigger: a part of {doc} found by search in capture {capture}",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 814
+      "line": 815
+    },
+    {
+      "id": "citation.index.trigger_graded_leg",
+      "en": "Trigger: the member's own grade of how well the team's copy shows {target}\n",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 968
     },
     {
       "id": "citation.index.trigger_imported_finding",
       "en": "Trigger: {ref} at edition {edition}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1056
+      "line": 1163
     },
     {
       "id": "citation.index.trigger_question_drawn",
       "en": "Trigger: question {qid} drawn into this case\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 944
+      "line": 1051
     },
     {
       "id": "citation.index.trigger_selection_handle",
       "en": "Trigger: selection {handle}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 386
+      "line": 387
     },
     {
       "id": "citation.index.trigger_selection_moved",
       "en": "Trigger: selection {handle}{moved}",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 815
+      "line": 816
     },
     {
       "id": "citation.index.verb_an_edge_records_why",
       "en": "{verb} an edge records WHY. The catalog's own remediation for a bad reference is \"sever with reason\", and an edge moved with no reason is an unexplained change wearing a status field.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 265
+      "line": 266
     },
     {
       "id": "citation.index.verb_requires_an_edge_currently",
       "en": "{verb} requires an edge currently in {states}. These targets are not, so the whole call is refused: a batch that moved only the eligible members would be a state change the operator did not ask for.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 346
+      "line": 347
     },
     {
       "id": "citation.index.which_part_of_a_document",
       "en": "which part of a document a citation rests on is recorded on a leg of a QUESTION's basis, and this citing object is a case. A case's citation edge names the document and has no slot for a page or a passage, so this extent would be dropped rather than recorded — refused instead, for the reason a role is refused here: a field stated in one place and honoured nowhere is how the record and its projections drift apart.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 670
+      "line": 671
     },
     {
       "id": "citation.recorded.a_read_names_the_member",
@@ -16182,7 +16322,7 @@
       "en": "{text}\n## Session Log\n\n{entry}",
       "module": "citation",
       "file": "bio-plane/src/citation/splice.mjs",
-      "line": 263
+      "line": 301
     },
     {
       "id": "civil-time.calendar.list_cannot_read",
