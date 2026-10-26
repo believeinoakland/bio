@@ -205,6 +205,16 @@ function keptOf(times) {
   if (!stages) return "undetermined";
   return Object.hasOwn(stages, "receipt") && times.running !== "receipt" ? "held" : "nothing";
 }
+/* R124 (acquisition R110): THE MEMBER A SESSION'S OPENER NAMES, in the viewer's form. A session stores the id the `acquire` was made for (`opened_by: "<id>"`); the
+   door stamps `member:<id>` (the founder's is `admin`), and a viewer may carry a project (`member:<id>@<project>`). The store answers `heldat` only for a viewer
+   spelling, so a bare id is read as `member:<id>`; the founder's bare `admin` and a spelling that already is a viewer stand as they are. Pure; never throws. */
+function openerForms(opened) {
+  const base = typeof opened === "string" ? opened.replace(/^(member:[A-Za-z0-9._:-]{1,128}|admin)@[\s\S]+$/, "$1") : "";
+  if (!base) return { viewer: "", memberId: "" };
+  if (base === "admin") return { viewer: "admin", memberId: "admin" };
+  if (base.startsWith("member:")) return { viewer: base, memberId: base.slice("member:".length) };
+  return { viewer: `member:${base}`, memberId: base };
+}
 /* R105 (fix round 6, G2, G3; K4562): THE STORE IS ASKED WHETHER THE CAPTURE IS KEPT, not only this call's stages. A call the door stopped waiting for may
    name a capture the record already holds (the address a member captured before, the page a `continue` finishes): that is kept whatever stage the call
    was in, and "kept nothing" is never said of it. The question is one read of the store as the member may see it, each failing to `false`. */
@@ -214,7 +224,7 @@ async function keptInStore(stub, { address, session, viewer }) {
     if (typeof session === "string" && session) {
       const ld = await ask(`loadcapturesession?session=${encodeURIComponent(session)}`);
       /* only the session's own opener is told it is kept: another's session id states nothing */
-      if (ld && ld.found === true && typeof ld.primarySha === "string" && ld.primarySha && ld.state && ld.state.opened_by === viewer) return true;
+      if (ld && ld.found === true && typeof ld.primarySha === "string" && ld.primarySha && ld.state && openerForms(ld.state.opened_by).viewer === openerForms(viewer).viewer) return true;
     }
     if (typeof address === "string" && address && viewer) {
       const held = await ask(`heldat?address=${encodeURIComponent(address)}&viewer=${encodeURIComponent(viewer)}`);
@@ -682,10 +692,11 @@ export async function deliverOwedRender({ ctx, env, storeName = "bio", answer, s
     if (typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha)) return { ok: false, reason: "NO_RENDERED_DOCUMENT" };
     const ld = captureOf(ctx).loadCaptureSession({ session });
     if (!ld || !ld.found) return { ok: false, reason: "NO_SUCH_SESSION" };
-    const viewer = ld.state && typeof ld.state.opened_by === "string" ? ld.state.opened_by : "";
-    if (!viewer) return { ok: false, reason: "NO_OPENER" };
-    /* the opener in the door's forms (R17): the viewer `member:<id>` or `admin`, her id, her positional identity */
-    const memberId = viewer.startsWith("member:") ? viewer.slice("member:".length) : viewer;
+    const opened = ld.state && typeof ld.state.opened_by === "string" ? ld.state.opened_by : "";
+    if (!opened) return { ok: false, reason: "NO_OPENER" };
+    /* the opener in the door's forms (R17): the viewer `member:<id>` or `admin`, her id, her positional identity. Acquisition writes the opener as the bare
+       member id and the door stamps the viewer form; both name one member (acquisition R110), so the store is asked in the viewer's form either way. */
+    const { viewer, memberId } = openerForms(opened);
     const who = { author: memberId, actorMemberId: memberId, actorIdentity: viewer === "admin" ? "member:admin" : viewer, actorViewer: viewer };
     /* (fix round 6, G2; K4562) a session parked for a fetch the member's act handed to the alarm carries her project and the opener in its state;
        a session parked for a render is filed beside its shell, under the shell's project */
