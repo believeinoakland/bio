@@ -86,6 +86,11 @@ export const request = Object.freeze({
       return rows.filter(function (x) { return x && x.kind === "body" && typeof x.entity === "string" && typeof x.name === "string" && x.name; })
         .map(function (x) { return { value: x.entity, text: x.name }; });
     },
+    // re-walk 10 N3: no body is held only when the directory read was whole: a page that ended at its cap may hold a body beyond it, and the screen says nothing then
+    noBody: function (view) {
+      const r = view.data.names;
+      return !!r && r.state === "ok" && !!r.value && r.value.truncated !== true && view.parts.bodiesOf(view).length === 0;
+    },
     // C64, C64-law: the records laws the active profiles name (`jurisdictions` R7), each with its own first-request window (R96)
     recordsLaws: recordsLawsOf,
     // C64: where requests go, as `entities` R63 holds it: `{kind: address|email|portal, value}`, by its form; none when left empty
@@ -135,6 +140,8 @@ export const request = Object.freeze({
           + cs.field("req-noff-role", "screen.request.nameoffice.role", { help: "screen.request.nameoffice.role.help" })
           // R57: the body that holds the office, chosen among the team's bodies (the entity id is what is kept)
           + cs.choice("req-noff-body", "screen.matter.f.body", [{ value: "", text: "" }].concat(P.bodiesOf(view)))
+          // re-walk 10 N3: a team with no body is told so, in the design's word for nothing held; the door where one is added is the places door below (an administrator's)
+          + (P.noBody(view) ? '<p class="cs-state" data-state="empty" data-nobody="1">' + cs.w("state.empty") + "</p>" : "")
           // R57: from when to when the body has held it (the person screen's own two days): an office with no day stated is registered but placed on no day
           + cs.field("req-noff-since", "screen.person.keeper.from.label", { type: "date" }) + cs.field("req-noff-until", "screen.person.keeper.to.label", { type: "date" })
           + '<p class="mk-small">' + cs.w("screen.person.keeper.dates.note.a") + " " + cs.w("screen.person.keeper.dates.note.b") + "</p>"

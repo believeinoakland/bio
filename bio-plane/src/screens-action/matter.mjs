@@ -180,12 +180,13 @@ export const matter = Object.freeze({
       }
       return { rows: rows, state: state, more: more };
     },
-    // R56 (walk E C2a (1, 2)): the body the act was by, chosen among the offices and bodies the team holds (`entitieskind`, entities R51), the
+    // R56 (walk E C2a (1, 2); re-walk 10 N5): the body the act was by, chosen among every kind `conformance` accepts as an actor (`ACTOR_KINDS`: office,
+    // institution, body, movement; the issuer of a standard is usually an institution) the team holds (`entitieskind`, entities R51), the
     // entity id sent as the actor's body (conformance R27 binds a standard to the body entity, never to typed words). The body a recorded
     // determination names is kept as an option when the team's list does not hold it.
     bodyChoice: function (cs, view, current) {
       const P = view.parts;
-      const reads = ["office", "body"].map(function (kind) { return P.later(cs, view, "entities:" + kind, "entitieskind", { kind: kind, limit: "200" }, ""); });
+      const reads = ["office", "institution", "body", "movement"].map(function (kind) { return P.later(cs, view, "entities:" + kind, "entitieskind", { kind: kind, limit: "200" }, ""); });
       if (reads.some(function (r) { return r.state === "loading"; })) return "";
       const failed = reads.find(function (r) { return r.state === "failed"; });
       if (failed) return cs.state(failed);
@@ -528,7 +529,9 @@ export const matter = Object.freeze({
           }).join("")) : "";
           const declined = status && Array.isArray(status.declines) ? status.declines.filter(function (x) { return !x.superseded_by; }) : [];
           return list + (declined.length ? '<p class="mk-note">' + cs.w("screen.matter.declined", { reason: declined[declined.length - 1].reason || "" }) + "</p>" : "")
-            + (!live ? '<div class="mk-acts">' + cs.act("escalationopen", {}) + cs.act("declinetoescalate", {}) + "</div>" : "");
+            // re-walk 10 N8: an escalation is opened, or declined, only on a determination that found an act noncompliant (the row `unavailable` states);
+            // a determination of compliant outcomes alone offers neither, and says what they need
+            + (live ? "" : P.ctx(view).nc.length ? '<div class="mk-acts">' + cs.act("escalationopen", {}) + cs.act("declinetoescalate", {}) + "</div>" : P.unavailable(cs, view));
         });
       }
       const k = P.ctx(view);

@@ -212,7 +212,9 @@ export const startSend = Object.freeze({
         // L20 (K4195): the code's words, then each finding's own detail as the record answers it (escaped record data)
         ACTION_BASIS_REFUSED: function (refusal, cs) {
           const found = Array.isArray(refusal.findings) ? refusal.findings.filter(function (f) { return f && typeof f.detail === "string" && f.detail.trim(); }) : [];
-          return cs.w("refusal.ACTION_BASIS_REFUSED") + (found.length ? '<ul class="mk-list">' + found.map(function (f) { return "<li>" + cs.esc(f.detail) + "</li>"; }).join("") + "</ul>" : "");
+          // re-walk 10 N7: the owner's reasons are the answer when it gives them; the code's sentence (which ends "or leave it out") stays for a refusal with none
+          if (found.length) return '<ul class="mk-list">' + found.map(function (f) { return "<li>" + cs.esc(f.detail) + "</li>"; }).join("") + "</ul>";
+          return cs.w("refusal.ACTION_BASIS_REFUSED");
         },
       },
       done: function (view, answer, cs) { if (answer && answer.action) cs.go("start-send", answer.action); return { stay: true }; },

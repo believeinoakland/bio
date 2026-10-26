@@ -28,10 +28,9 @@ test("R1 (C63): a plan's checks name the option or the phase by its place in the
   ];
   const p = await open("/app" + `/plan/${PLAN_ID}`, withPlan({ checks }));
   const strip = text(p, main(p).querySelector(".mk-checks2"));
-  // the design's own sentence for a hostile response spells a code in its words ("not_met", a WORDS row for the design stream); the fills are what is mapped here
-  const own = W("action-plans.index.phase_id_addresses_someone_outside", { id: "Phase 1" });
-  const drawn = strip.replace(own, "");
-  for (const raw of ["opt-1", "opt-2", "p1", "not_met"]) assert.ok(!drawn.includes(raw), `${raw} is not drawn`);
+  // re-walk 10: the hostile-response check is the design's own sentence (`action-plans.says.phase_addresses_someone`), never the plane's, which spells a code
+  const own = W("action-plans.says.phase_addresses_someone", { id: "Phase 1" });
+  for (const raw of ["opt-1", "opt-2", "p1", "not_met"]) assert.ok(!strip.includes(raw), `${raw} is not drawn`);
   const name = PLAN.options[0].summary;
   assert.ok(strip.includes(W("action-plans.says.regulated_date_passed", { id: name, date: D("2026-11-30"), basis: "law" })));
   assert.ok(strip.includes(W("action-plans.says.addresses_someone_outside", { id: PLAN.options[1].summary })));

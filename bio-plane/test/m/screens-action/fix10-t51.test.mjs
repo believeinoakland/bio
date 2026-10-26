@@ -150,7 +150,7 @@ test("R56 (walk E K-new): a request for comment with no advancing leg is sent an
   const real = await answerOf(world, me, "actioncreate", { body: { document } });
   assert.equal(real.result.reason, "ACTION_BASIS_REFUSED");
   const slot = text(p, slotOf(p, b));
-  assert.ok(slot.includes(W("refusal.ACTION_BASIS_REFUSED")));
+  assert.ok(!slot.includes(W("refusal.ACTION_BASIS_REFUSED")), "re-walk 10 N7: the reasons are the answer");
   const details = real.result.findings.map((f) => f.detail).filter(Boolean);
   assert.ok(details.length > 0);
   for (const d of details) assert.ok(slot.includes(d.replace(/\s+/g, " ").trim()), "each finding's own detail");

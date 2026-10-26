@@ -4,7 +4,7 @@ export const WORDS = Object.freeze([]);
 export const EXTRA = Object.freeze({
   // walk E K-words: a check that cannot be told for want of a day, and one that falls before its phase, worded by key with names
   plan: ["action-plans.time_zone_held_place", "action-plans.says.whether_regulated_date", "action-plans.says.whether_regulated_date_falls",
-    "action-plans.says.regulated_date_falls"],
+    "action-plans.says.regulated_date_falls", "action-plans.says.phase_addresses_someone"],
   // walk C C-M11: a concluded question that is no finding yet is drawn as concluded; walk E C2a: no office or body held points to where one is added
   matter: ["question.concluded.heading", "screen.request.nooffice.admin"],
 });

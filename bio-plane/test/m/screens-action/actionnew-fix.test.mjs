@@ -30,11 +30,11 @@ test("R24, L20 (K4195): a refusal with findings draws each finding's detail afte
   const details = owner.result.findings.map((f) => f.detail).filter(Boolean);
   assert.ok(details.length > 0, "and says why");
   for (const d of details) assert.ok(beside(real, rb).includes(d), "the owner's own detail is drawn: " + d);
-  assert.ok(beside(real, rb).includes(W("refusal.ACTION_BASIS_REFUSED")), "after the code's sentence");
+  assert.ok(!beside(real, rb).includes(W("refusal.ACTION_BASIS_REFUSED")), "the code's sentence, which ends 'leave it out', does not head the owner's reasons (re-walk 10 N7)");
   /* the shapes the owner does not give (several details, none, an empty list, markup in a detail) are answered by the table below */
   const { p, b } = await refusedWith({ findings: [{ check: "C-2.10", detail: "The leg names an action, not a question of this project." }] });
   const at = beside(p, b);
-  assert.ok(at.includes(W("refusal.ACTION_BASIS_REFUSED")), "the code's sentence");
+  assert.ok(!at.includes(W("refusal.ACTION_BASIS_REFUSED")), "not the code's sentence (re-walk 10 N7)");
   assert.ok(at.includes("The leg names an action, not a question of this project."), "the finding's own detail");
   const two = await refusedWith({ findings: [{ detail: "first reason" }, { detail: "second reason" }, { code: "X" }] });
   assert.ok(beside(two.p, two.b).includes("first reason") && beside(two.p, two.b).includes("second reason"), "each finding with a detail");
