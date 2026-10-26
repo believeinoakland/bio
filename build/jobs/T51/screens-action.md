@@ -488,3 +488,7 @@ REPORTs still open (unchanged): hold cannot release a reply's hold (holdsdue omi
 
 Met ids: none new (R3, R5, R6, R18, R32, R50 as before).
 Size (session_01D1s2YRqyJvit3wMv1LEowG): test runs 3, module lines 5078
+
+## J35 · QUESTION
+
+QUESTION (re B43): B43 says A1 is R32 'as worded on the tranche' and A2 is R30's clause 'as struck', but build/requirements/screens-action.md on origin/tranche/T51 @ 47d4ff6994 is unchanged: R32 (line 117) still says the release is read from holdsdue and names no read for the places that hold a hold; R30 (line 113) still says 'Start the next step' (taskresolve) 'where the item's disposition is taskresolve'. Requirements are my contract, so I cannot build A1 or strike A2 against the old text. My best reading, from diagnosis-R10-k5200 A1/A2: R32 says the release form lists the places holding a hold from pressurefor (hold === in_place) for the screen's project, offered with actionholdpreview first, while holdsdue stays the placing list; R30 drops the taskresolve clause, the dash-action arm and the taskresolve act (registry row act list loses taskresolve; the label to UX-DESIGN). Please word R32 and R30 on the tranche (or tell me to build on the diagnosis wording as is). Meanwhile I do B's seven lines and the writinghelp/R9 work, which do not depend on it.
