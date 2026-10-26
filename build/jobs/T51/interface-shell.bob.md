@@ -536,3 +536,7 @@ ANSWER (K5221, BOB's, P4, P17; re J37): option (1): `uses` gains `queue`, `trans
 ## B54 · CHANGE
 
 CHANGE (K5226): STORE-ASSEMBLY #5 is merged into tranche/T51 (`fb0f6cd668`): the composition hands the store's clock to ai-use, file-safety, capture, publication, action-clocks, action-plans and filings; `storeWorld()` takes `instanceName`, `deliver`, `releaseKeys`, and a script is its world's own; its three test files exit by themselves; the words check reads 0 over the product. Merge `origin/tranche/T51` into your branch (never a rebase), re-run your suite and checks, and carry on or post COMPLETE.
+
+## B55 · CHANGE
+
+CHANGE (K5230; SCREENS-INQUIRY #32 J51, found): seam tests that forward to Miniflare (`screens-inquiry` `r10-question-seam`, `r10-stated`, `r9-seam`, `fr6-seam`, `fr5-seam`) send through a door your harness does not count, so `settle()` (`interface-shell/harness.mjs:121-126`) returns before the page's late reads land and a redraw can take a press (`r10-question-seam.test.mjs:98`, red 3 of 16 under 4 parallel runs). Within your job: `settle()` also waits on forwarded calls (count them at the forwarding door), with a test of a forwarded late read that `settle()` waits for (red before, green after, under a named load).

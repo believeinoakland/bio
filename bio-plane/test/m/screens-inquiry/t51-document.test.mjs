@@ -7,6 +7,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn, boot } from "../interface-shell/harness.mjs";
+import { themeReadWithPassage } from "../connections/fixtures.mjs";
 import { open, storeWorld, SCREENS, main, actsIn, fill, press, says, section, word, day, lead, READING, DOCUMENT_MD, P, Q, Q2, D, SHA, NEWER, INQUIRY_REFS, inquiryMd } from "./fixtures.mjs";
 
 /* the clock the page draws is the browser's own; these tests run in one zone so a moment's time of day is exact */
@@ -444,11 +445,21 @@ test("R78 an extent of page 0 draws \"Page 1\" in the passage's place and in the
   await press(p, "cite", { within: q[0].nextElementSibling });
 });
 
-/* still scripted (themeread): the world's theme read gives a placement no page (connections' placements carry none), so this page-drawn-from-one placement cannot be made (needed: a placement of a passage with its page) */
-test("R78 a theme's placement page and the mention that counts are drawn from one", async () => {
-  const p = await open(at, { plane: { themeread: (r) => ok(r.query.id ? { ok: true, members: [{ target: D, page: 0, placer_handle: "dev", placed_at: "2026-10-03T10:00:00Z", note: "backlog" }], hunches: [] }
-    : { ok: true, themes: [{ theme_id: "TH-1", name: "Deferred maintenance" }] }) } });
-  assert.ok(says(section(p, "theme.section"), "screen.document.theme.page", { page: String(one(0)), name: "dev", date: day("2026-10-03T10:00:00Z"), note: "backlog" }));
+/* connections' real theme read (R56, R78): a theme holding a passage of a paged document (page 1, counted from 0) and a whole document */
+test("R78 a theme's placement page and the mention that counts are drawn from one: the placement's own page, by who placed it", async () => {
+  const real = themeReadWithPassage();
+  const passage = real.members.find((m) => m.target_kind === "content"), whole = real.members.find((m) => m.target_kind === "document");
+  const themes = (r) => ok(r.query.id ? real : { ok: true, themes: [{ theme_id: real.theme_id, name: real.name }] });
+  const roster = ok({ ok: true, members: [{ member_id: "bob", handle: passage.placed_by_handle }] });
+  const on = (doc) => open("/app/document/" + doc, { images: { [doc]: { "bundle.md": DOCUMENT_MD.replace(D, doc), "data/provenance.json": JSON.stringify({ documents: [{ capture: { sha256: SHA } }] }) } },
+    plane: { themeread: themes, memberlist: roster } });
+  const p = await on(passage.document);
+  assert.ok(says(section(p, "theme.section"), "screen.document.theme.page", { page: String(one(passage.page)), name: passage.placed_by_handle, date: day(passage.placed_at), note: "" }),
+    "the passage's page, counted from one, placed by the handle the read gives");
+  /* control: a placement of the whole document states no page, so none is drawn */
+  const w = await on(whole.document);
+  assert.ok(!section(w, "theme.section").textContent.includes(word("screen.document.passage.where", { page: "1" }).split("1")[0]), "no page for a whole document");
+  assert.ok(says(section(w, "theme.section"), "screen.document.theme.whole", { kind: word("shell.card.document"), name: whole.placed_by_handle, date: day(whole.placed_at) }));
 });
 
 test("R68 a name matched by a held reference and one by a member's testimony draw their own sentences", async () => {

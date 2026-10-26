@@ -94,3 +94,16 @@ test("R90 R99 R101 R108 (fixture `readHeldAnswer`, the paged and killed paths): 
   assert.deepEqual(f.answer.counters, { written: f.counters.written, skipped: f.counters.skipped });
   assert.deepEqual([f.counters.owed, f.counters.failed], [0, 0]);
 });
+
+test("R101 (fixture `readHeldAnswer.final('NO_PROGRESS')`): an OCR tick whose member answered pages holding no glyph ends the entry on that tick: `{ok: true, read: false, final: true, why: NO_PROGRESS}`, owing nothing, nothing written", async () => {
+  const a = await readHeldAnswer.final("NO_PROGRESS");
+  assert.deepEqual([a.ok, a.read, a.final, a.why, a.owed], [true, false, true, "NO_PROGRESS", undefined], JSON.stringify(a));
+});
+
+test("R101 (fixture `readHeldAnswer.failed()`): the store failing at a later piece is a transient answer, never an end: `TRANSIENT`, owed, the figures the state keeps, no `final`", async () => {
+  const a = await readHeldAnswer.failed();
+  assert.deepEqual([a.ok, a.read, a.owed, a.why, a.final], [true, false, true, "TRANSIENT", undefined], JSON.stringify(a));
+  assert.ok(a.detail.read_through > 0 && a.detail.total > a.detail.read_through, "the cursor's figures are kept");
+  assert.equal(typeof a.detail.reason, "string");
+  assert.match(a.detail.reason, /STORE_FAILED/);
+});

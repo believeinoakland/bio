@@ -250,14 +250,12 @@ test("R10 entry 25 the project draws exactly its registry acts, writing help und
   /* writing help is the assistant's, under the stake field; it is absent while the assistant is not reachable (control, above) */
   const stake = section(p, "stake.project.title");
   assert.ok(stake.querySelector('button[data-act="writinghelp"]'), "under the field");
-  /* it sends the field and what she told it; the draft stands in the field, labelled, and nothing is saved
-     (the draft is scripted: needs a recipe for the writing help's draft text, which the world's door answers without `text`) */
-  const h = await pageOf(w.world, w.ann, w.at, { plane: {
-    writinghelp: ok({ ok: true, text: "We rent from the contractor.", label: { kind: "machine", asked_by: "member:ann" }, untested: false }) } });
+  /* it sends the field and what she told it, over the world's own door (no draft is scripted, K5212); her words stay and nothing is saved */
+  const h = await pageOf(w.world, w.ann, w.at);
   fill(h, { "project-stake": "we rent" });
   await press(h, "writinghelp");
   assert.deepEqual(h.byOp("writinghelp").map((r) => r.body), [{ op: "projectstakeset", field: "stake", told: "we rent" }]);
-  assert.equal(h.doc.getElementById("project-stake").value, "We rent from the contractor.");
+  assert.equal(h.doc.getElementById("project-stake").value, "we rent", "her own words stay in the field");
   assert.equal(h.byOp("projectstakeset").length, 0, "nothing is saved");
 });
 

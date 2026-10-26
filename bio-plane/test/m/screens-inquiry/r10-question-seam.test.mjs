@@ -37,11 +37,19 @@ async function founder() {
 const screenCall = (auth) => ({ now: () => Date.now(), digest: async (s) => createHash("sha256").update(s).digest("hex"),
   call: async (op, { query = {}, body } = {}) => (await door(`/api/?${new URLSearchParams({ op, ...query })}`, { method: body === undefined ? "GET" : "POST",
     headers: { ...auth, "content-type": "application/json" }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) })).json() });
-const forwarded = (auth) => Object.fromEntries(Object.keys(OPS).map((op) => [op, async (req) => {
+/* `slow` names ops whose answer is held back that many ms (a loaded machine answers some reads later than others; the page must not lose the member's press to a late redraw) */
+/* the harness's `settle` waits only for the calls of a world's counted door; these are real requests to Miniflare, which it does not see, so a page's late reads (themes, frozen
+   editions, reminders, the queue, plans) can land after the test has ticked its radios and pressed, and the redraw takes the press with it. `quiet` waits for them (R-SEAM, K4966). */
+let busy = 0, started = 0;
+const forwarded = (auth, slow = {}) => Object.fromEntries(Object.keys(OPS).map((op) => [op, async (req) => { busy++; started++; try { return await call(auth, slow, op, req); } finally { busy--; } }]));
+const call = async (auth, slow, op, req) => {
+  if (slow[op]) await new Promise((r) => setTimeout(r, slow[op]));
   const r = await door(`/api/?${new URLSearchParams({ ...req.query, op })}`, { method: req.body === undefined ? "GET" : "POST", headers: { ...auth, "content-type": "application/json" },
     ...(req.body === undefined ? {} : { body: JSON.stringify(req.body) }) });
   return { status: r.status, json: await r.json().catch(() => null) };
-}]));
+};
+/** waits until no forwarded request is in flight and none has started for 400 ms: the page has drawn everything it reads */
+const quiet = async (p) => { for (let seen = -1; busy > 0 || seen !== started;) { seen = started; await p.settle(20); await new Promise((r) => setTimeout(r, 400)); } };
 const upload = async (auth, bytes, name, type) => (await (await door(`/api/?op=captureupload&statement=r10seam&name=${encodeURIComponent(name)}&type=${encodeURIComponent(type)}`, { method: "POST", headers: auth, body: bytes })).json()).result;
 const until = async (p, done, ms = 30000) => {
   const end = Date.now() + ms;
@@ -57,15 +65,15 @@ const makeProject = async (cs, title) => {
   return id;
 };
 
-test("R30a R23 R50 G6 (the real plane) two cited passages both answered 'No, my answer falls': the screen sends no ground, the plane stores it, and her own reading concludes with no affirmation", async () => {
+async function scenario(slow = {}, title = "Partition seam") {
   const auth = await founder();
   const cs = screenCall(auth);
-  const project = await makeProject(cs, "Partition seam");
+  const project = await makeProject(cs, title);
   /* two documents the member uploaded, filed under the project by the Add screen's own promotion */
   const docs = [];
   for (const [i, body] of ["The council minutes record that crews close each reported pothole within seven days of the report.",
     "The public works log states that the median repair time in the spring quarter was five days from the first report."].entries()) {
-    const up = await upload(auth, Buffer.from(body), `source-${i}.txt`, "text/plain");
+    const up = await upload(auth, Buffer.from(body + " (" + title + ".)"), `source-${i}.txt`, "text/plain");
     const filed = await CAPTURE_SCREEN.parts.promoteDocument(cs, { doc: up.document, title: `Source ${i}`, locator: up.document.locator, project });
     assert.equal(filed.refused, undefined, JSON.stringify(filed).slice(0, 300));
     docs.push({ id: filed.bundleId, sha: up.capture.sha256 });
@@ -89,11 +97,12 @@ test("R30a R23 R50 G6 (the real plane) two cited passages both answered 'No, my 
     assert.equal(/alert/.test(String(main(page).innerHTML).match(/role="alert"[^>]*>[^<]*/g)?.join("") || ""), false, "no refusal: " + (main(page).innerHTML.match(/role="alert"[^>]*>[^<]*/g) || []).join(" | "));
   }
   /* the question page: state b, both passages answered "No", saved */
-  const q = await boot({ screens: SCREENS, plane: forwarded(auth), path: "/app/question/" + question });
+  const q = await boot({ screens: SCREENS, plane: forwarded(auth, slow), path: "/app/question/" + question });
   assert.ok(await until(q, () => !!q.doc.getElementById("ask-0-0") && !!q.doc.getElementById("ask-1-0")), "each cited passage is asked what it carries");
-  q.doc.getElementById("ask-0-0").checked = true;
-  q.doc.getElementById("ask-1-0").checked = true;
+  await quiet(q);
+  for (const id of ["ask-0-0", "ask-1-0"]) { q.doc.getElementById(id).checked = true; q.fire(q.doc.getElementById(id), "change"); }
   await press(q, "inquiryground", { reason: "each passage is needed" });
+  assert.ok(await until(q, () => q.byOp("inquiryground").length > 0, 10000), "the answers are sent");
   const sent = q.byOp("inquiryground").at(-1);
   assert.deepEqual(sent.body.grounds, [], "no ground is sent: both passages are necessary");
   /* the plane stored it: the question is no longer unanswered, and its partition holds no ground */
@@ -101,8 +110,9 @@ test("R30a R23 R50 G6 (the real plane) two cited passages both answered 'No, my 
   assert.equal(part.ok, true, JSON.stringify(part).slice(0, 300));
   assert.deepEqual(part.groups, [], "the stored partition holds no ground");
   /* her own reading, concluded: no affirmation is asked, the plane accepts it */
-  const c = await boot({ screens: SCREENS, plane: forwarded(auth), path: "/app/question/" + question });
+  const c = await boot({ screens: SCREENS, plane: forwarded(auth, slow), path: "/app/question/" + question });
   assert.ok(await until(c, () => !!c.doc.getElementById("question-conclude-own")), "the Concluding form is drawn");
+  await quiet(c);
   fill(c, { "question-conclude-own": "Crews close reported potholes within a week.", "question-conclude-falsifier": "work orders showing repairs after seven days", "question-conclude-reason": "both sources agree" });
   await press(c, "conclude");
   assert.ok(await until(c, () => c.byOp("conclude").length > 0), "conclude is sent");
@@ -117,4 +127,12 @@ test("R30a R23 R50 G6 (the real plane) two cited passages both answered 'No, my 
     await new Promise((x) => setTimeout(x, 300));
   }
   assert.ok(after && after.conclusion, "the question is concluded on her own reading: " + JSON.stringify(after).slice(0, 400) + " | page: " + text(main(c).querySelector('[role="alert"]')).slice(0, 400));
+}
+
+test("R30a R23 R50 G6 (the real plane) two cited passages both answered 'No, my answer falls': the screen sends no ground, the plane stores it, and her own reading concludes with no affirmation", async () => {
+  await scenario();
+});
+
+test("R30a R23 R50 G6 (the real plane, the page's later reads answered late) the member's answers are not lost to a late redraw: the same scenario with themes, frozen editions, reminders, the queue and plans held back 1.5 s", async () => {
+  await scenario({ themeread: 1500, publishedfrozen: 1500, reevaluations: 1500, queue: 1500, plans: 1500 }, "Partition seam, answers held back");
 });

@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { boot, ok } from "../interface-shell/harness.mjs";
 import { open, main, press, says, word, SCREENS, P, Q, D, SHA, BASIS, DOCUMENT_MD, storeWorld } from "./fixtures.mjs";
 import { questionWaitsSetAside } from "../inquiry/fixtures.mjs";
+import { holdRefusals } from "../hypotheses/fixtures.mjs";
 import { onPhone } from "./phone.mjs";
 
 const at = "/app/question/" + Q;
@@ -164,7 +165,8 @@ const screen = SCREENS.find((s) => s.id === "question");
 const READS = { inquiry: "image", strength: "inquirystrength", basis: "basisversions", hunches: "hypotheses", waits: "questionwaits", partition: "inquirypartition", imports: "importedcases", relies: "backlinks" };
 const readCounts = (p) => Object.fromEntries(Object.entries(READS).map(([name, op]) => [name, p.byOp(op).length]));
 const changed = (a, b) => Object.keys(a).filter((k) => b[k] !== a[k]);
-const refusedAct = { status: 200, json: { ok: true, result: { ok: false, reason: "NO_REASON", code: "NO_REASON" } } };
+/* hypotheses' real refusal of a hunch with no words (R1: `HYPOTHESIS_NO_STATEMENT`) */
+const refusedAct = ok(holdRefusals().HYPOTHESIS_NO_STATEMENT);
 
 test("R2 R113 every act of the question screen declares the reads it changes: a list of names that exist in its reads, or 'all'", () => {
   const names = Object.keys(screen.reads({ subject: Q }));

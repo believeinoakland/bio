@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { registerDeclaredOps as registerOps } from "../../../src/op-declarations/index.mjs";
 import { boot, ok, refusedIn } from "../interface-shell/harness.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
+import { emptyFeed } from "../queue/fixtures.mjs";
 import { open, storeWorld, main, actsIn, press, fill, plane, inquiryMd, INQUIRY_REFS, DOCUMENT_MD, provenanceOf, SHA, POLICY, LEGS, says, section, lead, word, day, SCREENS, P, Q, D } from "./fixtures.mjs";
 
 /* K4245 (test-support R17): every owner's declarations registered once, before the first read, by the one registrar */
@@ -128,7 +129,7 @@ test("R71 states k and l: the project's decision is read from the set-aside list
   const pages = [
     { aside: [row({ finding: "INQ-2026-0099-other" }), row({ project: "PROJ-2026-0042" })], truncated: true, next: "cursor-1" },
     { aside: [row({ state: "dismissed", decided_by: "dev", reason: "retired" })], truncated: false, next: null }];
-  const p = await open(at, { ...A, plane: { queue: (r) => (r.query.aside ? ok({ ok: true, ...(r.query.after ? pages[1] : pages[0]), count: 3 }) : ok({ items: [] })) } });
+  const p = await open(at, { ...A, plane: { queue: (r) => (r.query.aside ? ok({ ok: true, ...(r.query.after ? pages[1] : pages[0]), count: 3 }) : ok(emptyFeed())) } });
   assert.deepEqual(asideReads(p).map((r) => r.query.after), [undefined, "cursor-1"], "paged by after until found");
   assert.ok(asideReads(p).every((r) => r.query.aside === "true" && r.query.limit === "500"));
   const m = main(p);
@@ -159,7 +160,7 @@ test("R71 controls: a member who is not in the project is drawn no fold and no s
   const loose = await worldOf({ filed: false });
   const bare = await loose.page();
   assert.equal(main(bare).querySelector("[data-aside]"), null);
-  const failed = await w.page({ plane: { queue: (r) => (r.query.aside ? refusedIn("SOME_REFUSAL") : ok({ items: [] })) } });
+  const failed = await w.page({ plane: { queue: (r) => (r.query.aside ? refusedIn("SOME_REFUSAL") : ok(emptyFeed())) } });
   const more = main(failed).querySelector('details[data-fold="more"]');
   assert.ok(more.querySelector('.cs-state[data-state="failed"]'), "drawn failed, never as no decision");
   assert.equal(more.querySelector('details[data-aside="set"]'), null);

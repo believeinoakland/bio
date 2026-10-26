@@ -1308,3 +1308,11 @@ CHANGE (K5226): STORE-ASSEMBLY #5 is merged into tranche/T51 (`fb0f6cd668`): the
 ## B108 · CHANGE
 
 CHANGE (K5226; store-assembly J12 (4), plan item 101 (4)(d)): with STORE-ASSEMBLY merged (see the CHANGE before this one), `bio-plane/test/m/plane/t42.test.mjs` and `t46.test.mjs` shrink to what is the class's own: the Worker-hook, Miniflare, workerd and RPC tests (plane R112, R113, R6 at the Worker's hooks; R42 on workerd; R114 the RPC methods); their composition cases now live in store-assembly's `t42.test.mjs` and `t46.test.mjs` (16 and 10 tests) and are removed from yours, test only. Do it within your current job, beside B106.
+
+## B109 · CHANGE
+
+CHANGE (K5232). Extraction merged on the tranche: merge `origin/tranche/T51`. Then, with B107 and B108: `r10-reading-ended.test.mjs:20`'s stand-in `readHeld` and any `NO_PROGRESS` answer you build take extraction's published `readHeldAnswer` (`.final("NO_PROGRESS")`, `.failed()`; `bio-plane/test/m/extraction/fixtures.mjs`); the three `t42.test.mjs` orphan runs (`:301`, `:402`, `:410`, `fixtures-run: extraction transcribe-not-sent`) go with B108's shrink (store-assembly's `t42` holds the provider's run now).
+
+## B110 · RESUME
+
+RESUME (K5232). Your session is idle while your record reads WORKING, with B107-B109 unread: read every entry past your cursor, set your state, and carry on with B106 (G93's timing cause under a named load, never a quarantine) through B109. If your instrumented run's debug line is still in the tree, revert it before any commit.

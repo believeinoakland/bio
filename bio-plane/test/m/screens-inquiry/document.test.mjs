@@ -3,6 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot, ok, refusedIn } from "../interface-shell/harness.mjs";
+import { connectionChooseMention } from "../connections/fixtures.mjs";
 import { open, storeWorld, main, actsIn, fill, press, rawKeys, plane, says, section, lead, word, day, READING, DOCUMENT_MD, DATASET, provenanceOf, SCREENS, P, Q, D, SHA } from "./fixtures.mjs";
 
 /** R80: the page bar's Next (a radio of the kit's choice control, no op): checked and changed. */
@@ -164,8 +165,7 @@ test("R32 R67 R68 the links this page carries, held ones a reference; the names 
   const conns = ok({ ok: true, connections: [{ a_capture_sha: SHA, b_capture_sha: "8".repeat(64), entity_id: "ENT-17", entity_name: "L. Chen",
     on_point: { a: { ref: "c1", occurrence: { page: 1 }, chosen_by: "record" }, b: null }, occurrences: 4,
     mentions: [{ ref: "c1", occurrence: "o1", grade: "A", position: null }, { ref: "c2", occurrence: "o2", grade: "B", position: null }] }] });
-  /* scripted: connectionchoose (needs a recipe that reads two captures naming one entity, so a connection with mentions exists) */
-  const p = await open(at, { plane: { links, connections: conns, resolutions: NAMES, connectionchoose: ok({ ok: true }) } });
+  const p = await open(at, { plane: { links, connections: conns, resolutions: NAMES, connectionchoose: ok(connectionChooseMention()) } });
   const l = section(p, "document.links.title");
   assert.ok(says(l, "screen.document.links.group.outside", { n: "1" }) && says(l, "screen.document.links.group.held", { n: "1" }));
   assert.ok(l.querySelector('a.cs-ref[href="/app/document/INFO-2026-0011"]'));
