@@ -340,7 +340,7 @@ export function basisVersionFindings(fm, findings) {
       /* MK-4 / C-54.1: the same named refusal at the version's grain. */
       if (leadLegFindings(`basis_version_legs[${li}] (version '${name}')`, leg, findings)) continue;
       /* D-162 / C-81.1: the theme refusal at the version's grain. */
-      if (themeLegFindings(`basis_version_legs[${li}] (version '${name}')`, leg, findings)) continue;
+      if (themeLegFindings(localize('basis-version-grammar.grammar.leg_of_version', "Leg {n} of version '{name}'", { n: String(li + 1), name: String(name) }), leg, findings)) continue;
       const t = leg.target;
       /* R3 (N522; DEC-112 (6)): a leg on another group's finding (`inquiry-grammar` R11's reference) has its form
          judged there (C-21.3) in place of the id, grade and extent arms: it names a finding and one edition, carries

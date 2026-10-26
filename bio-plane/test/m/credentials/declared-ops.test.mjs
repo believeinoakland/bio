@@ -133,6 +133,17 @@ test(TITLE("signerregisterown"), async () => {
     { refusedNaming: named({ keyB64: ["BAD_KEY"] }), values: { keyB64: "AAAAannnewkey" } });
 });
 
+test(TITLE("signerknown"), async () => {
+  const setup = async () => {
+    const w = await group();
+    assert.equal(w.c.signerRegisterOwn({ keyB64: "AAAAannkey", by: "ann" }).ok, true);
+    return w;
+  };
+  /* R83: the key from the body, the administrator from the door's stamp; an absent key is R6's BAD_KEY */
+  await holds("signerknown", mk("signerknown", { setup, stamps: { by: "admin" } }),
+    { refusedNaming: named({ keyB64: ["BAD_KEY"] }), values: { keyB64: "AAAAannkey" } });
+});
+
 test(TITLE("signerrevokeown"), async () => {
   const setup = async () => {
     const w = await group();

@@ -29,7 +29,9 @@ test("R6 R9 R12 R14 R15 R53 the rows: ids and words as copied, each where naming
       /^This key is registered to another member, so it cannot be yours\. Make a new key in this browser\. Nothing was changed\.$/],
     SIGNER_KEY_REVOKED: ["C-96.16", W("signerRegisterOwn", "is-signer-key-revoked"),
       /^This key was revoked, so it cannot be registered again\. Make a new key in this browser, or ask an administrator\. Nothing was changed\.$/],
-    MACHINE_CANNOT_REGISTER_KEY: ["C-96.17", W("signerRegisterOwn", "is-machine-register-key"), /from their own signed-in session/],
+    MACHINE_CANNOT_REGISTER_KEY: ["C-96.17", W("#machineCannotRegister", "is-machine-register-key"), /from their own signed-in session/],
+    /* (T51; R83) "I know about this key" said of a key not self-registered or not active; its words are the row's own, read by id (K3810) */
+    SIGNER_NOT_SELF_ACTIVE: ["C-96.55", W("signerKnown", "is-signer-self-active"), /\S/],
   };
   const families = [SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, CREDENTIALS_CHECKS];
   assert.deepEqual(families.flatMap((f) => Object.keys(f)).sort(), Object.keys(want).sort());

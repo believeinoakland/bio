@@ -129,3 +129,34 @@ export const CITE_IMPORTED_CHECKS = {
     translation: localize('citation.checks.the_edition_is_a_whole_number', 'The edition is a whole number of one or more: the edition of the other team\'s case that your team accepted. Nothing was written.'),
   },
 };
+
+/* R24 (T51 fix round 10; DEC-439 to DEC-441; K5303) — a member's capture-axis grade on a cited document leg. The five rows
+   are the next free ones of the C-33 family (C-33.60 to C-33.64), awaiting the stamp; `legGrade` mints them in the regions
+   is-leggrade-member, is-leggrade-leg and is-leggrade-ceiling. */
+export const CITE_LEG_GRADE_CHECKS = {
+  MACHINE_CANNOT_GRADE_LEG: {
+    check: 'C-33.60',
+    where: 'src/citation/index.mjs legGrade > is-leggrade-member',
+    translation: localize('citation.checks.only_a_member_grades_a_passage', 'Only a named member says how well your team\'s copy shows a passage, and this came from an automated or unnamed credential. Nothing was written.'),
+  },
+  BAD_GRADE: {
+    check: 'C-33.61',
+    where: 'src/citation/index.mjs legGrade > is-leggrade-member',
+    translation: localize('citation.checks.a_grade_is_a_letter', 'A grade is one letter from A to D. Choose one. Nothing was written.'),
+  },
+  LEG_NOT_GRADABLE: {
+    check: 'C-33.62',
+    where: 'src/citation/index.mjs legGrade > is-leggrade-leg',
+    translation: localize('citation.checks.this_passage_has_no_copy_to_grade', 'This is not a passage of a document your team holds a copy of: the record works its grade out from what it rests on, or takes it from the other team\'s edition, so a member does not set one. Nothing was written.'),
+  },
+  LEG_GRADE_OTHER_AXIS: {
+    check: 'C-33.63',
+    where: 'src/citation/index.mjs legGrade > is-leggrade-leg',
+    translation: localize('citation.checks.this_passage_already_carries_a_grade', 'This passage already carries a grade on another axis, and a passage carries one grade. Nothing was written, so that grade is kept.'),
+  },
+  GRADE_OVER_CEILING: {
+    check: 'C-33.64',
+    where: 'src/citation/index.mjs legGrade > is-leggrade-ceiling',
+    translation: localize('citation.checks.the_record_cannot_support_that_grade', 'The record cannot support a grade that strong for this copy. Choose the most it allows, or a weaker one, and say why. Nothing was written.'),
+  },
+};

@@ -1,6 +1,6 @@
 # action-grammar (T51)
 
-**Status** · session_018nYF1qKRjkKTcC4XS3jWuZ · depth 2 · COMPLETE · handled B6
+**Status** · session_01BES6yxyp2fZZgKKdbAsgEc · depth 2 · WAITING ON BOB (J11) · handled B7
 
 ## J1 · REPORT
 
@@ -163,3 +163,54 @@ Deferred, with why
 - Retired phrases still in the golden and in other modules' text (action_basis[, (DEC-14), names no earlier, is not a sha256 hash) are not in REWORDED, because they remain in those texts.
 
 Size (session_018nYF1qKRjkKTcC4XS3jWuZ): test runs 9, module lines 2576
+
+## J9 · REPORT
+
+Found outside my paths (K5175: reported the day found). Three items, none edited by me.
+
+1. The leg-finding messages of other modules still name fields. Each one starts with the label I now hand them ("basis leg N", was action_basis[N], so the label is plain), then the field: "{label}.{field} '{value}' ...".
+   - bio-plane/src/inquiry-grammar/grammar.mjs:1338 (leadLegFindings: "{label}.{field} '{v}' is a LEAD ..."; field is target or kind).
+   - bio-plane/src/connections/checks.mjs:309 and :318 (themeLegFindings: "{label}.{field}" and "{label}.{key} claims the leg through a THEME").
+   Owners: inquiry-grammar and connections. R30 of action-grammar is met at its own labels; the ".field" suffix needs their words.
+
+2. Orphan words rows in setup-words still hold the retired codes. action-grammar no longer reads refusal.OUTCOME_NOT_IN_VOCABULARY or refusal.DECISION_WITHOUT_OUTCOME (I moved both translations to localize ids under action-grammar.checks.an_outcome_is_one_of and action-grammar.checks.a_decision_carries_its_outcome, plain English). The rows still say none_exists / none_stated:
+   - bio-plane/src/setup-words/rows.mjs:13188 and :13422
+   - docs/development/ux-substrate/screens/words.json:91772 and :93410
+   Owner: setup-words. They can be retired or reworded; nothing of action-grammar's pins them now.
+
+3. The format check fails on BOB's file, not mine: build/rulings.md:5293 (K5300 records Bob's approval of a refused act with no standing-list decision line, §16). `node checks/format.mjs /home/user/bio` reports 1 failure; the other 178 modules pass.
+
+## J10 · COMPLETE
+
+COMPLETE for CHANGE B5, B6 and START B7 (K5297, R30): the plain-words sweep of this module, with the lead and theme leg labels and the two outcome translations. Commit 649cefd430, pushed to job/T51/action-grammar (merged tranche/T51 at bdb8b6831b earlier in this job).
+
+Applied (file:line)
+- bio-plane/src/action-grammar/grammar.mjs:156 and :158: the label handed to leadLegFindings and themeLegFindings is `basis leg ${i}` (was `action_basis[${i}]`), the same name this module's own leg messages use.
+- bio-plane/src/action-grammar/checks.mjs:1409: LIFECYCLE_CHECKS.OUTCOME_NOT_IN_VOCABULARY.translation is localize('action-grammar.checks.an_outcome_is_one_of', ...): "... none exists (the body says no responsive record exists), or none stated (the body stated none)." Was word('refusal.OUTCOME_NOT_IN_VOCABULARY'), whose row holds none_exists / none_stated.
+- bio-plane/src/action-grammar/checks.mjs:1414: LIFECYCLE_CHECKS.DECISION_WITHOUT_OUTCOME.translation is localize('action-grammar.checks.a_decision_carries_its_outcome', ...): "... record none stated ...". Was word('refusal.DECISION_WITHOUT_OUTCOME').
+- golden.json: 12 occurrences of action_basis[0] replaced by basis leg 0 (exact replacement); the two translations replaced with the new sentences.
+- Tests: fixture.mjs REWORDED gains action_basis[; grammar.test.mjs: the R13 pin (C94_5_NOW) is removed, since golden holds the translation; seeks.test.mjs: R13 checks the plain outcome words and asserts none_ codes and DEC- are absent from the translation.
+- New test, R30 (T51 fix round 10; K5297): over the corpus, no finding, repair or translation matches the field/code pattern (plus the two translations); the lead and theme documents' messages begin "basis leg 0." and never name action_basis.
+
+Red then green
+- R30 test: red on the pre-change source (fail 1, pass 0; stashed the two src files and ran it); green after (pass 1).
+
+Tests (node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/action-grammar/*.test.mjs): 84 of 84 pass, exit 0 (83 before, plus R30). No count shortfall.
+
+Checks (process repo, product /home/user/bio)
+- format: 178 modules, 178 requirements files; 1 failure, not this module: build/rulings.md:5293 (K5300), reported in J9.
+- architecture action-grammar: 15 product files, 43 relative imports; 0 failures
+- coverage action-grammar: 30 of 30 live requirement ids named by a test; 0 failures
+- words action-grammar: 0 failures (after fixture and test copies of the old sentences were removed; they matched the stale setup-words rows)
+- ownership bdb8b6831b..HEAD: 1 file changed by action-grammar in the job; 0 failures (rerun at COMPLETE)
+- checks/run.mjs: no line names action-grammar
+
+Deferred, with why
+- The lead and theme messages still show ".{field}" after the label ("basis leg 0.kind '...'"): their words are inquiry-grammar's and connections'. Reported in J9 with file:line.
+- The stale setup-words rows for the two old translations: setup-words' rows, reported in J9.
+
+Size (session_01BES6yxyp2fZZgKKdbAsgEc): test runs 6, module lines 2576
+
+## J11 · REPORT
+
+Correction to J10: the ownership line was run before my commit, so it said 1 file. Rerun after the commit: 7 files changed by action-grammar (6 module files and this record), 0 failures.

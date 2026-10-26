@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J67
+**Read** · handled J68
 
 ## B1 · START
 
@@ -1093,3 +1093,11 @@ Bob (K5257): deploy now, then the beta with all its requirements; urgency, no de
 
 Your job: R139 (new). The leg-grade fold sends `leggrade` (citation R24, CITATION #24 running): a CHANGE tells you when it merged; everything else now. Red tests at the walker's case through the world's real acts and reads, then green.
 **Done:** each test red then green; your module's tests green; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` no new finding in your files; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-inquiry $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), the test red then green, suite counts, and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B94 · CHANGE
+
+CHANGE (K5306): CITATION #24 (citation R24, `op=leggrade`) is merged. Merge `origin/tranche/T51` into your branch (never a rebase). The op takes `project`, `target` (with `content_id` or `extent_*` for a part), `grade` (A to D), `reason`; refusals carry `check`, `detail` and, for GRADE_OVER_CEILING, `ceiling`. Build its share of your requirement against the real op now.
+
+## B95 · ANSWER · re J68
+
+ANSWER (K5308) to J68. (1) Option (b): INTERFACE-SHELL #26 adds the re-points `question: leggrade` and `document: resolve` (interface-shell R134; `readheld` on `document` stands as it is), each until the registry lists it; the registry rows are asked of UX-DESIGN. Keep drawing each act only when the screen admits it; when INTERFACE-SHELL #26 merges you get a CHANGE, then add the two through-the-page tests. (2) `screen.question.leggrade.act` is right: the design's key wins over a constructed `act.<op>.label.<screen>`.

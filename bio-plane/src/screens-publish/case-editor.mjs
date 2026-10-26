@@ -76,10 +76,15 @@ export const CASE_EDITOR = Object.freeze({
       }).join(""))));
 
     // R31: a project's first case (state b): the concluded questions to take in, each ticked, then the scope.
-    const scope = function (authored) {
-      return cs.field("ce-scope", "screen.case-editor.scope.label", { area: true, rec: true, value: authored.scope || "", help: "screen.case-editor.scope.help" })
-        + cs.field("ce-statement", "review.statement.title", { area: true, rec: true, value: authored.statement || "" })
-        + '<div class="mk-acts">' + cs.act("writinghelp", { data: { field: "scope" } }) + cs.act("casedraft", { tone: "primary" }) + "</div>"
+    // D-M2 (R81): on a drafted state the act is "Save these details" and a field edited since the last save says so (`typing`: the shell hands
+    // the field's value to the screen about half a second after the last key); a first case prepares the draft
+    const edited = function (c2) { c2.set("unsaved", true); };
+    const scope = function (authored, drafted) {
+      const typing = drafted ? { typing: edited } : {};
+      return cs.field("ce-scope", "screen.case-editor.scope.label", { area: true, rec: true, value: authored.scope || "", help: "screen.case-editor.scope.help", ...typing })
+        + cs.field("ce-statement", "review.statement.title", { area: true, rec: true, value: authored.statement || "", ...typing })
+        + '<div class="mk-acts">' + cs.act("writinghelp", { data: { field: "scope" } }) + cs.act("casedraft", drafted ? { tone: "primary", label: "screen.case-editor.save" } : { tone: "primary" }) + "</div>"
+        + (drafted && view.ui.unsaved ? '<p class="mk-note" role="status" data-unsaved>' + cs.w("screen.case-editor.unsaved") + "</p>" : "")
         + P.said(view, "help-scope") + P.said(view, "casedraft");
     };
     if (!chosen) {
@@ -97,7 +102,7 @@ export const CASE_EDITOR = Object.freeze({
     // A new draft, or this one changed: its scope and what it says (`casedraft`, R1), with writing help under the scope.
     const copy = P.later(cs, view, "copy", "reviewcopy", { query: { draft: chosen.draft_id } });
     const authored = copy.state === "ok" && copy.value.authored ? copy.value.authored : {};
-    out.push(cs.sec("screen.case-editor.scope", scope(authored)));
+    out.push(cs.sec("screen.case-editor.scope", scope(authored, true)));
 
     // R44 (C2; DEC-376): what a case states about itself, held beside the scope and sent with `casedraft`: each finding's role, and the
     // team's position on putting the case to the people it concerns with its reasoning. Drawn from the copy's own choices, and only
@@ -120,7 +125,7 @@ export const CASE_EDITOR = Object.freeze({
     if (have && positionList.length) out.push(cs.sec("screen.case-editor.putting_this_case_to_the_people",
       cs.checks("ce-pos", { key: "screen.case-editor.say_where_the_team_stands" }, positionList.map(function (v) { return option(v, POSITION, authored.subjectPosition === v); }), { radio: true })
       + '<p class="mk-small">' + cs.w("screen.case-editor.choosing_not_to_give_notice_is") + "</p>"
-      + cs.field("ce-posjust", "screen.case-editor.why_the_team_took_this_position", { area: true, rec: true, value: authored.subjectJustification || "", help: "screen.case-editor.a_position_with_no_reasoning_behind" })));
+      + cs.field("ce-posjust", "screen.case-editor.why_the_team_took_this_position", { area: true, rec: true, value: authored.subjectJustification || "", help: "screen.case-editor.a_position_with_no_reasoning_behind", typing: edited })));
 
     // The readiness ladder: each rung "not yet checked" until its check answers (R1, R28).
     const check = caseOf && caseOf.case_id ? P.later(cs, view, "check", "casecheck", { query: { case: caseOf.case_id, edition: edition } }) : null;
@@ -168,12 +173,14 @@ export const CASE_EDITOR = Object.freeze({
         + (acks.length ? cs.sheet(acks.map(function (a) {
           return cs.row("", cs.w("screen.case-editor.ack.by", { who: a.by ? cs.memberName(a.by) : a.recipient || "" }), '<span class="rec">' + cs.esc(a.reason || "") + "</span>", a.at ? cs.date(a.at) : "");
         }).join("")) : "")
-        + cs.field("ce-exwhat", "screen.case-editor.something_else_it_leaves_out", { help: "screen.case-editor.name_a_document_in_your_record" })
-        + cs.field("ce-exwhy", "screen.case-editor.why_it_is_left_out", { help: ["screen.case-editor.required_for_each_item", "screen.case-editor.what_is_left_out_and_why"] })
+        + cs.field("ce-exwhat", "screen.case-editor.something_else_it_leaves_out", { help: "screen.case-editor.name_a_document_in_your_record", typing: edited })
+        + cs.field("ce-exwhy", "screen.case-editor.why_it_is_left_out", { help: ["screen.case-editor.required_for_each_item", "screen.case-editor.what_is_left_out_and_why"], typing: edited })
         + (ex.length ? "" : cs.checks("ce-exnone", { text: "" }, [["none", "screen.case-editor.this_case_leaves_nothing_material_out", false]])
           + '<p class="mk-small">' + cs.w("screen.case-editor.an_empty_list_is_a_claim") + "</p><p class=\"mk-small\">" + cs.w("screen.case-editor.silence_is_not_say_either_what") + "</p>")
         // D-M5 (2): what is acknowledged is the statement (case-inputs R1, C-82.5), so it is offered whenever the case has one, with or without a list
-        + (ex.length || acks.length || stated ? cs.field("ce-ackreason", "screen.case-editor.ack.reason", { area: true, help: "screen.case-editor.ack.reason.help" })
+        // R81 (D-M5): a case that lists nothing it leaves out says so and asks for the confirmation, with its own help for the reason
+        + (ex.length || acks.length || stated ? (ex.length ? "" : '<p class="mk-note" data-ack-none>' + cs.w("screen.case-editor.ack.none") + "</p>")
+          + cs.field("ce-ackreason", "screen.case-editor.ack.reason", { area: true, help: ex.length ? "screen.case-editor.ack.reason.help" : "screen.case-editor.ack.none.help" })
           + '<div class="mk-acts">' + cs.act("statementack") + "</div>" + P.said(view, "statementack") : "");
     })));
 
@@ -214,7 +221,7 @@ export const CASE_EDITOR = Object.freeze({
     if (caseOf && caseOf.case_id && before >= 1) {
       const changed = P.later(cs, view, "changed", "whatchangeddrafts", { query: { case: caseOf.case_id } },
         function (v) { return !v || !Array.isArray(v.drafts) || v.drafts.length === 0; });
-      out.push(cs.sec("screen.case-editor.changed", cs.field("ce-wc", "screen.case-editor.changed.label", { area: true, rec: true, value: authored.whatChanged && typeof authored.whatChanged.text === "string" ? authored.whatChanged.text : "", help: "screen.case-editor.changed.help" })
+      out.push(cs.sec("screen.case-editor.changed", cs.field("ce-wc", "screen.case-editor.changed.label", { area: true, rec: true, value: authored.whatChanged && typeof authored.whatChanged.text === "string" ? authored.whatChanged.text : "", help: "screen.case-editor.changed.help", typing: edited })
         + '<div class="mk-acts">' + cs.act("writinghelp", { data: { field: "whatchanged" } }) + (view.reachable ? cs.act("whatchangedpropose") : "") + "</div>"
         + P.said(view, "help-whatchanged") + P.said(view, "whatchangedpropose")
         + P.listed(cs, changed, function (v) {
@@ -248,7 +255,7 @@ export const CASE_EDITOR = Object.freeze({
           const sentence = f.sentence || mine[Number(f.ord) - 1] || "";
           return "<li>" + cs.w("screen.case-editor.account.flagged", { sentence: sentence }) + '<br><span class="meta">' + cs.esc(f.text || "") + "</span></li>";
         }).join("") + "</ul>" : "")
-        + cs.field("ce-account", "screen.case-editor.account", { area: true, rec: true, value: mine.join("\n") })
+        + cs.field("ce-account", "screen.case-editor.account", { area: true, rec: true, value: mine.join("\n"), typing: edited })
         + '<div class="mk-acts">' + cs.act("accountdrafts") + cs.act("casedraft", { tone: "primary", data: { account: "1" } }) + "</div>"
         + (view.ui.accountEarlier ? cs.sheet(view.ui.accountEarlier.map(draftRow).join("")) : "")
         + P.said(view, "accountdrafts") + P.said(view, "account"), { help: "screen.case-editor.account.help" }));
@@ -389,6 +396,7 @@ export const CASE_EDITOR = Object.freeze({
       } },
       done: function (view, answer, cs) {
         if (view.parts.refused(cs, view, "casedraft", answer)) return; // D29: a refusal inside a success is not success
+        view.ui.unsaved = false;
         view.parts.forget(view);
         view.parts.say(cs, view, "casedraft", cs.w("screen.case-editor.prepared"));
       },

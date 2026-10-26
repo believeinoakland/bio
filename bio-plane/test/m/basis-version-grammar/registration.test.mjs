@@ -52,7 +52,10 @@ test("R6: the registrant is the `module` argument — new at T51-148 — and a r
    K5077: a supporting leg that names no ground is a necessary leg, and no finding). R6 compares check, severity, message,
    repairs and code, so that finding is left out of the golden; it is the one difference, and no finding carries `legs`. */
 const retired = (f) => f.code === "VERSION_PARTITION_INCOMPLETE";
-const golden = (list) => JSON.parse(JSON.stringify(list.filter((f) => !retired(f)), (k, v) => (k === "legs" ? undefined : v)));
+/* R12: a theme finding's sentence and repairs are connections' own words (its R73), so this golden pins the finding by its
+   code and check only; the words are read by theme-label.test.mjs and connections' tests. */
+const theme = (f) => f.code === "THEME_NOT_EVIDENCE" ? { ...f, message: "theme", repairs: undefined } : f;
+const golden = (list) => JSON.parse(JSON.stringify(list.filter((f) => !retired(f)).map(theme), (k, v) => (k === "legs" ? undefined : v)));
 const legsOnlyOnPartition = (list) => list.every((f) => f.legs === undefined);
 
 test("R6: for every bundle of the corpus under every registry variant, checkBundle given record.grammars() answers the catalogue's findings before the move, identical in content and in order; each version finding is the one the catalogue's call added", async () => {

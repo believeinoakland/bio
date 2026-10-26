@@ -89,8 +89,8 @@ test("R19 citation declares reinstate: its requires alone raise no refusal namin
     values: { project: "sample", handle: "sample", reason: "the edition was right" }, same: sameCode });
 });
 
-test("R18, R19: the declaration is whole: each op names its class, weight and description, the two new ops refuse a machine session by class, and every sentence is read by key", () => {
-  assert.deepEqual(Object.keys(DECLARED_OPS), ["cite", "drawquestion", "sever", "reinstate", "citeimported", "withdrawimported"]);
+test("R18, R19: the declaration is whole: each op names its class, weight and description, the new ops refuse a machine session by class, and every sentence is read by key", () => {
+  assert.deepEqual(Object.keys(DECLARED_OPS), ["cite", "drawquestion", "sever", "reinstate", "leggrade", "citeimported", "withdrawimported"]);
   for (const [op, row] of Object.entries(DECLARED_OPS)) {
     assert.equal(row.mutating, true, op);
     assert.ok(["reversible", "reasoned"].includes(row.weight), op);
@@ -98,7 +98,7 @@ test("R18, R19: the declaration is whole: each op names its class, weight and de
     assert.ok(Array.isArray(row.fields.accepts) && Array.isArray(row.fields.requires), op);
     for (const r of row.fields.requires.flat()) assert.ok(row.fields.accepts.includes(r), `${op}: requires ${r} is accepted`);
   }
-  for (const op of ["citeimported", "withdrawimported"]) {
+  for (const op of ["leggrade", "citeimported", "withdrawimported"]) {
     assert.deepEqual(DECLARED_OPS[op].classes, ["admin", "member"], op);
     assert.deepEqual(DECLARED_OPS[op].machineClasses, [], op);
   }
@@ -117,5 +117,5 @@ test("R18, R19: the declaration is whole: each op names its class, weight and de
 });
 
 test("R18: both imported ops declare the stamps the door sets from the session, `author` and `viewer`, so a joined member's act names a member (K5131)", () => {
-  for (const op of ["citeimported", "withdrawimported"]) assert.deepEqual([...DECLARED_OPS[op].stamps].sort(), ["author", "viewer"], op);
+  for (const op of ["leggrade", "citeimported", "withdrawimported"]) assert.deepEqual([...DECLARED_OPS[op].stamps].sort(), ["author", "viewer"], op);
 });

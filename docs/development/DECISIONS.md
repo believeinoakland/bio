@@ -6813,3 +6813,15 @@ the design: who sets the time zone is not claimed (the held rows say an administ
 verified: on tranche/T51 at its tip with these words files, rows.mjs regenerated: words 0, format 0; action-plans, queue-producers, money no failure.
 reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-acts.js`, `screens/mock-screens.js`.
 owed: BOB: merge this commit (MERGE) in place of U483's head; it carries DEC-438 to DEC-440.
+
+### DEC-442 · decided
+raised: 2026-10-26 · the UX design session with Bob (session_01FfxzNZtq7F8arhiJhGFggR, UX design #41) (BOB's B537; SCREENS-INVESTIGATE #25 J44; standards R63, R64; K5302)
+for: design (T51; words a running job asked for)
+question: Standard's "Whom it binds, and until when" (DEC-438) reads `bindings` (standards R63), but the design kept no words for a binding row, one per kind.
+why it is Bob's: it is not (P17). provisional: as below. alternative: draw the held says alone (`standard.binding.binds|benchmark`); not taken: they name the body only, not the act, edition, mode or law the member needs to check the record.
+recommendation: as below. reversal cost: low. response: none needed (the design's detail).
+decided: 2026-10-26 · the design session (P17)
+the design: an adoption "Adopted by {body} in {act}, edition {edition}", beneath it "{mode} · in force from {from} · recorded by {author}, {date}" (`.meta.nofrom` without a from; {mode} the held `screen.standard.mode.<mode>` label); an imposition "Binds {body}: made binding by {law}"; a benchmark "A benchmark for {body}, not binding on it"; beneath each of the last two "Recorded by {author}, {date}". An adoption's act may be a dated Timeline event (R64): the form's act choice lists events, as its help already says. The mockup's Standard draws one row of each kind.
+verified: on tranche/T51 at its tip (after K5302) with these words files, rows.mjs regenerated: words 0, format 0; standards no failure.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-442's block); `screens/mock-screens.js` (`standard`).
+owed: BOB: merge this commit (MERGE); SCREENS-INVESTIGATE draws the rows with these keys.

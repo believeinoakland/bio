@@ -51,16 +51,17 @@ import { contentOf, citationExtent } from "../content/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { retrievalOf, answerChanged } from "../retrieval/index.mjs";
 import { inquiryOf, checkLegExtentGrammar, BASIS_ROLES } from "../inquiry/index.mjs";
-import { importedFindingRef } from "../inquiry-grammar/index.mjs";
+import { importedFindingRef, IMPORTED_FINDING_RE, CALCULATION_REF_RE, OCCURRENCE_REF_RE, DERIVED_CONNECTION_ID_RE } from "../inquiry-grammar/index.mjs";
+import { BASIS_GRADES } from "../record-grammar/grades.mjs";
 import { acceptedWorkOf } from "../accepted-work/index.mjs";
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
-import { CITE_CHECKS, CITE_EXTENT_CHECKS, CITE_IMPORTED_CHECKS } from "./checks.mjs";
-import { spliceEdgeStatus, spliceReferences, spliceBasis, removeBasisLegs, setBasisRole, setScalar, appendSessionLog } from "./splice.mjs";
+import { CITE_CHECKS, CITE_EXTENT_CHECKS, CITE_IMPORTED_CHECKS, CITE_LEG_GRADE_CHECKS } from "./checks.mjs";
+import { spliceEdgeStatus, spliceReferences, spliceBasis, removeBasisLegs, setBasisRole, setLegGrade, setScalar, appendSessionLog } from "./splice.mjs";
 import { recordedBy } from "./recorded.mjs";
 import { localize } from "../setup-words/index.mjs";
 
-export { CITE_CHECKS, CITE_EXTENT_CHECKS, CITE_IMPORTED_CHECKS } from "./checks.mjs";
-export { spliceEdgeStatus, spliceReferences, spliceBasis, removeBasisLegs, setBasisRole, legExtentLines } from "./splice.mjs";
+export { CITE_CHECKS, CITE_EXTENT_CHECKS, CITE_IMPORTED_CHECKS, CITE_LEG_GRADE_CHECKS } from "./checks.mjs";
+export { spliceEdgeStatus, spliceReferences, spliceBasis, removeBasisLegs, setBasisRole, setLegGrade, legExtentLines } from "./splice.mjs";
 export { RECORDED_LIMIT_DEFAULT, RECORDED_LIMIT_MAX } from "./recorded.mjs";
 
 /** R1: citing writes one frontmatter entry per cited record into a single `bundle.md`, so the edges one citing object
@@ -875,6 +876,112 @@ export class Citation {
                              : {}) };
   }
 
+  /* ---- legGrade (R24) ---- */
+
+  /** R24 (T51 fix round 10; DEC-439 to DEC-441; K5303; D-M1, C-M4): A MEMBER GRADES HOW WELL THE TEAM'S COPY SHOWS A CITED
+   *  PASSAGE. One document leg of a question's `basis[]`, found by its target and its part (R22), takes the capture-axis
+   *  grade the member states, with source `capture` (the only source the capture axis admits, `inquiry-grammar` R11's arm),
+   *  up to the capture ceiling `inquiry.earned` answers for it (`leg-earning` R1, R8): a letter above it is refused
+   *  `GRADE_OVER_CEILING` naming the ceiling, so no leg is given a grade the record did not earn (R8). The write
+   *  judges the revised document again as it judges every leg (`inquiry` R11). A leg of a kind the record derives, or on
+   *  another team's finding, is not the member's to grade; a leg already graded on another axis keeps that grade (a leg
+   *  carries one). A grade is the member's act, so a machine is refused as it is for R16. */
+  legGrade({ project = null, target = null, grade = null, reason = "", author = null, viewer = null, identity = null,
+             extent = null } = {}) {
+    /* DEC-49 REGION is-leggrade-member */
+    if (typeof author !== "string" || !author.trim() || isMachineIdentity(author) || author.trim().toLowerCase() === "admin")
+      return { ok: false, reason: "MACHINE_CANNOT_GRADE_LEG", ...rowOf(CITE_LEG_GRADE_CHECKS, "MACHINE_CANNOT_GRADE_LEG"), project,
+               detail: localize("citation.index.leggrade_member_only", "only a named member says how well your team's copy shows a passage; this came from an automated or unnamed credential, so nothing was written.") };
+    const obj = this.#citingObject(project, viewer);
+    if (!obj.ok) return obj;
+    const p = obj.head;
+    if (normalizeType(p.type) !== "inquiry")
+      return { ok: false, reason: "NOT_AN_INQUIRY", ...rowOf(CITE_CHECKS, "NOT_AN_INQUIRY"), project, got: p.type,
+               detail: localize("citation.index.leggrade_not_a_question", "{project} is not a question, and a passage is graded where a question rests on it; nothing was written.", { project: String(project) }) };
+    const gr = given(grade) ? String(grade).trim() : "";
+    if (!BASIS_GRADES.includes(gr))
+      return { ok: false, reason: "BAD_GRADE", ...rowOf(CITE_LEG_GRADE_CHECKS, "BAD_GRADE"), project, got: given(grade) ? String(grade) : null,
+               grades: BASIS_GRADES.slice(),
+               detail: localize("citation.index.leggrade_bad_grade", "a grade is one letter, {grades}; nothing was written.", { grades: BASIS_GRADES.join(", ") }) };
+    /* END DEC-49 REGION is-leggrade-member */
+    const why = String(reason ?? "").trim();
+    if (!why)
+      return { ok: false, reason: "NO_REASON", project,
+               detail: localize("citation.index.leggrade_needs_reason", "a grade records WHY, and a grade with no reason is an unexplained claim about your team's copy; nothing was written.") };
+    if (why.length > EDGE_REASON_MAX || /["\\\r\n]/.test(why))
+      return { ok: false, reason: "BAD_REASON", project,
+               detail: localize("citation.index.a_reason_is_at_most", "a reason is at most {max} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes, so those would reshape the document rather than appear in it", { max: String(EDGE_REASON_MAX) }) };
+    if (!this.inquiry || typeof this.inquiry.earned !== "function")
+      return { ok: false, reason: "INQUIRY_UNAVAILABLE", project,
+               detail: localize("citation.index.citing_onto_a_question_needs", "citing onto a question needs the inquiry module's role vocabulary, leg grammar and earned registry, and your team's Civicsmith was created without them, so nothing was written.") };
+
+    const doc = this.#document(project, null);
+    if (!doc.ok) return doc;
+    const tg = given(target) ? String(target).trim() : "";
+    const bag = isObj(extent) ? extent : {};
+    const mine = partKey(bag);
+    const basis = Array.isArray(doc.data.basis) ? doc.data.basis : [];
+    const at = basis.findIndex((l) => isObj(l) && l.target === tg && partKey(l) === mine);
+    if (at < 0)
+      return { ok: false, reason: "NOT_CITED", project, target: tg || null,
+               detail: localize("citation.index.leggrade_not_cited", "this question holds no leg on that passage, so there is nothing to grade. A different part of the same document is a different passage.") };
+    const leg = basis[at];
+
+    /* DEC-49 REGION is-leggrade-leg */
+    const kind = IMPORTED_FINDING_RE.test(tg) ? "imported" : CALCULATION_REF_RE.test(tg) ? "calculation"
+      : OCCURRENCE_REF_RE.test(tg) ? "occurrence" : DERIVED_CONNECTION_ID_RE.test(tg) ? "derived_connection"
+      : normalizeType(OBJECT_TYPES[tg.split("-")[0]]) === "inquiry" ? "question" : null;
+    if (kind)
+      return { ok: false, reason: "LEG_NOT_GRADABLE", ...rowOf(CITE_LEG_GRADE_CHECKS, "LEG_NOT_GRADABLE"), project, target: tg, kind,
+               detail: localize("citation.index.leggrade_not_gradable", "this passage is not one your team holds a copy of, so a member does not grade it: the record works its grade out from what it rests on, or takes it from the other team's edition. Nothing was written.") };
+    const held = leg.grade !== undefined && leg.grade !== null && String(leg.grade).trim() !== "";
+    if (held && leg.grade_axis !== "capture")
+      return { ok: false, reason: "LEG_GRADE_OTHER_AXIS", ...rowOf(CITE_LEG_GRADE_CHECKS, "LEG_GRADE_OTHER_AXIS"), project, target: tg,
+               axis: leg.grade_axis ?? null, grade: String(leg.grade),
+               detail: localize("citation.index.leggrade_other_axis", "this passage already carries a grade of {grade} on the {axis} axis, and a passage carries one grade, so that grade is kept and nothing was written.", { grade: String(leg.grade), axis: String(leg.grade_axis ?? "unstated") }) };
+    /* END DEC-49 REGION is-leggrade-leg */
+
+    /* DEC-49 REGION is-leggrade-ceiling */
+    const subject = typeof doc.data.subject_entity === "string" && doc.data.subject_entity.trim() !== ""
+      ? doc.data.subject_entity.trim() : null;
+    const reg = this.inquiry.earned(subject, [tg]);
+    const ceil = reg && reg.earned && reg.earned.capture ? reg.earned.capture[tg] : null;
+    const ceiling = ceil && ceil.mode === "ceiling" && BASIS_GRADES.includes(ceil.grade) ? ceil.grade : null;
+    if (ceiling === null || BASIS_GRADES.indexOf(gr) < BASIS_GRADES.indexOf(ceiling))
+      return { ok: false, reason: "GRADE_OVER_CEILING", ...rowOf(CITE_LEG_GRADE_CHECKS, "GRADE_OVER_CEILING"), project, target: tg, grade: gr,
+               ceiling, why: ceil && typeof ceil.why === "string" ? ceil.why : null,
+               detail: ceiling === null
+                 ? localize("citation.index.leggrade_no_ceiling", "the record cannot say how well your team's copy of {target} shows it, so it cannot support any grade here; nothing was written.", { target: tg })
+                 : localize("citation.index.leggrade_over_ceiling", "the most the record can support for your team's copy of {target} is {ceiling}, and {grade} is stronger; nothing was written.", { target: tg, ceiling, grade: gr }) };
+    /* END DEC-49 REGION is-leggrade-ceiling */
+
+    const spliced = setLegGrade(doc.text, at, tg, gr);
+    if (!spliced)
+      return { ok: false, reason: "UNSPLICEABLE_BASIS", project,
+               detail: localize("citation.index.the_questions_basis_block", "the question's basis block is not in a shape this grammar can extend in place. Citing appends legs to that block and never rewrites the rest of the document.") };
+    const when = stampInstant("second", this.now());
+    const who = author.trim();
+    const was = held ? String(leg.grade) : null;
+    let text = setScalar(spliced, "last_updated", `"${when}"`);
+    text = appendSessionLog(text,
+      localize("citation.index.session_graded_leg", "### Session {when} | Graded {target} on the capture axis | {who}\n", { when, target: tg, who })
+      + localize("citation.index.trigger_graded_leg", "Trigger: the member's own grade of how well the team's copy shows {target}\n", { target: tg })
+      + localize("citation.index.changes_graded_leg", "Changes: basis leg on {target} graded {grade} on the capture axis, up to the record's ceiling of {ceiling}; before: {was}. Reason: {why}.\n",
+                 { target: tg, grade: gr, ceiling, was: was ?? localize("citation.index.leggrade_was_none", "no grade"), why }));
+    const bytes = new TextEncoder().encode(text);
+    if (bytes.length > INLINE_MAX)
+      return { ok: false, reason: "CITATION_TOO_LARGE", project, bytes: bytes.length, limit: INLINE_MAX,
+               detail: localize("citation.index.leggrade_too_large", "the reason would push this question's bundle.md past the 1MB inline limit; nothing has been written.") };
+    const promoted = this.#write(project, p, text, when, author, doc.data, doc.data.object_type ?? p.type);
+    /* The write's refusals come back unchanged (inquiry R11): it judges the revised leg as it judges every other. */
+    if (!promoted.ok) return { ...promoted, project };
+    const role = typeof leg.role === "string" ? leg.role : null;
+    return { ok: true, project, citingObjectType: "inquiry", target: tg, role, grade: gr, grade_axis: "capture", grade_source: "capture",
+             ceiling, was, why,
+             leg: { target: tg, role, grade: gr, grade_axis: "capture", grade_source: "capture" },
+             bundleSha: promoted.bundleSha, rowVersion: promoted.rowVersion };
+  }
+
   /* ---- drawQuestion (R14) ---- */
 
   /** R14 (T47; N975): DRAWING ONE QUESTION INTO A CASE in one served act, with no selection and no document sent by
@@ -1200,6 +1307,10 @@ export function citationOps(c, url, body) {
     /* R14 (T47; N975): one question drawn into a case, named by `inquiry`; no selection and no document. */
     drawquestion: () => c.drawQuestion({ project: q("project"), inquiry: q("inquiry"), note: q("note") ?? "",
                                          author: q("author"), viewer: q("viewer"), identity: q("identity") }),
+    /* R24 (T51 fix round 10): a member grades how well the team's copy shows a cited passage; the fields from the body first, as
+       `cite`'s (R20), the passage's part by its `content_id` or `extent_*` fields. */
+    leggrade: () => c.legGrade({ project: s("project"), target: s("target"), grade: s("grade"), reason: s("reason") ?? "",
+                                 extent: part, author: q("author"), viewer: q("viewer"), identity: q("identity") }),
     /* R16, R17 (T51; K4189): a question rests on another team's accepted finding at an edition, and takes it back. */
     citeimported: () => c.citeImported({ inquiry: q("inquiry"), import: q("import"), finding: q("finding"), edition: q("edition"),
                                          role: q("role"), note: q("note") ?? "", author: q("author"), viewer: q("viewer"),
@@ -1229,6 +1340,10 @@ export const DECLARED_OPS = Object.freeze({
   reinstate: { classes: ["admin", "member", "probe"], mutating: true, needs: "contribute", weight: "reasoned", refusal: "NO_REASON",
     description: localize("citation.declared.reinstate", "moves a severed cites edge, or a question's severed leg, back to confirmed with the member's reason"),
     fields: { accepts: ["project", "handle", "reason", "role"], requires: ["project", "handle", "reason"] } },
+  leggrade: { classes: ["admin", "member"], machineClasses: [], mutating: true, stamps: ["author", "viewer"], needs: "contribute", weight: "reversible",
+    description: localize("citation.declared.leggrade", "a member's grade of how well your team's copy shows a passage a question rests on, up to the most the record supports, with the reason"),
+    fields: { accepts: ["project", "target", "grade", "reason", ...Object.keys(EXTENT_PARAMS)],
+              requires: ["project", "target", "grade", "reason"] } },
   citeimported: { classes: ["admin", "member"], machineClasses: [], mutating: true, stamps: ["author", "viewer"], needs: "contribute", weight: "reversible",
     description: localize("citation.declared.citeimported", "rests a question on another team's accepted finding at the edition shown; the grade is the edition's own, and withdrawimported takes it back"),
     fields: { accepts: ["inquiry", "import", "finding", "edition", "role", "note"],

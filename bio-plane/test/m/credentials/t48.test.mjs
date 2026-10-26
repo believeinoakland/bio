@@ -81,7 +81,7 @@ test("R72 credentialsOps answers the 24 moved op names through the delegates, ea
   assert.equal(movedOps.length, 24);
   const ops = Object.keys(w.ops());
   for (const op of movedOps) assert.ok(ops.includes(op), op);
-  assert.equal(ops.length, 52, "the 24 moved and the 28 own");
+  assert.equal(ops.length, 53, "the 24 moved and the 29 own (R83 adds signerknown)");
   /* each moved op calls the delegate, which answers ai-accounts' own: a sentinel through both maps, the same arguments */
   for (const op of movedOps) {
     const calls = [];

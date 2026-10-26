@@ -43961,6 +43961,42 @@
    "en": "{a} and {b}",
    "protected": false,
    "note": "DEC-440: R138: a row of the flags list, the two passages' names, linked to the contradiction; screen.contradiction.flagged.by beneath it"
+  },
+  {
+   "key": "screen.standard.binding.adoption",
+   "en": "Adopted by {body} in {act}, edition {edition}",
+   "protected": false,
+   "note": "DEC-442: R63 adoption: {act} the adopting act's name or the event's, {edition} as recorded"
+  },
+  {
+   "key": "screen.standard.binding.adoption.meta",
+   "en": "{mode} · in force from {from} · recorded by {author}, {date}",
+   "protected": false,
+   "note": "DEC-442: R63 adoption, beneath it: {mode} the held screen.standard.mode.<mode> label, {from} the day it took effect"
+  },
+  {
+   "key": "screen.standard.binding.adoption.meta.nofrom",
+   "en": "{mode} · recorded by {author}, {date}",
+   "protected": false,
+   "note": "DEC-442: R63 adoption with no from"
+  },
+  {
+   "key": "screen.standard.binding.imposition",
+   "en": "Binds {body}: made binding by {law}",
+   "protected": false,
+   "note": "DEC-442: R63 imposition: {law} the law's name"
+  },
+  {
+   "key": "screen.standard.binding.benchmark",
+   "en": "A benchmark for {body}, not binding on it",
+   "protected": false,
+   "note": "DEC-442: R63 benchmark declaration"
+  },
+  {
+   "key": "screen.standard.binding.recorded",
+   "en": "Recorded by {author}, {date}",
+   "protected": false,
+   "note": "DEC-442: beneath an imposition or a benchmark: {author} the member (by), {date} the day (at)"
   }
  ],
  "rewrite": {

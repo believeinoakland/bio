@@ -299,3 +299,11 @@ Bob (K5257): deploy now, then the beta with all its requirements; urgency, no de
 
 Your job: R71 (new): act help for the ops DEC-438 to DEC-441 draw. Ops `signerknown` and `leggrade` are being added (CREDENTIALS #33, CITATION #24): list them once a CHANGE says they merged; the five Standard ops now. Red tests at the walker's case through the world's real acts and reads, then green.
 **Done:** each test red then green; your module's tests green; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` no new finding in your files; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio affordances $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), the test red then green, suite counts, and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B31 · CHANGE
+
+CHANGE (K5306): CITATION #24 (citation R24, `op=leggrade`) is merged. Merge `origin/tranche/T51` into your branch (never a rebase). The op takes `project`, `target` (with `content_id` or `extent_*` for a part), `grade` (A to D), `reason`; refusals carry `check`, `detail` and, for GRADE_OVER_CEILING, `ceiling`. Build its share of your requirement against the real op now.
+
+## B32 · CHANGE
+
+CHANGE (K5308; plan item 147). CREDENTIALS #33 is merged into `tranche/T51` with `signerknown` declared (credentials R83; its description in `DECLARED_OPS`). Merge `origin/tranche/T51` (never a rebase) and give `signerknown` its act help as R71 says, by the K5164 stand-in route until the design words `act.signerknown.does` (asked of UX-DESIGN, K5308, with `act.leggrade.does` and the five `act.standard*.does` reads). OP-DECLARATIONS #40 drops the ops you now explain from its `ACT_HELP_ABSENT`. Then COMPLETE.

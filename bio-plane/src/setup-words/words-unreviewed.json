@@ -1121,6 +1121,13 @@
       "line": 953
     },
     {
+      "id": "action-grammar.checks.a_decision_carries_its_outcome",
+      "en": "A decision carries its outcome as the body gave it. If the body stated none, record none stated so the record says so rather than leaving it blank.",
+      "module": "action-grammar",
+      "file": "bio-plane/src/action-grammar/checks.mjs",
+      "line": 1414
+    },
+    {
       "id": "action-grammar.checks.a_records_law_in_the",
       "en": "A records law in the jurisdiction profile lists a stage the record does not know. Each of a law's stages is named by one of the record's stages of a records request, such as a request, an appeal or a decision. That stage is not read as one the law has.",
       "module": "action-grammar",
@@ -1147,6 +1154,13 @@
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
       "line": 1576
+    },
+    {
+      "id": "action-grammar.checks.an_outcome_is_one_of",
+      "en": "An outcome is one of granted, denied, partial, reversed, affirmed, none exists (the body says no responsive record exists), or none stated (the body stated none).",
+      "module": "action-grammar",
+      "file": "bio-plane/src/action-grammar/checks.mjs",
+      "line": 1409
     },
     {
       "id": "action-grammar.checks.at_bearing_string_is_not",
@@ -7062,6 +7076,13 @@
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
       "line": 171
+    },
+    {
+      "id": "basis-version-grammar.grammar.leg_of_version",
+      "en": "Leg {n} of version '{name}'",
+      "module": "basis-version-grammar",
+      "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
+      "line": 343
     },
     {
       "id": "basis-version-grammar.grammar.name_one_of_the_five",
@@ -15464,11 +15485,25 @@
       "line": 565
     },
     {
+      "id": "citation.checks.a_grade_is_a_letter",
+      "en": "A grade is one letter from A to D. Choose one. Nothing was written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/checks.mjs",
+      "line": 145
+    },
+    {
       "id": "citation.checks.bad_ground",
       "en": "A new citation can join only a group its question already declares, and a case has no groups. Name one of the question's groups, or cite without one. Nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/checks.mjs",
       "line": 58
+    },
+    {
+      "id": "citation.checks.only_a_member_grades_a_passage",
+      "en": "Only a named member says how well your team's copy shows a passage, and this came from an automated or unnamed credential. Nothing was written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/checks.mjs",
+      "line": 140
     },
     {
       "id": "citation.checks.only_a_member_rests_a_question",
@@ -15490,6 +15525,27 @@
       "module": "citation",
       "file": "bio-plane/src/citation/checks.mjs",
       "line": 124
+    },
+    {
+      "id": "citation.checks.the_record_cannot_support_that_grade",
+      "en": "The record cannot support a grade that strong for this copy. Choose the most it allows, or a weaker one, and say why. Nothing was written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/checks.mjs",
+      "line": 160
+    },
+    {
+      "id": "citation.checks.this_passage_already_carries_a_grade",
+      "en": "This passage already carries a grade on another axis, and a passage carries one grade. Nothing was written, so that grade is kept.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/checks.mjs",
+      "line": 155
+    },
+    {
+      "id": "citation.checks.this_passage_has_no_copy_to_grade",
+      "en": "This is not a passage of a document your team holds a copy of: the record works its grade out from what it rests on, or takes it from the other team's edition, so a member does not set one. Nothing was written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/checks.mjs",
+      "line": 150
     },
     {
       "id": "citation.checks.what_material_does_for_an",
@@ -15517,616 +15573,721 @@
       "en": "cites material or a question into a case's references or a question's basis, and sever takes it back",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1220
+      "line": 1331
     },
     {
       "id": "citation.declared.citeimported",
       "en": "rests a question on another team's accepted finding at the edition shown; the grade is the edition's own, and withdrawimported takes it back",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1233
+      "line": 1348
     },
     {
       "id": "citation.declared.drawquestion",
       "en": "project-directed: keyed by a project and one question; draws the question into the project as a confirmed `cites` edge and promotes the project; moves the project's bundle",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1224
+      "line": 1335
+    },
+    {
+      "id": "citation.declared.leggrade",
+      "en": "a member's grade of how well your team's copy shows a passage a question rests on, up to the most the record supports, with the reason",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 1344
     },
     {
       "id": "citation.declared.reinstate",
       "en": "moves a severed cites edge, or a question's severed leg, back to confirmed with the member's reason",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1230
+      "line": 1341
     },
     {
       "id": "citation.declared.sever",
       "en": "moves a case's cites edge, or a question's own leg, to severed with the member's reason; nothing is deleted",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1227
+      "line": 1338
     },
     {
       "id": "citation.declared.withdrawimported",
       "en": "takes another team's finding off a question's answer with the member's reason; the history keeps it, and so does each version already frozen",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1237
+      "line": 1352
     },
     {
       "id": "citation.index.a_case_rests_on_material",
       "en": "a case rests on material, or on a question the team is asking. These members of the selection are neither, and the whole call is refused rather than narrowed to the ones that are.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 599
+      "line": 600
     },
     {
       "id": "citation.index.a_citation_points_at_material",
       "en": "a citation points at material or at a question, and these members of the selection are neither, so they carry no citation to move. The whole call is refused rather than narrowed.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 305
+      "line": 306
     },
     {
       "id": "citation.index.a_leg_of_a_questions_basis",
       "en": "a leg of a question's basis says what the material DOES for the answer, and this call does not say. It is never assumed: a leg that cuts against the case is first-class here, and guessing would put a claim about your own reasoning in the record that you did not make. State role as one of: {roles}.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 556
+      "line": 557
     },
     {
       "id": "citation.index.a_note_is_at_most",
       "en": "a note is at most 200 characters and cannot contain a quote, a backslash, or a newline",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 536
+      "line": 537
     },
     {
       "id": "citation.index.a_part_of_a_document_is",
       "en": "a part of a document is a part of ONE document, and this call would write {n} legs. Writing the same page or passage onto each of them would put claims in the record that nobody made — the extent was named once. Cite the one document this part belongs to, and cite the rest separately.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 674
+      "line": 675
     },
     {
       "id": "citation.index.a_passage_found_by_search",
       "en": "a passage found by search is cited by the document it is in, the capture it was found in and its part of that capture, and this one names no document you can see, no capture, or no part; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 475
+      "line": 476
     },
     {
       "id": "citation.index.a_question_is_drawn_into",
       "en": "a question is drawn into a case, and this is not a case. A question rests on another question through a leg of its own basis, which citing onto it writes.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 893
+      "line": 1000
     },
     {
       "id": "citation.index.a_question_rests_on_material",
       "en": "a question rests on material or on another question, and nothing else in the record can be a leg of its basis. These members of the selection are neither, and the whole call is refused rather than narrowed to the ones that are.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 594
+      "line": 595
     },
     {
       "id": "citation.index.a_reason_is_at_most",
       "en": "a reason is at most {max} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes, so those would reshape the document rather than appear in it",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 268
+      "line": 269
     },
     {
       "id": "citation.index.a_role_says_what_material",
       "en": "a role says what material does for a QUESTION's answer, and this citing object is a case. A case's citation edge carries no role, so this one would be dropped rather than recorded — refused instead, because a field stated in one place and honoured nowhere is how the record and its projections drift apart.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 277
+      "line": 278
     },
     {
       "id": "citation.index.bad_ground",
       "en": "a new citation can join only a group its question already declares, and this one names {ground}; a case has no groups. Nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 576
+      "line": 577
     },
     {
       "id": "citation.index.changes_basis_legs_added",
       "en": "Changes: basis legs added for {listed}, each with role {role}. Grades: {graded} filled from the record's own resolutions to this question's subject; {ungraded} left undetermined and stated.{note}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 827
+      "line": 828
     },
     {
       "id": "citation.index.changes_basis_legs_on",
       "en": "Changes: basis legs on {listed} moved to '{to}', each leg kept as it was. Reason: {why}.\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 390
+      "line": 391
     },
     {
       "id": "citation.index.changes_basis_legs_role_moved",
       "en": "Changes: basis legs on {listed} moved to '{to}', each leg kept as it was except the role of {moved}, which moves from {from} to {role}. Reason: {why}.\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 389
+      "line": 390
     },
     {
       "id": "citation.index.changes_cites_edges_added",
       "en": "Changes: cites edges added to {listed}.{note}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 829
+      "line": 830
     },
     {
       "id": "citation.index.changes_cites_edges_to",
       "en": "Changes: cites edges to {listed} moved to '{to}'. Reason: {why}.\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 391
+      "line": 392
+    },
+    {
+      "id": "citation.index.changes_graded_leg",
+      "en": "Changes: basis leg on {target} graded {grade} on the capture axis, up to the record's ceiling of {ceiling}; before: {was}. Reason: {why}.\n",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 969
     },
     {
       "id": "citation.index.changes_imported_leg_added",
       "en": "Changes: basis leg added for {ref} at edition {edition}, role {role}. Grade: as that edition published it, none of its own.{note}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1057
+      "line": 1164
     },
     {
       "id": "citation.index.changes_imported_leg_removed",
       "en": "Changes: basis leg on {ref} (edition {edition}) removed. Reason: {why}.\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1112
+      "line": 1219
     },
     {
       "id": "citation.index.citations_live_on_the_citing",
       "en": "citations live on the citing object, and this is neither a case nor a question, so it holds no citation to withdraw or restore. A case keeps them in its references; a question keeps them in the basis its answer rests on.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 254
+      "line": 255
     },
     {
       "id": "citation.index.citations_live_on_the_citing_object",
       "en": "citations live on the CITING object, and this is neither a case nor a question. A case keeps them in its references; a question keeps them in the basis its answer rests on (State Rules 5.2). Nothing else in the record holds either.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 521
+      "line": 522
     },
     {
       "id": "citation.index.citing_onto_a_question_needs",
       "en": "citing onto a question needs the inquiry module's role vocabulary, leg grammar and earned registry, and your team's Civicsmith was created without them, so nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 280
+      "line": 281
     },
     {
       "id": "citation.index.citing_this_many_records",
       "en": "citing this many records at once would push this {object}'s bundle.md past the 1MB inline limit. Every edge is written into the document, so the ceiling is on edges in ONE object, not on the size of a selection. Cite in smaller batches; nothing has been written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 842
+      "line": 843
     },
     {
       "id": "citation.index.drawing_references_block",
       "en": "the project's references block is not in a shape this grammar can extend in place. Drawing a question in edits only that block and never rewrites the rest of the document.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 939
+      "line": 1046
     },
     {
       "id": "citation.index.drawing_this_question_in_would",
       "en": "drawing this question in would push this case's bundle.md past the 1MB inline limit. Every edge is written into the document; nothing has been written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 951
+      "line": 1058
     },
     {
       "id": "citation.index.every_member_of_the_selection",
       "en": "every member of the selection was already cited; nothing was written{v1}",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 737
+      "line": 738
     },
     {
       "id": "citation.index.for_question_suffix",
       "en": "; for question {question}",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 816
+      "line": 817
     },
     {
       "id": "citation.index.imported_already_cited",
       "en": "this question already rests on that finding; nothing was written. Moving to a later edition is the re-evaluation's act, not a second leg.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1045
+      "line": 1152
     },
     {
       "id": "citation.index.imported_basis_block_not_editable",
       "en": "the question's basis block is not in a shape this grammar can edit in place; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1105
+      "line": 1212
     },
     {
       "id": "citation.index.imported_edition_malformed",
       "en": "an edition is a whole number of one or more, the edition of the other team's case your team accepted, because each edition is its own document with its own published grades; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1018
+      "line": 1125
     },
     {
       "id": "citation.index.imported_inherits_publication",
       "en": "citing this inherits the fact of publication, not the credibility of its content",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1071
+      "line": 1178
     },
     {
       "id": "citation.index.imported_member_only",
       "en": "only a named member rests a question on another team's finding or takes it back; this came from an automated or unnamed credential, so nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 966
+      "line": 1073
     },
     {
       "id": "citation.index.imported_not_a_question",
       "en": "{inquiry} is not a question, and another team's finding is cited from a question; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 977
+      "line": 1084
     },
     {
       "id": "citation.index.imported_not_cited",
       "en": "this question holds no leg on that finding, so there is nothing to take back. A leg on a document or a question is severed, not withdrawn.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1100
+      "line": 1207
     },
     {
       "id": "citation.index.imported_ref_malformed",
       "en": "the import and the finding named here do not spell another team's finding, so there is nothing to rest the question on; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1014
+      "line": 1121
     },
     {
       "id": "citation.index.imported_withdraw_needs_reason",
       "en": "taking another team's finding off a question records WHY, and a change with no reason is an unexplained change; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1089
+      "line": 1196
     },
     {
       "id": "citation.index.imported_withdraw_too_large",
       "en": "the reason would push this question's bundle.md past the 1MB inline limit; nothing has been written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1116
+      "line": 1223
     },
     {
       "id": "citation.index.imported_would_be_too_large",
       "en": "resting on this finding would push this question's bundle.md past the 1MB inline limit; nothing has been written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1061
+      "line": 1168
     },
     {
       "id": "citation.index.k_cannot_be_written_into",
       "en": "'{k}' cannot be written into the record as it stands: a value describing which part of a document is at most 200 characters and cannot contain a quotation mark, a backslash, a line break or a comment mark. Those characters would reshape the document rather than appear in it.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 682
+      "line": 683
+    },
+    {
+      "id": "citation.index.leggrade_bad_grade",
+      "en": "a grade is one letter, {grades}; nothing was written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 905
+    },
+    {
+      "id": "citation.index.leggrade_member_only",
+      "en": "only a named member says how well your team's copy shows a passage; this came from an automated or unnamed credential, so nothing was written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 894
+    },
+    {
+      "id": "citation.index.leggrade_needs_reason",
+      "en": "a grade records WHY, and a grade with no reason is an unexplained claim about your team's copy; nothing was written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 910
+    },
+    {
+      "id": "citation.index.leggrade_no_ceiling",
+      "en": "the record cannot say how well your team's copy of {target} shows it, so it cannot support any grade here; nothing was written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 954
+    },
+    {
+      "id": "citation.index.leggrade_not_a_question",
+      "en": "{project} is not a question, and a passage is graded where a question rests on it; nothing was written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 900
+    },
+    {
+      "id": "citation.index.leggrade_not_cited",
+      "en": "this question holds no leg on that passage, so there is nothing to grade. A different part of the same document is a different passage.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 927
+    },
+    {
+      "id": "citation.index.leggrade_not_gradable",
+      "en": "this passage is not one your team holds a copy of, so a member does not grade it: the record works its grade out from what it rests on, or takes it from the other team's edition. Nothing was written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 936
+    },
+    {
+      "id": "citation.index.leggrade_other_axis",
+      "en": "this passage already carries a grade of {grade} on the {axis} axis, and a passage carries one grade, so that grade is kept and nothing was written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 941
+    },
+    {
+      "id": "citation.index.leggrade_over_ceiling",
+      "en": "the most the record can support for your team's copy of {target} is {ceiling}, and {grade} is stronger; nothing was written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 955
+    },
+    {
+      "id": "citation.index.leggrade_too_large",
+      "en": "the reason would push this question's bundle.md past the 1MB inline limit; nothing has been written.",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 974
+    },
+    {
+      "id": "citation.index.leggrade_was_none",
+      "en": "no grade",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 970
     },
     {
       "id": "citation.index.log_note",
       "en": " Note: {note}.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 817
+      "line": 818
     },
     {
       "id": "citation.index.no_question_drawn_into_case",
       "en": "no question by that id is one you can see, so it cannot be drawn into this case; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 908
+      "line": 1015
     },
     {
       "id": "citation.index.no_question_kept_with_it",
       "en": "no question by that id is one you can see, so this citation cannot be kept with it; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 497
+      "line": 498
     },
     {
       "id": "citation.index.not_a_question_cited_for",
       "en": "{qid} is not a question, so it cannot be the question this was cited for; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 501
+      "line": 502
     },
     {
       "id": "citation.index.not_a_question_drawn_into",
       "en": "{qid} is not a question, so it cannot be drawn into this case as one; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 912
+      "line": 1019
     },
     {
       "id": "citation.index.part_named_written_nowhere",
       "en": ". The part of the document this call named was written NOWHERE, because no leg was written at all: making an existing citation more specific is a separate authored act on this record's own plan.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 738
+      "line": 739
     },
     {
       "id": "citation.index.projects_bundle_md_does_not_parse",
       "en": "the project's own bundle.md does not parse under the restricted grammar",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 611
+      "line": 612
     },
     {
       "id": "citation.index.projects_references_block_extend",
       "en": "the project's references block is not in a shape this grammar can extend in place. Citing edits only that block and never rewrites the rest of the document.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 760
+      "line": 761
     },
     {
       "id": "citation.index.rl_is_not_a_role",
       "en": "'{rl}' is not a role a basis leg can carry. The set is closed and is published by op=affordances beside the act: {roles}.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 284
+      "line": 285
     },
     {
       "id": "citation.index.session_cited_many_records",
       "en": "### Session {when} | Cited {count} records | {who}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 824
+      "line": 825
     },
     {
       "id": "citation.index.session_cited_one_record",
       "en": "### Session {when} | Cited 1 record | {who}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 823
+      "line": 824
+    },
+    {
+      "id": "citation.index.session_graded_leg",
+      "en": "### Session {when} | Graded {target} on the capture axis | {who}\n",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 967
     },
     {
       "id": "citation.index.session_head_many_citations",
       "en": "### Session {when} | {verb} {count} citations | {who}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 383
+      "line": 384
     },
     {
       "id": "citation.index.session_head_one_citation",
       "en": "### Session {when} | {verb} {count} citation | {who}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 382
+      "line": 383
     },
     {
       "id": "citation.index.session_rested_many_records",
       "en": "### Session {when} | Rested this question on {count} records ({role}) | {who}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 821
+      "line": 822
     },
     {
       "id": "citation.index.session_rested_on_imported",
       "en": "### Session {when} | Rested this question on another team's finding ({role}) | {who}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1055
+      "line": 1162
     },
     {
       "id": "citation.index.session_rested_one_record",
       "en": "### Session {when} | Rested this question on 1 record ({role}) | {who}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 820
+      "line": 821
     },
     {
       "id": "citation.index.session_took_imported_back",
       "en": "### Session {when} | Took another team's finding back off this question | {who}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1110
+      "line": 1217
     },
     {
       "id": "citation.index.set_had_moved_since",
       "en": " (the set had moved since it was made; citing is report-weight and proceeded)",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 810
+      "line": 811
     },
     {
       "id": "citation.index.the_part_of_the_document_label",
       "en": "the part of the document this citation names",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 715
+      "line": 716
     },
     {
       "id": "citation.index.the_part_of_the_document_refused",
       "en": "the part of the document this citation names is refused by the SAME catalog function op=promote runs at the write, so nothing was written. A citation that names no part means the whole document, which is always a legal thing to cite.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 722
+      "line": 723
     },
     {
       "id": "citation.index.the_questions_basis_block",
       "en": "the question's basis block is not in a shape this grammar can extend in place. Citing appends legs to that block and never rewrites the rest of the document.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 371
+      "line": 372
     },
     {
       "id": "citation.index.the_questions_references_block",
       "en": "the question's references block is not in a shape this grammar can extend in place. Citing edits only that block and the basis block, and never rewrites the rest of the document.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 792
+      "line": 793
     },
     {
       "id": "citation.index.the_reasons_appended_to_these",
       "en": "the reasons appended to these citations would push bundle.md past the 1MB inline limit",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 396
+      "line": 397
     },
     {
       "id": "citation.index.the_references_block_not_in_shape",
       "en": "the references block is not in a shape this grammar can edit in place",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 363
+      "line": 364
     },
     {
       "id": "citation.index.the_team_has_retired_these",
       "en": "the team has RETIRED these since the edge was severed, recording that they are superseded or no longer stand, and reinstating the edge would read to every later member as live support. Cite what superseded them, or re-collect the source as a new record and cite that. The whole call is refused rather than narrowed to the members that are not retired.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 316
+      "line": 317
     },
     {
       "id": "citation.index.the_team_has_retired_these_now",
       "en": "the team has RETIRED these, recording that they are superseded or no longer stand, and a citation made now would read to every later member as live support. Cite what superseded them, or re-collect the source as a new record and cite that. The whole call is refused rather than narrowed to the members that are not retired.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 608
+      "line": 609
     },
     {
       "id": "citation.index.the_team_has_retired_this",
       "en": "the team has RETIRED this, recording that it is superseded or no longer stands, and drawing on it now would read to every later member as live support. Draw on what superseded it.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 916
+      "line": 1023
     },
     {
       "id": "citation.index.these_targets_already_carry",
       "en": "these targets already carry a SEVERED cites edge, which is a recorded decision to cut the dependency, not the absence of one. Citing neither reverses it silently nor skips past it. Reinstating a severance is a separate action that records its own reason.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 649
+      "line": 650
     },
     {
       "id": "citation.index.this_call_names_a_passage",
       "en": "this call names a passage found by search and also a selection or a part of a document. A found passage already names its document and its part, so the record could not tell which you meant; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 458
+      "line": 459
     },
     {
       "id": "citation.index.this_call_names_fields",
       "en": "this call names {names}, which this act does not carry, so the record cannot tell what part of the document was meant. It is REFUSED rather than ignored: a field accepted and quietly dropped leaves a citation that looks like the one you made and is not. The fields this act takes are: {fields}.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 665
+      "line": 666
     },
     {
       "id": "citation.index.this_call_names_neither",
       "en": "this call names neither a selection nor a passage found by search, so there is nothing to cite; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 459
+      "line": 460
     },
     {
       "id": "citation.index.this_case_already_carries",
       "en": "this case already carries a SEVERED edge to this question, which is a recorded decision to cut the dependency, not the absence of one. Drawing on it again would neither reverse that decision silently nor skip past it. Reinstating a severance is a separate action that records its own reason.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 927
+      "line": 1034
     },
     {
       "id": "citation.index.this_case_already_draws",
       "en": "this case already draws on this question; nothing was written",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 932
+      "line": 1039
     },
     {
       "id": "citation.index.this_passage_was_found_in",
       "en": "this passage was found in capture {sha} of {doc}, and a citation of {doc_2} is pinned to {v1}, so its part could name different words. Nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 482
+      "line": 483
     },
     {
       "id": "citation.index.this_selection_resolves_to_nothing_to_cite",
       "en": "this selection resolves to no members, so there is nothing to cite. It may have named ids that do not exist, or its members may have been purged or hidden since it was made.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 729
+      "line": 730
     },
     {
       "id": "citation.index.this_selection_resolves_to_nothing_to_move",
       "en": "this selection resolves to no members, so there is nothing to move. It may have named ids that do not exist, or its members may have been purged or hidden since it was made.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 291
+      "line": 292
     },
     {
       "id": "citation.index.trigger_a_part_found_in_capture",
       "en": "Trigger: a part of {doc} found by search in capture {capture}",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 814
+      "line": 815
+    },
+    {
+      "id": "citation.index.trigger_graded_leg",
+      "en": "Trigger: the member's own grade of how well the team's copy shows {target}\n",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 968
     },
     {
       "id": "citation.index.trigger_imported_finding",
       "en": "Trigger: {ref} at edition {edition}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1056
+      "line": 1163
     },
     {
       "id": "citation.index.trigger_question_drawn",
       "en": "Trigger: question {qid} drawn into this case\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 944
+      "line": 1051
     },
     {
       "id": "citation.index.trigger_selection_handle",
       "en": "Trigger: selection {handle}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 386
+      "line": 387
     },
     {
       "id": "citation.index.trigger_selection_moved",
       "en": "Trigger: selection {handle}{moved}",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 815
+      "line": 816
     },
     {
       "id": "citation.index.verb_an_edge_records_why",
       "en": "{verb} an edge records WHY. The catalog's own remediation for a bad reference is \"sever with reason\", and an edge moved with no reason is an unexplained change wearing a status field.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 265
+      "line": 266
     },
     {
       "id": "citation.index.verb_requires_an_edge_currently",
       "en": "{verb} requires an edge currently in {states}. These targets are not, so the whole call is refused: a batch that moved only the eligible members would be a state change the operator did not ask for.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 346
+      "line": 347
     },
     {
       "id": "citation.index.which_part_of_a_document",
       "en": "which part of a document a citation rests on is recorded on a leg of a QUESTION's basis, and this citing object is a case. A case's citation edge names the document and has no slot for a page or a passage, so this extent would be dropped rather than recorded — refused instead, for the reason a role is refused here: a field stated in one place and honoured nowhere is how the record and its projections drift apart.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 670
+      "line": 671
     },
     {
       "id": "citation.recorded.a_read_names_the_member",
@@ -16168,7 +16329,7 @@
       "en": "{text}\n## Session Log\n\n{entry}",
       "module": "citation",
       "file": "bio-plane/src/citation/splice.mjs",
-      "line": 263
+      "line": 301
     },
     {
       "id": "civil-time.calendar.list_cannot_read",
@@ -16718,7 +16879,7 @@
     },
     {
       "id": "conformance.index.whether_standard_binds_v1_is",
-      "en": "whether {standard} binds {v1} is undetermined ({v2}), and an act is found noncompliant only against a standard that binds its body: a member settles it in standards first. Nothing was written.",
+      "en": "whether {standard} binds {v1} is undetermined ({v2}), and an act is found noncompliant only against a standard that binds its body: settle it on the standard's page first. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/index.mjs",
       "line": 1079
@@ -16948,18 +17109,18 @@
       "line": 285
     },
     {
-      "id": "connections.checks.claims_leg_through_theme",
-      "en": "{label}.{key} claims the leg through a THEME, and membership in a theme is never a reason a leg counts (BIO_Content_Framework_v0_10.md §8.4, fence 4): the leg rests on its target or on nothing",
+      "id": "connections.checks.leg_claims_through_theme",
+      "en": "{label} claims its support through a THEME, and membership in a theme is never a reason a leg counts: it rests on the document or passage it cites, or on nothing",
       "module": "connections",
       "file": "bio-plane/src/connections/checks.mjs",
-      "line": 318
+      "line": 319
     },
     {
-      "id": "connections.checks.names_a_theme",
-      "en": "{label}.{field} '{value}' names a THEME{membership}, and a theme is never the basis of a claim (BIO_Content_Framework_v0_10.md §8.4, fence 4): it is a member's declared lens, not evidence, so no leg can rest on it or on membership in it",
+      "id": "connections.checks.leg_names_theme",
+      "en": "{label} names {subject}, and a theme is never the basis of a claim: it is one member's declared lens for gathering material, not evidence, so no leg can rest on it or on membership in it",
       "module": "connections",
       "file": "bio-plane/src/connections/checks.mjs",
-      "line": 309
+      "line": 310
     },
     {
       "id": "connections.checks.no_such_document",
@@ -20560,6 +20721,13 @@
       "line": 61
     },
     {
+      "id": "credentials.checks.only_a_key_a_member_registered",
+      "en": "Only a key a member registered for themselves, and that is still in use, can be marked as one you know about. This key was registered by an administrator, or it has been withdrawn, so there is nothing to confirm. Nothing was changed.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/checks.mjs",
+      "line": 125
+    },
+    {
       "id": "credentials.checks.only_a_named_person_signed",
       "en": "Only a named person signed in to your team's Civicsmith can create an agent credential. Deciding what an automated worker is allowed to reach is a judgement somebody has to be accountable for, so an automated worker cannot make it — not even about itself.",
       "module": "credentials",
@@ -20571,98 +20739,105 @@
       "en": "claims an instance at bootstrap",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2188
+      "line": 2230
     },
     {
       "id": "credentials.declared.passwordreset",
       "en": "credential: a reset link and a new password, reached with no session; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2192
+      "line": 2234
     },
     {
       "id": "credentials.declared.passwordresetlink",
       "en": "credential: an administrator's reset link for one member, answered once; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2194
+      "line": 2236
     },
     {
       "id": "credentials.declared.reauth",
       "en": "session-directed: the caller's own session, its password asked again for five minutes; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2196
+      "line": 2238
     },
     {
       "id": "credentials.declared.recover",
       "en": "credential: a recovery code and a new password, reached with no session; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2198
+      "line": 2240
     },
     {
       "id": "credentials.declared.recoverycodesissue",
       "en": "credential: an administrator's own recovery codes, shown once; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2200
+      "line": 2242
     },
     {
       "id": "credentials.declared.setpassword",
       "en": "session-directed: the caller's own password, the role from their session; ends their other sessions; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2204
+      "line": 2246
     },
     {
       "id": "credentials.declared.signeradd",
       "en": "signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2206
+      "line": 2248
+    },
+    {
+      "id": "credentials.declared.signerknown",
+      "en": "signer governance: an administrator says they know about a member's self-registered signing key, stamped `by` from their session; it records who and when and changes nothing else; the subject is a key, not a bundle",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 2254
     },
     {
       "id": "credentials.declared.signerregisterown",
       "en": "signer governance: a member registers their own signing key, stamped `by` from their session, and every administrator is told; the subject is a key, not a bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2208
+      "line": 2250
     },
     {
       "id": "credentials.declared.signerrevokeown",
       "en": "signer governance: a member revokes their own signing key, stamped `by` from their session; the subject is a key, not a bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2210
+      "line": 2252
     },
     {
       "id": "credentials.declared.signerset",
       "en": "signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2212
+      "line": 2256
     },
     {
       "id": "credentials.declared.signout",
       "en": "session-directed: ends the caller's own session, or every session of the caller's role; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2214
+      "line": 2258
     },
     {
       "id": "credentials.declared.signouteverywhere",
       "en": "session-directed: ends the caller's own session, or every session of the caller's role; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2216
+      "line": 2260
     },
     {
       "id": "credentials.declared.unlock",
       "en": "session-directed: the caller's own locked session, cleared with their password; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2218
+      "line": 2262
     },
     {
       "id": "credentials.index.a_member_changes_their_own",
@@ -20676,84 +20851,91 @@
       "en": "a member registers their own signing key from their own signed-in session. A machine credential, the operator's bearer and an unstamped call have no member behind them to hold one; an administrator registers a key for a member with op=signeradd. Nothing was written.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 915
+      "line": 962
     },
     {
       "id": "credentials.index.a_member_scoped_credential",
       "en": "a member-scoped credential acts for the member who mints it, and '{principalMember}' is not '{minter}'. A member cannot authorise an agent in another member's name. Nothing was written.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1081
+      "line": 1121
     },
     {
       "id": "credentials.index.a_reset_link_is_made",
       "en": "a reset link is made only for an active member of the team. Nothing was made.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1885
+      "line": 1925
     },
     {
       "id": "credentials.index.a_run_in_a_project",
       "en": "a run in a project",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1306
+      "line": 1346
     },
     {
       "id": "credentials.index.a_runs_credential_holds",
       "en": "a run's credential holds a non-empty list of the runner's writes, each one of {writes}, and this was not one. Nothing was minted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1292
+      "line": 1332
     },
     {
       "id": "credentials.index.a_runs_credential_is",
       "en": "a run's credential is minted only for an active member's own run. Nothing was minted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1247
+      "line": 1287
     },
     {
       "id": "credentials.index.a_runs_credential_names",
       "en": "a run's credential names the run it is bound to, a non-empty string, and none was given. Nothing was minted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1289
+      "line": 1329
     },
     {
       "id": "credentials.index.a_runs_credential_names_the",
       "en": "a run's credential names the project the run was opened in as a non-empty string, or names none, and this was neither. Nothing was minted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1291
+      "line": 1331
     },
     {
       "id": "credentials.index.a_standing_question_runs",
       "en": "a standing question runs only for an active member. Nothing was minted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1434
+      "line": 1474
+    },
+    {
+      "id": "credentials.index.an_administrator_says_they_know",
+      "en": "an administrator says they know about a member's signing key from their own signed-in session. A machine credential, the operator's bearer and an unstamped call have no administrator behind them to say it. Nothing was written.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 963
     },
     {
       "id": "credentials.index.an_asks_grant_admits",
       "en": "an ask's grant admits only the reads on its list, and '{op}'{write} is not one. Nothing was read.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1498
+      "line": 1538
     },
     {
       "id": "credentials.index.an_asks_grant_is",
       "en": "an ask's grant is minted only under the member's own live session. Nothing was minted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1412
+      "line": 1452
     },
     {
       "id": "credentials.index.empty_nothing_was",
       "en": "{empty}. Nothing was changed.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1984
+      "line": 2024
     },
     {
       "id": "credentials.index.expected_the_base64_field",
@@ -20767,35 +20949,35 @@
       "en": "expiresInDays is a whole number of days from {min} to {max}, {default} when it is left out, and this was not one. Nothing was written.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1109
+      "line": 1149
     },
     {
       "id": "credentials.index.from_is_before_the",
       "en": "from is before the counts kept, which go back {days} days",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1613
+      "line": 1653
     },
     {
       "id": "credentials.index.from_is_not_an",
       "en": "from is not an instant",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1607
+      "line": 1647
     },
     {
       "id": "credentials.index.from_is_not_before",
       "en": "from is not before to",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1609
+      "line": 1649
     },
     {
       "id": "credentials.index.id_already_names_a_credential",
       "en": "'{id}' already names a credential in your team's Civicsmith. Acts cite the IDENTITY, so rebinding it would re-attribute work already done.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1098
+      "line": 1138
     },
     {
       "id": "credentials.index.memberid_has_not_enrolled_status",
@@ -20816,28 +20998,28 @@
       "en": "minted by your team's Civicsmith for one segment of your run",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1273
+      "line": 1313
     },
     {
       "id": "credentials.index.no_credential_in_your_teams",
       "en": "no credential in your team's Civicsmith is called '{v1}'. Nothing was withdrawn, and being told so is the point: believing an authority is gone when it is not is the worse of the two outcomes.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1156
+      "line": 1196
     },
     {
       "id": "credentials.index.no_digest_of_the",
       "en": "no digest of the credential's secret was handed in (64 lowercase hexadecimal characters, made from the value generated when the credential was asked for), so there is nothing a lookup could ever find this credential by. Nothing was written.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1117
+      "line": 1157
     },
     {
       "id": "credentials.index.no_live_grant_answers",
       "en": "no live grant answers to this token: it expired, its session ended, or it never existed. Nothing was read.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1485
+      "line": 1525
     },
     {
       "id": "credentials.index.no_live_session_answers",
@@ -20851,70 +21033,84 @@
       "en": "no member is named on this act. An authority granted by nobody is an authority nobody can be asked about afterwards.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1073
+      "line": 1113
     },
     {
       "id": "credentials.index.no_member_is_named_2",
       "en": "no member is named on this act, and a withdrawal nobody authored is not one.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1150
+      "line": 1190
     },
     {
       "id": "credentials.index.no_password_was_set",
       "en": "no password was set and nothing was written. Either that role holds no recovery code, or the code given is not one of its unspent codes, or the role is not an active member's now. Which of those happened is not said: it is one answer deliberately, so that a refusal cannot be used to find out which roles hold codes.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1810
+      "line": 1850
     },
     {
       "id": "credentials.index.no_standing_question_was",
       "en": "no standing question was named. Nothing was minted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1444
+      "line": 1484
+    },
+    {
+      "id": "credentials.index.only_a_key_a_member",
+      "en": "only a key a member registered for themselves and that is still active can be marked as known; this one was registered by an administrator or has been revoked. Nothing was written.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 988
     },
     {
       "id": "credentials.index.pass_an_identity",
       "en": "pass an identity for this credential: it is the name acts will cite, and a credential nothing can name is one nothing can revoke either.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1099
+      "line": 1139
     },
     {
       "id": "credentials.index.period_refused_detail",
       "en": "{what}. {rule} Nothing was read.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1623
+      "line": 1663
     },
     {
       "id": "credentials.index.principalkind_was",
       "en": "principalKind was '{kind}'. It is 'organisation' (the key acts for the team, nobody individual behind it) or 'member' (attributable to that member). They carry different accountability and the record states which, never the token's value.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1093
+      "line": 1133
     },
     {
       "id": "credentials.index.recovery_codes_are_issued",
       "en": "recovery codes are issued to an active member for their own account, from their own signed-in session. Nothing was issued.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1782
+      "line": 1822
     },
     {
       "id": "credentials.index.registered_to_you_and",
       "en": "registered to you, and it attests as any registered key does. Every administrator is told of the registration, and any of them can revoke the key.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 957
+      "line": 950
+    },
+    {
+      "id": "credentials.index.saying_you_know_about_a_key",
+      "en": "saying you know about a member's signing key",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 978
     },
     {
       "id": "credentials.index.setting_the_teams_key",
       "en": "setting the team's key for an outside service",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1972
+      "line": 2012
     },
     {
       "id": "credentials.index.sign_in_refused",
@@ -20928,28 +21124,28 @@
       "en": "standing questions are off for the {who}, which would serve this one. Nothing was minted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1441
+      "line": 1481
     },
     {
       "id": "credentials.index.string_is_a_machine_identity",
       "en": "'{String}' is a machine identity, and minting an AI credential is a MEMBER act, never an AI act (D-199 (3)): if an agent can request a broader token, the scoping is theatre. This is REC-46's ONE predicate, so it catches token:ai without knowing that class exists.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1072
+      "line": 1112
     },
     {
       "id": "credentials.index.string_is_a_machine_identity_2",
       "en": "'{String}' is a machine identity. The row carries revoked_by, and a machine name there would record the team withdrawing an authority nobody in the team decided to withdraw.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1149
+      "line": 1189
     },
     {
       "id": "credentials.index.switching_the_teams_key",
       "en": "switching the team's key for an outside service",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1999
+      "line": 2039
     },
     {
       "id": "credentials.index.the_current_password_given",
@@ -20963,49 +21159,49 @@
       "en": "the keyed services are {services}, and {prefix}<tool id> for each security tool. Nothing was changed.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1941
+      "line": 1981
     },
     {
       "id": "credentials.index.the_kinds_counted_are",
       "en": "the kinds counted are {kinds}. Nothing was counted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1582
+      "line": 1622
     },
     {
       "id": "credentials.index.the_period_is_from",
       "en": "The period is from an earlier instant to a later one, at most {days} days long and inside the last {days} days.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1674
+      "line": 1714
     },
     {
       "id": "credentials.index.the_period_is_from_2",
       "en": "The period is from an earlier instant to a later one.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1730
+      "line": 1770
     },
     {
       "id": "credentials.index.the_period_is_longer",
       "en": "the period is longer than {days} days",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1611
+      "line": 1651
     },
     {
       "id": "credentials.index.the_security_counts_could",
       "en": "the security counts could not be read, so no figure is given: they are absent, never zero. Nothing was read.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1743
+      "line": 1783
     },
     {
       "id": "credentials.index.the_teams_key_for",
       "en": "the team's key for this service is off or not held; the caller goes on without it.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2027
+      "line": 2067
     },
     {
       "id": "credentials.index.this_act_asks_for",
@@ -21019,28 +21215,28 @@
       "en": "this key is already registered to you and active; nothing was written. Every administrator is told of the registration, and any of them can revoke the key.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 956
+      "line": 949
     },
     {
       "id": "credentials.index.this_key_is_registered",
       "en": "this key is registered to another member of this team, and a registered key is never rebound by its own member's act. Nothing was written.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 934
+      "line": 927
     },
     {
       "id": "credentials.index.this_key_of_yours",
       "en": "this key of yours was revoked, and a revoked key is re-activated only by an administrator (op=signerset), so that a revocation stands. Nothing was written.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 942
+      "line": 935
     },
     {
       "id": "credentials.index.this_reset_link_does",
       "en": "this reset link does not work: it was used, it expired, a newer one replaced it, or it never existed. Which, it does not say. Nothing was changed.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1874
+      "line": 1914
     },
     {
       "id": "credentials.index.this_session_is_locked",
@@ -21054,14 +21250,14 @@
       "en": "to is after the present hour",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1614
+      "line": 1654
     },
     {
       "id": "credentials.index.to_is_not_an",
       "en": "to is not an instant",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1608
+      "line": 1648
     },
     {
       "id": "credentials.index.too_many_attempts_were",
@@ -37350,56 +37546,56 @@
       "en": "read: the chain of authorising events toward the event a fact concerns, bounded; writes nothing",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1436
+      "line": 1439
     },
     {
       "id": "money.declared.committedagainstpaid",
       "en": "read: a contract's committed and paid facts with their sums and the difference, never a verdict; writes nothing",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1434
+      "line": 1437
     },
     {
       "id": "money.declared.createset",
       "en": "money-set-directed: keyed by a new MSR- id; writes money's rows and moves no bundle",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1424
+      "line": 1427
     },
     {
       "id": "money.declared.exclude",
       "en": "money-set-directed: keyed by (set, fact); writes money's rows and moves no bundle",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1428
+      "line": 1431
     },
     {
       "id": "money.declared.include",
       "en": "money-set-directed: keyed by (set, fact); writes money's rows and moves no bundle",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1426
+      "line": 1429
     },
     {
       "id": "money.declared.moneysets",
       "en": "read: the money sets that concern an id, such as a project's trails, newest first, bounded; writes nothing",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1432
+      "line": 1435
     },
     {
       "id": "money.declared.reconcile",
       "en": "read: whether two money facts are consistent, or each dimension that differs; writes nothing",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1430
+      "line": 1433
     },
     {
       "id": "money.declared.recordfact",
       "en": "money-directed: keyed by a new MNY- id; holds one source's reading of one amount and moves no bundle",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1422
+      "line": 1425
     },
     {
       "id": "money.index.a_balance_class_is_read",
@@ -37420,7 +37616,7 @@
       "en": "a calculation is never a money fact's source",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1376
+      "line": 1379
     },
     {
       "id": "money.index.a_canonical_table_row_read",
@@ -37434,7 +37630,7 @@
       "en": "a chain of authority is read for one money fact (MNY-...)",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1200
+      "line": 1203
     },
     {
       "id": "money.index.a_code_names_one_of",
@@ -37455,7 +37651,7 @@
       "en": "a duty is never named in a money fact",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1382
+      "line": 1385
     },
     {
       "id": "money.index.a_figure_states_how_it",
@@ -37476,28 +37672,28 @@
       "en": "a fund's type is {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1291
+      "line": 1294
     },
     {
       "id": "money.index.a_funds_type_names_its",
       "en": "a fund's type names its basis: the source that states it",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1292
+      "line": 1295
     },
     {
       "id": "money.index.a_hypothesis_is_never_named",
       "en": "a hypothesis is never named in a money fact ({k})",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1378
+      "line": 1381
     },
     {
       "id": "money.index.a_hypothesis_is_never_named_2",
       "en": "a hypothesis is never named in a money fact",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1387
+      "line": 1390
     },
     {
       "id": "money.index.a_kind_takes_a_stage",
@@ -37567,7 +37763,7 @@
       "en": "a money fact never concerns a duty",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1386
+      "line": 1389
     },
     {
       "id": "money.index.a_money_fact_never_names",
@@ -37623,7 +37819,7 @@
       "en": "a money set is read by its id (MSR-...)",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 988
+      "line": 991
     },
     {
       "id": "money.index.a_money_sets_purpose_is",
@@ -37637,7 +37833,7 @@
       "en": "a money set's purpose is {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1017
+      "line": 1020
     },
     {
       "id": "money.index.a_proposal_names_the_method",
@@ -37721,7 +37917,7 @@
       "en": "a total is a calculation, never stored as a money fact",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1379
+      "line": 1382
     },
     {
       "id": "money.index.a_trail_concerns_one_id",
@@ -37756,7 +37952,7 @@
       "en": "after names no set in this list; start again without it",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1029
+      "line": 1032
     },
     {
       "id": "money.index.an_actual_amount_names_its",
@@ -37840,7 +38036,7 @@
       "en": "{contract} is not a registered contract",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1129
+      "line": 1132
     },
     {
       "id": "money.index.each_id_concerned_is_a",
@@ -37868,7 +38064,7 @@
       "en": "events is not wired here",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1205
+      "line": 1208
     },
     {
       "id": "money.index.fact_id_is_withdrawn_and",
@@ -37882,7 +38078,7 @@
       "en": "{fund} is not registered as a fund",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1295
+      "line": 1298
     },
     {
       "id": "money.index.id_is_not_a_line",
@@ -37917,7 +38113,7 @@
       "en": "money sets are listed by what they concern: name the id (moneysets&concerns=...)",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1015
+      "line": 1018
     },
     {
       "id": "money.index.name_the_money_facts_by",
@@ -37931,7 +38127,7 @@
       "en": "no authorising event is held for this event",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1231
+      "line": 1234
     },
     {
       "id": "money.index.no_money_fact_id_could",
@@ -38022,7 +38218,7 @@
       "en": "the authorising events held toward this event",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1231
+      "line": 1234
     },
     {
       "id": "money.index.the_capture_named",
@@ -49677,42 +49873,42 @@
       "en": "standard-directed: keyed by a court standard and a portion; writes standards' rows and moves no bundle",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2851
+      "line": 2879
     },
     {
       "id": "standards.declared.lawrelate",
       "en": "standard-directed: keyed by a new relation between two standards or portions; writes standards' rows and moves no bundle",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2849
+      "line": 2877
     },
     {
       "id": "standards.declared.standardadopt",
       "en": "proposal-directed: a member adopts a standard proposal, keyed by proposal id, with the adopter's own reason, now required (standards R10, through R1; DEC-88: `reasoned`) — the proposal's why is the proposer's; writes an STD- bundle naming it",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2847
+      "line": 2875
     },
     {
       "id": "standards.declared.standarddeclare",
       "en": "standard-directed: a member records a standard (citation, kind, issuer, captured text, period), optionally superseding an earlier one, with the declarer's reason for holding the government to it, now required (standards R1; DEC-88: `reasoned`); writes an STD- bundle",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2845
+      "line": 2873
     },
     {
       "id": "standards.declared.standardinforce",
       "en": "read: whether one standard was in force on a date, with why; writes nothing",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2843
+      "line": 2871
     },
     {
       "id": "standards.index.a_citation_is_at_most",
       "en": "a citation is at most {CITE_MAX} characters, and this one is {length}. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2709
+      "line": 2737
     },
     {
       "id": "standards.index.a_standard_held_held_holds",
@@ -49726,14 +49922,14 @@
       "en": "an adoption names the edition adopted, at most {EDITION_MAX} characters. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 1867
+      "line": 1895
     },
     {
       "id": "standards.index.citation_is_not_one_of",
       "en": "{citation} is not one of this standard's text passages. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 1659
+      "line": 1687
     },
     {
       "id": "standards.index.cited_by_names_where_cited",
@@ -49747,14 +49943,14 @@
       "en": "documents whose readings cite it, as the readings state their references; a document you may not see is neither answered nor counted",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 1558
+      "line": 1586
     },
     {
       "id": "standards.index.force_read_from_provision_words",
       "en": "a force is read from the provision's own words and confirmed by a member; a proposal moves nothing",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 1796
+      "line": 1824
     },
     {
       "id": "standards.index.no_question_your_teams_record",
@@ -49768,7 +49964,7 @@
       "en": "no record of a version known in force through a date answers to that id here. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2186
+      "line": 2214
     },
     {
       "id": "standards.index.no_source_matches_citation",
@@ -49789,7 +49985,7 @@
       "en": "only an owner of the project its source material is filed in may release it. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 1816
+      "line": 1844
     },
     {
       "id": "standards.index.period_starts_after_captures",
@@ -49803,35 +49999,35 @@
       "en": " It is stored with no captured text, and cannot be adopted until a member names the captured passages that hold the standard's words (R9).",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2405
+      "line": 2433
     },
     {
       "id": "standards.index.proposed_force_moves_no_answer",
       "en": "this is a proposed force and not a force: it moves no answer until a member confirms it naming this proposal",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 1736
+      "line": 1764
     },
     {
       "id": "standards.index.read_names_the_member_reading",
       "en": "a read names the member reading; an absent viewer is neither an administrator nor the public",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2224
+      "line": 2252
     },
     {
       "id": "standards.index.sid_is_held_held_without",
       "en": "{sid} is held {held}, without its text, so nothing is read from its words. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2638
+      "line": 2666
     },
     {
       "id": "standards.index.sid_is_v1_seen_by",
       "en": "{sid} is {v1}seen by every member of your team. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 1810
+      "line": 1838
     },
     {
       "id": "standards.index.side_is_held_passage",
@@ -49852,14 +50048,14 @@
       "en": "the act a proposal names is an id of at most {ACT_MAX} characters. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2394
+      "line": 2422
     },
     {
       "id": "standards.index.the_source_was_last_retrieved",
       "en": "the source was last retrieved on {checkedDay}, and {through} is after it. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2153
+      "line": 2181
     },
     {
       "id": "steps.index.basis_ord_rests_on_target",
