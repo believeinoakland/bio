@@ -1,6 +1,6 @@
 # screens-settings (T51)
 
-**Status** · session_01TDZDRXt6aSdG9rueQLukTW · depth 2 · COMPLETE · handled B59
+**Status** · session_01KU5VbSaZA1BVG9g3aQn231 · depth 2 · COMPLETE · handled B62
 
 ## J1 · QUESTION
 
@@ -605,3 +605,31 @@ COMPLETE (re B59, K5245). Merged origin/tranche/T51 (no rebase); committed only 
 Changed: seed-group.mjs `team({ env, instanceName })` (was a `group` option the world no longer takes) -> storeWorld({ instanceName }); null binds none = store-request's olderInstallation recipe. identity.test.mjs R58 older installation: `team({ instanceName: null })`; group.test.mjs R69 control: `team({ instanceName: null })`; R69 group: `team({ instanceName: <slug> })` (both slugs). Each test goes through the real world and its expectation is read from the owner's answer (groupidentity group null; the well_known body's group equals the slug); red before (the 3 failures of J42/J43), green after.
 Suite: 272 tests, 272 pass, 0 fail, 0 skipped. Met ids: R58, R69 (BOB strikes). Checks: fixtures --list 0 failures; architecture 0; ownership 0; run.mjs no finding in my files; impact names screens-settings alone (6 of 24 files). No fixtures-own/generic marker added.
 Size (session_01TDZDRXt6aSdG9rueQLukTW): test runs 6, module lines 5470
+
+## J45 · QUESTION
+
+QUESTION (A-01, B60): the size-only read has no contract on tranche/T51 yet: grep of build/requirements (store-assembly, record-core, control-plane, op-declarations) and src finds no `fields`/`deep` parameter on `stats`; stats.mjs:67 still runs textIndexOk on every call. My best reading is causes-A's text: group.mjs:25 sends { op: "stats", fields: "size" }, answered { dbBytes } and nothing else (floored to 100 MB for an administering member, as today). Please confirm that exact request shape (op, field name, value, answer keys) once store-assembly #7 merges, or give the one it provides; I will build the failing-first test on the request I send (assert the request, red today) and the drawing on the answer. D-B1 waits for your CHANGE naming the LOCAL-FACTS #11 op and fields. Until the answer I stand by; nothing else of mine is open.
+
+## SCREENS-SETTINGS #23 · round 10, alpha-walk causes (B60, K5265)
+
+- **A-01** dropped by BOB's B61 (K5265): STORE-ASSEMBLY #7 makes the default `stats` answer cheap. Checked: `group.mjs:25` sends a plain `{ op: "stats" }` with no flag, and no file of `src/screens-settings/` reads `textIndexOk` or depends on the integrity check (the only `deep` match is the unrelated act key `act.deepercheck.does`, `keys.mjs:130`). No change made.
+- **D-B1** waits for BOB's CHANGE naming LOCAL-FACTS #11's op and fields; BOB re-opens this job by CHANGE. Read: `causes-D.md` D-B1 (`group.mjs:151-162`, `:301`; the button posts an empty path when no profile holds a `time_zone` fact).
+- Nothing REPORTed. No code or test changed; no checks needed beyond the unchanged tranche merge.
+- Size (session_01KU5VbSaZA1BVG9g3aQn231): test runs 0, module lines 0
+
+## J46 · COMPLETE
+
+COMPLETE (B60/B61): A-01 dropped as you ruled; verified group.mjs:25 sends a plain stats read with no flag and nothing in src/screens-settings reads textIndexOk or the integrity check. D-B1 NOT done: waiting on your CHANGE naming LOCAL-FACTS #11's op and fields; re-open me then. No code or test changed, nothing REPORTed, no requirement ids met. Size (session_01KU5VbSaZA1BVG9g3aQn231): test runs 0, module lines 0.
+
+### D-B1 (B62 CHANGE, K5282; local-facts R21)
+- **Changed** `bio-plane/src/screens-settings/group.mjs`: a read `teamzone` (`factstatus`, `path=@team/time_zone`, next to `facts`); the correction form always sends `path: "@team/time_zone"` (never `""`), in `form()` and the `factconfirm` act (rereads `facts` and `teamzone`); a zone the team stated (`governs.origin` "corrected") is drawn as `screen.group.timezone.governs.local` whatever the places say; with none held the "none" fold and the form stay. Where two places disagree there is now one correction (on the team's own path) in place of one per place, since each would write the same fact (a reading of R45; REPORTed below for BOB to fold). The path literal is inlined in the functions because the screen's functions run serialized in the page.
+- **Tests** `test/m/screens-settings/group.test.mjs`: new "R45 D-B1 no place chosen..." (red on today's code: the body carried no path; green after). The R45 correction test now expects the team path and reads `factstatus` by that path; its NO_SUCH_FACT leg (a place let go after the page drew) now asserts the owner takes the correction, since the team path needs no place. NO_SUCH_FACT can no longer arise from this screen's act; FACT_VALUE_REFUSED and FACT_HOW_REFUSED are still drawn by their words.
+- **Why the tests missed it:** the old tests only ever used a profile's fact path (`ZONE_PATH`) and drew the no-zone state without pressing its button.
+- **Suites:** screens-settings 273/273. Impact users (`impact.mjs`, 190 files outside this module, 1313 tests): 1297 pass, 16 fail: 8 in `journey-check/pseudo.test.mjs` (R29) and `control-plane/t51-round9-seam.test.mjs` fail identically on tranche's own `group.mjs`, not mine; 7 files (plane `t47`, `g83-location`; screens-inquiry `fr6-seam`, `g41-document`, `question`, `r10-question-seam`, `r10-stated`) failed under the load of the full run and pass when run alone with my change.
+- **Checks:** `checks/run.mjs`: format, architecture, coverage (7083/7083), words, channels 0 failures; fixtures 89 failures, none in screens-settings; ownership 0.
+- **Not done, for BOB:** the "Share for review is no longer refused" half of B62's test crosses into screens-publish and control-plane (review-copy reads `copyZone`); I did not add a through-the-door test (K5138). Please place it.
+- Size (session_01KU5VbSaZA1BVG9g3aQn231): test runs 9, module lines 5483
+
+## J47 · COMPLETE
+
+COMPLETE (B62, D-B1; A-01 dropped per B61). group.mjs: new read teamzone (factstatus path=@team/time_zone); the zone form always sends path '@team/time_zone' (never ''), rereads facts+teamzone; a team-stated zone is drawn as .governs.local; none held keeps the fold + form. Two disagreeing places now get ONE correction on the team path (was one per place; each would write the same fact): please fold into R45. Test: group.test.mjs 'R45 D-B1 no place chosen' red on today's code (body had no path), green after; the R45 correction test now expects the team path and its NO_SUCH_FACT leg (place let go) now asserts the owner takes it. Suites: screens-settings 273/273; impact users 1313 tests, 16 fail, none mine: pseudo.test (8) and control-plane t51-round9-seam fail identically on tranche's own group.mjs; 7 files (plane t47,g83-location; screens-inquiry fr6-seam,g41-document,question,r10-question-seam,r10-stated) failed under full-run load and pass alone with my change. checks/run.mjs: format, architecture, coverage, words, channels 0; fixtures 89 failures, none in screens-settings; ownership 0. REPORT for BOB to place: the 'Share for review no longer refused' through-the-door case (review-copy reads copyZone; screens-publish/control-plane, K5138); I added none. Met: R45 (D-B1). Markers added: none. Size (session_01KU5VbSaZA1BVG9g3aQn231): test runs 9, module lines 5483.
