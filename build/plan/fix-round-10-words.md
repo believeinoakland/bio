@@ -90,3 +90,9 @@
 - screens-entry R2: `refusal.SIGN_IN_PAUSED` reads "Try again at {time}", but `credentials` R38 states no end (an end would tell which window is full); the plane gives `stated`, the bound as a sentence. A row that draws the bound, with no time.
 - screens-entry R6: the office form calls the note "(optional)", but `entities` R1 refuses an office with no note (`ENTITY_NO_NOTE`): the label reads as required.
 - screens-entry R30 / screens-settings (K5192): the hosting line's `screen.group.hosting.now.system` draws a record "by the system" (`bootstrap`, `system:seed`, `token:ops`), but no product code records hosting access as the system: `member-roster`'s `hostingAccessSet` (`index.mjs:377-389`), the only writer, accepts an administrator or the founder only. Should the system's line exist, and if so, what records it (the installer, on the founder's Cloudflare account)?
+
+## Found at K5202 (carried from plan items 88, 89; INQUIRY #31 J16; SCREENS-INVESTIGATE #17 J33; K5201 A2)
+- inquiry: `inquiry.index.pass_grounds_an_array` in `words.json` (DEC-259) holds literal braces, so setup-words R13 fails; the source now reads it without braces (`inquiry/index.mjs:2545`): the row's English to that sentence.
+- screens-daily: the Grant/Decline note label, the `queue.project-leave.*` rows, the join-answer row; and whether Remove (`projectremove`) belongs inline on a leave item (Home or the queue).
+- Rows no screen has yet: `office-readers.formats-xlsx.sheet_columns_over_bound`, `translations.declared.interfacewords`, `answers.declared.ruleservicesstate`, retrieval's and ratification R21's `SELECTION_NOT_YOURS`, screens-settings J36's "Words with no row" keys (its record).
+- Explore: whether it offers an inquiry's leads (SCREENS-INVESTIGATE #17 J33; plan item 99 (8)); dash-action's `taskresolve` label goes (its arm is dead, K5201 A2).

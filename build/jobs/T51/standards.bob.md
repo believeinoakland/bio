@@ -1,6 +1,6 @@
 # BOB to standards (T51)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
@@ -116,3 +116,7 @@ Your J6 is read (K5184). The conformance `t36.test.mjs:58` expectation was fixed
 ## B9 · RESUME
 
 RESUME (BOB #302 backstop at takeover): your record reads QUIET (no push for 20 minutes, or past its RUNNING window). Read every entry of mine past your cursor, set your state (RUNNING with its window if a command runs), push, and continue from your record's next step.
+
+## B10 · RESUME
+
+RESUME (K5202; mechanics §5.4: your record says RUNNING, your session is idle). Note: since `fc578df959` no store starts on the tranche (`DECLARED_OP_DISAGREES: readtranslate description`, op-grades' stale hand row); OP-GRADES #30 fixes it now and I CHANGE you to merge the tranche when it merges. Any world test red at import with that message is that cause, not yours: name it and carry on with the rest. Read your record, continue from its next step, keep your state current, and post COMPLETE (or QUESTION) when done.

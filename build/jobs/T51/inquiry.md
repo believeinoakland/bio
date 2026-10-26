@@ -1,6 +1,6 @@
 # inquiry (T51)
 
-**Status** · session_012iUyB6WHxSjhQz8p8rGanY · depth 2 · COMPLETE · handled B13
+**Status** · session_01RuijnFp5KUgZxc7Koddggy · depth 2 · COMPLETE · handled B17
 
 ## J1 · COMPLETE
 
@@ -254,3 +254,78 @@ Tests and checks (run from the product root, absolute path)
 Deferred: none. Flaws found in inquiry: none. Found in another module: none new.
 
 Size (session_012iUyB6WHxSjhQz8p8rGanY): test runs 3, module lines 3849
+
+## J14 · REPORT
+
+Findings outside inquiry's paths (B15, plan item 99 (6)), each the day found:
+
+1. **control-plane `t50-door.test.mjs:175`.** Plan item 99 says this line hand-builds a `NOT_AN_INQUIRY`. At this tranche the line is the head of `acquireWorld`, and no `NOT_AN_INQUIRY` literal appears anywhere under `bio-plane/test/m/control-plane/`. The refusal that test relies on already comes from inquiry's published `readRefusals()` (`sight.notAnInquiry`, read through `seesOnlyQ1` at :178). So nothing is hand-built there now. The item may cite a stale line; CONTROL-PLANE should confirm it and re-point the `BAD_FOR` cases to `readRefusals`, which it already uses.
+
+2. **screens-inquiry, hand-built answers to inquiry's ops** (the seven `-> inquiry` lines of `checks/fixtures.mjs --list`): `fixtures.mjs:106` (questionwaits), `:118` (inquirypartition); `fr28-question-acts.test.mjs:116` (inquirydivide ok; the CHILD_EXISTS refusal at :127 via `refusedIn`); `fr3-question.test.mjs:122` and `question.test.mjs:83` (inquiryground `{act: "authored"}`); `question.test.mjs:120` (inquirypartition); `t48.test.mjs:133` (questionwaits). The published answers they should take now are in `bio-plane/test/m/inquiry/fixtures.mjs`: `divideAnswers()` (divided, childExists, noHome, noReason, notAnInquiry, absent, machine), `groundAnswers()` (authored, restructured, noPartition, notAnInquiry, absent, cutsAgainst, noReason), `readRefusals()` (inquirypartition), `questionWaitsNone()` and `questionWaitsSetAside()` (questionwaits).
+   The real answers carry more than the stand-ins: a real `questionwaits` answer also has `zone`, `document_waits`, `history` and `projects`. In a world without `capture`, `document_waits` is `null` with `document_waits_why` = `HELD_ACTS_UNREADABLE`, so a screen test should build its world with capture to see what the screen is shown.
+   The re-pointing is screens-inquiry's, in its next session (plan item 99 (6)).
+
+Also observed, not a finding in our paths: `checks/run.mjs /home/user/bio` exits 1 with 820 `FAIL` lines across other modules (none under `inquiry`); its words line reads 19247 words, 16 failures, and this job adds no user-facing string.
+
+## J15 · COMPLETE
+
+COMPLETE for B15 (inquiry's refusal answers published as fixtures, plan item 99 (6), K5200). Commit `944dc10695` on `job/T51/inquiry`. `tranche/T51` was fast-forwarded in first (`61ae2a7`), so there was nothing to merge by hand.
+
+**Entries applied**
+- `bio-plane/test/m/inquiry/fixtures.mjs`: three exports, each made by the real act over a fresh world, never stored:
+  - `divideAnswers()` (:129), `op=inquirydivide`: `divided` (its `into`, `children`, `apportionment`), `childExists` (`CHILD_EXISTS`), `noHome` (`NO_APPORTIONMENT`, `orphans` naming leg 1), `noReason` (`NO_REASON`), `notAnInquiry` (`NOT_AN_INQUIRY`), `absent` (`NO_SUCH_BUNDLE`), `machine` (`MACHINE_CANNOT_DIVIDE`, `C-32.7`).
+  - `groundAnswers()` (:154), `op=inquiryground`: `authored`, `restructured`, `noPartition` (`NO_PARTITION`), `notAnInquiry`, `absent`, `cutsAgainst` (`BASIS_REFUSED`, the finding naming leg 1, `C-2.8`), `noReason` (`NO_REASON`). `heldAfterAuthored` and `heldAfterRefusals` show that a refusal writes nothing.
+  - `questionWaitsNone()` (:174), `op=questionwaits`: a visible question with no wait, in a world with `capture`.
+  - Constants `P`, `C1`, `C2`, `E`, `G`; `MACHINE` imported from `fixture.mjs`. No source change.
+- `bio-plane/test/m/inquiry/fixtures.test.mjs`: the imports, the catalogue import `INQUIRY_GRAMMAR_CHECKS`, and five tests: R23 R25 (:96), R23 R25 catalogue (:110), R27 R85 (:116), R55 R58 (:130), and the two-calls test (:137).
+
+**Failing first.** The new tests were red before the exports existed (`SyntaxError: ... does not provide an export named 'divideAnswers'`). Two first-draft assertions were wrong, and the real answers corrected them:
+- `divide`'s `NO_REASON` carries no `target` (`#divide` returns `reason` and `detail` only). The assertion now checks the reason alone.
+- `questionWaits` in a world without `capture` gives `document_waits: null`, `HELD_ACTS_UNREADABLE`. The fixture now builds its world with `capture`, as the screen's world has it.
+
+**Met ids.** The new tests name R23, R25, R27, R55, R58 and R85, all already met. Nothing is newly met, and no requirement changed. BOB strikes marks as he sees fit.
+
+**Markers.** None added (`fixtures-own` and `fixtures-generic` count 0).
+
+**Tests and checks** (absolute root `/home/user/bio`; run without `--test-force-exit`, each exits by itself):
+- `--test bio-plane/test/m/inquiry/fixtures.test.mjs`: 12 tests, 12 pass.
+- `--test bio-plane/test/m/inquiry/*.test.mjs`: 243 tests, 242 pass, 0 fail, 1 todo (R31, the existing `not yet met: MK-5`).
+- Impact (`build/plan/impact.mjs origin/tranche/T51 HEAD`): 8 modules, 10 test files (`inquiry/fixtures.test.mjs`, `citation/cite-refusals`, `citation/draw`, `ai-runs/plan`, `intent/discovery`, `case-disclosures/hunch`, `queue/noticed`, `screens-inquiry/fr4-question`, `screens-inquiry/t51-final`, `control-plane/t50-door`): 98 of 98 pass.
+- `format` 0 failures (178 modules). `architecture inquiry` 0 (151 relative imports). `coverage inquiry` 58 of 58 named, 0. `ownership` 0 against the merge base `61ae2a7` and against `tranche/T51` (3 files: my two and my record).
+- `fixtures.mjs /home/user/bio inquiry --list`: 0 failures, answer 0.
+- `run.mjs /home/user/bio`: no finding in `inquiry`'s files, words in this job 0. The run exits 1 on other modules; see the REPORT.
+
+**Deferred.** None. **Flaws found in inquiry.** None. **Found in another module:** the REPORT above (control-plane :175, screens-inquiry's seven lines).
+
+Size (session_01RuijnFp5KUgZxc7Koddggy): test runs 7, module lines 3849
+
+## J16 · BLOCKED
+
+BLOCKED (cause: needs Bob) on B16 (K5201), the grounds prompt's braces.
+
+Done: `bio-plane/src/inquiry/index.mjs:2545` is reworded without braces (commit `718ef59bde` on `job/T51/inquiry`; tranche merged in first, `cde59f77cd`). `build.mjs --check` passes. The inquiry suite is unchanged: 242 pass, 0 fail, 1 todo (R31). I did not commit `rows.mjs`.
+
+Blocked: `setup-words/word-list.test.mjs:236` (R13) stays red. The table takes the English for `inquiry.index.pass_grounds_an_array` from the design word list, `docs/development/ux-substrate/screens/words.json` (its entry, key at line 81881, source DEC-259), not from the source's `localize` default. That entry still holds the braces, so the regenerated `rows.mjs` still does too. My source edit cannot change it. That file is the design stream's and outside my paths, so I have not edited it.
+
+Options (NEEDS BOB, P17):
+1. Edit that one `en` in `words.json` to the brace-free wording (the same sentence as `index.mjs:2545`), then regenerate `rows.mjs`. Keeps the key and the design's review. Recommended.
+2. Give the sentence a new key, so the source default is its English, and it enters the design's unreviewed list. The old `words.json` entry becomes orphaned for the design stream to remove.
+
+Once Bob takes option 1 or 2 and the tranche carries it, I merge the tranche, run the test green and post COMPLETE.
+
+## J17 · COMPLETE
+
+COMPLETE for B16 (K5201), read against B17 (K5202, BOB's ANSWER).
+
+**Entries applied**
+- `bio-plane/src/inquiry/index.mjs:2545` (`inquiry.index.pass_grounds_an_array`) reworded without braces: "pass grounds[] — an array of groups, each naming its ground label, the legs it groups by ord, and an optional statement; one entry per group, where each ord is a leg's position in this question's basis. …". Commit `718ef59bde` on `job/T51/inquiry`; the tranche was merged in first (`cde59f77cd`). No source change beyond that line; `rows.mjs` not committed.
+
+**Tests and checks** (absolute root `/home/user/bio`)
+- `setup-words/word-list.test.mjs:236` (R13): red, by name, as B17 says. Its English comes from `words.json` (`docs/development/ux-substrate/screens/words.json`, key at line 81881), which still has the braces. UX-DESIGN's row lands with BOB's round-end regeneration.
+- `setup-words/build.mjs --check`: passes.
+- `--test bio-plane/test/m/inquiry/*.test.mjs`: 243 tests, 242 pass, 0 fail, 1 todo (R31, the existing `not yet met: MK-5`).
+- `format` 0 failures (178 modules); `architecture inquiry` 0 (151 relative imports); `coverage inquiry` 58 of 58, 0; `fixtures.mjs inquiry --list` 0 failures, answer 0; `ownership` 0 against `tranche/T51` (4 files: my two fixture files, my source line, my record).
+
+**Deferred.** None. **Flaws found in inquiry.** None. **Found in another module.** None new (the words table as above is UX-DESIGN's, already handed over by BOB).
+
+Size (session_01RuijnFp5KUgZxc7Koddggy): test runs 9, module lines 3849
