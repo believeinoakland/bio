@@ -29,10 +29,10 @@ const docOf = (bytes, file, extra = {}) => ({ file, locator: `https://example.or
   capture: { sha256: hex(bytes), bytes: bytes.length, content_type: "text/html", method: "rendered", grade: "C", actor_class: "member", encoding: "binary" }, ...extra });
 
 /* a record holding a shell page, promoted as the screen promotes it (under `project`), and a capture session begun by `opener` over it */
-async function owing({ opener = "member:ann", project = "" } = {}) {
+async function owing({ opener = "ann", project = "" } = {}) {
   const r = await record();
   /* the opener takes part in the shell's project, as one who captured into it does */
-  if (project) r.ctx.storage.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated) VALUES (?, ?, 'active', 0, '2026-10-22T00:00:00Z', '2026-10-22T00:00:00Z')`, project, opener.replace(/^member:/, ""));
+  if (project) r.ctx.storage.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated) VALUES (?, ?, 'active', 0, '2026-10-22T00:00:00Z', '2026-10-22T00:00:00Z')`, project, opener.replace(/^member:/, "").replace(/@.*$/, ""));
   const shellBytes = new TextEncoder().encode(`<html><body>the shell page ${Math.random()}</body></html>`);
   r.objects.set(`bio/captures/${hex(shellBytes)}`, shellBytes);
   const shell = docOf(shellBytes, "shell.html");
@@ -102,7 +102,7 @@ test("R124 (controls): a session that is gone, one with no opener, an answer wit
 /* ---- fix round 6, G2 (K4562): the plane's `fetch` entry hands its finished document to the same delivery ---- */
 /* a session parked for a large fetch: its primary is not a held copy (the document does not exist until the fetch ends), and its state carries the opener
    and the project the member's act named */
-async function owingFetch({ opener = "member:ann", project = "INQ-2026-0002" } = {}) {
+async function owingFetch({ opener = "ann", project = "INQ-2026-0002" } = {}) {
   const r = await record();
   if (project) r.ctx.storage.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated) VALUES (?, ?, 'active', 0, '2026-10-22T00:00:00Z', '2026-10-22T00:00:00Z')`, project, opener.replace(/^member:/, ""));
   const session = `fetch-${Math.random().toString(16).slice(2)}`;
@@ -267,4 +267,31 @@ test("R124 (contract deliver-owed, acquisition): a delivery that completes answe
   const held = await deliverOwedRender({ ctx: f.ctx, env: f.env, storeName: "bio", answer: { ok: true, existed: true, document: other }, session: f.session });
   assert.deepEqual([held.ok, held.reason, shapeOf(held), held.kind, held.holder, held.capture_sha], [h.ok, h.reason, h.keys, h.kind, h.holder, other.capture.sha256], JSON.stringify(held));
   assert.deepEqual(held.detail, { capture_sha: held.capture_sha, kind: h.kind, holder: h.holder });
+});
+
+/* ---- the member's exact case (K5258; STORE-REQUEST #8): acquisition writes a session's opener as the BARE member id, the store answers `heldat` for a viewer spelling ---- */
+test("R124 (K5258): a render a member opened (opener the bare id, as acquisition writes it) is filed under its shell's project when the alarm delivers it, whichever spelling the opener has", async () => {
+  for (const opener of ["ann", "member:ann", "member:ann@INQ-2026-0001"]) {
+    const r = await owing({ opener, project: "INQ-2026-0001" });
+    const doc = rendered(r, `delivered for ${opener}`);
+    const out = await deliverOwedRender({ ctx: r.ctx, env: r.env, storeName: "bio", answer: { ok: true, document: doc }, session: r.session });
+    assert.equal(out.ok, true, `${opener}: ${JSON.stringify(out)}`);
+    assert.equal(bundleRow(r, out.bundleId).project, "INQ-2026-0001", `${opener}: filed under the shell's project, not under none`);
+  }
+  /* control: another member's session over the same shell does not find the project (the shell is not hers to see) */
+  const r = await owing({ opener: "ann", project: "INQ-2026-0001" });
+  r.ctx.storage.sql.exec(`UPDATE project_participants SET member_id = 'bea'`);
+  const doc = rendered(r, "delivered for a stranger");
+  const out = await deliverOwedRender({ ctx: r.ctx, env: r.env, storeName: "bio", answer: { ok: true, document: doc }, session: r.session });
+  assert.notEqual(out.ok && bundleRow(r, out.bundleId).project, "INQ-2026-0001", "an opener who is not a participant gets no project");
+});
+
+test("R124 (K5258): a render whose bytes a document the member holds already carries is linked, not promoted again, for the bare-id opener acquisition writes", async () => {
+  const r = await owing({ opener: "ann", project: "INQ-2026-0001" });
+  const doc = rendered(r, "held already");
+  const holder = await heldBefore(r, doc, { project: "INQ-2026-0001" });
+  const before = bundleCount(r);
+  const out = await deliverOwedRender({ ctx: r.ctx, env: r.env, storeName: "bio", answer: { ok: true, existed: true, document: doc }, session: r.session });
+  assert.deepEqual([out.ok, out.bundleId, out.existed], [true, holder, true], JSON.stringify(out));
+  assert.equal(bundleCount(r), before, "no second document was promoted");
 });

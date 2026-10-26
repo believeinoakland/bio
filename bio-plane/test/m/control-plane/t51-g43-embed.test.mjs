@@ -131,7 +131,7 @@ async function owingCsv() {
   assert.equal(made.refused, undefined, JSON.stringify(made).slice(0, 300));
   const session = `sess-${Math.random().toString(16).slice(2)}`;
   captureOf(r.ctx).saveCaptureSession({ session, locator: shell.locator, primarySha: shell.capture.sha256, primaryFile: shell.file, base: shell.locator,
-    state: { opened_by: "member:ann", queue: [], render_pending: { body: {} } } });
+    state: { opened_by: "ann", queue: [], render_pending: { body: {} } } });
   const added = [];
   const env = { ...r.env, STORE: { idFromName: (n) => n, get: () => ({ fetch: async (req) => { added.push(new URL(req.url ?? req)); return new Response(JSON.stringify({ ok: true, result: { ok: true } })); } }) } };
   return { ...r, session, env, added };
