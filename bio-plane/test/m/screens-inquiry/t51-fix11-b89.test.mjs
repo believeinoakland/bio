@@ -75,7 +75,7 @@ const IMAGES = { [A_DOC]: { "bundle.md": docMd(A_DOC, "Lease amendment, March 20
 const SERVED = [...SCREENS.filter((s) => s.id !== "contradiction"), CONTRADICTION_SCREEN];
 const openLead = async (c) => {
   const p = await boot({ screens: SERVED, path: "/app/contradiction/" + CAND, plane: plane({ images: IMAGES, plane: {
-    contradictioncandidates: answer(c), contradictionfacts: ok({ ok: true, candidate: CAND, key: "K4", facts: [] }), contradictionnotices: ok({ ok: true, notices: [] }) } }) });
+    contradictioncandidates: answer(c), contradictionnotices: ok({ ok: true, notices: [] }) } }) });
   await p.settle();
   return p;
 };
