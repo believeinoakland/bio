@@ -221,3 +221,15 @@ Deferred: none. Record: build/jobs/T51/translations.md, section "Completion, fix
 **REPORT for BOB.** (1) screens-settings `seed-common.mjs:119` and `translations.test.mjs:87` hand-build the `translationdraft` answers; screens-settings owns the re-point to `translationDraftAnswer`. (2) The door's agent-worker step for `translationdraft` is not built (`store-door/dispatch.mjs:510-517`); when it lands, the success answer (`translationDraftRecord`) needs its own fixture. Owed by BOB's plan, not this job.
 
 Size (session_013fsGnfsXmN9WkNCN2pULce): test runs 6, module lines 1027 (`bio-plane/src/translations/*.mjs`, unchanged; this round's diff is 45 added lines in the two fixture files).
+
+## J8 · COMPLETE
+
+COMPLETE, START B8 (K5222): translationdraft's real answer is published in translations' fixtures.mjs as translationDraftAnswer({ direction }) (bio-plane/test/m/translations/fixtures.mjs:38-53), made over a fresh world each call; test fixtures.test.mjs (R16, R18), red on a wrong reason, green restored. Commit 3f7757ea23 on job/T51/translations.
+
+The success answer is not on the real path: store-door/dispatch.mjs:510-517 never calls translationDraftRecord or agent-worker's /draft; translations/index.mjs translationDraft always answers ASSISTANT_DRAFT_UNAVAILABLE after the gates (as wizard-scripts/index.mjs:1539 for writinghelp). So the fixture publishes that real answer with the words to draft; no AGENT_WORKER double was needed.
+
+Results: module suite 47/47; format 0; architecture 0; coverage 21 of 21; words 0; fixtures --list 0 failures (the two fixture.mjs:78/:85 store-door contract lines are B5's); ownership 0; impact 0 of 178. No marker added (fixtures-own, fixtures-generic: none). Deferred: none.
+
+REPORT: screens-settings seed-common.mjs:119 and translations.test.mjs:87 hand-build translationdraft answers; screens-settings to re-point to translationDraftAnswer. The door's agent-worker draft step is unbuilt; a success-answer fixture waits on it.
+
+Size (session_013fsGnfsXmN9WkNCN2pULce): test runs 6, module lines 1027.
