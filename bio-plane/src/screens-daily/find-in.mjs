@@ -14,8 +14,8 @@ export const findIn = Object.freeze({
   reads: function (view) {
     const s = String(view.subject || "").split("/")[0];
     const out = {
-      // The team's time zone, as `factstatus` lists it (R47): the bounds of a person fact are counted in it.
-      zone: { op: "factstatus" },
+      // The team's time zone, read by its own path (local-facts R21): the bounds of a person fact are counted in it.
+      zone: { op: "factstatus", query: { path: "@team/time_zone" } },
     };
     // R48 (7): the questions a result may be recorded for: the project's own when the scope is a project, else those the member may see.
     if (s.indexOf("PROJ-") === 0) {

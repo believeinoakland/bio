@@ -24,7 +24,7 @@ const KINDS = [
   { kind: "events", items: [], count: 0, nothing: false, not_read: [{ capture: "c7", why: "scan queued" }] },
   { kind: "term", items: [{ kind: "term", words: "closed", capture_sha: SHA, title: "Housing code", extent: { paragraph: 5 }, recorded: [] }], count: 37, truncated: true, nothing: false, not_read: [] },
 ];
-const ZONE = ok({ ok: true, count: 1, facts: [{ path: "profile.time_zone", fact: { profile: "p1", fact: "time_zone" }, status: "confirmed", governs: { value: "America/Los_Angeles", origin: "profile" } }] });
+const ZONE = ok({ ok: true, path: "@team/time_zone", status: "confirmed", governs: { value: "America/Los_Angeles", origin: "profile" } });
 
 /** The team: rosa (an administrator), the project "The Coliseum lease" with the question of `Q_TITLE` drawn into it, the document "Housing code" held in it,
  *  and the project "Library hours" with no question; all by the real acts. Shared by the tests that only read it. */
@@ -359,4 +359,24 @@ test("R5, R26, R103 (R17a), over a real reading: a docx held and read by the rea
     assert.deepEqual(row.querySelectorAll("[data-part-kind]").map((e) => e.getAttribute("data-part-kind")), item.part === "body" ? [] : [item.part], item.words);
     if (item.part !== "body") assert.ok(text(p, row).includes(word(PART_KIND + item.part)), "the part named by its word");   // (control: a body hit has no [data-part-kind], above)
   }
+});
+
+/* R47 (D-B1; local-facts R21): the team's own zone is read by its path (`@team/time_zone`), so a team with no place profile whose zone is stated
+   dates its person facts in that zone. The zone's answer is local-facts' real answer over the real store; none stated sends no zone. */
+test("R47: a team with no place profile and its zone stated dates a person fact in that zone (the real local-facts answer); none stated sends no zone (control)", async () => {
+  const L = await lab(true);
+  const path = "@team/time_zone";
+  const real = (req) => (req.query && req.query.path ? L.w.door({ url: "/api/?op=factstatus&path=" + encodeURIComponent(req.query.path) }, L.rosa) : ok({ ok: true, count: 0, facts: [] }));
+  const stated = async () => (await L.w.door({ url: "/api/?op=factconfirm", init: { method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ path, act: "correct", how: "read the city's notice", source: "the city's posted notice", value: "America/Denver" }) } }, L.rosa)).json.result;
+  const valid = async () => {
+    const p = await shown({ factstatus: real }, L);
+    const f = button(p, "recordpersonfact").dataset.f;
+    await press(p, "recordpersonfact", { values: { [f + "-kind"]: "locality", [f + "-value"]: "Oakland" } });
+    return last(p, "recordpersonfact").body.valid;
+  };
+  assert.equal((await real({ query: { path } })).json.result.governs, null, "no profile and nothing stated: the team's zone governs nothing");
+  assert.equal("zone" in (await valid()), false, "control: none stated sends no zone, as today");
+  assert.equal((await stated()).ok, true, "the owner states the team's zone");
+  assert.equal((await valid()).zone, "America/Denver", "the stated team zone dates the person fact");
 });
