@@ -583,3 +583,10 @@ COMPLETE. Met ids: **R18, R21, R53, R60, R61**.
 **Notes.** Behaviour I did not change: public-read's assembly stays at its own count (BOB's bar), and the `reusedparts` ordering stays as BOB ruled.
 
 Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 12, module lines 4102
+
+## J32 · REPORT
+
+Finding outside my paths, found while running the words and process checks after the change (not changed by this job; described against the words rule K3930, K3949):
+
+1. `bio-plane/test/m/op-grades/owners.test.mjs:250` (testcopy, [code]): the test holds a plain copy of the publishat sentence (`assert.equal(NON_ACTS.publishat, "case-directed: keyed by a case edition ...")`). Now that the sentence is written as `localize("ratification.declared.publishat", ...)`, `checks/words.mjs` flags this copy. The sentence is unchanged and the test still passes (`owners.test.mjs`: 14 of 14). Owner: op-grades. Proposed: op-grades compares against the localized sentence instead of a code copy, or BOB rules otherwise.
+2. `checks/run.mjs /home/user/bio` reports 369 FAIL lines across other modules (store-assembly and others). None is in ratification. I did not work them.
