@@ -714,3 +714,15 @@ Size (session_01Xb5vaVT3GYT19KYpW2voTC): test runs 7, module lines 4355
 ## J37 · QUESTION
 
 The label by localize cannot be done in my module: setup-words R13 and checks/words.mjs:473 fail any localize call in a drawn-screen module (screens-*), and finder-states.mjs is a self-contained serialized part. My best reading (the walker's own fallback, causes-rewalk §5): the act borrows the existing word act.search.label.finder (Search), carrying data-widen = the terms joined by OR; the design owes the sentence (K5275). Carrying on with that; if you want a new key, the design stream must write the row first and I will switch to it by key.
+
+## Completion (SCREENS-DAILY #27, B50: fix round 10, F-B10 (a))
+
+Merged `tranche/T51` (@ 9c236df30b) first. Entry applied: causes-rewalk §5 (area B F-B10 (a), K5257).
+
+**Cause.** `finder-states.mjs` drew the heading `screen.finder.partial.head` whenever either route answered a wider reading, but a count line only for the fields route's: the passage-only case drew the heading over nothing, and `ordinance zzzqqq` drew a count with nothing to open.
+**Change.** `finder-states.mjs` (the `nothing` branch of `routes`, lines 221-229): under the heading one act, `cs.act("search", {label: "act.search.label.finder", data: {widen: <terms joined by " OR ">}})`, in both the fields and the passage-only case; the heading is drawn only when there is that act or the fields route's count (a query that already holds an operator, or one word, has no joined form, so it draws no bare heading). `finder.mjs` `acts[0]` (line 331): `el.dataset.widen` sets `routes` null and `q` to the joined query, the route of the main search, so both routes read it as F-B9 does (`passage:a OR passage:b` for passages).
+**Test, red then green.** `round10.test.mjs` "R78 (F-B10 (a), K5257)": the walker's `ordinance zzzqqq` (fields widen) and a passages-only widen: heading, then the act carrying `ordinance OR zzzqqq`, pressed: the fields route asks `ordinance OR zzzqqq` and the passages route `passage:ordinance OR passage:zzzqqq`; controls: no widen draws no heading; operators with no count draw no bare heading. Red at "an act under the heading carries the widened query"; green after the change.
+**Label.** J37 (QUESTION): `localize` is refused in a drawn-screen module (setup-words R13; `checks/words.mjs:473`), so the act borrows `act.search.label.finder` ("Search"), the walker's fallback; the design owes the sentence (K5275). Not answered at this writing; if a new key is written I switch to it by key.
+Deferred: none. Found in other modules: none. Passage count under the heading stays withheld (K5275).
+Suite 321 of 321 (round10 12 of 12). `checks/run.mjs`: format 0; architecture 0; coverage 7084 of 7084; words 0; fixtures 89 failures, none in screens-daily files (other modules' stubs); ownership 0 (see COMPLETE).
+Size (session_018S3kJ5pPzA2ti5PEP6LAdc): test runs 5, module lines 4362

@@ -327,6 +327,8 @@ export const finder = Object.freeze({
             return { refuse: "state.failed", fills: { reason: "" } };
           });
         }
+        // F-B10 (a): "Search" under the partial-match heading asks the same words joined by OR (the F-B9 route that reads both fields and passages).
+        if (el.dataset.widen) { cs.set("routes", null); cs.set("q", el.dataset.widen); return null; }
         const q = String(cs.value("finder-q") || "").trim();
         // R44: with no words the browse; leaving the words empty returns to it.
         if (!q) { cs.set("q", ""); return null; }

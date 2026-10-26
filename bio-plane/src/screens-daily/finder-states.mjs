@@ -221,9 +221,14 @@ export function finderStates() {
       const reading = function (r) { const x = r && r.state === "ok" && r.value && r.value.widen; return x && typeof x.total === "number" && x.total > 0 ? x : null; };
       const widen = reading(f);
       const wider = !!(widen || reading(p));
+      // The act under the heading re-asks the query with its terms joined by OR, which both routes read (F-B9); a query that already holds an
+      // operator has no such joining, so it draws the heading only over the fields route's count.
+      const orQuery = terms.length > 1 && toks.every(function (t) { return !operator(t); }) ? terms.join(" OR ") : "";
+      const partial = wider && (orQuery || widen);
       return scopes + '<div class="mk-note" data-state="empty"><p><b>' + (wider ? cs.w("screen.finder.noresult.partial", { q: q }) : cs.w("screen.finder.noresult", { q: q })) + "</b> " + cs.w("screen.finder.covers") + "</p>"
         + '<p class="mk-acts"><a class="cs-btn" data-tone="quiet" data-nav href="/app/capture">' + cs.w("screen.finder.captureit") + "</a></p></div>"
-        + (wider ? '<h3 class="mk-h2">' + cs.w("screen.finder.partial.head") + "</h3>" + (widen ? '<p class="mk-note">' + cs.w("screen.finder.widen", { n: String(widen.total) }) + "</p>" : "") : "");
+        + (partial ? '<h3 class="mk-h2">' + cs.w("screen.finder.partial.head") + "</h3>" + (widen ? '<p class="mk-note">' + cs.w("screen.finder.widen", { n: String(widen.total) }) + "</p>" : "")
+          + (orQuery ? '<span class="mk-acts">' + cs.act("search", { label: "act.search.label.finder", data: { widen: orQuery } }) + "</span>" : "") : "");
     }
     const total = f && f.state === "ok" ? "" : "";
     return scopes + fieldsSec + passagesSec + subjectsSec + total + (drawn.length > 1 || plain ? '<p class="mk-small muted">' + cs.w("screen.finder.route.apart") + "</p>" : "") + cross;
