@@ -87,12 +87,11 @@ const acts = [
       const listed = Array.isArray(refusal.deadlines) ? refusal.deadlines : [];
       if (cs) cs.set("rules", listed);
       if (!cs) return "";
-      /* R61 (5): `refusal.NO_SUCH_RULE` says "in the box below"; with no deadline listed no box is drawn, so that sentence is not drawn: the owner's own reason is
-         (record data, as `detail`), else the label of the case, and the door to the places' rules; the design holds no sentence for "your rules list none" (REPORTed) */
-      if (!listed.some((d) => d && typeof d.rule === "string" && d.rule)) {
-        const why = typeof refusal.detail === "string" && refusal.detail.trim() ? cs.esc(refusal.detail.trim()) : cs.w("screen.due-date.rule.summary");
-        return why + ` <a class="cs-ref" href="/app/places" data-nav data-screen="places">${cs.w("screen.due-date.rule.go")}</a>`;
-      }
+      /* R61 (5), R65: `refusal.NO_SUCH_RULE` says "in the box below"; with no deadline listed no box is drawn, so that sentence is not drawn: the design's own
+         (`screen.due-date.nodeadlines`, in its fold) and the door to the places' rules are, never the owner's `detail` */
+      if (!listed.some((d) => d && typeof d.rule === "string" && d.rule))
+        return `<details class="mk-details" open><summary>${cs.w("screen.due-date.nodeadlines.summary")}</summary>${cs.w("screen.due-date.nodeadlines")}`
+          + ` <a class="cs-ref" href="/app/places" data-nav data-screen="places">${cs.w("screen.due-date.rule.go")}</a></details>`;
       return cs.w("refusal.NO_SUCH_RULE");
     } },
     send(view, el, cs) {
@@ -131,7 +130,7 @@ const DUE_KEYS = [
   "screen.due-date.due", "screen.due-date.of", "screen.due-date.entries", "screen.due-date.basis", "screen.due-date.at",
   "screen.due-date.status.pending", "screen.due-date.status.met", "screen.due-date.status.overdue", "screen.due-date.status.waived",
   "screen.due-date.entry", "screen.due-date.on", "screen.due-date.remind.empty", "screen.reminder.on", "screen.due-date.download", "screen.due-date.how",
-  "screen.due-date.rule.summary", "screen.due-date.rule.pick", "screen.due-date.rule.help", "screen.due-date.rule.go", "refusal.NO_SUCH_RULE",
+  "screen.due-date.rule.summary", "screen.due-date.rule.pick", "screen.due-date.rule.help", "screen.due-date.rule.go", "screen.due-date.nodeadlines", "screen.due-date.nodeadlines.summary", "refusal.NO_SUCH_RULE",
   "screen.due-date.proposal", "screen.due-date.step.basis", "screen.due-date.step.received.receipt", "screen.due-date.step.received.sent",
   "screen.due-date.step.received.service", "screen.due-date.noreceipt", "screen.due-date.step.counted", "screen.due-date.step.skipped",
   "screen.due-date.step.due", "screen.due-date.nodate", "screen.due-date.why", "screen.due-date.why.help", "screen.due-date.queue",

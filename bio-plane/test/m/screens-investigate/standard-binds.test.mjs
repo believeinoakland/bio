@@ -23,7 +23,15 @@ async function laws(world, me) {
 }
 
 const through = (world, me, L, day = THROUGH) => me.act("standardinforcethrough", { body: { standard: L.pol, through: day, source: { captureSha: L.memo.sha, extent: L.mu[0].extent }, reason: REASON } });
-const refusedIn = (p, code) => p.root().querySelector(`[data-gap="refused"][data-refusal="${code}"]`);
+/** The refusal drawn beside an act for `code`: the shell draws the owner's words for it (`refusal.<CODE>`), so it is found by those words. */
+const refusedIn = (p, code) => p.root().querySelectorAll('[data-gap="refused"]').find((e) => e.textContent.includes(word("refusal." + code))) || null;
+/** The first passage of the document chosen in `picker` (`st-thr-passage`), selected by its words as a member selects it. */
+async function selectFirst(p, picker) {
+  const words = main(p).querySelectorAll("[data-words]").find((e) => e.getAttribute("data-words").startsWith(picker + "-"));
+  assert.ok(words, "the document's words are drawn to select from");
+  await p.click(words.querySelectorAll('[data-shell="word"]')[0]);
+  await p.settle();
+}
 
 test("R64 the Standard page draws 'Whom it binds, and until when' with its one help line and the four acts, each in its own fold; with no day recorded it says so and offers no withdrawal", async () => {
   const { world, me } = await inWorld();
@@ -31,7 +39,11 @@ test("R64 the Standard page draws 'Whom it binds, and until when' with its one h
   const p = await openAs(world, me, `/app/standard/${L.pol}`);
   const text = main(p).textContent;
   assert.ok(text.includes(word("screen.standard.binds.head")), "the section");
-  assert.equal(text.split(word("screen.standard.binds.help")).length - 1, 1, "its help, once");
+  const head = main(p).querySelectorAll("h2").find((h) => h.textContent === word("screen.standard.binds.head"));
+  /* the kit draws a help as the head's tip, its HTML escapes included */
+  const tip = head ? String(head.getAttribute("data-tip")).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: "\"", "#39": "'" }[e])) : "";
+  assert.ok(head && tip.includes(word("screen.standard.binds.help")), "its one help line, under the head");
+  assert.ok(!text.includes(word("screen.standard.binds.help")), "once: not again in the body");
   for (const op of ["standardinforcethrough", "standardadoption", "standardimpose", "standardbenchmark"]) {
     assert.ok(actsIn(main(p)).includes(op), `${op} offered`);
     assert.ok(text.includes(word(`act.${op}.label.standard`)), `${op} labelled by its key`);
@@ -49,6 +61,7 @@ test("R64 standardinforcethrough: the day, the passage on a held document and a 
   fill(p, { "st-thr-day": THROUGH, "st-thr-doc": L.memo.sha });
   p.fire(p.doc.getElementById("st-thr-doc"), "change");
   await settled(p);
+  await selectFirst(p, "st-thr-passage");
   await press(p, "standardinforcethrough", { reason: REASON });
   await settled(p);
   const sent = p.byOp("standardinforcethrough");
@@ -56,11 +69,12 @@ test("R64 standardinforcethrough: the day, the passage on a held document and a 
   assert.equal(sent[0].body.standard, L.pol, "the standard's own id");
   assert.equal(sent[0].body.through, THROUGH);
   assert.equal(sent[0].body.source.captureSha, L.memo.sha, "the document chosen");
+  assert.deepEqual(sent[0].body.source.extent, L.mu[0].extent, "the passage selected, not the whole document");
   const held = await me.read("inforcethroughof", { query: { id: L.pol } });
   assert.equal(held.records.length, 1, "the day is recorded");
   assert.equal(held.records[0].through, THROUGH);
   const text = main(p).textContent;
-  assert.ok(text.includes(word("screen.standard.through.recorded", { through: dayOf(THROUGH), source: "Policy.txt", name: me.handle })), "the recorded day, the document by its title, the member by name");
+  assert.ok(text.includes(word("standard.inforce.known", { through: dayOf(THROUGH), source: "Policy.txt", author: me.handle })), "the recorded day, the document by its title, the member by name");
   assert.ok(!text.includes(word("screen.standard.through.unknown", { from: dayOf(FROM) })), "no longer undetermined");
   assert.ok(!text.includes(held.records[0].id) && !text.includes(L.memo.sha.slice(0, 12)), "no record id, no fingerprint");
   assert.ok(actsIn(main(p)).includes("standardinforcethroughwithdraw"), "withdrawable on a recorded day");
@@ -73,7 +87,7 @@ test("R64 standardinforcethroughwithdraw: the record on the page is the one sent
   const L = await laws(world, me);
   const made = await through(world, me, L);
   const p = await openAs(world, me, `/app/standard/${L.pol}`);
-  assert.ok(main(p).textContent.includes(word("screen.standard.through.recorded", { through: dayOf(THROUGH), source: "Policy.txt", name: me.handle })));
+  assert.ok(main(p).textContent.includes(word("standard.inforce.known", { through: dayOf(THROUGH), source: "Policy.txt", author: me.handle })));
   await press(p, "standardinforcethroughwithdraw", { reason: REASON });
   await settled(p);
   const sent = p.byOp("standardinforcethroughwithdraw");
@@ -117,6 +131,8 @@ test("R64 standardimpose: the body is chosen among the team's offices and bodies
   const { world, me } = await inWorld();
   const L = await laws(world, me);
   await through(world, me, L);
+  /* the law makes it binding only while the law is itself known in force: its own period states no end */
+  await me.act("standardinforcethrough", { body: { standard: L.ord, through: THROUGH, source: { captureSha: L.doc.sha, extent: L.du[0].extent }, reason: REASON } });
   const p = await openAs(world, me, `/app/standard/${L.pol}`);
   const body = p.doc.getElementById("st-im-body");
   assert.ok(body && body.querySelectorAll("option").some((o) => o.getAttribute("value") === L.body && o.textContent.includes("Oakland Public Works")), "the team's bodies, by name");

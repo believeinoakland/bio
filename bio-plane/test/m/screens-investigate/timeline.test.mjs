@@ -523,7 +523,7 @@ test("R62 the walker's case: a team that stated its time zone with no place draw
   assert.equal(main(await pageOf(bare)).querySelectorAll("[data-nozone]").length, 1, "control: a team with neither a zone nor a place draws the hint");
 });
 
-test("R63 the walker's case: a party added to a payment event draws the entity's name and no ENT- id", async () => {
+test("R63 R65 the walker's case: a party added to a payment event draws the entity's name and no ENT- id", async () => {
   const s = await scene();
   const roofing = (await s.me.act("entitycreate", { body: { kind: "institution", label: "Oak Roofing LLC", note: "The roofing contractor was paid for the repair." } })).entity_id;
   const pay = (await s.me.act("createevent", { body: { kind: "payment", attestations: [{ datedFactId: s.f3 }], concerns: [s.org],

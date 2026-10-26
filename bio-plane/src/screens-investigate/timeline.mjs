@@ -177,7 +177,7 @@ function render(cs, view) {
   /* R49: the first expected flow is defined from the project's own timeline, not only from inside a flow's page */
   if (proj && proj.state === "ok") out.push(view.parts.defineFold(cs));
   out.push(cs.sec(S + "record.head",
-    P.docChoice(cs, view, "tl-doc", { project: id, query: { project: id }, passage: false, drive: true }) + P.passagePick(cs, view, "tl-doc", "tl-passage", P.later)
+    P.docChoice(cs, view, "tl-doc", { project: id, query: { project: id }, passage: false, drive: true }) + `<p class="mk-small" data-doc-noproject>${cs.w(S + "doc.noproject")}</p>` + P.passagePick(cs, view, "tl-doc", "tl-passage", P.later)
     + kindChoice
     + cs.act("createevent", { label: "act.createevent.label.timeline", tone: "primary" })
     + evChoice("tl-event", S + "event") + cs.choice("tl-who", S + "who", view.parts.options(view, "people", (v) => v.rows, (r) => ({ value: r.entity, text: r.name || r.entity })), {})
@@ -304,7 +304,7 @@ const acts = rereading([
 ], ["project", "people", "questions", "vocab", "matter", "def"]);
 
 const TIMELINE_KEYS = [
-  "screen.timeline.more.people", "screen.timeline.order.cited.before", "screen.timeline.order.cited.after", "screen.timeline.order.relation",
+  "screen.timeline.more.people", "screen.timeline.doc.noproject", "screen.timeline.order.cited.before", "screen.timeline.order.cited.after", "screen.timeline.order.relation",
   "screen.timeline.undated", "screen.timeline.month", "screen.timeline.onorbefore", "screen.timeline.role", "screen.timeline.nobody",
   "screen.timeline.source", "screen.timeline.kind", "screen.timeline.order.why", "screen.timeline.order.evidence", "screen.timeline.cite.date",
   "screen.timeline.cite.first", "screen.timeline.find.dates", "screen.timeline.noset", "screen.timeline.empty", "screen.timeline.lane.world",

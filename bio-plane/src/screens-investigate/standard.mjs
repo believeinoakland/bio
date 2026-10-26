@@ -102,7 +102,7 @@ function render(cs, view) {
       const left = hit.length - PASSAGE_UNITS;
       const row = heldRows.find((r) => r && r.capture && r.capture.sha256 === c.capture_sha);
       return (words ? `<blockquote class="mk-passage rec" data-words>${cs.esc(words)}</blockquote>` : "")
-        + (left > 0 ? `<p class="mk-small" data-passage-more>${cs.mark("gap", "undetermined", { reason: cs.w("screen.timeline.more.people", { n: String(left) }) })}</p>` : "")
+        + (left > 0 ? `<p class="mk-small" data-passage-more>${cs.mark("gap", "undetermined", { reason: cs.w(S + "more.passages", { n: String(left) }) })}</p>` : "")
         + `<p class="mk-small">${P.refOf(cs, c.capture_sha, (row && row.title) || P.plain(cs, "screen.person.source"), [t.standing || ""], "capture")}</p>`;
     };
     /* R8 (K5148; WALK-FINAL-08 D4): the words the plane composes for the standard (`standards` R45), each as the plane gave it, beside the passages */
@@ -183,7 +183,7 @@ function render(cs, view) {
     const fold = (op, inner) => `<details class="mk-details"><summary>${cs.w("act." + op + ".label.standard")}</summary>${inner}${cs.act(op, { label: "act." + op + ".label.standard", tone: "primary" })}</details>`;
     const project = /^PROJ-/.test(mode || "") ? mode : "";
     out.push(cs.sec(S + "binds.head",
-      (records.length ? cs.sheet(records.map((x) => cs.row("", `<span data-through-record="${cs.esc(x.id)}">${cs.w(S + "through.recorded", { through: { html: cs.date(x.through) }, source: sourceTitle(x.source), name: P.who(cs, x.by) })}</span>`,
+      (records.length ? cs.sheet(records.map((x) => cs.row("", `<span data-through-record="${cs.esc(x.id)}">${cs.w("standard.inforce.known", { through: { html: cs.date(x.through) }, source: sourceTitle(x.source), author: P.who(cs, x.by) })}</span>`,
         cs.act("standardinforcethroughwithdraw", { label: "act.standardinforcethroughwithdraw.label.standard", data: { record: x.id } }))).join(""))
         : per.from && !per.to ? `<details class="mk-details"><summary>${cs.w(S + "through.none.summary")}</summary>${cs.mark("gap", "undetermined", { reason: cs.w(S + "through.unknown", { from: { html: cs.date(per.from) } }) })}</details>` : "")
       + fold("standardinforcethrough", cs.field("st-thr-day", S + "f.through", { type: "date", help: S + "f.through.help" })
@@ -299,7 +299,7 @@ const acts = rereading([
 ], ["standard", "relations", "laws", "project", "proposals", "held", "bodies", "institutions", "offices"]);
 
 const STANDARD_KEYS = [
-  "screen.timeline.more.people",
+  "screen.standard.more.passages",
   "screen.standard.sub", "screen.standard.held", "screen.standard.held.more", "screen.standard.kind.statute", "screen.standard.kind.regulation", "screen.standard.kind.ordinance",
   "screen.standard.kind.court", "screen.standard.kind.policy", "screen.standard.kind.commitment", "screen.standard.kind.standard",
   "screen.standard.inforce.since", "screen.standard.inforce.span", "screen.standard.inforce.none", "screen.standard.words", "screen.standard.laws",
@@ -315,7 +315,7 @@ const STANDARD_KEYS = [
   "screen.standard.inforce.refused.body", "screen.standard.inforce.refused.body2", "screen.standard.inforce.help", "crumb.project.unjoined",
   "screen.standard.inforce.day.label", "screen.standard.inforce.result.line", "standard.inforce.known",
   /* R64 (DEC-438) */
-  "screen.standard.binds.head", "screen.standard.binds.help", "screen.standard.through.unknown", "screen.standard.through.recorded", "screen.standard.through.none.summary",
+  "screen.standard.binds.head", "screen.standard.binds.help", "screen.standard.through.unknown", "standard.inforce.known", "screen.standard.through.none.summary",
   "screen.standard.f.through", "screen.standard.f.through.help", "screen.standard.f.source", "screen.standard.f.source.help", "screen.standard.f.body", "screen.standard.f.body.help",
   "screen.standard.f.act", "screen.standard.f.act.help", "screen.standard.f.edition", "screen.standard.f.edition.help", "screen.standard.f.mode", "screen.standard.mode.by_reference",
   "screen.standard.mode.voluntary", "screen.standard.mode.by_accreditation", "screen.standard.f.passage", "screen.standard.f.law", "screen.held.untitled", "connection.node.unnamed",
