@@ -57,7 +57,7 @@ test("R58: the determination's body is a choice among the team's offices and bod
   assert.ok(main(p).querySelector("#mt-d-body"), "the choice");
   assert.ok(text(p).includes(W("screen.matter.f.body.help")), "its help");
   // control: the team's entities cannot be read
-  const q = await openIn(w.world, w.me, `/app/matter/${w.project}`, { entitieskind: refused("ENTITIES_UNAVAILABLE") });
+  const q = await openIn(w.world, w.me, `/app/matter/${w.project}`, { entitieskind: refused("NO_ENTITY", "the owner's own sentence") });
   assert.equal(main(q).querySelector("#mt-d-body"), null, "no choice");
   assert.ok(!text(q).includes(W("screen.matter.f.body.help")), "no help");
 });
