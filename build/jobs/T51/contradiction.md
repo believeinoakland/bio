@@ -258,3 +258,7 @@ Tests and checks
 - `node checks/ownership.mjs /home/user/bio contradiction <merge-base> HEAD`: 3 files changed, 0 failures.
 
 Size (session_01H8qkBewgtVcTLapCydbWnZ): test runs 5, module lines 3699 (bio-plane/src/contradiction.mjs and bio-plane/src/contradiction/).
+
+## J15 · COMPLETE
+
+R62 met (walk C C-M13): take-up writes fmSafe(title) into the envelope; test red then green; see record J14. Module 146 pass/0 fail/8 todo; take-up users 1272/1272; checks run: none in contradiction; ownership 0.
