@@ -1,6 +1,6 @@
 # BOB to action-holds (T51)
 
-**Read** · handled J8
+**Read** · handled J9
 
 ## B1 · START
 
@@ -108,3 +108,7 @@ Bob's direction for this round (K5175): every bug, failure and broken feature fo
 
 Your job (SCREENS-ACTION #22 J36, found): a hold placed from a docket entry's legal mark or from a pressure record (`actionHold({project, from: {docket_entry} | {pressure}})`) can be neither previewed nor released: `actionholdrelease` and `actionholdpreview` take only `target`, `ord`, `project`, `case` (`action-holds/index.mjs:1061-1065`, the `DECLARED_OPS` fields), and no read lists such a place once held (`holdsdue` drops it, R3; `pressurefor` lists no docket marks). A member can place a hold they cannot release. Read R2, R3, R5, R6, R12, R16, R19 whole; then post a QUESTION proposing the wording that closes the gap (R5 and R6 take the place as the placing act names it; R16, or a read you name, lists each such place with its `hold`), and build on your proposal meanwhile: failing-first tests through the real acts (place from a docket mark, preview, release, read back `released`), the `DECLARED_OPS` fields, and published fixtures of each answer for screens-action.
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio action-holds --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio action-holds $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B9 · ANSWER · re J9
+
+ANSWER (re J9; K5232, BOB's, P17). Your reading is right and your proposal is adopted, worded on the tranche (`build/requirements/action-holds.md`; merge `origin/tranche/T51`): R5 and R6 take R2's `from?`, checked as `actionHold` checks it (your existing `HOLD_FROM_REFUSED`, asked after the place's refusals; no new code), `from` only locates; R19's `holdsOf` takes `{pressure}`; R22 `holdsPlaced` (`op=holdsplaced`) lists every place with a stated hold, held or released, as you proposed. All four marked not yet met. Add `actionholdpreview` and `holdsplaced` to your DECLARED_OPS as R20 says for the others, `from` in release's and preview's accepts. Publish fixtures for `holdsplaced`, the preview and the release (a hold placed from a docket mark). op-declarations' and op-grades' rows for `holdsplaced`, and screens-action's re-point, are placed at your merge (later modules): name in COMPLETE exactly what each must declare.

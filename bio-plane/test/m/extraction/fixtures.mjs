@@ -50,7 +50,7 @@ export function extractionNotice() {
  *  follow: `partial` with R90's figures); `unknown` is a digest nothing holds (`none`). `answer` is the answer for all four, as the module gives it. */
 export async function progressOf() {
   const { generate } = await import("../../pdfgen.mjs");
-  // fixtures-contract: plane job-registrar
+  // fixtures-contract: store-assembly job-registrar
   const { jobRegistrarStub } = await import("../../job-registrar-stub.mjs");
   const g = generate({ kind: "pdf", seed: "progress", fonts: ["type0"], size: { pages: 30, lines: 1 }, kinds: ["scan"] });
   const scan = await held(await g.bytes(), { ct: "application/pdf", format: "pdf", fromText: false });
@@ -77,8 +77,11 @@ export async function progressOf() {
  *  - `piece()` the first tick of a text that goes on: `more: true` with `detail: {read_through, total}`; `pieces(n)` the ticks of a text of `n` pieces, the
  *    last answering as `read()` does (`n` from 2 to 5, so that every piece is 4,096 units);
  *  - `held()` a reading already held: `{ok: true, read: false, why: "READING_HELD", counters: {written, skipped}}`;
- *  - `final(why)` a read in pieces ended, stated, because the reader refuses the cursor (`why` `CURSOR_MISMATCH`; a refused `NOT_PIECEWISE` is stated
- *    partial once and answers `READING_HELD`, not final): `{ok: true, read: false, final: true, why}`;
+ *  - `final(why)` a read ended, stated: `{ok: true, read: false, final: true, why}`. `why` `CURSOR_MISMATCH`: a read in pieces whose reader refuses the cursor (a
+ *    refused `NOT_PIECEWISE` is stated partial once and answers `READING_HELD`, not final); `NO_PROGRESS`: an OCR tick whose member answered its pages with
+ *    no glyph (R101), which ends the entry on that tick, owing nothing;
+ *  - `failed()` the second tick of a text read in pieces, the evidence store failing (`head`, `get` and `put` reject `STORE_FAILED`): `{ok: true, read: false,
+ *    owed: true, why: "TRANSIENT", detail: {read_through, total, reason}}`, the cursor kept, nothing indexed, the entry owed and tried again (R101);
  *  - `killed()` an OCR tick whose member died on a page: the answer carries `killed: [page]`;
  *  the paged and killed paths, each made by the real `readHeld` over a held capture and answering the figures the ledger reads (K5139):
  *  - `windowed()` `{answer, cursor, units}`: the first tick of a text read in windows. `answer` is `more: true` with `detail: {read_through, total}` and no cursor
@@ -104,10 +107,26 @@ export const readHeldAnswer = {
   },
   async held() { const h = await held(textOf(20)); await h.w.x.readHeld({ sha: h.d, kind: "reading" }); return h.w.x.readHeld({ sha: h.d, kind: "reading" }); },
   async final(why = "CURSOR_MISMATCH") {
+    if (why === "NO_PROGRESS") {
+      /* a scan whose OCR member answers every page it is asked with words that hold no glyph: the pass reads nothing, the entry ends (R101) */
+      const { generate } = await import("../../pdfgen.mjs");
+      const g = generate({ kind: "pdf", seed: "no-progress", fonts: ["type0"], size: { pages: 3, lines: 1 }, kinds: ["scan"] });
+      const h = await held(await g.bytes(), { ct: "application/pdf", format: "pdf", fromText: false });
+      const blank = member((body) => ocrAnswer(body.pages, { text: () => "   " }));
+      await h.w.x.readHeld({ sha: h.d, kind: "reading", env: {} });
+      return h.w.x.readHeld({ sha: h.d, kind: "ocr", env: { OCR_WORKER: blank } });
+    }
     if (why !== "CURSOR_MISMATCH") throw new Error(`readHeldAnswer.final: no such reason ${why}`);
     const h = await held(textOf(9000));
     await h.w.x.readHeld({ sha: h.d, kind: "reading" });
     h.w.x.read = async () => ({ refused: { code: why, why: "the held bytes are not the ones this cursor was made from" } });
+    return h.w.x.readHeld({ sha: h.d, kind: "reading" });
+  },
+  async failed() {
+    const h = await held(textOf(9000));
+    await h.w.x.readHeld({ sha: h.d, kind: "reading" });
+    const fails = async () => { throw new Error("STORE_FAILED"); };
+    Object.assign(h.evidence, { head: fails, get: fails, put: fails });
     return h.w.x.readHeld({ sha: h.d, kind: "reading" });
   },
   async killed() {

@@ -3,7 +3,7 @@
    (PDF_WORKER, OCR_WORKER), a calibration provider behaving as calibration's Provides state (R10–R12), a promotion
    registry recording the step this module registers, a hook registry stand-in (`readHooks`) when a test hands one (R69), and helpers that build capture documents in the shape
    capture's acquire answer carries. */
-// fixtures-contract: plane job-registrar
+// fixtures-contract: store-assembly job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
