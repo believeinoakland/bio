@@ -156,6 +156,34 @@ test("R137 20 a page by the read's next: the first 20, the line the read allows 
   assert.deepEqual(radios(p, "connect").map((r) => r.value), first, "back to the first page");
 });
 
+/** ann's project holding 20 reports and, held after them, one more by another name: 21 other documents, the 21st on the second page */
+async function zebra() {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const mine = await world.recipes.project(ann, "Pothole repairs");
+  for (let i = 0; i < 20; i++) await world.recipes.hold(ann, `Report ${String(i + 1).padStart(2, "0")}`, `Report number ${i + 1}.`, mine);
+  const last = await world.recipes.hold(ann, "Zebra crossing study", "A study of the crossing on Fifth Street.", mine);
+  const here = await world.recipes.page(ann, "Policy memo", { paragraphs: ["The Director shall repair each reported pothole within seven days."], project: mine });
+  return { world, ann, last: last.bundle, at: "/app/document/" + here.bundle };
+}
+
+test("R137 while a page is unread and nothing read so far matches the text, the picker says more follow and never 'none found'; the page turned, the match is offered; with every page read, none matching says so", async () => {
+  const z = await zebra();
+  const p = await pageOn(z.world, z.ann, z.at);
+  await find(p, "connect", "zebra");
+  assert.deepEqual(radios(p, "connect").map((r) => r.value), [], "nothing on the pages read so far matches");
+  assert.ok(!picker(p, "connect").querySelector("[data-pick-none]"), "not 'none found' while a page is unread");
+  const more = picker(p, "connect").querySelector("[data-pick-more]");
+  assert.ok(more && text(more).includes(wordOr("screen.document.pick.more", { count: "20" }, "screen.people.more", { n: "20" })), "that more follow: " + (more && text(more)));
+  await turn(p, "connect", "document.read.next");
+  assert.deepEqual(radios(p, "connect").map((r) => r.value), [z.last], "the second page holds the match");
+  assert.ok(!picker(p, "connect").querySelector("[data-pick-none]"));
+  assert.ok(!picker(p, "connect").querySelector("[data-pick-more]"), "nothing unread, nothing more to say");
+  await find(p, "connect", "qqq");
+  assert.ok(picker(p, "connect").querySelector("[data-pick-none]"), "control: every page read and none matching, none found is said");
+  assert.ok(!picker(p, "connect").querySelector("[data-pick-more]"));
+});
+
 test("R137 one radio choice: a choice made on another page replaces the first, and is the one sent", async () => {
   const m = await many();
   const p = await pageOn(m.world, m.ann, m.at);

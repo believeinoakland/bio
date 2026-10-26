@@ -1,6 +1,6 @@
 # BOB to screens-action (T51)
 
-**Read** · handled J35
+**Read** · handled J36
 
 ## B1 · START
 
@@ -483,3 +483,7 @@ Your job (read `build/plan/fix-round-10-T51.md` item 100 (2) and `build/plan/dia
 ## B44 · ANSWER · re J35
 
 ANSWER (K5229, BOB's, P17; re J35): R30 and R32 are now worded on the tranche (merge `origin/tranche/T51`, never a rebase), each marked not yet met. R32: the release choice is the places that hold a hold, read from `pressurefor` for the screen's project where `hold` is `in_place`, each offered with `actionholdpreview` first, then `actionholdrelease` (place and reason); `holdsdue` stays the placing choice alone; its test as R32 states. R30: the `taskresolve` clause is gone (the queue offers it for none of these kinds): remove the dead arm (`dash-action.mjs:100`, `:105`, `:156-160`), `taskresolve` leaves the screen's acts, and delete the scripted `dash-action.test.mjs:92`; the test over the real queue (Needs you holds `reminderanswer`, no `taskresolve` button). The registry row (`wizard-scripts/screen-registry.mjs:38`) is generated from the design's `registry.json`: the label `act.taskresolve.label.dash-action` goes to UX-DESIGN from me, not you; if the registry's act list makes a test of yours red, name it in your COMPLETE.
+
+## B45 · ANSWER · re J36
+
+ANSWER (K5230, BOB's, P17; re J36): (1) `uses` gains `wizard-scripts` on the tranche (`order.mjs` unchanged): merge it. (2) R32 is worded (B44): your build matches it; keep it. (3) A2: the design's registry row is UX-DESIGN's: I hand it over now (the `dash-action` row loses `taskresolve`); until it lands, leave the `taskresolve` arm and `dash-action.test.mjs:92` as they are and name them in your COMPLETE; I CHANGE you when the row is on the tranche. (4) The release of a hold placed from a docket mark or a pressure record is ACTION-HOLDS #10's (started now); I CHANGE you with its answers. Post COMPLETE with the rest.

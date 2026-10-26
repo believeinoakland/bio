@@ -97,3 +97,32 @@ export function casedetailspublic() {
     unpublished: w.ci.caseDetailsPublic({ case: prepared }),
   };
 }
+
+const RELATED = [
+  { relation: "builds_on", case_ref: { group: "river-town", case: "CASE-2026-0007", edition: 1 }, words: "Builds on the council's 2025 minutes" },
+  { relation: "disagrees_with", url: "https://example.org/housing-study", words: "A competing reading of the same vote" },
+];
+
+/** `caseDetails` (R23) and `caseDetailsPublic` (R24), the two reads of a published case whose `related` standing has works:
+ *  `recorded`, the owner's case read to a joined member, and `publicRead`, the public read; each the real answer, with
+ *  `related` stated as a `builds_on` and a `disagrees_with` (their values as set) and `relationships` not stated. */
+export function casedetailsRelated() {
+  const { w, published } = detailsWorld();
+  setDetail(w, published, "related", RELATED);
+  return {
+    recorded: w.ci.caseDetails({ case: published, viewer: V("bo") }),
+    publicRead: w.ci.caseDetailsPublic({ case: published }),
+  };
+}
+
+/** `caseDetails` (R23) and `caseDetailsPublic` (R24), the two reads of a published case whose `relationships` standing is
+ *  stated as `{none: true}` (no relationships to report): `recorded` and `publicRead`, each the real answer, with
+ *  `relationships` stated as `{none: true}` and `related` not stated. */
+export function casedetailsNone() {
+  const { w, published } = detailsWorld();
+  setDetail(w, published, "relationships", { none: true });
+  return {
+    recorded: w.ci.caseDetails({ case: published, viewer: V("bo") }),
+    publicRead: w.ci.caseDetailsPublic({ case: published }),
+  };
+}

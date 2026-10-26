@@ -11,6 +11,7 @@ import { SCREENS } from "../../../src/screens-inquiry/index.mjs";
 import { PENDING_WORDS } from "../../../src/screens-inquiry/objective.mjs";
 import { boot, ok, refusedIn } from "../interface-shell/harness.mjs";
 import { rawKeys, fill, storeWorld } from "./fixtures.mjs";
+import { writingHelpDraftHeld, writingHelpUnreachable } from "../wizard-scripts/fixtures.mjs";
 
 const REGISTRY = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8"));
 /* the world (store-assembly's store with the real door, K5054): `dev` owns the project "Pothole repairs" she started and `mai` is joined to it; the team holds two flows
@@ -80,8 +81,6 @@ function plane(o = {}) {
     list: ok({ bundles: [{ bundle_id: GOAL.id, title: "Close the unvoted collections loophole" }] }),
     goal: ok({ ok: true, goal: GOAL }),
     assistantstate: ok({ on: true }), accountreference: ok({ held: true }),
-    /* needs a recipe: the writing help's draft text (the world's door answers it without `text`: the draft is asked of the Worker's assistant object, which needs the model) */
-    writinghelp: ok({ ok: true, text: "A drafted reason." }),
     ...o,
   };
 }
@@ -346,7 +345,7 @@ test("R106 goals: controls: a closed goal's link refusal and a missing statement
   assert.equal(button(none, "goalclose"), undefined, "nothing to close");
 });
 
-test("R106 writinghelp: drawn beside the member's own-words fields only while the assistant is reachable; it sends the field and what she has typed, and puts the draft in the field", async () => {
+test("R106 writinghelp: drawn beside the member's own-words fields only while the assistant is reachable; it sends the field and what she has typed, and leaves her words in the field", async () => {
   const p = await open();
   const helps = main(p).querySelectorAll('button[data-act="writinghelp"]');
   assert.ok(helps.length >= 3, "beside the reason, the statement and the goal's words");
@@ -355,9 +354,22 @@ test("R106 writinghelp: drawn beside the member's own-words fields only while th
   assert.ok(mine, "the measure's reason");
   await p.click(mine);
   assert.deepEqual(ops(p, "writinghelp")[0].body, { field: mine.getAttribute("data-field"), told: "My words." });
-  assert.equal(p.doc.getElementById("ob-why").value, "A drafted reason.");
+  assert.equal(p.doc.getElementById("ob-why").value, "My words.", "her own words stay in the field");
   const off = await open({ assistantstate: ok({ on: false }) });
   assert.equal(main(off).querySelectorAll('button[data-act="writinghelp"]').length, 0, "control: not reachable, not drawn");
+});
+
+test("R106 writinghelp: wizard-scripts' real answers are drawn by their words beside the help, her words kept: a draft already held, the assistant unreachable", async () => {
+  for (const [answer, held] of [[writingHelpDraftHeld(), "WRITING_HELP_DRAFT_HELD"], [writingHelpUnreachable(), "AGENT_WORKER_UNBOUND"]]) {
+    const code = answer.reason || answer.code;
+    assert.equal(code, held, "the real answer names " + held);
+    const p = await open({ writinghelp: ok(answer) });
+    fill(p, { "ob-why": "My words." });
+    await p.click(main(p).querySelectorAll('button[data-act="writinghelp"]').find((b) => b.getAttribute("data-id") === "ob-why"));
+    await p.settle();
+    assert.ok(main(p).textContent.includes(word("refusal." + held)), held + " is drawn by its words");
+    assert.equal(p.doc.getElementById("ob-why").value, "My words.", "her own words stay in the field");
+  }
 });
 
 test("R106 the member's own reads: aspirations are read for her (project and member), proposals and gaps for the project; nothing is written on load", async () => {
