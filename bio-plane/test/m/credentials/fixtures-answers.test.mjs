@@ -3,7 +3,8 @@
    is held here against the module's own registration and refusal. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { signerregisterown, signerregisterownHeld, SIGNER_KEY } from "./fixtures.mjs";
+import { signerregisterown, signerregisterownHeld, signout, SIGNER_KEY } from "./fixtures.mjs";
+import { sha } from "./fixture.mjs";
 
 test("R9: the published signerregisterown answer is a member's own key, registered active and self-origin, in the world it wrote", async () => {
   const { w, answer } = await signerregisterown();
@@ -23,4 +24,10 @@ test("R9: the published signerregisterownHeld answer refuses a key another membe
   assert.equal(answer.ok, false);
   assert.equal(answer.reason, "SIGNER_KEY_HELD_BY_ANOTHER");
   assert.equal(w.row("SELECT member_id FROM signers WHERE key_b64=?", SIGNER_KEY).member_id, "bob");
+});
+
+test("R39: the published signout answer ends the live session it names, and the store no longer holds that session", async () => {
+  const { w, token, answer } = await signout();
+  assert.deepEqual(answer, { ok: true, ended: 1 });
+  assert.equal(w.row("SELECT token_sha FROM sessions WHERE token_sha=?", sha(token)), null);
 });
