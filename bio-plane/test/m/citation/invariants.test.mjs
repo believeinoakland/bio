@@ -180,7 +180,7 @@ test("K3, R1, R7, R14: the op routes — the control plane's stamps are read fro
   /* C31: `cite` reads its fields from the body; the address carries the door's stamps only. */
   const body = { project: "P", handle: "H", note: "n", role: "supports", weight: "refuse", extent_kind: "pdf-page", extent_page: 2, content_id: "", other: 1 };
   const ops = citationOps(fake, url, body);
-  assert.deepEqual(Object.keys(ops).sort(), ["cite", "citeimported", "drawquestion", "reinstate", "sever", "withdrawimported"]);
+  assert.deepEqual(Object.keys(ops).sort(), ["cite", "citeimported", "drawquestion", "leggrade", "reinstate", "sever", "withdrawimported"]);
   ops.cite(); ops.sever(); ops.reinstate();
   assert.deepEqual(calls[0], ["cite", { project: "P", handle: "H", viewer: "member:ann", owner: "o", note: "n", author: "member:ann",
     identity: "member:ann", role: "supports", ground: null, extent: { extent_kind: "pdf-page", extent_page: "2", content_id: "" },
