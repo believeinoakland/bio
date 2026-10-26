@@ -1529,3 +1529,14 @@ Merged `tranche/T51` first (twice: at start and before COMPLETE); `mail start` d
 **Markers added:** none (`fixtures-own`/`fixtures-generic`: 0). **Met ids:** none new (every requirement mark unchanged).
 
 Size (session_01S5w36nrjrT4X3cdJbAUkgi): test runs 14, module lines 3754 src + 5303 tests
+
+## J49 · COMPLETE
+
+COMPLETE (fix round 10, B54). Detail: section "Fix round 10 (B54 ...)" in build/jobs/T51/screens-publish.md on job/T51/screens-publish; REPORT J48 names the gaps. Merged tranche/T51.
+
+Applied: 31 of the 35 op-table lines re-pointed to the providers' published fixtures (review, capture, citation, sources, credentials, entities, case-inputs, public-read, case-authoring B52, wizard-scripts B53 with the drafted-text cases removed per K5212); tests and fixtures only, no product code (fixtures.mjs `openDefaults`, `provided`, `refusalWords`; fr30, fr30b, case-editor, drafts, fix2, fix3, fix4, finding, seam4, style, t50).
+Left, 5 lines (fixtures --list 35 -> 5): fr30b:235 and :247 (citeimported, waits for CASE-IMPORT #22); fr30b:425 and :427 (case-inputs publishes no `related` or `relationships: none` standing); t51:76 (action-holds publishes no docket-entry arrival). Also modules.json `uses` lacks entities, capture, citation, sources, credentials, wizard-scripts (architecture check 8 failures, all that; yours).
+Failing-first: none, no product code changed (two tests that went red on a real answer were corrected to read the answer).
+Tests: screens-publish 296 tests, 294 pass, 0 fail, 2 todo (R35 press tests, K3717); files alone sum to 296. Checks: format 0, coverage 80/80 0, ownership 0, architecture 8 (uses only), run.mjs no other finding in my files, words not risen.
+Markers added: none (fixtures-own 0, fixtures-generic 0). Met ids: none new.
+Size (session_01S5w36nrjrT4X3cdJbAUkgi): test runs 14, module lines 3754 src + 5303 tests
