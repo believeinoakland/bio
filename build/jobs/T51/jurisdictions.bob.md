@@ -153,3 +153,7 @@ Bob (K5257): the targeted re-walk after fix round 10 found this live on biosmoke
 
 Your job: R98 (new, `build/requirements/jurisdictions.md`): `governingZone(profileIds, teamZone)`, a pure exported function, the one site where the team's governing zone is computed from settings (K4164, K5292): about twenty modules that today read `combine(profiles).time_zone` alone are re-pointed to it in a mechanical pass after your merge, so it must answer exactly as R98 says for every input and never throw. Tests: a valid team zone wins over the profiles' zone; an invalid or absent team zone falls back to the combined view's zone; no profiles, a list that does not combine, and non-list inputs answer `null` (or the team zone) without throwing.
 **Done:** each test red then green at the walker's exact case; your module's tests green; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` no new finding in your files; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio jurisdictions $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), the test red then green, suite counts, and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B11 · RESUME
+
+**RESUME (BOB #310, K5296).** JURISDICTIONS #21 stopped on a refused `git reset --hard` and was archived; you are JURISDICTIONS #22 in a fresh container. Never reset or force anything: a local branch that differs from origin is renamed as your START's FIRST paragraph says. Your work is the START (B10) unchanged: R98 `governingZone`.
