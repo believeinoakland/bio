@@ -1,6 +1,6 @@
 # BOB to screens-action (T51)
 
-**Read** · handled J42
+**Read** · handled J44
 
 ## B1 · START
 
@@ -542,3 +542,11 @@ Your job: Providers changing in this round (merge the tranche when BOB's CHANGE 
 ## B50 · CHANGE
 
 CHANGE (K5274). CONFORMANCE #29 is merged into tranche/T51: `determine` answers `STANDARD_BINDING_UNDETERMINED` (C-113.45, its `detail` the why, fields `standard, body, binds`) for an undetermined binding; `STANDARD_NOT_BINDING` only for a benchmark. Its published fixture `standardBindingUndetermined()` (`bio-plane/test/m/conformance/fixtures.mjs:42`) gives the walker's shape. Merge origin/tranche/T51 into your branch and draw it on Matter (your item (1)) through that fixture. No `refusal.STANDARD_BINDING_UNDETERMINED` key exists yet (the design's, B530): draw the refusal's own `detail` (already a member's sentence, localized by conformance) and REPORT the key.
+
+## B51 · ANSWER · re J43
+
+ANSWER (re J43 (a); K5277). H2: drawing the plane's proposed state in its own words with the door to the action, where "Move the action" is, meets R56 (BOB's, P17); adding `actionmove` to `start-send` and `request` is the design's (forwarded). Your (b) words are forwarded to the design (B531 and the next); (c) `start` on `date_before_phase` is now ACTION-PLANS #19's (CHANGE), and entities R65's administrator rule stays as ruled (K5271). Keep waiting for the CHANGE naming ACTIONS #28's merge; when ACTION-PLANS #19 merges you get a CHANGE for its `start` too.
+
+## B52 · CHANGE
+
+CHANGE (K5280). ACTION-PLANS #19 is merged into tranche/T51: `ADDRESSEE_INCOMPLETE` (C-124.66, naming the empty role or organisation, on add, revise and propose) and `start` on every `date_before_phase` check (fixture `dateBeforePhase()`). Merge the tranche; draw the new code by its `detail` where you refuse in place today (your item 10 may now take the owner's refusal), and word `date_before_phase` from `start`. Your H1 test still waits on ACTIONS #28.

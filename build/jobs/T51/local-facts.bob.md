@@ -58,3 +58,7 @@ Your job (D-B1, BLOCKER; BOB's ruling K5264): a team with no installed place pro
 ## B5 · RESUME
 
 RESUME (K5272): your record says WORKING but your session went idle at 07:53Z with no push for 40 minutes. Continue from your record's next step; post COMPLETE (or BLOCKED) when done.
+
+## B6 · RESUME
+
+RESUME (K5280): your session is idle while your record says WORKING, and no COMPLETE is posted. If the team-zone fact is done, post COMPLETE naming the op and fields SCREENS-SETTINGS #23 must send (D-B1); else continue from your record's next step.

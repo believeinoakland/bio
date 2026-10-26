@@ -47,3 +47,17 @@ export async function reinstate({ cut = "cut", reason = "the edition was right" 
   return { w, project, handle, severed, answer };
 }
 
+
+/* R23 (reinstate onto the other side): a question that cited one document as `cuts_against` and severed that leg (both
+   checked), then the door's answer to `reinstate` with `role` (default `supports`). Answers `{w, question, handle, severed,
+   answer}`. */
+export async function reinstateOtherSide({ role = "supports", reason = "I read it the wrong way round" } = {}) {
+  const w = world({ inquiry: true });
+  w.info("INFO-2026-0001-doc");
+  const question = w.inquiry("INQ-2026-0001-q");
+  const handle = await w.select(["INFO-2026-0001-doc"]);
+  must(w.cit.cite({ project: question, handle, ...ANN, role: "cuts_against", note: "first reason" }), "the cite");
+  const severed = must(door(w.cit, "sever", { project: question, handle, ...ANN, reason: "wrong side" }), "the sever");
+  const answer = door(w.cit, "reinstate", { project: question, handle, ...ANN, reason, role });
+  return { w, question, handle, severed, answer };
+}

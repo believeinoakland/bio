@@ -187,7 +187,10 @@ test("K3, R1, R7, R14: the op routes — the control plane's stamps are read fro
     found: null, question: null }]);
   const edgeArgs = { project: "P", handle: "H", viewer: "member:ann", owner: "o", reason: "why", author: "member:ann", identity: "member:ann" };
   assert.deepEqual(calls[1], ["sever", edgeArgs]);
-  assert.deepEqual(calls[2], ["reinstate", edgeArgs]);
+  /* R23: `reinstate` also reads the optional `role` (the body first, as `cite`'s fields); `sever` reads none. */
+  assert.deepEqual(calls[2], ["reinstate", { ...edgeArgs, role: "supports" }]);
+  citationOps(fake, new URL("http://x/?project=P&handle=H&reason=why"), {}).reinstate();
+  assert.equal(calls.pop()[1].role, null, "control: no role sent, none read");
   const bare = citationOps(fake, new URL("http://x/?project=P"), { project: "P" });
   bare.cite(); bare.sever();
   assert.deepEqual([calls[3][1].note, calls[3][1].extent, calls[3][1].role, calls[3][1].found, calls[3][1].question, calls[4][1].reason],

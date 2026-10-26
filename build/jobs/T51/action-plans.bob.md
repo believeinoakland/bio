@@ -1,6 +1,6 @@
 # BOB to action-plans (T51)
 
-**Read** · handled J6
+**Read** · handled J8
 
 ## B1 · START
 
@@ -114,3 +114,7 @@ Bob (K5257, K5258): the live walk before the alpha found this; it is fixed now, 
 
 Your job: (1) Walk E K10-1: `actionDocument` (`action-plans/index.mjs:2196-2216`) never carries the option's `fields.tier` to the action, so Prepare the filing is refused `FILING_TIER_UNDETERMINED`; meet R54's first sentence (in `optionStart`'s transaction, `actions.actionRiskTier`). (2) Walk E K4 and walk C C-M17: `ADDRESSEE_REFUSED` (`index.mjs:454`, `values.mjs:87-93`) says "never a private individual" for an empty role or organisation: meet R54's second sentence, publish the code. Tests red then green with the walkers' shapes. Tests red then green.
 **Done:** each test red then green; your module's tests green; the users `node build/plan/impact.mjs origin/tranche/T51 HEAD` names that exercise what you changed, green; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` no new finding in your files; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio action-plans $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each test red then green, suite counts, anything REPORTed, the met requirement ids, and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B10 · CHANGE
+
+CHANGE (K5277; from SCREENS-ACTION #25 J43 (c)). Beside your R54: your `date_before_phase` check answers no `start` (the day the phase can start), so the plan screen can only draw your English with ids. Carry `start` (an ISO day, or null when undetermined) on each `date_before_phase` check (amends R54's walk-E K-words line; a field added, meaning unchanged), published in your fixture; a test red then green. Then COMPLETE.

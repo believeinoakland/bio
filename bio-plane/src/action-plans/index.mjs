@@ -76,7 +76,7 @@ import { ACTION_PLANS_TABLES, migrateActionPlans } from "./schema.mjs";
 import { ACTION_PLAN_CHECKS, PLAN_WORDS, refusal } from "./checks.mjs";
 import { CATEGORIES, DISPOSITIONS, NEEDS_REASON, WORK_KINDS, REFUSED_KEYS, TIERS, JUDGEMENTS, TITLE_MAX, REASON_MAX,
          SUMMARY_MAX, DETAIL_MAX, WHY_MAX, NOTE_MAX, SUBJECTS_MAX, DATES_MAX, PLANS_PAGE_MAX, DUE_MAX,
-         SOURCES_MAX, isObj, str, isDay, isLine, isToken, normSubject, subjectKey, addresseeArm, addresseeOf,
+         SOURCES_MAX, isObj, str, isDay, isLine, isToken, normSubject, subjectKey, addresseeArm, addresseeEmptyFields, addresseeOf,
          checkPhases, phaseTimes, unbranched, dayOf, DUTY_STATES, OFFER_KINDS, INFRACTION_OUTCOMES, MARK_KINDS, CLOSE_NOTE_MAX,
          CLOSING_NOTES_MAX, MARKS_MAX } from "./values.mjs";
 import { localize, word } from "../setup-words/index.mjs";
@@ -451,6 +451,10 @@ export class ActionPlans {
     let addressee = null;
     if (a.addressee !== undefined && a.addressee !== null) {
       /* DEC-49 REGION is-option-addressee */
+      const empty = addresseeEmptyFields(a.addressee);
+      if (empty.length)
+        return refusal("ADDRESSEE_INCOMPLETE", localize("action-plans.index.addressee_left_part_empty", "an addressee's {empty} was left empty; state it. Nothing was written.",
+          { empty: empty.join(" and ") }), { empty });
       if (!addresseeArm(a.addressee))
         return refusal("ADDRESSEE_REFUSED", "an addressee is {state: named, kind?: office, role, body}, {state: named, "
           + "kind: press | organisation | group, role, organisation} or {state: audience, description}; never a private "
@@ -1459,6 +1463,12 @@ export class ActionPlans {
     const r = this.record.transact(() => {
       const a = this.actions.actionCreate({ document: doc, author, viewer });
       if (!ok(a)) return a;
+      /* R54: the tier the option states is the action's first risk-tier history entry, by the starter, in this transaction */
+      if ([1, 2, 3].includes(opt.fields.tier)) {
+        const t = this.actions.actionRiskTier({ target: a.id, tier: opt.fields.tier, author, viewer,
+          reason: localize("action-plans.index.tier_stated_by_the_option", "the tier option {option} of plan {plan} states", { option: String(opt.id), plan: String(p.id) }) });
+        if (!ok(t)) return t;
+      }
       const set = [];
       for (const rem of opt.reminders || []) {
         const entry = (opt.fields.dates || []).findIndex((d) => d.date === rem.date);
@@ -1916,10 +1926,10 @@ export class ActionPlans {
         for (const oid of ph.options) {
           const o = byId.get(oid);
           if (o && ph.earliest && start === null) for (const d of o.dates || [])
-            out.push({ check: "date_before_phase", scenario: sc.scenario, phase: ph.id, option: oid, date: d.date, state: "undetermined",
+            out.push({ check: "date_before_phase", scenario: sc.scenario, phase: ph.id, option: oid, date: d.date, start: null, state: "undetermined",
               says: localize("action-plans.says.whether_regulated_date_falls", "whether {oid}'s regulated date {date} falls before phase {id} can start cannot be told: {day_undetermined}", { oid: String(oid), date: String(d.date), id: String(ph.id), day_undetermined: String(DAY_UNDETERMINED) }) });
           if (o && start) for (const d of o.dates || [])
-            if (d.date < start) out.push({ check: "date_before_phase", scenario: sc.scenario, phase: ph.id, option: oid, date: d.date,
+            if (d.date < start) out.push({ check: "date_before_phase", scenario: sc.scenario, phase: ph.id, option: oid, date: d.date, start,
               says: localize("action-plans.says.regulated_date_falls", "{oid}'s regulated date {date} falls before phase {id} can start ({start})", { oid: String(oid), date: String(d.date), id: String(ph.id), start: String(start) }) });
         }
         const miss = unbranched(ph, sc.phases);
