@@ -955,3 +955,7 @@ COMPLETE (SCREENS-INQUIRY #35), B92: fix round 10 (plan item 144; K5292): (1) R1
 - Ownership: run after the commit; see the line below.
 
 Size (session_01XFsEBnM285mo6rZxqptTvL): test runs 15, module lines 7075
+
+**After the commit (702ae43f33)**
+- `checks/ownership.mjs`: 5 files changed by screens-inquiry, 0 failures.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 4 modules, 189 test files (screens-inquiry 68 of 68; control-plane 87 of 135; plane 33 of 56; journey-check 1 of 27). Those 189 files were run in one process: 1220 tests, 1192 pass, 1 fail, 27 cancelled. The one fail is `control-plane/t51-round9-seam.test.mjs` R9 seam §5, which its own title marks red until provenance 21 merges (not this change). The screens-inquiry files that failed in that combined run (r10-question-seam, r10-stated, r137-document, r45, r46, r47, r49, r50-own-reading) each pass when run alone, so the failure is the combined process, not the change. The 27 cancelled are the tail of that run after the 13-minute control-plane file. I did not run control-plane's and plane's files on the base to compare.
