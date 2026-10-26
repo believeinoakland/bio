@@ -1,6 +1,6 @@
 # screens-action (T51)
 
-**Status** · session_01D1s2YRqyJvit3wMv1LEowG · depth 2 · COMPLETE · handled B42
+**Status** · session_012TPANXXg4GGQVhTc5yKHd8 · depth 2 · COMPLETE · handled B46
 
 ## J1 · REPORT
 
@@ -488,3 +488,57 @@ REPORTs still open (unchanged): hold cannot release a reply's hold (holdsdue omi
 
 Met ids: none new (R3, R5, R6, R18, R32, R50 as before).
 Size (session_01D1s2YRqyJvit3wMv1LEowG): test runs 3, module lines 5078
+
+## J35 · QUESTION
+
+QUESTION (re B43): B43 says A1 is R32 'as worded on the tranche' and A2 is R30's clause 'as struck', but build/requirements/screens-action.md on origin/tranche/T51 @ 47d4ff6994 is unchanged: R32 (line 117) still says the release is read from holdsdue and names no read for the places that hold a hold; R30 (line 113) still says 'Start the next step' (taskresolve) 'where the item's disposition is taskresolve'. Requirements are my contract, so I cannot build A1 or strike A2 against the old text. My best reading, from diagnosis-R10-k5200 A1/A2: R32 says the release form lists the places holding a hold from pressurefor (hold === in_place) for the screen's project, offered with actionholdpreview first, while holdsdue stays the placing list; R30 drops the taskresolve clause, the dash-action arm and the taskresolve act (registry row act list loses taskresolve; the label to UX-DESIGN). Please word R32 and R30 on the tranche (or tell me to build on the diagnosis wording as is). Meanwhile I do B's seven lines and the writinghelp/R9 work, which do not depend on it.
+
+## J36 · REPORT
+
+REPORT (re B43), progress and two things only BOB can do.
+Done on my branch (committed, not yet COMPLETE): B's lines c94-t51:34 (plans scripted arms deleted, proved by interface-shell fixround2), fix4-t51:233 (templatesforaction: the real owner's NO_SUCH_ACTION at an absent action, via actionWorld), send-t51:339 (the two unreachable templatesave codes dropped), matter-t51:437/:458 and send-t51:428 (the drafted-text cases removed; the screens tested on wizard-scripts' published writingHelpDraftHeld / writingHelpUnreachable); R9 shown red (federal cite mutated in help-records.mjs: the federal-help test fails) then green restored; A1 built on my best reading (J35): hold.mjs reads pressurefor and lists the places holding a hold (in_place) to release, with actionholdpreview read first when a place is chosen (consequence.actionholdrelease + the projects it restarts); a reply's hold placed by the real actionhold is not offered to place, is offered to release, release sends {target, ord, reason}, the store then holds it released. Suite 296: all green but nothing else red.
+NEEDS BOB (1): build/modules.json: screens-action's uses lacks wizard-scripts; the tests that take its published answers (matter-t51, send-t51) fail checks/architecture.mjs ('imports bio-plane/test/m/wizard-scripts/fixtures.mjs of wizard-scripts, which screens-action does not declare in uses'). Please add it (modules.json is yours).
+NEEDS BOB (2) = my QUESTION J35: A2. dash-action's act list is the registry's (contract.test.mjs:35 requires screens' acts equal the registry's, and wizard-scripts' registry row for dash-action still lists taskresolve), so I cannot drop taskresolve from the screen until the registry row loses it (UX-design's registry.json, then wizard-scripts' build-data) and R30's clause is struck. dash-action.test.mjs:92 (the last fixtures line) closes only then. Also R32 is still unworded; I built it on the diagnosis wording.
+Found outside my paths: action-holds: a hold placed from a docket mark or a pressure record ({project, from}) cannot be released or previewed: actionholdrelease/actionholdpreview accept only target/ord/project/case (action-holds/index.mjs:1061-1065, DECLARED_OPS fields at the end of the file), and no read lists a docket mark's hold (holdsdue drops it once held, action-holds R3; pressurefor lists no docket marks), so hold lists only a reply's hold and a counsel matter's project hold.
+
+## Round 14 · fix round 10, item 100 (2) (SCREENS-ACTION #22, session_012TPANXXg4GGQVhTc5yKHd8, B43 START, B44 ANSWER)
+
+Entries (file:line on this branch):
+- **A1 (R32, K5229)** `hold.mjs`: new read `held` = `pressurefor` (for the action when opened on one); the release is its own choice `hold-release-for` (places with `hold` `in_place`, the counsel matters, what still wants a hold), a place must be chosen, which reads `actionholdpreview` and draws `consequence.actionholdrelease` with the projects it restarts; `holdsdue` stays the placing choice. Test `hold-counsel.test.mjs` "R32 (A1)": red first (no `hold-release-for`), green; also `reads-t51` hold read set gains `pressurefor`. `words-fix-action.mjs` EXTRA `hold`: `consequence.actionholdrelease`.
+- **A2 (R30, K5229)** `dash-action.mjs`: the `taskresolve` arm, its act and the dead `disposition.op` test removed; `dash-action.test.mjs`: scripted taskresolve case deleted, replaced by the real-queue assertion (no taskresolve button).
+- **B**: c94-t51 (scripted `plan`/`plans` arms deleted; proved by interface-shell fixround2), fix4-t51:233 (real NO_SUCH_ACTION via actionWorld), send-t51 templatesave loop (two unreachable codes dropped), matter-t51:437/:458 and send-t51:428 (drafted-text cases removed; screens tested on wizard-scripts' `writingHelpDraftHeld` / `writingHelpUnreachable`).
+- **R9**: failing first by mutation (`help-records.mjs:63` citing `chosen.citation`: the federal-help test fails), restored, green.
+
+Results: screens-action suite 296 tests, 295 pass, 1 fail (below). format 0; coverage 55 of 55; ownership 0; words screens-action 0; `fixtures.mjs screens-action --list`: 0 failures (2 accepted lines unchanged: join-t51:64, plan:235). impact (origin/tranche/T51): 3 modules; control-plane owner-ops, t46-app and plane t50, t47 (the tests naming my screens) 21 of 21 pass. checks/run.mjs: no finding in my files except architecture below.
+
+**Red / failing, named for BOB:**
+1. `contract.test.mjs:35` "each screen's acts are exactly its registry acts": `dash-action` registry row (`wizard-scripts/screen-registry.mjs:38`) still lists `taskresolve`; green when UX-DESIGN's registry drops it and wizard-scripts regenerates.
+2. `checks/architecture.mjs`: `matter-t51` and `send-t51` import wizard-scripts' published fixtures; `build/modules.json` `screens-action.uses` lacks `wizard-scripts` (BOB's file).
+
+Found outside my paths: action-holds: a hold placed from a docket mark or a pressure record (`{project, from}`) cannot be released or previewed (`actionholdrelease`/`actionholdpreview` take only target/ord/project/case, `action-holds/index.mjs:1061-1065`) and no read lists a docket mark's hold once held (R3), so `hold` releases only a reply's and a counsel matter's.
+Met ids (BOB strikes): R9, R30, R32.
+fixtures markers added: none.
+
+Size (session_012TPANXXg4GGQVhTc5yKHd8): test runs 14, module lines 5210
+
+## J37 · COMPLETE
+
+COMPLETE (re B43, B44). A1 (R32) and A2 (R30) built as K5229 words them; B's seven lines closed; R9 failing-first by mutation; fixtures.mjs screens-action: 0 failures; suite 296 tests, 295 pass. Two reds named for BOB: (1) contract.test.mjs:35, the registry row for dash-action still lists taskresolve (UX-DESIGN/wizard-scripts regenerate); (2) checks/architecture.mjs: screens-action's uses lacks wizard-scripts in build/modules.json (matter-t51, send-t51 take its published fixtures). format 0, coverage 55/55, ownership 0, words 0. Met ids R9, R30, R32. Found outside my paths: action-holds cannot release/preview a hold placed from a docket mark or pressure record (action-holds/index.mjs:1061-1065). Details in my record, Round 14. Size (session_012TPANXXg4GGQVhTc5yKHd8): test runs 14, module lines 5210
+
+## Round 14 addendum (re B45, K5230)
+
+Per B45 (3) A2 is reverted to the tranche's state: `dash-action.mjs` keeps the `taskresolve` arm and `dash-action.test.mjs:92` its scripted case, until the design's registry row (UX-DESIGN) is on the tranche; BOB then CHANGEs me to remove both. Merged `origin/tranche/T51` (`uses` gains wizard-scripts). Now: suite 296 of 296 pass; architecture 0; ownership 0; `fixtures.mjs screens-action --list`: 1 failure, `dash-action.test.mjs:92` (taskresolve, waits on the registry row). The contract test is green again (the registry and the screen both list `taskresolve`). R30's met mark waits on that CHANGE; R9 and R32 are met. Hold release from a docket mark or pressure record: ACTION-HOLDS #10's (B45 (4)).
+
+## J38 · COMPLETE
+
+COMPLETE (re B45). A2 reverted as you said: the taskresolve arm (dash-action.mjs) and dash-action.test.mjs:92 stay until the registry row lands; the last fixtures line is that one, named here. Merged the tranche (uses has wizard-scripts). Suite 296 of 296 pass; architecture 0, ownership 0, format 0, coverage 55/55, words 0, contract green. Met: R9, R32 (R30 waits on your CHANGE). Details in my record, Round 14 addendum. Size (session_012TPANXXg4GGQVhTc5yKHd8): test runs 16, module lines 5210
+
+## Round 15 · CHANGE B46 (K5235): hold release by `holdsplaced`
+
+`hold.mjs`: the read `held` is now `holdsplaced` (action-holds R22); each `in_place` place is offered to release as it was placed, one choice per distinct `from` (`heldPlacesOf`); the preview (`actionholdpreview`) and the release (`actionholdrelease`) are sent the placing body, `from` included (the preview's `from` as JSON in the query, which the owner parses, `action-holds/index.mjs:115`). Released places are not offered. Test `hold-counsel.test.mjs` "R32 (B46...)": on action-holds' published `holdPlacedReleasedAnswers` (placed, preview, released, after): the docket mark's hold is offered, previewed with `project`+`from`, released with the same body, then the re-read (`after`) lists it released and it is no longer offered; red with the `from` line removed from the preview query, green restored. The real-world reply test of Round 14 still passes through `holdsplaced`; `reads-t51` hold read set: `holdsplaced` replaces `pressurefor`.
+Results: suite 297 of 297; format 0, architecture 0, coverage 55/55, ownership 0, words 0; fixtures: 1 failure, `dash-action.test.mjs:92` (waits on the registry row, B45). Met: R32 (R9 before); R30 waits.
+Size (session_012TPANXXg4GGQVhTc5yKHd8): test runs 19, module lines 5222
+
+## J39 · COMPLETE
+
+COMPLETE (re B46). hold.mjs lists the places from holdsplaced, offers each in_place place as it was placed (one choice per distinct from), and sends the placing body (from included) to actionholdpreview and actionholdrelease. Test on action-holds' published holdPlacedReleasedAnswers: a docket-mark hold is listed in place, previewed, released, then listed released and no longer offered (red with the preview's from removed, green restored). Suite 297 of 297; format 0, architecture 0, coverage 55/55, ownership 0, words 0. fixtures: 1 left, dash-action.test.mjs:92 (waits on the registry row, your CHANGE). Met R32. No markers added. Size (session_012TPANXXg4GGQVhTc5yKHd8): test runs 19, module lines 5222

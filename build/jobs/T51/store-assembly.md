@@ -1,6 +1,6 @@
 # store-assembly (T51)
 
-**Status** · session_01TZ1hRYK6oq2r9ft3RFiNHd · depth 2 · COMPLETE · handled B18
+**Status** · session_01BDYpAB4hgQzmzRVLZ5co4a · depth 2 · COMPLETE · handled B20
 
 ## J1 · QUESTION
 
@@ -262,3 +262,29 @@ After 1-4: rerun the module suite without `--test-force-exit`, `checks/run.mjs` 
 **Markers added:** none.
 
 Size (session_01TZ1hRYK6oq2r9ft3RFiNHd): test runs 8, module lines 3750
+
+## STORE-ASSEMBLY #6 · B19 (K5232; plan item 113)
+
+**Entries applied.**
+- (1) `r9-jobs.test.mjs` R76 G129b (~:309-325): the hand-built `storeFailedTransient()` is gone (and its import); the second tick's answer is extraction's published `readHeldAnswer.failed()`, made by the real `readHeld` (`{ok: true, read: false, owed: true, why: "TRANSIENT"}`). The test asserts that answer, then that the ledger retries from it (the row is neither ended nor finished at ticks 3 and 4, `last_why` equals the answer's `why`, asked again at the same cursor), then finishes whole. It was green at once: the ledger already retries an `owed` answer (`pending.mjs` `stillOwed`), so this was a re-point, not a fix; no failing-first state exists for it. The `R2_HICCUP` `fixtures-generic` line stays (its own).
+- (2) `t42.test.mjs:257` "R57 R106 transcribe-answer" with `// fixtures-run: extraction transcribe-answer` (:266): extraction's `t48.test.mjs:29` value (copied as data, the keys and values it states) against the real `transcribe` answer for the same page of a held scan. RED by the stated cause only: the real answer also carries `asked: [0]`, `sent: [0]`, `owed: []` (and `unread: [{page, reason}]` when a page is refused). REPORT J17 names it. Extraction's marker there still reads `plane`, not `store-assembly`: the run is `orphan-run` until it is re-pointed.
+- (3) `OCR_NOTHING_OWED` (`pending.mjs:123`) does NOT need `NO_PROGRESS`: R76 (1) ends a step that advances nothing `final`, and `settle` (`pending.mjs` first lines) ends any answer with `final: true` before that list is read. New test `r9-jobs.test.mjs` "R76 G129a: extraction's own answer ... NO_PROGRESS": the real `readHeldAnswer.final("NO_PROGRESS")` through an `ocr` row ends it `final`, `NO_PROGRESS`, asked once. Green at once (nothing to add).
+- (4) not started, as told.
+
+**Tests.** Module suite without `--test-force-exit`, exit by itself in 226 s: tests 428, pass 426, fail 1 (the transcribe-answer run, by the cause above), todo 1 (R98, `owner-ops.mjs`).
+**Checks.** `checks/run.mjs`: format, architecture, coverage and ownership clean for this module (ownership 0); words 0 for store-assembly; fixtures `--list`: 13 `orphan-run` (12 as before: the users' markers still read `plane`, test-support's `job-registrar`; plus the new `extraction transcribe-answer`), none of another kind.
+**Markers added:** none (`fixtures-run` line `t42.test.mjs:266`).
+
+## J17 · REPORT
+
+REPORT (B19 (2)). The real answer of store-assembly's transcribe (transcribe.mjs:155 and its NO_PAGE_RENDERED branch), for a posted answer agent-worker gave ok: {...agent-worker's answer, asked: [pages wanted], sent: [pages rendered and sent], owed: [pages beyond the cap owed, [] if none], unread: [{page, reason}] only when a page was refused}. Extraction's t48.test.mjs:29 value {ok, engine, version, pages} lacks asked, sent, owed (and unread). Its marker there still reads 'plane transcribe-answer'; it must read 'store-assembly transcribe-answer'. The run stands at t42.test.mjs:266 and is red for this cause only: BOB starts extraction's re-point.
+
+## J18 · COMPLETE
+
+COMPLETE (STORE-ASSEMBLY #6, B19; code and record at e12ae57c4f, pushed). See my record's last section. (1) r9-jobs R76 G129b takes extraction's readHeldAnswer.failed() (hand-built storeFailedTransient and its import gone; the ledger's retry asserted from the answer's owed/why). (2) fixtures-run: extraction transcribe-answer at t42.test.mjs:266, RED by the missing asked/sent/owed(/unread) only (REPORT above; extraction's marker reads plane, not store-assembly). (3) OCR_NOTHING_OWED needs no NO_PROGRESS: settle ends any final:true answer before that list (R76 (1)); new test r9-jobs 'R76 G129a: extraction's own answer ... NO_PROGRESS' green. (4) not started. Suite (no --test-force-exit, exits by itself, 226 s): 428 tests, 426 pass, 1 fail (the run in (2)), 1 todo (R98). Checks: format/architecture/coverage clean, ownership 0, words 0, fixtures 13 orphan-run (users' markers + the new one). Met ids: R76 (G129a, G129b read from extraction's own answers). Markers added: none (one fixtures-run line). Size (session_01BDYpAB4hgQzmzRVLZ5co4a): test runs 6, module lines 3750
+
+**B20 (K5232):** added `// fixtures-run: reading-pipeline transcribe-answer` at `t42.test.mjs:267`, beside the extraction one, over the same test: reading-pipeline's values (`text-units.test.mjs:531-542`, `transcribe.test.mjs:323-327`) are the same `{ok, engine, version, pages}` success shape, so the test is red for the same cause only (the real answer also carries `asked`, `sent`, `owed`, `unread`; REPORT J17). Their refusal `{ok: false, reason}` is agent-worker's relayed shape. Fixtures: 14 `orphan-run` now (the new one added). Suite otherwise unchanged: 428 tests, 1 fail (that run), 1 todo.
+
+## J19 · COMPLETE
+
+COMPLETE (B20 on top of J18). Added fixtures-run: reading-pipeline transcribe-answer at t42.test.mjs:267 over the same test as extraction's: red for the same cause only (real answer also carries asked, sent, owed, unread; REPORT J17). Fixtures: 14 orphan-run (users' markers still read content/plane). Suite: 428 tests, 426 pass, 1 fail (that run), 1 todo (R98). Size (session_01BDYpAB4hgQzmzRVLZ5co4a): test runs 8, module lines 3750

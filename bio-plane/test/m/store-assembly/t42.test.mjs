@@ -254,6 +254,20 @@ test("R57 (was plane R36): transcription({member, project, at}) answers the obje
   assert.notEqual(other.act, tx.act);
 });
 
+test("R57 R106 transcribe-answer: the answer a user module (extraction's t48) hands for `transcribe` is the real one's: the same keys and values for the same pages", async () => {
+  /* extraction's value, as its t48 test builds it for pages `q.pages` (the contract it states: `fixtures-contract: store-assembly transcribe-answer`) */
+  const theirs = (q) => ({ ok: true, engine: "claude-test", version: "2026-01", pages: q.pages.map((p) => ({ page: p, text: `AI text of page ${p}` })) });
+  const worker = agentWorker((b) => theirs({ pages: b.pages.map((p) => p.page) }));
+  const x = await plane({ worker });
+  const d = await hold(x.evidence, SCAN);
+  const tx = transcriberOf(x.ctx, x.env).transcription({ member: "member:ann", project: null, at: "2026-10-11T06:00:00Z" });
+  const account = await credentialsOf(x.ctx).accountFor({ member: "member:ann", act: { kind: "transcribe", member: "member:ann" } });
+  const real = await tx.transcribe({ account, capture_sha: d, store: "bio", pages: [0], use: "transcribe" });
+  // fixtures-run: extraction transcribe-answer
+  // fixtures-run: reading-pipeline transcribe-answer   (text-units.test.mjs:531-542 and transcribe.test.mjs:323-327 hand the same success value, {ok, engine, version, pages}; their refusal `{ok: false, reason}` is agent-worker's relayed shape)
+  assert.deepEqual(real, theirs({ pages: [0] }), "the real answer also names the pages asked, sent, unread and owed (transcribe.mjs, R106)");
+});
+
 test("R57 (was plane R36) (agent-worker R6, R63, R72; ai-use R1, R11): the AI path renders the asked pages with pdf-pixels (decodeDct) as PNGs, posts {capture_sha, pages, account} in R6's wire shape to /transcribe, the secret only in that body, counts the usage under the act in one transaction, and answers agent-worker's answer", async () => {
   const worker = agentWorker();
   const x = await plane({ worker });
