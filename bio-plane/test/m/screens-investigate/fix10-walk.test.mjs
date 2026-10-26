@@ -112,7 +112,7 @@ test("R61 (2) Standard: the issuer is drawn by its label, on the standard's page
   assert.ok(main(q).textContent.includes("Public Works Department"), "control: the typed name");
 });
 
-test("R61 (2) Standard: a passage that is the whole document is drawn whole, every line; control: past the bound it says how many were left, by a gap mark", async () => {
+test("R61 (2) R65 Standard: a passage that is the whole document is drawn whole, every line; control: past the bound it says how many were left, by a gap mark", async () => {
   const S = await standardWorld(5);
   assert.equal(S.units.length, 5, "the reading holds five lines");
   const p = await openAs(S.world, S.me, "/app/standard/" + S.std);
@@ -129,7 +129,8 @@ test("R61 (2) Standard: a passage that is the whole document is drawn whole, eve
   assert.ok(drawn && left, "the passage and the mark");
   const shown = big.units.filter((u) => drawn.textContent.includes(String(u.text).trim())).length;
   assert.ok(shown > 5 && shown < 260, "drawn to a bound: " + shown);
-  assert.ok(left.textContent.includes(word("screen.timeline.more.people", { n: String(260 - shown) })), "the mark says how many were left");
+  assert.ok(left.textContent.includes(word("screen.standard.more.passages", { n: String(260 - shown) })), "the mark says how many were left, by the Standard's own sentence");
+  assert.ok(!left.textContent.includes(word("screen.timeline.more.people", { n: String(260 - shown) })), "not the Timeline's people sentence");
   assert.ok(left.querySelector('[data-gap="undetermined"]'), "a gap mark");
 });
 
