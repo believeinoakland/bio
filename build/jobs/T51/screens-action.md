@@ -542,3 +542,11 @@ Size (session_012TPANXXg4GGQVhTc5yKHd8): test runs 19, module lines 5222
 ## J39 · COMPLETE
 
 COMPLETE (re B46). hold.mjs lists the places from holdsplaced, offers each in_place place as it was placed (one choice per distinct from), and sends the placing body (from included) to actionholdpreview and actionholdrelease. Test on action-holds' published holdPlacedReleasedAnswers: a docket-mark hold is listed in place, previewed, released, then listed released and no longer offered (red with the preview's from removed, green restored). Suite 297 of 297; format 0, architecture 0, coverage 55/55, ownership 0, words 0. fixtures: 1 left, dash-action.test.mjs:92 (waits on the registry row, your CHANGE). Met R32. No markers added. Size (session_012TPANXXg4GGQVhTc5yKHd8): test runs 19, module lines 5222
+
+## J40 · REPORT
+
+Found outside my paths (K5175: reported the day found).
+
+1. `tasks` publishes no fixture for the op `taskresolve`. `screens-action`'s `dash-action.test.mjs:92` gave that op a hand-built answer, which the fixtures check flags as a finding (provider `tasks`, earlier in the order). I removed the scripted answer in my test (the test reads only the request it sends). If you want the answer scripted, `tasks` needs to publish it as a fixture (`tasks` is not my module). This also means the registry row question in B45 (`dash-action` still lists `taskresolve`) stands as before.
+
+2. `checks/run.mjs /home/user/bio` reports 263 findings in other modules' tests (stubs and answers with `contract-no-run`, `earlier`/`later` provider failures: e.g. `doorbell/r9-t51.test.mjs:8`, `file-safety/r1-registrar.test.mjs:8`, `monitoring/tick.test.mjs:566`, `plane/r10-reading-ended.test.mjs:20`, `test-support/job-registrar-stub.mjs:23`). None is in `screens-action`. Listed for BOB to route; I changed none of them.
