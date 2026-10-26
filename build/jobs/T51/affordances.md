@@ -1,6 +1,6 @@
 # affordances (T51)
 
-**Status** · session_011xzzNYHFupDKfrTnE3KwiM · depth 2 · WAITING ON BOB (J32) · handled B29
+**Status** · session_011xzzNYHFupDKfrTnE3KwiM · depth 2 · COMPLETE · handled B29
 
 ## J1 · QUESTION
 
