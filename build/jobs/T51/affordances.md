@@ -507,3 +507,16 @@ COMPLETE (re B27, K5209; plan item 77 (2), K5159). No file changed by this round
 Note on the tranche: the job branch was fast-forwarded to `origin/job/T51/affordances` and `origin/tranche/T51` merged (6 files, no conflicts) before START.
 
 Size (session_01Sh2NftThAzBKsEgeWdqNyT): test runs 5, module lines 0
+
+## J32 · QUESTION
+
+QUESTION (re B28). Which route clears the holdsplaced reds: an ACT_HELP text, or op-declarations' read ground?
+
+**What I found.** `holdsplaced` (action-holds R22) has no design text. `docs/development/ux-substrate/screens/mock-acts.js` has `actionhold` and `actionholdrelease` but no `holdsplaced`, and the word list has no `act.holdsplaced.does` (rows.mjs holds only `action-holds.declared.holdsplaced`, the grade text). `holdsdue` is in the read ground (op-declarations `ACT_HELP_ABSENT`, op-declarations R34), not in ACT_HELP. Per affordances R48, R62 and R70, ACT_HELP holds the design's text, read by key; an op with no design text is held none (as `projectownervotes`, R61).
+
+**Options.**
+1. (recommended) No ACT_HELP entry. op-declarations adds `holdsplaced` to its `ACT_HELP_ABSENT` read ground beside `holdsdue`, as your START describes. That clears "member ops with no text and no ground: holdsplaced" and "holdsplaced: neither explained nor named". The change is in op-declarations' paths, not mine, so I report it to you for placing. affordances changes nothing.
+2. A stand-in in affordances: `holdsplaced` in `T51_STANDIN_HELP` via `localize("act.holdsplaced.does", …)`, the pattern used for `authority` and `ruleservicesstate`. Two costs: R48 says the design's text, not ours, and the new id needs setup-words to regenerate rows.mjs (R15) before the words check passes. That regeneration is setup-words' artifact, which I may not write.
+3. Wait for the design stream to write `act.holdsplaced.does` into mock-acts.js, then re-generate ACT_HELP (R70's pattern). Nothing for me to change until then.
+
+**Recommendation.** Option 1 now, option 3 later. Tell me 1, 2 or 3. I have changed no file yet; the job branch is merged with tranche/T51 and the cursor is at B28.
