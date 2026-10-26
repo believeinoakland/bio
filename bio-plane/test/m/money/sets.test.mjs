@@ -1,4 +1,4 @@
-/* money sets and the change notice at money's interface: R12, R13, R23. */
+/* money sets and the change notice at money's interface: R12, R13, R23, R32. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, sha, MACHINE, ANN, BOB, OUTSIDER } from "./fixture.mjs";
@@ -52,7 +52,7 @@ test("R13 a machine's proposal is held apart, labelled with its method, and incl
   assert.equal(s.m.readSet({ setId: "MSR-2026-9999", viewer: ANN }).found, false);
 });
 
-test("R12 R13 exclude closes a figure's open proposal as include does: a proposal then excluded is listed under exclusions, never under proposals; control: include still closes one", () => {
+test("R32 R12 R13 exclude closes a figure's open proposal exactly as include does: after either act readSet lists the figure once, never also under proposals; control: include still closes one", () => {
   const s = seeded();
   const set = s.m.createSet({ purpose: "trail", label: "t", by: ANN }).set_id;
   const f = s.rec();

@@ -1,6 +1,6 @@
 # money (T51)
 
-**Status** · session_019EsZQTWhoRebUjdPxoj29x · depth 2 · COMPLETE · handled B13
+**Status** · session_01TGK8fdQUtNsiJunhDK7iqL · depth 2 · COMPLETE · handled B14
 
 ## J1 · REPORT
 
@@ -254,3 +254,44 @@ SCREENS-INVESTIGATE #17 J31 (B13) done: `exclude` now closes a figure's open pro
 **Other:** merged `origin/tranche/T51` (11 commits, a merge commit, no rebase) into the job branch before the start. Commit `5029bb5c49` on `job/T51/money`.
 
 Size (session_019EsZQTWhoRebUjdPxoj29x): test runs 8, module lines 3 (lines changed in money/index.mjs: 2 added, 1 removed).
+
+## J17 · REPORT
+
+REPORT (outside my paths): a stale `test.todo` in screens-investigate's test.
+
+The defect it records is fixed in money. `bio-plane/test/m/screens-investigate/money.test.mjs:125-135` is a `test.todo` ("a figure proposed and then excluded is one row of the trail, not two"), reported to money at its line 127. Money's `exclude` now closes the figure's open proposal as `include` does (`bio-plane/src/money/index.mjs:965-973`, requirement R32, commit 5029bb5c49, with R32's test in `bio-plane/test/m/money/sets.test.mjs` at 67658cd75f).
+
+I did not edit that file (it is screens-investigate's), and I have not run the todo as a live test. Screens-investigate should convert it to a live test and run it, and it should then pass or show a new cause in its own record.
+
+## J18 · COMPLETE
+
+COMPLETE, fix round 10 (B14, plan item 144; K5296). R32 is met.
+
+**Entries applied:** 1 of 1 (R32: `exclude` closes a figure's open proposal exactly as `include` does).
+
+**What changed (file:line)**
+- Product fix: already on the tranche from J16 (B13, commit 5029bb5c49). `bio-plane/src/money/index.mjs:965-966` looks up the open proposal for either act (the `act === "include"` guard is gone); `#setAct` is at `:956-973`. The open-proposal lookup filters `adopted_act IS NULL`, and `#setState` (`:1107-1120`) lists only the latest act per fact, so after either act the figure is listed once. Nothing in `index.mjs` changed in this round.
+- This round: `bio-plane/test/m/money/sets.test.mjs` (commit 67658cd75f). The test that proves the R32 scenario is now titled `R32 R12 R13 ...`, so the coverage check counts R32; the file header names R32. Its assertions are unchanged: propose then exclude gives one exclusion, no inclusion, no open proposal, and `adopted_proposal` equal to the proposal id. Control: propose then include gives one inclusion and no open proposal.
+
+**Failing-first.** I put the pre-fix `index.mjs` (`git show 5029bb5c49^`) in place, ran the R32 test, and restored the file from git. It failed: `adopted_proposal` undefined where the proposal id was expected. With the fix it passes (1 of 1).
+
+**Tests.** R32 test: 1 of 1 pass. Full money suite `bio-plane/test/m/money/*.test.mjs`: 115 of 115 pass, 0 fail.
+
+**Checks** (absolute root `/home/user/bio`):
+- `checks/format.mjs`: 0 failures (178 modules).
+- `checks/architecture.mjs ... money`: 0 failures.
+- `checks/coverage.mjs ... money`: 32 of 32 live requirement ids named by a test, 0 failures (R32 now counted).
+- `checks/fixtures.mjs ... money --list`: 0 failures.
+- `checks/ownership.mjs ... money bdc51c3410 HEAD`: 0 failures (the one file changed is the test file).
+- `checks/run.mjs`: 92 FAIL lines, none in money's paths (`src/money/`, `test/m/money/`). They are in acquisition, capture, doorbell, test-support, monitoring, file-safety, control-plane and screens-intake.
+- `words`: 0 failures.
+
+**Deferred:** none.
+
+**Found in another module:** see the REPORT posted with this COMPLETE (the `test.todo` at `bio-plane/test/m/screens-investigate/money.test.mjs:125-135`). I did not edit that file.
+
+**Markers added:** none (no `fixtures-own` or `fixtures-generic`).
+
+**Met ids:** R32, and R13 as the test names it. BOB strikes the marks.
+
+Size (session_01TGK8fdQUtNsiJunhDK7iqL): test runs 5, module lines 0 (test-file lines changed: 2)
