@@ -496,7 +496,7 @@ export function worldAnswers(op) {
 /* ---- R16: real sign-ins ---- */
 
 export const resultOf = (a) => (a && a.json && a.json.result !== undefined ? a.json.result : a && a.json);
-export const refusedAct = (op, a) => new Error(`storeWorld: ${op} was refused: ${JSON.stringify(a && (a.json ?? a.type)).slice(0, 400)}`);
+export const refusedAct = (op, a) => Object.assign(new Error(`storeWorld: ${op} was refused: ${JSON.stringify(a && (a.json ?? a.type)).slice(0, 400)}`), { answer: a });
 const passwordOf = (handle) => `${handle}-world-passphrase`;
 
 /** R16: `signIn(world, handle, {admin?, capabilities?, device?})` → `{handle, member, token, password, session, act, read}`, by the real acts:
@@ -596,6 +596,14 @@ export async function hold(world, as, name, content, project = "", { type = "tex
                           init: { method: "POST", headers: { "content-type": type }, body: bytes } }, as);
   const doc = resultOf(up) && resultOf(up).document;
   if (!doc || !doc.capture) throw refusedAct("captureupload", up);
+  const filed = await fileDocument(world, as, name, doc, project);
+  const { sha, bundle, parts } = filed;
+  if (!read) return { sha, bundle, ...(parts ? { parts } : {}) };
+  return { sha, bundle, ...(parts ? { parts } : {}), read: await as.act("readheld", { query: { sha } }) };
+}
+
+/** R19: a captured document `doc` (the owner's answer to an upload or an acquire) filed as an information bundle at `collected` by `as`'s real `promote`, under `project` when given. Answers `{sha, bundle, parts?}`. */
+export async function fileDocument(world, as, name, doc, project = "") {
   const now = instant(world);
   const minted = await as.read("allocid", { query: { prefix: "INFO", year: now.slice(0, 4) } });
   const id = minted.id + "-" + name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -616,9 +624,7 @@ export async function hold(world, as, name, content, project = "", { type = "tex
                           : { sha256: sha, path: doc.file, encoding: doc.capture.encoding, bytes: doc.capture.bytes }];
   const made = await as.act("promote", { body: { bundleId: id, base: null, snapKey: now.replace(/[-:]/g, "") + "_" + hex(id).slice(0, 8),
     meta: { object_type: "information", title: name, current_state: "collected", created: now, last_updated: now }, files, register } });
-  const bundle = made.bundleId || id;
-  if (!read) return { sha, bundle, ...(parts ? { parts } : {}) };
-  return { sha, bundle, ...(parts ? { parts } : {}), read: await as.act("readheld", { query: { sha } }) };
+  return { sha, bundle: made.bundleId || id, ...(parts ? { parts } : {}) };
 }
 
 /** R19: a project, started as Home's "Start a project" starts it (`promote` of its document with no base). Answers its bundle id. It is
