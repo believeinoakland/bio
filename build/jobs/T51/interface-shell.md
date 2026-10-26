@@ -755,3 +755,7 @@ Met: R134, R135 (the requirement lines still read "(not yet met: T51)": BOB's to
 Markers: none added (R135's stand-in screen is the test's own harness input, named `fixtures-own` in the file header).
 
 Size (session_011MRtDNeEfHW1QMz44tMXAY): test runs ~12, module lines 3437
+
+## J43 · COMPLETE
+
+COMPLETE, interface-shell, T51 fix round 10 (item 149; B59): R134 (RE_POINTS: setup factconfirm, question leggrade, document resolve) and R135 (cs.checks tells its screen of a change via a typing option). Tests red then green (r134.test.mjs, 4 tests); module 384/384; screens-publish/inquiry/settings/intake/daily/investigate/action/wizards all green; screens-entry 2 fail, identical on origin/tranche/T51. Checks: architecture, coverage 130/130, ownership 0, run.mjs no finding in my files; format has 1 failure in build/rulings.md:5301 (K5308, yours). Details in my record J42. Pushed job/T51/interface-shell.
