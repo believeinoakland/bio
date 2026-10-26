@@ -49,6 +49,9 @@ function render(cs, view) {
   const doc = proj && proj.state === "ok" ? P.front(proj.value["bundle.md"]) : null;
   const out = [cs.title(cs.w("screen.timeline.name"), { thing: { kind: "project", facts: [doc && doc.title ? doc.title : id] } })];
   /* R33 (2), (3): one matter the project follows, and one progression, each drawn by the module's parts */
+  /* K5304: a matter's or a progression's page is not the Timeline's record form while its project has not answered: drawing that form first asked a
+     document's words (a passage picker's read) whenever the documents answered before the project, so the page's reads depended on which came first */
+  if ((mode === "matter" || mode === "progression") && !(proj && proj.state === "ok")) return out.join("") + cs.state("project", view, () => "");
   if (proj && proj.state === "ok" && mode === "matter") return out.join("") + P.matter(cs, view, id);
   if (proj && proj.state === "ok" && mode === "progression") return out.join("") + P.progressionDef(cs, view, id);
   /* an event's date, as precise as its source states it: a day, a month marked "month known", "on or before" */
@@ -177,7 +180,7 @@ function render(cs, view) {
   /* R49: the first expected flow is defined from the project's own timeline, not only from inside a flow's page */
   if (proj && proj.state === "ok") out.push(view.parts.defineFold(cs));
   out.push(cs.sec(S + "record.head",
-    P.docChoice(cs, view, "tl-doc", { project: id, query: { project: id }, passage: false, drive: true }) + P.passagePick(cs, view, "tl-doc", "tl-passage", P.later)
+    P.docChoice(cs, view, "tl-doc", { project: id, query: { project: id }, passage: false, drive: true }) + `<p class="mk-small" data-doc-noproject>${cs.w(S + "doc.noproject")}</p>` + P.passagePick(cs, view, "tl-doc", "tl-passage", P.later)
     + kindChoice
     + cs.act("createevent", { label: "act.createevent.label.timeline", tone: "primary" })
     + evChoice("tl-event", S + "event") + cs.choice("tl-who", S + "who", view.parts.options(view, "people", (v) => v.rows, (r) => ({ value: r.entity, text: r.name || r.entity })), {})
@@ -304,7 +307,7 @@ const acts = rereading([
 ], ["project", "people", "questions", "vocab", "matter", "def"]);
 
 const TIMELINE_KEYS = [
-  "screen.timeline.more.people", "screen.timeline.order.cited.before", "screen.timeline.order.cited.after", "screen.timeline.order.relation",
+  "screen.timeline.more.people", "screen.timeline.doc.noproject", "screen.timeline.order.cited.before", "screen.timeline.order.cited.after", "screen.timeline.order.relation",
   "screen.timeline.undated", "screen.timeline.month", "screen.timeline.onorbefore", "screen.timeline.role", "screen.timeline.nobody",
   "screen.timeline.source", "screen.timeline.kind", "screen.timeline.order.why", "screen.timeline.order.evidence", "screen.timeline.cite.date",
   "screen.timeline.cite.first", "screen.timeline.find.dates", "screen.timeline.noset", "screen.timeline.empty", "screen.timeline.lane.world",

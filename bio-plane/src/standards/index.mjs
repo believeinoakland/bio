@@ -1159,9 +1159,37 @@ export class Standards {
                                                     text: withheld ? null : this.content.passageText(contentId) }));
     /* R50: the standing records of the version known in force through a date */
     const through = this.#throughRecords(sid).filter((x) => !x.withdrawn);
-    return { ok: true, ...a, texts, requires_quoted: quoted, in_force_through: through,
+    return { ok: true, ...a, texts, requires_quoted: quoted, in_force_through: through, bindings: this.#bindingsOf(sid, viewer),
              ...(withheld ? { text_withheld: textWithheldWords() } : {}),
              says: { ...a.says, note: noteWords() } };
+  }
+
+  /* R63 (DEC-438): whom the standard binds, as recorded: each adoption (R40), imposition and benchmark declaration (R43),
+     newest first (`at`, then insertion order within a table, then the kinds in that order), each with its words (R45,
+     R59). Called only for a standard the viewer may read (R37), so a record takes its standard's sight; the act or law of
+     a record that is itself a standard the viewer may not read is not named, nor is its passage. */
+  #bindingsOf(sid, viewer) {
+    const kinds = ["adoption", "imposition", "benchmark"];
+    const readable = (id) => { const r = this.#row(id); return !r || this.#readable(id, viewer); };
+    const label = (body) => { const e = body ? this.#entity(body, viewer) : null; return e ? e.label : body; };
+    const of = (kind, r, fields, ref) => {
+      const hidden = ref !== null && !readable(ref);
+      return { kind, ...fields(hidden), at: r.at, order: [r.at, kinds.indexOf(kind), r.rowid] };
+    };
+    const out = [
+      ...this.#rows(`SELECT rowid, * FROM standard_body_adoptions WHERE standard_id=?`, sid).map((r) => of("adoption", r, (h) => ({
+        id: r.adoption_id, body: r.body ?? null, act: h ? null : r.act, edition: r.edition, from: safeJson(r.from_json), mode: r.mode,
+        citation: h ? null : r.citation, by: r.author, at: r.at,
+        says: bindingWords("binds", label(r.body)) }), r.act)),
+      ...this.#rows(`SELECT rowid, * FROM standard_impositions WHERE standard_id=?`, sid).map((r) => of("imposition", r, (h) => ({
+        id: r.imposition_id, body: r.body, law: h ? null : r.law, citation: h ? null : r.citation, by: r.author, at: r.at,
+        says: bindingWords("binds", label(r.body)) }), r.law)),
+      ...this.#rows(`SELECT rowid, * FROM standard_benchmarks WHERE standard_id=?`, sid).map((r) => of("benchmark", r, () => ({
+        id: r.benchmark_id, body: r.body, by: r.author, at: r.at,
+        says: bindingWords("benchmark", label(r.body)) }), null)),
+    ];
+    out.sort((x, y) => cmp(y.order[0], x.order[0]) || x.order[1] - y.order[1] || y.order[2] - x.order[2]);
+    return out.map(({ order, ...rest }) => rest);
   }
 
   /* R5: what a viewer may read. A standard is a bundle outside any project, so membership R43 lets every member, machine

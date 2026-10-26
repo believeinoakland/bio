@@ -846,7 +846,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
           return '<label><input type="' + (o.radio ? "radio" : "checkbox") + '" name="' + esc(id) + '" id="' + esc(id) + "-" + i + '" value="' + esc(v) + '"' + (on ? " checked" : "") + "> <span>" + text + "</span></label>";
         };
         const redraw = typeof o.redraw === "string" && o.redraw ? ' data-shell="choice" data-redraw="' + esc(o.redraw) + '"' : "";
-        return '<fieldset class="cs-field" id="' + esc(id) + '"' + redraw + '><legend>' + wordOrData(legendKey) + "</legend>" + (options || []).map(opt).join("") + "</fieldset>";
+        /* R135: `typing` (as `field`'s) is handed `(cs, view, value)` at once when a box or radio changes, `value` the chosen value of a radio group or the list of values ticked */
+        if (typeof o.typing === "function") inst.typing[id] = o.typing;
+        return '<fieldset class="cs-field" id="' + esc(id) + '"' + redraw + (typeof o.typing === "function" ? ' data-typing-group="1"' : "") + '><legend>' + wordOrData(legendKey) + "</legend>" + (options || []).map(opt).join("") + "</fieldset>";
       },
       /* R74: the Sounds setting's control, drawn as `appearance()` draws R18's, so `screens-settings` draws none of its own */
       sounds() {
@@ -2370,6 +2372,17 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     });
     root.addEventListener("change", (e) => {
       if (blocked(e.target)) return;
+      /* R135: a group of boxes or radios tells its screen of the change, as a typed field does (K4076) */
+      const grp = e.target.closest ? e.target.closest('fieldset[data-typing-group="1"]') : null;
+      if (grp) {
+        const inst = ownerOf(grp);
+        if (inst && live(inst) && typeof inst.typing[grp.id] === "function") {
+          activity();
+          const boxes = Array.from(grp.querySelectorAll("input"));
+          const value = boxes[0] && boxes[0].type === "radio" ? (boxes.find((i) => i.checked) || { value: "" }).value : boxes.filter((i) => i.checked).map((i) => i.value);
+          try { inst.typing[grp.id](kit(inst), inst.view, value); } catch { /* a screen's own handler never stops the shell */ }
+        }
+      }
       const sh = e.target.closest ? e.target.closest('[data-shell="pick"]') : null;
       if (sh) return shell(sh, e);
       /* R49: a choice that drives its act redraws with the act following it */

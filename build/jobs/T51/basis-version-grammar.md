@@ -1,6 +1,6 @@
 # basis-version-grammar (T51)
 
-**Status** · session_01LxmnArEj3vhNdkgbYvMCRe · depth 2 · COMPLETE · handled B3
+**Status** · session_01PydE3LcJc4wSm6cj6MDZs3 · depth 2 · COMPLETE · handled B5
 
 ## Record
 
@@ -46,3 +46,55 @@ Fix (R3 as amended, K5077): an unlabelled supporting leg beside labelled grounds
 Met: R3 (cause 30b clause); R11 now vacuous. Module tests 36 pass; format, architecture, coverage (11/11), ownership, words: 0 failures in the module; fixtures --list for the module ends at 0; no fixtures-own / fixtures-generic marker added. Impact set (1329 files, 10,502 tests): 19 fail; 18 fail identically on untouched origin/tranche/T51; the one my change turns red is basis-versions versions.test.mjs:227 (every C-25 row reached by a real promotion: C-25.5 no longer is).
 For you: (1) DECISION: nothing raises C-25.5 now and R11's `legs` has no carrier. I kept the VERSION_PARTITION_INCOMPLETE row (basis-versions' test, screens-inquiry's tests and words pin it) and R8's test names it as the one row no document raises. Recommend retiring C-25.5 and R11 in the requirements and the row at CR-9. (2) basis-versions versions.test.mjs:227 and inquiry-grammar golden.json (INQ-2026-0129-versions still records the finding) are stale against the amended R3; my R6 test leaves that one finding out of the golden. (3) Stale generated artifacts, untouched: setup-words rows.mjs, case-checker program.mjs (already stale on the tranche), release/ and dist bundles.
 Size (session_01LxmnArEj3vhNdkgbYvMCRe): test runs 12, module lines 1124
+
+## Fix round 10, R12: the theme label (B4; session_01PydE3LcJc4wSm6cj6MDZs3)
+
+- **Cause.** `grammar.mjs:343` handed connections' `themeLegFindings` the field spelling ``basis_version_legs[${li}] (version '${name}')``, so a theme refusal on a version leg named a field in the member's words. connections R73 (merged at K5304) makes that finding name its label plainly, so the spelling now reaches the reader as written. `registration.test.mjs`'s R6 golden pinned connections' old sentence and repairs, which made R6 red on the tranche.
+- **Done.** `grammar.mjs:343` hands `localize('basis-version-grammar.grammar.leg_of_version', "Leg {n} of version '{name}'", { n, name })`: the leg's place, counted from one, and the version's name. The other labels in this module (the lead arm, the extent arm, the `VERSION_LEG_NOT_CITABLE` and `VERSION_GROUND_UNASSERTED` sentences) are unchanged: R12 names only the theme label.
+- **Tests.** New `theme-label.test.mjs` (R12, 4 tests), written and seen red first: 3 failed on the field spelling; the corpus test passed at once, because the corpus has no theme leg on a version (its theme findings are on `basis[N]`), so it guards the inquiry bundles only and the direct tests carry the control. `registration.test.mjs`'s `golden()` now pins a theme finding by its code and check only (message set to "theme", repairs dropped), since its words are connections' own (R73); the old sentence was the red.
+- **Met:** R12.
+- **Suite** (`node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/basis-version-grammar/`, no force-exit, the run exits by itself): 40 pass, 0 fail (36 before, plus 4 new; R6 green). Direct users, `basis-versions` and `strength` (`--test` on both folders): 390 pass, 0 fail.
+- **Checks (absolute root).** format 0 failures; architecture 0; coverage 11 of 11 ids named, 0; ownership 0 (`tranche/T51` to HEAD: `grammar.mjs`, `registration.test.mjs`, `theme-label.test.mjs`, and this record). `checks/run.mjs`: words 0 failures after the sentence was keyed (the first run flagged the label as an inline sentence, `grammar.mjs:343`); no finding in this module's files; the fixtures failures are the inherited set, unchanged apart from that one finding. `fixtures.mjs … basis-version-grammar --list`: 0. No `fixtures-own` or `fixtures-generic` marker added.
+- **Impact.** `build/plan/impact.mjs origin/tranche/T51 HEAD`: 76 modules, 1532 test files. I ran the two direct users above. I searched every test folder for the old label (`claims its support through a THEME`, `names a THEME`, `basis_version_legs[`): the only hits are inquiry-grammar's and action-grammar's own labels, which this change does not reach, and no other test pins the version theme label. I did not run the rest of the impact set.
+- **Found elsewhere, for BOB.** (1) Other version-leg labels still spell the field: `leadLegFindings` (`grammar.mjs:341`), `checkLegExtentGrammar` (`:391`), and the `VERSION_LEG_NOT_CITABLE` and `VERSION_GROUND_UNASSERTED` sentences (`:359`–`:405`). R12 names only the theme label, so I did not widen the change; a requirement covering them is BOB's call. (2) The corpus carries no theme leg on a version, so R12's corpus check is a guard with no version case; a version-leg corpus bundle would give it one.
+- **Deferred:** none.
+- Size (session_01PydE3LcJc4wSm6cj6MDZs3): test runs 7, module lines 1124
+
+## J4 · COMPLETE
+
+R12 done on job/T51/basis-version-grammar (pushed, 29d6f53dae; record: build/jobs/T51/basis-version-grammar.md, section "Fix round 10, R12").
+
+What changed: grammar.mjs:343 now hands connections' themeLegFindings "Leg {n} of version '{name}'" (localize, id basis-version-grammar.grammar.leg_of_version) instead of the field spelling basis_version_legs[i]. registration.test.mjs's golden pins a theme finding by code and check only (connections' words are its own, R73). New theme-label.test.mjs (R12, 4 tests): 3 red on the field spelling before the change, all green after.
+
+Suite: 40 pass, 0 fail (module); basis-versions + strength 390 pass, 0 fail. Checks: format, architecture, coverage (11/11), ownership, fixtures --list all 0; words 0 after keying the label; run.mjs no finding in this module. No fixtures-own or fixtures-generic marker added.
+
+For you: (1) impact set is 76 modules; I ran the two direct users and searched the rest for the old label, none pins it; the rest was not run. (2) Other version-leg labels still spell the field (leadLegFindings grammar.mjs:341, checkLegExtentGrammar :391, the VERSION_LEG_NOT_CITABLE and VERSION_GROUND_UNASSERTED sentences :359-405). R12 names only the theme label, so I did not widen; a requirement is your call. (3) The corpus has no theme leg on a version, so R12's corpus check has no version case.
+
+Size (session_01PydE3LcJc4wSm6cj6MDZs3): test runs 7, module lines 1124
+
+## Fix round 10, R13: every sentence about a version leg (B5 CHANGE, K5308; session_01PydE3LcJc4wSm6cj6MDZs3)
+
+- **Cause.** BOB's CHANGE (K5308, on J4 (2)): R12 named only the theme label. Every other sentence this module writes about a version leg still spelled the field `basis_version_legs[i]`: the lead arm, the extent arm, the target, role and grade sentences, the ground sentences, and the two orphan-row sentences for a leg whose version is missing.
+- **Done.** One helper, `legPlace(n, name)` (`grammar.mjs`, after the imports), reads the place by key, `basis-version-grammar.grammar.leg_of_version`, "Leg {n} of version '{name}'". The loop takes `const place = legPlace(li + 1, name)` and hands it to `leadLegFindings`, `themeLegFindings`, the imported, calculation, occurrence, derived and standard arms (as `lbl`), and `checkLegExtentGrammar`. Each local sentence is now keyed `basis-version-grammar.grammar.*` and starts with `{place}`: `leg_target_not_canonical`, `leg_rests_on_this_inquiry`, `leg_target_kind`, `leg_role`, `leg_grade`, `leg_grade_axis`, `leg_grade_source`, `leg_ground_not_label`, `leg_ground_undeclared`, `leg_no_basis_versions`, `leg_version_not_in_block`. The old `basis-versions.grammar.basis_version_legs_*` keys are no longer used here; their rows in `setup-words/rows.mjs` are stale (generated, another module's; reported, not written). The sentence that names `basis_version_grounds[]` rows, and the one that names `basis_versions[]`, keep those field names: they name blocks, not legs.
+- **Tests, red first.** New `leg-label.test.mjs` (R13, 10 tests), one per site, each reading the place by key through `localize` and asserting the code's message starts with it. All 10 failed on the field spelling before the change. `grammar.test.mjs` pinned the old not-canonical sentence whole; it now asserts the place and the code. `registration.test.mjs`'s golden pins a version-leg finding by code and check only (message "version leg"), since its sentences are the catalogue's copy (R13 names the words in the two tests, not the golden). R6 was red on the golden's old orphan sentence until that change.
+- **Met:** R13 (and R12, still met).
+- **Suite:** `bio-plane/test/m/basis-version-grammar/`: 50 pass, 0 fail. Direct users, `basis-versions` and `strength`: 390 pass, 0 fail.
+- **Checks (absolute root).** architecture 0; coverage 12 of 12 ids named, 0; fixtures `--list` for the module 0; ownership 0 (`tranche/T51` to HEAD: `grammar.mjs`, `registration.test.mjs`, `grammar.test.mjs`, `leg-label.test.mjs`, `theme-label.test.mjs`, this record). words 0 failures (no inline or unkeyed sentence from this module). `checks/run.mjs` shows no finding in this module's files. `checks/format.mjs`: 1 failure, `build/rulings.md:5301` (K5308 records a refused act's approval with no standing-list decision). That file is BOB's, not this module's; reported to BOB, not edited.
+- **Impact.** I ran the two direct users; the rest of the impact set (76 modules at the R12 commit) was not run. The version-leg text is read only by `basis-versions` and `strength`, and both pass.
+- **Found elsewhere, for BOB.** (1) `setup-words/rows.mjs` (generated, not written): the old `basis-versions.grammar.basis_version_legs_*` rows are stale; the new `basis-version-grammar.grammar.*` keys are not yet in it. (2) `build/rulings.md:5301` format failure (above). (3) `basis-versions/index.mjs:266` and `:320` build the same field spelling for their own findings (`basis_version_legs[{ord}] (version …)`); not this module's, not changed.
+- **Deferred:** none.
+- Size (session_01PydE3LcJc4wSm6cj6MDZs3): test runs 11, module lines 1128
+
+## J5 · COMPLETE
+
+R13 done on job/T51/basis-version-grammar (pushed, 85e913ba9e; record: build/jobs/T51/basis-version-grammar.md, section "Fix round 10, R13 (B5 CHANGE)").
+
+What changed: every sentence this module writes about a version leg now starts with the leg's place, "Leg {n} of version '{name}'", read by key (basis-version-grammar.grammar.leg_of_version) through one helper, legPlace. That covers the lead, theme, extent, target, role, grade, ground and orphan-row sentences (grammar.mjs). The lead, extent and other inquiry-grammar arms are handed the place as their label.
+
+Tests: new leg-label.test.mjs (R13, 10 tests), red first (all 10 failed on the field spelling), green after. grammar.test.mjs re-keyed to the place. The R6 golden pins version-leg findings by code and check only, as it already did for the theme finding.
+
+Results: module suite 50 pass, 0 fail; basis-versions + strength 390 pass, 0 fail. architecture, coverage (12/12), fixtures --list, ownership, words: 0. run.mjs: no finding in this module.
+
+For you: (1) format fails on build/rulings.md:5301 (K5308 records a refused act's approval with no standing-list decision). That file is yours, so I did not edit it. (2) setup-words/rows.mjs (generated, not written) still holds the old basis-versions.grammar.basis_version_legs_* rows; the new basis-version-grammar.grammar.* keys are not in it yet. (3) basis-versions/index.mjs:266 and :320 build the same field spelling for their own findings; not this module's. (4) I ran the two direct users only; the rest of the impact set was not run.
+
+Size (session_01PydE3LcJc4wSm6cj6MDZs3): test runs 11, module lines 1128

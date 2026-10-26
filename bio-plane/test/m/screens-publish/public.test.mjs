@@ -345,14 +345,15 @@ const C5S = (o = {}) => ({ ...PUBLISHED_CASE, ...o });
 const C5F = (o = {}) => ({ ...PUBLISHED_CASE.findings[0], ...o });
 const c5pub = (o, p = {}) => open(`/app/published/${C}`, { boot: PUBLIC, plane: { publishedcase: ok(C5S(o)), ...p } });
 
-test("R6 (C5 a) a finding's unrated axis draws the plane's own 'not graded yet' sentence, and a case with no bar declared draws the plane's bar sentence; with a bar and grades neither is drawn (control)", async () => {
+test("R6 R81 (C5 a) a finding's unrated axis draws the design's 'not graded yet' words by key, and a case with no bar declared draws the plane's bar sentence; with a bar and grades neither is drawn (control)", async () => {
   const UNRATED = "Not graded yet on capture: none of the documents this conclusion rests on has a grade that can be counted.";
   const NOBAR = "No standard of evidence was recorded for this case, which is not a standard of zero.";
   const p = await c5pub({ bar: null, bar_detail: NOBAR, findings: [C5F({
     strength: [{ axis: "capture", state: "unrated", grade: null, detail: UNRATED }, { axis: "connection", state: "graded", grade: "B" }],
     standing: { role: "load_bearing", bar: { capture: null, connection: null }, meets: "no_bar", short: [], line: "x" } })] });
   const card = main(p).querySelector('[data-finding]');
-  assert.ok(text(p, card).includes(UNRATED), "the unrated axis says it is not graded yet");
+  assert.ok(drew(p, "screen.published.strength.unrated", {}, card), "the unrated axis says it is not graded yet, by its key");
+  assert.ok(!text(p, card).includes(UNRATED), "the served sentence is not drawn (R81)");
   assert.equal(main(p).querySelectorAll("[data-ungraded]").length, 1, "one axis is ungraded: one line");
   assert.ok(text(p).includes(NOBAR) && main(p).querySelectorAll("[data-bar-none]").length === 1, "the case says no bar was declared");
   assert.ok(!drew(p, "screen.published.meets", { capture: "–", connection: "–" }) && !drew(p, "screen.published.below", {}), "no bar: neither met nor below is said");
@@ -397,10 +398,11 @@ test("R6 (C5 d) the header holds the case id and the manifest's hash; without a 
   assert.ok(text(q, main(q).querySelector("[data-case-head]")).includes(C) && !main(q).querySelector("[data-manifest]"), "no manifest: no hash drawn");
 });
 
-test("R6 (C5 e, R95 a) the plane's verification sentence is drawn with the signature check; an answer without one draws none (control)", async () => {
+test("R6 R81 (C5 e, R95 a) the verification explanation is drawn by key with the signature check; an answer without one draws none (control)", async () => {
   const SAID = "tamper-EVIDENT, not tamper-proof; the deliverer is this team's Civicsmith's record, not covered by any signature.";
   const p = await c5pub({ verification: { container: "x", manifest: "y", case_file: null, findings: [], detail: SAID } });
-  assert.ok(text(p, main(p).querySelector("[data-verification]")).includes(SAID));
+  assert.ok(drew(p, "screen.published.verify.detail", {}, main(p).querySelector("[data-verification]")), "by its key");
+  assert.ok(!text(p).includes(SAID), "the served sentence is not drawn (R81)");
   const q = await c5pub({});
   assert.equal(main(q).querySelectorAll("[data-verification]").length, 0);
 });

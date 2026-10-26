@@ -10,7 +10,7 @@ import { standardBindingUndetermined } from "./fixtures.mjs";
 
 const nothing = (w, fn) => { const before = w.snapshot(); const r = fn(); assert.deepEqual(w.snapshot(), before, "nothing written"); return r; };
 
-test("R43: noncompliant against an ordinance declared with a start and no end, the body given as text, is STANDARD_BINDING_UNDETERMINED (C-113.45), binds undetermined, its detail saying why and that a member settles it in standards, writing nothing", () => {
+test("R43: noncompliant against an ordinance declared with a start and no end, the body given as text, is STANDARD_BINDING_UNDETERMINED (C-113.45), binds undetermined, its detail saying why and that the member settles it on the standard's page, writing nothing", () => {
   const f = standardBindingUndetermined();
   const r = nothing(f.world, () => f.conformance.determine(f.asked));
   assert.deepEqual([r.ok, r.reason, r.code, r.check], [false, "STANDARD_BINDING_UNDETERMINED", "STANDARD_BINDING_UNDETERMINED", "C-113.45"]);
@@ -18,7 +18,7 @@ test("R43: noncompliant against an ordinance declared with a start and no end, t
   assert.equal(r.translation, CONFORMANCE_CHECKS.STANDARD_BINDING_UNDETERMINED.translation);
   assert.match(r.detail, /undetermined/);
   assert.match(r.detail, /does not state when it ceased to be in force/);
-  assert.match(r.detail, /settles it in standards/);
+  assert.match(r.detail, /settle it on the standard's page first/);
   assert.doesNotMatch(r.detail, /benchmark/);
   assert.notEqual(r.code, "STANDARD_NOT_BINDING");
   assert.match(r.translation, /Nothing was written\.$/);

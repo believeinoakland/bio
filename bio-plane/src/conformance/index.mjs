@@ -1076,7 +1076,7 @@ export class Conformance {
       /* DEC-49 REGION is-standard-binding-determined */
       if (x.outcome === "noncompliant" && b.binds !== true)
         return refusal("STANDARD_BINDING_UNDETERMINED",
-          localize("conformance.index.whether_standard_binds_v1_is", "whether {standard} binds {v1} is undetermined ({v2}), and an act is found noncompliant only against a standard that binds its body: a member settles it in standards first. Nothing was written.", { standard: String(b.cite ?? x.standard), v1: String(b.body_label ?? b.body ?? "the body"), v2: String(b.why ? reasonText(b.why) : "not recorded") }), { standard: x.standard, body: b.body, binds: b.binds });
+          localize("conformance.index.whether_standard_binds_v1_is", "whether {standard} binds {v1} is undetermined ({v2}), and an act is found noncompliant only against a standard that binds its body: settle it on the standard's page first. Nothing was written.", { standard: String(b.cite ?? x.standard), v1: String(b.body_label ?? b.body ?? "the body"), v2: String(b.why ? reasonText(b.why) : "not recorded") }), { standard: x.standard, body: b.body, binds: b.binds });
       /* END DEC-49 REGION is-standard-binding-determined */
     }
     const said = (Array.isArray(questions) ? questions : []).map((x) => (isObj(x) ? x.question : x));

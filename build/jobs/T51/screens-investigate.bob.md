@@ -1,6 +1,6 @@
 # BOB to screens-investigate (T51)
 
-**Read** · handled J45
+**Read** · handled J46
 
 ## B1 · START
 
@@ -509,3 +509,15 @@ J44 (1): standards R63 (new; STANDARDS #22) adds `bindings` to the `standard` re
 ## B52 · CHANGE
 
 CHANGE (K5303; plan item 147). Merge `origin/tranche/T51` into your branch (never a rebase): it holds UX-DESIGN's DEC-439 to DEC-441 (`61d9c43df3`, words in `rows.mjs`) and your new requirement R65 in `build/requirements/screens-investigate.md`. Read R65 whole and build it with your current work: each key drawn at its row's walker's case (the row's note in `words.json` names it), red then green; draw by key only. Then COMPLETE as your START says, naming R65's tests.
+
+## B53 · CHANGE
+
+CHANGE (K5304; plan item 148). Also in this job: MONEY #12 saw `bio-plane/test/m/screens-investigate/fix4.test.mjs` ("each screen of the module reads only what it draws, once") fail once in five runs. Reproduce it under named load (K4787, K4966: two suites at once is the realistic load), instrument it to its cause, fix it so it asserts work, never time, and prove it green under that load. Name it in your COMPLETE.
+
+## B54 · CHANGE
+
+CHANGE (K5305): WIZARD-SCRIPTS #29 (R53) is merged: the registry now carries Standard's five acts. Merge `origin/tranche/T51` into your branch (never a rebase) and re-run; your J45 block is cleared.
+
+## B55 · CHANGE
+
+CHANGE (K5308; plan item 149). Merge `origin/tranche/T51` (never a rebase): it holds STANDARDS #22 (R63 `bindings` on `standardRead`; R64 an adoption's act may be a dated event), UX-DESIGN's DEC-442 (U485: the binding row's words, `rows.mjs` regenerated) and your R66 (new, amends R64). Build R66 now: each binding row by kind in DEC-442's keys, `screen.standard.binds.unknown` exactly when `bindings` is empty, dated events offered as an adoption's act; red then green at the walker's case through the world's real `standard` read. Your J46 REPORT (Explore's `search` in the design registry): asked of UX-DESIGN (K5308); nothing for you until its answer. Then COMPLETE, after `mail done` through this entry.

@@ -1,6 +1,6 @@
 # wizard-scripts (T51)
 
-**Status** · session_01NUBiuQssQ3yVM3Be79u6Pm · depth 2 · COMPLETE · handled B30
+**Status** · session_01BjVHjrQrw5ZfRJcc3bHP1L · depth 2 · COMPLETE · handled B31
 
 ## J1 · BLOCKED
 
@@ -645,3 +645,25 @@ Checks (absolute root /home/user/bio), after the merge: module suite 145 of 145 
 Met ids this round: none. Markers: none added. Deferrals: none.
 
 Size (session_01NUBiuQssQ3yVM3Be79u6Pm): test runs 11, module lines 2903
+
+## J34 · COMPLETE
+
+COMPLETE for START B31 (R53, K5302). Commit pushed to job/T51/wizard-scripts (tranche/T51 merged in first; a merge, no rebase).
+
+Changed:
+- bio-plane/src/wizard-scripts/build-data.mjs:29 (SOURCES.registry.commit b1adf4236d) and the header note at :11.
+- bio-plane/src/wizard-scripts/screen-registry.mjs regenerated (`node bio-plane/src/wizard-scripts/build-data.mjs`): 91 screens, 656 acts (452 declared, 83 function, 121 owed, 105 owed ops). `standard` now registers standardinforcethrough, standardinforcethroughwithdraw, standardadoption, standardimpose, standardbenchmark.
+- bio-plane/test/m/wizard-scripts/source/registry.json is now the design's file at b1adf4236d (byte-equal to docs/development/ux-substrate/screens/registry.json on the tranche); the earlier file is kept whole beside it as source/registry-c752a602da.json.
+- Tests: t52g53.test.mjs:73 new R53 test (pin, counts, the five acts on standard, the earlier file kept, every act of c752a602da still registered, library and front doors unchanged, --check passes); the R50 test there lost its pin/count lines to R53's; the pin and count literals in library, t47, t48, t50, t51 and t51fr3 tests moved to b1adf4236d / 656 / 452.
+- Red then green: with the pins moved and the registry not yet re-taken, t52g53 R53 failed ("c752a602da" vs "b1adf4236d"); after build-data.mjs it passes. The R50 control (one-byte change fails --check) now flips b1adf4236d.
+
+One reading to note: R53 says "every act of c752a602da still registered", but the design (DEC-437, B527) took `taskresolve` off `dash-action` between the two commits (it stays on `home` and `queue`). The tests exempt exactly that one act on exactly that screen and assert it is gone from dash-action and still on home and queue. If BOB wants the requirement worded with the exception, that is his edit.
+
+Suites: wizard-scripts 146 of 146 pass; interface-shell (reads the registry, checkScreens) 380 of 380 pass, 0 skipped.
+Checks (absolute root /home/user/bio): format 0 failures; architecture 0; coverage 53 of 53 live ids named, 0 failures; ownership 0 failures (12 files, base 45242d93a6); setup-words build --check matches; checks/run.mjs names no finding in wizard-scripts files (its other coverage and fixtures failures are in other modules).
+
+Stale generated artifact, not mine to write (manifest §14): bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (owner not_product) carry screen-registry.mjs; BOB regenerates (`bio-plane/`: `npm run build`) and runs fleetbundles.test.mjs.
+
+Met ids this round: R53. Markers: no fixtures-own or fixtures-generic added. Deferrals: none.
+
+Size (session_01BjVHjrQrw5ZfRJcc3bHP1L): test runs 8, module lines 2903

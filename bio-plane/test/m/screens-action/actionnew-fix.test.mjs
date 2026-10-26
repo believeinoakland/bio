@@ -30,6 +30,7 @@ test("R24, L20 (K4195): a refusal with findings draws each finding's detail afte
   const details = owner.result.findings.map((f) => f.detail).filter(Boolean);
   assert.ok(details.length > 0, "and says why");
   for (const d of details) assert.ok(beside(real, rb).includes(d), "the owner's own detail is drawn: " + d);
+  assert.ok(beside(real, rb).includes(W("screen.action.basis.refused.head")), "R59 (DEC-439 N7): the owner's reasons sit under the design's head");
   assert.ok(!beside(real, rb).includes(W("refusal.ACTION_BASIS_REFUSED")), "the code's sentence, which ends 'leave it out', does not head the owner's reasons (re-walk 10 N7)");
   /* the shapes the owner does not give (several details, none, an empty list, markup in a detail) are answered by the table below */
   const { p, b } = await refusedWith({ findings: [{ check: "C-2.10", detail: "The leg names an action, not a question of this project." }] });
