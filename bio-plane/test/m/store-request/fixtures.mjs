@@ -7,6 +7,7 @@ import { WORLD_RELEASE_KEYS, WORLD_RUNNING_VERSION, worldDelivery, olderInstalla
 import { readings, machineReading, graded, sharedOrigin } from "./recipes-states.mjs";
 import { holdAt, newerCapture, connection, partialPdf, unmatchedPerson, attested, paperFile, unretirable } from "./recipes-docs.mjs";
 import { unnamedFounder, timeline, titlelessProject, deepChain, connectedSignIn, investigating, mentionedTogether } from "./recipes-team.mjs";
+import { makeRenderer, rendered, renderPending, unfinished, partedAddress, followed } from "./recipes-capture.mjs";
 import { page, pdf, question, questions, contradiction, conflict, setAside, finding, signer, published, imported, cited, rerun, assistant, writingHelp, grantAdmit, parted, largeSheet, credential, projects, draftOnly, register } from "./recipes.mjs";
 
 export { WORLD_RELEASE_KEY } from "./recipes-r10.mjs";
@@ -22,25 +23,29 @@ export const WORLD_GROUP = WORLD_INSTANCE_NAME;
  *  (`CIVICSMITH_TEST_INSTANCE` equal to `INSTANCE_NAME`, as ai-runs reads it), the only instance a run opens on while no AI part is verified. */
 export const WORLD_AI_SECRET = "world-account-seal-secret-3b9d71c4e0a5f628";
 
-/** `storeWorld({claimed?, now?, env?, ai?})` (op-tables §5.2, K5054): store-assembly's world (its producing team recorded at its first boot, K5149) with the binding tokens of
+/** `storeWorld({claimed?, now?, env?, ai?, deliver?, releaseKeys?, renderer?, follow?})` (op-tables §5.2, K5054): store-assembly's world (its producing team recorded at its first boot, K5149) with the binding tokens of
  *  `WORLD_TOKENS`, plus
  *  `door(req, as)` (R17: what a page's `fetch("/api/?op=...")` receives), `signIn(handle, {admin?, capabilities?, device?})` (R16),
  *  `plane(as)` and `boot(as)` (R18: `{door, session}` for interface-shell's `boot`), `route(as)` (R18: a Playwright route handler answering the page's `/api/` from the door, for a browser test), `session(as)` (the record `{t, e, d, w}`),
  *  `admitted(token, op?)` (admission's caller for a token) and `recipes.hold|project|trail|profiles` (R19), each of real acts;
  *  `store`, `ctx`, `sql`, `tick(ms)` are the world's own. The world binds `CAPTURES` (store-assembly's) and no `PUBLISHED`: `selftest` reads that as the owner does, one bucket bound without the other, and a test that unbinds
  *  `CAPTURES` leaves neither bound (SCREENS-SETTINGS #20 J37 (1); STORE-REQUEST #6 B15 (4)); `recipes.published` binds the published store when it publishes. */
-export async function storeWorld({ env = {}, ai = false, deliver = null, releaseKeys = null, ...opts } = {}) {
+export async function storeWorld({ env = {}, ai = false, deliver = null, releaseKeys = null, renderer = false, follow = false, ...opts } = {}) {
   const name = WORLD_GROUP;
   const holder = {};
+  /* the browser renderer a page is captured as a visitor saw it with, bound as `RENDERER` (the platform's service binding, a double; recipes-capture.mjs) */
+  const browser = renderer === true ? makeRenderer() : renderer || null;
   /* the world hands the owed-work ledger its own delivery (`worldDelivery`), as control-plane hands its `deliverOwedRender` (a later module) */
   // fixtures-own: harness the world's delivery, made of earlier modules' real acts (the alarm's filing of an owed fetch)
   const world = await assemblyWorld({ ...opts, ...(deliver === true ? { deliver: (a) => worldDelivery(holder.world)(a) } : deliver ? { deliver } : {}),
     ...(releaseKeys === true ? { releaseKeys: WORLD_RELEASE_KEYS } : releaseKeys ? { releaseKeys } : {}),
-    env: { ...(releaseKeys === true ? { VERSION: WORLD_RUNNING_VERSION } : {}), ...WORLD_TOKENS, ...(ai ? { ACCOUNT_SEAL_SECRET: WORLD_AI_SECRET, INSTANCE_NAME: name, CIVICSMITH_TEST_INSTANCE: name } : {}), ...env } });
+    env: { ...(releaseKeys === true ? { VERSION: WORLD_RUNNING_VERSION } : {}), ...WORLD_TOKENS, ...(ai ? { ACCOUNT_SEAL_SECRET: WORLD_AI_SECRET, INSTANCE_NAME: name, CIVICSMITH_TEST_INSTANCE: name } : {}), ...(browser ? { RENDERER: browser } : {}), ...env } });
   const door = doorOf(world);
   const make = () => storeWorld();
   holder.world = world;
   world.__delivery = deliver === true;
+  world.__follow = follow === true;
+  world.renderer = browser;
   world.__releaseKeys = releaseKeys === true;
   return Object.assign(world, {
     door: (req, as = null) => door(req, as),
@@ -100,6 +105,11 @@ export async function storeWorld({ env = {}, ai = false, deliver = null, release
       lapsed: (as, o) => lapsed(world, as, o),
       delivered: (as, o) => delivered(world, as, o),
       releaseNotice: (as, o) => releaseNotice(world, as, o),
+      rendered: (as, o) => rendered(world, as, o),
+      renderPending: (as, o) => renderPending(world, as, o),
+      unfinished: (as, o) => unfinished(world, as, o),
+      partedAddress: (as, o) => partedAddress(world, as, o),
+      followed: (as, name, content, o) => followed(world, as, name, content, o),
     },
   });
 }

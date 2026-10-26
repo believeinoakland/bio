@@ -13,8 +13,9 @@
    "WORLD_NO_DOOR_ARM", op}}`, never guessed. The ops the world cannot reach are a closed list, `WORLD_UNREACHED`, each with the
    cause (a part of `control-plane`'s own door, a later module), and R20's test holds the list closed.
    What the real door does that this one does not (stated, never hidden): no namespace, address or window gate (a world has
-   one object and no address to forge); no reading followed after a promotion or an upload, no
-   archive's members promoted after `unpack`, no draft asked after a draft-due act (the door's own steps after the forward);
+   one object and no address to forge); no reading followed after an upload (and none after a promotion unless the world is made with `follow: true`, which
+   re-makes control-plane's `followEntries` from the store's own routes: `readheldfor`, `pendingadd`, with its size gate re-made from `read-bounds`' rows; its other
+   halves of the gate, a container's unpacked text and the request's clock, stay control-plane's), no archive's members promoted after `unpack`, no draft asked after a draft-due act (the door's own steps after the forward);
    no bootstrap credential at `claim` (store-assembly R92). The helpers `control-plane` hands its arms (`sha256Hex`,
    `captureKey`, `caseReader`) are re-made from earlier modules (record-grammar, store-assembly R2's key, admission). */
 import { generateKeyPairSync } from "node:crypto";
@@ -50,6 +51,7 @@ import { agentPackOp, airunDispatchOp, draftCheckOp, TEXT_CHECK, READ_TRANSLATE 
 import { aiRunsOf } from "../../../src/ai-runs/index.mjs";
 import { mintTrace, memberRefOf } from "../../../src/signin-door/index.mjs";
 import { evidenceStorageAbsent } from "../../../src/acquisition/index.mjs";
+import { boundOf, wholeReadRow } from "../../../src/read-bounds.mjs";
 
 /** R17: the address a page's relative request is read against. */
 export const WORLD_ORIGIN = "https://group.example";
@@ -108,6 +110,90 @@ function stubOf(world) {
 function envOf(world, stub) {
   return Object.create(world.env, { STORE: { value: { idFromName: (n) => n, get: () => stub }, enumerable: true } });
 }
+
+/* ---- the reading that follows a promotion (control-plane R123, R130, R133; a world made with `follow: true`) ---- */
+/* control-plane `unreadDocuments`: the documents a promotion states in its `data/provenance.json` that carry a capture digest and no reading, in the order stated, each once;
+   none for a verified replay */
+export function unreadDocuments(b) {
+  if (!b || typeof b !== "object" || Array.isArray(b) || b.replay) return [];
+  const prov = Array.isArray(b.files) ? b.files.find((f) => f && f.path === "data/provenance.json" && typeof f.text === "string") : null;
+  if (!prov) return [];
+  let docs;
+  try { docs = JSON.parse(prov.text).documents; } catch { return []; }
+  if (!Array.isArray(docs)) return [];
+  const out = [], seen = new Set();
+  for (const d of docs) {
+    const sha = d && d.capture && d.capture.sha256;
+    if (typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha) || seen.has(sha)) continue;
+    seen.add(sha);
+    if (d.reading && typeof d.reading === "object") { if (d.reading.tier3_candidate === true) out.push({ sha, document: d, ocrOnly: true }); continue; }
+    out.push({ sha, document: d });
+  }
+  return out;
+}
+/* control-plane's READING_FOLLOWED_MAX: the most readings made inline in one request; the others stand by their job row */
+const READING_FOLLOWED_MAX = 16;
+/* control-plane R131 (1), R132, `reading-gate.mjs`'s `inlineVerdict`: whether a reading is made in the request, by size and kind alone (every ceiling a `READ_BOUNDS` row, read through
+   `boundOf`): `stated` over the whole-read ceiling of its kind (the reader states it from the sizes; nothing is owed), `deferred` over the inline ceiling (a PDF `pdf.request_bytes`, any other
+   kind `text.request_bytes`, or more than a reading assembles from parts, `office.text_bytes`), else `inline`. The gate's other halves, a container's declared unpacked text and the request's
+   clock, are control-plane's own and are not re-made here. */
+const TEXT_TYPE = /^(?:text\/|application\/(?:xhtml\+xml|xml|json)|application\/[a-z0-9.+-]*\+xml)/i;
+function inlineVerdictOf(document) {
+  const c = document && typeof document === "object" ? document.capture : null;
+  const parts = document && Array.isArray(document.parts) ? document.parts.reduce((n, p) => n + (Number.isFinite(p && p.bytes) ? p.bytes : 0), 0) : 0;
+  const size = Math.max(Number.isFinite(c && c.bytes) ? c.bytes : 0, parts);
+  const lower = (v) => (typeof v === "string" ? v.toLowerCase() : "");
+  const type = lower(c && c.content_type), declared = lower(document && document.profile && document.profile.source_content_type);
+  const format = lower(document && document.profile && document.profile.format && document.profile.format.format);
+  const locator = typeof (document && document.locator) === "string" ? document.locator : "";
+  const named = (re) => re.test(locator);
+  const kind = type.startsWith("application/pdf") || declared.startsWith("application/pdf") || format === "pdf" || (type === "" && declared === "" && named(/\.pdf(?:[?#]|$)/i)) ? "pdf"
+    : type.startsWith("text/csv") || declared.startsWith("text/csv") || format === "csv" || (type === "" && declared === "" && named(/\.csv(?:[?#]|$)/i)) ? "csv"
+    : TEXT_TYPE.test(type) || TEXT_TYPE.test(declared) || ["text", "tsv", "json", "xml", "html"].includes(format) ? "text" : "other";
+  if (size > boundOf(...wholeReadRow(kind))) return { verdict: "stated", kind, size };
+  const limit = kind === "pdf" ? boundOf("pdf", "request_bytes") : boundOf("text", "request_bytes");
+  if (size > limit || size > boundOf("office", "text_bytes")) return { verdict: "deferred", kind, size, limit };
+  return { verdict: "inline", kind, size };
+}
+/** control-plane `followEntries`, over the store's routes alone: each entry's `reading` job row is registered first (`pendingadd`, R130), then read (`readheldfor`, extraction R80) unless
+ *  the inline limit is spent; a reading made, or already held, ends it (a `more` is owed to the ledger); every other answer leaves the row standing. Answers `{pending, refused}`: `pending`
+ *  true while a row is held for a reading owed, `refused` the digests whose owed reading no row holds. An entry that owes the OCR pass is skipped (a world binds no OCR worker). */
+export async function followReading(world, entries, storeName = "bio") {
+  const stub = stubOf(world);
+  const ask = async (route, init) => { try { return await doAnswer(stub.fetch(new Request(`http://do/${route}`, init))); } catch { return { answered: false }; } };
+  const register = async (sha, kind) => {
+    const a = await ask(`pendingadd?kind=${kind}&sha=${sha}&store=${encodeURIComponent(storeName)}`, { method: "POST" });
+    return a.answered && a.result && a.result.ok === true ? { ok: true } : { ok: false, reason: a.answered && a.result && typeof a.result.reason === "string" ? a.result.reason : "PENDING_NOT_KEPT" };
+  };
+  let pending = false, inline = 0;
+  const refused = [];
+  const readHeld = async (sha) => {
+    const a = await ask(`readheldfor?sha=${sha}&store=${encodeURIComponent(storeName)}`);
+    return a.answered && a.result && typeof a.result === "object" && a.result.ok === true ? a.result : null;
+  };
+  for (const e of entries) {
+    if (e.ocrOnly) continue;
+    const verdict = inlineVerdictOf(e.document).verdict;
+    /* R132: a document over its kind's whole-read ceiling is stated from its sizes by the reader: no row is registered for it, and it is never deferred */
+    if (verdict === "stated") { await readHeld(e.sha); continue; }
+    const reg = await register(e.sha, "reading");
+    const owe = () => { if (reg.ok) pending = true; else refused.push(e.sha); };
+    if (inline >= READING_FOLLOWED_MAX || verdict === "deferred") { owe(); continue; }
+    inline++;
+    const held = await readHeld(e.sha);
+    if (held && (held.read === true || held.why === "READING_HELD")) {
+      if (held.owed === true) { const ocr = await register(e.sha, "ocr"); if (ocr.ok) pending = true; else refused.push(e.sha); }
+      if (held.more === true) owe();
+      continue;
+    }
+    owe();
+  }
+  return { pending, refused };
+}
+/* control-plane `followedAnswer`: the promote's answer carries the follow's outcome (`reading_pending` while a row is held, `reading_refused` for one no row holds); the refusal's sentence is
+   control-plane's own and is not re-made here */
+const followedAnswer = (result, followed) => ({ ...result, ...(followed.pending ? { reading_pending: true } : {}),
+  ...(followed.refused.length ? { reading_refused: { reason: "READING_NOT_REGISTERED", registrar: "PENDING_NOT_KEPT", count: followed.refused.length } } : {}) });
 
 const routesOf = (world) => world.__routes || (world.__routes = new Set(Object.keys(world.store.routes(new URL("http://x/"), null))));
 
@@ -325,6 +411,13 @@ async function answer(world, stub, env, page) {
   if (out.refused) return storeRefusal(out, op === "aicredentialmint" || op === "reviewgrant" || op === "templatereviewgrant" ? { op, ...extra } : extra);
   if (!out.answered) return storeSilent(op, out.correlation);
   const { body, status } = out.reply;
+  /* control-plane R123: the reading follows the promotion; the act stands as the store answered it, and the answer says `reading_pending` when a reading is owed (a world made with `follow: true`) */
+  if (op === "promote" && world.__follow && body.result && body.result.ok === true) {
+    let asked = null;
+    try { asked = page.text ? JSON.parse(page.text) : null; } catch { asked = null; }
+    const followed = await followReading(world, unreadDocuments(asked), storeName);
+    if (followed.pending || followed.refused.length) return json({ ...body, result: followedAnswer(body.result, followed), ...extra }, status);
+  }
   if (secret !== null) {
     if (!body.result || body.result.ok !== true) return json({ ok: false, ...(body.result || {}), op, ...extra }, 403);
     return json({ ok: true, result: { ...body.result, ...(op === "aicredentialmint" ? { token: secret } : { secret }) }, ...extra }, 200);
@@ -602,8 +695,8 @@ export async function hold(world, as, name, content, project = "", { type = "tex
   return { sha, bundle, ...(parts ? { parts } : {}), read: await as.act("readheld", { query: { sha } }) };
 }
 
-/** R19: a captured document `doc` (the owner's answer to an upload or an acquire) filed as an information bundle at `collected` by `as`'s real `promote`, under `project` when given. Answers `{sha, bundle, parts?}`. */
-export async function fileDocument(world, as, name, doc, project = "") {
+/** R19: a captured document `doc` (the owner's answer to an upload or an acquire) filed as an information bundle at `collected` by `as`'s real `promote`, under `project` when given. Answers `{sha, bundle, parts?}`; with `answered` (an object) the promotion's own answer is set on it as `promoted`. */
+export async function fileDocument(world, as, name, doc, project = "", answered = null) {
   const now = instant(world);
   const minted = await as.read("allocid", { query: { prefix: "INFO", year: now.slice(0, 4) } });
   const id = minted.id + "-" + name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -624,6 +717,7 @@ export async function fileDocument(world, as, name, doc, project = "") {
                           : { sha256: sha, path: doc.file, encoding: doc.capture.encoding, bytes: doc.capture.bytes }];
   const made = await as.act("promote", { body: { bundleId: id, base: null, snapKey: now.replace(/[-:]/g, "") + "_" + hex(id).slice(0, 8),
     meta: { object_type: "information", title: name, current_state: "collected", created: now, last_updated: now }, files, register } });
+  if (answered) answered.promoted = made;   /* the promotion's own answer, with the reading's flag a world that follows promotions adds */
   return { sha, bundle: made.bundleId || id, ...(parts ? { parts } : {}) };
 }
 

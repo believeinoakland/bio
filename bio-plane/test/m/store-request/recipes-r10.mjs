@@ -5,7 +5,7 @@ import { OWED_SESSION_TTL_MS } from "../../../src/acquisition/index.mjs";
 import { RELEASE_NOTICE_ADDRESS } from "../../../src/setup.mjs";
 import { releaseNoticeStatement, NS_RELEASE_NOTICE } from "../../../src/sshsig.mjs";
 import { signSshsig, signerPublicLine } from "../../../scripts/sign-sshsig.mjs";
-import { signIn, fileDocument, resultOf } from "./door.mjs";
+import { signIn, fileDocument, resultOf, followReading } from "./door.mjs";
 
 /** The release key a world made with `releaseKeys: true` verifies a notice against (the private half is a test's, `BIOKEY-RAW1` seed of 32 bytes). */
 export const WORLD_RELEASE_KEY = `BIOKEY-RAW1.bio-release.${Buffer.from(new Uint8Array(32).map((_, i) => (i * 41 + 9) % 256)).toString("base64")}`;
@@ -27,7 +27,12 @@ export function worldDelivery(world) {
     const opener = ld.state && typeof ld.state.opened_by === "string" ? ld.state.opened_by : "";
     if (!opener) throw new Error(`storeWorld: the session ${session} has no opener`);
     const member = opener.startsWith("member:") ? opener.slice("member:".length) : opener;
-    const project = ld.state && typeof ld.state.project === "string" ? ld.state.project.trim() : "";
+    /* a session parked for a fetch carries the member's project in its state; one parked for a render is filed beside its shell, under the shell's project (control-plane `deliverOwedRender`) */
+    let project = ld.state && typeof ld.state.project === "string" ? ld.state.project.trim() : "";
+    if (!project) {
+      const shell = await cap.heldAt({ sha256: ld.primarySha, viewer: opener });
+      project = shell && shell.held === true && shell.copy && typeof shell.copy.project === "string" ? shell.copy.project : "";
+    }
     const done = async (document, filed) => {
       if (ld.state && ld.state.fetch_pending && typeof cap.recordFetchDone === "function")
         await cap.recordFetchDone({ session, document, opener, project: filed || null, at: new Date(world.now()).toISOString() });
@@ -41,7 +46,9 @@ export function worldDelivery(world) {
     try {
       const filed = await fileDocument(world, as, title, doc, project);
       await done(filed.bundle, project);
-      return { ok: true, bundleId: filed.bundle };
+      /* control-plane R123: the reading follows the filing (a world made with `follow: true`): a document stored with no reading is read, or its row stands and the delivery says `reading_pending` */
+      const followed = world.__follow && !(doc.reading && typeof doc.reading === "object") ? await followReading(world, [{ sha, document: doc }]) : null;
+      return { ok: true, bundleId: filed.bundle, ...(followed && followed.pending ? { reading_pending: true } : {}) };
     } catch (e) {
       if (e && e.answer) return { ...resultOf(e.answer), ok: false };   /* the owner's own refusal of the promotion, as it answered it */
       throw e;
@@ -81,13 +88,18 @@ export async function lapsed(world, as, o = {}) {
   return { ...made, as: fresh, after: (await fresh.read("opencaptures")).captures };
 }
 
-/** R19: a capture owed and delivered, by the real alarm: a world made with `deliver: true` (`worldDelivery`) runs the owed fetch on a tick; the real `owedFetch` makes the capture, hands the
+/** R19: a capture owed and delivered, by the real alarm: a world made with `deliver: true` (`worldDelivery`) runs the owed fetch on a tick (up to four); the real `owedFetch` makes the capture, hands the
  *  delivery its document and drops the session. Answers `{...owed, as, after, copy}`: `copy` is `heldat`'s answer for the address (the document the delivery filed). */
 export async function delivered(world, as, o = {}) {
   if (!world.__delivery) throw new Error("storeWorld: recipes.delivered needs the world's delivery: make the world with storeWorld({ deliver: true })");
   const made = await owed(world, as, o);
-  await world.tick(60_000);
-  const fresh = await signIn(world, as.handle);
+  /* the alarm runs the owed fetch on a tick; an alarm that has just run another entry wakes again a tick later, so the clock moves a minute at a time until the session has left the list */
+  let fresh = null;
+  for (let i = 0; i < 4; i++) {
+    await world.tick(60_000);
+    fresh = await signIn(world, as.handle);
+    if (!(await fresh.read("opencaptures")).captures.some((c) => c.session === made.session)) break;
+  }
   return { ...made, as: fresh, after: (await fresh.read("opencaptures")).captures,
            copy: (await fresh.read("heldat", { query: { address: made.address } })).copy };
 }
