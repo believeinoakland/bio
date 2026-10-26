@@ -1,6 +1,6 @@
 # entities (T51)
 
-**Status** · session_01XoHLpj87gCyr4R1nEXhbe7 · depth 2 · WORKING · handled B13
+**Status** · session_01XoHLpj87gCyr4R1nEXhbe7 · depth 2 · COMPLETE · handled B13
 
 ## Completion (T51 fix round 3, ENTITIES #18)
 
