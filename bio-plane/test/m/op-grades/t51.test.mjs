@@ -40,13 +40,29 @@ test("R48: the three reads are no act (no MACHINE_REFUSALS row, no CONSEQUENCE_S
 test("R77 R78 R79: each read op-declarations declares for T51 has a NON_ACTS reason beginning \"read: \", and no rung, "
    + "ground or machine refusal", () => {
   const ops = Object.keys(T51_NON_ACTS);
-  assert.equal(ops.length, 16, "the fourteen session reads op-declarations declares for T51 (three of them R48s), publishedfrozen (public) and remindersfor (action-clocks R26, fix round 3)");
+  assert.equal(ops.length, 17, "the fourteen session reads op-declarations declares for T51 (three of them R48s), publishedfrozen (public), remindersfor (action-clocks R26, fix round 3) and holdsplaced (action-holds R22, K5232)");
   for (const op of ops) {
     assert.ok(NON_ACTS[op].startsWith("read: "), op);
     assert.equal(RUNGS[op], undefined, op);
     assert.equal(RUNG_ABSENT[op], undefined, op);
     assert.equal(Object.hasOwn(MACHINE_REFUSALS, op), false, op);
   }
+});
+
+/* ---- K5232 (action-holds R22): the places held, listed, a session read beside holdsdue ----------------------------- */
+test("R48 (action-holds R22): holdsplaced is a NON_ACTS read whose reason is the owner's sentence, beginning \"read: \" and "
+   + "ending \"writes nothing\", with no rung, ground or machine refusal, and it answers phone true", () => {
+  assert.equal(T51_NON_ACTS.holdsplaced, NON_ACTS.holdsplaced);
+  assert.ok(NON_ACTS.holdsplaced.startsWith("read: "));
+  assert.match(NON_ACTS.holdsplaced, /writes nothing \(action-holds R22\)$/);
+  assert.equal(RUNGS.holdsplaced, undefined, "a read has no rung");
+  assert.equal(RUNG_ABSENT.holdsplaced, undefined, "a read has no absence ground");
+  assert.equal(Object.hasOwn(MACHINE_REFUSALS, "holdsplaced"), false);
+  assert.equal(Object.hasOwn(CONSEQUENCE_STATEMENTS, "holdsplaced"), false);
+  assert.equal(phoneOf("holdsplaced"), true);
+  /* control: the read is held in NON_ACTS alone, beside holdsdue, which keeps its own reason */
+  assert.equal(NON_ACTS.holdsdue.startsWith("read: "), true);
+  assert.notEqual(NON_ACTS.holdsplaced, NON_ACTS.holdsdue);
 });
 
 /* ---- fix round 2, K4323 (DEC-394): the design's new acts ------------------------------------------------------------ */
