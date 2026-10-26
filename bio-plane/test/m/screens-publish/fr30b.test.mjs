@@ -38,7 +38,9 @@ test("R44 position, reasoning, one left-out row and each finding's role, then Sa
 
 test("R44 a left-out row needs its reason, and 'nothing material left out' sends an empty list; silence sends none; the second member's Acknowledge is drawn once something is left out", async () => {
   const none = await open(EDITOR, { plane: { reviewcopy: ok(COPY({ authored: { scope: "S", statement: "x", excluded: null }, statement_acknowledgements: null })) } });
-  assert.ok(!ops(none).includes("statementack"), "nothing is left out: nothing to acknowledge");
+  assert.ok(ops(none).includes("statementack"), "D-M5: what is acknowledged is the statement, so it is offered with nothing left out");
+  const bare = await open(EDITOR, { plane: { reviewcopy: ok(COPY({ authored: { scope: "S", statement: "", excluded: null }, statement_acknowledgements: null })) } });
+  assert.ok(!ops(bare).includes("statementack"), "control: no statement and nothing left out: nothing to acknowledge");
   await press(none, "casedraft", { reason: "edit" });
   assert.ok(!("excluded" in last(none, "casedraft").body), "silence sends none");
   fill(none, { "ce-exwhat": "Rents elsewhere", "ce-exwhy": "" });

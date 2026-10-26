@@ -1,6 +1,6 @@
 # csv-reader (T51)
 
-**Status** · session_016SDhXPpFVHc4twnonLuCEQ · depth 2 · COMPLETE · handled B12
+**Status** · session_01DbJ4aQ5uL3NWLi56wSCeot · depth 2 · COMPLETE · handled B15
 
 ## Completion
 
@@ -204,3 +204,18 @@ Size (session_016SDhXPpFVHc4twnonLuCEQ): test runs 4, module lines 1323
 ## J11 · COMPLETE
 
 R26 met: isDelimitedText now requires the delimiter's modal count on a majority of lines for declared plain text; declared CSV/TSV keep presence. Failing-first seen red, csv-reader 99/99, users 855 pass 0 fail, all checks 0 failures, no fixtures markers added. REPORT: bio-plane/dist/bio-plane.bundled.mjs is stale (regenerate); door twin for control-plane to place. See record J10.
+
+## Fix round 10 · C-M14 (session_01DbJ4aQ5uL3NWLi56wSCeot)
+
+- Entries applied: B15 (1) walk C C-M14, R27. Root: R26's modal-count rule passed three prose lines with three commas each; no floor on records, no limit on field length.
+- Changed: `bio-plane/src/csv-reader/index.mjs` `looksTabular` (new, before `isDelimitedText`) and its call in `isDelimitedText`: declared plain text also needs at least 5 records (`PLAIN_TEXT_RECORDS_MIN`) and a mean field length under 40 characters (`PLAIN_TEXT_FIELD_CHARS_MAX`, measured over `walkRecords` of the head). Declared CSV/TSV keep R7. Live path: `formats.mjs:153` calls `csv.mjs`, which re-exports this module.
+- Tests (`bio-plane/test/m/csv-reader/delimited.test.mjs`): two new R27 tests: the walker's three-line minutes as a `.txt` answers false (red, then green); control: a six-row comma table in a `.txt` answers true, four records false, exactly five true, eight records of three 46-char fields false, same bytes named `.csv` true. Both seen red before the fix, green after. Four existing 4-record `.txt` fixtures (`CSV`, `TSV` in the R21 test; `three` and the TSV in the R26 controls) were lengthened to 5 records, as R27 now requires.
+- Suites: csv-reader 101/101; office-readers 164/164; calculations 162/162; control-plane `t51-round9-seam.test.mjs` 80/81, the one failure being "R9 seam §5 ... (red until provenance 21 merges)", the provenance whole-refusal, not csv; csv text is not in its path.
+- Checks (absolute root): format, architecture 0 failures; coverage 7 failures, none csv-reader; fixtures 89 failures all stub/plane (later), none csv-reader; words 0; ownership 0. No finding in csv-reader files. The requirement line R27 still reads "not yet met"; BOB marks it.
+- REPORTed: none new. `bio-plane/dist/bio-plane.bundled.mjs` includes csv-reader and is stale again (BOB regenerates). Door twin for control-plane (upload a `.txt` of three comma-equal prose lines through r8-kit) is for BOB to place (K5138). Not run: the remaining ~2300 impact-named files; only `isDelimitedText`'s answer for declared plain text changed.
+- Met ids: R27 (and R26, R21 still). Deferred: none.
+Size (session_01DbJ4aQ5uL3NWLi56wSCeot): test runs 8, module lines 1338
+
+## J12 · COMPLETE
+
+C-M14 fixed (R27): csv-reader/index.mjs looksTabular + call in isDelimitedText; declared plain text needs >=5 records and mean field < 40 chars. Tests red then green in delimited.test.mjs (2 new R27 tests; 4 fixtures lengthened to 5 records). csv-reader 101/101, office-readers 164/164, calculations 162/162, seam 80/81 (1 = provenance 21, unrelated). Checks: no csv-reader finding; ownership 0. dist bundle stale (BOB regenerates). Door twin for BOB to place (K5138). Met: R27. Size (session_01DbJ4aQ5uL3NWLi56wSCeot): test runs 8, module lines 1338. See record, section Fix round 10.

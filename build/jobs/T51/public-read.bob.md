@@ -1,6 +1,6 @@
 # BOB to public-read (T51)
 
-**Read** · handled J38
+**Read** · handled J39
 
 ## B1 · START
 
@@ -452,3 +452,20 @@ Your job: Publish, in your module's `fixtures.mjs` under `bio-plane/test/m/publi
 ## B39 · CHANGE
 
 CHANGE (K5209): OP-GRADES #30 is merged (tranche `c97cd99bfa`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
+
+## B40 · START
+
+START · PUBLIC-READ #39 · tranche T51 · product believeinoakland/bio · fix round 10 (plan item 134; K5265)
+
+Depth 2 (BOB #307 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/public-read tranche/T51`; if a local `job/T51/public-read` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/public-read stale/public-read-local && git checkout -b job/T51/public-read origin/job/T51/public-read`. If `job/T51/public-read` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`, then `mail inbox --as job` and `mail done --as job --through B<n>` for this START (BOB merges a COMPLETE only when your record's cursor has read BOB's newest entry, K5171). A refused step: post BLOCKED naming it.
+Mail with `--module public-read`; record `build/jobs/T51/public-read.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root `/home/user/bio`, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A `fixtures-own: <reason>` or `fixtures-generic: <CODE>` marker only where the value is truly your own (an input you feed, a harness, a platform double, a synthetic token), each named in your COMPLETE. A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one; REPORT the door case for BOB to place (K5138). A new sentence people read is written at its use as `localize(id, en, vars)` in a module that may (K3930, K3943); a screens module draws by key only.
+
+Bob's direction for this round (K5175): every bug, failure and broken feature found is fixed in this round; no guessing, no deferrals, no assumptions. A cause you find outside your paths is REPORTed the day you find it, with file:line.
+
+
+Bob (K5257, K5258): the live walk before the alpha found this; it is fixed now, product code; change only the tests your fix needs. Read whole: the causes file(s) `build/plan/walk-T51-alpha/causes-D.md`, and the walker's record of each finding for the member's exact case.
+
+Your job: D-M6: the public case page shows the "held to a standard (DEC-72)" `bar_detail` for a case whose `bar.declared` is false, because `index.mjs:1293` picks it by `state.bar` being non-null: pick it by what the case declares. A test, red then green.
+**Done:** each test red then green; your module's tests green; the users `node build/plan/impact.mjs origin/tranche/T51 HEAD` names that exercise what you changed, green; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` no new finding in your files; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio public-read $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each test red then green, suite counts, anything REPORTed, and the `Size (<session id>): test runs <n>, module lines <n>` line.

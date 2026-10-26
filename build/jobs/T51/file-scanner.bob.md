@@ -1,6 +1,6 @@
 # BOB to file-scanner (T51)
 
-**Read** · handled J21
+**Read** · handled J23
 
 ## B1 · START
 
@@ -281,3 +281,24 @@ Rules of fix-round-9 §0 that bind: R-FOUR (root cause with file:line, why the t
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** each cause above fixed with its failing-first test green (seen red first) and its platform check done or named for the redeploy; your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . file-scanner --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/file-scanner.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B21 · START
+
+START · FILE-SCANNER #14 · tranche T51 · product believeinoakland/bio · fix round 10 (plan item 134; K5265)
+
+Depth 2 (BOB #307 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/file-scanner tranche/T51`; if a local `job/T51/file-scanner` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/file-scanner stale/file-scanner-local && git checkout -b job/T51/file-scanner origin/job/T51/file-scanner`. If `job/T51/file-scanner` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`, then `mail inbox --as job` and `mail done --as job --through B<n>` for this START (BOB merges a COMPLETE only when your record's cursor has read BOB's newest entry, K5171). A refused step: post BLOCKED naming it.
+Mail with `--module file-scanner`; record `build/jobs/T51/file-scanner.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root `/home/user/bio`, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A `fixtures-own: <reason>` or `fixtures-generic: <CODE>` marker only where the value is truly your own (an input you feed, a harness, a platform double, a synthetic token), each named in your COMPLETE. A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one; REPORT the door case for BOB to place (K5138). A new sentence people read is written at its use as `localize(id, en, vars)` in a module that may (K3930, K3943); a screens module draws by key only.
+
+Bob's direction for this round (K5175): every bug, failure and broken feature found is fixed in this round; no guessing, no deferrals, no assumptions. A cause you find outside your paths is REPORTed the day you find it, with file:line.
+
+
+Bob (K5257, K5258): the live walk before the alpha found this; it is fixed now, product code; change only the tests your fix needs. Read whole: the causes file(s) `build/plan/walk-T51-alpha/causes-B.md`, and the walker's record of each finding for the member's exact case.
+
+Your job: F-B14: the safe-view renderer answers `NOT_RENDERABLE` for Word and PowerPoint files the generators make (`causes-B.md` F-B14: LibreOffice 7.4.7 in the pinned image says "source file could not be loaded"; LibreOffice 24.2.7 converts the same files with the renderer's exact arguments). Reproduce inside the pinned image (`Dockerfile.renderer`; start a Docker daemon with `dockerd &` as earlier sessions did, K3448), name the cause with file:line or the image layer, fix it in your paths, and prove a generated .docx and .pptx render in the image. If the image cannot run here, post BLOCKED naming the refused step. Note `render.mjs:59` dropped the message for older failures and a failed render is final (`file-safety/index.mjs:1138`): REPORT it if a member must be able to retry.
+**Done:** each test red then green; your module's tests green; the users `node build/plan/impact.mjs origin/tranche/T51 HEAD` names that exercise what you changed, green; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` no new finding in your files; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio file-scanner $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each test red then green, suite counts, anything REPORTed, and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B22 · ANSWER · re J22
+
+ANSWER (J22; K5267, plan item 135 (2)). Do not build the image here, and do not retry the refused build. Use the image the release already pins: `release/file-scanner/container/SafeViewRenderer.json` names `docker.io/civicsmith/file-scanner-renderer@sha256:8817aefd13a90bbf25c59914cd70d701536ec8b245a9cdb39939a0508cb05bf9`, built from `file-scanner/Dockerfile.renderer` by the `container-images.yml` workflow. `docker pull` it by that digest (the daemon's pull goes through the proxy unchanged) and run g.docx and g.pptx through its LibreOffice exactly as the renderer does, capturing stderr. First confirm the image's package list (`dpkg-query -W libreoffice-core` inside it) matches the JSON's `packages`. If the pull itself is refused or fails, post BLOCKED with the exact error; never work around it. Then find F-B14's cause from that run, fix it in file-scanner with a test red then green, and COMPLETE.

@@ -1230,6 +1230,21 @@ function isDeclaredPlainText(lowerName, type) {
   return t === "text/plain" || lowerName.endsWith(".txt");
 }
 
+const PLAIN_TEXT_RECORDS_MIN = 5;
+const PLAIN_TEXT_FIELD_CHARS_MAX = 40;
+
+/** R27: beyond R26, declared plain text is a table only with at least five records whose fields average under 40 characters
+ *  (prose lines with equal comma counts are neither). `s` is the dialect scan of `h`, whose delimiter is decided. */
+function looksTabular(h, s) {
+  if (s.delimiter.lines < PLAIN_TEXT_RECORDS_MIN) return false;
+  const text = new TextDecoder(s.utf16 || "utf-8").decode(h);
+  let chars = 0, fields = 0;
+  for (const record of walkRecords(text, s.delimiter.delimiter)) {
+    for (const f of record) { chars += f.length; fields++; }
+  }
+  return fields > 0 && chars / fields < PLAIN_TEXT_FIELD_CHARS_MAX;
+}
+
 /** True exactly when `type` names a CSV, TSV or plain or opaque type, `name` ends in `.csv`, `.tsv`, `.tab` or `.txt`, and
  *  `head` (the first bytes of the file, up to 1 MiB) is delimited text: no binary signature, no NUL in an 8-bit head, an
  *  encoding R7 reads and one consistent delimiter. Never throws. */
@@ -1246,7 +1261,7 @@ export function isDelimitedText(name, type, head) {
     if (hasBinarySignature(h)) return false;
     const s = scanDialect(h, undefined);
     if (!s.ok || s.encoding.encoding == null || s.delimiter.delimiter == null) return false;
-    if (isDeclaredPlainText(lower, type) && !(s.delimiter.modalLines * 2 > s.delimiter.records)) return false;
+    if (isDeclaredPlainText(lower, type) && !(s.delimiter.modalLines * 2 > s.delimiter.records && looksTabular(h, s))) return false;
     if (!s.utf16 && s.windows.some((w) => w.scan && w.scan.nul > 0)) return false;
     return true;
   } catch {

@@ -1,6 +1,6 @@
 # store-assembly (T51)
 
-**Status** · session_01BDYpAB4hgQzmzRVLZ5co4a · depth 2 · COMPLETE · handled B20
+**Status** · session_01MHfM4Jg8WvCFNaPQUvxaFk · depth 2 · COMPLETE · handled B21
 
 ## J1 · QUESTION
 
@@ -288,3 +288,23 @@ COMPLETE (STORE-ASSEMBLY #6, B19; code and record at e12ae57c4f, pushed). See my
 ## J19 · COMPLETE
 
 COMPLETE (B20 on top of J18). Added fixtures-run: reading-pipeline transcribe-answer at t42.test.mjs:267 over the same test as extraction's: red for the same cause only (real answer also carries asked, sent, owed, unread; REPORT J17). Fixtures: 14 orphan-run (users' markers still read content/plane). Suite: 428 tests, 426 pass, 1 fail (that run), 1 todo (R98). Size (session_01BDYpAB4hgQzmzRVLZ5co4a): test runs 8, module lines 3750
+
+## J20 · COMPLETE
+
+COMPLETE (STORE-ASSEMBLY #7, B21: A-01, walk T51 alpha, K5257/K5258).
+
+**What changed.** `op=stats` no longer runs FTS5's rank-1 integrity check by default. `store-assembly/stats.mjs`: `figures` carries `textIndexOk` only when `proof` (purge's private proof, a deliberate read, unchanged) or while a deep read is being served; new `withDeepStats(ops, url)` wraps the record-core route map's `stats` arm and sets that read's flag (synchronously, cleared in `finally`) when the query holds `deep=1` AND the control plane's `capacity=1` stamp (administrator class; a member's `deep=1` is ignored, so no caller below admin can ask for the 5.7 s walk). `assemble.mjs`: the route map spreads `withDeepStats(recordCoreOps(...), url)`. No other module changed; record-core's R64/R65 are untouched (the figures source already receives the request only through the arm).
+
+**Tests (stats.test.mjs), red then green.** `R100 (A-01): the default op=stats answer runs no text-index integrity check ... deep=1 from the administrator class runs it once` (a counting `sql.exec` stand-in: zero `integrity-check` statements for `/stats`, `?capacity=1`, member viewer, and member+`capacity=1`; one for `?capacity=1&deep=1`; the flag does not stay on; `deep=1` without the capacity stamp ignored) was red with "/stats carries no textIndexOk" and is green; `purge's private proof keeps the index check` is a control, green before and after. The pinned R100 wire test no longer lists `textIndexOk` for the default answer.
+
+**Needs BOB / REPORT.** (1) `screens-settings/group.mjs:25` still sends `{op: "stats"}` and reads only `dbBytes`; with this change it no longer pays for the check, but the 20 owners' counts still run. causes-A.md proposes a size-only `fields=size` read there: screens-settings' and record-core's, not mine. (2) Nothing in the repository sends `deep=1` today; a deliberate "check the index" read needs a screen/op-declarations parameter allowing it (op-declarations lists `stats` with no parameter list). (3) Pre-existing on the tranche, not from this change: `declarations.test.mjs` R83 is red (`missing` is `[]`, the test expects `['control-plane']`) because CONTROL-PLANE #65 deleted `owner-ops.mjs`; B19 (4)'s rename CHANGE has not reached me, so I left it. 
+
+**Suite.** store-assembly module: 430 tests, 428 pass, 1 fail (R83 above), 1 todo (R98). Users that read `stats` (the other suites naming it): see below. Checks: format 0, architecture 0, coverage 0 (7070 of 7070), words 0 new (unkeyed 1991, round-end regeneration's), ownership 0; fixtures `run.mjs` 89 failures, all stubs/orphan-runs of other modules' markers (none new from this job; I added no marker).
+
+Size (session_01MHfM4Jg8WvCFNaPQUvxaFk): test runs 6, module lines 3800
+
+**J20 addendum (users).** The 24 other test files naming `stats` (outside store-assembly and record-core): 170 tests, 169 pass, 1 fail: `bio-plane/test/system/migrate-released.test.mjs`, which ran 1,106 s before failing. It only asserts `op=stats` answers `ok !== false` (line 435); I did not establish its cause and did not rerun it on the bare tranche, so I cannot say it is unrelated: BOB please have it checked (it is plane's/system's, not in my paths).
+
+## J21 · COMPLETE
+
+COMPLETE (STORE-ASSEMBLY #7, B21, A-01). op=stats runs the FTS5 integrity check only on deep=1 with the capacity stamp (stats.mjs withDeepStats, assemble.mjs route spread) and in purge's proof; default answer has no textIndexOk. Test red then green (stats.test.mjs, counting sql.exec: zero checks by default, one with the flag) plus a purge-proof control. Module: 430 tests, 428 pass, 1 fail (R83 declarations: control-plane's owner-ops.mjs already deleted on the tranche; the DECLARED_OPS rename CHANGE B19 (4) has not reached me), 1 todo. Users naming stats: 170 tests, 1 fail, system/migrate-released.test.mjs (1106 s, cause not established; please check). Checks: format/architecture/coverage/ownership 0, words none new. REPORT: screens-settings group.mjs:25 should ask a size-only read; nothing sends deep=1 yet (op-declarations lists no parameter). Details in record J20. Size (session_01MHfM4Jg8WvCFNaPQUvxaFk): test runs 7, module lines 3800

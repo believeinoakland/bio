@@ -135,6 +135,10 @@ function routesCrossed(ast) {
   return walk(ast);
 }
 
+/* R9: a conjunction holding a NOT has no wider reading to offer: `query-language` reads its OR as the union of the NOT's
+   complement with the words, which counts every record (F-B10 (c)), so none is offered. */
+const holdsNot = (ast) => !!ast && typeof ast === "object" && (ast.op === "not" || (Array.isArray(ast.kids) && ast.kids.some(holdsNot)));
+
 /* R88: the refusal, with no row run. */
 const crossedRefusal = () => ({ ok: false, reason: "ROUTES_CROSSED", code: "ROUTES_CROSSED", routes: [...ROUTES],
   detail: "an OR joins a passage: term (the passages route) to a term of another route (the fields route: the record's "
@@ -894,7 +898,7 @@ export class Retrieval {
     /* R9: the affordance that makes AND safe. A bare conjunction that returns zero is re-run as OR and the wider count
        is offered. It costs one extra query only in the case that already returned nothing. */
     out.widen = null;
-    if (total === 0 && plan.widenable && input.widen !== false) {
+    if (total === 0 && plan.widenable && !holdsNot(plan.ast) && input.widen !== false) {
       const or = this.#compile({ ...input, implicitOp: "or" });
       /* R88: the OR reading is never offered across routes, since it would count what the query was refused for. */
       const n = routesCrossed(or.ast) ? 0 : this.runQuery(or.statements.count(), tally)[0]?.n ?? 0;
@@ -958,13 +962,14 @@ export class Retrieval {
     if (!known.includes(asked))
       return refuse("MEANING_ROWS_UNKNOWN_ARM",
         localize("retrieval.index.no_meaning_of_the_kind", "no meaning of the kind {stringify} is held. The kinds that are: {map}", { stringify: String(JSON.stringify(asked)), map: String(known.map((k) => `${k} (${MEANING[k].rowGrain})`).join("; ")) }));
-    const plan = this.#compile({
+    const compileArgs = {
       q: String(input.q ?? ""), viewer: input.viewer ?? null,
       ids: Array.isArray(input.ids) && input.ids.length ? input.ids : null,
       rows: asked, rowLimit: input.limit, rowOffset: input.offset,
       /* R79: the caller's snippet length (query-language R12 clamps it to 4-64); none leaves R12's default. */
       snippetChars: Number(input.snippetChars) || undefined,
-    });
+    };
+    const plan = this.#compile(compileArgs);
     if (routesCrossed(plan.ast)) return crossedRefusal();
     const tally = { applied: 0 };
     /* The count FIRST, so a statement that somehow lost the gate throws before any row is assembled. */
@@ -975,6 +980,14 @@ export class Retrieval {
     /* REC-92 (R14) — THE CONTENT-AXIS TALLY, ONLY for an arm that searches the text index. */
     const axis = plan.meaning.fts ? this.#contentAxisTally(plan, tally) : null;
     const obs = this.observation;
+    /* R9 at meaning grain: a conjunction that finds no rows is re-run as OR and the wider count offered, as `search` does. */
+    let widen = null;
+    if (total === 0 && plan.widenable && !holdsNot(plan.ast) && input.widen !== false) {
+      const or = this.#compile({ ...compileArgs, implicitOp: "or" });
+      const n = routesCrossed(or.ast) ? 0 : this.runQuery(or.statements.meaning({ mode: "count" }), tally)[0]?.n ?? 0;
+      if (n > 0) widen = { interpretation: "OR", total: n, q: String(input.q ?? ""),
+                           detail: localize("retrieval.index.no_record_matches_all", "no record matches all of these terms; this many match any of them") };
+    }
     return {
       ok: true,
       /* The GRAIN travels with the answer, in words: an inquiry resting on four legs is FOUR rows here and ONE row
@@ -986,7 +999,7 @@ export class Retrieval {
       /* REC-108 / D-379: only the FILTER route can run at this grain. */
       cached: cachedNotes(plan.cached, { facets: false, ordered: false }),
       rows, count: rows.length,
-      limit: plan.meaning.limit, offset: plan.meaning.offset, total,
+      limit: plan.meaning.limit, offset: plan.meaning.offset, total, widen,
       ...this.#withExistenceOnly(meaningLevels(plan.meaning.level, Number(lv.documents || 0), Number(lv.documents_with_rows || 0), total,
                        { arm: plan.meaning.arm, matched: plan.meaning.matched, axis,
                          vocab: obs ? { states: obs.vocabulary.CONTENT_AXIS_STATES,

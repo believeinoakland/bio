@@ -16,7 +16,7 @@ import { compile, cachedNotes, GATE_MARK, MEANING, MEANING_LIMIT_DEFAULT, MEANIN
 
 const ARMS = Object.keys(MEANING);
 const ENVELOPE = ["arm", "cached", "count", "gate", "grain", "identity", "level", "levels", "limit", "offset", "ok", "query",
-                  "rows", "says", "scope", "table", "total"];
+                  "rows", "says", "scope", "table", "total", "widen"];
 
 function leg(w, inq, ord, target, type, { role = "supports", grade = null, axis = "capture", source = "capture", ground = null } = {}) {
   w.st.sql.exec(`INSERT INTO inquiry_basis (bundle_id, ord, target_id, target_type, role, grade, grade_axis, grade_source, ground, at)

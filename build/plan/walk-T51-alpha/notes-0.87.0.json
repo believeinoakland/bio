@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-26",
+  "security": false,
+  "notes": {
+    "members": "Large and awkward files are now read all the way through. Long documents, big spreadsheets and tables, scans with many pages, and web pages with many pictures are read in the background, and the screen says plainly when a document is still being read or only partly read, instead of leaving you to guess. Recording a determination and publishing a case work: a case with one finding can be prepared, signed with your key and published. Screens are quicker, and many sentences that showed machine words now read in plain language. Your team is called a team everywhere. Not working yet: the assistant is not ready and is not part of this release. Old Word files (.doc) are not read. Some archive files are read only in part. A case with several findings may show its signing box too tall for a small laptop screen. Naming a federal office for a records request, and some citation steps, have been repaired but not yet checked end to end on a live team. This is still a test release; if something does not work, please tell us.",
+    "administrators": "This release repairs how documents are read and kept. Large files, scans, spreadsheets, tables and web pages are read whole in the background, and a reading that stalls now restarts by itself. Document safety checks and the document viewer are updated, and the team's pages answer faster. The installer and the civicsmith.org pages use the same words as the screens. The assistant is not ready and is not included. Known gaps: old Word (.doc) files, some archive members and the signing box on small screens. Nothing you run today needs to change.",
+    "must_do": ""
+  }
+}

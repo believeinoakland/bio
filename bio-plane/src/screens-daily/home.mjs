@@ -395,7 +395,8 @@ export const home = Object.freeze({
       ? cs.sec("screen.home.projects", cs.state("projects", view.parts.projectRows(cs, view, "screen.home", true))) : "";
 
     // "Since you last looked": the members' acts since then as the areas' reads answer them (each project's last change).
-    const changed = since ? plist.filter(function (p) { return p.lastChange && String(p.lastChange) > since; }) : [];
+    // The look carries milliseconds and a change does not, so the two are compared as instants, never as text ("…:47Z" sorts after "…:47.304Z").
+    const changed = since ? plist.filter(function (p) { return p.lastChange && Date.parse(String(p.lastChange)) > Date.parse(since); }) : [];
     const recent = failed(lk) ? cs.sec("screen.home.since", cs.state("looked", null))
       : changed.length ? cs.sec("screen.home.since", cs.sheet(changed.map(function (p) {
         return cs.row("", cs.ref("project", String(p.id), p.name || String(p.id), []), '<span class="muted">' + cs.w("screen.home.since.changed", { date: cs.date(String(p.lastChange)) }) + "</span>", "");

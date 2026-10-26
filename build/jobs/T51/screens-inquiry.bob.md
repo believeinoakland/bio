@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J57
+**Read** · handled J62
 
 ## B1 · START
 
@@ -1028,3 +1028,32 @@ CHANGE (K5242). Interface-shell merged: merge `origin/tranche/T51` and do B83 no
 ## B86 · CHANGE
 
 CHANGE (K5245). STORE-REQUEST #7 merged: merge `origin/tranche/T51`. Your 138 fixtures lines take store-request's recipes and real world (every state your record named that a real act makes is now a recipe: readings, machineReading, graded, sharedOrigin, holdAt, newerCapture, connection, partialPdf, unmatchedPerson, attested, paperFile, unretirable, unnamedFounderWorld, timeline, titlelessProject, deepChain, connectedSignIn, investigating, mentionedTogether; `question` takes subject/extent_rect, `pdf` fonts) or the providers' published answers. A state no act makes (its record's "Completion of B18", `build/jobs/T51/store-request.md:263`, with file:line): the case removed, test only (K4297 (2)). Goal: `fixtures.mjs /home/user/bio screens-inquiry --list` at 0. Never `git commit -a` (K5245). Post COMPLETE with B85 and this.
+
+## B87 · START
+
+START · SCREENS-INQUIRY #34 · tranche T51 · product believeinoakland/bio · fix round 10 (plan item 134; K5265)
+
+Depth 2 (BOB #307 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/screens-inquiry tranche/T51`; if a local `job/T51/screens-inquiry` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/screens-inquiry stale/screens-inquiry-local && git checkout -b job/T51/screens-inquiry origin/job/T51/screens-inquiry`. If `job/T51/screens-inquiry` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`, then `mail inbox --as job` and `mail done --as job --through B<n>` for this START (BOB merges a COMPLETE only when your record's cursor has read BOB's newest entry, K5171). A refused step: post BLOCKED naming it.
+Mail with `--module screens-inquiry`; record `build/jobs/T51/screens-inquiry.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root `/home/user/bio`, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A `fixtures-own: <reason>` or `fixtures-generic: <CODE>` marker only where the value is truly your own (an input you feed, a harness, a platform double, a synthetic token), each named in your COMPLETE. A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one; REPORT the door case for BOB to place (K5138). A new sentence people read is written at its use as `localize(id, en, vars)` in a module that may (K3930, K3943); a screens module draws by key only.
+
+Bob's direction for this round (K5175): every bug, failure and broken feature found is fixed in this round; no guessing, no deferrals, no assumptions. A cause you find outside your paths is REPORTed the day you find it, with file:line.
+
+
+Bob (K5257, K5258): the live walk before the alpha found this; it is fixed now, product code; change only the tests your fix needs. Read whole: the causes file(s) `build/plan/walk-T51-alpha/causes-D.md`, and the walker's record of each finding for the member's exact case.
+
+Your job: (1) D-M1 (3): `question.mjs:304-309` hands already-escaped text to `cs.mark`, which escapes again (`interface-shell/browser.mjs:742`): a raw "&amp;" shows. (2) D-M6: "Reading shown reading-1" (`question.mjs:716`) shows a version's machine name; draw its description (as the design's mock, `mock-screens.js` near :1691). Tests red then green.
+**Done:** each test red then green; your module's tests green; the users `node build/plan/impact.mjs origin/tranche/T51 HEAD` names that exercise what you changed, green; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` no new finding in your files; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-inquiry $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each test red then green, suite counts, anything REPORTed, and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B88 · CHANGE
+
+CHANGE (re J58 (1); K5268). No new ruling is needed: R96 (fix round 6, K4571) already requires it: "a stored statement (`failure: final`, or `completeness.state` `stated`) is drawn as the statement the reading states, with the figures that reading states". A whole reading whose reason is not a size, holding its statement in `completeness.why` (else `reading.basis`), must draw that statement on the Document page, never a bare "Undetermined / Held". Fix `document.mjs` so `r10-stated.test.mjs:126` (A7) and the A8 test pass (they are the walker-shaped red tests; do not change them), run the module's suite, then COMPLETE again. J58 (2) is known (89 test-only lines waiting on Bob's test rethink, K5258): nothing to do.
+
+## B89 · CHANGE
+
+CHANGE (K5271, plan item 136). Walks C and E (read whole `build/plan/walk-T51-alpha/causes-C.md` C-M2, C-M5, C-M12, C-M13 and `causes-E.md` S3) add to your job, beside B88: (1) C-M2: `document.mjs:744-750` draws "Not yet checked" unconditionally; `op=transcriptions` answers `attestations` (content R57): draw a typing's confirmation when one holds `counts`, and no confirm form for a member who has confirmed. (2) C-M5: `question.mjs:1564-1573` unions a "Yes, because of X" with X even when X was answered "No": refuse before sending, naming both passages, or keep X out of the part and say so. (3) C-M12: the contradiction flag form's choices are drawn with a fixed `{value:""}` (`document.mjs:1287`, `:1290`): keep the member's picks (the fold staying open is INTERFACE-SHELL #25's R133). (4) C-M13: `contradiction.mjs:215` draws "the assistant's guess" for a member's flag: choose by `flagged_by`. (5) E S3: `document.mjs:609-613`, `:670` glue "Cited" to the passage text: separate them. A sentence no word-table key holds: never draw a false one; REPORT the key needed (B530 asked the design for C-M2's and C-M13's). Tests red then green with the walkers' cases. C-M6's control waits on CITATION #23 (R23); BOB sends a CHANGE at its merge.
+
+## B90 · CHANGE
+
+CHANGE (re J61, J62; K5276). Your J62 is accepted except that C-M12 and E S3 have no red test: every walk fix carries one (K4426 (3)): write them (C-M12: choose the other document, the fold is open and `document-flag-here` keeps its pick after the redraw; S3: a cited passage's text and its "Cited" mark are separated), each red with your fix stashed, green with it. CITATION #23 is merged into tranche/T51 (R23: `reinstate` accepts `role`; fixture `reinstateOtherSide()`): merge the tranche; C-M6's "Put on the other side" control is drawn only if a held key names it, else REPORT the key (B530 asked the design) and draw nothing. Your J61 (2) is done (CONTRADICTION #18 merged, K5274); J61 (1) and (3)'s keys go to the design. Then COMPLETE again.

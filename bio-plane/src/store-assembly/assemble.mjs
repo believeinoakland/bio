@@ -101,7 +101,7 @@ import { translationsOf, translationsOps } from "../translations/index.mjs";
 import { instanceSetupOf, instanceSetupOps, disclosureReadOf, DISCLOSURE_READER } from "../setup.mjs";
 import { dispatch, controlPlaneRoutes } from "../store-door/dispatch.mjs";   /* K1907, K2041: the store's door */
 import { promotionStep } from "../store-door/step.mjs";
-import { registerOwnersCounts, registerStats } from "./stats.mjs";
+import { registerOwnersCounts, registerStats, withDeepStats } from "./stats.mjs";
 import { wizardRegistration } from "./wizards.mjs";
 import { eventsOf, eventsOps } from "../events/index.mjs";
 import { linesOf, linesOps } from "../lines/index.mjs";
@@ -835,7 +835,7 @@ export function assembleStore(ctx, env, { deliver = null, releaseKeys = null } =
       ...networkNoticesOps(networkNoticesOf(ctx), url, body),   /* noticeprepare, noticepost, notices, directorysubmission */
       ...promotionOps(promotionOf(ctx), url, body),
       /* record-core's audit gated by membership's sight (record-core R73). */
-      ...recordCoreOps(recordOf(ctx), url, body, { sight: viewerPredicate }),
+      ...withDeepStats(recordCoreOps(recordOf(ctx), url, body, { sight: viewerPredicate }), url),
       /* `recordcapturedlocator` reports observation-log's receipt listener. */
       ...provenanceOps(provenanceOf(ctx), url, body, { observer: OBSERVATION_LOG_MODULE }),
       /* `provenancechain`, `provenanceroute`, `provenanceroutes`: provenance-routes' (its R9; N512), at the place
