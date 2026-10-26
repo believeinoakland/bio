@@ -55,12 +55,12 @@ import { importedFindingRef } from "../inquiry-grammar/index.mjs";
 import { acceptedWorkOf } from "../accepted-work/index.mjs";
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { CITE_CHECKS, CITE_EXTENT_CHECKS, CITE_IMPORTED_CHECKS } from "./checks.mjs";
-import { spliceEdgeStatus, spliceReferences, spliceBasis, removeBasisLegs, setScalar, appendSessionLog } from "./splice.mjs";
+import { spliceEdgeStatus, spliceReferences, spliceBasis, removeBasisLegs, setBasisRole, setScalar, appendSessionLog } from "./splice.mjs";
 import { recordedBy } from "./recorded.mjs";
 import { localize } from "../setup-words/index.mjs";
 
 export { CITE_CHECKS, CITE_EXTENT_CHECKS, CITE_IMPORTED_CHECKS } from "./checks.mjs";
-export { spliceEdgeStatus, spliceReferences, spliceBasis, removeBasisLegs, legExtentLines } from "./splice.mjs";
+export { spliceEdgeStatus, spliceReferences, spliceBasis, removeBasisLegs, setBasisRole, legExtentLines } from "./splice.mjs";
 export { RECORDED_LIMIT_DEFAULT, RECORDED_LIMIT_MAX } from "./recorded.mjs";
 
 /** R1: citing writes one frontmatter entry per cited record into a single `bundle.md`, so the edges one citing object
@@ -237,7 +237,7 @@ export class Citation {
    *  `leg-earning`'s `restsOnLive` read a leg's severance from. A REASON IS REQUIRED by both: the catalogue's own remedy
    *  for a bad edge is "sever with reason" (C-6.1), and State Rules §5.1 has a human confirming or severing. One method
    *  for both directions and both arms, because they are the same operation over the same grammar. */
-  #edgeTransition({ project, handle, viewer, owner, reason, author, from, to, verb, resultKey, identity = null }) {
+  #edgeTransition({ project, handle, viewer, owner, reason, author, from, to, verb, resultKey, identity = null, role = null }) {
     /* Weight `refuse`, hard-coded exactly as `cite` hard-codes `report`: a caller that could choose the weight would
        make the distinction advisory (R7). */
     const sel = this.retrieval.selectionResolve({ handle, viewer, owner, weight: "refuse" });
@@ -266,6 +266,23 @@ export class Citation {
     if (why.length > EDGE_REASON_MAX || /["\\\r\n]/.test(why))
       return { ok: false, reason: "BAD_REASON",
                detail: localize("citation.index.a_reason_is_at_most", "a reason is at most {max} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes, so those would reshape the document rather than appear in it", { max: String(EDGE_REASON_MAX) }) };
+
+    /* R23: a reinstatement may also put a question's leg on the other side. A case's edge carries no role, so a role sent
+       there is refused by name as `cite` refuses it, never dropped; on a question it is one of the vocabulary. */
+    const rl = role === null || role === undefined || String(role) === "" ? null : String(role);
+    if (rl !== null) {
+      if (!onInquiry)
+        return { ok: false, reason: "ROLE_NOT_APPLICABLE", ...rowOf(CITE_CHECKS, "ROLE_NOT_APPLICABLE"), project, handle,
+                 got: rl, drift: sel.drift,
+                 detail: localize("citation.index.a_role_says_what_material", "a role says what material does for a QUESTION's answer, and this citing object is a case. A case's citation edge carries no role, so this one would be dropped rather than recorded — refused instead, because a field stated in one place and honoured nowhere is how the record and its projections drift apart.") };
+      if (!this.inquiry || !Array.isArray(this.inquiry.BASIS_ROLES))
+        return { ok: false, reason: "INQUIRY_UNAVAILABLE", project, handle, drift: sel.drift,
+                 detail: localize("citation.index.citing_onto_a_question_needs", "citing onto a question needs the inquiry module's role vocabulary, leg grammar and earned registry, and your team's Civicsmith was created without them, so nothing was written.") };
+      if (!this.inquiry.BASIS_ROLES.includes(rl))
+        return { ok: false, reason: "BAD_ROLE", ...rowOf(CITE_CHECKS, "BAD_ROLE"), project, handle, got: rl,
+                 roles: this.inquiry.BASIS_ROLES.slice(), drift: sel.drift,
+                 detail: localize("citation.index.rl_is_not_a_role", "'{rl}' is not a role a basis leg can carry. The set is closed and is published by op=affordances beside the act: {roles}.", { rl, roles: this.inquiry.BASIS_ROLES.join(", ") }) };
+    }
 
     /* An EMPTY selection is refused, not a successful no-op: promoting an UNCHANGED document would put a revision
        recording that nothing happened into an append-only history. */
@@ -345,7 +362,19 @@ export class Citation {
       return { ok: false, reason: "UNSPLICEABLE_REFERENCES", project,
                detail: localize("citation.index.the_references_block_not_in_shape", "the references block is not in a shape this grammar can edit in place") };
 
-    let text = setScalar(spliced, "last_updated", `"${when}"`);
+    /* R23: the named legs go to the new role in the same write; the legs that did not change side are not named below. */
+    let withRole = spliced, roleMoved = [], roleFrom = [];
+    if (rl !== null) {
+      const set = setBasisRole(spliced, new Set(sel.members), rl);
+      if (!set)
+        return { ok: false, reason: "UNSPLICEABLE_BASIS", project,
+                 detail: localize("citation.index.the_questions_basis_block", "the question's basis block is not in a shape this grammar can extend in place. Citing appends legs to that block and never rewrites the rest of the document.") };
+      withRole = set.text;
+      for (const [id, was] of set.from) if (was.some((r) => r !== rl)) { roleMoved.push(id); roleFrom.push(...was.filter((r) => r !== rl)); }
+      roleMoved.sort();
+      roleFrom = [...new Set(roleFrom)].sort();
+    }
+    let text = setScalar(withRole, "last_updated", `"${when}"`);
     const ids = [...sel.members].sort();
     const shown = ids.slice(0, CITE_LOG_SAMPLE);
     const listed = shown.join(", ") + (ids.length > shown.length ? `, and ${ids.length - shown.length} more` : "");
@@ -356,7 +385,9 @@ export class Citation {
       logHead
       + localize("citation.index.trigger_selection_handle", "Trigger: selection {handle}\n", { handle: String(handle) })
       + (onInquiry
-        ? localize("citation.index.changes_basis_legs_on", "Changes: basis legs on {listed} moved to '{to}', each leg kept as it was. Reason: {why}.\n", { listed, to, why: String(why) })
+        ? (roleMoved.length
+          ? localize("citation.index.changes_basis_legs_role_moved", "Changes: basis legs on {listed} moved to '{to}', each leg kept as it was except the role of {moved}, which moves from {from} to {role}. Reason: {why}.\n", { listed, to, moved: roleMoved.join(", "), from: roleFrom.join(", "), role: String(rl), why: String(why) })
+          : localize("citation.index.changes_basis_legs_on", "Changes: basis legs on {listed} moved to '{to}', each leg kept as it was. Reason: {why}.\n", { listed, to, why: String(why) }))
         : localize("citation.index.changes_cites_edges_to", "Changes: cites edges to {listed} moved to '{to}'. Reason: {why}.\n", { listed, to, why: String(why) })));
 
     const bytes = new TextEncoder().encode(text);
@@ -375,7 +406,8 @@ export class Citation {
                 `reason`. */
              [resultKey]: ids, why, from, to,
              bundleSha: promoted.bundleSha, rowVersion: promoted.rowVersion, gate: sel.gate,
-             ...(onInquiry ? { citingObjectType: "inquiry" } : {}) };
+             ...(onInquiry ? { citingObjectType: "inquiry" } : {}),
+             ...(rl !== null ? { role: rl, roleMoved } : {}) };
   }
 
   sever({ project, handle, viewer = null, owner = null, reason = "", author = null, identity = null } = {}) {
@@ -383,8 +415,8 @@ export class Citation {
       from: ["confirmed", "proposed"], to: "severed", verb: "Severed", resultKey: "severed" });
   }
 
-  reinstate({ project, handle, viewer = null, owner = null, reason = "", author = null, identity = null } = {}) {
-    return this.#edgeTransition({ project, handle, viewer, owner, reason, author, identity,
+  reinstate({ project, handle, viewer = null, owner = null, reason = "", author = null, identity = null, role = null } = {}) {
+    return this.#edgeTransition({ project, handle, viewer, owner, reason, author, identity, role,
       from: ["severed"], to: "confirmed", verb: "Reinstated", resultKey: "reinstated" });
   }
 
@@ -1162,7 +1194,9 @@ export function citationOps(c, url, body) {
     sever: () => c.sever({ project: q("project"), handle: q("handle"), viewer: q("viewer"), owner: q("owner"),
                            reason: q("reason") ?? "", author: q("author"), identity: q("identity") }),
     reinstate: () => c.reinstate({ project: q("project"), handle: q("handle"), viewer: q("viewer"), owner: q("owner"),
-                                   reason: q("reason") ?? "", author: q("author"), identity: q("identity") }),
+                                   reason: q("reason") ?? "", author: q("author"), identity: q("identity"),
+                                   /* R23: optional; body-first as `cite`'s (R20). */
+                                   role: s("role") }),
     /* R14 (T47; N975): one question drawn into a case, named by `inquiry`; no selection and no document. */
     drawquestion: () => c.drawQuestion({ project: q("project"), inquiry: q("inquiry"), note: q("note") ?? "",
                                          author: q("author"), viewer: q("viewer"), identity: q("identity") }),
@@ -1194,7 +1228,7 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["project", "handle", "reason"], requires: ["project", "handle", "reason"] } },
   reinstate: { classes: ["admin", "member", "probe"], mutating: true, needs: "contribute", weight: "reasoned", refusal: "NO_REASON",
     description: localize("citation.declared.reinstate", "moves a severed cites edge, or a question's severed leg, back to confirmed with the member's reason"),
-    fields: { accepts: ["project", "handle", "reason"], requires: ["project", "handle", "reason"] } },
+    fields: { accepts: ["project", "handle", "reason", "role"], requires: ["project", "handle", "reason"] } },
   citeimported: { classes: ["admin", "member"], machineClasses: [], mutating: true, stamps: ["author", "viewer"], needs: "contribute", weight: "reversible",
     description: localize("citation.declared.citeimported", "rests a question on another team's accepted finding at the edition shown; the grade is the edition's own, and withdrawimported takes it back"),
     fields: { accepts: ["inquiry", "import", "finding", "edition", "role", "note"],

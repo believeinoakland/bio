@@ -48,7 +48,7 @@ test("R27: each standard's bindingness on the act's body is read from standards 
   assert.deepEqual([byEntity.standards[0].body, byEntity.standards[0].label], [dept, "Benchmark · not binding on Parks Department"]);
 });
 
-test("R27: noncompliant against a standard that does not bind the body is STANDARD_NOT_BINDING (C-113.32), naming the standard and the body; an undetermined bindingness is refused the same until a member settles it in standards; other outcomes against a benchmark are accepted, labelled", () => {
+test("R27: noncompliant against a standard that does not bind the body is STANDARD_NOT_BINDING (C-113.32), naming the standard and the body; an undetermined bindingness is STANDARD_BINDING_UNDETERMINED (R43) until a member settles it in standards; other outcomes against a benchmark are accepted, labelled", () => {
   const { w, std, ev, bench, input, row } = benchScene();
   const r = nothing(w, () => w.c.determine(input({ standards: [{ standard: bench, outcome: "noncompliant" }], rows: [row()] })));
   refused(r, "STANDARD_NOT_BINDING");
@@ -66,12 +66,12 @@ test("R27: noncompliant against a standard that does not bind the body is STANDA
   const act = { ...input().act, actor: { role: "Director of Parks", body: dept } };
   const asked = input({ act, standards: [{ standard: council, outcome: "noncompliant" }], rows: [{ ...input().rows[0], standard: council }] });
   const und = nothing(w, () => w.c.determine(asked));
-  refused(und, "STANDARD_NOT_BINDING");
+  refused(und, "STANDARD_BINDING_UNDETERMINED");
   assert.equal(und.binds, "undetermined");
   assert.match(und.detail, /undetermined/);
   /* an act placed nowhere has no date at which anything binds: undetermined, refused the same */
   const nowhere = w.event(ev, { date: null });
-  refused(nothing(w, () => w.c.determine(input({ act: { ...input().act, event: nowhere } }))), "STANDARD_NOT_BINDING");
+  refused(nothing(w, () => w.c.determine(input({ act: { ...input().act, event: nowhere } }))), "STANDARD_BINDING_UNDETERMINED");
   /* a member settles it in standards (a held law imposes it on the body): then it binds, and noncompliant is recorded */
   const law = w.standard("State Parks Act 5", { kind: "statute", issuer: "The State", text: lawText,
                                                 period: { from: "2019-01-01", to: "2030-12-31" } });

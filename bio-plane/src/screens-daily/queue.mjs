@@ -356,7 +356,7 @@ export const queue = Object.freeze({
       return rows.length ? cs.sec("queue.muted.title", cs.sheet(rows.join("")), { help: "queue.muted.help" }) : "";
     })();
     const doneNote = (typeof ui.done === "string" && ui.done
-      ? '<p class="mk-note" role="status">' + cs.w("queue.done", { what: { html: cs.w("act." + ui.done + ".label.queue") } }) + "</p>" : "")
+      ? '<p class="mk-note" role="status">' + cs.w("queue.done", { what: { html: cs.w(ui.doneFor && ui.doneFor.op === ui.done ? ui.doneFor.label : "act." + ui.done + ".label.queue") } }) + "</p>" : "")
       + view.parts.routed().shown(cs, ui);
 
     // R41, R60: with nothing waiting and every feed answered, the sentence, each class "none here", the up-to-date row and the door to
@@ -432,6 +432,8 @@ export const queue = Object.freeze({
         // R70: `definitionVersion` is the word `proposedispose` reads; a finding with none sends none.
         // R68: the button says which: Defer puts the finding off (`deferred`), Dismiss sets it aside (`dismissed`).
         const to = el.dataset.to === "deferred" ? "deferred" : "dismissed";
+        // A-17 (DEC-299): the confirmation names the act of the button pressed, which the op's one label cannot say.
+        view.ui.doneFor = { op: "proposedispose", label: to === "deferred" ? "screen.queue.defer" : "act.proposedispose.label.queue" };
         if (el.dataset.key) return { body: Object.assign({ key: el.dataset.key, to: to }, el.dataset.version === "" ? {} : { definitionVersion: Number(el.dataset.version) }) };
         return { body: { project: el.dataset.project, finding: el.dataset.finding || el.dataset.item, to: to } };
       },
@@ -448,6 +450,7 @@ export const queue = Object.freeze({
     { op: "queuemute", label: "act.queuemute.label.queue", rereads: ["queue", "muted"],
       send: function (view, el) {
         // R50 (1): "Turn back on" sends the same form with `unmute`.
+        view.ui.doneFor = { op: "queuemute", label: el.dataset.unmute ? "queue.muted.unmute" : "act.queuemute.label.queue" };   // A-17: the button's own act
         if (el.dataset.unmute === "kind") return { body: { case: el.dataset.mutecase, kinds: [el.dataset.kind], unmute: true } };
         if (el.dataset.unmute === "item") return { body: { item: el.dataset.item, unmute: true } };
         return el.dataset.mutecase && el.dataset.kind ? { body: { case: el.dataset.mutecase, kinds: [el.dataset.kind] } } : { body: { item: el.dataset.item } };
@@ -518,6 +521,7 @@ export const queue = Object.freeze({
     { op: "projectrequestanswer", label: "act.projectrequestanswer.label.queue", rereads: ["queue"],
       send: function (view, el, cs) {
         if (!(el.dataset.project && el.dataset.who && el.dataset.answer)) return null;
+        view.ui.doneFor = { op: "projectrequestanswer", label: el.dataset.answer === "decline" ? "screen.home.request.decline" : "screen.home.request.grant" };   // A-17: Grant or Decline, as pressed
         // R104: the member's word, when she wrote one, goes with the answer as `comment`.
         const comment = String(cs.value(el.dataset.f + "-comment") || "").trim();
         return { query: Object.assign({ projectId: el.dataset.project, handle: el.dataset.who, answer: el.dataset.answer }, comment ? { comment: comment } : {}) };

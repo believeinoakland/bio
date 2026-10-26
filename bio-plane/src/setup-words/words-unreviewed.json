@@ -1874,14 +1874,14 @@
       "en": "A judgement names a scenario of the plan, one of its phases that has a checkpoint, met or not_met, and a note of up to 500 characters. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/checks.mjs",
-      "line": 187
+      "line": 191
     },
     {
       "id": "action-plans.checks.a_phase_starts_after_or",
       "en": "A phase starts after, or a judgement leads to, a phase of the same scenario, or a matter the plan is about. The one named is neither. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/checks.mjs",
-      "line": 179
+      "line": 183
     },
     {
       "id": "action-plans.checks.an_addressee_is_an_office",
@@ -1891,123 +1891,137 @@
       "line": 103
     },
     {
+      "id": "action-plans.checks.an_addressee_names_its_role_and_organisation",
+      "en": "An addressee needs its role, and its organisation unless it is an office. Say which part is missing. Nothing was written.",
+      "module": "action-plans",
+      "file": "bio-plane/src/action-plans/checks.mjs",
+      "line": 107
+    },
+    {
       "id": "action-plans.checks.whether_a_checkpoints_condition_was",
       "en": "Whether a checkpoint's condition was met is the team's own judgement. An assistant may not make it. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/checks.mjs",
-      "line": 183
+      "line": 187
     },
     {
       "id": "action-plans.declared.checkpointrecord",
       "en": "scenario-directed: a member judges a phase's checkpoint met or not met, keyed by (plan, scenario, phase); judged once",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2459
+      "line": 2469
     },
     {
       "id": "action-plans.declared.optionadd",
       "en": "plan-directed: a member adds an option to a plan, keyed by plan; writes an option row",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2451
+      "line": 2461
     },
     {
       "id": "action-plans.declared.optionadopt",
       "en": "proposal-directed: a member adopts a proposal as an option, keyed by proposal; at most once",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2453
+      "line": 2463
     },
     {
       "id": "action-plans.declared.optiondispose",
       "en": "option-directed: a member disposes of one or more options (open, chosen, declined, done, blocked), keyed by (plan, options); every change kept in the option's history",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2455
+      "line": 2465
     },
     {
       "id": "action-plans.declared.optionstart",
       "en": "option-directed: a member starts a chosen option as an action, keyed by (plan, option); composes and promotes the action",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2461
+      "line": 2471
     },
     {
       "id": "action-plans.declared.optionstartpreview",
       "en": "read: what starting a chosen option would do at this instant, keyed by (plan, option) — the action it would compose, the reminders it would set, and whether it would start or the refusal it would answer; allocates no id, sets no reminder and writes nothing",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2463
+      "line": 2473
     },
     {
       "id": "action-plans.declared.planask",
       "en": "plan-directed: keyed by a plan; a member asks the assistant for options on it, opening one planning run whose proposals reach the member's tray; writes no option and moves no bundle",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2465
+      "line": 2475
     },
     {
       "id": "action-plans.declared.planclose",
       "en": "plan-directed: a member closes a plan with a reason, keyed by plan id; the plan stays readable",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2449
+      "line": 2459
     },
     {
       "id": "action-plans.declared.planopen",
       "en": "project-directed: a member opens a plan for one project over named subjects, keyed by project; writes a PLN- record object",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2445
+      "line": 2455
     },
     {
       "id": "action-plans.declared.plansubjectadd",
       "en": "plan-directed: a member adds a subject to a plan with a reason, keyed by (plan, subject); kept in the plan's history",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2447
+      "line": 2457
     },
     {
       "id": "action-plans.declared.scenarioset",
       "en": "plan-directed: a member sets one of a plan's scenarios whole, keyed by (plan, scenario); the earlier version kept in history",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2457
+      "line": 2467
     },
     {
       "id": "action-plans.index.a_plan_is_about_at",
       "en": "a plan is about at least one matter, and that is its last. Close the plan instead. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 741
+      "line": 745
     },
     {
       "id": "action-plans.index.a_proposal_names_who_made",
       "en": "a proposal names who made it, and this one came with no stamped caller. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 813
+      "line": 817
     },
     {
       "id": "action-plans.index.a_source_named_is_not",
       "en": "a source named is not a finding, determination, standard, consequence, plan or option this caller can see. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 897
+      "line": 901
     },
     {
       "id": "action-plans.index.action_plans_provider_was_not",
       "en": "action-plans: {provider} was not given",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2335
+      "line": 2345
+    },
+    {
+      "id": "action-plans.index.addressee_left_part_empty",
+      "en": "an addressee's {empty} was left empty; state it. Nothing was written.",
+      "module": "action-plans",
+      "file": "bio-plane/src/action-plans/index.mjs",
+      "line": 456
     },
     {
       "id": "action-plans.index.id_goes_outside_the_team",
       "en": "{id} goes outside the team before the infraction it serves is documented; say why it goes first, in 1 to {REASON_MAX} characters with no quotation mark, backslash or line break. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 1454
+      "line": 1458
     },
     {
       "id": "action-plans.index.matter_i_is_already_in",
@@ -2035,63 +2049,70 @@
       "en": "phase {id} addresses someone outside the team and has no branch for a hostile response (a refusal, obstruction or retaliation): give it a checkpoint whose not_met judgement leads somewhere",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 1931
+      "line": 1941
     },
     {
       "id": "action-plans.index.phase_index_holds_an_option",
       "en": "phase {index} holds an option the team has not chosen: {detail}. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 1243
+      "line": 1247
     },
     {
       "id": "action-plans.index.phase_index_names_a_phase",
       "en": "phase {index} names a phase or a matter this scenario does not hold: {detail}. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 1247
+      "line": 1251
     },
     {
       "id": "action-plans.index.phase_v1_is_not_a",
       "en": "phase {v1} is not a phase this scenario can hold: {detail}. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 1239
+      "line": 1243
     },
     {
       "id": "action-plans.index.regulated_dates_list",
       "en": "regulated dates are a list of at most {max} {date: YYYY-MM-DD, basis}, each basis naming the statute, order or commitment that sets it. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 468
+      "line": 472
     },
     {
       "id": "action-plans.index.run_string_is_not_a",
       "en": "run {String} is not a planning run of this plan. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2321
+      "line": 2331
     },
     {
       "id": "action-plans.index.that_checkpoint_was_judged_judged",
       "en": "that checkpoint was judged {judged} by {author}. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 1397
+      "line": 1401
     },
     {
       "id": "action-plans.index.the_plan_holds_no_scenario",
       "en": "the plan holds no scenario {String}. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 1196
+      "line": 1200
+    },
+    {
+      "id": "action-plans.index.tier_stated_by_the_option",
+      "en": "the tier option {option} of plan {plan} states",
+      "module": "action-plans",
+      "file": "bio-plane/src/action-plans/index.mjs",
+      "line": 1469
     },
     {
       "id": "action-plans.says.phase_leads_here_not_led",
       "en": "the phase that leads here has not led here yet, so no occurrence is read",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 1291
+      "line": 1295
     },
     {
       "id": "action-plans.why.suspected_matter_concluded",
@@ -15258,98 +15279,98 @@
       "en": "cites material or a question into a case's references or a question's basis, and sever takes it back",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1186
+      "line": 1220
     },
     {
       "id": "citation.declared.citeimported",
       "en": "rests a question on another team's accepted finding at the edition shown; the grade is the edition's own, and withdrawimported takes it back",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1199
+      "line": 1233
     },
     {
       "id": "citation.declared.drawquestion",
       "en": "project-directed: keyed by a project and one question; draws the question into the project as a confirmed `cites` edge and promotes the project; moves the project's bundle",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1190
+      "line": 1224
     },
     {
       "id": "citation.declared.reinstate",
       "en": "moves a severed cites edge, or a question's severed leg, back to confirmed with the member's reason",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1196
+      "line": 1230
     },
     {
       "id": "citation.declared.sever",
       "en": "moves a case's cites edge, or a question's own leg, to severed with the member's reason; nothing is deleted",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1193
+      "line": 1227
     },
     {
       "id": "citation.declared.withdrawimported",
       "en": "takes another team's finding off a question's answer with the member's reason; the history keeps it, and so does each version already frozen",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1203
+      "line": 1237
     },
     {
       "id": "citation.index.a_case_rests_on_material",
       "en": "a case rests on material, or on a question the team is asking. These members of the selection are neither, and the whole call is refused rather than narrowed to the ones that are.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 567
+      "line": 599
     },
     {
       "id": "citation.index.a_citation_points_at_material",
       "en": "a citation points at material or at a question, and these members of the selection are neither, so they carry no citation to move. The whole call is refused rather than narrowed.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 288
+      "line": 305
     },
     {
       "id": "citation.index.a_leg_of_a_questions_basis",
       "en": "a leg of a question's basis says what the material DOES for the answer, and this call does not say. It is never assumed: a leg that cuts against the case is first-class here, and guessing would put a claim about your own reasoning in the record that you did not make. State role as one of: {roles}.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 524
+      "line": 556
     },
     {
       "id": "citation.index.a_note_is_at_most",
       "en": "a note is at most 200 characters and cannot contain a quote, a backslash, or a newline",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 504
+      "line": 536
     },
     {
       "id": "citation.index.a_part_of_a_document_is",
       "en": "a part of a document is a part of ONE document, and this call would write {n} legs. Writing the same page or passage onto each of them would put claims in the record that nobody made — the extent was named once. Cite the one document this part belongs to, and cite the rest separately.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 642
+      "line": 674
     },
     {
       "id": "citation.index.a_passage_found_by_search",
       "en": "a passage found by search is cited by the document it is in, the capture it was found in and its part of that capture, and this one names no document you can see, no capture, or no part; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 443
+      "line": 475
     },
     {
       "id": "citation.index.a_question_is_drawn_into",
       "en": "a question is drawn into a case, and this is not a case. A question rests on another question through a leg of its own basis, which citing onto it writes.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 861
+      "line": 893
     },
     {
       "id": "citation.index.a_question_rests_on_material",
       "en": "a question rests on material or on another question, and nothing else in the record can be a leg of its basis. These members of the selection are neither, and the whole call is refused rather than narrowed to the ones that are.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 562
+      "line": 594
     },
     {
       "id": "citation.index.a_reason_is_at_most",
@@ -15363,56 +15384,63 @@
       "en": "a role says what material does for a QUESTION's answer, and this citing object is a case. A case's citation edge carries no role, so this one would be dropped rather than recorded — refused instead, because a field stated in one place and honoured nowhere is how the record and its projections drift apart.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 532
+      "line": 277
     },
     {
       "id": "citation.index.bad_ground",
       "en": "a new citation can join only a group its question already declares, and this one names {ground}; a case has no groups. Nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 544
+      "line": 576
     },
     {
       "id": "citation.index.changes_basis_legs_added",
       "en": "Changes: basis legs added for {listed}, each with role {role}. Grades: {graded} filled from the record's own resolutions to this question's subject; {ungraded} left undetermined and stated.{note}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 795
+      "line": 827
     },
     {
       "id": "citation.index.changes_basis_legs_on",
       "en": "Changes: basis legs on {listed} moved to '{to}', each leg kept as it was. Reason: {why}.\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 359
+      "line": 390
+    },
+    {
+      "id": "citation.index.changes_basis_legs_role_moved",
+      "en": "Changes: basis legs on {listed} moved to '{to}', each leg kept as it was except the role of {moved}, which moves from {from} to {role}. Reason: {why}.\n",
+      "module": "citation",
+      "file": "bio-plane/src/citation/index.mjs",
+      "line": 389
     },
     {
       "id": "citation.index.changes_cites_edges_added",
       "en": "Changes: cites edges added to {listed}.{note}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 797
+      "line": 829
     },
     {
       "id": "citation.index.changes_cites_edges_to",
       "en": "Changes: cites edges to {listed} moved to '{to}'. Reason: {why}.\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 360
+      "line": 391
     },
     {
       "id": "citation.index.changes_imported_leg_added",
       "en": "Changes: basis leg added for {ref} at edition {edition}, role {role}. Grade: as that edition published it, none of its own.{note}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1025
+      "line": 1057
     },
     {
       "id": "citation.index.changes_imported_leg_removed",
       "en": "Changes: basis leg on {ref} (edition {edition}) removed. Reason: {why}.\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1080
+      "line": 1112
     },
     {
       "id": "citation.index.citations_live_on_the_citing",
@@ -15426,420 +15454,420 @@
       "en": "citations live on the CITING object, and this is neither a case nor a question. A case keeps them in its references; a question keeps them in the basis its answer rests on (State Rules 5.2). Nothing else in the record holds either.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 489
+      "line": 521
     },
     {
       "id": "citation.index.citing_onto_a_question_needs",
       "en": "citing onto a question needs the inquiry module's role vocabulary, leg grammar and earned registry, and your team's Civicsmith was created without them, so nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 516
+      "line": 280
     },
     {
       "id": "citation.index.citing_this_many_records",
       "en": "citing this many records at once would push this {object}'s bundle.md past the 1MB inline limit. Every edge is written into the document, so the ceiling is on edges in ONE object, not on the size of a selection. Cite in smaller batches; nothing has been written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 810
+      "line": 842
     },
     {
       "id": "citation.index.drawing_references_block",
       "en": "the project's references block is not in a shape this grammar can extend in place. Drawing a question in edits only that block and never rewrites the rest of the document.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 907
+      "line": 939
     },
     {
       "id": "citation.index.drawing_this_question_in_would",
       "en": "drawing this question in would push this case's bundle.md past the 1MB inline limit. Every edge is written into the document; nothing has been written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 919
+      "line": 951
     },
     {
       "id": "citation.index.every_member_of_the_selection",
       "en": "every member of the selection was already cited; nothing was written{v1}",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 705
+      "line": 737
     },
     {
       "id": "citation.index.for_question_suffix",
       "en": "; for question {question}",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 784
+      "line": 816
     },
     {
       "id": "citation.index.imported_already_cited",
       "en": "this question already rests on that finding; nothing was written. Moving to a later edition is the re-evaluation's act, not a second leg.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1013
+      "line": 1045
     },
     {
       "id": "citation.index.imported_basis_block_not_editable",
       "en": "the question's basis block is not in a shape this grammar can edit in place; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1073
+      "line": 1105
     },
     {
       "id": "citation.index.imported_edition_malformed",
       "en": "an edition is a whole number of one or more, the edition of the other team's case your team accepted, because each edition is its own document with its own published grades; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 986
+      "line": 1018
     },
     {
       "id": "citation.index.imported_inherits_publication",
       "en": "citing this inherits the fact of publication, not the credibility of its content",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1039
+      "line": 1071
     },
     {
       "id": "citation.index.imported_member_only",
       "en": "only a named member rests a question on another team's finding or takes it back; this came from an automated or unnamed credential, so nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 934
+      "line": 966
     },
     {
       "id": "citation.index.imported_not_a_question",
       "en": "{inquiry} is not a question, and another team's finding is cited from a question; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 945
+      "line": 977
     },
     {
       "id": "citation.index.imported_not_cited",
       "en": "this question holds no leg on that finding, so there is nothing to take back. A leg on a document or a question is severed, not withdrawn.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1068
+      "line": 1100
     },
     {
       "id": "citation.index.imported_ref_malformed",
       "en": "the import and the finding named here do not spell another team's finding, so there is nothing to rest the question on; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 982
+      "line": 1014
     },
     {
       "id": "citation.index.imported_withdraw_needs_reason",
       "en": "taking another team's finding off a question records WHY, and a change with no reason is an unexplained change; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1057
+      "line": 1089
     },
     {
       "id": "citation.index.imported_withdraw_too_large",
       "en": "the reason would push this question's bundle.md past the 1MB inline limit; nothing has been written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1084
+      "line": 1116
     },
     {
       "id": "citation.index.imported_would_be_too_large",
       "en": "resting on this finding would push this question's bundle.md past the 1MB inline limit; nothing has been written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1029
+      "line": 1061
     },
     {
       "id": "citation.index.k_cannot_be_written_into",
       "en": "'{k}' cannot be written into the record as it stands: a value describing which part of a document is at most 200 characters and cannot contain a quotation mark, a backslash, a line break or a comment mark. Those characters would reshape the document rather than appear in it.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 650
+      "line": 682
     },
     {
       "id": "citation.index.log_note",
       "en": " Note: {note}.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 785
+      "line": 817
     },
     {
       "id": "citation.index.no_question_drawn_into_case",
       "en": "no question by that id is one you can see, so it cannot be drawn into this case; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 876
+      "line": 908
     },
     {
       "id": "citation.index.no_question_kept_with_it",
       "en": "no question by that id is one you can see, so this citation cannot be kept with it; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 465
+      "line": 497
     },
     {
       "id": "citation.index.not_a_question_cited_for",
       "en": "{qid} is not a question, so it cannot be the question this was cited for; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 469
+      "line": 501
     },
     {
       "id": "citation.index.not_a_question_drawn_into",
       "en": "{qid} is not a question, so it cannot be drawn into this case as one; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 880
+      "line": 912
     },
     {
       "id": "citation.index.part_named_written_nowhere",
       "en": ". The part of the document this call named was written NOWHERE, because no leg was written at all: making an existing citation more specific is a separate authored act on this record's own plan.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 706
+      "line": 738
     },
     {
       "id": "citation.index.projects_bundle_md_does_not_parse",
       "en": "the project's own bundle.md does not parse under the restricted grammar",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 579
+      "line": 611
     },
     {
       "id": "citation.index.projects_references_block_extend",
       "en": "the project's references block is not in a shape this grammar can extend in place. Citing edits only that block and never rewrites the rest of the document.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 728
+      "line": 760
     },
     {
       "id": "citation.index.rl_is_not_a_role",
       "en": "'{rl}' is not a role a basis leg can carry. The set is closed and is published by op=affordances beside the act: {roles}.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 528
+      "line": 284
     },
     {
       "id": "citation.index.session_cited_many_records",
       "en": "### Session {when} | Cited {count} records | {who}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 792
+      "line": 824
     },
     {
       "id": "citation.index.session_cited_one_record",
       "en": "### Session {when} | Cited 1 record | {who}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 791
+      "line": 823
     },
     {
       "id": "citation.index.session_head_many_citations",
       "en": "### Session {when} | {verb} {count} citations | {who}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 354
+      "line": 383
     },
     {
       "id": "citation.index.session_head_one_citation",
       "en": "### Session {when} | {verb} {count} citation | {who}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 353
+      "line": 382
     },
     {
       "id": "citation.index.session_rested_many_records",
       "en": "### Session {when} | Rested this question on {count} records ({role}) | {who}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 789
+      "line": 821
     },
     {
       "id": "citation.index.session_rested_on_imported",
       "en": "### Session {when} | Rested this question on another team's finding ({role}) | {who}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1023
+      "line": 1055
     },
     {
       "id": "citation.index.session_rested_one_record",
       "en": "### Session {when} | Rested this question on 1 record ({role}) | {who}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 788
+      "line": 820
     },
     {
       "id": "citation.index.session_took_imported_back",
       "en": "### Session {when} | Took another team's finding back off this question | {who}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1078
+      "line": 1110
     },
     {
       "id": "citation.index.set_had_moved_since",
       "en": " (the set had moved since it was made; citing is report-weight and proceeded)",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 778
+      "line": 810
     },
     {
       "id": "citation.index.the_part_of_the_document_label",
       "en": "the part of the document this citation names",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 683
+      "line": 715
     },
     {
       "id": "citation.index.the_part_of_the_document_refused",
       "en": "the part of the document this citation names is refused by the SAME catalog function op=promote runs at the write, so nothing was written. A citation that names no part means the whole document, which is always a legal thing to cite.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 690
+      "line": 722
     },
     {
       "id": "citation.index.the_questions_basis_block",
       "en": "the question's basis block is not in a shape this grammar can extend in place. Citing appends legs to that block and never rewrites the rest of the document.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 765
+      "line": 371
     },
     {
       "id": "citation.index.the_questions_references_block",
       "en": "the question's references block is not in a shape this grammar can extend in place. Citing edits only that block and the basis block, and never rewrites the rest of the document.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 760
+      "line": 792
     },
     {
       "id": "citation.index.the_reasons_appended_to_these",
       "en": "the reasons appended to these citations would push bundle.md past the 1MB inline limit",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 365
+      "line": 396
     },
     {
       "id": "citation.index.the_references_block_not_in_shape",
       "en": "the references block is not in a shape this grammar can edit in place",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 346
+      "line": 363
     },
     {
       "id": "citation.index.the_team_has_retired_these",
       "en": "the team has RETIRED these since the edge was severed, recording that they are superseded or no longer stand, and reinstating the edge would read to every later member as live support. Cite what superseded them, or re-collect the source as a new record and cite that. The whole call is refused rather than narrowed to the members that are not retired.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 299
+      "line": 316
     },
     {
       "id": "citation.index.the_team_has_retired_these_now",
       "en": "the team has RETIRED these, recording that they are superseded or no longer stand, and a citation made now would read to every later member as live support. Cite what superseded them, or re-collect the source as a new record and cite that. The whole call is refused rather than narrowed to the members that are not retired.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 576
+      "line": 608
     },
     {
       "id": "citation.index.the_team_has_retired_this",
       "en": "the team has RETIRED this, recording that it is superseded or no longer stands, and drawing on it now would read to every later member as live support. Draw on what superseded it.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 884
+      "line": 916
     },
     {
       "id": "citation.index.these_targets_already_carry",
       "en": "these targets already carry a SEVERED cites edge, which is a recorded decision to cut the dependency, not the absence of one. Citing neither reverses it silently nor skips past it. Reinstating a severance is a separate action that records its own reason.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 617
+      "line": 649
     },
     {
       "id": "citation.index.this_call_names_a_passage",
       "en": "this call names a passage found by search and also a selection or a part of a document. A found passage already names its document and its part, so the record could not tell which you meant; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 426
+      "line": 458
     },
     {
       "id": "citation.index.this_call_names_fields",
       "en": "this call names {names}, which this act does not carry, so the record cannot tell what part of the document was meant. It is REFUSED rather than ignored: a field accepted and quietly dropped leaves a citation that looks like the one you made and is not. The fields this act takes are: {fields}.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 633
+      "line": 665
     },
     {
       "id": "citation.index.this_call_names_neither",
       "en": "this call names neither a selection nor a passage found by search, so there is nothing to cite; nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 427
+      "line": 459
     },
     {
       "id": "citation.index.this_case_already_carries",
       "en": "this case already carries a SEVERED edge to this question, which is a recorded decision to cut the dependency, not the absence of one. Drawing on it again would neither reverse that decision silently nor skip past it. Reinstating a severance is a separate action that records its own reason.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 895
+      "line": 927
     },
     {
       "id": "citation.index.this_case_already_draws",
       "en": "this case already draws on this question; nothing was written",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 900
+      "line": 932
     },
     {
       "id": "citation.index.this_passage_was_found_in",
       "en": "this passage was found in capture {sha} of {doc}, and a citation of {doc_2} is pinned to {v1}, so its part could name different words. Nothing was written.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 450
+      "line": 482
     },
     {
       "id": "citation.index.this_selection_resolves_to_nothing_to_cite",
       "en": "this selection resolves to no members, so there is nothing to cite. It may have named ids that do not exist, or its members may have been purged or hidden since it was made.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 697
+      "line": 729
     },
     {
       "id": "citation.index.this_selection_resolves_to_nothing_to_move",
       "en": "this selection resolves to no members, so there is nothing to move. It may have named ids that do not exist, or its members may have been purged or hidden since it was made.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 274
+      "line": 291
     },
     {
       "id": "citation.index.trigger_a_part_found_in_capture",
       "en": "Trigger: a part of {doc} found by search in capture {capture}",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 782
+      "line": 814
     },
     {
       "id": "citation.index.trigger_imported_finding",
       "en": "Trigger: {ref} at edition {edition}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 1024
+      "line": 1056
     },
     {
       "id": "citation.index.trigger_question_drawn",
       "en": "Trigger: question {qid} drawn into this case\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 912
+      "line": 944
     },
     {
       "id": "citation.index.trigger_selection_handle",
       "en": "Trigger: selection {handle}\n",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 357
+      "line": 386
     },
     {
       "id": "citation.index.trigger_selection_moved",
       "en": "Trigger: selection {handle}{moved}",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 783
+      "line": 815
     },
     {
       "id": "citation.index.verb_an_edge_records_why",
@@ -15853,14 +15881,14 @@
       "en": "{verb} requires an edge currently in {states}. These targets are not, so the whole call is refused: a batch that moved only the eligible members would be a state change the operator did not ask for.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 329
+      "line": 346
     },
     {
       "id": "citation.index.which_part_of_a_document",
       "en": "which part of a document a citation rests on is recorded on a leg of a QUESTION's basis, and this citing object is a case. A case's citation edge names the document and has no slot for a page or a passage, so this extent would be dropped rather than recorded — refused instead, for the reason a role is refused here: a field stated in one place and honoured nowhere is how the record and its projections drift apart.",
       "module": "citation",
       "file": "bio-plane/src/citation/index.mjs",
-      "line": 638
+      "line": 670
     },
     {
       "id": "citation.recorded.a_read_names_the_member",
@@ -15902,7 +15930,7 @@
       "en": "{text}\n## Session Log\n\n{entry}",
       "module": "citation",
       "file": "bio-plane/src/citation/splice.mjs",
-      "line": 224
+      "line": 263
     },
     {
       "id": "civil-time.calendar.list_cannot_read",
@@ -16343,42 +16371,49 @@
       "en": "A cure is already recorded for that breach against that standard. End that link first, saying why. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/checks.mjs",
-      "line": 218
+      "line": 224
     },
     {
       "id": "conformance.checks.a_determination_is_recorded_only",
       "en": "A determination is recorded only by the determination act, and never edited: a correction is a new determination that supersedes it. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/checks.mjs",
-      "line": 222
+      "line": 228
     },
     {
       "id": "conformance.checks.a_determination_rests_on_findings",
       "en": "A determination rests on findings of three kinds: published by this project in a ratified case edition; checked for publication and held unsigned by this project; or another team's finding this team has accepted at the edition named. The finding named is none of these. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/checks.mjs",
-      "line": 94
+      "line": 96
     },
     {
       "id": "conformance.checks.an_act_is_compared_as",
       "en": "An act is compared as the act of an office or an organisation. The people who took part are recorded on the act, never as the one who acted. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/checks.mjs",
-      "line": 178
+      "line": 184
+    },
+    {
+      "id": "conformance.checks.civicsmith_cannot_yet_tell_whether",
+      "en": "Civicsmith cannot yet tell whether this standard was in force and binding on this body on the day of the act, so the act is not found noncompliant against it. Settle it in the standard first: when it was in force, and whom it binds. Nothing was written.",
+      "module": "conformance",
+      "file": "bio-plane/src/conformance/checks.mjs",
+      "line": 176
     },
     {
       "id": "conformance.checks.that_determination_reads_undetermined_a",
       "en": "That determination reads undetermined: a finding it rests on no longer stands (its check was voided, or the other team withdrew or revised the edition accepted). A member re-evaluates it by superseding it with a determination resting on findings that stand. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/checks.mjs",
-      "line": 190
+      "line": 196
     },
     {
       "id": "conformance.declared.determine",
       "en": "act-directed: a member determines a government act against named standards on published findings, keyed by (project, act); writes a CONF- bundle",
       "module": "conformance",
       "file": "bio-plane/src/conformance/index.mjs",
-      "line": 2250
+      "line": 2255
     },
     {
       "id": "conformance.index.a_determination_measures_the_act",
@@ -16420,7 +16455,7 @@
       "en": "name which side of the question states what the standard requires, a or b: your team's Civicsmith never chooses it. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/index.mjs",
-      "line": 1757
+      "line": 1762
     },
     {
       "id": "conformance.index.no_office_entity_is_held",
@@ -16448,7 +16483,7 @@
       "en": "whether {standard} binds {v1} is undetermined ({v2}), and an act is found noncompliant only against a standard that binds its body: a member settles it in standards first. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/index.mjs",
-      "line": 1071
+      "line": 1076
     },
     {
       "id": "connection-grammar.conformance.a_hunch_is_returned_with",
@@ -19178,49 +19213,49 @@
       "en": "candidate-directed: keyed by a candidate, reached where its sides are shown; records how the sides differ, or which is wrong and why, and never edits a side",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3166
+      "line": 3167
     },
     {
       "id": "contradiction.declared.contradictiondismiss",
       "en": "candidate-directed: keyed by a candidate, reached where its sides are shown; sets a lead aside for one of three stated reasons, kept, never deleted",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3164
+      "line": 3165
     },
     {
       "id": "contradiction.declared.contradictionflag",
       "en": "document-directed: keyed by a passage in each of two documents the member may see, reached from either document; sets them side by side as a contradiction for the project to settle, with the member's reason, and changes neither document",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3170
+      "line": 3171
     },
     {
       "id": "contradiction.declared.contradictionoptin",
       "en": "conflict-directed: keyed by a candidate and the member's project, reached from the conflict's notice; the project asks to resolve a conflict with a record its members cannot see, never withdrawn",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3172
+      "line": 3173
     },
     {
       "id": "contradiction.declared.contradictionrespond",
       "en": "conflict-directed: keyed by a candidate and the member's project, reached from the conflict's notice; a response disclosing only what its author chooses, relayed once the projects are named to each other",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3174
+      "line": 3175
     },
     {
       "id": "contradiction.declared.contradictiontakeup",
       "en": "candidate-directed: keyed by a candidate, reached where its sides are shown; opens one contradiction inquiry framed around one side",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3168
+      "line": 3169
     },
     {
       "id": "contradiction.flag_why",
       "en": "a member set these two documents side by side as contradicting, with their reason",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2631
+      "line": 2632
     },
     {
       "id": "contradiction.index.acceptance_not_standing_detail",
@@ -19241,7 +19276,7 @@
       "en": "this question names a contradiction the record does not hold, or one whose side its author may not see",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2741
+      "line": 2742
     },
     {
       "id": "contradiction.index.candidate_unreadable",
@@ -19304,14 +19339,14 @@
       "en": "the part of the disclosure that is not one of cover or email: {part}",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3007
+      "line": 3008
     },
     {
       "id": "contradiction.index.disclosure_not_yours_detail",
       "en": "a response may share only your own cover or your own email address",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3016
+      "line": 3017
     },
     {
       "id": "contradiction.index.dismissal_reason_detail",
@@ -19325,7 +19360,7 @@
       "en": "the question's document is not held as text",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2486
+      "line": 2487
     },
     {
       "id": "contradiction.index.evidence_not_seen_detail",
@@ -19339,35 +19374,35 @@
       "en": "{name}: {why}",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2520
+      "line": 2521
     },
     {
       "id": "contradiction.index.flag_no_reason_detail",
       "en": "say in your own words how the two disagree: no reason was given",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2586
+      "line": 2587
     },
     {
       "id": "contradiction.index.flag_passage_unheld",
       "en": "no passage you can see is held there",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2537
+      "line": 2538
     },
     {
       "id": "contradiction.index.flag_passage_unnamed",
       "en": "name the capture and the extent in it",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2526
+      "line": 2527
     },
     {
       "id": "contradiction.index.flag_same_document_detail",
       "en": "both passages are in the same document",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2581
+      "line": 2582
     },
     {
       "id": "contradiction.index.judgement_by",
@@ -19409,7 +19444,7 @@
       "en": "machine work records who proposed it; the plane stamps that from the credential that asked, so an empty one means the act arrived by a route that does not attribute it",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2701
+      "line": 2702
     },
     {
       "id": "contradiction.index.no_reason_detail",
@@ -19423,14 +19458,14 @@
       "en": "no run named '{run}' is open in this store",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2708
+      "line": 2709
     },
     {
       "id": "contradiction.index.no_run_named_detail",
       "en": "pass run=<the run whose work this is>: machine work names the run it came from",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2709
+      "line": 2710
     },
     {
       "id": "contradiction.index.no_such_detail",
@@ -19444,7 +19479,7 @@
       "en": "no contradiction you can see answers to that id for this project",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3094
+      "line": 3095
     },
     {
       "id": "contradiction.index.no_wrong_side_detail",
@@ -19458,28 +19493,28 @@
       "en": "two projects' conclusions have no wrong side and no double-speak",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2474
+      "line": 2475
     },
     {
       "id": "contradiction.index.not_a_contradiction_inquiry_detail",
       "en": "no question you can see answers to that id as one taken up from a contradiction",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2470
+      "line": 2471
     },
     {
       "id": "contradiction.index.not_a_party_detail",
       "en": "the project named does not rest on the side of this conflict you can see",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2947
+      "line": 2948
     },
     {
       "id": "contradiction.index.not_a_project_conflict_detail",
       "en": "a lead is not a conflict the record holds between projects",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2952
+      "line": 2953
     },
     {
       "id": "contradiction.index.pair_not_formed_cut_detail",
@@ -19514,28 +19549,28 @@
       "en": "recommendation {index} names '{coordinate}'",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2659
+      "line": 2660
     },
     {
       "id": "contradiction.index.recommend_no_coordinates_detail",
       "en": "name at least one respect in which the sides may differ",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2649
+      "line": 2650
     },
     {
       "id": "contradiction.index.recommend_no_reason_detail",
       "en": "recommendation {index} carries no reason",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2667
+      "line": 2668
     },
     {
       "id": "contradiction.index.recommend_not_standing_detail",
       "en": "that contradiction is not open to recommendation",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2675
+      "line": 2676
     },
     {
       "id": "contradiction.index.record_cannot_be_dismissed_detail",
@@ -19549,49 +19584,49 @@
       "en": "- {when} · {who} · resolution recorded as {kind} (contradiction {candidate})",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2492
+      "line": 2493
     },
     {
       "id": "contradiction.index.response_before_opt_in_detail",
       "en": "this project has not asked to resolve it yet",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3057
+      "line": 3058
     },
     {
       "id": "contradiction.index.response_no_text_detail",
       "en": "a response says something in the responder's own words",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3062
+      "line": 3063
     },
     {
       "id": "contradiction.index.run_not_running_detail",
       "en": "the run '{run}' has ended; its work is read against the conditions it was formed under",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2719
+      "line": 2720
     },
     {
       "id": "contradiction.index.side_no_longer_held",
       "en": "a side of this contradiction is no longer held",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2415
+      "line": 2416
     },
     {
       "id": "contradiction.index.take_up_no_frame_detail",
       "en": "choose the side the question is asked around: a or b",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2407
+      "line": 2408
     },
     {
       "id": "contradiction.index.take_up_no_question_detail",
       "en": "word the question, or accept the default shown with the candidate",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2402
+      "line": 2403
     },
     {
       "id": "contradiction.index.taken_up_detail",
@@ -19640,14 +19675,14 @@
       "en": "these two passages are already set side by side as a contradiction, and it stays as it is",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2630
+      "line": 2631
     },
     {
       "id": "contradiction.says.flag_written",
       "en": "these two passages are set side by side as a contradiction for your project to settle: a lead, not a finding. Neither document is changed",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2637
+      "line": 2638
     },
     {
       "id": "contradiction.says.two_documents_flagged",
@@ -25240,7 +25275,21 @@
       "en": "rings is 1 or 2: the graph shows the records one or two steps from the centre",
       "module": "explore",
       "file": "bio-plane/src/explore/graph.mjs",
-      "line": 58
+      "line": 59
+    },
+    {
+      "id": "explore.label.event",
+      "en": "{kind} · {date}",
+      "module": "explore",
+      "file": "bio-plane/src/explore/labels.mjs",
+      "line": 55
+    },
+    {
+      "id": "explore.label.event_undated",
+      "en": "{kind} · undated",
+      "module": "explore",
+      "file": "bio-plane/src/explore/labels.mjs",
+      "line": 55
     },
     {
       "id": "explore.ops.a_preset_is_one_of",
@@ -25359,21 +25408,21 @@
       "en": "reading-directed: keyed by a capture; at a member's act, the AI reads the pages Civicsmith could not, on the account that pays and within its limits; the text is labeled the AI's reading and undetermined; moves no bundle",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3482
+      "line": 3490
     },
     {
       "id": "extraction.declared.readheld",
       "en": "reading-directed: keyed by a capture's digest; at a member's act, Civicsmith reads a document its record holds whole and holds no reading of, or holds a reading of that found nothing for want of the whole; the reading is machine-made and undetermined, the earlier one kept in the history; moves no bundle",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3487
+      "line": 3495
     },
     {
       "id": "extraction.declared.reading",
       "en": "read: keyed by a capture's digest; its reading, how far a text read in pieces has been read, and its text units a page at a time; writes nothing",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3485
+      "line": 3493
     },
     {
       "id": "extraction.drift.this_text_was_graded_under",
@@ -25429,133 +25478,133 @@
       "en": "a re-read replaces this capture's reading, its text units and the standing of content rows cited under the old one, which is a write to the record and asks the capability a promotion asks.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2918
+      "line": 2926
     },
     {
       "id": "extraction.index.a_transcription_replaces_this_captures",
       "en": "a transcription replaces this capture's reading, its text units and the standing of content rows cited under the old one, which is a write to the record and asks the capability a promotion asks.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3110
+      "line": 3118
     },
     {
       "id": "extraction.index.cells_bytes_not_held",
       "en": "the file this document was read from could not be read just now, so its cells could not be made; try again",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2220
+      "line": 2228
     },
     {
       "id": "extraction.index.cells_no_reading",
       "en": "no reading of this document is held, so none of its cells are",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2178
+      "line": 2186
     },
     {
       "id": "extraction.index.cells_not_interpretable",
       "en": "this document's cells cannot be made from its file here",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2212
+      "line": 2220
     },
     {
       "id": "extraction.index.cells_not_made",
       "en": "this document's cells could not be made ({reason})",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2224
+      "line": 2232
     },
     {
       "id": "extraction.index.cells_sheet_not_held",
       "en": "this sheet's cells were not made when it was read, and its file does not hold them to make now",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2207
+      "line": 2215
     },
     {
       "id": "extraction.index.cells_sheet_not_named",
       "en": "no sheet was named, so no cells could be made",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2180
+      "line": 2188
     },
     {
       "id": "extraction.index.cells_sheet_not_named_in",
       "en": "the reading names no sheet called {sheet}",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2208
+      "line": 2216
     },
     {
       "id": "extraction.index.length_transcription_s_were_graded",
       "en": "{length} transcription(s) were graded under a measurement a later probe found WEAKER. NOTHING HAS BEEN RE-GRADED and nothing will be automatically: this names the work so a member can do it (DEC-4)",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3260
+      "line": 3268
     },
     {
       "id": "extraction.index.no_evidence_store_set_up",
       "en": "your team's Civicsmith has no evidence store set up, so the stored bytes cannot be read again",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2818
+      "line": 2826
     },
     {
       "id": "extraction.index.no_ocr_member_is_bound",
       "en": "no OCR member is bound to this instance (the OCR_WORKER service binding is absent), so there is no tier 3 to reach. Nothing was read, called or written. An instance that installs the member later can re-read this capture then (D-115, D-319).",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2922
+      "line": 2930
     },
     {
       "id": "extraction.index.no_text_provenance_recorded",
       "en": "this reading carries no text provenance, which is not the same as its text not having been transcribed -- nobody recorded how it was produced",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1989
+      "line": 1997
     },
     {
       "id": "extraction.index.ocr_stringify_is_not_a",
       "en": "ocr={stringify} is not a value this op reads. Send ocr=1 to re-read the document with the OCR member, or leave the parameter off for the ordinary read.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2908
+      "line": 2916
     },
     {
       "id": "extraction.index.op_pagetranscribe_writes_this_captures",
       "en": "op=pagetranscribe writes this capture's reading and spends the account that pays for it, and an agent credential cannot declare that as one of its writes. A member can ask for it (D-199).",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3105
+      "line": 3113
     },
     {
       "id": "extraction.index.part_omitted",
       "en": "this document's {key} ({bytes} bytes) is not kept with its reading, which would pass {limit} bytes; its text is kept whole and every line can be searched",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1598
+      "line": 1606
     },
     {
       "id": "extraction.index.readheld_no_sha",
       "en": "a read of a held document is about one captured document, named by its fingerprint",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3468
+      "line": 3476
     },
     {
       "id": "extraction.index.reading_size",
       "en": "{mib} MiB ({bytes} bytes)",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1633
+      "line": 1641
     },
     {
       "id": "extraction.index.reading_too_large",
       "en": "this document's reading is too large to keep whole: {size}; the largest part is {key}",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1635
+      "line": 1643
     },
     {
       "id": "extraction.index.reread_candidates_frontier",
@@ -25569,42 +25618,42 @@
       "en": "the AI's part for transcribing pages has not passed its test bar here (run-rules R19), so it is not switched on. Nothing was read, rendered, sent or written, and no account was looked at.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3116
+      "line": 3124
     },
     {
       "id": "extraction.index.this_record_holds_no_reading",
       "en": "this record holds no reading of that capture that you can see, so there is nothing for a re-read to replace. A capture is read when a record carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2927
+      "line": 2935
     },
     {
       "id": "extraction.index.this_record_holds_no_reading_2",
       "en": "this record holds no reading of that capture that you can see, so there are no pages for the AI to transcribe. A capture is read when a record carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3121
+      "line": 3129
     },
     {
       "id": "extraction.why.basis_changed",
       "en": "the stored reading changed while this {act} was being made, so it was not written over; it can be asked again",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3356
+      "line": 3364
     },
     {
       "id": "extraction.why.press_owed",
       "en": "your team's Civicsmith reads {count} page(s) with its text recognition in the background, and the reading shows them as each is read",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3020
+      "line": 3028
     },
     {
       "id": "extraction.why.request_too_large",
       "en": "this file is {size} bytes, more than a request reads whole here ({limit} bytes), so it is read in the background",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3001
+      "line": 3009
     },
     {
       "id": "file-safety.checks.the_file_scanner_could_not_read",
@@ -35936,224 +35985,224 @@
       "en": "a status is a fact about OUR OWN machinery (D-103/D-95): this instance's governor is holding the host, which is distinguishable from the source being unreachable and must not be read as evidence about the publisher. It clears for every member when the hold expires; there is no act that ends it.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 354
+      "line": 365
     },
     {
       "id": "machinery-producers.index.a_status_is_a_fact_2",
       "en": "a status is a fact about OUR OWN machinery (D-491, BOB #32 item 3): this instance's renderer, render allowance or host pacing is what holds the render, which says nothing about the page. The served frame is never filed as the content, so while it waits and after it expires there is NO capture of what a visitor saw.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 846
+      "line": 857
     },
     {
       "id": "machinery-producers.index.a_sweeps_status_is_link",
       "en": "a sweep's status is link-sweep's (its R8, R11): derived on read from the sweep's own runs and backlog, read here and never restated. It goes to the members of the sweep's project who may see its record, and it leaves on the first read after it stops holding.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 965
+      "line": 976
     },
     {
       "id": "machinery-producers.index.a_working_on_notices_state",
       "en": "a working-on notice's state is network-notices' (its R12, R13, R22), read here and never restated. It is told to the project's owners and to nobody else, and it leaves on the first read after it stops holding.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 1014
+      "line": 1025
     },
     {
       "id": "machinery-producers.index.both_principals_are_named_dec",
       "en": "BOTH PRINCIPALS ARE NAMED (DEC-27(b), DEC-55.4): the act is the daemon's, performed at the session's request, under the plane credential the run holds and paid for by the level of the Claude-account cascade the run named. Never a token value, and never a person's name on the act itself.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 651
+      "line": 662
     },
     {
       "id": "machinery-producers.index.cooloff_no_refusal_instant",
       "en": "the governor row is in cool-off but carries no instant for the refusal that started it, so how long this has been true is not derivable",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 359
+      "line": 370
     },
     {
       "id": "machinery-producers.index.eligibility_is_captures_rule",
       "en": "eligibility is capture's rule (its R8), read as the next archive tick would read it (monitoring R47); the tick itself fires the fallback, and this item clears when the address answers again.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 728
+      "line": 739
     },
     {
       "id": "machinery-producers.index.failing_run_no_first_failure",
       "en": "the failing run carries no first-failure instant this producer can read",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 732
+      "line": 743
     },
     {
       "id": "machinery-producers.index.it_was_due_at_due",
       "en": "it was due at {due_at} and is checked every {round} hours; the check has not run since. Nothing about the source is claimed here.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 762
+      "line": 773
     },
     {
       "id": "machinery-producers.index.its_last_n_runs_each",
       "en": "its last {n} runs each filed nothing, and it is not held. Its seeds or its match may no longer find what it was set up to find.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 920
+      "line": 931
     },
     {
       "id": "machinery-producers.index.its_last_run_filed_n",
       "en": "its last run filed {n} against a median of {n_2} over its recent runs. Nothing else changed: the run's note says only that the number was unusual.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 909
+      "line": 920
     },
     {
       "id": "machinery-producers.index.machine_writer_is_named",
       "en": "the machine writer is NAMED, never anonymous: the control plane deletes any caller-supplied author and stamps token:<class> for a machine credential (REC-2, closing D-61), so this is the record's own trace of an unattended write and not an inference. It clears for every member when a person authors the document again.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 565
+      "line": 576
     },
     {
       "id": "machinery-producers.index.manifest_created_unreadable",
       "en": "the manifest entry carries a created stamp this producer cannot read as an instant",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 569
+      "line": 580
     },
     {
       "id": "machinery-producers.index.n_of_its_captures_are",
       "en": "{n} of its captures are still awaiting review, at or over its backlog limit of {n_2}. It runs again when members review or set aside enough of them.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 906
+      "line": 917
     },
     {
       "id": "machinery-producers.index.no_instance_key_was_bound",
       "en": "no instance key was bound when it fell due, so your team's Civicsmith could not sign the notice's activity level. The notice shows its last attested level with that level's date until an attestation is issued; an administrator binds the key.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 1037
+      "line": 1048
     },
     {
       "id": "machinery-producers.index.no_interval_can_be_derived",
       "en": "no interval can be derived for it ({v1}), so no check is scheduled.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 763
+      "line": 774
     },
     {
       "id": "machinery-producers.index.on_its_last_run_these",
       "en": "on its last run these could not be fetched: {list}. The sweep's other pages were read; each one's reachability is on the basis.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 912
+      "line": 923
     },
     {
       "id": "machinery-producers.index.our_own_attempts_at",
       "en": "our own attempts at this address have failed enough times, for long enough, that the archive fallback may fetch a replay in its place. This is a fact about our attempts, not a finding about the publisher.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 724
+      "line": 735
+    },
+    {
+      "id": "machinery-producers.index.pacing_wait_in_words",
+      "en": "Civicsmith will try {host} again in {wait}. It has been turned away {refusals} time{v1} in a row, so it is waiting before it sends more. This says nothing about whether the site is working.",
+      "module": "machinery-producers",
+      "file": "bio-plane/src/machinery-producers/index.mjs",
+      "line": 358
     },
     {
       "id": "machinery-producers.index.request_completion_unreadable",
       "en": "the request row carries a completion stamp this producer cannot read as an instant",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 655
+      "line": 666
     },
     {
       "id": "machinery-producers.index.request_stamp_unreadable",
       "en": "the request row carries a request stamp this producer cannot read as an instant",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 850
+      "line": 861
     },
     {
       "id": "machinery-producers.index.session_created_unreadable",
       "en": "the session row carries a created stamp this producer cannot read as an instant",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 433
+      "line": 444
     },
     {
       "id": "machinery-producers.index.sweep_status_no_instant",
       "en": "the sweep's status carries no instant this producer can read",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 969
+      "line": 980
     },
     {
       "id": "machinery-producers.index.the_ledger_is_scratch_and",
       "en": "the ledger is SCRATCH and not record: it names a work list with an expiry, the primary capture is complete from the first tick, and the row is dropped by the capture path itself when nothing is left. It therefore clears for every member when the capture finishes or the session expires.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 429
+      "line": 440
     },
     {
       "id": "machinery-producers.index.the_notice_has_been_dormant",
       "en": "the notice has been Dormant at its last monthly attestation, and a second Dormant month with no revision lapses it. A revision or a stop answers this; so does the lapse itself.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 1047
-    },
-    {
-      "id": "machinery-producers.index.the_per_host_governor_is",
-      "en": "the per-host governor is in cool-off for {host} for another {max}ms after {refusals} consecutive refusal{v1}{v2}. Nothing about the source is being claimed here.",
-      "module": "machinery-producers",
-      "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 347
+      "line": 1058
     },
     {
       "id": "machinery-producers.index.the_plan_is_monitorings_its",
       "en": "the plan is monitoring's (its R16, R32); this item is our own machinery falling behind or unable to schedule, and it clears when the check runs or a cadence is set.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 767
+      "line": 778
     },
     {
       "id": "machinery-producers.index.the_primary_document_is_captured",
       "en": "the primary document is captured and its bytes are in the store; the platform's subrequest ceiling was reached before its support material was fetched, and the remainder is parked for another tick (tick {ticks}, expires {expires}).",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 422
+      "line": 433
     },
     {
       "id": "machinery-producers.index.the_to_do_is_derived",
       "en": "the to-do is derived on read from the signed notice your team's Civicsmith already holds. It goes to every administrator and leaves every administrator's queue when one of them updates, puts it aside until a later day or skips it, or when your team is running that release or a newer one.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 1158
+      "line": 1169
     },
     {
       "id": "machinery-producers.index.unscheduled_no_instant",
       "en": "an unscheduled address has no instant it fell due",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 771
+      "line": 782
     },
     {
       "id": "machinery-producers.index.words_the_request_expired_at",
       "en": "{words} The request expired at {expires} and was released; nothing was filed in the render's place, and no conclusion about the page can rest on it.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 837
+      "line": 848
     },
     {
       "id": "machinery-producers.index.words_the_request_is_held",
       "en": "{words} The request is held and asked again on every tick until {expires}; if it cannot be rendered by then it is recorded UNDETERMINED and released.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 838
+      "line": 849
     },
     {
       "id": "machinery-producers.index.your_teams_civicsmith_signed_the",
       "en": "your team's Civicsmith signed the closing into the notice's public record. An owner may still stop the notice with a handoff naming another team or an open lead. This stands for 30 days from the closing, or until an owner stops the notice.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 1063
+      "line": 1074
     },
     {
       "id": "member-roster.declared.adminendorse",
@@ -39464,7 +39513,7 @@
       "en": "a tab-separated file is read by this entry; its delimiter is decided from the bytes",
       "module": "csv-reader",
       "file": "bio-plane/src/csv-reader/index.mjs",
-      "line": 1280
+      "line": 1295
     },
     {
       "id": "office-readers.csv.declared_by_the_producer_in_the_bytes",
@@ -39506,7 +39555,7 @@
       "en": "likely, not certain: a declared type is a claim, and a csv has no magic bytes to check it against",
       "module": "csv-reader",
       "file": "bio-plane/src/csv-reader/index.mjs",
-      "line": 1273
+      "line": 1288
     },
     {
       "id": "office-readers.csv.likely_not_certain_validity_is_evidence",
@@ -42103,658 +42152,658 @@
       "en": "a bounded number of shared questions and of projects per question are read. A conclusion reported over a truncated set is still true; an ABSENCE over one is not, which is why the flags are published.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1344
+      "line": 1346
     },
     {
       "id": "queue-producers.index.a_candidate_is_contradictions_its",
       "en": "a candidate is contradiction's (its R24–R26): its weight comes from the machine's label and its key, and its state from the members' acts, both read here and never restated. The machine's label and reason stay the machine's.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1812
+      "line": 1814
     },
     {
       "id": "queue-producers.index.a_conclusion_is_the_concluding",
       "en": "a conclusion is the concluding project's own dated row (§7.1), read through basis-versions' one reader (its R22) for each project drawing on this shared question, and the others' own conclusions beside it. Derived on read: nothing is stored, and nobody else's stance moved.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1347
+      "line": 1349
     },
     {
       "id": "queue-producers.index.a_core_item_still_due",
       "en": "a core item still due is docket's fact (its R9), read here and never stored; the case's project is publication's (its R40). It goes to the case's managers, its project's owners, and to nobody else (DEC-116 item 2), and is raised once (DEC-69, DEC-94).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2261
+      "line": 2265
     },
     {
       "id": "queue-producers.index.a_gap_is_derived_intent",
       "en": "a gap is DERIVED (intent R6): the objective's satisfaction test read against the record, recomputed at every read. It leaves this project's list by a recorded decision.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1604
+      "line": 1606
     },
     {
       "id": "queue-producers.index.a_gap_is_recomputed_at",
       "en": "a gap is recomputed at read time and has no creation instant",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1606
+      "line": 1608
     },
     {
       "id": "queue-producers.index.a_newer_approved_version_of",
       "en": "a newer approved version of a copy's base is wizard-scripts' fact (its R26), listed once per copy and version and read here, never stored. It goes to each of the copy's wizard editors it names, once (DEC-69, DEC-70), and the change is brought across only by a member's own revision (its R4).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 3029
+      "line": 3033
     },
     {
       "id": "queue-producers.index.a_notice_is_contradictions_its",
       "en": "a notice is contradiction's (its R50): it names the side this project rests on and nothing of the other, nor who holds it, nor how many do. Your project can ask to resolve it; when every project holding a side has asked, the projects are named to each other and each can respond, sharing only what its responder chose.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2045
+      "line": 2047
     },
     {
       "id": "queue-producers.index.a_notice_is_derived_at",
       "en": "a notice is derived at read time and carries no instant of its own",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2047
+      "line": 2049
     },
     {
       "id": "queue-producers.index.a_notice_is_reevaluations_its",
       "en": "a notice is reevaluation's (its R14): raised when a newer capture of what a reference is pinned to is graded affected or undetermined, never for A or B. It is read here, never raised, and it closes only by the holder's adoption or keeping (its R15).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1542
+      "line": 1544
     },
     {
       "id": "queue-producers.index.a_refused_entry_is_case",
       "en": "a refused entry is case-import's (its R18, R20): an entry of the followed case's docket that failed a check, recorded and never a move. It goes to the member who set the watch, else the administrators, and to nobody else.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2576
+      "line": 2580
     },
     {
       "id": "queue-producers.index.a_request_to_leave_is_the",
       "en": "a request to leave is the participant's row in state leaving (membership R35, project-roster R1), read here at every read and never stored. It goes to each owner of the project and to nobody else, and leaves for all of them when an owner removes the participant or she withdraws the request.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 3211
+      "line": 3215
     },
     {
       "id": "queue-producers.index.a_scheduled_edition_is_publish",
       "en": "a scheduled edition is publish-schedule's (its R1–R4): its time as set, in the team's zone, and its outcome, read here as the plane and never stored. It goes to the member who set the time and to the case's project's owners, and to nobody else (DEC-147).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2901
+      "line": 2905
     },
     {
       "id": "queue-producers.index.a_scripts_break_or_return",
       "en": "a script's break or return is wizard-scripts' record (its R13), made when its checks are run again at start, read here and never stored. It goes to the script's project owners (for a team script, the administrators) and its version's author, once (DEC-69, DEC-70).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2704
+      "line": 2708
     },
     {
       "id": "queue-producers.index.a_submitted_version_is_wizard",
       "en": "a submitted version is wizard-scripts' fact (its R7, R17): each owner who may approve it is listed. It goes to that owner and to nobody else, and is raised once (DEC-69, DEC-94).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2758
+      "line": 2762
     },
     {
       "id": "queue-producers.index.a_tension_after_publication_is",
       "en": "a tension after publication is case-tensions' (its R4, was publication R50), read under the owning project's owners' sight: a side any owner may not see is answered unseen, with nothing of it. It is told to the project's owners and to nobody else, and it composes no strength.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1978
+      "line": 1980
     },
     {
       "id": "queue-producers.index.a_tension_is_derived_at",
       "en": "a tension is derived at read time from the edition and the candidates; it has no creation instant",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1980
+      "line": 1982
     },
     {
       "id": "queue-producers.index.a_verified_entry_of_a",
       "en": "a verified entry of a followed case's docket is case-import's (its R18, R20), read here and never stored. It goes to the member who set the watch, else the administrators, and to nobody else; only a new edition or a withdrawal is a cause of re-evaluation (K1339, K1366).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2531
+      "line": 2535
     },
     {
       "id": "queue-producers.index.agree_to_remove_an_owner",
       "en": "Agree to remove an owner",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 3233
+      "line": 3237
     },
     {
       "id": "queue-producers.index.an_arrival_is_instance_setups",
       "en": "an arrival is instance-setup's fact (its R62): a held profile matching the place the team named, first found at a start, read here through the read it registered and never stored. It goes to every administrator and to nobody else (DEC-150 (3)), and leaves when the arrival leaves.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2967
+      "line": 2971
     },
     {
       "id": "queue-producers.index.an_endorsement_owed_is_member_roster",
       "en": "an endorsement owed is member-roster's fact (its R77), read here at every read and never stored. It goes to each active administrator who has not endorsed the proposal and may (not the one who proposed it), and to nobody else, and leaves when she endorses, the member is no longer proposed, or the proposal is withdrawn.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 3279
+      "line": 3283
     },
     {
       "id": "queue-producers.index.an_expertise_awaiting_confirmation_is_member",
       "en": "an expertise awaiting confirmation is member-roster's fact (its R78), read here at every read and never stored. It goes to each active administrator and to nobody else, and leaves for all of them when any confirms, the label is withdrawn or the member is no longer active.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 3385
+      "line": 3389
     },
     {
       "id": "queue-producers.index.an_export_of_the_working",
       "en": "an export of the working corpus is recorded in the append-only export log and every administrator is notified (Membership v2 §8.1). This notice is derived from that log row and reaches every administrator named in raised_to and no one else. No act clears it yet: a disposition is scoped to a project and an export has none, and a member's own mute of a finding (D-125) is ruled but not built.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1424
+      "line": 1426
     },
     {
       "id": "queue-producers.index.an_invitation_is_memberships_row",
       "en": "an invitation is membership's row for the member (project-roster R34, membership R118), read here at every read and never stored. It goes to the member invited and to nobody else, and leaves when her state changes: she joins, is removed, or the invitation is withdrawn.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 3110
+      "line": 3114
     },
     {
       "id": "queue-producers.index.an_open_request_to_join",
       "en": "an open request to join is project-roster's row (its R12, R14), read here at every read and never stored. It goes to each owner of the project and to nobody else, and leaves for all of them when one owner answers it or the requester withdraws.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 3161
+      "line": 3165
     },
     {
       "id": "queue-producers.index.an_owner_vote_owed_is_project",
       "en": "an owner vote owed is project-roster's fact (its R30), read here at every read and never stored. It goes to each owner whose vote would still count and is not in, and to nobody else, and leaves when she votes or the change is carried or withdrawn.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 3340
+      "line": 3344
     },
     {
       "id": "queue-producers.index.an_unreadable_docket_is_case",
       "en": "an unreadable docket is case-import's fact about this copy's latest read (its R18, R20), read here and never stored: a signal about our own reading, not about the publisher. It goes to the member who set the watch, else the administrators, and leaves on the first read after it stops holding.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2610
+      "line": 2614
     },
     {
       "id": "queue-producers.index.bias_debt_is_disclosed_and",
       "en": "bias debt is DISCLOSED and travels with the work; only an uncleared hunch refuses publication (DEC-20). Whether the lens moved is op=airun's own comparison, read by the sweep and never recomputed.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1696
+      "line": 1698
     },
     {
       "id": "queue-producers.index.both_principals_are_named_dec",
       "en": "BOTH PRINCIPALS ARE NAMED (DEC-27(b), DEC-55.4) and BOTH QUESTIONS ARE NAMED (D-213): the act is the daemon's, performed at the session's request, and the session was working one question when it met evidence for another. The absence of a basis entry is MEASURED and reported on `basis_entry` rather than left to be inferred from an empty field — absence at one level is not evidence of absence at the next, and which one is true is the answer, not a footnote (CLAUDE.md).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 764
+      "line": 766
     },
     {
       "id": "queue-producers.index.d_216_measured_that_one",
       "en": "D-216 measured that one question sits beneath several projects and that each reads the whole version set (2026-08-08): after two projects diverged, each still saw every version and every leg of the other's. So this item announces an arrival, not a disclosure — the reading was already readable here, and what was missing was anybody being told it had appeared.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1243
+      "line": 1245
     },
     {
       "id": "queue-producers.index.d_216_measured_this_model",
       "en": "D-216 measured this model rather than assuming it (2026-08-08): two projects were driven onto two different readings of one shared question SIMULTANEOUSLY, the plane refused neither, and after divergence each still saw every version and every leg of the other's. The sharing is real and the stance is not shared — which is why this item exists at all.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1044
+      "line": 1046
     },
     {
       "id": "queue-producers.index.dec_17s_reasoning_a_settings",
       "en": "DEC-17's reasoning: a settings row would be a way to change the standard with nothing to read afterwards. Every stance named here was read out of a project's own promoted bytes, where the act that wrote it is in the append-only history beside it.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1043
+      "line": 1045
     },
     {
       "id": "queue-producers.index.endorsement_owed_detail",
       "en": "A member has been proposed as an administrator, and your endorsement is still to give. Nothing is decided until enough administrators have endorsed.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 3265
+      "line": 3269
     },
     {
       "id": "queue-producers.index.endorsement_owed_summary",
       "en": "Endorse {who} as an administrator ({have} endorsed so far, {awaiting} still to endorse)",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 3263
+      "line": 3267
     },
     {
       "id": "queue-producers.index.expertise_confirmation_owed_detail",
       "en": "A member declared this expertise about themselves. Confirming it lets it be asked for when a check needs it; nothing else depends on it.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 3371
+      "line": 3375
     },
     {
       "id": "queue-producers.index.expertise_confirmation_owed_summary",
       "en": "Confirm {who}'s expertise in {label}",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 3369
+      "line": 3373
     },
     {
       "id": "queue-producers.index.looked_for_and_not_there",
       "en": "LOOKED FOR AND NOT THERE, which is the point of this item rather than an omission. The document was CAPTURED — an entry to the store — and no leg of any inquiry's basis and no leg of any proposed reading points at it (DEC-60, D-213). It was NOT made part of the case, which is a different sentence from nobody having read it, and this producer counted both basis projections to be able to say which.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 634
+      "line": 636
     },
     {
       "id": "queue-producers.index.monitorings_tick_records_what_it",
       "en": "monitoring's tick records what it saw and never decides what a change means (its R8): this item is that flag, as monitoring reads it (its R48).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1653
+      "line": 1655
     },
     {
       "id": "queue-producers.index.no_member_could_be_named",
       "en": "no member could be named inside this run's read gate, so it is offered to every member who can read the run",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1704
+      "line": 1706
     },
     {
       "id": "queue-producers.index.no_register_entry_answers_to",
       "en": "no register entry answers to this capture, so the bytes are not attached to a document this store can name and there is nothing whose place in a case could be asked. Undetermined, and STATED (D-9/D-45's unbacked-register shape).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 621
+      "line": 623
     },
     {
       "id": "queue-producers.index.none_in_force",
       "en": "none in force",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1695
+      "line": 1697
     },
     {
       "id": "queue-producers.index.owner_vote_owed_add",
       "en": "Agree to make {who} an owner of {project} ({agreed} agree, {awaiting} still to)",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 3319
+      "line": 3323
     },
     {
       "id": "queue-producers.index.owner_vote_owed_detail",
       "en": "The owners of a project decide who its owners are together, and your vote on this change is still to give.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 3323
+      "line": 3327
     },
     {
       "id": "queue-producers.index.owner_vote_owed_remove",
       "en": "Agree to remove {who} as an owner of {project} ({agreed} agree, {awaiting} still to)",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 3321
+      "line": 3325
     },
     {
       "id": "queue-producers.index.project_leave_detail",
       "en": "A participant has asked to leave this project. Nothing changes until an owner removes them; they can also withdraw the request.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 3206
+      "line": 3210
     },
     {
       "id": "queue-producers.index.project_leave_summary",
       "en": "{who} asks to leave {project}",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 3205
+      "line": 3209
     },
     {
       "id": "queue-producers.index.the_arrival_carries_no_instant",
       "en": "the arrival carries no instant this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2968
+      "line": 2972
     },
     {
       "id": "queue-producers.index.the_candidate_carries_no_instant",
       "en": "the candidate carries no instant this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1816
+      "line": 1818
     },
     {
       "id": "queue-producers.index.the_case_document_carries_no",
       "en": "the case document carries no instant this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2177
+      "line": 2181
     },
     {
       "id": "queue-producers.index.the_cause_carries_no_instant",
       "en": "the cause carries no instant this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2324
+      "line": 2328
     },
     {
       "id": "queue-producers.index.the_cause_carries_no_instant_2",
       "en": "the cause carries no instant this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2446
+      "line": 2450
     },
     {
       "id": "queue-producers.index.the_cause_is_reevaluations_its",
       "en": "the cause is reevaluation's (its R30): a live leg of this finding rests on a member finding of a withdrawn case edition, or this finding is a member of an edition a filed response contests. It is read here, never raised, and nothing was regraded.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2320
+      "line": 2324
     },
     {
       "id": "queue-producers.index.the_cause_is_reevaluations_its_2",
       "en": "the cause is reevaluation's (its R33): a live leg of this finding rests on another team's finding at an edition whose publisher has since listed a later edition or withdrawn it on its docket, a verified entry your team's Civicsmith read. It is read here, never raised, and nothing was regraded.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2442
+      "line": 2446
     },
     {
       "id": "queue-producers.index.the_cause_is_reevaluations_its_3",
       "en": "the cause is reevaluation's (its R27): a live leg of this finding rests on a side contradiction marks stale. It is read here, never raised, and no strength, conclusion or case moved.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1866
+      "line": 1868
     },
     {
       "id": "queue-producers.index.the_conclusion_row_carries_no",
       "en": "the conclusion row carries no authored instant this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1352
+      "line": 1354
     },
     {
       "id": "queue-producers.index.the_debt_row_carries_a",
       "en": "the debt row carries a raised stamp this producer cannot read as an instant",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1700
+      "line": 1702
     },
     {
       "id": "queue-producers.index.the_declaration_carries_no_instant",
       "en": "the declaration carries no instant this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 3387
+      "line": 3391
     },
     {
       "id": "queue-producers.index.the_edition_carries_no_publishing",
       "en": "the edition carries no publishing instant this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2875
+      "line": 2879
     },
     {
       "id": "queue-producers.index.the_edition_carries_no_signing",
       "en": "the edition carries no signing instant this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2868
+      "line": 2872
     },
     {
       "id": "queue-producers.index.the_edition_carries_no_stopping",
       "en": "the edition carries no stopping instant this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2882
+      "line": 2886
     },
     {
       "id": "queue-producers.index.the_edition_is_publications_prepared",
       "en": "the edition is publication's prepared, unsigned case document (its R56), its attribution facts its own (its R2, R17); the observation's author is the register's (provenance R48). Only the author chooses the level (DEC-102 item 3), so only the author is told.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2173
+      "line": 2177
     },
     {
       "id": "queue-producers.index.the_entry_carries_no_instant",
       "en": "the entry carries no instant this copy read it at that this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2633
+      "line": 2637
     },
     {
       "id": "queue-producers.index.the_entry_carries_no_instant_2",
       "en": "the entry carries no instant this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 3030
+      "line": 3034
     },
     {
       "id": "queue-producers.index.the_export_log_row_carries",
       "en": "the export log row carries an instant this producer cannot read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1429
+      "line": 1431
     },
     {
       "id": "queue-producers.index.the_flag_carries_no_instant",
       "en": "the flag carries no instant this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1657
+      "line": 1659
     },
     {
       "id": "queue-producers.index.the_item_carries_no_instant",
       "en": "the item carries no instant this producer can read for when it fell due",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2265
+      "line": 2269
     },
     {
       "id": "queue-producers.index.the_key_is_credentials_own",
-      "en": "the key is credentials' own row (its R8), registered by its member (its R9) and read here at every read: it is told to every administrator and to nobody else, and it leaves when the key is no longer active, by an administrator's revoke (its R7) or otherwise.",
+      "en": "the key is credentials' own row (its R8), registered by its member (its R9) and read here at every read: it is told to every administrator but the one who registered the key, and to nobody else, and it leaves when the key is no longer active, by an administrator's revoke (its R7) or otherwise.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2097
+      "line": 2101
     },
     {
       "id": "queue-producers.index.the_keys_row_carries_an",
       "en": "the key's row carries an added stamp this producer cannot read as an instant",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2101
+      "line": 2105
     },
     {
       "id": "queue-producers.index.the_lens_in_force_when",
       "en": "the lens in force when it opened",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1695
+      "line": 1697
     },
     {
       "id": "queue-producers.index.the_lens_it_was_handed",
       "en": "the lens it was handed",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1695
+      "line": 1697
     },
     {
       "id": "queue-producers.index.the_marking_act_carries_no",
       "en": "the marking act carries no instant this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1870
+      "line": 1872
     },
     {
       "id": "queue-producers.index.the_members_row_carries_no",
       "en": "the member's row carries no instant this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 3112
+      "line": 3116
     },
     {
       "id": "queue-producers.index.the_natural_acts_here_are",
       "en": "the natural acts here are at STANCE grain — move to the reading the others are on, or record why we are staying — and the first of those is op=versioncurrent on THIS project and nobody else's. It is deliberately not offered as an option on an item another project's members can also see: an act one team performs from a notification another team is reading is the single shared stance §7 rejected, arriving through a button (D-222's grain problem).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1060
+      "line": 1062
     },
     {
       "id": "queue-producers.index.the_natural_acts_here_are_2",
       "en": "the natural acts here are at VERSION grain — consider this reading, accept it, turn it down — and they exist (op=versionconsider / accept / reject), but they move the SHARED question's row and are therefore not this project's to take from a notification about somebody else's proposal. What IS this project's own act is op=versioncurrent, which moves only this project's stance (§7).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1255
+      "line": 1257
     },
     {
       "id": "queue-producers.index.the_newest_exports_are_read",
       "en": "the newest exports are read up to this bound. An export past it is still in the log (op=exportlog, with a larger limit) and is not told here.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1423
+      "line": 1425
     },
     {
       "id": "queue-producers.index.the_notice_carries_no_raised",
       "en": "the notice carries no raised instant this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1546
+      "line": 1548
     },
     {
       "id": "queue-producers.index.the_project_that_concluded_is",
       "en": "the project that concluded is not a team this was concluded ELSEWHERE for, so this item is not filed under it. Stated rather than performed silently (DEC-16).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1310
+      "line": 1312
     },
     {
       "id": "queue-producers.index.the_project_this_reading_was",
       "en": "the project this reading was proposed under is not a team it arrived FROM, so this item is not filed under it. Stated rather than performed silently: a home set that is quietly shorter is indistinguishable from nobody caring (DEC-16).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1209
+      "line": 1211
     },
     {
       "id": "queue-producers.index.the_proposal_carries_no_instant",
       "en": "the proposal carries no instant this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 3281
+      "line": 3285
     },
     {
       "id": "queue-producers.index.the_read_carries_no_instant",
       "en": "the read carries no instant this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2614
+      "line": 2618
     },
     {
       "id": "queue-producers.index.the_read_of_a_named",
       "en": "the read of a named place's arrivals is registered once at start, and it was",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2922
+      "line": 2926
     },
     {
       "id": "queue-producers.index.the_record_carries_no_instant",
       "en": "the record carries no instant this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2707
+      "line": 2711
     },
     {
       "id": "queue-producers.index.the_registered_read_is_placearrivals",
       "en": "the registered read is placeArrivals, a function",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2920
+      "line": 2924
     },
     {
       "id": "queue-producers.index.the_request_carries_no_instant",
       "en": "the request carries no instant this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 3162
+      "line": 3166
     },
     {
       "id": "queue-producers.index.the_request_records_no_capture",
       "en": "the request records no capture digest, so there is no document to ask about. That this producer could not look is a different fact from the document being part of nothing, and it is reported as the first rather than the second.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 615
+      "line": 617
     },
     {
       "id": "queue-producers.index.the_request_row_carries_a",
       "en": "the request row carries a completion stamp this producer cannot read as an instant",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 769
+      "line": 771
     },
     {
       "id": "queue-producers.index.the_row_carries_no_leave_instant",
       "en": "the participant's row carries no instant for the request that this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 3212
+      "line": 3216
     },
     {
       "id": "queue-producers.index.the_source_team_is_the",
       "en": "the source team is the RUN's own context project, a fact stored when the run was opened. It is never inferred from who authored the version: a member does not name a team in this record, and a producer that guessed one would be manufacturing the connection the notification is claiming attention for. A version with no run, or a run whose context is not a project, mints NO item — the silence is a declared gap (D-266), not a filtered one.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1241
+      "line": 1243
     },
     {
       "id": "queue-producers.index.the_submission_carries_no_instant",
       "en": "the submission carries no instant this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2761
+      "line": 2765
     },
     {
       "id": "queue-producers.index.the_version_row_carries_no",
       "en": "the version row carries no authored instant this producer can read, so how long this reading has been standing unanswered is undetermined",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1248
+      "line": 1250
     },
     {
       "id": "queue-producers.index.this_document_is_carried_by",
       "en": "this document IS carried by a reading of some question, so the lead has already been acted on or the document was evidence before the lead was raised. Reported rather than suppressed: the item is still the record of an observation somebody made.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 635
+      "line": 637
     },
     {
       "id": "queue-producers.index.this_feed_examines_a_bounded",
       "en": "this feed examines a bounded number of shared questions per read and a bounded number of projects per question. Where either is truncated the divergence reported is a FLOOR: the projects named do stand where this says, and the read did not reach every one that might. A divergence over a truncated set is still true; an ABSENCE of one over a truncated set is not, which is why the flags are published rather than the counts alone.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1034
+      "line": 1036
     },
     {
       "id": "queue-producers.index.this_feed_examines_a_bounded_2",
       "en": "this feed examines a bounded number of shared questions per read, a bounded number of projects per question and a bounded number of run-proposed readings per question. A truncation here means READINGS THIS READ DID NOT REACH, never readings that do not exist — the arrival of this one is unaffected by it, and the flag is published so the silence about any other cannot be read as evidence there is none.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1237
+      "line": 1239
     },
     {
       "id": "queue-producers.index.this_projects_pointer_carries_no",
       "en": "this project's pointer carries no date this producer can read as an instant, so how long the two teams have stood apart is undetermined and is reported as such rather than measured from this read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1053
+      "line": 1055
     },
     {
       "id": "queue-producers.proposals.a_finding_is_derived_d",

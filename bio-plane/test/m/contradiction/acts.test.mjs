@@ -235,6 +235,22 @@ test("R35: a promotion refusal is relayed whole, and nothing is written", () => 
   assert.equal(dup.ok, false);
 });
 
+test("R62: take up writes one title into the envelope and the document, so promotion's comparison holds for a question holding a quote, a backslash or a line break — the default question included", () => {
+  const w = seeded();
+  const taken = (key, question) => {
+    const candidate = cand(w, key, "record");
+    const q = question ?? shown(w, candidate).default_question;
+    const r = w.c.takeUp({ candidate, question: q, frame: "a", viewer: M1, author: M1 });
+    assert.equal(r.ok, true, JSON.stringify(r).slice(0, 800));
+    return r;
+  };
+  const quoted = taken("K2", 'Does the "fee" rise, given the minutes?');
+  assert.equal(w.fm(quoted.inquiry).title, "Does the 'fee' rise, given the minutes?");
+  const dflt = taken("K1", null);
+  assert.ok(!/["\\]/.test(w.fm(dflt.inquiry).title));
+  taken("K4", "Back\\slash or\nbreak?");
+});
+
 test("R36: resolve — machine, not a contradiction inquiry (absent, invisible, plain alike), acceptance; writes the resolution and concludes the question without a project, together or not at all", () => {
   const w = seeded();
   const duty = cand(w, "K2", "record");

@@ -1438,6 +1438,21 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     }
   }
   let MENU = false, DRAWN = {}, SHOWN_FOR = null, QUIET_FOCUS = false;
+  /* R133 (T51 fix round 10, C-M12, C-M16): a fold is known across a redraw by its own name (its id, `data-fold`, `data-start`, else its
+     summary) and its place among those of that name */
+  function foldsOf(root) {
+    const seen = {};
+    return Array.from(root.querySelectorAll("details")).map((d) => {
+      const s = d.querySelector("summary");
+      const k = d.id || d.getAttribute("data-fold") || d.getAttribute("data-start") || (s ? s.textContent : "");
+      seen[k] = (seen[k] || 0) + 1;
+      return [d, k + "#" + seen[k]];
+    });
+  }
+  /* every fold enclosing an element is opened, so what is drawn in it is seen (R133; the ring's rule, B3) */
+  function openAround(el) {
+    for (let d = el && el.closest ? el.closest("details") : null; d; d = d.parentElement && d.parentElement.closest ? d.parentElement.closest("details") : null) d.setAttribute("open", "");
+  }
   const focusKey = (el) => (!el || !el.getAttribute ? null : el.id ? "#" + el.id
     : ["data-shell", "data-ai", "data-table", "data-id", "data-col", "data-theme-to", "data-areas", "data-i"].map((a) => (el.getAttribute(a) !== null ? "[" + a + '="' + el.getAttribute(a) + '"]' : "")).join("") || null);
   function draw() {
@@ -1456,6 +1471,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const shownFor = MAIN || ROUTE, same = SHOWN_FOR === shownFor;
     SHOWN_FOR = shownFor;
     const fk = same ? focusKey(doc.activeElement) : null;
+    /* R133: the folds the member had open, of the screen already shown */
+    const openFolds = same ? new Set(foldsOf(root).filter((f) => f[0].hasAttribute("open")).map((f) => f[1])) : new Set();
     /* R93: a redraw in place leaves the main column where it was scrolled to */
     const before = doc.getElementById("cs-main"), top = same && before ? before.scrollTop : 0;
     root.innerHTML = frameHtml(ROUTE) + overlayHtml();
@@ -1514,6 +1531,19 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       if (el && el.focus) { QUIET_FOCUS = true; try { el.focus({ preventScroll: true }); } finally { QUIET_FOCUS = false; } }
     }
     restoreRefusals();
+    /* R133: a fold stays open that the member had open, that holds an act's answer or refusal (or its open reason box), or a control whose
+       value the member set; a fold with none of these is as the screen drew it */
+    for (const [d, k] of foldsOf(root)) {
+      let hold = openFolds.has(k);
+      if (!hold) for (const s of d.querySelectorAll("[data-slot]")) if (String(s.innerHTML).trim() !== "") { hold = true; break; }
+      if (!hold) for (const el of d.querySelectorAll("input, textarea, select")) {
+        if (!el.id || el.type === "file" || el.getAttribute("data-shell") === "pick") continue;
+        const box = el.type === "checkbox" || el.type === "radio", first = el.localName === "select" ? el.querySelector("option") : null;
+        const drew = box ? !!asDrawn[el.id] : el.localName === "select" ? (asDrawn[el.id] || (first ? first.getAttribute("value") || "" : "")) : asDrawn[el.id];
+        if ((box ? !!el.checked : el.value) !== drew) { hold = true; break; }
+      }
+      if (hold) d.setAttribute("open", "");
+    }
     doc.title = titleOf();
   }
   /* R84 (N1184; DEC-299 (12)): the browser tab's title: `page.title` ({screen}, {team}), and on a public page `page.title.public`
@@ -1844,7 +1874,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const el = main ? main.querySelector('[data-act="' + RING.op.replace(/"/g, "") + '"]') : null;
     if (!el) return;
     /* B3: a closed fold around the control is opened, every one enclosing it, so the ring is never on a hidden control */
-    for (let d = el.closest ? el.closest("details") : null; d; d = d.parentElement && d.parentElement.closest ? d.parentElement.closest("details") : null) d.setAttribute("open", "");
+    openAround(el);
     /* the design's ring (`cs-target`) and its label */
     el.classList.add("cs-target");
     const label = doc.createElement("span");
@@ -2062,7 +2092,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
      press, a refresh) draws it again; whatever else is drawn in the slot, or the act's next press, or leaving the screen, ends it */
   const REFUSED = new Map();
   const actOf = (ai) => { const [k, i] = String(ai).split(":"); const ins = instOf(k); return ins ? ins.acts[Number(i)] || null : null; };
-  function besideAct(ai, inner) { const s = slotOf(ai); if (s) s.innerHTML = inner; const d = actOf(ai); if (d) REFUSED.delete(d.key); }
+  function besideAct(ai, inner) { const s = slotOf(ai); if (s) { s.innerHTML = inner; if (inner) openAround(s); } const d = actOf(ai); if (d) REFUSED.delete(d.key); }
   function restoreRefusals() {
     if (!REFUSED.size) return;
     for (const inst of [MAIN, DOCKI, GUIDEI]) if (inst) inst.acts.forEach((d, i) => { const h = REFUSED.get(d.key); const s = h ? slotOf(inst.key + ":" + i) : null; if (s) s.innerHTML = h; });

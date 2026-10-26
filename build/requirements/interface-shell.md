@@ -272,7 +272,7 @@ Terms. A **screen** is a registry screen (`docs/development/ux-substrate/screens
 - **R130** (K5157, reading K5155; walk-T51-final 06 §16) Enter in a one-line field (never a `textarea`) presses the primary act of the section that holds the field, once, as a click on it would, with what was typed; a field may name another act to press (`enter`).
 - **R131** (K5157; walk-T51-final 06 §19 (c)) A `cs.ref` drawn in a row or list is at least 44 px to tap at 390 px (R84, R108: it is not inline there); a link inside running text stays as it is.
 - **R132** (K5157; DEC-155; walk-T51-final 03 §19, 11 §9) A double-click on the rail's edge restores its default width, 184 px, kept on the device as R26's other settings are.
-- **R133** *(not yet met: T51)* (T51 fix round 10, live walk C/E; K5271) A fold that holds a pressed act's answer or refusal, or a control whose value the member set, stays open across a redraw, and a set control keeps its value (walk C C-M12, C-M16).
+- **R133** (T51 fix round 10, live walk C/E; K5271) A fold that holds a pressed act's answer or refusal, or a control whose value the member set, stays open across a redraw, and a set control keeps its value (walk C C-M12, C-M16).
 
 ## Private
 

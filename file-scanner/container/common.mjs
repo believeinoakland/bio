@@ -63,8 +63,27 @@ export async function fileHas(fh, size, needle) {
   return false;
 }
 
+const MAX32 = 0xffffffff;
+
+/** The 64-bit values of an entry's ZIP64 extra field (id 1) in place of the fields its record gives as 0xFFFFFFFF, in the
+ *  order the format states: uncompressed size, compressed size, offset. A field the extra does not hold stays as it was. */
+function zip64Fields(entry, extra) {
+  for (let at = 0; at + 4 <= extra.length;) {
+    const id = extra.readUInt16LE(at), len = extra.readUInt16LE(at + 2), end = at + 4 + len;
+    if (id === 1 && end <= extra.length) {
+      let p = at + 4;
+      for (const key of ['usize', 'csize', 'at']) {
+        if (entry[key] !== MAX32 || p + 8 > end) continue;
+        entry[key] = Number(extra.readBigUInt64LE(p)); p += 8;
+      }
+      return;
+    }
+    at = end;
+  }
+}
+
 /** A ZIP's central directory, read within `maxBytes` and for at most `maxEntries` entries (ZIP64's end record handled):
- *  `{entries: [{name, flags, method, csize, at}]}`, or `{limit: 'ZipDirectory'}` when the directory is over `maxBytes`,
+ *  `{entries: [{name, flags, method, crc, csize, usize, at}]}` (sizes and offset from the ZIP64 extra field when the record gives 0xFFFFFFFF), or `{limit: 'ZipDirectory'}` when the directory is over `maxBytes`,
  *  or `{entries: []}` when the file has no readable directory. */
 export async function zipDirectory(fh, size, { maxEntries, maxBytes }) {
   const tailLen = Math.min(size, 65_557 + 20 + 56);
@@ -84,10 +103,12 @@ export async function zipDirectory(fh, size, { maxEntries, maxBytes }) {
   await fh.read(cd, 0, cdSize, cdAt);
   const entries = [];
   for (let at = 0; entries.length < Math.min(count, maxEntries) && at + 46 <= cd.length && cd.readUInt32LE(at) === 0x02014b50;) {
-    const n = cd.readUInt16LE(at + 28);
-    entries.push({ name: cd.toString('utf8', at + 46, at + 46 + n), flags: cd.readUInt16LE(at + 8), method: cd.readUInt16LE(at + 10),
-      csize: cd.readUInt32LE(at + 20), at: cd.readUInt32LE(at + 42) });
-    at += 46 + n + cd.readUInt16LE(at + 30) + cd.readUInt16LE(at + 32);
+    const n = cd.readUInt16LE(at + 28), x = cd.readUInt16LE(at + 30);
+    const entry = { name: cd.toString('utf8', at + 46, at + 46 + n), flags: cd.readUInt16LE(at + 8), method: cd.readUInt16LE(at + 10),
+      crc: cd.readUInt32LE(at + 16), csize: cd.readUInt32LE(at + 20), usize: cd.readUInt32LE(at + 24), at: cd.readUInt32LE(at + 42) };
+    zip64Fields(entry, cd.subarray(at + 46 + n, at + 46 + n + x));
+    entries.push(entry);
+    at += 46 + n + x + cd.readUInt16LE(at + 32);
   }
   return { entries };
 }

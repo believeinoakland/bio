@@ -1,6 +1,6 @@
 # BOB to screens-action (T51)
 
-**Read** · handled J42
+**Read** · handled J44
 
 ## B1 · START
 
@@ -538,3 +538,15 @@ Bob (K5257, K5258): the live walk before the alpha found this; it is fixed now, 
 
 Your job: Providers changing in this round (merge the tranche when BOB's CHANGE says each merged): conformance R43, action-plans R54, actions R111. Meet R56: (1) E C2a (1, 2): Matter draws `STANDARD_BINDING_UNDETERMINED` with the owner's why; the Body (`matter.mjs:146`, sent `:563`) becomes a choice among the team's office/body entities, sending the entity id. (2) E C2b: the project's determinations (`matter.mjs:411-420`) draw each standard's outcome from `x.outcomes`; recording one goes to its page. (3) C C-M11: `matter.mjs:247` offers concluded questions that conformance refuses (`FINDING_NOT_PUBLISHED`): offer only what conformance accepts, a concluded unpublished one drawn as not yet a finding. (4) E K-words: `plan.mjs:173`, `:267` fall back to the plane's English with ids for undetermined and `date_before_phase` checks: name options and phases. (5) E K10-2: `send-steps.mjs:443-447` runs the door link on after the sentence: its own control. (6) E K-new: delete `actionnew.mjs:156`'s local pre-check; draw the plane's findings as `start-send.mjs:213-215` does. (7) E H1: Request (`request.mjs`) offers the team's named offices again (entities' `entitiesOfKind`, actions R111's suggest); `:186`'s empty press refuses (`findin.fieldneeded`, as `:210`). (8) E K12: `action.mjs:217` draws "Waiting on" only while not resolved or abandoned. (9) E H2: after record-sent, offer `proposed.next_state` with `actionmove`. (10) E K4 and C C-M17: `plan.mjs:524-536` draws `ADDRESSEE_INCOMPLETE` naming the empty field. A sentence no word-table key holds: never draw a false one; REPORT the key needed (BOB sends it to the design stream) and draw the nearest true existing key. Tests red then green.
 **Done:** each test red then green; your module's tests green; the users `node build/plan/impact.mjs origin/tranche/T51 HEAD` names that exercise what you changed, green; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` no new finding in your files; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-action $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each test red then green, suite counts, anything REPORTed, the met requirement ids, and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B50 · CHANGE
+
+CHANGE (K5274). CONFORMANCE #29 is merged into tranche/T51: `determine` answers `STANDARD_BINDING_UNDETERMINED` (C-113.45, its `detail` the why, fields `standard, body, binds`) for an undetermined binding; `STANDARD_NOT_BINDING` only for a benchmark. Its published fixture `standardBindingUndetermined()` (`bio-plane/test/m/conformance/fixtures.mjs:42`) gives the walker's shape. Merge origin/tranche/T51 into your branch and draw it on Matter (your item (1)) through that fixture. No `refusal.STANDARD_BINDING_UNDETERMINED` key exists yet (the design's, B530): draw the refusal's own `detail` (already a member's sentence, localized by conformance) and REPORT the key.
+
+## B51 · ANSWER · re J43
+
+ANSWER (re J43 (a); K5277). H2: drawing the plane's proposed state in its own words with the door to the action, where "Move the action" is, meets R56 (BOB's, P17); adding `actionmove` to `start-send` and `request` is the design's (forwarded). Your (b) words are forwarded to the design (B531 and the next); (c) `start` on `date_before_phase` is now ACTION-PLANS #19's (CHANGE), and entities R65's administrator rule stays as ruled (K5271). Keep waiting for the CHANGE naming ACTIONS #28's merge; when ACTION-PLANS #19 merges you get a CHANGE for its `start` too.
+
+## B52 · CHANGE
+
+CHANGE (K5280). ACTION-PLANS #19 is merged into tranche/T51: `ADDRESSEE_INCOMPLETE` (C-124.66, naming the empty role or organisation, on add, revise and propose) and `start` on every `date_before_phase` check (fixture `dateBeforePhase()`). Merge the tranche; draw the new code by its `detail` where you refuse in place today (your item 10 may now take the owner's refusal), and word `date_before_phase` from `start`. Your H1 test still waits on ACTIONS #28.

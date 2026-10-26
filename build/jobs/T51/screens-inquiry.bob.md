@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J59
+**Read** · handled J63
 
 ## B1 · START
 
@@ -1049,3 +1049,15 @@ Your job: (1) D-M1 (3): `question.mjs:304-309` hands already-escaped text to `cs
 ## B88 · CHANGE
 
 CHANGE (re J58 (1); K5268). No new ruling is needed: R96 (fix round 6, K4571) already requires it: "a stored statement (`failure: final`, or `completeness.state` `stated`) is drawn as the statement the reading states, with the figures that reading states". A whole reading whose reason is not a size, holding its statement in `completeness.why` (else `reading.basis`), must draw that statement on the Document page, never a bare "Undetermined / Held". Fix `document.mjs` so `r10-stated.test.mjs:126` (A7) and the A8 test pass (they are the walker-shaped red tests; do not change them), run the module's suite, then COMPLETE again. J58 (2) is known (89 test-only lines waiting on Bob's test rethink, K5258): nothing to do.
+
+## B89 · CHANGE
+
+CHANGE (K5271, plan item 136). Walks C and E (read whole `build/plan/walk-T51-alpha/causes-C.md` C-M2, C-M5, C-M12, C-M13 and `causes-E.md` S3) add to your job, beside B88: (1) C-M2: `document.mjs:744-750` draws "Not yet checked" unconditionally; `op=transcriptions` answers `attestations` (content R57): draw a typing's confirmation when one holds `counts`, and no confirm form for a member who has confirmed. (2) C-M5: `question.mjs:1564-1573` unions a "Yes, because of X" with X even when X was answered "No": refuse before sending, naming both passages, or keep X out of the part and say so. (3) C-M12: the contradiction flag form's choices are drawn with a fixed `{value:""}` (`document.mjs:1287`, `:1290`): keep the member's picks (the fold staying open is INTERFACE-SHELL #25's R133). (4) C-M13: `contradiction.mjs:215` draws "the assistant's guess" for a member's flag: choose by `flagged_by`. (5) E S3: `document.mjs:609-613`, `:670` glue "Cited" to the passage text: separate them. A sentence no word-table key holds: never draw a false one; REPORT the key needed (B530 asked the design for C-M2's and C-M13's). Tests red then green with the walkers' cases. C-M6's control waits on CITATION #23 (R23); BOB sends a CHANGE at its merge.
+
+## B90 · CHANGE
+
+CHANGE (re J61, J62; K5276). Your J62 is accepted except that C-M12 and E S3 have no red test: every walk fix carries one (K4426 (3)): write them (C-M12: choose the other document, the fold is open and `document-flag-here` keeps its pick after the redraw; S3: a cited passage's text and its "Cited" mark are separated), each red with your fix stashed, green with it. CITATION #23 is merged into tranche/T51 (R23: `reinstate` accepts `role`; fixture `reinstateOtherSide()`): merge the tranche; C-M6's "Put on the other side" control is drawn only if a held key names it, else REPORT the key (B530 asked the design) and draw nothing. Your J61 (2) is done (CONTRADICTION #18 merged, K5274); J61 (1) and (3)'s keys go to the design. Then COMPLETE again.
+
+## B91 · CHANGE
+
+CHANGE (re J63; K5279). Your J63 is accepted but for one new fixtures finding, the only one the merge adds: `t51-fix11-b89.test.mjs:78` hand-builds contradiction's `contradictionfacts` answer (`ok({ ok: true, candidate: CAND, key: "K4", ... })`; `checks/fixtures.mjs` [op-table], provider contradiction, earlier in the order). Take that answer from contradiction's published fixture (`bio-plane/test/m/contradiction/fixtures.mjs`, run by its real code), or, if it publishes no member-flagged candidate, REPORT that exact fixture for BOB to place. Run `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio screens-inquiry --list`: 0 in your files. Then COMPLETE.
