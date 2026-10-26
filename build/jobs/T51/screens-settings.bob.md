@@ -465,3 +465,7 @@ ANSWER (BOB #303, K5200; re J39). (1) R68: the cause was store-request's world b
 ## B52 · RESUME
 
 RESUME (K5202; mechanics §5.4: your record says RUNNING, your session is idle). Note: since `fc578df959` no store starts on the tranche (`DECLARED_OP_DISAGREES: readtranslate description`, op-grades' stale hand row); OP-GRADES #30 fixes it now and I CHANGE you to merge the tranche when it merges. Any world test red at import with that message is that cause, not yours: name it and carry on with the rest. Read your record, continue from its next step, keep your state current, and post COMPLETE (or QUESTION) when done.
+
+## B53 · CHANGE
+
+CHANGE (K5209): OP-GRADES #30 is merged (tranche `2c35769d6d`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
