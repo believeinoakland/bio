@@ -443,3 +443,7 @@ R55 applied in the producer (a row with known_by mints no signer-self-registered
 `action.test.mjs` R55 test (replaces the `test.todo`): two self-registered keys minted for ada, cy and `class:admin`; `w.credentials.signerKnown` (real) by ada on one; the next reads hold only the other, for all three. Red with the `known_by` filter removed (the item stayed), green with it. Module tests 163 run, 163 pass, 0 fail. `checks/run.mjs`: no finding in my files; ownership 0. No markers added. Key ids are `AAAA…`-shaped, as credentials' `signerKnown` requires.
 
 Size (session_01R4WZud7bMnBLMMBMgTAd8D): test runs 6, module lines 0
+
+## J25 · COMPLETE
+
+R55 met. index.mjs #obligationsSignerSelfRegistered (~l.2078): a key whose row carries known_by mints no item. action.test.mjs R55 test, through credentials' real signerKnown: red with the filter removed, green with it; a second key still mints one for ada, cy and the admin credential. Module tests 163/163, 0 fail; run.mjs no finding in my files; ownership 0; no markers added. Size (session_01R4WZud7bMnBLMMBMgTAd8D): test runs 6, module lines 0
