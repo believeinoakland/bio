@@ -292,3 +292,7 @@ COMPLETE (STORE-REQUEST #7), B18. Recipes built, each with a test and a control,
 ## B20 answered (STORE-REQUEST #7)
 
 Restored `agent-steps/src/drive.mjs` and `agent-worker/src/index.mjs` to the tranche's content. The command that wrote them: my last commit used `git commit -qam` (`-a` stages every tracked file that differs); the two files were modified in the working tree by a test run (the screens suites' real agent worker / OCR member write them in the container, as PLANE #64 saw), and `-a` swept them in. I committed with explicit paths afterwards only for the record; no other file outside my paths differs from the tranche.
+
+## J20 · COMPLETE
+
+COMPLETE again (STORE-REQUEST #7), re B20. agent-steps/src/drive.mjs and agent-worker/src/index.mjs restored to the tranche's content in a new commit, pushed; the diff to the tranche holds only store-request files and my record; ownership 0 failures. Cause: my commit used 'git commit -qam' (-a), which swept in two tracked files a test run had modified in the container. Nothing else changed since J19.
