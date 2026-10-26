@@ -1322,3 +1322,13 @@ B106 (G93 timing, under load) is still open; I'm diagnosing it now (reproduced u
 **Working tree:** the G93 test edit (`r8-heal-door.test.mjs`) is uncommitted; the five foreign files (names.mjs, plane-meaning.mjs, run-rules/rules.mjs, drive.mjs, agent-worker index.mjs) are not mine and are not committed (patch saved at /tmp/claude-0/-home-user-bio/foreign-changes.patch).
 
 Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 30, module lines 371
+
+## J75 · BLOCKED · re B113
+
+Cause: tests (G93, r8-heal-door R102). B113 done and pushed: maps.mjs re-pointed to store-assembly's ownerOps; the two importers pass 9 of 9 (door.test 6 of 6).
+
+G93 is NOT 10 of 10. Ten runs under busy loops (20 loop processes on 4 cores, heavier than the 4 named): owedwork passed in every completed run; whoami failed twice: run 3 in settled (the 120 s wait for the first firing to end, not reached) and run 4 at r8-heal-door.test.mjs:109 (the member's read did not arm the alarm after its firing ended).
+
+Measured cause for owedwork: the founder's read starts the row's firing; the platform answers no alarm while it runs (scheduler/index.mjs:614, R29), so the old immediate assertion read the firing, not the arm. The test now waits for the firing to end (firingEnded) before reading the alarm; the same wait is on whoami. The whoami :109 failure is not yet explained: the read during or just after a firing, or a look inside HEAL_EVERY_MS (scheduler heal(), :807).
+
+The G93 test edit is uncommitted (not verified). The five foreign files are not mine and are not committed (patch: /tmp/claude-0/-home-user-bio/foreign-changes.patch). Need: a decision on the whoami case (is a member read after a firing expected to arm at once, or to arm when the firing ends?), or permission to continue diagnosing it.
