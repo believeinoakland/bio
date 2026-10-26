@@ -161,7 +161,7 @@ test("R6 (T51 fix round 10, B5): the leg repairs (grammar.mjs:146, :168) name no
   const leg = (target, kind) => ({ action_kind: "other", action_basis: [{ target, kind }] });
   const repairs = (fm) => pushed((f) => AG.actionBasisFindings(fm, f)).findings.flatMap((x) => x.repairs ?? []);
   const notLeg = repairs(leg("not-an-id", "rests_on"));
-  const ofAction = repairs(leg("ACTN-2026-0001", "rests_on"));
+  const ofAction = repairs(leg("ACTN-2026-0005-earlier", "rests_on"));
   assert.equal(notLeg.length, 1, "the leg whose target is not an id is refused");
   assert.equal(ofAction.length, 1, "the leg onto an action is refused");
   for (const r of [...notLeg, ...ofAction]) assert.doesNotMatch(r, /kind:|\(kind|rests_on|action_basis/, r);
