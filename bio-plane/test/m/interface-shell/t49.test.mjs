@@ -1,6 +1,7 @@
 /* interface-shell R65, R67, R68 (T49-20): the shell draws its own elements with the design's classes and carries no rule
    for them; the test-instance band is the design's; explanations close, nothing is clipped at the phone width, and the
    expected refusal writes no console line. Every sentence is read through `setup-words`' `word` (R70). */
+import { frameAnswers } from "./frame-answers.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { interfacePage, classLiterals, checkScreens } from "../../../src/interface-shell/index.mjs";
@@ -28,8 +29,9 @@ const ELEMENTS = {
     + cs.areas(cs.image("openoriginal", { capture: "p1" }, { alt: { text: "x" } }), { id: "ph", areas: [{ left: 1, top: 2, width: 3, height: 4 }] }),
 };
 
+const FRAME_ANSWERS = await frameAnswers();
 test("R65 the shell draws its own elements with the design's classes: the member menu (mk-menuwrap, mk-menu over a cs-dialog), an act with its slot (mk-actwrap, mk-slot), a row's name cell (mk-rowname), the scrim behind a dialog (mk-scrim), an image (mk-image), areas on it (mk-imgareas, mk-imgarea), the avatar as a button, the group's name (mk-grp) and the explanation-level control (mk-lvlbtn); none of the replaced classes is drawn or styled", async () => {
-  const p = await boot({ screens: [...ALL, ELEMENTS], path: "/app/ceremony/c1", plane: { openoriginal: bytes(new Uint8Array([1]), "image/png") } });
+  const p = await boot({ screens: [...ALL, ELEMENTS], path: "/app/ceremony/c1", plane: { ...FRAME_ANSWERS, openoriginal: bytes(new Uint8Array([1]), "image/png") } });
   const root = p.root();
   assert.ok(root.querySelector(".mk-menuwrap > button.mk-avatar"));
   assert.ok(root.querySelector(".mk-menuwrap > .mk-menu.cs-dialog#cs-menu"));

@@ -192,7 +192,9 @@ test("R51 a date sends standardinforce with the declared fields and draws the ow
   await press(p, "standardinforce");
   assert.deepEqual(p.byOp("standardinforce")[0].query, { op: "standardinforce", id: L.pol, date: "2026-06-15" }, "the op is the request's; the declared fields are id and date");
   let shown = main(p).querySelector('[data-inforce="in_force"]');
-  assert.ok(shown && shown.textContent.includes(inside.why));
+  /* the owner's answer carries known_through (standards R7, K5178): the screen words it by key with the member by name, in place of the why's stamp (R8) */
+  assert.ok(inside.known_through && typeof inside.known_through.by === "string", "the world: a version known in force");
+  assert.ok(shown && shown.textContent.includes(word("standard.inforce.known", { through: dayOf(inside.known_through.through), source: "Policy.txt", author: me.handle })));
   drew(shown, "screen.standard.inforce.result.line", { date: dayOf("2026-06-15"), state: word("screen.standard.inforce.state.in_force") });
   drew(shown.parentElement, "screen.standard.inforce.result.meta", { from: dayOf("2023-01-01") });
   const before = await asked(L.pol, "2022-05-01");

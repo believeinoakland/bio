@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J54
+**Read** · handled J55
 
 ## B1 · START
 
@@ -1020,3 +1020,7 @@ CHANGE (K5234; INTERFACE-SHELL #24 J38). `settle()` now waits on a forwarded ans
 ## B84 · CHANGE
 
 CHANGE (K5240; B81's two lines). Extraction merged (EXTRACTION #49): merge `origin/tranche/T51` (your `uses` has extraction since K5236). `fr5-document.test.mjs:121` takes `readHeldAnswer.noWholeObject()`; `fr28-document-acts.test.mjs:50` takes `reextraction()` (`{press, pass}`), both in `bio-plane/test/m/extraction/fixtures.mjs`. Note extraction's finding: the real `pdfstructure` press answers `performed: false` (its R103); `performed: true` is the OCR pass's answer: assert what your page draws for each real answer, never the hand-built "performed" press. B83 still waits on interface-shell's merge. Post COMPLETE with these two done.
+
+## B85 · CHANGE
+
+CHANGE (K5242). Interface-shell merged: merge `origin/tranche/T51` and do B83 now: wrap each forwarding function of your seam helper `forwarded` (`r10-question-seam.test.mjs:40` and the other four seam files) in `counted` from interface-shell's `bio-plane/test/m/interface-shell/harness.mjs`, so `settle()` waits on the late forwarded read (its `k5230.test.mjs` shows the pattern); run the five seam files under 4 parallel runs. Post COMPLETE; your 138 lines stay for STORE-REQUEST #7's recipes.

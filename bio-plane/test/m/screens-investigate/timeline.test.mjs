@@ -583,3 +583,54 @@ test("R33 B14 the module names instance and progression among the timeline's act
   const none = await pageOf(bare);
   assert.deepEqual(sectionActs(none), []);
 });
+
+/* ---- T51 fix round 10: R33 (4), (5) ---- */
+test("R33 (4) the addresses: the project is state a, <project>/matter/<progression>/<entity> is state b and <project>/progression/<progression> is state c, each on the timeline screen with the reads it names; control: a matter address with no entity is not state b", async () => {
+  const s = await scene({ matter: true });
+  const a = await pageOf(s);
+  assert.ok(a.byOp("timeline").length >= 1, "state a reads the timeline");
+  assert.equal(a.byOp("instance").length, 0, "and no matter");
+  assert.equal(a.byOp("progression").length, 0, "and no progression");
+  assert.ok(secOf(a, "progression.follows"), "state a draws the matters followed");
+  const b = await pageOf(s, matterAt(s));
+  assert.deepEqual(b.byOp("instance")[0].query, { op: "instance", key: "pra", id: s.org }, "state b reads the matter of the progression and the entity named in the address");
+  assert.ok(secOf(b, "progression.steps"), "state b draws its steps");
+  assert.equal(secOf(b, "progression.follows"), undefined, "and not the list of matters");
+  assert.equal(b.byOp("progression").length, 0);
+  const c = await pageOf(s, "/progression/pra");
+  assert.deepEqual(c.byOp("progression")[0].query, { op: "progression", key: "pra" }, "state c reads the progression named in the address");
+  assert.ok(secOf(c, "progression.basis"), "state c draws its basis");
+  assert.equal(c.byOp("instance").length, 0);
+  assert.equal(secOf(c, "progression.follows"), undefined);
+  for (const p of [a, b, c]) {
+    assert.ok(main(p).textContent.includes(word("screen.timeline.name")), "the same screen, titled so");
+    assert.equal(main(p).textContent.includes(s.project), false, "the project by its title, never its id");
+  }
+  const half = await pageOf(s, "/matter/pra");
+  assert.equal(half.byOp("instance").length, 0, "control: a matter address with no entity names no matter: nothing is read as one");
+});
+
+test("R33 (5) the set the timeline reads is built from every dated document fact, not only from the entity and event references the project cites: both lists are sent together and each document's dated facts are drawn; control: a document of another project adds none", async () => {
+  const s = await scene({ matter: false });
+  const d3 = await holdRead(s.world, s.me, "Inspection notice", "The inspection was held in May 2025.", s.project, []);
+  await s.me.act("recorddatedfact", { body: { captureSha: d3.sha, extent: DOC, kind: "hearing", value: "2025-05-20", method: "stated in the document" } });
+  const other = await s.world.recipes.project(s.me, "Lease renewals");
+  const foreign = await holdRead(s.world, s.me, "Foreign memo", "Signed on June 2, 2024.", other, []);
+  await s.me.act("recorddatedfact", { body: { captureSha: foreign.sha, extent: DOC, kind: "signed", value: "2024-06-02", method: "stated in the document" } });
+  const p = await pageOf(s);
+  assert.equal(p.byOp("timeline").length, 1, "read once, with both lists, after the documents are known");
+  const sent = p.byOp("timeline")[0].query;
+  assert.equal(sent.set, s.org, "the cited entity is sent");
+  const held = [s.d1, s.d2, d3].map((d) => d.sha);
+  assert.deepEqual(sent.captures.split(",").sort(), held.slice().sort(), "and every document of the project, no other");
+  const answer = await s.me.read("timeline", { query: sent });
+  const dated = (answer.dated && answer.dated.items) || [];
+  assert.ok(dated.length >= 5, "the world holds the dated facts of all three documents");
+  const sec = secOf(p, "timeline.dated.title");
+  assert.ok(sec, "the dated list is drawn beside the lanes");
+  for (const t of ["Lease amendment 1", "Rent schedule", "Inspection notice"]) assert.ok(sec.textContent.includes(t), t + " dates something");
+  drew(sec, "screen.timeline.datekind.hearing");
+  assert.ok(!sec.textContent.includes("Foreign memo"), "control: another project's document is not read");
+  assert.ok(main(p).querySelectorAll(".mk-lanes").length >= 1, "the lanes stand beside it");
+  assert.ok(main(p).querySelectorAll("[data-event]").length > 0, "and the events the cited entity concerns");
+});

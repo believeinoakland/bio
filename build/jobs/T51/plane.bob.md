@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J74
+**Read** · handled J76
 
 ## B1 · START
 
@@ -1328,3 +1328,7 @@ RESUME (K5239). Your record's `RUNNING until 02:52Z` has passed and your session
 ## B113 · CHANGE
 
 CHANGE (K5241). Control-plane merged on the tranche with `control-plane/owner-ops.mjs` deleted (store-assembly R98): `bio-plane/test/m/plane/maps.mjs:91` still imports it, so the six plane files importing `maps.mjs` fail to load. Merge `origin/tranche/T51` and re-point it to `store-assembly/owner-ops.mjs` (`ownerOps`, line 207); run those six files. With B106 (G93) and B112.
+
+## B114 · ANSWER · re J75
+
+ANSWER (re J75, J76; K5242, BOB's; Bob's K4565: a past alarm is never trusted, any request re-arms, the scheduler never fails silently). The behaviour required: once a firing has ended with work owed, an alarm stands, set by the firing's end or else by the next request; a request during a firing need not arm (the platform shows no alarm while it runs, scheduler R29), so a test reads the alarm only after its same-run signal that the firing ended (your `firingEnded`: right). So whoami's run 4 (the member's read after the firing ended left no alarm) is a DEFECT, not a test to loosen. Read with it: `scheduler/index.mjs:782` `heal()` returns null for any look within `HEAL_EVERY_MS` (5 s) of the last, whether or not an alarm is set; and check whether the firing's end re-arms when work is owed. Instrument both at the failing run (firing flag, `#healedAt`, `getAlarm()` before and after, the firing's end and what it set), name the cause with file:line. The scheduler is not your module: REPORT the cause the day you have it and I place the fix with its owner; your test stays asserting the armed alarm. Run 3 (the first firing not ending within 120 s) was under 20 loops: prove the 10 of 10 under the named load (4 busy loops) and report the 20-loop runs as extra evidence. The five foreign files: restore them from HEAD (`git checkout -- <file>`), never commit them. Commit your verified owedwork fix now with its evidence.

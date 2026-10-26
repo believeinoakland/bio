@@ -2,7 +2,8 @@
    project (the second address part), and the six screens the design adds have their paths and the reference kinds that open them. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { PATHS, REF_SCREENS, SETTINGS_SCREENS, PROJECT_PART, ADMIN_SCREENS } from "../../../src/interface-shell/index.mjs";
+import { PATHS, REF_SCREENS, SETTINGS_SCREENS, PROJECT_PART } from "../../../src/interface-shell/index.mjs";
+import { ADMIN_SCREENS } from "../../../src/wizard-scripts/index.mjs";
 import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { boot, ok, ADMIN } from "./harness.mjs";
