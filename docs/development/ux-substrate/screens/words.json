@@ -22,7 +22,7 @@
   "label": 231,
   "project": 56,
   "grouprule": 1,
-  "refusal": 2597,
+  "refusal": 2598,
   "signing": 23,
   "case": 18,
   "docket": 7,
@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7708,
+  "screen": 7737,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 1275,
+  "act": 1285,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -236,7 +236,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19246,
+  "total": 19286,
   "protected": 1157
  },
  "words": [
@@ -82123,6 +82123,251 @@
    "note": "DEC-435: B523: a hint on Timeline when the team has no active place (zone null); drawn once above the events it touches"
   },
   {
+   "key": "act.standardinforcethrough.label.standard",
+   "en": "Record a day it was still in force",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: standards R50 on Standard"
+  },
+  {
+   "key": "act.standardinforcethroughwithdraw.label.standard",
+   "en": "Withdraw this, with a reason",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: standards R51, beside a recorded day"
+  },
+  {
+   "key": "act.standardadoption.label.standard",
+   "en": "Record that a body adopted it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: standards R40 on Standard"
+  },
+  {
+   "key": "act.standardimpose.label.standard",
+   "en": "Record a law that makes it binding",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: standards R43 on Standard"
+  },
+  {
+   "key": "act.standardbenchmark.label.standard",
+   "en": "Hold it only as a benchmark for a body",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: standards R43 on Standard"
+  },
+  {
+   "key": "screen.standard.binds.head",
+   "en": "Whom it binds, and until when",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: the section on Standard"
+  },
+  {
+   "key": "screen.standard.binds.help",
+   "en": "An act is found out of conformance only with a standard that was in force on the act's day and binding on the body that acted. Record here what the documents show.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: its help, once, under the head"
+  },
+  {
+   "key": "screen.standard.through.unknown",
+   "en": "No end is stated, and no member has recorded a day it was still in force, so Civicsmith cannot tell whether it was in force after {from}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: {from} the day its period began; drawn when the period is open and no day is recorded"
+  },
+  {
+   "key": "screen.standard.through.recorded",
+   "en": "Known to be in force through {through}, from {source}, recorded by {name}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: a recorded day, as the read gives it"
+  },
+  {
+   "key": "screen.standard.binds.unknown",
+   "en": "No adoption or law recorded here says whom it binds.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: drawn when neither is recorded"
+  },
+  {
+   "key": "screen.standard.f.through",
+   "en": "The last day it is known to be in force",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: standardinforcethrough: the day"
+  },
+  {
+   "key": "screen.standard.f.through.help",
+   "en": "A day on or before the day the source was last checked.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: its help"
+  },
+  {
+   "key": "screen.standard.f.source",
+   "en": "Where it shows",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: standardinforcethrough: the passage"
+  },
+  {
+   "key": "screen.standard.f.source.help",
+   "en": "Choose the passage, in a document your team holds, that shows it still in force.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: its help"
+  },
+  {
+   "key": "screen.standard.f.body",
+   "en": "The body",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: standardimpose, standardbenchmark: an office or organization chosen from the list"
+  },
+  {
+   "key": "screen.standard.f.body.help",
+   "en": "Choose the office or organization. Your team's offices and bodies come from the places it chose, under Places and offices.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: its help"
+  },
+  {
+   "key": "screen.standard.f.act",
+   "en": "The act that adopted it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: standardadoption: a held act or a dated event"
+  },
+  {
+   "key": "screen.standard.f.act.help",
+   "en": "An ordinance, resolution or other act your team holds, or a dated event on the Timeline.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: its help"
+  },
+  {
+   "key": "screen.standard.f.edition",
+   "en": "The edition adopted",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: standardadoption"
+  },
+  {
+   "key": "screen.standard.f.edition.help",
+   "en": "As the act names it, such as \"2021\" or \"Fourth edition\".",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: its help"
+  },
+  {
+   "key": "screen.standard.f.mode",
+   "en": "How it was adopted",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: standardadoption: one of three"
+  },
+  {
+   "key": "screen.standard.mode.by_reference",
+   "en": "Written into the act by reference",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: ADOPTION_MODES"
+  },
+  {
+   "key": "screen.standard.mode.voluntary",
+   "en": "Taken up by choice",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: ADOPTION_MODES"
+  },
+  {
+   "key": "screen.standard.mode.by_accreditation",
+   "en": "Required to keep an accreditation",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: ADOPTION_MODES"
+  },
+  {
+   "key": "screen.standard.f.passage",
+   "en": "The passage that says so",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: standardadoption, standardimpose: the citation"
+  },
+  {
+   "key": "screen.standard.f.law",
+   "en": "The law that makes it binding",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: standardimpose: a held law"
+  },
+  {
+   "key": "screen.standard.f.reason",
+   "en": "Your reason",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: each of the four acts"
+  },
+  {
+   "key": "refusal.STANDARD_BINDING_UNDETERMINED",
+   "en": "Civicsmith cannot yet tell whether this standard was in force and binding on this body on the day of the act, so the act is not found out of conformance with it. Settle it on the standard's page, under \"Whom it binds, and until when\", then record the determination again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: B531 item 6; conformance C-113.45 (K5274)"
+  },
+  {
+   "key": "screen.matter.f.body.help",
+   "en": "Choose the office or body whose act this is, from your team's offices and bodies. They come from the places your team chose, under Places and offices.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: C2a (a): the body is chosen, never typed, so it matches the standard's issuer"
+  },
+  {
+   "key": "screen.standard.through.none.summary",
+   "en": "When no day is recorded",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: the mockup fold over the unknown state"
+  },
+  {
+   "key": "screen.matter.event.none.summary",
+   "en": "When the project has no dated event",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: the mockup fold"
+  },
+  {
+   "key": "screen.matter.determine.needscase.summary",
+   "en": "When no finding is published yet",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: the mockup fold"
+  },
+  {
+   "key": "screen.matter.event.none",
+   "en": "This project has no dated event yet. Record the act on the project's Timeline, with its date, then choose it here.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: C2a (1): the event picker when the project has none"
+  },
+  {
+   "key": "screen.matter.determine.needscase",
+   "en": "No finding is here to rest on yet. Publish a case that carries this project's findings, or accept a finding from another team, then record the determination.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: C2a (2): above Record a determination when the project has no published finding"
+  },
+  {
+   "key": "screen.matter.concluded.unpublished",
+   "en": "Concluded. It becomes a finding once a case that carries it is published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-438: C-M11, B532 (2): a concluded question not yet in a published case"
+  },
+  {
    "key": "refusal.GROUP_SLUG_MALFORMED",
    "en": "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.",
    "protected": false,
@@ -93884,10 +94129,10 @@
   },
   {
    "key": "refusal.STANDARD_NOT_BINDING",
-   "en": "This standard does not bind this body, so the act cannot be found nonconforming against it. Record it as a benchmark comparison: below, slower than, or above. Nothing was written.",
+   "en": "This standard is held as a benchmark for this body, not a rule that binds it, so the act cannot be found out of conformance with it. To measure the act against it, ask the question on this project and cite the standard there. Nothing was written.",
    "protected": false,
    "source": "DEC-260",
-   "note": "conformance's translation, keyed by its code"
+   "note": "conformance's translation, keyed by its code; DEC-259: reworded"
   },
   {
    "key": "refusal.STANDARD_NOT_IN_FORCE",
@@ -127366,6 +127611,36 @@
   {
    "key": "act.standardinforce.does",
    "en": "Asks whether this standard was in force on a day you choose, and why.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.standardinforcethrough.does",
+   "en": "Records, from a passage of a document your team holds, checked that day, that this standard was still in force through a day. Until one is recorded, Civicsmith cannot tell whether a standard with no stated end was in force after it began, and an act is not found out of conformance with it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.standardinforcethroughwithdraw.does",
+   "en": "Withdraws a day this standard was recorded as known in force through. The record is kept, marked withdrawn, with your reason.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.standardadoption.does",
+   "en": "Records that a body adopted an edition of this standard: the act that adopted it, how, and the passage of that act that says so.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.standardimpose.does",
+   "en": "Records that a law your team holds makes this standard binding on a body, citing the passage of the law that says so.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.standardbenchmark.does",
+   "en": "Records that this standard is used to measure a body against, not as a rule the body must follow. It never makes the standard binding, and an act is never found out of conformance with a benchmark.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

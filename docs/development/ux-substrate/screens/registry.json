@@ -4285,6 +4285,40 @@
      "modules": [
       "law-relations"
      ]
+    },
+    {
+     "op": "standardinforcethrough",
+     "label": "Record a day it was still in force",
+     "status": "declared",
+     "modules": [
+      "standards"
+     ]
+    },
+    {
+     "op": "standardinforcethroughwithdraw",
+     "label": "Withdraw this, with a reason",
+     "status": "declared",
+     "servedBy": "standards R51 (op standardinforcethroughwithdraw, routed by store-request and listed in op-declarations' standards row, which has no classes object the check reads; DEC-438)"
+    },
+    {
+     "op": "standardadoption",
+     "label": "Record that a body adopted it",
+     "status": "declared",
+     "modules": [
+      "standards"
+     ]
+    },
+    {
+     "op": "standardimpose",
+     "label": "Record a law that makes it binding",
+     "status": "declared",
+     "servedBy": "standards R43 (op standardimpose, impositionRecord; listed as standardinforcethroughwithdraw is; DEC-438)"
+    },
+    {
+     "op": "standardbenchmark",
+     "label": "Hold it only as a benchmark for a body",
+     "status": "declared",
+     "servedBy": "standards R43 (op standardbenchmark, benchmarkDeclare; listed as standardinforcethroughwithdraw is; DEC-438)"
     }
    ],
    "journeys": [

@@ -6329,12 +6329,28 @@
      "basis": "fixed"
     },
     {
+     "step": "Settle whom it binds, and until when (DEC-438)",
+     "whoIsActing": "member",
+     "whatTheyKnow": "The standard's period as held; the adopting act or the law that imposes it, and a passage checked on a day showing it still in force.",
+     "decisionTheyMake": "Record a day it was still in force; record that a body adopted it, or a law that makes it binding; or hold it only as a benchmark for a body.",
+     "whatCanGoWrong": [
+      "No end stated and no day recorded: whether it was in force is undetermined, and a noncompliant determination is refused until it is settled (STANDARD_BINDING_UNDETERMINED).",
+      "A day after the source was last checked: refused (THROUGH_AFTER_CHECK).",
+      "A benchmark never binds: an act is never found out of conformance with it."
+     ],
+     "howLong": "Minutes.",
+     "handoffTo": "joined member",
+     "feelingRisk": "None named.",
+     "src": "standards R40, R43, R50, R51; conformance R27, R43; walk E C2a (K5271)",
+     "basis": "fixed"
+    },
+    {
      "step": "Record a determination per standard",
      "whoIsActing": "joined member",
      "whatTheyKnow": "Published findings with frozen pairs; standards in force.",
      "decisionTheyMake": "Compliant, noncompliant or unclear, per standard.",
      "whatCanGoWrong": [
-      "A standard not in force at the act's date: refused.",
+      "A standard not in force at the act's date, or whose binding on the body is undetermined: refused, with the standard's page named as where to settle it. The body is chosen from the team's offices and bodies, never typed.",
       "Any significance, rank or score key: refused (R8).",
       "basis_changed later when a finding reopens."
      ],
