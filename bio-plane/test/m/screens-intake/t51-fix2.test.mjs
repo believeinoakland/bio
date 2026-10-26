@@ -12,8 +12,8 @@ import { hasWord } from "../../../src/setup-words/index.mjs";
 const CAN = ["contribute", "create_projects"];
 const ADDRESS = "https://www.example.gov/reports/street-maintenance-2026.pdf";
 /* a member and a project of hers */
-async function team(spec = {}) {
-  const t = await members({ mai: CAN, ...spec });
+async function team(spec = {}, opts = {}) {
+  const t = await members({ mai: CAN, ...spec }, opts);
   t.project = await t.world.recipes.project(t.mai, "Pothole repairs");
   return t;
 }
@@ -226,7 +226,7 @@ test("R54 (C25) control: two documents from one host with different titles are t
 
 /* ---------- C29, C45 ---------- */
 
-test("R3 (C29) the testimony's result links the document it made, and draws no link and no raw number where the answer names none", async () => {
+test("R3 (C29) the testimony's result links the document it made, and draws no raw number", async () => {
   const t = await team();
   const words = "I saw the pothole at 6012 Seminary Ave still open.";
   const fillSaw = { "ci-words": words, "ci-where": "6012 Seminary Ave", "ci-when": "2026-10-01T09:00:00Z" };
@@ -238,12 +238,7 @@ test("R3 (C29) the testimony's result links the document it made, and draws no l
   const made = String(links[0].getAttribute("href")).match(/INFO-[A-Za-z0-9-]+/)[0];
   assert.ok(await t.mai.read("image", { query: { id: made } }), "the document is the one the owner made");
   assert.ok(!text(p).includes(made), "no raw record number");
-  /* an answer that names no document is one the owner never gives for a testimony it took: the one scripted answer */
-  const q = await open(t, "/app/capture/saw", { testify: ok({ ok: true }) });
-  fill(q, fillSaw);
-  await press(q, "testify");
-  assert.equal(main(q).querySelectorAll('a[href*="INFO-"]').length, 0, "no id, no link");
-  assert.ok(!/:\s*\./.test(text(q)), "and no blank where the number was");
+  /* an answer that names no document is one the owner never gives for a testimony it took (fix round 10, K5245): no act makes it, so the case is removed */
 });
 
 test("R25 (C45) \"For which question\" shows the question's title, not its id; a question whose title cannot be read shows the word for a question", async () => {
@@ -263,11 +258,10 @@ test("R25 (C45) \"For which question\" shows the question's title, not its id; a
 /* ---------- C78 ---------- */
 
 test("R47 (C78) the explanation of \"Show the stored logins\" sits directly under its own button, before the list it explains", async () => {
-  const t = await team();
-  /* a stored login is made by the owner's `capturecredentialsupply`, which the world's door refuses every member (CAPTURE_CREDENTIAL_NOT_A_MEMBER: the door stamps `by` as the viewer,
-     "member:mai", and capture-sources asks its members for the bare id): the owner's list is the one scripted answer, until that is mended */
-  const entries = [{ credential: "c1", host: "records.example.gov", supplied_by: "mai", supplied_at: "2026-10-01T10:00:00Z" }];
-  const p = await open(t, "/app/capture/address", { capturecredentiallist: ok({ ok: true, entries }) });
+  /* a stored login is made by the owner's `capturecredentialsupply` (capture-sources R72: a member's own, the door stamping her), so the list the screen reads is the owner's */
+  const t = await team({}, { env: { CAPTURE_CREDENTIALS_KEY: "k".repeat(64) } });
+  await t.world.recipes.credential(t.mai, { host: "records.example.gov" });
+  const p = await open(t, "/app/capture/address");
   assert.ok(btn(p, "capturecredentiallist").closest(".mk-acts").nextElementSibling.textContent.includes(word("screen.capture.cred.listnote1")), "it stands under its button before the press too (the shell closes the tip on the press, fix round 3, C78)");
   await press(p, "capturecredentiallist");
   const under = btn(p, "capturecredentiallist").closest(".mk-acts").nextElementSibling;

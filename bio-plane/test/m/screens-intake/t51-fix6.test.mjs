@@ -7,25 +7,21 @@
  * the plan states, and the last test holds capture's own declaration of `acquire` to carrying `project`, red by name until capture merges. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { openWorld, members, main, fill, press, ok, says, word, DOCUMENT_STUB } from "./page.mjs";
+import { openWorld, members, main, fill, press, ok, says, word, lapse, DOCUMENT_STUB } from "./page.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 import { collectOwnerRows as realRows } from "../interface-shell/harness.mjs";
 
+/* Fix round 10 (K5245): an owed fetch is delivered, lapsed or refused by the store's own clock (`deliver: true`, store-request R19). */
 /* Fix round 10 (K5054): every screen here is opened over the REAL store. A member and a project are made by real acts; an address is answered by the world's
  * network (`world.script`, an environment double); the page's own acts (`acquire`, `captureupload`, `promote`) are answered by the real modules. What stays scripted
  * is what the world cannot make and is said where it stays: the plane's alarm runs no delivery here (store-assembly's pending work holds no control-plane
  * `deliverOwedRender`), so a parked fetch is never filed or dropped from the list by a clock; and an owner's flag a real act cannot raise. */
 const CAN = ["contribute", "create_projects"];
 const ADDRESS = "https://www.nps.gov/yose/planyourvisit/upload/big.pdf";
-const SESSION = "rs_big_1";
-const SHA = "d".repeat(64);
-const HOME = "INFO-2026-0140-big";
 const BYTES = 15932155;
-const NOT_HELD = { ok: true, held: false, copy: null, versions: 0, truncated: false, changed: { state: "undetermined" } };
-const COPY = { ok: true, held: true, copy: { sha256: SHA, document: HOME, project: null, retrieved: "2026-10-22T10:00:00Z", actor: "mai", address: ADDRESS }, versions: 1, truncated: false, changed: { state: "unchanged" } };
 /* a member, and a project of hers named Yosemite */
-async function team() {
-  const t = await members({ mai: CAN });
+async function team(opts = {}, others = {}) {
+  const t = await members({ mai: CAN, ...others }, opts);
   t.project = await t.world.recipes.project(t.mai, "Yosemite");
   return t;
 }
@@ -34,24 +30,24 @@ const open = (t, path, plane = {}) => openWorld(path, { world: t.world, as: t.ma
 const site = (t, address, make) => t.world.script(address, async () => make());
 const page = (t, address, html = "<html><head><title>Sagamore</title></head><body><p>Payment vouchers are due in four instalments.</p></body></html>") =>
   site(t, address, () => new Response(html, { status: 200, headers: { "content-type": "text/html" } }));
-/* a file the source says is too long to wait for: acquisition parks it (`fetch_pending`) before one byte is read */
-const bigFile = (t, address = ADDRESS) => site(t, address, () => new Response("%PDF-", { status: 200, headers: { "content-type": "application/pdf", "content-length": String(BYTES) } }));
-/* the member's open captures as the owner answered them (read by the real act), until the session leaves the list */
-const listing = (state, real) => () => ok({ ...real, captures: state.listed ? real.captures : [] });
+/* a file the source says is too long to wait for: acquisition parks it (`fetch_pending`) before one byte is read; once `release()` is called the source serves the file itself (what the
+   owed fetch finds when it runs) */
+const FILE_BODY = "%PDF-1.4\n1 0 obj << /Title (Yosemite) >> endobj\n";
+const bigFile = (t, address = ADDRESS) => {
+  const gate = { parked: true, release: () => { gate.parked = false; } };
+  site(t, address, () => gate.parked ? new Response("%PDF-", { status: 200, headers: { "content-type": "application/pdf", "content-length": String(BYTES) } })
+    : new Response(FILE_BODY, { status: 200, headers: { "content-type": "application/pdf" } }));
+  return gate;
+};
 const fetching = (p) => main(p).querySelectorAll("[data-fetching]").length;
 const size = word_n("15.2");
 function word_n(n) { return ["size.mb", { n }]; }
 const pressCapture = async (p) => { fill(p, { "ci-address": ADDRESS }); await press(p, "acquire"); };
-const heldat = (state) => (r) => ok(r.query.check || !state.held ? NOT_HELD : COPY);
 
 test("R58 (G2) a capture answered fetch_pending is said at once (size, where it is filed), nothing is promoted, and when the session leaves the list the finished line links the document", async () => {
-  const t = await team();
-  bigFile(t);
-  /* the real acquire parks the fetch; the plane's alarm cannot deliver it here, so the listing and the record's copy that follow the delivery are the one scripted pair */
-  const parked = await t.mai.act("acquire", { body: { locator: ADDRESS, project: t.project } });
-  assert.ok(parked.fetch_pending && parked.fetch_pending.session, "the owner parked the fetch");
-  const state = { listed: true, held: false };
-  const p = await open(t, `/app/capture/address/${t.project}`, { opencaptures: listing(state, await t.mai.read("opencaptures")), heldat: heldat(state) });
+  const t = await team({ deliver: true });
+  const gate = bigFile(t);
+  const p = await open(t, `/app/capture/address/${t.project}`);
   await pressCapture(p);
   assert.deepEqual(p.byOp("acquire").map((r) => r.body), [{ locator: ADDRESS, project: t.project }], "the project rides so the delivery can file it");
   assert.equal(fetching(p), 1, "the what-and-why line is drawn once");
@@ -63,11 +59,15 @@ test("R58 (G2) a capture answered fetch_pending is said at once (size, where it 
   assert.ok(p.byOp("opencaptures").length > before, "opencaptures is polled");
   assert.equal(fetching(p), 1, "still listed: still being fetched");
   assert.equal(says(p, "screen.capture.address.done", { title: "x" }), false);
-  state.listed = false; state.held = true;
+  /* the store's alarm runs the owed fetch: the source now serves the file, the real owedFetch makes the capture, the delivery files it under the project and the session leaves the list */
+  gate.release();
+  await t.world.tick(60_000);
+  assert.equal((await t.mai.read("opencaptures")).captures.length, 0, "the delivery dropped the session");
+  const home = (await t.mai.read("heldat", { query: { address: ADDRESS } })).copy.document;
   await p.clock.tick(4000);
   for (let i = 0; i < 8; i++) await p.settle(20);
   assert.equal(fetching(p), 0, "the working line is gone");
-  assert.ok(main(p).querySelector(`a[href*="${HOME}"]`), "the finished line links the document the delivery filed");
+  assert.ok(main(p).querySelector(`a[href*="${home}"]`), "the finished line links the document the delivery filed");
   assert.equal(p.byOp("promote").length, 0, "the screen filed nothing: the delivery did");
   const asks = p.byOp("heldat").filter((r) => !r.query.check);
   assert.ok(asks.length >= 1 && asks.every((r) => r.query.address === ADDRESS), "the record is asked for the copy at the address, nothing fetched");
@@ -88,9 +88,12 @@ test("R58 (G2) a capture whose declared size is not stated draws the line withou
 test("R58 (G2) a session that left the list with no copy at the address three asks in a row is refusal.FETCH_FAILED beside the act, and claims nothing", async () => {
   const t = await team();
   bigFile(t);
-  /* the session leaves the list: the one thing a clock cannot do in the world (no delivery runs), so the listing is the scripted answer; the record holds no copy, as it really does */
-  const p = await open(t, `/app/capture/address/${t.project}`, { opencaptures: listing({ listed: false }, { ok: true, truncated: false }) });
+  const p = await open(t, `/app/capture/address/${t.project}`);
   await pressCapture(p);
+  assert.equal(fetching(p), 1, "being fetched");
+  /* the session leaves the list by the store's own clock (a month's idle), and the record holds no copy, as it really does */
+  await lapse(t, p);
+  assert.equal((await t.mai.read("opencaptures")).captures.length, 0, "the session left the list");
   for (let i = 0; i < 3; i++) { await p.clock.tick(4000); for (let j = 0; j < 8; j++) await p.settle(20); }
   assert.equal(fetching(p), 0);
   assert.ok(says(p, "refusal.FETCH_FAILED"));
@@ -123,48 +126,10 @@ test("R58 control: a page answered with its document in the request is promoted 
   assert.equal(p.byOp("opencaptures").length, n, "nothing is polled");
 });
 
-/* ---- G3: "Finish it" answered at once ---- */
-
-/* An unfinished capture with files outstanding, a continuation and a render that is pending are made by the alarm's walk of a page's supporting files and a browser's
-   render, which the world's runtime does not run: these two tests keep the three answers scripted, and the member and the page real. */
-const PAGE = "https://www.nps.gov/sagu/index.htm";
-const FIN = { session: "rs_sagu", primary: { sha256: "a".repeat(64), file: "snapshots/index.htm", locator: PAGE } };
-const OPENS = (state) => () => ok({ ok: true, truncated: false, captures: state.listed ? [{ session: "rs_sagu", locator: PAGE, primary_sha: "a".repeat(64), started: "2026-10-22T09:00:00Z", outstanding: 1 }] : [] });
-const finishBtn = (p) => Array.from(main(p).querySelectorAll('button[data-act="acquire"]')).find((b) => b.getAttribute("data-session") === "rs_sagu");
-const mark = (p, k) => main(p).querySelectorAll(`[data-finish="${k}"]`).length;
-
-test("R31 (G3) 'Finish it' answered render pending at once draws the working line, then, once the session has left the list, the finished line linking the visitor copy; the screen files nothing", async () => {
-  const t = await team();
-  const state = { listed: true, held: false };
-  const p = await open(t, "/app/capture/address", { opencaptures: OPENS(state), heldat: heldat(state), acquire: ok({ ok: true, existed: true, continued: FIN, render: { state: "pending", session: "rs_sagu" } }) });
-  await p.click(finishBtn(p));
-  for (let i = 0; i < 8; i++) await p.settle(20);
-  assert.equal(mark(p, "pending"), 1, "the working line at once");
-  assert.deepEqual(p.byOp("acquire").map((r) => r.body), [{ continue: "rs_sagu" }]);
-  await p.clock.tick(4000);
-  for (let i = 0; i < 6; i++) await p.settle(20);
-  assert.equal(mark(p, "pending"), 1, "still listed: still being made");
-  state.listed = false; state.held = true;
-  await p.clock.tick(4000);
-  for (let i = 0; i < 8; i++) await p.settle(20);
-  assert.equal(mark(p, "pending"), 0);
-  assert.equal(mark(p, "done"), 1, "the finished line");
-  assert.ok(main(p).querySelector(`a[href*="${HOME}"]`), "linking the document");
-  assert.equal(p.byOp("promote").length, 0, "filed by the delivery, not the screen");
-});
-
-test("R31 (G3) control: a continuation answered with only its files draws that and polls nothing", async () => {
-  const t = await team();
-  const state = { listed: true, held: false };
-  const p = await open(t, "/app/capture/address", { opencaptures: OPENS(state), heldat: heldat(state), acquire: ok({ ok: true, existed: true, continued: FIN }) });
-  await p.click(finishBtn(p));
-  for (let i = 0; i < 8; i++) await p.settle(20);
-  assert.equal(mark(p, "files"), 1);
-  const n = p.byOp("opencaptures").length;
-  await p.clock.tick(30000);
-  for (let i = 0; i < 6; i++) await p.settle(20);
-  assert.equal(p.byOp("opencaptures").length, n);
-});
+/* ---- G3: "Finish it" answered at once ----
+   Fix round 10 (K5245; K4297 (2)): the cases of a "Finish it" answered with a continuation (files outstanding) or a render pending are removed. An unfinished capture with files
+   outstanding and a pending render are made only by the capture of "the page as a visitor saw it", which opens a browser the world has none of (the capture of the page as the site
+   sent it keeps no snapshot: measured over 60, 200 and 700 images), so no act makes them. r7-finish.test.mjs holds the press of "Finish it". */
 
 /* ---- G7: the flag over the fact ---- */
 
@@ -204,13 +169,9 @@ test("R57 (G7) an answer that holds a reading of its own draws no 'reading follo
   const bare = { ...other, document: { ...other.document, reading: undefined } };
   const none = await open(t, "/app/capture/address", { acquire: ok({ ...bare, existed: false, reading_pending: true }) });
   await pressCapture(none);
-    assert.equal(pendingMarks(none), 1, "control: no reading of its own, the mark stays");
-  /* the promotion's own flag (the door's reading after `promote`, which the world's door does not follow) beside a reading in the answer */
-  const third = await captured(t);
-  const promo = await open(t, "/app/capture/address", { acquire: ok({ ...third, existed: false }),   /* the flag the door raises when it reads after a promotion, which the world's door does not follow */
-    promote: async (r) => ok({ ok: true, bundleId: r.body.bundleId, reading_pending: true }) });
-  await pressCapture(promo);
-  assert.equal(pendingMarks(promo), 0, "a promotion's flag beside a reading in the answer draws none");
+  assert.equal(pendingMarks(none), 1, "control: no reading of its own, the mark stays");
+  /* a promotion's own flag beside a reading in the answer (the door's reading after `promote`) is no case here: the world's door follows no promotion with a reading (store-request,
+     J56 (2) (b)), so no act raises it (K4297 (2)) */
 });
 
 test("R57 (G7) an upload answered with its reading draws no 'reading follows' beside it, whatever the flag says", async () => {
@@ -261,25 +222,35 @@ test("R58 (G2 seam) capture's own declaration of acquire accepts `project` (capt
 
 /* ---- B31: a session whose owed fetch ended in a stated refusal ---- */
 
+/* a refusal no later try changes, by the real acts: rosa holds the very bytes the source will serve under a document of her own hidden project, so the bytes mai's owed fetch makes are held
+   under a document she cannot see (provenance R2); the store's alarm runs the fetch, the delivery's promotion is refused CAPTURE_HELD_BY_ANOTHER_BUNDLE, which ends the entry stated (acquisition R111) */
+async function heldElsewhere() {
+  /* the world's clock is set to the page's own, so that the page's "listed for a day from the failure" (N1) reads the entry's `failed_at` against the same day */
+  const t = await team({ deliver: true, now: Date.now() }, { rosa: CAN });
+  const hers = await t.world.recipes.project(t.rosa, "Hers", { visibility: "hidden" });
+  await t.world.recipes.hold(t.rosa, "big.pdf", FILE_BODY, hers, { type: "application/pdf" });
+  await t.world.tick(60_000);   /* the reading of her document, owed since it was held, is made first */
+  return t;
+}
+
 test("R58 (B31) an entry kept with `failed` draws the failure in the refusal's words at once, from the poll and from the list, without waiting for three asks", async () => {
-  const t = await team();
-  bigFile(t);
-  /* the owner parks the fetch (real); that the delivery then ended in a stated refusal is the alarm's, which the world's pending work cannot run: the owner's entry, with `failed` added */
-  const parked = await t.mai.act("acquire", { body: { locator: ADDRESS, project: t.project } });
-  const listed = (await t.mai.read("opencaptures")).captures[0];
-  assert.equal(listed.session, parked.fetch_pending.session);
-  /* listed for a day from the fetch (N1, fix round 9; K4855): the entry is recent */
-  const failedEntry = { ...listed, fetch_pending: { ...listed.fetch_pending, failed: "TOO_LARGE" } };
-  const state = { listed: true };
-  const p = await open(t, `/app/capture/address/${t.project}`, { opencaptures: () => ok({ ok: true, truncated: false, captures: state.listed ? [failedEntry] : [] }) });
+  const t = await heldElsewhere();
+  const gate = bigFile(t);
+  const p = await open(t, `/app/capture/address/${t.project}`);
   await pressCapture(p);
+  assert.equal(fetching(p), 1, "being fetched");
+  gate.release();
+  await t.world.tick(60_000);   /* the alarm runs mai's owed fetch; the delivery is refused */
+  const listed = (await t.mai.read("opencaptures")).captures;
+  assert.equal(listed.length, 1);
+  assert.equal(listed[0].fetch_pending.failed, "CAPTURE_HELD_BY_ANOTHER_BUNDLE", "the entry states the refusal");
   await p.clock.tick(4000);
   for (let i = 0; i < 8; i++) await p.settle(20);
   assert.equal(fetching(p), 0, "no working line");
-  assert.ok(says(p, "refusal.TOO_LARGE"), "the stated reason, in the refusal's words");
+  assert.ok(says(p, "refusal.CAPTURE_HELD_BY_ANOTHER_BUNDLE"), "the stated reason, in the refusal's words");
   assert.equal(p.byOp("heldat").filter((r) => !r.query.check).length, 0, "the record is not asked: the answer was stated");
-  const reloaded = await open(t, "/app/capture/address", { opencaptures: ok({ ok: true, truncated: false, captures: [failedEntry] }) });
-  assert.ok(says(reloaded, "refusal.TOO_LARGE"), "the list says it too");
+  const reloaded = await open(t, "/app/capture/address");
+  assert.ok(says(reloaded, "refusal.CAPTURE_HELD_BY_ANOTHER_BUNDLE"), "the list says it too");
   assert.equal(Array.from(main(reloaded).querySelectorAll('button[data-act="acquire"]')).filter((b) => b.getAttribute("data-session")).length, 0, "and offers no Finish it");
 });
 

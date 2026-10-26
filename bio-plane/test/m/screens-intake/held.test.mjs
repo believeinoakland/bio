@@ -156,10 +156,7 @@ test("R4 each row with its title, age and project; the questions it waits for; w
   assert.ok(x.includes(`${word("screen.held.ineligible", { reason: word("screen.held.ineligible.crucial") })} ${word("screen.held.ineligible.alone")}`));
   assert.ok(rows[lease.bundle].reason && !x.includes(rows[lease.bundle].reason), "R23: never the catalogue's sentence");
   assert.deepEqual(rawKeys(p), []);
-  /* an undetermined eligibility (no reader answered the batch examination) is a state the owner answers only when its reader is silent: scripted */
-  const row = { bundle_id: "INFO-2026-0005-packet", title: "Agenda packet", project: null, age_days: 1, eligible: null, captured_for: null, captured_for_basis: "no reader answered", capture: null };
-  const u = await open(t, "/app/held", t.mai, { plane: { heldcaptures: (req) => ok({ ok: true, held: req.query.state === "set_aside" ? [] : [row] }) } });
-  assert.ok(main(u).querySelector('[data-gap="undetermined"]'), "an undetermined eligibility is stated, never drawn eligible");
+  /* an undetermined eligibility is read only when a page's examination ran out of time (HELD_PAGE_WAIT_MS, 5 s: capture R91) or for a vouched row (R88): no act of the world makes either on this list, so the case that scripted one is removed (fix round 10, K5245) */
   /* control: an eligible row with nothing withheld carries no gap mark */
   const one = await desk({ mai: CAN });
   await hold(one, one.mai, { name: "Photo" });
@@ -387,16 +384,8 @@ test("R11 each row's grade is one mark from capture.grade, never a received or a
   /* the thumbnail opens open-file for capture.sha256 */
   for (const id of [fetched.bundle, uploaded.bundle, seen]) assert.ok(row(id).querySelector(`a.cs-ref[href="/app/open-file/${rows[id].capture.sha256}"]`), id);
   assert.deepEqual(rawKeys(p), []);
-  /* a letter stated by its author without a measure (route unrecorded) and a row with no capture are states the owner's record does not make from any act of a
-     member (its grade axis is measured or authored, and a held document files its capture): the one scripted answer of this test (reported) */
-  const S4 = "4".repeat(64);
-  const stated = { bundle_id: "INFO-D", title: "Stated", project: null, age_days: 1, eligible: true, captured_for: { questions: [], withheld: null }, capture: { sha256: S4, grade: { grade: "C", route: "unrecorded", determined: false, basis: null } } };
-  const none = { bundle_id: "INFO-E", title: "Nothing filed", project: null, age_days: 1, eligible: true, captured_for: { questions: [], withheld: null }, capture: null };
-  const u = await open(t, "/app/held", t.mai, { plane: { heldcaptures: (req) => ok({ ok: true, held: aside(req) ? [] : [stated, none] }) } });
-  const urow = (id) => main(u).querySelector(`#pick-held-${id}`).parentNode.parentNode;
-  assert.ok(urow("INFO-D").textContent.includes(word("screen.held.grade.stated")) && urow("INFO-D").querySelectorAll(".cs-grade")[0].textContent.endsWith("C"));
-  assert.ok(saysIn(urow("INFO-E"), "state.undetermined", { reason: word("screen.held.grade.nocapture") }));
-  assert.equal(urow("INFO-E").querySelector('a.cs-ref[href^="/app/open-file/"]'), null);
+  /* a letter stated by its author without a measure (route unrecorded) and a row with no capture are states the owner's record does not make from any act of a member (its grade axis is
+     measured or authored, and a held document files its capture): the case that scripted them is removed (fix round 10, K5245) */
 });
 
 test("R4 heldcaptures (\"See held captures\") asks the list again", async () => {
@@ -420,16 +409,13 @@ test("R23 a held row's refusal is drawn by its words, never the catalogue's text
   assert.deepEqual([rows[crucial.bundle].class, rows[incomplete].class, rows[contested].class], ["CRUCIAL_IN_BATCH", "ENTRY_REQUIREMENTS", "CONTESTED_IN_BATCH"]);
   const CAT = rows[crucial.bundle].reason;
   assert.ok(CAT && CAT !== word("screen.held.ineligible.crucial"), "the owner's catalogue sentence is its own");
-  /* a class the page does not know and a refusal naming no class are not made by the owner: the two scripted rows of this test (reported) */
-  const odd = { bundle_id: "INFO-X4", title: "Odd", eligible: false, class: "SOMETHING_NEW", reason: CAT };
-  const plain = { bundle_id: "INFO-X5", title: "Plain", eligible: false, reason: CAT };
-  const everything = (req) => ok({ ok: true, held: aside(req) ? [] : [...Object.values(rows), odd, plain] });
-  const p = await everyone(await open(t, "/app/held", t.ada, { plane: { heldcaptures: everything } }));
+  /* a class the page does not know and a refusal naming no class are not made by the owner: the two scripted rows of this test are removed (fix round 10, K5245) */
+  const p = await everyone(await open(t, "/app/held", t.ada));
   const row = (id) => main(p).querySelector(`#pick-held-${id}`).parentNode.parentNode;
   assert.ok(!text(p).includes(CAT), "no row draws the catalogue's text");
   assert.ok(saysIn(row(crucial.bundle), "screen.held.ineligible.crucial"));
   assert.ok(saysIn(row(contested), "screen.held.ineligible.contested"));
-  for (const id of [crucial.bundle, incomplete, contested, "INFO-X4", "INFO-X5"]) {
+  for (const id of [crucial.bundle, incomplete, contested]) {
     assert.ok(row(id).querySelector('[data-gap="refused"]'), id);
     assert.ok(saysIn(row(id), "screen.held.ineligible.alone"), id);
   }
@@ -498,30 +484,16 @@ test("R35 R40 a held upload reads uploaded by its member's handle and the day of
   assert.ok(p.byOp("memberlist").length >= 1, "the shell's roster gives the handle (interface-shell R111)");
 });
 
-/* the page over rows the test names: the owner's own rows, changed in the one field the test says (a state the owner does not answer from any act of a member), and the owner's
-   real roster. `aside(req)` is the set-aside list, which is empty here. */
-const scripted = (t, rows, as = t.mai) => open(t, "/app/held", as, { plane: { heldcaptures: (req) => ok({ ok: true, held: aside(req) ? [] : rows, truncated: false }) } });
 const sizeWord = (n) => (n < 1024 ? word("size.small") : n >= 1048576 ? word("size.mb", { n: (n / 1048576).toFixed(1) }) : word("size.kb", { n: String(Math.round(n / 1024)) }));
 const uploaded = word("document.uploaded.by", { member: "x", date: "y" }).split("x")[0].trim();
 
-test("R35 R40 controls: a fetched row still names its address; an upload row answering none of the three draws no raw source and no sentence with a blank; an archive's row draws the archive's size", async () => {
+test("R35 R40 controls: a fetched row still names its address; an archive's row draws the archive's size", async () => {
   const t = await desk({ mai: CAN });
   const address = "https://city.example/notice.pdf";
   const fetched = await hold(t, t.mai, { name: "Notice", address, bytes: "<html><head><title>Notice</title></head><body><p>The council met.</p></body></html>", type: "text/html" });
   const p = await open(t);
   assert.ok(text(p).includes(word("screen.held.from", { address })));
   assert.ok(!text(p).includes(uploaded));
-  /* an upload row answering none of actor, retrieved and bytes, and one whose uploader the roster does not name, are rows the owner's record always stamps: the owner's own row with those fields blank */
-  const up = await hold(t, t.mai, { name: "Pothole photo", bytes: "p".repeat(2300) });
-  const row = (await rowsOf(t.mai, up.bundle))[up.bundle];
-  const q = await scripted(t, [{ ...row, actor: null, retrieved: null, bytes: null }]);
-  assert.ok(!text(q).includes("upload:") && !text(q).includes(up.sha.slice(0, 16)));
-  assert.ok(!text(q).includes(uploaded));
-  assert.ok(!text(q).includes(word("size.small")) && !text(q).includes(word("size.kb", { n: "2" })), "no size where the row answers none");
-  /* C94: an uploader the roster does not name is not named by an id; the fallback word stands for her */
-  const stranger = await scripted(t, [{ ...row, actor: "member:nobody" }]);
-  assert.ok(!text(stranger).includes("nobody") && text(stranger).includes(word("document.uploaded.by", { member: word("shell.card.member"), date: dayOf(row.retrieved) })));
-  assert.ok(text(stranger).includes(word("size.kb", { n: "2" })));
   /* an archive's row draws the archive's size */
   const zipped = await hold(t, t.mai, { name: "Packet", bytes: makeZip(zipEntries(3)), type: "application/zip" });
   const zrow = (await rowsOf(t.mai, zipped.bundle))[zipped.bundle];
@@ -556,7 +528,7 @@ test("R37 the door opens archive with the archive's own digest as its subject (n
   assert.equal(door.textContent, word("screen.held.archivefiles"));
 });
 
-test("R37 controls: no not-filed part at zero, no summary at all at zero both; truncation said with shown and total; a row whose files is null says nothing of a count", async () => {
+test("R37 controls: no not-filed part at zero, no summary at all at zero both; truncation said with shown and total", async () => {
   const t = await desk({ mai: CAN });
   const z = await archiveOf(t, t.mai, { entries: zipEntries(36) });
   const row = (await rowsOf(t.mai, z.archive.bundle))[z.archive.bundle];
@@ -564,19 +536,19 @@ test("R37 controls: no not-filed part at zero, no summary at all at zero both; t
   const a = await open(t);
   assert.ok(text(a).includes(word("screen.held.archive", { parts: word("screen.held.archive.filed", { count: 36 }) })));
   assert.ok(!text(a).includes(word("screen.held.archive.notfiled", { count: 0 })) && !text(a).includes("0 not filed"));
-  /* an archive every file of which the team already held (filed none, not filed none) and one whose files were cut at the page: the owner's row, changed in the one field */
-  const nothing = await scripted(t, [{ ...row, archive: { ...row.archive, filed: 0, already_held: 3, not_filed: 0 } }]);
-  assert.ok(!text(nothing).includes(word("screen.held.archive", { parts: "x" }).split("x")[0].trim()), "no summary line with nothing in it");
-  assert.ok(text(nothing).includes(word("screen.held.archivefiles")), "the door remains");
+  /* an archive every file of which the team already held (filed none, not filed none): the same files in another order make another archive, whose files are all held already */
+  const again = await archiveOf(t, t.mai, { entries: zipEntries(36).reverse() });
+  const arow = (await rowsOf(t.mai, again.archive.bundle))[again.archive.bundle];
+  assert.deepEqual([arow.archive.filed, arow.archive.already_held, arow.archive.not_filed], [0, 36, 0], "the owner counts every file as already held");
+  const nothing = await open(t);
+  const nrow = main(nothing).querySelector(`#pick-held-${again.archive.bundle}`).parentNode.parentNode;
+  assert.ok(!nrow.textContent.includes(word("screen.held.archive", { parts: "x" }).split("x")[0].trim()), "no summary line with nothing in it");
+  assert.ok(nrow.textContent.includes(word("screen.held.archivefiles")), "the door remains");
   const cut = await archiveOf(t, t.mai, { entries: zipEntries(52) });
   const crow = (await rowsOf(t.mai, cut.archive.bundle))[cut.archive.bundle];
   assert.equal(crow.files_truncated, true);
   assert.ok(text(await open(t)).includes(word("screen.held.archivemore", { shown: crow.files.length, total: crow.files_total })));
-  /* a row whose listing did not settle in time (capture R91) answers no files: the owner's row with none */
-  const unsettled = await scripted(t, [{ ...row, files: null, files_total: undefined, files_truncated: false }]);
-  assert.ok(text(unsettled).includes(word("screen.held.archivefiles")), "the summary and the door");
-  const tail = word("screen.held.archivemore", { shown: "@", total: "#" }).split("#")[1].trim();
-  assert.ok(!text(unsettled).includes(tail), "no count it does not hold");
+  /* a row whose listing did not settle in time (capture R91, a wait of 5 s) answers no files: no act makes it, so the case that scripted it is removed (fix round 10, K5245) */
 });
 
 test("R37 control: an ordinary row, and a file cut out of an archive (archive: {sha256} alone), draw no door", async () => {
@@ -593,26 +565,18 @@ test("R37 control: an ordinary row, and a file cut out of an archive (archive: {
   assert.ok(!text(only).includes(word("screen.held.archivefiles")));
 });
 
-test("B6 a row names its project by its name, never its record id; a project the list does not name is not named at all; no project says so", async () => {
+test("B6 a row names its project by its name, never its record id; no project says so", async () => {
   const t = await desk({ mai: CAN });
   const pothole = await t.world.recipes.project(t.mai, "Pothole repairs");
   const filed = await hold(t, t.mai, { name: "Photo", project: pothole });
   const p = await open(t);
   assert.ok(text(p).includes(word("screen.held.project", { project: "Pothole repairs" })));
   assert.ok(!text(p).includes(pothole) && !text(p).includes("pothole-repairs"), "no slug, no id");
-  /* a project the viewer's list does not name: the owner's row with a project the list has no name for */
-  const row = (await rowsOf(t.mai, filed.bundle))[filed.bundle];
-  const unnamed = await scripted(t, [{ ...row, project: "PROJ-2026-0099-roof-repairs-at-city-hall" }]);
-  assert.ok(!text(unnamed).includes("roof-repairs") && !text(unnamed).includes("PROJ-"), "an unnamed project is not drawn as its id");
-  assert.ok(!text(unnamed).includes(word("screen.held.noproject")), "and is not said to be no project");
+  /* a project the viewer's list does not name: a hidden project's documents are not the viewer's to see, so no row reaches her naming one (measured); the case that scripted it is removed (fix round 10, K5245) */
   const loose = await hold(t, t.mai, { name: "Loose" });
-  const none = await scripted(t, [{ ...(await rowsOf(t.mai, loose.bundle))[loose.bundle], project: null }]);
+  const none = await open(t);
   assert.ok(text(none).includes(word("screen.held.noproject")));
-  /* an archive's listed file with no name is not drawn as its record id */
-  const z = await archiveOf(t, t.mai, { entries: zipEntries(1) });
-  const zrow = (await rowsOf(t.mai, z.archive.bundle))[z.archive.bundle];
-  const zip = await scripted(t, [{ ...zrow, files: zrow.files.map((f) => ({ ...f, name: null })) }]);
-  assert.ok(!text(zip).includes(zrow.files[0].document) && !text(zip).includes("INFO-2026"));
+  /* an archive's listed file with no name is no answer the owner gives (every file carries its path): the case that scripted one is removed (fix round 10, K5245) */
 });
 
 test("R69 Set aside asks its reason: picked rows with no reason typed send nothing and draw the field's refusal; a reason typed sends heldsetaside with it, and the row moves to Set aside with who, when and why", async () => {

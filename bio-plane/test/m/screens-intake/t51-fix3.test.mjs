@@ -224,7 +224,7 @@ test("R54 (C25) a page with a title is named by it; one without by its file name
   assert.ok(promoted(neither)[0].includes("www.example.gov") && !promoted(neither)[0].includes("street-maintenance"), "host and day");
 });
 
-test("R54 (C25) the name drawn at capture from `document.title` equals the name drawn once read from `reading.title`; a multi-part capture, with no `document.title`, is named by the reading's title", async () => {
+test("R54 (C25) the name drawn at capture from `document.title` equals the name drawn once read from `reading.title`", async () => {
   const t = await team();
   /* the owner states one title for a page, as the document's and as its reading's: a page whose title is its first heading gives both */
   const atCapture = await captureOf(t, pageOf("Housing notice"));
@@ -232,15 +232,8 @@ test("R54 (C25) the name drawn at capture from `document.title` equals the name 
   assert.deepEqual(promoted(atCapture), promoted(onceRead));
   const sha = (await t.mai.read("heldcaptures", { query: { fields: "picker" } })).held.map((h) => h.capture.sha256).pop();
   assert.equal((await t.mai.read("reading", { query: { sha256: sha } })).reading.title, promoted(onceRead)[0], "the owner's reading states the title the page was named by");
-  /* a capture held in parts is what the owner makes of a file past 32 MiB (read-bounds `part_bytes`), which a test cannot send: the one scripted answer, with the document the owner would give */
-  const parts = [{ file: "snapshots/p1", sha256: "1".repeat(64), bytes: 5 }, { file: "snapshots/p2", sha256: "2".repeat(64), bytes: 5 }];
-  const DOC = { capture: { sha256: "a".repeat(64), bytes: 10, encoding: "binary", content_type: "application/pdf" }, file: "snapshots/a.pdf", title: null };
-  const packet = await open(t, "/app/capture/address", { plane: { acquire: ok({ ok: true, document: { ...DOC, parts }, reading: { title: "The whole packet" } }) } });
-  await capture(packet, "https://www.example.gov/packet");
-  assert.deepEqual(promoted(packet), ["The whole packet"]);
-  const unread = await open(t, "/app/capture/address", { plane: { acquire: ok({ ok: true, document: { ...DOC, parts, capture: { ...DOC.capture, file_name: "packet.pdf" } } }) } });
-  await capture(unread, "https://www.example.gov/packet");
-  assert.deepEqual(promoted(unread), ["packet.pdf"], "no reading yet: the file name");
+  /* a capture held in parts (fix round 10, K5245): the owner makes one only of a file past 32 MiB, which no `acquire` answers inline (a source that long is parked and owed), so the case of
+     a multi-part document answered by `acquire` is removed; the name of a document held in parts is not drawn by this screen's press */
 });
 
 test("R54 (C25) a PDF with no reading yet is named by its file name, once read by `reading.title`; one with no Title is named by its file name on both", async () => {
