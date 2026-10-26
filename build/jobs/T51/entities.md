@@ -1,6 +1,6 @@
 # entities (T51)
 
-**Status** · session_01XoHLpj87gCyr4R1nEXhbe7 · depth 2 · COMPLETE · handled B14
+**Status** · session_01XMYdViRyFKTuXB4fU2bSa8 · depth 2 · COMPLETE · handled B15
 
 ## Completion (T51 fix round 3, ENTITIES #18)
 
@@ -244,3 +244,31 @@ Size (session_01XoHLpj87gCyr4R1nEXhbe7): test runs 5, module lines 2598
 ## J14 · COMPLETE
 
 B14 (CHANGE K5209) done. Merged tranche/T51 at 850cee6469; entities tests 165/0; format, architecture, coverage 65/65, words, fixtures, ownership 0 failures. The three other-module findings are unchanged and not in entities' files. Record appended. Size: test runs 5, module lines 2598.
+
+## J15 · COMPLETE
+
+## J15 · COMPLETE · re B15
+
+R66 done (walk E H1(b)), commit `bfe5949c14` on `job/T51/entities`.
+
+**Cause.** `bio-plane/src/entities/index.mjs:616` ran R65's dedup only `if (marked === 1)`; `marked` is 1 only for a non-administrator member, so an administrator's office skipped the dedup and always allocated a new ENT id.
+
+**Change.** `index.mjs:616-620`: the dedup now runs `if (k === "office" && by !== null && !isMachine(by))`, so any non-machine declarer (member or administrator) is answered the held office with `existed: true`, nothing written. A machine's office is registered as before.
+
+**Tests (red then green).**
+- New `bio-plane/test/m/entities/t51r10.test.mjs`, three tests each naming R66:
+  - administrator naming "Office of the City Clerk" twice (walker's case: same folded name, also a different casing/spacing and a member's repeat): red before the fix (`existed` undefined), green after; office count stays 1.
+  - control: an administrator naming the office under another law (`P.E.B.L. § 4`) makes a new entry.
+  - control: a machine (`class:entities-import`) registers a new one on each naming.
+- **Amended existing assertion:** `test/m/entities/t51r4.test.mjs`, R65 test, the control that asserted an administrator's twin makes a new entry. R66 reverses that rule, so the control now asserts `existed: true` with the first id. This replaces an assertion; the rest of that test is unchanged.
+
+**Suites and checks.**
+- entities: `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/entities/*.test.mjs`: 168 tests, 168 pass, 0 fail.
+- consumers (every test outside entities that calls `entitycreate`/`createEntity`, 30 files): 919 tests, 917 pass, 0 fail, 2 existing TODO markers.
+- `checks/format.mjs`: 178 modules, 0 failures. `architecture.mjs entities`: 0 failures. `coverage.mjs entities`: 66 of 66 live ids named by a test. `ownership.mjs entities c441f90f47 HEAD`: 0 failures (4 files, all entities').
+- `checks/run.mjs /home/user/bio`: no finding in entities' files; the findings it reports are in other modules and unchanged by this job.
+- Not run: the full `impact.mjs` user set (105 modules, 1944 test files) — the consumer run above covers the modules that create entities; the rest only read entities and are not affected by this rule.
+
+**Deferred:** none. **Other modules:** none found.
+
+Size (session_01XMYdViRyFKTuXB4fU2bSa8): test runs 10, module lines 2599
