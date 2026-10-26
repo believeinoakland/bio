@@ -1,6 +1,6 @@
 # BOB to case-authoring (T51)
 
-**Read** · handled J31
+**Read** · handled J32
 
 ## B1 · START
 
@@ -432,3 +432,7 @@ CHANGE (K5207), in this job beside its waits (J30): publish in `bio-plane/test/m
 ## B41 · CHANGE
 
 CHANGE (K5209): OP-GRADES #30 is merged (tranche `c276821d50`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
+
+## B42 · CHANGE
+
+CHANGE (K5214): RATIFICATION #39 is merged (R60's chain at 12, R61's member basis): merge `origin/tranche/T51`, run your R31 chain test green, build R87 (B39), keep B40's fixtures, and post the one COMPLETE covering R31, R87 and B40.

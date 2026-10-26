@@ -1,6 +1,6 @@
 # affordances (T51)
 
-**Status** · session_01DbuMFFet27V5BfK1bLJQFn · depth 2 · COMPLETE · handled B26
+**Status** · session_01Sh2NftThAzBKsEgeWdqNyT · depth 2 · COMPLETE · handled B27
 
 ## J1 · QUESTION
 
@@ -473,3 +473,37 @@ COMPLETE (K5195, fix round 10, item 95; START B26). Branch `job/T51/affordances`
 
 Size (session_01DbuMFFet27V5BfK1bLJQFn): test runs 3, module lines 0
 Note: test lines changed in `door.test.mjs` (+6/-3: one const of three lines and the three uses); no module source changed.
+
+## J31 · COMPLETE · re B27
+
+COMPLETE (re B27, K5209; plan item 77 (2), K5159). No file changed by this round: the work it asks for is already on this branch.
+
+**What changed (file:line):** none in this round. The registration is in commit ad057f2363 (K5159, earlier round): `bio-plane/test/m/affordances/register-owners.mjs` (lines 1–37) registers every owner's `DECLARED_OPS`, found from `build/modules.json` by the search in that file (module paths, the `^export const DECLARED_OPS` line, `node_modules` skipped); no owner is listed by hand. Its R12 test, `bio-plane/test/m/affordances/owners-registered.test.mjs`, checks the registration against every module whose source exports `DECLARED_OPS`.
+
+**Test-support's collector:** read `bio-plane/test/declared-ops.mjs` (`pairsOf`, `declaredOpsOf`, `registerDeclared`). It uses the same discovery rule. Two differences, kept on purpose: this module does not import test-support (affordances' uses list has no test-support edge, and the file's header says so, P4); and this copy does not tolerate a missing path (the collector returns no files for one). Every `paths` entry in `modules.json` exists today, so the suite is unaffected. If BOB wants the import instead, it is an edge in `build/layers.md`, BOB's call.
+
+**Failing-first (K5159 red, now verified again):** I put the three-owner `register-owners.mjs` from `ad057f2363^` in place and ran `owners-registered.test.mjs`: red, `an owner that declares ops is not registered`, naming `docket` (an owner not among case-inputs, case-import, contradiction). With the current file: green. The file was restored from git afterwards (`git status` clean).
+
+**Modules importing `affordances/register-owners.mjs`:** `bio-plane/test/m/affordances/catalogue.test.mjs` (line 9) and `owners-registered.test.mjs` (lines 4 and 10). `op-declarations` has its own `register-owners.mjs` and imports only that; nothing else imports this file.
+
+**Entries applied:** B27 (plan item 77 (2)): done by ad057f2363, verified here. No requirement text changed. Deferred: none. Found in other modules: none new.
+
+**Tests and checks** (absolute root `/home/user/bio`):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/affordances/*.test.mjs` (30 files): 289 tests, 289 pass, 0 fail, exited on its own.
+- `owners-registered.test.mjs` + `catalogue.test.mjs`: 45 pass, 0 fail.
+- `checks/format.mjs /home/user/bio`: 178 modules, 178 requirements files; 0 failures.
+- `checks/architecture.mjs /home/user/bio affordances`: 36 product files, 388 relative imports; 0 failures.
+- `checks/coverage.mjs /home/user/bio affordances`: 54 of 54 live ids named; 0 failures.
+- `checks/words.mjs /home/user/bio affordances`: 6926 literals read; 0 failures.
+- `checks/fixtures.mjs /home/user/bio affordances --list`: 1 accepted (`door.test.mjs:19`, answer-envelope door-helpers), 0 failures.
+- `checks/ownership.mjs /home/user/bio affordances 2148e94569… HEAD`: 1 file changed by affordances, 0 failures.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules, 0 of 2967 test files affected.
+- `checks/run.mjs /home/user/bio` (whole tree): 374 FAIL lines; none names `affordances`. Coverage has 4 failures and fixtures 355 and words 15 failures, all in other modules, as in the last round.
+
+**Markers added:** none this round. **Met ids:** none in requirements (no text changed); R12 is already covered by `owners-registered.test.mjs`.
+
+**Deferred:** none.
+
+Note on the tranche: the job branch was fast-forwarded to `origin/job/T51/affordances` and `origin/tranche/T51` merged (6 files, no conflicts) before START.
+
+Size (session_01Sh2NftThAzBKsEgeWdqNyT): test runs 5, module lines 0
