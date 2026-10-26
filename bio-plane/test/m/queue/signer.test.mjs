@@ -21,7 +21,7 @@ test("R1, R11, R12: a signer-self-registered OBLIGATION passes the mint and name
   const f = w.feed(null, "class:admin");
   assert.equal(f.ok, true, JSON.stringify(f).slice(0, 300));
   const d = byId(f)["OBLIGATION::signer-self-registered::K1"].disposition;
-  assert.deepEqual([d.available, d.reason, d.instead], [false, "an_obligation_is_resolved_not_disposed", "signerset"]);
+  assert.deepEqual([d.available, d.instead], [true, "signerset"]);
   assert.match(d.detail, /op=signerset/);
   assert.equal(f.counts.obligation, 1);
 });
@@ -35,4 +35,29 @@ test("R19, R26, R31: a signer-self-registered obligation is refused KIND_NOT_PER
   const f = w.feed("alice");
   assert.deepEqual(f.items.map((i) => i.id), ["OBLIGATION::signer-self-registered::K1"]);
   assert.equal(f.mute.suppressed.length, 0);
+});
+
+test("R96: a signer-self-registered item's disposition is available and offers signerknown, its door still signerset", () => {
+  const w = withSigner();
+  const f = w.feed(null, "class:admin");
+  const d = byId(f)["OBLIGATION::signer-self-registered::K1"].disposition;
+  assert.deepEqual([d.available, d.acts, d.instead], [true, ["signerknown"], "signerset"]);
+  assert.deepEqual([d.scope, d.key, d.requires], ["key", "K1", ["keyB64"]]);
+  /* control: every other OBLIGATION's disposition is unchanged, and the bridge still names the door */
+  const bridge = w.q.proposeDispose({ key: "OBLIGATION::signer-self-registered::K1", state: "dismissed", reason: "r", decidedBy: "alice", viewer: "member:alice" });
+  assert.deepEqual([bridge.reason, bridge.instead], ["CLASS_NOT_DISPOSED", "signerset"]);
+});
+
+test("R96: the walker's case through the real acts: a member registers a key, an administrator says they know it, the item is gone", () => {
+  const w = world();
+  w.member("ada", { role: "admin" }); w.member("cy", { role: "admin" }); w.member("kim");
+  assert.equal(w.credentials.signerRegisterOwn({ keyB64: "AAAAkimkey", comment: "laptop", by: "kim" }).ok, true);
+  const before = byId(w.feed("ada"))["OBLIGATION::signer-self-registered::AAAAkimkey"];
+  assert.ok(before, "the item is minted for an administrator");
+  assert.deepEqual([before.disposition.available, before.disposition.acts], [true, ["signerknown"]]);
+  assert.equal(w.credentials.signerKnown({ keyB64: "AAAAkimkey", viewer: "member:ada" }).ok, true);
+  for (const m of ["ada", "cy"]) assert.equal(byId(w.feed(m))["OBLIGATION::signer-self-registered::AAAAkimkey"], undefined);
+  /* control: a second self-registered key still mints one */
+  w.credentials.signerRegisterOwn({ keyB64: "AAAAkimtwo", by: "kim" });
+  assert.ok(byId(w.feed("ada"))["OBLIGATION::signer-self-registered::AAAAkimtwo"]);
 });

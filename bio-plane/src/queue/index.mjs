@@ -770,7 +770,7 @@ export class Queue {
   /** R12: what each of those doors is, said on the item's disposition after the general sentence. */
   static OBLIGATION_DOOR_DETAIL = Object.freeze({
     "bias-debt": localize("queue.index.this_one_is_a_bias", " This one is a bias debt, which is keyed by the RUN it is about rather than by a task, so it is settled through op=biasdebtresolve with a stated reason — or by a re-run under the lens now in force, or by the lens moving back (BOB #32, 2026-09-23)."),
-    "signer-self-registered": localize("queue.index.this_one_is_a_signing", " This one is a signing key a member registered for themselves, which is keyed by the KEY rather than by a task, so it leaves when an administrator revokes the key (op=signerset), or when it is otherwise no longer active."),
+    "signer-self-registered": localize("queue.index.this_one_is_a_signing", " This one is a signing key a member registered for themselves, which is keyed by the KEY rather than by a task, so it leaves when an administrator says they know of the key (op=signerknown) or revokes it (op=signerset), or when it is otherwise no longer active."),
     "plan-checkpoint-due": localize("queue.index.this_one_is_a_checkpoint", " This one is a checkpoint your team set in an action plan, keyed by the plan, scenario and phase rather than by a task: it leaves when a member records whether its condition was met (op=checkpointrecord), or when the plan is closed."),
     "escalation-stage-proposed": localize("queue.index.this_one_is_an_escalations", " This one is an escalation's next stage, proposed because its trigger was met and keyed by the escalation and the stage rather than by a task: a member advances it (op=escalationadvance) or declines it with a reason (op=escalationdecline), and it also leaves when the escalation is suspended or ended."),
     "action-reminder": localize("queue.index.this_one_is_a_reminder", " This one is a reminder you asked for on one of the team's action deadlines, keyed by the action, the entry and the day rather than by a task: you answer it with another reminder or with none (op=reminderanswer), and it also leaves when the entry is no longer pending or the action is closed."),
@@ -879,6 +879,14 @@ export class Queue {
       ? item.subject.definition_version : null;
     const contradiction = this.#contradictionDisposition(item);
     if (contradiction) return contradiction;
+    /* R96 (fix round 10; DEC-439 to DEC-441, K5303, A-03; credentials R83): an administrator may answer a self-registered
+       key with "I know about this key" (op=signerknown), keyed by the key; revoking it (op=signerset) stays its door. */
+    if (item.kind === "signer-self-registered") {
+      const key = pick(item.subject, "id");
+      return { available: key !== null, op: "signerknown", scope: "key", keyed_on: ["keyB64"], key, acts: ["signerknown"],
+               requires: ["keyB64"], instead: Queue.doorOf(item.kind, item.door),
+               detail: localize("queue.index.an_administrator_who_knows_this", "an administrator who knows of this key says so (op=signerknown) and it leaves every administrator's list; revoking it (op=signerset) ends it too.") };
+    }
     if (item.class === "OBLIGATION")
       /* REC-207: AND `instead` NAMES THE DOOR THIS ITEM ACTUALLY HAS. N375 (R12; J1): a self-registered signing key is
          keyed by the KEY, not a task, and leaves when an administrator revokes it (op=signerset, membership R26). `op=taskresolve` addresses rows in
