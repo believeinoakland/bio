@@ -23,12 +23,8 @@ async function choose(p, id, value) {
   p.fire(el, "change");
   await p.settle();
 }
-const heldRow = (extra = {}) => ({ bundle_id: D, title: "Pothole repair policy", project: P, collected_since: "2026-10-02T09:00:00Z", actor: "member:mai", standing: "collected",
-  capture: { sha256: SHA, grade: { grade: "B" } }, captured_for: { questions: [{ question: Q2, title: "Does closed mean repaired?", asker: "mai" }], withheld: null }, ...extra });
-/* scripted: heldcaptures (the phone measurement below answers from a plane table only, `onPhone` taking no world door; and a held row naming no actor, which no act of the world makes) */
 /** the page's reads of heldcaptures that carry bundle_id: this copy's row (R137's picker reads the team's documents besides) */
 const copyReads = (p) => p.byOp("heldcaptures").filter((r) => r.query.bundle_id !== undefined);
-const held = (row) => ({ heldcaptures: ok({ ok: true, held: row ? [row] : [] }) });
 /* the real world (store-assembly's store with the real door; the state is made by real acts, K5054): a page as `as` reads it over the world's door, `plane` scripting
    only the ops it names; `answers(op)` are the door's own answers to that op, in order */
 const OWN = { capabilities: ["contribute", "create_projects"] };
@@ -201,8 +197,7 @@ test("R55 C16 a held row of another member's capture draws no held banner and no
   const theirs = await pageOn(w.world, w.ann, "/app/document/" + copy.bundle);
   assert.equal(main(theirs).querySelector("[data-held]"), null, "not hers: no banner");
   assert.ok(!actsIn(main(theirs)).includes("release"), "no vouch box");
-  const none = await openWith(at, { plane: held(heldRow({ actor: null })) });
-  assert.equal(main(none).querySelector("[data-held]"), null, "a capture naming no actor is not hers");
+  /* a held row naming no actor cannot exist: every capture a document is filed from records its actor (capture/index.mjs:1035), and a sighting that records none files no document (:1008-1024) */
   const mine = await pageOn(w.world, w.ann, w.at);
   assert.ok(main(mine).querySelector("[data-held]") && actsIn(main(mine)).includes("release"), "control: her own is held");
 });
@@ -225,7 +220,7 @@ test("R49 R61 N2 Cite this with no question chosen sends nothing and says so bes
 /* ---- C81 / R5: the controls at 390 px ---- */
 test("R5 C81 at 390 px the document's route and OCR controls lie inside the screen and are 44 px to press; control: at 1280 px they lie inside it and the untouched controls keep their boxes", { timeout: 120000 }, async () => {
   const labels = [word("act.provenanceroute.label.document"), word("act.pdfstructure.label.document")];
-  const o = { plane: { reading: ok(READING({ unread_pages: [7] })), ...held(null) } };
+  const o = { plane: { reading: ok(READING({ unread_pages: [7] })) } };
   const m = await onPhone({ path: at, o, width: 390, controls: labels });
   assert.ok(m.mainScroll <= 390, "the main area is no wider than the screen: " + m.mainScroll);
   for (const l of labels) {

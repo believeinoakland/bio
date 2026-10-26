@@ -99,18 +99,8 @@ test("R75 sending the vote: no reason sends nothing and says so; with her reason
   assert.ok(says(stateE(p), "refusal.VOTES_SHORT"), "VOTES_SHORT by its words, in the vote");
   assert.ok(says(stateE(p).querySelector('[data-vote-for="mai"]'), "screen.project.standdown.agreed", { member: "mai" }));
   assert.ok(says(stateE(p).querySelector('[data-vote-for="dev"]'), "screen.project.standdown.notyet", { member: "dev" }), "and dev has not");
-  /* CONSENSUS_REQUIRED, as the requirement words it: have and awaiting named */
-  const waiting = ok({ ok: true, projectId: P, changes: [{ change: "remove", target: "dev", proposed_by: "rosa", proposed_at: "2026-10-09T09:00:00Z", agreed: ["rosa"], awaiting: ["mai"] }] });
-  const k = await open(at, { plane: { projectparticipants: THREE, projectownerarith: arith(3), projectownervotes: waiting,
-    projectownerremove: { status: 200, json: { ok: true, result: { ok: false, reason: "CONSENSUS_REQUIRED", code: "CONSENSUS_REQUIRED", projectId: P, handle: "dev", have: ["rosa"], awaiting: ["mai"] } } } } });
-  await k.click(main(k).querySelector('[data-pending="remove"] ~ .mk-actwrap button[data-act="projectownerremove"], button[data-act="projectownerremove"][data-handle="dev"]'));
-  await k.settle();
-  fill(k, { "project-ownerstand-reason": "dev has handed it over" });
-  await k.click(stateE(k).querySelector('button[data-act="projectownerremove"]'));
-  await k.settle();
-  assert.deepEqual([k.byOp("projectownerremove")[0].query.handle, k.byOp("projectownerremove")[0].query.reason], ["dev", "dev has handed it over"]);
-  assert.ok(stateE(k), "the vote stays open");
-  assert.ok(says(stateE(k), "screen.project.1.of.2.have.agreed", { n: "1", total: "2" }), "counted from have and awaiting");
+  /* a removal answered `CONSENSUS_REQUIRED` (have and awaiting named) is a state no act makes: the owner answers a stand-down `VOTES_SHORT` alone (project-roster/index.mjs:426) and `CONSENSUS_REQUIRED`
+     only to the addition of an owner (:323), so that case is not tested */
 });
 
 test("R75 a three-owner project: 2 of 3 on the live row; the owner standing down casts none (check 4 does not hold, nothing offered); another owner's agree opens the same vote", async () => {

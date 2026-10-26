@@ -39,13 +39,26 @@ const pageOf = async (w, as, o = {}) => {
 };
 /* the notice as the plane answers it: the words row it is made from, read by `word` */
 const NOTICE = word("ai.disclosure.projectkey", { project: "Pothole repairs" });
-/* the usage the project's key has paid for: no act of the world spends (a use is recorded as the assistant answers, and none answers in a test), so this read alone is scripted over the world */
-const USAGE = (project) => ({ aiusage: ok({ ok: true, owner: "project:" + project, uses: [{ use: "ask", calls: 12, tokens: 34000, total_cost_usd: 1.2 }] }) });
-/* her sign-in connected: `subscriptionConnected` is in-plane and no act of the world connects one (needed: a recipe connecting a member's sign-in), so the read is scripted over the world */
+/** The usage the project's key has paid for, by real acts: `dev` joins the project and reads its key notice, opens a run over it (`airunopen`, which the project's account serves) and the run reports
+ *  `calls` conversations at `cost` dollars (`airuntick`), which ai-use counts to `project:<id>`; then the owner removes `dev`, so the owner is its only participant again and has not read the notice herself.
+ *  Answers the owner's own `aiusage` read of the project's account. */
+const spend = async (w, { calls = 12, cost = 1.2 } = {}) => {
+  const as = w.dev;
+  await w.ann.act("projectinvite", { query: { projectId: w.project, handle: "dev" }, body: {} });
+  await as.act("projectjoin", { query: { projectId: w.project }, body: {} });
+  await as.act("projectkeynoticeseen", { body: { project: w.project } });
+  const run = `RUN-2026-0001-projectai`;
+  const opened = await as.act("airunopen", { body: { run, contextType: "project", contextId: w.project, skillVersion: "contradiction@1", principalClaude: `member:${as.member}`, mode: "check" } });
+  assert.equal(opened.started, true, "the project's account serves the run");
+  await as.act("airuntick", { body: { run, usage: [{ mode: "check", model: "claude-test", usage: { input_tokens: 34000, output_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0, total_cost_usd: cost }, calls }] } });
+  await w.ann.act("projectremove", { query: { projectId: w.project, handle: "dev" } });
+  return w.ann.read("aiusage", { query: { owner: w.owner } });
+};
 /* the project's own record, readable: the real image of a hidden project she is not in is empty, so the shell draws "nothing is here"; the screen's own unavailable state (R60) is
    drawn when the record reads and her sight of it is refused (needed: a state where a project reads but is neither listed nor hers; no act makes one), so the record alone is scripted */
 const SEEN = (project) => ({ image: ok({ "bundle.md": `---\nid: ${project}\nobject_type: project\ntitle: "Pothole repairs"\n---\n` }) });
-const CONNECTED = { subscriptionsignin: ok({ ok: true, connected: true }) };
+/** Her sign-in connected, by the real acts of the sign-in door (store-request's `connectedSignIn`: the runner is the platform's stand-in). */
+const connect = (w, as = w.ann) => w.world.recipes.connectedSignIn(as);
 
 test("R14 reads: the project's account, its notice and keep-away, her sign-in, and the panel's four reads over owner project:<id>", async () => {
   const w = await worldOf({ sole: false });
@@ -63,7 +76,10 @@ test("R14 reads: the project's account, its notice and keep-away, her sign-in, a
 
 test("R14 drawn to an owner: what pays, the panel over the project's account (screens-settings R9), keep-away, and the eight acts", async () => {
   const w = await worldOf();
-  const p = await pageOf(w, w.ann, { plane: { ...USAGE(w.project), ...CONNECTED } });
+  await connect(w);
+  const used = await spend(w);
+  assert.equal(used.uses[0].total_cost_usd, 1.2, "the owner counts the run's spend to the project");
+  const p = await pageOf(w, w.ann);
   const m = main(p);
   const held = await w.ann.read("projectaccountstate", { query: { project: w.project } });
   assert.equal(m.querySelector("h1").textContent, "Pothole repairs");
@@ -71,7 +87,7 @@ test("R14 drawn to an owner: what pays, the panel over the project's account (sc
   assert.ok(says(m, "screen.projectai.account.since", { who: "ann", date: day(held.set_at, { year: true }) }));
   /* the panel: its four sections, its use summed naming no member */
   assert.ok(m.querySelectorAll("section").length >= 4, "the panel's sections, drawn by screens-settings");
-  assert.ok(m.textContent.includes("$1.20"));
+  assert.ok(m.textContent.includes("$" + used.uses[0].total_cost_usd.toFixed(2)));
   assert.ok(says(m.querySelector('[data-keepaway="off"]'), "screen.projectai.keepaway.off"));
   /* every act of the screen's own declaration but Join (R37), drawn to an owner */
   assert.deepEqual([...new Set(actsIn(m))].sort(), SCREENS.find((s) => s.id === "projectai").acts.map((a) => a.op).filter((op) => op !== "projectjoin").sort());
@@ -100,18 +116,28 @@ test("R14 projectkeyset sends the key in the body only, never drawn again", asyn
 });
 
 test("R14 her own sign-in is offered only while the project has no other participant and her sign-in is connected", async () => {
-  /* her sign-in is connected and the act is answered as the sole participant's: both scripted over the real project (no recipe connects a sign-in: needed, a member's connected sign-in) */
   const w = await worldOf();
-  const p = await pageOf(w, w.ann, { plane: { ...CONNECTED, projectsigninset: ok({ ok: true, project: w.project, kind: "signin" }) } });
+  await connect(w);
+  const p = await pageOf(w, w.ann);
   await press(p, "projectsigninset");
   assert.deepEqual(p.byOp("projectsigninset")[0].body, { project: w.project });
+  assert.equal((await w.ann.read("projectaccountstate", { query: { project: w.project } })).kind, "signin", "her sign-in now serves the project");
   const two = await worldOf({ sole: false });
-  assert.ok(!actsIn(main(await pageOf(two, two.ann, { plane: CONNECTED }))).includes("projectsigninset"), "another participant");
-  /* the real sign-in of a world is not connected */
-  assert.ok(!actsIn(main(await pageOf(w, w.ann))).includes("projectsigninset"), "not connected");
-  /* the owner's refusal by its words (ai.refused.notsole) */
-  const r = await pageOf(w, w.ann, { plane: { ...CONNECTED, projectsigninset: refusedIn("PROJECT_NOT_SOLE_MEMBER") } });
-  assert.ok(says(await press(r, "projectsigninset"), "ai.refused.notsole", { project: "" }));
+  await connect(two);
+  assert.ok(!actsIn(main(await pageOf(two, two.ann))).includes("projectsigninset"), "another participant");
+  /* the real sign-in of a world is not connected until she connects it */
+  const bare = await worldOf();
+  assert.ok(!actsIn(main(await pageOf(bare, bare.ann))).includes("projectsigninset"), "not connected");
+  /* the owner's refusal by its words (its own translation; `ai.refused.notsole` when it sends none): a participant joined after the page was drawn, so the owner refuses the press */
+  const late = await worldOf({ sole: true, key: false });
+  await connect(late);
+  await late.ann.act("reauth", { body: { password: late.ann.password } });
+  const r = await pageOf(late, late.ann);
+  await late.ann.act("projectinvite", { query: { projectId: late.project, handle: "dev" }, body: {} });
+  await late.dev.act("projectjoin", { query: { projectId: late.project }, body: {} });
+  const refused = await late.ann.act("projectsigninset", { body: { project: late.project } }).then(() => assert.fail("the owner refuses"), (e) => e.answer.json.result);
+  assert.equal(refused.reason, "PROJECT_NOT_SOLE_MEMBER");
+  assert.ok((await press(r, "projectsigninset")).textContent.includes(refused.translation), "the owner's own words");
 });
 
 test("R14 switch, remove, the notice, the panel's two acts and keep-away send what their owners take", async () => {

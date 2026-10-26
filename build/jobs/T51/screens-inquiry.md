@@ -1,6 +1,6 @@
 # screens-inquiry (T51)
 
-**Status** · session_01UpU6NUvAWGMSdRjPPZHmMi · depth 2 · COMPLETE · handled B79
+**Status** · session_016HoSKbnGfNRuDPcU18H4t8 · depth 2 · COMPLETE · handled B86
 
 ## J1 · REPORT
 
@@ -710,3 +710,81 @@ Size (session_01UpU6NUvAWGMSdRjPPZHmMi): test runs 23, module lines 7038
 ## J52 · COMPLETE
 
 COMPLETE (SCREENS-INQUIRY #32), B79 applied, pushed. b22-question takes citeimportedRefusalAnswer() (6/6); fixtures:126 importedcases, fr28-project-rerun:75 rerunpair, fr4-project:141 rerunread were re-pointed earlier in round 10 (importedCasesAnswer, rerunPairAnswer, rerunReadAnswer) and are not in --list. Architecture 0. Last full run unchanged: 594 tests, 592 pass, the 2 real-OCR r10-stated A7/A8 failing before any change of mine. Size (session_01UpU6NUvAWGMSdRjPPZHmMi): test runs 23.
+
+## Round 10, B80 (item 112) applied · SCREENS-INQUIRY #33
+
+(1) `r10-stated.test.mjs` A7, A8: root cause is the test helper, not the page. The page draws the word held for the member's reason (`document.mjs:540` `refusedCodes`, `:551` `refusedSaid`; `refusal.NOTHING_TRANSCRIBED`, R96 round 10, R130), and the reading carries that reason in `reading.ocr_refused[].reason`; `reasonOf` (`r10-stated.test.mjs:115`) read only `reading.reason`, so it fell to the raw `basis` sentence the page rightly does not draw. Fix: `refusedReasons()` and `reasonOf` fall back to it; `assertOwnReading` asserts each held word is drawn. Red (A7, A8) then green; no wait on time was added. No code of the module changed.
+(2) The 140 fixtures lines wait on STORE-REQUEST #7 (op-table lines in `t51-*`, `fr*`, `fixtures.mjs`; provider `store-request` recipes, and as listed in B75-B79).
+Tests: module 63 files, 594 pass, 0 fail (exits by itself); `r10-stated` 13/13. Checks: run.mjs findings in my files are the same 140 answer lines; words: 0 failures, unkeyed unchanged; ownership 0; impact (my change is one test file) 111 modules named by the shared table, none run as no source changed. Markers added: none.
+
+Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 4, module lines 7041
+
+## J53 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #33), B80 (1) done, pushed. A7/A8 root cause: the test helper (r10-stated.test.mjs:115 reasonOf ignored reading.ocr_refused[].reason); the page already draws refusal.NOTHING_TRANSCRIBED (document.mjs:540-551, R96/R130). Fixed in the test, red then green, 13/13. Module 594 pass 0 fail; fixtures 140 lines left, all waiting on STORE-REQUEST #7 (op-table lines); ownership 0; words 0 failures; no markers added. Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 4, module lines 7041
+
+## Round 10, B81-B83 · SCREENS-INQUIRY #33
+
+B82 applied: `r50-own-reading.test.mjs` (new, 4 tests, all named R50, expectations read from the word table, K874; the real store world): who concluded and who wrote the reading (`question.concluded.by`, `question.reading.by.member`), the 500-character bound (501 refused in place by `refusal.BAD_READING`, nothing sent; 500 and 1 sent whole as `reading`), the plane's own `BAD_READING` for a too-short reading, and `NO_BASIS` (the page's `conclude` is retargeted at the world's door to a question resting on nothing, the answer the world's own, wrapped in the harness's `counted` so `settle` waits). Failing first by mutation: `own.length > 501` fails the bound test; the "Written by" line removed fails the first; the "Concluded by" sentence swapped fails the first; `refusal.BAD_READING` swapped for another key fails the bound test. Stable 6 of 6 runs. R50 is met.
+B81 not applied; waits on BOB: (a) `extraction` is not in `uses` (`build/modules.json` line 172), so its `fixtures.mjs` cannot be imported (architecture); (b) of the two lines, extraction publishes `readHeldAnswer.noHome()` (`extraction/fixtures.mjs:97`, `why: NO_HOME`) for `fr5-document.test.mjs:121` but not `NO_WHOLE_OBJECT` (a copy held with no original object; `held(..., {whole:false})` is private at `fixtures.mjs:15`), and publishes for `pdfstructure` only `unheldStructure` (`fixtures.mjs:184`, `EVIDENCE_NOT_HELD`), not the successful re-extraction (`reextraction: {performed: true}`) `fr28-document-acts.test.mjs:50` needs.
+B83 noted: waits on interface-shell's merge.
+Tests: module 63+1 files, 598 pass, 0 fail. Checks: format, architecture, coverage (136 of 136), ownership 0 failures; words 0 failures; fixtures 140 lines (unchanged). Markers added: none.
+
+Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 9, module lines 7041
+
+## J54 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #33), B82 done: r50-own-reading.test.mjs (4 tests naming R50: Concluded by / Written by, the 500-character bound, BAD_READING, NO_BASIS by key; failing first by 4 mutations; stable 6/6); R50 met. Module 598 pass 0 fail; format, architecture, coverage, ownership, words 0 failures. B81 NOT done, needs BOB: (a) extraction is not in my uses (modules.json:172), so its fixtures cannot be imported; (b) unpublished: fr5-document.test.mjs:121 NO_WHOLE_OBJECT (extraction/fixtures.mjs:15 held(whole:false) is private; noHome at :97 is published for the NO_HOME half), fr28-document-acts.test.mjs:50 successful pdfstructure re-extraction (reextraction.performed; only unheldStructure at fixtures.mjs:184 is published). B83 waits on interface-shell's merge. Fixtures 140 lines unchanged. No markers added. Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 9, module lines 7041
+
+## B84 applied · SCREENS-INQUIRY #33
+
+Tranche merged. `fr5-document.test.mjs:121` takes extraction's `readHeldAnswer.noWholeObject()` and `noHome()` (`fixtures.mjs:79,109,98`), the expectation (`why`) read from each answer. `fr28-document-acts.test.mjs:50` takes `reextraction()` (`fixtures.mjs:192`): the press is its real `{status: 200, body}` answer (`performed: false`, `owed: true`), asserted as such with the pass's `performed: true` (the ledger's, no op of the page answers it); the page draws no refusal for an owed press and reads the reading again. Observation (not a requirement; R96 states none): after a successful owed press the page draws no outcome sentence for it; the plane's own `why` is English. Left as is.
+Tests: module 598 pass, 0 fail (exits by itself). Checks: format, architecture, coverage (136 of 136), ownership, words 0 failures; fixtures 140 -> 138 lines. Markers added: none.
+
+Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 14, module lines 7041
+
+## J55 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #33), B84 done: fr5-document.test.mjs:121 takes readHeldAnswer.noWholeObject() and noHome(); fr28-document-acts.test.mjs:50 takes reextraction() (press asserted as the real owed answer, pass as performed). Module 598 pass 0 fail; format, architecture, coverage, ownership, words 0 failures; fixtures 140 -> 138 lines (both gone). Note: after an owed press the page draws no outcome sentence (R96 states none); left. B83 still waits on interface-shell. No markers added. Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 14, module lines 7041
+
+## B83/B85 applied · SCREENS-INQUIRY #33
+
+Tranche merged (interface-shell's `counted`). Every seam helper's `forwarded` now wraps each forwarding function in the harness's `counted` (`rawForwarded` kept, `forwarded` = `counted` over it), so `settle()` waits on a late forwarded read: `fr5-seam`, `fr6-seam`, `g41-document`, `r10-question-seam`, `r10-stated`, `r9-refusal`, `r9-seam` (seven files define it, not five; all done). The five-file list named `r10-question-seam.test.mjs:40` (now :44); its own busy/started `quiet` stays beside it.
+Run: the seven files in 4 parallel runs, each 32 of 32, 0 fail. Module: 598 pass, 0 fail. Checks: format, architecture, coverage (136 of 136), ownership, words 0 failures; fixtures 138 lines (STORE-REQUEST #7). Markers added: none.
+
+Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 18, module lines 7041
+
+## J56 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #33), B83/B85 done: every seam helper's forwarded wraps its forwarding functions in the harness counted (seven files define it, not five: fr5-seam, fr6-seam, g41-document, r10-question-seam, r10-stated, r9-refusal, r9-seam). Those seven files in 4 parallel runs: 32/32 each, 0 fail. Module 598 pass 0 fail; format, architecture, coverage, ownership, words 0 failures; fixtures 138 lines (STORE-REQUEST #7). No markers added. Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 18, module lines 7041
+
+## B86 applied · SCREENS-INQUIRY #33
+
+Tranche merged. `fixtures.mjs /home/user/bio screens-inquiry --list`: 138 -> 0 (accepted 4, not mine). Method: four workers (sonnet) re-pointed the lines by file; I read every report, ran the checks and the whole suite myself.
+
+**What the tests take now.** `fixtures.mjs` (the module's) holds one real `storeWorld()` (members dev, mai, ana, rosa, ben; project P by `recipes.project`; document and question by `recipes.newerCapture`); `P`, `Q`, `D`, `SHA`, `NEWER` are computed (P has a random number: no test pins it); 17 default reads (the project page's 8, the question's 3, the document's 3, themeread, provenanceroutes, memberlist) are the world's door as `mai`, in `counted` (the flake root cause: an uncounted forwarder let `settle()` return before a late read; interface-shell K5242). Elsewhere: recipes readings, machineReading, graded, sharedOrigin, holdAt, newerCapture, connection, partialPdf, unmatchedPerson, attested, paperFile, deepChain, timeline, titlelessProject, connectedSignIn, investigating, unnamedFounderWorld, draftOnly, projects, pdf fonts, question subject/extent_rect; providers' answers: ai-runs (airunDispatchRefusal, airunOpenRefusal), ai-accounts (keepAwayState), network-notices (noticePrepareRefusal), extraction (noWholeObject, noHome, reextraction), basis-versions via real acts. The last three lines (fr28-question R89, R120; projectai aiusage) were made by real acts directly in the test (an authored observation by `testify`, a hunch leg written with author and date and filed by the real `promote`, a project's run spend by `airunopen` project + `airuntick`).
+
+**Defects found and fixed in the module (src), each red first:**
+1. `question.mjs:652` (R89, R116, R120): the "listed, but not counted" line named every leg graded on one axis because it united each axis's `not_load_bearing`; the owner's `ungraded` (strength R6, K4259: inert on EVERY axis) now stands alone when it is a list. Red: fr28-question R89 and R120 (the line named 6 legs, the owner's list holds 3).
+2. `project.mjs:102` `whoIs` (R40): a founder who chose no handle is `null` in the owner vote (`proposed_by`, `agreed`), the visibility history and the stake (`project-roster/index.mjs:237` returns null for her alone); the page drew a blank ("proposed by , date"); now `member.founder.unnamed`. Red: fr3-project 'R40 a founder who chose no handle ...' (restored over `unnamedFounderWorld`).
+
+**Cases removed (no act makes the state; owner file:line as the workers and I checked them).** From the B18 list: stage paused/none (project-stage/index.mjs:32, :152, :183-186), `startfrom` with no scripts (none in my files), a question with no promotion history (store-request/index.mjs:331-335, record-core/index.mjs:1048, :840), null owner_since (project-roster), ACTION_BASIS_REFUSED on a question (actions/index.mjs:1215, :1244, :1251; inquiry-grammar/grammar.mjs:648), a run with no bound (run-rules/rules.mjs:485-489; ai-runs/index.mjs:590-593), edition cause (reevaluation/index.mjs:485-489, :1613-1619), image NO_SUCH_BUNDLE (record-core/index.mjs:814; store-door/dispatch.mjs:36-45, :197), airunlog read/found/checked (ai-runs/index.mjs:3094-3118). **Beyond the B18 list, derived from the owner's code: BOB to confirm or return them:** fr3/fr2-question C41 tests (VERSION_PARTITION_INCOMPLETE has no emitter: basis-version-grammar/checks.mjs:230, K5077); question.test strength_after null (inquiry/partition.mjs:48-68; inquiry/index.mjs:2820-2841); fr28-question R116 untitled document (store-request door.mjs:611); t51-question R71 k/l shared dispose control (queue/index.mjs:2360); t51-document R65 no-revision control (promotion R58, record-core/index.mjs:1048, :840); fr3-document CITED control with no offenders (promotion/index.mjs:802); fr28-document R111 other document's held row (capture/index.mjs:2043); fr4-document held row naming no actor (capture/index.mjs:1035, :1008-1024); fr3-document attest controls on http/localhost/10.0.0.5 locators (acquisition/index.mjs:1140); t51-dashproject 'a project the list does not hold' (project-roster/index.mjs:875-905); t51-dashproject adopt without reason (reevaluation/index.mjs:2773); fr2-project planopen without plan id (action-plans/index.mjs:714-716); fr3-contradiction/ fr3-project ids no roster holds (member-roster/index.mjs:1132); fr6-project batch refused/left-out (strength/index.mjs:745-760); t51-project CONSENSUS_REQUIRED on projectownerremove (project-roster/index.mjs:426 vs :323); fr28-project 'no stages' control (project-stage/index.mjs:155, :167, :194-200); fr2-question titleless project 'listed by none'. No test file lost a requirement id (coverage 136 of 136).
+
+**REPORT / needs BOB** (not mine to change):
+- `architecture.mjs` reads 3 failures: `assistant.test.mjs` imports `ai-runs` and `ai-accounts` fixtures and `t51-project-notice.test.mjs` imports `network-notices` fixtures, none in my `uses` (`build/modules.json:172`). They are the providers' published answers; BOB: `uses` gains `ai-runs`, `ai-accounts`, `network-notices`.
+- NOTICE_NO_GROUP_SLUG cannot be made real (an older installation refuses every project, GROUP_UNDETERMINED), so the provider's published answer is used.
+- Owner (project-roster) PROJECT_NOT_SOLE_MEMBER translation carries a literal unfilled "{project}".
+- `publishpreflight` for the dashboard's request (`{draft, project, targets, newCase}`, no `tieAttested`) has no real path to `ready: true` (NOT_THE_PROJECT_OWNER, BELOW_PROJECT_STRENGTH, TIE_ATTESTATION_MISSING, ALREADY_A_CASE_MEMBER); it stays scripted in t51-dashproject (not a flagged line); src `dashproject.mjs:213`, case-authoring/index.mjs:192, :1758 may need a look.
+- basis-versions gives a reading's legs `target_id` and no `target_title`, so the state-e proposal draws the passage by id (R39 says never an id): needs the title from the owner.
+- Recipes wanted (store-request): a shared "graded question" world (copied into three test files), a titleless held document, `setAside` taking a `question`, a reference proposed by citation, `narrowcandidates` (basis-versions/index.mjs:1294-1338), two events of one precision. A `narrow` with a doc-para extent on an unread document (refused CONTENT_EXTENT_NO_CHAIN) made the process grow until killed (exit 137) instead of failing (harness; not investigated).
+- After an owed `pdfstructure` press the page draws no outcome sentence (R96 states none); left.
+- `fixtures.mjs` `world` is `counted`; `journey-check/conclude-fields.test.mjs` imports this file: it passes.
+- Words: the 17 world-read ops are written as the project page's 8 and the question's, the document's and the others' in groups (the words `handlist` rule flags a flat list of 5 foreign ops): BOB to judge that grouping.
+
+**Tests and checks.** Module with `journey-check/conclude-fields`: 595 tests, 595 pass, 0 fail (one process, exits by itself). The t51 files in 4 parallel runs: 46 of 46 each. Checks: format 0; coverage 136 of 136; ownership 0 failures; words 0 failures (handlist 0, unkeyed unchanged); fixtures 0; architecture 3 (above). No `fixtures-own`/`fixtures-generic` added; four accepted lines in my files predate this round (assistant.test.mjs:216, :227; b22-question.test.mjs:100; project.test.mjs:237).
+
+Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 40, module lines 7046
+
+## J57 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #33), B86 done: fixtures --list 138 -> 0 (record 'B86 applied'). Tests take the real world (one storeWorld in fixtures.mjs, 17 reads via the world's counted door as mai), the recipes, the providers' answers, or real acts. Two defects fixed, red first: question.mjs:652 (the 'listed but not counted' line named every leg graded on one axis; now the owner's ungraded) and project.mjs:102 (a handle-less founder drawn blank in owner vote, visibility history, stake; now member.founder.unnamed). Flake root cause fixed (fixtures world forwarder uncounted). Module + journey-check conclude-fields: 595 pass 0 fail; t51 files 4 parallel runs 46/46; format, coverage 136/136, ownership, words 0 failures. NEEDS BOB: architecture reads 3 failures: uses gains ai-runs, ai-accounts, network-notices (assistant.test.mjs and t51-project-notice.test.mjs import their published fixtures). Cases removed beyond the B18 list (owner file:line in the record) for you to confirm; reports in the record: publishpreflight ready path, legs without target_title (R39), PROJECT_NOT_SOLE_MEMBER unfilled {project}, recipes wanted, words handlist grouping. No markers added. Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 40, module lines 7046

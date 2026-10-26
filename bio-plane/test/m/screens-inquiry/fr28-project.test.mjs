@@ -42,15 +42,6 @@ const pageOf = async (world, as, path, o = {}) => {
   return p;
 };
 const hrefs = (el) => el.querySelectorAll("a").map((a) => a.getAttribute("href"));
-/* project-stage R4's answer: the four stages, each with its fixed sentence (the plane's `word`s, read by key) */
-const STAGES = (over = {}) => ({ ok: true, project: P, stage: "investigating", closed_reason: null, questions: { read: 2, with_legs: 1, concluded: 0, truncated: false }, published_editions: 0,
-  stages: [
-    { stage: "forming", reached: true, earned: null, since: "2026-10-01T09:00:00Z", needs: null, why: word("project-stage.project_starts_forming") },
-    { stage: "investigating", reached: true, earned: { question: Q }, since: "2026-10-03T09:00:00Z", needs: null, why: word("project-stage.held_questions_read", { with_legs: "1", read: "2" }) },
-    { stage: "matured", reached: false, earned: null, since: null, needs: { any_of: [{ condition: "concluded_held_question", have: 0 }, { condition: "ratified_case_edition", have: 0 }] },
-      why: word("project-stage.project_concluded_none", { read: "2" }) },
-    { stage: "closed", reached: false, earned: null, since: null, needs: null, why: word("project-stage.close_owner_recorded") }],
-  ...over });
 const rowOf = (s, stage) => s.querySelector(`[data-stage="${stage}"]`);
 const choose = (p, id, value) => { p.doc.getElementById(id).querySelectorAll("input").find((i) => i.getAttribute("value") === value).checked = true; };
 
@@ -75,35 +66,46 @@ test("R90 R115 the work rows open only what the project holds, but for Matter (B
 });
 
 test("R94 What each stage needs: every unreached stage draws what it needs and why; a reached stage draws neither", async () => {
-  const p = await open(at, { plane: { projectstage: ok(STAGES()) } });
+  /* the real state: a project with two held questions, one resting on a document (project-stage R4's answer, read as its owner reads it) */
+  const w = await team();
+  const real = await w.ann.read("projectstage", { query: { project: w.project } });
+  assert.equal(real.stage, "investigating");
+  const p = await pageOf(w.world, w.ann, w.at);
   const s = section(p, "screen.project.what.each.stage.needs");
   assert.ok(says(s, "screen.project.the.record.decides.the.stage.by") && says(s, "screen.project.nothing.here.is.a.button.when"));
   assert.ok(s.querySelector("h2").getAttribute("data-tip").includes(word("screen.project.help.for.each.stage.what.it.took")));
   const matured = rowOf(s, "matured"), closed = rowOf(s, "closed");
-  assert.ok(says(matured, "project-stage.project_concluded_none", { read: "2" }), "matured: why");
-  assert.ok(says(matured, "screen.project.either.one.reaches.it.the.project", { held: "2" }), "matured: what it needs, either one");
+  const at3 = (k) => real.stages.find((x) => x.stage === k);
+  assert.ok(matured.querySelector("[data-why]").textContent.includes(at3("matured").why), "matured: why, as the record answers it");
+  assert.ok(says(matured, "project-stage.project_concluded_none", { read: String(real.questions.read) }), "matured: why, by its word");
+  assert.ok(says(matured, "screen.project.either.one.reaches.it.the.project", { held: String(real.questions.read) }), "matured: what it needs, either one");
+  assert.equal(matured.getAttribute("data-needs"), at3("matured").needs.any_of.map((c) => c.condition).join(" "));
   assert.equal(matured.getAttribute("data-needs"), "concluded_held_question ratified_case_edition");
-  assert.ok(says(closed, "project-stage.close_owner_recorded"), "closed: why (needs is null)");
+  assert.ok(closed.querySelector("[data-why]").textContent.includes(at3("closed").why), "closed: why (needs is null)");
+  assert.ok(says(closed, "project-stage.close_owner_recorded"));
   assert.equal(closed.getAttribute("data-needs"), null);
   /* control: a reached stage draws neither its sentence nor a need */
   for (const reached of ["forming", "investigating"]) {
     assert.equal(rowOf(s, reached).getAttribute("data-reached"), "yes");
     assert.equal(rowOf(s, reached).querySelector("[data-why], [data-need]"), null, `${reached}: nothing`);
+    assert.ok(!s.textContent.includes(at3(reached).why), `${reached}: its sentence is not drawn`);
   }
-  assert.ok(!s.textContent.includes(word("project-stage.project_starts_forming")) && !s.textContent.includes(word("project-stage.held_questions_read", { with_legs: "1", read: "2" })));
-  /* control: an answer that holds no stages draws no section (R20) */
-  const bare = await open(at);
-  assert.equal(section(bare, "screen.project.what.each.stage.needs"), undefined);
+  /* "an answer that holds no stages draws no section (R20)" is not tested here: it is a state no read makes; project-stage always answers `stages`, even for a project it could not read
+     (bio-plane/src/project-stage/index.mjs:155 and :167 give `stages: this.#stages({ unread })`, :194-200 the rest). */
 });
 
 test("R94 a closed project: every need is null and each unreached stage says why; a stage the read could not decide draws its detail, never a need", async () => {
-  const closed = STAGES({ stage: "closed", closed_reason: "resolved" });
-  closed.stages[3] = { stage: "closed", reached: true, earned: { closed_reason: "resolved" }, since: "2026-10-09T09:00:00Z", needs: null, why: word("project-stage.owner_recorded_close") };
-  closed.stages[2] = { stage: "matured", reached: false, earned: null, since: null, needs: null, why: word("project-stage.project_closed_further") };
-  const p = await open(at, { plane: { projectstage: ok(closed) } });
+  const w = await team();
+  await w.ann.act("projectclose", { query: {}, body: { project: w.project, reason: "resolved" } });
+  const real = await w.ann.read("projectstage", { query: { project: w.project } });
+  assert.equal(real.stage, "closed");
+  assert.equal(real.closed_reason, "resolved");
+  const p = await pageOf(w.world, w.ann, w.at);
   const s = section(p, "screen.project.what.each.stage.needs");
   assert.ok(says(rowOf(s, "matured"), "project-stage.project_closed_further"));
+  assert.ok(rowOf(s, "matured").querySelector("[data-why]").textContent.includes(real.stages.find((x) => x.stage === "matured").why));
   assert.equal(rowOf(s, "matured").getAttribute("data-needs"), null, "no need is listed once it is closed");
+  assert.equal(rowOf(s, "closed").getAttribute("data-reached"), "yes");
   assert.equal(rowOf(s, "closed").querySelector("[data-why]"), null, "the reached close draws no sentence");
 });
 
@@ -206,20 +208,8 @@ test("R117 a refused act whose answer carries findings draws the first finding's
   assert.ok(detail.textContent.includes("the target is not a canonical id") && !detail.textContent.includes(generic));
   const none = await draw(refused("BASIS_REFUSED", "These documents cannot be used here.", 400));
   assert.ok(says(none, "refusal.BASIS_REFUSED"), "no findings: the generic sentence");
-  /* "Open a question": the same, beside the act */
-  /* the refusal of `promote` is scripted over the real `allocid` (no question the page can send is one the owner refuses on an action's basis: needs a recipe of a refused promotion with findings) */
-  const w = await team();
-  const q = await pageOf(w.world, w.ann, w.at, { plane: {
-    promote: { status: 200, json: { ok: true, result: { ok: false, reason: "ACTION_BASIS_REFUSED", code: "ACTION_BASIS_REFUSED", translation: "An action cannot rest on another action.", findings: [findings[1]] } } } } });
-  fill(q, { "project-question": "Who inspects?" });
-  await press(q, "promote");
-  const said = main(q).querySelector('[data-refusal="promote"]');
-  assert.ok(said.textContent.includes("the target is not a canonical id") && !said.textContent.includes("An action cannot rest on another action."));
-  const plain = await pageOf(w.world, w.ann, w.at, { plane: {
-    promote: { status: 200, json: { ok: true, result: { ok: false, reason: "ACTION_BASIS_REFUSED", code: "ACTION_BASIS_REFUSED", translation: "An action cannot rest on another action." } } } } });
-  fill(plain, { "project-question": "Who inspects?" });
-  await press(plain, "promote");
-  assert.ok(main(plain).querySelector('[data-refusal="promote"]').textContent.includes("An action cannot rest on another action."));
+  /* "Open a question" refused on an action's basis (`ACTION_BASIS_REFUSED`, with findings) is a state no act makes: the owner raises it only inside `isAction` (actions/index.mjs:1215, :1244, :1251);
+     a question whose leg names an action is `BASIS_REFUSED` (inquiry-grammar/grammar.mjs:648). That case is not tested here. */
 });
 
 test("R10 entry 25 the project draws exactly its registry acts, writing help under the stake field only while the assistant is reachable", async () => {

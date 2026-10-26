@@ -44,6 +44,8 @@ const stateWorld = async ({ n = 3, world = null } = {}) => {
   };
   return { world, ann, project, targets, id, join, page };
 };
+/** a record's title, as its bundle holds it */
+const titleOf = async (as, id) => /^title: "?(.*?)"?$/m.exec((await as.read("image", { query: { id } }))["bundle.md"])[1];
 const CONCLUDED = (r) => ok(BASIS(r.query.project ? { conclusion: { claim: { text: "Yes." }, by: "member:dev", at: "2026-10-13T09:00:00Z" }, conclusion_stance: "concluded" } : {}));
 
 /* ------------------------------------------------------------------------------------------------------------------ R101 */
@@ -171,26 +173,40 @@ test("R102 control: a missing reason, a missing question or a passage sent nowhe
 
 /* ------------------------------------------------------------------------------------------------------------------ R103 */
 
-/* still scripted (reevaluations, reevaluationrecord): needed: a recipe for a document whose newer edition makes an "edition" cause for a question citing the older (no act of the world makes a second edition of a held document) */
-const OBLIGATION = (extra = {}) => ({ bundle_id: Q, title: "Seven days", object_type: "inquiry", current_state: "open", target: D, target_state: "open", legs: [],
-  causes: [{ source: "edition", since: "2026-10-06T09:00:00Z", ord: 0, cited_edition: 1, latest_edition: 2, detail: "this leg rests on edition 1" }],
-  closed: [{ source: "edition", since: "2026-09-01T09:00:00Z", closed_by: "mai", closed_at: "2026-10-07T09:00:00Z", note: "The new edition repeats page 12 unchanged." }], ...extra });
-const reeval = (list) => ({ reevaluations: (r) => ok({ ok: true, target: r.query.target, obligations: r.query.target === D ? list : [], count: list.length, closed: [], closed_count: 0 }) });
+/** a question citing a held page that has since changed at its source (the world's recipe `newerCapture`): the reminder the record holds for the document is a `source_status` cause (an `edition` cause needs a
+ *  ratified or published edition above the first of a held document, which no act makes). Answers the recipe's, `as` the member signed in again, with `page(id)` over the world's door as her. */
+const changedWorld = async () => {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const made = await world.recipes.newerCapture(ann);
+  const page = async (id = made.question) => {
+    const { door, session } = world.boot(made.as);
+    const p = await boot({ screens: SCREENS, door, session, path: "/app/question/" + id });
+    await p.settle();
+    return p;
+  };
+  return { world, ...made, page };
+};
+const obligationsOf = async (w, id) => (await w.as.read("reevaluations", { query: { target: w.document } })).obligations.filter((o) => o.bundle_id === id);
 
 test("R103 what needs a second look is listed from the reminders the record holds for what this question rests on, and recording that one was looked at sends the dependent, the cause and the note", async () => {
-  const p = await open(at, { ...A, plane: { ...reeval([OBLIGATION()]), reevaluationrecord: ok({ ok: true, closed: true }) } });
-  assert.deepEqual(p.byOp("reevaluations").map((r) => r.query.target).sort(), [D, "INFO-2026-0006"].sort(), "read for each document the question cites that is not taken back");
+  const w = await changedWorld();
+  const p = await w.page();
+  assert.deepEqual(p.byOp("reevaluations").map((r) => r.query.target), [w.document], "read for each document the question cites that is not taken back");
+  const cause = (await obligationsOf(w, w.question))[0].causes[0];
   const s = main(p).querySelector("#reeval");
   assert.ok(s && says(s.querySelector("h2"), "screen.question.reeval.heading"));
   const open1 = s.querySelector('[data-reeval="open"]');
-  assert.ok(says(open1, "screen.question.reeval.edition", { document: DOC_TITLE }) && says(open1, "screen.question.reeval.edition.meta"), "an edition cause, by the document's title");
-  assert.ok(open1.textContent.includes(day("2026-10-06")));
-  const done = s.querySelector('[data-reeval="done"]');
-  assert.ok(says(done, "screen.question.reeval.done", { name: "mai", date: day("2026-10-07"), note: "The new edition repeats page 12 unchanged." }) && says(done, "screen.question.reeval.done.meta", { what: DOC_TITLE }), "a closed cause: who, when and what was decided");
+  assert.ok(open1.textContent.includes(cause.detail) && open1.textContent.includes(day(cause.since)), "a cause, as the record words it, with its date");
   assert.ok(says(s, "screen.question.reeval.note.label"));
   fill(p, { "question-reeval-note": "The new edition repeats the clause." });
   await press(p, "reevaluationrecord", { within: s });
-  assert.deepEqual(p.byOp("reevaluationrecord")[0].body, { dependent: Q, target: D, source: "edition", since: "2026-10-06T09:00:00Z", note: "The new edition repeats the clause." });
+  assert.deepEqual(p.byOp("reevaluationrecord")[0].body, { dependent: w.question, target: w.document, source: cause.source, since: cause.since, note: "The new edition repeats the clause." });
+  /* the real act closed the cause: the list read again draws it as looked at, with who, when and what was decided */
+  const closed = (await w.as.read("reevaluations", { query: { target: w.document } })).closed.find((o) => o.bundle_id === w.question).causes[0];
+  const done = main(p).querySelector('#reeval [data-reeval="done"]');
+  assert.ok(says(done, "screen.question.reeval.done", { name: "ann", date: day(closed.closed_at), note: closed.note }) && says(done, "screen.question.reeval.done.meta", { what: await titleOf(w.as, w.document) }), "a closed cause: who, when and what was decided");
+  assert.equal(main(p).querySelector('#reeval [data-reeval="open"]'), null);
   /* "See what needs a second look" reads again */
   const before = p.byOp("reevaluations").length;
   await press(p, "reevaluations", { within: main(p).querySelector("#reeval") });
@@ -198,15 +214,23 @@ test("R103 what needs a second look is listed from the reminders the record hold
 });
 
 test("R103 control: a finding with no reminder draws none (R20); an empty note sends nothing; the owner's refusal is drawn by its words; a reminder for another question is not this one's", async () => {
-  const none = await open(at, { ...A, plane: { ...reeval([]) } });
+  const quiet = await stateWorld({ n: 1 });
+  const none = await quiet.page();
   assert.equal(main(none).querySelector("#reeval"), null);
   assert.ok(!actsIn(main(none)).includes("reevaluationrecord") && !actsIn(main(none)).includes("reevaluations"));
-  const other = await open(at, { ...A, plane: { ...reeval([OBLIGATION({ bundle_id: "INQ-2026-0099-other", closed: [] })]) } });
-  assert.equal(main(other).querySelector("#reeval"), null, "a dependent that is not this question");
-  const p = await open(at, { ...A, plane: { ...reeval([OBLIGATION({ closed: [] })]), reevaluationrecord: refusedIn("REEVALUATION_NO_SUCH_CAUSE") } });
+  /* a second question of the project resting on the same page: the record holds a reminder for each, and each page draws its own */
+  const w = await changedWorld();
+  const other = (await w.world.recipes.question(w.as, w.project, { title: "Another reading", text: "Is it so?", legs: [{ target: w.document, role: "supports" }], draw: true })).id;
+  assert.ok((await obligationsOf(w, other)).length > 0 && (await obligationsOf(w, w.question)).length > 0, "a reminder for each question");
+  const own = await w.page();
+  assert.equal(main(own).querySelectorAll('#reeval [data-reeval="open"]').length, (await obligationsOf(w, w.question))[0].causes.length, "this question's alone");
+  const p = await w.page(other);
   const s = main(p).querySelector("#reeval");
   assert.ok(says(await press(p, "reevaluationrecord", { within: s }), "screen.question.reeval.refused.body"), "no note");
   assert.equal(p.byOp("reevaluationrecord").length, 0);
+  /* the cause is looked at by her real act after the page was drawn: the page still offers it, and the owner refuses */
+  const cause = (await obligationsOf(w, other))[0].causes[0];
+  await w.as.act("reevaluationrecord", { body: { dependent: other, target: w.document, source: cause.source, since: cause.since, note: "Looked." } });
   fill(p, { "question-reeval-note": "Looked." });
   const slot = await press(p, "reevaluationrecord", { within: s });
   assert.ok(says(slot, "screen.question.reeval.refused.body2"), "nothing stands now: the list is read again");

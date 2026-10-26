@@ -120,11 +120,10 @@ test("R45 a run of hers that ended with no proposal draws the ending and the ask
   assert.deepEqual(actsIn(m).filter((a) => a === "airunopen"), ["airunopen"]);
 });
 
-test("R45 a run that ended without a condition is named by its status; another member's ended run is not hers", async () => {
+test("R45 another member's ended run is not hers", async () => {
   const w = await stateWorld();
-  /* still scripted (airuns): a run that ended with no condition, only a status (needed: a run the lease ended, or one that failed; the world's runs always end by a named bound) */
-  const p = await w.page({ plane: { airuns: ok({ ok: true, runs: [{ id: "RUN-" + "d".repeat(16), status: "failed", ticks: 3, principal: { plane: "member:" + w.ann.member } }] }) } });
-  assert.ok(says(section(p, "question.empty.heading"), "screen.assistant.run.ended", { why: word("ai.run.ending.unknown") }));
+  /* a run that ended with no condition, only a status, is a state no act makes: a run ends only by a named bound (AI_RUN_BOUND_UNNAMED, run-rules/rules.mjs:485-489; ai-runs/index.mjs:590-593),
+     and its expiry reads real time, which `tick` does not age; that case is not tested */
   const ben = await joined(w, "ben");
   await (await openRun(w, { who: ben })).end("cancelled");
   const other = await w.page();

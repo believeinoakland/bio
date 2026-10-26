@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot, ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, storeWorld, main, press, fill, says, word, section, projectWith, SCREENS, P, Q, Q2 } from "./fixtures.mjs";
+import { open, storeWorld, WORLD_FOUNDER_HANDLE, main, press, fill, says, word, section, projectWith, SCREENS, P, Q, Q2 } from "./fixtures.mjs";
 import { onPhone } from "./phone.mjs";
 import { rerunReadAnswer } from "../case-import/fixtures.mjs";
 
@@ -107,46 +107,60 @@ test("R1 R36 C63 'Plan what to do' on the project page opens the plan page it ma
 
 /* ------------------------------------------------------------------------------------------------------------------ C81 */
 
-/* the phone measurement below is scripted: `onPhone` (phone.mjs) answers the page from a plane table only and takes no world door (it would need `world.route(as)`) */
-const P2 = "PROJ-2026-0012", P3 = "PROJ-2026-0013";
-const QA = "INQ-2026-0050-days", QB = "INQ-2026-0060-days", QC = "INQ-2026-0061-unique", QO = "INQ-2026-0200-orphan";
-/* `projectlist`'s as project-roster R26 (`id`, `name`, `question_count`);
-   `projectquestions`' as basis-versions R50 (`items: [{inquiry, title}]`) */
-const ELSEWHERE = {
-  list: ok({ bundles: [row(Q, "Is the city repairing reported potholes within seven days?"), row(Q2, "Does closed mean repaired?"), row(QA, SAME), row(QB, SAME), row(QA, SAME), row(QC, "A title only one has"), row(QO, "Nobody draws on this")] }),
-  projectlist: ok({ ok: true, projects: [{ id: P, name: "Pothole repairs", question_count: 2 }, { id: P2, name: "Bridge repairs", question_count: 1 }, { id: P3, name: "Culvert repairs", question_count: 2 }, { id: "PROJ-2026-0014", name: "Empty one", question_count: 0 }] }),
-  projectquestions: (r) => ok(r.query.project === P2 ? { ok: true, project: P2, items: [{ inquiry: QA, title: SAME }], cursor: null }
-    : r.query.project === P3 ? { ok: true, project: P3, items: [{ inquiry: QB, title: SAME }, { inquiry: QC, title: "A title only one has" }], cursor: null }
-    : r.query.project === P ? { ok: true, project: P, items: [{ inquiry: Q, title: "Is the city repairing reported potholes within seven days?" }, { inquiry: Q2, title: "Does closed mean repaired?" }], cursor: null }
-    : { ok: true, project: r.query.project, items: [], cursor: null }),
-};
-
+/* the phone measurement below is drawn over the real world's answers, read once and played back: `onPhone` (phone.mjs) answers the page from a plane table only and takes no world door (it would need `world.route(as)`) */
 const LONG = "a-very-long-member-handle-without-any-breaks-at-all";
-const PEOPLE = [{ handle: "mai", state: "joined", owner: 1, owner_since: "2026-10-01T09:00:00Z" }, { handle: "dev", state: "joined", owner: 1 }, { handle: LONG + "1", state: "joined", owner: 1 },
-  { handle: LONG + "2", state: "joined", owner: 1 }, { handle: "rosa", state: "joined", owner: 0, joined_at: "2026-10-02T00:00:00Z" }, { handle: "ben", state: "joined", owner: 0 },
-  { handle: LONG + "3", state: "joined", owner: 0 }, { handle: "ana", state: "invited", owner: 0 }];
 const TITLE = "A project with a very long title that goes on and on about potholes, repairs and the city of Oakland";
-const LONGMD = projectWith([[Q, "cites", "active"], [Q2, "cites", "confirmed"]]).replace('title: "Pothole repairs"', `title: "${TITLE}"`);
 const NOTICE = { notice: "N1", status: "open", revisions: [{ published_at: "2026-10-01T09:00:00Z", json: { wording: "We are looking at pothole repairs " + LONG, since: "2026-09-01", collaborate: true } }],
   level: { level: "Active", as_of: "2026-10-10T00:00:00Z" }, next_monthly: "2026-11-01T00:00:00Z", attestations: [{ json: { cases: [1, 2] } }] };
-const VOTES = [{ change: "remove", target: "dev", proposed_by: "rosa", proposed_at: "2026-10-09T09:00:00Z", agreed: ["rosa"], awaiting: ["mai"] },
-  { change: "add", target: "ben", proposed_by: "dev", proposed_at: "2026-10-09T09:00:00Z", agreed: ["dev"], awaiting: ["mai"] }];
+/** The busy project by real acts: the founder's project with a very long title, four owners (`mai`, `dev` and two with very long handles, each made by every owner's agreement), members (one with a very long handle) and an
+ *  invited one, two questions with long titles drawn into it, a vote waiting on the other owners, and two other projects whose questions share a title. Answers `{ path, o }` for `onPhone`:
+ *  its plane is the world's own answers to the reads the page makes, as `mai` reads them. */
+const busy = async () => {
+  const world = await storeWorld();
+  const founder = await world.signIn(WORLD_FOUNDER_HANDLE);
+  /* a member id is at most 41 characters (C-96.2): the longest the record allows */
+  const HANDLE = (n) => LONG.slice(0, 40) + n;
+  const handles = ["mai", "dev", HANDLE(1), HANDLE(2), "rosa", "ben", HANDLE(3), "ana"];
+  const who = {};
+  for (const h of handles) who[h] = await world.signIn(h, OWN);
+  const project = await world.recipes.project(founder, TITLE);
+  for (const h of handles) await founder.act("projectinvite", { query: { projectId: project, handle: h }, body: {} });
+  for (const h of handles.slice(0, 7)) await who[h].act("projectjoin", { query: { projectId: project }, body: {} });
+  const owners = [founder];
+  for (const h of handles.slice(0, 4)) {
+    for (const o of owners) await o.act("projectowneradd", { query: { projectId: project, handle: h }, body: {} }).catch((e) => { if (!/CONSENSUS_REQUIRED/.test(String(e.message))) throw e; });
+    owners.push(who[h]);
+  }
+  await founder.act("projectowneradd", { query: { projectId: project, handle: "ben" }, body: {} }).catch((e) => { if (!/CONSENSUS_REQUIRED/.test(String(e.message))) throw e; });
+  const draw = (title, projectId) => world.recipes.question(founder, projectId, { title, text: title, draw: Boolean(projectId) }).then((r) => r.id);
+  await draw("Is the city repairing reported potholes within seven days of the report, and recording it?", project);
+  await draw("Does closed mean repaired " + LONG, project);
+  const bridge = await world.recipes.project(founder, "Bridge repairs"), culvert = await world.recipes.project(founder, "Culvert repairs");
+  await world.recipes.project(founder, "Empty one");
+  await draw(SAME, bridge); await draw(SAME, culvert); await draw("A title only one has", culvert); await draw("Nobody draws on this", null);
+  const mai = who.mai;
+  const read = (op, query = {}) => mai.read(op, { query });
+  const at = "/app/project/" + project;
+  /* every read the project screen makes is the world's own answer (the rerun comparison is case-import's, below) */
+  const real = Object.fromEntries(await Promise.all(Object.values(PROJECT.reads({ subject: project, me: { member: "mai", handle: "mai" } })).filter((x) => x.op !== "rerunread" && x.op !== "image")
+    .map(async (x) => [x.op, ok(await read(x.op, x.query))])));
+  return { path: at, o: { images: { [project]: await read("image", { id: project }) }, plane: {
+    ...real,
+    projectquestions: async (r) => ok(await read("projectquestions", r.query)),
+    inquirystrength: async (r) => ok(await read("inquirystrength", r.query)),
+    memberlist: ok(await read("memberlist")),
+    projectlist: ok(await read("projectlist", { limit: "200" })),
+    notices: ok({ ok: true, notices: [NOTICE] }),
+    rerunread: ok(RERUN),
+    projectownerarith: ok({ ok: true, table: [1, 2, 3, 4, 5].map((n) => ({ owners: n, votesNeeded: Math.floor(n / 2) + 1, eligibleVoters: n - 1 })),
+      live: { owners: 4, votesNeeded: 3, eligibleVoters: 3, possible: true, targetMayVote: false }, projectId: project }) } } };
+};
 /* case-import's real `rerunread` answer (R31), the strings the comparison draws made long (an input that stretches the layout; fixtures-own: synthetic the lengthened text) */
 const REAL_RERUN = (await rerunReadAnswer()).answer;
 const [REAL_RUN] = REAL_RERUN.reruns;
 const RERUN = { ...REAL_RERUN, reruns: [{ ...REAL_RUN,
   lens_difference: { ...REAL_RUN.lens_difference, only_source: REAL_RUN.lens_difference.only_source.map((x) => ({ ...x, text: x.text + " " + LONG })) },
   findings: REAL_RUN.findings.map((f) => ({ ...f, finding: f.finding + " " + LONG })) }] };
-const BUSY = { images: { [P]: { "bundle.md": LONGMD } }, plane: {
-  projectparticipants: ok({ ok: true, projectId: P, participants: PEOPLE }),
-  projectquestions: ok({ ok: true, project: P, items: [{ inquiry: Q, title: "Is the city repairing reported potholes within seven days of the report, and recording it?" }, { inquiry: Q2, title: "Does closed mean repaired " + LONG }], cursor: null }),
-  projectownervotes: ok({ ok: true, projectId: P, changes: VOTES }),
-  memberlist: ok({ ok: true, members: PEOPLE.map((x) => ({ member_id: x.handle, handle: x.handle })) }),
-  notices: ok({ ok: true, notices: [NOTICE] }),
-  rerunread: ok(RERUN),
-  projectownerarith: ok({ ok: true, table: [1, 2, 3, 4, 5].map((n) => ({ owners: n, votesNeeded: Math.floor(n / 2) + 1, eligibleVoters: n - 1 })),
-    live: { owners: 4, votesNeeded: 3, eligibleVoters: 3, possible: true, targetMayVote: false }, projectId: P }),
-  ...ELSEWHERE } };
 const ACTS = ["act.planopen.label.project", "act.projectowneradd.label.project", "act.projectownerremove.label.project", "act.projectremove.label.project", "act.projectinvite.label.project",
   "act.projectbarset.label.project", "act.promote.label.project", "act.findin.label.project", "act.drawquestion.label.project", "act.heldcaptures.label.project", "act.projectvisibilityset.label.project",
   "screen.project.notice.change", "act.projectleave.label.project"].map((k) => word(k));
@@ -154,7 +168,8 @@ const ACTS = ["act.planopen.label.project", "act.projectowneradd.label.project",
 const notRef = (s) => !s.startsWith("a.cs-ref");
 
 test("R5 C81 the project page at 390 px: nothing past the screen and every button and summary at least 44 px, with a long title, long member names, many owners, a pending vote, the published notice, the vote to stand down and the rerun's comparison; control: at 1280 px nothing is past the viewport and the controls of the rows not touched keep their place", async () => {
-  const phone = async (before) => onPhone({ path: at, o: BUSY, width: 390, controls: ACTS, before });
+  const { path, o: BUSY } = await busy();
+  const phone = async (before) => onPhone({ path, o: BUSY, width: 390, controls: ACTS, before });
   const base = await phone();
   assert.ok(base.mainScroll <= 390, "the main area does not scroll sideways: " + base.mainScroll);
   assert.deepEqual(base.over, [], "nothing runs past the screen");
@@ -167,7 +182,7 @@ test("R5 C81 the project page at 390 px: nothing past the screen and every butto
   const cmp = await phone(async (page) => { await page.click('button[data-act="rerunread"]'); });
   assert.ok(cmp.mainScroll <= 390 && cmp.over.length === 0 && cmp.small.filter(notRef).length === 0, "the comparison: " + JSON.stringify(cmp));
   /* control: the desktop page keeps everything inside the viewport, and the controls whose rows were not touched are where they were (their left edge and height) */
-  const wide = await onPhone({ path: at, o: BUSY, width: 1280, controls: [word("act.planopen.label.project"), word("act.projectinvite.label.project"), word("act.projectbarset.label.project")] });
+  const wide = await onPhone({ path, o: BUSY, width: 1280, controls: [word("act.planopen.label.project"), word("act.projectinvite.label.project"), word("act.projectbarset.label.project")] });
   assert.deepEqual(wide.over, [], "at 1280 nothing is past the viewport");
   assert.deepEqual([wide.boxes[word("act.planopen.label.project")], wide.boxes[word("act.projectinvite.label.project")], wide.boxes[word("act.projectbarset.label.project")]].map((b) => [b[0].left, b[0].height]),
     [[208, 40], [208, 40], [208, 40]], "plan, invite and bar keep their left edge and height");

@@ -31,8 +31,17 @@ test("R44 the keys words-reads.json lists for the module are each a words.json w
 });
 
 test("R44 over fixtures, what the screens draw for a sample of their keys equals word(key, vars)", async () => {
-  const p = await open("/app/project/" + P);
-  assert.ok(section(p, "screen.project.stage.head") && says(main(p), "screen.project.stage.read", { count: "2" }));
+  /* the project page over a real world: an owner's project holding two questions, the count of held questions read from project-stage's own answer */
+  const w = await storeWorld();
+  const own = await w.signIn("ann", { capabilities: ["contribute", "create_projects"] });
+  const proj = await w.recipes.project(own, "Pothole repairs");
+  await w.recipes.questions(own, proj, 2);
+  const held = (await own.read("projectstage", { query: { project: proj } })).questions.read;
+  assert.equal(held, 2);
+  const { door: pd, session: ps } = w.boot(own);
+  const p = await boot({ screens: SCREENS, door: pd, session: ps, path: "/app/project/" + proj });
+  await p.settle();
+  assert.ok(section(p, "screen.project.stage.head") && says(main(p), "screen.project.stage.read", { count: String(held) }));
   assert.equal(main(p).querySelector('button[data-act="promote"]').childNodes[0].data || main(p).querySelector('button[data-act="promote"]').textContent.split(word("weight.reversible.name"))[0],
     word("act.promote.label.project"));
   const q = await open("/app/question/" + Q);

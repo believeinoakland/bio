@@ -13,7 +13,7 @@ import { Miniflare } from "miniflare";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 import { RE_POINTS } from "../../../src/interface-shell/index.mjs";
 import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
-import { boot } from "../interface-shell/harness.mjs";
+import { boot, counted } from "../interface-shell/harness.mjs";
 import { SCREENS, main, actsIn, press, says } from "./fixtures.mjs";
 
 const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.url));
@@ -52,13 +52,15 @@ const until = async (p, done, ms = 300000) => {
   for (;;) { await p.settle(20); if (done()) return true; if (Date.now() > end) return false; await new Promise((r) => setTimeout(r, 100)); }
 };
 /** Every op the page asks, forwarded to the real door as the founder: `{status, json}` as the harness answers. */
-const forwarded = (auth) => Object.fromEntries(Object.keys(OPS).map((op) => [op, async (req) => { try {
+const rawForwarded = (auth) => Object.fromEntries(Object.keys(OPS).map((op) => [op, async (req) => { try {
   const u = new URLSearchParams({ ...req.query, op });
   const r = await door(`/api/?${u}`, { method: req.body === undefined ? "GET" : "POST", headers: { ...auth, "content-type": "application/json" },
                                        ...(req.body === undefined ? {} : { body: JSON.stringify(req.body) }) });
   const j = await r.json().catch(() => null);
   return { status: r.status, json: j };
   } catch (e) { process.stderr.write("FWDERR " + op + " " + String(e && e.stack).slice(0, 400) + "\n"); throw e; } }]));
+/** every forwarding function is counted, so `settle()` waits on a late forwarded read (interface-shell K5242) */
+const forwarded = (auth) => Object.fromEntries(Object.entries(rawForwarded(auth)).map(([op, f]) => [op, counted(f)]));
 
 test("R129 N5 (the real plane): interface-shell lists readheld among the acts of document: CAUSE-SHELL-4's line, red by name until it merges", () => {
   assert.ok(Array.isArray(RE_POINTS.document) && RE_POINTS.document.includes("readheld"));

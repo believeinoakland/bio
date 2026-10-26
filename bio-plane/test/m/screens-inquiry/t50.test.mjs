@@ -4,17 +4,9 @@
  * over a scripted plane. Every expectation is a word read by key (R44). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { boot, ok } from "../interface-shell/harness.mjs";
-import { open, storeWorld, WORLD_FOUNDER_HANDLE, main, actsIn, press, fill, inquiryMd, INQUIRY_REFS, LEGS, BASIS, plane, says, section, word, SCREENS, P, Q, D, SHA } from "./fixtures.mjs";
+import { boot } from "../interface-shell/harness.mjs";
+import { storeWorld, WORLD_FOUNDER_HANDLE, main, actsIn, press, fill, says, section, word, SCREENS } from "./fixtures.mjs";
 
-const at = "/app/question/" + Q;
-const REACH = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }), agentpack: ok({ ok: true, pack: { version: "p@1" } }) };
-const GROUNDS = [{ ground: "part 1", asserted_by: "member:dev", at: "2026-10-05T09:00:00Z" }];
-const cited = (o = {}) => inquiryMd(P, INQUIRY_REFS, { legs: LEGS.map((l) => (l.target === D ? { ...l, ground: "part 1" } : l)), grounds: GROUNDS, ...o });
-const A = { images: { [Q]: { "bundle.md": cited() } } };
-const reach = (o = {}) => ({ images: o.images, boot: { plane: { ...plane(o), ...REACH, airuns: ok({ ok: true, runs: [] }), ...(o.reach || {}) } } });
-const RUN = "RUN-" + "e".repeat(16);
-const mine = (o = {}) => ({ id: RUN, status: "running", ticks: 2, principal: { plane: "member:mai" }, ...o });
 /** A project with `n` held documents and a question in it resting on them, drawn into the project: all by real acts over the world.
  *  Answers `{world, ann, project, docs, id, page(opts)}`; `page` boots the question's page over the world (`plane` overrides only the ops it names). */
 const stateWorld = async ({ n = 1, world = null } = {}) => {
@@ -40,13 +32,25 @@ const aiTeam = async (world) => {
   await admin.act("groupkeyset", { body: { key: "sk-ant-api03-" + "w".repeat(40) } });
   await admin.act("groupkeyswitch", { body: { on: true } });
   await admin.act("groupkeynoticeseen", { body: {} });
+  return admin;
 };
 /** a run of the member's own over the question, opened by her real act (`airunopen`: running, before anything dispatches it); the member reads the team's notice first */
 let runs = 0;
-const openRun = async (w, run = "RUN-" + String(++runs).padStart(16, "c")) => {
-  await w.ann.act("groupkeynoticeseen", { body: {} });
-  await w.ann.act("airunopen", { body: { run, contextType: "inquiry", contextId: w.id, skillVersion: "investigative-session@1", principalClaude: `member:${w.ann.member}`, mode: "check" } });
+const openRun = async (w, who = w.ann, run = "RUN-" + String(++runs).padStart(16, "c")) => {
+  await who.act("groupkeynoticeseen", { body: {} });
+  await who.act("airunopen", { body: { run, contextType: "inquiry", contextId: w.id, skillVersion: "investigative-session@1", principalClaude: `member:${who.member}`, mode: "check" } });
   return run;
+};
+/** a reading of two separately sufficient parts that is suggested, by her real acts: the passages grouped into two parts (`inquiryground`), a reading accepted with both parts affirmed, withdrawn, turned down and put back (`versionrevert`) */
+const twoParts = async (w) => {
+  const grounds = [{ ground: "part 1", legs: [0] }, { ground: "part 2", legs: [1] }];
+  const q = { target: w.id, project: w.project };
+  await w.ann.act("inquiryground", { body: { target: w.id, grounds } });
+  await w.ann.act("conclude", { query: { ...q, reading: "The count is about four hundred.", falsifier: "records showing otherwise", affirmed: "part 1,part 2" } });
+  await w.ann.act("withdrawconclusion", { query: { ...q, reason: "to make it suggested again" } });
+  await w.ann.act("versionreject", { query: { ...q, version: "reading-1", reason: "set aside once for now" } });
+  await w.ann.act("versionrevert", { query: { ...q, version: "reading-1" } });
+  return "reading-1";
 };
 const steps = (p) => main(p).querySelectorAll("[data-steps] li").map((li) => [li.getAttribute("data-step"), li.getAttribute("data-state")]);
 
@@ -74,20 +78,31 @@ test("R50 Conclude takes a member's own reading: reading is sent in place of ver
 });
 
 test("R51 the three steps: each state draws its step as current; the new question draws the three buttons and no Concluding section; secondary acts fold under more", async () => {
-  const empty = await open(at, reach({ images: { [Q]: { "bundle.md": inquiryMd(P, [], { legs: [] }) } } }));
+  /* the real states, by her acts over a question in a project: no passage cited, a passage cited and a reading put under consideration (none accepted), a reading accepted, the conclusion made */
+  const e = await stateWorld({ n: 0 });
+  const empty = await e.page();
   assert.deepEqual(steps(empty), [["source", "current"], ["mark", "todo"], ["conclude", "todo"]]);
   assert.equal(section(empty, "screen.question.concluding.head"), undefined);
   assert.equal(empty.root().querySelector('[data-adddoc="question"]').getAttribute("data-tone"), "primary");
   assert.ok(says(main(empty), "question.empty.conclude.own"));
-  /* still scripted (basisversions): needed: a recipe for a question holding a considering reading (basis-versions has no act that makes a version) */
-  const ask = await open(at, { ...A, plane: { basisversions: ok({ ok: true, inquiry: Q, versions: [{ name: "draft", state: "considering", legs: [] }] }) } });
+  const w = await stateWorld();
+  const q = { target: w.id, project: w.project };
+  const reading = { ...q, reading: "Most reports are repaired within seven days.", falsifier: "records showing otherwise" };
+  const cited = await w.page();
+  assert.deepEqual(steps(cited), [["source", "done"], ["mark", "current"], ["conclude", "todo"]]);
+  await w.ann.act("conclude", { query: reading });
+  await w.ann.act("withdrawconclusion", { query: { ...q, reason: "to weigh it first" } });
+  await w.ann.act("versionconsider", { query: { ...q, version: "reading-1", reason: "we are weighing it" } });
+  const ask = await w.page();
   assert.deepEqual(steps(ask), [["source", "done"], ["mark", "current"], ["conclude", "todo"]]);
-  const stands = await open(at, A);
+  await w.ann.act("versionaccept", { query: { ...q, version: "reading-1" } });
+  const stands = await w.page();
   assert.deepEqual(steps(stands), [["source", "done"], ["mark", "done"], ["conclude", "current"]]);
   const more = main(stands).querySelector('details[data-fold="more"]');
   assert.ok(says(more.querySelector("summary"), "question.more"));
   assert.deepEqual(actsIn(more).sort(), ["checkrequest", "inquirydivide", "planopen", "proposedispose", "search"], "R71: set aside for the project is among them");
-  const done = await open(at, { ...A, plane: { basisversions: ok(BASIS({ conclusion: { claim: { text: "x" }, by: "member:dev", at: "2026-10-13T09:00:00Z" }, conclusion_stance: "concluded" })) } });
+  await w.ann.act("conclude", { query: reading });
+  const done = await w.page();
   assert.deepEqual(steps(done), [["source", "done"], ["mark", "done"], ["conclude", "done"]]);
 });
 
@@ -106,78 +121,71 @@ test("R62 a concluded question offers a case: casedraft with the project and the
 });
 
 test("R57 a run ends in the ending's own words, never its code; the cost to the owner only; a stopped run says what was kept", async () => {
-  const ended = (c) => ({ id: RUN, status: "completed", principal: { plane: "member:mai" }, condition: { bound: c } });
-  for (const [bound, key] of [["wallclock", "ai.run.ending.wallclock"], ["cancelled", "ai.run.ending.cancelled"], ["zzz", "ai.run.ending.unknown"]]) {
-    let p;
-    if (bound === "zzz") {
-      /* still scripted (airuns): needed: a run closed with an ending the words do not know (airunclose refuses a bound that names none: AI_RUN_BOUND_UNNAMED) */
-      p = await open(at, reach({ ...A, reach: { airuns: ok({ ok: true, runs: [ended(bound)] }) } }));
-    } else {
-      /* the real state: her run opened and closed with the ending, by the acts the page makes */
-      const world = await storeWorld({ ai: true });
-      await aiTeam(world);
-      const w = await stateWorld({ world });
-      const run = await openRun(w);
-      await w.ann.act("airunclose", { body: { run, bound } });
-      p = await w.page();
-    }
+  /* a run ending with a code the words do not know cannot exist: airunclose refuses a bound that names none (AI_RUN_BOUND_UNNAMED, run-rules/rules.mjs:485-489; ai-runs/index.mjs:590-593) */
+  for (const [bound, key] of [["wallclock", "ai.run.ending.wallclock"], ["cancelled", "ai.run.ending.cancelled"]]) {
+    /* the real state: her run opened and closed with the ending, by the acts the page makes */
+    const world = await storeWorld({ ai: true });
+    await aiTeam(world);
+    const w = await stateWorld({ world });
+    const run = await openRun(w);
+    await w.ann.act("airunclose", { body: { run, bound } });
+    const p = await w.page();
     assert.ok(says(main(p), "screen.assistant.run.ended", { why: word(key) }), bound);
-    assert.ok(!main(p).textContent.includes(bound === "zzz" ? "zzz" : "\u0000"), "the code is never drawn");
+    assert.ok(!main(p).textContent.includes("ai.run.ending"), "the code is never drawn");
     assert.equal(!!main(p).querySelector('[data-run="stopped"]'), bound === "cancelled", "R64: only a stopped run says what was kept");
   }
-  /* still scripted (airuns, airun): needed: a closed run with a cost recorded against its account (no act records a run's cost: it comes of the model's own calls) */
-  const withCost = (cost) => reach({ ...A, reach: { airuns: ok({ ok: true, runs: [ended("completed")] }), airun: ok({ ok: true, session: { id: RUN, status: "completed", ...(cost ? { cost } : {}) } }) } });
-  const owner = await open(at, withCost({ owner: "member:mai", calls: 3, tokens: 900, cost: { usd: 0.42 }, unit: "usd" }));
-  assert.ok(says(main(owner), "screen.assistant.run.cost.final", { cost: word("ai.run.cost.money", { amount: "$0.42", calls: 3 }), account: word("ai.run.cost.on.apikey") }));
-  const sub = await open(at, withCost({ owner: "member:mai", calls: 3, tokens: 900, cost: null, unit: "tokens" }));
-  assert.ok(says(main(sub), "ai.run.cost.tokens", { tokens: 900, calls: 3 }));
-  const other = await open(at, withCost(null));
-  assert.equal(main(other).querySelector('[data-run="cost"]'), null, "no cost line when session.cost is absent");
+  /* the cost: the model's calls counted under the run's id by the run's own ticks (`airuntick` with its usage), a run closed after; the account is the team's, so its owner (the administrator) reads the cost of her run, and a member who is not an owner reads none of hers */
+  /* each in a world of its own: the page draws her newest run, and two runs of one second are not told apart */
+  const closed = async (member, usage) => {
+    const world = await storeWorld({ ai: true });
+    const admin = await aiTeam(world);
+    const w = await stateWorld({ world });
+    const who = member === "admin" ? admin : w.ann;
+    const run = await openRun(w, who);
+    await who.act("airuntick", { body: { run, usage, log: [] } });
+    await who.act("airunclose", { body: { run, bound: "completed" } });
+    return w.page({}, who);
+  };
+  const call = { mode: "ask", usage: { input_tokens: 1000, output_tokens: 200, cache_read_input_tokens: 0, cache_creation_input_tokens: 0, total_cost_usd: 0.42 }, calls: 3 };
+  const owner = await closed("admin", [call]);
+  assert.ok(says(main(owner), "screen.assistant.run.cost.final", { cost: word("ai.run.cost.money", { amount: "$0.42", calls: 3 }), account: word("ai.run.cost.on.team") }));
+  /* a call that states no money (total_cost_usd null) is counted in tokens */
+  const tokens = await closed("admin", [{ ...call, usage: { ...call.usage, total_cost_usd: null } }]);
+  assert.ok(says(main(tokens), "ai.run.cost.tokens", { tokens: 1200, calls: 3 }));
+  const other = await closed("ann", [call]);
+  assert.equal(main(other).querySelector('[data-run="cost"]'), null, "no cost line for a member who does not own the account");
 });
 
-test("R58 a run's progress is drawn from its log's fields, each row as it arrives; the proposal waits for the check; airunopen carries the project", async () => {
-  /* the run is hers and real (opened by her act); still scripted (airunlog): needed: a run whose log rows carry the progress fields (read, found, checked), which no act makes: airuntick appends rows of level, subject, state and detail only */
+test("R58 airunopen carries the question's project", async () => {
+  /* a log whose rows carry the progress fields (read, found, checked) cannot exist: the entries the run's log holds carry seq, at, level, subject, state, governed, condition, bound, terminal, detail, result_kind, result_ref and coverage only (ai-runs/index.mjs:3094-3118) */
   const world = await storeWorld({ ai: true });
   await aiTeam(world);
-  const w = await stateWorld({ world });
-  await openRun(w);
-  const entries = [{ read: { record: w.docs[0], n: 1, total: 2, outcome: "answered" } }, { read: { record: "INFO-2026-0005", n: 2, total: 2, outcome: "refused" } }, { found: 3 }];
-  const p = await w.page({ plane: { airunlog: ok({ ok: true, entries }) } });
-  const prog = main(p).querySelector("[data-progress]");
-  assert.equal(prog.querySelectorAll('li[data-step="reading"]').length, 2, "the reads, in order");
-  assert.ok(says(prog.querySelectorAll('li[data-step="reading"]')[0], "ai.progress.reading", { document: "Passage 1", n: 1, total: 2 }));
-  assert.equal(prog.querySelectorAll('li[data-outcome="refused"]').length, 1, "a refused re-read is drawn as refused, naming none");
-  assert.ok(says(prog, "ai.progress.read", { total: 2 }) && says(prog, "ai.progress.found", { count: 3 }) && says(prog, "ai.progress.hold"));
-  assert.equal(section(p, "question.proposal.heading"), undefined, "no proposal while the run works");
-  /* the check found none: the sentence stands in place of any proposal */
-  const proposal = [{ name: "Proposed", state: "suggested", author: "class:ai/t", run: RUN, claim: { text: "About 9 in 10." }, legs: [] }];
-  /* still scripted (basisversions, airunlog): needed: a question holding a machine-authored suggested reading made by its run, and a log row carrying the check's figures; the run itself is real, ended by her act */
-  const w2 = await stateWorld({ world: await storeWorld({ ai: true }) });
-  await aiTeam(w2.world);
-  const run2 = await openRun(w2);
-  await w2.ann.act("airunclose", { body: { run: run2, bound: "completed" } });
-  const failed = await w2.page({ plane: { basisversions: ok({ ok: true, inquiry: w2.id, versions: proposal.map((v) => ({ ...v, run: run2 })) }), airunlog: ok({ ok: true, entries: [{ checked: { ok: 0, total: 2 } }] }) } });
-  assert.ok(says(main(failed), "ai.progress.check.failed"));
-  assert.equal(section(failed, "question.proposal.heading"), undefined);
-  /* airunopen carries the question's project */
-  const o = await open(at, reach({ images: { [Q]: { "bundle.md": inquiryMd(P, [], { legs: [] }) } }, plane: { airunopen: ok({ run: "x", started: true }), airundispatch: ok({ dispatched: true }) } }));
+  const w = await stateWorld({ world, n: 0 });
+  await w.ann.act("groupkeynoticeseen", { body: {} });
+  const o = await w.page();
   await press(o, "airunopen");
-  assert.equal(o.byOp("airunopen")[0].body.project, P);
+  assert.equal(o.byOp("airunopen")[0].body.project, w.project);
 });
 
 test("R59 R64 accepting a reading of several parts asks each part; Decline sends the version's reject with its reason", async () => {
-  /* still scripted (basisversions, versionaccept): needed: a question holding a suggested reading of several parts (basis-versions has no act that makes a version) */
-  const v = { name: "Two parts", state: "suggested", author: "member:ana", parts: ["part 1", "part 2"], legs: [], grounds: [] };
-  const p = await open(at, { ...A, plane: { basisversions: ok({ ok: true, inquiry: Q, versions: [v] }), versionaccept: ok({ ok: true }) } });
-  const row = section(p, "question.readings.title").querySelector('[data-reading="Two parts"]');
+  /* the real state: a reading of two separately sufficient parts, suggested again by her acts */
+  const w = await stateWorld({ n: 2 });
+  const name = await twoParts(w);
+  const p = await w.page();
+  const row = section(p, "question.readings.title").querySelector(`[data-reading="${name}"]`);
   assert.ok(says(row, "reading.affirm.head") && says(row, "reading.affirm.says", { n: 2 }) && says(row, "reading.affirm.part", { part: "part 1" }));
   p.doc.getElementById("affirm-0-0").checked = true;
   await press(p, "versionaccept", { within: row });
   assert.deepEqual(p.byOp("versionaccept")[0].body.affirmed, ["part 1"], "the parts she ticked");
-  /* a reading of one part asks none */
-  /* still scripted (basisversions): needed: the same, a reading of one part */
-  const one = await open(at, { ...A, plane: { basisversions: ok({ ok: true, inquiry: Q, versions: [{ ...v, name: "One", parts: ["part 1"] }] }) } });
-  assert.equal(one.doc.getElementById("affirm-0"), null);
+  /* a reading of one part asks none (the question's other reading, of its one passage) */
+  const one = await stateWorld({ n: 1 });
+  const q = { target: one.id, project: one.project };
+  await one.ann.act("conclude", { query: { ...q, reading: "Most reports are repaired within seven days.", falsifier: "records showing otherwise" } });
+  await one.ann.act("withdrawconclusion", { query: { ...q, reason: "to make it suggested again" } });
+  await one.ann.act("versionreject", { query: { ...q, version: "reading-1", reason: "set aside once for now" } });
+  await one.ann.act("versionrevert", { query: { ...q, version: "reading-1" } });
+  const single = await one.page();
+  assert.equal(single.doc.getElementById("affirm-0"), null);
 });
 
 test("R55 R56 the document: a held copy is vouched for and replaced by the vouched line; a placement in a theme is drawn apart from evidence", async () => {

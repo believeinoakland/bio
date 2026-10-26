@@ -9,6 +9,7 @@ import { webcrypto, generateKeyPairSync } from "node:crypto";
 import { ok, refusedIn, boot } from "../interface-shell/harness.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
 import { verifySshsig, NS_NOTICE } from "../../../src/sshsig.mjs";
+import { noticePrepareRefusal } from "../network-notices/fixtures.mjs";
 import { open, storeWorld, main, actsIn, fill, says, word, rawKeys, SCREENS, P } from "./fixtures.mjs";
 
 /* every owner's declarations, registered once before the first read (test-support R17, K4245): the project's acts name ops its owners declare */
@@ -255,8 +256,9 @@ test("R76 the plane's refusals of the preview are drawn in plain words in the on
     ["NOTICE_SINCE_IN_FUTURE", ["refusal.NOTICE_SINCE_IN_FUTURE"], {}],
     ["NOTICE_WORDING_MALFORMED", ["refusal.NOTICE_WORDING_MALFORMED"], {}],
   ];
-  /* the world's own refusal where an act of the world makes the state; the two it cannot make stay scripted over the world:
-     NOTICE_NO_GROUP_SLUG (needed: a world whose team has recorded no name) and NOTICE_WORDING_MALFORMED past the page's own check (needed: a wording the page lets through that the owner refuses) */
+  /* the world's own refusal where an act of the world makes the state; the two it cannot make are network-notices' published answers, played back where the page sends the preview:
+     NOTICE_NO_GROUP_SLUG (a project in a team that recorded no name: an older installation refuses every project, GROUP_UNDETERMINED, so none can be made there) and
+     NOTICE_WORDING_MALFORMED past the page's own check (a wording the page lets through that the owner refuses) */
   const refusedBy = {
     NOTICE_ALREADY_OPEN: async () => { const w = await ownerWorld(); const p = await openOwner({}, w); await openNotice(w); return { p, since: w.since }; },
     NOTICE_SINCE_BEFORE_PROJECT: async () => { const w = await ownerWorld(); return { p: await openOwner({}, w), since: "2026-09-15", w }; },
@@ -271,7 +273,7 @@ test("R76 the plane's refusals of the preview are drawn in plain words in the on
       await pressMode(p, "noticeprepare", "open");
       fill(p, { ...FORM, "project-notice-since": since });
     } else {
-      p = await openOwner({ plane: { noticeprepare: { status: 200, json: { ok: true, result: { ok: false, reason: code, code, ...fields } } } } });
+      p = await openOwner({ plane: { noticeprepare: ok(await noticePrepareRefusal(code)) } });
       await pressMode(p, "noticeprepare", "open");
       fill(p, FORM);
     }

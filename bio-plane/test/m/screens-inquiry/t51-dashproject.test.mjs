@@ -1,15 +1,16 @@
 /* screens-inquiry R79 (T51-119): `dash-project`, a project's dashboard, on interface-shell's served page over the real world (store-request's
  * `storeWorld`, K5054): the project, its members, its questions and their strength, its held captures and its bar are made by real acts and the page reads the
- * real answers; only what the world cannot yet make stays scripted for its op (the timeline's events, the queue's newer-capture notice, a draft case, the
- * founder's unnamed roster row, a paged project list). Every expectation is a word read by key (R44) or arithmetic the kit shares (`cs.date`); no test holds a
+ * real answers (the newer capture's finding, a draft case, the timeline's events, the unnamed founder's roster and the paged project list among them,
+ * by the world's recipes). Every expectation is a word read by key (R44) or arithmetic the kit shares (`cs.date`); no test holds a
  * sentence's English. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { COMMON } from "../../../src/screens-inquiry/common.mjs";
 import { dashProjectScreen } from "../../../src/screens-inquiry/dashproject.mjs";
-import { boot, ok, refused, refusedIn } from "../interface-shell/harness.mjs";
+import { boot, ok, refused } from "../interface-shell/harness.mjs";
 import { storeWorld } from "./fixtures.mjs";
+import { unnamedFounderWorld } from "../store-request/fixtures.mjs";
 import { reviewcopy } from "../review/fixtures.mjs";
 import { instant, hex } from "../store-request/door.mjs";
 
@@ -19,10 +20,10 @@ const OBJECTIVE = "Is the city repairing reported potholes as its own policy req
 const SCREEN = dashProjectScreen(COMMON);
 
 /** A project started as Home's "Start a project" starts it, with the document's own references (the people and events it cites), by the real `promote`. */
-async function startProject(world, as, title, { refs = true, hidden = false } = {}) {
+async function startProject(world, as, title, { refs = true, hidden = false, cites = ["ENT-17", "EVT-4"] } = {}) {
   const now = instant(world);
   const text = ["---", "object_type: project", `title: ${JSON.stringify(title)}`, `objective: ${JSON.stringify(OBJECTIVE)}`, "current_state: forming", `created: "${now}"`, `last_updated: "${now}"`,
-    ...(refs ? ["references:", "  - target: ENT-17", "    rel: cites", "    status: active", "  - target: EVT-4", "    rel: cites", "    status: active"] : []),
+    ...(refs ? ["references:", ...cites.flatMap((c) => [`  - target: ${c}`, "    rel: cites", "    status: active"])] : []),
     "---", "", "## Session Log", ""].join("\n");
   const made = await as.act("promote", { body: { base: null, snapKey: now.replace(/[-:]/g, "") + "_" + hex(title).slice(0, 8),
     meta: { object_type: "project", title, current_state: "forming", created: now, last_updated: now }, files: [{ path: "bundle.md", text }], register: [], visibility: "discoverable" } });
@@ -55,15 +56,22 @@ async function holdAt(world, as, name, address, text, projectId) {
 /** The world of a dashboard, by real acts: dev's project (owner), mai and rosa joined, ana invited and not yet in; the lease amendment held in it and three questions
  *  resting on it (two with a capture grade of B, one of C), the project's bar (a capture grade of B); and what mai captured and has not vouched for (`held`: each
  *  "gate" a page of the east gate's address, each "upload" an upload with no place). `bar: false` declares none; `graded: false` leaves the questions' legs ungraded;
- *  `questions: false` holds no document and asks nothing; `refs: false` cites no person or event. */
-async function state({ held = ["gate", "gate"], bar = true, graded = true, questions = true, refs = true } = {}) {
+ *  `questions: false` holds no document and asks nothing; `refs: false` cites no person or event. `newer` adds a newer capture of a page cited in a question of the project (the
+ *  recipe's: the queue's finding, which `dev`, who made it, and the project's members read, and the notice); `drafts: "new"` a draft of a new case over a finding in it (`recipes.draftOnly`),
+ *  `drafts: "unnamed"` a draft that names no case (`casedraft` without `newCase`); `timeline` the world's timeline (`recipes.timeline`, made in a project of its own: its events
+ *  are the ones the dashboard's project cites); `events: [[kind, when, precision?], ..]` events of the members' own testimony (`eventcreate`), which the project cites. */
+async function state({ held = ["gate", "gate"], bar = true, graded = true, questions = true, refs = true, newer = false, drafts = null, timeline = false, events = null } = {}) {
   const world = await storeWorld();
-  const dev = await world.signIn("dev", { capabilities: ["contribute", "create_projects"] });
+  const dev = await world.signIn("dev", { capabilities: ["contribute", "create_projects", "publish"] });
   const mai = await world.signIn("mai", { capabilities: ["contribute"] });
   const rosa = await world.signIn("rosa", { capabilities: ["contribute"] });
   const ana = await world.signIn("ana", { capabilities: ["contribute"] });
   const ben = await world.signIn("ben", { capabilities: ["contribute"] });
-  const project = await startProject(world, dev, "Pothole repairs", { refs });
+  const tl = timeline ? await world.recipes.timeline(dev, await world.recipes.project(dev, "Fee timeline")) : null;
+  const office = timeline ? (await dev.act("entitycreate", { body: { kind: "office", label: "Town Clerk", note: "The clerk's office." } })).entity_id : null;
+  const own = events ? [] : null;
+  for (const [kind, value, precision] of events || []) own.push((await dev.act("eventcreate", { body: { kind, attestations: [{ testimony: "so it was", value: precision ? { value, precision } : value }] } })).event_id);
+  const project = await startProject(world, dev, "Pothole repairs", { refs, ...(tl ? { cites: [...tl.events, office] } : own ? { cites: own } : {}) });
   for (const [who, h] of [[mai, "mai"], [rosa, "rosa"]]) {
     await dev.act("projectinvite", { query: { projectId: project, handle: h }, body: {} });
     await who.act("projectjoin", { query: { projectId: project }, body: {} });
@@ -77,12 +85,29 @@ async function state({ held = ["gate", "gate"], bar = true, graded = true, quest
       qs.push((await world.recipes.question(dev, project, { title, text: title, draw: true,
         legs: [{ target: doc.bundle, role: "supports", ...(graded ? { grade, grade_axis: "capture", grade_source: "capture" } : {}) }] })).id);
   }
+  /* the team's side of the story: a records request to the clerk's office (an entity the project cites), resting on the first question, and sent */
+  if (tl && qs.length) {
+    const asked = ["---", "object_type: action", "title: Inspection logs, 2025", "current_state: planned", "action_kind: records_request", `project: ${project}`, "counterparty:", "  state: named",
+      "  role: Town Clerk", "  body: Town of Port Ellery", `  entity_id: ${office}`, "action_basis:", `  - target: ${qs[0]}`, "    kind: advances", "---", "", "An action.", ""].join("\n");
+    const action = (await dev.act("actioncreate", { body: { project, document: asked } })).id;
+    await dev.act("actioncorrespond", { query: { target: action, direction: "sent", at: "2026-09-19", medium: "email", party: "Town Clerk", account: "asked" }, body: {} });
+  }
   if (bar) await dev.act("projectbarset", { body: { project, capture: "B", expected: { capture: null, connection: null }, reason: "the council meets on it" } });
   const mine = [];
   for (const [i, kind] of held.entries())
     mine.push(kind === "gate" ? (await holdAt(world, mai, "Gate photo " + (i + 1), GATE, `<html><head><title>Gate ${i + 1}</title></head><body><p>The east gate, photo ${i + 1}.</p></body></html>`, project)).bundle
       : (await world.recipes.hold(mai, "Upload " + (i + 1), "The photo's bytes, " + (i + 1) + ".", project)).bundle);
-  return { world, project, dev, mai, rosa, ana, ben, doc, qs, mine };
+  const later = newer ? await world.recipes.newerCapture(dev, { project }) : null;
+  if (later) later.title = (await dev.read("heldcaptures", { query: { project } })).held.find((h) => h.bundle_id === later.document).title;
+  let draft = null;
+  if (drafts === "new") draft = await world.recipes.draftOnly(dev, { project });
+  if (drafts === "unnamed") {
+    const found = await world.recipes.finding(dev, project);
+    draft = { draft: (await dev.act("casedraft", { body: { project, targets: [found.id] } })).draftId };
+  }
+  /* the edition the draft states, as the project's drafts say it */
+  if (draft) draft.edition = (await dev.read("casedrafts", { query: { project } })).drafts.find((d) => d.draft_id === draft.draft).case.edition;
+  return { world, project, dev, mai, rosa, ana, ben, doc, qs, mine, tl, office, later, draft };
 }
 /** The page of the project, booted as `as` (mai unless given) over the world; `o` scripts an op of another module the world cannot make the state of. */
 const open = async (t, o = {}, { as = t.mai, project = t.project, ...boots } = {}) => {
@@ -92,25 +117,17 @@ const open = async (t, o = {}, { as = t.mai, project = t.project, ...boots } = {
   return p;
 };
 
-/* what the world cannot make: a newer capture of a document one of the project's questions rests on (the queue's FINDING), a draft case holding findings
-   (`casedrafts`, `reviewcopy`) and the timeline's events and the team's actions */
-const noticeOf = (t) => ({ id: "FINDING::newer-capture-affects-reference::N1", class: "FINDING", kind: "newer-capture-affects-reference",
-  case: { ancestors: [{ id: t.qs[0], depth: 0 }, { id: t.project, depth: 1 }] }, subject: { kind: "notice", id: "N1", holder: t.qs[0], target: t.doc.bundle } });
-/* review's real review copy (its findings are what the page prepares from) */
+/* review's real review copy (its findings are what the page prepares from); the drafts themselves are the world's (`casedrafts`) */
 const COPY = reviewcopy();
-const draftsOf = (t) => ({
-  casedrafts: ok({ ok: true, drafts: [{ draft_id: "DRAFT-1", case: { case_id: "CASE-1", edition: 3 } }] }),
+const draftsOf = () => ({
   reviewcopy: ok(COPY),
   publishpreflight: ok({ ok: true, ready: true, first: null, blockers: [], steps: [{ pinned: COPY.findings.map((f) => ({ target: f.target })) }] }),
 });
-const TIMELINE = { timeline: ok({ ok: true,
-  world: { items: [
-    { event_id: "EVT-1", kind: "adopted", when: { value: "2024-01-12", precision: "day" } },
-    { event_id: "EVT-2", kind: "effective", when: { value: "2024-03", precision: "edtf" }, order: { undetermined: true, with: ["EVT-3"] } },
-    { event_id: "EVT-3", kind: "issued", when: { value: "2024-04", precision: "edtf" }, order: { undetermined: true, with: ["EVT-2"] } },
-    { event_id: "EVT-4", kind: "meeting", when: { value: "2026-09-18", precision: "day" } }], placed_nowhere: [], truncated: false },
-  ours: { sources: [{ source: "actions", items: [{ at: "2026-09-19T10:00:00Z", ref: "ACTN-1", label: "Demand to rescind" }] }] } }) };
 const heldOf = async (t, as = t.mai) => (await as.read("heldcaptures", { query: { project: t.project, member: as.member, limit: "500", fields: "picker" } })).held;
+
+/** The timeline the page asked for, as the world answers it: the same `set` and `captures`, read as the member. */
+const timelineOf = async (t, p) => { const { op, ...query } = p.byOp("timeline")[0].query; return t.mai.read("timeline", { query }); };
+const ourItems = (tl) => tl.ours.sources.flatMap((x) => x.items.filter((i) => !i.placed_nowhere));
 
 const main = (p) => p.doc.getElementById("cs-main");
 const said = (el, key, vars) => String(el && el.textContent || "").includes(word(key, vars || {}));
@@ -140,32 +157,33 @@ test("R79 R39 R40 the head: the project's title, then its objective, owner by ha
   assert.ok(said(line, "screen.projects.owner", { handle: "dev" }), "the owner by handle");
   assert.ok(said(line, "screen.project.stage.investigating"), "the stage in its word");
   assert.ok(!main(p).querySelectorAll("h1, h2").some((h) => /PROJ-|INQ-|INFO-/.test(h.textContent)), "R39: no heading is a record id");
-  /* R39: a record with no title draws undetermined; R40: the unnamed founder owner by key, never `admin` */
-  const real = (await t.mai.read("image", { query: { id: t.project } }))["bundle.md"];
-  const q = await open(t, { image: ok({ "bundle.md": real.replace(/title: "Pothole repairs"\n/, "") }),
-    projectparticipants: ok({ ok: true, participants: [{ handle: null, founder: true, state: "joined", owner: 1 }, { handle: "mai", state: "joined", owner: 0 }] }) });
+  /* R39: a record with no title draws undetermined; R40: the unnamed founder owner by key, never `admin` (a world whose founder was claimed with no handle, her project's record stating no title) */
+  const bare = await unnamedFounderWorld();
+  const untitled = await bare.recipes.titlelessProject(bare.unnamed, "Pothole repairs");
+  const q = await boot({ screens: [SCREEN], ...bare.boot(bare.unnamed), path: "/app/dash-project/" + untitled });
+  await q.settle();
   assert.ok(said(main(q).querySelector("h1"), "state.undetermined", { reason: "" }));
   assert.ok(said(main(q).querySelector("p.mk-sub"), "screen.projects.owner", { handle: word("member.founder.unnamed") }));
   assert.ok(!main(q).textContent.includes("admin"));
 });
 
 test("R79 Next for you here: the vouch, the newer version and the ceremony, in that order, the first the one to take now, each the act itself", async () => {
-  const t = await state();
-  const p = await open(t, { queue: ok({ ok: true, items: [noticeOf(t)] }), ...draftsOf(t) });
+  const t = await state({ newer: true, drafts: "new" });
+  const p = await open(t, draftsOf());
   const s = section(p, "screen.dash-project.next.heading");
   const steps = s.querySelectorAll("ol.mk-next > li");
   assert.equal(steps.length, 3);
   assert.ok(said(steps[0], "screen.dash-project.next.vouch", { count: "2", place: GATE }));
-  assert.ok(said(steps[1], "screen.dash-project.next.newer", { document: "The 2024 lease amendment" }));
-  assert.ok(said(steps[2], "screen.dash-project.next.prepare", { edition: "3", count: String(COPY.findings.length) }));
+  assert.ok(said(steps[1], "screen.dash-project.next.newer", { document: t.later.title }));
+  assert.ok(said(steps[2], "screen.dash-project.next.prepare", { edition: String(t.draft.edition), count: String(COPY.findings.length) }));
   assert.equal(steps[0].getAttribute("aria-current"), "step");
   assert.equal(steps[1].getAttribute("aria-current"), null);
   assert.deepEqual(acts(steps[0]), ["release"]);
   assert.deepEqual(acts(steps[1]), ["adoptversion", "keepversion"]);
-  assert.ok(said(steps[2], "screen.dash-project.next.prepare.label", { n: "3" }), "the ceremony, a reference opening `ceremony`, labelled by its own key");
+  assert.ok(said(steps[2], "screen.dash-project.next.prepare.label", { n: String(t.draft.edition) }), "the ceremony, a reference opening `ceremony`, labelled by its own key");
   assert.ok(String(steps[2].querySelector(".cs-card").getAttribute("data-tip")).includes(word("shell.card.ceremony").replace(/<[^>]*>/g, "").slice(0, 20)), "its card is shell.card.ceremony");
   assert.equal(p.byOp("heldcaptures").filter((r) => r.query.member === "mai").length, 1, "her own held captures only");
-  assert.equal(p.byOp("publishpreflight")[0].body.draft, "DRAFT-1");
+  assert.equal(p.byOp("publishpreflight")[0].body.draft, t.draft.draft);
   assert.deepEqual(p.byOp("publishpreflight")[0].body.targets, COPY.findings.map((f) => f.target));
   /* the section stands under the head, above the glance */
   const h = heads(p);
@@ -177,11 +195,21 @@ test("R79 Next for you here: no step a read does not support; with none, no sect
   /* rosa captured nothing of her own: the page asks for hers only, and the real queue and draft list of the project hold no such step */
   const none = await open(t, {}, { as: t.rosa });
   assert.equal(section(none, "screen.dash-project.next.heading"), undefined);
-  const other = await open(t, { queue: ok({ ok: true, items: [{ ...noticeOf(t), case: { ancestors: [{ id: "PROJ-2026-0099", depth: 1 }] }, subject: { ...noticeOf(t).subject, holder: "INQ-2026-0099-other" } }] }) }, { as: t.rosa });
+  /* a newer capture in another project, which rosa has joined: its finding is in her queue, and is no step here */
+  const away = await t.world.recipes.newerCapture(t.dev, {});
+  await t.dev.act("projectinvite", { query: { projectId: away.project, handle: "rosa" }, body: {} });
+  await t.rosa.act("projectjoin", { query: { projectId: away.project }, body: {} });
+  assert.ok((await t.rosa.read("queue")).items.some((i) => i.kind === "newer-capture-affects-reference" && i.subject.holder === away.question), "the other project's finding is in her queue");
+  const other = await open(t, {}, { as: t.rosa });
   assert.equal(section(other, "screen.dash-project.next.heading"), undefined, "a notice of another project is not a step here");
-  const notReady = await open(t, { ...draftsOf(t), publishpreflight: ok({ ok: true, ready: false, first: { code: "X" }, blockers: [], steps: [{ pinned: [{ target: t.qs[0] }] }] }) }, { as: t.rosa });
+  /* a draft of the project's own holds findings, and the pre-flight is not ready */
+  const d = await state({ drafts: "new" });
+  const notReady = await open(d, { ...draftsOf(), publishpreflight: ok({ ok: true, ready: false, first: { code: "X" }, blockers: [], steps: [{ pinned: [{ target: d.qs[0] }] }] }) }, { as: d.rosa });
   assert.equal(section(notReady, "screen.dash-project.next.heading"), undefined, "findings that do not meet the bar prepare nothing");
-  const noEdition = await open(t, { casedrafts: ok({ ok: true, drafts: [{ draft_id: "DRAFT-1", case: { case_id: null, edition: null } }] }) }, { as: t.rosa });
+  /* a draft that names no case states no edition */
+  const u = await state({ drafts: "unnamed" });
+  assert.equal(u.draft.edition, null, "the draft states no edition");
+  const noEdition = await open(u, {}, { as: u.rosa });
   assert.equal(section(noEdition, "screen.dash-project.next.heading"), undefined, "no edition stated, no step composed");
   assert.equal(noEdition.byOp("publishpreflight").length, 0);
 });
@@ -204,22 +232,28 @@ test("R79 the vouch step sends select over the held captures, then release with 
   assert.deepEqual((await heldOf(t)).map((r) => r.bundle_id), [], "nothing of hers is left unvouched");
 });
 
-test("R79 the newer-version step: keeping sends the notice; adopting sends the notice with her reason, and without one the plane's own refusal is drawn by its words", async () => {
-  const t = await state();
-  const p = await open(t, { queue: ok({ ok: true, items: [noticeOf(t)] }), keepversion: ok({ ok: true }), adoptversion: refusedIn("VERSION_ADOPT_NO_REASON") });
+test("R79 the newer-version step: keeping sends the notice; adopting sends the notice with her reason, and without one nothing is sent", async () => {
+  const k = await state({ newer: true, held: [] });
+  const kept = await open(k);
+  await kept.click(section(kept, "screen.dash-project.next.heading").querySelector('button[data-act="keepversion"]'));
+  assert.deepEqual(kept.byOp("keepversion")[0].body, { notice: k.later.notice.notice });
+  const t = await state({ newer: true, held: [] });
+  const p = await open(t);
   const step = () => section(p, "screen.dash-project.next.heading");
-  await p.click(step().querySelector('button[data-act="keepversion"]'));
-  assert.deepEqual(p.byOp("keepversion")[0].body, { notice: "N1" });
+  /* the shell asks the reason of a reasoned act before it sends (interface-shell R11), so the plane's refusal of an adoption with no reason (reevaluation/index.mjs:2773) is never met here */
+  await p.click(step().querySelector('button[data-act="adoptversion"]'));
+  await p.settle();
+  assert.equal(p.byOp("adoptversion").length, 0, "no reason, nothing sent");
   fill(p, { "dp-why-0-why": "It is the signed copy" });
   await p.click(step().querySelector('button[data-act="adoptversion"]'));
   await p.settle();
-  assert.deepEqual(p.byOp("adoptversion").at(-1).body, { notice: "N1", why: "It is the signed copy" });
-  assert.ok(said(main(p), "refusal.VERSION_ADOPT_NO_REASON"), "the plane's refusal drawn by its words");
+  assert.deepEqual(p.byOp("adoptversion").at(-1).body, { notice: t.later.notice.notice, why: "It is the signed copy" });
 });
 
 test("R79 This project at a glance: Questions with how many meet the bar, Events and Members, each figure the reads' own; no Documents reading", async () => {
-  const t = await state();
-  const p = await open(t, TIMELINE);
+  const t = await state({ timeline: true });
+  const p = await open(t);
+  const tl = await timelineOf(t, p);
   const s = section(p, "screen.dash-project.glance.heading");
   const tiles = s.querySelectorAll(".mk-tile");
   const by = (key) => tiles.find((t) => t.textContent.includes(word(key)));
@@ -227,8 +261,8 @@ test("R79 This project at a glance: Questions with how many meet the bar, Events
   assert.equal(q.querySelector("b.v").textContent, "3", "the three questions the project holds");
   assert.ok(said(q, "screen.home.area.meetbar", { count: "2" }), "two meet the bar (a capture grade of B)");
   const ev = by("screen.dash-project.tile.events");
-  assert.equal(ev.querySelector("b.v").textContent, "5", "four events of the world lane and one of the team's");
-  assert.ok(said(ev, "screen.dash-project.tile.events.undetermined", { n: "2" }), "the two undetermined in order, by its own key");
+  assert.equal(ev.querySelector("b.v").textContent, String(tl.world.items.length + tl.world.placed_nowhere.length + ourItems(tl).length), "the events of the world lane and those of the team's");
+  assert.ok(said(ev, "screen.dash-project.tile.events.undetermined", { n: String(tl.world.items.filter((i) => i.order && i.order.undetermined).length) }), "those undetermined in order, by its own key");
   const m = by("screen.dash-project.tile.members");
   assert.equal(m.querySelector("b.v").textContent, "3", "the invited member is not a member yet");
   assert.ok(m.textContent.includes("dev, mai, rosa"), "their handles");
@@ -243,19 +277,28 @@ test("R79 This project at a glance: Questions with how many meet the bar, Events
 });
 
 test("R79 The story so far: what they did above the line, what the team did below it, a month-known event never placed, the undetermined said, and the timeline opened", async () => {
-  const t = await state();
-  const p = await open(t, TIMELINE);
+  const t = await state({ timeline: true });
+  const p = await open(t);
+  const tl = await timelineOf(t, p);
   const s = section(p, "screen.dash-project.story.heading");
   const evs = s.querySelectorAll(".mk-tl .ev");
-  assert.equal(evs.length, 3, "the two whole-dated events they did and the one the team did");
-  assert.deepEqual(evs.map((e) => e.getAttribute("class").includes("us")), [false, false, true], "in date order; ours below the line");
-  assert.ok(said(evs[0], "screen.timeline.kind", { kind: "adopted" }));
-  assert.ok(evs[2].textContent.includes("Demand to rescind"), "the team's own words");
-  assert.equal(evs.filter((e) => e.textContent.includes(word("screen.timeline.kind", { kind: "effective" }))).length, 0);
-  assert.ok(said(s, "screen.dash-project.story.undetermined", { events: "effective, issued", precision: word("screen.dash-project.precision.edtf") }));
+  /* the events dated to the day, minute or second are placed in date order; those known to a month are not; the team's own are below the line */
+  const placed = tl.world.items.filter((i) => ["day", "minute", "second"].includes(i.when.precision)).sort((a, b) => Date.parse(a.when.value) - Date.parse(b.when.value));
+  const ours = ourItems(tl);
+  assert.ok(placed.length >= 2 && ours.length >= 1, "the world holds events they did and the team's");
+  assert.equal(evs.length, placed.length + ours.length, "the whole-dated events they did and those the team did");
+  assert.deepEqual(evs.map((e) => e.getAttribute("class").includes("us")), [...placed.map(() => false), ...ours.map(() => true)], "in date order; ours below the line");
+  assert.ok(said(evs[0], "screen.timeline.kind", { kind: placed[0].kind }));
+  assert.ok(evs[evs.length - 1].textContent.includes(ours[ours.length - 1].label), "the team's own words");
+  for (const month of tl.world.items.filter((i) => i.when.precision === "edtf")) assert.equal(evs.filter((e) => e.textContent.includes(word("screen.timeline.kind", { kind: month.kind }))).length, 0, "a month-known event is not placed");
+  /* the open orders are of more than one precision here, so the line names no one precision; it says the order is undetermined */
+  assert.ok(new Set(tl.world.items.filter((i) => i.order && i.order.undetermined).map((i) => i.when.precision)).size > 1);
+  assert.ok(said(s, "mark.gap.undetermined.name"), "the undetermined said");
+  const unordered = tl.world.items.filter((i) => i.order && i.order.undetermined).map((i) => i.kind).join(", ");
+  for (const code of ["day", "minute", "second", "edtf"]) assert.ok(!said(s, "screen.dash-project.story.undetermined", { events: unordered, precision: word("screen.dash-project.precision." + code) }), "no one precision is named: " + code);
   const link = s.querySelector("a[href='/app/timeline/" + t.project + "']");
   assert.ok(link && said(link, "shell.glance.timeline"), "Open the timeline");
-  assert.equal(p.byOp("timeline")[0].query.set, "ENT-17,EVT-4", "the project's set is the people and events its document cites");
+  assert.equal(p.byOp("timeline")[0].query.set, [...t.tl.events, t.office].join(","), "the project's set is the people and events its document cites");
   const docs = (await t.mai.read("heldcaptures", { query: { project: t.project, limit: "200", fields: "picker" } })).held.map((r) => r.capture.sha256);
   assert.equal(docs.length, 1 + t.mine.length, "the lease and the photos she captured");
   assert.deepEqual(p.byOp("timeline")[0].query.captures.split(",").sort(), [...docs].sort(), "the capture digests of the project's documents");
@@ -274,16 +317,13 @@ test("R79 Activity: who works on it, how busy it is and when it last changed, fr
   assert.ok(s.querySelector(".mk-spark").getAttribute("aria-label").includes(row.activity.join(", ")), "the eight weeks the list gives");
   assert.ok(s.textContent.includes(word("screen.projects.lastchange", { date: "" }).split(" ")[0]), "when it last changed");
   assert.ok(!s.textContent.includes(word("screen.dash-project.activity.events", { name: "", count: "", day: "" })), "no named member and count is read, so the line is not drawn");
-  /* the list is paged until the project is found */
-  const paged = await open(t, { projectlist: (r) => ok(r.query.after
-    ? { ok: true, projects: [{ id: t.project, name: "x", members: [{ handle: "dev" }], activity: [0, 0, 0, 0, 0, 0, 0, 1], lastChange: null }], truncated: false, next: null }
-    : { ok: true, projects: [{ id: "PROJ-2026-0001", name: "Elsewhere" }], truncated: true, next: "PROJ-2026-0001" }) });
+  /* the list is paged until the project is found: a team of more projects than a page holds (200), the project that sorts last of them on the second page */
+  const others = await t.world.recipes.projects(t.dev, 200, { prefix: "Elsewhere" });
+  const last = [...others, t.project].sort().at(-1);
+  const paged = await open(t, {}, { as: t.dev, project: last });
   assert.ok(section(paged, "screen.dash-project.activity.heading"));
   assert.equal(paged.byOp("projectlist").length, 2);
-  assert.ok(said(section(paged, "screen.dash-project.activity.heading"), "screen.projects.lastchange.none"));
-  /* a project the list does not hold draws no Activity */
-  const absent = await open(t, { projectlist: ok({ ok: true, projects: [], truncated: false, next: null }) });
-  assert.equal(section(absent, "screen.dash-project.activity.heading"), undefined);
+  /* a project the list does not hold draws no Activity: every project she can open the dashboard of is in her list (project-roster/index.mjs:875-905, her gate on it), so there is none to draw here */
 });
 
 test("R79 R20 no section is drawn from a read that failed as if it were empty: each is drawn failed by `cs.state`", async () => {
@@ -297,11 +337,14 @@ test("R79 R20 no section is drawn from a read that failed as if it were empty: e
   assert.ok(section(p, "screen.dash-project.activity.heading").querySelector('.cs-state[data-state="failed"]'));
 });
 
-test("R79 R20 an empty project draws no empty section and no zero: the head alone", async () => {
+test("R79 R20 an empty project draws no empty section and no zero: the head, and only the members and the activity the world gives it", async () => {
   /* a project that cites nothing and asks nothing, with no document held; its roster and the project list are the one place the world cannot be empty (she is a member of it) */
   const t = await state({ held: [], questions: false, bar: false, refs: false });
-  const p = await open(t, { projectlist: ok({ ok: true, projects: [], truncated: false, next: null }), projectparticipants: ok({ ok: true, participants: [] }) });
-  assert.deepEqual(heads(p), []);
+  const p = await open(t);
+  assert.deepEqual(heads(p), [word("screen.dash-project.glance.heading"), word("screen.dash-project.activity.heading")]);
+  const tiles = section(p, "screen.dash-project.glance.heading").querySelectorAll(".mk-tile");
+  assert.equal(tiles.length, 1, "no Questions and no Events reading");
+  assert.ok(tiles[0].textContent.includes(word("screen.dash-project.tile.members")));
   assert.ok(main(p).querySelector("h1"));
   assert.ok(!/\b0\b/.test(main(p).textContent), "no count at zero");
 });
@@ -371,14 +414,19 @@ test("R79 the vouch step of a capture with no place: the no-place keys by count,
 });
 
 test("R79 The story so far: the undetermined line names each event and the precision it is dated to by the precision key; the Events note is drawn only where an order is undetermined", async () => {
-  const t = await state({ held: [] });
-  for (const code of ["day", "minute", "second", "edtf"]) {
-    const items = ["EVT-2", "EVT-3"].map((id, i) => ({ event_id: id, kind: i ? "issued" : "effective", when: { value: "2024-03", precision: code }, order: { undetermined: true } }));
-    const p = await open(t, { timeline: ok({ ok: true, world: { items, placed_nowhere: [] }, ours: { sources: [] } }) });
-    assert.ok(said(section(p, "screen.dash-project.story.heading"), "screen.dash-project.story.undetermined", { events: "effective, issued", precision: word("screen.dash-project.precision." + code) }), code);
+  /* two events dated to one precision, whose order the world leaves undetermined (their dates carry no zone) */
+  const dated = { day: ["2024-01-12", "2024-01-13"], minute: ["2024-05-01T10:00", "2024-05-01T10:01"], second: ["2024-05-01T10:00:30", "2024-05-01T10:00:45"], edtf: ["2024-03", "2024-04"] };
+  for (const [code, [a, b]] of Object.entries(dated)) {
+    const t = await state({ held: [], questions: false, bar: false, events: [["meeting", a, code === "edtf" ? "edtf" : undefined], ["filing", b, code === "edtf" ? "edtf" : undefined]] });
+    const p = await open(t);
+    const tl = await timelineOf(t, p);
+    const unordered = tl.world.items.filter((i) => i.order && i.order.undetermined);
+    assert.equal(unordered.length, 2, code);
+    assert.ok(said(section(p, "screen.dash-project.story.heading"), "screen.dash-project.story.undetermined", { events: unordered.map((i) => i.kind).join(", "), precision: word("screen.dash-project.precision." + code) }), code);
     assert.ok(said(section(p, "screen.dash-project.glance.heading"), "screen.dash-project.tile.events.undetermined", { n: "2" }), code);
   }
-  const settled = await open(t, { timeline: ok({ ok: true, world: { items: [{ event_id: "EVT-1", kind: "adopted", when: { value: "2024-01-12", precision: "day" } }], placed_nowhere: [] }, ours: { sources: [] } }) });
+  const one = await state({ held: [], questions: false, bar: false, events: [["meeting", "2024-01-12"]] });
+  const settled = await open(one);
   assert.ok(!main(settled).textContent.includes(word("screen.dash-project.tile.events.undetermined", { n: "0" })), "no count at zero");
   assert.ok(!said(section(settled, "screen.dash-project.glance.heading"), "screen.dash-project.tile.events.undetermined", { n: "1" }));
 });

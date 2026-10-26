@@ -6,7 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn, boot } from "../interface-shell/harness.mjs";
-import { main, actsIn, fill, press, says, word, plane, storeWorld, READING, DOCUMENT_MD, provenanceOf, SCREENS, P, Q, Q2, D, SHA, PROJECT_QUESTIONS } from "./fixtures.mjs";
+import { main, actsIn, fill, press, says, word, plane, storeWorld, READING, DOCUMENT_MD, provenanceOf, SCREENS, P, Q, Q2, D, SHA, NEWER, PROJECT_QUESTIONS } from "./fixtures.mjs";
 
 process.env.TZ = "UTC";
 const at = "/app/document/" + D;
@@ -28,12 +28,12 @@ async function pageOn(world, as, path, o = {}) {
   return p;
 }
 /** A member with a PDF (or, `page`, a web page that is read) held in her project, and `others` other projects of hers. */
-async function member({ others = 0, page = false } = {}) {
+async function member({ others = 0, page = false, fonts = null } = {}) {
   const world = await storeWorld();
   const ann = await world.signIn("ann", OWN);
   const project = await world.recipes.project(ann, "Pothole repairs");
   const pdf = page ? await world.recipes.page(ann, "Policy memo", { paragraphs: ["The Director shall repair each reported pothole within seven days."], project })
-                   : await world.recipes.pdf(ann, "Policy memo", { project });
+                   : await world.recipes.pdf(ann, "Policy memo", { project, ...(fonts ? { fonts } : {}) });
   const rest = [];
   for (let i = 0; i < others; i++) rest.push(await world.recipes.project(ann, `Other project ${i + 1}`));
   return { world, ann, project, rest, document: pdf.bundle, sha: pdf.sha, at: "/app/document/" + pdf.bundle };
@@ -159,14 +159,22 @@ test("R108 C20 control: a capture with no statement draws no empty heads; a stat
 const QUESTION_WITH_LEG = { images: { [Q]: { "bundle.md": ["---", `id: ${Q}`, "object_type: inquiry", 'title: "Seven days"', `project: ${P}`, "references:", `  - target: ${D}`, "    rel: cites", "    status: confirmed",
   "basis:", `  - target: ${D}`, "    role: supports", "    grade: B", "    extent_page: 2", "---", "", "## Question", "", "Is it?", ""].join("\n") } } };
 const REF = `${D}#x`;
-/* scripted below: the first cite's cite (an `alreadyCited` answer naming a page: needs a recipe that makes a question resting on a PDF page, which a world refuses without a reading chain) */
 test("R3 R49 C30 a cite answered alreadyCited says the question already rests on the document, at which passage, and links the question to narrow it; a cited answer says it is cited", async () => {
-  const p = await openWith(at, { ...QUESTION_WITH_LEG, plane: { cite: ok({ ok: true, inquiry: Q, role: "supports", cited: [], alreadyCited: [REF] }) } });
-  fill(p, { "document-cite-question": Q });
-  await press(p, "cite");
-  const m = main(p);
+  /* the real state: a passage of a PDF the world reads (a font that decodes) cited into a question, and cited again (the owner's own `alreadyCited` answer) */
+  const r = await member({ fonts: ["type0", "type0", "type0"] });
+  const asked0 = await r.world.recipes.question(r.ann, r.project, { title: "Seven days", text: "Is the city repairing reported potholes within seven days?", draw: true });
+  const first = await pageOn(r.world, r.ann, r.at);
+  fill(first, { "document-cite-question": asked0.id });
+  await press(first, "cite");
+  assert.equal(first.answers("cite")[0].cited.length, 1, "the first cite is made");
+  const again = await pageOn(r.world, r.ann, r.at);
+  fill(again, { "document-cite-question": asked0.id });
+  await press(again, "cite");
+  assert.equal(again.answers("cite")[0].alreadyCited.length, 1, "the owner's own answer: already cited");
+  const unit = (await r.ann.read("reading", { query: { sha256: r.sha } })).text_units[0];
+  const m = main(again);
   assert.ok(says(m, "screen.finder.a17.left_as_it_was") && says(m, "screen.finder.a17.the_question_already_cited_it"), "not silent");
-  assert.ok(says(m, "screen.document.passage.where", { page: 3 }), "the passage the question rests on, from one");
+  assert.ok(says(m, "screen.document.passage.where", { page: unit.extent.page + 1 }), "the passage the question rests on, from one");
   const note = m.querySelector("[data-cite-done=already]");
   assert.ok(note && note.querySelector('a[href*="/app/question/"]'), "a way to narrow: the question");
   /* a cited answer says so (the world's own cite of the read page's passage into a question of her project) */
@@ -181,12 +189,15 @@ test("R3 R49 C30 a cite answered alreadyCited says the question already rests on
 });
 
 /* ---- C32 ---- */
-/* scripted: provenanceroute (needs a recipe that makes a document whose route cannot be shown: the world's own check finds a held copy's route PRESENT) */
 test("R98 C32 the route check sends bundleId in the query, as the arm reads it, and no body field", async () => {
-  const p = await openWith(at, { plane: { provenanceroute: ok({ ok: true, bundleId: D, appended: true, route: { finding: "LOOKED_INDETERMINATE" } }) } });
+  /* the real state: a clerk's paper file promoted with no provenance file (`recipes.paperFile`), whose route the check cannot show */
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const paper = await world.recipes.paperFile(ann, await world.recipes.project(ann, "Pothole repairs"));
+  const p = await pageOn(world, ann, "/app/document/" + paper.bundle);
   await press(p, "provenanceroute");
   const r = p.byOp("provenanceroute")[0];
-  assert.equal(r.query.bundleId, D);
+  assert.equal(r.query.bundleId, paper.bundle);
   assert.ok(!r.body || !("bundleId" in r.body), "no body field");
   assert.ok(says(main(p), "screen.document.route.notshown"));
 });
@@ -226,7 +237,7 @@ test("R92 C35 Watch for changes shows the frequency it sends: Every day is first
 const REFUSED_WITH_FINDINGS = (code) => ({ status: 200, json: { ok: true, result: { ok: false, reason: code, code, findings: [{ check: "C-45.2",
   detail: "The newer copy has no reading chain for the passage on page 3.", translation: "The newer copy has no reading chain for the passage on page 3." }, { check: "C-45.3", detail: "A second finding." }] } } });
 test("R35 R50 R117 C41 a basis version refused when a newer copy is adopted is drawn by its first finding, not only the generic sentence; a refusal with no finding keeps the generic sentence", async () => {
-  const notice = (r) => ok({ ok: true, notices: r.query.holder === Q ? [{ id: "REN-1", state: "open", capture_sha: SHA, newer_capture: "9".repeat(64) }] : [] });
+  const notice = (r) => ok({ ok: true, notices: r.query.holder === Q ? [{ id: "REN-1", state: "open", capture_sha: SHA, newer_capture: NEWER }] : [] });
   const p = await openWith(at, { plane: { reevaluationnotices: notice, adoptversion: REFUSED_WITH_FINDINGS("BASIS_VERSION_REFUSED") } });
   fill(p, { "document-version-why-REN-1": "the newer one adds the supervisor" });
   const slot = await press(p, "adoptversion");

@@ -99,9 +99,7 @@ test("R65 control: an answer with no states draws only the first revision's row 
   assert.equal(s.querySelectorAll(".cs-sheet .cs-row").length, 1, "only the first revision");
   assert.equal(s.querySelector("[data-release]"), null, "a `who` that carries no Civicsmith/<version> draws no release line");
   assert.equal(s.querySelector("details"), null);
-  /* nothing in the answer, no section (still scripted: needed: a document whose record holds no revision; every document the world holds has its promotion) */
-  const none = await open(at, { plane: { bundlehistory: ok({ ok: true, bundle: D, revisions: [], states: [], truncated: false }) } });
-  assert.equal(record(none), undefined, "R20: a section that holds nothing is not drawn");
+  /* a document whose record holds no revision cannot exist: every promotion writes a manifest row (record-core/index.mjs:1048) and the image always carries _history/promotion_*.json (:840) */
 });
 
 test("R65 a refusal of the history is drawn in the section by its words, and the document's own page stands", async () => {
@@ -389,28 +387,30 @@ test("R69 an answer the record could not give is drawn undetermined and says it 
   assert.ok(legs(q)[0].querySelector('[data-leg="undetermined"] .cs-gap[data-gap="undetermined"]'));
 });
 
-/* still scripted (adoptversion, keepversion, versionchain): needed: a question resting on a document that has a newer capture, with the sweep's notice raised (reevaluation) */
 test("R69 a notice the sweep raised is a read of the record: its row is drawn asked from the start, with the two acts; adopting needs her reason, sends the notice and the why, and the row re-reads", async () => {
-  let closed = false;
-  const notices = (r) => ok({ ok: true, notices: r.query.holder === Q ? [closed ? { ...NOTICE_Q, state: "adopted", closed_by: "mai", closed_at: "2026-10-12T10:00:00Z", why: "the newer one adds the supervisor" } : NOTICE_Q] : [] });
-  const p = await open(at, { images: { ...QPROJECT(LEG), ...TWO }, plane: { backlinks: () => backlinks2, reevaluationnotices: notices, adoptversion: () => { closed = true; return ok({ ok: true }); }, keepversion: ok({ ok: true }),
-    versionchain: ok({ ok: true, versions: [{ capture_sha: SHA, first_retrieved: "2026-10-02T09:00:00Z" }, { capture_sha: NEWER, first_retrieved: "2026-10-09T09:00:00Z" }], at_index: 0 }) } });
+  /* the real state: a question resting on a passage of a held page that has changed at its address since, the sweep's notice open (`recipes.newerCapture`) */
+  const world = await storeWorld();
+  const seen = await world.recipes.newerCapture(await world.signIn("ann", OWN));
+  const chain = (await seen.as.read("versionchain", { query: { address: seen.address } })).versions;
+  const p = await pageOn(world, seen.as, "/app/document/" + seen.document);
   const r = legs(p)[0];
   assert.deepEqual(actsIn(r).sort(), ["adoptversion", "keepversion"]);
-  assert.ok(says(r, "screen.document.a34.a_newer_copy_exists_captured_2_october", { date: day("2026-10-09T09:00:00Z") }));
+  assert.ok(says(r, "screen.document.a34.a_newer_copy_exists_captured_2_october", { date: day(chain[1].first_retrieved) }));
   assert.equal(p.byOp("versionnotice").length, 0);
   /* without her reason nothing is written */
   await press(p, "adoptversion");
   assert.equal(p.byOp("adoptversion").length, 0);
   assert.ok(says(main(p), "shell.reason.needed"), "refused in words");
-  fill(p, { "document-version-why-REN-1": "the newer one adds the supervisor" });
+  const why = "the newer one adds the supervisor";
+  fill(p, { ["document-version-why-" + seen.notice.notice]: why });
   await press(p, "adoptversion");
-  assert.deepEqual(p.byOp("adoptversion")[0].body, { notice: "REN-1", why: "the newer one adds the supervisor" });
+  assert.deepEqual(p.byOp("adoptversion")[0].body, { notice: seen.notice.notice, why });
   /* decided: what she chose, who and when, in her words, and nothing more offered */
+  const closed = (await seen.as.read("reevaluationnotices", { query: { holder: seen.question, state: "all" } })).notices[0];
   const done = legs(p)[0];
   assert.ok(done.querySelector('[data-leg-state="decided"]') && done.querySelector('[data-decided="adopted"]'));
-  assert.ok(text(done).includes("mai") && text(done).includes(day("2026-10-12T10:00:00Z")) && text(done).includes("“the newer one adds the supervisor”"));
-  assert.ok(says(done, "screen.document.a34.moved", { member: "mai", date: day("2026-10-12T10:00:00Z"), why: "the newer one adds the supervisor" }), "the decided row by its key, its three fills read from the notice");
+  assert.ok(text(done).includes(closed.closed_by) && text(done).includes(day(closed.closed_at)) && text(done).includes(`“${why}”`));
+  assert.ok(says(done, "screen.document.a34.moved", { member: closed.closed_by, date: day(closed.closed_at), why }), "the decided row by its key, its three fills read from the notice");
   assert.deepEqual(actsIn(done), []);
 });
 

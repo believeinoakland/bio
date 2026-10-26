@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 import { Miniflare } from "miniflare";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
-import { boot } from "../interface-shell/harness.mjs";
+import { boot, counted } from "../interface-shell/harness.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
 import { SCREENS, main, actsIn, press, fill, word } from "./fixtures.mjs";
 
@@ -49,12 +49,14 @@ const until = async (p, done, ms = 30000) => {
   for (;;) { await p.settle(20); if (done()) return true; if (Date.now() > end) return false; await new Promise((r) => setTimeout(r, 100)); }
 };
 /** Every op the page asks, forwarded to the real door as the founder. */
-const forwarded = (auth) => Object.fromEntries(Object.keys(OPS).map((op) => [op, async (req) => {
+const rawForwarded = (auth) => Object.fromEntries(Object.keys(OPS).map((op) => [op, async (req) => {
   const u = new URLSearchParams({ ...req.query, op });
   const r = await door(`/api/?${u}`, { method: req.body === undefined ? "GET" : "POST", headers: { ...auth, "content-type": "application/json" },
                                        ...(req.body === undefined ? {} : { body: JSON.stringify(req.body) }) });
   return { status: r.status, json: await r.json().catch(() => null) };
 }]));
+/** every forwarding function is counted, so `settle()` waits on a late forwarded read (interface-shell K5242) */
+const forwarded = (auth) => Object.fromEntries(Object.entries(rawForwarded(auth)).map(([op, f]) => [op, counted(f)]));
 const upload = async (auth, bytes, name, type) => (await (await door(`/api/?op=captureupload&statement=seam&name=${encodeURIComponent(name)}&type=${encodeURIComponent(type)}`, { method: "POST", headers: auth, body: bytes })).json()).result;
 /** `n` parts of 8 MiB less a little, bytes that are no document (a 40 MB file the reader is not handed). */
 const bulk = (parts) => { const n = parts * 8 * 1024 * 1024 - 1000; const b = Buffer.alloc(n); for (let i = 0; i < n; i++) b[i] = (i * 2654435761) & 255; return b; };

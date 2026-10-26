@@ -14,7 +14,7 @@ import { connectionChooseMention } from "../connections/fixtures.mjs";
 import { documentScreen } from "../../../src/screens-inquiry/document.mjs";
 import { checkOutcome } from "../../../src/screens-intake/index.mjs";
 import { COMMON } from "../../../src/screens-inquiry/common.mjs";
-import { main, actsIn, fill, press, says, section, word, day, plane, storeWorld, READING, DOCUMENT_MD, provenanceOf, SCREENS, P, Q, D, SHA, NEWER } from "./fixtures.mjs";
+import { main, actsIn, fill, press, says, section, word, day, plane, storeWorld, WORLD_FOUNDER_HANDLE, READING, DOCUMENT_MD, provenanceOf, SCREENS, P, Q, D, SHA, NEWER } from "./fixtures.mjs";
 
 process.env.TZ = "UTC";
 const at = "/app/document/" + D;
@@ -33,8 +33,10 @@ async function openWith(path, o = {}) {
 const OWN = { capabilities: ["contribute", "create_projects"] };
 async function pageOn(world, as, path, o = {}) {
   const { door, session } = world.boot(as);
-  const p = await boot({ screens: [...SCREENS, PERSON], door, session, path, ...o });
+  const kept = [];
+  const p = await boot({ screens: [...SCREENS, PERSON], door: async (req) => { const a = await door(req); kept.push([req.op, a]); return a; }, session, path, ...o });
   await p.settle();
+  p.answers = (op) => kept.filter(([k]) => k === op).map(([, a]) => (a.json && a.json.result !== undefined ? a.json.result : a.json));
   return p;
 }
 /** A copy captured from a public address for a question, then brought back from aside (`recipes.setAside`, `heldrestore`): the copy of a page the world's network serves
@@ -67,29 +69,35 @@ const WATCHED = DOCUMENT_MD.replace("\nsource:", "\nmonitoring:\n  enabled: true
 const UNWATCHED = DOCUMENT_MD.replace("\nsource:", "\nmonitoring:\n  enabled: false\n  frequency: none\nsource:");
 
 /* ---- R84 ---- */
-const FLOW = ok({ ok: true, progression_key: "meeting", found: true, label: "Meeting", stages: [{ stage_key: "agenda", label: "Agenda" }, { stage_key: "minutes", label: "Minutes" }] });
-const THREADED = ok({ ok: true, capture_sha: SHA, count: 1, instances: [{ progression_key: "meeting", progression_label: "Meeting", entity_id: "ENT-9", entity_label: "City Council",
-  stage_key: "agenda", stage_label: "Agenda", definition_version: 2, findings: [], finding_count: 0, open_finding_count: 0 }] });
-const threadPlane = { captureprogressions: THREADED, progression: (r) => (r.query.key === "meeting" ? FLOW : ok({ ok: true, found: false, stages: [] })), thread: ok({ ok: true, threaded: 1 }) };
+/** Two captures naming one ordinance, threaded under a flow of two stages (agenda, minutes) by the real acts (`recipes.connection`): the page of the first, which stands at "minutes". */
+const threaded = async () => {
+  const world = await storeWorld();
+  const made = await world.recipes.connection(await world.signIn(WORLD_FOUNDER_HANDLE), await world.signIn("ann", OWN));
+  return { world, made, page: () => pageOn(world, made.as, "/app/document/" + made.documents[0]) };
+};
 
 test("R84 Thread it to a step sends the flow's key, the entity from captureprogressions and one placement for the stage chosen; the guard accepts it", async () => {
-  const p = await openWith(at, { plane: threadPlane });
-  assert.equal(p.byOp("progression")[0].query.key, "meeting", "the flow's stages are read by the row's key");
+  const t = await threaded();
+  const p = await t.page();
+  const row = p.answers("captureprogressions")[0].instances[0];
+  assert.equal(p.byOp("progression")[0].query.key, row.progression_key, "the flow's stages are read by the row's key");
   const s = section(p, "progression.threadedto");
   assert.ok(s, "the steps section is drawn where a thread is");
   const stage = p.doc.getElementById("document-thread-stage-0");
-  assert.deepEqual(stage.querySelectorAll("option").map((o) => o.getAttribute("value")), ["", "agenda", "minutes"], "the flow's own stages, none chosen");
-  fill(p, { "document-thread-stage-0": "minutes" });
+  const stages = p.answers("progression")[0].stages.map((x) => x.stage_key);
+  assert.deepEqual(stage.querySelectorAll("option").map((o) => o.getAttribute("value")), ["", ...stages], "the flow's own stages, none chosen");
+  fill(p, { "document-thread-stage-0": stages[0] });
   await press(p, "thread");
-  assert.deepEqual(p.byOp("thread")[0].body, { progressionKey: "meeting", entityId: "ENT-9", placements: [{ stage: "minutes", captureSha: SHA }] }, "the three fields, the guard having accepted them");
+  assert.deepEqual(p.byOp("thread")[0].body, { progressionKey: row.progression_key, entityId: t.made.entity, placements: [{ stage: stages[0], captureSha: t.made.shas[0] }] }, "the three fields, the guard having accepted them");
 });
 
 test("R84 control: no stage chosen sends nothing and says so beside the act; a document threaded under no flow draws no steps section", async () => {
-  const p = await openWith(at, { plane: threadPlane });
+  const t = await threaded();
+  const p = await t.page();
   const slot = await press(p, "thread");
   assert.equal(p.byOp("thread").length, 0, "nothing is sent");
   assert.ok(says(slot, "capture.fieldneeded", { field: word("progression.steps") }), "the missing field is named by its key");
-  const none = await openWith(at);
+  const none = await pageOn(t.world, t.made.as, "/app/document/" + (await t.world.recipes.page(t.made.as, "Alone", {})).bundle);
   assert.equal(section(none, "progression.threadedto"), undefined);
   assert.equal(none.byOp("progression").length, 0, "no flow, no flow read");
 });
@@ -239,9 +247,6 @@ test("R95 control: without the page serving person, the name is the kit's card, 
 });
 
 /* ---- R111 ---- */
-/* the row of a held capture, handed back as the plane's answer for another document (the world, filtering by bundle, never gives one) */
-const HELD_ROW = { bundle_id: D, title: "Pothole repair policy", project: P, collected_since: "2026-10-02T09:00:00Z", capture: { sha256: SHA, grade: { grade: "B" } },
-  captured_for: { questions: [{ question: Q, title: "Seven days?", asker: "mai" }], withheld: null } };
 test("R111 a held capture, read as the plane answers it ({held: rows}), draws the two release fields and the act, and its question is preselected", async () => {
   const c = await heldCopy();
   const p = await pageOn(c.world, c.ann, c.at);
@@ -253,11 +258,8 @@ test("R111 a held capture, read as the plane answers it ({held: rows}), draws th
   assert.equal(p.doc.getElementById("document-cite-question").value, c.question, "the row's captured_for question is preselected");
 });
 
-test("R111 control: a document she vouched for draws the vouched note and no release; a held row of another document draws no banner", async () => {
-  /* the world answers a held read for this document alone (its `bundle_id`), so a row of another document is the plane's own to give: scripted over a real copy (needs no recipe: no act makes the plane answer another document's row) */
-  const o = await remoteCopy();
-  const other = await pageOn(o.world, o.ann, o.at, { plane: { heldcaptures: ok({ ok: true, held: [{ ...HELD_ROW, bundle_id: "INFO-2026-0077", capture: { sha256: "6".repeat(64) } }] }) } });
-  assert.equal(main(other).querySelector("[data-held]"), null);
+test("R111 control: a document she vouched for draws the vouched note and no release", async () => {
+  /* a held row of another document cannot be answered: the owner filters a read by `bundle_id` (capture/index.mjs:2043), so the page never meets one */
   /* a copy held by her own upload is released by the page's own acts (`select`, then `release`) */
   const world = await storeWorld();
   const ann = await world.signIn("ann", OWN);
@@ -449,7 +451,7 @@ test("R10 the document draws exactly its registry acts, each labelled by a word 
 });
 
 test("R10 every request the page makes on load is accepted by its owner's declaration (the guard raises no FieldMismatch)", async () => {
-  const p = await openWith(at, { plane: threadPlane });
+  const p = await (await threaded()).page();
   assert.ok(p.requests.length > 5);
   assert.equal(writes(p).length, 0, "and the load writes nothing");
 });

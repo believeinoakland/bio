@@ -643,7 +643,9 @@ function render(cs, view) {
       /* R89, R116: the legs the reading leaves out, once, by their titles (or, with no titles to name, their count), unless an unrated
          axis's sentence has named them already; and the hunches it left out, each only above zero (R20) */
       const ungradedIds = Array.isArray(s.ungraded) ? s.ungraded.map((m) => String(m && typeof m === "object" ? m.target_id || m.target : m)).filter((i) => !sev.has(i)) : [];
-      const out1 = [...new Set(["capture", "connection", "testimony"].flatMap((a) => nlbIds(s[a])).concat(ungradedIds))];
+      /* strength R6 (K4259): `ungraded` is the legs inert on every axis, one entry each; a leg graded on one axis is inert on the others and is not left out, so the owner's list stands alone */
+      const out1 = Array.isArray(s.ungraded) ? [...new Set(ungradedIds)]
+        : [...new Set(["capture", "connection", "testimony"].flatMap((a) => nlbIds(s[a])).concat(ungradedIds))];
       const nOut = Math.max(out1.length, Array.isArray(s.ungraded) ? ungradedIds.length : Number(s.ungraded) || 0);
       const namedAlready = ["capture", "connection", "testimony"].some((a) => s[a] && s[a].state === "unrated" && nlbIds(s[a]).length);
       const nHunch = Number(s.hunches_left_out) || 0;
