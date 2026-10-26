@@ -505,3 +505,7 @@ Your job: (1) your two `translationdraft` lines (`seed-common.mjs:119`, `transla
 ## B57 · CHANGE
 
 CHANGE (K5226): STORE-ASSEMBLY #5 is merged into tranche/T51 (`fb0f6cd668`): the composition hands the store's clock to ai-use, file-safety, capture, publication, action-clocks, action-plans and filings; `storeWorld()` takes `instanceName`, `deliver`, `releaseKeys`, and a script is its world's own; its three test files exit by themselves; the words check reads 0 over the product. Merge `origin/tranche/T51` into your branch (never a rebase), re-run your suite and checks, and carry on or post COMPLETE.
+
+## B58 · CHANGE
+
+CHANGE (K5232). Your REPORT in J42 is done: `screens-settings.uses` gains `translations` on the tranche. Merge `origin/tranche/T51`, run architecture over your module (0), and post COMPLETE again. You stay open for R58 and R69 (store-request's older-installation recipe), by CHANGE at STORE-REQUEST #7's merge.
