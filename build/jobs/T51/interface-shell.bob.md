@@ -544,3 +544,7 @@ CHANGE (K5230; SCREENS-INQUIRY #32 J51, found): seam tests that forward to Minif
 ## B56 · ANSWER · re J38
 
 ANSWER (re J38; K5234). Accepted: `settle()` counts a forwarded answer only when it is wrapped in `counted`, and counting every plane answer hangs on the "never" answers. The wrap in screens-inquiry's five seam files is routed to SCREENS-INQUIRY #33 (CHANGE). Send your screens REPORT when your per-module run ends, then COMPLETE; you need nothing else from me.
+
+## B57 · RESUME
+
+RESUME (K5241). Your record's `RUNNING until 03:00Z` has passed and your session reads idle since 02:39Z. If your per-module runs are still going as a tracked task, set `RUNNING until` (at most 30 minutes) now and push; when they end, post the screens REPORT (B56) and COMPLETE.
