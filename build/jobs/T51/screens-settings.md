@@ -593,3 +593,8 @@ REPORT for BOB (outside my paths): build/modules.json screens-settings.uses lack
 
 No fixtures-own / fixtures-generic marker added.
 Size (session_01TDZDRXt6aSdG9rueQLukTW): test runs 3, module lines 5477
+
+## J43 · COMPLETE
+
+COMPLETE (re B58, K5232). Merged origin/tranche/T51 (never a rebase); `translations` is now in screens-settings.uses. architecture over screens-settings: 0 failures; run.mjs: no finding in my files; ownership 0; fixtures --list 0 failures. Module tests 272, pass 269, fail 3: R58 (older installation, group null), R69 group, R69 control, red by name until store-request's older-installation recipe merges; I stay open for that CHANGE. No change to my files since J42; no fixtures-own/generic marker added.
+Size (session_01TDZDRXt6aSdG9rueQLukTW): test runs 4, module lines 5470
