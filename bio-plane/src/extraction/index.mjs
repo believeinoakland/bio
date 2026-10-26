@@ -1139,7 +1139,8 @@ export class Extraction {
     const pass = await this.#ocrPass({ digest, basis, env, storeName, author, via, killedPages, call, halved, stamp });
     const killed = pass.killed && pass.killed.length ? { killed: pass.killed } : {};
     if (pass.changed) return left("BASIS_CHANGED", { owed: true });
-    if (!pass.filled.length && !pass.stated) return left(pass.why || "OCR_NO_PROGRESS", { ...(pass.transient ? { owed: true } : {}), ...killed });
+    /* (R101) a pass that answered pages holding no glyph read nothing: the end is stated `final`, so the ledger's row ends on this tick and never tries it again */
+    if (!pass.filled.length && !pass.stated) return left(pass.why || "OCR_NO_PROGRESS", { ...(pass.transient ? { owed: true } : {}), ...(pass.why === "NO_PROGRESS" ? { final: true } : {}), ...killed });
     return { ok: true, read: true, bundle_id: bundleId, found: true, reextraction: pass.summary,
              ...(pass.stated ? { stated: pass.stated } : {}), ...(pass.entry ? { owed: true, registration: pass.registration } : {}), ...killed };
   }
