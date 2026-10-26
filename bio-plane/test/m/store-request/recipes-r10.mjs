@@ -27,7 +27,12 @@ export function worldDelivery(world) {
     const opener = ld.state && typeof ld.state.opened_by === "string" ? ld.state.opened_by : "";
     if (!opener) throw new Error(`storeWorld: the session ${session} has no opener`);
     const member = opener.startsWith("member:") ? opener.slice("member:".length) : opener;
-    const project = ld.state && typeof ld.state.project === "string" ? ld.state.project.trim() : "";
+    /* a session parked for a fetch carries the member's project in its state; one parked for a render is filed beside its shell, under the shell's project (control-plane `deliverOwedRender`) */
+    let project = ld.state && typeof ld.state.project === "string" ? ld.state.project.trim() : "";
+    if (!project) {
+      const shell = await cap.heldAt({ sha256: ld.primarySha, viewer: opener });
+      project = shell && shell.held === true && shell.copy && typeof shell.copy.project === "string" ? shell.copy.project : "";
+    }
     const done = async (document, filed) => {
       if (ld.state && ld.state.fetch_pending && typeof cap.recordFetchDone === "function")
         await cap.recordFetchDone({ session, document, opener, project: filed || null, at: new Date(world.now()).toISOString() });
@@ -81,13 +86,18 @@ export async function lapsed(world, as, o = {}) {
   return { ...made, as: fresh, after: (await fresh.read("opencaptures")).captures };
 }
 
-/** R19: a capture owed and delivered, by the real alarm: a world made with `deliver: true` (`worldDelivery`) runs the owed fetch on a tick; the real `owedFetch` makes the capture, hands the
+/** R19: a capture owed and delivered, by the real alarm: a world made with `deliver: true` (`worldDelivery`) runs the owed fetch on a tick (up to four); the real `owedFetch` makes the capture, hands the
  *  delivery its document and drops the session. Answers `{...owed, as, after, copy}`: `copy` is `heldat`'s answer for the address (the document the delivery filed). */
 export async function delivered(world, as, o = {}) {
   if (!world.__delivery) throw new Error("storeWorld: recipes.delivered needs the world's delivery: make the world with storeWorld({ deliver: true })");
   const made = await owed(world, as, o);
-  await world.tick(60_000);
-  const fresh = await signIn(world, as.handle);
+  /* the alarm runs the owed fetch on a tick; an alarm that has just run another entry wakes again a tick later, so the clock moves a minute at a time until the session has left the list */
+  let fresh = null;
+  for (let i = 0; i < 4; i++) {
+    await world.tick(60_000);
+    fresh = await signIn(world, as.handle);
+    if (!(await fresh.read("opencaptures")).captures.some((c) => c.session === made.session)) break;
+  }
   return { ...made, as: fresh, after: (await fresh.read("opencaptures")).captures,
            copy: (await fresh.read("heldat", { query: { address: made.address } })).copy };
 }
