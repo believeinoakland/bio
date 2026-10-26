@@ -191,3 +191,7 @@ Size (session_01UPyQp2ZbB7wjPqmg4PELgH): test runs 8, module lines 3533
 **Markers added**: none.
 
 Size (session_01C5J6cssani1eTzUn9iSHoK): test runs 14, module lines 3561
+
+## J11 · COMPLETE
+
+Fix round 10 (B10): R111 met. Ledger rows carry stage, outcome, exemptions, due_by, due_cite, quote amount/currency/basis from fm.correspondence (index.mjs derived ~2612); addresseeSuggest answers an office-entity subject as named (~2981). Both tests red on old code, green now (t51, t33). actions 157/157; impact set 7494 tests, remaining reds inherited at base (see record). Checks: format, architecture, coverage 78/78, words, ownership 0 failures; fixtures actions 0. Record: build/jobs/T51/actions.md. Size (session_01C5J6cssani1eTzUn9iSHoK): test runs 14, module lines 3561
