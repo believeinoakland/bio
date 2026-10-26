@@ -210,3 +210,7 @@ Deferred, with why
 - The stale setup-words rows for the two old translations: setup-words' rows, reported in J9.
 
 Size (session_01BES6yxyp2fZZgKKdbAsgEc): test runs 6, module lines 2576
+
+## J11 · REPORT
+
+Correction to J10: the ownership line was run before my commit, so it said 1 file. Rerun after the commit: 7 files changed by action-grammar (6 module files and this record), 0 failures.
