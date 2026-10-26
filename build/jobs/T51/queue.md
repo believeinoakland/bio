@@ -420,3 +420,7 @@ Size (session_01KTd17XTyLAtTuNkmbbXcVw): test runs 5, module lines 92
 ## J21 · REPORT
 
 R96 disposition built and green (signer-self-registered: available true, acts [signerknown], instead signerset; bridge unchanged). The walker's end-to-end test is red only because credentials.signerKnown (R83) is not merged yet; queue module 237/238. Waiting for your CHANGE when credentials merges; then I re-run and post COMPLETE.
+
+## J22 · REPORT
+
+Merged tranche/T51 (credentials R83 real). My R96 disposition test is green and the walker's case passes up to signerKnown ok. The last assertion, the item gone from every administrator's feed after the act, fails: bio-plane/src/queue-producers/index.mjs (#obligationsSignerSelfRegistered, ~line 2065-2085) does not yet skip a key whose row carries known_by (queue-producers R55, not merged; signerList already answers known_by). Nothing in my paths can fix it. Queue module 237/238. I keep the test as written and wait: tell me when QUEUE-PRODUCERS merges R55 (CHANGE), then I re-run and post COMPLETE.
