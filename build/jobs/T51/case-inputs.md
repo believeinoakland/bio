@@ -381,3 +381,19 @@ COMPLETE for B16 (fix round 10, K5222 / K5175): publish two more `casedetails` /
 **Markers:** none added. The new tests use the module's own values; the fixture answers are the real ones.
 
 **Size (session_01WehNcUZffFn8iev6Pzbh8X): test runs 9, module lines 1602** (`bio-plane/src/case-inputs/*.mjs`, unchanged; the new test lines are 35 in `fixtures.test.mjs` and 26 in `fixtures.mjs`).
+
+## J19 · COMPLETE
+
+COMPLETE again for B17 (CHANGE K5226: STORE-ASSEMBLY #5 merged into tranche/T51 at fb0f6cd668). Merged origin/tranche/T51 into job/T51/case-inputs as a merge commit (no rebase), pushed as 42b4bbd72e.
+
+**Re-run after the merge:**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/case-inputs/*.test.mjs`: 85 tests, 85 pass, 0 fail.
+- `checks/format.mjs /home/user/bio`: 0 failures.
+- `checks/architecture.mjs /home/user/bio case-inputs`: 0 failures.
+- `checks/coverage.mjs /home/user/bio case-inputs`: 29 of 29 live requirement ids named by a test, 0 failures.
+- `checks/fixtures.mjs /home/user/bio case-inputs --list`: 0 failures.
+- `checks/ownership.mjs /home/user/bio case-inputs <merge-base> HEAD`: 0 failures. The three changed files are the two case-inputs test files and this job record.
+
+No code, test or marker changes in this round. The met ids are unchanged.
+
+**Size (session_01WehNcUZffFn8iev6Pzbh8X): test runs 10, module lines 1602** (`bio-plane/src/case-inputs/*.mjs`, unchanged).
