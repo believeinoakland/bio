@@ -594,3 +594,34 @@ Size (session_01HPeMsK2U9rvs16rEGDCexd): test runs 5, module lines 4209
 **Note for BOB:** the START named model claude-sonnet-5-5; this job ran on claude-haiku-5-5 (the session's model). No model was changed.
 
 Size (session_01TcHc26898m1HrcsW2GWfXH): test runs 4, module lines 14062 (src/public-read/*.mjs 2981 plus test/m/public-read/*.mjs 11081, `wc -l`)
+
+## J40 · COMPLETE
+
+**COMPLETE (fix round 10, section 1: walk E R56-4, `publishedlist`).** Commits `da5ce38d0b` and `8f82e03e9a` on `job/T51/public-read` (tranche/T51 merged first, K5291 tip).
+
+**Entries applied.**
+- `bio-plane/src/public-read/door.mjs`: `publishedlist` joins `PUBLIC_READ_DOOR_OPS` (line 29) and has its own arm beside `publishedmanifest`. It reads `http://do/publishedlist` with no credential and answers `{ok: true, ...result}` at 200, flat, as `verify` does: the screens read `value.cases` directly (`screens-action/matter.mjs:266`, `screens-inquiry/project.mjs:420`, `screens-entry/front.mjs:17`), so a wrapped `result` would break them. Refusals and silences go through `storeRefusal` / `storeSilent` as the other arms do. Header count fixed ("eight ops" to "its ops").
+- Requirement: R2 (`publishedList`), as the control plane routes it with no credential (`public-read.md` "For callers").
+
+**Red, then green.**
+- `door.test.mjs`, new test "R2 R10 the door's publishedlist answers the published list ...": red before the arm (`TypeError: Cannot read properties of null (reading 'status')`), green after. It asserts the body equals `{ok: true, ...publishedList()}`, that `cases` lists `CASE-2026-0001`, and that the store is asked `/publishedlist` only, never `/bootstrap`.
+- `door.test.mjs` op-list assertion (was the walker's "asserts null" line 108): `publishedlist` moved from the not-its-own list into `PUBLIC_READ_DOOR_OPS`; red before, green after.
+- `public-path.test.mjs`: the "every public route answers a world holding working material" sweep asked the door's `publishedmanifest` and `publicread` but not `publishedlist`; the sweep's own check (`the door's publishedlist is asked`) failed once the op was claimed. Added `[door, "publishedlist", {}]` to its route list; green.
+
+**Suite.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/public-read/*.test.mjs`: 320 tests, 320 pass, 0 fail, 0 cancelled (319 before, plus the new test). No `--test-force-exit`; the run exits by itself.
+
+**Checks** (absolute root `/home/user/bio`):
+- format: 178 modules, 0 failures.
+- architecture public-read: 0 failures.
+- coverage public-read: 45 of 45 live ids named, 0 failures.
+- fixtures public-read `--list`: 0 invented answers, 0 stubs, 0 contract markers, 0 failures.
+- ownership vs `origin/tranche/T51`: 4 files changed by public-read (the three above and this record), 0 failures.
+- `checks/run.mjs /home/user/bio`: 89 FAIL lines, none in public-read's files or citing public-read.
+
+**Deferred:** none.
+
+**Found in other modules / REPORT for BOB.** The walker's sweep invariant (every `classes: null` op in `OPS` must be claimed by some door arm, or be in `INSTANCE_SETUP_OPS`) would have caught T47. It spans control-plane and plane, outside my `tests` path, so I did not write it. Please place it under K5138 (the cross-door test belongs to control-plane); the failing op it would have flagged is now claimed, so it passes on the current head.
+
+**Met:** E R56-4 (`publishedlist` answers the published list at the public door). R2 stays met; R10 and R14 sweep still holds.
+
+Size (session_0197ypjbRq5ZngF7K7iyVT4P): test runs 4, module lines 14084 (src/public-read/*.mjs 2990 plus test/m/public-read/*.mjs 11094, `wc -l`)
