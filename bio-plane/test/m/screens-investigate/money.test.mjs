@@ -1,7 +1,7 @@
 /* screens-investigate R4: a money trail, on interface-shell's served page over `store-request`'s world. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ok, refusedIn } from "../interface-shell/harness.mjs";
+import { refusedIn } from "../interface-shell/harness.mjs";
 import { inWorld, openAs, settled, refused, rewrite } from "./world.mjs";
 import { main, actsIn, button, fill, press, word, drew, notDrew, dayOf } from "./fixtures.mjs";
 
@@ -136,8 +136,9 @@ test.todo("REPORTED: a figure proposed and then excluded is one row of the trail
 test("R4 each row's panel by its kind: reconcile (a budgeted figure beside a paid one), authoritychain, include/exclude with a reason, gradenote, acquire, findin, recordfact, actioncreate, createevent, checkrequest, hypothesishold", async () => {
   const { world, me, project, lease, trail, F } = await moneyWorld();
   const inquiry = await ask(world, me, "Is the city repairing reported potholes within seven days?");
-  /* `acquire` fetches an address on the web: an externally driven answer, the one line kept scripted (K5044 (1)) */
-  const p = await openAs(world, me, "/app/money/" + trail, { plane: { acquire: ok({ ok: true }) } });
+  /* `acquire` fetches an address on the web: the world's network serves it, and the real acquire takes it */
+  world.script("https://city.example/afr-2022.pdf", async () => new Response("The annual financial report, 2022.", { status: 200, headers: { "content-type": "application/pdf" } }));
+  const p = await openAs(world, me, "/app/money/" + trail);
   let panel = await openPanel(p, F.adopted);
   fill(p, { ["money-with-" + F.adopted]: F.paid });
   await press(p, "reconcile", { within: panel });

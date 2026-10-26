@@ -1,6 +1,6 @@
 # screens-investigate (T51)
 
-**Status** · session_01WxduRcHCPEywTgh4uSiVDq · depth 2 · COMPLETE · handled B42
+**Status** · session_01C3EHTs8Q553ayr9DuBPkZk · depth 2 · COMPLETE · handled B43
 
 ## J1 · QUESTION
 
@@ -467,3 +467,26 @@ Size (session_01WxduRcHCPEywTgh4uSiVDq): test runs 9, module lines 3585
 ## J36 · COMPLETE
 
 COMPLETE (fix round 10, B42): (1) R51 red was mine: standards now answers known_through and the screen words it by key (standard.mjs:129-132); standard.test.mjs:195 asserted the old why; fixed, plus a world test replacing the K5178 todo. (2) R33 (4) and (5) tests added, failing first by four mutations; timeline read twice for a project citing an entity, now once. (3) R8: proposals are drawn whether or not the assistant is reachable (R19 amends R8), so I cannot confirm 'only while reachable'; strike R8 on R19's reading. Also fixed two tests red after the tranche merge (NO_COLUMN/NO_PART/NO_SUCH_COLUMN words; a hard-coded removal date). (4) the 2 acquire fixtures lines wait for STORE-REQUEST #7's CHANGE. Suite per file 294 tests, 0 fail, 1 todo; checks clean for the module. Detail: record J35.
+
+## J37 · COMPLETE
+
+COMPLETE · screens-investigate · fix round 10, B43 (K5245): STORE-REQUEST #7's CHANGE applied. Commit f3b5c838ce on job/T51/screens-investigate (pushed).
+
+**Changed (file:line).**
+- `bio-plane/test/m/screens-investigate/fix2w2.test.mjs`:100-102 (C14): the hand-filed copy and the scripted `acquire` answer are gone. The world's network serves `https://city.example/budget.pdf` (200, text), and the real `acquire` takes it. The `ok` import is removed (no use left).
+- `bio-plane/test/m/screens-investigate/money.test.mjs`:139-141 (R4 panel test): the scripted `acquire` answer is gone. The world's network serves `https://city.example/afr-2022.pdf` (200, pdf), and the real `acquire` takes it. The `ok` import is removed.
+- No state needed a removed case: both lines drove an address on the network, and the real acts answer it. Both cases still assert what they asserted (the re-read count; the sent body).
+
+**Failing-first.** Not applicable: only the input changed (scripted answer to the world's network); no expectation changed, so nothing was red before. Each file ran green with the real acquire on its first run.
+
+**Found, not mine (REPORT, no file:line located).** With a 404 served for `afr-2022.pdf`, the money test file stopped after 4 of 15 tests and exited 0 with no assertion (and "test failed" with no message when run alone, after 88 s). The probe showed the press itself returning; the stop happens in the steps after it. I did not locate the cause. The served 200 avoids it. A refused real `acquire` inside `openAs` ends a test file silently: BOB may want the owner (acquisition or the store-request world) to look.
+
+**Tests.** Module suite as one run (`bio-plane/test/m/screens-investigate/*.test.mjs`): 294 tests, 293 pass, 0 fail, 1 todo (money's exclude-after-propose, REPORTED in J31). The money file alone: 15 tests, 14 pass, 1 todo (as before). `fix2w2` run by name ("C14"): 7 pass.
+
+**Checks.** `checks/fixtures.mjs /home/user/bio screens-investigate --list`: 0 failures (the two `acquire` lines are gone). `checks/ownership.mjs ... origin/tranche/T51 HEAD`: 0 failures. `build/plan/impact.mjs origin/tranche/T51 HEAD`: 1 module (this one), 2 test files, both run. `checks/run.mjs /home/user/bio`: words 19247 (unchanged); format 0; architecture 0; coverage 7070 of 7070 ids named; the run's exit is 1 for other modules' fixtures failures (262 across the product, none in screens-investigate's files).
+
+**Met ids.** None changed; R4 and its C14 keep their marks.
+**Markers.** `fixtures-own` / `fixtures-generic`: none added.
+**Branch.** The old local `job/T51/screens-investigate` (6c72d2a8ad, behind origin) is kept as local `stale/screens-investigate-local`; the job branch was recreated from origin, then `origin/tranche/T51` merged (a merge commit, not a rebase).
+
+Size (session_01C3EHTs8Q553ayr9DuBPkZk): test runs 9, module lines 3416
