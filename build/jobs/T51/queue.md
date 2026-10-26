@@ -432,3 +432,7 @@ Merged tranche/T51 (credentials R83 real). My R96 disposition test is green and 
 - Suite: queue module tests 238, pass 238, fail 0. Checks: format, architecture, coverage (57 of 57), ownership 0 failures; `checks/run.mjs` no finding in my files.
 - Deferred: none. Found in other modules: none beyond the R55 dependency, now merged.
 - Size (session_01T4hjho3HGUnZTokJ1wkCcL): test runs 6, module lines 2706
+
+## J23 · COMPLETE
+
+R96 complete. src/queue/index.mjs #dispositionOf: a signer-self-registered item is available:true, acts [signerknown], scope key, requires [keyB64], instead signerset; bridge unchanged. Tests (test/m/queue/signer.test.mjs): R96 disposition and the walker's case through real credentials R83 and queue-producers R55, each red then green; queue module 238/238. Checks: format, architecture, coverage 57/57, ownership 0 failures; run.mjs no finding in my files. Size (session_01T4hjho3HGUnZTokJ1wkCcL): test runs 6, module lines 2706
