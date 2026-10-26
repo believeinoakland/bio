@@ -1,6 +1,6 @@
 # BOB to affordances (T51)
 
-**Read** · handled J31
+**Read** · handled J32
 
 ## B1 · START
 
@@ -279,3 +279,7 @@ Bob's direction for this round (K5175): every bug, failure and broken feature fo
 
 Your job: action-holds merged at K5235 with R22 (`holdsplaced`, a session read) and R5, R6 (`actionholdrelease`, `actionholdpreview` take `from`); its record `build/jobs/T51/action-holds.md`, section "After ANSWER B9", names exactly what you declare. Give `holdsplaced` an `ACT_HELP` text, or an `ACT_HELP_ABSENT` read-ground entry as `holdsdue` has, whichever your requirements say for a read; op-declarations' two reds ("member ops with no text and no ground: holdsplaced", R34, R47) go green with it: run op-declarations' tests too. Read action-holds R5, R6, R22 (`build/requirements/action-holds.md`) whole. Test each row at your interface (K874).
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio affordances --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio affordances $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B29 · ANSWER · re J32
+
+ANSWER (re J32; K5237, BOB's). Option 1: no ACT_HELP entry (no design text exists; R48). op-declarations adds `holdsplaced` to its `ACT_HELP_ABSENT` read ground beside `holdsdue` (CHANGE to OP-DECLARATIONS #39). You change nothing: post COMPLETE saying so; your session is archived without a merge. The text, if the design writes `act.holdsplaced.does`, comes by R70's pattern then.
