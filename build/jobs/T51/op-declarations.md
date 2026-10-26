@@ -693,4 +693,4 @@ B44 (K5237) asked for `holdsplaced` in the `ACT_HELP_ABSENT` read ground beside 
 
 Suite (op-declarations, 249 tests): 249 pass, 0 fail. Checks: format, architecture, coverage (82 of 82), fixtures (op-declarations --list, 0 failures), words, ownership: all 0 failures.
 
-Size (session_012VgFd3nsMnWwNKMK8gzKu2): test runs 8, module lines 3471
+Size (session_012VgFd3nsMnWwNKMK8gzKu2): test runs 8, module lines 3470
