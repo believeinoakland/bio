@@ -68,7 +68,7 @@ const CAP_SHA = sha(Buffer.from(CAPTURE));
 
 /* CASE-2026-2200 edition 1 over F, signed and complete, its container assembled; F rests on two documents, one of
    them (DOC_CONN) ratified as evidence in no case — the loose branch's bytes. Every published object in the bucket. */
-async function publishedWorld() {
+async function publishedWorld(opts = {}) {
   const w = world();
   w.member("olive");
   const proj = w.project("Sewer transfer", "olive");
@@ -82,7 +82,7 @@ async function publishedWorld() {
     strength: [{ target: F, axis: "capture", grade: "B" }, { target: F, axis: "connection", grade: "C" }],
     excluded: [{ target: LEFTOUT, description: "the FY2023 comparison memo", reason: "a records request is outstanding" }] });
   assert.equal(w.signCase(CASE, 1, { project: proj, roster: [{ bundle_id: F, version_sha: pin, role: "load_bearing" }],
-                                     completeness: COMPLETENESS1, bar: BAR, sig: SIG(1), at: T1 }).ok, true);
+                                     completeness: COMPLETENESS1, bar: opts.bar ?? BAR, sig: SIG(1), at: T1 }).ok, true);
   const text = w.text(F);
   const fin = w.signFinding(F, { title: "Finding F", sig: SIG(11), at: T1, edges: publishedGraphEdges(w.fm(F)),
     shas: [{ sha256: pin, path: "bundle.md", kind: "bundle", bytes: Buffer.byteLength(text) },
@@ -273,6 +273,19 @@ test("R3 (block 6) a division disclosure: a finding names its parent and sibling
     const r = await call(w, env, "publishedbytes", { sha256: w.head(id) });
     assert.deepEqual([r.status, (await r.json()).reason], [404, "NO_PUBLISHED_PART"], `${id}'s bytes are not reachable`);
   }
+});
+
+/* D-M6 (K5265): a case that declares no bar carries a bar object with `declared: false`; the public page must not say it
+   was held to a standard, it says no bar was recorded (the same words a null bar gets), and the DEC-72 sentence is for
+   a declared bar only. */
+test("R3 (D-M6) a case that declares no bar says no bar was recorded, never that it was held to one (red before the fix)", async () => {
+  const UNDECLARED = { declared: false, source: "none", capture: null, connection: null, detail: "This case declares no required evidentiary strength." };
+  const { w } = await publishedWorld({ bar: UNDECLARED });
+  const s = w.read("publishedcase", { id: F });
+  assert.deepEqual(s.bar, UNDECLARED, "fixture: the case states an undeclared bar, a non-null object");
+  assert.equal(s.bar_detail, word("public-read.bar_recorded_case"), "an undeclared bar answers the no-bar words");
+  assert.ok(!s.bar_detail.includes("held to"), "no standard is said to have been applied");
+  assert.equal(s.bar_detail.includes("DEC-72"), false, "no internal reference on the public page");
 });
 
 test("R3 (block 8, M0-11) the loose branch: ratified bytes in no case answer, with their full contract", async () => {

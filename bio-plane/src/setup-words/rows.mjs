@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19246 design words, 1157 protected; SHA-256
-   641148afcaa459ad607bdaebe5a1cd86dbcccbd88254a0b40dbf295751bcf83b) followed by 7430 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   641148afcaa459ad607bdaebe5a1cd86dbcccbd88254a0b40dbf295751bcf83b) followed by 7431 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -25897,6 +25897,7 @@ export const WORD_ROWS = Object.freeze([
   ["retrieval.index.selection_owned_by_credential","a selection is owned by the credential that made it",null,null,false,"code"],
   ["retrieval.index.selection_readable_by_credential","a selection is readable only by the credential that made it",null,null,false,"code"],
   ["retrieval.index.this_action_changes_state_so","this action changes state, so it will not run against a set that moved since it was selected. Look at the selection again and re-select.",null,null,false,"code"],
+  ["retrieval.levels.finding_rests_plain","nobody has yet said whether a finding rests on what was found here; the Cited column beside each result says it for that result",null,null,false,"code"],
   ["retrieval.levels.searched_so_far","Searched so far: {count} capture(s) in scope are read to {through} of {total}. Nothing found here is \"not found so far\", never \"not in the document\".",null,null,false,"code"],
   ["retrieval.levels.searched_so_far_unmeasured","Searched so far: {count} capture(s) in scope are only partly read. Nothing found here is \"not found so far\", never \"not in the document\".",null,null,false,"code"],
   ["review.declared.casedraft","review copy: its subject is a DRAFT CASE keyed draft_id, beside publish and never a bundle in a state — the answer names op=reviewcopy",null,null,false,"code"],

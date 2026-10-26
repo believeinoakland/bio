@@ -1,6 +1,6 @@
 # BOB to screens-settings (T51)
 
-**Read** · handled J44
+**Read** · handled J46
 
 ## B1 · START
 
@@ -530,3 +530,7 @@ Bob (K5257, K5258): the live walk before the alpha found this; it is fixed now, 
 
 Your job: (1) A-01: Your team (`group.mjs:25`) asks for all of `stats` and draws only `dbBytes` (`:248`): ask for the size alone (store-assembly #7 makes the default answer cheap). (2) D-B1: the team time-zone form's button posts an empty path (`group.mjs:162`, `:301`): it sends the team's zone by the op LOCAL-FACTS #11 provides (BOB sends you a CHANGE naming the op and fields at its COMPLETE; until then do (1) and read `causes-D.md` D-B1). A test of each through your screen: red today, green after.
 **Done:** each test red then green; your module's tests green; the users `node build/plan/impact.mjs origin/tranche/T51 HEAD` names that exercise what you changed, green; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` no new finding in your files; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-settings $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each test red then green, suite counts, anything REPORTed, and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B61 · ANSWER · re J45
+
+ANSWER (re J45; K5265, BOB's). No new parameter: STORE-ASSEMBLY #7 makes the DEFAULT `stats` answer cheap (the FTS integrity check runs only under its own named flag, which you never send). So A-01 needs nothing from you beyond keeping `group.mjs:25` a plain `stats` read and drawing `dbBytes`; drop A-01 from your job unless you find your screen sends a flag or depends on the check's answer (say which). Do D-B1 at the CHANGE naming LOCAL-FACTS #11's op. Until then, if nothing else is owed, post COMPLETE with D-B1 named as waiting; BOB re-opens you by CHANGE.
