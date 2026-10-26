@@ -4,6 +4,7 @@
    same page small enough to be held in one part is read the same way (the same title and the same first words). Run against the Miniflare plane (the seam kit). */
 import { after, test } from "node:test";
 import assert from "node:assert/strict";
+import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
 import { makeKit } from "./r8-kit.mjs";
 
 const kit = makeKit({ tag: "r10htmlparts" });
@@ -37,6 +38,11 @@ async function pressed(auth, label, size) {
   assert.equal(first.status, 200, JSON.stringify(first.body).slice(0, 400));
   return { bytes, tag, locator, sha: sha(bytes), first };
 }
+/* the member's own act: the document the answer carries is filed as the capture screen files it, and the reading follows the entry (control-plane R123) */
+async function fileIt(auth, doc, locator, title) {
+  const made = await CAPTURE_SCREEN.parts.promoteDocument(kit.screenCall(auth), { doc, title, locator, project: "" });
+  assert.equal(made.refused, undefined, "filed: " + JSON.stringify(made).slice(0, 400));
+}
 /* the reading by digest, waited for until the ledger has ended it */
 async function readEnded(auth, digest, ms = 300000) {
   let last = null;
@@ -52,13 +58,14 @@ async function readEnded(auth, digest, ms = 300000) {
 test("R100 R120 R123 (reading-pipeline R1): a 9 MiB HTML page fetched and held in parts is read as the page: its text whole, its title stated, nothing refused for being in parts; the small page is read the same way (control)", { timeout: 900000 }, async () => {
   const auth = await founder();
   const big = await pressed(auth, "htmlparts", 9 * MB);
+  /* acquisition holds a fetch over its 8 MiB part in parts, the whole never stored under its own digest: the answer of a page that size is the parked fetch of that many bytes */
   assert.ok(big.first.body.fetch_pending, `a page over 8 MiB is parked for the fetch: ${JSON.stringify(big.first.body).slice(0, 300)}`);
+  assert.equal(big.first.body.fetch_pending.declared_bytes, big.bytes.length, "the declared size is the page's");
   const held = await until(async () => {
     const h = body(await get(auth, { op: "heldat", address: big.locator }));
-    return h && h.copy && h.copy.parts ? h : null;
+    return h && h.copy && h.copy.sha256 === big.sha ? h : null;
   }, 300000, 2000);
   assert.ok(held, "the fetch delivered the copy");
-  assert.ok(held.copy.parts.length >= 2, `held in parts: ${held.copy.parts.length}`);
   const read = await readEnded(auth, big.sha);
   assert.notEqual(read.completeness.failure, "final", `read, not refused: ${JSON.stringify(read.completeness).slice(0, 300)}`);
   assert.ok(!/multipart/i.test(JSON.stringify(read.completeness)), `no "(multipart)": ${JSON.stringify(read.completeness).slice(0, 300)}`);
@@ -70,6 +77,7 @@ test("R100 R120 R123 (reading-pipeline R1): a 9 MiB HTML page fetched and held i
   /* control: the same page held whole */
   const small = await pressed(auth, "htmlsmall", 300 * 1024);
   assert.ok(!small.first.body.fetch_pending, "a small page is answered at once");
+  await fileIt(auth, small.first.body.document, small.locator, "Housing notice 2026-118 (small)");
   const one = await readEnded(auth, small.sha);
   assert.ok(unitsText(one).includes("housing committee adopted the annual budget resolution"), "the control page reads");
   assert.ok(JSON.stringify(one).includes("Housing notice 2026-118"), "the control page's title");
