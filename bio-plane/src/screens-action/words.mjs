@@ -14,9 +14,10 @@ import * as FIX_PLAN from "./words-fix-plan.mjs";
 import * as FIX_SEND from "./words-fix-send.mjs";
 import * as FIX_ACTION from "./words-fix-action.mjs";
 import * as FIX_REQUEST from "./words-fix-request.mjs";
+import * as FIX_R56 from "./words-fix-r56.mjs";
 
 /** The fix round's word files (T51 FR-31), one per group of entries. */
-export const FIX = Object.freeze([FIX_MATTER, FIX_PLAN, FIX_SEND, FIX_ACTION, FIX_REQUEST]);
+export const FIX = Object.freeze([FIX_MATTER, FIX_PLAN, FIX_SEND, FIX_ACTION, FIX_REQUEST, FIX_R56]);
 
 export const SCREEN_WORDS = Object.freeze([
   "act.filingrecordsent.does",

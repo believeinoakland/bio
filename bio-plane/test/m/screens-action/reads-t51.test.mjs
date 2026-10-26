@@ -23,7 +23,7 @@ const OWN = {
   holdnotice: ["list"],
   counsel: ["action", "list"],
   "dash-action": ["action", "actions", "affordances", "checkpointsdue", "filingsfor", "list", "profiles", "projectlist"],
-  "request on a project": ["list", "peopledirectory", "profiles"],
+  "request on a project": ["entitieskind", "list", "peopledirectory", "profiles"],
   "plan on a project": ["list", "plans"],
   "start-send on an action": ["action", "affordances", "filingsfor", "list", "memberlist", "projectlist", "stakeatpreparation"],
 };

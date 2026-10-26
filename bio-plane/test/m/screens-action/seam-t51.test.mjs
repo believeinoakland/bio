@@ -15,6 +15,8 @@ const lawsPick = (q) => q.doc.getElementById("req-law").querySelectorAll("option
    its `profiles()` omits the laws (instance-setup R12, INSTANCE-SETUP #27), `jurisdictions.combine`'s view in its place. */
 async function walk(profiles) {
   const x = realWorld();
+  // R56 (walk E H1): the team's named offices are offered again, so the world's own seeded office would be; the walker's team holds none
+  x.w.st.sql.exec(`DELETE FROM entities WHERE kind = 'office'`);
   const plane = realPlane(x, V("olive"), { peopledirectory: ok({ rows: [], truncated: false }), profiles,
     list: ok({ bundles: [{ bundle_id: x.proj, object_type: "project", title: "Parks" }], limit: 500, cursor: null, total: 1 }) });
   const p = await open(`/app/request/${x.proj}`, plane);
@@ -30,9 +32,10 @@ async function walk(profiles) {
   assert.equal(last(p, "entitycreate").body.law, FED);
   assert.deepEqual(p.doc.getElementById("req-office").querySelectorAll("option").map((o) => o.textContent.trim()), [OGIS], "chosen at once and drawn once");
   assert.ok(main(p).querySelector('[data-named="1"]'), "marked as named by a member");
-  // naming the same office again returns the first entry (the real `entities` answers `existed`), not another
+  // R56 (walk E H1): on her next visit the office she named is offered again, by its label (the real `entities` lists it), and she is not asked to name it twice
   const again = await open(`/app/request/${x.proj}`, plane);
-  await press(again, "entitycreate", { values: { "req-noff-name": ` ${OGIS.toLowerCase()} `, "req-noff-note": "x again" } });
+  assert.deepEqual(again.doc.getElementById("req-subject").querySelectorAll("option").map((o) => o.textContent.trim()), ["", OGIS], "the named office is offered again");
+  assert.ok(!again.doc.getElementById("req-noff-name"), "and the fold that names one is not drawn: an office is known");
   assert.equal(x.rows("SELECT COUNT(*) AS n FROM entities WHERE label = ?", OGIS)[0].n, 1, "one entry for the office");
   await press(p, "actioncreate", { values: { "req-what": "Records of how the Archives handled federal records requests in 2024", "req-office": "0" }, reason: "start" });
   await until(p, () => /ACTN-/.test(p.location.pathname) && p.doc.getElementById("req-law"), "the started request's page");

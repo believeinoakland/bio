@@ -115,8 +115,11 @@ test("R24: refusals in place send nothing: an undetermined addressee with no bas
   assert.equal((await actionsOf(me)).filter((x) => x.kind === "media").length, 1, "and the store took it");
   const q = await page();
   await choose(q, "an-kind", "request_for_comment");
-  await press(q, "actioncreate", { values: { "an-who": "The auditor", "an-ask": "Comment on the standard" }, reason: "x" });
-  assert.equal(q.byOp("actioncreate").length, 0, "a request for comment with no advances leg is refused in place");
+  const rfc = await press(q, "actioncreate", { values: { "an-who": "The auditor", "an-ask": "Comment on the standard" }, reason: "x" });
+  // R56 (walk E K-new): no local pre-check; the plane is asked and its refusal is drawn
+  assert.equal(q.byOp("actioncreate").length, 1, "a request for comment with no advances leg is sent: the plane refuses it, not the screen");
+  assert.ok(text(q, q.root().querySelector(`[data-slot="${rfc.getAttribute("data-ai")}"]`)).includes(W("refusal.ACTION_BASIS_REFUSED")));
+  assert.equal((await actionsOf(me)).filter((x) => x.kind === "request_for_comment").length, 0, "and the store holds none");
 });
 
 test("R24: control: no tier is preselected and nothing is filled from the project's questions without her choice; the machine sets no tier; a refusal is drawn by its words", async () => {

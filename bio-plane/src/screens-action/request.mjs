@@ -45,6 +45,8 @@ export const request = Object.freeze({
       // R39: `addresseesuggest` resolves an entity or an action's records, never a project: the member says which name the records
       // concern first, from the names the record follows, and the offices are asked after she picks (the act below)
       r.names = { op: "peopledirectory", query: { show: "everything", limit: "200" }, empty: function () { return false; } };
+      // R56 (walk E H1): the offices the team has named (`entities` R51, `entitiesOfKind`) are offered again, each as a name the member may pick
+      r.teamoffices = { op: "entitieskind", query: { kind: "office", limit: "200" }, empty: function () { return false; } };
       // C64 (DEC-402): the laws an office a member names can go under are the profile's records laws
       r.profiles = { op: "profiles", empty: function () { return false; } };
     }
@@ -66,8 +68,15 @@ export const request = Object.freeze({
     namesOf: function (view) {
       const r = view.data.names;
       const rows = r && r.state === "ok" && r.value && Array.isArray(r.value.rows) ? r.value.rows : [];
-      return rows.filter(function (x) { return x && typeof x.entity === "string" && typeof x.name === "string" && x.name; })
+      const out = rows.filter(function (x) { return x && typeof x.entity === "string" && typeof x.name === "string" && x.name; })
         .map(function (x) { return { value: x.entity, text: x.name }; });
+      // R56 (walk E H1): the team's named offices, each once, by its label
+      const o = view.data.teamoffices;
+      const offices = o && o.state === "ok" && o.value && Array.isArray(o.value.entities) ? o.value.entities : [];
+      offices.forEach(function (x) {
+        if (x && typeof x.entity_id === "string" && typeof x.label === "string" && x.label && !out.some(function (y) { return y.value === x.entity_id; })) out.push({ value: x.entity_id, text: x.label });
+      });
+      return out;
     },
     // C64, C64-law: the records laws the active profiles name (`jurisdictions` R7), each with its own first-request window (R96)
     recordsLaws: recordsLawsOf,
@@ -130,6 +139,7 @@ export const request = Object.freeze({
       // a request opened with no subject at all, or a record that follows no name, cannot ask: it says no office is known
       if (offices !== null && !offices.length && !asked) return head + noOffice("");
       if (view.data.names && view.data.names.state !== "ok" && view.data.names.state !== "empty") return head + cs.state("names");
+      if (view.data.teamoffices && view.data.teamoffices.state !== "ok" && view.data.teamoffices.state !== "empty") return head + cs.state("teamoffices");
       if (!names.length && !asked) return head + noOffice("");
       const subjectPick = cs.choice("req-subject", "screen.request.subject.label", [{ value: "", text: "" }].concat(names), { value: String(view.ui.subject || "") })
         + '<p class="mk-note">' + cs.w("screen.request.subject.help") + "</p>"
@@ -183,7 +193,8 @@ export const request = Object.freeze({
       // R39: the subject is the name the member picked, never the project (the plane resolves an entity or an action's records)
       send: function (view, el, cs) {
         const subject = String(cs.value("req-subject") || "");
-        if (!subject) return null;
+        // R56 (walk E H1): an empty press is refused in the words of a field left empty, never silent
+        if (!subject) return { refuse: "findin.fieldneeded", fills: { field: { html: cs.w("screen.request.subject.label") } } };
         view.ui.subject = subject;
         view.ui.pick = Number(cs.value("req-office")) || 0;
         return { query: { subject: subject } };

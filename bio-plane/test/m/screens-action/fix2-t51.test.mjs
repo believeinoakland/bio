@@ -30,15 +30,16 @@ test("R1 (C63): a plan's checks name the option or the phase by its place in the
   const strip = text(p, main(p).querySelector(".mk-checks2"));
   // the design's own sentence for a hostile response spells a code in its words ("not_met", a WORDS row for the design stream); the fills are what is mapped here
   const own = W("action-plans.index.phase_id_addresses_someone_outside", { id: "Phase 1" });
-  const drawn = strip.replace(own, "").replace("opt-1's regulated date falls before phase p1 can start (2026-12-01)", "");
+  const drawn = strip.replace(own, "");
   for (const raw of ["opt-1", "opt-2", "p1", "not_met"]) assert.ok(!drawn.includes(raw), `${raw} is not drawn`);
   const name = PLAN.options[0].summary;
   assert.ok(strip.includes(W("action-plans.says.regulated_date_passed", { id: name, date: D("2026-11-30"), basis: "law" })));
   assert.ok(strip.includes(W("action-plans.says.addresses_someone_outside", { id: PLAN.options[1].summary })));
   assert.ok(strip.includes(own), "the phase by its place");
   assert.ok(strip.includes(W("action-plans.says.phase_checkpoint_leads", { id: "Phase 1", miss: W("screen.plan.judged.not_met") })));
-  // control: the check whose sentence needs a fact the data does not carry (the day the phase can start) is drawn in the plan's own words
-  assert.ok(strip.includes("opt-1's regulated date falls before phase p1 can start (2026-12-01)"));
+  // R56 (walk E K-words): the check whose sentence needs the day the phase can start, which this data does not carry, is drawn in the plan's own words with the
+  // option and the phase called by name and its days as dates, never ids or ISO days
+  assert.ok(strip.includes(`${name}'s regulated date falls before phase Phase 1 can start (${D("2026-12-01")})`));
 });
 
 const sectionOf = (p, headingKey) => main(p).querySelectorAll("section.cs-section").find((s) => text(p, s.querySelector("h2")) === W(headingKey));

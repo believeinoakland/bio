@@ -143,7 +143,7 @@ export const matter = Object.freeze({
         + cs.sec("screen.matter.replaces", P.note(cs, "screen.matter.the_earlier_determination_stays_readable_with_a") + P.note(cs, "screen.matter.it_is_not_edited")) : "";
       const acts = cs.sec("screen.matter.act", P.note(cs, "screen.matter.whether_the_act_met_the_rule_with")
         + P.eventChoice(cs, view, k, act.event || "")
-        + cs.field("mt-d-role", "screen.matter.f.role", { value: actor.role || "" }) + cs.field("mt-d-body", "screen.matter.f.body", { value: actor.body || "" })
+        + cs.field("mt-d-role", "screen.matter.f.role", { value: actor.role || "" }) + P.bodyChoice(cs, view, actor.body || "")
         + P.passageChoice(cs, view, k));
       const rests = cs.sec("screen.actionnew.rests", found + P.note(cs, "screen.matter.a_determination_rests_on_findings_your_team"));
       const rule = cs.sec("screen.matter.the_rule_it_is_measured_against", std
@@ -179,6 +179,25 @@ export const matter = Object.freeze({
         if (n === 4) more = true;
       }
       return { rows: rows, state: state, more: more };
+    },
+    // R56 (walk E C2a (1, 2)): the body the act was by, chosen among the offices and bodies the team holds (`entitieskind`, entities R51), the
+    // entity id sent as the actor's body (conformance R27 binds a standard to the body entity, never to typed words). The body a recorded
+    // determination names is kept as an option when the team's list does not hold it.
+    bodyChoice: function (cs, view, current) {
+      const P = view.parts;
+      const reads = ["office", "body"].map(function (kind) { return P.later(cs, view, "entities:" + kind, "entitieskind", { kind: kind, limit: "200" }, ""); });
+      if (reads.some(function (r) { return r.state === "loading"; })) return "";
+      const failed = reads.find(function (r) { return r.state === "failed"; });
+      if (failed) return cs.state(failed);
+      const opts = [];
+      reads.forEach(function (r) {
+        (r.value && Array.isArray(r.value.entities) ? r.value.entities : []).forEach(function (e) {
+          if (e && typeof e.entity_id === "string" && e.entity_id && !opts.some(function (o) { return o.value === e.entity_id; })) opts.push({ value: e.entity_id, text: e.label || e.entity_id });
+        });
+      });
+      if (current && !opts.some(function (o) { return o.value === current; })) opts.push({ value: current, text: current });
+      return cs.choice("mt-d-body", "screen.matter.f.body", [{ value: "", text: "" }].concat(opts), { value: current })
+        + (opts.length ? "" : '<p class="mk-note">' + cs.w("screen.request.nooffice.admin") + "</p>");
     },
     // R45 (C6): the event the act was part of, chosen among the events the project's document follows (the timeline's own set), never typed
     eventChoice: function (cs, view, k, current) {
@@ -237,7 +256,9 @@ export const matter = Object.freeze({
       return refs.filter(function (r) { return /^(ENT|EVT)-/.test(String(r.target || "")) && r.status !== "severed"; }).map(function (r) { return r.target; })
         .filter(function (t, i, a) { return a.indexOf(t) === i; });
     },
-    // R45 (C6): the findings it rests on, chosen among the project's concluded questions and the published cases' findings, never typed
+    // R45 (C6), R56 (walk C C-M11): the findings it rests on, chosen among those `conformance` accepts, never typed: a finding of a published case
+    // (a concluded question that is one is offered by its question's title) and the findings a recorded determination already rests on. A
+    // concluded question no published case holds is no finding yet: it is drawn apart, never tickable, so the member is not led to a refusal.
     findings: function (cs, view, k) {
       const P = view.parts;
       const ql = P.later(cs, view, "questions", "projectquestions", { project: k.project, limit: "200" }, "");
@@ -247,17 +268,25 @@ export const matter = Object.freeze({
       const latest = {};
       rows.forEach(function (r) { if (r && r.case_id && !(latest[r.case_id] >= Number(r.edition))) latest[r.case_id] = Number(r.edition); });
       const held = function (id) { return !!(k.d && Array.isArray(k.d.findings) && k.d.findings.some(function (x) { return (x.finding || x.id) === id; })); };
-      const opts = [];
-      const add = function (id, title) { if (id && !opts.some(function (o) { return o.value === id; })) opts.push({ value: id, text: title || id, on: held(id) }); };
-      qs.forEach(function (q) { if (q && q.stance === "concluded") add(q.inquiry, q.title); });
+      const published = [];
       Object.keys(latest).slice(0, 12).forEach(function (c) {
         const pc = P.later(cs, view, "case:" + c, "publishedcase", { id: c, edition: String(latest[c]) }, "");
         const fs = pc.state === "ok" && pc.value && Array.isArray(pc.value.findings) ? pc.value.findings : [];
-        fs.forEach(function (f) { if (f) add(f.bundle_id, f.title); });
+        fs.forEach(function (f) { if (f && f.bundle_id) published.push(f); });
       });
       if (ql.state === "loading" || list.state === "loading") return "";
-      return opts.length ? cs.checks("mt-d-findings", "screen.matter.f.findings", opts)
-        : '<p class="mk-small">' + cs.w("screen.matter.f.findings") + '</p><p class="cs-state" data-state="empty">' + cs.w("state.empty") + "</p>";
+      const isPublished = function (id) { return published.some(function (f) { return f.bundle_id === id; }); };
+      const opts = [];
+      const add = function (id, title) { if (id && !opts.some(function (o) { return o.value === id; })) opts.push({ value: id, text: title || id, on: held(id) }); };
+      qs.forEach(function (q) { if (q && q.stance === "concluded" && (isPublished(q.inquiry) || held(q.inquiry))) add(q.inquiry, q.title); });
+      published.forEach(function (f) { add(f.bundle_id, f.title); });
+      (k.d && Array.isArray(k.d.findings) ? k.d.findings : []).forEach(function (x) { add(x.finding || x.id, ""); });
+      const notYet = qs.filter(function (q) { return q && q.stance === "concluded" && q.inquiry && !opts.some(function (o) { return o.value === q.inquiry; }); });
+      const apart = notYet.length ? '<ul class="mk-list" data-list="concluded-unpublished">' + notYet.map(function (q) {
+        return "<li>" + cs.esc(q.title || q.inquiry) + ' <span class="meta">' + cs.w("question.concluded.heading") + "</span></li>";
+      }).join("") + "</ul>" : "";
+      return (opts.length ? cs.checks("mt-d-findings", "screen.matter.f.findings", opts)
+        : '<p class="mk-small">' + cs.w("screen.matter.f.findings") + '</p><p class="cs-state" data-state="empty">' + cs.w("state.empty") + "</p>") + apart;
     },
     // R50: what the breach did, recorded
     consForm: function (cs, view, k) {
@@ -413,7 +442,11 @@ export const matter = Object.freeze({
       const live = Array.isArray(l.items) ? l.items : [];
       const head = P.readOnly(cs, "screen.matter.name") + cs.title(null) + (live.length ? "" : '<p class="mk-sub">' + cs.w("screen.matter.nodet") + "</p>");
       const links = live.length ? cs.sheet(live.map(function (x) {
-        return cs.row("", '<a class="cs-ref" href="/app/matter/' + encodeURIComponent(x.id) + '" data-nav>' + (cs.esc(P.actName(cs, x)) || cs.w("screen.matter.name")) + "</a>", "", "");
+        // R56 (walk E C2b): each standard's outcome as the determination states it (`outcomes`, conformance R11), by the standard's citation
+        const outs = (Array.isArray(x.outcomes) ? x.outcomes : []).map(function (o) {
+          return "<b>" + cs.esc(P.cite(cs, view, o.standard) || o.standard) + "</b> · " + cs.w("screen.matter.outcome." + P.outcome(o.outcome));
+        }).join("<br>");
+        return cs.row("", '<a class="cs-ref" href="/app/matter/' + encodeURIComponent(x.id) + '" data-nav>' + (cs.esc(P.actName(cs, x)) || cs.w("screen.matter.name")) + "</a>", outs, "");
       }).join("")) : "";
       return head + cs.sec("screen.matter.where_this_matter_stands", (live.length ? "" : P.note(cs, "screen.matter.your_team_has_not_yet_said_whether") + P.note(cs, "screen.matter.what_a_breach_did_and_every_stage"))
         + links + (live.length ? "" : P.unavailable(cs, view)) + P.doing(cs, view, k, true));
@@ -536,6 +569,16 @@ export const matter = Object.freeze({
     {
       // R45: record a determination, or (with the one it replaces) revise it; exactly the fields `determine` declares
       op: "determine",
+      // R56 (walk E C2a (1)): a standard whose binding on the body is undetermined is the owner's own refusal, drawn in its words with the owner's why
+      // (its `detail` names why and that a member settles it in `standards`), the owner's own `detail` (the why); a standard that does not bind keeps the shell's words
+      refusals: {
+        STANDARD_BINDING_UNDETERMINED: function (r, cs) {
+          // the refusal's own `detail` is the member's sentence (conformance localizes it, naming why and that a member settles it in `standards`)
+          return cs.esc(typeof r.detail === "string" && r.detail ? r.detail : r.translation || "");
+        },
+      },
+      // R56 (walk E C2b): recording one goes to its page
+      done: function (view, answer, cs) { if (answer && typeof answer.id === "string" && answer.id) cs.go("matter", answer.id); return { stay: true }; },
       send: async function (view, el, cs) {
         const P = view.parts, k = P.ctx(view);
         const line = function (v) { return String(v || "").replace(/\s+/g, " ").trim(); };
