@@ -401,7 +401,6 @@ async function handleRun(req, env) {
      never this member's inference — D-199 (4) makes the principal the VIEWER the
      credential's reads compile under, so a member-side guess would be a claim
      about who acted, produced by the party least entitled to make it. */
-  await askPlane(env, "whoami", "aik-" + "f".repeat(64), store);
   const asked = await askPlane(env, "whoami", credential, store);
   if (!asked.reached)
     return refusal("PLANE_SILENT",

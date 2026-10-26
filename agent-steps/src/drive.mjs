@@ -378,9 +378,8 @@ export async function driveHarness(host, env, { runId, store, credential, judgem
     }
     /* ai-runs R48: the usage of every model call since the last tick, counted for the member whose account carried it. */
     const usage = model ? model.drain() : [];
-    const tick = decision.step === "close"
-      ? { reached: true, status: 200, body: { ok: true, result: {} } }
-      : await call("airuntick", null, { run: runId, log: sentEntries, consume, ...(published ? { state: published.state } : {}),
+    const tick = await call("airuntick", null,
+      { run: runId, log: sentEntries, consume, ...(published ? { state: published.state } : {}),
         ...(usage.length ? { usage } : {}) });
     if (!tick.reached) return { refusal: planeSilent(tick) };
     /* R26, R43 — D-276's class at the tick: a refusal of the whole tick nested in `result` is a refusal, never
