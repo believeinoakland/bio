@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot } from "../interface-shell/harness.mjs";
-import { main, fill, press, says, storeWorld, SCREENS } from "./fixtures.mjs";
+import { main, fill, press, says, storeWorld, SCREENS, word } from "./fixtures.mjs";
 import { CONTRADICTION_SCREEN } from "../../../src/screens-inquiry/contradiction.mjs";
 
 const OWN = { capabilities: ["contribute", "create_projects"] };
@@ -49,11 +49,12 @@ test("R138 C-M12 new 4: after 'Say these two contradict' the page says what was 
   await press(p, "contradictionflag");
   const first = p.answers("contradictionflag")[0];
   assert.equal(first.wrote, true, "the world recorded the flag");
-  assert.equal(outcomeOf(p), first.says, "the page draws the sentence the flag was recorded with");
+  /* R139 (DEC-439, DEC-440): the design's sentence, in place of the owner's `says` that R138 drew */
+  assert.equal(outcomeOf(p), word("screen.document.flag.recorded"), "the page draws the sentence the flag was recorded with");
   await press(p, "contradictionflag");
   const again = p.answers("contradictionflag")[1];
   assert.equal(again.already, true, "the same pair again: the world answers already");
-  assert.equal(outcomeOf(p), again.says, "the page draws the owner's own sentence for a pair already held");
+  assert.equal(outcomeOf(p), word("screen.document.flag.already"), "the page draws the design's sentence for a pair already held");
 });
 
 test("R138 a refusal is drawn beside the act by the owner's key; control: a refusal records nothing, so no sentence is drawn for the act", async () => {
@@ -66,7 +67,7 @@ test("R138 a refusal is drawn beside the act by the owner's key; control: a refu
   assert.equal(outcomeOf(p), null, "control: a refusal records nothing, so no sentence is drawn for the act");
 });
 
-test("C-M13 MINOR the contradiction screen never draws a fact's doctype by the id the reader states ('generic · generic'): with no held label for it the row is not drawn; control: the passages stay drawn", async () => {
+test("C-M13 MINOR the contradiction screen never draws a fact's doctype by the id the reader states ('generic · generic'): each side is drawn by the word held for its reader id (R139, DEC-440); control: the passages stay drawn", async () => {
   const world = await storeWorld();
   const ann = await world.signIn("ann", OWN);
   const project = await world.recipes.project(ann, "Pothole repairs");
@@ -75,7 +76,9 @@ test("C-M13 MINOR the contradiction screen never draws a fact's doctype by the i
   const unit = async (h) => (await ann.read("reading", { query: { sha256: h.sha } })).text_units[0].extent;
   const flag = await ann.act("contradictionflag", { body: { here: { capture: a.sha, extent: await unit(a) }, other: { capture: b.sha, extent: await unit(b) }, reason: "The notice and the amendment give two different dates." } });
   const p = await pageOn(world, ann, "/app/contradiction/" + flag.candidate, [...SCREENS.filter((x) => x.id !== "contradiction"), CONTRADICTION_SCREEN]);
-  assert.equal(main(p).querySelector('[data-fact="doctype"]'), null, "the design holds no label for the doctype the reader states: no row");
-  assert.doesNotMatch(main(p).textContent, /\bgeneric\b/, "never the id");
-  assert.ok(main(p).querySelector('[data-side="a"]'), "control: the passages stay drawn");
+  const row = main(p).querySelector('[data-fact="doctype"]');
+  assert.ok(row, "the kinds the reader states are drawn");
+  assert.ok(says(row, "screen.contradiction.doctype.generic"), "by the word held for the reader id");
+  assert.doesNotMatch(row.textContent, /\bgeneric\b/, "never the id");
+  assert.ok(main(p).querySelector('[data-side="a"]') !== null, "control: the passages stay drawn");
 });
