@@ -4,7 +4,8 @@
  * states that stop it (no key here, a phone, a member who is not an owner). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, drew, drewIn, day, clock, word, ops, press, fill, tick, last, ok, refusedIn, pending, keptKey, answerSign, until, PREFLIGHT, P, DR, C, SHA, B1, E1, PHOTO } from "./fixtures.mjs";
+import { groupName, open, main, text, drew, drewIn, day, clock, word, ops, press, fill, tick, last, ok, refusedIn, pending, keptKey, answerSign, until, PREFLIGHT, P, DR, C, SHA, B1, E1, PHOTO } from "./fixtures.mjs";
+const GROUP = await groupName();
 import { gateRefusal } from "../case-disclosures/fixtures.mjs";
 
 const PATH = `/app/ceremony/${P}/${DR}`;
@@ -129,7 +130,7 @@ test("R5 the Ties step's confirmation sends publish with tieAttested: true; no S
 
 test("R12 the Sign step: when it becomes public (now, or a date and time in the group's zone), one button following the choice, and who signs", async () => {
   const p = await prepared();
-  assert.ok(drew(p, "signing.ceremony.who", { signer: "dev", project: "The Coliseum lease", group: "River Town" }));
+  assert.ok(drew(p, "signing.ceremony.who", { signer: "dev", project: "The Coliseum lease", group: GROUP }));
   assert.ok(drew(p, "screen.ceremony.when") && drew(p, "screen.ceremony.when.help", { zone: "America/Los_Angeles" }));
   assert.ok(p.doc.getElementById("ce-date") && p.doc.getElementById("ce-time"));
   assert.deepEqual(ops(p).filter((o) => o === "caseratify" || o === "publishat"), ["caseratify"], "one button: now");

@@ -6,7 +6,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { webcrypto } from "node:crypto";
-import { open, main, text, drew, drewIn, ops, press, last, fill, tick, norm, until, keptKey, answerSign, button, ok, refusedIn, provided, word, COPY, DOCUMENT, PREFLIGHT, FINDING, F1, B1, E1, P, C, DR, SHA, publishedPlane, findingPath, signDialog } from "./fixtures.mjs";
+import { groupName, open, main, text, drew, drewIn, ops, press, last, fill, tick, norm, until, keptKey, answerSign, button, ok, refusedIn, provided, word, COPY, DOCUMENT, PREFLIGHT, FINDING, F1, B1, E1, P, C, DR, SHA, publishedPlane, findingPath, signDialog } from "./fixtures.mjs";
+const GROUP = await groupName();
 import { MEMBER } from "../interface-shell/harness.mjs";
 import { gateRefusal } from "../case-disclosures/fixtures.mjs";
 
@@ -123,7 +124,7 @@ test("R70 C48 the confirmation of \"Confirm, and prepare Edition n\" does not sa
   const q = await prepared();
   const sign = button(q, "caseratify");
   assert.ok(sign.getAttribute("data-weighed"), "control: sign keeps its weight");
-  assert.ok(drew(q, "signing.ceremony.who", { signer: "dev", project: "The Coliseum lease", group: "River Town" }), "only the Sign step says it cannot be taken back");
+  assert.ok(drew(q, "signing.ceremony.who", { signer: "dev", project: "The Coliseum lease", group: GROUP }), "only the Sign step says it cannot be taken back");
 });
 
 test("R70 C48 once the edition is prepared the page draws one state: the prepared edition and no list of reasons that stop the signing; before preparing the gates are listed (control)", async () => {
