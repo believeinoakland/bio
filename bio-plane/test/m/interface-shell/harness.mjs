@@ -19,6 +19,7 @@ export const ADMIN = Object.freeze({ ...MEMBER, member: "rosa", handle: "rosa", 
 /* answers: a value (`ok`), a refusal at the top level (`refused`) or in `result` (`refusedIn`), an HTTP error with no
    JSON (`httpError`), no answer (`silent`: the fetch throws) and never (`pending`) */
 export const ok = (result, status = 200) => ({ status, json: { ok: true, result } });
+// fixtures-own: input the refusal envelope this harness builds for the code a test feeds it: the code is the test's input, not a module's answer
 export const refused = (code, translation, status = 400, extra = {}) => ({ status, json: { ok: false, reason: code, code, ...(translation ? { translation } : {}), ...extra } });
 export const refusedIn = (code, translation) => ({ status: 200, json: { ok: true, result: { ok: false, reason: code, code, ...(translation ? { translation } : {}) } } });
 export const httpError = (status = 500) => ({ status, text: "boom" });

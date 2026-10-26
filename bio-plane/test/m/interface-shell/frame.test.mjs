@@ -1,4 +1,5 @@
 /* interface-shell R7, R8, R9, R20, R26, R28, R30, R35–R37, R43, R45, R48: the working frame and the public and setup frames, the path, the router and unavailable, the dock, the places, the band, the mark and the rail. */
+import { frameAnswers } from "./frame-answers.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -7,9 +8,11 @@ import { PATHS, FRAMES, PLACE_SCREENS } from "../../../src/interface-shell/index
 import { fitSend, boot, ok, refused, silent, pending, httpError, STORE_KEY, tabs, SESSION } from "./harness.mjs";
 import { ALL, ASSISTANT, FRONT, DOORBELL, PUBLISHED, JOIN, PERSON } from "./screens.fixture.mjs";
 import { inWorld, bootAs, obligations } from "./world.mjs";
+import { countWithItem } from "../queue/fixtures.mjs";
 
 const IMAGE = ok({ title: "A lease", pages: 3, grade: "B", why: "w", project: { id: "P1", title: "Pothole repairs" }, passages: [{ n: 1, text: "Closed" }] });
 const HELDA = ok({ items: [{ id: "h1", title: "Minutes", at: "2026-10-01" }] });
+const FRAME_ANSWERS = await frameAnswers();
 const PLANE = { image: IMAGE, heldcaptures: HELDA, projectdirectory: ok({ projects: [] }) };
 const en = (k) => (WORD_ROWS.find((r) => r[0] === k) || [])[1];
 const texts = (els) => els.map((e) => e.textContent.trim());
@@ -48,13 +51,13 @@ test("R7 R60 the masthead: the group's name (groupidentity, read once; \"Your gr
 });
 
 test("R7 the band (mark.band.means with mark.path.working.*), the rail's seven places in order with rail.<k>.name and guidance rail.<k>.holds, one column of work, and at the phone width the five tabs Home, Queue, Add, Find, More", async () => {
-  const p = await boot({ screens: ALL, plane: PLANE });
+  const p = await boot({ screens: ALL, plane: { ...FRAME_ANSWERS, ...PLANE } });
   const band = p.root().querySelector(".cs-band");
   assert.equal(band.getAttribute("data-band"), "working");
   assert.equal(band.textContent, word("mark.path.working.name") + " " + word("shell.band.working"), "R57: the band as drawn");
   assert.ok(band.querySelector("[data-tip]").getAttribute("data-tip").startsWith(en("mark.band.means").replace(/'/g, "&#39;")));
   const rail = p.root().querySelectorAll(".cs-rail a");
-  assert.deepEqual(texts(rail), Object.keys(PLACE_SCREENS).map((k) => word("rail." + k + ".name") + (k === "queue" ? "3" : "")), "the shell's places, in its order (R96: the queue's count on Queue alone)");
+  assert.deepEqual(texts(rail), Object.keys(PLACE_SCREENS).map((k) => word("rail." + k + ".name") + (k === "queue" ? String(countWithItem().count) : "")), "the shell's places, in its order (R96: the queue's count on Queue alone)");
   rail.forEach((a, i) => assert.ok(a.getAttribute("data-tip").length > 10, i));
   assert.equal(p.root().querySelectorAll("main").length, 1);
   const tabs = p.root().querySelectorAll(".cs-tabs a");
@@ -401,7 +404,7 @@ test("R36 while bootstrap answers test_instance true every frame shows the test-
 
 test("R43 every working screen's masthead opens with the mark (the plumb bob, before the group's name), explaining itself; the public frame's page body draws none", async () => {
   for (const path of ["/app", "/app/held", "/app/settings", "/app/nowhere"]) {
-    const p = await boot({ screens: ALL, path, plane: PLANE });
+    const p = await boot({ screens: ALL, path, plane: { ...FRAME_ANSWERS, ...PLANE } });
     const mast = p.root().querySelector(".cs-mast");
     const mark = mast.children[0];
     assert.ok(mark.classList.contains("cs-mark"), path);
@@ -418,7 +421,7 @@ test("R43 every working screen's masthead opens with the mark (the plumb bob, be
 test("R48 the main frame's root carries data-screen of the registered screen it drew; the shell's own fallbacks carry none", async () => {
   const cases = [["/app", "home"], ["/app/held", "held"], ["/app/document/c1", "document"], ["/app/settings", null], ["/app/people", null], ["/app/nowhere", null], ["/app/more", null]];
   for (const [path, id] of cases) {
-    const p = await boot({ screens: ALL, path, plane: PLANE });
+    const p = await boot({ screens: ALL, path, plane: { ...FRAME_ANSWERS, ...PLANE } });
     assert.equal(p.root().querySelector("#cs-main").getAttribute("data-screen"), id, path);
   }
   const nf = await boot({ screens: ALL, path: "/app/document/zz", plane: { ...PLANE, image: refused("NO_SUCH_CAPTURE") } });
