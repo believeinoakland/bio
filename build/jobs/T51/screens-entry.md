@@ -308,3 +308,7 @@ Size (session_01JdJGDMdqKM21B8AxsWMQLp): test runs 11, module lines 1197
 **Deferred.** Nothing. **Found in other modules.** The sweep was run over this module's screens only; the diagnosis's hardening (interface-shell `readAll`'s `catch { specs = {} }` hides a failed `reads`) is the shell's, not done here. Other screen modules were not swept; the probe in `served.test.mjs` is written against any `SCREENS` list and could be copied.
 
 Size (session_01HPbxRrBFoxDBNSYkhtnFYP): test runs 12, module lines 1197
+
+## J25 · COMPLETE
+
+S-1 fixed (B24). setup.mjs: ZONE_PATH and ZONES no longer module-level; reads and the factconfirm act carry the literal path, render declares ZONES at its head. Tests red then green: setup.test.mjs (signed founder with a handle, served source: reads, zone step, act) and served.test.mjs (every screen of SCREENS: a probe finds no module-scope name in any served function, and all scenes drawn from served source equal the module's own). Module suite 111/111; format, architecture, coverage (31 of 31), ownership 0 failures; run.mjs: no line names screens-entry. Details in build/jobs/T51/screens-entry.md. Cursor is through B24.
