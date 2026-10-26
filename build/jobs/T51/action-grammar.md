@@ -138,3 +138,28 @@ Other findings, not changed (for BOB)
 Merge: job/T51/action-grammar merged origin/tranche/T51 at fda631a17b (a merge commit, not a rebase).
 
 Size (session_018nYF1qKRjkKTcC4XS3jWuZ): test runs 4, module lines 2589
+
+## J8 · COMPLETE
+
+COMPLETE for CHANGE B6 (BOB #310, K5296): the other finding messages in grammar.mjs, in plain words.
+
+Applied (commit eef15c85d8, pushed to job/T51/action-grammar)
+- Leg arm (grammar.mjs ~149–185): the basis-leg messages (not a complete entry; not a valid record id; points at an action; must say rests on or advances) and the clock repair are localized in plain words. Localized ids that already existed with other English were renamed, so the new wording shows (localize returns the stored text for an existing id): basis_leg_i_names_string_which, basis_leg_i_points_at_an_action, request_for_comment_states_window, non_response_carries_a_kept, entry_carries_both_a_kept, entry_stage_is_not_one.
+- Correspondence arm (~223–272): entry-level messages and the direction, date, kept-document, account, and capture-or-testify repairs, with no field names or DEC codes. Added plainDirection(): the code no_response reads "no response".
+- Quote arm (~321–355) and lifecycle arm (~408–470): each message in plain words; code fields (quote_amount, due_by, follows, stage) are named by what they are.
+- Golden: 237 recorded occurrences of 49 changed strings updated by exact-string replacement from the pre-change output (formatting preserved). The in-memory growth step in fixture.mjs and its seeks assertion are removed: the recorded text now carries none_exists.
+- REWORDED (fixture.mjs) gains the retired phrases, except four that remain in other modules' text (see below).
+
+Red, then green
+- Sweep test "R6 (T51 fix round 10, B6)": over every corpus document, no finding or repair of the leg, correspondence, quote and lifecycle arms names a field (action_basis[i], correspondence[i], clock[], quote_, due_by, due_cite, artifact_sha, kind:, rests_on) or a code (DEC-, D-, C-, no_response, none_stated, none_exists). Red on the pre-change module: 74 of 92 messages named one. Green after.
+- Pins moved to the new wording: grammar.test.mjs (two literal messages), t45.test.mjs (the id and wording, two pins), seeks.test.mjs (the outcome message).
+
+Tests: node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/action-grammar/*.test.mjs: 83 of 83 pass, exit 0.
+Checks (process repo, product /home/user/bio): format 0 failures; architecture action-grammar 0; coverage 29 of 29 ids named; words action-grammar 0 failures; ownership tranche/T51 to HEAD: 7 files, 0 failures; checks/run.mjs: no line names action-grammar.
+
+Deferred, with why
+- Row translations (not findings), still naming a code: LIFECYCLE_CHECKS.OUTCOME_NOT_IN_VOCABULARY ("when the body says no responsive record exists, record none_exists") and LIFECYCLE_CHECKS.DECISION_WITHOUT_OUTCOME ("record none_stated"). They are the refusal rows' words that the R9 tests pin; changing them rewrites those rows, so I left them for BOB's call.
+- Other modules' findings: the lead and theme leg messages (inquiry-grammar's and connections' leg checks, which actionBasisFindings calls) still name action_basis[i] and DEC-14 codes. Not this module's words; reported here so the owner can take them.
+- Retired phrases still in the golden and in other modules' text (action_basis[, (DEC-14), names no earlier, is not a sha256 hash) are not in REWORDED, because they remain in those texts.
+
+Size (session_018nYF1qKRjkKTcC4XS3jWuZ): test runs 9, module lines 2576
