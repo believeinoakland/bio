@@ -16413,7 +16413,7 @@
       "en": "act-directed: a member determines a government act against named standards on published findings, keyed by (project, act); writes a CONF- bundle",
       "module": "conformance",
       "file": "bio-plane/src/conformance/index.mjs",
-      "line": 2255
+      "line": 2268
     },
     {
       "id": "conformance.index.a_determination_measures_the_act",
@@ -16441,7 +16441,7 @@
       "en": "{id} is a determination of {act_id}, and this names {event}. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/index.mjs",
-      "line": 968
+      "line": 971
     },
     {
       "id": "conformance.index.id_was_not_in_force",
@@ -16455,7 +16455,7 @@
       "en": "name which side of the question states what the standard requires, a or b: your team's Civicsmith never chooses it. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/index.mjs",
-      "line": 1762
+      "line": 1765
     },
     {
       "id": "conformance.index.no_office_entity_is_held",
@@ -16483,7 +16483,7 @@
       "en": "whether {standard} binds {v1} is undetermined ({v2}), and an act is found noncompliant only against a standard that binds its body: a member settles it in standards first. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/index.mjs",
-      "line": 1076
+      "line": 1079
     },
     {
       "id": "connection-grammar.conformance.a_hunch_is_returned_with",
@@ -33794,7 +33794,7 @@
       "en": "a different profile with id '{id}' was given earlier",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1684
+      "line": 1702
     },
     {
       "id": "jurisdictions.index.a_source_has_a_citation",
@@ -33920,7 +33920,7 @@
       "en": "the family is dropped from the view: a citation of it is recognised by no profile until they agree",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1910
+      "line": 1928
     },
     {
       "id": "jurisdictions.index.field_is_one_of_policy",
@@ -34004,7 +34004,7 @@
       "en": "the active profiles give different instrument-key segments, so no key is composed",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2132
+      "line": 2150
     },
     {
       "id": "jurisdictions.index.k_is_not_a_field",
@@ -34172,14 +34172,14 @@
       "en": "its local day is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2016
+      "line": 2034
     },
     {
       "id": "jurisdictions.index.locale_conflict",
       "en": "the active profiles name different locales, so none is given: a render asks for its fallback",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1836
+      "line": 1854
     },
     {
       "id": "jurisdictions.index.marker_is_one_of_meeting",
@@ -34200,7 +34200,7 @@
       "en": "the active profiles give different periods after which absent minutes raise a question, so none is given",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1827
+      "line": 1845
     },
     {
       "id": "jurisdictions.index.name_is_a_title_of",
@@ -34228,21 +34228,21 @@
       "en": "body-variant keys",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1974
+      "line": 1992
     },
     {
       "id": "jurisdictions.index.named_identifiers",
       "en": "identifiers",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1974
+      "line": 1992
     },
     {
       "id": "jurisdictions.index.named_within",
       "en": "organisations it is part of",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1974
+      "line": 1992
     },
     {
       "id": "jurisdictions.index.no_computation_entry_of_this",
@@ -34298,7 +34298,7 @@
       "en": "no profile '{item}' is held",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1674
+      "line": 1692
     },
     {
       "id": "jurisdictions.index.no_records_laws_or_standard",
@@ -34340,7 +34340,7 @@
       "en": "one active profile says {host} serves many offices' publications and another names a system for it, so an address there names no system",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1785
+      "line": 1803
     },
     {
       "id": "jurisdictions.index.organisation_is_a_key_the",
@@ -34368,14 +34368,14 @@
       "en": "receipt on a closed day stays the actual day only where no profile states otherwise; here it is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2015
+      "line": 2033
     },
     {
       "id": "jurisdictions.index.records_help_conflict",
       "en": "the active profiles give different records-request help, so none is given: the page has no figure to show",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1854
+      "line": 1872
     },
     {
       "id": "jurisdictions.index.relation_is_one_of_amending",
@@ -34529,147 +34529,147 @@
       "en": "the active profiles define the {space} form '{form}' differently, so it is withheld: a value in it is recognised by no profile until they agree",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1723
+      "line": 1741
     },
     {
       "id": "jurisdictions.index.the_active_profiles_disagree_on",
       "en": "the active profiles disagree on whether {role} ({body}) is an oversight or audit body, so it is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1960
+      "line": 1978
     },
     {
       "id": "jurisdictions.index.the_active_profiles_disagree_on_2",
       "en": "the active profiles disagree on the {f} of {rule} for {applies_to}, so it is withheld: the deadline is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2083
+      "line": 2101
     },
     {
       "id": "jurisdictions.index.the_active_profiles_explain_name",
       "en": "the active profiles explain {name} differently in {l}, so no explanation is given there",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2179
+      "line": 2197
     },
     {
       "id": "jurisdictions.index.the_active_profiles_give_different",
       "en": "the active profiles give different coverage floors for {kind}, so no floor is given: whether a number is inside the record's reach is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1739
+      "line": 1757
     },
     {
       "id": "jurisdictions.index.the_active_profiles_give_different_2",
       "en": "the active profiles give different hours for {role} ({body}), so its hours are undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1966
+      "line": 1984
     },
     {
       "id": "jurisdictions.index.the_active_profiles_give_different_3",
       "en": "the active profiles give different time zones for {role} ({body}), so its local day is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1972
+      "line": 1990
     },
     {
       "id": "jurisdictions.index.the_active_profiles_give_different_4",
       "en": "the active profiles give different {v1} for {role} ({body}), so none is given: it is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1979
+      "line": 1997
     },
     {
       "id": "jurisdictions.index.the_active_profiles_give_different_5",
       "en": "the active profiles give different {v1} for {kind}, so none is given{v2}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2010
+      "line": 2028
     },
     {
       "id": "jurisdictions.index.the_active_profiles_give_different_6",
       "en": "the active profiles give different {v1} for {kind}'s venue, so {v2}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2022
+      "line": 2040
     },
     {
       "id": "jurisdictions.index.the_active_profiles_give_different_7",
       "en": "the active profiles give different {purpose} templates for {kind}, so none is given",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2056
+      "line": 2074
     },
     {
       "id": "jurisdictions.index.the_active_profiles_give_different_8",
       "en": "the active profiles give different {what} for {replace}, so it is withheld: it is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2145
+      "line": 2163
     },
     {
       "id": "jurisdictions.index.the_active_profiles_give_different_9",
       "en": "the active profiles give different official translations of {name} in {l}, so none is given: the name is shown as it is",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2178
+      "line": 2196
     },
     {
       "id": "jurisdictions.index.the_active_profiles_give_name",
       "en": "the active profiles give {name} different stages, so which stages it has is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1888
+      "line": 1906
     },
     {
       "id": "jurisdictions.index.the_active_profiles_give_name_different_windows",
       "en": "the active profiles give {name} different first-request windows, so which one it has is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1889
+      "line": 1907
     },
     {
       "id": "jurisdictions.index.the_active_profiles_give_what",
       "en": "the active profiles give {what} ({replace}) different {v1}, so it is withheld: {says}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1926
+      "line": 1944
     },
     {
       "id": "jurisdictions.index.the_active_profiles_list_different",
       "en": "the active profiles list different closure days for {year}{whose}, so the year is withheld there: a business-day count reaching into it is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2114
+      "line": 2132
     },
     {
       "id": "jurisdictions.index.the_active_profiles_map_the",
       "en": "the active profiles map the MemberType '{t}'{v1} to different capacities, so it maps to none there: a seat's capacity is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1808
+      "line": 1826
     },
     {
       "id": "jurisdictions.index.the_active_profiles_say_differently",
       "en": "the active profiles say differently who may request under {name}, so it is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1890
+      "line": 1908
     },
     {
       "id": "jurisdictions.index.the_active_profiles_say_host",
       "en": "the active profiles say {host} publishes different systems' material ({origins}), so an address there names no system",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1772
+      "line": 1790
     },
     {
       "id": "jurisdictions.index.the_active_profiles_state_kind",
       "en": "the active profiles state {kind}'s venue's {fact} differently, so it is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2039
+      "line": 2057
     },
     {
       "id": "jurisdictions.index.the_body_variant_map_names",
@@ -34774,7 +34774,7 @@
       "en": "the active profiles name different time zones, so none is given: a time of day there is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1843
+      "line": 1861
     },
     {
       "id": "jurisdictions.index.trigger_is_one_of_legal",
@@ -34844,7 +34844,7 @@
       "en": "the active profiles name different weekends, so none is given: a business-day count or a roll is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2131
+      "line": 2149
     },
     {
       "id": "jurisdictions.index.what_is_a_non_empty",
@@ -34858,7 +34858,7 @@
       "en": "who issues it is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1915
+      "line": 1933
     },
     {
       "id": "jurisdictions.index.within_is_amount_and_units",
