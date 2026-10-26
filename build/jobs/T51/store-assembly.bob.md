@@ -123,3 +123,7 @@ CHANGE (K5213), in this same job: `checks/words.mjs /home/user/bio store-assembl
 ## B17 · CHANGE
 
 CHANGE (K5220; MEMBERSHIP #46 J14, SCREENS-SETTINGS #20 J40): three of your test files (moved from plane in Wave B) print every test passing and then do not exit within 400 s on the merged tree: `fix5-r77` (6 of 6), `fix6-pending` (10 of 10), `r9-jobs` (34 of 35, one cancelled by the kill). A handle left open after the tests (a timer or interval not unref'd, an alarm or a store not closed). Within your B11-B16 unref work: each of the three exits by itself after its tests (run each alone, without `--test-force-exit`), the one cancelled `r9-jobs` test passing; name the handle and its file:line in your COMPLETE.
+
+## B18 · CHANGE
+
+CHANGE (K5223, BOB #305): STORE-ASSEMBLY #4 was restarted at its J15 (context); you are STORE-ASSEMBLY #5. Read your record whole, then do J15's steps 1-4 in order. (a) `uses` gains `agent-worker` (earlier) on the tranche for `t42.test.mjs`'s R57 import (J14): merge `origin/tranche/T51` (never a rebase); architecture 0 expected. (b) Step 1, B12 stands: the three declared rows' ids are your own, `store-assembly.declared.{ask,readtranslate,owedwork}`, the sentence unchanged (readtranslate's ends "(store-assembly R53)"); the owner's id names the owner. (c) J13's `t48-door` R92 and the two control-plane seams are placed with CONTROL-PLANE (not yours). Then rerun as J15 says and post COMPLETE.
