@@ -991,3 +991,7 @@ Suites: module 524 tests, 523 pass, 0 fail, 1 todo (existing); extraction 392/39
 Met ids for BOB to strike: R1 (K5200 (4)).
 REPORT: (a) an HTML page between the whole-read ceiling (24 MiB) and the text bound (50 MB), whole or in parts, is refused TOO_LARGE against 24 MiB while plan() (index.mjs:1643) and R50/R51 read as if its bound were 50 MB; text/JSON/XML in that range are windowed, HTML is not. Which bound an HTML page has is BOB's; I changed nothing, so single part and parts stay equal. (b) A door case for a fetched HTML page in parts is control-plane's to place (K5138), using r1-parts.test.mjs's page. Record section B61.
 Size (session_018AnPSu24P4RD3aumhsFSif): test runs 12, module lines 4293
+
+### B62 (K5209) · after OP-GRADES #30
+Merged `origin/tranche/T51`. Module 524 tests plus d606, tier2-wire, pdf-worker-binding and the four control-plane door files (r100-upload, r123-reading, r117-held, t51-reading-follows): 551 tests, 550 pass, 0 fail, 1 todo (existing). The inherited `DECLARED_OP_DISAGREES` reds are gone. Checks as in B61, all 0.
+Size (session_018AnPSu24P4RD3aumhsFSif): test runs 13, module lines 4293
