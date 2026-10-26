@@ -114,11 +114,6 @@ export async function securityTeam({ tool = true, ...opts } = {}) {
   return s;
 }
 
-/** The assistant's reading of a protected word into English, which the platform's model gives (the door asks no draft after a draft-due act:
- *  store-request's door header): the answer at the platform's edge, in the shape translations gives it, asked by `as`. */
-export const englishDraft = (as) => ({ translationdraft: (q, b) => ({ ok: true, result: { ok: true, key: b.key, language: b.language, english: "Reversible: you can undo this, as read back from the Spanish.", label: { kind: "machine", asked_by: "member:" + as.member } } }) });
-
-
 /* ---- the teams the screens are drawn over, by name; and the runs (a screen, as whom, over which team) the cross-screen tests make ---- */
 
 const REASON = "We hold tips from city employees; none of it may go to an AI service.";

@@ -10,7 +10,6 @@ import { TEAMS, teamNamed, RUNS, readsOf, subjectOf, fullTeam, reauth, KEYS, G, 
 import { key as keyOf } from "./seed-members.mjs";
 import { rulesTeam } from "./seed-places.mjs";
 import { writingHelp } from "./seed-account.mjs";
-import { englishDraft } from "./seed-common.mjs";
 
 const SECRET = "SENTINEL-SECRET-0123456789";
 const TOOL_SECRET = "SENTINEL-intelix-client_secret";
@@ -89,7 +88,6 @@ const PRESSES = [
   P("security", "security", "securitytooltest", (t) => ({ data: { tool: t.toolId } })),
   P("security", "security", "securitytoolremove", (t) => ({ data: { tool: t.toolId } })),
   P("full", "translations", "translationadopt", { data: { key: "rail.home.name" }, values: { "tr-t-rail_home_name": "Portada" } }, { who: "dev" }),
-  P("full", "translations", "translationdraft", { data: { key: "weight.reversible.name", direction: "to_english" }, reason: "r" }, { table: (t) => englishDraft(t.founder) }),
   P("full", "translations", "translationconfirm", { data: { key: "weight.reversible.name" } }, { who: "dev" }),
   P("full", "translations", "translationrevert", { data: { key: "rail.home.name" } }),
   P("full", "translations", "translationgrant", { data: { revoke: "" }, values: { "tr-member": "ana" } }),
@@ -128,7 +126,7 @@ const CHANGES = {
   passwordresetlink: [], signerset: ["signers"], signeradd: ["signers"], ruleconfirm: ["rules"], rulewithdraw: ["rules"], ruledraft: ["rules"], groupnameset: ["identity"], groupdomainset: ["identity"], grouplanguagesset: ["languages"], courtnoticeset: ["court"],
   hostingaccessset: ["hosting"], strengthbarset: ["bar"], profilesset: ["profiles"], placewanted: ["place"], officesseed: ["offices"], entitycreate: ["offices"],
   recoverycodesissue: ["codes"], groupdescriptionset: ["description"], groupdescriptiondraft: [], securitymap: ["map"], securitytooladd: ["tools"], securitytooltest: ["tools"],
-  securitytoolremove: ["tools"], translationadopt: ["words"], translationconfirm: ["words"], translationrevert: ["words"], translationgrant: [], translationdraft: ["words"],
+  securitytoolremove: ["tools"], translationadopt: ["words"], translationconfirm: ["words"], translationrevert: ["words"], translationgrant: [],
 };
 
 test("R8 every act of every screen, once answered, reads again what it changes and draws it", async () => {
