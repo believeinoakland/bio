@@ -1080,7 +1080,7 @@ export class FileSafety {
      and its record, goes on past the firing's bound (R55). A failure is classed from the renderer's refusal: `TIME_LIMIT` and an
      unreachable renderer are transient (the file stays queued and is tried again with back-off), `NOT_RENDERABLE`, `ENCRYPTED` and
      any other refusal are final, and only `NOT_FOUND` waits for the file's bytes (R51). */
-  async #render(row) {
+  async #render(row, release) {
     const sha = row.capture_sha;
     const look = await this.#look(sha);
     /* R51 (F3b): bytes not held yet (the keep, after the receipt that queued this render) are waited for, not failed: the view is
@@ -1094,13 +1094,13 @@ export class FileSafety {
     /* R54: an encrypted file is refused without a call to the renderer, so it does not use the tick */
     if (look.encrypted || this.#scanNoteEncrypted(sha)) { this.#renderFinal(sha, route, "ENCRYPTED", null); return "refused"; }
     this.sql.exec(`UPDATE fs_files SET render_state = 'rendering', render_started_at = ? WHERE capture_sha = ?`, iso(this.now()), sha);
-    try { return await this.#renderCall(sha, route); } catch (e) {
+    try { return await this.#renderCall(sha, route, release); } catch (e) {
       /* a fault after the mark: the file is queued again, not left marked in flight */
       try { this.sql.exec(`UPDATE fs_files SET render_state = 'queued', render_started_at = NULL WHERE capture_sha = ? AND render_state = 'rendering'`, sha); } catch { /* the stale mark is released */ }
       throw e;
     }
   }
-  async #renderCall(sha, route) {
+  async #renderCall(sha, route, release) {
     const r = await this.#scanner("/render", { store: this.store, target: this.#target(sha), route }, { stream: true });
     const bucket = this.#bucket();
     const detail = r.body && r.body.detail ? String(r.body.detail).slice(0, 300) : r.body && r.body.message ? String(r.body.message).slice(0, 300) : null;
@@ -1110,10 +1110,10 @@ export class FileSafety {
       const derived = r.headers.get("x-derived-sha256");
       if (!derived || !HEX64.test(derived) || !bucket) {
         await FileSafety.#drop(r.stream);
-        return this.#renderFinal(sha, route, !bucket ? "R2_NOT_CONFIGURED" : "RENDER_FAILED", null);
+        return this.#renderFinal(sha, route, !bucket ? "R2_NOT_CONFIGURED" : "RENDER_FAILED", null, release);
       }
       const got = await FileSafety.#heldStream(r.stream, SAFE_VIEW_BYTES_MAX);
-      if (!got.ok) return this.#renderFinal(sha, route, got.reason, null);
+      if (!got.ok) return this.#renderFinal(sha, route, got.reason, null, release);
       await bucket.put(derivedKey(this.store, derived), got.bytes, { sha256: derived,
         customMetadata: { derived: "true", of: sha, kind: "safe-view" } });
       this.sql.exec(`UPDATE fs_files SET render_state = 'done', render_route = ?, render_sha = ?, render_pages = ?, render_source_pages = ?,
@@ -1126,18 +1126,36 @@ export class FileSafety {
     const code = (r.body && r.body.code) || (!bucket ? "R2_NOT_CONFIGURED" : "RENDER_FAILED");
     if (code === "NOT_FOUND") return this.#renderWaits(sha);
     const transient = r.body && (r.body.class === "transient" || code === "TIME_LIMIT" || code === "SCANNER_UNREACHABLE");
-    return transient ? this.#renderRetry(sha, route, code, detail) : this.#renderFinal(sha, route, code, detail);
+    return transient ? this.#renderRetry(sha, route, code, detail) : this.#renderFinal(sha, route, code, detail, release);
   }
   #renderWaits(sha) {
     this.sql.exec(`UPDATE fs_files SET render_state = 'waiting', render_reason = 'NOT_FOUND', render_wait_at = ?, render_started_at = NULL WHERE capture_sha = ?`,
                   iso(this.now() + WAITING_RECHECK_MS), sha);
     return "waiting";
   }
-  /* G136b: final, never tried again */
-  #renderFinal(sha, route, code, detail) {
-    this.sql.exec(`UPDATE fs_files SET render_state = 'failed', render_route = ?, render_reason = ?, render_detail = ?, render_wait_at = NULL, render_started_at = NULL
-                   WHERE capture_sha = ?`, route, code, detail, sha);
+  /* G136b: final, not tried again by the renderer that failed it. R59: the renderer's release is recorded with it (null when the
+     renderer's release was not read, or the refusal was not the renderer's), so another release tries it once. */
+  #renderFinal(sha, route, code, detail, release = null) {
+    this.sql.exec(`UPDATE fs_files SET render_state = 'failed', render_route = ?, render_reason = ?, render_detail = ?, render_release = ?, render_wait_at = NULL, render_started_at = NULL
+                   WHERE capture_sha = ?`, route, code, detail, release, sha);
     return "failed";
+  }
+  /* R59 (F-B14): the release the renderer answering now states in its own /version, or null when it states none or cannot be reached. */
+  async #rendererRelease() {
+    try {
+      const got = await this.#bounded("version", () => this.#scanner("/version", null, { method: "GET" }));
+      const v = got.late ? null : got.value;
+      return v && v.body && v.body.ok === true && typeof v.body.renderer_version === "string" && v.body.renderer_version ? v.body.renderer_version : null;
+    } catch { return null; }
+  }
+  /* R59: the SQL naming the files a release could change: failed by a renderer's refusal (not ENCRYPTED, which no release reads) */
+  static RENDER_RETRYABLE = `render_state = 'failed' AND COALESCE(render_reason, '') <> 'ENCRYPTED'`;
+  /* R59: a file failed finally by another release (or one not recorded) is queued once more; one failed by this release stays failed. */
+  #requeueForRelease(release) {
+    this.#keep("renderrel", { checked: this.now() });
+    if (!release) return;
+    this.sql.exec(`UPDATE fs_files SET render_state = 'queued', render_reason = NULL, render_detail = NULL, render_tries = 0, render_wait_at = NULL, render_started_at = NULL
+                   WHERE ${FileSafety.RENDER_RETRYABLE} AND COALESCE(render_release, '') <> ?`, release);
   }
   /* G136b: transient, queued again after a back-off that doubles each try from `RENDER_RETRY_MS` to the hour (one file's recheck ceiling) */
   #renderRetry(sha, route, code, detail) {
@@ -1208,6 +1226,14 @@ export class FileSafety {
     };
     await this.#releaseRenderWaits(lim);
     this.#releaseStaleRenders();
+    /* R59: the renderer's release is read when a file waits for it or has failed by it; a failed file of another release is queued again */
+    let release = null;
+    try {
+      if (this.#one(`SELECT 1 AS x FROM fs_files WHERE render_state = 'queued' OR (${FileSafety.RENDER_RETRYABLE}) LIMIT 1`)) {
+        release = await this.#rendererRelease();
+        this.#requeueForRelease(release);
+      }
+    } catch { /* the failed files wait for the next round */ }
     let views, queuedCopies;
     try {
       /* DEC-49 REGION is-render-queue-readable */
@@ -1224,7 +1250,7 @@ export class FileSafety {
       /* R55: one render is begun per tick, and the firing waits for it no longer than the bound; a file that takes no renderer (no
          route, a spreadsheet's cells, bytes not held yet) is bookkeeping and does not use the tick */
       for (const row of views) {
-        const got = await this.#bounded(`render:${row.capture_sha}`, () => this.#render(row));
+        const got = await this.#bounded(`render:${row.capture_sha}`, () => this.#render(row, release));
         if (got.late) { inFlight++; break; }
         const r = got.value;
         if (r in out) out[r]++;
@@ -2185,7 +2211,11 @@ export class FileSafety {
         const f = this.#one(`SELECT MIN(render_started_at) AS t FROM fs_files WHERE render_state = 'rendering'`);
         const ft = f && f.t ? Date.parse(f.t) + RENDER_INFLIGHT_STALE_MS : NaN;
         const inflight = Number.isFinite(ft) ? Math.max(poll, ft) : null;
-        return this.#answer("render", waiting === null ? inflight : inflight === null ? waiting : Math.min(waiting, inflight));
+        /* R59: a file failed finally by a renderer's refusal is looked at once an hour, to see whether the renderer is another release */
+        const rel = this.#one(`SELECT 1 AS x FROM fs_files WHERE ${FileSafety.RENDER_RETRYABLE} LIMIT 1`)
+          ? Math.max(poll, ((this.#kept("renderrel") || {}).checked ?? n) + WAITING_RECHECK_MS) : null;
+        const soonest = [waiting, inflight, rel].filter((x) => x !== null);
+        return this.#answer("render", soonest.length ? Math.min(...soonest) : null);
       }
       return this.#answer("render", poll);
     } catch { return this.#answer("render", poll); }

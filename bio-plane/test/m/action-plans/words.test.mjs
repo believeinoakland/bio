@@ -70,7 +70,7 @@ test("R36: every refusal this module mints, each detail's variants with it, and 
   /* R9–R12: options */
   const add = (extra = {}) => keep(w.ap.optionAdd({ plan: w.PL, summary: "Write", category: "awareness", subjects: [w.S1], ...by("bob"), ...extra }));
   add(m); add({ summary: "" }); add({ detail: "x".repeat(5001) }); add({ category: "x" }); add({ subjects: [] }); add({ subjects: [w.S3] });
-  add({ addressee: { state: "named", name: "A Person" } }); add({ dates: [{ date: "2026-13-01", basis: "b" }] }); add({ tier: 1 });
+  add({ addressee: { state: "named", name: "A Person" } }); add({ addressee: { state: "named", kind: "press", role: "", organisation: "" } }); add({ dates: [{ date: "2026-13-01", basis: "b" }] }); add({ tier: 1 });
   add({ category: "legal", tier: 9 }); add({ lobbying: true }); add({ budget: 1 }); add({ ...by("carol") });
   const a = add({ subjects: [w.SI, w.S1], addressee: OFFICE, dates: [{ date: "2026-09-01", basis: "the order" }] }).option;
   const b = add({ subjects: [w.SI], addressee: OFFICE, lobbying: true, enforces: w.S1 }).option;

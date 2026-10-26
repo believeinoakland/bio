@@ -195,7 +195,9 @@ export const CEREMONY = Object.freeze({
         + (prepared ? "" : v.ready && !lines.length ? '<p data-ready="yes">' + cs.w("screen.ceremony.ready") + "</p>"
           : lines.length ? '<p data-ready="no"><b>' + cs.w("ceremony.gate.heading") + '</b></p><ul class="mk-list" data-blockers>' + lines.map(function (l) { return '<li role="alert">' + l + "</li>"; }).join("") + "</ul>"
             : '<p data-ready="no">' + cs.w("screen.ceremony.notready") + "</p>");
-    }) + '<div class="mk-acts">' + cs.act("publishpreflight") + "</div>"));
+    }) + '<div class="mk-acts">' + cs.act("publishpreflight") + "</div>"
+    // D-M5 (1): a refused confirmation of the ties is said here as well, with the stops it is about, not only at the foot of the page
+    + P.said(view, "stops")));
 
     // R57 (C12; DEC-378): the four details of this work, stated or not stated, never blocking the signing; read once the case has an id.
     if (c.case_id) {
@@ -542,9 +544,17 @@ export const CEREMONY = Object.freeze({
     {
       // R5: the Ties step's confirmation prepares the edition for signing: `publish` with `tieAttested: true`.
       op: "publish", label: "act.publish.label.ceremony", rereads: ["copy", "drafts"],
+      // D-M5 (1): a refusal in form leaves the stops to be read again too, as a refusal inside a success does (`done`)
+      failed: function (view, answer, cs) {
+        const f = answer && answer.fields && typeof answer.fields === "object" ? answer.fields : { code: answer && answer.code };
+        view.parts.say(cs, view, "stops", view.parts.refusalText(cs, f) || cs.w("shell.noanswer"), false);
+        view.parts.forget(view);
+        cs.set("later", view.ui.later);
+      },
       send: function (view, el, cs) {
         const copy = view.parts.copyOf(view);
         if (!copy) return null;
+        view.parts.unsay(cs, view, "stops");
         const tick = cs.value("ce-tie");
         if (!(Array.isArray(tick) ? tick.includes("yes") : tick === true)) return { refuse: "screen.ceremony.ties.needed" };
         const at = view.parts.attested(view, cs);
@@ -553,7 +563,12 @@ export const CEREMONY = Object.freeze({
         return { body: Object.assign(view.parts.caseArgs(copy, view.ui.draftId || ""), at.body, { tieAttested: true }) };
       },
       done: function (view, answer, cs) {
-        if (view.parts.refused(cs, view, "publish", answer)) return; // D29: nothing is prepared on a refusal
+        // D29: nothing is prepared on a refusal; D-M5 (1): the stops are read again, so the list at the top is the one the plane now holds
+        if (view.parts.refused(cs, view, "publish", answer)) {
+          view.parts.say(cs, view, "stops", view.parts.refusalText(cs, view.parts.carried(answer)), false);
+          view.parts.forget(view);
+          return;
+        }
         const r = view.parts.value(answer) || {};
         view.ui.prepared = { caseId: r.caseId, edition: r.edition, docSha: r.caseDocument ? r.caseDocument.doc_sha : null,
           findings: (Array.isArray(r.findings) ? r.findings : r.target ? [{ target: r.target, bundleSha: r.bundleSha }] : [])

@@ -1,6 +1,6 @@
 # BOB to screens-publish (T51)
 
-**Read** · handled J52
+**Read** · handled J54
 
 ## B1 · START
 
@@ -673,3 +673,7 @@ Bob (K5257, K5258): the live walk before the alpha found this; it is fixed now, 
 
 Your job: (1) D-M5 (1): a refused "Confirm your ties and prepare the edition for signing" is drawn under the Ties box at the page foot (`ceremony.mjs:340`) and `publish` re-reads only copy and drafts (`:544`), so the stop list at the top is unchanged and the member cannot tell: draw the refusal by the act pressed and re-read the stops. (2) D-M5 (2): `case-editor.mjs:174` offers the exclusion statement's acknowledgement only when something is listed; what is acknowledged is the statement (case-inputs R1, C-82.5): offer it whenever there is a statement. (3) D-M1 (2): the published page names a document by its internal id (`published-parts.mjs:125` draws `strength/arithmetic.mjs:139`'s signed text verbatim): draw the document's title beside the id where the record holds one (the signed text is unchanged). (4) D-M6: plane `detail` prose drawn verbatim on public pages (`published.mjs:90`, `:193`, `published-parts.mjs:125`): draw by key where the owner publishes a key; REPORT each sentence that has no key with its owner and file:line. Tests red then green.
 **Done:** each test red then green; your module's tests green; the users `node build/plan/impact.mjs origin/tranche/T51 HEAD` names that exercise what you changed, green; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` no new finding in your files; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-publish $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each test red then green, suite counts, anything REPORTed, and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B59 · CHANGE
+
+CHANGE (re J53 (4); K5270). PUBLIC-READ #39 is merged into tranche/T51 (K5267): `publishedcase`'s `bar_detail` now answers the no-bar words when `bar.declared` is false (`public-read/index.mjs:1293`). D-M6's cause is public-read's, fixed there; one cause, one site. Merge origin/tranche/T51 into your branch, remove your `barSaid` preference for `bar.detail` (`published.mjs:89-90`) so the page draws `bar_detail` as before, and make your walk-d D-M6 test assert the no-bar words through public-read's real answer (red on the old tranche, green now). Your other three items stand. Then COMPLETE again. Your REPORT's sentences (verification.detail, strength[].detail) and the 'nothing left out' words are already with the design stream (B529).

@@ -1,7 +1,7 @@
 /* store-assembly R100, R97 (were plane R10, R9; K861 (2)): the assembly's own stats sight, registered as `store-assembly`
    through record-core's R65. It is the one
    source behind `op=stats` and purge's proof: the caller's sight over hidden bundles and hidden runs, the three figures
-   no owner reports (`refs`, read from `connections`' export, its R61; `textIndexOk`, `extraction`'s boolean;
+   no owner reports (`refs`, read from `connections`' export, its R61; `textIndexOk`, `extraction`'s boolean, only on a deep read or purge's proof;
    `observationsNonLead`), and the spread of every module's registered figures (record-core R63). Each owner's figures are
    its own, registered under its name by the composition root (`assemble.mjs`, `registerOwnersCounts`). It writes nothing. */
 import { recordOf, RecordCore } from "../record-core/index.mjs";
@@ -40,6 +40,23 @@ export function registerOwnersCounts(ctx) {
   return OWNERS.map(([module, keys, counts]) => record.registerCounts(module, [...keys], (hid) => counts(ctx, hid)));
 }
 
+/* A-01 (walk T51 alpha): `textIndexOk` is FTS5's integrity check at rank 1, which re-reads and re-tokenises every row of the
+   text index (5.7 s live), and the object answers one request at a time. So the wire's default answer does not run it: it
+   runs only while the `stats` route arm serves a read that named `deep=1` and carries the control plane's `capacity`
+   stamp (the administrator class). The arm is synchronous, so the flag is set and cleared inside one call. Purge's proof
+   (`proof`) is a deliberate read and keeps the check. */
+let deepRead = false;
+
+/** R100: the route map with its `stats` arm wrapped, so `deep=1` with `capacity=1` (the control plane's stamp, never the
+ *  body's) makes that one read carry `textIndexOk`. Every other key of the map is untouched. */
+export function withDeepStats(ops, url) {
+  const stats = ops.stats;
+  return { ...ops, stats: () => {
+    deepRead = url.searchParams.get("deep") === "1" && url.searchParams.get("capacity") === "1";
+    try { return stats(); } finally { deepRead = false; }
+  } };
+}
+
 /** R100: the assembly's own stats sight, registered as the instance's stats source (record-core R65). */
 export function registerStats(ctx) {
   return recordOf(ctx).registerStatsSource(STATS_SOURCE, ({ viewer, proof }) => figures(ctx, { proof, viewer }));
@@ -64,7 +81,7 @@ function figures(ctx, { proof, viewer }) {
   return {
     /* K877, K882 (N454): `refs` is connections' table, counted by its export (its R61) through this sight. */
     ...connectionsOf(ctx).refsCounts(hid),
-    textIndexOk: extractionOf(ctx).textIndexOk(),
+    ...(proof || deepRead ? { textIndexOk: extractionOf(ctx).textIndexOk() } : {}),
     /* REC-131 / IC-148 — ONE KEY NEVER CARRIES TWO MEANINGS. The wire's log count excludes lead looks, so it is
        published as `observationsNonLead`, a name that states its predicate (`authority_kind <> 'lead'`); purge's
        `observations` (observation-log's figure) keeps the whole log, and the wire carries no `observations` key.

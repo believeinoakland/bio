@@ -293,6 +293,20 @@ test("R62 addresseeSuggest answers the offices held as custodian_of or responsib
   void body;
 });
 
+test("R111 R62 addresseeSuggest given an office entity as the subject answers that office as named, with its body; an office placed in no body is undetermined, never absent", () => {
+  const w = world();
+  const { office } = seeded(w);
+  const named = w.a.addresseeSuggest({ subject: office, viewer: M });
+  assert.equal(named.ok, true, JSON.stringify(named));
+  assert.deepEqual(named.offices.map((o) => o.addressee),
+    [{ state: "named", kind: "office", role: "Town Clerk", body: "Town of Port Ellery", entity_id: office }]);
+  assert.deepEqual(named.undetermined, []);
+  const loose = ent(w, "office", "Harbour Master");
+  const u = w.a.addresseeSuggest({ subject: loose, viewer: M });
+  assert.deepEqual([u.offices.length, u.undetermined.map((x) => [x.office, x.why])], [0, [[loose, word("actions.why.line_date_places")]]]);
+  assert.equal(actions.actionsOps(w.a, new URL(`https://x/?subject=${office}&viewer=${M}`), null).addresseesuggest().offices[0].addressee.entity_id, office);
+});
+
 test("R66 the 'what we did' source: the group's correspondence and moves on visible actions touching the set, at their own dates, windowed and bounded; registered once with events", () => {
   const w = world();
   const { office } = seeded(w);

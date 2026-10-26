@@ -102,7 +102,7 @@ export function meaningLevels(level, documents, withRows, total,
       meaning: at("meaning")
         ? { state: "COUNTED", documents_with_rows: withRows, rows_matched: total,
             why: say("retrieval.why.document_scope_hold_rows", { with_rows: withRows, documents, without }) }
-        : { state: "UNDETERMINED", why: say("retrieval.why.finding_rests_rows") },
+        : { state: "UNDETERMINED", why: localize("retrieval.levels.finding_rests_plain", "nobody has yet said whether a finding rests on what was found here; the Cited column beside each result says it for that result") },
     },
   };
   /* ONE SENTENCE a surface can render without composing it itself. The passage arm's own sentence LEADS WITH THE

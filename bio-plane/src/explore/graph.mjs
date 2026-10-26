@@ -7,7 +7,7 @@
    viewer is answered or counted (R7); it writes nothing (R9). */
 import { LOWEST_GRADE, orderPaths, exhausted } from '../connection-grammar/index.mjs';
 import { checkWalkArgs, traverse, depthStop } from './walk.mjs';
-import { readEntities, labelIn, idKindOf } from './labels.mjs';
+import { readEntities, readNodeNames, labelIn, idKindOf } from './labels.mjs';
 import { refuse, isObj, DECLARED_MARK, HUNCH_MARK, NOT_ASSERTED } from './answer.mjs';
 import { word, localize } from '../setup-words/index.mjs';
 
@@ -17,8 +17,9 @@ export const STOPPED_SENTENCE = word('explore.stopped_sentence');
 export const RINGS = Object.freeze([1, 2]);
 
 /**
- * Each node's `label` and `entity_kind` (R25): an `ENT-` node's canonical label and kind as `entities` answers them,
- * `null` for any other node and for an entity the record holds no name for. A node's label is never its id.
+ * Each node's `label` and `entity_kind` (R25, R29): an `ENT-` node's canonical label and kind as `entities` answers them,
+ * an `EVT-` node's by its kind and date and an `INFO-` node's by its document's title (`readNodeNames`), `null` for any
+ * other node and for one the record holds no name for. A node's label is never its id.
  * @param {Map<string, any>} known @param {{id: string, ring: number, id_kind: string | null}[]} nodes
  */
 function named(known, nodes) {
@@ -47,7 +48,7 @@ function stepOf(registry, h, known) {
 
 /**
  * neighbourhood({centre, at, rings?, kinds?, scope?, viewer}) (`op=exploregraph`).
- * @param {{registry: any, now: () => number, budget_ms: number, entities?: any}} ctx @param {any} arg
+ * @param {{registry: any, now: () => number, budget_ms: number, entities?: any, events?: any, documents?: any}} ctx @param {any} arg
  */
 export function neighbourhood(ctx, arg) {
   const a = isObj(arg) ? arg : {};
@@ -75,6 +76,7 @@ export function neighbourhood(ctx, arg) {
   // Names are read once for each distinct end of the nodes and steps listed (R25, R26), in bounded reads.
   const known = readEntities(ctx, [...nodes.map((n) => n.id), ...hops.flatMap((h) => [h.from, h.to])], a.viewer);
   const steps = hops.map((h) => stepOf(ctx.registry, h, known));
+  const nodeNames = new Map([...known, ...readNodeNames(ctx, nodes.map((n) => n.id), a.viewer)]);
   const stopped = [
     ...t.atDepth.map((node) => ({ node, why: 'ring' })),
     ...s.hubs.map((h) => ({ node: h.node, why: 'hub', kind: h.kind, bound: h.bound, set_size: h.set_size })),
@@ -82,7 +84,7 @@ export function neighbourhood(ctx, arg) {
     ...(s.stop ? [{ node: s.stop_node, why: s.stop }] : []),
   ];
   return {
-    ok: true, centre, at: a.at, rings, kinds: k.kinds, scope: a.scope ?? null, nodes: named(known, nodes), steps, stopped,
+    ok: true, centre, at: a.at, rings, kinds: k.kinds, scope: a.scope ?? null, nodes: named(nodeNames, nodes), steps, stopped,
     ...(stopped.length ? { stopped_sentence: STOPPED_SENTENCE } : {}),
     ...depthStop(t.atDepth), owner_refusals: s.refusals,
     visited: t.visited, budget_ms: ctx.budget_ms, elapsed_ms, owner_calls: s.calls, complete: t.r.complete(), note: NOT_ASSERTED,

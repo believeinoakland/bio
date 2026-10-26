@@ -1,6 +1,6 @@
 # explore (T51)
 
-**Status** · session_017Lam1WDA8ZqRqYcHHMJK64 · depth 2 · COMPLETE · handled B6
+**Status** · session_017reTzAgYSiDVCzRpif7dhJ · depth 2 · COMPLETE · handled B7
 
 ## Completion (EXPLORE #7)
 
@@ -109,3 +109,25 @@ Size (session_01MBWcpq5eLEyiijWPhxG9Zx): test runs 4, module lines 1115
 **Deferred.** None for this entry.
 
 Size (session_017Lam1WDA8ZqRqYcHHMJK64): test runs 3, module lines 1115
+
+## Completion (EXPLORE #11, fix round 10, B7)
+
+**Entries applied.** Walk C C-M8 (1), requirement R29 (K5271): `exploregraph`'s node `label` now names an `EVT-` node by its kind and date ("meeting · 2026-02-10"; "award · undated" when the event holds no date or `undetermined`) and an `INFO-` node by its document's title, else `null` as before. A hop's `from_label`/`to_label` stay R26's (entities only; an event end `null`): the screen draws nodes by `label` (`parts.mjs` ~:275), so the Person page's Connect no longer draws "Not yet named" for an event.
+- `bio-plane/src/explore/labels.mjs:35-70` `readNodeNames` (new): events by `ctx.events().readEvent({eventId, viewer})` (the owner keeps the viewer's sight, R7); documents by `ctx.documents.titlesOf({ids, viewer})` in reads of at most 500 ids; sentences `explore.label.event` and `explore.label.event_undated` through `localize`; a title or label never the id.
+- `bio-plane/src/explore/graph.mjs:79,87` the node names merged with the entity names; only the nodes the answer lists are read, so a withheld hop names nothing.
+- `bio-plane/src/explore/index.mjs:35,43` `exploreOf` takes `deps.documents` (none by default: document nodes stay unnamed).
+- Test, `bio-plane/test/m/explore/node-labels.test.mjs` (3 tests, names R29 R25 R7; fixtures-own: the events and documents readers are doubles of the two reads, fed by the test): RED first (event and document nodes `null`; the viewer-pass assertion false; documents never read), GREEN after.
+
+**REPORT to BOB (outside my paths).** (1) `store-assembly/assemble.mjs:277` builds `exploreOf(ctx, { events, money })`: events are live, so event nodes are named live now; document titles need the assembly to pass `documents: { titlesOf({ids, viewer}) → {titles}}` reading `bundles.title` for a bundle the viewer may see (record-core's `bundleInfo` plus membership's `viewerPredicate`; explore's Uses name neither, so a module edge or a provider is BOB's call). Until then an `INFO-` node stays "Not yet named". (2) The second half of C-M8 (`parts.mjs:336` drawing `capture:<sha>` evidence raw) is `screens-investigate`'s. (3) Not mine, red on the tranche tip as well: `store-assembly/declarations.test.mjs` R83 (modules exporting DECLARED_OPS not in the assembly), and `screens-investigate/common.test.mjs` cancelled by timeout (4 pass, 1 cancelled, same with `bio-plane/src/explore` restored to `origin/tranche/T51`).
+
+**Deferred.** None in my module.
+
+**Tests and checks.** explore: 62 pass, 0 fail (12 files). `impact.mjs origin/tranche/T51 HEAD`: 19 modules, 418 files; run together 1836 pass, 8 fail, 225 cancelled ("event loop already resolved", K5124); each of the 225 flagged files run alone: 223 clean, the two above red also on the base. `checks/run.mjs`: no finding in explore's files (89 stub failures in capture, doorbell, file-safety, monitoring, test-support, none in mine); words 0. `format` 0 failures; `architecture explore` 24 files, 0 failures; `coverage explore` 29 of 29 live ids named, 0 failures; `ownership explore` 5 files, 0 failures.
+
+**Met requirement ids.** R29 (and R25, R26, R7 unchanged and still met).
+
+Size (session_017reTzAgYSiDVCzRpif7dhJ): test runs 11 (+1 impact run of 418 files and 225 single-file reruns), module lines 1154
+
+## J7 · COMPLETE
+
+COMPLETE · fix round 10 (B7): R29 met. EVT- node named '{kind} · {date}' ('{kind} · undated'), INFO- node by document title via new deps.documents titlesOf (labels.mjs:35-70, graph.mjs:79,87, index.mjs:35,43). Test node-labels.test.mjs red then green; explore 62/62; impact 418 files: 223 of 225 flagged clean alone, the 2 red are red on the tranche tip too (store-assembly declarations R83; screens-investigate common timeout); checks 0 failures in explore. REPORT: store-assembly/assemble.mjs:277 must pass documents (bundle title, sight-aware) for INFO- titles live; event names are live now. Details in my record.

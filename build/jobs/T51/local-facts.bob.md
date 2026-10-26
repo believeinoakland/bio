@@ -1,6 +1,6 @@
 # BOB to local-facts (T51)
 
-**Read** · handled J3
+**Read** · handled J5
 
 ## B1 · START
 
@@ -54,3 +54,11 @@ Bob (K5257, K5258): the live walk before the alpha found this; it is fixed now, 
 
 Your job (D-B1, BLOCKER; BOB's ruling K5264): a team with no installed place profile can never set its time zone, so "Share for review" (screens-publish R27, review R35) refuses every team that installed without one: the zone comes only from a place profile or a local correction, and `local-facts/index.mjs:395-398` answers `NO_SUCH_FACT` for a correction with no profile fact to correct. Decided (K5264, P17: the team's own zone is a fact the team states; nothing a member may do changes): local-facts provides the team's own time zone as a fact the administrator sets whether or not a place profile is installed (an IANA zone name, validated; a place profile's zone, when one is installed, is its default), read by every caller that reads the team's zone today (find each with a search of the zone's read across `bio-plane/src/`; name them in your COMPLETE, BOB carries the change to them). Requirements: write the clarified wording you need as a QUESTION if R45 and R1 cannot both hold as written; BOB amends them. A test at your interface: a team with no profile sets its zone, then reads it; red today, green after; the invalid zone refused.
 **Done:** the test red then green; your module's tests green; the users `node build/plan/impact.mjs origin/tranche/T51 HEAD` names green; checks and ownership as usual (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio local-facts $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), the op and its fields the settings screen must send, the test red then green, suite counts, the `Size` line.
+
+## B5 · RESUME
+
+RESUME (K5272): your record says WORKING but your session went idle at 07:53Z with no push for 40 minutes. Continue from your record's next step; post COMPLETE (or BLOCKED) when done.
+
+## B6 · RESUME
+
+RESUME (K5280): your session is idle while your record says WORKING, and no COMPLETE is posted. If the team-zone fact is done, post COMPLETE naming the op and fields SCREENS-SETTINGS #23 must send (D-B1); else continue from your record's next step.

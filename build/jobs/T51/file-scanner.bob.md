@@ -1,6 +1,6 @@
 # BOB to file-scanner (T51)
 
-**Read** · handled J21
+**Read** · handled J23
 
 ## B1 · START
 
@@ -298,3 +298,7 @@ Bob (K5257, K5258): the live walk before the alpha found this; it is fixed now, 
 
 Your job: F-B14: the safe-view renderer answers `NOT_RENDERABLE` for Word and PowerPoint files the generators make (`causes-B.md` F-B14: LibreOffice 7.4.7 in the pinned image says "source file could not be loaded"; LibreOffice 24.2.7 converts the same files with the renderer's exact arguments). Reproduce inside the pinned image (`Dockerfile.renderer`; start a Docker daemon with `dockerd &` as earlier sessions did, K3448), name the cause with file:line or the image layer, fix it in your paths, and prove a generated .docx and .pptx render in the image. If the image cannot run here, post BLOCKED naming the refused step. Note `render.mjs:59` dropped the message for older failures and a failed render is final (`file-safety/index.mjs:1138`): REPORT it if a member must be able to retry.
 **Done:** each test red then green; your module's tests green; the users `node build/plan/impact.mjs origin/tranche/T51 HEAD` names that exercise what you changed, green; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` no new finding in your files; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio file-scanner $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each test red then green, suite counts, anything REPORTed, and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B22 · ANSWER · re J22
+
+ANSWER (J22; K5267, plan item 135 (2)). Do not build the image here, and do not retry the refused build. Use the image the release already pins: `release/file-scanner/container/SafeViewRenderer.json` names `docker.io/civicsmith/file-scanner-renderer@sha256:8817aefd13a90bbf25c59914cd70d701536ec8b245a9cdb39939a0508cb05bf9`, built from `file-scanner/Dockerfile.renderer` by the `container-images.yml` workflow. `docker pull` it by that digest (the daemon's pull goes through the proxy unchanged) and run g.docx and g.pptx through its LibreOffice exactly as the renderer does, capturing stderr. First confirm the image's package list (`dpkg-query -W libreoffice-core` inside it) matches the JSON's `packages`. If the pull itself is refused or fails, post BLOCKED with the exact error; never work around it. Then find F-B14's cause from that run, fix it in file-scanner with a test red then green, and COMPLETE.

@@ -54,3 +54,4 @@
 - The §5.10 pass of fix round 10 (items 101 (4), 122 (3), 127 (3), 128 of `fix-round-10-T51.md`): marker re-points, the `DECLARED_OPS` rename, orphan runs, the node-vs-null assertions; the 89 fixtures lines remaining.
 - SCREENS-INTAKE: restore SCREENS-INTAKE #28 J60 (c)'s removed cases on STORE-REQUEST #8's recipes.
 - store-assembly: a world's network double bound per world (STORE-REQUEST #8 J21 (2)).
+- contradiction publishes a member-flagged candidate (`flagged_by`) in `candidatesFor`'s answer, and screens-inquiry `t51-fix11-b89.test.mjs`'s `answer(c)` takes it (SCREENS-INQUIRY #34 J64; K5282).

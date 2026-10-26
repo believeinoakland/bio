@@ -1,6 +1,6 @@
 # local-facts (T51)
 
-**Status** · session_012PieGczCfTTKCXgZH64nqx · depth 2 · COMPLETE · handled B3
+**Status** · session_01TwA2g3SpTvu1uEcFVRLefh · depth 2 · COMPLETE · handled B6
 
 ## Completion (T51-158)
 
@@ -65,3 +65,41 @@ RW (words, K4015): done. `checks/words.mjs /home/user/bio local-facts` reads 0 f
 - `checks/ownership.mjs /home/user/bio local-facts tranche/T51 job/T51/local-facts`: 0 failures.
 
 Size (session_012PieGczCfTTKCXgZH64nqx): test runs 10, module lines 1450
+
+## Fix round 10 · D-B1 (plan item 133; K5264) · LOCAL-FACTS #11
+
+**What changed**
+- `local-facts/paths.mjs`: `TEAM_ZONE_PATH = "@team/time_zone"`; `factPath({team: true, fact: "time_zone"})` answers it and `parseFactPath` reads it back as `{team: true, fact: "time_zone"}`. `@` is no character of a profile id, so no profile can hold the path.
+- `local-facts/index.mjs`: `#resolve` treats the team path as always a fact (no profile needed); `#profileZone` (the zone the active profiles agree on, each as it governs here) is its default; `#teamZone` (latest `correct` on the team path, else the default) is the zone its horizon counts on; `factConfirm` validates the value through `jurisdictions.validate` of a probe profile holding it as `time_zone` (one rule, R41), writes `profile` `@team`; confirm/dispute with no zone governing answer `NO_SUCH_FACT`. `TEAM_ZONE_PATH` exported.
+- The team zone is read by its path and is not listed by `factstatus {}` or `factsdue {}`: `screens-settings/group.mjs:139` takes the first listed `time_zone` as a profile's (listing it broke its R45 tests, seen and reverted).
+
+**The op the settings screen sends:** `op=factconfirm` body `{path: "@team/time_zone", act: "correct", value: "<IANA name>", how: "<1-500 chars>", source: "<1-500 chars>"}` (`by`/`viewer` stamped). Read: `op=factstatus&path=@team/time_zone` answers `status` `absent` (nothing stated, no profile default), `unconfirmed` (default only), `corrected` (stated); the governing zone is `governs.value`.
+
+**Test red then green:** `team-zone.test.mjs` (8 tests, R21): red before (the module did not export `TEAM_ZONE_PATH`; a no-profile team's correction answered `NO_SUCH_FACT`), green after: a team with no profile sets its zone then reads it; invalid zones (`Mars/Olympus`, `pacific time`, empty, non-string) refused with nothing written; no confirm/dispute until a zone governs; 183-day lapse on the zone's local day; profile zone is the default, a stated one governs over it; two disagreeing profiles give no default.
+
+**Readers of the team's zone, for BOB to carry** (each reads `${id}/time_zone` per active profile and returns null with no active profile; they should read `@team/time_zone` first):
+- `review/index.mjs:381-384` (`#zone`, early return at :372 when no profile is active)
+- `retrieval/index.mjs:502-505` (same shape)
+- `publish-schedule/schedule.mjs:49-66` (`groupZone`, early return at :53; review R35 / screens-publish R27 reach it)
+- `screens-settings/group.mjs:34, 138-165, 294-301` (draws and sends; sends `path: ""` with none held, now `@team/time_zone`)
+- `screens-daily/find-in.mjs:17-18`, `find-in-forms.mjs:23` (read the list's time_zone; need the path read)
+- `progressions/index.mjs:1709` (`factStatus({})` listing; unchanged, the team fact is not listed)
+
+**Proposed wording for BOB (R21; amends R1, R6, R3)**: "**R21** (T51; D-B1; K5264) The team's own time zone is a fact the team states whether or not a place profile is installed: path `@team/time_zone` (R6; no profile id can spell it). `factConfirm` accepts a `correct` of it with a `value` that is an IANA name valid as a profile's `time_zone` (`jurisdictions` R41), a `source` and a `how`, with no profile held; `confirm` and `dispute` need a zone that governs (else `NO_SUCH_FACT`). It governs from its latest correction, else the zone the active profiles agree on; with none, `factStatus` of the path answers `absent`. Horizon: 183 days (R3). It is read by its path and is not among the facts `factStatus`/`factsDue` list without a path." R1's `NO_SUCH_FACT` ("a path R6 does not name in an active profile") needs "or the team's own".
+
+**Open for BOB:** (1) "the administrator sets it": `factconfirm` admits member and probe classes; restricting the team path to administrators needs a new refusal and its `words.json` key (design stream) or an admin-only door; not done. (2) New `localize` id `local-facts.index.the_team_has_not_stated`: setup-words rows stale, regenerate at layer close.
+
+**Tests and checks**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/local-facts/*.test.mjs`: 83 pass, 0 fail (run alone, files summed = 83).
+- `impact.mjs origin/tranche/T51 HEAD` named 1781 test files in 95 modules; I ran 1719 of them (the run was stopped, a flake-prone tail left). Failing files: 14, all red on the tranche tip too except `queue-producers/names.test.mjs` (fixed by tranche changes, green after merging the tip) and `instance-setup/worker-reports.test.mjs` (load flake, green alone); `screens-settings/group.test.mjs` went red only while the team fact was listed and is green after the revert. The direct users re-run after the revert, all green: progressions 96, retrieval 221, publish-schedule 35, review 106, screens-settings 272, screens-daily 319, duties 80, ratification 340, action-clocks 87, filings 168.
+- checks: format 0 failures, architecture 0, coverage 20 of 20, words 0, ownership 0.
+
+Size (session_01TwA2g3SpTvu1uEcFVRLefh): test runs 12, module lines 1560
+
+## J4 · COMPLETE
+
+D-B1 done (R21). Team zone = fact at path @team/time_zone; set with op=factconfirm {path:'@team/time_zone', act:'correct', value:<IANA>, how, source}; read with op=factstatus&path=@team/time_zone (absent / unconfirmed(default) / corrected; governs.value). Invalid zone -> FACT_VALUE_REFUSED. New test team-zone.test.mjs 8 tests (red before, green after); local-facts 83 pass; direct users green (progressions, retrieval, publish-schedule, review, screens-settings, screens-daily, duties, ratification, action-clocks, filings); impact run 1719/1781 files, remaining reds red on the tip too. Not listed by factstatus{} (screens-settings takes the first listed time_zone). Readers for you to carry (file:line in my record): review 381, retrieval 502, publish-schedule 59, screens-settings group.mjs 34/138/294, screens-daily find-in 17. Open: admin-only needs a refusal+word (design); R21/R1 wording proposed in record; setup-words rows stale for 1 new localize id. Size (session_01TwA2g3SpTvu1uEcFVRLefh): test runs 12, module lines 1560. Fixtures: team-zone tests use fixtures-own (own store, profiles written by the test).
+
+## J5 · COMPLETE · re B6
+
+D-B1 is done and J4 (COMPLETE) is already on origin/job/T51/local-facts; this answers B6. For SCREENS-SETTINGS #23: set the team zone with op=factconfirm body {path:'@team/time_zone', act:'correct', value:<IANA zone name>, how:<1-500 chars>, source:<1-500 chars>} (by/viewer stamped); an invalid zone answers FACT_VALUE_REFUSED. Read it with op=factstatus&path=@team/time_zone: status absent (nothing stated, no profile default), unconfirmed (profile default only), corrected (stated); the governing zone is governs.value. The team fact is NOT in the factstatus{} list, so the screen must read that path itself (it should send path '@team/time_zone' instead of '' when no profile holds a time_zone). The other readers to carry (review 381, retrieval 502, publish-schedule 59, screens-daily find-in 17) are in my record. Size (session_01TwA2g3SpTvu1uEcFVRLefh): test runs 12, module lines 1560.

@@ -57,6 +57,7 @@ const KEPT_THREE = {
 /* Every row R38 does not re-word (34: the three above among them; not C-113.6, R40), as T45 left them: their canonical JSON's sha256, so
    no check, where or translation of theirs moves. */
 const KEPT = { count: 34, sha256: "e19b29e2e575ef1fbbaf88b3f01f0863b1551f0fbe8e8404a4e57f1aee39f0d0" };
+/* T51 (R43) added C-113.45 STANDARD_BINDING_UNDETERMINED; it is held by t51-binding.test.mjs and left out of this set. */
 /* T48 (R40) re-worded C-113.6 NO_FINDINGS, and T50 reads it by key; it leaves this set, and the R40 test below holds it. */
 const R40 = ["C-113.6", AT("#pinFindings", "is-finding-named")];
 
@@ -86,7 +87,7 @@ test("R38 C-113.7 FINDING_NOT_PUBLISHED, C-113.37 DETERMINATION_VOID and C-113.4
     assert.ok(!(`refusal.${code}` in CONFORMANCE_WORDS), `${code}: not taken in T46`);
     assert.notEqual(row.translation, en(`refusal.${code}`), `${code}: words.json's sentence and R38 do not yet agree`);
   }
-  const kept = Object.fromEntries(Object.entries(CONFORMANCE_CHECKS).filter(([c]) => !(c in TAKEN) && c !== "NO_FINDINGS"));
+  const kept = Object.fromEntries(Object.entries(CONFORMANCE_CHECKS).filter(([c]) => !(c in TAKEN) && c !== "NO_FINDINGS" && c !== "STANDARD_BINDING_UNDETERMINED"));
   assert.deepEqual([Object.keys(kept).length, sha256HexSync(canonicalJson(kept))], [KEPT.count, KEPT.sha256],
     "no other row's check, where or translation moved");
   for (const [code, r] of Object.entries(kept)) assert.ok(!Object.values(CONFORMANCE_WORDS).includes(r.translation), code);

@@ -141,3 +141,14 @@ test("R8 (T45; K2888): handed no action-producers, feedItems builds the real one
   assert.equal(typeof r.facts.action, "object", "its facts beside the others");
   assert.ok(!("disposition" in it) && !("catalogue_id" in it));
 });
+
+test("R14 (A-03): the member who registered a key is not told of it, though she is an administrator; the other administrators and the admin credential are", () => {
+  const w = world();
+  w.member("ada", { role: "admin" }); w.member("cy", { role: "admin" });
+  w.signer("KEY-A", "ada", { comment: "ada's laptop" });
+  const ids = (r) => ofKind(r, "signer-self-registered").map((i) => i.id);
+  assert.deepEqual(ids(w.read("ada")), [], "she registered it herself");
+  assert.deepEqual(ids(w.read("cy")), ["OBLIGATION::signer-self-registered::KEY-A"], "another administrator is told");
+  assert.deepEqual(ids(w.read(null, "class:admin")), ["OBLIGATION::signer-self-registered::KEY-A"], "the admin credential is told");
+  assert.deepEqual(byId(w.read("cy"))["OBLIGATION::signer-self-registered::KEY-A"].basis.raised_to, ["cy"], "raised_to does not name her");
+});

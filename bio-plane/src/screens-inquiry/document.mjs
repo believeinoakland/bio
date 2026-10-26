@@ -261,10 +261,13 @@ function render(cs, view) {
   const flagOf = (k) => !!rv0 && (rv0[k] === true || (!!rdObj && rdObj[k] === true));
   const failure = rv0 ? String((rdObj && rdObj.failure) || rv0.failure || "") : "";
   const isMore = flagOf("more"), isRepairable = flagOf("repairable");
+  /* T51 fix round 10 (BOB B88, R96 fix round 6): a whole reading that found no words, whose reason is not a size, holds its statement (`completeness.why`, else `basis`)
+     and is drawn as that statement, never as a bare "Undetermined / Held" */
+  const wholeStated = compState === "whole" && !!((comp && typeof comp.why === "string" && comp.why.trim()) || (rdObj && typeof rdObj.basis === "string" && rdObj.basis.trim()));
   const textState = !sha ? "" : reading.state === "empty" ? "unread"
     : rv0 ? (isMore ? "reading" : compState === "stated" && !isRepairable ? "stated"
       : words0.length ? (compState === "partial" ? "cut" : blind0.length ? "partial" : "full")
-      : isRepairable ? "repairable" : failure === "final" ? "stated" : compState === "partial" ? "cut" : "none") : "";
+      : isRepairable ? "repairable" : failure === "final" || wholeStated ? "stated" : compState === "partial" ? "cut" : "none") : "";
   /* G13 (R96): while the text is being read the page asks for it again on the page clock, at most every 10 seconds (as the dock does, R8), keeping what is
      drawn until the new answer arrives; a whole reading is not asked again. */
   if (isMore && sha && !ui.readPoll) {
@@ -552,7 +555,8 @@ function render(cs, view) {
       : textState === "stated" && reasonSaid ? reasonSaid
       : textState === "repairable" && heldWord("screen.document.reading.repairable") ? cs.w("screen.document.reading.repairable")
       : comp && typeof comp.why === "string" && comp.why.trim() ? cs.esc(comp.why.trim()) : basisWords ? cs.esc(basisWords) : undetermined("");
-    const statedHtml = noReader && unreadNote ? unreadNote : textState === "stated" || textState === "repairable" ? `<p class="mk-note" data-reading="stated">${statedSaid}</p>` : "";
+    /* T51 fix round 10 (B88): a whole reading that states its own reason (not a size) draws that statement beside its words, as a stated one does */
+    const statedHtml = noReader && unreadNote ? unreadNote : textState === "stated" || textState === "repairable" || (wholeStated && stateReason !== "TOO_LARGE") ? `<p class="mk-note" data-reading="stated">${statedSaid}</p>` : "";
     /* G13 (R96): a text still being read says how far it has come (R90), and what is drawn of it is never stated as the whole: the passages drawn so far
        ("Passages: N of M", the nearest held words; the row owed is `screen.document.reading.firstn`), with the more act the page bar's own control (the
        choice redraws the page and the next page is read: `op=reading` with `after`). Search and Cite cover what is read, which is what is drawn and stored. */
@@ -662,12 +666,12 @@ function render(cs, view) {
       + cs.checks("document-read-page", { key: "document.read.page", fills: { n: String(cur), count: String(total) } },
           (cur > 1 ? [{ value: String(cur - 1), key: "document.read.prev", on: false }] : []).concat(cur < total ? [{ value: String(cur + 1), key: "document.read.next", on: false }] : []),
           { radio: true, redraw: "readpage" }) + "</div>" : tabs;
-    return originalCard + (textState === "stated" ? statedHtml : "") + moreNote + `<p class="mk-small">${cs.w("document.read.select")}</p>` + bar + (shown.length ? "" : `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`) + shown.map(([p, i]) => {
+    return originalCard + (textState === "stated" || (wholeStated && stateReason !== "TOO_LARGE") ? statedHtml : "") + moreNote + `<p class="mk-small">${cs.w("document.read.select")}</p>` + bar + (shown.length ? "" : `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`) + shown.map(([p, i]) => {
       const extent = p.extent && typeof p.extent === "object" ? p.extent : null;
       /* R78: the record's page 0 is drawn "Page 1"; the extent a citation sends keeps the record's own number */
       const page = extent && Number.isInteger(extent.page) ? pg(extent.page) : null;
       return `<blockquote class="mk-passage rec" data-passage="${i}">“${cs.esc(String(p.text).trim())}”`
-        + (page !== null ? `<span class="mk-small">${cs.w("screen.document.passage.where", { page })}</span>` : "") + partKind(p) + citedMark(extent) + "</blockquote>"
+        + (page !== null ? `<span class="mk-small">${cs.w("screen.document.passage.where", { page })}</span>` : "") + partKind(p) + (citedMark(extent) ? "<br>" + citedMark(extent) : "") + "</blockquote>"
         + (extent && askable.length ? cs.act("cite", { label: "document.read.cite",
             data: { found: JSON.stringify({ capture_sha: sha, extent, kind: "passage" }) } }) : "");
     }).join("") + pick + pickHelp + none + citeDoneHtml() + own("cite");
@@ -739,13 +743,17 @@ function render(cs, view) {
       const ext = t.extent && typeof t.extent === "object" ? t.extent : null;
       const page = ext && Number.isInteger(ext.page) ? pg(ext.page) : null;
       const name = who(t.transcriber);
+      /* T51 fix round 10 (B89, C-M2; content R57): an attestation that `counts` is a second member's check of this typing. A typing so checked draws no "Not yet
+         checked" (false), and a member who has confirmed it is offered no form. The word for "checked by X on D" is not held; REPORTed, never drawn false */
+      const counted = (Array.isArray(t.attestations) ? t.attestations : []).filter((a) => a && a.counts);
+      const iConfirmed = counted.some((a) => meIds.includes(String(a.attestor)));
       /* C17: the typed words are the page's reading: read from the typing (content R26's `transcription`) and drawn under the page typed */
       const tw = later("typing:" + String(t.content_id), "transcription", { id: String(t.content_id) });
       const words = tw.state === "ok" && tw.value && typeof tw.value.text === "string" && tw.value.text.trim()
         ? `<blockquote class="mk-passage rec" data-typed-text="1">\u201c${cs.esc(tw.value.text.trim())}\u201d</blockquote>` : "";
       return `<div data-typed="${cs.esc(String(t.content_id))}">` + cs.sheet(rowOf("", `<span class="rec">${W("screen.document.attest.row", { page: page !== null ? String(page) : String(t.ref || ""), name, date: { html: dayOf(t.at) } })}</span>`
-          + `<br><span class="mk-sub">${W("screen.document.attest.status", { name })}</span>`)) + words
-        + (mine ? "" : cs.field("document-attest-note-" + String(t.content_id), "screen.document.attest.note", { area: true, rec: true, help: "screen.document.attest.note.help" })
+          + (counted.length ? "" : `<br><span class="mk-sub">${W("screen.document.attest.status", { name })}</span>`))) + words
+        + (mine || iConfirmed ? "" : cs.field("document-attest-note-" + String(t.content_id), "screen.document.attest.note", { area: true, rec: true, help: "screen.document.attest.note.help" })
           + `<p class="mk-note">${W("screen.document.attest.at")}</p>` + cs.act("transcriptionattest", { label: "act.transcriptionattest.label.document", data: { content: String(t.content_id) } })) + "</div>";
     }).join("") + own("transcriptionattest") + "</details>");
   }
@@ -1282,11 +1290,13 @@ function render(cs, view) {
       : [hereRead.state, thereRead.state].includes("loading") ? cs.state({ state: "loading" }, () => "") : "";
     /* R137: the other document is chosen through the one picker (its choice `ui.flagOther`); once chosen, its passages (`screen.document.pick.passage`) */
     const flagHtml = flagHere.length && offered
-      ? `<details class="mk-details" data-fold="contradict"><summary>${W("screen.document.contradict.head")}</summary><p class="mk-note">${W("screen.document.contradict.note1")} ${W("screen.document.contradict.note2")}</p>`
-        + cs.choice("document-flag-here", "screen.document.contradict.here", [{ value: "", text: "" }].concat(flagHere.map((u, i) => ({ value: String(i), text: flagLabel(u) }))), { value: "" })
+      /* T51 fix round 10 (B89, C-M12): the fold stays open once the other document is chosen or a passage is picked, and each pick is drawn as the member
+         left it (read from the page before it is redrawn), so a redraw keeps it */
+      ? `<details class="mk-details" data-fold="contradict"${flagPick || String(cs.value("document-flag-here") || cs.value("document-flag-there") || "") ? " open" : ""}><summary>${W("screen.document.contradict.head")}</summary><p class="mk-note">${W("screen.document.contradict.note1")} ${W("screen.document.contradict.note2")}</p>`
+        + cs.choice("document-flag-here", "screen.document.contradict.here", [{ value: "", text: "" }].concat(flagHere.map((u, i) => ({ value: String(i), text: flagLabel(u) }))), { value: String(cs.value("document-flag-here") || "") })
         + `<p class="mk-small">${W("screen.document.contradict.here.help")}</p>`
         + picker("flag", "flagOther", "screen.document.contradict.other")
-        + (flagPick ? cs.choice("document-flag-there", pickHeld("screen.document.pick.passage") ? "screen.document.pick.passage" : "screen.document.contradict.other", [{ value: "", text: "" }].concat(flagThere.map((u, i) => ({ value: String(i), text: flagLabel(u) }))), { value: "" }) : "")
+        + (flagPick ? cs.choice("document-flag-there", pickHeld("screen.document.pick.passage") ? "screen.document.pick.passage" : "screen.document.contradict.other", [{ value: "", text: "" }].concat(flagThere.map((u, i) => ({ value: String(i), text: flagLabel(u) }))), { value: String(cs.value("document-flag-there") || "") }) : "")
         + `<p class="mk-small">${W("screen.document.contradict.other.help")}</p>`
         + flagState + cs.field("document-flag-why", "screen.document.contradict.why", { area: true, rec: true, help: "screen.document.contradict.why.help" })
         + cs.act("contradictionflag", { data: { sha } }) + own("contradictionflag") + "</details>" : "";

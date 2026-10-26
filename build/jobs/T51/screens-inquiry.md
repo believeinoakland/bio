@@ -1,6 +1,6 @@
 # screens-inquiry (T51)
 
-**Status** · session_016HoSKbnGfNRuDPcU18H4t8 · depth 2 · COMPLETE · handled B86
+**Status** · session_01XPqxHzozhsnQVpVqcbAkKT · depth 2 · COMPLETE · handled B91
 
 ## J1 · REPORT
 
@@ -788,3 +788,144 @@ Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 40, module lines 7046
 ## J57 · COMPLETE
 
 COMPLETE (SCREENS-INQUIRY #33), B86 done: fixtures --list 138 -> 0 (record 'B86 applied'). Tests take the real world (one storeWorld in fixtures.mjs, 17 reads via the world's counted door as mai), the recipes, the providers' answers, or real acts. Two defects fixed, red first: question.mjs:652 (the 'listed but not counted' line named every leg graded on one axis; now the owner's ungraded) and project.mjs:102 (a handle-less founder drawn blank in owner vote, visibility history, stake; now member.founder.unnamed). Flake root cause fixed (fixtures world forwarder uncounted). Module + journey-check conclude-fields: 595 pass 0 fail; t51 files 4 parallel runs 46/46; format, coverage 136/136, ownership, words 0 failures. NEEDS BOB: architecture reads 3 failures: uses gains ai-runs, ai-accounts, network-notices (assistant.test.mjs and t51-project-notice.test.mjs import their published fixtures). Cases removed beyond the B18 list (owner file:line in the record) for you to confirm; reports in the record: publishpreflight ready path, legs without target_title (R39), PROJECT_NOT_SOLE_MEMBER unfilled {project}, recipes wanted, words handlist grouping. No markers added. Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 40, module lines 7046
+
+## J58 · REPORT
+
+REPORT (SCREENS-INQUIRY #34), on the way to COMPLETE for B87. Two things found in the run, neither in this job's two causes; neither changed.
+
+1. Two tests in my module fail on the base as well (checked: the same two fail with my change stashed): `bio-plane/test/m/screens-inquiry/r10-stated.test.mjs:126` (a PNG the reader finds nothing in, A7) and the "turned sideways" PNG (A8). The page draws the reading's "Undetermined / Held" page with no statement of the reading, while the reading's own statement ("the generic reader found no entities ... 1 scanned page(s) were transcribed by the OCR member") is in `completeness.why` and `reading.basis`. The owner is `screens-inquiry` `document.mjs` (R96: what a whole reading with a non-size reason draws). Needs a ruling on that wording, so I have left it; I can take it in the next round if you say so. Suite: 596 tests, 594 pass, 2 fail.
+
+2. `node /home/user/civicos-process/checks/run.mjs /home/user/bio`: 89 FAIL lines, none in screens-inquiry or in my files. They are in other modules' tests (acquisition fix4b-owed 13, store-assembly r10-fixtures-run 12, acquisition r9-registrar 8, capture r9-t51 6, doorbell r9-t51 5, acquisition r9-pending-render 5, monitoring tick 4, capture g127f-t51 4, file-safety, test-support's job-registrar-stub), all "contract-no-run" or "stand-in registerJob". Full log: /home/user/run-checks.log on this machine. Owners: those modules; I did not touch them.
+
+## J59 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #34), B87: fix round 10 (plan item 134; K5265), the two items named in B87. Red first, then green.
+
+**Applied**
+- **D-M1 part 3, the double escape.** `bio-plane/src/screens-inquiry/question.mjs` `axisReason` (:298-313) returned escaped HTML from `W` on its unrated paths, and the mark (:594, :659) and the "raise" line (:642) escaped it again. It now returns plain text from `T` on every path (the mark or fill escapes it once). Red: a leg titled "Permits & Fees" drew "Permits &amp; Fees" in the strength box. Green: it draws "Permits & Fees" and no "&amp;". Test: `bio-plane/test/m/screens-inquiry/t51-fix10-question.test.mjs`, R5 R120 (with a plain-title control).
+- **D-M6, "Reading shown reading-1".** The chooser (`question.mjs` :716-718) names each reading by its description, clipped at 120 characters; its value stays the name the chooser sends. A reading with no description keeps its name (the same fallback as the claim line at :535). Red: option text "reading-1". Green: the description. Test: same file, R25 (with a no-description control).
+
+**Ruling (recorded here; the rulings file is BOB's to fold):** the chooser's text is the description, not the name, as the design's mock draws it (D-M6). Lower-level: no new rule; the clip length is 120, the same convention `clip` already uses for passages.
+
+**Not applied:** the other causes in `build/plan/walk-T51-alpha/causes-D.md` are the design stream's, or belong to `screens-publish` (D-M1 part 2, D-M2 to D-M5, D-M6 public words), `local-facts`/`screens-settings` (D-B1), or `entities`. None is in this job's list, so I left them.
+
+**Tests and checks** (on `job/T51/screens-inquiry`, commit 7a46832d75)
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/screens-inquiry/*.test.mjs`: 596 tests, 594 pass, 2 fail. The two failures are r10-stated.test.mjs:126 and the A8 PNG test. Both fail on the base too (checked with question.mjs stashed); details in my REPORT. The new file's 2 tests pass.
+- `checks/format.mjs /home/user/bio`: 0 failures. `checks/architecture.mjs /home/user/bio screens-inquiry`: 0 failures. `checks/coverage.mjs`: 136 of 136 live ids named. `checks/ownership.mjs ... $(git merge-base origin/tranche/T51 HEAD) HEAD`: 0 failures.
+- `checks/run.mjs /home/user/bio`: 89 FAIL lines, none in screens-inquiry or in my files (see REPORT).
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules and 0 of 3002 test files affected (as the tool printed it).
+
+**Deviations, stated plainly**
+- Model: the START says claude-sonnet-5-5, medium effort. This session runs claude-haiku-5-5, and I could not change that. The work was done on Haiku 5.5.
+- Reading: I read the causes file whole, the job record's tail and the three requirement entries the fix touches (R5, R25, R116, R120), but not all of `build/requirements/screens-inquiry.md` (155 KB). That is a departure from "read whole"; the requirement entries I read are the ones these changes touch.
+- The commit trailer carries no model identifier (the session's rule on artifacts), only the Claude-Session line.
+
+Size (session_01XPqxHzozhsnQVpVqcbAkKT): test runs 5, module lines 7048
+
+## J60 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #34), again, for B88 (CHANGE re J58 (1); K5268). Commit 920e3a2850 on `job/T51/screens-inquiry`.
+
+**Applied**
+- `bio-plane/src/screens-inquiry/document.mjs`: a whole reading that found no words, whose reason is not a size, now draws its statement (`completeness.why`, else `basis`). It is drawn beside the reading's words, and alone when there are none, as a stated reading does. A size reason (`TOO_LARGE`) keeps its own sentence. `wholeStated` (about :266) decides the text state; `statedHtml` (about :559) and the return at about :669 draw it.
+- Tests unchanged, as B88 asked: `r10-stated.test.mjs` A7 (:126) and A8 were red, now green. The file is 13 of 13.
+
+**Tests and checks**
+- Module suite `bio-plane/test/m/screens-inquiry/*.test.mjs`: 596 tests, 596 pass, 0 fail (this includes the two `t51-fix10` tests from round 10).
+- `checks/format.mjs /home/user/bio`: 0 failures. `checks/architecture.mjs ... screens-inquiry`: 0 failures. `checks/coverage.mjs`: 136 of 136. `checks/ownership.mjs ...`: 0 failures.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD` printed "affected modules: 176 of 178; affected test files: 2911 of 3003". In the last COMPLETE it printed 0 of 178 and 0 of 3002. I did not investigate the change, and I did not run those 2911 files. BOB, please say whether those tests are wanted before you merge. The change touches only `document.mjs` (and `question.mjs` from B87), with no change to a service.
+
+**Not done**
+- J58 (2), the 89 test-only lines in other modules, is left as B88 says.
+
+**Deviation**
+- The module is still on claude-haiku-5-5 (the START asked for sonnet). Unchanged.
+
+Size (session_01XPqxHzozhsnQVpVqcbAkKT): test runs 9, module lines 7050
+
+## J61 · REPORT
+
+REPORT (SCREENS-INQUIRY #34), B89. Three things BOB needs to place; none changed:
+1. Keys needed (design stream): `screen.document.attest.checked` ("Checked by {name}, {date}", C-M2); words for a passage answered "No" that a "Yes, because of" names, or a refusal for it (C-M5); words for a member-flagged lead (C-M13).
+2. `contradiction/index.mjs:2385`: `title: title ?? question` is raw while the document uses `fmSafe` (C-M13 refusal). Owner: `contradiction`. Not touched.
+3. C-M12 "Flags raised on this document" line not drawn (needs a key); and C-M12 and walk E S3 have no red test yet.
+
+## J62 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #34), B89 (CHANGE K5271, plan item 136). Commit 6a51112484 on `job/T51/screens-inquiry`.
+
+**Applied**
+- **C-M2 (1)** `document.mjs` (typed block, about :745-760): an attestation that `counts` (content R57) is a second member's check. A typing so checked draws no "Not yet checked", and the member who confirmed it is offered no form. The checked-by sentence has no held key, so nothing is drawn for it (see REPORT).
+- **C-M5 (2)** `question.mjs` `inquiryground` send (about :1566-1575): a passage answered "No" is never unioned into a "Yes, because of" part, so it stays a necessary leg in no ground. I did not refuse before sending: the refusal sentence has no held key, so the page does not say so (see REPORT).
+- **C-M12 (3)** `document.mjs` contradiction fold (about :1293-1300): the fold opens once a document is chosen or a passage is picked, and each pick is drawn from the page's current value, so a redraw keeps it. Not covered by a test yet.
+- **C-M13 (4)** `contradiction.mjs` (about :215): a lead a member flagged (`flagged_by`) draws no assistant sentence. The member-lead sentence has no held key (see REPORT).
+- **E S3 (5)** `document.mjs` (about :674): a "Cited" mark sits on its own line after the passage, not glued to it. Not covered by a test yet.
+
+**Tests**
+- `bio-plane/test/m/screens-inquiry/t51-fix11-b89.test.mjs`: three tests (C-M2, C-M5, C-M13 with controls). Each fails with the fixes stashed and passes with them.
+- C-M12 and S3 have no red test: I did not write one, so they are not covered. I can add them if BOB wants them before merge.
+- Module suite `bio-plane/test/m/screens-inquiry/*.test.mjs`: 599 tests, 599 pass, 0 fail.
+- Format, architecture, coverage (136 of 136), ownership: 0 failures.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 176 of 178 modules and 2913 of 3004 test files, the same as after B88. I have not run those files.
+
+**REPORT (keys needed, out of scope, or not done)** — also in a separate REPORT
+1. Keys needed from the design stream (no held row; I did not draw a false sentence): `screen.document.attest.checked` ("Checked by {name}, {date}"; C-M2); a refusal or note for a passage answered "No" that a "Yes, because of" names (C-M5); the member-lead sentence (C-M13).
+2. Out of this module: C-M13 title refusal at `contradiction/index.mjs:2385` (`title: title ?? question` should be `fmSafe(...)`). Owner: `contradiction`. Not touched.
+3. C-M12's "Flags raised on this document" line is not done (needs a key and the candidate list).
+
+Size (session_01XPqxHzozhsnQVpVqcbAkKT): test runs 9, module lines 7060
+
+## J63 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #34), B90 (CHANGE re J61, J62; K5276). Commit 7318e9c350 on `job/T51/screens-inquiry`.
+
+**Done**
+- **C-M12 and walk E S3 now have red tests** (`bio-plane/test/m/screens-inquiry/t51-fix12-b90.test.mjs`, 2 tests). Each fails on the pre-fix `document.mjs` (checked by restoring the file from before the B89 commit, then putting the current version back) and passes with the fix:
+  - C-M12: choosing the other document opens the contradiction fold; a passage picked before a redraw keeps its pick; control: no document chosen, fold shut.
+  - S3: a cited passage's "Cited" mark follows a line break; control: a passage not cited draws no mark.
+- **Tranche merged:** `origin/tranche/T51` merged into the job branch (a merge commit, no rebase). This brings in CITATION #23 and CONTRADICTION #18.
+- **C-M6 control:** no held key names "Put on the other side" (searched `rows.mjs`), so nothing is drawn for it. REPORT for the key follows.
+
+**Checks**
+- Module suite: 601 tests, 601 pass, 0 fail.
+- Format, architecture, coverage (136 of 136), ownership: 0 failures.
+
+**Still open from earlier rounds (already REPORTed in J62)**
+- Held keys needed from the design stream: the checked-by sentence (C-M2), the "No passage in a Yes-because-of part" refusal (C-M5), the member-lead sentence (C-M13), the "Put on the other side" control (C-M6), and the "Flags raised on this document" line (C-M12).
+- The C-M13 title refusal at `contradiction/index.mjs:2385` is in `contradiction`, not this module.
+
+Size (session_01XPqxHzozhsnQVpVqcbAkKT): test runs 13, module lines 7062
+
+## J64 · REPORT
+
+COMPLETE (SCREENS-INQUIRY #34), B91 (CHANGE re J63; K5279). Commit f8c817ef54 on `job/T51/screens-inquiry`.
+
+**Done**
+- `t51-fix11-b89.test.mjs` no longer hand-builds the `contradictionfacts` answer. The C-M13 test does not read facts, so the override is dropped. `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio screens-inquiry --list` now shows 0 op-table failures and 0 invented answers in my files. The 4 accepted lines are the earlier ones named in the record, and they are not flagged.
+- The C-M13 test still fails on the pre-fix `contradiction.mjs` and passes with the fix.
+
+**REPORT (for BOB to place)**
+- The member-flagged candidate is still hand-built. `contradictioncandidates` (the `answer(c)` helper in `t51-fix11-b89.test.mjs`) carries `flagged_by`, and `bio-plane/test/m/contradiction/fixtures.mjs` publishes no candidate with `flagged_by` (only `candidateReads` and `readRefusals`). The checker does not flag this, but the exact missing fixture is a member-flagged candidate in `candidatesFor`'s answer, for contradiction to publish.
+
+**Checks**
+- Module suite: 601 of 601 pass.
+- Format, architecture, coverage (136 of 136), ownership: 0 failures.
+
+Size (session_01XPqxHzozhsnQVpVqcbAkKT): test runs 17, module lines 7062
+
+## J65 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #34), B91 (CHANGE re J63; K5279). Commit f8c817ef54 on `job/T51/screens-inquiry`.
+
+**Done**
+- `t51-fix11-b89.test.mjs` no longer hand-builds the `contradictionfacts` answer. The C-M13 test does not read facts, so the override is dropped. `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio screens-inquiry --list` now shows 0 op-table failures and 0 invented answers in my files. The 4 accepted lines are the earlier ones named in the record, and they are not flagged.
+- The C-M13 test still fails on the pre-fix `contradiction.mjs` and passes with the fix.
+
+**REPORT (for BOB to place)**
+- The member-flagged candidate is still hand-built. `contradictioncandidates` (the `answer(c)` helper in `t51-fix11-b89.test.mjs`) carries `flagged_by`, and `bio-plane/test/m/contradiction/fixtures.mjs` publishes no candidate with `flagged_by` (only `candidateReads` and `readRefusals`). The checker does not flag this, but the exact missing fixture is a member-flagged candidate in `candidatesFor`'s answer, for contradiction to publish.
+
+**Checks**
+- Module suite: 601 of 601 pass.
+- Format, architecture, coverage (136 of 136), ownership: 0 failures.
+
+Size (session_01XPqxHzozhsnQVpVqcbAkKT): test runs 17, module lines 7062

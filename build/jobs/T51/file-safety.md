@@ -1,6 +1,6 @@
 # file-safety (T51)
 
-**Status** · session_01YBRdy1ssgabFSCE7bRoS1Y · depth 2 · COMPLETE · handled B23
+**Status** · session_01DQTwXbCEKsKgGfae1iUXrh · depth 2 · COMPLETE · handled B24
 
 ## Completion (T51-183, words)
 
@@ -508,3 +508,16 @@ Merged `tranche/T51`. `tools.test.mjs` (the checksum refusal) and `wakes.test.mj
 ## J20 · COMPLETE
 
 R58 (cause 39a) done: scanStatus states scanner.bounds and renderer.bounds from /version; r58-bounds.test.mjs seen red then green on real BOUNDS; control refused. Platform check L named for redeploy (admin reads scanstatus). Five fixtures published (fixtures.mjs + fixtures.test.mjs). B23: two refresh refusals re-pointed to file-scanner reputationRefresh. fixtures list: answer 0; 2 contract-no-run (r1-registrar.test.mjs, wait for plane). No fixtures-own/generic markers. Module tests 143 pass; words/format/architecture/coverage(58/58)/ownership 0 failures. Users' tests (impact, 149 files): 1223 pass, 8 fail, all outside file-safety (7 journey-check/pseudo.test.mjs fail identically on tranche/T51; 1 R24 words test). Note for scheduler re-point: real forwardSecurityCounts({}) answers record {period,counts}, not null. Size (session_01YBRdy1ssgabFSCE7bRoS1Y): test runs 5, module lines 3378
+
+## J21 · COMPLETE
+
+R59 met (F-B14 tail; K5272). A finally failed render now records the renderer's release; renderBatch queues it once more when another release answers; never against the same release.
+
+Changed: schema.mjs:25 and :155 (column `fs_files.render_release`, additive); index.mjs `#renderFinal` (records the release), new `#rendererRelease` (renderer_version from the renderer's own /version, bounded, null when unreadable), `#requeueForRelease` and `RENDER_RETRYABLE` (failed, not ENCRYPTED, release differs or unrecorded; so files failed before this change are tried once), `renderBatch` (reads the release only when a view is queued or a retryable file exists), `renderWake` (a retryable failed file is looked at once an hour, since a wake cannot read the release). Files the renderer finds ENCRYPTED, or that fail with no release read, are not retried. fixture.mjs gains a `rendererVersion` script key.
+
+Tests (r59-release.test.mjs, 3): red first (wake null; no second /render under release B), green after. (1) NOT_RENDERABLE under release A, then release B renders it and the safe view serves. (2) control: same release, 3 days of batches, one /render only; release B asks once more and fails, never again under B; an ENCRYPTED file is not asked under C. (3) unreadable release retries nothing.
+
+Counts: file-safety 146/146 (was 143). coverage 59 of 59 ids named. words, format, architecture, ownership 0 failures (a stray package-lock.json from my npm install was removed). run.mjs: no finding in my files beyond the known contract-no-run lines (r1-registrar.test.mjs, wait for plane; and store-assembly orphan-run for the same).
+Users' tests (impact.mjs, 485 files outside this module): tests 4375, pass 4356, fail 14, none from my change: 7 journey-check R29 and R17/R28/R31 (as before); R83 declarations.test.mjs and 2 R1 R96 PNG tests in screens-inquiry/r10-stated.test.mjs fail identically on origin/tranche/T51; R9 seam §5 is labeled red until provenance 21; R4 R34 R52 C14 (screens-investigate/fix4.test.mjs) passes alone on my head (3/3) and failed only under the full run's load. Nothing REPORTed; found in another module: the above inherited reds only. Deferred: none. Platform check for the redeploy: after the new renderer is deployed, a renderbatch (the wake runs within the hour) re-queues the failed documents; BOB reads the safe views.
+
+Size (session_01DQTwXbCEKsKgGfae1iUXrh): test runs 6, module lines 3411

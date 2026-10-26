@@ -294,7 +294,8 @@ function render(cs, view) {
   const nameLegs = (ids) => [...new Set(ids)].map((t) => titleOf(t) || T("shell.card.document")).join(", ");
   const nlbAll = (x) => (x && Array.isArray(x.not_load_bearing) ? x.not_load_bearing.map((m) => String((m && typeof m === "object" ? m.target_id || m.target : m) || "")).filter(Boolean) : []);
   const nlbIds = (x) => nlbAll(x).filter((i) => !sev.has(i));
-  /* the plane's own sentence for an axis, its record ids put back into titles; the sentences that take {legs} are drawn by their keys */
+  /* the plane's own sentence for an axis, its record ids put back into titles; the sentences that take {legs} are drawn by their keys.
+     Plain text, never escaped HTML (T51 fix round 10, D-M1): the mark or the word it goes into escapes it once, so a title with "&" is not "&amp;" */
   const axisReason = (a, x, loud) => {
     if (!x) return "";
     const ids = nlbIds(x), all = nlbAll(x), axisName = T("mark.scale." + a + ".name");
@@ -304,10 +305,10 @@ function render(cs, view) {
     if (x.state === "unrated") {
       if (!loud) return "";
       const sets = Array.isArray(x.grounds) ? x.grounds.filter((g) => g && g.ground !== null && g.ground !== undefined) : [];
-      if (all.length && !ids.length) return W("strength.arithmetic.unrated_this_inquiry_rests_on_nothing", { axis: axisName });
-      if (!ids.length) return Number(x.population) > 0 ? bare(x.detail) : W("strength.arithmetic.unrated_this_inquiry_rests_on_nothing", { axis: axisName });
-      return sets.length ? W("strength.arithmetic.unrated_no_leg_on_any_set", { axis: axisName, count: String(sets.length), legs: nameLegs(ids) })
-        : W("strength.arithmetic.unrated_no_leg_on_this_axis", { axis: axisName, legs: nameLegs(ids) });
+      if (all.length && !ids.length) return T("strength.arithmetic.unrated_this_inquiry_rests_on_nothing", { axis: axisName });
+      if (!ids.length) return Number(x.population) > 0 ? bare(x.detail) : T("strength.arithmetic.unrated_this_inquiry_rests_on_nothing", { axis: axisName });
+      return sets.length ? T("strength.arithmetic.unrated_no_leg_on_any_set", { axis: axisName, count: String(sets.length), legs: nameLegs(ids) })
+        : T("strength.arithmetic.unrated_no_leg_on_this_axis", { axis: axisName, legs: nameLegs(ids) });
     }
     return bare(all.length ? String(x.detail || "").split(T("strength.arithmetic.present_and_not_yet_load_bearing", { legs: all.join(", ") })).join("").trim() : x.detail);
   };
@@ -714,7 +715,8 @@ function render(cs, view) {
       })());
   };
   const chooser = vs.length ? cs.choice("question-reading", "question.reading.shown",
-    vs.filter((v) => !v.hidden && v.state !== "rejected").map((v) => ({ value: String(v.name), text: String(v.name) })),
+    /* T51 fix round 10 (D-M6): a reading is named by what it says, its description; the name is the value the chooser sends */
+    vs.filter((v) => !v.hidden && v.state !== "rejected").map((v) => ({ value: String(v.name), text: clip(v.description, 120) || String(v.name) })),
     /* the chooser drives only once the project's reading is known, so its default (the reading the project stands on) is not kept from a pending read */
     cur && cur.state === "loading" ? { value: shownName } : { value: shownName, acts: {} }) + `<p class="mk-small">${W("question.reading.shown.help")}</p>` : "";
   let restsBack = "";
@@ -1562,13 +1564,16 @@ const acts = [
       const parent = new Map(legs.map((l) => [l.ord, l.ord]));
       const root = (x) => { while (parent.get(x) !== x) x = parent.get(x); return x; };
       const asserting = new Set();
+      /* T51 fix round 10 (B89, C-M5): a passage answered "No" is necessary, so a "Yes, because of X" never joins X to its part: X is left out of the
+         union and stays a necessary leg. (The sentence that says so is not held: REPORTed.) */
+      const answeredNo = new Set(legs.filter((l) => (cs.value("ask-" + l.ord) || []).includes("no")).map((l) => l.ord));
       for (const l of legs) {
         const said = cs.value("ask-" + l.ord) || [];
         if (!said.includes("yes")) continue;
         asserting.add(l.ord);
         for (const o of cs.value("ask-which-" + l.ord) || []) {
           const n = Number(o);
-          if (parent.has(n)) parent.set(root(n), root(l.ord));
+          if (parent.has(n) && !answeredNo.has(n)) parent.set(root(n), root(l.ord));
         }
       }
       const groups = new Map();

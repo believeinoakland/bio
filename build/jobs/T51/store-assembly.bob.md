@@ -1,6 +1,6 @@
 # BOB to store-assembly (T51)
 
-**Read** · handled J19
+**Read** · handled J21
 
 ## B1 · START
 
@@ -162,3 +162,20 @@ Bob (K5257, K5258): the live walk before the alpha found this; it is fixed now, 
 
 Your job: A-01: `op=stats` runs an FTS5 `integrity-check` (rank 1) over the whole text index on every call (`store-assembly/stats.mjs:67` -> `extraction/index.mjs:2375`); live it took 5.7 s and the single-threaded object makes every other op wait. Run the integrity check only when the caller asks for it by a named flag; the default answer (size and counts) does no index scan. A test at your interface: the default answer does not call the check (red today), the flag does.
 **Done:** each test red then green; your module's tests green; the users `node build/plan/impact.mjs origin/tranche/T51 HEAD` names that exercise what you changed, green; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` no new finding in your files; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio store-assembly $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each test red then green, suite counts, anything REPORTed, and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B22 · START
+
+START · STORE-ASSEMBLY #8 · tranche T51 · product believeinoakland/bio · fix round 10 (plan item 138; K5280)
+
+Depth 2 (BOB #308 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/store-assembly tranche/T51`; if a local `job/T51/store-assembly` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/store-assembly stale/store-assembly-local && git checkout -b job/T51/store-assembly origin/job/T51/store-assembly`. If `job/T51/store-assembly` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`, then `mail inbox --as job` and `mail done --as job --through B<n>` for this START (BOB merges a COMPLETE only when your record's cursor has read BOB's newest entry, K5171). A refused step: post BLOCKED naming it.
+Mail with `--module store-assembly`; record `build/jobs/T51/store-assembly.md` (append a new section). Model claude-haiku-5-5, low effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root `/home/user/bio`, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A `fixtures-own: <reason>` or `fixtures-generic: <CODE>` marker only where the value is truly your own (an input you feed, a harness, a platform double, a synthetic token), each named in your COMPLETE. A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one; REPORT the door case for BOB to place (K5138). A new sentence people read is written at its use as `localize(id, en, vars)` in a module that may (K3930, K3943); a screens module draws by key only.
+
+Bob's direction for this round (K5175): every bug, failure and broken feature found is fixed in this round; no guessing, no deferrals, no assumptions. A cause you find outside your paths is REPORTed the day you find it, with file:line.
+
+
+Bob (K5257, K5258): the live walk before the alpha found this; it is fixed now, product code. Read whole: `build/plan/walk-T51-alpha/causes-C.md` C-M8 and explore's R29 (`build/requirements/explore.md`).
+
+Your job: (1) Walk C C-M8: EXPLORE #11 (merged, K5280) names an `INFO-` node by its document's title through a `documents` reader with `titlesOf({ids, viewer})` (sight-aware: a viewer who may not see a document gets no title); `assemble.mjs:277` builds `exploreOf(ctx, { events, money })` with none, so live document nodes stay "Not yet named". Pass the reader from the module that holds documents' titles (its published service, sight-aware), named in your COMPLETE with file:line. Test red then green through the assembled store: a graph step to a document the viewer may see is named by its title; control: one the viewer may not see is not.
+**Done:** each test red then green; your module's tests green; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` no new finding in your files; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio store-assembly $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), the test red then green, suite counts, and the `Size (<session id>): test runs <n>, module lines <n>` line.

@@ -24,6 +24,7 @@ const renderTimeMs = (asked) => Number(process.env.RENDER_TIME_MS || asked);
 const OLE2 = Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]);
 const ENCRYPTED_PACKAGE = Buffer.from('EncryptedPackage', 'utf16le');
 const SOFFICE = process.env.SOFFICE || 'soffice';
+const MAX32 = 0xffffffff;
 
 // A refusal, as `work` answers it; `render` sends it once the request's directory is gone.
 const refuse = (res, status, code, message, reason) => ({ status, body: { ok: false, code, ...(message ? { message: String(message).slice(0, 300) } : {}), ...(reason ? { reason } : {}) } });
@@ -132,7 +133,56 @@ export async function officeInfo(fh, size, kind, { entries, directory }) {
   const app = entry('docProps/app.xml') ? await zipText(fh, entry('docProps/app.xml'), directory) : null;
   const meta = entry('meta.xml') ? await zipText(fh, entry('meta.xml'), directory) : null;
   const pages = Number((/<Pages>(\d+)<\/Pages>/.exec(app || '') || /meta:page-count="(\d+)"/.exec(meta || '') || [])[1]) || null;
-  return { app: impress ? 'impress' : 'writer', pages };
+  return { app: impress ? 'impress' : 'writer', pages, entries: d.entries };
+}
+
+const u16 = (v) => { const b = Buffer.alloc(2); b.writeUInt16LE(v); return b; };
+const u32 = (v) => { const b = Buffer.alloc(4); b.writeUInt32LE(v); return b; };
+
+/** Rewrites the package `src` (of `size` bytes, with the central directory `entries`) to `dst` as a plain ZIP, the form the
+ *  pinned LibreOffice 7.4.7 loads (F-B14, measured in the image: it answers "source file could not be loaded" to the
+ *  ZIP64 packages the streaming writers make, with or without data descriptors, and loads the same entries written plain):
+ *  every entry's CRC and sizes in its local header, no data descriptor, no ZIP64 or other extra field, the entries in file order with their data copied
+ *  as stored (nothing is inflated). Answers true when written; false, with nothing written, when a value does not fit a plain
+ *  ZIP (a size, offset or count past 32 or 16 bits) or an entry's local header is not where the directory says, so the caller
+ *  converts the original. */
+export async function plainPackage(src, size, entries, dst) {
+  const list = [...entries].sort((a, b) => a.at - b.at);
+  if (list.length > 0xffff || list.some((e) => e.csize >= MAX32 || e.usize >= MAX32 || e.at >= MAX32)) return false;
+  const inn = await open(src, 'r');
+  const out = await open(dst, 'w');
+  try {
+    const central = [];
+    let offset = 0;
+    const put = async (b) => { await out.write(b); offset += b.length; };
+    for (const e of list) {
+      const lh = Buffer.alloc(30);
+      if ((await inn.read(lh, 0, 30, e.at)).bytesRead < 30 || lh.readUInt32LE(0) !== 0x04034b50) return false;
+      const n = lh.readUInt16LE(26);
+      const name = Buffer.alloc(n);
+      await inn.read(name, 0, n, e.at + 30);
+      const dataAt = e.at + 30 + n + lh.readUInt16LE(28);
+      if (dataAt + e.csize > size) return false;
+      const flags = e.flags & ~8;
+      const time = lh.subarray(10, 14);
+      const start = offset;
+      await put(Buffer.concat([u32(0x04034b50), u16(20), u16(flags), u16(e.method), time, u32(e.crc), u32(e.csize), u32(e.usize), u16(n), u16(0), name]));
+      const chunk = Buffer.alloc(1 << 20);
+      for (let done = 0; done < e.csize;) {
+        const { bytesRead } = await inn.read(chunk, 0, Math.min(chunk.length, e.csize - done), dataAt + done);
+        if (!bytesRead) return false;
+        await put(chunk.subarray(0, bytesRead));
+        done += bytesRead;
+      }
+      central.push(Buffer.concat([u32(0x02014b50), u16(20), u16(20), u16(flags), u16(e.method), time, u32(e.crc), u32(e.csize), u32(e.usize),
+        u16(n), u16(0), u16(0), u16(0), u16(0), u32(0), u32(start), name]));
+    }
+    const cdAt = offset;
+    const cd = Buffer.concat(central);
+    await put(cd);
+    await put(Buffer.concat([u32(0x06054b50), u16(0), u16(0), u16(list.length), u16(list.length), u32(cd.length), u32(cdAt), u16(0)]));
+    return true;
+  } finally { await inn.close(); await out.close(); }
 }
 
 // The request's directory is removed before its answer leaves (R14): a refusal is sent after the removal, and the safe
@@ -210,6 +260,11 @@ async function work(req, res, url, dir) {
     const ext = kind === 'rtf' ? 'rtf' : kind === 'ole2' ? 'doc' : 'docx';
     const named = join(dir, `source.${ext}`);
     await rename(src, named);
+    // F-B14: a ZIP package is made plain first; the original is converted when it cannot be.
+    if (kind === 'zip') {
+      const plain = `${named}.plain`;
+      if (await plainPackage(named, (await stat(named)).size, info.entries, plain)) await rename(plain, named);
+    }
     // R7 (G136b): only the first `max` pages and one more are ever converted, so a long document costs `max` + 1 pages of
     // work and the page past the cap tells a longer document from one of exactly `max` pages, whatever LibreOffice does
     // past the end of a document.
