@@ -176,3 +176,7 @@ Test: `jurisdictions/test/t51-governing-zone.test.mjs`, 4 tests naming R98. Red 
 Suites: jurisdictions 188/188 (was 184). Checks: format 0 failures; architecture 0; coverage 98/98; fixtures `jurisdictions --list` 0 failures, no marker added; ownership 0 failures (3 files); `checks/run.mjs`: no finding in a jurisdictions file once the new test was staged (coverage had named R98 until then); its other findings (words, fixtures in acquisition, capture, store-assembly) are other modules'. No words added by this job.
 Deferred: none. Found in another module: none. For BOB: build/requirements/jurisdictions.md:86 still reads "(not yet met: T51)" for R98; the requirements file is BOB's. The re-pointing of the ~20 callers is the mechanical pass after merge.
 Size (session_01BAZvY9Tc39zzprM7J4aUBN): test runs 4, module lines 2248
+
+## J13 · COMPLETE
+
+COMPLETE (fix round 10, R98; START B10/B11): governingZone(profileIds, teamZone) exported at jurisdictions/index.mjs:1687. Test jurisdictions/test/t51-governing-zone.test.mjs (4 tests) red (no export) then green. Suite 188/188; format, architecture, fixtures, ownership 0 failures; coverage 98/98; no finding in my files in checks/run.mjs. No marker added. Requirements line 86 still says 'not yet met' (yours to update). Deferred none. Size (session_01BAZvY9Tc39zzprM7J4aUBN): test runs 4, module lines 2248
