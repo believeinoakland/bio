@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { store, deployed, GATE_FLAGS, GATE_SET, disclosed } from "./fixture.mjs";
 import { declaredOpHolds } from "../../declared-ops.mjs";
-import { ASSEMBLY_DECLARED_OPS as DECLARED_OPS } from "../../../src/store-assembly/declared.mjs";
+import { DECLARED_OPS } from "../../../src/store-assembly/declared.mjs";
 import { OWNERS } from "../../../src/store-assembly/declarations.mjs";
 import { askOp, assistantGateOf } from "../../../src/store-assembly/ask.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";

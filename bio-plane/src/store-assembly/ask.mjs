@@ -19,7 +19,7 @@ import { recordOf } from "../record-core/index.mjs";
 import { answersOf } from "../answers/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
 import { membershipOf, noSuchProject } from "../membership/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { storeStub } from "../store-place.mjs";
 import { deployedModesFor, draftKindDeployed, draftMayRead, partRefusal, AI_RUN_OPEN_CHECKS, ASK_MODE,
          DRAFT_MODE } from "../run-rules/index.mjs";
@@ -365,7 +365,7 @@ export async function draftOnObject(ctx, env, { op = null, member = null, sessio
      the subject's project. It mints no grant, sends no `told`, and writes nothing. */
   let reading = null;
   if (kind === "reading") {
-    if (!said(who)) return out(400, badTask("a reading is a member's own act"));
+    if (!said(who)) return out(400, badTask(localize("store-assembly.ask.reading-own-act", "a reading is a member's own act")));
     const got = readSubject(ctx, who, subject);
     if (!got.ok) return out(got.status, got.answer);
     const lang = translationsOf(ctx).readingLanguage({ member: who, ...(said(language) ? { language } : {}) });
@@ -385,8 +385,8 @@ export async function draftOnObject(ctx, env, { op = null, member = null, sessio
      her viewer stamp), and the keep-away of its project for drafts (`credentials.aiKeptAway({project, use: "draft"})`)
      refuses as given, both before any account is read; a refused read ends the draft with that refusal. */
   if (kind === "statusreport") {
-    if (!said(plan) || !Array.isArray(items)) return out(400, badTask("a status report's draft names its plan and hands the items its report is drawn from"));
-    if (typeof read !== "function" || !said(who)) return out(400, badTask("the plan this draft is about cannot be read here"));
+    if (!said(plan) || !Array.isArray(items)) return out(400, badTask(localize("store-assembly.ask.statusreport-names-plan", "a status report's draft names its plan and hands the items its report is drawn from")));
+    if (typeof read !== "function" || !said(who)) return out(400, badTask(localize("store-assembly.ask.plan-unreadable", "the plan this draft is about cannot be read here")));
     let p;
     try { p = read("plan", { id: plan, viewer: who }); } catch { p = null; }
     if (!p || typeof p !== "object") p = { ok: false, reason: "UNDETERMINED", detail: word("ai.draft.planunread") };
@@ -466,7 +466,7 @@ function readSubject(ctx, who, subject) {
   const kind = subject && typeof subject === "object" && !Array.isArray(subject) ? subject.kind : null;
   const id = subject && typeof subject === "object" ? subject.id : null;
   if (!READ_SUBJECT_KINDS.includes(kind) || !((typeof id === "string" && id.trim() !== "") || Number.isInteger(id)))
-    return { ok: false, status: 400, answer: badTask(`a reading names its subject as {kind, id}, kind one of ${READ_SUBJECT_KINDS.join(", ")}`) };
+    return { ok: false, status: 400, answer: badTask(localize("store-assembly.ask.reading-subject", "a reading names its subject as {kind, id}, kind one of {kinds}", { kinds: READ_SUBJECT_KINDS.join(", ") })) };
   if (kind === "note") {
     /* hypotheses' notes are never shared: only her own are read (its R12, R14) */
     const want = Number(id);
@@ -499,7 +499,7 @@ function readSubject(ctx, who, subject) {
 }
 
 /* R41: a draft's task the door cannot assemble records for, in agent-worker R59's code. */
-const badTask = (detail) => ({ ok: false, reason: "BAD_TASK", code: "BAD_TASK", detail: `${detail}. Nothing was drafted.` });
+const badTask = (detail) => ({ ok: false, reason: "BAD_TASK", code: "BAD_TASK", detail: localize("store-assembly.ask.bad-task", "{detail}. Nothing was drafted.", { detail }) });
 const said = (v) => typeof v === "string" && v.trim() !== "";
 
 /** R41 (T45; K2824; agent-worker R76; run-rules R27): the records an action draft is about, assembled ONLY from reads the
@@ -518,26 +518,26 @@ const said = (v) => typeof v === "string" && v.trim() !== "";
  *  Answers `{ok: true, records}`, or a read's own refusal as given, or `BAD_TASK`. Never throws. */
 export function assembleRecords(ctx, { kind, matter = null, action = null, reply = null, viewer = null, read = null }) {
   try {
-    if (typeof read !== "function") return badTask("the records this draft is about cannot be read here");
-    if (!said(viewer)) return badTask("a draft that reads records is a member's own act");
+    if (typeof read !== "function") return badTask(localize("store-assembly.ask.records-unreadable", "the records this draft is about cannot be read here"));
+    if (!said(viewer)) return badTask(localize("store-assembly.ask.draft-own-act", "a draft that reads records is a member's own act"));
     const ask = (op, params) => { const r = read(op, { ...params, viewer }); return r && typeof r === "object" ? r : { ok: false, reason: "UNDETERMINED" }; };
     const sight = membershipOf(ctx);
     if (kind === "bearingdraft") {
-      if (!said(action)) return badTask("a bearing draft names the action the reply was received on");
+      if (!said(action)) return badTask(localize("store-assembly.ask.bearing-names-action", "a bearing draft names the action the reply was received on"));
       const a = ask("action", { id: action });
       if (a.ok !== true) return a;
       const ord = Number(reply);
       const entry = Number.isInteger(ord) ? (Array.isArray(a.correspondence) ? a.correspondence : []).find((e) => e && e.ord === ord) : null;
-      if (!entry || entry.direction !== "received") return badTask("the reply named is not an entry received on this action");
+      if (!entry || entry.direction !== "received") return badTask(localize("store-assembly.ask.reply-not-received", "the reply named is not an entry received on this action"));
       const reading = said(entry.artifact_sha) ? ask("reading", { sha256: entry.artifact_sha }) : null;
       const t = reading && reading.ok === true && reading.reading && typeof reading.reading.text === "string" ? reading.reading.text : null;
       return { ok: true, records: { action_record: a, reply_record: { action, ord, entry, reading,
-        text: t ?? { state: "undetermined", why: "the reply's text is not held in a reading this member may read" } } } };
+        text: t ?? { state: "undetermined", why: localize("store-assembly.ask.reply-text-unheld", "the reply's text is not held in a reading this member may read") } } } };
     }
     /* infractiondraft */
     const m = said(matter) ? { plan: matter } : matter && typeof matter === "object" && !Array.isArray(matter) ? matter : null;
     const named = m && Array.isArray(m.actions) ? m.actions.filter(said) : [];
-    if (!m || (!said(m.plan) && !named.length)) return badTask("an infraction draft names the matter's plan or its actions");
+    if (!m || (!said(m.plan) && !named.length)) return badTask(localize("store-assembly.ask.infraction-names-matter", "an infraction draft names the matter's plan or its actions"));
     let plan = null;
     const ids = [];
     if (said(m.plan)) {

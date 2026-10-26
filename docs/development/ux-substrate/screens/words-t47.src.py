@@ -32,7 +32,7 @@ w('ai.label.untested.writinghelp', 'Not yet tested: this help with writing hasn\
 
 # --- The way in (DEC-201; B158, B159): signing in and out, recovery, claiming, joining
 w('refusal.SIGN_IN_REFUSED', 'That handle and password don\'t match. Check both and try again; after several tries, sign-in pauses for a while to keep others from guessing.', False, 'credentials R4; never says which handles exist')
-w('refusal.SIGN_IN_PAUSED', 'Sign-in is paused for a while after too many tries from here. This keeps others from guessing passwords; it isn\'t a judgment on you. Try again at {time}.', False, 'credentials R38; {time} the local time the pause ends')
+w('refusal.SIGN_IN_PAUSED', 'Sign-in is paused for a while after too many tries. This keeps others from guessing passwords; it isn\'t a judgment on you. Wait a while, then try again. The limit: {stated}.', False, "credentials R38; DEC-436 (B525): {stated} the plane's bound as credentials R38 states it; no time, since neither tells which count was full")
 w('refusal.RECOVERY_REFUSED', 'That didn\'t work: the handle, the code or both aren\'t right, or the code was already used. Check them and try again.' + NC, False, 'credentials R47; one answer for every arm')
 w('refusal.NOT_SIGNED_IN', 'You aren\'t signed in here any more: your sign-in ended, or you signed out on another device. Sign in again to go back to where you were.', False, 'credentials R39')
 w('refusal.PASSWORD_TOO_SHORT', 'A password needs at least 12 characters. A short sentence you can remember works well.' + NC, False)

@@ -1,6 +1,6 @@
 # BOB to case-import (T51)
 
-**Read** · handled J18
+**Read** · handled J20
 
 ## B1 · START
 
@@ -226,3 +226,7 @@ Bob's direction for this round (K5175): every bug, failure and broken feature fo
 
 Your job: publish `citeimported`'s refusal for a finding not accepted beside `citeimportedAnswer()` in your `fixtures.mjs` (your own test's control, `fixtures-citeimported.test.mjs`, makes it: an unaccepted finding refused `IMPORTED_NOT_ACCEPTED`), made by the real code each call, with a test that it is the real answer (break once: red; restore: green). Screens-publish's `fr30b.test.mjs:257` takes it.
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio case-import --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio case-import $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B19 · CHANGE
+
+CHANGE (K5226): STORE-ASSEMBLY #5 is merged into tranche/T51 (`fb0f6cd668`): the composition hands the store's clock to ai-use, file-safety, capture, publication, action-clocks, action-plans and filings; `storeWorld()` takes `instanceName`, `deliver`, `releaseKeys`, and a script is its world's own; its three test files exit by themselves; the words check reads 0 over the product. Merge `origin/tranche/T51` into your branch (never a rebase), re-run your suite and checks, and carry on or post COMPLETE.
