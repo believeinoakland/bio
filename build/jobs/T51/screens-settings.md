@@ -616,3 +616,7 @@ QUESTION (A-01, B60): the size-only read has no contract on tranche/T51 yet: gre
 - **D-B1** waits for BOB's CHANGE naming LOCAL-FACTS #11's op and fields; BOB re-opens this job by CHANGE. Read: `causes-D.md` D-B1 (`group.mjs:151-162`, `:301`; the button posts an empty path when no profile holds a `time_zone` fact).
 - Nothing REPORTed. No code or test changed; no checks needed beyond the unchanged tranche merge.
 - Size (session_01KU5VbSaZA1BVG9g3aQn231): test runs 0, module lines 0
+
+## J46 · COMPLETE
+
+COMPLETE (B60/B61): A-01 dropped as you ruled; verified group.mjs:25 sends a plain stats read with no flag and nothing in src/screens-settings reads textIndexOk or the integrity check. D-B1 NOT done: waiting on your CHANGE naming LOCAL-FACTS #11's op and fields; re-open me then. No code or test changed, nothing REPORTed, no requirement ids met. Size (session_01KU5VbSaZA1BVG9g3aQn231): test runs 0, module lines 0.
