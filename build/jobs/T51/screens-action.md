@@ -500,3 +500,23 @@ Done on my branch (committed, not yet COMPLETE): B's lines c94-t51:34 (plans scr
 NEEDS BOB (1): build/modules.json: screens-action's uses lacks wizard-scripts; the tests that take its published answers (matter-t51, send-t51) fail checks/architecture.mjs ('imports bio-plane/test/m/wizard-scripts/fixtures.mjs of wizard-scripts, which screens-action does not declare in uses'). Please add it (modules.json is yours).
 NEEDS BOB (2) = my QUESTION J35: A2. dash-action's act list is the registry's (contract.test.mjs:35 requires screens' acts equal the registry's, and wizard-scripts' registry row for dash-action still lists taskresolve), so I cannot drop taskresolve from the screen until the registry row loses it (UX-design's registry.json, then wizard-scripts' build-data) and R30's clause is struck. dash-action.test.mjs:92 (the last fixtures line) closes only then. Also R32 is still unworded; I built it on the diagnosis wording.
 Found outside my paths: action-holds: a hold placed from a docket mark or a pressure record ({project, from}) cannot be released or previewed: actionholdrelease/actionholdpreview accept only target/ord/project/case (action-holds/index.mjs:1061-1065, DECLARED_OPS fields at the end of the file), and no read lists a docket mark's hold (holdsdue drops it once held, action-holds R3; pressurefor lists no docket marks), so hold lists only a reply's hold and a counsel matter's project hold.
+
+## Round 14 · fix round 10, item 100 (2) (SCREENS-ACTION #22, session_012TPANXXg4GGQVhTc5yKHd8, B43 START, B44 ANSWER)
+
+Entries (file:line on this branch):
+- **A1 (R32, K5229)** `hold.mjs`: new read `held` = `pressurefor` (for the action when opened on one); the release is its own choice `hold-release-for` (places with `hold` `in_place`, the counsel matters, what still wants a hold), a place must be chosen, which reads `actionholdpreview` and draws `consequence.actionholdrelease` with the projects it restarts; `holdsdue` stays the placing choice. Test `hold-counsel.test.mjs` "R32 (A1)": red first (no `hold-release-for`), green; also `reads-t51` hold read set gains `pressurefor`. `words-fix-action.mjs` EXTRA `hold`: `consequence.actionholdrelease`.
+- **A2 (R30, K5229)** `dash-action.mjs`: the `taskresolve` arm, its act and the dead `disposition.op` test removed; `dash-action.test.mjs`: scripted taskresolve case deleted, replaced by the real-queue assertion (no taskresolve button).
+- **B**: c94-t51 (scripted `plan`/`plans` arms deleted; proved by interface-shell fixround2), fix4-t51:233 (real NO_SUCH_ACTION via actionWorld), send-t51 templatesave loop (two unreachable codes dropped), matter-t51:437/:458 and send-t51:428 (drafted-text cases removed; screens tested on wizard-scripts' `writingHelpDraftHeld` / `writingHelpUnreachable`).
+- **R9**: failing first by mutation (`help-records.mjs:63` citing `chosen.citation`: the federal-help test fails), restored, green.
+
+Results: screens-action suite 296 tests, 295 pass, 1 fail (below). format 0; coverage 55 of 55; ownership 0; words screens-action 0; `fixtures.mjs screens-action --list`: 0 failures (2 accepted lines unchanged: join-t51:64, plan:235). impact (origin/tranche/T51): 3 modules; control-plane owner-ops, t46-app and plane t50, t47 (the tests naming my screens) 21 of 21 pass. checks/run.mjs: no finding in my files except architecture below.
+
+**Red / failing, named for BOB:**
+1. `contract.test.mjs:35` "each screen's acts are exactly its registry acts": `dash-action` registry row (`wizard-scripts/screen-registry.mjs:38`) still lists `taskresolve`; green when UX-DESIGN's registry drops it and wizard-scripts regenerates.
+2. `checks/architecture.mjs`: `matter-t51` and `send-t51` import wizard-scripts' published fixtures; `build/modules.json` `screens-action.uses` lacks `wizard-scripts` (BOB's file).
+
+Found outside my paths: action-holds: a hold placed from a docket mark or a pressure record (`{project, from}`) cannot be released or previewed (`actionholdrelease`/`actionholdpreview` take only target/ord/project/case, `action-holds/index.mjs:1061-1065`) and no read lists a docket mark's hold once held (R3), so `hold` releases only a reply's and a counsel matter's.
+Met ids (BOB strikes): R9, R30, R32.
+fixtures markers added: none.
+
+Size (session_012TPANXXg4GGQVhTc5yKHd8): test runs 14, module lines 5210

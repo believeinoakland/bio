@@ -27,7 +27,8 @@ export const hold = Object.freeze({
       projects: { op: "list", query: { type: "project", limit: "500" } },
     };
     // R32: the places that hold a hold are those `pressurefor` states `in_place` (action-holds R18); `holdsdue` lists only what has none
-    r.held = { op: "pressurefor", query: { limit: "500" } };
+    // (for the screen's action when it is opened on one: its marks and their holds)
+    r.held = { op: "pressurefor", query: /^ACTN-/.test(String(view.subject || "")) ? { action: view.subject, limit: "500" } : { limit: "500" } };
     // R32: what releasing the place chosen would restart, read before the release is asked (action-holds R6)
     const at = view.ui && view.ui.releaseFor ? view.parts.placeIn(view.ui.releaseFor) : null;
     if (at && (at.target || at.project)) r.preview = { op: "actionholdpreview", query: at.target ? { target: at.target, ord: String(at.ord) } : { project: at.project } };

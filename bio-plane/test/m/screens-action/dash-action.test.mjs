@@ -12,10 +12,6 @@ const ONE = { ...ACTIONS, items: [ACTIONS.items[0]] };
 // sent on October 2 and not answered: the correspondence holds the sent entry and no reply after it
 const SENT = { ...ACTION, correspondence: [ACTION.correspondence[0]], entries: [] };
 const OFFICE = "City Clerk, Office of the City Clerk";
-const QITEMS = { items: [
-  { id: "Q-1", kind: "action-clock-overdue", summary: "The City Clerk's reply to the records request was due; no reply recorded", due: "2026-10-12", options: [{ id: "taskresolve" }], subject: { id: ACTION_ID } },
-  { id: "Q-2", kind: "action-reminder", summary: "Remind me about the extension", options: [{ id: "reminderanswer" }], subject: { id: ACTION_ID, entry: 1 } },
-  { id: "Q-3", kind: "some-other-kind", summary: "Not Action's" }] };
 
 test("R30: the screen is drawn at /app/dash-action from ops only: the visible actions, `action` and `filingsfor` for each one listed, and the member's queue; a resolved action has no row", async () => {
   const p = await open(ROUTES["dash-action"], { ...DATA_PLANE, actions: ok(ACTIONS) });
@@ -87,13 +83,9 @@ test("R30: Needs you lists the member's queue items of Action's kinds, each with
   assert.deepEqual({ ...last(p, "reminderanswer").body, reason: undefined }, { target: reminder.subject.id, entry: reminder.subject.entry, on: "2026-11-01", reason: undefined });
   const held = (await me.read("remindersfor", { query: { action } })).reminders;
   assert.deepEqual(held.map((r) => [r.entry, r.on, r.state]), [[0, "2026-10-01", "answered"], [0, "2026-11-01", "waiting"]], "the store holds the answer and the further day");
-  // `taskresolve` (queue's): no item of Action's kinds offers it in the real queue (action-producers' doors for them name none), so the "Start the next step"
-  // act is drawn here over a task item the plane scripts, unchanged
-  const task = await open(ROUTES["dash-action"], { ...DATA_PLANE, actions: ok(ONE), queue: ok({ items: [QITEMS.items[0], QITEMS.items[2]] }), taskresolve: ok({ ok: true }) });
-  assert.ok(section(task, "home.needsyou.title").textContent.includes("The City Clerk's reply to the records request was due"));
-  assert.ok(!section(task, "home.needsyou.title").textContent.includes("Not Action's"));
-  await press(task, "taskresolve", { reason: "x" });
-  assert.equal(last(task, "taskresolve").body.id, "Q-1");
+  // R30 (K5229): "Start the next step" (`taskresolve`) is drawn on none of Action's kinds: the real queue offers it for none of them
+  assert.equal(p.doc.querySelectorAll('button[data-act="taskresolve"]').length, 0, "no taskresolve button over the real queue");
+  assert.ok(!ops(p).includes("taskresolve"));
 });
 
 test("R30: 'Start an action' opens the composer on the project chosen and writes nothing; a team with no action draws only that first step", async () => {
