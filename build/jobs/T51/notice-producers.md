@@ -208,3 +208,21 @@ Checks, run from /home/user/bio:
 Met ids: R29 (BOB strikes the mark). Found outside my paths, already reported at J11/J12: a refused row's `why` is a bound key (`pdf.bytes`) or REFUSED, so the notice reads "was not taken in: pdf.bytes" (plane/setup-words wording).
 
 Size (session_01VGCXrV2bt6soPPDTNLuJ76): test runs 2, module lines 1699
+
+## J15 · COMPLETE
+
+COMPLETE (B15 applied; R29). Merged `origin/tranche/T51` into the job branch (merge commit `778b8e0d22`, pushed; no rebase). OP-GRADES #30 is in, so the stores start again. No product code changed this round.
+
+Checks, run from /home/user/bio after the merge:
+- module tests `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/notice-producers/*.test.mjs`: 155 tests, 155 pass, 0 fail.
+- fixtures `notice-producers`: 0 failures, accepted 1 (the reading-ended answer at `reading-ended-seam.test.mjs:37`, covered by the marker at `:36`, run `bio-plane/test/m/plane/r10-reading-ended.test.mjs:30`).
+- format: 178 modules, 0 failures.
+- architecture: 20 product files, 0 failures.
+- coverage: 29 of 29 live requirement ids named by a test, 0 failures.
+- ownership (merge-base with tranche/T51 to HEAD): 0 failures.
+
+Not mine, not red in this module: `control-plane/r10-caseratify-chain.test.mjs` (until RATIFICATION #39) and `store-assembly/declarations.test.mjs` R83 (until STORE-ASSEMBLY #4), as BOB's B15 notes.
+
+Met ids: R29 (BOB strikes the mark).
+
+Size (session_01VGCXrV2bt6soPPDTNLuJ76): test runs 3, module lines 1699
