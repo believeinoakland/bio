@@ -534,3 +534,17 @@ COMPLETE (re B29, K5237). No change to affordances: I changed no file in this ro
 **Met ids:** none. **Markers added:** none. **Session:** session_011xzzNYHFupDKfrTnE3KwiM, archived without a merge, as B29 says.
 
 Size (session_011xzzNYHFupDKfrTnE3KwiM): test runs 0, module lines 0
+
+## J34 · COMPLETE · re B31
+
+COMPLETE (re B30, B31; R71, K5303), as far as the ops that exist. `signerknown` waits for a CHANGE (credentials R83 is not merged).
+
+**What changed:** `bio-plane/src/affordances/act-help.mjs`: new `T51_STANDARD_OPS` (:140), the five Standard acts DEC-438 draws (`standardinforcethrough`, `standardinforcethroughwithdraw`, `standardadoption`, `standardimpose`, `standardbenchmark`), each read from its `act.<op>.does` word, held in `ACT_HELP_OPS` (:225); `leggrade` (citation R24, merged) held in `T51_STANDIN_HELP` (:162) under `act.leggrade.does` with a plain default (grade A to D, reason, no higher than the record's ceiling), the K5164 route, because the word list holds no `act.leggrade.does` row (only `screen.question.leggrade.*`). `signerknown`: held none, no module declares it. Header comment updated (:38).
+**Tests:** new `bio-plane/test/m/affordances/t51-r71.test.mjs` (3 tests: the five answer their words through `op=affordances`; leggrade explained, signerknown none; control: an absent op answers none, one entry per op). Red first (export missing; then leggrade unexplained), then green. `t36.test.mjs` (mine): its expected table and key count now include `T51_STANDARD_OPS`, since the reads list is a generation behind (it gives none of the five).
+**Results:** affordances 292 pass, 0 fail. format 0; architecture 0; coverage 55 of 55; ownership 0 (4 files); `checks/run.mjs`: no finding in my files.
+
+**For BOB, op-declarations (their R34):** its `ACT_HELP_ABSENT` still names the five Standard ops (its list near `standardadoption`..`standardinforcethroughwithdraw`), so 4 op-declarations tests are red until it drops them: R34 partition (t36:306), R34 T51_DESIGN_OPS ground, R47/R34 and R75. Before my change it had 2 red: `leggrade` neither explained nor absent; that is closed by this job. When `signerknown` merges and is worded, its CHANGE comes to me.
+**For the design (not mine):** `words-reads.json` lacks the five `act.standard*.does` keys; the word list lacks `act.leggrade.does` and `act.signerknown.does`: the stand-in's sentence is mine until the design words it, then it reads by key.
+**Deferred:** none. Found in other modules: the two items above.
+
+Size (session_01FZVnUzKGadGvoQL6wLCbSU): test runs 14, module lines 3150
