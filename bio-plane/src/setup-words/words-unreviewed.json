@@ -19659,30 +19659,30 @@
     {
       "id": "control-plane.declared.accountdrafts",
       "en": "read: a case's drafts of its account, each labeled machine work; writes nothing",
-      "module": "control-plane",
-      "file": "bio-plane/src/control-plane/owner-ops.mjs",
-      "line": 22
+      "module": "store-assembly",
+      "file": "bio-plane/src/store-assembly/owner-ops.mjs",
+      "line": 26
     },
     {
       "id": "control-plane.declared.accountpropose",
       "en": "case-directed: keyed by a case, reached from its account; the system's draft of the account, labeled machine work, never the published account until a member writes it",
-      "module": "control-plane",
-      "file": "bio-plane/src/control-plane/owner-ops.mjs",
-      "line": 25
+      "module": "store-assembly",
+      "file": "bio-plane/src/store-assembly/owner-ops.mjs",
+      "line": 29
     },
     {
       "id": "control-plane.declared.captureupload",
       "en": "upload-directed: a member's bytes held as a capture under their digest, in her own name, with its receipt; reached from the upload, never beside a bundle",
-      "module": "control-plane",
-      "file": "bio-plane/src/control-plane/owner-ops.mjs",
-      "line": 19
+      "module": "store-assembly",
+      "file": "bio-plane/src/store-assembly/owner-ops.mjs",
+      "line": 23
     },
     {
       "id": "control-plane.declared.clockpropose",
       "en": "action-directed: keyed by (action, rule, proposer); a proposal stored apart, never a clock entry until a member adopts it",
-      "module": "control-plane",
-      "file": "bio-plane/src/control-plane/owner-ops.mjs",
-      "line": 28
+      "module": "store-assembly",
+      "file": "bio-plane/src/store-assembly/owner-ops.mjs",
+      "line": 32
     },
     {
       "id": "control-plane.draft.draft_over_limit",
