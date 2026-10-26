@@ -907,14 +907,7 @@ export class Credentials {
    * unchanged; one `by` holds that was revoked is refused and stays revoked (K535): only an administrator re-activates
    * a key (R7). */
   signerRegisterOwn({ keyB64, comment = null, by = null } = {}) {
-    /* DEC-49 REGION is-machine-register-key */
-    if (by === null || by === undefined || by === "" || isMachineIdentity(by)) {
-      const row = CREDENTIALS_CHECKS.MACHINE_CANNOT_REGISTER_KEY;
-      return { ok: false, reason: "MACHINE_CANNOT_REGISTER_KEY", code: "MACHINE_CANNOT_REGISTER_KEY", check: row.check,
-               translation: row.translation, by: by || null,
-               detail: localize("credentials.index.a_member_registers_their", "a member registers their own signing key from their own signed-in session. A machine credential, the operator's bearer and an unstamped call have no member behind them to hold one; an administrator registers a key for a member with op=signeradd. Nothing was written.") };
-    }
-    /* END DEC-49 REGION is-machine-register-key */
+    if (by === null || by === undefined || by === "" || isMachineIdentity(by)) return Credentials.#machineCannotRegister(by, "register");
     if (!Credentials.#keyShaped(keyB64)) return this.signerAdd({ keyB64 });   /* R6's BAD_KEY, from its one site */
     /* C51 (fix round 3; K4356): the answer of a registration carries `timings: {total_ms, stages}`, the whole milliseconds
        each stage that ran took: `standing` (the member's bar), `lookup` (whether the key is held), `write` (the new row,
@@ -958,6 +951,50 @@ export class Credentials {
              timings: { total_ms: Math.max(Math.floor(performance.now() - t0), Object.values(stages).reduce((x, y) => x + y, 0)), stages } };
   }
 
+  /* R9, R83: MACHINE_CANNOT_REGISTER_KEY (C-96.17), minted here alone (K231): a machine credential, the operator's bearer
+     or an unstamped call has no member behind it, whether it registers a key (R9) or says it knows about one (R83). */
+  static #machineCannotRegister(by, act) {
+    /* DEC-49 REGION is-machine-register-key */
+    const row = CREDENTIALS_CHECKS.MACHINE_CANNOT_REGISTER_KEY;
+    return { ok: false, reason: "MACHINE_CANNOT_REGISTER_KEY", code: "MACHINE_CANNOT_REGISTER_KEY", check: row.check,
+             translation: row.translation, by: by || null,
+             detail: act === "register"
+               ? localize("credentials.index.a_member_registers_their", "a member registers their own signing key from their own signed-in session. A machine credential, the operator's bearer and an unstamped call have no member behind them to hold one; an administrator registers a key for a member with op=signeradd. Nothing was written.")
+               : localize("credentials.index.an_administrator_says_they_know", "an administrator says they know about a member's signing key from their own signed-in session. A machine credential, the operator's bearer and an unstamped call have no administrator behind them to say it. Nothing was written.") };
+    /* END DEC-49 REGION is-machine-register-key */
+  }
+
+  /* R83 (T51 fix round 10; DEC-439, DEC-440, DEC-441, K5303; A-03) `op=signerknown`: an administrator says they know about
+     a key a member registered for themselves. It records `known_by` (the administrator) and `known_at` (the instant) on the
+     key's row, which R8 answers and which the queue's "a key was self-registered" item reads to end. It only records: the key
+     attests as before (R19) and any administrator can revoke it (R7). Refusals in order, each writing nothing: no member
+     behind the caller (R9's MACHINE_CANNOT_REGISTER_KEY); not an administrator (membership R84, as R13 answers it); the key's
+     shape (R6's BAD_KEY, from its one site); a key not held (R7's NO_SUCH_KEY, the absent-key answer); a key not
+     self-registered or not active (SIGNER_NOT_SELF_ACTIVE, C-96.55). A key already known answers `already: true` with the
+     first knower and instant, writing nothing. `viewer` is the control plane's stamp, never read from the body. */
+  signerKnown({ keyB64, viewer = null } = {}) {
+    if (viewer === null || viewer === undefined || viewer === "" || isMachineIdentity(viewer))
+      return Credentials.#machineCannotRegister(viewer, "know");
+    const bar = this.#adminBar(viewer, localize("credentials.index.saying_you_know_about_a_key", "saying you know about a member's signing key"));
+    if (bar) return bar;
+    if (!Credentials.#keyShaped(keyB64)) return this.signerAdd({ keyB64 });   /* R6's BAD_KEY, from its one site */
+    const row = this.#one(`SELECT status, origin, known_by, known_at FROM signers WHERE key_b64=?`, keyB64);
+    if (!row) return { ok: false, reason: "NO_SUCH_KEY" };
+    /* DEC-49 REGION is-signer-self-active */
+    if (row.origin !== "self" || row.status !== "active") {
+      const refused = CREDENTIALS_CHECKS.SIGNER_NOT_SELF_ACTIVE;
+      return { ok: false, reason: "SIGNER_NOT_SELF_ACTIVE", code: "SIGNER_NOT_SELF_ACTIVE", check: refused.check,
+               translation: refused.translation,
+               detail: localize("credentials.index.only_a_key_a_member", "only a key a member registered for themselves and that is still active can be marked as known; this one was registered by an administrator or has been revoked. Nothing was written.") };
+    }
+    /* END DEC-49 REGION is-signer-self-active */
+    if (typeof row.known_by === "string" && row.known_by !== "")
+      return { ok: true, keyB64, already: true, known_by: row.known_by, known_at: row.known_at ?? null };
+    const by = Credentials.#memberOf(viewer), at = this.#instant();
+    this.sql.exec(`UPDATE signers SET known_by=?, known_at=? WHERE key_b64=? AND known_by IS NULL`, by, at, keyB64);
+    return { ok: true, keyB64, already: false, known_by: by, known_at: at };
+  }
+
   /* R10: a member revokes their own key, never refused for a key they hold, whatever its state or theirs (revoking
      narrows a claim, D-158). A key they do not hold answers NO_SUCH_KEY exactly as `signerSet` answers a key no one
      holds, so the answer never says whether a key is registered to somebody else. */
@@ -984,7 +1021,7 @@ export class Credentials {
       return facts.get(id);
     };
     return { signers: this.#rows(
-      `SELECT key_b64, member_id, comment, status, added, status_by, origin, registered_by, status_at
+      `SELECT key_b64, member_id, comment, status, added, status_by, origin, registered_by, status_at, known_by, known_at
          FROM signers ORDER BY added, key_b64`).map((r) => {
         const memberStatus = statusOf(r.member_id);
         const attests = Credentials.#attests(r.status, memberStatus);
@@ -996,6 +1033,9 @@ export class Credentials {
           /* R6 was the only door before R9, so a row with no recorded origin is an administrator's. */
           origin: r.origin === "self" ? "self" : "admin",
           registered_by: Credentials.#statusBy(r.registered_by),
+          /* R83: the administrator who said they know about the key and when; null until one has */
+          known_by: typeof r.known_by === "string" && r.known_by !== "" ? r.known_by : null,
+          known_at: typeof r.known_at === "string" && r.known_at !== "" ? r.known_at : null,
           member_status: memberStatus,
           attests,
           attests_why: attests ? null
@@ -2150,6 +2190,8 @@ export function credentialsOps(c, url, body, env) {
     signeradd: () => c.signerAdd({ ...(body || {}), by: url.searchParams.get("by") }),
     signerlist: () => c.signerList(),
     signerset: () => c.signerSet({ ...(body || {}), by: url.searchParams.get("by") }),
+    /* R83 (T51): the key from the body, the administrator from the control plane's stamp (`viewer`, else `by`), never the body */
+    signerknown: () => c.signerKnown({ keyB64: bodyField("keyB64"), viewer: url.searchParams.get("viewer") ?? url.searchParams.get("by") }),
     /* T33-20 (R27–R29): the ask grant and the keyed services, `by` the control plane's stamp and the session the one it
        authenticated (`session`, its stamp); a secret only ever in the body, never the query. The in-plane reads
        (`aiGrantAdmit`, `aiGrantHeld`, `aiGrantMintStanding`, `keyedServiceFor`; T35's `securityLevel`; T36's
@@ -2208,6 +2250,8 @@ export const DECLARED_OPS = Object.freeze({
   signerregisterown: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("credentials.declared.signerregisterown", "signer governance: a member registers their own signing key, stamped `by` from their session, and every administrator is told; the subject is a key, not a bundle"),
     fields: { accepts: ["keyB64","comment"], requires: ["keyB64"] } },
   signerrevokeown: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("credentials.declared.signerrevokeown", "signer governance: a member revokes their own signing key, stamped `by` from their session; the subject is a key, not a bundle"),
+    fields: { accepts: ["keyB64"], requires: ["keyB64"] } },
+  signerknown: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("credentials.declared.signerknown", "signer governance: an administrator says they know about a member's self-registered signing key, stamped `by` from their session; it records who and when and changes nothing else; the subject is a key, not a bundle"),
     fields: { accepts: ["keyB64"], requires: ["keyB64"] } },
   signerset: { classes: ["admin","member","probe"], machineClasses: ["admin","probe"], mutating: true, weight: "credential", description: localize("credentials.declared.signerset", "signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)"),
     fields: { accepts: ["keyB64","status"], requires: ["keyB64","status"] } },

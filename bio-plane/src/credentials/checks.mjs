@@ -115,8 +115,14 @@ export const CREDENTIALS_CHECKS = Object.freeze({
     translation: word('refusal.SIGNER_KEY_REVOKED'),
   }),
   MACHINE_CANNOT_REGISTER_KEY: Object.freeze({
-    check: 'C-96.17', where: at("signerRegisterOwn", "is-machine-register-key"),
+    check: 'C-96.17', where: at("#machineCannotRegister", "is-machine-register-key"),
     translation: word('refusal.MACHINE_CANNOT_REGISTER_KEY'),
+  }),
+  /* R83 (T51 fix round 10; K5303): "I know about this key" is said of a key a member registered for themselves and that is
+     still active, the next free number of C-96. A new row, awaiting promotion's stamp. */
+  SIGNER_NOT_SELF_ACTIVE: Object.freeze({
+    check: 'C-96.55', where: at("signerKnown", "is-signer-self-active"),
+    translation: localize('credentials.checks.only_a_key_a_member_registered', 'Only a key a member registered for themselves, and that is still in use, can be marked as one you know about. This key was registered by an administrator, or it has been withdrawn, so there is nothing to confirm. Nothing was changed.'),
   }),
 });
 
