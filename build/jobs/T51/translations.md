@@ -184,3 +184,17 @@ COMPLETE, fix round 10 (B6, plan item 95; K5195): R18 met for `translationdraft`
 **Stale generated artifacts.** None from this round (no source of a bundle's input changed; `bio-plane/dist/bio-plane.bundled.mjs` holds no fixture).
 
 **Size (session_01KFtq9Cm6EqDrBRK4KzWp2Y): test runs 6, module lines 1027** (`bio-plane/src/translations/*.mjs`; this round's diff is 24 and 19 added lines in the two fixture files).
+
+## J7 · COMPLETE
+
+COMPLETE, START B7 (K5217): `interfacewords`'s words answer is published in translations' `fixtures.mjs` as `interfaceWordsAnswer({ language })`: the real op=interfacewords answer through `frame`, for a member in the default language (no word held, the shell's English) and one who reads another (the one adopted word, shown, with its English), each over a fresh world, never stored.
+
+Changed (job pushed, 21308b38e6): `bio-plane/test/m/translations/fixtures.mjs:24-37` (the fixture, and imports at :3-6); `bio-plane/test/m/translations/fixtures.test.mjs` (new test, R8 R19; control: a second call is equal and a separate object). No source change; no fixtures-own or fixtures-generic marker added.
+
+Failing first: red (interfaceWordsAnswer is not a function), then green. Break once: the expected text broken, red (1 fail); restored, green.
+
+Ran (root /home/user/bio): module suite 46/46 pass; fixtures check 0 failures (the two store-door contract lines at fixture.mjs:78, :85 are B5's, waiting on store-door); format 0; architecture 0; coverage 21 of 21; ownership 0; run.mjs no finding in translations' files, words count not risen; impact 0 of 178 (no source changed).
+
+REPORT, other modules (not edited here): (1) interface-shell `bio-plane/test/m/interface-shell/harness.mjs:88` still hand-builds an `interfacewords` answer; to re-point to `interfaceWordsAnswer` (its R5, R7, R10, R82, R84, R103 frame tests). (2) screens-settings `seed-common.mjs:119` and `translations.test.mjs:87` hand-build `translationdraft` answers (translations' op, R18); screens-settings to re-point.
+
+Deferred: none. Record: build/jobs/T51/translations.md, section "Completion, fix round 10, Wave A". Size (session_01KFtq9Cm6EqDrBRK4KzWp2Y): test runs 6, module lines 1027.
