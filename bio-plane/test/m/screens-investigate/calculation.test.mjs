@@ -204,13 +204,13 @@ test("R5 the acts: calculationcreate, tabledeclare, recordcheck, calculationacce
   await settled(p);
   assert.deepEqual(p.byOp("tabledeclare")[0].body.header, ["grantee", "amount"]);
   assert.equal(p.byOp("tabledeclare")[0].body.source.capture_sha, R.other.sha);
-  assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "the plane holds the table");
+  assert.ok(!main(p).querySelector('[data-gap="refused"]'), "the plane holds the table");
   /* addworkbook: the workbook added to the project, under the calculation's question and the period */
   fill(p, { "calc-wb": R.book.sha, "calc-period": "FY2025" });
   await press(p, "addworkbook", { reason: "my own count" });
   await settled(p);
   assert.deepEqual(p.byOp("addworkbook")[0].body, { captureSha: R.book.sha, question: stored.question, period: "FY2025", project: R.project, reason: "my own count" });
-  assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "the plane holds the workbook");
+  assert.ok(!main(p).querySelector('[data-gap="refused"]'), "the plane holds the workbook");
   const held = await me.read("workbook", { query: { capture: R.book.sha, project: R.project } });
   assert.deepEqual([held.ok, held.workbook.period, held.workbook.question], [true, "FY2025", stored.question], "the store holds it under that question and period");
   /* bind: a range of the workbook to the table's own cells */
@@ -218,7 +218,7 @@ test("R5 the acts: calculationcreate, tabledeclare, recordcheck, calculationacce
   await press(p, "bind");
   await settled(p);
   assert.deepEqual(p.byOp("bind")[0].body, { captureSha: R.book.sha, project: R.project, range: "Model!B2:B4", input: { table: R.table, range: "C1:C3" } });
-  assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "bound");
+  assert.ok(!main(p).querySelector('[data-gap="refused"]'), "bound");
   const bound = (await me.read("workbook", { query: { capture: R.book.sha, project: R.project } })).bindings;
   assert.deepEqual(bound.map((b) => [b.range, b.input.table, b.bound_by, b.agrees]), [["Model!B2:B4", R.table, me.member, true]], "the store holds the binding, and the table's cells agree with the workbook's");
   /* recordcheck is a second member's: the author's own is refused (drawn beside it); a second member's lands */
@@ -232,7 +232,7 @@ test("R5 the acts: calculationcreate, tabledeclare, recordcheck, calculationacce
   await press(q, "recordcheck");
   await settled(q);
   assert.deepEqual(q.byOp("recordcheck")[0].body, { captureSha: R.book.sha, project: R.project, outcome: "agrees", note: "I recounted 21" });
-  assert.equal(main(q).querySelector('[data-gap="refused"]'), null, "a second member's check lands");
+  assert.ok(!main(q).querySelector('[data-gap="refused"]'), "a second member's check lands");
   assert.ok(JSON.stringify(await me.read("workbook", { query: { capture: R.book.sha, project: R.project } })).includes("I recounted 21"), "and the store holds it with her note");
   /* calculationaccept */
   await press(p, "calculationaccept", { reason: "recomputed and agrees" });
@@ -263,7 +263,7 @@ test("R34 R5 the draw's set is chosen among the tables this calculation reads, b
   fill(p, { "calc-set": R.table, "calc-n": "2", "calc-seed": "2026-10-05-7f31" });
   await press(p, "calculationdraw", { reason: "a sample to visit" });
   await settled(p);
-  assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "the store draws what the page offered");
+  assert.ok(!main(p).querySelector('[data-gap="refused"]'), "the store draws what the page offered");
   assert.ok((await me.read("spotcheck", { query: { id: R.first } })), "the draw is held");
 });
 

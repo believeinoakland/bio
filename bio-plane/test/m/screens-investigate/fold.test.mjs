@@ -113,7 +113,7 @@ test("R22 a section, list or reading that holds nothing is not drawn, and no cou
   assert.deepEqual((await me.read("memberties")).ties, [], "no tie");
   for (const [id, path] of Object.entries(empty)) {
     const p = await openAs(world, me, path);
-    assert.equal(main(p).querySelector('[data-state="failed"]'), null, `${id}: every read answered`);
+    assert.ok(!main(p).querySelector('[data-state="failed"]'),  `${id}: every read answered`);
     for (const s of main(p).querySelectorAll("section")) {
       const h = s.querySelector("h2");
       const body = s.textContent.replace(h ? h.textContent : "", "").trim();

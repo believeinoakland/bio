@@ -57,7 +57,7 @@ test("R34 C56 an unreadable vocabulary draws the kind choice failed, never a han
   const { world, me } = await inWorld();
   const project = await world.recipes.project(me, "Pothole repairs");
   const p = await openAs(world, me, "/app/timeline/" + project, { plane: { affordances: refusedIn("UNAVAILABLE", "x") } });
-  assert.equal(p.doc.getElementById("tl-kind"), null, "no kinds are guessed");
+  assert.ok(!p.doc.getElementById("tl-kind"),  "no kinds are guessed");
 });
 
 /* ---------------------------------------------------------------- C57 */
@@ -90,7 +90,7 @@ test("R4 R23 C57 committed against paid chooses the contract from the contracts 
   const project2 = await other.world.recipes.project(other.me, "Sewer lining");
   const trail2 = await other.world.recipes.trail(other.me, project2, "Sewer lining, FY2026");
   const none = await openAs(other.world, other.me, "/app/money/" + trail2);
-  assert.equal(none.doc.getElementById("mf-contract"), null, "no contract held: no choice");
+  assert.ok(!none.doc.getElementById("mf-contract"),  "no contract held: no choice");
   await press(none, "committedagainstpaid");
   assert.equal(none.byOp("committedagainstpaid").length, 0);
   drew(main(none), "screen.money.f.nocontract", undefined, "and the refusal is said in words");
@@ -138,7 +138,7 @@ test("R4 C8 control: a figure read where no trail is open sends no propose; a re
   const project = await world.recipes.project(me, "Records office budget");
   const held = await world.recipes.hold(me, "Adopted budget.txt", "The overhead allocation from the Sewer Fund to the General Fund was 310,000 dollars.", project);
   const none = await openAs(world, me, "/app/money/" + project);
-  assert.equal(none.doc.getElementById("mf-amount"), null, "a project with no trail offers no figure form");
+  assert.ok(!none.doc.getElementById("mf-amount"),  "a project with no trail offers no figure form");
   assert.equal(none.byOp("moneysetpropose").length, 0);
   const trail = await world.recipes.trail(me, project, "Overhead allocation trail, FY2022");
   /* the owner refuses the proposal (a fault the page cannot cause: the trail it names is the one open) */
@@ -178,7 +178,7 @@ test("R53 C7 an institution's Address fact from a document is recorded (the fact
   assert.ok(main(p).textContent.includes(facts[0].value), "the recorded fact is drawn from the record");
   assert.ok(main(p).textContent.includes(word("screen.person.kind.address")));
   for (const k of ["birth", "death", "locality"]) assert.ok(!kinds.some(([v]) => v === k), k + " is not offered");
-  assert.equal(main(p).querySelector('[data-state="failed"]'), null, "never a failed read");
+  assert.ok(!main(p).querySelector('[data-state="failed"]'), "never a failed read");
 });
 
 /* ---------------------------------------------------------------- C59 */

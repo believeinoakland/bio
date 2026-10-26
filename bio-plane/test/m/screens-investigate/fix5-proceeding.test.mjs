@@ -46,7 +46,7 @@ test("R6 R34 D3 Proceeding: 'Link a decision to what it interprets' rests on a p
   const sent = p.byOp("courtlink");
   assert.equal(sent.length, 1);
   assert.deepEqual([sent[0].body.type, sent[0].body.from, sent[0].body.to, sent[0].body.citation], ["interprets", M.std, M.ord, passage]);
-  assert.equal(main(p).querySelector('[data-gap="refused"]'), null);
+  assert.ok(!main(p).querySelector('[data-gap="refused"]'));
 });
 
 test("R6 R34 D6 Proceeding: 'Add a party by role' cites the passage chosen on the document by its words, and the role opens with nothing chosen", async () => {
@@ -70,7 +70,7 @@ test("R6 R34 D6 Proceeding: 'Add a party by role' cites the passage chosen on th
   assert.equal(sent.length, 1);
   assert.equal(sent[0].body.role, "petitioner");
   assert.deepEqual(sent[0].body.basis.extent, M.du[1].extent, "the second paragraph selected, not the whole document");
-  assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "the party is recorded");
+  assert.ok(!main(p).querySelector('[data-gap="refused"]'), "the party is recorded");
 });
 
 test("R36 R47 D10 Proceeding: the kind of proceeding opens with nothing chosen and a press without it refuses in place", async () => {

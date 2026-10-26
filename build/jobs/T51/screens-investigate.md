@@ -1,6 +1,6 @@
 # screens-investigate (T51)
 
-**Status** · session_01C3EHTs8Q553ayr9DuBPkZk · depth 2 · COMPLETE · handled B43
+**Status** · session_01WPDZpswNMiVXDQapJTbjk9 · depth 2 · COMPLETE · handled B45
 
 ## J1 · QUESTION
 
@@ -490,3 +490,23 @@ COMPLETE · screens-investigate · fix round 10, B43 (K5245): STORE-REQUEST #7's
 **Branch.** The old local `job/T51/screens-investigate` (6c72d2a8ad, behind origin) is kept as local `stale/screens-investigate-local`; the job branch was recreated from origin, then `origin/tranche/T51` merged (a merge commit, not a rebase).
 
 Size (session_01C3EHTs8Q553ayr9DuBPkZk): test runs 9, module lines 3416
+
+## J38 · COMPLETE
+
+COMPLETE · screens-investigate · fix round 10, B44 (K5250): the money file's silent stop is found, fixed and the file runs all its tests. Commit 45873ea0ae (pushed).
+
+**Cause (mine, in the tests, not the screen).** With the world's network serving 404 for `afr-2022.pdf`, the screen already draws the owner's refusal (`refusal.SOURCE_REFUSED`) beside the act. `money.test.mjs`:171 then asserted `assert.equal(<DOM node>, null, ...)`; that assertion failed, and Node's AssertionError construction over a DOM node (circular, whole document) hung 78-97 s and the test process ended with no message ("test failed" at file level; exit 0 only when piped). Not `openAs`/`settled`, not the press, not the owner's answer. `assert` ignores custom inspect, so no kit guard can cure it: the call sites are fixed.
+
+**Changed.**
+- 94 assertions in 22 files of `bio-plane/test/m/screens-investigate/`: `assert.equal(<node or node-returning helper>, null|undefined, msg)` is now `assert.ok(!<node>, msg)` (querySelector 42; getElementById, button, secOf, graphOf, sec, rowOf, wordsOf 52). The same failure now reports in 4.7 s with its message.
+- `money.test.mjs` new test "R4 an address the site refuses (404) ..." (before the "Ask the city" test): the 404 is scripted in the world's network; the code is read from the owner's own answer (`refused(world, me, "acquire")` -> `reason`); the panel draws `word("refusal." + reason)` in `[data-gap="refused"]` beside the act; the page then answers `checkrequest`.
+
+**Red then green.** Red: the original panel test with the 404 served: 78-97 s, no assertion message, 4 of 15 tests reported, file-level "test failed". Green: the same 404 with the converted assertion fails in 4.7 s with `AssertionError: the store took the request`; the new test passes with the screen as it is.
+
+**Suites.** money.test.mjs alone: 16 tests, 15 pass, 0 fail, 1 todo. Module as one run (no `--test-force-exit`): 295 tests, 294 pass, 0 fail, 1 todo (the reported exclude-after-propose); 294 before + 1 new.
+
+**Checks.** `checks/run.mjs`: format 0, architecture 0, coverage 7070 of 7070 named, words 19247 (unchanged, 0 failures); its fixtures lines (233) are other modules' (capture, doorbell, file-safety, monitoring, plane, test-support), none in my files. `checks/fixtures.mjs ... screens-investigate --list`: 0. Ownership: 0 failures. `impact.mjs`: only this module's tests changed.
+
+**Met ids.** None changed. **Markers added.** No `fixtures-own` / `fixtures-generic`. **Reported to others.** Nothing outside my paths. Other modules' tests may hold the same `assert.equal(<node>, null)` form (interface-shell's harness users); BOB may tell their jobs.
+
+Size (session_01WPDZpswNMiVXDQapJTbjk9): test runs 14, module lines 3416

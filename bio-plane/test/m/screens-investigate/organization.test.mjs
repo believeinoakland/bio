@@ -27,10 +27,10 @@ test("R53 an institution's page draws no Born, Died or where they live, offers a
   /* the person read is made and answered as the owner answers it; it is not drawn as failed or as a claim */
   assert.ok(p.byOp("person").length >= 1);
   assert.equal((await me.read("person", { query: { id: org, at: p.byOp("person")[0].query.at } })).claims.length, 0);
-  assert.equal(m.querySelector('[data-state="failed"]'), null, "an answer of no claims is drawn as no claims");
+  assert.ok(!m.querySelector('[data-state="failed"]'), "an answer of no claims is drawn as no claims");
   /* the owner once refused an organization NOT_A_PERSON and the page keeps to its word: that refusal is no claims and no failed read (a refusal this build no longer gives) */
   const old = await openAs(world, me, "/app/person/" + org, { plane: { person: noPerson(), samepersoncandidates: noPerson() } });
-  assert.equal(main(old).querySelector('[data-state="failed"]'), null, "a NOT_A_PERSON refusal is drawn as no claims");
+  assert.ok(!main(old).querySelector('[data-state="failed"]'), "a NOT_A_PERSON refusal is drawn as no claims");
   assert.ok(!main(old).textContent.includes(word("refusal.NOT_A_PERSON")));
   const q = await openAs(world, me, "/app/person/" + chen);
   const pk = q.doc.getElementById("person-fact-kind").querySelectorAll("option").map((o) => o.textContent);
@@ -83,7 +83,7 @@ test("R58 an organization's page draws the .org keys: Same organization?, its he
   assert.ok((await me.read("samepersoncandidates", { query: { id: org } })).count >= 1);
   const s = secOf(p, "screen.person.same.org");
   assert.ok(s, "headed by the organization's key");
-  assert.equal(secOf(p, "screen.person.same"), undefined, "not the person's");
+  assert.ok(!secOf(p, "screen.person.same"),  "not the person's");
   assert.ok(s.querySelector("[data-tip]").getAttribute("data-tip").includes(word("screen.person.same.holds.org")), "its help");
   drew(s, "screen.person.same.claimed.org");
   drew(s, "screen.person.candidates.org");
@@ -152,7 +152,7 @@ test("R50 Records its offices keep lists the lines standing for this organizatio
   fill(q, { "kp-src": "own" });
   q.fire(q.doc.getElementById("kp-src"), "change");
   await q.settle();
-  assert.equal(q.doc.getElementById("kp-doc"), null, "no document chosen for her own word");
+  assert.ok(!q.doc.getElementById("kp-doc"),  "no document chosen for her own word");
   fill(q, { "kp-office": w.keeper, "kp-subject": w.subject, "kp-statement": "I worked in that office" });
   await press(q, "recordline", { reason: REASON });
   assert.deepEqual(q.byOp("recordline")[0].body, { kind: "custodian_of", from: w.keeper, to: w.subject, basis: { statement: "I worked in that office" } }, "no dates: no validity sent");
@@ -164,7 +164,7 @@ test("R50 Records its offices keep lists the lines standing for this organizatio
 test("R50 a statement with no source sends nothing; the owner's refusals are drawn in the design's words (no source, same office and subject, dates reversed); an organization with no office draws no section (R22)", async () => {
   const bare = await keepers({ docs: false, office: false });
   const barePage = await openAs(bare.world, bare.me, "/app/person/" + bare.org);
-  assert.equal(secOf(barePage, "screen.person.keeper.heading"), undefined, "no office, no section");
+  assert.ok(!secOf(barePage, "screen.person.keeper.heading"),  "no office, no section");
   assert.ok(!actsIn(main(barePage)).includes("recordline"));
   /* an office of the organization, held on no document: the post is the member's own word, and no document is held to cite */
   const w = await keepers({ docs: false, office: false });
@@ -193,7 +193,7 @@ test("R50 a statement with no source sends nothing; the owner's refusals are dra
   assert.equal(nobasis.byOp("recordline").length, 1, "NO_BASIS");
   drew(main(nobasis), "screen.person.keeper.refused.nobasis.a");
   const person = await openAs(k.world, k.me, "/app/person/" + k.chen);
-  assert.equal(secOf(person, "screen.person.keeper.heading"), undefined, "control: a person's page has none");
+  assert.ok(!secOf(person, "screen.person.keeper.heading"),  "control: a person's page has none");
   assert.ok(!actsIn(main(person)).includes("recordline"));
 });
 

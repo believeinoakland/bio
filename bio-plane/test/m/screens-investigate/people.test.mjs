@@ -107,7 +107,7 @@ test("R12 search: Name or office and the four filters read the directory again, 
   fill(q, { "people-q": "x".repeat(1000) });
   await press(q, "search");
   assert.ok(main(q).querySelector('[data-state="failed"]'));
-  assert.equal(main(q).querySelector('[data-state="empty"]'), null);
+  assert.ok(!main(q).querySelector('[data-state="empty"]'));
 });
 
 test("R13 each row: the kind's mark, the name opening person, who they are today, the counts as answered, Explore connections", async () => {
@@ -201,9 +201,9 @@ test("R25 with nothing followed people draws only its empty state (follows no on
   drew(m, "screen.people.none");
   assert.ok(m.querySelector('a[href="/app/capture"]'));
   assert.ok(button(p, "entitycreate"));
-  assert.equal(p.doc.getElementById("people-q"), null, "no search box");
-  assert.equal(p.doc.getElementById("people-show"), null, "no filters");
-  assert.equal(button(p, "search"), null);
+  assert.ok(!p.doc.getElementById("people-q"),  "no search box");
+  assert.ok(!p.doc.getElementById("people-show"),  "no filters");
+  assert.ok(!button(p, "search"));
   notDrew(m, "screen.people.countline", { following: "0", mine: "0" });
   notDrew(m, "screen.people.countline.none", { following: "0" });
   await entity(me, "person", "L. Chen", "Director of the department");
@@ -308,7 +308,7 @@ test("R42 with a kind other than people in view \"Add\" is the state g form: the
   fill(p, { "people-show": "everything" });
   await press(p, "search");
   assert.ok(p.doc.getElementById("people-other-name"), "state g");
-  assert.equal(p.doc.getElementById("people-add-kind"), null, "no two-way form");
+  assert.ok(!p.doc.getElementById("people-add-kind"),  "no two-way form");
   assert.ok(![...p.doc.getElementById("people-other-kind").querySelectorAll("option")].some((o) => o.getAttribute("value") === "proceeding"), "no A proceeding in the form");
   await p.clock.tick(1000);
   assert.equal(p.byOp("entitysimilar").length, 0, "nothing typed, nothing asked");

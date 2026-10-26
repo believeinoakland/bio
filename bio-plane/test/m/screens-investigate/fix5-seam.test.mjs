@@ -146,8 +146,8 @@ test("R34 R17 (cause 9) Explore, the real world: the form that attaches a source
   const titles = doc.querySelectorAll("option").map((o) => o.textContent);
   assert.ok(titles.some((t) => t.includes("Memo.txt")) && titles.some((t) => t.includes("Minutes.txt")), "by title");
   assert.ok(titles.findIndex((t) => t.includes("Minutes.txt")) < titles.findIndex((t) => t.includes("Memo.txt")), "newest first");
-  assert.equal(p.doc.getElementById("explore-assert-sha"), null, "no field asks a fingerprint");
-  assert.equal(p.doc.getElementById("explore-assert-page"), null, "or a page number");
+  assert.ok(!p.doc.getElementById("explore-assert-sha"),  "no field asks a fingerprint");
+  assert.ok(!p.doc.getElementById("explore-assert-page"),  "or a page number");
   fill(p, { "explore-assert-doc": memo.sha, "explore-assert-basis": "The memo says he signs for her." });
   p.fire(p.doc.getElementById("explore-assert-doc"), "change");
   await settled(p);

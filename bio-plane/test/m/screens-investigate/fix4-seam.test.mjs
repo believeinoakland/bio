@@ -35,7 +35,7 @@ test("R34 C59 N3 Money, over the world: a held text file's words are listed unde
   assert.equal(alone.length, 0, "no empty state stands bare, with nothing to say what is empty");
   const slot = main(p).querySelector('[data-empty="mf-contract"]');
   assert.ok(slot.textContent.includes(word("screen.money.f.contract")), "the contract choice, none held, under its label");
-  assert.equal(main(p).querySelector('[data-empty="mf-doc"]'), null, "the document choice lists the file and draws no empty state");
+  assert.ok(!main(p).querySelector('[data-empty="mf-doc"]'), "the document choice lists the file and draws no empty state");
   assert.equal(p.byOp("reading").length, 1, "the file was read once");
   assert.ok(p.byOp("reading")[0].query.sha256 === held.sha);
 });
@@ -57,7 +57,7 @@ test("R34 C59 N3 Timeline, over the world with the live copy's record: the choic
   const sentence = word("state.failed", { reason: word("shell.noanswer") });
   assert.ok(text.includes(sentence), `drawn failed, in words: ${sentence}`);
   assert.ok(!escaped(text), "no sentence is drawn with an entity of its own showing");
-  assert.equal(p.doc.getElementById("tl-kind"), null, "no choice of what happened is offered without its kinds");
+  assert.ok(!p.doc.getElementById("tl-kind"),  "no choice of what happened is offered without its kinds");
   /* the control: the store's own answer carries the kinds */
   const own = await openAs(world, me, "/app/timeline/" + project);
   assert.ok(own.doc.getElementById("tl-kind"), "the kinds are offered");
@@ -106,7 +106,7 @@ test("R4 C8 (the figure) Money, over the world: a figure read in with its period
   await press(p, "recordfact", { reason: REASON });
   /* the act's answer is awaited by its result (the row drawn), never by a quiet window the store can outlast under load */
   const row = await settledUntil(p, () => main(p).querySelectorAll("tr").find((r) => r.textContent.includes(word("screen.money.proposed.member"))));
-  assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "recorded: no refusal stays on the page");
+  assert.ok(!main(p).querySelector('[data-gap="refused"]'), "recorded: no refusal stays on the page");
   assert.ok(row, "the figure the member read in is a row of the trail, proposed by a member (the store names her `admin`, not `member:admin`)");
   const stored = (await me.read("moneyset", { query: { id: trail } })).proposals[0];
   const fact = (await me.read("money", { query: { id: stored.fact_id } })).fact;

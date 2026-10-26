@@ -57,7 +57,7 @@ test("R1 Person, an office: a holder whose post states no end is stated current 
   const sent = p.byOp("linecurrentthrough");
   assert.equal(sent.length, 1);
   assert.deepEqual([sent[0].body.lineId, sent[0].body.day, sent[0].body.basis.captureSha], [line, "2026-09-30", roster.sha]);
-  assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "the store holds the statement");
+  assert.ok(!main(p).querySelector('[data-gap="refused"]'), "the store holds the statement");
   const through = (await me.read("line", { query: { id: line } }));
   assert.equal(JSON.stringify(through).includes("2026-09-30"), true, "the line reads current through the day");
 });
