@@ -396,3 +396,17 @@ COMPLETE (B22). R95 met: What you answered gains join_answer (project-roster R44
 **Markers added**: none (no `fixtures-own` or `fixtures-generic`).
 
 Size (session_01KTd17XTyLAtTuNkmbbXcVw): test runs 5, module lines 92
+
+## J20 · COMPLETE
+
+COMPLETE (B23, K5217). queue's `op=queue` answer is published as queue's fixtures for interface-shell, in `bio-plane/test/m/queue/fixtures.mjs`: `emptyFeed()` and `feedWithItem()` (member `mai`, one OBLIGATION on `INF-1` for the one-item case), plus `emptyCount()` and `countWithItem()` for the `count: true` read. Each is made by `queueFeed` over a fresh world on every call and never stored. No requirement changed, so no mark moves.
+
+Test: `bio-plane/test/m/queue/fixtures.test.mjs`, four tests titled K5217. Failing first: the afresh-world comparison failed on the clock timings, and was fixed by comparing content without `feeds_ms`, `derivation` and `feeds`. Break once: `items: []` in the feed's return in `bio-plane/src/queue/index.mjs` (the derivation's return, near :1466) gave three red and one green (the empty feed, as it should). Restored by `git checkout` of that file; green again.
+
+Suite: `bio-plane/test/m/queue/*.test.mjs` plus conclude-project and docdates, 238 of 238 pass, exit 0. Checks: fixtures (queue --list) 0 failures; architecture 0; coverage 56 of 56, 0; format 0; ownership 0 (3 files: my two and the record); impact `queue 1/35`; words count 19247 both in the tree and in a clean tranche worktree (no rise).
+
+Outside my paths (REPORTed in my record): `checks/run.mjs` names 349 fixtures failures in other modules, among them the frame default at `bio-plane/test/m/interface-shell/harness.mjs:91` (`queue`) and six `screens-inquiry` tests' hand-built `queue:` answers. Owners to re-point at the published fixtures. Coverage (5) and words (16) failures are in other modules too; the output does not name them.
+
+Markers added: none.
+
+Size (session_01KTd17XTyLAtTuNkmbbXcVw): test runs 5, module lines 92
