@@ -67,6 +67,7 @@
 
 ## Tests assert the word key, never the English: first after the alpha's deployment (Bob, K5313; P19 (1): after the release, by Bob's order)
 - The sweep (K5313): every finding and refusal carries its code, word key and values; every test and saved expected output asserts those, never a sentence or a fragment; the words check refuses sentence fragments in tests; one mechanical pass (§5.10), a module needing judgment its own job.
+- Reds seen at T51's close (K5339; code unchanged since each module's merge): format-registry R31 (SHEET C32 C33 C23 C24, delimited text read as a sheet); pdf-worker `structure.test.mjs`; promotion `row-census.test.mjs`; setup-words R13 (`inquiry.index.pass_grounds_an_array`'s braces, the design stream's row, `fix-round-10-words.md` item 95). Each traced to its cause before it is fixed.
 - The §5.10 pass of fix round 10 (items 101 (4), 122 (3), 127 (3), 128 of `fix-round-10-T51.md`): marker re-points, the `DECLARED_OPS` rename, orphan runs, the node-vs-null assertions; the 89 fixtures lines remaining.
 - SCREENS-INTAKE: restore SCREENS-INTAKE #28 J60 (c)'s removed cases on STORE-REQUEST #8's recipes.
 - store-assembly: a world's network double bound per world (STORE-REQUEST #8 J21 (2)).
