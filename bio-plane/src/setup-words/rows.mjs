@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19364 design words, 1157 protected; SHA-256
-   0511dbc5b56d08e250b7c7d120b991f5898de3c7c51937d71d2cfb6761fc9b9f) followed by 7495 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   0511dbc5b56d08e250b7c7d120b991f5898de3c7c51937d71d2cfb6761fc9b9f) followed by 7501 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -20383,6 +20383,7 @@ export const WORD_ROWS = Object.freeze([
   ["basis-version-grammar.checks.suggest_kind_sharpen_question","the inquiry asks two questions that need different evidence; here they are separated (section 8). The separation is carried as the version's claim",null,null,false,"code"],
   ["basis-version-grammar.grammar.basis_versions_is_not_an","basis_versions is not an array",null,null,false,"code"],
   ["basis-version-grammar.grammar.describe_what_this_reading_of","describe what this reading of the evidence is and why it differs from the others",null,null,false,"code"],
+  ["basis-version-grammar.grammar.leg_of_version","Leg {n} of version '{name}'",null,null,false,"code"],
   ["basis-version-grammar.grammar.name_one_of_the_five","name one of the five kinds",null,null,false,"code"],
   ["basis-version-grammar.grammar.name_the_member_asserting_that","name the member asserting that this ground is independently sufficient",null,null,false,"code"],
   ["basis-version-grammar.grammar.or_leave_kind_out_entirely","or leave kind out entirely — a version a member composed is not a suggestion of any kind",null,null,false,"code"],
@@ -22331,6 +22332,7 @@ export const WORD_ROWS = Object.freeze([
   ["court-doctypes.ecourt.the_page_holds_no_register","the page holds no Register of Actions table with a date and a description",null,null,false,"code"],
   ["credentials.checks.a_credential_that_acts_for","A credential that acts for one member acts for the member who creates it, and nobody else. You named another member, and nobody can authorise an agent in someone else's name: it would see what they see and its work would be recorded as theirs. Nothing was created. The member it should act for can create it themselves.",null,null,false,"code"],
   ["credentials.checks.an_agent_credential_has_to","An agent credential has to say who stands behind it: the organisation as a whole, or one named member. The two carry different accountability and they see different things, so the record will not hold one that says neither.",null,null,false,"code"],
+  ["credentials.checks.only_a_key_a_member_registered","Only a key a member registered for themselves, and that is still in use, can be marked as one you know about. This key was registered by an administrator, or it has been withdrawn, so there is nothing to confirm. Nothing was changed.",null,null,false,"code"],
   ["credentials.checks.only_a_named_person_signed","Only a named person signed in to your team's Civicsmith can create an agent credential. Deciding what an automated worker is allowed to reach is a judgement somebody has to be accountable for, so an automated worker cannot make it — not even about itself.",null,null,false,"code"],
   ["credentials.declared.claim","claims an instance at bootstrap",null,null,false,"code"],
   ["credentials.declared.passwordreset","credential: a reset link and a new password, reached with no session; moves no bundle",null,null,false,"code"],
@@ -22340,6 +22342,7 @@ export const WORD_ROWS = Object.freeze([
   ["credentials.declared.recoverycodesissue","credential: an administrator's own recovery codes, shown once; moves no bundle",null,null,false,"code"],
   ["credentials.declared.setpassword","session-directed: the caller's own password, the role from their session; ends their other sessions; moves no bundle",null,null,false,"code"],
   ["credentials.declared.signeradd","signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",null,null,false,"code"],
+  ["credentials.declared.signerknown","signer governance: an administrator says they know about a member's self-registered signing key, stamped `by` from their session; it records who and when and changes nothing else; the subject is a key, not a bundle",null,null,false,"code"],
   ["credentials.declared.signerregisterown","signer governance: a member registers their own signing key, stamped `by` from their session, and every administrator is told; the subject is a key, not a bundle",null,null,false,"code"],
   ["credentials.declared.signerrevokeown","signer governance: a member revokes their own signing key, stamped `by` from their session; the subject is a key, not a bundle",null,null,false,"code"],
   ["credentials.declared.signerset","signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",null,null,false,"code"],
@@ -22356,6 +22359,7 @@ export const WORD_ROWS = Object.freeze([
   ["credentials.index.a_runs_credential_names","a run's credential names the run it is bound to, a non-empty string, and none was given. Nothing was minted.",null,null,false,"code"],
   ["credentials.index.a_runs_credential_names_the","a run's credential names the project the run was opened in as a non-empty string, or names none, and this was neither. Nothing was minted.",null,null,false,"code"],
   ["credentials.index.a_standing_question_runs","a standing question runs only for an active member. Nothing was minted.",null,null,false,"code"],
+  ["credentials.index.an_administrator_says_they_know","an administrator says they know about a member's signing key from their own signed-in session. A machine credential, the operator's bearer and an unstamped call have no administrator behind them to say it. Nothing was written.",null,null,false,"code"],
   ["credentials.index.an_asks_grant_admits","an ask's grant admits only the reads on its list, and '{op}'{write} is not one. Nothing was read.",null,null,false,"code"],
   ["credentials.index.an_asks_grant_is","an ask's grant is minted only under the member's own live session. Nothing was minted.",null,null,false,"code"],
   ["credentials.index.empty_nothing_was","{empty}. Nothing was changed.",null,null,false,"code"],
@@ -22376,11 +22380,13 @@ export const WORD_ROWS = Object.freeze([
   ["credentials.index.no_member_is_named_2","no member is named on this act, and a withdrawal nobody authored is not one.",null,null,false,"code"],
   ["credentials.index.no_password_was_set","no password was set and nothing was written. Either that role holds no recovery code, or the code given is not one of its unspent codes, or the role is not an active member's now. Which of those happened is not said: it is one answer deliberately, so that a refusal cannot be used to find out which roles hold codes.",null,null,false,"code"],
   ["credentials.index.no_standing_question_was","no standing question was named. Nothing was minted.",null,null,false,"code"],
+  ["credentials.index.only_a_key_a_member","only a key a member registered for themselves and that is still active can be marked as known; this one was registered by an administrator or has been revoked. Nothing was written.",null,null,false,"code"],
   ["credentials.index.pass_an_identity","pass an identity for this credential: it is the name acts will cite, and a credential nothing can name is one nothing can revoke either.",null,null,false,"code"],
   ["credentials.index.period_refused_detail","{what}. {rule} Nothing was read.",null,null,false,"code"],
   ["credentials.index.principalkind_was","principalKind was '{kind}'. It is 'organisation' (the key acts for the team, nobody individual behind it) or 'member' (attributable to that member). They carry different accountability and the record states which, never the token's value.",null,null,false,"code"],
   ["credentials.index.recovery_codes_are_issued","recovery codes are issued to an active member for their own account, from their own signed-in session. Nothing was issued.",null,null,false,"code"],
   ["credentials.index.registered_to_you_and","registered to you, and it attests as any registered key does. Every administrator is told of the registration, and any of them can revoke the key.",null,null,false,"code"],
+  ["credentials.index.saying_you_know_about_a_key","saying you know about a member's signing key",null,null,false,"code"],
   ["credentials.index.setting_the_teams_key","setting the team's key for an outside service",null,null,false,"code"],
   ["credentials.index.sign_in_refused","no session was issued and nothing was written. Either no active credential is held under that role — a role that was never registered and one whose membership is no longer active are the same answer here — or a credential is stored and the password supplied does not derive its stored hash. The password itself is never kept, only a salted derivation of it, so that is the only comparison there is to make. Which of those happened, the record does not say: it is one answer deliberately, so that a refusal cannot be used to find out which roles hold a credential.",null,null,false,"code"],
   ["credentials.index.standing_questions_are_off","standing questions are off for the {who}, which would serve this one. Nothing was minted.",null,null,false,"code"],
