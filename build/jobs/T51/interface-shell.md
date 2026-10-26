@@ -1,6 +1,6 @@
 # interface-shell (T51)
 
-**Status** · session_0141YvoVpS4Rz4SNMfkcYzHh · depth 2 · BLOCKED · handled B51
+**Status** · session_0141YvoVpS4Rz4SNMfkcYzHh · depth 2 · WAITING ON BOB (J36) · handled B51
 
 ## J1 · BLOCKED
 
