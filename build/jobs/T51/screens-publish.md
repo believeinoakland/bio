@@ -1518,14 +1518,14 @@ Merged `tranche/T51` first (twice: at start and before COMPLETE); `mail start` d
 
 **Failing-first.** None: no product code changed; the one test that went red on a real answer (`t50:283`, whose expected entries were hand-written) and the R57 "area" add (the real area is already stated) were corrected to read the answer, then green.
 
-**Lines left (4, each with its provider):**
+**Lines left (5 lines in 4 groups, each with its provider):**
 - citation `citeimported`: `fr30b.test.mjs:235`, `:247`, waits for CASE-IMPORT #22 (B54).
 - case-inputs: `casedetails` `fr30b.test.mjs:425`, `casedetailspublic` `:427`: no published standing with `related` works or `relationships: {none: true}` stated (REPORT J48).
 - action-holds: `holdsdue` `t51.test.mjs:76`: no published answer listing a docket entry's mark (`arrived: {docket_entry, case}`) and none after the hold is placed (REPORT J48).
 - modules.json `uses` lacks entities, capture, citation, sources, credentials, wizard-scripts: `checks/architecture.mjs` 8 failures, all that (BOB's file; REPORT J48).
 
 **Tests:** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/screens-publish/*.test.mjs`: 296 tests, 294 pass, 0 fail, 2 todo (R35's two press tests, K3717); the files run alone sum to 296 (K5124). **Impact:** `impact.mjs origin/tranche/T51 HEAD` names all 178 modules (the shared fixtures table); every module's users of screens-publish's fixtures are the two control-plane seam files, not changed in their reading of it (`openWorld` and the plane are unchanged); not re-run.
-**Checks:** format 0; coverage 80 of 80, 0; ownership 0; architecture 8 (the `uses` above); `checks/run.mjs`: the only findings in my files are those 8 and the 5 fixtures lines above (the other fixtures lines are not mine); words count not risen (no new sentence); fixtures `--list`: 5 (the 4 above and one counted line, `fr30b:235/247` being two).
+**Checks:** format 0; coverage 80 of 80, 0; ownership 0; architecture 8 (the `uses` above); `checks/run.mjs`: the only findings in my files are those 8 and the 5 fixtures lines above (the other fixtures lines in the whole-repo run belong to other modules); words count not risen (no new sentence); fixtures `--list`: 5 lines (`fr30b:235`, `:247`, `:425`, `:427`, `t51:76`), from 35.
 **Markers added:** none (`fixtures-own`/`fixtures-generic`: 0). **Met ids:** none new (every requirement mark unchanged).
 
 Size (session_01S5w36nrjrT4X3cdJbAUkgi): test runs 14, module lines 3754 src + 5303 tests
