@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19246 design words, 1157 protected; SHA-256
-   641148afcaa459ad607bdaebe5a1cd86dbcccbd88254a0b40dbf295751bcf83b) followed by 7432 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   641148afcaa459ad607bdaebe5a1cd86dbcccbd88254a0b40dbf295751bcf83b) followed by 7438 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -19524,6 +19524,7 @@ export const WORD_ROWS = Object.freeze([
   ["action-plans.checks.a_judgement_names_a_scenario","A judgement names a scenario of the plan, one of its phases that has a checkpoint, met or not_met, and a note of up to 500 characters. Nothing was written.",null,null,false,"code"],
   ["action-plans.checks.a_phase_starts_after_or","A phase starts after, or a judgement leads to, a phase of the same scenario, or a matter the plan is about. The one named is neither. Nothing was written.",null,null,false,"code"],
   ["action-plans.checks.an_addressee_is_an_office","An addressee is an office by its role and body, a reporter or outlet, an organisation or another civic organization by role and organisation, or a described audience. It is never a private individual. Nothing was written.",null,null,false,"code"],
+  ["action-plans.checks.an_addressee_names_its_role_and_organisation","An addressee needs its role, and its organisation unless it is an office. Say which part is missing. Nothing was written.",null,null,false,"code"],
   ["action-plans.checks.whether_a_checkpoints_condition_was","Whether a checkpoint's condition was met is the team's own judgement. An assistant may not make it. Nothing was written.",null,null,false,"code"],
   ["action-plans.declared.checkpointrecord","scenario-directed: a member judges a phase's checkpoint met or not met, keyed by (plan, scenario, phase); judged once",null,null,false,"code"],
   ["action-plans.declared.optionadd","plan-directed: a member adds an option to a plan, keyed by plan; writes an option row",null,null,false,"code"],
@@ -19540,6 +19541,7 @@ export const WORD_ROWS = Object.freeze([
   ["action-plans.index.a_proposal_names_who_made","a proposal names who made it, and this one came with no stamped caller. Nothing was written.",null,null,false,"code"],
   ["action-plans.index.a_source_named_is_not","a source named is not a finding, determination, standard, consequence, plan or option this caller can see. Nothing was written.",null,null,false,"code"],
   ["action-plans.index.action_plans_provider_was_not","action-plans: {provider} was not given",null,null,false,"code"],
+  ["action-plans.index.addressee_left_part_empty","an addressee's {empty} was left empty; state it. Nothing was written.",null,null,false,"code"],
   ["action-plans.index.id_goes_outside_the_team","{id} goes outside the team before the infraction it serves is documented; say why it goes first, in 1 to {REASON_MAX} characters with no quotation mark, backslash or line break. Nothing was written.",null,null,false,"code"],
   ["action-plans.index.matter_i_is_already_in","matter {i} is already in the open plan {plan_id} of this project. Nothing was written.",null,null,false,"code"],
   ["action-plans.index.matter_is_neither","matter {i} is neither {kind: inquiry, inquiry} nor {kind: outcome, determination, standard}. Nothing was written.",null,null,false,"code"],
@@ -19552,6 +19554,7 @@ export const WORD_ROWS = Object.freeze([
   ["action-plans.index.run_string_is_not_a","run {String} is not a planning run of this plan. Nothing was written.",null,null,false,"code"],
   ["action-plans.index.that_checkpoint_was_judged_judged","that checkpoint was judged {judged} by {author}. Nothing was written.",null,null,false,"code"],
   ["action-plans.index.the_plan_holds_no_scenario","the plan holds no scenario {String}. Nothing was written.",null,null,false,"code"],
+  ["action-plans.index.tier_stated_by_the_option","the tier option {option} of plan {plan} states",null,null,false,"code"],
   ["action-plans.says.phase_leads_here_not_led","the phase that leads here has not led here yet, so no occurrence is read",null,null,false,"code"],
   ["action-plans.why.suspected_matter_concluded","a suspected matter: a question concluded in this project, not yet a determination",null,null,false,"code"],
   ["action-producers.index.a_checkpoint_come_due_is","a checkpoint come due is action-plans' fact (its R17): read here at the read's instant and never stored. It goes to the member who last took it up, else the member who set the scenario's current version, each while an active member who may see the plan, else the project's active owners, else the administrators, and leaves when a member judges it or closes the plan.",null,null,false,"code"],
@@ -21452,6 +21455,7 @@ export const WORD_ROWS = Object.freeze([
   ["citation.index.bad_ground","a new citation can join only a group its question already declares, and this one names {ground}; a case has no groups. Nothing was written.",null,null,false,"code"],
   ["citation.index.changes_basis_legs_added","Changes: basis legs added for {listed}, each with role {role}. Grades: {graded} filled from the record's own resolutions to this question's subject; {ungraded} left undetermined and stated.{note}\n",null,null,false,"code"],
   ["citation.index.changes_basis_legs_on","Changes: basis legs on {listed} moved to '{to}', each leg kept as it was. Reason: {why}.\n",null,null,false,"code"],
+  ["citation.index.changes_basis_legs_role_moved","Changes: basis legs on {listed} moved to '{to}', each leg kept as it was except the role of {moved}, which moves from {from} to {role}. Reason: {why}.\n",null,null,false,"code"],
   ["citation.index.changes_cites_edges_added","Changes: cites edges added to {listed}.{note}\n",null,null,false,"code"],
   ["citation.index.changes_cites_edges_to","Changes: cites edges to {listed} moved to '{to}'. Reason: {why}.\n",null,null,false,"code"],
   ["citation.index.changes_imported_leg_added","Changes: basis leg added for {ref} at edition {edition}, role {role}. Grade: as that edition published it, none of its own.{note}\n",null,null,false,"code"],
@@ -22861,6 +22865,8 @@ export const WORD_ROWS = Object.freeze([
   ["explore.declared.explorepreset","read: one preset walk — chain, flows, relations, a path between two nodes, overlaps — or the presets; writes nothing",null,null,false,"code"],
   ["explore.declared.exploreverify","read: whether a derived connection re-derives to its id, and which hops it rests on; writes nothing",null,null,false,"code"],
   ["explore.graph.rings_is_one_or_two","rings is 1 or 2: the graph shows the records one or two steps from the centre",null,null,false,"code"],
+  ["explore.label.event","{kind} · {date}",null,null,false,"code"],
+  ["explore.label.event_undated","{kind} · undated",null,null,false,"code"],
   ["explore.ops.a_preset_is_one_of","a preset is one of {PRESET_NAMES}",null,null,false,"code"],
   ["explore.presets.no_to_named","no to is named: a path between two records names both",null,null,false,"code"],
   ["explore.presets.others_held","with {held} others held{settled}",null,null,false,"code"],
@@ -24406,13 +24412,13 @@ export const WORD_ROWS = Object.freeze([
   ["machinery-producers.index.no_interval_can_be_derived","no interval can be derived for it ({v1}), so no check is scheduled.",null,null,false,"code"],
   ["machinery-producers.index.on_its_last_run_these","on its last run these could not be fetched: {list}. The sweep's other pages were read; each one's reachability is on the basis.",null,null,false,"code"],
   ["machinery-producers.index.our_own_attempts_at","our own attempts at this address have failed enough times, for long enough, that the archive fallback may fetch a replay in its place. This is a fact about our attempts, not a finding about the publisher.",null,null,false,"code"],
+  ["machinery-producers.index.pacing_wait_in_words","Civicsmith will try {host} again in {wait}. It has been turned away {refusals} time{v1} in a row, so it is waiting before it sends more. This says nothing about whether the site is working.",null,null,false,"code"],
   ["machinery-producers.index.request_completion_unreadable","the request row carries a completion stamp this producer cannot read as an instant",null,null,false,"code"],
   ["machinery-producers.index.request_stamp_unreadable","the request row carries a request stamp this producer cannot read as an instant",null,null,false,"code"],
   ["machinery-producers.index.session_created_unreadable","the session row carries a created stamp this producer cannot read as an instant",null,null,false,"code"],
   ["machinery-producers.index.sweep_status_no_instant","the sweep's status carries no instant this producer can read",null,null,false,"code"],
   ["machinery-producers.index.the_ledger_is_scratch_and","the ledger is SCRATCH and not record: it names a work list with an expiry, the primary capture is complete from the first tick, and the row is dropped by the capture path itself when nothing is left. It therefore clears for every member when the capture finishes or the session expires.",null,null,false,"code"],
   ["machinery-producers.index.the_notice_has_been_dormant","the notice has been Dormant at its last monthly attestation, and a second Dormant month with no revision lapses it. A revision or a stop answers this; so does the lapse itself.",null,null,false,"code"],
-  ["machinery-producers.index.the_per_host_governor_is","the per-host governor is in cool-off for {host} for another {max}ms after {refusals} consecutive refusal{v1}{v2}. Nothing about the source is being claimed here.",null,null,false,"code"],
   ["machinery-producers.index.the_plan_is_monitorings_its","the plan is monitoring's (its R16, R32); this item is our own machinery falling behind or unable to schedule, and it clears when the check runs or a cadence is set.",null,null,false,"code"],
   ["machinery-producers.index.the_primary_document_is_captured","the primary document is captured and its bytes are in the store; the platform's subrequest ceiling was reached before its support material was fetched, and the remainder is parked for another tick (tick {ticks}, expires {expires}).",null,null,false,"code"],
   ["machinery-producers.index.the_to_do_is_derived","the to-do is derived on read from the signed notice your team's Civicsmith already holds. It goes to every administrator and leaves every administrator's queue when one of them updates, puts it aside until a later day or skips it, or when your team is running that release or a newer one.",null,null,false,"code"],

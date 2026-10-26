@@ -97,6 +97,17 @@ export function addresseeArm(a) {
   return null;
 }
 
+/** R54: the fields of a named addressee of a known kind that are stated empty: `role` (any kind), `organisation` (a
+ *  press, organisation or group). A field that is absent, a kind that is not one, or any other shape lists none: that
+ *  is not an incomplete addressee but not an addressee (R10's refusal). */
+export function addresseeEmptyFields(a) {
+  if (!isObj(a) || a.state !== "named") return [];
+  const kind = a.kind === undefined || a.kind === null ? "office" : a.kind;
+  if (!["office", "press", "organisation", "group"].includes(kind)) return [];
+  const empty = (k) => typeof a[k] === "string" && a[k].trim() === "";
+  return ["role", ...(kind === "office" ? [] : ["organisation"])].filter(empty);
+}
+
 /** The addressee as the action's `counterparty` carries it (actions R9): its own keys only. */
 export function addresseeOf(a) {
   const arm = addresseeArm(a);

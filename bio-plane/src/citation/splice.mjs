@@ -206,6 +206,45 @@ export function removeBasisLegs(text, target) {
   return { text: lines.filter((_, i) => !gone.has(i)).join("\n"), editions };
 }
 
+/** R23: set the `role` of every leg in the `basis` block whose `target` is in `targets`, touching nothing else of the leg
+ *  or the document. Answers `{text, from}`, `from` mapping each target to the roles its legs held before (in order), or null
+ *  when the block is not in a shape this grammar can edit in place, or a named target's leg has no `role:` line to
+ *  rewrite. A leg already on `role` is rewritten to itself (the bytes are the same). */
+export function setBasisRole(text, targets, role) {
+  const lines = text.split("\n");
+  if (lines[0] !== "---") return null;
+  const end = lines.indexOf("---", 1);
+  if (end === -1) return null;
+  let bi = -1;
+  for (let i = 1; i < end; i++) if (/^basis:/.test(lines[i])) { bi = i; break; }
+  if (bi === -1 || lines[bi].slice("basis:".length).trim() !== "") return null;
+  let last = bi;
+  for (let i = bi + 1; i < end; i++) {
+    if (lines[i].trim() === "") continue;
+    if (/^\s/.test(lines[i])) { last = i; continue; }
+    break;
+  }
+  const starts = [];
+  for (let i = bi + 1; i <= last; i++) if (/^ {2}- /.test(lines[i])) starts.push(i);
+  const out = lines.slice(), from = new Map();
+  for (let s = 0; s < starts.length; s++) {
+    const a = starts[s], b = (s + 1 < starts.length ? starts[s + 1] : last + 1) - 1;
+    let target = null, at = -1, was = null;
+    for (let i = a; i <= b; i++) {
+      const t = /^\s*(?:- )?target:\s*(.+?)\s*$/.exec(lines[i]);
+      if (t && target === null) target = t[1].replace(/^["']|["']$/g, "");
+      const r = /^(\s*(?:- )?)role:\s*(.+?)\s*$/.exec(lines[i]);
+      if (r && at === -1) { at = i; was = r[2]; }
+    }
+    if (target === null || !targets.has(target)) continue;
+    if (at === -1) return null;
+    out[at] = lines[at].replace(/role:.*$/, `role: ${role}`);
+    if (!from.has(target)) from.set(target, []);
+    from.get(target).push(was);
+  }
+  return from.size === targets.size ? { text: out.join("\n"), from } : null;
+}
+
 /** Set a top-level frontmatter scalar that is already there (copied from the retired legacy store, K57); the text unchanged when the
  *  key is absent. Used for `last_updated`, which every citing document carries. */
 export function setScalar(text, key, value) {

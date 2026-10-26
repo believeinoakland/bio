@@ -1,8 +1,11 @@
 // @ts-check
-/* explore: the names of the ends an answer lists (R25, R26; entities R56). An answer states data only (K3665): the
-   canonical label of the registered entity for an `ENT-` end, else `null`, never the id. Names are read once for each
-   distinct end of what the answer lists, in reads of at most 500 ids, so a hop the viewer may not see names nothing (R7). */
+/* explore: the names of the ends an answer lists (R25, R26, R29; entities R56). An answer states data only (K3665): the
+   canonical label of the registered entity for an `ENT-` end, else `null`, never the id; a graph node is also named
+   when it is an event (its kind and date) or a document (its title), each read from its owner for the viewer. Names are
+   read once for each distinct end of what the answer lists, in reads of at most 500 ids, so a hop the viewer may not
+   see names nothing (R7). */
 import { isRecordId } from '../connection-grammar/index.mjs';
+import { localize } from '../setup-words/index.mjs';
 import { isObj } from './answer.mjs';
 
 /** The most entity ids one `entities.labelsOf` read takes (entities R56); ends are read in reads of this size. */
@@ -27,6 +30,40 @@ export function readEntities(ctx, ids, viewer) {
     const got = reader.labelsOf({ ids: slice, viewer });
     const byId = got && typeof got === 'object' ? (got.labels ?? got) : {};
     for (const id of slice) if (isObj(byId[id])) known.set(id, byId[id]);
+  }
+  return known;
+}
+
+/**
+ * The names R29 adds for the graph's nodes, as a map to `{label, kind: null}` like `readEntities`': an `EVT-` node's kind
+ * and date as `events.readEvent` answers them for the viewer ("{kind} · {date}", "{kind} · undated" when it holds none),
+ * an `INFO-` node's document title as the `documents` reader's `titlesOf` answers it (reads of at most 500 ids). An end the
+ * owner does not answer, or answers with its own id, is absent; no reader leaves every such node unnamed.
+ * @param {{events?: any, documents?: any}} ctx @param {Iterable<string>} ids @param {any} viewer
+ * @returns {Map<string, {label: string, kind: null}>}
+ */
+export function readNodeNames(ctx, ids, viewer) {
+  const known = new Map();
+  const distinct = [...new Set(ids)];
+  const events = typeof ctx.events === 'function' ? ctx.events() : ctx.events;
+  if (events && typeof events.readEvent === 'function') {
+    for (const id of distinct.filter((i) => idKindOf(i) === 'EVT')) {
+      const got = events.readEvent({ eventId: id, viewer });
+      const e = got && got.ok && got.found ? got.event : null;
+      if (!isObj(e) || typeof e.kind !== 'string' || e.kind === '') continue;
+      const date = isObj(e.when) && typeof e.when.value === 'string' && e.when.value !== '' ? e.when.value : null;
+      known.set(id, { label: date === null ? localize('explore.label.event_undated', '{kind} · undated', { kind: e.kind }) : localize('explore.label.event', '{kind} · {date}', { kind: e.kind, date }), kind: null });
+    }
+  }
+  const docs = typeof ctx.documents === 'function' ? ctx.documents() : ctx.documents;
+  if (docs && typeof docs.titlesOf === 'function') {
+    const infos = distinct.filter((i) => idKindOf(i) === 'INFO');
+    for (let i = 0; i < infos.length; i += LABELS_PER_READ) {
+      const slice = infos.slice(i, i + LABELS_PER_READ);
+      const got = docs.titlesOf({ ids: slice, viewer });
+      const byId = got && typeof got === 'object' ? (got.titles ?? got) : {};
+      for (const id of slice) if (typeof byId[id] === 'string' && byId[id].trim() !== '') known.set(id, { label: byId[id], kind: null });
+    }
   }
   return known;
 }
