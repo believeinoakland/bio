@@ -80,8 +80,6 @@ function plane(o = {}) {
     list: ok({ bundles: [{ bundle_id: GOAL.id, title: "Close the unvoted collections loophole" }] }),
     goal: ok({ ok: true, goal: GOAL }),
     assistantstate: ok({ on: true }), accountreference: ok({ held: true }),
-    /* needs a recipe: the writing help's draft text (the world's door answers it without `text`: the draft is asked of the Worker's assistant object, which needs the model) */
-    writinghelp: ok({ ok: true, text: "A drafted reason." }),
     ...o,
   };
 }
@@ -346,7 +344,7 @@ test("R106 goals: controls: a closed goal's link refusal and a missing statement
   assert.equal(button(none, "goalclose"), undefined, "nothing to close");
 });
 
-test("R106 writinghelp: drawn beside the member's own-words fields only while the assistant is reachable; it sends the field and what she has typed, and puts the draft in the field", async () => {
+test("R106 writinghelp: drawn beside the member's own-words fields only while the assistant is reachable; it sends the field and what she has typed, and leaves her words in the field", async () => {
   const p = await open();
   const helps = main(p).querySelectorAll('button[data-act="writinghelp"]');
   assert.ok(helps.length >= 3, "beside the reason, the statement and the goal's words");
@@ -355,7 +353,7 @@ test("R106 writinghelp: drawn beside the member's own-words fields only while th
   assert.ok(mine, "the measure's reason");
   await p.click(mine);
   assert.deepEqual(ops(p, "writinghelp")[0].body, { field: mine.getAttribute("data-field"), told: "My words." });
-  assert.equal(p.doc.getElementById("ob-why").value, "A drafted reason.");
+  assert.equal(p.doc.getElementById("ob-why").value, "My words.", "her own words stay in the field");
   const off = await open({ assistantstate: ok({ on: false }) });
   assert.equal(main(off).querySelectorAll('button[data-act="writinghelp"]').length, 0, "control: not reachable, not drawn");
 });
