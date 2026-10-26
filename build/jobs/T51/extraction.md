@@ -941,3 +941,22 @@ Found in other modules (REPORT):
 - `test-support`'s `job-registrar-stub.mjs:23`, `:35` fail the fixtures check (the stub is the contract's user, not a fixture): BOB's.
 
 Size (session_012woGyRG5HAsMu8o2WXWekE): test runs 9, module lines 3303
+
+## EXTRACTION #49 · fix round 10 (B65, plan item 117; K5236)
+
+Changed (all test-side; no module code changed):
+- `bio-plane/test/m/extraction/fixtures.mjs`: `readHeldAnswer.noWholeObject()` (the real `readHeld` over a home the register names whose object the store does not hold: `{ok: true, read: false, why: "NO_WHOLE_OBJECT"}`); `reextraction()` (end of file): `{press, pass}` from the real `pdfStructure({ocr: "1"})` and the ledger's pass `readHeld({kind: "ocr"})` over a stored two-page reading with page 1 unread and a scripted OCR member.
+- `fixtures.test.mjs` (last two tests): each names its ids and checks the real answer. Failing first: with the capture held whole, `noWholeObject` read it (red); with no OCR member, `reextraction` did not perform (red); restored, both green.
+- `t48.test.mjs:28-33`: the `transcribe` value now has store-assembly's real shape, `{...agent-worker's answer, asked, sent, owed}` (`unread` only when a page is refused; none is here); marker `fixtures-contract: store-assembly transcribe-answer`.
+
+Met ids (BOB strikes the marks): R80 (`NO_WHOLE_OBJECT` fixture), R34, R103 (re-extraction fixture), R106's shape of `transcribe` (t48). No `fixtures-own` / `fixtures-generic` marker added.
+
+Findings for BOB:
+- The real `pdfstructure` press answers `performed: false, owed: true` (R103); `reextraction.performed: true` is the ledger pass's `readHeld({kind: "ocr"})` answer. So screens-inquiry's `fr28-document-acts.test.mjs:50` stub `pdfstructure: ok({ok: true, reextraction: {performed: true}})` is not an answer the op gives; it should take `reextraction().press` (the owed press) and, where it needs a performed re-read, `reextraction().pass.reextraction`. For screens-inquiry's `fr5-document.test.mjs:121`: `readHeldAnswer.noWholeObject()`.
+- store-assembly `t42.test.mjs:266` keeps its own copy `theirs` of the old shape (no `asked`, `sent`, `owed`), so its `deepEqual` at `:268` is red against the real answer. Run against my branch merged with `job/T51/store-assembly`: 16 of 17, the one red being that test. With `asked: q.pages, sent: q.pages, owed: []` added to `theirs` (tried in a throwaway worktree only), 17 of 17. Store-assembly must change its copy; `fixtures.mjs extraction --list` on that merge shows no extraction line other than plane's.
+- plane `t42.test.mjs:301`, `:402`, `:410` carry `fixtures-run: extraction transcribe-not-sent` and are orphan runs (the consumer, extraction `t44.test.mjs:93`, is marked `transcribe-not-sent` to store-assembly): plane's/BOB's to remove or move.
+- `checks/fixtures.mjs extraction --list` on my branch alone: `t48.test.mjs:31` [contract-no-run] until store-assembly's branch is merged (its run `// fixtures-run: extraction transcribe-answer` is at its `t42.test.mjs:266`); then zero for extraction's own lines.
+
+Ran: extraction suite 396 of 396; the 12 other test files importing `extraction/fixtures.mjs` 110 of 110; `impact.mjs origin/tranche/T51 HEAD`: 10 of 178 modules, 58 files (the users of the fixtures file); `checks/run.mjs /home/user/bio`: words 0 findings (178 modules, `testcopy 0`), channels 0, fixtures failures are the other modules' (stubs of test-support's `job-registrar-stub`, etc.); ownership 0.
+
+Size (session_015RF4m8g84eTxBUcZNfsLxW): test runs 8, module lines 4552
