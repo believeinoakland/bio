@@ -52,6 +52,8 @@
 
 - entities / op-grades: `resolve` is declared `weight: reasoned` but takes no `reason` field; the act works (K5314). P19 (1): after the alpha, by Bob's order (K5311, K5313).
 
+- DEC-443 (UX-DESIGN U486, `2892f29ccb`; K5315): merge it first after the alpha's deployment; wizard-scripts re-takes the registry (the four acts listed; interface-shell R134's re-points retire); screens-inquiry draws `act.leggrade.label.question` (its `screen.question.leggrade.act` retired); screens-entry draws `act.factconfirm.label.setup` and `screen.setup.zone.how.help`; affordances reads `act.leggrade.does`, `act.signerknown.does`, `act.factconfirm.does` and the five `act.standard*.does` by key; screens-investigate builds Explore's "Documents that name them" in "Follow from here" (`search`, DEC-410). P19 (1): after the alpha's deployment, by Bob's order (K5313).
+
 ## Tests assert the word key, never the English: first after the alpha's deployment (Bob, K5313; P19 (1): after the release, by Bob's order)
 - The sweep (K5313): every finding and refusal carries its code, word key and values; every test and saved expected output asserts those, never a sentence or a fragment; the words check refuses sentence fragments in tests; one mechanical pass (§5.10), a module needing judgment its own job.
 - The §5.10 pass of fix round 10 (items 101 (4), 122 (3), 127 (3), 128 of `fix-round-10-T51.md`): marker re-points, the `DECLARED_OPS` rename, orphan runs, the node-vs-null assertions; the 89 fixtures lines remaining.
