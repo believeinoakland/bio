@@ -191,3 +191,45 @@ Size (session_0194RwZ8cmBo7rAcUqnf6xx9): test runs 12, module lines 21 (source) 
 ## J11 · COMPLETE
 
 COMPLETE · item 143 (E N4). Changed bio-plane/src/conformance/index.mjs: reasonText helper :2056; datesOf :626-627 and whenWords :2169-2170 draw the act event's {key,vars} reason in words; #bindings carries body_label and cite; both binding refusals draw the body's label and the standard's citation (:1079). Test red then green (t51-binding.test.mjs, 2 new: pass 5/fail 2 before, 7/7 after). Conformance 134/134; consequences 73, actions 157, action-clocks 87, filings 168, escalation 103, action-plans 110, plan-work 52, screens-action 310 green. checks/run.mjs: no conformance finding, words not risen; ownership 0. Met: R3, R17, R27, R43. No markers, no REPORT. Size (session_0194RwZ8cmBo7rAcUqnf6xx9): test runs 12, module lines 21
+
+## Fix round 10 (B11) · R44 · work
+
+R44 (DEC-438) is built in the source, but three tests stay red for a cause only BOB can clear: the words list holds the old sentence.
+
+Changed (commit dabce750ab):
+- `bio-plane/src/conformance/index.mjs:1079`: the undetermined-binding refusal's `localize` sentence ends "settle it on the standard's page first. Nothing was written." (was "a member settles it in standards first.").
+- `bio-plane/test/m/conformance/r44-standards-page.test.mjs` (new; names R44): the walker's case answers the new ending and writes nothing; the old ending is gone from detail and translation; no other wording changes.
+- `bio-plane/test/m/conformance/t51-binding.test.mjs:13,21`: the R43 test asserts the new ending and its title says so.
+
+Red then green: not reached. The walker's case still answers the old sentence. `localize` takes the words list's row over its `en` (`bio-plane/src/setup-words/index.mjs:45`, "the list always wins"), and `rows.mjs:21685` holds the old sentence. `node bio-plane/src/setup-words/build.mjs --check` reports `rows.mjs is stale: word 21675 (conformance.index.whether_standard_binds_v1_is)`. `rows.mjs` is setup-words' generated artifact: I did not regenerate it (B1; BOB regenerates at the layer close).
+
+Red now (3 of 137 module tests): R43 `t51-binding.test.mjs` (the walker's case, ending), and two R44 tests (new ending present; old ending absent). All three fail on the one cause above. Green once `rows.mjs` carries the new sentence.
+
+Checks (absolute root /home/user/bio): format 0 failures; architecture 0; coverage 44 of 44 live ids named by a test; words 0 failures; fixtures --list answer 0; ownership 0 failures (4 files: the three above and this record). Module suite: tests 137, pass 134, fail 3 (the cause above).
+
+Not run: `checks/run.mjs` in full (the words stale-row finding is the one expected, not yet checked against it).
+
+Needs BOB (one act): regenerate `rows.mjs` for `conformance.index.whether_standard_binds_v1_is` at the layer close (DEC-438's owed list, item "CONFORMANCE rewords its detail's end"), or rule another route. I have not changed the word id.
+
+Size (session_011kaeq1oqwM8DTfsD6rg1kR): test runs 3, module lines 1
+
+## J12 · BLOCKED
+
+R44 (DEC-438) is built in the source, but three tests stay red for a cause only BOB can clear: the words list holds the old sentence.
+
+Changed (commit dabce750ab):
+- `bio-plane/src/conformance/index.mjs:1079`: the undetermined-binding refusal's `localize` sentence ends "settle it on the standard's page first. Nothing was written." (was "a member settles it in standards first.").
+- `bio-plane/test/m/conformance/r44-standards-page.test.mjs` (new; names R44): the walker's case answers the new ending and writes nothing; the old ending is gone from detail and translation; no other wording changes.
+- `bio-plane/test/m/conformance/t51-binding.test.mjs:13,21`: the R43 test asserts the new ending and its title says so.
+
+Red then green: not reached. The walker's case still answers the old sentence. `localize` takes the words list's row over its `en` (`bio-plane/src/setup-words/index.mjs:45`, "the list always wins"), and `rows.mjs:21685` holds the old sentence. `node bio-plane/src/setup-words/build.mjs --check` reports `rows.mjs is stale: word 21675 (conformance.index.whether_standard_binds_v1_is)`. `rows.mjs` is setup-words' generated artifact: I did not regenerate it (B1; BOB regenerates at the layer close).
+
+Red now (3 of 137 module tests): R43 `t51-binding.test.mjs` (the walker's case, ending), and two R44 tests (new ending present; old ending absent). All three fail on the one cause above. Green once `rows.mjs` carries the new sentence.
+
+Checks (absolute root /home/user/bio): format 0 failures; architecture 0; coverage 44 of 44 live ids named by a test; words 0 failures; fixtures --list answer 0; ownership 0 failures (4 files: the three above and this record). Module suite: tests 137, pass 134, fail 3 (the cause above).
+
+Not run: `checks/run.mjs` in full (the words stale-row finding is the one expected, not yet checked against it).
+
+Needs BOB (one act): regenerate `rows.mjs` for `conformance.index.whether_standard_binds_v1_is` at the layer close (DEC-438's owed list, item "CONFORMANCE rewords its detail's end"), or rule another route. I have not changed the word id.
+
+Size (session_011kaeq1oqwM8DTfsD6rg1kR): test runs 3, module lines 1
