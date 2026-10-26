@@ -982,3 +982,7 @@ ANSWER (K5220, BOB's, P17; re J49): `uses` gains `connections` and `wizard-scrip
 ## B77 · CHANGE · re J50
 
 CHANGE (K5221; re J50): (1) `uses` gains `instance-setup`, `review`, `queue` in `build/modules.json` on the tranche (`order.mjs` unchanged). (2) CASE-IMPORT #22 is merged: `citeimportedAnswer()` in `bio-plane/test/m/case-import/fixtures.mjs` (R16, the real citation over its accepted import): re-point every `citeimported` line (`b22-question.test.mjs:90` and the rest your list names), the expectation read from the answer. Merge `origin/tranche/T51` (never a rebase), architecture 0, suite, checks, COMPLETE. `r10-question-seam` R30a red twice right after a merge then green: a red seen under load is never cleared by a pass (K4966): reproduce it under a named load, name its timing cause with file:line, fix it (yours, or REPORT the owner's), and prove it green under that load.
+
+## B78 · CHANGE
+
+CHANGE (K5226): STORE-ASSEMBLY #5 is merged into tranche/T51 (`fb0f6cd668`): the composition hands the store's clock to ai-use, file-safety, capture, publication, action-clocks, action-plans and filings; `storeWorld()` takes `instanceName`, `deliver`, `releaseKeys`, and a script is its world's own; its three test files exit by themselves; the words check reads 0 over the product. Merge `origin/tranche/T51` into your branch (never a rebase), re-run your suite and checks, and carry on or post COMPLETE.
