@@ -68,10 +68,10 @@ test("R6 the sub-slot: for an inquiry, rest() runs once, after the entry, divisi
   assert.equal(typeof answer?.then, "function", "with an asynchronous sub-slot the arm answers a promise");
   await answer;
   assert.equal(calls.length, 1);
-  assert.deepEqual(calls[0], ["surfaced_by 'robot' is not one of: agent, human",
-    "subject_entity 'x' is not a subject registry key (ENT-YYYY-NNNN)"], "the entry and subject findings come first");
-  assert.deepEqual(findings.map((x) => x.message.slice(0, 26)),
-    ["surfaced_by 'robot' is not", "subject_entity 'x' is not ", "VERSION", "basis[0].target 'nope' is "]);
+  assert.deepEqual(calls[0], ["who surfaced this inquiry is 'robot', which is not one of: agent, human",
+    "the subject entity 'x' is not an entry in the subject registry"], "the entry and subject findings come first");
+  assert.deepEqual(findings.map((x) => x.message.split(" ").slice(0, 3).join(" ")),
+    ["who surfaced this", "the subject entity", "VERSION", "basis leg 0"]);
   /* with no sub-slot, the catalogue's synchronous arm */
   const plain = run((f) => checkInquiryExtension({ fm }, f));
   assert.equal(plain.answer, undefined);

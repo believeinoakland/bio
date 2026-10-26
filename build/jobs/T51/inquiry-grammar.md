@@ -1,6 +1,6 @@
 # inquiry-grammar (T51)
 
-**Status** · session_011JT8beX7mv7RWXrkz2inzX · depth 2 · COMPLETE · handled B10
+**Status** · session_012Hcsp3epJPBUahiBP41uKh · depth 2 · COMPLETE · handled B12
 
 ## Completion (CR-8)
 
@@ -165,3 +165,67 @@ Size (session_011JT8beX7mv7RWXrkz2inzX): test runs 1, module lines 2039
 ## J8 · COMPLETE
 
 CHANGE B10 applied (K5095; test files only): the stale C-25.5 finding is removed from INQ-2026-0130-versions-entry and INQ-2026-0134-version-name-twice, the same four objects each (versions, both, nosubject, none), in golden.json. Red first: 6 differences between golden and the real merged grammars; green after: 0. Module tests 88/88; format, architecture, coverage, words, fixtures and ownership 0 failures. A first attempt over-deleted two C-2.8 findings; caught by the real-grammar comparison, redone, committed. No C-25.5 remains in golden.json. Details in my record, Completion (CHANGE B10).
+
+## J9 · REPORT
+
+R69 side effects on other modules (commit 1c825b1d5e). Nothing outside this module was edited.
+
+1. action-grammar pins this module's lead sentence. bio-plane/test/m/action-grammar/golden.json lines 1199, 1212, 1225 and 1239 hold the old text "action_basis[0].target 'LEAD-2026-0001-hunch' is a LEAD, and a lead is never evidence (MEMBER-KNOWLEDGE-DESIGN.md §5, §7)". bio-plane/test/m/action-grammar/grammar.test.mjs R6 (line 138) and R7 (line 202) fail on it. The sentence now reads "the target on <label> ('…') is a LEAD, and a lead is never evidence: …". The label is action-grammar's own argument, `action_basis[0]`, a field path: R69 asks each caller to hand a plain label, and the golden needs an exact re-pin. Owner: action-grammar.
+
+2. The inquiry module's tests pin this module's old wording, through its grammar face. Failing assertions: bio-plane/test/m/inquiry/grammar.test.mjs:36 and :33 (surfaced_by 'robot'); inquiry/promotion.test.mjs:194 (surfaced_by 'robot' is not one of: agent, human); inquiry/facts.test.mjs:160; inquiry/divide.test.mjs:72; inquiry/lifecycle-reads.test.mjs:80; inquiry/case-grammar.test.mjs:132 (a finding's bytes name a case (case_id)); inquiry/capture-bound.test.mjs:61 (/STRONGER than the C/; the sentence now says "stronger"). ratification/converted-c.test.mjs:245 (surfaced_by 'robot') and ratification/converted-d.test.mjs:490 (case_id). Owner: inquiry, ratification.
+
+3. A generated artifact is stale: bio-plane/src/case-checker/program.mjs, which the standalone case checker builds from this module's grammar. bio-plane/test/m/case-checker/program.test.mjs R13 (line 22) fails with "program.mjs is stale"; R25 also fails on the same program text. Regenerate with `node bio-plane/src/case-checker/build-program.mjs` (case-checker's owner). I did not regenerate it (mechanics §14).
+
+4. Generated artifacts are stale: bio-plane/src/setup-words/rows.mjs and words-unreviewed.json. Every changed sentence has a new localize id (suffix _p) and the old rows are retired. `node bio-plane/src/setup-words/build.mjs --check` fails; setup-words tests R10, R16 and R17 fail until it is regenerated with `node bio-plane/src/setup-words/build.mjs` (setup-words' owner). I did not write them. setup-words R13 also fails on inquiry.index.pass_grounds_an_array, a design-list row this change does not touch.
+
+5. Observed, not mine: bio-plane/test/m/store-assembly/declarations.test.mjs:36 fails on the set of modules exporting DECLARED_OPS. This module exports none. I did not look further.
+
+6. Decision for BOB: several sentences still list the stored values a field may take (grade sources, grade axes, roles, the bias effects, the surfaced-by values), as "is not one of: …". R69 names fields, codes and ids, not values, so I left these. Say if they should become plain phrases as well.
+
+## J10 · COMPLETE
+
+R69 (T51 fix round 10; K5297, K5175, K5257) applied, commit 1c825b1d5e on job/T51/inquiry-grammar (merged tranche/T51 at 929bcf76c7 first, fast-forward).
+
+Entries applied
+- R69 (new, `build/requirements/inquiry-grammar.md`). No finding or repair this module words names a field, a stored code or a decision id. Done in bio-plane/src/inquiry-grammar/grammar.mjs: 173 member-facing sentences reworded (each under a new localize id, suffix _p, since localize returns the frozen row for an existing id): supersession and division (lines 83–157), recheck (175–181), entry arm (203–352), division block (408–468), content-id arms (572–578), the basis leg arms (610–960), grounds (873–956), testimony/earned/inherited (1058–1319), lead (1338–1340), imported-finding (1399–1441), standard/calculation/occurrence/derived (1472–1655), bias applications (1753–1854).
+- Labels: the leg label is now `basis leg N` (lines 624–811), not `basis[N]`, for every caller of this module's leg checks, theme included; field names in messages are words (`words`, line 45; `FIELD_WORD`, line 46; apportionment rows, grounds rows, the bias applications on a leg read as words, not keys).
+- Extent-kind repair (line 574): names the landed kinds by content's own member phrases (`human`), not their stored names.
+- Repairs: the same rule (e.g. "remove the case facts from this inquiry" for the case-field refusal, and "the earned-basis check" for "op=earnedbasis").
+
+Red, then green
+- The sweep is r69.test.mjs (new). Over the module's recorded findings (402, the golden sections for its checks; record-grammar's own bundle C-6.x findings excluded), it reads each message and repair: pre-change golden: 520 naming hits (a field such as snake_case, a bracketed path, DEC-/C-/REC-/CASE- ids, op=, kind:, upper-case codes); after: 0. The same regex run on the pre-change golden is the red state (the test itself was written after the change).
+- Golden (test/m/inquiry-grammar/golden.json): the reworded sentences only, by exact replacement from the old templates (431 matches, 34 nested sentences, 173 template pairs; anchored to whole messages; one pass). Repairs too. Nothing else in the file changed.
+- Test pins moved to the new wording in grammar.test.mjs, imported, registration, t33, t34, t41, and t51 (labels only). Each old pin was checked against the new output before it moved.
+
+Suite and checks (module tests, on this tree)
+- node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/inquiry-grammar/*.test.mjs: tests 90, pass 90, fail 0 (88 before, plus r69's 2).
+- checks/format.mjs /home/user/bio: 178 modules, 178 requirements files; 0 failures.
+- checks/architecture.mjs /home/user/bio inquiry-grammar: 14 product files; 0 failures.
+- checks/coverage.mjs /home/user/bio inquiry-grammar: 21 of 21 live requirement ids named by a test; 0 failures.
+- checks/ownership.mjs /home/user/bio inquiry-grammar 929bcf76c7 HEAD: 11 files changed by inquiry-grammar; 0 failures.
+- checks/words.mjs /home/user/bio inquiry-grammar: inline 0, plain 0, testcopy 0; 0 failures. (Two test literals of member copy were shortened to fragments under the checker's 25-character rule; two inline phrases in code moved to localize.)
+- checks/run.mjs /home/user/bio: no line names inquiry-grammar; words over all 178 modules: 0 failures. The 89 "fixtures" failures are other modules' stub and contract findings, not this module's files.
+- Consumers: each test file that imports this module or lives in a consumer module's directory (620 files), run on this tree and on a HEAD copy. New failures against the wording (the pins are in REPORT J9, file:line): action-grammar grammar.test.mjs (2), inquiry (7 files), ratification converted-c and converted-d. Not caused by this change, verified alone: control-plane t51-round5/6/7/8/9, stamps, t51-reading-follows (slow under load, pass alone); case-checker program.test.mjs R13 and R25 (generated artifact stale, REPORT J9 item 3); answer-envelope families.test.mjs and control-plane t51-round10-seam-csvprose (fail on the HEAD copy too). store-assembly declarations.test.mjs (REPORT J9 item 5).
+
+Deferred, with why
+- Other modules' pins and generated artifacts (case-checker program, setup-words rows and review list): REPORT J9, for their owners.
+- The stored values a field may take (grade sources, axes, roles, bias effects, surfaced-by values) still appear as "is not one of: …" lists. R69 names fields, codes and ids, not values; BOB to say whether they become plain phrases (REPORT J9 item 6).
+- Golden: no longer the pre-move catalogue byte for byte. R4's byte-identity holds for every finding R69 did not reword, and the reworded ones were replaced by exact text, as action-grammar did.
+
+Commit attribution: the commit carries the Claude-Session trailer; the co-author line that names the model is left out (system guidance on model identifiers in commits).
+
+Size (session_012Hcsp3epJPBUahiBP41uKh): test runs 26, module lines 2048
+
+## J11 · COMPLETE
+
+CHANGE B12 (K5304) applied. Merged origin/tranche/T51 (2947741d44; fast-forward of the job branch, no conflicts), then re-pinned the connections sentences.
+
+- Six pins red after the merge: grammar.test.mjs, registration.test.mjs, t33, t34, t41 and golden.json. Each now takes the sentence connections returns for that leg label: `basis leg N names a THEME …` and `basis leg N claims its support through a THEME …`. Read from themeLegFindings on the same leg shape, not typed by hand. Commit ddc01120a4.
+- Plain label: connections is handed `basis leg N` (grammar.mjs:626). The brief said `basis[${i}]` at :617; that was the pre-merge line, and the label was already plain under R69.
+- Lead sentence (grammar.mjs:1347): `the {field} on {label} ('{v}') is a LEAD, …` with the field in plain words. It has no `.{field}` suffix and no document-file citation.
+
+Suite and checks, merged tree: inquiry-grammar tests 90 of 90 pass. format 178 modules, 0 failures; architecture 0 failures; coverage 21 of 21 ids; ownership 0 failures (11 files since the tranche tip 2947741d44); words 0 failures.
+
+Earlier cross-module findings stand (REPORT J9): action-grammar golden and tests, the inquiry and ratification pins, the stale case-checker program.mjs, and the stale setup-words rows.
+
+Size (session_012Hcsp3epJPBUahiBP41uKh): test runs 28, module lines 2048

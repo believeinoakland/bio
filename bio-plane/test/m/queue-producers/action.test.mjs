@@ -152,3 +152,18 @@ test("R14 (A-03): the member who registered a key is not told of it, though she 
   assert.deepEqual(ids(w.read(null, "class:admin")), ["OBLIGATION::signer-self-registered::KEY-A"], "the admin credential is told");
   assert.deepEqual(byId(w.read("cy"))["OBLIGATION::signer-self-registered::KEY-A"].basis.raised_to, ["cy"], "raised_to does not name her");
 });
+
+test("R55: an administrator's signerKnown ends the signer-self-registered item for every administrator and the admin credential; a second self-registered key still mints one", () => {
+  const w = world();
+  w.member("ada", { role: "admin" }); w.member("cy", { role: "admin" }); w.member("alice");
+  w.signer("AAAAKEYA", "alice", { comment: "alice's laptop" });
+  w.signer("AAAAKEYB", "alice", { comment: "alice's phone" });
+  const ids = (r) => ofKind(r, "signer-self-registered").map((i) => i.id).sort();
+  assert.deepEqual(ids(w.read("ada")), ["OBLIGATION::signer-self-registered::AAAAKEYA", "OBLIGATION::signer-self-registered::AAAAKEYB"], "minted");
+  const done = w.credentials.signerKnown({ keyB64: "AAAAKEYA", viewer: "member:ada" });
+  assert.equal(done.ok, true, "the act is the credentials module's own");
+  const left = ["OBLIGATION::signer-self-registered::AAAAKEYB"];
+  assert.deepEqual(ids(w.read("ada")), left, "gone for the administrator who said it");
+  assert.deepEqual(ids(w.read("cy")), left, "gone for every other administrator");
+  assert.deepEqual(ids(w.read(null, "class:admin")), left, "and for the admin credential; the second key still mints one");
+});
