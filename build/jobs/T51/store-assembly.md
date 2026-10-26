@@ -1,6 +1,6 @@
 # store-assembly (T51)
 
-**Status** · session_01HLnCbbHSqPYo154Eb9QHxW · depth 2 · RUNNING until 2026-10-26T00:31:32Z (module suite then the world users' suites) · handled B11
+**Status** · session_01HLnCbbHSqPYo154Eb9QHxW · depth 2 · RUNNING until 2026-10-26T00:56:34Z (plane and control-plane suites) · handled B11
 
 ## J1 · QUESTION
 
