@@ -104,3 +104,25 @@ Fix round 10 (B5, K5175; plan item 97): the hypotheses op answers are published 
 I did not add any `fixtures-run` line: each would be an orphan run until a user marks it, and the check would fail on this module's own lines.
 
 **Size (session_011WtEw93w6Hath6F3qEfKYj): test runs 4, module lines 1132**
+
+## J5 · COMPLETE
+
+Applied START B6 (fix round 10, K5216): the `op=hypotheses` list answer, published in `bio-plane/test/m/hypotheses/fixtures.mjs` beside `holdRefusals`, `reviseAnswer` and `withdrawAnswer`. No source change. No `fixtures-own` or `fixtures-generic` marker added.
+
+- `fixtures.mjs:84` `listWorld()`: the inquiry INQ with one hypothesis Ann holds live and one she holds and withdraws (`withdraw`, reason "mistaken").
+- `fixtures.mjs:95` `listAnswer()`: `hypothesesOf({inquiry: INQ, viewer: ANN})` over `listWorld()`, made on each call, never stored: `{ok, inquiry, label, hypotheses: [live, withdrawn], system_proposals}`.
+- `fixtures.mjs:100` `emptyListAnswer()`: the empty list for an inquiry that holds none, the system's proposals' heading beside it.
+
+A reading for BOB to confirm. The START says "a project's or question's hunches". The op takes an inquiry (`hypothesesOps`' `inquiry` query), and hypotheses has no project list, so the list fixture is for a question. A project-level list would be a new op, BOB's call.
+
+Tests (`fixtures.test.mjs`): R3 `listAnswer`, its shape and labelling (line 69); R3 `listAnswer` equals `op=hypotheses` over the same `listWorld()` through `hypothesesOps` (line 79); R3 `emptyListAnswer` (line 85); the made-on-each-call test now also covers `listAnswer`. Break once: with the withdrawal removed from `listWorld`, `R3 listAnswer` goes red (10 pass, 1 fail); restored, 11 of 11 green. I wrote the tests with the fixture, not before it, so the red step is the break test, not a test-first run.
+
+Met ids: R3 (the list answer). Coverage: 24 of 24 live ids named by a test.
+
+Suite counts: `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/hypotheses/*.test.mjs`: 69 pass, 0 fail, 0 cancelled; the run exited by itself (no force-exit, so K5124's sum check does not apply). The fixtures file alone: 11 of 11.
+
+Checks (process repo, product /home/user/bio): format 0 failures; architecture (this module) 0 failures; coverage (hypotheses) 24 of 24, 0 failures; `checks/fixtures.mjs /home/user/bio hypotheses --list`: 0 answers, 0 failures; ownership: 0 failures; impact (`build/plan/impact.mjs origin/tranche/T51 HEAD`, the ref is `origin/` because `tranche/T51` is not local in this checkout): 1 of 178 modules, hypotheses itself. `checks/run.mjs /home/user/bio`: 370 FAIL lines, none naming hypotheses; they sit in other modules (fixtures 349: stub 92, answer 257; words 16: store-assembly 15, ratification 1). The words count cannot rise: this change adds no sentence. Reported to BOB in a REPORT.
+
+Deferred: none.
+
+Size (session_0189S9L8ZybB8aa7uuRhyQpw): test runs 6, module lines 1132
