@@ -185,3 +185,7 @@ COMPLETE (J6, resumed): R7 known_through done (index.mjs, known-through.test.mjs
 **Checks** (absolute root `/home/user/bio`): format 0 failures; architecture (standards) 0; coverage (standards) 55 of 55, 0; words (standards) 0 (inline 0, plain 0, testcopy 0, missingkey 0); ownership (standards, merge-base, HEAD) 0; fixtures `--list` (standards) 0 failures, no marker added.
 **Deferred:** nothing. **Found in other modules:** none.
 Size (session_01LUFXknQDNmXzx4Bh2JT3Fh): test runs 8, module lines 3621
+
+## J8 · COMPLETE
+
+R63 met: standardRead answers bindings (adoptions, impositions, benchmarks, newest first, with says by standard.binding.binds/.benchmark; [] when none; NO_SUCH_STANDARD for a viewer who may not read it; an act or law the viewer may not read is not named). R64 proved by test; the module already met it, no source change. Standards suite 125/125 (3 new in t51-bindings.test.mjs, red then green); 16 user test files 129/129; format, architecture, coverage 55/55, words, ownership, fixtures 0 failures. One flaw left for your ruling, not changed: an event act accepts any held passage as its citation, not only one of the event's own capture (t35/t37 rely on it). Details in my record, section 'Fix round 10, R63 and R64 (B11)'. Size line is there.
