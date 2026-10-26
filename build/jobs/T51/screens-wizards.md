@@ -164,3 +164,7 @@ REPORT · SCREENS-WIZARDS #8 · R7/R11 required-mark test and the dead group:nul
 - Markers added: none.
 - Met ids: R7, R11 (with R52 of wizard-scripts); BOB strikes the marks.
 Size (session_01TFDt6wMDgqu975n41svvYp): test runs 6, module lines 941
+
+## J9 · COMPLETE
+
+COMPLETE · SCREENS-WIZARDS #8 · batch 8. Tests only: world.mjs:15 dead group:null dropped; t51.test.mjs last test names R7 and R11 (every wizardsat row carries boolean required; Recommended is drawn exactly for required rows, on ceremony and members). Module code unchanged (guide.mjs:476/:491 already follow the row). Red by mutation (guide.mjs:476 forced to required:false: t51 8 pass/1 fail), green restored. Module 76 pass/0 fail; impact 1 of 178 modules; format/architecture 0; coverage and words show no finding in my files (coverage 4 failures: capture R115, case-authoring R87, filings R70, membership R156; words 15, none mine); fixtures 0 failures, 1 accepted (unchanged guide.test.mjs:204); ownership 0. No fixtures markers added. Met: R7, R11. Size (session_01TFDt6wMDgqu975n41svvYp): test runs 6, module lines 941.
