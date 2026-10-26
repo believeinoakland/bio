@@ -520,3 +520,7 @@ Met ids (BOB strikes): R9, R30, R32.
 fixtures markers added: none.
 
 Size (session_012TPANXXg4GGQVhTc5yKHd8): test runs 14, module lines 5210
+
+## J37 · COMPLETE
+
+COMPLETE (re B43, B44). A1 (R32) and A2 (R30) built as K5229 words them; B's seven lines closed; R9 failing-first by mutation; fixtures.mjs screens-action: 0 failures; suite 296 tests, 295 pass. Two reds named for BOB: (1) contract.test.mjs:35, the registry row for dash-action still lists taskresolve (UX-DESIGN/wizard-scripts regenerate); (2) checks/architecture.mjs: screens-action's uses lacks wizard-scripts in build/modules.json (matter-t51, send-t51 take its published fixtures). format 0, coverage 55/55, ownership 0, words 0. Met ids R9, R30, R32. Found outside my paths: action-holds cannot release/preview a hold placed from a docket mark or pressure record (action-holds/index.mjs:1061-1065). Details in my record, Round 14. Size (session_012TPANXXg4GGQVhTc5yKHd8): test runs 14, module lines 5210
