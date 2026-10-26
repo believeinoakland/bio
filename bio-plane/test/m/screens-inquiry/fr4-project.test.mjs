@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { boot, ok, refusedIn } from "../interface-shell/harness.mjs";
 import { open, storeWorld, main, press, fill, says, word, section, projectWith, SCREENS, P, Q, Q2 } from "./fixtures.mjs";
 import { onPhone } from "./phone.mjs";
+import { rerunReadAnswer } from "../case-import/fixtures.mjs";
 
 const at = "/app/project/" + P;
 const PROJECT = SCREENS.find((s) => s.id === "project");
@@ -130,15 +131,19 @@ const NOTICE = { notice: "N1", status: "open", revisions: [{ published_at: "2026
   level: { level: "Active", as_of: "2026-10-10T00:00:00Z" }, next_monthly: "2026-11-01T00:00:00Z", attestations: [{ json: { cases: [1, 2] } }] };
 const VOTES = [{ change: "remove", target: "dev", proposed_by: "rosa", proposed_at: "2026-10-09T09:00:00Z", agreed: ["rosa"], awaiting: ["mai"] },
   { change: "add", target: "ben", proposed_by: "dev", proposed_at: "2026-10-09T09:00:00Z", agreed: ["dev"], awaiting: ["mai"] }];
-const RERUN = { case: "A case", edition: 1, group: "Team", lens_difference: { only_source: [{ kind: "k", subject: "s", text: "t " + LONG }], only_own: [], shared: 1 },
-  findings: [{ finding: "F1 " + LONG, ref: "r1", source: { pair: { capture: { state: "graded", grade: "B" }, connection: { state: "graded", grade: "C" } } }, pairings: [] }] };
+/* case-import's real `rerunread` answer (R31), the strings the comparison draws made long (an input that stretches the layout; fixtures-own: synthetic the lengthened text) */
+const REAL_RERUN = (await rerunReadAnswer()).answer;
+const [REAL_RUN] = REAL_RERUN.reruns;
+const RERUN = { ...REAL_RERUN, reruns: [{ ...REAL_RUN,
+  lens_difference: { ...REAL_RUN.lens_difference, only_source: REAL_RUN.lens_difference.only_source.map((x) => ({ ...x, text: x.text + " " + LONG })) },
+  findings: REAL_RUN.findings.map((f) => ({ ...f, finding: f.finding + " " + LONG })) }] };
 const BUSY = { images: { [P]: { "bundle.md": LONGMD } }, plane: {
   projectparticipants: ok({ ok: true, projectId: P, participants: PEOPLE }),
   projectquestions: ok({ ok: true, project: P, items: [{ inquiry: Q, title: "Is the city repairing reported potholes within seven days of the report, and recording it?" }, { inquiry: Q2, title: "Does closed mean repaired " + LONG }], cursor: null }),
   projectownervotes: ok({ ok: true, projectId: P, changes: VOTES }),
   memberlist: ok({ ok: true, members: PEOPLE.map((x) => ({ member_id: x.handle, handle: x.handle })) }),
   notices: ok({ ok: true, notices: [NOTICE] }),
-  rerunread: ok({ ok: true, reruns: [RERUN] }),
+  rerunread: ok(RERUN),
   projectownerarith: ok({ ok: true, table: [1, 2, 3, 4, 5].map((n) => ({ owners: n, votesNeeded: Math.floor(n / 2) + 1, eligibleVoters: n - 1 })),
     live: { owners: 4, votesNeeded: 3, eligibleVoters: 3, possible: true, targetMayVote: false }, projectId: P }),
   ...ELSEWHERE } };

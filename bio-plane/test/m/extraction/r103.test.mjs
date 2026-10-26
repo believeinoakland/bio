@@ -7,7 +7,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bundle, hold, member, withEntry, i2, noText, ocrAnswer, pageUnits, payingAccount } from "./fixture.mjs";
-// fixtures-contract: plane job-registrar
+// fixtures-contract: store-assembly job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 import { REQUEST_READ_MAX } from "../../../src/extraction/index.mjs";
 import { WORD } from "./words.mjs";

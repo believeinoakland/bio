@@ -2,7 +2,7 @@
    refusal table and the real code it comes from. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { carryOutcome, statementAck, casedetails, casedetailsset, casedetailspublic } from "./fixtures.mjs";
+import { carryOutcome, statementAck, casedetails, casedetailsset, casedetailspublic, casedetailsRelated, casedetailsNone } from "./fixtures.mjs";
 import { CARRIED_OUTCOME_CHECKS, STATEMENT_ACK_CHECKS, CASE_DETAILS_FIELDS, CASE_DETAILS_WORDS, fillWords, fillDetails } from "../../../src/case-inputs/index.mjs";
 import { WORDS, DEAD } from "./fixture.mjs";
 
@@ -96,4 +96,44 @@ test("R20, R23, R24: each details fixture is made when it is called, over a fres
   assert.equal(b.unpublished.reason, "NOT_PUBLISHED");
   assert.equal(casedetails().recorded.ok, true);
   assert.equal(casedetailsset().set.ok, true);
+});
+
+test("R21, R23: the casedetailsRelated fixture's caseDetails is the real read of a published case whose related standing has works: ok, related stated as a builds_on and a disagrees_with with their values as set, relationships not stated", () => {
+  const { recorded: r } = casedetailsRelated();
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  assert.equal(r.published, true);
+  assert.equal(r.details.related.stated, true);
+  assert.deepEqual(r.details.related.value.map((e) => e.relation), ["builds_on", "disagrees_with"]);
+  assert.deepEqual(r.details.related.value, [
+    { relation: "builds_on", case_ref: { group: "river-town", case: "CASE-2026-0007", edition: 1 }, words: "Builds on the council's 2025 minutes" },
+    { relation: "disagrees_with", url: "https://example.org/housing-study", words: "A competing reading of the same vote" },
+  ]);
+  assert.equal(r.details.relationships.stated, false, "relationships is not stated");
+  assert.equal(r.details.relationships.value, null);
+});
+
+test("R21, R24: the casedetailsRelated fixture's casedetailspublic is the real public read of the same case: ok, the team's slug, related stated with its two works, relationships not stated, and nothing of who set them", () => {
+  const { publicRead: p } = casedetailsRelated();
+  assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
+  assert.equal(p.group, "test-group");
+  assert.equal(p.details.related.stated, true);
+  assert.deepEqual(p.details.related.value.map((e) => e.relation), ["builds_on", "disagrees_with"]);
+  assert.equal(p.details.relationships.stated, false);
+  assert.equal(JSON.stringify(p).includes("set_by"), false, "the public read never says who set a detail");
+});
+
+test("R21, R23: the casedetailsNone fixture's caseDetails is the real read of a published case whose relationships are stated {none: true}: ok, relationships stated, related not stated", () => {
+  const { recorded: r } = casedetailsNone();
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  assert.equal(r.details.relationships.stated, true);
+  assert.deepEqual(r.details.relationships.value, { none: true });
+  assert.equal(r.details.related.stated, false, "related is not stated");
+});
+
+test("R21, R24: the casedetailsNone fixture's casedetailspublic is the real public read of the same case: ok, relationships stated as {none: true}, related not stated", () => {
+  const { publicRead: p } = casedetailsNone();
+  assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
+  assert.equal(p.details.relationships.stated, true);
+  assert.deepEqual(p.details.relationships.value, { none: true });
+  assert.equal(p.details.related.stated, false);
 });

@@ -26,7 +26,7 @@ function transcriber(services, { away = null } = {}) {
     transcription: ({ member, project, at }) => ({ member, project, at, act: `transcribe:t48:${at}`,
       ...Object.fromEntries(Object.keys(services).map((name) => [name, service(name)])),
       useCheck: async () => null,
-      // fixtures-contract: content transcribe-answer
+      // fixtures-contract: plane transcribe-answer
       transcribe: async (q) => { calls.transcribe.push(q);
         return { ok: true, engine: "claude-test", version: "2026-01", pages: q.pages.map((p) => ({ page: p, text: `AI text of page ${p}` })) }; } }),
   };

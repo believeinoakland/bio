@@ -10,7 +10,7 @@ import { readFileSync } from "node:fs";
 import { fresh, bundle, bucket, doc, sha, docx, wp, wr, member, ocrAnswer, homesOver } from "./fixture.mjs";
 import { generate } from "../../pdfgen.mjs";
 import * as F from "../office-readers/fixtures.mjs";
-// fixtures-contract: plane job-registrar
+// fixtures-contract: store-assembly job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 import { read as readDocument } from "../../../src/reading-pipeline/index.mjs";
 import { extractionOps, LAND_BATCH_BYTES, READING_SHAPE, CAPTURE_TEXT_CAPTURE_UNIT_BOUND } from "../../../src/extraction/index.mjs";

@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { fresh, bundle, bucket, hold, member, withEntry, i2, noText, ocrAnswer, doc, homesOver } from "./fixture.mjs";
-// fixtures-contract: plane job-registrar
+// fixtures-contract: store-assembly job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 
 const pdf = (text) => ({ format: "pdf", structure: async () => ({ ok: true, text: structuredClone(text), pages: (text.pages || []).length, notes: [] }) });
@@ -71,7 +71,7 @@ test("R102 (G126c's rule for this module): a registrar answering `{ok: false}` i
   const { w, d, document } = await held({ env: { OCR_WORKER: perPage([]) } });
   const none = await withEntry(pdf(SCAN(3)), () => w.x.read(document, { env: w.env }));
   assert.deepEqual(none.owed, { kind: "ocr", pages_left: 3, registered: false, reason: "NO_REGISTRAR" });
-  // fixtures-contract: plane job-registrar
+  // fixtures-contract: store-assembly job-registrar
   const refuses = { registerJob: () => ({ ok: false, reason: "JOB_NOT_KEPT" }), armJobs: async () => {} };
   const r = await withEntry(pdf(SCAN(30)), () => w.x.readHeld({ sha: d, ...refuses }));
   assert.deepEqual([r.read, r.owed], [true, true]);

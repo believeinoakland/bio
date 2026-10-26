@@ -8,6 +8,11 @@ import { boot, ok, textNodes } from "../interface-shell/harness.mjs";
 /* K4245, K5054: the op declarations are registered once, by the world (store-assembly R83: every owner's, op-declarations and op-grades), which
    this module's tests import for the acts they seed (op-tables §5.3) */
 import { storeWorld as requestWorld, WORLD_FOUNDER_HANDLE } from "../store-request/fixtures.mjs";
+/* the answers inquiry and case-import publish (K4990, K4993, K4995, K5200): made by their real code, never typed here */
+import { questionWaitsSetAside, readRefusals } from "../inquiry/fixtures.mjs";
+import { importedCasesAnswer } from "../case-import/fixtures.mjs";
+import { listAnswer } from "../hypotheses/fixtures.mjs";
+import { groupIdentityAnswer } from "../instance-setup/fixtures.mjs";
 
 export { SCREENS, word, WORLD_FOUNDER_HANDLE };
 export const storeWorld = requestWorld;
@@ -21,6 +26,30 @@ export const SHA = "3b9f" + "0".repeat(56) + "c210";
 /** The cited policy as the readings and the strength name it: a title (record data), held once. */
 export const POLICY = "Policy memo 4.12";
 export const NEWER = "9".repeat(64);
+/** inquiry's real `questionwaits` answer for a question with one document set aside by `setter` (`member:<id>`, default `member:ben`) with `reason`
+ *  (default "wrong year"), as its asker reads it: `document_waits`, `history`, `zone`, `projects` (inquiry R58). The document is `ASIDE_DOCUMENT`,
+ *  whose record these fixtures serve under the title `ASIDE_TITLE`. Made by inquiry's real code, once for each setter and reason. */
+export const ASIDE_TITLE = "2024 budget PDF";
+const ASIDE_KEPT = new Map();
+export const waitsSetAside = ({ setter = "member:ben", reason = "wrong year" } = {}) => {
+  const key = setter + "\u0000" + reason;
+  if (!ASIDE_KEPT.has(key)) ASIDE_KEPT.set(key, questionWaitsSetAside({ asker: "member:dev", setter, reason }));
+  const fx = ASIDE_KEPT.get(key);
+  return { ...fx, answer: structuredClone(fx.answer) };
+};
+export const ASIDE_DOCUMENT = waitsSetAside().document;
+/** the record of the document a wait names, as the screen reads its title */
+export const ASIDE_RECORD = { "bundle.md": ["---", `id: ${ASIDE_DOCUMENT}`, "object_type: information", `title: "${ASIDE_TITLE}"`, "---", "", "## Summary", ""].join("\n") };
+/** inquiry's real partition read of a question that holds no grouping (`grouped: false`, no groups, no changes), as the viewer who may see it reads it (inquiry R33) */
+const UNGROUPED = readRefusals().visible;
+/** case-import's real `importedcases` answer: two imports, one of them with a withdrawn acceptance (case-import R4) */
+const IMPORTS = (await importedCasesAnswer()).answer;
+/** hypotheses' real list (R3) of a question holding a live hunch and a withdrawn one; `HUNCH` is the live one, held by `HUNCH_BY` (a member id) */
+export const HUNCHES = listAnswer();
+export const HUNCH = HUNCHES.hypotheses.find((h) => h.status === "live");
+export const HUNCH_BY = HUNCH.held_by.replace(/^member:/, "");
+/** instance-setup's real `groupidentity` answer (R11): the group's slug, its recorded name, no domain, no declared stake */
+const GROUP = await groupIdentityAnswer();
 
 const projectMd = (refs) => ["---", `id: ${P}`, "object_type: project", "title: \"Pothole repairs\"",
   "objective: \"Is the city repairing reported potholes as its own policy requires?\"", "references:",
@@ -83,7 +112,7 @@ export const PARTICIPANTS = [{ handle: "dev", state: "joined", owner: 1 }, { han
 
 /** The plane every screen reads from, keyed by op; `image` answers by the id asked. */
 export function plane(o = {}) {
-  const images = { [P]: { "bundle.md": PROJECT_MD }, [Q]: { "bundle.md": inquiryMd(o.inquiryProject === undefined ? P : o.inquiryProject) }, [D]: { "bundle.md": DOCUMENT_MD, "data/provenance.json": provenanceOf(SHA) }, ...(o.images || {}) };
+  const images = { [P]: { "bundle.md": PROJECT_MD }, [Q]: { "bundle.md": inquiryMd(o.inquiryProject === undefined ? P : o.inquiryProject) }, [D]: { "bundle.md": DOCUMENT_MD, "data/provenance.json": provenanceOf(SHA) }, [ASIDE_DOCUMENT]: ASIDE_RECORD, ...(o.images || {}) };
   return {
     image: (r) => (Object.hasOwn(images, r.query.id) ? ok(images[r.query.id]) : ok(null)),
     projectstage: ok({ ok: true, project: P, stage: "investigating", questions: { read: 2, with_legs: 1, concluded: 0 } }),
@@ -103,8 +132,8 @@ export function plane(o = {}) {
     basisversions: (r) => ok({ ...BASIS(), ...(r.query.project ? { current: { project: r.query.project, version: "main", at: "2026-10-06T09:00:00Z", by: "dev" } } : {}) }),
     versionstrength: (r) => ok({ ok: true, inquiry: r.query.id, version: r.query.version, pair: { capture: { state: "graded", grade: "B" }, connection: { state: "graded", grade: "C" } } }),
     partitionindependence: ok({ ok: true, inquiry: Q, independence: { checked: true, parts: 2, shared: [], complete: true } }),
-    hypotheses: ok({ ok: true, inquiry: Q, hypotheses: [{ hypothesis_id: "HYP-1", statement: "Crews close reports when they inspect.", held_by: "dev" }] }),
-    questionwaits: ok({ ok: true, waits: [{ document: "INFO-2026-0008", title: "2024 budget PDF", setter: "ben", reason: "wrong year", date: "2026-10-06T09:00:00Z" }] }),
+    hypotheses: ok(HUNCHES),
+    questionwaits: ok(waitsSetAside().answer),
     backlinks: (r) => ok(r.query.target === D
       ? { ok: true, target: D, backlinks: [{ from: Q, from_type: "inquiry", from_title: "Seven days?", rel: "cites" },
                                            { from: P, from_type: "project", from_title: "Pothole repairs", rel: "cites" }], out_of_view: true }
@@ -116,19 +145,19 @@ export function plane(o = {}) {
     capturegrade: ok({ ok: true, captureSha: SHA, grade: { grade: "B", route: "fetched", determined: true } }),
     themeread: ok({ ok: true, themes: [] }),
     captureprogressions: ok({ ok: true, instances: [] }),
-    inquirypartition: ok({ ok: true, id: Q, grouped: false, groups: [], ungrouped: [], changes: [], strength_now: null }),
-    groupidentity: ok({ ok: true, declared_stake: { stake: null, set_by: null, set_at: null }, declared_stake_history: [] }),
+    inquirypartition: ok(UNGROUPED),
+    groupidentity: ok(GROUP),
     projectstake: ok({ ok: true, stake: null, set_by: null, set_at: null, history: [] }),
     publishedlist: ok({ bundles: [], cases: [] }),
     links: ok({ ok: true, links: [] }),
     connections: ok({ ok: true, connections: [] }),
     reevaluationnotices: ok({ ok: true, notices: [] }),
-    importedcases: ok({ ok: true, imports: [], count: 0 }),
+    importedcases: ok(IMPORTS),
     origins: ok({ ok: true, bundleId: D, origins: [] }),
     provenanceroutes: ok({ ok: true, bundleId: D, state: "verified", objectType: "information", route: { applies: true, assessed: false, marked: false, finding: "NEVER_LOOKED" } }),
     transcriptions: ok({ ok: true, bundle_id: D, transcriptions: [], count: 0, truncated: false, cursor: null }),
     /* interface-shell R111 (C94): the roster `memberlist` answers, id to handle, for the handles these fixtures name */
-    memberlist: ok({ ok: true, members: ["dev", "mai", "rosa", "ben", "ana"].map((h) => ({ member_id: h, handle: h })) }),
+    memberlist: ok({ ok: true, members: ["dev", "mai", "rosa", "ben", "ana", HUNCH_BY].map((h) => ({ member_id: h, handle: h })) }),
     ...(o.plane || {}),
   };
 }
