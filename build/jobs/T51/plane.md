@@ -1304,3 +1304,9 @@ Not done: B108 (shrink t42/t46). Needs: someone to say whether the foreign modif
 **B106:** still open; see the BLOCKED (J73).
 
 Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 16, module lines 371
+
+## J74 · REPORT · re B110
+
+B107, B108, B109 done and pushed on job/T51/plane (commit with B108/B109). Tranche merged. t42 shrunk to 4 tests (R112, R113 x2, R6 hook), t46 to 3 (R42 workerd, R114 x2 RPC); the 16 and 10 composition cases are in store-assembly's t42/t46 by title, the 3 t42 orphan runs gone. r10-reading-ended takes readHeldAnswer.final('NO_PROGRESS') for the unopened row. t42 4/4, t46 3/3, r10 2/2, r-transcribe 2/2. format 0; coverage 37/37. Fixtures: one orphan-run left, r-transcribe-answer:54 (reading-pipeline transcribe-answer), pending your rename of content transcribe-answer.
+
+B106 (G93 timing, under load) is still open; I'm diagnosing it now (reproduced under 4 busy loops, 3 of 5). Working tree: names.mjs, plane-meaning.mjs, run-rules/rules.mjs, agent-steps/drive.mjs, agent-worker/index.mjs show changes that are not mine; not committed.
