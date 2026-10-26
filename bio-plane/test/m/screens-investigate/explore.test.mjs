@@ -98,7 +98,7 @@ test("R24 R27 explore's Follow offers the design's six groups, the first three t
   const boxes = box.querySelectorAll("input");
   assert.deepEqual(boxes.map((b) => b.parentElement.textContent.trim()), ["pos", "money", "part", "ment", "same", "step_source"].map((g) => word("connection.kind." + g + ".name")));
   assert.deepEqual(boxes.map((b) => b.checked), [true, true, true, false, false, false]);
-  assert.equal(p.doc.getElementById("explore-kinds"), null, "no raw kind checkbox is drawn");
+  assert.ok(!p.doc.getElementById("explore-kinds"),  "no raw kind checkbox is drawn");
   assert.equal(p.root().querySelectorAll('input[type="checkbox"]').filter((i) => /explore-kinds/.test(i.getAttribute("name") || "")).length, 0);
   boxes[0].checked = false; boxes[2].checked = false;
   fill(p, { "explore-to": org, "explore-at": "2025-06-30" });
@@ -147,7 +147,7 @@ test("R29 explore opened with no centre draws its sentence by key and asks the p
   const p = await openAs(world, me, "/app/explore");
   drew(main(p), "screen.explore.nocentre");
   assert.equal(p.byOp("exploregraph").length, 0, "no graph is read");
-  assert.equal(main(p).querySelector(".mk-graph"), null);
+  assert.ok(!main(p).querySelector(".mk-graph"));
   assert.ok(hasWord("screen.explore.nocentre"));
   const q = await openAs(world, me, explorePath(chen));
   assert.ok(main(q).querySelector(".mk-graph"));
@@ -289,7 +289,7 @@ test("R17 Attach a source to a declared step sends stepsource with the hop's rel
   await settled(p);
   const lead = () => main(p).querySelectorAll("div.mk-msg[data-chain]").find((c) => c.querySelector('button[data-act="stepsource"]') || c.querySelector("[data-attached]"));
   drew(lead(), "screen.explore.lead");
-  assert.equal(button(p, "connectionassert"), null, "connectionassert is not drawn for this act");
+  assert.ok(!button(p, "connectionassert"),  "connectionassert is not drawn for this act");
   const basis = "The memo says he signs for her.";
   /* R34 (K5148): the document is chosen by title and the passage by its words, never typed */
   fill(p, { "explore-assert-doc": memo.sha, "explore-assert-basis": basis });

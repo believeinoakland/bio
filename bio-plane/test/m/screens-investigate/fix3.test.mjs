@@ -63,7 +63,7 @@ for (const [name, at, doc, words] of SCREENS) {
     assert.ok(units[chosen], "a held document is the one chosen");
     assert.deepEqual(unitsOf(p, words), units[chosen].map((u) => u.text), "the chosen document's words");
     assert.equal(p.byOp("reading")[0].query.sha256, chosen);
-    assert.equal(main(p).querySelector('[data-state="failed"]'), null, "nothing failed");
+    assert.ok(!main(p).querySelector('[data-state="failed"]'), "nothing failed");
     /* choosing the other document redraws the words from that document's reading */
     const other = chosen === w.first.sha ? w.second.sha : w.first.sha;
     await select(p, doc, other);
@@ -80,7 +80,7 @@ for (const [name, at, doc, words] of SCREENS) {
       const sec = main(p).textContent;
       assert.ok(sec.includes(NOT_READ), "the reason is said");
       assert.ok(!sec.includes(word("shell.unread")), "not 'could not read this'");
-      assert.equal(wordsOf(p, words), undefined, "no words to select");
+      assert.ok(!wordsOf(p, words),  "no words to select");
       assert.ok(heading(p, words).length === 1, "the heading stays");
     }
     const r = await twoDocuments();

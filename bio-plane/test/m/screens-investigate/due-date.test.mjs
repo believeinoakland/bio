@@ -88,7 +88,7 @@ test("R7 with no standing proposal nothing can be confirmed (control: clockadopt
   await sentOn(id, "2026-10-02");
   assert.deepEqual((await me.read("clockproposals", { query: { action: id } })).proposals, [], "none stands");
   const p = await openAs(world, me, "/app/due-date/" + id);
-  assert.equal(button(p, "clockadopt"), null);
+  assert.ok(!button(p, "clockadopt"));
   assert.deepEqual(actsIn(main(p)).sort(), ["clockpropose", "reminderset"]);
 });
 
@@ -187,7 +187,7 @@ test("R55 the head names the counterparty from whatever keys it holds: an addres
   });
   drew(await head(id, { action: named }), "screen.due-date.of", { who: "Office of the City Attorney" });
   const none = await head(await request(['  state: "undetermined"', '  basis: "no one has answered yet"']));
-  assert.equal(none.querySelector(".mk-sub"), null, "no sentence");
+  assert.ok(!none.querySelector(".mk-sub"), "no sentence");
   assert.ok(!none.textContent.includes("no one has answered yet"), "the basis is not a name");
 });
 
@@ -197,7 +197,7 @@ test("R59 the refusal that no rule states a deadline draws the deadlines its ans
   const id = await request();
   await sentOn(id, "2026-10-02");
   const p = await openAs(world, me, "/app/due-date/" + id);
-  assert.equal(main(p).querySelector("[data-rules]"), null, "nothing before the refusal");
+  assert.ok(!main(p).querySelector("[data-rules]"), "nothing before the refusal");
   await press(p, "clockpropose", { reason: REASON });
   /* what the store answers to that very request (the refusal is written nothing, so it can be asked again) */
   const refusal = await refused(world, me, "clockpropose", p.byOp("clockpropose")[0].body);
@@ -219,6 +219,6 @@ test("R59 the refusal that no rule states a deadline draws the deadlines its ans
   assert.deepEqual(held.map((x) => x.rule), [pick], "the store holds the proposal for the rule she picked");
   /* control: a due date that is found draws none */
   const found = await openAs(world, me, "/app/due-date/" + id);
-  assert.equal(found.doc.getElementById("dd-rule"), null, "control: a due date that is found draws none");
-  assert.equal(main(found).querySelector("[data-rules]"), null);
+  assert.ok(!found.doc.getElementById("dd-rule"),  "control: a due date that is found draws none");
+  assert.ok(!main(found).querySelector("[data-rules]"));
 });

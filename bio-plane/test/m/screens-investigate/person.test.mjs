@@ -230,7 +230,7 @@ test("R1 personexpunge at the phone width is read and not done (interface-shell 
   const { world, me, chen, lease } = await scene();
   await fact(me, chen, lease.sha);
   const p = await openAs(world, me, "/app/person/" + chen, { phone: true });
-  assert.equal(button(p, "personexpunge"), null);
+  assert.ok(!button(p, "personexpunge"));
   assert.ok(main(p).querySelector('[data-phone-act="personexpunge"]'));
 });
 
@@ -337,8 +337,8 @@ test("R32 (1) control: an organization's page words it for an organization; writ
   const { world, me, org } = await scene();
   const p = await openAs(world, me, "/app/person/" + org);
   assert.ok(secOf(p, "entity.says.title.org"));
-  assert.equal(secOf(p, "entity.says.title"), undefined);
-  assert.equal(button(p, "writinghelp"), null, "no assistant, no help");
+  assert.ok(!secOf(p, "entity.says.title"));
+  assert.ok(!button(p, "writinghelp"),  "no assistant, no help");
 });
 
 test("R32 (2) every fact recorded is listed: valid today, then those whose validity is not stated or settled (marked undetermined with the reason and the source), the withdrawn in a fold with who, when and why", async () => {
@@ -388,7 +388,7 @@ test("R34 the fact form chooses a document by title and sends its digest; with n
   const bare = await inWorld();
   const lone = await entity(bare.me, "person", "L. Chen");
   const none = await openAs(bare.world, bare.me, "/app/person/" + lone);
-  assert.equal(none.doc.getElementById("person-fact-doc"), null);
+  assert.ok(!none.doc.getElementById("person-fact-doc"));
   drew(secOf(none, "screen.person.facts"), "state.empty");
   fill(none, { "person-fact-value": "x" });
   await press(none, "recordpersonfact", { reason: REASON });
@@ -438,7 +438,7 @@ test("R38 with no candidate the menu lists the people the record follows, never 
   assert.deepEqual(followed, [body]);
   /* a candidates read that fails (a fault the store does not make for a person it holds): drawn failed, no menu */
   const bad = await openAs(world, me, "/app/person/" + chen, { plane: { samepersoncandidates: refusedIn("UNREADABLE", "The candidates could not be read.") } });
-  assert.equal(bad.doc.getElementById("person-claim-other"), null);
+  assert.ok(!bad.doc.getElementById("person-claim-other"));
   assert.ok(secOf(bad, "screen.person.same").querySelector('[data-state="failed"], .cs-gap'), "drawn failed");
   /* a withdrawn claim is not drawn */
   const made = await claim(dev, chen, twin);
@@ -454,7 +454,7 @@ test("R38 the withdraw fold asks its reason before it sends; a basis other than 
   const p = await openAs(world, me, "/app/person/" + chen);
   await press(p, "withdrawidentityclaim", { el: button(p, "withdrawidentityclaim") });
   assert.equal(p.byOp("withdrawidentityclaim").length, 0, "no reason, nothing sent");
-  assert.equal(p.doc.getElementById("person-claim-doc-a"), null, "control: testimony, the default, names no document");
+  assert.ok(!p.doc.getElementById("person-claim-doc-a"),  "control: testimony, the default, names no document");
   fill(p, { "person-claim-basis": "identifier" });
   p.fire(p.doc.getElementById("person-claim-basis"), "change");
   assert.equal(p.doc.getElementById("person-claim-doc-a") === null, false, "a basis other than testimony chooses a document for each record");
@@ -542,8 +542,8 @@ test("R41 an ordinance opens its own page: its note, kind and documents, \"Where
   assert.ok(secOf(p, "entity.alias.title").textContent.includes("Chapter 8.22"));
   assert.ok(secOf(p, "entity.naming.title"), "a document that may name it");
   assert.ok(button(p, "explore"), "explore where a document names it");
-  for (const k of ["screen.person.positions", "screen.person.facts", "screen.person.same"]) assert.equal(secOf(p, k), undefined, k);
-  assert.equal(button(p, "recordpersonfact"), null);
+  for (const k of ["screen.person.positions", "screen.person.facts", "screen.person.same"]) assert.ok(!secOf(p, k),  k);
+  assert.ok(!button(p, "recordpersonfact"));
   assert.ok(button(p, "relationdeclare"), "the ties part, DEC-338");
   drew(secOf(p, "entity.relation.title"), "screen.person.ties.none.ordinance");
   await post(me, chen, org, lease.sha);
@@ -564,10 +564,10 @@ test("R41 an office draws who has held it (the holders, their dates, source and 
   assert.equal(held.length, 2);
   const open = held.find((l) => !l.valid.to);
   assert.ok(h.textContent.includes(word("screen.person.since", { from: dayOf(open.valid.from) })));
-  assert.equal(secOf(p, "screen.person.cited"), undefined);
-  assert.equal(secOf(p, "entity.naming.title"), undefined, "an office draws other names alone of the document part");
+  assert.ok(!secOf(p, "screen.person.cited"));
+  assert.ok(!secOf(p, "entity.naming.title"),  "an office draws other names alone of the document part");
   drew(main(p), "screen.people.counts.none");
-  assert.equal(button(p, "explore"), null, "no document names it: no explore");
+  assert.ok(!button(p, "explore"),  "no document names it: no explore");
 });
 
 test("R44 an undetermined fact's reason is drawn by its word with the owner's fills; a bare string draws no English of this module; R46 a page 0 is drawn as page 1", async () => {
@@ -603,5 +603,5 @@ test("R48 a person with no connections draws person.graph.none and no Explore co
   assert.ok(secOf(one, "screen.person.connections").querySelectorAll("svg").length > 0);
   const none = await openAs(world, me, "/app/person/" + twin);
   drew(secOf(none, "screen.person.connections"), "person.graph.none");
-  assert.equal(button(none, "explore"), null);
+  assert.ok(!button(none, "explore"));
 });

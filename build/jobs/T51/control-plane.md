@@ -1,6 +1,6 @@
 # control-plane (T51)
 
-**Status** · session_01T5nJFHPxsRYLW4H7VxjX1m · depth 2 · COMPLETE · handled B103
+**Status** · session_01V3zmYxVpugx4Rg3Yyk4VDe · depth 2 · COMPLETE · handled B104
 
 ## J1 · QUESTION
 
@@ -1146,3 +1146,15 @@ Size (session_01T5nJFHPxsRYLW4H7VxjX1m): test runs 16, module lines 2,995
 ## J67 · COMPLETE
 
 COMPLETE (control-plane #65, B102/B103). owner-ops.mjs deleted; r49 re-pointed to case-import's published answers; HTML-in-parts door case added (3/3); reds: t48-door R92 and t51-routes captureseenin (tests handed a null owner with an env), R8 G109 (test: unnamed PDF stored under the fallback title; kit serve takes a disposition), round-9 seam 14b/14 G124 (lead imports the assembly first; ACCEPTED re-keyed + NATIVE_DIGEST_MIN_BYTES, BOB to confirm): seam file 81/81. Checks: format/architecture/words 0, coverage 97/97, ownership 0, fixtures 2 left, both store-assembly's (r10-fixtures-run.test.mjs:23,:29 orphan-run). RED BY NAME, not mine: walk-monitoring-checknow-adopt: provenance versionChain orders by first_retrieved (whole seconds) then sha (provenance/index.mjs:1664, :1694): same-second captures tie. REPORT: plane test/m/plane/maps.mjs:91 imports the deleted owner-ops.mjs (needs CHANGE to PLANE: store-assembly ownerOps); store-assembly CHANGE to rename OWNER_MAP_DECLARED_OPS and drop the two orphan fixtures-run lines. Record: build/jobs/T51/control-plane.md.
+
+## CONTROL-PLANE #66 (B104): fix round 10, G109
+
+**Finding.** `r8-seam-capture.mjs:195` R8 (G109) is not load-dependent. The reds reported by SCREENS-PUBLISH #25 (J51) and op-declarations J44 (":206, the capture-title fallback row") were taken on tranche tips from before my #65 fix (`73ae1c20ea`) merged (03:34): that test served an unnamed PDF, so the stored title WAS the host-and-day fallback and the assertion "the row is not the host-and-day fallback" failed. Reproduced: the pre-fix test files (`73ae1c20ea^`) run alone, unloaded, fail every time with `the row is not the host-and-day fallback: A page from www.example.gov, captured October 26, 2026` (red). The current files (r8-kit `disposition`, the test's file names itself, capture R54) pass.
+**Instrumented runs (current code).** Per-step timings of the second press (field drawn +26..42 ms; press +137..212 ms; `.rec` drawn at +441..515 ms; asks `heldat` once for the check, `heldat` again for the stored copy) and the title found equal to `stored` every time. Neither `until` at :200/:205 is near its 60 s bound; the test's 45-50 s are the first press's alarm-delivered fetch, a same-run signal (`heldAt` held:true), not a fixed wait. Nothing in the plane retitles a bundle (no writer of `bundles.title` after filing).
+**Load results (current code).** 4 busy loops on 4 cores: 3 of 3 (then 10 of 10, f1-f10); 12 busy loops: 3 of 3 (4th unfinished at the tool limit); alone: green. No source or test file changed; none needed. No wait lengthened.
+**Checks.** fixtures control-plane: own lines 0 (2 remaining are store-assembly's `r10-fixtures-run.test.mjs:23`, `:29` orphan-run, BOB's §5.10); ownership 0 failures; format, architecture, coverage 0 failures (7070/7070); `checks/run.mjs` FAILs listed are in acquisition, screens-inquiry (answer fixtures), none in control-plane. Met ids: none new. Markers added: none.
+Size (session_01V3zmYxVpugx4Rg3Yyk4VDe): test runs 24, module lines 0 changed
+
+## J68 · COMPLETE
+
+COMPLETE (control-plane #66, B104). G109 (r8-seam-capture.mjs:195) is not load-dependent: the reds J51/J44 reported were taken before my #65 fix (73ae1c20ea) merged into the tranche (03:34); that test served an unnamed PDF so the stored title was the host-and-day fallback. Reproduced: pre-fix files fail every run alone, unloaded, with 'the row is not the host-and-day fallback'; current files green alone, 10 of 10 under 4 busy loops, 3 of 3 under 12. Instrumented timings in the record (second press drawn in ~0.5 s; waits are same-run signals). No file changed beyond my record. Checks: fixtures control-plane own 0 (2 are store-assembly's orphan-run lines), ownership 0, format/architecture/coverage 0. Met ids none new; no markers added. Size (session_01V3zmYxVpugx4Rg3Yyk4VDe): test runs 24, module lines 0 changed.

@@ -95,7 +95,7 @@ test("R6 recordline \"Add a party by role\"; followregister (a register needing 
   await settled(p);
   const line = p.byOp("recordline")[0];
   assert.deepEqual([line.body.kind, line.body.from, line.body.to, line.body.role, line.body.basis.captureSha], ["party_to", M.party, M.proc, "intervenor", order.sha]);
-  assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "the party is recorded");
+  assert.ok(!main(p).querySelector('[data-gap="refused"]'), "the party is recorded");
   const parties = (await me.read("partiesof", { query: { proceeding: M.proc } })).parties;
   assert.deepEqual(parties.map((x) => [x.party, x.role]), [[M.party, "intervenor"]], "the world holds the party by role");
   drew(sec(p, "screen.proceeding.register.head"), "screen.proceeding.login.note");
@@ -114,14 +114,14 @@ test("R6 recordline \"Add a party by role\"; followregister (a register needing 
   await settled(p);
   const link = p.byOp("courtlink")[0];
   assert.deepEqual([link.body.type, link.body.from, link.body.to, link.body.citation, link.body.reason], ["interprets", court, ord, passage, "the order reads the ordinance's §4"]);
-  assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "the link is held");
+  assert.ok(!main(p).querySelector('[data-gap="refused"]'), "the link is held");
   fill(p, { "pr-obligor": M.other, "pr-act": "produce the 2024 rent schedules", "pr-clause": "Order ¶3", "pr-due": "2026-10-30" });
   fill(p, { "pr-court": court });
   await press(p, "declare", { reason: REASON });
   await settled(p);
   assert.deepEqual(p.byOp("declare")[0].body, { modality: "duty", obligor: M.other, performance: { act: "produce the 2024 rent schedules" }, source: { kind: "court", standard: court }, clause: "Order ¶3", arising_in: M.proc,
     trigger: { kind: "date", date: "2026-10-30" }, time: { basis: "window", date: "2026-10-30" } });
-  assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "the real store holds the order");
+  assert.ok(!main(p).querySelector('[data-gap="refused"]'), "the real store holds the order");
   const duties = (await me.read("dutiesof", { query: { entity: M.other, as: "obligor" } })).duties;
   assert.deepEqual(duties.map((d) => [d.performance.act, d.arising_in, d.time.date]), [["produce the 2024 rent schedules", M.proc, "2026-10-30"]]);
 });
@@ -264,7 +264,7 @@ test("R36 with no forum held the screen draws court.none in its fold and the Add
   const fold = main(p).querySelector("details");
   drew(fold, "screen.proceeding.court.none.summary");
   drew(fold, "court.none");
-  assert.equal(p.doc.getElementById("pr-forum"), null);
+  assert.ok(!p.doc.getElementById("pr-forum"));
   fill(p, { "pr-court-name": "Court of Appeal" });
   await press(p, "entitycreate", { el: p.root().querySelector('button[data-act="entitycreate"]'), reason: REASON });
   await settled(p);
@@ -286,7 +286,7 @@ test("R34 recordline chooses the document by title; with no document the choice'
   const { world, me } = await inWorld();
   const M = await matter(world, me);
   const none = await openAs(world, me, "/app/proceeding/" + M.proc);
-  assert.equal(none.doc.getElementById("pr-doc"), null);
+  assert.ok(!none.doc.getElementById("pr-doc"));
   fill(none, { "pr-party": M.party });
   await press(none, "recordline", { reason: REASON });
   assert.equal(none.byOp("recordline").length, 0);
@@ -313,7 +313,7 @@ test("R47 a proceeding is offered every kind the active profiles name for the fo
   await press(p, "entitycreate", { el: p.root().querySelectorAll('button[data-act="entitycreate"]').pop(), reason: REASON });
   await settled(p);
   assert.equal(p.byOp("entitycreate")[0].body.proceeding.kind, forCommission[0][0]);
-  assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "the store takes it");
+  assert.ok(!main(p).querySelector('[data-gap="refused"]'), "the store takes it");
   const made = (await me.read("entitieskind", { query: { kind: "proceeding" } })).entities;
   assert.equal(made.length, 1);
   assert.equal((await me.read("entity", { query: { id: made[0].entity_id } })).entity.proceeding.kind, forCommission[0][0], "the world holds the kind");
@@ -326,13 +326,13 @@ test("R47 an affordances answer without the key draws the choice failed, never a
   /* the profile's answer is altered: a fault the real profile cannot make (no key, an empty list, a forum with none) */
   const unread = await openAs(world, me, "/app/proceeding", { plane: { affordances: ok({ vocabularies: {} }) } });
   assert.ok(sec(unread, "screen.proceeding.register").querySelector('[data-state="failed"]'), "failed");
-  assert.equal(unread.doc.getElementById("pr-kind"), null);
+  assert.ok(!unread.doc.getElementById("pr-kind"));
   const none = await openAs(world, me, "/app/proceeding", { plane: { affordances: ok({ vocabularies: { proceeding_kinds: [] } }) } });
   assert.ok(sec(none, "screen.proceeding.register").querySelector('[data-state="empty"]'), "empty, in place of the choice");
-  assert.equal(none.doc.getElementById("pr-kind"), null);
+  assert.ok(!none.doc.getElementById("pr-kind"));
   fill(none, { "pr-forum": court, "pr-number": "24CV111111", "pr-note": "n" });
   await press(none, "entitycreate", { el: none.root().querySelectorAll('button[data-act="entitycreate"]').pop(), reason: REASON });
   assert.equal(none.byOp("entitycreate").length, 0, "nothing sent");
   const other = await openAs(world, me, "/app/proceeding", { plane: { affordances: ok({ vocabularies: { proceeding_kinds: [{ kind: "complaint", label: "Complaint", forum_kind: "commission" }] } }) } });
-  assert.equal(other.doc.getElementById("pr-kind"), null, "a forum with no kind in the profile offers none");
+  assert.ok(!other.doc.getElementById("pr-kind"),  "a forum with no kind in the profile offers none");
 });

@@ -32,7 +32,7 @@ test("R5 item 59 Calculation: the form offers the held table's own columns for a
   const col = p.doc.getElementById("calc-column");
   assert.ok(col && /select/i.test(col.tagName), "the column is chosen");
   assert.deepEqual(col.querySelectorAll("option").map((o) => o.getAttribute("value")).filter(Boolean), ["payer", "payee", "amount"], "among the held table's own columns");
-  assert.equal(p.doc.getElementById("calc-part"), null, "a total asks no part");
+  assert.ok(!p.doc.getElementById("calc-part"),  "a total asks no part");
   fill(p, { "calc-column": "amount" });
   await press(p, "calculationcreate", { reason: REASON });
   await settled(p);
@@ -78,7 +78,7 @@ test("R5 item 59 Calculation: a share asks the part as well as the column; a cou
   fill(c, { "calc-q": "How many payments in all?", "calc-from": "2025-07-01", "calc-to": "2026-06-30", "calc-kind": "count", "calc-input": R.table });
   c.fire(c.doc.getElementById("calc-input"), "input");
   await settled(c);
-  assert.equal(c.doc.getElementById("calc-column"), null);
+  assert.ok(!c.doc.getElementById("calc-column"));
   await press(c, "calculationcreate", { reason: REASON });
   await settled(c);
   assert.equal(c.byOp("calculationcreate")[0].body.column, undefined);
@@ -99,5 +99,5 @@ test("R5 Calculation: 'Declare a table' sends the passage chosen on the document
   const sent = p.byOp("tabledeclare");
   assert.equal(sent.length, 1);
   assert.deepEqual(Object.keys(sent[0].body.source).sort(), ["capture_sha", "extent"], "a passage, not a bare digest");
-  assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "the plane holds it");
+  assert.ok(!main(p).querySelector('[data-gap="refused"]'), "the plane holds it");
 });

@@ -180,7 +180,7 @@ test("R3 an event whose order is undetermined is drawn so, with the evidence tha
   drew(ev, "screen.timeline.order.why", { with: s.e3 });
   drew(ev, "screen.timeline.order.evidence");
   assert.deepEqual(actsIn(ev).sort(), ["findin", "recorddatedfact", "relate"]);
-  assert.equal(main(p).querySelector(`[data-event="${s.e1}"] .cs-gap[data-gap="undetermined"]`), null, "an ordered event carries no such mark (control)");
+  assert.ok(!main(p).querySelector(`[data-event="${s.e1}"] .cs-gap[data-gap="undetermined"]`), "an ordered event carries no such mark (control)");
   const undated = main(p).querySelectorAll("section").find((x) => x.querySelector("h2") && x.querySelector("h2").textContent === word("screen.timeline.undated.head"));
   drew(undated, "screen.timeline.undated.apart");
   drew(undated, "screen.timeline.kind", { kind: "statement" });
@@ -232,7 +232,7 @@ test("R3 createevent from a passage; addparticipant; relate \"Link events\" and 
 test("R3 each act names its passage (control: with no document held, none sends nothing)", async () => {
   const s = await scene({ bare: true });
   const p = await pageOf(s);
-  assert.equal(p.doc.getElementById("tl-doc"), null, "no document held");
+  assert.ok(!p.doc.getElementById("tl-doc"),  "no document held");
   for (const op of ["createevent", "addparticipant", "recorddatedfact"]) {
     await press(p, op, { el: main(p).querySelectorAll(`button[data-act="${op}"]`).at(-1), reason: "x" });
     assert.equal(p.byOp(op).length, 0, op);
@@ -300,7 +300,7 @@ test("R20 two events ordered by a cited relation are marked \"order cited, not d
   drew(ev, "screen.timeline.order.cited.before", { other: s.e3 });
   assert.ok(ev.querySelector(".cs-card, a.cs-ref"), "the relation is a reference");
   const dated = main(p).querySelector(`[data-event="${s.e1}"]`);
-  assert.equal(button(p, "relate", dated), null, "an ordered pair is never offered it");
+  assert.ok(!button(p, "relate", dated),  "an ordered pair is never offered it");
   notDrew(dated, "screen.timeline.cite.first");
 });
 
@@ -321,7 +321,7 @@ test("R33 (1) state a draws, after the two lanes, Progressions it follows: each 
   assert.ok(sec.querySelector(".cs-card, .cs-ref"), "a reference");
   const bare = await scene({ bare: true });
   const none = await pageOf(bare);
-  assert.equal(secOf(none, "progression.follows"), undefined, "a project that follows nothing draws no empty section");
+  assert.ok(!secOf(none, "progression.follows"),  "a project that follows nothing draws no empty section");
 });
 
 test("R33 (2) state b: one matter's steps in order with each document, its own date and who threaded it; a step with no document draws the finding's own sentence; never overdue or late; the chain undetermined below two placed steps; findings listed", async () => {
@@ -460,7 +460,7 @@ test("R34 the timeline's event form chooses the project's documents by title and
   assert.equal(main(p).querySelectorAll("*").filter((e) => /^tl-(sha|page)$/.test(e.getAttribute("id") || "")).length, 0);
   const bare = await scene({ bare: true });
   const none = await pageOf(bare);
-  assert.equal(none.doc.getElementById("tl-doc"), null);
+  assert.ok(!none.doc.getElementById("tl-doc"));
   await press(none, "createevent", { reason: "x" });
   assert.equal(none.byOp("createevent").length, 0);
 });
@@ -548,7 +548,7 @@ test("R49 a progression address of a key the record does not hold draws the empt
   const known = await scene({ matter: true });
   const k = await pageOf(known, "/progression/pra");
   assert.equal(main(k).querySelectorAll("details[data-define]").length, 1);
-  assert.equal(main(k).querySelector('[data-state="empty"]'), null);
+  assert.ok(!main(k).querySelector('[data-state="empty"]'));
   drew(main(k), "progression.steps");
   /* the refusal is the record's own, caused by the act: a step that comes after one the sequence does not hold */
   const sent = { progressionKey: "x", label: "X", basis: "the code", citation: "", stages: [{ key: "a", label: "a", after: "zzz", within: null, required: "sometimes", cardinality: "0..n" }] };
@@ -595,13 +595,13 @@ test("R33 (4) the addresses: the project is state a, <project>/matter/<progressi
   const b = await pageOf(s, matterAt(s));
   assert.deepEqual(b.byOp("instance")[0].query, { op: "instance", key: "pra", id: s.org }, "state b reads the matter of the progression and the entity named in the address");
   assert.ok(secOf(b, "progression.steps"), "state b draws its steps");
-  assert.equal(secOf(b, "progression.follows"), undefined, "and not the list of matters");
+  assert.ok(!secOf(b, "progression.follows"),  "and not the list of matters");
   assert.equal(b.byOp("progression").length, 0);
   const c = await pageOf(s, "/progression/pra");
   assert.deepEqual(c.byOp("progression")[0].query, { op: "progression", key: "pra" }, "state c reads the progression named in the address");
   assert.ok(secOf(c, "progression.basis"), "state c draws its basis");
   assert.equal(c.byOp("instance").length, 0);
-  assert.equal(secOf(c, "progression.follows"), undefined);
+  assert.ok(!secOf(c, "progression.follows"));
   for (const p of [a, b, c]) {
     assert.ok(main(p).textContent.includes(word("screen.timeline.name")), "the same screen, titled so");
     assert.equal(main(p).textContent.includes(s.project), false, "the project by its title, never its id");

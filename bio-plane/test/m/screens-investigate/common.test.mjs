@@ -131,10 +131,10 @@ test("R10 a read that answers nothing is drawn empty, never failed (control: a r
   const p = await openAs(world, me, TIES);
   assert.deepEqual((await me.read("memberties")).ties, [], "the member has declared no tie: the world's own answer");
   assert.ok(main(p).textContent.includes(word("screen.ties.first")), "the designed empty state, naming the first step");
-  assert.equal(main(p).querySelector('[data-state="failed"]'), null);
+  assert.ok(!main(p).querySelector('[data-state="failed"]'));
   /* a refused read is a fault the real code cannot be made to cause: scripted */
   const q = await openAs(world, me, TIES, { plane: { memberties: refusedIn("SOME_REFUSAL") } });
-  assert.equal(main(q).querySelector('[data-state="empty"]'), null);
+  assert.ok(!main(q).querySelector('[data-state="empty"]'));
 });
 
 test("R10 every grade is drawn as one mark (the scale's name and the letter) explaining itself, on every screen that draws grades", async () => {
@@ -260,7 +260,7 @@ test("D29 an answer that says ok and carries a refusal is drawn as the refusal, 
   const U = await theWorld();
   const g = await openAs(U.world, U.me, U.PATHS.explore, { plane: { exploregraph: refusal } });
   assert.ok(main(g).querySelector('[data-state="failed"]'), "the graph read");
-  assert.equal(main(g).querySelector(".mk-graph"), null);
+  assert.ok(!main(g).querySelector(".mk-graph"));
   const s = await openAs(U.world, U.me, U.PATHS.calculation, { plane: { spotcheck: refusal } });
   assert.ok(main(s).querySelector('[data-state="failed"]'), "the spot-check read");
   const p = await openAs(U.world, U.me, U.PATHS.people, { plane: { peopledirectory: rewrite(U.world, U.me, (req, a) => (req.query && req.query.q ? refusal : a)) } });
@@ -268,5 +268,5 @@ test("D29 an answer that says ok and carries a refusal is drawn as the refusal, 
   await press(p, "search");
   await settled(p);
   assert.ok(main(p).querySelector('[data-state="failed"]'), "the search");
-  assert.equal(main(p).querySelector('[data-state="empty"]'), null);
+  assert.ok(!main(p).querySelector('[data-state="empty"]'));
 });

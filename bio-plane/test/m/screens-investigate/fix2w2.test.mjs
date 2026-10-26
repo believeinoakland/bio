@@ -166,7 +166,7 @@ test("R34 C95 a search box narrows the picker by title, without reading the docu
   await type(p, "mf-doc-q", "");
   assert.deepEqual(optsOf(p, "mf-doc").map(([v]) => v), A.ordered, "emptied: all of them");
   await type(p, "mf-doc-q", "zzz");
-  assert.equal(p.doc.getElementById("mf-doc"), null, "nothing to choose");
+  assert.ok(!p.doc.getElementById("mf-doc"),  "nothing to choose");
   drew(main(p), "form.choose.search.none");
   assert.ok(p.doc.getElementById("mf-doc-q"), "and the search stays so it can be changed");
   assert.equal(p.byOp("heldcaptures").length, 1, "narrowed on the page");
@@ -190,7 +190,7 @@ test("R34 C95 the search belongs to its own picker; control: a single document n
   const only = await solo.world.recipes.hold(solo.me, "Budget memo.txt", ORDINANCE, project);
   const trail = await solo.world.recipes.trail(solo.me, project, "Records office budget, FY2026");
   const one = await openAs(solo.world, solo.me, "/app/money/" + trail);
-  assert.equal(one.doc.getElementById("mf-doc-q"), null);
+  assert.ok(!one.doc.getElementById("mf-doc-q"));
   assert.deepEqual(optsOf(one, "mf-doc").map(([v]) => v), [only.sha]);
 });
 
@@ -461,7 +461,7 @@ test("R3 R33 C54 an event recorded on a project whose document names no person, 
   assert.ok(main(again).querySelector(`[data-event="${id}"]`), "and after a reload, with nothing kept in the page");
   assert.ok(optsOf(again, "tl-event").map(([v]) => v).includes(id), "it can be chosen for who took part, a dated fact, a link");
   const elsewhere = await openAs(world, me, "/app/timeline/" + other);
-  assert.equal(main(elsewhere).querySelector(`[data-event="${id}"]`), null, "another project's documents do not find it");
+  assert.ok(!main(elsewhere).querySelector(`[data-event="${id}"]`), "another project's documents do not find it");
 });
 
 test("R3 C54 a project that names an entity records its event the same way: no entity is guessed from the document", async () => {
@@ -500,7 +500,7 @@ test("R8 C61 the project's list of held standards is headed by its own key and s
   await declare(0);
   const whole = await openAs(world, me, "/app/standard/" + project);
   assert.equal((await me.read("standards", { query: { limit: "200" } })).truncated, false);
-  assert.equal(main(whole).querySelector("[data-held-more]"), null);
+  assert.ok(!main(whole).querySelector("[data-held-more]"));
   /* more standards than one read holds (the page asks for 200) */
   for (let i = 1; i <= 200; i++) await declare(i);
   const read = await me.read("standards", { query: { limit: "200" } });

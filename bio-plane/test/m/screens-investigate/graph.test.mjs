@@ -54,7 +54,7 @@ test("R18 explore draws the graph from exploregraph with the screen's subject as
   assert.equal(g.querySelectorAll("svg g.node").length, walk.nodes.length);
   assert.ok(g.querySelector(".gwrap .e-pos"), "a position line in its class");
   assert.ok(g.querySelector(".gwrap .e-same"), "a same-person claim in its class");
-  assert.equal(g.querySelector(".gwrap .e-money"), null, "no line of a class the walk did not meet");
+  assert.ok(!g.querySelector(".gwrap .e-money"), "no line of a class the walk did not meet");
   drew(g, "connection.thing.org", undefined, "the far end of a position is an organization, by its kind's word");
   /* R35: nodes are named; an unnamed one says so, and no node is drawn by its id */
   assert.ok(g.textContent.includes(walk.nodes.find((n) => n.id === S.alvarez).label), "the person one ring out is drawn by name");
@@ -90,7 +90,7 @@ test("R18 pressing a node makes it the centre; the centres are kept as the trail
   for (const variant of [refusedIn("NO_NODE", "No such record."), silent]) {
     const q = await openAs(world, me, at, { plane: { exploregraph: variant } });
     assert.ok(main(q).querySelector('[data-state="failed"]'), "failed");
-    assert.equal(graphOf(q), null, "never an empty graph");
+    assert.ok(!graphOf(q),  "never an empty graph");
   }
   const w = await openAs(world, me, at, { plane: { exploregraph: pending } });
   assert.ok(main(w).querySelector('[data-state="loading"]'));
@@ -112,8 +112,8 @@ test("R18 control: a step the read does not answer (a hidden hop) is not drawn o
   assert.equal(walk.steps.length, 1);
   assert.equal(m.querySelectorAll("svg g.node").length, 2);
   assert.equal(m.querySelectorAll(".gwrap .e-pos").length, 1, "the one step the read answers");
-  assert.equal(m.querySelector(`a.cs-ref[href="/app/person/${org}"]`), null);
-  assert.equal(m.querySelector("[data-limit]"), null, "no stop said when none was met");
+  assert.ok(!m.querySelector(`a.cs-ref[href="/app/person/${org}"]`));
+  assert.ok(!m.querySelector("[data-limit]"), "no stop said when none was met");
   /* the contrast the control rests on: with the department's line, its node is drawn and the stop said */
   await me.act("recordline", { body: { kind: "holds", from: alvarez, to: org, capacity: "employee", ...GOOD, basis: passage, reason: "The roster says so." } });
   const q = await openAs(world, me, "/app/explore/" + chen);
