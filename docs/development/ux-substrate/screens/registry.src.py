@@ -137,7 +137,7 @@ screen('proceeding', 'Proceeding', 'working', 'A court case or regulatory procee
 screen('due-date', 'How this date was worked out', 'working', 'A due date\'s basis and counting; confirm it; download it (K1431, K1444).',
   [('clockpropose','Work out the due date'),('clockadopt','Confirm the due date'),('reminderset','Remind me')], [7,8])
 screen('standard', 'Standard', 'working', 'A requirement the city set itself, held and searchable.',
-  [('standardinforce','Check a date'),('standarddeclare','Hold this as a standard'),('standardadopt','Adopt a proposed standard'),('lawrelate','Relate to a law')], [6,14,22])
+  [('standardinforce','Check a date'),('standarddeclare','Hold this as a standard'),('standardadopt','Adopt a proposed standard'),('lawrelate','Relate to a law'),('standardinforcethrough','Record a day it was still in force'),('standardinforcethroughwithdraw','Withdraw this, with a reason'),('standardadoption','Record that a body adopted it'),('standardimpose','Record a law that makes it binding'),('standardbenchmark','Hold it only as a benchmark for a body')], [6,14,22])
 
 # --- deciding and acting (bound sketches: the plan page, start and send)
 screen('plan', 'Action plan', 'working', 'The approved plan page: subjects, options, scenarios, what each option became (K608 (4)).',

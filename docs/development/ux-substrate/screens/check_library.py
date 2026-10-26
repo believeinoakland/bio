@@ -24,7 +24,10 @@ MACHINE_DRAFTS = {'whatchangedpropose', 'escalationreasondraft'}  # wizard-scrip
 # Served through a door rather than declared as op=… in a requirement, as BOB states in B149 (T46's HANDOFF):
 SERVED_BY_DOOR = {'ask': 'the plane\'s ask door, agent-worker R54', 'subscriptionsignin': 'control-plane R65',
                   'infolevelset': 'instance-setup R79 (T46)', 'projectaikeepaway': 'op-declarations R41 (BOB\'s B172: declared and served, T47)',
-                  'linewithdraw': 'lines R8 (op linewithdraw, served by the lines module and listed open in op-declarations; its module row has no classes object the check reads)'}
+                  'linewithdraw': 'lines R8 (op linewithdraw, served by the lines module and listed open in op-declarations; its module row has no classes object the check reads)',
+                  'standardinforcethroughwithdraw': 'standards R51 (op standardinforcethroughwithdraw, routed by store-request and listed in op-declarations\' standards row, which has no classes object the check reads; DEC-438)',
+                  'standardimpose': 'standards R43 (op standardimpose, impositionRecord; listed as standardinforcethroughwithdraw is; DEC-438)',
+                  'standardbenchmark': 'standards R43 (op standardbenchmark, benchmarkDeclare; listed as standardinforcethroughwithdraw is; DEC-438)'}
 
 def op_universe(ref):
     try:
