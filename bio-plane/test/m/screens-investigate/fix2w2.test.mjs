@@ -4,7 +4,6 @@
  * the fix is the cause. Scripted: an externally driven answer (the fetch of a site) and a record the live copy holds that a member's session of this build does not make. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ok } from "../interface-shell/harness.mjs";
 import { createHash } from "node:crypto";
 import { SESSION_OPS } from "../../../src/op-declarations/index.mjs";
 import { WORLD_FOUNDER_HANDLE, inWorld, openAs, settled, readHeld, declareStandard, rewrite } from "./world.mjs";
@@ -97,9 +96,9 @@ test("R4 C14 money's act that files a document (acquire) reads the documents aga
   const fact = (await me.act("recordfact", { body: { amount: "1250000.00", as_read: "$1,250,000", currency: "USD", sign: "+", precision: "exact", kind: "expenditure", phase: "adopted", basis: "budgetary",
     period: { from: "2025-07-01", to: "2026-06-30" }, source: { capture_sha: held.sha, extent: { kind: "document" } } } })).fact_id;
   await me.act("include", { body: { setId: trail, factId: fact, reason: REASON } });
-  const filed = await world.recipes.hold(me, "City budget.txt", "The city budget as published.", project);
-  /* the fetch of a site is externally driven (K5044 (1)): the copy it files is a real held document */
-  const p = await openAs(world, me, "/app/money/" + trail, { plane: { acquire: ok({ ok: true, sha256: filed.sha }) } });
+  /* the fetch of a site is answered by the world's network (the site serves its budget): the real acquire takes it, as the site would */
+  world.script("https://city.example/budget.pdf", async () => new Response("The city budget as published.", { status: 200, headers: { "content-type": "application/pdf" } }));
+  const p = await openAs(world, me, "/app/money/" + trail);
   const rowOf = () => main(p).querySelectorAll("tr.cs-r").find((r) => r.querySelector(`[data-id="${fact}"]`));
   await p.click(rowOf().querySelector('[data-shell="row"]'));
   assert.equal(p.byOp("heldcaptures").length, 1, "one list of documents for the screen");
