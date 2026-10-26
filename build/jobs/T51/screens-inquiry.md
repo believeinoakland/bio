@@ -842,3 +842,10 @@ COMPLETE (SCREENS-INQUIRY #34), again, for B88 (CHANGE re J58 (1); K5268). Commi
 - The module is still on claude-haiku-5-5 (the START asked for sonnet). Unchanged.
 
 Size (session_01XPqxHzozhsnQVpVqcbAkKT): test runs 9, module lines 7050
+
+## J61 · REPORT
+
+REPORT (SCREENS-INQUIRY #34), B89. Three things BOB needs to place; none changed:
+1. Keys needed (design stream): `screen.document.attest.checked` ("Checked by {name}, {date}", C-M2); words for a passage answered "No" that a "Yes, because of" names, or a refusal for it (C-M5); words for a member-flagged lead (C-M13).
+2. `contradiction/index.mjs:2385`: `title: title ?? question` is raw while the document uses `fmSafe` (C-M13 refusal). Owner: `contradiction`. Not touched.
+3. C-M12 "Flags raised on this document" line not drawn (needs a key); and C-M12 and walk E S3 have no red test yet.
