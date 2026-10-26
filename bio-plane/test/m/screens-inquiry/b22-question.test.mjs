@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot, ok, refusedIn } from "../interface-shell/harness.mjs";
 import { open, storeWorld, SCREENS, main, actsIn, button, fill, press, rawKeys, inquiryMd, INQUIRY_REFS, LEGS, says, section, word, P, Q } from "./fixtures.mjs";
-import { importedNamed } from "../case-import/fixtures.mjs";
+import { importedNamed, citeimportedAnswer } from "../case-import/fixtures.mjs";
 import { V, F1, F2 } from "../case-import/fixture.mjs";
 
 const at = "/app/question/" + Q;
@@ -84,18 +84,20 @@ test("R110 citeimported sends the question, the import, the finding, the edition
   assert.deepEqual(sent(q), { inquiry: q2, import: w.imp.import, finding: w.imp.finding, edition: w.imp.edition, role: "supports" }, "the note is optional");
 });
 
-test("R110 IMPORTED_NOT_ACCEPTED, carried inside BASIS_REFUSED or answered alone, is drawn by its words; control: another BASIS_REFUSED draws its first finding's own detail", async () => {
-  const refused = (findings) => ({ status: 200, json: { ok: true, result: { ok: false, reason: "BASIS_REFUSED", code: "BASIS_REFUSED", findings } } });
+test("R110 IMPORTED_NOT_ACCEPTED, carried inside BASIS_REFUSED as case-import's real citation gives it, is drawn by its words; control: another finding of the refusal draws its own detail", async () => {
+  /* the real refusal of citing a finding of an import whose edition the team has not accepted (R16) */
+  const real = (await citeimportedAnswer({ finding: F2 })).answer;
+  assert.equal(real.reason, "BASIS_REFUSED");
+  assert.equal(real.findings[0].code, "IMPORTED_NOT_ACCEPTED");
   const go = async (answer) => {
-    const p = await open(at, withImports({ plane: { citeimported: answer } }));
+    const p = await open(at, withImports({ plane: { citeimported: ok(answer) } }));
     fill(p, { "question-imp-finding": `${IMP}|${EDITION}|${F1}` });
     choose(p, "question-imp-role", "supports");
     return press(p, "citeimported", { reason: "x" });
   };
-  assert.ok(says(await go(refused([{ code: "IMPORTED_NOT_ACCEPTED", check: "C-21.4", detail: "basis[0] rests on x" }])), "refusal.IMPORTED_NOT_ACCEPTED"));
-  assert.ok(says(await go(refusedIn("IMPORTED_NOT_ACCEPTED")), "refusal.IMPORTED_NOT_ACCEPTED"));
+  assert.ok(says(await go(real), "refusal.IMPORTED_NOT_ACCEPTED"));
   // fixtures-generic: SOMETHING_ELSE (a finding code made up on purpose: no module gives it, so a finding with an unlisted code is drawn by its own detail)
-  const other = await go(refused([{ code: "SOMETHING_ELSE", check: "C-9.9", detail: "the leg names no edition" }]));
+  const other = await go({ ...real, findings: [{ ...real.findings[0], code: "SOMETHING_ELSE", check: "C-9.9", detail: "the leg names no edition" }] });
   assert.ok(other.textContent.includes("the leg names no edition") && !says(other, "refusal.IMPORTED_NOT_ACCEPTED"));
 });
 
