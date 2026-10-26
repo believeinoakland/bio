@@ -722,3 +722,21 @@ NOT YET
 - Re-points for the other providers' answers (review, credentials, public-read, case-inputs, entities, sources, citation, wizard-scripts, action-holds, case-import importregrade, capture, case-authoring): I re-open on each CHANGE as BOB's answer says.
 
 LINES LEFT: 35 (fixtures list). Named in the record section "Fix round 11".
+
+## J45 · COMPLETE · re B51 (fix round 11, K5209)
+
+COMPLETE (fix round 11, B51). Merged `tranche/T51` at `718c142e3b` (OP-GRADES #30 merged; stores load).
+
+**Applied:** the `importedcase`/`rerunstart` answers from case-import's published fixtures (fr30:41, fr30b:188, :211, :219); the doorbell `knock` controls (fr30:95 R67, fr30:140 R49) take the real door answer with the field under test taken off it (openWorld); R59's citing-note count (fr30b) reads the accepted findings of the real answer (two, not one). Commits aee8d9883a, 364999c72e, the record, and the merges.
+
+**Failing-first:** no product fix this round (tests re-pointed to real answers); the R59 count was red on the real answer (2 buttons for 2 accepted findings) and is green with its count taken from the answer.
+
+**Tests:** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/screens-publish/`: 295 tests, 293 pass, 0 fail, 2 todo (R35's two press tests, K3717), 45 s.
+
+**Checks:** format 0 failures; architecture 0 failures; coverage 80 of 80 ids, 0 failures; ownership 0 failures (committed diff); `checks/fixtures.mjs --list`: 35 failures (down from 60 in round 10 and 41 at the start of this round). The 35 are named in "Fix round 11" above and BOB placed the providers in B50; the ones whose providers have not merged (review, credentials, public-read, case-inputs, entities, sources, citation, wizard-scripts, action-holds, capture, case-authoring, case-import importregrade) are re-opened on their CHANGEs.
+
+**Met ids:** none new this round (R49 and R67 controls are now the real door's answers; the requirement marks are unchanged).
+
+**Deferred:** none. **Found elsewhere:** nothing new (the `uses` edge to case-import is now declared).
+
+Size (session_01QdkoEiuG83wpMkf86sUqDW): test runs 9, module lines 3754 src + 5222 tests

@@ -382,7 +382,8 @@ test("R59 the assistant helps with the citing note only while it is reachable: i
   assert.equal(help.getAttribute("data-field"), "note");
   assert.equal(help.getAttribute("data-forop"), "citeimported");
   assert.equal(help.getAttribute("data-id"), "im-ci-note-0");
-  assert.equal(p.root().querySelectorAll('button[data-act="writinghelp"]').length, 1, "the citing note only");
+  const accepted = ACCEPTED.answer.json.result.edition.findings.filter((x) => x.origin?.acceptance).length;
+  assert.equal(p.root().querySelectorAll('button[data-act="writinghelp"]').length, accepted, "one citing note per accepted finding, and nothing else");
   await press(p, "writinghelp", { values: { "im-ci-note-0": "schedule 2025" } });
   assert.deepEqual(last(p, "writinghelp").body, { op: "citeimported", field: "note", told: "schedule 2025" });
   assert.equal(p.doc.getElementById("im-ci-note-0").value, "It states the 2025 schedule.");
