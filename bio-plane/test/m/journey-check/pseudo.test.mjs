@@ -50,6 +50,9 @@ const PLANE = {
   recoverycodesstate: ok({ shown: true }),
   profiles: ok({ ok: true, profiles: [{ id: OAKLAND.id, name: OAKLAND.name, covers: OAKLAND.covers }],
     choices: [{ id: OAKLAND.id, name: OAKLAND.name, covers: OAKLAND.covers }, { id: "second", name: "Second County", covers: ["Second County"] }], conflicts: [] }),
+  // fixtures-contract: local-facts factstatus (`@team/time_zone` when the team has stated no zone and a place gives one: local-facts' #status, unconfirmed, governed by the place's value)
+  factstatus: ok({ ok: true, path: "@team/time_zone", latest: null, acts: 0, profile: { value: OAKLAND.time_zone.value, status: OAKLAND.time_zone.status, basis: OAKLAND.time_zone.basis },
+    governs: { value: OAKLAND.time_zone.value, origin: "profile" }, status: "unconfirmed" }),
   placewantedstate: ok({ name: null }),
   aikeepawaystate: ok({ on: false }),
   groupkeystate: ok({ on: false, held: false }),
@@ -196,6 +199,16 @@ test("R29 (b): Home of a team holding three languages and three places reports n
   assert.ok(none.main.querySelectorAll("[data-area]").length > 0, "the areas");
   const caught = await drawn("/app", { plane: three, entered, beside: `<p id="beside-home">${SENTENCE}</p>` });
   assert.deepEqual(reported(caught.found), [`p#beside-home: ${SENTENCE}`]);
+});
+
+test("R29 (b): the modelled plane answers `factstatus` for `@team/time_zone` as local-facts does: a place's zone the team has not stated governs, and is unconfirmed by the team", () => {
+  const { result } = PLANE.factstatus.json;
+  assert.equal(result.ok, true);
+  assert.equal(result.path, "@team/time_zone");
+  assert.equal(result.status, "unconfirmed");
+  assert.equal(result.latest, null);
+  assert.equal(result.acts, 0);
+  assert.deepEqual(result.governs, { value: OAKLAND.time_zone.value, origin: "profile" });
 });
 
 test("R29 (K5062): every op the pseudo walk's modelled plane answers is an op the plane declares", () => {
