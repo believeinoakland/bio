@@ -215,3 +215,17 @@ Deferred, with why
 Commit attribution: the commit carries the Claude-Session trailer; the co-author line that names the model is left out (system guidance on model identifiers in commits).
 
 Size (session_012Hcsp3epJPBUahiBP41uKh): test runs 26, module lines 2048
+
+## J11 · COMPLETE
+
+CHANGE B12 (K5304) applied. Merged origin/tranche/T51 (2947741d44; fast-forward of the job branch, no conflicts), then re-pinned the connections sentences.
+
+- Six pins red after the merge: grammar.test.mjs, registration.test.mjs, t33, t34, t41 and golden.json. Each now takes the sentence connections returns for that leg label: `basis leg N names a THEME …` and `basis leg N claims its support through a THEME …`. Read from themeLegFindings on the same leg shape, not typed by hand. Commit ddc01120a4.
+- Plain label: connections is handed `basis leg N` (grammar.mjs:626). The brief said `basis[${i}]` at :617; that was the pre-merge line, and the label was already plain under R69.
+- Lead sentence (grammar.mjs:1347): `the {field} on {label} ('{v}') is a LEAD, …` with the field in plain words. It has no `.{field}` suffix and no document-file citation.
+
+Suite and checks, merged tree: inquiry-grammar tests 90 of 90 pass. format 178 modules, 0 failures; architecture 0 failures; coverage 21 of 21 ids; ownership 0 failures (11 files since the tranche tip 2947741d44); words 0 failures.
+
+Earlier cross-module findings stand (REPORT J9): action-grammar golden and tests, the inquiry and ratification pins, the stale case-checker program.mjs, and the stale setup-words rows.
+
+Size (session_012Hcsp3epJPBUahiBP41uKh): test runs 28, module lines 2048
