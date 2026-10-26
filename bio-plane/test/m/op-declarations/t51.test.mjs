@@ -394,3 +394,25 @@ test("R19, R2, R3, R4, R34 (T51 fix round 6, G55; K4208): moneyingestread is cal
   assert.deepEqual(ground("moneyingest"), ["unexplained"]);
   assert.notDeepEqual(plain(OPS.moneyingestread), plain(OPS.moneyingest));
 });
+
+test("R22, R5, R6 (T51; K5232; action-holds R22, R5, R6; screens-action R32): holdsplaced is a session read in action-holds' family — the sessionread spec, a present null NEEDS row, both session sets, viewer stamped, no bearer admitted, off AI_GRANT_OPS and never unattended, served by action-holds' ops map — and actionholdpreview and actionholdrelease accept `from` in their declared fields, holdsplaced's fields being `after` and `limit` alone (negative control: an op its owner declares no fields for answers undefined)", () => {
+  assert.deepEqual(familyOf("holdsplaced"), ["action-holds"]);
+  assert.equal(OP_FAMILIES["action-holds"].kinds.holdsplaced, "sessionread");
+  assert.deepEqual(plain(OPS.holdsplaced), KINDS.sessionread.spec);
+  assert.ok(Object.hasOwn(NEEDS, "holdsplaced") && NEEDS.holdsplaced === null);
+  assert.ok(both("holdsplaced"));
+  assert.deepEqual(stamps("holdsplaced"), ["viewer"]);
+  assert.deepEqual(machineAdmits("holdsplaced"), []);
+  assert.ok(!AI_GRANT_OPS.includes("holdsplaced"));
+  assert.ok(!Object.hasOwn(UNATTENDED_BY_DECISION, "holdsplaced"));
+  assert.ok(keysOf(actionHoldsOps).includes("holdsplaced"), "action-holds' ops map serves holdsplaced");
+  /* the fields: the request names `after` and `limit`; nothing is required */
+  assert.deepEqual(O.declaredFields("holdsplaced"), { accepts: ["after", "limit"], requires: [] });
+  /* `from` is accepted by the two acts' previews and releases (action-holds R5, R6; K5232) */
+  for (const op of ["actionholdpreview", "actionholdrelease"]) {
+    assert.ok(O.declaredFields(op).accepts.includes("from"), `${op}: does not accept from`);
+    assert.ok(O.declaredFields(op).accepts.includes("target") && O.declaredFields(op).accepts.includes("ord"), op);
+  }
+  /* negative control: an op its owner declares no fields for answers undefined */
+  assert.equal(O.declaredFields("holdsdue"), undefined);
+});
