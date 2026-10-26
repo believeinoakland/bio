@@ -173,3 +173,29 @@ REPORT (other modules):
 2. checks/fixtures.mjs names screens-inquiry document.test.mjs:168 and fr28-document.test.mjs:105,115,120 as hand-built connectionchoose answers (-> connections, earlier). connections publishes no connectionchoose answer yet; a published one is the fix, for BOB to place as a next job (not built here).
 
 Size (session_01Cj68FRJaNM9wJqTDmVe669): test runs 5, module lines 2398.
+
+## Completion record (B11 and B12: the tranche merged; the connectionchoose fixtures; CONNECTIONS #20, session_01Cj68FRJaNM9wJqTDmVe669)
+
+**B11 (CHANGE K5209, OP-GRADES #30 merged).** `origin/tranche/T51` merged into the job branch (merge commit 6a5bbcd080, not a rebase). Stores start again: `DECLARED_OP_DISAGREES` is gone.
+
+**B12 (CHANGE K5210, J8 REPORT 2).** `bio-plane/test/m/connections/fixtures.mjs` publishes two `connectionchoose` answers, each made by connections' real `choose` through the ops map over `fixture.mjs`'s world on each call:
+- `connectionChooseMention()`: a member chooses the second of two mentions of one subject in a document (the one with an occurrence key). Answer: `ok`, `wrote: true`, `chosen.ref` and `chosen.occurrence` set. The screen tests at `document.test.mjs:168` and `fr28-document.test.mjs:105,115` need this state.
+- `connectionChooseUnplaced()`: a member chooses a mention the document reads at no recorded place, sent with no occurrence. Answer: `ok`, `wrote: true`, `chosen.ref` set. `fr28-document.test.mjs:120` needs this state.
+
+The screen tests need no other state: each expects a success, not a refusal. No refusal answer is published, because none of those three lines asks for one. `fixtures.test.mjs` checks each answer against the real code (R70 named in both titles).
+
+**Met.** R70 (its choose clause; unchanged text). R44 stays met.
+
+**Fixture markers added.** None.
+
+**Tests and checks** (on the job branch at a644b72ae8):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/connections/*.test.mjs`: 153 tests, 153 pass, 0 fail.
+- Users now that the stores start: `screens-inquiry/document.test.mjs`, `screens-inquiry/fr28-document.test.mjs`, `screens-daily/*.test.mjs`: 353 tests, 353 pass, 0 fail. The screen tests still hand-build their `connectionchoose` answers (`{ok: true}`) and `themeread` (`{ok: true, themes: []}`), which is screens-inquiry's to change, so the published fixtures are not yet used there.
+- `checks/format.mjs /home/user/bio`: 178 modules, 0 failures. `architecture connections`: 0 failures. `coverage connections`: 72 of 72. `words connections`: 0 failures. `fixtures connections`: 0 failures, 5 accepted. `checks/run.mjs /home/user/bio`: no finding in connections' files.
+- `checks/ownership.mjs /home/user/bio connections $(git merge-base origin/tranche/T51 HEAD) HEAD`: 5 files, 0 failures.
+
+**REPORT for screens-inquiry (not mine).** To take the published answers, `fixtures.mjs:117` (`themeread`) and the three `connectionchoose` lines (`document.test.mjs:168`, `fr28-document.test.mjs:105,115,120`) should use `themeReadWithPassage()`, `connectionChooseMention()` and `connectionChooseUnplaced()` from `bio-plane/test/m/connections/fixtures.mjs`, instead of their hand-built `ok({...})` answers.
+
+**Deferred.** None.
+
+**Size (session_01Cj68FRJaNM9wJqTDmVe669): test runs 4, module lines 2398.** Same counting method as the earlier records.
