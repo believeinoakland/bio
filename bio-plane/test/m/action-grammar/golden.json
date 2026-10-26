@@ -269,12 +269,12 @@
    "OUTCOME_NOT_IN_VOCABULARY": {
     "check": "C-94.5",
     "where": "src/actions/index.mjs actionCorrespond > is-lifecycle-grammar",
-    "translation": "An outcome is one of granted, denied, partial, reversed, affirmed, or none_stated when the body stated none."
+    "translation": "An outcome is one of granted, denied, partial, reversed, affirmed, none exists (the body says no responsive record exists), or none stated (the body stated none)."
    },
    "DECISION_WITHOUT_OUTCOME": {
     "check": "C-94.6",
     "where": "src/actions/index.mjs actionCorrespond > is-lifecycle-grammar",
-    "translation": "A decision carries its outcome as the body gave it. If the body stated none, record none_stated so the record says so rather than leaving it blank."
+    "translation": "A decision carries its outcome as the body gave it. If the body stated none, record none stated so the record says so rather than leaving it blank."
    },
    "FEE_ESTIMATE_WITHOUT_QUOTE": {
     "check": "C-94.7",
@@ -1196,7 +1196,7 @@
      {
       "check": "C-54.1",
       "severity": "error",
-      "message": "action_basis[0].target 'LEAD-2026-0001-hunch' is a LEAD, and a lead is never evidence (MEMBER-KNOWLEDGE-DESIGN.md §5, §7): it says where to look, not what was found, so no leg can rest on it",
+      "message": "basis leg 0.target 'LEAD-2026-0001-hunch' is a LEAD, and a lead is never evidence (MEMBER-KNOWLEDGE-DESIGN.md §5, §7): it says where to look, not what was found, so no leg can rest on it",
       "repairable": true,
       "repairs": [
        "follow the lead and cite the document the look captured instead",
@@ -1209,7 +1209,7 @@
      {
       "check": "C-54.1",
       "severity": "error",
-      "message": "action_basis[0].target 'LEAD-2026-0001-hunch' is a LEAD, and a lead is never evidence (MEMBER-KNOWLEDGE-DESIGN.md §5, §7): it says where to look, not what was found, so no leg can rest on it",
+      "message": "basis leg 0.target 'LEAD-2026-0001-hunch' is a LEAD, and a lead is never evidence (MEMBER-KNOWLEDGE-DESIGN.md §5, §7): it says where to look, not what was found, so no leg can rest on it",
       "repairable": true,
       "repairs": [
        "follow the lead and cite the document the look captured instead",
@@ -1222,7 +1222,7 @@
      {
       "check": "C-54.1",
       "severity": "error",
-      "message": "action_basis[0].target 'LEAD-2026-0001-hunch' is a LEAD, and a lead is never evidence (MEMBER-KNOWLEDGE-DESIGN.md §5, §7): it says where to look, not what was found, so no leg can rest on it",
+      "message": "basis leg 0.target 'LEAD-2026-0001-hunch' is a LEAD, and a lead is never evidence (MEMBER-KNOWLEDGE-DESIGN.md §5, §7): it says where to look, not what was found, so no leg can rest on it",
       "repairable": true,
       "repairs": [
        "follow the lead and cite the document the look captured instead",
@@ -1236,7 +1236,7 @@
     {
      "check": "C-54.1",
      "severity": "error",
-     "message": "action_basis[0].target 'LEAD-2026-0001-hunch' is a LEAD, and a lead is never evidence (MEMBER-KNOWLEDGE-DESIGN.md §5, §7): it says where to look, not what was found, so no leg can rest on it",
+     "message": "basis leg 0.target 'LEAD-2026-0001-hunch' is a LEAD, and a lead is never evidence (MEMBER-KNOWLEDGE-DESIGN.md §5, §7): it says where to look, not what was found, so no leg can rest on it",
      "repairable": true,
      "repairs": [
       "follow the lead and cite the document the look captured instead",
@@ -1302,7 +1302,7 @@
      {
       "check": "C-81.1",
       "severity": "error",
-      "message": "action_basis[0].target 'THEME-2026-0001-lens' names a THEME, and a theme is never the basis of a claim (BIO_Content_Framework_v0_10.md §8.4, fence 4): it is a member's declared lens, not evidence, so no leg can rest on it or on membership in it",
+      "message": "basis leg 0 names a THEME, and a theme is never the basis of a claim: it is one member's declared lens for gathering material, not evidence, so no leg can rest on it or on membership in it",
       "repairable": true,
       "repairs": [
        "cite the document or the passage itself — the theme is how you found it, not what it shows",
@@ -1315,7 +1315,7 @@
      {
       "check": "C-81.1",
       "severity": "error",
-      "message": "action_basis[0].target 'THEME-2026-0001-lens' names a THEME, and a theme is never the basis of a claim (BIO_Content_Framework_v0_10.md §8.4, fence 4): it is a member's declared lens, not evidence, so no leg can rest on it or on membership in it",
+      "message": "basis leg 0 names a THEME, and a theme is never the basis of a claim: it is one member's declared lens for gathering material, not evidence, so no leg can rest on it or on membership in it",
       "repairable": true,
       "repairs": [
        "cite the document or the passage itself — the theme is how you found it, not what it shows",
@@ -1328,7 +1328,7 @@
      {
       "check": "C-81.1",
       "severity": "error",
-      "message": "action_basis[0].target 'THEME-2026-0001-lens' names a THEME, and a theme is never the basis of a claim (BIO_Content_Framework_v0_10.md §8.4, fence 4): it is a member's declared lens, not evidence, so no leg can rest on it or on membership in it",
+      "message": "basis leg 0 names a THEME, and a theme is never the basis of a claim: it is one member's declared lens for gathering material, not evidence, so no leg can rest on it or on membership in it",
       "repairable": true,
       "repairs": [
        "cite the document or the passage itself — the theme is how you found it, not what it shows",
@@ -1342,7 +1342,7 @@
     {
      "check": "C-81.1",
      "severity": "error",
-     "message": "action_basis[0].target 'THEME-2026-0001-lens' names a THEME, and a theme is never the basis of a claim (BIO_Content_Framework_v0_10.md §8.4, fence 4): it is a member's declared lens, not evidence, so no leg can rest on it or on membership in it",
+     "message": "basis leg 0 names a THEME, and a theme is never the basis of a claim: it is one member's declared lens for gathering material, not evidence, so no leg can rest on it or on membership in it",
      "repairable": true,
      "repairs": [
       "cite the document or the passage itself — the theme is how you found it, not what it shows",
@@ -1408,7 +1408,7 @@
      {
       "check": "C-81.1",
       "severity": "error",
-      "message": "action_basis[0].theme claims the leg through a THEME, and membership in a theme is never a reason a leg counts (BIO_Content_Framework_v0_10.md §8.4, fence 4): the leg rests on its target or on nothing",
+      "message": "basis leg 0 claims its support through a THEME, and membership in a theme is never a reason a leg counts: it rests on the document or passage it cites, or on nothing",
       "repairable": true,
       "repairs": [
        "cite the document or the passage itself — the theme is how you found it, not what it shows",
@@ -1421,7 +1421,7 @@
      {
       "check": "C-81.1",
       "severity": "error",
-      "message": "action_basis[0].theme claims the leg through a THEME, and membership in a theme is never a reason a leg counts (BIO_Content_Framework_v0_10.md §8.4, fence 4): the leg rests on its target or on nothing",
+      "message": "basis leg 0 claims its support through a THEME, and membership in a theme is never a reason a leg counts: it rests on the document or passage it cites, or on nothing",
       "repairable": true,
       "repairs": [
        "cite the document or the passage itself — the theme is how you found it, not what it shows",
@@ -1434,7 +1434,7 @@
      {
       "check": "C-81.1",
       "severity": "error",
-      "message": "action_basis[0].theme claims the leg through a THEME, and membership in a theme is never a reason a leg counts (BIO_Content_Framework_v0_10.md §8.4, fence 4): the leg rests on its target or on nothing",
+      "message": "basis leg 0 claims its support through a THEME, and membership in a theme is never a reason a leg counts: it rests on the document or passage it cites, or on nothing",
       "repairable": true,
       "repairs": [
        "cite the document or the passage itself — the theme is how you found it, not what it shows",
@@ -1448,7 +1448,7 @@
     {
      "check": "C-81.1",
      "severity": "error",
-     "message": "action_basis[0].theme claims the leg through a THEME, and membership in a theme is never a reason a leg counts (BIO_Content_Framework_v0_10.md §8.4, fence 4): the leg rests on its target or on nothing",
+     "message": "basis leg 0 claims its support through a THEME, and membership in a theme is never a reason a leg counts: it rests on the document or passage it cites, or on nothing",
      "repairable": true,
      "repairs": [
       "cite the document or the passage itself — the theme is how you found it, not what it shows",

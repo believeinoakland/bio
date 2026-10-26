@@ -1,6 +1,6 @@
 # BOB to screens-action (T51)
 
-**Read** · handled J48
+**Read** · handled J50
 
 ## B1 · START
 
@@ -604,3 +604,7 @@ Bob (K5257, K5258): the alpha's one design blocker (walk E C2a: no screen settle
 
 Your job: R58 (new). Red tests at the walker's case through the world's real acts and reads, then green.
 **Done:** each test red then green; your module's tests green; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` no new finding in your files; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-action $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), the test red then green, suite counts, and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B57 · CHANGE
+
+CHANGE (K5303; plan item 147). Merge `origin/tranche/T51` into your branch (never a rebase): it holds UX-DESIGN's DEC-439 to DEC-441 (`61d9c43df3`, words in `rows.mjs`) and your new requirement R59 in `build/requirements/screens-action.md`. Read R59 whole and build it with your current work: each key drawn at its row's walker's case (the row's note in `words.json` names it), red then green; draw by key only. Then COMPLETE as your START says, naming R59's tests.

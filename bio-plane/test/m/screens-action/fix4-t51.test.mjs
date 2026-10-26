@@ -258,13 +258,14 @@ async function answeredWorld(o = {}) {
   return w;
 }
 
-test("R43, R48 (C65): a request prepared, approved, sent and answered offers the way to keep its filing as the team's template: the action draws the reference, it opens `start-send`, which draws the form; control: an unsent action and an action with no filing do not", async () => {
+test("R43, R48, R59 (C65; DEC-439 E H2): a request prepared, approved, sent and answered offers the way to keep its filing as the team's template: the action draws the reference, it opens `start-send`, which draws the form; control: an unsent action and an action with no filing do not", async () => {
   const { world, me, project, action } = await actionWorld();
   const req = await openIn(world, me, `/app/request/${action}`);
   await press(req, "communicationprepare", { values: { "send-text-0": "Please send me the logs." }, reason: "ready" });
   await press(req, "filingapprove", { reason: "ready", confirm: true });
   await press(req, "filingrecordsent", { values: { "send-at": "2026-10-20", "send-account": "through the portal", "send-reference": "26-0001" }, reason: "sent" });
   said(req, "screen.start-send.sent", { date: D("2026-10-20") });
+  said(req, "screen.start-send.sent.next");
   assert.equal(ops(req).includes("templatesave"), false, "the request page itself draws no template act (the registry lists it on start-send alone)");
   const [kept] = (await me.read("filingsfor", { query: { action } })).drafts;
   assert.equal(kept.sending.reference, "26-0001", "the store holds the filing as sent");

@@ -1406,12 +1406,12 @@ export const LIFECYCLE_CHECKS = {
     where: 'src/actions/index.mjs actionCorrespond > is-lifecycle-grammar',
     /* R13 (T41): the vocabulary gained none_exists, so the sentence naming it does; a changed translation, awaiting T42's
        stamp. */
-    translation: word('refusal.OUTCOME_NOT_IN_VOCABULARY'),
+    translation: localize('action-grammar.checks.an_outcome_is_one_of', 'An outcome is one of granted, denied, partial, reversed, affirmed, none exists (the body says no responsive record exists), or none stated (the body stated none).'),
   },
   DECISION_WITHOUT_OUTCOME: {
     check: 'C-94.6',
     where: 'src/actions/index.mjs actionCorrespond > is-lifecycle-grammar',
-    translation: word('refusal.DECISION_WITHOUT_OUTCOME'),
+    translation: localize('action-grammar.checks.a_decision_carries_its_outcome', 'A decision carries its outcome as the body gave it. If the body stated none, record none stated so the record says so rather than leaving it blank.'),
   },
   FEE_ESTIMATE_WITHOUT_QUOTE: {
     check: 'C-94.7',

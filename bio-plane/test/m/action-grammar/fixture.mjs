@@ -26,7 +26,9 @@ export const REWORDED = [
   /* T51 fix round 10 (B6): the finding messages named fields and codes; each is now plain (golden.json holds it). */
   "correspondence[", "clock[]", "is an ACTION:", "is not one of: rests_on, advances",
   "carries NEITHER", "carries BOTH", "carries an account with no author", "(D-148)", "(DEC-13)", "(YYYY-MM-DD)", 
-  "record a non-response as direction", "is not a leg block", "not a stage of a", ];
+  "record a non-response as direction", "is not a leg block", "not a stage of a",
+  /* T51 fix round 10 (R30): the leg label named the list index; the outcome and decision translations named their codes. */
+  "action_basis[", ];
 export const RECORDED = readFileSync(new URL("./golden.json", import.meta.url), "utf8");
 export const GOLDEN = JSON.parse(RECORDED);
 

@@ -1,6 +1,6 @@
 # money (T51)
 
-**Status** · session_01TGK8fdQUtNsiJunhDK7iqL · depth 2 · COMPLETE · handled B14
+**Status** · session_01TGK8fdQUtNsiJunhDK7iqL · depth 2 · COMPLETE · handled B15
 
 ## J1 · REPORT
 
@@ -295,3 +295,43 @@ COMPLETE, fix round 10 (B14, plan item 144; K5296). R32 is met.
 **Met ids:** R32, and R13 as the test names it. BOB strikes the marks.
 
 Size (session_01TGK8fdQUtNsiJunhDK7iqL): test runs 5, module lines 0 (test-file lines changed: 2)
+
+## J19 · COMPLETE
+
+COMPLETE, B15 (CHANGE K5300): R33 is met, and the screens-investigate test at `money.test.mjs:126` is green.
+
+**Entries applied:** 1 of 1 (R33: a machine's proposal of a figure the set already includes or excludes holds no proposal; a member's latest act stands).
+
+**What changed (file:line)**
+- `bio-plane/src/money/index.mjs:976-986` (`proposeInclusion`): after the fact is read, it looks up the latest act on the figure in the set (`money_set_acts`, `ORDER BY act_id DESC LIMIT 1`). If there is one, it answers `{ok: true, set_id, fact_id, already: "included" | "excluded"}` and inserts no proposal. Otherwise it holds the proposal as before. Three added lines, one comment with `R33 (T51; K5300)`.
+- `bio-plane/test/m/money/sets.test.mjs`: new test "R33 a machine's proposal of a figure the set already includes or excludes holds no proposal: the member's latest act stands; control: a figure with no member act is held as a proposal". It covers exclude then propose (one exclusion, no proposal, `already: "excluded"`), include then propose (one inclusion, no proposal, `already: "included"`), and control (a figure with no act is held as a proposal).
+
+**Failing-first.** Before the change, the R33 test fails: `[true, undefined]`, expected `[true, 'excluded']`. After the change it passes.
+
+**Tests**
+- R33 test: 1 of 1 pass.
+- Full money suite `bio-plane/test/m/money/*.test.mjs`: 116 of 116 pass.
+- `bio-plane/test/m/screens-investigate/money.test.mjs` (not edited): 16 of 16 pass, 0 todo. Line 126 is now a live test and passes.
+- Other callers of `proposeInclusion` / `moneysetpropose`: `affordances/t33`, `screens-investigate/{pickers, fix2, fold, picker-more, fix2w2, money}`, `op-grades/owners` all pass.
+- `screens-investigate/fix4.test.mjs`: one failure in five runs. The failing test is "each screen of the module reads only what it draws, once" (an assertion about screen reads, 6.7 s). It passed on the pre-R33 code once, and passed with R33 in place on four reruns. I did not reproduce it again and cannot say whether it is timing-sensitive or caused by this change. It is screens-investigate's test, and I have not edited it. Please have screens-investigate look at it if it recurs.
+
+**Checks** (absolute root `/home/user/bio`)
+- `checks/format.mjs`: 0 failures (178 modules).
+- `checks/architecture.mjs ... money`: 0 failures.
+- `checks/coverage.mjs ... money`: 33 of 33 live requirement ids named by a test, 0 failures (R33 counted).
+- `checks/fixtures.mjs ... money --list`: 0 failures.
+- `checks/ownership.mjs ... money <merge-base> HEAD`: 0 failures.
+- `checks/run.mjs`: 95 FAIL lines, none in money's paths (`src/money/`, `test/m/money/`), none in screens-investigate's money files or affordances/t33. The lines are in acquisition, capture, doorbell, file-safety, monitoring, test-support, store-assembly and others, and include coverage gaps (for example R30 in action-grammar, R44 in conformance, R73 in connections). The count rose from 92 to 95 with the tranche merge; none of the new lines name money.
+- `words`: 0 failures.
+
+**Deferred:** none.
+
+**Found elsewhere:** the `fix4` intermittent failure above (screens-investigate's test). Nothing else.
+
+**Merged:** `origin/tranche/T51` (fast-forward, then the B15 merge commit) before the change.
+
+**Markers added:** none (no `fixtures-own` or `fixtures-generic`).
+
+**Met ids:** R33 (and R32 and R13 unchanged). BOB strikes the marks.
+
+Size (session_01TGK8fdQUtNsiJunhDK7iqL): test runs 9, module lines 3 (`money/index.mjs`: 3 added); test-file lines added: 23
