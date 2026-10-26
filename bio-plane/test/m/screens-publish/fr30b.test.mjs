@@ -4,6 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { webcrypto } from "node:crypto";
+import { citeimportedAnswer } from "../case-import/fixtures.mjs";
 import { open, main, drew, drewIn, ops, press, last, fill, tick, until, keptKey, answerSign, choose, day, publishedPlane, FINDING, F1, E1, DETAILS, DETAILS_PUBLIC, ok, refusedIn, word, hasWord, COPY, PREFLIGHT, P, C, DR, importedCase, rerunImport, provided, refusalWords, text } from "./fixtures.mjs";
 
 const EDITOR = `/app/case-editor/${P}/${DR}`;
@@ -232,7 +233,8 @@ test("R58 'Re-run this work in your own project' sends rerunstart with the proje
 });
 
 test("R59 an accepted import's finding offers 'Rest one of your team's questions on this' and the act sends the declared fields; a non-accepted import offers none, and IMPORTED_NOT_ACCEPTED is drawn by its words", async () => {
-  const p = await open(IMP, { plane: { ...IMPORT(true), citeimported: ok({ ok: true }) } });
+  const CITED = ok((await citeimportedAnswer()).answer); // case-import's real citeimported (citation's citation over its accepted import)
+  const p = await open(IMP, { plane: { ...IMPORT(true), citeimported: CITED } });
   assert.ok(drew(p, "screen.imported.citeimp.head") && ops(p).includes("citeimported"));
   await press(p, "citeimported");
   assert.equal(p.byOp("citeimported").length, 0, "no question or role chosen, nothing is sent");
@@ -244,6 +246,14 @@ test("R59 an accepted import's finding offers 'Rest one of your team's questions
   assert.deepEqual(b, { inquiry: "INQ-2026-0001", import: ACCEPTED.import, finding: FIRST, edition: ACCEPTED.edition, role: "supports", note: "It states the schedule." });
   const none = await open(BARE_IMP, { plane: IMPORT(false) });
   assert.ok(!ops(none).includes("citeimported") && !drew(none, "screen.imported.citeimp.head"));
+  /* a refusal the real op gives: the import and finding do not spell another team's finding */
+  const malformed = ok((await citeimportedAnswer({ finding: "FND-2026-0032" })).answer);
+  const bad = await open(IMP, { plane: { ...IMPORT(true), citeimported: malformed } });
+  fill(bad, { "im-ci-q-0": "INQ-2026-0001" });
+  pick(bad, "im-ci-role-0", "cuts_against");
+  await press(bad, "citeimported", { reason: "x" });
+  assert.ok(!hasWord("refusal." + malformed.json.result.code) && text(bad).includes(malformed.json.result.translation), "no word is held for it: the plane's own translation is drawn");
+  /* IMPORTED_NOT_ACCEPTED: case-import's fixture publishes no such state (REPORTed); hand-built until it does */
   const refused = await open(IMP, { plane: { ...IMPORT(true), citeimported: ok({ ok: false, code: "IMPORTED_NOT_ACCEPTED", reason: "IMPORTED_NOT_ACCEPTED" }) } });
   fill(refused, { "im-ci-q-0": "INQ-2026-0001" });
   pick(refused, "im-ci-role-0", "cuts_against");

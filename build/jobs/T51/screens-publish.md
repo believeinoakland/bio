@@ -1540,3 +1540,7 @@ Failing-first: none, no product code changed (two tests that went red on a real 
 Tests: screens-publish 296 tests, 294 pass, 0 fail, 2 todo (R35 press tests, K3717); files alone sum to 296. Checks: format 0, coverage 80/80 0, ownership 0, architecture 8 (uses only), run.mjs no other finding in my files, words not risen.
 Markers added: none (fixtures-own 0, fixtures-generic 0). Met ids: none new.
 Size (session_01S5w36nrjrT4X3cdJbAUkgi): test runs 14, module lines 3754 src + 5303 tests
+
+## Fix round 10, CHANGE B55 (K5221) · citeimported
+
+Merged `tranche/T51`. `fr30b.test.mjs:235` takes case-import's real `citeimportedAnswer()` (the success). A real refusal it gives (`IMPORTED_REF_MALFORMED`, no word held) is added: the plane's own translation is drawn. `IMPORTED_NOT_ACCEPTED` (the screen's special wording, `imported.mjs:246`) is a state `citeimportedAnswer` does not publish: it stays hand-built at `fr30b.test.mjs:256` (REPORT). Suite 297 tests; fixtures `--list` 4 lines (fr30b NOT_ACCEPTED, :425, :427, t51:76). No product code.
