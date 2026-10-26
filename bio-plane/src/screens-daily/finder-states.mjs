@@ -217,18 +217,20 @@ export function finderStates() {
       // R78: when the wider reading finds documents (`widen.total` above 0) the partial match is told apart from "nothing matches".
       // F-B10 (a): the wider reading is the plane's of either route that answered one: the fields route's first, else the passages route's.
       // The fields route counts documents, which the count line says; the passages route counts passages, so its reading draws the partial
-      // sentence and no document count (a count of another unit under "Documents holding ..." would be false).
+      // sentence with its own count of passages (R107), never the document count's words (a count of another unit under "Documents holding ..." would be false).
       const reading = function (r) { const x = r && r.state === "ok" && r.value && r.value.widen; return x && typeof x.total === "number" && x.total > 0 ? x : null; };
       const widen = reading(f);
-      const wider = !!(widen || reading(p));
+      const passageWiden = widen ? null : reading(p);
+      const wider = !!(widen || passageWiden);
       // The act under the heading re-asks the query with its terms joined by OR, which both routes read (F-B9); a query that already holds an
       // operator has no such joining, so it draws the heading only over the fields route's count.
       const orQuery = terms.length > 1 && toks.every(function (t) { return !operator(t); }) ? terms.join(" OR ") : "";
       const partial = wider && (orQuery || widen);
       return scopes + '<div class="mk-note" data-state="empty"><p><b>' + (wider ? cs.w("screen.finder.noresult.partial", { q: q }) : cs.w("screen.finder.noresult", { q: q })) + "</b> " + cs.w("screen.finder.covers") + "</p>"
         + '<p class="mk-acts"><a class="cs-btn" data-tone="quiet" data-nav href="/app/capture">' + cs.w("screen.finder.captureit") + "</a></p></div>"
-        + (partial ? '<h3 class="mk-h2">' + cs.w("screen.finder.partial.head") + "</h3>" + (widen ? '<p class="mk-note">' + cs.w("screen.finder.widen", { n: String(widen.total) }) + "</p>" : "")
-          + (orQuery ? '<span class="mk-acts">' + cs.act("search", { label: "act.search.label.finder", data: { widen: orQuery } }) + "</span>" : "") : "");
+        + (partial ? '<h3 class="mk-h2">' + cs.w("screen.finder.partial.head") + "</h3>" + (widen ? '<p class="mk-note">' + cs.w("screen.finder.widen", { n: String(widen.total) }) + "</p>"
+          : passageWiden ? '<p class="mk-note">' + cs.w("screen.finder.widen.passages", { n: String(passageWiden.total) }) + "</p>" : "")
+          + (orQuery ? '<span class="mk-acts">' + cs.act("search", { label: passageWiden ? "act.search.label.finder.widen" : "act.search.label.finder", data: { widen: orQuery } }) + "</span>" : "") : "");
     }
     const total = f && f.state === "ok" ? "" : "";
     return scopes + fieldsSec + passagesSec + subjectsSec + total + (drawn.length > 1 || plain ? '<p class="mk-small muted">' + cs.w("screen.finder.route.apart") + "</p>" : "") + cross;

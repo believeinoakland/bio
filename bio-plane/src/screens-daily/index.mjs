@@ -140,7 +140,7 @@ const WORDS_OF = {
   finder: [...SHARED, "screen.finder.name", "screen.finder.purpose", "mark.origin.search.name", "mark.origin.search.means", "mark.gap.nobody.name", "mark.gap.nobody.means",
     ...ACTS("finder", ["search", "select", "findin", "selectionrelease", "frontier", "calculationcreate"]),
     "screen.finder.sub", "screen.finder.words", "screen.finder.wordsfirst", "screen.finder.total.one", "screen.finder.total.many", "screen.finder.noresult",
-    "screen.finder.covers", "screen.finder.captureit", "screen.finder.widen", "screen.finder.pick", "screen.finder.held.one", "screen.finder.held.many",
+    "screen.finder.covers", "screen.finder.captureit", "screen.finder.widen", "screen.finder.widen.passages", "act.search.label.finder.widen", "screen.finder.pick", "screen.finder.held.one", "screen.finder.held.many",
     "screen.finder.until", "screen.finder.nobody", "screen.finder.nobody.one", "screen.finder.nobody.none", "screen.finder.count.question", "screen.finder.count.from", "screen.finder.count.to",
     "screen.finder.counted", "screen.finder.pickfirst", ...["legend", "support", "against", "cited", "newly_against", "set_changed", "added_since", "gone_since", "back", "back.help"].map((k) => `screen.finder.cite.${k}`), "screen.finder.holdfirst",
     // R44, R45: the browse, its marks, and Watch, Flag and Clear.

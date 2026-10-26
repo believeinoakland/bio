@@ -279,3 +279,33 @@ test("R78 (F-B10 (a), K5257): the walker's cases `ordinance zzzqqq` (fields wide
   await settle();
   assert.ok(!text(ops).includes(word("screen.finder.partial.head")), "control: a query with operators and no count to say draws no bare heading");
 });
+
+/* ---------- R107 (F-B10 (a), DEC-439): the passage route's widen has its own count and its own act label ---------- */
+
+test("R107 (F-B10 (a), DEC-439): the walker's passages-only widen draws `screen.finder.widen.passages` {n} and the act `act.search.label.finder.widen` (pressed it asks the OR reading); control: the documents route keeps `screen.finder.widen` and `act.search.label.finder`, and wins when both routes widen", async () => {
+  const typed = "ordinance zzzqqq";
+  const w = (total) => ({ interpretation: "OR", total, q: typed, detail: "d" });
+  const drawn = async (fields, passages) => {
+    const p = await open("/app/finder/" + typed, { search: NOHITS(fields), meaningrows: PASSAGES([], { total: 0, widen: passages }) });
+    await settle();
+    return { p, t: text(p), act: main(p).querySelectorAll('button[data-act="search"]').find((x) => x.dataset.widen) };
+  };
+  const label = (a) => a.textContent.trim();
+  const only = await drawn(null, w(3));
+  assert.ok(only.t.includes(word("screen.finder.widen.passages", { n: "3" })), "the passage count: " + only.t.slice(0, 400));
+  assert.ok(!only.t.includes(word("screen.finder.widen", { n: "3" })), "never under \"Documents holding ...\"");
+  assert.ok(only.act, "the widen act");
+  assert.equal(label(only.act), word("act.search.label.finder.widen").trim());
+  assert.ok(only.t.indexOf(word("screen.finder.widen.passages", { n: "3" })) > only.t.indexOf(word("screen.finder.partial.head")), "the count follows the heading");
+  await only.p.click(only.act);
+  await settle();
+  assert.deepEqual(only.p.byOp("search").slice(-1).map((r) => r.query.q), ["ordinance OR zzzqqq"]);
+  const docs = await drawn(w(5), null);
+  assert.ok(docs.t.includes(word("screen.finder.widen", { n: "5" })), "control: the documents route's count");
+  assert.ok(!docs.t.includes(word("screen.finder.widen.passages", { n: "5" })));
+  assert.equal(label(docs.act), word("act.search.label.finder").trim(), "control: its act unchanged");
+  const both = await drawn(w(2), w(9));
+  assert.ok(both.t.includes(word("screen.finder.widen", { n: "2" })), "control: the documents route's reading wins");
+  assert.ok(!both.t.includes(word("screen.finder.widen.passages", { n: "9" })));
+  assert.equal(label(both.act), word("act.search.label.finder").trim());
+});
