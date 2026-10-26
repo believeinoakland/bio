@@ -58,3 +58,33 @@ test("R43: an act placed nowhere, whose day nothing binds on, is STANDARD_BINDIN
                                    rows: [{ ...input().rows[0], reading: "aligns" }] }));
   assert.deepEqual([ok.ok, ok.standards[0].binds], [true, "undetermined"], JSON.stringify(ok).slice(0, 300));
 });
+
+/* T51 re-walk (K5290; causes-rewalk.md §2, area E N4): the member's sentence never carries an object's text or a record id.
+   The walker's case: noncompliant, the body picked as an entity, the act's event placed nowhere (its `why` is events'
+   `{key, vars}`), against a standard whose binding on that body is undetermined. */
+test("R43 R27: the undetermined-binding refusal draws the act event's reason in words, names the body by its label and the standard by its citation, with no [object Object] and no ENT-/STD- id", () => {
+  const { w, std, ev, input } = scene();
+  const body = w.entity("body", "Parks Department", "government");
+  const nowhere = w.event(ev, { date: null });
+  const asked = input({ act: { ...input().act, event: nowhere, actor: { role: "Director of Parks", body } } });
+  const r = nothing(w, () => w.c.determine(asked));
+  assert.equal(r.code, "STANDARD_BINDING_UNDETERMINED");
+  for (const text of [r.detail, r.translation]) {
+    assert.doesNotMatch(text, /\[object Object\]/);
+    assert.doesNotMatch(text, /\b(ENT|STD)-\d{4}-\d{4}/);
+  }
+  assert.match(r.detail, /Parks Department/);
+  assert.match(r.detail, /Parks Code 12\.08\.030/);
+  assert.match(r.detail, /placed nowhere/);
+});
+
+test("R3 R17: a determination of an act placed nowhere states its event's reason in words in its own document and in the standard's in-force note, never [object Object]", () => {
+  const { w, std, ev, input } = scene();
+  const nowhere = w.event(ev, { date: null });
+  const d = w.c.determine(input({ act: { ...input().act, event: nowhere }, standards: [{ standard: std, outcome: "compliant" }],
+                                  rows: [{ ...input().rows[0], reading: "aligns" }] }));
+  assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
+  assert.doesNotMatch(w.text(d.id), /\[object Object\]/);
+  assert.doesNotMatch(JSON.stringify(d), /\[object Object\]/);
+  assert.match(w.text(d.id), /placed nowhere/);
+});
