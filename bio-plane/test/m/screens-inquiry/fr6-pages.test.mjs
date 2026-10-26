@@ -6,7 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, boot } from "../interface-shell/harness.mjs";
-import { main, actsIn, fill, press, says, plane, provenanceOf, inquiryMd, INQUIRY_REFS, SCREENS, P, Q, D, SHA, NEWER } from "./fixtures.mjs";
+import { main, actsIn, fill, press, says, plane, storeWorld, provenanceOf, inquiryMd, INQUIRY_REFS, SCREENS, P, Q, D, SHA, NEWER } from "./fixtures.mjs";
 
 process.env.TZ = "UTC";
 const docAt = "/app/document/" + D;
@@ -89,12 +89,22 @@ async function pickDoc(p, kind, value) {
 /** `heldcaptures` as the plane answers it: the picker's read (sorted by project, R137) the rows given, any other read the fixture's own answer */
 const pickHeld = (base, rows) => (r) => (r.query.sort === "project" ? ok({ ok: true, held: rows, truncated: false, next: null }) : (typeof base.heldcaptures === "function" ? base.heldcaptures(r) : base.heldcaptures));
 const OTHER_ROW = { bundle_id: OTHER, title: "Rent notice, October 2026", project: P, collected_since: "2026-10-02T09:00:00Z", capture: { sha256: OTHER_SHA }, actor: "member:dev", whole: true, standing: "collected" };
+/* contradiction's own answer to a flag: a member's real flag, set over two pages held in a world, played back where the page sends hers (the passages it names are the world's, the page sends its own) */
+const FLAG_ANSWER = await (async () => {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", { capabilities: ["contribute", "create_projects"] });
+  const project = await world.recipes.project(ann, "Pothole repairs");
+  const a = await world.recipes.page(ann, "Lease amendment, March 2024", { paragraphs: ["The rent adjustment takes effect on November 1, 2026."], project });
+  const b = await world.recipes.page(ann, "Rent notice, September 2026", { paragraphs: ["The adjusted rent is due beginning December 1, 2026."], project });
+  const unit = async (h) => (await ann.read("reading", { query: { sha256: h.sha } })).text_units[0].extent;
+  return ann.act("contradictionflag", { body: { here: { capture: a.sha, extent: await unit(a) }, other: { capture: b.sha, extent: await unit(b) }, reason: "One says one thing, the other another." } });
+})();
 const FLAG_PLANE = (extra = {}) => {
   const base = plane();
   const own = pages(SHA), other = pages(OTHER_SHA, (n) => `Other document, page ${n + 1}.`);
   return { list: (r) => (r.query.type === "information" ? ok({ bundles: [{ bundle_id: D, object_type: "information", title: "This one" }, { bundle_id: OTHER, object_type: "information", title: "Rent notice, October 2026" }] }) : ok({ bundles: [] })),
     image: (r) => (r.query.id === OTHER ? ok({ "bundle.md": ["---", `id: ${OTHER}`, "object_type: information", "title: \"Rent notice, October 2026\"", "---", "", ""].join("\n"), "data/provenance.json": provenanceOf(OTHER_SHA) }) : base.image(r)),
-    heldcaptures: pickHeld(base, [OTHER_ROW]), reading: readingOf({ [SHA]: own, [OTHER_SHA]: other }), contradictionflag: ok({ ok: true, wrote: true, candidate: "c1" }), ...extra };
+    heldcaptures: pickHeld(base, [OTHER_ROW]), reading: readingOf({ [SHA]: own, [OTHER_SHA]: other }), contradictionflag: ok(FLAG_ANSWER), ...extra };
 };
 const optionsOf = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => ({ value: o.getAttribute("value"), text: o.textContent }));
 

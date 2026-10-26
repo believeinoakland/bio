@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn, MEMBER, ADMIN, boot } from "../interface-shell/harness.mjs";
 import { NEEDS } from "../../../src/op-declarations/index.mjs";
+import { unnamedFounderWorld } from "../store-request/fixtures.mjs";
 import { open, main, actsIn, button, fill, press, rawKeys, plane, says, section, lead, word, projectWith, storeWorld, WORLD_FOUNDER_HANDLE, SCREENS, P, Q, Q2 } from "./fixtures.mjs";
 
 /* every owner's declarations, registered once before the first read (test-support R17, K4245): the project's acts name ops its owners declare */
@@ -43,14 +44,36 @@ test("R1 R9 R28 R29 reads: its stage (the subject), the project, participants, b
 });
 
 test("R1 the project drawn: title, objective, stage, its questions with their strength, account, members, and the acts a joined member is offered", async () => {
-  const p = await open(at());
+  /* the real state: `ann` started "Pothole repairs"; `mai` joined; a question resting on a staff directory (its connection graded by resolution) and on a held page (graded on the capture axis), and one
+     resting on a held page with no grade, are drawn into it; the page is mai's */
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", MAKER);
+  const mai = await world.signIn("mai", { capabilities: ["contribute"] });
+  const project = await world.recipes.project(ann, "Pothole repairs");
+  await ann.act("projectinvite", { query: { projectId: project, handle: "mai" }, body: {} });
+  await mai.act("projectjoin", { query: { projectId: project }, body: {} });
+  const names = ["Jane Smith", "Raj Patel", "Maria Lopez", "Tom Chen", "Ana Diaz", "Lee Park"];
+  const dir = await world.recipes.hold(ann, "Staff directory", `<html><head><title>Staff Directory</title></head><body><h1>Staff Directory</h1><table>${names.map((n, i) => `<tr><td>${n}</td><td>${n.toLowerCase().replace(" ", ".")}@oaklandca.gov</td><td>510-238-${3000 + i}</td></tr>`).join("")}</table></body></html>`, project, { type: "text/html", read: true });
+  const subject = (await ann.act("entitycreate", { body: { kind: "person", label: "Jane Smith", note: "A person the directory lists.", aliases: ["jane.smith@oaklandca.gov"] } })).entity_id;
+  await ann.act("resolve", { body: { captureSha: dir.sha } });
+  const memo = (await world.recipes.hold(ann, "Policy memo", "The Director shall repair each reported pothole within seven days.", project)).bundle;
+  const graded = (await world.recipes.question(ann, project, { title: "Is the city repairing reported potholes within seven days?", subject, draw: true, legs: [
+    { target: dir.bundle, role: "supports", grade: "B", grade_axis: "connection", grade_source: "resolution" },
+    { target: memo, role: "supports", grade: "B", grade_axis: "capture", grade_source: "capture" }] })).id;
+  const bare = (await world.recipes.question(ann, project, { title: "Does closed mean repaired?", draw: true, legs: [{ target: memo, role: "supports" }] })).id;
+  /* a question of the project not yet drawn into it: the member may draw it */
+  await world.recipes.question(ann, project, { title: "Who signed the order?", legs: [{ target: memo, role: "supports" }] });
+  const real = await mai.read("inquirystrength", { query: { id: graded } });
+  const p = await pageOf(world, mai, "/app/project/" + project);
   const m = main(p);
   assert.equal(m.querySelector("h1").textContent, "Pothole repairs");
-  assert.ok(m.textContent.includes("as its own policy requires"));
+  const objective = /^objective: "(.*)"$/m.exec((await mai.read("image", { query: { id: project } }))["bundle.md"])[1];
+  assert.ok(m.textContent.includes(objective), "the objective, read from the record");
   assert.ok(says(m.querySelector('[data-ladder="stage"] [aria-current="step"]'), "screen.project.stage.investigating"));
   const rows = section(p, "screen.project.questions.head").querySelectorAll(".cs-row");
-  assert.deepEqual(rows[0].querySelectorAll(".cs-grade").map((g) => g.textContent.slice(-1)), ["B", "C"]);
-  assert.equal(rows[1].querySelectorAll('.cs-gap[data-gap="unrated"]').length, 2);
+  const rowOf = (q) => rows.find((r) => r.querySelector(`a[href$="${q}"]`));
+  assert.deepEqual(rowOf(graded).querySelectorAll(".cs-grade").map((g) => g.textContent.slice(-1)), [real.capture.grade, real.connection.grade]);
+  assert.equal(rowOf(bare).querySelectorAll('.cs-gap[data-gap="unrated"]').length, 2);
   assert.ok(says(m, "screen.project.account.member"));
   /* changed in fix round 3 (DEC-394 (3a), R128): the registry lists `heldcaptures` on the project, drawn as "List this project's documents" */
   assert.deepEqual(actsIn(m).sort(), ["drawquestion", "findin", "heldcaptures", "planopen", "projectbarset", "projectleave", "projectstakeset", "promote"]);
@@ -275,8 +298,13 @@ test("R29 R40 R54 members: one row each with role, the founder unnamed by key, n
   const s = section(p, "screen.project.members.head");
   const rows = s.querySelectorAll(".cs-row");
   assert.ok(rows[0].textContent.includes(WORLD_FOUNDER_HANDLE) && says(rows[0], "project.member.owner"), "the founder, by the handle she chose, an owner");
-  /* R40: a founder who chose no handle is unnamed by key; the world's founder has one, so her roster row alone is made so */
-  const unnamed = await pageOf(world, mai, path, { projectparticipants: ok({ ok: true, projectId: project, participants: roster.map((x) => (x.founder ? { ...x, handle: null } : x)) }) });
+  /* R40: a founder who chose no handle is unnamed by key (a world claimed with none, store-request's `unnamedFounderWorld`); the world's founder above has one */
+  const nw = await unnamedFounderWorld();
+  const nmai = await nw.signIn("mai", MAKER);
+  const nproject = await nw.recipes.project(nw.unnamed, "Unnamed founder's potholes");
+  await nw.unnamed.act("projectinvite", { query: { projectId: nproject, handle: "mai" }, body: {} });
+  await nmai.act("projectjoin", { query: { projectId: nproject }, body: {} });
+  const unnamed = await pageOf(nw, nmai, "/app/project/" + nproject);
   const bare = section(unnamed, "screen.project.members.head").querySelectorAll(".cs-row")[0];
   assert.ok(says(bare, "member.founder.unnamed") && says(bare, "project.member.owner"));
   assert.ok(!/\badmin\b/.test(s.textContent), "never admin");
@@ -297,15 +325,12 @@ test("R29 R40 R54 members: one row each with role, the founder unnamed by key, n
   assert.equal(p.byOp("projectownerremove").length, 0, "opened, not sent");
   /* control: with a handle, the handle */
   assert.ok(rows[1].textContent.includes("mai"));
-  /* R54: a null date draws no date, never "since null": a member invited and not yet joined has none (the store's own), and an owner whose date
-     was never recorded has none (no act of the door makes that row, so it alone is scripted) */
+  /* R54: a null date draws no date, never "since null": a member invited and not yet joined has none (the store's own); an owner whose date was never recorded
+     has none, a state no act makes (project-roster stamps every owner, so the case is not tested here) */
   await world.signIn("ben", MAKER);
   await founder.act("projectinvite", { query: { projectId: project, handle: "ben" }, body: {} });
   const real = await pageOf(world, mai, path);
   assert.ok(!/null|undefined/.test(section(real, "screen.project.members.head").textContent), "no date is said");
-  const nul = await pageOf(world, mai, path, { projectparticipants: ok({ ok: true, projectId: project, participants: [{ handle: "mai", state: "joined", owner: 1, owner_since: null },
-    { handle: "ana", state: "joined", owner: 0, joined_at: null }] }) });
-  assert.ok(!/null|undefined/.test(section(nul, "screen.project.members.head").textContent), "no date is said");
 });
 
 test("R29 three owners with one change agreed by one draw waiting for the other two; an owner who has not agreed agrees by the same act", async () => {

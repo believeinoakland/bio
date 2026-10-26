@@ -147,16 +147,23 @@ test("R32 \"Its versions\" draws its refusal by its words", async () => {
 });
 
 test("R32 a newer version's notice is adopted with her reason, or kept (on the question's row, R69)", async () => {
-  /* scripted: adoptversion, keepversion (needs a recipe that holds a newer capture of a cited address and raises the question's re-evaluation notice) */
-  const p = await open(at, { plane: { reevaluationnotices: (r) => ok({ ok: true, notices: r.query.holder === Q ? [{ id: "REN-1", state: "open", capture_sha: SHA, newer_capture: "9".repeat(64) }] : [] }),
-    adoptversion: ok({ ok: true }), keepversion: ok({ ok: true }) } });
+  /* the real state: a question resting on a passage of a held page that has changed at its address since, the sweep's notice open (`recipes.newerCapture`) */
+  const world = await storeWorld();
+  const seen = await world.recipes.newerCapture(await world.signIn("ann", OWN));
+  const p = await pageOn(world, seen.as, "/app/document/" + seen.document);
   const s = section(p, "screen.document.a34.your_citations_leg_by_leg");
   assert.deepEqual(actsIn(s).sort(), ["adoptversion", "keepversion"]);
-  fill(p, { "document-version-why-REN-1": "the newer one adds the supervisor" });
+  const why = "the newer one adds the supervisor";
+  fill(p, { ["document-version-why-" + seen.notice.notice]: why });
   await press(p, "adoptversion");
-  assert.deepEqual(p.byOp("adoptversion")[0].body, { notice: "REN-1", why: "the newer one adds the supervisor" });
-  await press(p, "keepversion");
-  assert.equal(p.byOp("keepversion")[0].body.notice, "REN-1");
+  assert.deepEqual(p.byOp("adoptversion")[0].body, { notice: seen.notice.notice, why });
+  /* the notice is closed by the adoption; a second world holds one open for the keep */
+  const other = await storeWorld();
+  const again = await other.recipes.newerCapture(await other.signIn("ann", OWN));
+  const k = await pageOn(other, again.as, "/app/document/" + again.document);
+  fill(k, { ["document-version-why-" + again.notice.notice]: why });
+  await press(k, "keepversion");
+  assert.equal(k.byOp("keepversion")[0].body.notice, again.notice.notice);
 });
 
 test("R32 R67 R68 the links this page carries, held ones a reference; the names it holds with the mention that counts; explore", async () => {
@@ -206,9 +213,9 @@ test("R3 an unchanged version chain marks nothing changed; the grade note answer
 
 test("R3 acts send what their owners take", async () => {
   const w = await remoteCopy({ watched: true });
-  /* scripted over the real copy: the reading of its PDF pages, the names, the assistant's reach, and the two acts no recipe lets a world make real (scripted: transcribe, which needs a
-     recipe that holds a PDF with unread pages; identityclaim, which needs a recipe that resolves a named person in a reading); `attest`, `monitor` and `cite` are the world's own */
-  const p = await pageOn(w.world, w.ann, w.at, { plane: copyPlane(w, WATCHED_MD, { ...REACH, transcribe: ok({ ok: true }), identityclaim: ok({ ok: true }),
+  /* scripted over the real copy: the reading of its PDF pages, the names and the assistant's reach; `attest`, `monitor` and `cite` are the world's own, and `transcribe` and `identityclaim` are asked of pages of
+     documents the recipes hold (a PDF read in part, a name matched to no subject) below */
+  const p = await pageOn(w.world, w.ann, w.at, { plane: copyPlane(w, WATCHED_MD, { ...REACH,
     pagetranscribe: { status: 200, json: { ok: true, transcription: { performed: true, pages: [7, 8], untested: { kind: "untested" } } } }, resolutions: NAMES }) });
   /* a passage cited needs text the record has read: the world's read page (the scripted reading above is a PDF's, whose chain no recipe makes), cited in the copy's question */
   const page = await w.world.recipes.page(w.ann, "Policy page", { paragraphs: ["The Director shall repair each reported pothole within seven calendar days of the report."], project: w.project });
@@ -228,14 +235,18 @@ test("R3 acts send what their owners take", async () => {
   await press(p, "monitor");
   assert.deepEqual(p.byOp("monitor")[0].body, { bundleId: w.document });
   assert.equal(p.answers("monitor")[0].status, "unchanged", "the world's check was made");
-  /* R78: the picker draws the record's page 8 as its own 9; the extent sent is the record's number */
-  fill(p, { "document-unread-page": String(one(8)), "document-unread-words": "Repairs are inspected." });
-  await press(p, "transcribe");
-  assert.deepEqual(p.byOp("transcribe")[0].body, { bundleId: w.document, extent: { kind: "pdf-page", page: 8 }, text: "Repairs are inspected." });
-  fill(p, { "document-claim-person": "ENT-3", "document-claim-basis": "corroborated_name", "document-claim-note": "Same title and department" });
-  await press(p, "identityclaim");
-  assert.deepEqual(p.byOp("identityclaim")[0].body,
-    { a: "ENT-17", b: "ENT-3", kind: "same_as", basis: "corroborated_name", evidence: { a: { captureSha: w.sha } }, note: "Same title and department" });
+  /* R78: the picker draws the record's unread page as its own next number; the extent sent is the record's number */
+  const part = await w.world.recipes.partialPdf(w.ann, "Scanned minutes", { project: w.project, transcribe: false });
+  const t = await pageOn(w.world, w.ann, "/app/document/" + part.bundle);
+  fill(t, { "document-unread-page": String(one(part.unread[0])), "document-unread-words": "Repairs are inspected." });
+  await press(t, "transcribe");
+  assert.deepEqual(t.byOp("transcribe")[0].body, { bundleId: part.bundle, extent: { kind: "pdf-page", page: part.unread[0] }, text: "Repairs are inspected." });
+  const who = await w.world.recipes.unmatchedPerson(w.ann, { project: w.project, testify: false });
+  const m = await pageOn(w.world, w.ann, "/app/document/" + who.bundle);
+  fill(m, { "document-claim-person": who.people[1], "document-claim-basis": "corroborated_name", "document-claim-note": "Same title and department" });
+  await press(m, "identityclaim");
+  assert.deepEqual(m.byOp("identityclaim")[0].body,
+    { a: who.people[0], b: who.people[1], kind: "same_as", basis: "corroborated_name", evidence: { a: { captureSha: who.sha } }, note: "Same title and department" });
   await press(p, "pagetranscribe", { reason: "the pages hold the dates" });
   assert.deepEqual([p.byOp("pagetranscribe")[0].query.sha256, p.byOp("pagetranscribe")[0].query.project], [w.sha, w.project]);
   assert.ok(says(main(p), "screen.document.pagetranscribe.done", { pages: `${one(7)}, ${one(8)}` }) && says(main(p), "ai.label.untested"));
@@ -319,7 +330,9 @@ test("R3 R32 (K3387) every capture read is keyed on the capture's sha from its p
   assert.equal(p.location.pathname, "/app/find-in/" + SHA);
   /* the versions' dates are provenance's first_retrieved */
   const d = await open(at);
-  assert.ok(section(d, "screen.document.versions.head").textContent.includes(day("2026-10-09T09:00:00Z")));
+  const chain = await plane().versionchain(d.byOp("versionchain")[0]);
+  const dates = (chain.json.result || chain.json).versions.map((v) => day(v.first_retrieved));
+  assert.ok(dates.length > 1 && dates.every((x) => section(d, "screen.document.versions.head").textContent.includes(x)), "the owner's own dates, one for each version");
 });
 
 test("R3 (K3387) the document's words are the reading's text_units; a reading with none says so, and no invented field is read", async () => {

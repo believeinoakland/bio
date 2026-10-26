@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { boot, ok } from "../interface-shell/harness.mjs";
 import { CONTRADICTION_SCREEN } from "../../../src/screens-inquiry/contradiction.mjs";
 import { SCREENS } from "../../../src/screens-inquiry/index.mjs";
+import { unnamedFounderWorld } from "../store-request/fixtures.mjs";
 import { plane, main, says, word, day, storeWorld, WORLD_FOUNDER_HANDLE, P, SHA, DOCUMENT_MD } from "./fixtures.mjs";
 
 const S = "screen.contradiction.";
@@ -44,9 +45,9 @@ async function pageOn(world, as, path, o = {}) {
   return p;
 }
 /** Two web pages held in ann's project, and a candidate she raised by her real flag (`contradictionflag`, a passage of each and her reason). Answers the world, ann, the project, the candidate, and the flag's own answer. */
-async function flagged({ reason = "The notice and the amendment give two different dates.", world = null, founder = false } = {}) {
-  world = world || await storeWorld();
-  const ann = founder ? await world.signIn(WORLD_FOUNDER_HANDLE) : await world.signIn("ann", OWN);
+async function flagged({ reason = "The notice and the amendment give two different dates.", world = null, founder = false, unnamed = false } = {}) {
+  world = world || (unnamed ? await unnamedFounderWorld() : await storeWorld());
+  const ann = unnamed ? world.unnamed : founder ? await world.signIn(WORLD_FOUNDER_HANDLE) : await world.signIn("ann", OWN);
   const project = await world.recipes.project(ann, "Pothole repairs");
   const a = await world.recipes.page(ann, "Lease amendment, March 2024", { paragraphs: ["The rent adjustment takes effect on November 1, 2026."], project });
   const b = await world.recipes.page(ann, "Rent notice, September 2026", { paragraphs: ["The adjusted rent is due beginning December 1, 2026."], project });
@@ -76,10 +77,11 @@ test("R105 a candidate a member flagged draws her reason in her words, her name 
   assert.ok(m.doc.getElementById("cs-main").textContent.includes(MACHINE_REASON), "the machine's reason as before");
   assert.ok(main(m).querySelector(".cs-machinework"), "marked machine work");
   assert.equal(main(m).querySelector("[data-flagged-by]"), null, "and no flagged-by line");
-  /* a flag whose member has no handle known is the plain word, and one with no reason draws no line (both still scripted over a scripted candidate: needed: a member the roster holds no handle for,
-     and a flag with no reason, which the owner refuses) */
-  const quiet = await open(at, FLAGGED(), { plane: { memberlist: ok({ ok: true, members: [] }) } });
-  assert.ok(main(quiet).querySelector("[data-flagged-by]").textContent.includes(word("shell.card.member")), "a member with no handle known: the fallback word");
+  /* a flag by the founder who chose no handle draws her unnamed (a world claimed with none); a member the roster holds no handle for is a state no act makes (the roster lists every member
+     it holds, member-roster/index.mjs:1132) and is not tested; a flag with no reason, which the owner refuses, is still scripted over a scripted candidate */
+  const u = await flagged({ unnamed: true });
+  const quiet = await pageOn(u.world, u.ann, u.at);
+  assert.ok(main(quiet).querySelector("[data-flagged-by]").textContent.includes(word("member.founder.unnamed")), "the founder with no handle: unnamed");
   const bare = await open(at, FLAGGED({ flagged_by: { member: "u-7", at: "2026-10-11T09:00:00Z", reason: "" } }));
   assert.equal(main(bare).querySelector("[data-flagged-by]"), null, "no reason, no line");
 });

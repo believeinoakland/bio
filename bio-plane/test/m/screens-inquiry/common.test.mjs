@@ -8,8 +8,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { interfacePage } from "../../../src/interface-shell/index.mjs";
 import { OPS, BROWSER_ACTS } from "../../../src/op-declarations/index.mjs";
-import { refusedIn, silent, pending, ok } from "../interface-shell/harness.mjs";
-import { open, main, rawKeys, plane, word, inquiryMd, INQUIRY_REFS, LEGS, SCREENS, P, Q, D } from "./fixtures.mjs";
+import { refusedIn, silent, pending, ok, boot } from "../interface-shell/harness.mjs";
+import { open, main, rawKeys, plane, word, inquiryMd, INQUIRY_REFS, LEGS, SCREENS, storeWorld, P, Q, D } from "./fixtures.mjs";
 
 const REGISTRY = JSON.parse(readFileSync(new URL("./fixtures/registry-43379a1a44.json", import.meta.url), "utf8"));
 const PATHS = { project: "/app/project/" + P, question: "/app/question/" + Q, document: "/app/document/" + D, projectai: "/app/projectai/" + P };
@@ -26,12 +26,38 @@ const DRAWN = Object.fromEntries(Object.entries(DRAWN_READS).map(([id, names]) =
 /* the question with its partition held (state a), so its strength is drawn */
 const GROUPED = { [Q]: { "bundle.md": inquiryMd(P, INQUIRY_REFS, { legs: LEGS.map((l) => (l.target === D ? { ...l, ground: "part 1" } : l)),
   grounds: [{ ground: "part 1", asserted_by: "member:dev", at: "2026-10-05T09:00:00Z" }] }) } };
-/* projectai's reads answered as an owner of the project reads them (R14), so every one is drawn */
-const AI = { projectparticipants: ok({ ok: true, projectId: P, participants: [{ handle: "mai", state: "joined", owner: true }] }),
-  projectaccountstate: ok({ ok: true, held: true, kind: "apikey", on: true, set_at: "2026-10-05T09:00:00Z", by: "mai", serving: "project" }),
-  projectkeynotice: ok({ ok: true, due: true, text: "The notice." }), projectaikeepawaystate: ok({ ok: true, on: false }),
-  accountuses: ok({ owner: "project:" + P, held: true, uses: { ask: true } }), ailimits: ok({ ok: true, limits: [], history: [] }),
-  aiusage: ok({ ok: true, uses: [] }), accounthistory: ok({ ok: true, changes: [] }) };
+/* projectai's reads answered as an owner of the project reads them (R14), so every one is drawn: the world's own answers to `mai`, who started the project and holds a key for it (her password
+   again, the key set and switched on), read once and played back */
+const AI = await (async () => {
+  const world = await storeWorld({ ai: true });
+  const mai = await world.signIn("mai", { capabilities: ["contribute", "create_projects"] });
+  const project = await world.recipes.project(mai, "Pothole repairs");
+  await mai.act("reauth", { body: { password: mai.password } });
+  await mai.act("projectkeyset", { body: { project, key: "sk-ant-api03-" + "7".repeat(40) } });
+  await mai.act("projectaccountswitch", { body: { project, on: true } });
+  const owner = "project:" + project;
+  const read = async (op, query) => ok(await mai.read(op, { query }));
+  return { projectparticipants: await read("projectparticipants", { projectId: project }), projectaccountstate: await read("projectaccountstate", { project }),
+    projectkeynotice: await read("projectkeynotice", { project }), projectaikeepawaystate: await read("projectaikeepawaystate", { project }),
+    accountuses: await read("accountuses", { owner }), ailimits: await read("ailimits", { owner }), aiusage: await read("aiusage", { owner }), accounthistory: await read("accounthistory", { owner }) };
+})();
+/* the project page with a graded question on it: the world's own project is shown with its question unrated, so this one is made by real acts in a world of its own: `ann`'s project with a question
+   resting on a staff directory (its connection graded B by resolution) and on a held page (graded on the capture axis) */
+const GRADED = await (async () => {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", { capabilities: ["contribute", "create_projects"] });
+  const project = await world.recipes.project(ann, "Pothole repairs");
+  const names = ["Jane Smith", "Raj Patel", "Maria Lopez", "Tom Chen", "Ana Diaz", "Lee Park"];
+  const dir = await world.recipes.hold(ann, "Staff directory", `<html><head><title>Staff Directory</title></head><body><h1>Staff Directory</h1><table>${names.map((n, i) => `<tr><td>${n}</td><td>${n.toLowerCase().replace(" ", ".")}@oaklandca.gov</td><td>510-238-${3000 + i}</td></tr>`).join("")}</table></body></html>`, project, { type: "text/html", read: true });
+  const subject = (await ann.act("entitycreate", { body: { kind: "person", label: "Jane Smith", note: "A person the directory lists.", aliases: ["jane.smith@oaklandca.gov"] } })).entity_id;
+  await ann.act("resolve", { body: { captureSha: dir.sha } });
+  const memo = (await world.recipes.hold(ann, "Policy memo", "The Director shall repair each reported pothole within seven days.", project)).bundle;
+  await world.recipes.question(ann, project, { title: "Is the city repairing reported potholes within seven days?", subject, draw: true, legs: [
+    { target: dir.bundle, role: "supports", grade: "B", grade_axis: "connection", grade_source: "resolution" },
+    { target: memo, role: "supports", grade: "B", grade_axis: "capture", grade_source: "capture" }] });
+  const { door, session } = world.boot(ann);
+  return { open: async () => { const b = await boot({ screens: SCREENS, door, session, path: "/app/project/" + project }); await b.settle(); return b; } };
+})();
 const base = (id) => (id === "projectai" ? AI : {});
 const VARIANTS = { refused: refusedIn("SOME_REFUSAL", "The plane refused this read."), silent, pending };
 /* the registry acts this module's requirements do not name (reported to BOB, J3): every other act the registry lists for
@@ -54,13 +80,14 @@ for (const [id, path] of Object.entries(PATHS)) {
       assert.ok(m.querySelector("h1"), `${id} with ${op} ${name}: the screen stays`);
       const want = name === "pending" ? "loading" : "failed";
       assert.ok(m.querySelector(`[data-state="${want}"]`), `${id}: ${op} ${name} drawn ${want}`);
-      if (name === "refused") assert.match(m.querySelector('[data-state="failed"]').textContent, /The plane refused this read|SOME_REFUSAL/);
+      /* the project draws one failed read of its own beside the overridden one (the question `Q2` its record cites, which the world does not hold), so the refusal's words are looked for among its failed states */
+      if (name === "refused") assert.ok(m.querySelectorAll('[data-state="failed"]').some((e) => /The plane refused this read|SOME_REFUSAL/.test(e.textContent)), `${id}: ${op} refused, drawn by the refusal's words`);
       assert.deepEqual(rawKeys(p.root()), [], `${id} with ${op} ${name}`);
     }
   });
 
   if (id !== "projectai") test(`R5 ${id}: every grade is drawn as one mark (the scale's name and the letter), every record item named a reference to its screen`, async () => {
-    const p = await open(path, { images: id === "question" ? GROUPED : {} });
+    const p = id === "project" ? await GRADED.open() : await open(path, { images: id === "question" ? GROUPED : {} });
     const m = main(p);
     const grades = m.querySelectorAll(".cs-grade");
     assert.ok(grades.length > 0);

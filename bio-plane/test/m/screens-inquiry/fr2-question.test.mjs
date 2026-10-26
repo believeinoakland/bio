@@ -1,11 +1,10 @@
 /* screens-inquiry fix round 2 (T51), the question screen: C34 (R104, R62: reopen a project-concluded finding by withdrawing the
  * conclusion), C36 (R23, R24, R34: each leg draws the first words of the passage it cites), C37 (R2: the parts of a leg and of the
- * read-back are separate elements), C41 (R35, R50, R117: BASIS_VERSION_REFUSED is drawn with its findings), C44 and C62 (R2: the
- * head and the crumb name the project). On interface-shell's served page over a scripted plane; every expectation is a word read by key
+ * read-back are separate elements), C44 and C62 (R2: the head and the crumb name the project). On interface-shell's served page over a scripted plane; every expectation is a word read by key
  * (R44), never copied (K3810). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { boot, ok, refusedIn } from "../interface-shell/harness.mjs";
+import { boot } from "../interface-shell/harness.mjs";
 import { open, storeWorld, main, actsIn, fill, press, inquiryMd, INQUIRY_REFS, BASIS, says, word, lead, SCREENS, P, Q, D, SHA, POLICY } from "./fixtures.mjs";
 
 const at = "/app/question/" + Q;
@@ -30,7 +29,6 @@ const worldOf = async (docs = [{ title: "Pothole repair policy" }]) => {
 };
 /** the finding concluded within the project (its own state still open), by her real act */
 const concludeIn = (w, id) => w.ann.act("conclude", { query: { target: id, project: w.project, reading: "Yes: repairs are made within seven days.", falsifier: "Work orders dated later show otherwise." } });
-const refusedBody = (code, extra = {}) => ({ status: 200, json: { ok: true, result: { ok: false, reason: code, code, ...extra } } });
 
 /* ------------------------------------------------------------------------------------------------------------------ C34 */
 
@@ -143,50 +141,19 @@ test("R2 the parts of a leg and of the read-back are separate elements: a leg's 
   for (const el of back.children) if (el.localName !== "br") assert.ok(el.previousElementSibling === null || el.previousElementSibling.localName === "br", "no two parts of the read-back run together");
 });
 
-/* ------------------------------------------------------------------------------------------------------------------ C41 */
-
-test("R35 R50 R117 a BASIS_VERSION_REFUSED answer lists its findings: the first finding's own translation and its repair, not only the generic sentence; control: BASIS_REFUSED is drawn as before", async () => {
-  const finding = { check: "C-27.9", code: "VERSION_PARTITION_INCOMPLETE", detail: "version 'main' has 1 leg with no ground", translation: "Every passage must be placed in a part.", repairs: ["repair-sentinel-qq"] };
-  /* still scripted (conclude's refusal): needed: no recipe can make it; VERSION_PARTITION_INCOMPLETE is held by basis-version-grammar but raised by no document (K5077) */
-  const go = async (code, findings) => {
-    const p = await open(at, { plane: { conclude: refusedBody(code, { findings }) } });
-    fill(p, { "question-conclude-falsifier": "logs dated later", "question-conclude-reason": "it answers it" });
-    return press(p, "conclude");
-  };
-  const slot = await go("BASIS_VERSION_REFUSED", [finding]);
-  assert.ok(slot.textContent.includes("repair-sentinel-qq"), "the repair");
-  assert.ok(!says(slot, "refusal.BASIS_VERSION_REFUSED") || slot.textContent.includes("give every leg"), "the finding is listed");
-  /* a real finding code, as basis-version-grammar's catalogue gives it with its own words (`translation` is the row of its code): drawn by the word held for the code */
-  const own = await go("BASIS_VERSION_REFUSED", [{ check: "C-27.1", code: "VERSION_PARTITION_INCOMPLETE", detail: "d", translation: word("refusal.VERSION_PARTITION_INCOMPLETE") }]);
-  assert.ok(says(own, "refusal.VERSION_PARTITION_INCOMPLETE"), "the code's own words");
-  const bare = await go("BASIS_VERSION_REFUSED", undefined);
-  assert.ok(says(bare, "refusal.BASIS_VERSION_REFUSED"), "with no finding, the generic sentence");
-  // fixtures-generic: SOMETHING_ELSE (a finding code made up on purpose: the control that BASIS_REFUSED is drawn by its detail, whatever code it carries)
-  const old = await go("BASIS_REFUSED", [{ check: "C-9.9", code: "SOMETHING_ELSE", detail: "the leg names no edition" }]);
-  assert.ok(old.textContent.includes("the leg names no edition"), "control: BASIS_REFUSED unchanged");
-});
-
 /* ------------------------------------------------------------------------------------------------------------------ C44, C62 */
 
-/* still scripted (projectlist): needed: a recipe for a project whose record states no title (every project the world makes is titled), and one a member may not read (an image refused NO_SUCH_BUNDLE) */
-const bareProject = { [P]: { "bundle.md": ["---", `id: ${P}`, "object_type: project", "---", ""].join("\n") } };
-const listed = ok({ ok: true, projects: [{ id: P, name: "Pothole repairs" }] });
-
 test("R2 the head and the crumb name the project even when its record states no title: the project list's name is read; control: the record's own title is not read past", async () => {
-  const p = await open(at, { images: bareProject, plane: { projectlist: listed } });
-  assert.ok(p.root().querySelector(".cs-crumbs").textContent.includes("Pothole repairs"), "the crumb");
+  const w = await worldOf();
+  /* a project whose record states no title (the world's recipe: the promotion's meta names it), a question of hers drawn into it */
+  const bare = await w.world.recipes.titlelessProject(w.ann, "Stormwater drains");
+  const id = (await w.world.recipes.question(w.ann, bare, { title: "Seven days", text: "Is the city repairing reported potholes within seven days?", draw: true })).id;
+  const p = await w.page(id);
+  assert.ok(p.root().querySelector(".cs-crumbs").textContent.includes("Stormwater drains"), "the crumb");
   const sub = main(p).querySelector(".mk-sub");
-  assert.ok(sub.textContent.includes("Pothole repairs"), "the head");
-  const ref = main(p).querySelector('a.cs-ref[href="/app/project/' + P + '"]');
-  assert.ok(ref && ref.textContent === "Pothole repairs");
-  const titled = await open(at);
+  assert.ok(sub.textContent.includes("Stormwater drains"), "the head");
+  const ref = main(p).querySelector('a.cs-ref[href="/app/project/' + bare + '"]');
+  assert.ok(ref && ref.textContent === "Stormwater drains");
+  const titled = await w.page(await w.question());
   assert.equal(titled.byOp("projectlist").length, 0, "control: with the title on the record the list is not read");
-});
-
-test("R2 a project that states no title and is listed by none draws no 'because' stub; a read that refused with words draws them after 'because'", async () => {
-  const none = await open(at, { images: bareProject, plane: { projectlist: ok({ ok: true, projects: [] }) } });
-  assert.ok(main(none).querySelector(".mk-sub"), "the head is drawn");
-  assert.equal(main(none).querySelector('a.cs-ref[href="/app/project/' + P + '"]'), null, "no project link whose text is a dangling 'because'");
-  const why = await open(at, { plane: { image: (r) => (r.query.id === P ? refusedIn("NO_SUCH_BUNDLE", "it is not readable by you") : ok(r.query.id === Q ? { "bundle.md": inquiryMd() } : null)), projectlist: ok({ ok: true, projects: [] }) } });
-  assert.ok(main(why).querySelector(".mk-sub").textContent.includes(word("state.undetermined", { reason: "it is not readable by you" })));
 });

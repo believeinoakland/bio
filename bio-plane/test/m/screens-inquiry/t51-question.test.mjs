@@ -5,10 +5,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { registerDeclaredOps as registerOps } from "../../../src/op-declarations/index.mjs";
-import { boot, ok, refusedIn } from "../interface-shell/harness.mjs";
+import { boot, ok, refusedIn, counted } from "../interface-shell/harness.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
 import { emptyFeed } from "../queue/fixtures.mjs";
-import { open, storeWorld, main, actsIn, press, fill, plane, inquiryMd, INQUIRY_REFS, DOCUMENT_MD, provenanceOf, SHA, POLICY, LEGS, says, section, lead, word, day, SCREENS, P, Q, D } from "./fixtures.mjs";
+import { open, storeWorld, WORLD_FOUNDER_HANDLE, main, actsIn, press, fill, plane, inquiryMd, INQUIRY_REFS, DOCUMENT_MD, provenanceOf, SHA, POLICY, LEGS, says, section, lead, word, day, SCREENS, P, Q, D } from "./fixtures.mjs";
 
 /* K4245 (test-support R17): every owner's declarations registered once, before the first read, by the one registrar */
 
@@ -16,8 +16,19 @@ const at = "/app/question/" + Q;
 const GROUNDS = [{ ground: "part 1", asserted_by: "member:dev", at: "2026-10-05T09:00:00Z" }];
 const grouped = (o = {}) => inquiryMd(P, INQUIRY_REFS, { legs: LEGS.map((l) => (l.target === D ? { ...l, ground: "part 1" } : l)), grounds: GROUNDS, ...o });
 const A = { images: { [Q]: { "bundle.md": grouped() } } };
-/* still scripted (airuns, and the airun/versionaccept/versionconsider of R74): needed: a question holding a machine-authored reading (suggested by an assistant run, with its run and the bias it was composed under); no act of the world makes one */
-const REACH = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }), agentpack: ok({ ok: true, pack: { version: "p@1" } }), airuns: ok({ ok: true, runs: [] }) };
+/** the assistant's reads (`assistantstate`, `accountreference`, `groupkeystate`, `agentpack`, `airuns`) as the team's Claude account answers them: a world whose team has set it up and switched it on, and a member
+ *  who has read its notice (the world's recipe), the world's door answering each request as she does */
+const ASSISTANT = await (async () => {
+  const world = await storeWorld({ ai: true });
+  const admin = await world.signIn(WORLD_FOUNDER_HANDLE);
+  const member = await world.signIn("mai", { capabilities: ["contribute"] });
+  await world.recipes.assistant(admin, { readers: [member] });
+  return { world, member };
+})();
+const REACH = Object.fromEntries(["assistantstate", "accountreference", "groupkeystate", "agentpack", "airuns"].map((op) => [op, counted((req) => {
+  const headers = Object.fromEntries(Object.entries({ ...(req.init && req.init.headers), ...req.headers }).filter(([k]) => k.toLowerCase() !== "authorization"));
+  return ASSISTANT.world.door({ ...req, headers, init: { ...req.init, headers } }, ASSISTANT.member);
+})]));
 const reach = (o = {}) => ({ ...o, boot: { plane: { ...plane(o), ...REACH, ...(o.reach || {}) } } });
 const choose = async (p, id, value) => { const el = p.doc.getElementById(id); el.value = value; p.fire(el, "change"); await p.settle(); };
 const aside = (rows, extra = {}) => (r) => ok(r.query.aside ? { ok: true, aside: rows, count: rows.length, next: null, truncated: false, ...extra } : { items: [] });
@@ -124,27 +135,39 @@ test("R71 the refusals are drawn by their words: not a participant, no reason, a
   }
 });
 
-/* still scripted (queue, the first page): needed: a project with more than 500 set-aside decisions, so that the list is paged by `after` (the world holds a few) */
 test("R71 states k and l: the project's decision is read from the set-aside list, paged by after; the receipt replaces the fold, the question is still drawn whole; another participant's decision is drawn by her name", async () => {
-  const pages = [
-    { aside: [row({ finding: "INQ-2026-0099-other" }), row({ project: "PROJ-2026-0042" })], truncated: true, next: "cursor-1" },
-    { aside: [row({ state: "dismissed", decided_by: "dev", reason: "retired" })], truncated: false, next: null }];
-  const p = await open(at, { ...A, plane: { queue: (r) => (r.query.aside ? ok({ ok: true, ...(r.query.after ? pages[1] : pages[0]), count: 3 }) : ok(emptyFeed())) } });
-  assert.deepEqual(asideReads(p).map((r) => r.query.after), [undefined, "cursor-1"], "paged by after until found");
+  const w = await worldOf();
+  const dev = await w.world.signIn("dev", { capabilities: ["contribute"] });
+  await w.ann.act("projectinvite", { query: { projectId: w.project, handle: "dev" } });
+  await dev.act("projectjoin", { query: { projectId: w.project } });
+  /* three questions of the project set aside before the one she reads, which another participant then dismisses */
+  for (const title of ["Other one", "Other two", "Other three"]) await w.ann.act("proposedispose", { body: { project: w.project, finding: await w.question(title), to: "deferred", reason: "waiting for the 2026 log" } });
+  const target = await w.question("Seven days again", { legs: [{ target: w.targets[0], role: "supports" }, { target: w.targets[1], role: "cuts_against" }] });
+  await dev.act("proposedispose", { body: { project: w.project, finding: target, to: "dismissed", reason: "retired" } });
+  /* the list paged two to a page by its own cursor: the world's door answering the page's read with a smaller limit (the page asks for 500, past what a test holds) */
+  const { door } = w.world.boot(w.ann);
+  const paged =(req) => door(req.query.aside ? { ...req, url: req.url.replace("limit=500", "limit=2") } : req);
+  const p = await w.page({ plane: { queue: counted(paged) } }, w.ann, "/app/question/" + target);
+  const first = await w.ann.read("queue", { query: { aside: "true", limit: "2" } });
+  assert.deepEqual(asideReads(p).map((r) => r.query.after), [undefined, first.next], "paged by after until found");
   assert.ok(asideReads(p).every((r) => r.query.aside === "true" && r.query.limit === "500"));
   const m = main(p);
   const r = m.querySelector('[data-aside="dismissed"]');
-  assert.ok(says(r, "screen.question.say008.bymember", { project: "Pothole repairs", member: "dev", date: day("2026-10-18") }));
+  const theirs = (await decisions(w)).find((d) => d.finding === target);
+  assert.ok(says(r, "screen.question.say008.bymember", { project: "Pothole repairs", member: theirs.decided_by, date: day(theirs.at) }));
   assert.ok(!says(r, "screen.question.say001", { project: "Pothole repairs" }), "the 'with your name' line is hers alone");
-  assert.ok(says(r, "shell.reason.lead") && r.textContent.includes("retired"), "her reason is led by its key");
+  assert.ok(says(r, "shell.reason.lead") && r.textContent.includes(theirs.reason), "her reason is led by its key");
   assert.equal(m.querySelector('details[data-aside="set"]'), null, "in states k and l the fold gives way to Change your decision");
   assert.ok(r.querySelector('details[data-aside="change"]'));
   assert.ok(section(p, "screen.question.supports.head") && section(p, "screen.question.against.head"), "drawn whole beneath");
   /* a deferral by her */
-  const d = await open(at, { ...A, plane: { queue: aside([row()]) } });
-  assert.ok(says(main(d).querySelector('[data-aside="deferred"]'), "screen.question.say000", { project: "Pothole repairs", date: day("2026-10-18") }));
-  /* control: a decision for another project, or another question, is not this one's: the fold is drawn */
-  const o = await open(at, { ...A, plane: { queue: aside([row({ project: "PROJ-2026-0042" }), row({ finding: "INQ-2026-0099-other" }), row({ scope: "instance", project: null })]) } });
+  const mine = await w.question("Mine");
+  await w.ann.act("proposedispose", { body: { project: w.project, finding: mine, to: "deferred", reason: "waiting for the 2026 log" } });
+  const d = await w.page({}, w.ann, "/app/question/" + mine);
+  const deferred = (await decisions(w)).find((x) => x.finding === mine);
+  assert.ok(says(main(d).querySelector('[data-aside="deferred"]'), "screen.question.say000", { project: "Pothole repairs", date: day(deferred.at) }));
+  /* control: the decisions of other questions are not this one's: the fold is drawn */
+  const o = await w.page({}, w.ann, "/app/question/" + await w.question("Untouched"));
   assert.ok(main(o).querySelector('details[data-aside="set"]') && !main(o).querySelector("[data-aside=deferred]"));
 });
 
@@ -174,19 +197,48 @@ test("R71 controls: a member who is not in the project is drawn no fold and no s
 /* ---------------------------------------------------------------------------------------------------------------------- R72 */
 
 const PAIR = (c, k) => ({ capture: { axis: "capture", grade: c }, connection: { axis: "connection", grade: k } });
-const CASES = [
-  { case_id: "CASE-A", edition: 2, project: P, published_at: "2026-10-01T09:00:00Z", signed_at: "2026-10-01T08:00:00Z", withdrawn: null, pinned: true, strength: PAIR("B", "C"), strength_from: "case_document" },
-  { case_id: "CASE-B", edition: 1, project: P, published_at: "2026-03-12T09:00:00Z", withdrawn: null, pinned: true, strength: PAIR("C", "C"), strength_from: "member_bytes" },
-  { case_id: "CASE-C", edition: 1, project: P, published_at: "2025-05-09T09:00:00Z", withdrawn: null, pinned: false, strength: PAIR("A", "A"), strength_from: "case_document" },
-  { case_id: "CASE-D", edition: 1, project: P, published_at: "2025-06-01T09:00:00Z", withdrawn: null, pinned: true, strength: null, withheld: { orders: ["ORD-1"] } },
-  { case_id: "CASE-E", edition: 1, project: P, published_at: "2025-07-01T09:00:00Z", withdrawn: null, pinned: null, strength: null, strength_detail: "none" }];
-const FROZEN = (cases) => ok({ ok: true, id: Q, cases, detail: "" });
-const publishedcase = (r) => ok({ caseId: r.query.id, edition: Number(r.query.edition), project: P, ...(r.query.id === "CASE-A" ? { scope: "Street safety" } : {}) });
+const weaker = (g) => String.fromCharCode(g.charCodeAt(0) + 1);
+const later = (iso, days) => new Date(Date.parse(iso) + days * 86400000).toISOString().replace(/\.\d+Z$/, "Z");
+/** A project of `ann`'s with a question resting on a held passage (capture graded B) and a directory (connection graded B by resolution), drawn into it, by real acts: its strength is graded on both
+ *  axes. Answers `{world, ann, project, id, memo, today, retrieved, page(plane)}`: `today` is the owner's `inquirystrength`, `retrieved` the date the held passages were captured (the world's clock),
+ *  `page(plane)` the question's page over the world's door with only the ops `plane` names answered otherwise. */
+const gradedWorld = async () => {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const project = await world.recipes.project(ann, "Pothole repairs");
+  const directory = await world.recipes.graded(ann, project);
+  const memo = (await world.recipes.hold(ann, POLICY, "The Director shall repair each reported pothole, part 1.", project)).bundle;
+  const id = (await world.recipes.question(ann, project, { title: "Seven days", text: "Is the city repairing reported potholes within seven days?", subject: directory.subject, draw: true,
+    legs: [{ target: memo, role: "supports", grade: "B", grade_axis: "capture", grade_source: "capture" }, { target: directory.document, role: "supports", grade: "B", grade_axis: "connection", grade_source: "resolution" }] })).id;
+  const today = await ann.read("inquirystrength", { query: { id, project } });
+  const retrieved = /^\s+retrieved: (\S+)/m.exec((await ann.read("image", { query: { id: memo } }))["bundle.md"])[1];
+  const page = async (plane = {}) => {
+    const { door, session } = world.boot(ann);
+    const p = await boot({ screens: SCREENS, door, session, path: "/app/question/" + id, plane });
+    await p.settle();
+    return p;
+  };
+  return { world, ann, project, id, memo, today, retrieved, page };
+};
+/** the cases a question is in, as published-read freezes them; a pair is today's, or one axis weaker (`cases(w)`'s B, whose capture grade was under today's) */
+const casesOf = (w) => {
+  const cap = w.today.capture.grade, con = w.today.connection.grade;
+  return [
+    { case_id: "CASE-A", edition: 2, project: w.project, published_at: later(w.retrieved, 9), signed_at: later(w.retrieved, 8), withdrawn: null, pinned: true, strength: PAIR(cap, con), strength_from: "case_document" },
+    { case_id: "CASE-B", edition: 1, project: w.project, published_at: later(w.retrieved, 5), withdrawn: null, pinned: true, strength: PAIR(weaker(cap), con), strength_from: "member_bytes" },
+    { case_id: "CASE-C", edition: 1, project: w.project, published_at: "2025-05-09T09:00:00Z", withdrawn: null, pinned: false, strength: PAIR("A", "A"), strength_from: "case_document" },
+    { case_id: "CASE-D", edition: 1, project: w.project, published_at: "2025-06-01T09:00:00Z", withdrawn: null, pinned: true, strength: null, withheld: { orders: ["ORD-1"] } },
+    { case_id: "CASE-E", edition: 1, project: w.project, published_at: "2025-07-01T09:00:00Z", withdrawn: null, pinned: null, strength: null, strength_detail: "none" }];
+};
+const FROZEN = (id, cases) => ok({ ok: true, id, cases, detail: "" });
+const publishedcase = (project) => (r) => ok({ caseId: r.query.id, edition: Number(r.query.edition), project, ...(r.query.id === "CASE-A" ? { scope: "Street safety" } : {}) });
 const entry = (p, id) => main(p).querySelector(`[data-case-edition="${id}"]`);
 
 test("R72 what each published case froze for the question: one entry for each case edition, its own pair beside today's; the pinned-version check; a withheld edition with no pair; never combined", async () => {
-  const p = await open(at, { images: { ...A.images, [D]: docAt("2025-01-01T09:00:00Z") }, plane: { publishedfrozen: FROZEN(CASES), publishedcase, backlinks: ok({ ok: true, target: Q, backlinks: [{ from: P, from_type: "project", from_title: "Pothole repairs" }] }) } });
-  assert.equal(p.byOp("publishedfrozen")[0].query.id, Q);
+  const w = await gradedWorld();
+  const CASES = casesOf(w), cap = w.today.capture.grade, con = w.today.connection.grade;
+  const p = await w.page({ publishedfrozen: FROZEN(w.id, CASES), publishedcase: publishedcase(w.project) });
+  assert.equal(p.byOp("publishedfrozen")[0].query.id, w.id);
   const s = section(p, "screen.question.say045");
   assert.ok(s && says(s, "screen.question.say046") && says(s, "screen.question.say047"));
   assert.ok(says(s, "screen.question.frozen.count", { n: "5" }), "the question is in n published cases, n the cases the answer holds");
@@ -196,16 +248,16 @@ test("R72 what each published case froze for the question: one entry for each ca
   /* a reference of kind published (a link where the published screen is served, its card either way) */
   assert.equal(a.querySelector("b").textContent, "Street safety");
   assert.ok((a.querySelector("b .cs-card") || a.querySelector("b a.cs-ref")).getAttribute("data-tip").includes(word("shell.card.published")));
-  assert.ok(says(a.querySelector("[data-published]"), "screen.question.frozen.published", { date: day("2026-10-01"), n: "2" }), "Published <date>, edition n");
-  assert.ok(says(entry(p, "CASE-B:1").querySelector("[data-published]"), "screen.question.frozen.published", { date: day("2026-03-12"), n: "1" }));
+  assert.ok(says(a.querySelector("[data-published]"), "screen.question.frozen.published", { date: day(CASES[0].published_at), n: "2" }), "Published <date>, edition n");
+  assert.ok(says(entry(p, "CASE-B:1").querySelector("[data-published]"), "screen.question.frozen.published", { date: day(CASES[1].published_at), n: "1" }));
   const b = entry(p, "CASE-B:1");
   assert.ok(b.querySelector("b").textContent.startsWith(lead("state.undetermined")) && !b.textContent.includes("CASE-B"), "a case that states no title is undetermined, never its id");
-  /* frozen beside today, each its own; the same or, axis by axis, stronger or weaker (today: capture B, connection C) */
+  /* frozen beside today, each its own; the same or, axis by axis, stronger or weaker (today: the owner's pair for the question) */
   const grades = (el) => el.querySelectorAll(".cs-grade").map((g) => g.textContent.slice(-1));
-  assert.deepEqual(grades(a.querySelector("[data-frozen]")), ["B", "C"]);
-  assert.deepEqual(grades(a.querySelector("[data-today]")), ["B", "C"]);
-  assert.deepEqual(grades(b.querySelector("[data-frozen]")), ["C", "C"], "each case its own pair, never combined");
-  assert.deepEqual(grades(b.querySelector("[data-today]")), ["B", "C"]);
+  assert.deepEqual(grades(a.querySelector("[data-frozen]")), [cap, con]);
+  assert.deepEqual(grades(a.querySelector("[data-today]")), [cap, con]);
+  assert.deepEqual(grades(b.querySelector("[data-frozen]")), [weaker(cap), con], "each case its own pair, never combined");
+  assert.deepEqual(grades(b.querySelector("[data-today]")), [cap, con]);
   assert.deepEqual([a, b].map((e) => ["capture", "connection"].map((x) => e.querySelector(`[data-axis="${x}"]`).getAttribute("data-relation"))), [["same", "same"], ["stronger", "same"]]);
   assert.ok(says(a.querySelector("[data-today]"), "screen.question.frozen.today") && says(b.querySelector("[data-today]"), "screen.question.frozen.today"), "Today:");
   assert.ok(says(a.querySelector("[data-axis=capture]"), "screen.question.word.same") && says(a.querySelector("[data-axis=connection]"), "screen.question.word.same"));
@@ -221,8 +273,8 @@ test("R72 what each published case froze for the question: one entry for each ca
   assert.equal(c.querySelectorAll(".cs-grade").length, 0, "no pair for a case that pinned another version");
   assert.ok(!says(c, "screen.question.say052"));
   /* withheld: listed with that word and no pair */
-  const w = entry(p, "CASE-D:1");
-  assert.ok(w.hasAttribute("data-withheld") && says(w, "mark.gap.withheld.name") && w.querySelectorAll(".cs-grade").length === 0);
+  const held = entry(p, "CASE-D:1");
+  assert.ok(held.hasAttribute("data-withheld") && says(held, "mark.gap.withheld.name") && held.querySelectorAll(".cs-grade").length === 0);
   /* pinned: null says nothing of a pin; a pair with no record is not filled in */
   const e = entry(p, "CASE-E:1");
   assert.ok(says(e, "screen.question.frozen.unpinned") && !says(a, "screen.question.frozen.unpinned") && !says(c, "screen.question.frozen.unpinned"), "pinned: null says nothing was pinned");
@@ -233,7 +285,7 @@ test("R72 what each published case froze for the question: one entry for each ca
 });
 
 test("R72 controls: a question in no case draws no section; a question never published (NOT_PUBLISHED) draws none; a read that fails is drawn failed, never as none", async () => {
-  const none = await open(at, { ...A, plane: { publishedfrozen: FROZEN([]) } });
+  const none = await open(at, { ...A, plane: { publishedfrozen: FROZEN(Q, []) } });
   assert.equal(section(none, "screen.question.say045"), undefined);
   const working = await open(at, { ...A, plane: { publishedfrozen: refusedIn("NOT_PUBLISHED") } });
   assert.equal(section(working, "screen.question.say045"), undefined);
@@ -371,10 +423,18 @@ test("R74 on a reading the assistant composed that is not yet accepted: the bias
 });
 
 test("R74 an accept, a weigh and a reject sent from the fold carry the version; a run answering found: false is undetermined, never 'has not moved'; controls: a member-written or an accepted reading draws no fold", async () => {
-  const p = await open(at, withVersions({ plane: { airun: BIAS({ in_force: true, moved: true }), versionaccept: ok({ ok: true }), versionconsider: ok({ ok: true }) } }));
-  await press(p, "versionaccept", { within: biasFold(p) });
-  await press(p, "versionconsider", { within: biasFold(p), reason: "weigh it" });
-  assert.deepEqual([p.byOp("versionaccept")[0].body.version, p.byOp("versionconsider")[0].body.version], ["The audit alone", "The audit alone"]);
+  /* a reading suggested by the machine under its run (the world's recipe): the real acts, from the fold */
+  const world = await storeWorld({ ai: true });
+  const admin = await world.signIn(WORLD_FOUNDER_HANDLE);
+  const ann = await world.signIn("ann", OWN);
+  const project = await world.recipes.project(ann, "Pothole repairs");
+  const machine = await world.recipes.machineReading(admin, ann, project);
+  const { door, session } = world.boot(ann);
+  const p = await boot({ screens: SCREENS, door, session, path: "/app/question/" + machine.question });
+  await p.settle();
+  await press(p, "versionconsider", { within: biasFold(p, machine.version), reason: "weigh it" });
+  await press(p, "versionaccept", { within: biasFold(p, machine.version) });
+  assert.deepEqual([p.byOp("versionaccept")[0].body.version, p.byOp("versionconsider")[0].body.version], [machine.version, machine.version]);
   const missing = await open(at, withVersions({ plane: { airun: ok({ run: "RUN-77", found: false, session: null }) } }));
   const lens = biasFold(missing).querySelector("[data-bias]");
   assert.equal(lens.getAttribute("data-bias"), "undetermined");
@@ -437,18 +497,22 @@ test("R78 a page the record states counts from zero and is drawn from one: an ex
   assert.ok(p.byOp("basisversions").length > 0 && !p.requests.some((r) => r.body && JSON.stringify(r.body).includes('"page"')));
 });
 
-const docAt = (when) => ({ "bundle.md": DOCUMENT_MD.replace("retrieved: 2026-10-02T09:00:00Z", "retrieved: " + when), "data/provenance.json": provenanceOf(SHA) });
-const withDoc = (when, extra = {}) => ({ images: { ...A.images, [D]: docAt(when) }, plane: { publishedfrozen: FROZEN([CASES[1]]), publishedcase, backlinks: ok({ ok: true, target: Q, backlinks: [{ from: P, from_type: "project", from_title: "Pothole repairs" }] }), ...extra } });
+/** the case B edition, published `days` after the date the held passages were captured (negative: before it), the question's page drawing it beside today's pair */
+const dated = async (days) => {
+  const w = await gradedWorld();
+  const c = { ...casesOf(w)[1], published_at: later(w.retrieved, days) };
+  return { w, c, e: entry(await w.page({ publishedfrozen: FROZEN(w.id, [c]), publishedcase: publishedcase(w.project) }), "CASE-B:1") };
+};
 
 test("R72 the capture axis with a document the question cited after the edition published draws screen.question.say054 ({change}, {source} the document's title); the other axis, with none, draws screen.question.compare.axis", async () => {
-  const p = await open(at, withDoc("2026-10-02T09:00:00Z"));
-  const e = entry(p, "CASE-B:1");
+  const { w, e } = await dated(-1);
+  /* both held passages carry the world's clock as their capture date: the first the question cites is the newest, by the page's own rule */
   assert.ok(says(e.querySelector("[data-axis=capture]"), "screen.question.say054", { change: word("screen.question.word.stronger"), source: POLICY }));
   assert.ok(says(e.querySelector("[data-axis=connection]"), "screen.question.compare.axis", { axis: word("mark.scale.connection.name"), change: word("screen.question.word.same") }));
 });
 
 test("R72 a citation dated before the edition published draws screen.question.compare.axis, never say054", async () => {
-  const p = await open(at, withDoc("2026-03-01T09:00:00Z"));
-  const e = entry(p, "CASE-B:1");
+  const { e } = await dated(1);
   assert.ok(says(e.querySelector("[data-axis=capture]"), "screen.question.compare.axis", { axis: word("mark.scale.capture.name"), change: word("screen.question.word.stronger") }));
+  assert.ok(!e.textContent.includes(lead("screen.question.say054")));
 });

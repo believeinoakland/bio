@@ -100,6 +100,9 @@ function render(cs, view) {
      where the kit holds no `memberName` */
   const rosterRows = d.participants && d.participants.state === "ok" && d.participants.value && Array.isArray(d.participants.value.participants) ? d.participants.value.participants : [];
   const whoIs = (x, founder) => {
+    /* R40: project-roster names an actor by handle, and gives `null` only for the founder who chose none (index.mjs `#handleOf`: the root admin's handle, any other member by her handle or her id), so a null
+       (or the empty stand-in for it) is the unnamed founder, drawn by her key, never blank */
+    if (x === null || x === "") return P.who(cs, { founder: true });
     const s = typeof x === "string" ? x.replace(/^(member:|token:)/, "") : "";
     const row = s ? rosterRows.find((r) => r && r.handle && r.handle === s) : null;
     return row ? P.who(cs, row, founder) : P.named(cs, x, founder, P.who);

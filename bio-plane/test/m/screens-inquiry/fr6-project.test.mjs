@@ -29,7 +29,6 @@ test("R128 G12a every read of the project's documents asks for picker rows, page
   assert.ok(["web", "sheet", "photo"].every((k) => !rows[2].textContent.includes(word("screen.project.docs.kind." + k))), "no format stated, no kind drawn");
 });
 
-const QS = (n) => ({ ok: true, project: P, items: Array.from({ length: n }, (_, i) => ({ inquiry: "INQ-2026-" + String(100 + i).padStart(4, "0"), title: "Question " + i })), cursor: null });
 /** A world where `ann` started a project and drew `n` questions on it by real acts: every odd one rests on a held document (so it grades), the others rest on nothing. */
 async function questionsWorld(n) {
   const world = await storeWorld();
@@ -53,7 +52,6 @@ const pageAs = async (world, me, path) => {
   await p.settle();
   return p;
 };
-const graded = (i) => ({ ok: true, capture: { state: "graded", grade: "BCDA"[i % 4] }, connection: { state: "graded", grade: "CDAB"[i % 4] } });
 
 test("R1 R9 G12c a project with five questions asks for their strength once (inquirystrength with their five ids), draws each question's own pair, and sends no read for one id", async () => {
   const { world, ann, project, ids } = await questionsWorld(5);
@@ -78,17 +76,17 @@ test("R1 R9 G12c a project with five questions asks for their strength once (inq
   assert.ok(gradedRows >= 2, "control: the questions that rest on a document are graded");
 });
 
-test("R1 R9 G12c more than fifty questions are asked for fifty at a time; a question the batch refuses (or leaves out) is drawn failed alone, the others graded", async () => {
-  const items = QS(120);
-  const ids = items.items.map((x) => x.inquiry);
-  const p = await open(at, { plane: { projectquestions: ok(items),
-    inquirystrength: (r) => ok({ ok: true, results: Object.fromEntries(String(r.query.ids).split(",").filter((id) => id !== ids[3]).map((id) => [id, id === ids[2] ? { ok: false, code: "NO_SUCH_BUNDLE", target: id } : { ok: true, target: id, ...graded(1) }])) }) } });
+test("R1 R9 G12c more than fifty questions are asked for fifty at a time, every one drawn with its own answer and none failed", async () => {
+  const { world, ann, project, ids } = await questionsWorld(120);
+  const p = await pageAs(world, ann, "/app/project/" + project);
   const reads = p.byOp("inquirystrength");
   assert.deepEqual(reads.map((r) => String(r.query.ids).split(",").length).sort((a, b) => a - b), [20, 50, 50], "three reads for 120 questions");
+  assert.deepEqual(reads.flatMap((r) => String(r.query.ids).split(",")).sort(), [...ids].sort(), "naming each question once");
   const rows = section(p, "screen.project.questions.head").querySelectorAll(".cs-row");
   assert.equal(rows.length, 120);
-  const failed = rows.map((r, i) => [i, !!r.querySelector('[data-state="failed"]')]).filter(([, f]) => f).map(([i]) => i);
-  assert.deepEqual(failed, [2, 3], "only the refused and the left-out question are drawn failed");
+  assert.deepEqual(rows.filter((r) => r.querySelector('[data-state="failed"]')).length, 0, "none is drawn failed");
+  /* a question the batch refuses (`NO_SUCH_BUNDLE`) or leaves out is drawn failed alone; neither state is reached by an act: the project's list holds only what the viewer may see, and the batch
+     answers every id it is given (strength/index.mjs:745-760), so those cases are not tested */
 });
 
 test("R79 G12c the project's dashboard asks for the questions' strength once too", async () => {

@@ -134,14 +134,15 @@ test("R97 control: the typist's own page offers no Confirm; the plane's refusal 
 /* ---- R98 ---- */
 test("R98 the route check sends the bundle and reads the answer back: not shown, shown, and nothing new", async () => {
   const w = await member();
-  /* not shown: the world's route is PRESENT for a document whose register it can read; a route looked at and found indeterminate is scripted (needed: a held document whose register cannot be read) */
-  const p = await pageOn(w.world, w.ann, w.at, { plane: { provenanceroute: ok({ ok: true, bundleId: w.document, appended: true, route: { finding: "LOOKED_INDETERMINATE" } }) } });
-  assert.ok(says(main(p), "screen.document.route.standing") && says(main(p), "screen.document.route.says"));
+  /* not shown: a clerk's paper file promoted with no provenance file (`recipes.paperFile`), whose route the check looks at and finds indeterminate */
+  const paper = await w.world.recipes.paperFile(w.ann, w.project);
+  const p = await pageOn(w.world, w.ann, "/app/document/" + paper.bundle);
+  assert.ok(says(main(p), "screen.document.route.notshown") && says(main(p), "screen.document.route.says") && !says(main(p), "screen.document.route.standing"), "the recipe's own check has looked: not shown");
   await press(p, "provenanceroute");
   /* C32: the arm reads `bundleId` from the query, so it is sent there and in no body */
-  assert.equal(p.byOp("provenanceroute")[0].query.bundleId, w.document);
+  assert.equal(p.byOp("provenanceroute")[0].query.bundleId, paper.bundle);
   assert.ok(!p.byOp("provenanceroute")[0].body || !("bundleId" in p.byOp("provenanceroute")[0].body));
-  assert.ok(says(main(p), "screen.document.route.notshown") && !says(main(p), "screen.document.route.standing"));
+  assert.ok(says(main(p), "screen.document.route.notshown") && says(main(p), "screen.document.route.same") && !says(main(p), "screen.document.route.standing"), "looked at again: still not shown, nothing new");
   /* shown, then nothing new: the world's own check, made twice */
   const first = await pageOn(w.world, w.ann, w.at);
   assert.ok(says(main(first), "screen.document.route.standing"), "nobody has looked");
@@ -190,9 +191,13 @@ test("R99 control: with no other document to connect to the section is not drawn
 /* ---- R100 ---- */
 const RES = ok({ ok: true, names: [{ entity_id: "ENT-17", label: "L. Chen", kind: "person", grade: "A", matched_by: "identifier", mentions: 1 }],
   resolutions: [{ ref: "name:l-chen", entity_id: "ENT-17", grade: "A" }] });
-/* still scripted (resolutions, resolutiondefect): needed: a held document whose reading carries a reference resolved to an entity (the world's reading carries no reference to resolve) */
 test("R100 a match reported as wrong sends the capture, the reference, the entity and her reason", async () => {
-  const p = await open(at, { plane: { resolutions: RES, resolutiondefect: ok({ ok: true }) } });
+  /* the real state: a staff directory held and read, one name matched to a person entity (`recipes.unmatchedPerson`, no testimony) */
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const dir = await world.recipes.unmatchedPerson(ann, { project: await world.recipes.project(ann, "Pothole repairs"), testify: false });
+  const match = (await ann.read("resolutions", { query: { sha256: dir.sha } })).resolutions.find((r) => r.entity_id === dir.people[0]);
+  const p = await pageOn(world, ann, "/app/document/" + dir.bundle);
   assert.ok(says(main(p).querySelector("[data-fold=defect]"), "screen.document.defect.summary"));
   assert.ok(says(await press(p, "resolutiondefect"), "capture.fieldneeded", { field: word("screen.document.defect.which") }));
   fill(p, { "document-defect-which": "0" });
@@ -200,7 +205,7 @@ test("R100 a match reported as wrong sends the capture, the reference, the entit
   assert.equal(p.byOp("resolutiondefect").length, 0);
   fill(p, { "document-defect-why": "It is the deputy, not the director." });
   await press(p, "resolutiondefect");
-  assert.deepEqual(p.byOp("resolutiondefect")[0].body, { captureSha: SHA, ref: "name:l-chen", entityId: "ENT-17", reason: "It is the deputy, not the director." });
+  assert.deepEqual(p.byOp("resolutiondefect")[0].body, { captureSha: dir.sha, ref: match.ref, entityId: dir.people[0], reason: "It is the deputy, not the director." });
 });
 
 test("R100 control: the plane's refusals are drawn by the design's words; no match, no fold", async () => {
@@ -270,16 +275,26 @@ test("R98 entry 3 (B22): the standing route is read as `provenanceroutes` answer
 });
 
 test("R108 entry 3 (B22): the declared origins are read (`origins`, `bundleId`) and listed oldest first with who and when, those made elsewhere as well; a read that fails is drawn failed", async () => {
-  const list = [{ seq: 1, system: "The city's records portal", by: "rosa", at: "2026-10-01T09:00:00Z" }, { seq: 2, system: "The clerk's office, by email", by: "mai", at: "2026-10-08T09:00:00Z" }];
-  const p = await open(at, { plane: { origins: ok({ ok: true, bundleId: D, origins: list }) } });
-  assert.equal(p.byOp("origins")[0].query.bundleId, D);
+  /* the real acts: two members of the project declare where the document came from, one after the other (provenance R64), and the page lists what `origins` answers */
+  const w = await member();
+  const mai = await w.world.signIn("mai", { capabilities: ["contribute"] });
+  await w.ann.act("projectinvite", { query: { projectId: w.project, handle: "mai" }, body: {} });
+  await mai.act("projectjoin", { query: { projectId: w.project }, body: {} });
+  await w.ann.act("declareorigin", { query: {}, body: { bundleId: w.document, system: "The city's records portal" } });
+  await mai.act("declareorigin", { query: {}, body: { bundleId: w.document, system: "The clerk's office, by email" } });
+  const list = (await w.ann.read("origins", { query: { bundleId: w.document } })).origins;
+  assert.equal(list.length, 2);
+  assert.deepEqual(list.map((o) => [o.by, o.system]), [["member:ann", "The city's records portal"], ["member:mai", "The clerk's office, by email"]], "the record answers oldest first");
+  const p = await pageOn(w.world, w.ann, w.at);
+  assert.equal(p.byOp("origins")[0].query.bundleId, w.document);
   const rows = section(p, "screen.document.origin.head").querySelectorAll("[data-origin]");
   assert.equal(rows.length, 2);
-  assert.ok(text(rows[0]).includes(list[0].system) && text(rows[0]).includes("rosa") && text(rows[0]).includes(day(list[0].at)));
-  assert.ok(text(rows[1]).includes(list[1].system), "the later one after it");
-  const none = await open(at);
-  assert.equal(section(none, "screen.document.origin.head").querySelectorAll("[data-origin]").length, 0, "control: none declared, none listed");
-  const bad = await open(at, { plane: { origins: refusedIn("ORIGIN_NOT_A_DOCUMENT", "x") } });
+  assert.ok(text(rows[0]).includes(list[0].system) && text(rows[0]).includes("ann") && text(rows[0]).includes(day(list[0].at)));
+  assert.ok(text(rows[1]).includes(list[1].system) && text(rows[1]).includes("mai") && text(rows[1]).includes(day(list[1].at)), "the later one after it, by the member who made it elsewhere");
+  const none = await member();
+  const q = await pageOn(none.world, none.ann, none.at);
+  assert.equal(section(q, "screen.document.origin.head").querySelectorAll("[data-origin]").length, 0, "control: none declared, none listed");
+  const bad = await pageOn(w.world, w.ann, w.at, { plane: { origins: refusedIn("ORIGIN_NOT_A_DOCUMENT", "x") } });
   assert.ok(section(bad, "screen.document.origin.head").querySelector('[data-state="failed"]'), "a failed read is drawn failed");
 });
 

@@ -5,8 +5,8 @@
  * their keys' words (K3810). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { boot, ok } from "../interface-shell/harness.mjs";
-import { open, storeWorld, SCREENS, main, press, says, fill, inquiryMd, section, P, Q, D } from "./fixtures.mjs";
+import { boot } from "../interface-shell/harness.mjs";
+import { storeWorld, SCREENS, main, press, says, fill, section } from "./fixtures.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
 process.env.TZ = "UTC";
@@ -137,19 +137,26 @@ test("R50 R30b control: one ground beside a necessary passage, and every passage
 });
 
 /* R17b: a question's leg whose extent names a part of the document (`doc-part`) is placed by its reference */
-/* a footnote's extent needs a reading of the document (content C-45.2: no chain, no passage), which no act of the world makes (the reader is an
-   environment double): this one question stays on the scripted page, its `basisversions` the one answer left by hand */
-const partLeg = { target: D, role: "supports", grade: "B", extent_kind: "doc-part", extent_part: "word/footnotes.xml", extent_ref: "footnote 1" };
 const where = (p) => section(p, "screen.question.supports.head");
 test("R17b R2 a leg citing a footnote is placed by the footnote's own reference; legs placed by a page or a paragraph are unchanged", async () => {
-  const at = "/app/question/" + Q;
-  const legsOf = (l) => [l];
-  const doc = (l) => open(at, { images: { [Q]: { "bundle.md": inquiryMd(P, [[D, "cites", "confirmed", null]], { legs: legsOf(l) }) } }, plane: { basisversions: ok({ ok: true, inquiry: Q, versions: [] }) } });
-  const footnote = await doc(partLeg);
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", { capabilities: ["contribute", "create_projects"] });
+  const project = await world.recipes.project(ann, "Stormwater");
+  /* a held page with a footnote and paragraphs (a footnote's extent needs a reading of the document: C-45.2) and a held PDF of three pages */
+  const minutes = await world.recipes.page(ann, "Council minutes", { paragraphs: ["The council met on Tuesday.", "The vote was five to two.", "The budget was amended.", "The meeting was adjourned."], footnotes: ["Footnote text."], project });
+  const audit = await world.recipes.pdf(ann, "The audit", { pages: 3, project });
+  const doc = async (leg) => {
+    const id = (await world.recipes.question(ann, project, { title: "Where is it", text: "Is it so?", legs: [leg], draw: true })).id;
+    const { door, session } = world.boot(ann);
+    const p = await boot({ screens: SCREENS, door, session, path: "/app/question/" + id });
+    await p.settle();
+    return p;
+  };
+  const footnote = await doc({ target: minutes.bundle, role: "supports", extent_kind: "doc-part", extent_part: "word/footnotes.xml", extent_ref: "footnote 1" });
   assert.ok(where(footnote).textContent.includes("footnote 1"), "the line carries the part's reference: " + where(footnote).textContent.slice(0, 300));
-  const page = await doc({ target: D, role: "supports", grade: "B", extent_page: 2 });
+  const page = await doc({ target: audit.bundle, role: "supports", extent_kind: "pdf-page", extent_page: 2 });
   assert.ok(says(where(page), "screen.document.passage.where", { page: "3" }), "a page leg is placed by its page, one-based");
   assert.ok(!where(page).textContent.includes("footnote 1"));
-  const para = await doc({ target: D, role: "supports", grade: "B", extent_para: 4 });
+  const para = await doc({ target: minutes.bundle, role: "supports", extent_kind: "doc-para", extent_para: 4 });
   assert.ok(says(where(para), "screen.question.leg.paragraph", { n: "5" }), "a paragraph leg is placed by its paragraph, one-based");
 });

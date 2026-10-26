@@ -8,6 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { hasWord } from "../../../src/setup-words/index.mjs";
 import { ok, refusedIn, boot } from "../interface-shell/harness.mjs";
+import { unnamedFounderWorld } from "../store-request/fixtures.mjs";
 import { main, actsIn, fill, press, says, section, word, plane, storeWorld, WORLD_FOUNDER_HANDLE, READING, DOCUMENT_MD, provenanceOf, inquiryMd, INQUIRY_REFS, SCREENS, P, Q, Q2, D, SHA, NEWER } from "./fixtures.mjs";
 
 process.env.TZ = "UTC";
@@ -138,8 +139,6 @@ test("R123 R55 R113 C33 a held copy offers no retire; control: a vouched copy of
   assert.ok(actsIn(main(plain)).includes("retire"), "control: a copy that is no held row of hers offers retire");
 });
 
-const cited = (extra = {}) => ({ status: 200, json: { ok: true, result: { ok: false, reason: "CITED", code: "CITED", translation: "This copy is cited.", offenders: [{ id: D, citedBy: [Q, Q2] }], ...extra } } });
-
 test("R123 R113 C33 retire answered CITED draws the questions that cite the copy as references and not the release act's sentence", async () => {
   const w = await member({ vouch: true, cites: ["Seven days?", "Does closed mean repaired?"] });
   const p = await pageOn(w.world, w.ann, w.at);
@@ -150,10 +149,7 @@ test("R123 R113 C33 retire answered CITED draws the questions that cite the copy
   assert.deepEqual(refs.map(text).sort(), ["Does closed mean repaired?", "Seven days?"], "named by their titles");
   assert.ok(!says(slot, "refusal.ILLEGAL_TRANSITION"), "never the release act's sentence");
   assert.ok(text(slot).includes(word("screen.document.retire.refused.cited", { questions: "" }).split("{")[0].trim().slice(0, 20)), "the cited sentence is drawn by its key");
-  /* control: without the refusal's own list the page's questions that cite the copy are drawn (scripted: the world's refusal always lists its offenders) */
-  const q = await pageOn(w.world, w.ann, w.at, { plane: { retire: cited({ offenders: undefined }) } });
-  const slot2 = await retireIt(q);
-  assert.equal(slot2.querySelectorAll("a.cs-ref").length, 2, "from the page's own backlinks");
+  /* a refusal that lists no offenders cannot exist: the owner's CITED always names the offending copy and its citers (promotion/index.mjs:802) */
 });
 
 test("R123 R113 C33 retire answered ILLEGAL_TRANSITION does not draw the release act's sentence", async () => {
@@ -204,32 +200,39 @@ test("R55 C40 attest sends the digest, the archive request and the document's pu
   await attestIt(p);
   assert.deepEqual(p.byOp("attest")[0].body, { sha256: c.sha, archive: true, locator: c.address });
   assert.equal(p.answers("attest").length, 1, "the world answered the attestation");
-  /* scripted below: attest (needs recipes that hold a copy of an http address, of a local host and of a testimony, whose public-address test the world's capture would refuse) */
-  for (const md of [HTTP_MD, TESTIMONY_MD, WEB.replace("https://example.org/", "https://localhost/"), WEB.replace("https://example.org/", "https://10.0.0.5/")]) {
-    const q = await openWith(at, { ...withMd(md), plane: { attest: attestAnswer({ ok: true, attestation: TOKEN }) } });
+  /* a copy held at an http address, a local host or a bare IP cannot exist: the capture refuses such a locator (BAD_LOCATOR, acquisition/index.mjs:1140). The copies that have no public https address are a member's
+     own testimony and a page she brought in: neither asks for the archive */
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const testified = await ann.act("testify", { body: { words: "I saw the pothole at 4th and Main.", observedAt: "2026-10-04T09:10:00Z" } });
+  const brought = await world.recipes.page(ann, "Policy memo", {});
+  for (const bundle of [testified.bundle_id, brought.bundle]) {
+    const q = await pageOn(world, ann, "/app/document/" + bundle);
     await attestIt(q);
-    assert.deepEqual(q.byOp("attest")[0].body, { sha256: SHA }, "control: no archive asked for an address that is not public https");
+    assert.deepEqual(Object.keys(q.byOp("attest")[0].body), ["sha256"], "control: no archive asked for an address that is not public https");
   }
 });
 
-/* scripted: attest (needs a recipe that stands a time-stamping authority and an archive in the world's network, so the attestation obtains both, one or neither) */
 test("R55 C40 attest says which of the two is still missing, in words that exist; both obtained says done only; neither is refused as before", async () => {
-  const both = await openWith(at, { plane: { attest: attestAnswer({ ok: true, attestation: TOKEN, archive: { service: "a", locator: "https://archive.example/1" } }) } });
-  const s1 = await attestIt(both);
+  /* the time-stamping authority and the archive stand in the world's network as `recipes.attested` makes them answer (up or down); the page's own press is the second ask of the owner */
+  const pressed = async (net) => {
+    const world = await storeWorld();
+    const ann = await world.signIn("ann", OWN);
+    const made = await world.recipes.attested(ann, net);
+    const p = await pageOn(world, ann, "/app/document/" + made.document);
+    return { p, slot: await attestIt(p) };
+  };
   const outcome = (p) => text(main(p).querySelector('[data-outcome="attest"]'));
-  assert.ok(says(main(both), "screen.document.attest.done") && !outcome(both).includes(word("filings.trusted_timestamp_archive")), "both: done only");
-  const noArchive = await openWith(at, { plane: { attest: attestAnswer({ ok: true, attestation: TOKEN }) } });
-  await attestIt(noArchive);
-  assert.ok(says(main(noArchive).querySelector('[data-outcome="attest"]'), "filings.trusted_timestamp_archive"), "a timestamp and no co-archive");
-  assert.ok(!says(main(noArchive).querySelector('[data-outcome="attest"]'), "screen.document.attest.done"));
-  const noStamp = await openWith(at, { plane: { attest: { status: 200, json: { ok: true, result: { ok: false, reason: "NO_ATTESTATION", code: "NO_ATTESTATION", attempts: [], archive: { service: "a", locator: "https://archive.example/1" } } } } } });
-  const s3 = await attestIt(noStamp);
-  assert.ok(says(slotOf(noStamp, "attest"), "filings.archive_trusted_timestamp"), "a co-archive and no trusted timestamp");
-  const neither = await openWith(at, { plane: { attest: { status: 200, json: { ok: true, result: { ok: false, reason: "NO_ATTESTATION", code: "NO_ATTESTATION", translation: "No authority answered.", attempts: [] } } } } });
-  const s4 = await attestIt(neither);
-  assert.ok(!says(s4, "filings.archive_trusted_timestamp") && !says(s4, "filings.trusted_timestamp_archive") && !says(main(neither), "screen.document.attest.done"), "neither: the refusal as before");
-  assert.ok(text(s4).includes("No authority answered.") || says(s4, "refusal.NO_ATTESTATION"));
-  void s1; void s3;
+  const both = await pressed({ tsa: true, archive: true });
+  assert.ok(says(main(both.p), "screen.document.attest.done") && !outcome(both.p).includes(word("filings.trusted_timestamp_archive")), "both: done only");
+  const noArchive = await pressed({ tsa: true, archive: false });
+  assert.ok(says(main(noArchive.p).querySelector('[data-outcome="attest"]'), "filings.trusted_timestamp_archive"), "a timestamp and no co-archive");
+  assert.ok(!says(main(noArchive.p).querySelector('[data-outcome="attest"]'), "screen.document.attest.done"));
+  const noStamp = await pressed({ tsa: false, archive: true });
+  assert.ok(says(slotOf(noStamp.p, "attest"), "filings.archive_trusted_timestamp"), "a co-archive and no trusted timestamp");
+  const neither = await pressed({ tsa: false, archive: false });
+  assert.ok(!says(neither.slot, "filings.archive_trusted_timestamp") && !says(neither.slot, "filings.trusted_timestamp_archive") && !says(main(neither.p), "screen.document.attest.done"), "neither: the refusal as before");
+  assert.ok(text(neither.slot).includes(word("refusal.NO_ATTESTATION")) || says(neither.slot, "refusal.NO_ATTESTATION"), "refused in the owner's words");
 });
 
 /* ---- C42 / R124 / R69: a move of citations only where it can be done ---- */
@@ -297,8 +300,13 @@ test("C94 R111 a member the record names is drawn by her handle, the founder's i
   assert.ok(text(rows[0]).includes(WORLD_FOUNDER_HANDLE) && text(rows[1]).includes("ann"), "each one's handle");
   const all = text(main(p));
   assert.doesNotMatch(all, /\badmin\b/, "never the founder's id");
-  /* control: no roster answers (the world's roster always lists its members, so it is scripted empty over the real origins); the founder is the unnamed founder, the other keeps the handle she declared by */
-  const none = await pageOn(w.world, w.ann, w.at, { plane: { memberlist: ok({ ok: true, members: [] }) } });
+  /* control: the founder holds no handle (a claim made with none, `unnamedFounderWorld`): she is the unnamed founder, the other keeps the handle she declared by */
+  const bare = await unnamedFounderWorld();
+  const ben = await bare.signIn("ann", OWN);
+  const doc = await bare.recipes.page(ben, "Policy memo", {});
+  await bare.unnamed.act("declareorigin", { body: { bundleId: doc.bundle, system: "Portal" } });
+  await ben.act("declareorigin", { body: { bundleId: doc.bundle, system: "Email" } });
+  const none = await pageOn(bare, ben, "/app/document/" + doc.bundle);
   const r2 = section(none, "screen.document.origin.head").querySelectorAll("[data-origin]");
   assert.ok(text(r2[0]).includes(word("member.founder.unnamed")) && text(r2[1]).includes("ann"), "control: no handle known draws the fallback word: " + r2.map(text).join(" | "));
   /* an id the record names that no member of the roster holds draws the plain word (scripted: the origins, since the world's records name only members it holds) */
@@ -342,24 +350,28 @@ test("R117 R35 R50 C41 a basis version refused for unplaced legs names each leg 
 });
 
 /* ---- DEC-394 (3d) R126: resolvetestify ---- */
-const UNMATCHED = [{ ref: "name:director-chen", label: "Director Chen", page: 3 }, { ref: "name:the-department", label: "the Department", page: 5 }];
-const NAMES_FOR_TESTIFY = (extra = {}) => ok({ ok: true, names: [{ entity_id: "ENT-17", label: "L. Chen, Director of Public Works", kind: "person", grade: "A", matched_by: "identifier", mentions: 1 }], resolutions: [], ...extra });
 const testifyFold = (p) => main(p).querySelector('[data-fold="testify"]');
 
-/* scripted: resolvetestify and the names of `resolutions` (needs a recipe that reads a document whose person is named but matched to no registered subject, and registers the subject she is then said to be) */
 test("R126 DEC-394 resolvetestify: a name the record matched to no subject is listed with a field for who it is and how she knows; it sends the declared fields; no how, nothing is sent; control: no unmatched name, no fold", async () => {
-  const p = await openWith(at, { plane: { resolutions: NAMES_FOR_TESTIFY({ unresolved: UNMATCHED }), resolvetestify: ok({ ok: true }) } });
+  /* the real state: a staff directory read, one name matched to a person and the rest matched to none, and a second entity she may say a name is (`recipes.unmatchedPerson`, no testimony yet) */
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const project = await world.recipes.project(ann, "Pothole repairs");
+  const dir = await world.recipes.unmatchedPerson(ann, { project, testify: false });
+  const unresolved = (await ann.read("resolutions", { query: { sha256: dir.sha } })).unresolved;
+  const p = await pageOn(world, ann, "/app/document/" + dir.bundle);
   const fold = testifyFold(p);
   assert.ok(fold && says(fold, "screen.document.testify.head") && says(fold, "screen.document.testify.note3"), "the fold and its notes by key");
   const which = p.doc.getElementById("document-testify-which").querySelectorAll("option");
-  assert.deepEqual(which.map((o) => o.getAttribute("value")), ["0", "1"], "each name the read gives, none preselected over the first");
-  fill(p, { "document-testify-which": "1", "document-testify-who": "ENT-17" });
+  assert.deepEqual(which.map((o) => o.getAttribute("value")), unresolved.map((_, i) => String(i)), "each name the read gives, none preselected over the first");
+  fill(p, { "document-testify-which": "1", "document-testify-who": dir.people[1] });
   assert.ok(says(await press(p, "resolvetestify"), "screen.document.testify.refused"), "no how: refused in place");
   assert.equal(p.byOp("resolvetestify").length, 0, "nothing sent");
   fill(p, { "document-testify-how": "I was at the meeting." });
   await press(p, "resolvetestify");
-  assert.deepEqual(p.byOp("resolvetestify")[0].body, { captureSha: SHA, ref: "name:the-department", entityId: "ENT-17", basis: "I was at the meeting." });
-  const none = await openWith(at, { plane: { resolutions: NAMES_FOR_TESTIFY() } });
+  assert.deepEqual(p.byOp("resolvetestify")[0].body, { captureSha: dir.sha, ref: unresolved[1].ref, entityId: dir.people[1], basis: "I was at the meeting." });
+  const plain = await world.recipes.page(ann, "Plain memo", { project });
+  const none = await pageOn(world, ann, "/app/document/" + plain.bundle);
   assert.equal(testifyFold(none), null, "control: the read gives no unmatched name, so no form");
   assert.ok(!actsIn(main(none)).includes("resolvetestify"));
 });

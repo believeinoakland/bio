@@ -5,15 +5,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn, boot } from "../interface-shell/harness.mjs";
+import { unnamedFounderWorld } from "../store-request/fixtures.mjs";
 import { open, main, actsIn, press, says, section, word, day, storeWorld, WORLD_FOUNDER_HANDLE, SCREENS, P } from "./fixtures.mjs";
 import { generate as sheetOf } from "../../sheetgen.mjs";
 import { generate as imageOf } from "../../imggen.mjs";
 
 const at = "/app/project/" + P;
 const PROJECT = SCREENS.find((s) => s.id === "project");
-const ROSTER = ok({ ok: true, members: [{ member_id: "admin", handle: "sparky", founder: true }, { member_id: "u-7", handle: "rosa" }, { member_id: "u-9", handle: null }] });
-const QUIET = ok({ ok: true, members: [] });
-const NOID = /\bu-7\b|\badmin\b|\bu-99\b/;
 
 /* ------------------------------------------------------------------------------------------------------------------ C94 */
 
@@ -66,33 +64,33 @@ test("R29 R40 R54 C94 the members the project names from the record are drawn by
   assert.doesNotMatch(main(q).textContent, NOHANDLE);
 });
 
-test("R29 R40 R54 C94 the members the project names from the record are drawn by handle, never by id (shapes the real plane never gives, which the page still guards): a participant given by id, the visibility history's setter, the stake's, the owners' vote; an id no roster holds by the plain word; control: the roster silent, the fallback words", async () => {
-  /* still scripted (projectparticipants, projectvisibility, projectstake, projectownervotes): these are shapes the real owners never give (a participant by id, a setter by id, an id no roster holds), which the page still
-     guards; no recipe can make them (needed: none, the real counterpart is the test above) */
-  const plane = (roster) => ({ memberlist: roster,
-    projectparticipants: ok({ ok: true, projectId: P, participants: [{ handle: "mai", state: "joined", owner: 1 }, { member: "u-7", state: "joined", owner: 0 }, { handle: "ana", state: "joined", owner: 0 }] }),
-    projectvisibility: ok({ ok: true, projectId: P, setting: "hidden", recorded: true, history: [
-      { setting: "hidden", set_by: "u-7", reason: null, at: "2026-10-01T09:00:00Z" },
-      { setting: "discoverable", set_by: "admin", reason: "ready", at: "2026-10-05T09:00:00Z" },
-      { setting: "hidden", set_by: "u-99", reason: "too soon", at: "2026-10-06T09:00:00Z" }] }),
-    projectstake: ok({ ok: true, stake: "Two members live nearby.", set_by: "u-7", set_at: "2026-10-09T09:00:00Z", history: [] }),
-    projectownervotes: ok({ ok: true, projectId: P, changes: [{ change: "add", target: "ana", proposed_by: "u-7", proposed_at: "2026-10-09T09:00:00Z", agreed: ["admin"], awaiting: ["u-99"] }] }) });
-  const p = await open(at, { plane: plane(ROSTER) });
+test("R40 a founder who chose no handle is drawn by member.founder.unnamed, never blank, as the proposer of an owner's addition, as the setter of the visibility and as the stake's setter", async () => {
+  /* the real state (`unnamedFounderWorld`: a founder claimed with a password and no handle): mai joined and made an owner beside her; the founder hides the project, sets the stake and proposes ana, who joined, as a
+     third owner (one vote short: CONSENSUS_REQUIRED, the vote is kept); the owners' vote, the history and the stake name her by what project-roster gives for a founder with no handle */
+  const world = await unnamedFounderWorld();
+  const mai = await world.signIn("mai", { capabilities: ["contribute", "create_projects"] });
+  const ana = await world.signIn("ana", { capabilities: ["contribute"] });
+  const project = await world.recipes.project(world.unnamed, "Unnamed founder's potholes");
+  const founder = world.unnamed;
+  await founder.act("projectinvite", { query: { projectId: project, handle: "mai" } });
+  await mai.act("projectjoin", { query: { projectId: project } });
+  await founder.act("projectowneradd", { query: { projectId: project, handle: "mai" } });
+  await founder.act("projectvisibilityset", { query: { projectId: project, setting: "discoverable", reason: "ready" }, body: {} });
+  await founder.act("projectstakeset", { query: { projectId: project, stake: "Two members live nearby." }, body: {} });
+  await founder.act("projectinvite", { query: { projectId: project, handle: "ana" } });
+  await ana.act("projectjoin", { query: { projectId: project } });
+  await founder.act("projectowneradd", { query: { projectId: project, handle: "ana" } }).then(() => assert.fail("the second owner's agreement is owed"), (e) => assert.match(String(e.message), /CONSENSUS_REQUIRED/));
+  const read = (op) => mai.read(op, { query: { projectId: project } });
+  const vote = (await read("projectownervotes")).changes[0], history = (await read("projectvisibility")).history, stake = await read("projectstake");
+  const unnamed = word("member.founder.unnamed");
+  const p = await pageOf(world, mai, "/app/project/" + project);
   const members = section(p, "screen.project.members.head");
-  assert.ok(members.textContent.includes("rosa"), "a participant row that carries her id only is drawn by her handle");
-  assert.ok(says(members, "project.owners.pending", { who: "ana", by: "rosa", date: day("2026-10-09"), agreed: "sparky", awaiting: word("shell.card.member") }),
-    "the owners' vote: proposer and agreed by handle, an unknown id by the plain word");
+  assert.ok(says(members, "project.owners.pending", { who: "ana", by: unnamed, date: day(vote.proposed_at), agreed: unnamed, awaiting: "mai" }), "the owners' vote: proposer and agreed, the founder unnamed");
   const vis = main(p).querySelector('details[data-fold="settings"]');
-  assert.ok(says(vis, "project.visibility.history", { change: word("project.visibility.discoverable"), who: "sparky", date: day("2026-10-05"), reason: "ready" }), "the founder's id by her handle");
-  assert.ok(says(vis, "project.visibility.history", { change: word("project.visibility.hidden"), who: word("shell.card.member"), date: day("2026-10-06"), reason: "too soon" }), "an unknown id by the plain word");
-  assert.ok(says(section(p, "stake.project.title"), "stake.set", { who: "rosa", date: day("2026-10-09") }), "the stake's setter");
-  assert.doesNotMatch(main(p).textContent, NOID, "never an id");
-  /* control: the roster names no handle: the founder is the unnamed founder, any other member the plain word */
-  const q = await open(at, { plane: plane(QUIET) });
-  const vq = main(q).querySelector('details[data-fold="settings"]');
-  assert.ok(says(vq, "project.visibility.history", { change: word("project.visibility.discoverable"), who: word("member.founder.unnamed"), date: day("2026-10-05"), reason: "ready" }), "the founder unnamed");
-  assert.ok(says(section(q, "stake.project.title"), "stake.set", { who: word("shell.card.member"), date: day("2026-10-09") }), "a member with no handle known: the fallback word");
-  assert.doesNotMatch(main(q).textContent, NOID);
+  const set = history.find((h) => h.setting === "discoverable");
+  assert.ok(says(vis, "project.visibility.history", { change: word("project.visibility.discoverable"), who: unnamed, date: day(set.at), reason: "ready" }), "the visibility history's setter, the founder unnamed");
+  assert.ok(says(section(p, "stake.project.title"), "stake.set", { who: unnamed, date: day(stake.set_at) }), "the stake's setter, the founder unnamed");
+  assert.doesNotMatch(main(p).textContent, /\badmin\b|\bnull\b/, "never admin, never null");
 });
 
 /* ------------------------------------------------------------------------------------------------------------------ DEC-394 (3a) */

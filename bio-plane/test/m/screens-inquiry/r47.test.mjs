@@ -126,14 +126,8 @@ test("R48 two ended runs draw the later's ending, not \"No run yet\"; the ask is
   assert.ok(!says(panel(p), "screen.assistant.run.ended", { why: word("ai.run.ending.cancelled") }));
   assert.ok(!says(panel(p), "screen.assistant.run.none"));
   assert.ok(button(p, "airunopen", panel(p)), "Work on this is offered again");
-  /* an ended run with no condition is named by its status (still scripted: needed: a run that ended with no condition, only a status); another member's ended run is not hers */
-  const x = await stateWorld({ n: 1 });
-  const { door, session } = x.world.boot(x.ann);
-  const failed = await boot({ screens: SCREENS, door, session, path: "/app/question/" + x.id, plane: { airuns: ok({ ok: true, runs: [{ id: "RUN-" + "e".repeat(16), status: "failed", ticks: 2, principal: { plane: "member:" + x.ann.member } }] }) } });
-  await failed.settle();
-  await failed.click(failed.root().querySelector('.cs-mast [data-shell="dock"]'));
-  await failed.settle();
-  assert.ok(says(panel(failed), "screen.assistant.run.ended", { why: word("ai.run.ending.unknown") }));
+  /* an ended run with no condition, named by its status alone, is a state no act makes (a run ends only by a named bound: AI_RUN_BOUND_UNNAMED, run-rules/rules.mjs:485-489; ai-runs/index.mjs:590-593;
+     its expiry reads real time, which `tick` does not age), so that case is not tested; another member's ended run is not hers */
   const y = await stateWorld({ n: 1 });
   await (await openRun(y, { who: await joined(y, "ben") })).end("cancelled");
   const other = await dock(y);
