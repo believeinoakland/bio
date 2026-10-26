@@ -264,6 +264,7 @@ test("R57 R106 transcribe-answer: the answer a user module (extraction's t48) ha
   const account = await credentialsOf(x.ctx).accountFor({ member: "member:ann", act: { kind: "transcribe", member: "member:ann" } });
   const real = await tx.transcribe({ account, capture_sha: d, store: "bio", pages: [0], use: "transcribe" });
   // fixtures-run: extraction transcribe-answer
+  // fixtures-run: reading-pipeline transcribe-answer   (text-units.test.mjs:531-542 and transcribe.test.mjs:323-327 hand the same success value, {ok, engine, version, pages}; their refusal `{ok: false, reason}` is agent-worker's relayed shape)
   assert.deepEqual(real, theirs({ pages: [0] }), "the real answer also names the pages asked, sent, unread and owed (transcribe.mjs, R106)");
 });
 
