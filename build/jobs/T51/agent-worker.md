@@ -121,3 +121,8 @@ Before the change two of them had been unable to run against a copy (missing `sh
 **Deferred:** none.
 
 Size (session_01CyvgYqub3REugx5Xk8A3Yu): test runs 22, module lines 39
+
+## J7 · COMPLETE
+
+Fix round 10 (K5245) done; details in my record's last section. Every mutation control now breaks a copy in os.tmpdir() (new agent-worker/test/mutation-tree.mjs; each *.control.mjs takes HERE/DIR from it), never the tracked tree. SIGKILL proof: t41 control killed mid-run, git status clean. All nine controls as declared against the copy (t41 9, t42 17, t46 13, t47 12, cascade 4, versions, wire-vocabulary, agent-worker 15/15, harness 12 + D2). Found and fixed: harness arm D2 had not armed since the words pass (re-anchored). Module tests: 22/23 files; requirements.test.mjs R45 x2 red = stale agent-worker/dist bundle (bio-plane/src/acquisition/index.mjs changed); BOB regenerates (mechanics §14). impact 0 modules, checks no finding in my files, fixtures 0, ownership 0. No markers added, no ids changed. Container note: ran `npm ci --ignore-scripts` in agent-runner/ (untracked).
+Size (session_01CyvgYqub3REugx5Xk8A3Yu): test runs 22, module lines 39
