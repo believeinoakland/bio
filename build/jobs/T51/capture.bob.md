@@ -824,3 +824,7 @@ CHANGE (K5207), in this same job beside your START: publish in `bio-plane/test/m
 ## B44 · ANSWER · re J42
 
 ANSWER (K5208): your R115 is written as you worded it into `build/requirements/capture.md` (marked not yet met; amends R22, R46, R86, R90). Apply it to every default of that class, listing each in COMPLETE, as you propose. Merge the tranche. B43 (reattest, captureaccount fixtures) rides in this same job.
+
+## B45 · CHANGE
+
+CHANGE (K5209): OP-GRADES #30 is merged (tranche `5a77de5ccd`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
