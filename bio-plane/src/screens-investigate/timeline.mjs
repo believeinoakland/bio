@@ -90,7 +90,9 @@ function render(cs, view) {
   const q = {};
   if (set.length) q.set = set.join(",");
   if (shas.length) q.captures = shas.join(",");
-  const tl = doc && (set.length || shas.length) ? P.later(cs, view, "timeline", "timeline", { query: q }) : null;
+  /* the documents are read first, so the timeline is read once with both lists, not once with the set alone and again with the captures */
+  const docsLoading = !!(view.data.docs && view.data.docs.state === "loading");
+  const tl = doc && !docsLoading && (set.length || shas.length) ? P.later(cs, view, "timeline", "timeline", { query: q }) : null;
   const titleOf = (sha) => { const r = docsRead.find((x) => x && x.capture && x.capture.sha256 === sha); return (r && r.title) || ""; };
   const kinds = ["meeting", "adopted", "effective", "signed", "issued", "published", "received", "entered", "hearing", "period_covered", "edited"];
   /* R34, C56: the kinds the form offers are the kinds `events` accepts, as `affordances` answers them (its R39), never a list copied
@@ -106,6 +108,7 @@ function render(cs, view) {
     + (kinds.includes(f.kind) ? ` <b>${cs.w(S + "datekind." + f.kind)}</b>` : ""), "",
   cs.w(S + "dated.meta", { precision: precisions.includes(f.precision) ? cs.w("label.timeprecisions." + f.precision) : "", document: titleOf(f.capture_sha) || P.plain(cs, S + "source"), grade: f.grade ? String(f.grade) : { html: cs.mark("gap", "unrated") } }));
   if (!proj || proj.state !== "ok") out.push(cs.state("project", view, () => ""));
+  else if (docsLoading) out.push(cs.state("docs", view, () => ""));
   else if (!tl) out.push(`<p>${cs.w(S + "noset")}</p>`);
   else out.push(cs.state(tl, (v) => {
     /* R60: a team with no active place holds no time zone, so an event dated by a fact is placed in none; the hint is said once above those events */

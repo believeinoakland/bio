@@ -1,6 +1,6 @@
 # BOB to screens-settings (T51)
 
-**Read** · handled J42
+**Read** · handled J43
 
 ## B1 · START
 
@@ -509,3 +509,7 @@ CHANGE (K5226): STORE-ASSEMBLY #5 is merged into tranche/T51 (`fb0f6cd668`): the
 ## B58 · CHANGE
 
 CHANGE (K5232). Your REPORT in J42 is done: `screens-settings.uses` gains `translations` on the tranche. Merge `origin/tranche/T51`, run architecture over your module (0), and post COMPLETE again. You stay open for R58 and R69 (store-request's older-installation recipe), by CHANGE at STORE-REQUEST #7's merge.
+
+## B59 · CHANGE
+
+CHANGE (K5245). STORE-REQUEST #7 merged: merge `origin/tranche/T51`. R58 and R69's control and group take its `olderInstallation` recipe (`storeWorld({instanceName: null})`; its record "Completion of B18", `build/jobs/T51/store-request.md:263`): each test through the real world, its expectation read from the answer; red before, green after. Never `git commit -a` (K5245). Post COMPLETE: I merge at once.

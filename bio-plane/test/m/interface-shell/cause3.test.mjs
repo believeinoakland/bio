@@ -5,7 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { interfacePage, interfaceScript, interfaceScriptHash, scriptPath, versionOfScriptPath } from "../../../src/interface-shell/index.mjs";
-import { boot, ok, refused, ADMIN, MEMBER, fitSend, scriptOf, settle } from "./harness.mjs";
+import { boot, ok, refused, ADMIN, MEMBER, fitSend, scriptOf, settle, queueOf } from "./harness.mjs";
 
 const WHO = { ...ADMIN, capabilities: ["contribute", "administer", "create_projects", "publish"] };
 const SCREEN = { id: "members", words: [], reads: () => ({}), acts: [], render: () => "" };
@@ -119,10 +119,11 @@ test("R113 (P2.1) loadReach makes no screen read: the assistant becoming reachab
 const badge = (p) => (p.root().querySelector('.mk-hide-phone[data-kind="todo"]') || { textContent: "" }).textContent;
 test("R114 R96 (C70) the number the masthead and the rail's Queue place draw is the queue's three kinds plus the count a screen reports with cs.band; control: with none reported it is unchanged", async () => {
   const band = { id: "members", words: [], reads: () => ({}), acts: [], render: (cs) => { cs.band(28); return "<p>x</p>"; } };
-  const none = await boot({ screens: [SCREEN], path: "/app/members" });
+  const queue = { queue: queueOf([{ id: "a", class: "OBLIGATION" }, { id: "b", class: "FINDING" }, { id: "c", class: "OBLIGATION" }]) };
+  const none = await boot({ screens: [SCREEN], path: "/app/members", plane: queue });
   const base = none.root().querySelector('.cs-rail a .count').textContent;
   assert.equal(base, "3", "the queue's three items");
-  const p = await boot({ screens: [band], path: "/app/members" });
+  const p = await boot({ screens: [band], path: "/app/members", plane: queue });
   assert.equal(p.root().querySelector('.cs-rail a .count').textContent, "31");
   assert.ok(/31/.test(badge(p)), "the masthead draws the same number");
 });

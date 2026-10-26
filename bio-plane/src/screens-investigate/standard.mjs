@@ -1,7 +1,7 @@
 /* screens-investigate R8: a standard the city set itself (Projects › <project> › Standard; registry screen `standard`,
  * its 3 acts). Reads the standard (`standards`' `standard`: its words as written, its source passage, its issuer, kind and
- * when it is in force), its relations to laws (`lawrelations`) and, only while the assistant is reachable, the proposals
- * (`proposals`), each drawn as machine work, "not a standard until a member adopts it". */
+ * when it is in force), its relations to laws (`lawrelations`) and the project's proposals (`standardproposals`, R19: drawn whether or
+ * not the assistant is reachable, a member's among them), each labelled with who proposed it, machine work marked, "not a standard until a member adopts it". */
 
 import { PARTS } from "./parts.mjs";
 import { FORM_SHARED } from "./graphwords.mjs";

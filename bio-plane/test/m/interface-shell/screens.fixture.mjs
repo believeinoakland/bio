@@ -125,7 +125,7 @@ export const DOORBELL = {
 };
 export const PUBLISHED = {
   id: "published",
-  reads(view) { return { c: { op: "publishedcase", query: { case: view.subject }, subject: true } }; },
+  reads(view) { return { c: { op: "publishedcase", query: { id: view.subject }, subject: true } }; },
   render(cs, view) { return cs.state("c", view, (c) => cs.title(c.title)); },
   acts: [{ op: "verify" }],
 };

@@ -1587,8 +1587,8 @@ class Provenance {
    *  values survive into the answer, so the distinction the key preserves is
    *  reported rather than flattened away.
    *
-   *  ORDER IS `first_retrieved` — WHEN WE FIRST HELD THESE BYTES — and never
-   *  `last_retrieved`, which moves every time the target holds still and would
+   *  ORDER IS `first_retrieved` — WHEN WE FIRST HELD THESE BYTES — then, for versions first held in the same second,
+   *  the register's own row order (R17: the order the record registered them), and never `last_retrieved`, which moves every time the target holds still and would
    *  reorder a settled history as a side effect of re-checking it. `capture_sha`
    *  is the tiebreak, so the order is TOTAL and `offset` paging cannot repeat or
    *  skip a version. The record cannot say when the SOURCE published a version;
@@ -1655,7 +1655,8 @@ class Provenance {
                r.path                           AS path,
                r.encoding                       AS encoding,
                r.bytes                          AS bytes,
-               r.registered                     AS registered
+               r.registered                     AS registered,
+               r.rowid                          AS reg_seq
           FROM captured_locators cl
           JOIN register r ON r.capture_sha = cl.capture_sha
          WHERE cl.address_norm = ?
@@ -1673,7 +1674,7 @@ class Provenance {
       bytes: r.bytes, registered: r.registered,
     });
     const versions = this.#rows(
-      `${CHAIN} SELECT * FROM chain ORDER BY first_retrieved, capture_sha LIMIT ? OFFSET ?`,
+      `${CHAIN} SELECT * FROM chain ORDER BY first_retrieved, reg_seq, capture_sha LIMIT ? OFFSET ?`,
       ...args, cap, from).map(shape);
 
     /* THE PREDECESSOR, when an anchor was given. Two seeks, both on the same
@@ -1683,18 +1684,20 @@ class Provenance {
        failed. */
     let anchorRow = null, predecessor = null, atIndex = null;
     if (anchor) {
-      anchorRow = shape(this.#one(`${CHAIN} SELECT * FROM chain WHERE capture_sha = ?`, ...args, anchor));
+      const anchorRaw = this.#one(`${CHAIN} SELECT * FROM chain WHERE capture_sha = ?`, ...args, anchor);
+      anchorRow = shape(anchorRaw);
       if (!anchorRow)
         return refuse("VERSION_CHAIN_NO_SUCH_VERSION",
           `no version with capture ${anchor.slice(0, 12)}… is held at ${addr}. A capture the record does `
           + "not hold, one filed at a different address, and one inside a project you were not invited to "
           + "answer identically here, deliberately.");
-      const before = `first_retrieved < ? OR (first_retrieved = ? AND capture_sha < ?)`;
-      const beforeArgs = [anchorRow.first_retrieved, anchorRow.first_retrieved, anchorRow.capture_sha];
+      const before = `first_retrieved < ? OR (first_retrieved = ? AND (reg_seq < ? OR (reg_seq = ? AND capture_sha < ?)))`;
+      const beforeArgs = [anchorRaw.first_retrieved, anchorRaw.first_retrieved, anchorRaw.reg_seq, anchorRaw.reg_seq,
+                          anchorRaw.capture_sha];
       atIndex = this.#one(`${CHAIN} SELECT COUNT(*) AS n FROM chain WHERE ${before}`,
         ...args, ...beforeArgs)?.n ?? 0;
       predecessor = shape(this.#one(
-        `${CHAIN} SELECT * FROM chain WHERE ${before} ORDER BY first_retrieved DESC, capture_sha DESC LIMIT 1`,
+        `${CHAIN} SELECT * FROM chain WHERE ${before} ORDER BY first_retrieved DESC, reg_seq DESC, capture_sha DESC LIMIT 1`,
         ...args, ...beforeArgs)) || null;
     }
 

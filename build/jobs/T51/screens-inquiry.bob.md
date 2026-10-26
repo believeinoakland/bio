@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J52
+**Read** · handled J56
 
 ## B1 · START
 
@@ -1012,3 +1012,19 @@ CHANGE (K5232). Extraction merged on the tranche: merge `origin/tranche/T51`. Ad
 ## B82 · CHANGE
 
 CHANGE (K5233). R23 is struck on the tranche (met). R50 stays: its clauses "Written by" (`question.concluded.by`, `question.reading.by.member`), the 500-character bound, and `refusal.BAD_READING` and `NO_BASIS` drawn by key have no test naming them: add one each at your interface (expectations read from the word table and the owner's answer, K874), failing first where a mutation can show it; name R50 met in your COMPLETE.
+
+## B83 · CHANGE
+
+CHANGE (K5234; INTERFACE-SHELL #24 J38). `settle()` now waits on a forwarded answer only when it is wrapped in interface-shell's harness `counted`: wrap each forwarding function of your seam helper `forwarded` (`r10-question-seam.test.mjs:40` and the other four seam files) in `counted` once interface-shell merges (its branch: `counted` exported from `harness.mjs`); I CHANGE you at that merge to take it. Until then B81 and B82 stand; post COMPLETE with them done.
+
+## B84 · CHANGE
+
+CHANGE (K5240; B81's two lines). Extraction merged (EXTRACTION #49): merge `origin/tranche/T51` (your `uses` has extraction since K5236). `fr5-document.test.mjs:121` takes `readHeldAnswer.noWholeObject()`; `fr28-document-acts.test.mjs:50` takes `reextraction()` (`{press, pass}`), both in `bio-plane/test/m/extraction/fixtures.mjs`. Note extraction's finding: the real `pdfstructure` press answers `performed: false` (its R103); `performed: true` is the OCR pass's answer: assert what your page draws for each real answer, never the hand-built "performed" press. B83 still waits on interface-shell's merge. Post COMPLETE with these two done.
+
+## B85 · CHANGE
+
+CHANGE (K5242). Interface-shell merged: merge `origin/tranche/T51` and do B83 now: wrap each forwarding function of your seam helper `forwarded` (`r10-question-seam.test.mjs:40` and the other four seam files) in `counted` from interface-shell's `bio-plane/test/m/interface-shell/harness.mjs`, so `settle()` waits on the late forwarded read (its `k5230.test.mjs` shows the pattern); run the five seam files under 4 parallel runs. Post COMPLETE; your 138 lines stay for STORE-REQUEST #7's recipes.
+
+## B86 · CHANGE
+
+CHANGE (K5245). STORE-REQUEST #7 merged: merge `origin/tranche/T51`. Your 138 fixtures lines take store-request's recipes and real world (every state your record named that a real act makes is now a recipe: readings, machineReading, graded, sharedOrigin, holdAt, newerCapture, connection, partialPdf, unmatchedPerson, attested, paperFile, unretirable, unnamedFounderWorld, timeline, titlelessProject, deepChain, connectedSignIn, investigating, mentionedTogether; `question` takes subject/extent_rect, `pdf` fonts) or the providers' published answers. A state no act makes (its record's "Completion of B18", `build/jobs/T51/store-request.md:263`, with file:line): the case removed, test only (K4297 (2)). Goal: `fixtures.mjs /home/user/bio screens-inquiry --list` at 0. Never `git commit -a` (K5245). Post COMPLETE with B85 and this.

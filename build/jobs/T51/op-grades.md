@@ -1,6 +1,6 @@
 # op-grades (T51)
 
-**Status** · session_01ADU8ZLB34wMH6KE4yEcSe5 · depth 2 · COMPLETE · handled B39
+**Status** · session_01FqdzvhmfeKdDQQEZxW6vKL · depth 2 · COMPLETE · handled B40
 
 ## J1 · QUESTION
 
@@ -482,3 +482,33 @@ Size (session_012vYFrTXPwUmqg22vRjid91): test runs 29, module lines 7 (`declared
 3. Carried over from J30, unchanged: `bio-plane/test/m/affordances/register-owners.mjs` registers three owners by hand; affordances' R12 does not see the others' declared ops.
 
 Size (session_01ADU8ZLB34wMH6KE4yEcSe5): test runs 9, module lines 2
+
+## J34 · COMPLETE
+
+**COMPLETE** (B40, fix round 10, K5235; plan item 116). Pushed `b951f2b5c1` on `job/T51/op-grades` (the state commit `95ff6d55af` rides on it). `tranche/T51` merged first (at `459cdefccb`, fast-forward; no rebase).
+
+**Change**
+- `bio-plane/src/op-grades/t51.mjs:15`: `holdsplaced` is a read in `NON_ACTS`, beside `holdsdue`. Its reason is `localize("action-holds.declared.holdsplaced", …)` with the owner's sentence word for word, so registration meets no `DECLARED_OP_DISAGREES` on it (R50 (b)): "read: every place a hold was stated that the member may see, with its latest hold and what prompted it; writes nothing (action-holds R22)". No rung, ground, machine refusal or consequence entry.
+- `bio-plane/test/m/op-grades/t51.test.mjs`: the T51 read count is 17 (was 16); new test "R48 (action-holds R22)" at the module's exports: `NON_ACTS.holdsplaced` is the owner's sentence, begins "read: ", ends "writes nothing (action-holds R22)", is in no `RUNGS`, `RUNG_ABSENT`, `MACHINE_REFUSALS` or `CONSEQUENCE_STATEMENTS`, and `phoneOf` answers true; control: it differs from `holdsdue`.
+- Failing first: with the module's previous `t51.mjs`, the count test and the new test are red (2 fail); with the change, green.
+
+**Suites**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/op-grades/*.test.mjs`: 162 tests, 162 pass, 0 fail, exited by itself.
+- Users of `op-grades` named by the impact check (`affordances`, `op-declarations`, `interface-shell`, `screens-action`, `action-holds`, `op-capabilities`): 1279 tests, 1274 pass, 5 fail. The same 5 fail on `origin/tranche/T51` (a worktree, removed): `interface-shell/frame.test.mjs`, `interface-shell/sweep.test.mjs`, `interface-shell/t50.test.mjs`, `op-declarations/t42.test.mjs`, `op-declarations/t36.test.mjs` (affordances R48 partition, holdsplaced's text owed by affordances, as action-holds' record says). Not caused here.
+- `plane` and `control-plane` (full, one process): 1026 tests, 1019 pass, 7 fail. Re-run on the tip worktree and on this branch file by file: the failures are `control-plane/t51-routes.test.mjs` (captureseenin route, red on the tip too), `control-plane/walk-monitoring-checknow-adopt.test.mjs` (red on the tip too), `plane/r8-heal-door.test.mjs` (a 5-second read window, timing-dependent, red on the tip too), `control-plane/r9-seam-limits.mjs` and `control-plane/r8-seam-capture.mjs` (both pass when run alone, on this branch and on the tip). None is in op-grades or in the lines this change touches.
+
+**Checks** (absolute root `/home/user/bio`): format 0 failures (178 modules, 178 requirement files); architecture `op-grades` 0 failures; coverage `op-grades` 54 of 54 live ids named, 0 failures; words `op-grades` 0 failures, handlist 0, plain 0, unkeyed 29 (as before); fixtures `op-grades --list` 0 failures, no marker added; ownership `tranche/T51 job/T51/op-grades` 0 failures (the one changed file is `t51.mjs`, `t51.test.mjs` is a test file); `checks/run.mjs` prints no line naming op-grades. Impact (`origin/tranche/T51 HEAD`): 24 modules, 697 test files; the consumers run above are the ones that read `NON_ACTS`.
+
+**Markers:** none added.
+
+**Requirements:** none edited (ownership). R48 names the three reads of T51's first pass; `holdsplaced` is named by a test in this module under the id R48 and its source is `action-holds` R22. If BOB wants R48's text to name the fourth read, that is a requirement line for BOB to write.
+
+**Deferred / found elsewhere (REPORT, for BOB):**
+1. `affordances` has no `ACT_HELP` or `ACT_HELP_ABSENT` entry for `holdsplaced`, so `affordances/…` R48 and `op-declarations/t36` (R34, R47) are red on the tip and here. Owner: `affordances`.
+2. `op-declarations` has no spec for `holdsplaced` (`op-declarations/t42.test.mjs`, "holdsplaced has no spec"); the `interface-shell` frame/sweep/t50 failures are on the tip too. Owners: `op-declarations`, `interface-shell`.
+3. `control-plane/t51-routes.test.mjs` (`captureseenin` route) and `control-plane/walk-monitoring-checknow-adopt.test.mjs` are red on the tip. Owners: `control-plane` and the T51 route owners.
+4. `plane/r8-heal-door.test.mjs`: the five-second read window is red on the tip too and varies run to run; it looks timing-sensitive. Owner: `plane`.
+
+**Housekeeping:** a `/t51.keep` copy I made while checking the failing-first test is in the filesystem root, outside the repository; a removal of it was refused by a safety check, so it is still there. It is not part of the repository.
+
+Size (session_01FqdzvhmfeKdDQQEZxW6vKL): test runs 11, module lines 3689

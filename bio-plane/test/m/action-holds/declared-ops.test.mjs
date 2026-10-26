@@ -79,3 +79,13 @@ test("R21 action-holds: an actionpressure call without ord is refused naming ord
   assert.equal(withOrd.ok, true);
   assert.equal(withOrd.ord, 0);
 });
+
+test("R20 R22 action-holds declares actionholdpreview: its requires alone raise no refusal naming a field, the missing place is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "actionholdpreview", declaration: DECLARED_OPS["actionholdpreview"], call: mk("actionholdpreview", {"viewer":"member:alice"}, async () => (mkWorld(true)), null, (fields, env) => (placed(fields, env))),
+    refusedNaming: named({"target":["NO_TARGET"],"project":["NO_TARGET"],"case":["NO_TARGET"]}, true), values: {}, same: sameCode });
+});
+
+test("R20 R22 action-holds declares holdsplaced: it requires nothing, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "holdsplaced", declaration: DECLARED_OPS["holdsplaced"], call: mk("holdsplaced", {"viewer":"member:alice"}, async () => (mkWorld(true)), null, (fields, env) => (placed(fields, env))),
+    refusedNaming: named({}, true), values: {}, same: sameCode });
+});

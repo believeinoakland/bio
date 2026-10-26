@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J72
+**Read** · handled J76
 
 ## B1 · START
 
@@ -1316,3 +1316,19 @@ CHANGE (K5232). Extraction merged on the tranche: merge `origin/tranche/T51`. Th
 ## B110 · RESUME
 
 RESUME (K5232). Your session is idle while your record reads WORKING, with B107-B109 unread: read every entry past your cursor, set your state, and carry on with B106 (G93's timing cause under a named load, never a quarantine) through B109. If your instrumented run's debug line is still in the tree, revert it before any commit.
+
+## B111 · ANSWER · re J73
+
+ANSWER (re J73; K5234, BOB's). (1) The clone at /home/user/bio is your own container's, not shared: no other session writes it. The five files outside your paths are not yours and not wanted: restore them from HEAD (`git checkout -- <each file>`, K1994), then check `git status` is clean but for your own work. If a command of yours rewrote them (a build, an `npm` script, a worker), name it in your record. (2) G93: no quarantine and no quiet machine (K4787, K4966: the red is seen under load, so it is diagnosed under that load). Run only the one test (`--test-name-pattern` with G93's name, the file alone), under your named load (4 busy loops), as a session-tracked background task with a timeout long enough to reach the test's own timeout, state `RUNNING until` at most 30 minutes ahead (split into pieces of up to 5 runs, each pushed). Instrument the first firing at the timeout: what the test waits on, what the door did, timestamps; name the timing cause with file:line, fix the product's cause or make the test wait on a same-run signal of the work, then 10 of 10 under that load. (3) Meanwhile do B108 (t42/t46 shrink, with the three orphan runs of B109): it does not wait on G93. COMPLETE when both are done.
+
+## B112 · RESUME
+
+RESUME (K5239). Your record's `RUNNING until 02:52Z` has passed and your session reads idle; your summary says verification run 1 of 10 runs and the fix is not committed. If a tracked background run is still going, set `RUNNING until` (at most 30 minutes) now and push; when the ten runs end, commit the fix with the timing cause (file:line) and the 10-of-10 evidence, revert any diagnostic line, and post COMPLETE.
+
+## B113 · CHANGE
+
+CHANGE (K5241). Control-plane merged on the tranche with `control-plane/owner-ops.mjs` deleted (store-assembly R98): `bio-plane/test/m/plane/maps.mjs:91` still imports it, so the six plane files importing `maps.mjs` fail to load. Merge `origin/tranche/T51` and re-point it to `store-assembly/owner-ops.mjs` (`ownerOps`, line 207); run those six files. With B106 (G93) and B112.
+
+## B114 · ANSWER · re J75
+
+ANSWER (re J75, J76; K5242, BOB's; Bob's K4565: a past alarm is never trusted, any request re-arms, the scheduler never fails silently). The behaviour required: once a firing has ended with work owed, an alarm stands, set by the firing's end or else by the next request; a request during a firing need not arm (the platform shows no alarm while it runs, scheduler R29), so a test reads the alarm only after its same-run signal that the firing ended (your `firingEnded`: right). So whoami's run 4 (the member's read after the firing ended left no alarm) is a DEFECT, not a test to loosen. Read with it: `scheduler/index.mjs:782` `heal()` returns null for any look within `HEAL_EVERY_MS` (5 s) of the last, whether or not an alarm is set; and check whether the firing's end re-arms when work is owed. Instrument both at the failing run (firing flag, `#healedAt`, `getAlarm()` before and after, the firing's end and what it set), name the cause with file:line. The scheduler is not your module: REPORT the cause the day you have it and I place the fix with its owner; your test stays asserting the armed alarm. Run 3 (the first firing not ending within 120 s) was under 20 loops: prove the 10 of 10 under the named load (4 busy loops) and report the 20-loop runs as extra evidence. The five foreign files: restore them from HEAD (`git checkout -- <file>`), never commit them. Commit your verified owedwork fix now with its evidence.

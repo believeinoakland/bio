@@ -1,6 +1,6 @@
 # provenance (T51)
 
-**Status** · session_0177JBZkD5i4LMCHS2gFnjNU · depth 2 · COMPLETE · handled B9
+**Status** · session_013hM79EaBNz2N4rzna8XuQt · depth 2 · COMPLETE · handled B14
 
 ## J1 · REPORT
 
@@ -244,3 +244,18 @@ Size (session_0177JBZkD5i4LMCHS2gFnjNU): test runs 9, module lines 3311
 ## J14 · COMPLETE
 
 B13 done (K5148). (1) R66/R80: new read op authority {bundleId, capture?} (authoritiesOf) states the standing authority (state, issuer, dated basis, reviewed, history) of each capture of a document; after a decision it is stated, with no decision the register's value alone; authority-read.test.mjs 5 red then green; R53, R68 amended; DECLARED_OPS has authority. NOT in my paths, for BOB: screens-inquiry must ask it through later() as it asks origins and draw it (the bundle's own data/provenance.json entry stays as acquired by design); affordances act-help.mjs must explain or name authority (t36 R34 now names it; ruleservicesstate was red before). (2) Fixture: homeOfOver({host, record, membership?, promotion?, now?}) -> {provenance, homeOf} in provenance/fixtures.mjs, tested; doorbell re-points held.test.mjs:14 to homeOfOver({host: f.ctx, record: f.core}). Met ids to strike: R66, R80 (R53, R68 amended). Markers added: none. provenance folder 196 pass 0 fail; format, architecture, coverage 65/65, words, fixtures 0; ownership 1 failure = the requirements file K4210 accepts. Record: build/jobs/T51/provenance.md. Size (session_0177JBZkD5i4LMCHS2gFnjNU): test runs 9, module lines 3311
+
+## J15 · COMPLETE
+
+B14 done (K5241). **R17 (amends R18):** `versionChain` orders `first_retrieved, reg_seq, capture_sha`, where `reg_seq` is the register row's own `rowid`. I chose the rowid over `registered`: `registered` is a millisecond text from this module's clock, so it ties under a fixed clock and is moved by a re-registration under another bundle, while the rowid is kept by the upsert and rises with each new row. The change is in `bio-plane/src/provenance/index.mjs`: the chain CTE (`~:1659`, `r.rowid AS reg_seq`), the page query (`~:1678`), and the anchor's `before` clause, `at_index` count and predecessor query (`~:1694-1702`). `reg_seq` is not in the answer's shape.
+**Test (red then green):** `convert-versionchain.test.mjs`, "R17, R18: versions first seen in the same second are ordered as the record registered them…". A first capture and a copy are registered in that order with receipts in the same second, the copy's sha sorting first. Red on today's code (versions `[copy, first]`); green after: the copy is index 1, the first is its predecessor, and the first is index 0 with a null predecessor. Control: captures a day apart keep first-seen order whatever the registration order.
+**Why the tests missed it:** every earlier chain test spaced its versions at least a day apart, so the tie on `first_retrieved` (whole seconds) never arose and the sha tiebreak was never exercised against registration order.
+**Control-plane's `walk-monitoring-checknow-adopt.test.mjs`:** run against my branch, 1 of 1 pass (green). Not edited.
+**Met ids to strike:** R17 (its K5241 sentence); R18 follows.
+**Tests/checks:** provenance folder 197 pass, 0 fail; users (content, file-safety view, control-plane walk-monitoring) 189 pass, 0 fail; `checks/run.mjs`: format 0, architecture 0, coverage 7070 of 7070, words 0 (testcopy 0); `fixtures provenance --list` 0 (one accepted marker, B10's); ownership 0. The `run.mjs` stub/answer failures listed belong to other modules.
+**Markers added:** none. Deferred: none. Found in other modules: none. Open QUESTION: none.
+Size (session_013hM79EaBNz2N4rzna8XuQt): test runs 8, module lines 3318
+
+## J16 · COMPLETE
+
+B14 done (K5241). R17 (amends R18): versionChain orders first_retrieved, register row order (rowid), capture_sha in the page, anchor index and predecessor queries (provenance/index.mjs ~1659-1702). Test 'R17, R18: versions first seen in the same second…' in convert-versionchain.test.mjs red then green. control-plane walk-monitoring-checknow-adopt.test.mjs: green (1 of 1) on my branch. Provenance folder 197 pass; users 189 pass; format, architecture, coverage, words, fixtures, ownership 0. Met ids to strike: R17 (R18 follows). Markers added: none. Record J15. Size (session_013hM79EaBNz2N4rzna8XuQt): test runs 8, module lines 3318

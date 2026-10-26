@@ -3,6 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { actionWorld, correspond, counselMatter, openIn } from "./world.mjs";
+import { holdPlacedReleasedAnswers } from "../action-holds/fixtures.mjs";
 import { open, main, text, ops, press, last, ok, refusedIn, button, beside, choose, W, D, DATA_PLANE, ROUTES, ACTION, ACTION_ID, PROJECT, HOLDS_DUE, COUNSEL_PROJECT, NOTICE, PACKET, READER } from "./page.mjs";
 
 const ROUTES_AT = { hold: (a) => `/app/hold/${a}`, action: (a) => `/app/action/${a}` };
@@ -57,20 +58,69 @@ test("R32: placing the hold sends the place chosen and the reason, any projects 
 });
 
 test("R32: releasing a hold is drawn on `hold`: the place, the member's reason in `screen.hold.release.reason`, confirmed because it cannot be undone", async () => {
-  /* a counsel matter is listed whether or not a hold stands on it; a reply is listed by `holdsdue` only while no hold stands (action-holds R19),
-     so the hold released here is a counsel matter's (reported to BOB: the screen offers no release of a reply's hold) */
   const { world, me, action } = await actionWorld();
   const counsel = await counselMatter(world, me);
   await me.act("actionhold", { body: { project: counsel, hold: "in_place", reason: "the owner's lawyer wrote" } });
   const p = await openIn(world, me, ROUTES_AT.hold(action));
   said(p, "screen.hold.release.form");
   assert.ok(text(p).includes(W("screen.hold.release.reason")));
-  await press(p, "actionholdrelease", { values: { "hold-for": JSON.stringify({ project: counsel }), "hold-release-why": "the claim was dropped" }, reason: "x", confirm: true });
+  await press(p, "actionholdrelease", { values: { "hold-release-for": JSON.stringify({ project: counsel }), "hold-release-why": "the claim was dropped" }, reason: "x", confirm: true });
   const b = last(p, "actionholdrelease").body;
   assert.equal(b.project, counsel);
   assert.ok(b.reason.includes("the claim was dropped"), "her reason goes with it");
   const after = await me.read("actionholdpreview", { query: { project: counsel } });
   assert.equal(after.hold, "released", "the store holds the matter's hold as released");
+});
+
+test("R32 (A1): a reply's hold, placed by the real `actionhold`, is no longer a place to place one (`holdsdue` drops it) and is a place to release, with what the release restarts read first; releasing sends the place and the reason and the store holds it released", async () => {
+  const { world, me, action, project } = await actionWorld();
+  await correspond(me, action, "sent");
+  const ord = await correspond(me, action, "received", { pressure: { kind: "legal", note: "a letter from the city's counsel" } });
+  const placed = await me.act("actionhold", { body: { target: action, ord, hold: "in_place", reason: "a claim is coming" } });
+  assert.equal(placed.hold, "in_place");
+  const place = JSON.stringify({ target: action, ord });
+  const p = await openIn(world, me, ROUTES_AT.hold(action));
+  const placing = p.doc.getElementById("hold-for") ? p.doc.getElementById("hold-for").querySelectorAll("option").map((o) => o.value) : [];
+  assert.ok(!placing.includes(place), "control: the place that holds a hold is not offered to place one");
+  const releasing = p.doc.getElementById("hold-release-for").querySelectorAll("option").map((o) => o.value);
+  assert.ok(releasing.includes(place), "the reply's hold is offered to release");
+  assert.equal(p.byOp("actionholdpreview").length, 0, "nothing is previewed until a place is chosen");
+  await choose(p, "hold-release-for", place);
+  const preview = p.byOp("actionholdpreview");
+  assert.equal(preview.length, 1, "what the release restarts is read first");
+  assert.deepEqual([preview[0].query.target, String(preview[0].query.ord)], [action, String(ord)]);
+  said(p, "consequence.actionholdrelease");
+  const title = ((await me.read("list", { query: { type: "project", limit: "500" } })).bundles.find((b) => b.bundle_id === project) || {}).title;
+  assert.ok(title && main(p).querySelector("ul.mk-list").textContent.includes(title), "the project whose deletion restarts is named: " + title);
+  await press(p, "actionholdrelease", { values: { "hold-release-why": "the claim was dropped" }, reason: "x", confirm: true });
+  const b = last(p, "actionholdrelease").body;
+  assert.deepEqual([b.target, b.ord, b.reason], [action, ord, "the claim was dropped"]);
+  const after = (await me.read("pressurefor", { query: { action } })).items.find((m) => m.arrived.ord === ord);
+  assert.equal(after.hold, "released", "the store holds it released");
+  const again = await openIn(world, me, ROUTES_AT.hold(action));
+  const left = again.doc.getElementById("hold-release-for");
+  assert.ok(!left || !left.querySelectorAll("option").some((o) => o.value === place), "a hold that was released is no longer offered to release");
+});
+
+test("R32 (B46, action-holds R22): a hold placed from a docket mark is listed in place from `holdsplaced`, previewed and released with the body that placed it (`from` included), and then listed released", async () => {
+  const f = holdPlacedReleasedAnswers();
+  let released = false;
+  const p = await open(ROUTES.hold, { ...DATA_PLANE, holdsplaced: () => ok(released ? f.after : f.placed), actionholdpreview: ok(f.preview), actionholdrelease: () => { released = true; return ok(f.released); } });
+  const place = JSON.stringify({ project: f.body.project, from: f.body.from });
+  const choice = () => p.doc.getElementById("hold-release-for");
+  assert.ok(choice().querySelectorAll("option").some((o) => o.value === place), "the docket mark's hold is offered to release, as it was placed");
+  assert.equal(p.byOp("actionholdpreview").length, 0);
+  await choose(p, "hold-release-for", place);
+  const q = p.byOp("actionholdpreview")[0].query;
+  assert.deepEqual([q.project, JSON.parse(q.from)], [f.body.project, f.body.from], "the preview is asked with the placing body");
+  said(p, "consequence.actionholdrelease");
+  assert.ok(main(p).querySelector("ul.mk-list"), "what it restarts is named");
+  await press(p, "actionholdrelease", { values: { "hold-release-why": "no longer needed" }, reason: "x", confirm: true });
+  const b = last(p, "actionholdrelease").body;
+  assert.deepEqual([b.project, b.from, b.reason], [f.body.project, f.body.from, "no longer needed"]);
+  assert.equal(f.after.items[0].hold, "released", "the owner then lists the place released");
+  assert.equal(p.byOp("holdsplaced").length, 2, "the page re-read the places held");
+  assert.ok(!(choice() && choice().querySelectorAll("option").some((o) => o.value === place)), "a released place is no longer offered to release");
 });
 
 test("R32: pressure that arrived outside any action is recorded in a project, creating no action; `actionhold` is no longer drawn on `action`", async () => {

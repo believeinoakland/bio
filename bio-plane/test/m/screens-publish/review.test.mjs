@@ -3,7 +3,8 @@
  * reader's page, its secret only in a request's body. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, tipOf, drew, drewIn, day, clock, word, ops, press, fill, last, ok, refused, refusedIn, plane, PREFLIGHT, COPY, P, DR, C, GRANT_SECRET, GRANT_UNTIL } from "./fixtures.mjs";
+import { groupName, open, main, text, tipOf, drew, drewIn, day, clock, word, ops, press, fill, last, ok, refused, refusedIn, plane, PREFLIGHT, COPY, P, DR, C, GRANT_SECRET, GRANT_UNTIL } from "./fixtures.mjs";
+const GROUP = await groupName();
 import { statementAck } from "../case-inputs/fixtures.mjs";
 
 const PATH = `/app/review-copy/${P}`;
@@ -125,7 +126,7 @@ test("R17 review-outside: the fragment's secret goes only in reviewcopy's body, 
     assert.ok(!q.url.includes(GRANT_SECRET), "never in an address");
     assert.equal(q.headers.Authorization, undefined, "no credential");
   }
-  assert.ok(drew(p, "screen.review-outside.heading", { group: "River Town" }));
+  assert.ok(drew(p, "screen.review-outside.heading", { group: GROUP }));
   assert.ok(drew(p, "screen.review-outside.draft", { case: "The Coliseum lease", edition: "2" }), "the draft's title names the case and edition");
   assert.ok(text(p).includes("Rent adjustments under the Coliseum lease"));
 });

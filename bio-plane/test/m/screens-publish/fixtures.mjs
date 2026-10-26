@@ -11,6 +11,7 @@ import { word, hasWord } from "../../../src/setup-words/index.mjs";
 let storeWorld = null;
 try { ({ storeWorld } = await import("../store-request/fixtures.mjs")); } catch (e) { if (!/second registration|registered after the first read/.test(String(e && e.message))) throw e; }
 import { boot, counted, ok, refused, refusedIn, silent, pending, textNodes, settle, bytes, MEMBER } from "../interface-shell/harness.mjs";
+import { frameAnswers } from "../interface-shell/frame-answers.mjs";
 
 export { SCREENS, ok, refused, refusedIn, silent, pending, settle, bytes, word, hasWord };
 
@@ -86,12 +87,14 @@ export const PUBLISHED_CASE = { caseId: C, edition: 2, scope: "The Coliseum leas
 /* K5207, K5213 (fix round 10): the reads the screens' default plane takes from their providers' published fixtures, each answer made by
  * the provider's real code. Loaded lazily (a provider's fixtures register nothing until a test asks), by `open` and `openDefaults`
  * before the page boots; `plane()` spreads whatever is loaded. */
+/** The group's display name as the frame's `groupidentity` answer states it (instance-setup's fixture): what a test expects a screen to draw. */
+export const groupName = async () => (await frameAnswers()).groupidentity.json.result.display_name;
 export const DEFAULT = {};
 export async function openDefaults() {
   if (DEFAULT.entitieskind) return DEFAULT;
   const [pr, ci, en] = await Promise.all([import("../public-read/fixtures.mjs"), import("../case-inputs/fixtures.mjs"), import("../entities/fixtures.mjs")]);
   const details = ci.casedetails().recorded, detailsPublic = ci.casedetailspublic().published;
-  Object.assign(DEFAULT, { docketpublic: ok(await pr.docketPublicOfCase()), casedetails: ok(details), casedetailspublic: ok(detailsPublic), entitieskind: ok(en.entitieskind()) });
+  Object.assign(DEFAULT, { ...(await frameAnswers()), docketpublic: ok(await pr.docketPublicOfCase()), casedetails: ok(details), casedetailspublic: ok(detailsPublic), entitieskind: ok(en.entitieskind()) });
   return DEFAULT;
 }
 
@@ -110,6 +113,13 @@ export const provided = {
   casedetails: say(async () => (await import("../case-inputs/fixtures.mjs")).casedetails(), (r) => r.recorded),
   casedetailsset: say(async () => (await import("../case-inputs/fixtures.mjs")).casedetailsset(), (r) => r),
   casedetailspublic: say(async () => (await import("../case-inputs/fixtures.mjs")).casedetailspublic(), (r) => r.published),
+  /** case-inputs' `casedetails` and `casedetailspublic` for a case whose `related` works are stated (`related`), or whose `relationships` standing is {none: true} (`none`): each the real answer, in the plane's shape. */
+  casedetailsRelated: async () => { const r = (await import("../case-inputs/fixtures.mjs")).casedetailsRelated(); return { recorded: ok(r.recorded), publicRead: ok(r.publicRead) }; },
+  casedetailsNone: async () => { const r = (await import("../case-inputs/fixtures.mjs")).casedetailsNone(); return { recorded: ok(r.recorded), publicRead: ok(r.publicRead) }; },
+  /** action-holds' real `holdsdue` answers on a docket entry carrying a legal mark: `answer` before a hold, `placed` after one; `entry`/`case`/`project` as the answer states them. */
+  holdsDueDocket: async () => { const r = (await import("../action-holds/fixtures.mjs")).holdsDueDocketAnswer(); const it = r.answer.items[0]; return { answer: ok(r.answer), placed: ok(r.placed), entry: it.arrived.docket_entry, case: it.arrived.case, project: it.project, note: it.note, marked_at: it.marked_at }; },
+  /** case-import's real refusal of a citation of a finding the team has not accepted (citation's BASIS_REFUSED carrying IMPORTED_NOT_ACCEPTED). */
+  citeimportedRefused: async () => ok((await (await import("../case-import/fixtures.mjs")).citeimportedRefusalAnswer()).answer),
   knockerconsent: say(async () => (await import("../sources/fixtures.mjs")).knockerconsent(), (r) => r.answer),
   signerregisterown: say(async (o) => (await import("../credentials/fixtures.mjs")).signerregisterown(o), (r) => r.answer),
   /** wizard-scripts' real `writinghelp` answers (K5212): the draft already held in the field, or the assistant unreachable. It never returns a draft. */

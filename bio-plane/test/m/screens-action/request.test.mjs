@@ -6,6 +6,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { actionWorld, filingIn, openIn } from "./world-C.mjs";
 import { open, main, text, ops, press, last, ok, refused, button, beside, W, D, DATA_PLANE, ACTION, ACTION_ID, PROJECT, FILING, FILINGS, READ, STAKE, ADMIN, draft } from "./page.mjs";
+import { frameAnswers } from "../interface-shell/frame-answers.mjs";
 
 const NEW = `/app/request/${PROJECT}`;
 const AT = `/app/request/${ACTION_ID}`;
@@ -159,13 +160,15 @@ test("R11: a request reloaded between preparing and approving draws the same tex
 
 /* ---------- R21 (T50; N933; K3230; DEC-231; DEC-320; filings R60 to R62): the matter's stake at preparation, a prompt and never a gate ---------- */
 
-const TEAM = "River Town";
+/* the frame's four reads, each answered by its owner's fixture (K5217, K5219); the team's name is read from its `groupidentity` answer */
+const FRAME_ANSWERS = await frameAnswers();
+const TEAM = FRAME_ANSWERS.groupidentity.json.result.display_name;
 const SAID = "Some members rent from landlords the city licenses.";
 const PROJECT_STAKE = "Two members live in buildings on the city's list of slow repairs.";
 const stakeSaid = (p, from = "project") => said(p, "stake.source." + from, { who: "dev", date: D("2026-10-09") });
 
 test("R21: request draws 'Sent with' (the team's name and its statement) and 'In this matter' with the stake and its source, above the approval, and no question", async () => {
-  const p = await open(AT, { ...DATA_PLANE, filingsfor: ok(FILINGS([draft()])), filingread: ok(READ()) });
+  const p = await open(AT, { ...DATA_PLANE, ...FRAME_ANSWERS, filingsfor: ok(FILINGS([draft()])), filingread: ok(READ()) });
   assert.equal(p.byOp("stakeatpreparation")[0].query.action, ACTION_ID);
   for (const k of ["stake.sentwith", "stake.inmatter"]) said(p, k);
   for (const t of [TEAM, SAID, PROJECT_STAKE]) assert.ok(text(p).includes(t), t);
@@ -191,7 +194,7 @@ test("R21: the stake shown is the action's own when it has one, else the project
   said(none, "stake.none");
   assert.ok(!text(none).includes(W("stake.unreadable")));
   // the team's statement unread, or none: the lines still say what they hold
-  const quiet = await open(AT, { ...DATA_PLANE, stakeatpreparation: ok(STAKE({ group_stake: null })) });
+  const quiet = await open(AT, { ...DATA_PLANE, ...FRAME_ANSWERS, stakeatpreparation: ok(STAKE({ group_stake: null })) });
   assert.ok(text(quiet).includes(TEAM) && !text(quiet).includes(SAID));
   // control: unreadable, whichever source, is its own sentence in its fold, open whenever drawn, and not "none"
   for (const matter_stake of [{ stake: "undetermined", set_by: null, set_at: null, source: "action" }, { stake: "undetermined", set_by: null, set_at: null, source: "project" }]) {

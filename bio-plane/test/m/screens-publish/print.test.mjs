@@ -4,7 +4,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { until, open, main, text, drew, drewIn, day, word, ops, press, ok, C, F1, F2, FINDING, leg, publishedPlane, SIGNER_KEY } from "./fixtures.mjs";
+import { groupName, until, open, main, text, drew, drewIn, day, word, ops, press, ok, C, F1, F2, FINDING, leg, publishedPlane, SIGNER_KEY } from "./fixtures.mjs";
+const GROUP = await groupName();
 
 const PUBLIC = { session: null };
 const PATH = `/app/published/${C}`;
@@ -43,7 +44,7 @@ test("R39 printing the whole case draws every finding open with its sources and 
   assert.ok(!/INFO-\d/.test(sheet.textContent), "a document the case only names is not named");
   assert.ok(drewIn(sheet, "screen.published.sources.nonepublished", { count: "4" }), "the sources the case does not publish, counted");
   const foot = sheet.querySelector("[data-print-foot]");
-  assert.ok(drewIn(foot, "screen.published.signed.for.lakeshore.tenants.by", { team: "River Town", member: "rosa", date: day("2026-11-18"), fingerprint }), "who signed for the team, when, with which key");
+  assert.ok(drewIn(foot, "screen.published.signed.for.lakeshore.tenants.by", { team: GROUP, member: "rosa", date: day("2026-11-18"), fingerprint }), "who signed for the team, when, with which key");
   assert.ok(drewIn(foot, "screen.published.check.the.signature.at.the") && drewIn(foot, "screen.published.printed.in.full.no.minimum"));
   assert.equal(main(p).querySelectorAll("button[data-act]").length, 0, "no control is printed: the note and the acts are on screen only");
   done();
@@ -78,12 +79,12 @@ test("R39 a fact the answer does not state is left out of the footer, not guesse
   await until(p, () => main(p).querySelector("[data-print-foot]"));
   const foot = main(p).querySelector("[data-print-foot]");
   assert.ok(foot && drewIn(foot, "screen.published.check.the.signature.at.the"));
-  assert.ok(!foot.textContent.includes(word("screen.published.signed.for.lakeshore.tenants.by", { team: "River Town", member: "rosa", date: day("2026-11-18"), fingerprint })) && !/\{[a-z]+\}/.test(foot.textContent));
+  assert.ok(!foot.textContent.includes(word("screen.published.signed.for.lakeshore.tenants.by", { team: GROUP, member: "rosa", date: day("2026-11-18"), fingerprint })) && !/\{[a-z]+\}/.test(foot.textContent));
   assert.ok(!/\b[0-9a-f]{4} [0-9a-f]{4}\b/.test(foot.textContent), "no fingerprint is made up");
   const stated = publishedPlane([FINDING(F1, { attestor: { member: "rosa", key_b64: SIGNER_KEY, fingerprint: "ab12 34cd" } })]);
   const q = await open(PATH, { boot: PUBLIC, plane: stated });
   await printing(q);
   await press(q, "pubprint");
   await until(q, () => main(q).querySelector("[data-print-foot]"));
-  assert.ok(drewIn(main(q).querySelector("[data-print-foot]"), "screen.published.signed.for.lakeshore.tenants.by", { team: "River Town", member: "rosa", date: day("2026-11-18"), fingerprint: "ab12 34cd" }), "a fingerprint the answer states is the one drawn");
+  assert.ok(drewIn(main(q).querySelector("[data-print-foot]"), "screen.published.signed.for.lakeshore.tenants.by", { team: GROUP, member: "rosa", date: day("2026-11-18"), fingerprint: "ab12 34cd" }), "a fingerprint the answer states is the one drawn");
 });
