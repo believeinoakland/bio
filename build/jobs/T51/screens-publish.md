@@ -1623,4 +1623,4 @@ Read whole: `causes-D.md`, the requirements, `ceremony.mjs`, `case-editor.mjs`, 
 **Tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/screens-publish/*.test.mjs`: 300 tests, 298 pass, 0 fail, 2 todo (R35's two presses, K3717); exits by itself. Users `impact.mjs origin/tranche/T51 HEAD` names (control-plane 88/135, plane 33/56; 121 files): 741 tests, 741 pass, 0 fail.
 **Checks (root /home/user/bio).** format 0 failures; architecture screens-publish 0; coverage 80 of 80, 0; ownership 0 (7 files, all mine); words 0 failures (testcopy 0); fixtures `--list` 0 (answer 0, stub 0, code 0, contract 0, accepted 6, none added by me); `run.mjs`: no finding naming screens-publish. Markers added: none.
 
-Size (session_01XJUFJNZiz3mKqghrzkmAZs): test runs 10, module lines 3969 src + tests
+Size (session_01XJUFJNZiz3mKqghrzkmAZs): test runs 10, module lines 3803 src
