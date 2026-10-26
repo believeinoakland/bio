@@ -647,3 +647,20 @@ Size (session_01G5xzAiTosZejpAGJJrukB7): test runs 75, module lines 4336
 ## J33 · COMPLETE
 
 COMPLETE (B46). Count fixed: finder's done read results[result_key]; now results.output (the value, e.g. 2; the id only if nothing readable). Failing-first: finder.test.mjs 'R4: Count' red on the merged tranche, green after. Also made fix6/home overrides counted (settle did not wait; intermittent under load) and home's ladder test pick by name. screens-daily 31 files 308/308; format, architecture, coverage 104/104, ownership, words 0; fixtures --list 0 failures. Record: build/jobs/T51/screens-daily.md
+
+## J34 · COMPLETE
+
+COMPLETE · SCREENS-DAILY #25 · B47 (fix round 10, item 134). Record: build/jobs/T51/screens-daily.md, section "Completion (SCREENS-DAILY #25, B47)", pushed (1a64e7159a).
+
+Changed, each test red then green (round10.test.mjs, 10 of 10):
+1. A-02 forward.mjs:8-26: the choice sends the roster's member_id (text = handle); a typed handle is resolved through the roster; oneself refused by id or handle. Real store: forwarding to the founder (id admin, handle founder) leaves the task assigned to admin.
+2. A-17 queue.mjs (proposedispose, queuemute, projectrequestanswer send; doneNote): the "Done: ..." note names the pressed button (Defer, Turn back on, Grant/Decline).
+3. F-B9 finder-states.mjs:109-122: queries with OR/NOT/parentheses/quoted phrases and no field term also send the passage search (each term as passage:term, operators as written); passage terms with an OR go to passages alone; a field term keeps fields only. Subjects route stays plain-words only (subjectsnamed ANDs every word, entities/index.mjs:910-920). Tested over the real plane.
+4. F-B10 (a) finder-states.mjs no-result branch: reads the passage route's widen when the fields route has none. Scripted (RETRIEVAL #32 unmerged): CHANGE me at its merge if the shape or unit differs.
+5. Own flaw fixed: home.mjs:398 compared instants as text (Since you last looked drew a project changed before the look); now Date.parse. Test red/green. home.test.mjs busy() fixed (world clock vs wall clock).
+
+Suites: module 318 tests, 314 pass, 4 fail. Users named by impact.mjs (control-plane 86, plane 33, journey-check 2 files, plus screens-daily): 707 pass, 0 fail. checks/run.mjs: format 0, architecture 0, coverage 7070/7070, words 0, fixtures none in my files; ownership 0.
+
+REPORT (outside my paths): the 4 failing module tests (routed R75 home/queue, fix2 R85 home/queue) fail at the tranche tip without my change: A-06, queue-producers/index.mjs:146 (membersOf(host) is a second Members that was never told the copy is claimed; credentials/index.mjs:170 and membership/index.mjs:238 are the one that is). The tests are right.
+
+Size (session_01Tu7DPfm2DwNJsuukT5fZvH): test runs 22, module lines 4356
