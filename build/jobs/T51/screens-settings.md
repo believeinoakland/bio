@@ -609,3 +609,10 @@ Size (session_01TDZDRXt6aSdG9rueQLukTW): test runs 6, module lines 5470
 ## J45 · QUESTION
 
 QUESTION (A-01, B60): the size-only read has no contract on tranche/T51 yet: grep of build/requirements (store-assembly, record-core, control-plane, op-declarations) and src finds no `fields`/`deep` parameter on `stats`; stats.mjs:67 still runs textIndexOk on every call. My best reading is causes-A's text: group.mjs:25 sends { op: "stats", fields: "size" }, answered { dbBytes } and nothing else (floored to 100 MB for an administering member, as today). Please confirm that exact request shape (op, field name, value, answer keys) once store-assembly #7 merges, or give the one it provides; I will build the failing-first test on the request I send (assert the request, red today) and the drawing on the answer. D-B1 waits for your CHANGE naming the LOCAL-FACTS #11 op and fields. Until the answer I stand by; nothing else of mine is open.
+
+## SCREENS-SETTINGS #23 · round 10, alpha-walk causes (B60, K5265)
+
+- **A-01** dropped by BOB's B61 (K5265): STORE-ASSEMBLY #7 makes the default `stats` answer cheap. Checked: `group.mjs:25` sends a plain `{ op: "stats" }` with no flag, and no file of `src/screens-settings/` reads `textIndexOk` or depends on the integrity check (the only `deep` match is the unrelated act key `act.deepercheck.does`, `keys.mjs:130`). No change made.
+- **D-B1** waits for BOB's CHANGE naming LOCAL-FACTS #11's op and fields; BOB re-opens this job by CHANGE. Read: `causes-D.md` D-B1 (`group.mjs:151-162`, `:301`; the button posts an empty path when no profile holds a `time_zone` fact).
+- Nothing REPORTed. No code or test changed; no checks needed beyond the unchanged tranche merge.
+- Size (session_01KU5VbSaZA1BVG9g3aQn231): test runs 0, module lines 0
