@@ -228,3 +228,7 @@ COMPLETE for B20 (START, fix round 10, Wave A batch 1: R11c, `reputationRefresh`
 ## J21 · COMPLETE
 
 COMPLETE for B20: R11c fixed (NOT_RENDERABLE message reaches the answer, failing-first test seen red), reputationRefresh fixture published with its test; all checks green. Platform check owed at the redeploy. Detail in J20 of the record.
+
+## J22 · BLOCKED
+
+BLOCKED (cause: needs Bob). NEEDS BOB: F-B14 needs one run of the pinned renderer image (Dockerfile.renderer) to find why LibreOffice 7.4.7 cannot load the generator's g.docx/g.pptx. Docker works here (dockerd up). The unmodified build fails at apt-get update: the session's egress proxy re-signs TLS, and the image trusts only Node's bundled roots (Dockerfile line 'ca-certificates.crt'), so snapshot.debian.org is 'certificate issuer unknown' (build log: Err:1 ... Certificate verification failed). I tried one command to build from a scratchpad COPY of the Dockerfile (product file untouched) that appends the proxy CA bundle /root/.ccr/ca-bundle.crt to the image's trust (verification stays on). The permission check refused it. I have not retried, split or worked around it. Needed from Bob: approve that one act (a scratchpad build that trusts the proxy CA), or name another way to get the pinned image's LibreOffice 7.4.7 packages into a container here. Fixtures g.docx and g.pptx from the corpus generator are ready; no code changed yet.
