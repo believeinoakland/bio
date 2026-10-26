@@ -4,7 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { V } from "./fixture.mjs";
 import { CASE } from "../docket/fixture.mjs";
-import { holdsDueAnswer, holdsDueDocketAnswer } from "./fixtures.mjs";
+import { holdsDueAnswer, holdsDueDocketAnswer, holdPlacedReleasedAnswers } from "./fixtures.mjs";
 
 const A = "ACTN-2026-0001-a";
 
@@ -39,4 +39,18 @@ test("R19 holdsdue docket fixture: the published answer lists the docket's legal
 test("R19 holdsdue docket fixture control: a viewer who sees no project of the docket mark reads no item of the page", () => {
   const { h } = holdsDueDocketAnswer();
   assert.deepEqual(h.holdsDue({ viewer: V("dave") }).items, []);
+});
+
+test("R22 R5 R6 placed-and-released fixture: the published answers are the real acts' over a hold placed from a docket mark, and the place reads released afterwards", () => {
+  const { w, h, viewer, entry, body, placed, preview, released, after } = holdPlacedReleasedAnswers();
+  assert.deepEqual(placed.items.map((x) => [x.place, x.hold, x.from]), [[{ project: w.P }, "in_place", [{ docket_entry: entry }]]]);
+  assert.deepEqual([preview.ok, preview.hold, preview.restarts], [true, "in_place", [w.P]]);
+  assert.deepEqual([released.ok, released.hold, released.from], [true, "released", body.from]);
+  assert.deepEqual(after.items.map((x) => x.hold), ["released"]);
+  assert.notEqual(holdPlacedReleasedAnswers().w, w, "a call builds its own world");
+});
+
+test("R22 placed-and-released fixture control: a viewer who sees no project reads no place", () => {
+  const { h } = holdPlacedReleasedAnswers();
+  assert.deepEqual(h.holdsPlaced({ viewer: V("dave") }).items, []);
 });
