@@ -3,6 +3,9 @@
    move (`golden.json`; how it was recorded is in `corpus.mjs`' header). No network, no record; the time is `NOW`. */
 import { readFileSync } from "node:fs";
 import { DOCS, KIND_SETS, SCALARS, NOW, TODAY } from "./corpus.mjs";
+import { leadLegFindings } from "../../../src/inquiry-grammar/grammar.mjs";
+import { themeLegFindings } from "../../../src/connections/checks.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 /* R7 (K1444 (iii); T33-72): the audit reads a clock entry's past date on the office's local day, `ctx.zone`. The golden
    file was recorded when it read the UTC day, so the suite hands it `UTC` (a zone, not a place), on which the local day is
@@ -97,4 +100,17 @@ export function suite(api) {
       clockMoves: S.clockMoves.map(([a, b, t]) => plain(api.clockMovesNotMechanical(clone(a), clone(b), t))),
     },
   };
+}
+
+/** R6, R7, R30 (T51 fix round 10): the lead and theme legs are judged by inquiry-grammar and connections, so what a document
+ *  whose leg is one of them answers is read from those providers for the same input and the label this module hands them,
+ *  never copied (K3810): the recorded golden holds their wording from before they took the caller's label. */
+export const PROVIDER_LEG_DOCS = Object.keys(DOCS).filter((id) => /^leg-(lead|theme)$/.test(id));
+export function providerLegFindings(id) {
+  const findings = [];
+  DOCS[id].action_basis.forEach((leg, i) => {
+    const label = localize("action-grammar.grammar.basis_leg_label", "basis leg {i}", { i: String(i) });
+    leadLegFindings(label, leg, findings) || themeLegFindings(label, leg, findings);
+  });
+  return plain(findings);
 }
