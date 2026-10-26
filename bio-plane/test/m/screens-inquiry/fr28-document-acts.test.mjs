@@ -4,6 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn, boot } from "../interface-shell/harness.mjs";
+import { reextraction } from "../extraction/fixtures.mjs";
 import { open, storeWorld, main, actsIn, fill, press, says, section, word, day, READING, SCREENS, D, SHA } from "./fixtures.mjs";
 
 process.env.TZ = "UTC";
@@ -44,12 +45,17 @@ test("R96 each of the four states of a document's text is drawn from the answer:
 
 test("R96 the OCR act sends the capture and ocr=1 and reads the document again; a scanned and a partial document offer it, an unread one does not, a full one does not", async () => {
   const w = await member();
-  /* the PDF is the world's own, held; the world reads no text from a generated PDF, so its reading is scripted with unread pages (needed: a recipe for a held PDF read in part), and so is the re-read,
-     which the world refuses (REEXTRACT_NO_OCR_MEMBER: no OCR engine is bound) (needed: a world with an OCR member bound) */
+  /* the PDF is the world's own, held; the world reads no text from a generated PDF, so its reading is scripted with unread pages (needed: a recipe for a held PDF read in part). The press is extraction's
+     real answer (K5240, its R103): `op=pdfstructure&ocr=1` makes no OCR call and owes the page (`performed: false`, `owed: true`); `performed: true` is the OCR pass's, not the press's */
+  const re = await reextraction();
+  assert.equal(re.press.body.reextraction.performed, false, "the press's real answer: owed, not yet performed");
+  assert.equal(re.pass.reextraction.performed, true, "the ledger's pass is the performed one");
   const partial = READING({ capture_sha: w.sha });
-  const p = await pageOn(w.world, w.ann, w.at, { plane: { reading: ok(partial), pdfstructure: ok({ ok: true, reextraction: { performed: true } }) } });
+  const p = await pageOn(w.world, w.ann, w.at, { plane: { reading: ok(partial), pdfstructure: { status: re.press.status, json: re.press.body } } });
   assert.ok(says(main(p), "screen.document.ocr.says", { pages: "8–10" }));
   await press(p, "pdfstructure");
+  /* the press owed the page (`performed: false`, `owed: true`): the page draws no refusal for it, and reads the reading again (the pages arrive as the ledger's pass reads them) */
+  assert.equal(main(p).querySelector('[data-outcome="pdfstructure"]'), null, "an owed re-extraction is not drawn as a refusal");
   assert.deepEqual([p.byOp("pdfstructure")[0].query.sha256, p.byOp("pdfstructure")[0].query.ocr], [w.sha, "1"], "the guard accepted exactly these");
   assert.equal(p.byOp("reading").length, 2, "the reading is read again");
   /* fix round 3 (R96, C17): a scanned copy a reading is held for offers it; a copy no reading is held for draws no act that reads it again */

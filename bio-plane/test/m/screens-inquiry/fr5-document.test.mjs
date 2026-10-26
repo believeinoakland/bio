@@ -4,6 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, boot } from "../interface-shell/harness.mjs";
+import { readHeldAnswer } from "../extraction/fixtures.mjs";
 import { open, storeWorld, main, says, word, SCREENS, P, Q, Q2, D, SHA, DOCUMENT_MD, inquiryMd } from "./fixtures.mjs";
 
 process.env.TZ = "UTC";
@@ -116,9 +117,11 @@ test("R129 N5 a copy stored with no reading says so and offers Read it now; pres
 });
 
 test("R129 N5 a refusal to read says why in words: the original not held whole, or no record to read it into; control: a copy read by someone else meanwhile (READING_HELD) is read again and draws its reading", async () => {
-  for (const why of ["NO_WHOLE_OBJECT", "NO_HOME"]) {
-    /* still scripted (reading, readheld): needed: a copy held with no original object under its digest (NO_WHOLE_OBJECT), and one whose digest names no home bundle (NO_HOME) */
-    const p = await open(at, { plane: { reading: UNREAD, readheld: ok({ ok: true, read: false, why }) } });
+  /* extraction's published answers (K5240): a home whose object the store does not hold whole, and a digest no register names; the reason is read from the answer */
+  for (const answer of [await readHeldAnswer.noWholeObject(), await readHeldAnswer.noHome()]) {
+    const why = answer.why;
+    assert.ok(["NO_WHOLE_OBJECT", "NO_HOME"].includes(why), "the answer states its reason: " + why);
+    const p = await open(at, { plane: { reading: UNREAD, readheld: ok(answer) } });
     await press(p, "readheld", { reason: "read it" });
     assert.ok(says(main(p).querySelector('[data-outcome="readheld"]'), why === "NO_HOME" ? "refusal.CAPTURE_NOT_HELD" : "transcribe.why.evidenceabsent"), why + " is said, in the nearest words held (the rows owed are asked of the design)");
     assert.ok(actsIn(main(p)).includes("readheld"), "and the act stays, for when it can be done");
