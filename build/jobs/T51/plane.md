@@ -1340,3 +1340,18 @@ Final count for the G93 verification (fix-run-1 to -10, same load): owedwork 10 
 ## J77 · REPORT · re B114
 
 whoami diagnosis: 10 instrumented runs of the member's whoami test under 4 busy loops: 10 of 10 green, nothing captured. The earlier failures (2 of 10, runs 3 and 4) did not reproduce. The instrumented copy (state before and after the firing ends: flight, rows, counters) passed each time, so the instrumentation may change the timing. No scheduler cause is named yet, so there is nothing to place with its owner. The owedwork fix is pushed and 10 of 10 green. Five foreign files are still modified in the shared clone (restore refused by the classifier; saved as a patch). Options: a longer run of the uninstrumented file to try to reproduce whoami, or a decision to accept whoami as passing under load after the owedwork fix.
+
+## J78 · BLOCKED · re B115
+
+G93 whoami, B115 (deterministic repro): NOT built yet, and G93 is NOT resolved, so no COMPLETE.
+
+What I checked in the code (bio-plane/src/scheduler/index.mjs, file:line):
+- heal() returns null while a firing runs (:782 `if (this.#firing || now - this.#healedAt < HEAL_EVERY_MS) return null`), and sets #healedAt at the look (:783). Your sequence (1)-(3) is consistent with that.
+- The firing's end reconciles EXACTLY over the full registry before it clears running_since (:658 `#reconcile(now, reg, true, answers)`, then the beat write at :661). So after firingEnded (running_since null) the alarm is the one that reconcile set.
+- #reconcile sets the alarm to the earliest consumer wake, and DELETES it when no consumer wants a wake (`if (!wants.length) deleteAlarm`). The ledger's wake (pending.mjs:780) is the first live row's due instant, or `at` while a row is started, or null when no row is live.
+
+Reading of run 4: the alarm is null after the firing ended only if the reconcile found no wake, i.e. no live row. If that is right, the failing assertion was asserting an alarm with no owed work, which is a test expectation, not a missed re-arm. I have NOT confirmed this: I did not capture the rows at the failing assertion (the diagnostic runs passed), so it is an inference.
+
+Why no repro yet: a deterministic sequence needs an owed reading row through the real store and scheduler with an injected clock. The plane's r8 world runs under miniflare, whose time is not injectable, and the scheduler's own fixture is the scheduler module's (not mine). I have not built that world.
+
+Options for you: (a) I build the repro with a platform double for storage and the real Scheduler class, pinning Date.now as the scheduler tests do, and check the reconcile's wake at the failure instant; or (b) you accept the inference (no live row at the end, so the test's armed expectation is wrong) and I change the whoami test to assert the alarm only while work is owed. The five foreign files are not committed.
