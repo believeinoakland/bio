@@ -100,7 +100,7 @@ export const actionNew = Object.freeze({
         return typeof q.title === "string" && q.title ? { value: q.inquiry, text: q.title } : { value: q.inquiry, key: "screen.plan.matter.n", fills: { n: String(i + 1) } };
       }));
       const restsSec = questions.length && legKinds.length ? cs.sec("screen.actionnew.rests", cs.choice("an-leg", "screen.actionnew.rests.point", legOptions, { acts: {}, value: "" })
-        + cs.choice("an-legk", "screen.actionnew.rests.does", legKinds) + '<p class="mk-note">' + cs.w("screen.actionnew.rests.needed") + "</p>") : "";
+        + cs.choice("an-legk", "screen.actionnew.rests.does", legKinds, kind === "request_for_comment" && legKinds.some(function (k) { return k[0] === "advances"; }) ? { value: "advances" } : {}) + '<p class="mk-note">' + cs.w("screen.actionnew.rests.needed") + "</p>") : "";
 
       // when things are due: each date says where it comes from
       const dueSec = cs.sec("screen.actionnew.due", cs.field("an-due-text", "screen.actionnew.due.what") + cs.field("an-due-date", "screen.actionnew.due.when", { type: "date" })
@@ -153,7 +153,7 @@ export const actionNew = Object.freeze({
         const dtext = line(cs.value("an-due-text")), ddate = String(cs.value("an-due-date") || "").trim(), dbasis = line(cs.value("an-due-because"));
         const dated = dtext || ddate || dbasis;
         if (dated && (!dtext || !/^\d{4}-\d{2}-\d{2}$/.test(ddate) || !dbasis)) return { refuse: "refusal.CLOCK_REFUSED" };
-        if (kind === "request_for_comment" && (!legs.length || cs.value("an-legk") !== "advances" || !dated)) return { refuse: "refusal.ACTION_BASIS_REFUSED" };
+        // R56 (walk E K-new): no local pre-check of a request for comment's basis; the plane's refusal and its findings are drawn (`refusals` below)
         const clock = dated ? ["  - text: " + q(dtext), "    description: " + q(dtext), "    date: " + ddate, "    basis: " + q(dbasis), "    status: pending"] : [];
         const tier = String(cs.value("an-tier") || "");
         const at = new Date(cs.now()).toISOString().replace(/\.\d{3}Z$/, "Z");

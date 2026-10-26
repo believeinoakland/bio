@@ -170,7 +170,24 @@ export const plan = Object.freeze({
       const phs = sc && Array.isArray(sc.phases) ? sc.phases : [];
       const pi = phs.findIndex(function (x) { return x.id === c.phase; });
       const ph = pi >= 0 ? P.phName(cs, phs[pi], pi) : "";
-      if (c.state === "undetermined") return "";
+      // R56 (walk E K-words): a check that cannot be told for want of a day is worded by its key with the option and phase named, the reason
+      // the design's own (`action-plans.time_zone_held_place`), never the plane's English with its ids
+      if (c.state === "undetermined") {
+        const why = { html: cs.w("action-plans.time_zone_held_place") };
+        if (c.check === "date_past" && opt) return cs.w("action-plans.says.whether_regulated_date", { id: { html: opt }, date: { html: cs.date(c.date) }, day_undetermined: why });
+        if (c.check === "date_before_phase" && opt && ph) return cs.w("action-plans.says.whether_regulated_date_falls", { oid: { html: opt }, id: { html: ph }, date: { html: cs.date(c.date) }, day_undetermined: why });
+        return "";
+      }
+      // R56: a regulated date that falls before its phase can start: the key when the check carries the day the phase starts; else the plane's own
+      // sentence, which states it, with the option and the phase called by name where it wrote their ids
+      if (c.check === "date_before_phase" && opt && ph) {
+        if (typeof c.start === "string" && c.start) return cs.w("action-plans.says.regulated_date_falls", { oid: { html: opt }, id: { html: ph }, date: { html: cs.date(c.date) }, start: { html: cs.date(c.start) } });
+        if (typeof c.says !== "string" || !c.says) return "";
+        const esc = function (id) { return String(id).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); };
+        const names = {}; names[String(c.option)] = opt; names[String(c.phase)] = ph;
+        const re = new RegExp("(^|[^\\w-])(" + Object.keys(names).map(esc).join("|") + ")(?![\\w-])|\\b(\\d{4}-\\d{2}-\\d{2})\\b", "g");
+        return cs.esc(c.says).replace(re, function (m, pre, id, day) { return day ? cs.date(day) : pre + names[id]; });
+      }
       if (c.check === "date_past" && opt) {
         const d = (Array.isArray(options[at].dates) ? options[at].dates : []).find(function (x) { return x && x.date === c.date; });
         return d && typeof d.basis === "string" ? cs.w("action-plans.says.regulated_date_passed", { id: { html: opt }, date: { html: cs.date(c.date) }, basis: d.basis }) : "";
@@ -531,6 +548,11 @@ export const plan = Object.freeze({
         if (detail) body.detail = detail;
         const text = function (id) { return String(cs.value(id) || "").trim(); };
         const kind = String(cs.value("plan-opt-adk") || "none");
+        // R56 (walk E K4; walk C C-M17): an addressee is refused for the part left empty, and the sentence names that part
+        if (kind === "office" || kind === "press" || kind === "organisation") {
+          if (!text("plan-opt-arole")) return { refuse: "findin.fieldneeded", fills: { field: { html: cs.w("screen.plan.option.role") } } };
+          if (!text("plan-opt-abody")) return { refuse: "findin.fieldneeded", fills: { field: { html: cs.w("screen.plan.the.body.or.organization") } } };
+        }
         if (kind === "office") body.addressee = { state: "named", kind: "office", role: text("plan-opt-arole"), body: text("plan-opt-abody") };
         else if (kind === "press" || kind === "organisation") body.addressee = { state: "named", kind: kind, role: text("plan-opt-arole"), organisation: text("plan-opt-abody") };
         else if (kind === "audience") body.addressee = { state: "audience", description: text("plan-opt-adesc") };

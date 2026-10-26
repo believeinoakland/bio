@@ -213,7 +213,8 @@ export const action = Object.freeze({
       // R43, R48 (C65): once the filing's sending is recorded the way to keep it as the team's template is reachable from the action: the
       // control is on `start-send`'s step for a sent filing (the registry lists `templatesave` on that screen alone), which this opens
       const keepDoor = step === "sent" && !joinFirst && cs.can("templatesave") ? '<p class="mk-note">' + aLink("start-send", view.subject, "screen.start-send.template.heading") + "</p>" : "";
-      const owed = a.reply_owed && a.reply_owed.owed;
+      // R56 (walk E K12): "Waiting on" only while the action is neither resolved nor abandoned; the plane's `owed` stays true after
+      const owed = a.reply_owed && a.reply_owed.owed && state !== "resolved" && state !== "abandoned";
       const wait = owed ? '<p class="cs-wait" role="status">' + cs.w("screen.action.waiting", { office: office || cs.w("screen.action.theoffice") }) + "</p>" : "";
       const today = P.today(cs);
       const clock = Array.isArray(a.clock) ? a.clock : [];

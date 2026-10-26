@@ -65,18 +65,21 @@ test("R45 (b): a matter with no determination yet draws each act that needs one 
 test("R45 (c): recording a determination sends exactly what `determine` declares: the act, the findings it rests on, the rule, what it requires and what was done, the outcome, the question when unclear, the cause", async () => {
   const w = await matterWorld();
   const docs = await heldOf(w);
+  // R56 (walk E C2a (2)): the body is chosen among the offices the team holds and sent as the entity id
+  const office = (await w.me.act("entitycreate", { body: { kind: "office", label: "City of Oakland", note: "The office." } })).entity_id;
   const p = await openIn(w.world, w.me, `/app/matter/${w.project}`);
   assert.ok(!main(p).querySelector("#mt-d-why"), "a first determination replaces nothing");
+  assert.deepEqual(optText(p, "mt-d-body"), ["", "City of Oakland"], "the team's offices, by label");
   // the rules come from `standards`, the findings from the project's concluded questions and the published cases' own findings
   assert.equal(p.byOp("standards").length, 1);
   assert.deepEqual(p.byOp("publishedcase").map((r) => [r.query.id, r.query.edition]), [["CASE-2026-0101", "1"]], "each case's latest edition, once, by the case's id");
   assert.ok((await w.me.read("publishedcase", { query: { id: "CASE-2026-0101", edition: "1" } })).findings.some((f) => f.bundle_id === w.finding), "the store answers that read with the case's finding");
   assert.ok(main(p).querySelector(`#mt-d-std option[value='${w.std.b}']`));
   assert.ok(text(p).includes(FINDING_TITLE));
-  await press(p, "determine", { reason: "recorded", values: { "mt-d-event": w.events.dated, "mt-d-role": "City Administrator", "mt-d-body": "City of Oakland", "mt-d-evidence-0": true,
+  await press(p, "determine", { reason: "recorded", values: { "mt-d-event": w.events.dated, "mt-d-role": "City Administrator", "mt-d-body": office, "mt-d-evidence-0": true,
     "mt-d-findings-0": true, "mt-d-std": w.std.a, "mt-d-req": "a council vote", "mt-d-did": "no vote was held", "mt-d-rd": "diverges", "mt-d-out-2": true, "mt-d-q": "Was there a vote?", "mt-d-cause": "a rushed signing" } });
   const b = last(p, "determine").body;
-  assert.deepEqual(b.act, { event: w.events.dated, actor: { role: "City Administrator", body: "City of Oakland" }, evidence: [docs[0].content] });
+  assert.deepEqual(b.act, { event: w.events.dated, actor: { role: "City Administrator", body: office }, evidence: [docs[0].content] });
   assert.deepEqual(b.findings, [{ finding: w.finding }]);
   assert.deepEqual(b.standards, [{ standard: w.std.a, outcome: "unclear" }]);
   assert.deepEqual(b.rows, [{ standard: w.std.a, requires: "a council vote", did: "no vote was held", reading: "diverges" }]);

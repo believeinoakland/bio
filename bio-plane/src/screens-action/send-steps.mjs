@@ -295,7 +295,11 @@ export function sendSteps(cs, view, filings, o) {
     ? ui.releasedDone.items.map(function (r) { return '<p class="mk-note">' + cs.w("screen.start-send.release.done", { who: String(view.me.handle), date: { html: cs.date(new Date(cs.now()).toISOString().slice(0, 10)) }, reason: r.reason }) + "</p>"; }).join("") : "";
   if (step === "sent") {
     const s = d.sent.sending;
-    return wasReleased + '<p class="mk-note" role="status">' + cs.w("screen.start-send.sent", { date: { html: cs.date(s.sent_on || s.at) } })
+    // R56 (walk E H2): the sending moves no state; `filingrecordsent` answers the next state a member may choose (`proposed.next_state`, filings
+    // R7), said here in the owner's words as the answer gave them, and the way to the action's move follows
+    const nx = ui.proposed && ui.proposed.next_state && typeof ui.proposed.next_state === "object" ? ui.proposed.next_state : null;
+    const proposal = nx && typeof nx.to === "string" && nx.to && typeof nx.says === "string" && nx.says ? '<p class="mk-note" data-proposed="next-state">' + cs.esc(nx.says) + "</p>" : "";
+    return wasReleased + proposal + '<p class="mk-note" role="status">' + cs.w("screen.start-send.sent", { date: { html: cs.date(s.sent_on || s.at) } })
       + (s.reference ? " · " + cs.w("screen.start-send.reference", { reference: s.reference }) : "") + "</p>"
       + '<a class="cs-ref" href="/app/action/' + encodeURIComponent(view.subject) + '" data-nav>' + cs.w("screen.start-send.openaction") + "</a>" + keep + joinFirst;
   }
@@ -442,8 +446,9 @@ export const PREPARE_FILING = Object.freeze({
   refusals: {
     FILING_TIER_UNDETERMINED: function (refusal, cs) {
       const id = typeof refusal.action === "string" ? refusal.action : "";
+      // R56 (walk E K10): the door is its own control after the sentence, never run on from it ("A member states the tier first. Its risk")
       return cs.w("refusal.FILING_TIER_UNDETERMINED")
-        + (id ? ' <a class="cs-ref" href="/app/action/' + encodeURIComponent(id) + '" data-nav>' + cs.w("risk.title") + "</a>" : "");
+        + (id ? '<div class="mk-acts"><a class="cs-ref" href="/app/action/' + encodeURIComponent(id) + '" data-nav>' + cs.w("risk.title") + "</a></div>" : "");
     },
   },
   send: function (view, el, cs) {
@@ -574,6 +579,11 @@ export const RECORD_SENT = Object.freeze({
     const ref = String(cs.value("send-reference") || "").trim();
     if (ref) body.reference = ref;
     return { body: body };
+  },
+  // R56 (walk E H2): what the sending proposes is kept in the page's memory for the step that follows
+  done: function (view, answer, cs) {
+    const r = answer && answer.result !== undefined ? answer.result : answer;
+    if (r && r.proposed && typeof r.proposed === "object") cs.set("proposed", r.proposed);
   },
   refusals: { SENT_REFERENCE_MALFORMED: "screen.request.reference.malformed", SECOND_APPROVAL_NEEDED: "screen.start-send.waitsecond" },
 });

@@ -9,6 +9,7 @@ import { SCREENS } from "../../../src/screens-action/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { wordsOf, interfacePage } from "../../../src/interface-shell/index.mjs";
 import { boot, ok, refused, refusedIn, settle, textNodes, MEMBER, ADMIN } from "../interface-shell/harness.mjs";
+import { entitieskind as entitiesListing } from "../entities/fixtures.mjs";
 
 export { SCREENS, ok, refused, refusedIn, settle, textNodes, MEMBER, ADMIN, word, hasWord };
 /** A word read through `setup-words` as a drawn text node holds it (whitespace collapsed): the tests assert keys, never a sentence's text (R19). */
@@ -250,6 +251,8 @@ export const DATA_PLANE = {
   standards: ok({ ok: true, items: [{ id: "STD-1", cite: "Lease §7.2" }, { id: "STD-2", cite: "Lease §9.1" }], truncated: false }),
   affordances: ok(AFFORDANCES), holdsdue: ok(HOLDS_DUE), projectlist: ok(ROSTER), templatesforaction: ok(TEMPLATES), procedureguides: ok(GUIDES),
   actions: ok(ACTIONS), queue: ok({ items: [] }),
+  // R56: the team's bodies as `entities` lists them (its published fixture: the real `entitiesOfKind`); the team holds no office until a test says so
+  entitieskind: (req) => ok(req.query.kind === "body" ? entitiesListing({ kind: "body" }) : { ...entitiesListing({ kind: req.query.kind }), entities: [], count: 0 }),
   // R3: the language the member states for a draft (`memberlanguage`) among those the team's profiles answer (`grouplanguages`)
   memberlanguage: ok({ language: "en" }), grouplanguages: ok({ languages: ["en", "es"] }),
   // the roster the fixtures' member ids are named from (C94, interface-shell R111): each id's handle is its own
