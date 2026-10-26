@@ -4,7 +4,7 @@
    The handlers are replaced by recording stand-ins in a child process (node's module mocks), which state one entry each through the
    context they receive and nothing else; the door itself is real. (2) The real object's answers carry `object-age;dur=<ms>` beside R78's
    `object;dur`, the age growing between two answers of one instance (a real wait between them). */
-import "../../../src/plane/register.mjs";   /* R68: the start's registration before any op table is read */
+import "../../../src/store-assembly/register.mjs";   /* R68: the start's registration before any op table is read */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -89,7 +89,7 @@ test("R96 (G106, G120): every route answer of the object states `object-age;dur=
    neither; the door's `stateTiming` reaches the report, which states entries through it. */
 function bootstrapViaDoor(readers) {
   const script = `
-    import "${file("plane/register.mjs")}";
+    import "${file("store-assembly/register.mjs")}";
     import { mock } from "node:test";
     const real = { ...(await import(${JSON.stringify(file("control-plane/index.mjs") + "?real")})) };
     let reader = { viewer: "" };

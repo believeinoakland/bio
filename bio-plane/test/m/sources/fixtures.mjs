@@ -16,6 +16,21 @@ export async function rungOf() {
   };
 }
 
+/** `knockerconsent` (R11, R22): a source a pulled knock holds, with its knocker secret, and one disclosure of its name
+ *  waiting for consent (a pending entry, shown to no one: R8). `before` is the real `publishableAt` for the group, empty;
+ *  `answer` is the real `consentBySecret` the knocker's own consent to that entry for the group makes; `after` is the
+ *  real `publishableAt` for the group once it stands, the entry shown with its basis `consent` (R8, R11). */
+export async function knockerconsent() {
+  const w = seeded();
+  const { sourceId } = await w.pulled({ secret: SECRET });
+  const d = w.disclose(sourceId);
+  if (!d.ok) throw new Error(`knockerconsent: the disclosure was refused: ${JSON.stringify(d).slice(0, 300)}`);
+  w.tick();
+  const before = w.s.publishableAt({ source: sourceId, audience: "group" });
+  const answer = await w.s.consentBySecret({ knockerSecret: SECRET, entry: d.entry, audience: "group", sourceAddress: "198.51.100.7" });
+  return { source: sourceId, entry: d.entry, before, answer, after: w.s.publishableAt({ source: sourceId, audience: "group" }) };
+}
+
 /** `sourceOfReads` (R1, R8): the real `sourceOf` for a capture no source stands behind (`none`, a sha no capture holds),
  *  a fetched capture of acquisition's kind that came by no knock (`fetched`), and a capture with a source (`withSource`,
  *  the pulled knock's own answer); `publishable` is the real `publishableAt` for that source to the group (R8: nothing

@@ -21,7 +21,7 @@ import { EXTRACTION_OPS, extractionOp, acquireReadingOp, pageTranscribeOp } from
 import { CONNECTIONS_OPS, connectionsOp } from "../connections/ops.mjs";
 import { ratificationOp } from "../ratification/ops.mjs";
 import { ACT_GATE } from "../op-declarations/index.mjs";
-import { askOp, actionDraftOp, ACTION_DRAFT_OPS } from "./ask.mjs";
+import { askOp, actionDraftOp, ACTION_DRAFT_OPS } from "../store-assembly/index.mjs";
 /* K1907, K2041: the answer's envelope is answer-envelope's (its R1–R5); the reads of a case, a capture's key and the
    store's absence stay control-plane's, with the namespace names it re-exports from admission. */
 import { json, doAnswer, storeSilent, storeRefusal, STORE_SILENT_REASON, STORE_SILENT_DETAIL,

@@ -114,7 +114,7 @@ async function caseCeremony(req, stub, ctx, later) {
        first leaves them to finish, writing nothing. */
     const sittingList = sitting.length ? doAnswer(stub.fetch(`http://do/list?viewer=${encodeURIComponent(sessViewer)}`)) : null;
     if (sittingList) sittingList.catch(() => {});
-    const memberReads = sitting.map((m) => readFinding({ bundleId: m.id }, stub, ctx, { viewer: sessViewer, list: sittingList }));
+    const memberReads = readSitting(sitting, stub, ctx, { viewer: sessViewer, list: sittingList });
     const factsOut = await doAnswer(stub.fetch(
       `http://do/casedocfacts?case=${encodeURIComponent(body.caseId)}`
       + `&edition=${encodeURIComponent(String(body.edition))}`
@@ -519,15 +519,16 @@ function publishRefusalStatus(pub) {
  *  (`list`: a sitting's one shared read), and, as soon as those three are in, the store-half gate over them (N417: it reads and
  *  writes nothing). Answers the asks; `weighFinding` weighs them in the act's order. A read still in flight when the act stops at
  *  an earlier refusal is left to finish: it writes nothing. */
-export function readFinding({ bundleId }, stub, ctx, { viewer, list = null }) {
+export function readFinding({ bundleId }, stub, ctx, { viewer, list = null, batched = false }) {
   const { doAnswer } = ctx;
   const v = encodeURIComponent(viewer);
   const factsAsk = doAnswer(stub.fetch(`http://do/gatefacts?id=${encodeURIComponent(bundleId)}&viewer=${v}`));
   const imgAsk = doAnswer(stub.fetch(`http://do/image?id=${encodeURIComponent(bundleId)}&viewer=${v}`));
   const listAsk = list || doAnswer(stub.fetch(`http://do/list?viewer=${v}`));
   const readable = (out) => out && !out.refused && out.answered;
-  /* the gate is asked only over answers the act would hand it; any other answer is weighed (refused or silent) before the gate's */
-  const gateAsk = (async () => {
+  /* the gate is asked only over answers the act would hand it; any other answer is weighed (refused or silent) before the gate's.
+     `batched` (a sitting, R52): `readSitting` asks the gate for the whole sitting in one call and sets `gateAsk` itself. */
+  const gateAsk = batched ? null : (async () => {
     const [factsOut, imgOut, listOut] = await Promise.all([factsAsk, imgAsk, listAsk]);
     if (!readable(factsOut) || !readable(imgOut) || !readable(listOut) || !factsOut.result?.ok) return null;
     const facts = factsOut.result;
@@ -543,8 +544,44 @@ export function readFinding({ bundleId }, stub, ctx, { viewer, list = null }) {
         earnedRegistry: facts.earnedRegistry,
       }) })));
   })();
-  for (const pending of [factsAsk, imgAsk, listAsk, gateAsk]) pending.catch(() => {});
+  for (const pending of [factsAsk, imgAsk, listAsk, gateAsk]) pending?.catch(() => {});
   return { factsAsk, imgAsk, listAsk, gateAsk };
+}
+
+/** R52 / R60 (fix round 10): the reads of a sitting, as `readFinding` makes them for each member, but the store-half gate for
+ *  every member the act would gate is asked ONCE, in one `ratifygate` call (`{members: [...]}`), not once each: each member's
+ *  answer is the store's answer for its own body, in the sitting's order, and a store refusal or silence is each member's. A
+ *  member the act would not gate (its facts, image or list not readable, or its facts not ok) is not in the call, as before. */
+export function readSitting(members, stub, ctx, { viewer, list }) {
+  const { doAnswer } = ctx;
+  const reads = members.map((m) => readFinding({ bundleId: m.id }, stub, ctx, { viewer, list, batched: true }));
+  const readable = (out) => out && !out.refused && out.answered;
+  const ready = reads.map((r) => Promise.all([r.factsAsk, r.imgAsk, list]).then(([factsOut, imgOut, listOut]) =>
+    readable(factsOut) && readable(imgOut) && readable(listOut) && factsOut.result?.ok
+      ? { factsOut, imgOut, listOut } : null));
+  const batch = Promise.all(ready).then(async (rows) => {
+    const picked = rows.flatMap((row, i) => (row ? [i] : []));
+    if (!picked.length) return { picked, out: null };
+    const body = { members: picked.map((i) => {
+      const { factsOut, imgOut, listOut } = rows[i];
+      const facts = factsOut.result;
+      return { bundleId: members[i].id, image: imgOut.result,
+               knownIds: [...new Set((listOut.result || []).map((b) => b.bundle_id))],
+               registers: facts.registers, publishedRegistry: facts.publishedRegistry,
+               publishedCaseRegistry: facts.publishedCaseRegistry, earnedRegistry: facts.earnedRegistry };
+    }) };
+    const out = await doAnswer(stub.fetch(new Request("http://do/ratifygate", { method: "POST", body: JSON.stringify(body) })));
+    return { picked, out };
+  });
+  batch.catch(() => {});
+  reads.forEach((r, i) => {
+    r.gateAsk = batch.then(({ picked, out }) => {
+      const k = picked.indexOf(i);
+      return k < 0 || !out ? null : { ...out, result: out.result?.members?.[k] ?? null };
+    });
+    r.gateAsk.catch(() => {});
+  });
+  return reads;
 }
 
 /** R4 (and R52, for each member of a sitting): every check `op=ratify` makes before its commit, after the credential's fences

@@ -15,7 +15,7 @@
 
 import { fmSafe, whatChangedBlockLines, whatChangedSectionLines, lensBlockLines,
          lensSectionLines, caseDocumentFormatFor, workingOnLines, methodBlockLines, materialBlockLines, acceptedWorkBlockLines,
-         gradingFactsLines, passagesLines } from "../case-grammar/index.mjs";
+         gradingFactsLines, passagesLines, memberBasisVersionLines } from "../case-grammar/index.mjs";
 /* N529 (K1333): the disclosure renderers and their fixed sentences are `case-disclosures`' (its R1–R4, R7, R13, R14),
    moved there and imported here, never copied, so the signed document is byte-identical before and after the split. */
 import { FLAG_SENTENCE, tensionFrontmatterLines, tensionBodyLines, tensionSentence, captureBodyLines, carriesBodyLines,
@@ -57,7 +57,8 @@ export const CEREMONY_HIGHLIGHT_SENTENCE = word("case-authoring.ceremony_highlig
  *  sentences as the publisher typed them, and every fact the caller read from the record at the act (`searched`,
  *  `conclusions`, `frozen`, `manifest`, `acks`, `citations`, `attributions`, the writer). Nothing here is composed,
  *  summarised or inferred, and no case-level strength has anywhere to be written (R24).
- *  `subjects` maps each member to the `subject_entity` its pinned bytes state, or null (R60).
+ *  `subjects` maps each member to the `subject_entity` its pinned bytes state, or null (R60). `basisVersions` maps each
+ *  member to the `{name, identity}` its project stood on, or null (R87; case-grammar R34).
  *
  *  `statementBy` null is UNDETERMINED and is STATED, never filled in from `author` (R14, `case-inputs` R3; R26). `searched` is required:
  *  a document that cannot say what was searched fails the ceremony instead (R11). `frozen` maps each member to
@@ -71,7 +72,7 @@ export const CEREMONY_HIGHLIGHT_SENTENCE = word("case-authoring.ceremony_highlig
 export function caseDocumentText({ caseId, edition, project, workingOn = null, scope, bias, bar, roster, roles, pins,
                                    statement, position, justification, excluded, author, at,
                                    statementBy = null, statementByStated = "",
-                                   searched, conclusions = [], frozen, manifest = null, subjects = null,
+                                   searched, conclusions = [], frozen, manifest = null, subjects = null, basisVersions = null,
                                    acks = { statementSha: null, truncated: false, rows: [] },
                                    citations = [], attributions = [], tensions = [],
                                    tensionsUnread = [], captures = [], sources = [], whatChanged = null,
@@ -158,7 +159,9 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
       `    edition: ${frozenOf(m) ? frozenOf(m).edition : "null"}`,
       /* R60 (N717; case-grammar R22): the subject the member's pinned bytes state, so `case-checker` R21 reads only the
          criteria rows of that body; null when they state none, never another member's or the inquiry's current one. */
-      `    subject_entity: ${(subjects && subjects.get(m)) || "null"}`]),
+      `    subject_entity: ${(subjects && subjects.get(m)) || "null"}`,
+      /* R87 (case-grammar R34): the basis version the member's project stood on, both null where it named none. */
+      ...memberBasisVersionLines(basisVersions ? basisVersions.get(m) : null)]),
     /* REC-135 / §7.1 item 4 — THE CONCLUSION EACH MEMBER ENTERED THIS CASE ON, AND WHOSE IT WAS. A `no_project` row is
        a DISCLOSURE, not a defect; `claim_state: undetermined` is a first-class answer, never an empty claim. The rows
        are `ratification`'s one writer of them, so what an edition records and what `editionsRecordingConclusion`

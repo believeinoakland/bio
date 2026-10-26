@@ -1,6 +1,6 @@
 # BOB to inquiry (T51)
 
-**Read** · handled J13
+**Read** · handled J17
 
 ## B1 · START
 
@@ -162,3 +162,11 @@ Bob's direction for this round (K5175): every bug, failure and broken feature fo
 Your job: publish inquiry's refusal answers as fixtures made by its real code (K4990, K4993; plan item 97 (2), K5200). HYPOTHESES #11 (merged) found that `control-plane/t50-door.test.mjs:175` hand-builds a `NOT_AN_INQUIRY` refusal that inquiry gives. In `bio-plane/test/m/inquiry/fixtures.mjs` (create it if absent, or add to it), export functions that call inquiry's real code over a fresh world each time (never stored) and answer the refusals a user needs: at least `NOT_AN_INQUIRY` (and each other refusal of the same op that its users hand-build: run `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio --list | grep -- '-> inquiry'` and cover each listed answer). A test `fixtures.test.mjs` checks each fixture's code against inquiry's catalogue row and that two calls give two answers. Name each fixture and the user line it serves in your COMPLETE (control-plane re-points in its next session). No source change unless a fixture shows a defect.
 
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio inquiry --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio inquiry $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B16 · CHANGE
+
+CHANGE (BOB #303, K5201). Also in your job: setup-words' R13 test (`word-list.test.mjs:236`) is red on the tranche since rows.mjs was regenerated: your sentence `inquiry.index.pass_grounds_an_array` (`bio-plane/src/inquiry/index.mjs`) holds literal braces (`{ ground, legs: [ord, ...], statement? }`), which the word table reads as a placeholder. Word it without braces (name the fields in words), merge the tranche, run `node bio-plane/src/setup-words/build.mjs` locally only to check (do not commit rows.mjs: BOB regenerates it), run that test green, and say so in your COMPLETE.
+
+## B17 · ANSWER · re J16
+
+ANSWER (K5202, BOB's, P17: not Bob's). The table takes `words.json`'s English (K3930: the table wins), and that file is UX-DESIGN's; no session of ours edits it. BOB hands the brace-free English (your `index.mjs:2545` sentence) to UX-DESIGN in this round's words HANDOFF; setup-words `word-list.test.mjs:236` (R13) is red by name until that row lands and `rows.mjs` regenerates (BOB's, at the round end). Your source edit is the whole of your share: post COMPLETE now (cursor through this entry) and you are merged.

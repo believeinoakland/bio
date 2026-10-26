@@ -121,7 +121,10 @@ async function owedWorld({ alarm = null } = {}) {
   x.ctx.storage.setAlarm = async (t) => { sets++; return set(t); };
   x.asked = [];
   const { extractionOf } = await import("../../../src/extraction/index.mjs");
-  extractionOf(x.ctx).readHeld = async (a) => { x.asked.push(a); return { ok: true, read: true }; };
+  const { readHeldAnswer } = await import("../extraction/fixtures.mjs");
+  const readDone = await readHeldAnswer.read();   /* extraction's published read-to-its-end answer, made by its real reader */
+  // fixtures-own: harness a recorder of what the ledger asks the reading owner, answering extraction's published read-to-its-end answer: "no work ran" is read from the record, the answer is the owner's own
+  extractionOf(x.ctx).readHeld = async (a) => { x.asked.push(a); return readDone; };
   await x.ctx.storage.deleteAlarm();
   if (alarm !== null) await x.ctx.storage.setAlarm(alarm);
   sets = 0;

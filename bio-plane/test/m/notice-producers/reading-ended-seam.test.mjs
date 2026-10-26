@@ -1,6 +1,6 @@
 /* R29 (fix round 10; the marked clause, the seam over the real job table: control-plane seam section 11, job 43): the `reading-ended` producer
    built from `readingsEnded` over the rows the REAL job table answers. The job table is plane's (`plane/pending.mjs`, `readingsEnded`, plane R98), later in the
-   order than this module, so its answer is not built here: `READING_ROWS` below is the contract, stated as data exactly as plane's own `Store` answers it (member as
+   order than this module, so its answer is not built here: `READING_ROWS` below, handed in as `readingsEnded`'s answer (marked `fixtures-contract: plane reading-ended`), is the contract, stated as data exactly as plane's own `Store` answers it (member as
    `member:<id>`, `ended_at` in epoch milliseconds, `why` the refusal's bound key or the reader's final reason, the cursor `<ended_at>\u0001<sha>\u0001<kind>`), and the
    plane's test runs it against its real table (the `fixtures-run` line it carries). This test drives `noticeItems` at its interface over those rows. */
 import test from "node:test";
@@ -15,7 +15,6 @@ const NOW = Date.parse("2026-10-25T00:00:00Z");
 const sha = (c) => c.repeat(64);
 const AT = NOW - 3600e3;
 
-// fixtures-contract: plane reading-ended
 const READING_ROWS = Object.freeze([
   Object.freeze({ id: "refused", sha: sha("3"), kind: "reading", state: "refused", why: "pdf.bytes", written: 0, skipped: 0, owed: 0, failed: 0, ended_at: AT, member: "member:m1" }),
   Object.freeze({ id: "finished", sha: sha("1"), kind: "reading", state: "finished", why: null, written: 5, skipped: 0, owed: 0, failed: 0, ended_at: AT + 15, member: "member:m1" }),
@@ -34,6 +33,7 @@ function setup(rows) {
     const start = after === null ? 0 : rows.findIndex((r) => cursorOf(r) === after) + 1;
     const page = rows.slice(start, start + limit);
     const last = page[page.length - 1];
+    // fixtures-contract: plane reading-ended
     return { ok: true, rows: page.map(({ id, ...r }) => ({ ...r })), next: page.length === limit && start + limit < rows.length ? cursorOf(last) : null };
   };
   const n = fresh(w.host, { membership: w.membership, readingsEnded });

@@ -59,7 +59,8 @@
  *                  retirement (a test may); absent, the group is read through `promotion.fact("producingGroup")`.
  *   profiles       a function answering the active profiles (ids or profile objects) to combine; default record-core's
  *                  setting `jurisdiction_profiles` (its R26).
- *   now            the clock for the instants it writes, an ISO string (default: the wall clock, to the second).
+ *   now            the clock for the instants it writes, an ISO string (default: `env`'s `BIO_NOW_MS`, else the wall clock).
+ *   env            the store's environment (K5202, K5132's rule): `BIO_NOW_MS` is the instance clock when no `now` is handed.
  *
  * READ CONTRACTS it joins in its own SQL: publication's `cases` and `published_cases` (`case_id`, `edition`,
  * `project_id`, `ratified_at`, its R40); provenance's `register` and `captured_locators` (its R48).
@@ -235,7 +236,7 @@ export class Filings {
                 actions = null, conformance = null, standards = null, consequences = null, promotion = null, strength = null, actionClocks = null,
                 localFacts = null, filingTemplates = null, events = null, docket = null, projectRoster = null,
                 actionHolds = null, caseCheck = null, acceptedWork = null, grammar = null, accountCheck = null,
-                producingGroup = null, profiles = null, now = null } = {}) {
+                producingGroup = null, profiles = null, now = null, env = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.#deps = { host, membership, publication, publicRead, provenance, attestation, content, actions, conformance, standards, consequences, promotion, strength, actionClocks, localFacts, filingTemplates, events, docket, projectRoster, actionHolds, caseCheck, acceptedWork };
@@ -250,7 +251,9 @@ export class Filings {
     this.producingGroup = typeof producingGroup === "function" ? producingGroup : null;
     this.#profilesGiven = typeof profiles === "function";
     this.profiles = typeof profiles === "function" ? profiles : () => this.record.getSetting("jurisdiction_profiles");
-    this.now = typeof now === "function" ? now : () => stampInstant("second");
+    /* K5202 (K5132's rule): the clock handed in, else the store's environment (`env.BIO_NOW_MS`, read by `#when`), else the wall clock */
+    this.now = typeof now === "function" ? now : null;
+    this.env = env && typeof env === "object" ? env : null;
     for (const m of SERVICES) { const fn = this[m].bind(this); this[m] = (...a) => withRow(fn(...a)); }
   }
 
@@ -298,7 +301,15 @@ export class Filings {
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { for (const r of this.sql.exec(q, ...a)) return r; return null; }
-  #when() { const w = this.now(); return typeof w === "string" && w ? w : stampInstant("second"); }
+  /* K5202 (K5132's rule, as credentials' `#nowMs`): every instant this module records. A handed `now` answers first, then the
+     store's `BIO_NOW_MS` (a string or a number of milliseconds), else the wall clock, to the second. */
+  #when() {
+    const w = this.now ? this.now() : null;
+    if (typeof w === "string" && w) return w;
+    const raw = this.env ? this.env.BIO_NOW_MS : undefined;
+    const v = raw === undefined || raw === null || raw === "" ? NaN : Number(raw);
+    return Number.isFinite(v) && v >= 0 ? stampInstant("second", v) : stampInstant("second");
+  }
   #call(fn) { try { return fn(); } catch { return null; } }
 
   /* ---------------------------------------------------------------- the reads of the modules it uses */

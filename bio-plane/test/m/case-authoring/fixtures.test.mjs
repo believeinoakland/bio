@@ -1,7 +1,7 @@
 /* case-authoring's published fixtures (fixtures.mjs): each is called and its real answer checked (K4990, K4993). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { preflightAnswer } from "./fixtures.mjs";
+import { preflightAnswer, preflightTensionRefused, preflightPasses, preflightNoFinding } from "./fixtures.mjs";
 
 test("R34: the preflightAnswer fixture is publishPreflight's real answer — a bar shortfall as first (the refusal op=publish gives) with BELOW_PROJECT_STRENGTH among the blockers, and the first refusals MACHINE_CANNOT_PUBLISH and NOT_THE_PROJECT_OWNER — made afresh at call time, writing nothing", () => {
   const f = preflightAnswer();
@@ -17,4 +17,17 @@ test("R34: the preflightAnswer fixture is publishPreflight's real answer — a b
   assert.deepEqual(f.world.snapshot(), before, "nothing written");
   const again = preflightAnswer();
   assert.deepEqual([again.blocked.first.reason, again.blocked.blockers.length], [f.blocked.first.reason, f.blocked.blockers.length]);
+});
+
+test("R34: the three pre-flight answers screens-publish takes are publishPreflight's real answers: an undisclosed tension refused TENSION_NOT_DISCLOSED, the same once disclosed passes its refusals (first null), and no finding named is PUBLISH_NO_FINDING; each equals a fresh real call and writes nothing", () => {
+  const refused = preflightTensionRefused();
+  const passes = preflightPasses();
+  const none = preflightNoFinding();
+  for (const f of [refused, passes, none]) {
+    assert.equal(f.answer.wrote, false);
+    assert.deepEqual(f.answer, f.world.ca.publishPreflight(f.call), "the answer is what a fresh call gives");
+  }
+  assert.equal(refused.answer.first.reason, "TENSION_NOT_DISCLOSED", JSON.stringify(refused.answer.first).slice(0, 300));
+  assert.equal(passes.answer.first, null, JSON.stringify(passes.answer.first).slice(0, 300));
+  assert.equal(none.answer.first.reason, "PUBLISH_NO_FINDING", JSON.stringify(none.answer.first).slice(0, 300));
 });

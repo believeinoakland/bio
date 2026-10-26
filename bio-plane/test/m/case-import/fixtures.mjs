@@ -1,7 +1,8 @@
 /* The answers this module publishes for its users' tests (K4990, K4993, K4995, K5044): each is made by this module's real
    code when the test runs, never stored. A user's test takes its value from here instead of building the answer by hand. */
-import { seeded, imp, caseFile, V, SOURCE, CASE, LENS, F1, F2, F3 } from "./fixture.mjs";
-import { docketAddressOf } from "../../../src/case-import/index.mjs";
+import { seeded, imp, caseFile, door, V, SOURCE, CASE, LENS, F1, F2, F3 } from "./fixture.mjs";
+import { docketAddressOf, caseImportOps } from "../../../src/case-import/index.mjs";
+import { importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
 
 const g = (grade) => ({ state: "graded", grade });
 const BY = "alice";
@@ -92,4 +93,96 @@ export async function importedNamed({ scope = "Did the clerk stamp the contract 
   const list = w.ci.importedCases({ viewer: V(BY) });
   const one = w.ci.importedCase({ import: r.import, viewer: V(BY) });
   return { w, ci: w.ci, scope, titles, import: r.import, list, one };
+}
+
+/* K5175 (fix round 10): the answers of the five ops the screens and the door read: `importedcases`, `importedcase`,
+   `rerunstart`, `rerunpair` and `rerunread`. Each is the door's answer (`caseImportOps`, the route the store calls) over
+   the module's real methods, run over a world this module builds when called; nothing is stored, and each call builds its
+   own world. A read whose fields are URL query parameters (`importedcase`) goes through `doorQuery`. */
+const RERUN_PROJECT = "PRJ-2026-0001-rerun";
+const RERUN_OWN = ["INQ-2026-0101-own-transfers", "INQ-2026-0102-own-contracts", "INQ-2026-0103-own-payroll"];
+const RERUN_STATEMENTS = [
+  { bundle: "BIA-src", id: "scrutiny-official-statements", kind: "scrutiny", subject: "official statements", text: "Check each official statement twice.", justification: "j", citations: [] },
+  { bundle: "BIA-src", id: "pattern-late-filings", kind: "pattern", subject: "late filings", text: "Late filings are usual here.", justification: "j", citations: [] },
+];
+const RERUN_APPS = [{ finding: F1, ord: 0, target: "leg", statement: "scrutiny-official-statements", effect: "grade_lowered", from: "B", to: "C" }];
+const own = (cap, con) => ({ capture: cap ? g(cap) : { state: "unrated", grade: null }, connection: con ? g(con) : { state: "unrated", grade: null } });
+const ALICE = { viewer: V(BY), by: V(BY) };
+
+function doorQuery(w, op, { viewer = null, ...params } = {}) {
+  const q = new URLSearchParams();
+  for (const [k, v] of Object.entries({ ...params, viewer })) if (v !== null && v !== undefined) q.set(k, String(v));
+  return caseImportOps(w.ci, new URL(`http://x/?${q}`), {})[op]();
+}
+
+/* R4 (importedcases): the list of two imports, one of them with a withdrawn acceptance, as the door answers it to an
+   active member. Answers `{w, answer}`. */
+export async function importedCasesAnswer() {
+  const { w } = await importedWorld({ imports: [
+    { editions: [{ edition: 1, accepted: [F1] }, { edition: 2, accepted: [F1, F2], flags: [{ finding: F1, issue: "page 3 is misread" }] }] },
+    { group: "other-group", case: "CASE-2026-0900", lens: "b2".repeat(32), editions: [{ edition: 1, accepted: [F1], withdrawn: "the source corrected it" }] },
+  ] });
+  return { w, answer: door(w, "importedcases", { viewer: V(BY) }) };
+}
+
+/* R4 (importedcase): one import of two editions, the second accepted in part and flagged, as the door answers it to an
+   active member. `edition` names one (null: the latest). Answers `{w, import, answer}`. */
+export async function importedCaseAnswer({ edition = null } = {}) {
+  const { w, imports } = await importedWorld({ imports: [
+    { editions: [{ edition: 1, accepted: [F1] }, { edition: 2, accepted: [F1, F2], flags: [{ finding: F1, issue: "page 3 is misread" }] }] },
+  ] });
+  const [{ import: importId }] = imports;
+  return { w, import: importId, answer: doorQuery(w, "importedcase", { viewer: V(BY), import: importId, edition }) };
+}
+
+/* the rerun world (R29–R31): an import of one case whose first finding a re-check lowers (`RERUN_APPS`), a project alice
+   owns and bob has joined, and three of its own findings. Answers `{w, import}`. */
+async function rerunWorld() {
+  const w = seeded();
+  w.script.set(F1, { role: "load_bearing", result: "recreated", pair: { capture: g("C"), connection: g("C") } });
+  const a = await imp(w, caseFile({ apps: RERUN_APPS, printedLens: RERUN_STATEMENTS }));
+  if (a.ok !== true) throw new Error(`rerunWorld: the import was refused: ${JSON.stringify(a).slice(0, 300)}`);
+  w.project(RERUN_PROJECT, { owner: BY, joined: ["bob"] });
+  w.ownFinding(RERUN_PROJECT, RERUN_OWN[0], own("B", "C"));
+  w.ownFinding(RERUN_PROJECT, RERUN_OWN[1], own("B", "C"));
+  w.ownFinding(RERUN_PROJECT, RERUN_OWN[2], own(null, null));
+  return { w, import: a.import };
+}
+
+/* R29 (rerunstart): the owner declares the project a re-run of edition 1 of the import. `twice` makes the second, refused
+   declaration the answer (RERUN_ALREADY). Answers `{w, import, answer}`. */
+export async function rerunStartAnswer({ twice = false } = {}) {
+  const { w, import: importId } = await rerunWorld();
+  const start = () => door(w, "rerunstart", { ...ALICE, project: RERUN_PROJECT, import: importId, edition: 1 });
+  const first = start();
+  return { w, import: importId, answer: twice ? start() : first };
+}
+
+/* R30 (rerunpair): the project's own finding (`own`, default the first) is paired with the import's first finding, after the
+   re-run is declared; `withdraw` takes the pairing back instead. Answers `{w, import, answer}`. */
+export async function rerunPairAnswer({ own: ownFinding = RERUN_OWN[0], withdraw = false } = {}) {
+  const { w, import: importId } = await rerunStartAnswer();
+  const answer = door(w, "rerunpair", { ...ALICE, project: RERUN_PROJECT, source_finding: importedFindingRef(importId, F1),
+                                         own_finding: ownFinding, withdraw });
+  return { w, import: importId, answer };
+}
+
+/* R31 (rerunread): the project's re-runs read after the pairing (`paired: true`), or after the declaration alone (`paired:
+   false`, the source finding then pairs with nothing). Answers `{w, import, answer}`. */
+export async function rerunReadAnswer({ paired = true } = {}) {
+  const { w, import: importId } = paired ? await rerunPairAnswer() : await rerunStartAnswer();
+  return { w, import: importId, answer: door(w, "rerunread", { viewer: V(BY), project: RERUN_PROJECT }) };
+}
+
+/* K5195 (fix round 11): the answer of `importregrade`, the read of one imported edition under a lens: the source's own
+   edition with one lowered grade (F1's capture, lowered from B to C by `RERUN_APPS`' statement), read through the door
+   (`caseImportOps`) over the module's real `regradeImported` in a world this module builds when called. `lens` is one of
+   as_published, removed or own; nothing is stored, and each call builds its own world. Answers `{w, import, answer}`. */
+export async function importRegradeAnswer({ lens = "removed" } = {}) {
+  const w = seeded();
+  w.script.set(F1, { role: "load_bearing", result: "recreated", pair: { capture: g("C"), connection: g("C") } });
+  w.bar({ capture: "B", connection: "C" });
+  const a = await imp(w, caseFile({ apps: RERUN_APPS, printedLens: RERUN_STATEMENTS }));
+  if (a.ok !== true) throw new Error(`importRegradeAnswer: the import was refused: ${JSON.stringify(a).slice(0, 300)}`);
+  return { w, import: a.import, answer: door(w, "importregrade", { viewer: V(BY), import: a.import, edition: 1, lens }) };
 }

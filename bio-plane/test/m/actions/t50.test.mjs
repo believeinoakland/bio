@@ -1,10 +1,12 @@
 /* actions' T50 entry at its interface (T50-74; N933, N1178; K3230, K3547, K3635): R105 `own_stake` and an accepted
    disclosure's `matter_stake`, R106 `actionRead` answering an id no action answers to through R43, R107 `noSuchAction`
-   re-exported from `action-records`. The determinations are stand-ins in conformance R9's shape; the action's own stake is
-   `action-records` R17's act, read back through the real module. */
+   re-exported from `action-records`. The determinations are conformance's own, its published `matterStakeBases` (R32, R41):
+   one per accepted basis, each read through its real `determinationRead`. The action's own stake is `action-records`
+   R17's act, read back through the real module. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, actionMd, CP, NONCOMPLIANT } from "./fixture.mjs";
+import { world, V, actionMd, CP } from "./fixture.mjs";
+import { matterStakeBases } from "../conformance/fixtures.mjs";
 import * as actions from "../../../src/actions/index.mjs";
 import * as records from "../../../src/action-records/index.mjs";
 import * as grammar from "../../../src/action-grammar/index.mjs";
@@ -12,22 +14,15 @@ import { localize } from "../../../src/setup-words/index.mjs";
 
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b", INFO = "INFO-2026-0001-d";
 const M = V("alice");
-const WITH = "CONF-2026-0001-with-matter-stake", WITHOUT = "CONF-2026-0002-without", UNDETERMINED = "CONF-2026-0003-undetermined";
-const MATTER = { stake: "the group is a tenant of the building", set_by: "carol", set_at: "2026-09-10T00:00:00Z", source: "declared" };
-const accepted = (matter, extra = {}) => ({ kind: "accepted", group: "Hayward Parents", case: "CASE-2026-0009", edition: 2,
-  edition_date: "2026-09-03", accepted_at: "2026-09-20", accepted_by: M, identity: "Hayward Parents for Accountability",
-  stake: "none declared", ...(matter === undefined ? {} : { matter_stake: matter }), ...extra });
-const det = (id, basis) => ({ ok: true, id, live: true, superseded_by: null, outcomes: NONCOMPLIANT,
-  findings: [{ finding: "INQ-2026-0001-q", basis }] });
-const DETS = {
-  [WITH]: det(WITH, accepted(MATTER)),
-  [WITHOUT]: det(WITHOUT, accepted(undefined)),
-  [UNDETERMINED]: det(UNDETERMINED, accepted("undetermined", { identity: null, stake: "undetermined" })),
-};
-const conf = { determinationRead: ({ id }) => DETS[id] || { ok: false, reason: "NO_SUCH_DETERMINATION" } };
+/* conformance's real determinations: each accepted basis's stake as import recorded it (with, without, undetermined), and
+   the matter stake the import recorded. Conformance answers the participant who sees them, so every read is made as that one. */
+const F = matterStakeBases();
+const WITH = F.withStake, WITHOUT = F.withoutStake, UNDETERMINED = F.undetermined;
+const MATTER = F.matterStake;
+const conf = { determinationRead: ({ id }) => F.conformance.determinationRead({ id, viewer: F.viewer }) };
 function grounded() {
   const w = world({ conformance: conf });
-  for (const id of Object.keys(DETS))
+  for (const id of [WITH, WITHOUT, UNDETERMINED])
     assert.equal(w.promote(id, ["---", `id: ${id}`, "object_type: determination", `title: ${id}`, "current_state: recorded",
       'created: "2026-09-01T00:00:00Z"', 'last_updated: "2026-09-01T00:00:00Z"', "---", "", "d", ""].join("\n"),
       { extra: { replay: true } }).ok, true);

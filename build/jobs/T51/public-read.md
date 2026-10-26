@@ -1,6 +1,6 @@
 # public-read (T51)
 
-**Status** · session_01ML8hpkf2vrUZPMLJcMVCtD · depth 2 · COMPLETE · handled B34
+**Status** · session_01HPeMsK2U9rvs16rEGDCexd · depth 2 · COMPLETE · handled B39
 
 ## J1 · QUESTION
 
@@ -465,3 +465,110 @@ Test (`court-orders.test.mjs`, R28, red on the prior code at `case_excludes`, gr
 Checks: `bio-plane/test/m/public-read/` 315 pass, 0 fail; format 0; architecture 0; coverage 44 of 44; words none in public-read; ownership 0; fixtures: only the known `group-fields.test.mjs:18` contract line (waits for instance-setup). Deferred: none. Other modules: none.
 
 Size (session_01ML8hpkf2vrUZPMLJcMVCtD): test runs 5, module lines 4207
+
+## J33 · COMPLETE
+
+**COMPLETE (B35: K5195, public-read R40 as amended, and the orphan fixtures marker).** Met: **R40** (declares `publishedcase`; its declared-ops case names R40). BOB strikes the mark.
+
+**1. `publishedcase` declared (R40).** Red first: `declared-ops.test.mjs` "R40 public-read declares publishedcase (K5195)" failed with `the declaration has no fields.accepts and fields.requires arrays`. Then added to `DECLARED_OPS` (`bio-plane/src/public-read/index.mjs:2104`-area, after `verify`): `classes: null, mutating: false, weight: "read", description: "act.publishedcase.label.published"` (the key the op's existing row in `setup-words` already carries; no new sentence), `fields: { accepts: ["id", "edition", "caseId", "sha256"], requires: [] }`, the four fields the arm reads (`publicReadOps`). Green after. The collector finds `publishedcase` owned by public-read, no duplicates (429 ops).
+
+**2. Orphan marker deleted (`bio-plane/test/m/public-read/group-fields.test.mjs:18`).** The `fixtures-contract: instance-setup group-identity-public` line covered nothing (`NO_SLUG` at `:19` is `ok: true` and is used at `:61`); deleted. `NO_SLUG` stays.
+
+**Tests and checks** (absolute root `/home/user/bio`; commit `f0b5a6b2a2`):
+- `bio-plane/test/m/public-read/` (all `*.test.mjs`, run to exit): 316 pass, 0 fail (was 315 at J32; one new test).
+- Cross-module, since `DECLARED_OPS` is shared (impact named 56 modules, 1234 files): every `bio-plane/test/m/*/declared-ops.test.mjs`, `op-declarations/*.test.mjs` and `store-assembly/t51.test.mjs` (109 files): 775 pass, 0 fail.
+- format 0 failures; architecture 0; coverage public-read 45 of 45 live ids named; ownership vs `origin/tranche/T51`: 0 failures.
+- `run.mjs /home/user/bio`: no finding in public-read's paths; no words added (the key `act.publishedcase.label.published` already exists). Its 16 failures are in other modules (the store-assembly and control-plane arms among them), not mine.
+- fixtures `--list`: one line, `instance-setup/fixtures.test.mjs:64` `[orphan-run] fixtures-run: public-read group-identity-public`. That run is instance-setup's to delete (its START, J30; INSTANCE-SETUP #37): left as it is, and this is the zero the two merges reach together. The `accepted` lines (11) are the checker's accepted classes, not failures.
+
+**Deferred:** none. **Found in other modules:** the orphan run above (`instance-setup/fixtures.test.mjs:64`, its owner). **Markers added:** none (no `fixtures-own` or `fixtures-generic`).
+
+**Not done here, as the START says:** R45 (the basis version per finding) is a CHANGE once case-authoring's R87 merges; `publishedcase` tests for R45 wait for it.
+
+Size (session_0117cYK5Yq6yKMxRK124CAvs): test runs 5, module lines 4209 (public-read `src/`, `publication/worker.mjs`, `container.mjs`, `inband.mjs`, `wc -l`)
+
+## J34 · BLOCKED
+
+**BLOCKED (B36, K5198): cause, needs Bob.** I did not change the code. The hop the CHANGE asks me to remove is the case-file puts' sliding window, and removing it breaks R44's own peak-concurrency rule.
+
+**What I measured (no code changed; HEAD `270330087d`).** Running `control-plane/r10-caseratify-chain.test.mjs` gives **13** against the bar 11, not 12 as B36 has it. I dumped the door's call timeline (a temporary copy of the test, deleted after). The longest chain runs `… PUBLISHED.put → do:recordcasefile → r2:PUBLISHED.get → r2:PUBLISHED.put → r2:PUBLISHED.put → do:recordcasemanifest`: the assembly's share is five hops, as B36 says.
+
+**Why the named candidates do not come out.**
+- `recordcasefile` (the `building` ledger write) is not removable: `casefilefacts` starts at the same point and is the same length, so removing `building` alone still gives 13 (simulated).
+- The materials read (`get`) needs the facts, so it stays.
+- The second put is the hop. The case file writes 11 objects (10 files plus the manifest) through `inWindow` with width 8 (`public-read/casefile.mjs:37`, `CASEFILE_GROUP`). The ninth call starts only when one of the first eight ends, so it counts as a hop. Simulating all puts issued together gives 10.
+
+**The conflict.** R44 (G121b, `build/requirements/public-read.md:115`) requires the window of 8 and says "never over 8" (`r8-assemble.test.mjs`: peak concurrency never over 8). Getting the chain to 11 or fewer while keeping the container byte for byte means one of:
+1. Widen the window so all puts start together. That breaks R44's peak-concurrency control. It needs a requirement change, which is BOB's.
+2. Fold the manifest's put into the `recordcasemanifest` call. That changes a store contract and needs its owner's job (`publication`), not this module's paths.
+3. Accept a chain of 13 and have `ratification` (or BOB) take the bar to 13, or split the door's counting another way. That is a requirement decision.
+
+**Recommendation.** Option 3 is the smallest change to the requirements; option 1 is the cleanest if R44's "never over 8" is only a memory bound (it is not stated as one). Your call; I will not widen the window without it.
+
+**Left as it is:** code, tests and the record's other entries. Chain test in `public-read/chain.test.mjs` still passes at 4 (its scene has 8 objects or fewer).
+
+NEEDS BOB: choose one of options 1–3 above.
+
+## J35 · COMPLETE
+
+**COMPLETE (B36 CHANGE, answered at B37 / K5200: no code change).** Met: **R40** (declared `publishedcase`, J33) and **R44** (case file in groups; `chain.test.mjs` at 4, as worded). BOB strikes the marks.
+
+**What I did.** Merged `origin/tranche/T51` into `job/T51/public-read` (merge commit `feddaa6811`). No code changed, as B37 asks.
+
+**Tests** (`bio-plane/test/m/public-read/`, all `*.test.mjs`, run to exit): 316 pass, 0 fail, on the merged tranche.
+- `public-read/chain.test.mjs` (R6 / R44's chain bar 4): passes.
+
+**One thing for BOB (not my test, not changed here).** `control-plane/r10-caseratify-chain.test.mjs` on the merged tranche fails: the longest chain is **13** against the bar **12** (`admission 1 + ratification 6 + the assembly 4 + its second window of puts 1`). The test's first-test assertion on this same tranche code measured 13 before my change too (J34's trace: `… PUBLISHED.put → do:recordcasefile → r2:PUBLISHED.get → r2:PUBLISHED.put → r2:PUBLISHED.put → do:recordcasemanifest`). The assembly's share in that path is five hops, not four (the `building` write is on the path, since the materials read starts after it ends). So the 12 in the bar does not match the measured path; I did not edit the test (control-plane's). Please check the arithmetic before the bar is relied on.
+
+**Deferred:** none. **Found in other modules:** the r10 bar above (control-plane, `r10-caseratify-chain.test.mjs`). **Markers added:** none.
+
+Size (session_0117cYK5Yq6yKMxRK124CAvs): test runs 4 (this round), module lines 4209 (unchanged)
+
+## J36 · REPORT
+
+Ring failed: the BOB session session_01WJsZWkoGCJqWG6874AF7LK is archived, so create_trigger refused it. J35 COMPLETE is the pushed entry for BOB's backstop to read.
+
+## J37 · COMPLETE
+
+**COMPLETE (fix round 10, START B38; K5207, K5175).** Code commit `9e064e0b43` on `job/T51/public-read` (pushed). The tranche (`origin/tranche/T51`, 0fe95a97b6) was merged into the job branch before start (merge, not rebase).
+
+**Entries applied (the fixtures BOB asked for).**
+- `bio-plane/test/m/public-read/fixtures.mjs`: two new exports, each made by this module's real code over docket's own world (`seeded()` from docket's fixture, real modules) on each call, read through this module's op map (`publicReadOps`):
+  - `publishedCaseSeveralCases()`: `publishedcase` for a published case edition whose finding (F1) is cited in several cases. By the finding's id alone: `FINDING_IN_SEVERAL_CASES`, check `C-44.2`, naming `CASE-2026-0101` and `CASE-2026-0102`. By `caseId` `CASE-2026-0101`: that case's edition 1.
+  - `docketPublicOfCase()`: `docketpublic` for `CASE-2026-0101`'s public docket after a posted withdrawal of edition 1 (the docket's own answer, one entry, with its feed).
+- `bio-plane/test/m/public-read/fixtures.test.mjs`: an R39 test and an R21 test, each asserting the real answer, each with a negative control.
+- Failing-first: the R21 test was broken on purpose (expected reason changed) and went red (1 fail), then restored and went green.
+- No product code changed. No `fixtures-own` or `fixtures-generic` markers added. No words added.
+
+**Deferred:** none.
+
+**Found in other modules (REPORT: for the owners, not in my paths).** Three answers in screens-publish are still hand-built where these exports now answer, each cited by `checks/run.mjs` as `-> public-read`:
+- `bio-plane/test/m/screens-publish/finding.test.mjs:75` (`publishedcase`, FINDING_IN_SEVERAL_CASES): take `publishedCaseSeveralCases().byFinding`.
+- `bio-plane/test/m/screens-publish/fixtures.mjs:126` (`docketpublic`): take `docketPublicOfCase()`.
+- `bio-plane/test/m/screens-publish/seam4.test.mjs:158` (`publishedcase`, NOT_PUBLISHED-shaped stub): take `publishedCaseSeveralCases().byCase` or the id refusal, as the test needs.
+
+**Tests and checks.**
+- Fixture tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/public-read/fixtures.test.mjs`: 4 pass, 0 fail (after the restore).
+- Full module suite, `bio-plane/test/m/public-read/*.test.mjs`: 318 tests, 318 pass, 0 fail, 0 cancelled, no shortfall.
+- `checks/fixtures.mjs /home/user/bio public-read --list`: 0 invented answers, 0 stubs, 0 contract markers in public-read; exit 0.
+- `checks/format.mjs`: 178 modules, 0 failures. `checks/architecture.mjs public-read`: 0 failures. `checks/coverage.mjs public-read`: 45 of 45 live ids named, 0 failures. `checks/ownership.mjs /home/user/bio public-read <merge-base> HEAD`: 0 failures.
+- `checks/run.mjs /home/user/bio`: exit 1, 373 FAIL lines. None is in public-read's files. The three that cite public-read are the screens-publish rows above. Words: no product string added, so the count does not rise from this module.
+- `build/plan/impact.mjs`: this clone has only `origin/tranche/T51`, so it was run as `origin/tranche/T51 HEAD`: 0 of 178 modules affected (a test-only change).
+
+**Met ids (this round):** R21 and R39 (the new answers). R6, R23 and R34 stay met.
+
+Size (session_01HPeMsK2U9rvs16rEGDCexd): test runs 4, module lines 4209
+
+## J38 · COMPLETE
+
+**COMPLETE (re-COMPLETE after CHANGE B39; K5209).** Merged `origin/tranche/T51` into `job/T51/public-read` (merge, not rebase; head d9c60cc847). No further code change: the fixtures and tests from the earlier COMPLETE (J37) are unchanged.
+
+**Checks on the merged head, after OP-GRADES #30 merged:**
+- Module suite `bio-plane/test/m/public-read/*.test.mjs`: 318 tests, 318 pass, 0 fail, 0 cancelled. Previously the `DECLARED_OP_DISAGREES` import failure is gone.
+- `checks/fixtures.mjs … public-read --list`: 0 invented answers, 0 stubs, 0 contract markers; 0 failures.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs public-read`: 0 failures. `checks/coverage.mjs public-read`: 45 of 45 live ids named, 0 failures. `checks/ownership.mjs` against the tranche: 0 failures.
+- Not re-run here: `checks/run.mjs` (its failures are in other modules; see J37).
+
+**Deferred:** none. **Found in other modules:** unchanged from J37 (screens-publish's three hand-built public-read answers).
+
+Size (session_01HPeMsK2U9rvs16rEGDCexd): test runs 5, module lines 4209

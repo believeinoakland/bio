@@ -1,6 +1,6 @@
 # BOB to reading-pipeline (T51)
 
-**Read** · handled J54
+**Read** · handled J57
 
 ## B1 · START
 
@@ -1316,3 +1316,25 @@ Your job: reading-pipeline R49's untested clauses (read R49 whole): `encoding_di
 ## B60 · ANSWER · re J54
 
 ANSWER (BOB #303, K5200; re J54). Merged now (R49 struck). (b) is a defect, BOB's (K4630, K4571, R54: a file within its kind's bound is never refused for size, and no refusal reads '(multipart)'): an HTML or text capture held in parts and within the profile's text bound is read as text whole, as an upload is. R1 and R32 are worded to it and a new session of reading-pipeline does it. (a) is not taken: your `declaredNameOf` meets R49; a copy in ooxml adds code for nothing. Your session is archived at the merge.
+
+## B61 · START
+
+START · READING-PIPELINE #40 · tranche T51 · product believeinoakland/bio · fix round 10 (K5202)
+
+Depth 2 (BOB #304 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/reading-pipeline tranche/T51`; if a local `job/T51/reading-pipeline` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/reading-pipeline stale/reading-pipeline-local && git checkout -b job/T51/reading-pipeline origin/job/T51/reading-pipeline`. If `job/T51/reading-pipeline` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`, then `mail inbox --as job` and `mail done --as job --through B<n>` for this START (BOB merges a COMPLETE only when your record's cursor has read BOB's newest entry, K5171). A refused step: post BLOCKED naming it.
+Mail with `--module reading-pipeline`; record `build/jobs/T51/reading-pipeline.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root `/home/user/bio`, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A `fixtures-own: <reason>` or `fixtures-generic: <CODE>` marker only where the value is truly your own (an input you feed, a harness, a platform double, a synthetic token), each named in your COMPLETE. A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one; REPORT the door case for BOB to place (K5138). A new sentence people read is written at its use as `localize(id, en, vars)` in a module that may (K3930, K3943); a screens module draws by key only.
+
+Bob's direction for this round (K5175): every bug, failure and broken feature found is fixed in this round; no guessing, no deferrals, no assumptions. A cause you find outside your paths is REPORTed the day you find it, with file:line.
+
+Your job: reading-pipeline R1's amendment (K5200 (4), marked not yet met: read R1 whole, with R32 and R49): a textual capture within the profile's text bound that is held in parts (a fetch stored in parts) is read as text whole, its parts joined in order and decoded as an upload is (R49), with R32's text units; never "not read as text" for being in parts. Failing-first test through `read` over a capture held in two or more parts (the shape a real fetch stores; extraction's or capture's published fixtures where one exists), red before, green after, naming R1; with a single-part control. Note: until OP-GRADES #30 merges (I CHANGE you then), every store fails at import with `DECLARED_OP_DISAGREES: readtranslate description` (op-grades' stale hand row); that red is not yours: write your change and your failing-first test meanwhile, and run them green after the CHANGE.
+**Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio reading-pipeline --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio reading-pipeline $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B62 · CHANGE
+
+CHANGE (K5209): OP-GRADES #30 is merged (tranche `269d7de61f`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
+
+## B63 · CHANGE · re J55
+
+CHANGE (K5211, BOB's, P17), on your J55 REPORT (a), with B62 (merge the tranche): HTML's bound is the standard's text bound (R50's 50 MB, as `plan()` already reads it; K4630: a file within its kind's bound is never refused for size). R51 is amended on the tranche (read it whole; its new clause marked not yet met): an HTML page past `WHOLE_READ_MAX` and within the bound, whole or in parts, is read by the one streaming pass in byte windows with a carry, its units equal to the same page read whole; above the bound refused with its figure. Failing-first as R51's new test says, red today (TOO_LARGE against 24 MiB), green after. (b) the door case is placed with control-plane's list. Then COMPLETE with R1 and R51.

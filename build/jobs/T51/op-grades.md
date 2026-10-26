@@ -1,6 +1,6 @@
 # op-grades (T51)
 
-**Status** · session_01FQzZSFC8jvCf4w2KhSK6C5 · depth 2 · COMPLETE · handled B37
+**Status** · session_01ADU8ZLB34wMH6KE4yEcSe5 · depth 2 · COMPLETE · handled B39
 
 ## J1 · QUESTION
 
@@ -421,3 +421,64 @@ Size (session_01T9Q1bzf8ZbBrV2wLLGqZoT): test runs 5, module lines 1
 2. Still open from J30, unchanged here: `bio-plane/test/m/affordances/register-owners.mjs` registers three owners by hand, so affordances' R12 does not see other owners' declared ops (the fix belongs in affordances' test); and `plane.declared.readtranslate` has two sentences (`bio-plane/src/plane/declared.mjs:13`, `bio-plane/src/store-assembly/declared.mjs:16`), which `setup-words build.mjs --check` refuses.
 
 Size (session_01FQzZSFC8jvCf4w2KhSK6C5): test runs 8, module lines 5
+
+## J32 · COMPLETE
+
+**COMPLETE** · fix round 10, item 97 (K5198): R54 (PUBLISH-SCHEDULE #6 J8). Branch `job/T51/op-grades` at `64e97ce338`, pushed; tranche merged first (`bf6bb18293`, no conflict; no rebase).
+
+**Change (applies R54):**
+- `bio-plane/src/op-grades/declared.mjs:37-43` (`kindOf`): an owner row weighted `irreversible` is no longer refused outright. It is taken only where the op has a hand row in `RUNGS` and the row is writing (`mutating`); the existing agreement check (R50 (b), `declared.mjs` `register`) then accepts it when the hand row is `irreversible` (nothing changed) and refuses it `DECLARED_OP_DISAGREES` when the hand row is anything else. An `irreversible` row with no `RUNGS` hand row (or a read) stays `DECLARED_OP_BAD_WEIGHT`.
+- Nothing else changed: no table, no refusal code, no marks.
+
+**Failing-first test:** `bio-plane/test/m/op-grades/r54.test.mjs` (new, 83 lines; names R54; 7 tests). Red first on the old code: `publishatmove` and `publishat` refused `DECLARED_OP_BAD_WEIGHT` (the two accept-tests failed), and the reasoned and reversible controls failed too (refused `BAD_WEIGHT`, not `DISAGREES`). Green after the change. Tests: publishatmove and publishat (both irreversible hand rows) register and change nothing; an irreversible row with no RUNGS hand row (`fxirreversible`) is refused naming it; an irreversible row on a read hand row (`holdsdue`) is refused; control: `standardinforcethrough` (reasoned) declared irreversible → `DECLARED_OP_DISAGREES`; control: `cite` (reversible) declared irreversible → `DISAGREES`, and the call's other rows are not added. The owner rows are built from this module's own hand rows (descriptions read from `NON_ACTS`); the weight `irreversible` is the input under test. `publish-schedule` does not yet declare `publishatmove` (see REPORT), so no published owner fixture exists for it; the test marks no `fixtures-own` (the check reads zero for op-grades).
+
+**Suite:** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-reporter=tap bio-plane/test/m/op-grades/*.test.mjs` → 161 of 161 pass, 0 fail, 0 cancelled (23 files; `r54.test.mjs` 7 of 7; others unchanged). Declared-ops and affordances files of the affected modules (the impact users' declared tests, 123 files): 849 of 849 pass, 0 fail, exited by itself.
+
+**Checks** (ABSOLUTE root `/home/user/bio`):
+- format: 0 failures (178 modules, 178 requirements files).
+- architecture `op-grades`: 0 failures.
+- coverage `op-grades`: 54 of 54 live requirement ids named by a test, 0 failures.
+- ownership `tranche/T51 job/T51/op-grades` (merge-base to HEAD): 0 failures.
+- fixtures `op-grades --list`: 0 failures, 0 answers, no marker added.
+- words: 16 failures, the same 16 as at `origin/tranche/T51` (baseline run in a temporary worktree, removed); word count 19247 unchanged; string literals 754909 → 754910 (the new test file).
+- run.mjs: 1139 failures at HEAD and at `origin/tranche/T51`, none in `bio-plane/src/op-grades/` or `bio-plane/test/m/op-grades/`. The words failures and others are in other modules' files; not mine.
+- impact `origin/tranche/T51 HEAD`: 24 modules, 718 test files; the declared-ops and affordances runs above cover what the change can touch (the only other test expectations on `DECLARED_OP_BAD_WEIGHT` are the rung-on-read and ground-on-read cases, unchanged).
+
+**Met ids:** R54 (named by `r54.test.mjs`). BOB strikes the mark as it judges.
+
+**Deferred:** none.
+
+**Markers:** no `fixtures-own` or `fixtures-generic` marker added.
+
+**REPORT (for BOB):**
+1. `publish-schedule` (R12, `build/plan/verify-marks.md` line 86, still NOT MET): it serves `publishatmove` (`bio-plane/src/publish-schedule/index.mjs:168`) but does not declare it. R54 now lets it be declared `irreversible` in agreement with this module's hand row, so the owner's `DECLARED_OPS` row for `publishatmove` is what closes that mark. Not my module; not changed here. `publishat` (ratification) is the same case.
+2. The ones carried over in J30 remain open and unchanged: `bio-plane/test/m/affordances/register-owners.mjs` registers three owners by hand; and `plane.declared.readtranslate` has two sentences (`bio-plane/src/plane/declared.mjs:13` and `bio-plane/src/store-assembly/declared.mjs:16`).
+
+Size (session_012vYFrTXPwUmqg22vRjid91): test runs 29, module lines 7 (`declared.mjs` +6/−1; test file `r54.test.mjs` +83 new).
+
+## J33 · COMPLETE
+
+**COMPLETE** · OP-GRADES #30 (B39, K5202): `readtranslate` hand row. Pushed `ec2ebbf51d` on `job/T51/op-grades` (tranche merged first at `261f327a5b`, no conflict; no rebase).
+
+**Change**
+- `bio-plane/src/op-grades/t48.mjs:71`: the hand row ends "(store-assembly R53)" (was "(plane R50)"). Nothing else in the row changed.
+- `bio-plane/test/m/op-grades/t37.test.mjs:24`: `subscriptionsignin`'s reason reads `declaredSentence("signin-door", …)` (was `"control-plane"`). The word `signin-door.declared.subscriptionsignin` exists and its text equals the hand row at `t37.mjs:53`. Before this edit `t37.test.mjs` failed at import with `UNKNOWN_WORD: no word control-plane.declared.subscriptionsignin`; I confirmed that on the tranche tip with my hand-row edit stashed. Found while running the module's suite; fixed here, in my tests path.
+
+**Failing-first test:** `bio-plane/test/m/op-grades/r50-readtranslate.test.mjs` (new; names R50). It imports store-assembly's `ASSEMBLY_DECLARED_OPS` through its export, registers `readtranslate` with `registerDeclaredOps`, and asserts `agreed: ["readtranslate"]`. Red before: `Error: DECLARED_OP_DISAGREES: readtranslate description`. Green after.
+
+**Starts (B39's stated check):**
+- `bio-plane/test/m/screens-action/action-fix.test.mjs` and `bio-plane/test/m/screens-settings/account.test.mjs`: 28 of 28 pass; the stores start.
+- `bio-plane/test/m/control-plane/r10-caseratify-chain.test.mjs`: the store starts and the registration passes; the R60 chain test then fails at line 27: "the longest chain awaited one after another is 13 of 46 calls (bar 12)". Its header says it is red by name until RATIFICATION #39 (one gate call) is merged. Not mine; not changed.
+
+**Suites:** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/op-grades/*.test.mjs`: 162 tests, 162 pass, 0 fail, 0 cancelled, exited by itself. Before the t37 edit the same run was 159 pass, 1 fail (the t37 import error above).
+
+**Checks** (absolute root `/home/user/bio`): format 0 failures (178 modules); architecture `op-grades` 0 failures; coverage `op-grades` 54 of 54 live ids named, 0 failures; words `op-grades` 0 failures, handlist 0, unkeyed 29 (as before); fixtures `op-grades --list` 0 failures, no marker added; ownership `op-grades` 0 failures. `checks/run.mjs` prints no line naming op-grades.
+
+**Markers:** none added (no `fixtures-own` or `fixtures-generic`).
+
+**Deferred / found elsewhere (REPORT, for BOB):**
+1. `bio-plane/test/m/store-assembly/declarations.test.mjs`, test R83 (line range of the "copy window" check) is red: `actual: ['control-plane'], expected: ['control-plane', 'plane']`. Plane's `bio-plane/src/plane/declared.mjs` was deleted in Wave B (`51f57fa193`), so `plane` no longer exports `DECLARED_OPS` and the test's expectation is stale. This only became visible now that the store starts. Not op-grades; store-assembly owns the test.
+2. I did not finish the full `signin-door` and `store-assembly` suites. The run stalled after 118 passing tests and one R83 failure (above); I stopped it. They are not verified here.
+3. Carried over from J30, unchanged: `bio-plane/test/m/affordances/register-owners.mjs` registers three owners by hand; affordances' R12 does not see the others' declared ops.
+
+Size (session_01ADU8ZLB34wMH6KE4yEcSe5): test runs 9, module lines 2

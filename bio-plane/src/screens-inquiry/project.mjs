@@ -421,7 +421,7 @@ function render(cs, view) {
   let pubPending = pub.state === "loading";
   for (const cid of caseIds) {
     const latest = Math.max(...pub.value.cases.filter((c) => c && String(c.case_id) === cid).map((c) => Number(c.edition) || 0));
-    const one = later("pubcase:" + cid, "publishedcase", { caseId: cid, edition: String(latest) });
+    const one = later("pubcase:" + cid, "publishedcase", { id: cid, edition: String(latest) });
     if (one.state === "loading") pubPending = true;
     else if (one.state === "ok" && one.value && one.value.project === id) ours.push(cid);
   }
