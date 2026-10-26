@@ -90,3 +90,31 @@ Answer to CHANGE (K5101): `whole-rows.test.mjs` R16 done, and J3's COMPLETE stan
 Seen red first: at the branch point the test was red (37 pass, 1 fail), the part rows being `register` rows. Its fixture now takes provenance's published `heldParts` (the whole in `register`, the parts in `register_parts`, promoted by provenance's real code); the world's `registeredFor` is that instance's real answer (`world().registered`), and the one thing the module also reads itself (the `register` table, which finds the machine-finished bundle) is filled row for row from what `registeredFor` answers, not hand-written parts. The dead `.filter((r) => !r.part_of)` is removed from `#gradeNotes` and its comment updated. The control test's request-digest half uses a plain whole row (a part's digest is no register row since R74). Green: machinery-producers 38 of 38. `checks/fixtures.mjs . machinery-producers --list`: 0 failures (1 accepted, the `fixtures-own: synthetic` at producers.test.mjs:88 named in J3); format, architecture, words, coverage (16 of 16) and ownership (7 files) 0 failures. Commits pushed: 0083dab06e, then the heldParts one.
 
 Size (session_012Guji6Q9psWn5A5A16kTPi): test runs 9, module lines 1192
+
+## J5 · COMPLETE
+
+Fix round 10, A-04 (plan item 134; K5265; Bob K5175, K5257, K5258). Code commit b660a69e31, pushed.
+
+**Entries applied.** A-04, the pacing status item (`governor-holding-host`), `bio-plane/src/machinery-producers/index.mjs`:
+- Summary (`:346`): now `word("observation-log.vocabulary.condition_governor_holding_host")`, the design's reviewed sentence (DEC-347; `setup-words/rows.mjs:8222`, design source), read by key, not composed. It carries no host; the host is in the item's subject and in the detail.
+- Detail (`:347`): `localize("machinery-producers.index.pacing_wait_in_words", …)` in plain words: "Civicsmith will try {host} again in {wait}. It has been turned away {n} time(s) in a row, so it is waiting before it sends more. This says nothing about whether the site is working." `waitInWords(ms)` (new, top of the file) gives the wait in whole seconds rounded up: "45 seconds", "2 minutes", "1 minute and 30 seconds". No status code, no milliseconds, no "governor", "cool-off" or "PACED". The numbers stay in `basis` (`retry_in_ms`, `refusals`, `last_refusal_status`), as before.
+
+**Tests, red then green.**
+- `bio-plane/test/m/machinery-producers/conditions.test.mjs`: new test "R2 (T51 A-04): the governor-holding-host item says it in plain words …". Red first: `summary` was `our own pacing is holding www.example.gov: captures from it are PACED, not broken`, not the design sentence. Green after the fix. It also checks 90 s → "1 minute and 30 seconds", 45 s → "45 seconds", 120 s → "2 minutes", and no `governor|cool-?off|PACED|\d+ ?ms|\b4\d\d\b` in summary or detail.
+- The existing R2 assertion `includes("PACED, not broken")` is now `includes("paced, not broken")` (the design sentence's wording).
+- `invariants.test.mjs` (R2, R4, R5, R11 summary test): the governor line now reads the new key.
+
+**Tests and checks (absolute root /home/user/bio).**
+- Module, before the fix: conditions 11/11 green at baseline; with the new test 38 pass, 1 fail (the red above).
+- Module, after: `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/machinery-producers/*.test.mjs`: tests 39, pass 39, fail 0.
+- Users: `node build/plan/impact.mjs origin/tranche/T51 HEAD --json` names 19 modules and 475 test files. Full run of those files: tests 4196, pass 4181, fail 10. All 10 fail on `origin/tranche/T51` too, run on the same files in a clean worktree: R48, R53 (queue-producers `names.test.mjs`); R85 (queue, home) and R75 (queue, home) (screens-daily `fix2`, `routed`); R17, R28, R31 (screens-daily `home.test.mjs`); R1 R96 G1 x2 (screens-inquiry `r10-stated.test.mjs`); R83 (store-assembly `declarations.test.mjs`). The tranche run also failed R64 (screens-daily), which passes on this branch. The tenth, R9 seam §5 (`control-plane/r9-seam-documents.mjs`), failed only in the full run (124 s, under load); it passes alone on both trees. No test in the list touches the governor item. So no regression from this change.
+- `checks/format.mjs /home/user/bio`: 0 failures. `checks/architecture.mjs … machinery-producers`: 0. `checks/coverage.mjs … machinery-producers`: 16 of 16 live ids named. `checks/ownership.mjs … machinery-producers f39e45f0… HEAD`: 4 files, 0 failures.
+- `checks/run.mjs /home/user/bio`: 89 failures (73 stub, 12 contract, 4 answer), none in this module's files (`bio-plane/src/machinery-producers/**`, `bio-plane/test/m/machinery-producers/**`). Words: 0 failures.
+
+**REPORT to BOB (outside my paths; found today, the cause is in setup-words).**
+1. The detail has no design row yet. `machinery-producers.index.pacing_wait_in_words` has its English in code (`localize` fallback). A design row for it belongs to setup-words / the words pass, `docs/development/ux-substrate/screens/words.json`, reviewed as DEC-347 was. Until then the member sees the code sentence, which the design has not reviewed. Please place it.
+2. Now unused, and due to be pruned by setup-words: `bio-plane/src/setup-words/rows.mjs:15931` `machinery-producers.summary.pacing_holding_captures` (its only user was this item), and `rows.mjs:24414` `machinery-producers.index.the_per_host_governor_is`, the old detail row.
+
+Deferred: none.
+
+Size (session_01Xt1kwbte4Mz33WMvtsxu4A): test runs 9, module lines 2409
