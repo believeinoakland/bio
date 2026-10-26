@@ -490,9 +490,8 @@ export class LocalFacts {
   /* Every fact of the active profiles, once each, with its status. */
   #all(active) {
     const out = new Map();
-    /* R21: the team's own zone, first, whether or not a profile is installed */
-    const team = this.#resolve(TEAM_ZONE_PATH, active);
-    out.set(TEAM_ZONE_PATH, this.#status(TEAM_ZONE_PATH, team.parts, team.held, team.inView, active));
+    /* R21: the team's own zone is read by its path, never listed here: callers that list the facts take the first
+       `time_zone` they find as a profile's (`screens-settings`, `progressions`) */
     for (const p of active.held.values()) for (const parts of factsOf(p)) {
       const path = factPath(parts);
       if (!path || out.has(path)) continue;

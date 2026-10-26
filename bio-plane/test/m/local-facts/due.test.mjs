@@ -3,7 +3,6 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { word } from "../../../src/setup-words/index.mjs";
 import { world, V, P, TP } from "./fixture.mjs";
-import { TEAM_ZONE_PATH } from "../../../src/local-facts/index.mjs";
 
 const paths = (r) => r.due.map((d) => d.path).sort();
 
@@ -12,7 +11,7 @@ test("R4 without paths: every fact of the active profiles that is unconfirmed (l
   /* at 2026-09-28 every fact is unconfirmed; 2027 is listed though it falls due only on 2026-11-01 (K986), saying so */
   let r = w.lf.factsDue({ viewer: V("bob") });
   assert.equal(r.ok, true);
-  assert.deepEqual(paths(r), [TEAM_ZONE_PATH, ...Object.values(P)].sort(), "R21: the team's own zone is listed with the profiles' facts");
+  assert.deepEqual(paths(r), Object.values(P).sort());
   for (const d of r.due) { assert.equal(d.status, "unconfirmed"); assert.ok(d.why.length > 0); }
   const y = r.due.find((d) => d.path === P.y2027);
   assert.equal(y.due, false);

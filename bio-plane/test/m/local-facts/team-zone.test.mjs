@@ -30,7 +30,8 @@ test("R21 a team with no profile installed sets its zone, then reads it; red bef
   assert.deepEqual([s.status, s.governs.value, s.governs.origin], ["corrected", "America/Los_Angeles", "corrected"]);
   assert.equal(s.latest.by, V("bob"));
   assert.equal(w.rows(`SELECT profile FROM local_fact_acts`)[0].profile, "@team");
-  assert.ok(w.lf.factStatus({}).facts.some((f) => f.path === TEAM_ZONE_PATH && f.governs.value === "America/Los_Angeles"));
+  assert.ok(!w.lf.factStatus({}).facts.some((f) => f.path === TEAM_ZONE_PATH), "read by its path; not in the list the screens take a profile's zone from");
+  assert.ok(!w.lf.factsDue({}).due.some((f) => f.path === TEAM_ZONE_PATH));
   assert.equal(set(w, "America/New_York").ok, true, "stated again: the latest governs");
   assert.equal(w.status(TEAM_ZONE_PATH).governs.value, "America/New_York");
   assert.equal(w.count(), 2, "append-only");

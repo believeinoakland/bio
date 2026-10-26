@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { word } from "../../../src/setup-words/index.mjs";
 import { world, V, P, TP, NOW, written } from "./fixture.mjs";
-import { LOCAL_FACT_STATUSES, TEAM_ZONE_PATH } from "../../../src/local-facts/index.mjs";
+import { LOCAL_FACT_STATUSES } from "../../../src/local-facts/index.mjs";
 
 const SRC = { source: "the clerk's posted notice" };
 
@@ -85,8 +85,8 @@ test("R2 without a path: every fact of the active profiles once, corrections and
   w.act(P.tz, "confirm");
   const all = w.lf.factStatus({ viewer: V("bob") });
   assert.equal(all.ok, true);
-  assert.equal(all.count, 12, "the eleven facts of the profile and the team's own zone (R21)");
-  assert.deepEqual(new Set(all.facts.map((f) => f.path)), new Set([TEAM_ZONE_PATH, ...Object.values(P)]));
+  assert.equal(all.count, 11);
+  assert.deepEqual(new Set(all.facts.map((f) => f.path)), new Set(Object.values(P)));
   assert.deepEqual(all.facts.slice(0, 2).map((f) => f.status).sort(), ["corrected", "disputed"]);
   assert.ok(all.facts.slice(2).every((f) => f.status !== "corrected" && f.status !== "disputed"));
   assert.equal(all.facts.find((f) => f.path === P.tz).status, "confirmed");
@@ -200,7 +200,7 @@ test("R2 R6 the office calendar's path names its own entry, never a named closur
   assert.deepEqual(w.status("test-lists/holidays/2026").profile.value, [{ date: "2026-01-01", name: "New Year's Day" }]);
   assert.deepEqual(w.status("test-lists/holidays/2026/list=court").profile.value, [{ date: "2026-08-31", name: "Court day" }]);
   assert.deepEqual(w.lf.factStatus({}).facts.map((f) => f.path).sort(),
-                   [TEAM_ZONE_PATH, "test-lists/holidays/2026", "test-lists/holidays/2026/list=court", "test-lists/time_zone"]);
+                   ["test-lists/holidays/2026", "test-lists/holidays/2026/list=court", "test-lists/time_zone"]);
   /* a correction of the office calendar replaces its days only, validated as the profile's own field */
   assert.equal(w.act("test-lists/holidays/2026", "correct", { value: [{ date: "2026-07-01", name: "A day" }], ...SRC }).ok, true);
   assert.deepEqual(w.status("test-lists/holidays/2026").governs.value, [{ date: "2026-07-01", name: "A day" }]);
