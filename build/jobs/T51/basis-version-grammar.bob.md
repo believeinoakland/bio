@@ -1,6 +1,6 @@
 # BOB to basis-version-grammar (T51)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -56,3 +56,7 @@ Bob (K5257): deploy now, then the beta; urgency. CONNECTIONS #21 (R73, merged at
 
 Your job: R12. Red test first, then green; the module suite green.
 **Done:** each test red then green; your module's tests green; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` no new finding in your files; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio basis-version-grammar $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), the test red then green, suite counts, and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B5 · CHANGE
+
+CHANGE (K5308; your J4 (2)). Your other version-leg labels are in this tranche, now (P19): R13 (new, `build/requirements/basis-version-grammar.md`; merge `origin/tranche/T51`, never a rebase): every sentence about a version leg names it "Leg {n} of version '{name}'" (your `basis-version-grammar.grammar.leg_of_version` key), never `basis_version_legs[i]`: `leadLegFindings` (grammar.mjs:341), `checkLegExtentGrammar` (:391), the VERSION_LEG_NOT_CITABLE and VERSION_GROUND_UNASSERTED sentences (:359-405). Tests red then green, pins by code and key, never a copied sentence. Then COMPLETE.

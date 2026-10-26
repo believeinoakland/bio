@@ -10,6 +10,8 @@ import { BUNDLE_ID_RE } from "../../../src/record-grammar/index.mjs";
 import { INFO, INQ, PUBLISHED, EARNED, REF, IMPORT, IMPORTED_BUNDLE_CASES, REGISTRY_VARIANTS } from "./corpus.mjs";
 import { run, plain, judge } from "./fixture.mjs";
 import { localize } from "../../../src/setup-words/index.mjs";
+const newHead = (i, field) => (field.startsWith(" ") ? `basis leg ${i}${field}` : `the ${field.slice(1).replace(/_/g, " ")} on basis leg ${i}`);
+const fieldKey = (m) => m.replace(/'[^']*'/g, "").split(/ is | names | must | has | states | carries | cannot | lowers | requires | rests | holds | applies | are |[(:,]/)[0].trim();
 
 const { IMPORTED_FINDING_RE, importedFindingRef, parseImportedFindingRef, importedLegFindings, checkInquiryBasis,
         checkInquiryExtension, INQUIRY_GRAMMARS, INQUIRY_GRAMMAR_CHECKS } = IG;
@@ -52,14 +54,14 @@ test("R11 importedFindingRef spells the ref, parseImportedFindingRef reads it ba
 
 test("R11 the leg on a ref: one C-21.3 error, code IMPORTED_LEG_MALFORMED, per departure, naming the leg and the field: target_edition a positive integer; no grade, grade_axis, grade_source; no content_id, extent or extent_capture", () => {
   const legOf = (over) => ({ target: REF, role: "supports", target_edition: 1, ...over });
-  const judgeLeg = (over) => { const r = run((f) => importedLegFindings("basis[4]", legOf(over), f)); assert.equal(r.answer, true); return plain(r.findings); };
+  const judgeLeg = (over) => { const r = run((f) => importedLegFindings("basis leg 4", legOf(over), f)); assert.equal(r.answer, true); return plain(r.findings); };
   assert.deepEqual(judgeLeg({}), [], "a well-formed leg: nothing");
   assert.deepEqual(judgeLeg({ target_edition: 7, note: "why" }), []);
   const one = (over, field) => {
     const got = judgeLeg(over);
     assert.equal(got.length, 1, JSON.stringify([over, got]));
     assert.deepEqual([got[0].check, got[0].severity, got[0].code], ["C-21.3", "error", "IMPORTED_LEG_MALFORMED"]);
-    assert.ok(got[0].message.startsWith(`basis[4]${field}`), `${got[0].message} names ${field}`);
+    assert.ok(got[0].message.startsWith(newHead(4, field)), `${got[0].message} names ${field}`);
     assert.ok(Array.isArray(got[0].repairs) && got[0].repairs.length, "a repair is named");
     return got[0];
   };
@@ -77,24 +79,24 @@ test("R11 the leg on a ref: one C-21.3 error, code IMPORTED_LEG_MALFORMED, per d
   /* every departure at once: one error each, in the order the requirement lists them */
   const all = judgeLeg({ target_edition: 0, grade: "A", grade_axis: "capture", grade_source: "hunch", content_id: "c".repeat(64),
                          extent_kind: "pdf-page", extent_page: 1, extent_capture: "d".repeat(64) });
-  assert.deepEqual(all.map((x) => x.message.split(" ")[0]),
-    ["basis[4].target_edition", "basis[4].grade", "basis[4].grade_axis", "basis[4].grade_source", "basis[4].content_id", "basis[4]",
-     "basis[4].extent_capture"]);
+  assert.deepEqual(all.map((x) => fieldKey(x.message)),
+    ["the target edition on basis leg 4", "the grade on basis leg 4", "the grade axis on basis leg 4", "the grade source on basis leg 4", "the content id on basis leg 4", "basis leg 4",
+     "the extent capture on basis leg 4"]);
   assert.ok(all.every((x) => x.check === "C-21.3" && x.code === "IMPORTED_LEG_MALFORMED" && x.check === ROW.check));
   /* the C-number is the caller's at another grain (as checkLegExtentGrammar's), the code travels */
   const relabelled = run((f) => importedLegFindings("basis_version_legs[0]", legOf({ grade: "B" }), f, "C-25.14")).findings;
   assert.deepEqual(relabelled.map((x) => [x.check, x.code]), [["C-25.14", "IMPORTED_LEG_MALFORMED"]]);
-  assert.match(relabelled[0].message, /^basis_version_legs\[0\]\.grade /);
+  assert.match(relabelled[0].message, /^the grade on basis_version_legs\[0\] is set/);
 });
 
 test("R11 importedLegFindings answers false and pushes nothing for any leg whose target is not a ref (a local id, a lead, a near miss, a non-object), so the caller's own target arm runs", () => {
   for (const leg of [{ target: INFO }, { target: INQ, grade: "B" }, { target: "LEAD-2026-0101-abc" }, { target: `imported:${HEX}/bad` },
                      { target: `imported:${HEX.toUpperCase()}/INQ-2026-0001-a`, grade: "A" }, { content_id: REF }, {}, null, REF, 5, [REF]]) {
-    const r = run((f) => importedLegFindings("basis[0]", leg, f));
+    const r = run((f) => importedLegFindings("basis leg 0", leg, f));
     assert.equal(r.answer, false, JSON.stringify(leg));
     assert.deepEqual(r.findings, []);
   }
-  const spaced = run((f) => importedLegFindings("basis[0]", { target: `  ${REF} `, target_edition: 1 }, f));
+  const spaced = run((f) => importedLegFindings("basis leg 0", { target: `  ${REF} `, target_edition: 1 }, f));
   assert.equal(spaced.answer, true, "a ref is read trimmed, as a lead is");
   assert.deepEqual(spaced.findings, []);
 });
@@ -111,7 +113,7 @@ test("R11 in checkInquiryBasis the arm replaces the target arm for a leg on a re
   }
   /* the role arm and the note arm run as of any leg */
   assert.deepEqual(basis([leg({ role: "maybe", note: 5 })]).map((x) => [x.check, x.message]),
-    [["C-2.8", "basis[0].role 'maybe' is not one of: supports, cuts_against"], ["C-2.8", "basis[0].note is not a string"]]);
+    [["C-2.8", "the role of basis leg 0 is 'maybe', which is not one of: supports, cuts against"], ["C-2.8", "the note on basis leg 0 is not text"]]);
   /* a graded leg on a ref: C-21.3 per field, and nothing from the grade, axis, source, inherited or earned arms */
   const graded = basis([leg({ grade: "A", grade_axis: "capture", grade_source: "inherited", extent_kind: "dom" })]);
   assert.deepEqual(graded.map((x) => [x.check, x.code]), [["C-21.3", "IMPORTED_LEG_MALFORMED"], ["C-21.3", "IMPORTED_LEG_MALFORMED"],
@@ -120,13 +122,13 @@ test("R11 in checkInquiryBasis the arm replaces the target arm for a leg on a re
   const AT = "2026-07-01T00:00:00Z";
   assert.deepEqual(basis([leg({ ground: "a" }), { target: INFO, role: "supports", ground: "a" }],
     { grounds: [{ ground: "a", asserted_by: "member:a", at: AT }] }), []);
-  assert.match(basis([leg({ ground: "a" }), { target: INFO, role: "supports" }])[0].message, /names a ground with no grounds\[\] block/);
+  assert.match(basis([leg({ ground: "a" }), { target: INFO, role: "supports" }])[0].message, /names a ground, but there is no grounds section/);
   /* lead and theme are still asked first: a lead in content_id on a ref leg is refused by name, and nothing more */
   assert.deepEqual(basis([leg({ content_id: "LEAD-2026-0101-abc" })]).map((x) => x.code), ["LEAD_NOT_EVIDENCE"]);
   assert.deepEqual(basis([leg({ theme: "x" })]).map((x) => x.check), ["C-81.1"]);
   /* negative control: a malformed ref is no ref, and the target arm answers as before */
   assert.deepEqual(basis([{ target: `imported:${HEX}/bad`, role: "supports" }]).map((x) => [x.check, x.message]),
-    [["C-2.8", localize("inquiry-grammar.grammar.basis_i_target_string_is", "basis[{i}].target '{String}' is not a canonical record id", { i: "0", String: `imported:${HEX.slice(0, 31)}` })]]);
+    [["C-2.8", localize("inquiry-grammar.grammar.basis_i_target_string_is_p", "basis leg {i} names '{String}', which is not a valid record reference", { i: "0", String: `imported:${HEX.slice(0, 31)}` })]]);
   /* negative control: a local leg missing from references[] is still C-6.3 */
   assert.deepEqual(basis([leg(), { target: INQ, role: "supports" }]).map((x) => x.check), ["C-6.3"]);
 });
@@ -135,8 +137,8 @@ test("R11 a references[] entry naming a ref is refused, one C-21.3 error each na
   const refs = [{ target: INFO }, { target: REF, rel: "cites" }, null, { target: ` ${REF}` }, { target: `imported:${HEX}/bad` }];
   for (const basis of [undefined, [], [{ target: REF, role: "supports", target_edition: 1 }]]) {
     const got = plain(run((f) => checkInquiryBasis({ object_type: "inquiry", references: refs, basis }, f, null, null)).findings);
-    assert.deepEqual(got.map((x) => [x.check, x.code, x.message.split(" ")[0]]),
-      [["C-21.3", "IMPORTED_LEG_MALFORMED", "references[1].target"], ["C-21.3", "IMPORTED_LEG_MALFORMED", "references[3].target"]],
+    assert.deepEqual(got.map((x) => [x.check, x.code, fieldKey(x.message)]),
+      [["C-21.3", "IMPORTED_LEG_MALFORMED", "reference 1"], ["C-21.3", "IMPORTED_LEG_MALFORMED", "reference 3"]],
       JSON.stringify(basis));
     assert.ok(got.every((x) => x.repairs.length === 1));
   }
@@ -160,14 +162,14 @@ test("R11 through record-grammar's checkBundle with INQUIRY_GRAMMARS: a conclude
   for (const v of Object.keys(REGISTRY_VARIANTS)) {
     assert.deepEqual(await mine("INQ-2026-0200-imported-clean", v), [], v);
     const bad = await mine("INQ-2026-0201-imported-bad", v);
-    assert.deepEqual(bad.map((x) => [x.check, x.code ?? null, x.message.split(" ")[0]]), [
-      ["C-21.3", "IMPORTED_LEG_MALFORMED", "references[1].target"],
-      ["C-21.3", "IMPORTED_LEG_MALFORMED", "basis[0].target_edition"],
-      ["C-21.3", "IMPORTED_LEG_MALFORMED", "basis[0].grade"],
-      ["C-21.3", "IMPORTED_LEG_MALFORMED", "basis[0].grade_axis"],
-      ["C-21.3", "IMPORTED_LEG_MALFORMED", "basis[0].grade_source"],
-      ["C-21.3", "IMPORTED_LEG_MALFORMED", "basis[0].content_id"],
-      ["C-2.8", null, "basis[0].role"]], v);
+    assert.deepEqual(bad.map((x) => [x.check, x.code ?? null, fieldKey(x.message)]), [
+      ["C-21.3", "IMPORTED_LEG_MALFORMED", "reference 1"],
+      ["C-21.3", "IMPORTED_LEG_MALFORMED", "the target edition on basis leg 0"],
+      ["C-21.3", "IMPORTED_LEG_MALFORMED", "the grade on basis leg 0"],
+      ["C-21.3", "IMPORTED_LEG_MALFORMED", "the grade axis on basis leg 0"],
+      ["C-21.3", "IMPORTED_LEG_MALFORMED", "the grade source on basis leg 0"],
+      ["C-21.3", "IMPORTED_LEG_MALFORMED", "the content id on basis leg 0"],
+      ["C-2.8", null, "the role of basis leg 0"]], v);
   }
   assert.ok(IMPORTED_BUNDLE_CASES["INQ-2026-0200-imported-clean"].basis[0].target.startsWith(`imported:${IMPORT}/`));
 });

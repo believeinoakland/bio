@@ -84,10 +84,12 @@ export const PUBLISHED = Object.freeze({
     // The findings: each with its two strengths and whether it meets the project's bar.
     const findings = Array.isArray(e.findings) ? e.findings : [];
     // R37: each finding is the way to its own page; R38 and R39 come after the case's acts
-    // 10B C5 (R94 a): a case that declared no bar says so, in the plane's own sentence (`bar_detail`); null here is no standard, not a bar of zero
+    // 10B C5 (R94 a): a case that declared no bar says so, in the plane's own sentence (`bar_detail`); null here is no standard, not a bar of zero.
+    // R81 (D-M6 (c)): a case that declared one says by key what it was held to, in place of the served sentence
     const bare = !e.bar || typeof e.bar !== "object" || e.bar.declared === false || (!e.bar.capture && !e.bar.connection);
     out.push(P.sec(cs, "screen.published.findings", findings.map(function (f, i) { return P.card(cs, view, f, i + 1, e, caseId, { link: true }); }).join("")
-      + (findings.length && bare && typeof e.bar_detail === "string" && e.bar_detail.trim() ? '<p class="mk-note" data-bar-none>' + cs.esc(e.bar_detail) + "</p>" : "")));
+      + (findings.length && bare && typeof e.bar_detail === "string" && e.bar_detail.trim() ? '<p class="mk-note" data-bar-none>' + cs.esc(e.bar_detail) + "</p>" : "")
+      + (findings.length && !bare ? '<p class="mk-note" data-bar-declared>' + cs.w("screen.published.bar.declared") + "</p>" : "")));
 
     // Its timeline, the people it names and its evidence, as the edition carries them.
     const timeline = e.method && Array.isArray(e.method.timeline) ? e.method.timeline : Array.isArray(e.timeline) ? e.timeline : [];
@@ -189,8 +191,8 @@ export const PUBLISHED = Object.freeze({
       + (/^[0-9a-f]{64}$/.test(String(e.manifest_sha || "")) ? cs.act("publishedcase", { label: "screen.published.download", data: { download: "1", manifest: String(e.manifest_sha) } }) : "")
       + (findings.length ? cs.act("pubprint") : "") + "</div>" + P.said(view, "verify") + P.said(view, "download")
       + (P.casefileSaid(cs, e) ? '<p class="mk-note" role="status" data-casefile-state>' + P.casefileSaid(cs, e) + "</p>" : "")
-      // 10B C5 (R95 a): what the check proves and what it does not, in the plane's own sentence (`verification.detail`)
-      + (e.verification && typeof e.verification.detail === "string" && e.verification.detail.trim() ? '<p class="mk-small" data-verification>' + cs.esc(e.verification.detail) + "</p>" : ""));
+      // 10B C5 (R95 a), R81 (D-M6 (a)): what the check proves and what it does not, by key, where the answer states a verification
+      + (e.verification && typeof e.verification === "object" ? '<p class="mk-small" data-verification>' + cs.w("screen.published.verify.detail") + "</p>" : ""));
     // R38: a minimum strength to read it at, when there is a finding to hold to one
     if (findings.length) out.push(P.minimum(cs, view));
 

@@ -1,6 +1,6 @@
 # BOB to queue-producers (T51)
 
-**Read** · handled J24
+**Read** · handled J25
 
 ## B1 · START
 
@@ -303,3 +303,7 @@ Bob (K5257): deploy now, then the beta with all its requirements; urgency, no de
 
 Your job: R55 (new). It reads `credentials` R83's `known_by` (CREDENTIALS #33, running): build and test against its real code once a CHANGE tells you it merged; until then write the tests as `test.todo` naming R55 and do the rest. Red tests at the walker's case through the world's real acts and reads, then green.
 **Done:** each test red then green; your module's tests green; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` no new finding in your files; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio queue-producers $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), the test red then green, suite counts, and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B21 · CHANGE
+
+CHANGE (K5308; plan item 147). CREDENTIALS #33 is merged into `tranche/T51`: `signerKnown({keyB64, viewer})`, `op=signerknown` (declared; refusals MACHINE_CANNOT_REGISTER_KEY, not an administrator, BAD_KEY, NO_SUCH_KEY, SIGNER_NOT_SELF_ACTIVE; a key already known answers `{ok: true, already: true, known_by, known_at}`), and `signerList` answers `known_by`, `known_at`. Merge `origin/tranche/T51` into your branch (never a rebase), finish the part of your entry that waited on it against the real code (red then green), then COMPLETE as your START says.

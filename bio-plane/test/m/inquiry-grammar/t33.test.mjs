@@ -10,6 +10,8 @@ import { idPattern } from "../../../src/record-grammar/index.mjs";
 import { isCalendarDate } from "../../../src/civil-time/index.mjs";
 import { INFO, LEG_CASES, BUNDLE_CASES, REGISTRY_VARIANTS, PUBLISHED, EARNED, legFm } from "./corpus.mjs";
 import { GOLDEN, run, plain, judge } from "./fixture.mjs";
+const newHead = (i, field) => (field.startsWith(" ") ? `basis leg ${i}${field}` : `the ${field.slice(1).replace(/_/g, " ")} on basis leg ${i}`);
+const fieldKey = (m) => m.replace(/'[^']*'/g, "").split(/ is | names | must | has | states | carries | cannot | lowers | requires | rests | holds | applies | are |[(:,]/)[0].trim();
 
 const { checkInquiryExtension, checkRecheckCoverage, checkInquiryBasis, INQUIRY_GRAMMARS, INQUIRY_GRAMMAR_CHECKS,
         CALCULATION_REF_RE, calculationLegFindings, OCCURRENCE_REF_RE, occurrenceRef, parseOccurrenceRef,
@@ -22,7 +24,7 @@ const EARNED_STD = { ...EARNED, earned: { ...EARNED.earned, capture: { ...EARNED
   "STD-2026-0008-unread": { grade: null, mode: "ceiling", why: "its text was read by an unmeasured engine." } } } };
 const ofLegs = (legs, refs, pub = PUBLISHED, earned = EARNED_STD, extra = {}) => plain(run((f) => checkInquiryBasis(
   { object_type: "inquiry", references: refs.map((target) => ({ target, rel: "cites" })), basis: legs, ...extra }, f, pub, earned)).findings);
-const shape = (xs) => xs.map((x) => [x.check, x.code ?? null, x.message.split(" ")[0]]);
+const shape = (xs) => xs.map((x) => [x.check, x.code ?? null, fieldKey(x.message)]);
 
 /* ---- R3, and the hunch's date (C-6): calendar dates through civil-time ---- */
 
@@ -31,22 +33,22 @@ test("R3 (C-15.1) a trigger's date is a calendar date as civil-time judges it: a
     recheck_triggers: dates.map((date) => ({ text: "x", description: "y", date })) } }, f)).findings);
   for (const s of ["open", "dismissed", "concluded", "divided", "deferred", "surfaced"]) {
     assert.deepEqual(c(["2026-02-31", "2026-13-01", "2025-02-29", "2026-04-31", "2026-00-10", "2026-01-00"], s).map((x) => [x.check, x.severity, x.message]), [
-      ["C-15.1", "error", "recheck_triggers[0].date '2026-02-31' is not a calendar date (YYYY-MM-DD)"],
-      ["C-15.1", "error", "recheck_triggers[1].date '2026-13-01' is not a calendar date (YYYY-MM-DD)"],
-      ["C-15.1", "error", "recheck_triggers[2].date '2025-02-29' is not a calendar date (YYYY-MM-DD)"],
-      ["C-15.1", "error", "recheck_triggers[3].date '2026-04-31' is not a calendar date (YYYY-MM-DD)"],
-      ["C-15.1", "error", "recheck_triggers[4].date '2026-00-10' is not a calendar date (YYYY-MM-DD)"],
-      ["C-15.1", "error", "recheck_triggers[5].date '2026-01-00' is not a calendar date (YYYY-MM-DD)"]], s);
+      ["C-15.1", "error", "recheck trigger 0 has the date '2026-02-31', which is not a real calendar date"],
+      ["C-15.1", "error", "recheck trigger 1 has the date '2026-13-01', which is not a real calendar date"],
+      ["C-15.1", "error", "recheck trigger 2 has the date '2025-02-29', which is not a real calendar date"],
+      ["C-15.1", "error", "recheck trigger 3 has the date '2026-04-31', which is not a real calendar date"],
+      ["C-15.1", "error", "recheck trigger 4 has the date '2026-00-10', which is not a real calendar date"],
+      ["C-15.1", "error", "recheck trigger 5 has the date '2026-01-00', which is not a real calendar date"]], s);
     assert.deepEqual(c(["2024-02-29", "2026-12-31", "2026-01-01"], s), [], s);
   }
   assert.deepEqual(c(["July", "2026-7-1", "2026-07-01T00:00:00Z"]).map((x) => x.message), [
-    "recheck_triggers[0].date 'July' is not YYYY-MM-DD", "recheck_triggers[1].date '2026-7-1' is not YYYY-MM-DD",
-    "recheck_triggers[2].date '2026-07-01T00:00:00Z' is not YYYY-MM-DD"]);
+    "recheck trigger 0 has the date 'July', which is not in the form YYYY-MM-DD", "recheck trigger 1 has the date '2026-7-1', which is not in the form YYYY-MM-DD",
+    "recheck trigger 2 has the date '2026-07-01T00:00:00Z', which is not in the form YYYY-MM-DD"]);
   /* the judgment is civil-time's, every day of a span of years */
   const days = [];
   for (let y = 2023; y <= 2025; y++) for (let m = 1; m <= 13; m++) for (let d = 0; d <= 32; d++)
     days.push(`${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`);
-  const refused = new Set(c(days).map((x) => Number(/\[(\d+)\]/.exec(x.message)[1])));
+  const refused = new Set(c(days).map((x) => Number(/recheck trigger (\d+)/.exec(x.message)[1])));
   days.forEach((d, i) => assert.equal(refused.has(i), !isCalendarDate(d), d));
   assert.ok(refused.size > 0 && refused.size < days.length);
 });
@@ -57,14 +59,14 @@ test("R4 (C-6) a hunch's date is a calendar date as civil-time judges it: an imp
   assert.deepEqual(hunch("2026-07-01"), []);
   assert.deepEqual(hunch("2024-02-29"), []);
   for (const d of ["2026-02-31", "2026-13-01", "July", undefined])
-    assert.deepEqual(hunch(d), ["basis[0] is a hunch with no date: a hunch is temporary by construction and carries the date it was declared, YYYY-MM-DD (DEC-15)"], String(d));
+    assert.deepEqual(hunch(d), ["basis leg 0 is a hunch with no date: a hunch is temporary by construction and carries the date it was declared, YYYY-MM-DD"], String(d));
 });
 
 /* ---- R12: the entity key ---- */
 
 test("R12 subject_entity is judged by record-grammar's ID_TABLE form for ENT, no copy: ENT-2026-10000 is a key and ENT-2026-999 is not, and the refusal is exactly idPattern('ENT')'s", () => {
   const refused = (v) => plain(run((f) => checkInquiryExtension({ fm: { object_type: "inquiry", surfaced_by: "human", subject_entity: v } }, f)).findings)
-    .some((x) => /^subject_entity /.test(x.message));
+    .some((x) => /^the subject entity /.test(x.message));
   assert.equal(refused("ENT-2026-10000"), false);
   assert.equal(refused("ENT-2026-0001"), false);
   assert.equal(refused("ENT-2026-999"), true);
@@ -81,10 +83,10 @@ test("R13 a held standard is a leg target, listed in references[] like an inform
   assert.deepEqual(ofLegs([{ target: STD, role: "supports" }], [STD]), []);
   assert.deepEqual(ofLegs([{ target: STD, role: "supports", target_portion: "art. 2 § 54953(a)" }], [STD]), []);
   assert.deepEqual(ofLegs([{ target: STD, role: "supports", target_portion: "x".repeat(200) }], [STD]), []);
-  assert.deepEqual(shape(ofLegs([{ target: STD, role: "supports" }], [])), [["C-6.3", null, "basis[0].target"]]);
+  assert.deepEqual(shape(ofLegs([{ target: STD, role: "supports" }], [])), [["C-6.3", null, "basis leg 0"]]);
   for (const p of [5, " ", "x".repeat(201), ["a"], { path: "a" }]) {
     const got = ofLegs([{ target: STD, role: "supports", target_portion: p }], [STD]);
-    assert.deepEqual(shape(got), [["C-2.8", null, "basis[0].target_portion"]], JSON.stringify(p));
+    assert.deepEqual(shape(got), [["C-2.8", null, "the target portion on basis leg 0"]], JSON.stringify(p));
     assert.match(got[0].message, /is not a portion path/);
   }
   for (const p of [undefined, null, ""]) assert.deepEqual(ofLegs([{ target: STD, role: "supports", target_portion: p }], [STD]), []);
@@ -96,16 +98,16 @@ test("R13 its grade is on the capture axis only, source capture, bounded by what
   const cap = (grade, target = STD, earned = EARNED_STD) => ofLegs([{ target, role: "supports", grade, grade_axis: "capture", grade_source: "capture" }], [target], PUBLISHED, earned);
   assert.deepEqual(cap("B"), []);
   assert.deepEqual(cap("C"), []);
-  assert.match(cap("A")[0].message, /STRONGER than the B the record can earn for it/);
+  assert.match(cap("A")[0].message, /stronger than the B the record can earn for it/);
   assert.match(cap("C", "STD-2026-0008-unread")[0].message, /is UNDETERMINED, not C/);
   assert.match(cap("C", "STD-2026-0009-none")[0].message, /holds no registered capture/);
   assert.match(cap("B", STD, null)[0].message, /cannot be read here/);
   assert.ok([cap("A"), cap("C", "STD-2026-0008-unread"), cap("B", STD, null)].every((x) => x.length === 1 && x[0].check === "C-2.8" && !x[0].code));
   /* an authored source on the capture axis is refused by the capture arms as on any document */
   assert.match(ofLegs([{ target: STD, role: "supports", grade: "D", grade_axis: "capture", grade_source: "testimony" }], [STD])[0].message,
-    /capture-axis grade with grade_source 'testimony'/);
+    /capture-axis grade with grade source 'testimony'/);
   assert.match(ofLegs([{ target: STD, role: "supports", grade: "B", grade_axis: "capture", grade_source: "resolution" }], [STD], PUBLISHED, EARNED_STD)[0].message,
-    /grade_source 'resolution' on the capture axis/);
+    /states a grade source 'resolution' on the capture axis/);
 });
 
 test("R13 R16 a connection or testimony axis, or a hunch source, on a standard leg is one C-2.8 STANDARD_LEG_AXIS error naming the leg, and the hunch, testimony, earned and inherited arms stay silent on it", () => {
@@ -122,26 +124,26 @@ test("R13 R16 a connection or testimony axis, or a hunch source, on a standard l
   for (const v of VARIANTS) for (const [over, re] of cases) {
     const [pub, earned] = REGISTRY_VARIANTS[v];
     const got = ofLegs([{ target: STD, role: "supports", ...over }], [STD], pub, earned);
-    assert.deepEqual(shape(got), [["C-2.8", "STANDARD_LEG_AXIS", "basis[0]"]], `${v} ${JSON.stringify(over)}: ${JSON.stringify(got)}`);
-    assert.match(got[0].message, new RegExp(`^basis\\[0\\] rests on the standard ${STD} and `));
+    assert.deepEqual(shape(got), [["C-2.8", "STANDARD_LEG_AXIS", "basis leg 0"]], `${v} ${JSON.stringify(over)}: ${JSON.stringify(got)}`);
+    assert.match(got[0].message, new RegExp(`^basis leg 0 rests on the standard ${STD} and `));
     assert.match(got[0].message, re);
     assert.equal(got[0].check, INQUIRY_GRAMMAR_CHECKS[got[0].code].check);
     assert.ok(got[0].repairs.length === 2);
   }
   /* the vocabulary arms still run beside it: an unknown grade letter is its own complaint */
   assert.deepEqual(shape(ofLegs([{ target: STD, role: "supports", grade: "E", grade_axis: "connection", grade_source: "resolution" }], [STD])),
-    [["C-2.8", null, "basis[0].grade"], ["C-2.8", "STANDARD_LEG_AXIS", "basis[0]"]]);
+    [["C-2.8", null, "the grade of basis leg 0"], ["C-2.8", "STANDARD_LEG_AXIS", "basis leg 0"]]);
   /* negative control: the same leg on a document is judged by the arms it always met */
   assert.ok(!ofLegs([{ target: INFO, role: "supports", grade: "C", grade_axis: "connection", grade_source: "hunch" }], [INFO]).some((x) => x.code === "STANDARD_LEG_AXIS"));
 });
 
 test("R13 every other arm reads a standard leg as an information leg: lead and theme first, role, note, extent and content id, grounds", () => {
-  assert.deepEqual(shape(ofLegs([{ target: STD, role: "supports", content_id: "LEAD-2026-0101-abc" }], [STD])), [["C-54.1", "LEAD_NOT_EVIDENCE", "basis[0].content_id"]]);
+  assert.deepEqual(shape(ofLegs([{ target: STD, role: "supports", content_id: "LEAD-2026-0101-abc" }], [STD])), [["C-54.1", "LEAD_NOT_EVIDENCE", "the content id on basis leg 0"]]);
   assert.deepEqual(ofLegs([{ target: STD, role: "supports", theme: "x" }], [STD]).map((x) => x.check), ["C-81.1"]);
-  assert.deepEqual(shape(ofLegs([{ target: STD, role: "maybe", note: 5 }], [STD])), [["C-2.8", null, "basis[0].role"], ["C-2.8", null, "basis[0].note"]]);
+  assert.deepEqual(shape(ofLegs([{ target: STD, role: "maybe", note: 5 }], [STD])), [["C-2.8", null, "the role of basis leg 0"], ["C-2.8", null, "the note on basis leg 0"]]);
   assert.deepEqual(ofLegs([{ target: STD, role: "supports", extent_kind: "dom" }], [STD]).map((x) => x.code), ["CONTENT_EXTENT_NO_PRODUCER"]);
   assert.deepEqual(ofLegs([{ target: STD, role: "supports", content_id: "a".repeat(64) }], [STD]), []);
-  assert.match(ofLegs([{ target: STD, role: "supports", ground: "a" }], [STD])[0].message, /names a ground with no grounds\[\] block/);
+  assert.match(ofLegs([{ target: STD, role: "supports", ground: "a" }], [STD])[0].message, /names a ground, but there is no grounds section/);
 });
 
 /* ---- R14: a calculation ---- */
@@ -156,7 +158,7 @@ test("R14 CALCULATION_REF_RE matches exactly a calculation's id, record-grammar'
 });
 
 test("R14 R16 calculationLegFindings: a leg on a calculation gains one C-2.8 CALCULATION_LEG_MALFORMED error per departure, naming the field (grade, grade_axis, grade_source, content_id, extent, extent_capture), and answers true; any other leg nothing and false", () => {
-  const judgeLeg = (over) => { const r = run((f) => calculationLegFindings("basis[2]", { target: CALC, role: "supports", ...over }, f));
+  const judgeLeg = (over) => { const r = run((f) => calculationLegFindings("basis leg 2", { target: CALC, role: "supports", ...over }, f));
                                assert.equal(r.answer, true); return plain(r.findings); };
   assert.deepEqual(judgeLeg({}), []);
   assert.deepEqual(judgeLeg({ grade: null, grade_axis: "", grade_source: undefined, content_id: "", extent_capture: null, note: "n" }), []);
@@ -165,13 +167,13 @@ test("R14 R16 calculationLegFindings: a leg on a calculation gains one C-2.8 CAL
                                [{ extent_page: 3 }, " names an extent"], [{ extent_capture: "b".repeat(64) }, ".extent_capture"]]) {
     const got = judgeLeg(over);
     assert.deepEqual(got.map((x) => [x.check, x.severity, x.code]), [["C-2.8", "error", "CALCULATION_LEG_MALFORMED"]], JSON.stringify(over));
-    assert.ok(got[0].message.startsWith(`basis[2]${field}`), got[0].message);
+    assert.ok(got[0].message.startsWith(newHead(2, field)), got[0].message);
     assert.ok(got[0].repairs.length === 1);
   }
   const all = judgeLeg({ grade: "A", grade_axis: "capture", grade_source: "capture", content_id: "c".repeat(64), extent_kind: "pdf-page", extent_page: 1,
                          extent_capture: "d".repeat(64) });
-  assert.deepEqual(all.map((x) => x.message.split(" ")[0]), ["basis[2].grade", "basis[2].grade_axis", "basis[2].grade_source",
-    "basis[2].content_id", "basis[2]", "basis[2].extent_capture"]);
+  assert.deepEqual(all.map((x) => fieldKey(x.message)), ["the grade on basis leg 2", "the grade axis on basis leg 2", "the grade source on basis leg 2",
+    "the content id on basis leg 2", "basis leg 2", "the extent capture on basis leg 2"]);
   for (const leg of [{ target: INFO }, { target: "CALC-2026-003" }, { target: ` ${CALC}` }, { content_id: CALC }, {}, null, CALC, 5])
     assert.deepEqual(run((f) => calculationLegFindings("x", leg, f)), { findings: [], answer: false }, JSON.stringify(leg));
 });
@@ -184,15 +186,15 @@ test("R14 in checkInquiryBasis a calculation leg replaces the target arm: not a 
   /* a references[] entry naming a calculation is record-grammar's refusal (its references arm), not this module's */
   assert.deepEqual(ofLegs([{ target: CALC, role: "supports" }], [CALC]), []);
   assert.deepEqual(shape(ofLegs([{ target: CALC, role: "maybe", note: 5, grade: "B", grade_axis: "capture", grade_source: "capture" }], [])), [
-    ["C-2.8", "CALCULATION_LEG_MALFORMED", "basis[0].grade"], ["C-2.8", "CALCULATION_LEG_MALFORMED", "basis[0].grade_axis"],
-    ["C-2.8", "CALCULATION_LEG_MALFORMED", "basis[0].grade_source"], ["C-2.8", null, "basis[0].role"], ["C-2.8", null, "basis[0].note"]]);
-  assert.deepEqual(shape(ofLegs([{ target: CALC, role: "supports", content_id: "LEAD-2026-0101-abc" }], [])), [["C-54.1", "LEAD_NOT_EVIDENCE", "basis[0].content_id"]]);
+    ["C-2.8", "CALCULATION_LEG_MALFORMED", "the grade on basis leg 0"], ["C-2.8", "CALCULATION_LEG_MALFORMED", "the grade axis on basis leg 0"],
+    ["C-2.8", "CALCULATION_LEG_MALFORMED", "the grade source on basis leg 0"], ["C-2.8", null, "the role of basis leg 0"], ["C-2.8", null, "the note on basis leg 0"]]);
+  assert.deepEqual(shape(ofLegs([{ target: CALC, role: "supports", content_id: "LEAD-2026-0101-abc" }], [])), [["C-54.1", "LEAD_NOT_EVIDENCE", "the content id on basis leg 0"]]);
   assert.deepEqual(ofLegs([{ target: CALC, role: "supports", theme: "x" }], []).map((x) => x.check), ["C-81.1"]);
   const AT = "2026-07-01T00:00:00Z";
   assert.deepEqual(ofLegs([{ target: CALC, role: "supports", ground: "a" }], [], PUBLISHED, EARNED_STD,
     { grounds: [{ ground: "a", asserted_by: "member:a", at: AT }] }), []);
   /* negative control: a near miss is no calculation, and the target arm answers as before */
-  assert.deepEqual(shape(ofLegs([{ target: "CALC-2026-003", role: "supports" }], [])), [["C-2.8", null, "basis[0].target"]]);
+  assert.deepEqual(shape(ofLegs([{ target: "CALC-2026-003", role: "supports" }], [])), [["C-2.8", null, "basis leg 0"]]);
 });
 
 /* ---- R15: a duty occurrence ---- */
@@ -214,7 +216,7 @@ test("R15 OCCURRENCE_REF_RE matches exactly occurrence:<DUT id>/<duties' key>; o
 });
 
 test("R15 R16 occurrenceLegFindings: a leg on an occurrence ref (read trimmed) gains one C-2.8 OCCURRENCE_LEG_MALFORMED error per departure, naming the field, and answers true; any other leg nothing and false", () => {
-  const judgeLeg = (over) => { const r = run((f) => occurrenceLegFindings("basis[1]", { target: OCC, role: "supports", ...over }, f));
+  const judgeLeg = (over) => { const r = run((f) => occurrenceLegFindings("basis leg 1", { target: OCC, role: "supports", ...over }, f));
                                assert.equal(r.answer, true); return plain(r.findings); };
   assert.deepEqual(judgeLeg({}), []);
   assert.deepEqual(judgeLeg({ target: `  ${OCC} ` }), []);
@@ -223,12 +225,12 @@ test("R15 R16 occurrenceLegFindings: a leg on an occurrence ref (read trimmed) g
                                [{ extent_capture: "b".repeat(64) }, ".extent_capture"]]) {
     const got = judgeLeg(over);
     assert.deepEqual(got.map((x) => [x.check, x.severity, x.code]), [["C-2.8", "error", "OCCURRENCE_LEG_MALFORMED"]], JSON.stringify(over));
-    assert.ok(got[0].message.startsWith(`basis[1]${field}`), got[0].message);
+    assert.ok(got[0].message.startsWith(newHead(1, field)), got[0].message);
   }
   const all = judgeLeg({ grade: "A", grade_axis: "capture", grade_source: "capture", content_id: "c".repeat(64), extent_kind: "pdf-page", extent_page: 1,
                          extent_capture: "d".repeat(64) });
-  assert.deepEqual(all.map((x) => x.message.split(" ")[0]), ["basis[1].grade", "basis[1].grade_axis", "basis[1].grade_source",
-    "basis[1].content_id", "basis[1]", "basis[1].extent_capture"]);
+  assert.deepEqual(all.map((x) => fieldKey(x.message)), ["the grade on basis leg 1", "the grade axis on basis leg 1", "the grade source on basis leg 1",
+    "the content id on basis leg 1", "basis leg 1", "the extent capture on basis leg 1"]);
   for (const leg of [{ target: INFO }, { target: CALC }, { target: `occurrence:${DUT}/bad` }, { content_id: OCC }, {}, null, OCC, 5])
     assert.deepEqual(run((f) => occurrenceLegFindings("x", leg, f)), { findings: [], answer: false }, JSON.stringify(leg));
 });
@@ -239,16 +241,16 @@ test("R15 in checkInquiryBasis an occurrence leg replaces the target arm: not a 
     assert.deepEqual(ofLegs([{ target: OCC, role: "cuts_against" }, { target: INFO, role: "supports" }], [INFO], pub, earned), [], v);
   }
   assert.deepEqual(shape(ofLegs([{ target: OCC, role: "maybe", grade: "D", grade_axis: "testimony", grade_source: "testimony" }], [])), [
-    ["C-2.8", "OCCURRENCE_LEG_MALFORMED", "basis[0].grade"], ["C-2.8", "OCCURRENCE_LEG_MALFORMED", "basis[0].grade_axis"],
-    ["C-2.8", "OCCURRENCE_LEG_MALFORMED", "basis[0].grade_source"], ["C-2.8", null, "basis[0].role"]]);
+    ["C-2.8", "OCCURRENCE_LEG_MALFORMED", "the grade on basis leg 0"], ["C-2.8", "OCCURRENCE_LEG_MALFORMED", "the grade axis on basis leg 0"],
+    ["C-2.8", "OCCURRENCE_LEG_MALFORMED", "the grade source on basis leg 0"], ["C-2.8", null, "the role of basis leg 0"]]);
   for (const basis of [undefined, [], [{ target: OCC, role: "supports" }]]) {
     const got = plain(run((f) => checkInquiryBasis({ object_type: "inquiry", basis,
       references: [{ target: INFO }, { target: OCC }, { target: ` ${OCC}` }, { target: `occurrence:${DUT}/bad` }] }, f, null, null)).findings);
-    assert.deepEqual(shape(got), [["C-2.8", "OCCURRENCE_LEG_MALFORMED", "references[1].target"], ["C-2.8", "OCCURRENCE_LEG_MALFORMED", "references[2].target"]],
+    assert.deepEqual(shape(got), [["C-2.8", "OCCURRENCE_LEG_MALFORMED", "reference 1"], ["C-2.8", "OCCURRENCE_LEG_MALFORMED", "reference 2"]],
       JSON.stringify(basis));
   }
-  assert.deepEqual(shape(ofLegs([{ target: OCC, role: "supports", content_id: "LEAD-2026-0101-abc" }], [])), [["C-54.1", "LEAD_NOT_EVIDENCE", "basis[0].content_id"]]);
-  assert.match(ofLegs([{ target: OCC, role: "supports", ground: "a" }], [])[0].message, /names a ground with no grounds\[\] block/);
+  assert.deepEqual(shape(ofLegs([{ target: OCC, role: "supports", content_id: "LEAD-2026-0101-abc" }], [])), [["C-54.1", "LEAD_NOT_EVIDENCE", "the content id on basis leg 0"]]);
+  assert.match(ofLegs([{ target: OCC, role: "supports", ground: "a" }], [])[0].message, /names a ground, but there is no grounds section/);
   /* an action is never a leg target (D113) */
   assert.match(ofLegs([{ target: "ACTN-2026-0001-x", role: "supports" }], ["ACTN-2026-0001-x"])[0].message, /is a action: a leg rests on information or on another inquiry/);
 });
@@ -265,8 +267,8 @@ test("R13 R14 R15 through this module's three slot arms (INQUIRY_GRAMMARS): a co
                              { target: CALC, role: "supports" }, { target: OCC, role: "cuts_against" }], [STD])), []);
   assert.deepEqual(mine(doc([{ target: STD, role: "supports", grade: "C", grade_axis: "connection", grade_source: "hunch" },
                              { target: CALC, role: "supports", grade: "B" }, { target: OCC, role: "supports", content_id: "a".repeat(64) }], [STD, CALC, OCC])), [
-    ["C-2.8", "OCCURRENCE_LEG_MALFORMED", "references[2].target"], ["C-2.8", "STANDARD_LEG_AXIS", "basis[0]"],
-    ["C-2.8", "CALCULATION_LEG_MALFORMED", "basis[1].grade"], ["C-2.8", "OCCURRENCE_LEG_MALFORMED", "basis[2].content_id"]]);
+    ["C-2.8", "OCCURRENCE_LEG_MALFORMED", "reference 2"], ["C-2.8", "STANDARD_LEG_AXIS", "basis leg 0"],
+    ["C-2.8", "CALCULATION_LEG_MALFORMED", "the grade on basis leg 1"], ["C-2.8", "OCCURRENCE_LEG_MALFORMED", "the content id on basis leg 2"]]);
 });
 
 /* ---- R16: the rows, and nothing else moved ---- */
@@ -309,9 +311,9 @@ test("R16 R9 the new arms are pure: the same leg gives the same findings, nothin
     const pub = freeze(structuredClone(PUBLISHED)), earned = freeze(structuredClone(EARNED_STD));
     const a = plain(run((f) => checkInquiryBasis(fm, f, pub, earned)).findings);
     assert.deepEqual(a, plain(run((f) => checkInquiryBasis(fm, f, pub, earned)).findings));
-    assert.deepEqual(shape(a), [["C-2.8", "OCCURRENCE_LEG_MALFORMED", "references[2].target"], ["C-2.8", "STANDARD_LEG_AXIS", "basis[0]"],
-      ["C-2.8", null, "basis[0]"], ["C-2.8", "CALCULATION_LEG_MALFORMED", "basis[1].grade"],
-      ["C-2.8", "OCCURRENCE_LEG_MALFORMED", "basis[2].grade_source"]], "the axis departure, and the source missing beside a grade");
+    assert.deepEqual(shape(a), [["C-2.8", "OCCURRENCE_LEG_MALFORMED", "reference 2"], ["C-2.8", "STANDARD_LEG_AXIS", "basis leg 0"],
+      ["C-2.8", null, "basis leg 0"], ["C-2.8", "CALCULATION_LEG_MALFORMED", "the grade on basis leg 1"],
+      ["C-2.8", "OCCURRENCE_LEG_MALFORMED", "the grade source on basis leg 2"]], "the axis departure, and the source missing beside a grade");
     assert.equal(run((f) => checkRecheckCoverage({ fm }, f)).findings.length, 1);
     for (const weird of [undefined, null, 0, "x", Symbol.iterator, () => 1, { target: Symbol.iterator }]) {
       assert.doesNotThrow(() => parseOccurrenceRef(weird));

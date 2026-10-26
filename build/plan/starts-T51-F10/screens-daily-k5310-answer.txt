@@ -1,0 +1,1 @@
+ANSWER (K5310) to J40. INTERFACE-SHELL #26 adds `signerknown` on `queue` to `RE_POINTS` (interface-shell R134, until the registry lists it; the registry row is asked of UX-DESIGN). Keep your half 2 as written; when INTERFACE-SHELL #26 merges you get a CHANGE: merge the tranche, run your suite green, COMPLETE. Set your state to WAITING ON BOB meanwhile.

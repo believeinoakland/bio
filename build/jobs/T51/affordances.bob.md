@@ -1,6 +1,6 @@
 # BOB to affordances (T51)
 
-**Read** · handled J33
+**Read** · handled J34
 
 ## B1 · START
 
@@ -303,3 +303,7 @@ Your job: R71 (new): act help for the ops DEC-438 to DEC-441 draw. Ops `signerkn
 ## B31 · CHANGE
 
 CHANGE (K5306): CITATION #24 (citation R24, `op=leggrade`) is merged. Merge `origin/tranche/T51` into your branch (never a rebase). The op takes `project`, `target` (with `content_id` or `extent_*` for a part), `grade` (A to D), `reason`; refusals carry `check`, `detail` and, for GRADE_OVER_CEILING, `ceiling`. Build its share of your requirement against the real op now.
+
+## B32 · CHANGE
+
+CHANGE (K5308; plan item 147). CREDENTIALS #33 is merged into `tranche/T51` with `signerknown` declared (credentials R83; its description in `DECLARED_OPS`). Merge `origin/tranche/T51` (never a rebase) and give `signerknown` its act help as R71 says, by the K5164 stand-in route until the design words `act.signerknown.does` (asked of UX-DESIGN, K5308, with `act.leggrade.does` and the five `act.standard*.does` reads). OP-DECLARATIONS #40 drops the ops you now explain from its `ACT_HELP_ABSENT`. Then COMPLETE.

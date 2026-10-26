@@ -8155,6 +8155,16 @@ for i, en in [('meeting_calendar', 'Meeting calendar'), ('meeting_minutes', 'Mee
     w440('screen.contradiction.doctype.' + i, en, 'the kind of document a passage comes from, by the reader\'s registered id (content_type); an id with no row draws no row')
 w440('screen.document.flags.pair', '{a} and {b}', 'R138: a row of the flags list, the two passages\' names, linked to the contradiction; screen.contradiction.flagged.by beneath it')
 
+# DEC-442: B537 (SCREENS-INVESTIGATE #25 J44; standards R63, R64; K5302): a binding row on Standard, one per kind
+def w442(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-442: ' + note))
+w442('screen.standard.binding.adoption', 'Adopted by {body} in {act}, edition {edition}', "R63 adoption: {act} the adopting act's name or the event's, {edition} as recorded")
+w442('screen.standard.binding.adoption.meta', '{mode} · in force from {from} · recorded by {author}, {date}', "R63 adoption, beneath it: {mode} the held screen.standard.mode.<mode> label, {from} the day it took effect")
+w442('screen.standard.binding.adoption.meta.nofrom', '{mode} · recorded by {author}, {date}', 'R63 adoption with no from')
+w442('screen.standard.binding.imposition', 'Binds {body}: made binding by {law}', "R63 imposition: {law} the law's name")
+w442('screen.standard.binding.benchmark', 'A benchmark for {body}, not binding on it', 'R63 benchmark declaration')
+w442('screen.standard.binding.recorded', 'Recorded by {author}, {date}', 'beneath an imposition or a benchmark: {author} the member (by), {date} the day (at)')
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

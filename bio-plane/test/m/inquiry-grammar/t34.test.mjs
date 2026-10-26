@@ -14,6 +14,7 @@ import { OCCURRENCE_KEY_RE as VOCAB_OCCURRENCE_KEY_RE } from "../../../src/dutie
 import { derivedId } from "../../../src/connection-grammar/index.mjs";
 import { INFO, LEG_CASES, REGISTRY_VARIANTS, PUBLISHED, EARNED, legFm } from "./corpus.mjs";
 import { GOLDEN, run, plain } from "./fixture.mjs";
+const fieldKey = (m) => m.replace(/'[^']*'/g, "").split(/ is | names | must | has | states | carries | cannot | lowers | requires | rests | holds | applies | are |[(:,]/)[0].trim();
 
 const { checkInquiryBasis, INQUIRY_GRAMMARS, INQUIRY_GRAMMAR_CHECKS, occurrenceRef, parseOccurrenceRef, OCCURRENCE_REF_RE,
         occurrenceLegFindings, DERIVED_CONNECTION_ID_RE, DERIVATION_FIELDS, derivedConnectionLegFindings } = IG;
@@ -26,7 +27,7 @@ const fields = (five = FIVE) => Object.fromEntries(Object.entries(five).map(([k,
 const LEG = { target: DER, role: "supports", ...fields() };
 const ofLegs = (legs, refs, pub = PUBLISHED, earned = EARNED, extra = {}) => plain(run((f) => checkInquiryBasis(
   { object_type: "inquiry", references: refs.map((target) => ({ target, rel: "cites" })), basis: legs, ...extra }, f, pub, earned)).findings);
-const shape = (xs) => xs.map((x) => [x.check, x.code ?? null, x.message.split(" ")[0]]);
+const shape = (xs) => xs.map((x) => [x.check, x.code ?? null, fieldKey(x.message)]);
 
 /* ---- R13: the portion path is standards' form ---- */
 
@@ -37,7 +38,7 @@ test("R13 a target_portion is refused exactly when standards.isPortionPath (its 
     const got = ofLegs([{ target: STD, role: "supports", target_portion: p }], [STD]);
     if (isPortionPath(p)) assert.deepEqual(got, [], JSON.stringify(p));
     else {
-      assert.deepEqual(shape(got), [["C-2.8", null, "basis[0].target_portion"]], JSON.stringify(p));
+      assert.deepEqual(shape(got), [["C-2.8", null, "the target portion on basis leg 0"]], JSON.stringify(p));
       assert.match(got[0].message, new RegExp(`is not a portion path: .* at most ${PORTION_PATH_MAX} characters$`));
     }
   }
@@ -104,7 +105,7 @@ test("R17 R16 derivedConnectionLegFindings: a leg on a derived connection whose 
   const judgeLeg = (over, drop = []) => {
     const leg = { ...LEG, ...over };
     for (const k of drop) delete leg[k];
-    const r = run((f) => derivedConnectionLegFindings("basis[3]", leg, f));
+    const r = run((f) => derivedConnectionLegFindings("basis leg 3", leg, f));
     assert.equal(r.answer, true);
     return plain(r.findings);
   };
@@ -114,33 +115,33 @@ test("R17 R16 derivedConnectionLegFindings: a leg on a derived connection whose 
   for (const k of DERIVATION_FIELDS) for (const bad of [undefined, "", "  ", 7, null, ["x"]]) {
     const got = bad === undefined ? judgeLeg({}, [k]) : judgeLeg({ [k]: bad });
     assert.deepEqual(got.map((x) => [x.check, x.severity, x.code]), [["C-2.8", "error", "DERIVED_LEG_MALFORMED"]], `${k} ${JSON.stringify(bad)}`);
-    assert.ok(got[0].message.startsWith(`basis[3].${k} is missing or empty`), got[0].message);
+    assert.ok(got[0].message.startsWith(`the ${k.replace(/_/g, " ")} on basis leg 3 is missing or empty`), got[0].message);
     assert.equal(got[0].repairs.length, 1);
   }
   /* all five gone: five departures in the fields' order, and the id is not asked */
-  assert.deepEqual(judgeLeg({}, DERIVATION_FIELDS).map((x) => x.message.split(" ")[0]), DERIVATION_FIELDS.map((k) => `basis[3].${k}`));
+  assert.deepEqual(judgeLeg({}, DERIVATION_FIELDS).map((x) => fieldKey(x.message)), DERIVATION_FIELDS.map((k) => `the ${k.replace(/_/g, " ")} on basis leg 3`));
   /* each field changed: the target no longer is its id, one departure naming the id the fields give */
   for (const k of Object.keys(FIVE)) {
     const changed = { ...FIVE, [k]: `${FIVE[k]}x` };
     const got = judgeLeg(fields(changed));
-    assert.deepEqual(shape(got), [["C-2.8", "DERIVED_LEG_MALFORMED", "basis[3].target"]], k);
+    assert.deepEqual(shape(got), [["C-2.8", "DERIVED_LEG_MALFORMED", "the target on basis leg 3"]], k);
     assert.ok(got[0].message.includes(`(${derivedId(changed)})`), got[0].message);
     assert.equal(got[0].repairs.length, 2);
     assert.deepEqual(judgeLeg({ target: derivedId(changed), ...fields(changed) }), [], `${k}: the matching id is clean`);
   }
   /* the fields are compared as stated, not trimmed: a padded value is a different derivation */
-  assert.deepEqual(shape(judgeLeg({ derivation_kind: ` ${FIVE.kind}` })), [["C-2.8", "DERIVED_LEG_MALFORMED", "basis[3].target"]]);
+  assert.deepEqual(shape(judgeLeg({ derivation_kind: ` ${FIVE.kind}` })), [["C-2.8", "DERIVED_LEG_MALFORMED", "the target on basis leg 3"]]);
   for (const [over, field] of [[{ grade: "B" }, ".grade"], [{ grade_axis: "connection" }, ".grade_axis"], [{ grade_source: "resolution" }, ".grade_source"],
                                [{ grade: 0 }, ".grade"], [{ content_id: "a".repeat(64) }, ".content_id"], [{ extent_kind: "pdf-page" }, " names an extent"],
                                [{ extent_page: 3 }, " names an extent"], [{ extent_capture: "b".repeat(64) }, ".extent_capture"]]) {
     const got = judgeLeg(over);
     assert.deepEqual(got.map((x) => [x.check, x.severity, x.code]), [["C-2.8", "error", "DERIVED_LEG_MALFORMED"]], JSON.stringify(over));
-    assert.ok(got[0].message.startsWith(`basis[3]${field}`), got[0].message);
+    assert.ok(got[0].message.startsWith((field.startsWith(" ") ? `basis leg 3${field}` : `the ${field.slice(1).replace(/_/g, " ")} on basis leg 3`)), got[0].message);
   }
   const all = judgeLeg({ derivation_to: "", grade: "A", grade_axis: "capture", grade_source: "capture", content_id: "c".repeat(64),
                          extent_kind: "pdf-page", extent_page: 1, extent_capture: "d".repeat(64) });
-  assert.deepEqual(all.map((x) => x.message.split(" ")[0]), ["basis[3].derivation_to", "basis[3].grade", "basis[3].grade_axis",
-    "basis[3].grade_source", "basis[3].content_id", "basis[3]", "basis[3].extent_capture"]);
+  assert.deepEqual(all.map((x) => fieldKey(x.message)), ["the derivation to on basis leg 3", "the grade on basis leg 3", "the grade axis on basis leg 3",
+    "the grade source on basis leg 3", "the content id on basis leg 3", "basis leg 3", "the extent capture on basis leg 3"]);
   assert.ok(all.every((x) => x.check === INQUIRY_GRAMMAR_CHECKS[x.code].check));
   /* any other leg: nothing, and false */
   for (const leg of [{ target: INFO }, { target: CALC }, { target: OCC }, { target: DER.toUpperCase(), ...fields() }, { target: ` ${DER}` },
@@ -154,18 +155,18 @@ test("R17 in checkInquiryBasis a derived-connection leg is admitted in place of 
     assert.deepEqual(ofLegs([LEG, { target: INFO, role: "supports" }], [INFO], pub, earned), [], v);
     /* malformed, under every variant: only its own departures, never an earned or inherited complaint */
     assert.deepEqual(shape(ofLegs([{ ...LEG, grade: "B", grade_axis: "connection", grade_source: "resolution" }], [], pub, earned)), [
-      ["C-2.8", "DERIVED_LEG_MALFORMED", "basis[0].grade"], ["C-2.8", "DERIVED_LEG_MALFORMED", "basis[0].grade_axis"],
-      ["C-2.8", "DERIVED_LEG_MALFORMED", "basis[0].grade_source"]], v);
+      ["C-2.8", "DERIVED_LEG_MALFORMED", "the grade on basis leg 0"], ["C-2.8", "DERIVED_LEG_MALFORMED", "the grade axis on basis leg 0"],
+      ["C-2.8", "DERIVED_LEG_MALFORMED", "the grade source on basis leg 0"]], v);
   }
-  assert.deepEqual(shape(ofLegs([{ ...LEG, role: "maybe", note: 5 }], [])), [["C-2.8", null, "basis[0].role"], ["C-2.8", null, "basis[0].note"]]);
-  assert.deepEqual(shape(ofLegs([{ ...LEG, content_id: "LEAD-2026-0101-abc" }], [])), [["C-54.1", "LEAD_NOT_EVIDENCE", "basis[0].content_id"]]);
+  assert.deepEqual(shape(ofLegs([{ ...LEG, role: "maybe", note: 5 }], [])), [["C-2.8", null, "the role of basis leg 0"], ["C-2.8", null, "the note on basis leg 0"]]);
+  assert.deepEqual(shape(ofLegs([{ ...LEG, content_id: "LEAD-2026-0101-abc" }], [])), [["C-54.1", "LEAD_NOT_EVIDENCE", "the content id on basis leg 0"]]);
   assert.deepEqual(ofLegs([{ ...LEG, theme: "x" }], []).map((x) => x.check), ["C-81.1"]);
   const AT = "2026-07-01T00:00:00Z";
   assert.deepEqual(ofLegs([{ ...LEG, ground: "a" }], [], PUBLISHED, EARNED, { grounds: [{ ground: "a", asserted_by: "member:a", at: AT }] }), []);
-  assert.match(ofLegs([{ ...LEG, ground: "a" }], [])[0].message, /names a ground with no grounds\[\] block/);
+  assert.match(ofLegs([{ ...LEG, ground: "a" }], [])[0].message, /names a ground, but there is no grounds section/);
   /* negative control: a near miss is no derived connection, and the target arm answers as it always did */
   for (const t of [DER.toUpperCase(), DER.slice(1), ` ${DER}`])
-    assert.deepEqual(shape(ofLegs([{ ...LEG, target: t }], [])), [["C-2.8", null, "basis[0].target"]], t);
+    assert.deepEqual(shape(ofLegs([{ ...LEG, target: t }], [])), [["C-2.8", null, "basis leg 0"]], t);
 });
 
 test("R17 R13 R15 through this module's three slot arms (INQUIRY_GRAMMARS): a concluded inquiry resting on a derived connection, a standard and an occurrence has no finding; a malformed derived leg answers exactly its code", () => {
@@ -175,7 +176,7 @@ test("R17 R13 R15 through this module's three slot arms (INQUIRY_GRAMMARS): a co
   const mine = (fm) => shape(plain(run((f) => { for (const g of INQUIRY_GRAMMARS) g.arm({ fm, publishedRegistry: PUBLISHED, earnedRegistry: EARNED }, f); }).findings));
   assert.deepEqual(mine(doc([LEG, { target: STD, role: "supports", target_portion: "s. 3" }, { target: OCC, role: "cuts_against" }], [STD])), []);
   assert.deepEqual(mine(doc([{ ...LEG, derivation_method: "line-walk/2" }, { target: STD, role: "supports" }], [STD])),
-    [["C-2.8", "DERIVED_LEG_MALFORMED", "basis[0].target"]]);
+    [["C-2.8", "DERIVED_LEG_MALFORMED", "the target on basis leg 0"]]);
 });
 
 /* ---- R16: the row, and nothing else moved ---- */
@@ -205,7 +206,7 @@ test("R17 R9 the derived arm is pure: the same leg gives the same findings, noth
     const fm = freeze({ object_type: "inquiry", references: [], basis: [LEG, { ...LEG, derivation_as_of: "2026-10-02", grade: "B" }] });
     const a = plain(run((f) => checkInquiryBasis(fm, f, PUBLISHED, EARNED)).findings);
     assert.deepEqual(a, plain(run((f) => checkInquiryBasis(fm, f, PUBLISHED, EARNED)).findings));
-    assert.deepEqual(shape(a), [["C-2.8", "DERIVED_LEG_MALFORMED", "basis[1].target"], ["C-2.8", "DERIVED_LEG_MALFORMED", "basis[1].grade"]]);
+    assert.deepEqual(shape(a), [["C-2.8", "DERIVED_LEG_MALFORMED", "the target on basis leg 1"], ["C-2.8", "DERIVED_LEG_MALFORMED", "the grade on basis leg 1"]]);
     for (const weird of [undefined, null, 0, "x", Symbol.iterator, () => 1, { target: Symbol.iterator },
                          { target: DER, derivation_kind: Symbol.iterator }, { target: DER, ...fields(), derivation_to: { toString: () => "x" } }])
       assert.doesNotThrow(() => derivedConnectionLegFindings("x", weird, []));

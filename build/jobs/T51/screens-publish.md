@@ -1,6 +1,6 @@
 # screens-publish (T51)
 
-**Status** · session_011NG1HnSXvNnQhtBzLy59au · depth 2 · COMPLETE · handled B60
+**Status** · session_01RxWsaACDwtn8crGboLcaNB · depth 2 · COMPLETE · handled B61
 
 ## J1 · QUESTION
 
@@ -1671,3 +1671,27 @@ Size (session_011NG1HnSXvNnQhtBzLy59au): test runs 4, module lines 3805 src
 ## J55 · COMPLETE
 
 COMPLETE (B60, K5290; walk-T51-alpha A N-1 section 6). Share for review pressed while the review copy is loading now draws state.loading beside the button; pressed after the copy read failed, it draws the read's own refusal beside the share; nothing is sent in either case. Change: bio-plane/src/screens-publish/review-copy.mjs:145-152. Test: bio-plane/test/m/screens-publish/review-copy-share.test.mjs, 3 tests named R2; the loading and failed cases were red before and are green after; the control (press after the answer shares) passes both ways. Suite screens-publish 303 tests, 301 pass, 0 fail, 2 todo (R35, K3717). The 22 user files naming screens-publish: 179 pass, 0 fail. Checks: format, architecture, coverage 80/80, ownership, words, run.mjs: 0 findings in my files. fixtures --list: accepted 6, the same six as before this round. Size (session_011NG1HnSXvNnQhtBzLy59au): test runs 4, module lines 3805. Record: build/jobs/T51/screens-publish.md, section 'Fix round 10, plan item 143'.
+
+## Fix round 10, R81 (B61, K5303; DEC-439, DEC-440, DEC-441; U481-U484)
+
+**Change (all in `bio-plane/src/screens-publish/`).**
+- `case-editor.mjs:79-90` (D-M2): on a drafted state the `casedraft` act is labelled `screen.case-editor.save`; a first case keeps "Prepare the draft". The fields `casedraft` sends (scope, statement, position reason, what is left out and why, what changed, the account) carry `typing: edited`, which sets `view.ui.unsaved`; the line `screen.case-editor.unsaved` (`data-unsaved`, `role="status"`) is drawn under the button while it is set, and `casedraft`'s `done` clears it (:398).
+- `case-editor.mjs:178-183` (D-M5): a case that lists nothing it leaves out draws `screen.case-editor.ack.none` above the reason field and `.ack.none.help` as its help; a case that lists something keeps `.ack.reason.help`.
+- `review-copy.mjs:96-98` (D-M4): once the file is made, `screen.review_copy.save.ready` (`data-export-says`, `role="status"`) is drawn before the button that hands it over.
+- `published-parts.mjs:147-153` (D-M6 (b)): each axis of `strength` that is not a letter draws `data-ungraded="<axis>"` with the axis's name and `screen.published.strength.undetermined` (state `undetermined`) or `.unrated` (any other), never nothing and never the served `detail`. `titled` (D-M1 (2), the served sentence's documents beside their ids) is removed: the served sentence is no longer drawn.
+- `published.mjs:90-92`, `:195-196` (D-M6 (c), (a)): a case with a declared bar draws `screen.published.bar.declared` (`data-bar-declared`); one without keeps public-read's `bar_detail` (K5270). The verification line is `screen.published.verify.detail` wherever the answer states a `verification` object.
+- `keys.mjs`: the nine keys added to the screens' lists.
+
+**Tests.** New `bio-plane/test/m/screens-publish/r81.test.mjs`, 7 tests naming R81, each with its control. Red before the change: 7 of 7 failed (the keys drew nothing or the served sentence); green after: 7 of 7. Three older assertions changed because R81 supersedes them: `public.test.mjs` R6 C5 a and C5 e (the served unrated and verification sentences are now keys), and `walk-d.test.mjs`'s D-M1 (2) test (titles beside ids in the served sentence) is retired with `titled`.
+
+**Suite.** screens-publish 309 tests, 307 pass, 0 fail, 2 todo (R35, K3717). The 22 outside files naming screens-publish: 179 pass, 0 fail. Checks (root /home/user/bio): format 0, architecture 0, coverage 81 of 81, ownership 0, words 0, setup-words 0, fixtures --list screens-publish 0 (accepted 6, the same six as before); run.mjs names none of this round's changes. Markers added: none.
+
+**Found outside my paths.** (1) The unsaved line is drawn when a text field of the drafted state is edited; a change to a role or position radio or the "nothing material left out" box does not draw it, because `cs.checks` carries no change hook (`interface-shell/browser.mjs:843`, `checks(id, legendKey, options, o)`; compare `field`'s `typing`, :785-786): interface-shell would add one (`typing` on `checks`, handed the chosen values) for screens-publish to use. (2) Still owed from the D-M6 report: the sentences with no key (`public-read/index.mjs:1293-1296`, `publication/worker.mjs:961`, `strength/arithmetic.mjs:139,172-177`) are no longer drawn by this module; nothing else of mine reads them.
+
+**Deferred.** None in my paths.
+
+Size (session_01RxWsaACDwtn8crGboLcaNB): test runs 9, module lines 3796 src
+
+## J56 · COMPLETE · re B61
+
+COMPLETE (re B61, R81, K5303). Drawn by key: case editor 'Save these details' (screen.case-editor.save) with the unsaved line on an edited text field, cleared by the save, and the nothing-left-out acknowledgement (ack.none, ack.none.help) (case-editor.mjs:79-90, :178-183, :398); review copy file-ready line (review-copy.mjs:96-98); public page: unrated/undetermined axis by key, never the served detail (published-parts.mjs:147-153, titled removed), verify.detail and bar.declared by key (published.mjs:90-92, :195-196); keys.mjs. Test r81.test.mjs 7 tests naming R81: 7 of 7 red before, green after. Three older assertions superseded by R81 changed (public.test.mjs C5 a, C5 e; walk-d D-M1 (2) retired with titled). Suite screens-publish 309 tests, 307 pass, 0 fail, 2 todo; 22 user files 179 pass. Checks at /home/user/bio: format 0, architecture 0, coverage 81/81, ownership 0, words 0, setup-words 0, fixtures --list 0 (accepted 6 unchanged), run.mjs no finding in my files. Markers added: none. REPORT outside my paths: the unsaved line is not drawn for a role/position radio or the nothing-left-out box, because cs.checks has no change hook (interface-shell/browser.mjs:843; field has typing at :785-786): interface-shell could add one. Size (session_01RxWsaACDwtn8crGboLcaNB): test runs 9, module lines 3796

@@ -1,6 +1,6 @@
 # BOB to screens-investigate (T51)
 
-**Read** · handled J45
+**Read** · handled J46
 
 ## B1 · START
 
@@ -517,3 +517,7 @@ CHANGE (K5304; plan item 148). Also in this job: MONEY #12 saw `bio-plane/test/m
 ## B54 · CHANGE
 
 CHANGE (K5305): WIZARD-SCRIPTS #29 (R53) is merged: the registry now carries Standard's five acts. Merge `origin/tranche/T51` into your branch (never a rebase) and re-run; your J45 block is cleared.
+
+## B55 · CHANGE
+
+CHANGE (K5308; plan item 149). Merge `origin/tranche/T51` (never a rebase): it holds STANDARDS #22 (R63 `bindings` on `standardRead`; R64 an adoption's act may be a dated event), UX-DESIGN's DEC-442 (U485: the binding row's words, `rows.mjs` regenerated) and your R66 (new, amends R64). Build R66 now: each binding row by kind in DEC-442's keys, `screen.standard.binds.unknown` exactly when `bindings` is empty, dated events offered as an adoption's act; red then green at the walker's case through the world's real `standard` read. Your J46 REPORT (Explore's `search` in the design registry): asked of UX-DESIGN (K5308); nothing for you until its answer. Then COMPLETE, after `mail done` through this entry.

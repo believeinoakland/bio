@@ -1,0 +1,1 @@
+CHANGE (K5310). Merge `origin/tranche/T51` (never a rebase): R134 now has a fourth re-point, `signerknown` on `queue` (credentials R83, merged; found by SCREENS-DAILY #28 J40: `checkScreens` refuses it, `index.mjs:197`; the registry's `queue` entry lists it nowhere). Same rule and test as the other three. Then COMPLETE as your START says.

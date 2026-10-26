@@ -13,6 +13,7 @@ import { BASIS_GRADES, parseFrontmatter, checkBundle } from "../../../src/record
 import { derivedId } from "../../../src/connection-grammar/index.mjs";
 import { INFO, INQ, REF, LEG_CASES, REGISTRY_VARIANTS, PUBLISHED, EARNED, legFm, inquiryDoc } from "./corpus.mjs";
 import { GOLDEN, NOW, run, plain } from "./fixture.mjs";
+const fieldKey = (m) => m.replace(/'[^']*'/g, "").split(/ is | names | must | has | states | carries | cannot | lowers | requires | rests | holds | applies | are |[(:,]/)[0].trim();
 
 const { checkInquiryBasis, INQUIRY_GRAMMARS, INQUIRY_GRAMMAR_CHECKS, BIAS_EFFECTS, biasAppliedFindings, flattenBiasApplied,
         readBiasApplied } = IG;
@@ -25,9 +26,9 @@ const GOOD = [{ statement: "funder-tilt", effect: "grade_lowered", from: "B", to
               { statement: "S 3", effect: "inference_refused" }];
 const FLAT = { bias_1_statement: "funder-tilt", bias_1_effect: "grade_lowered", bias_1_from: "B", bias_1_to: "C",
                bias_2_statement: "s2", bias_2_effect: "leg_excluded", bias_3_statement: "S 3", bias_3_effect: "inference_refused" };
-const shape = (xs) => xs.map((x) => [x.check, x.code ?? null, x.message.split(" ")[0]]);
+const shape = (xs) => xs.map((x) => [x.check, x.code ?? null, fieldKey(x.message)]);
 /* the findings biasAppliedFindings pushes for a value (a row or a list), and its answer, which must be their number */
-const judgeValue = (value, label = "basis[2]", opts) => {
+const judgeValue = (value, label = "basis leg 2", opts) => {
   const r = run((f) => biasAppliedFindings(label, value, f, opts));
   assert.equal(r.answer, r.findings.length, "answers the number of departures");
   return plain(r.findings);
@@ -37,7 +38,7 @@ const leg = (list, over = {}) => ({ target: INFO, role: "supports", ...flattenBi
 const one = (value, first) => {
   const got = judgeValue(value);
   assert.deepEqual(got.map((x) => [x.check, x.severity, x.code]), [["C-2.8", "error", CODE]], JSON.stringify(value));
-  assert.equal(got[0].message.split(" ")[0], first, got[0].message);
+  assert.equal(fieldKey(got[0].message), first, got[0].message);
   assert.ok(Array.isArray(got[0].repairs) && got[0].repairs.length >= 1);
   return got[0];
 };
@@ -54,8 +55,8 @@ test("R18 BIAS_EFFECTS is grade_lowered, leg_excluded, inference_refused, frozen
   for (const a of GOOD) { assert.deepEqual(judgeValue([a]), [], JSON.stringify(a)); assert.deepEqual(judgeValue(leg([a])), [], JSON.stringify(a)); }
   for (const v of [undefined, null, "", [], {}, { target: INFO, role: "supports" }]) assert.deepEqual(judgeValue(v), [], JSON.stringify(v));
   /* negative control: one item broken is no longer clean, and only that item is named */
-  assert.deepEqual(shape(judgeValue([GOOD[0], { ...GOOD[1], effect: "leg_dropped" }, GOOD[2]])), [["C-2.8", CODE, "basis[2].bias_applied[1].effect"]]);
-  assert.deepEqual(shape(judgeValue(leg(GOOD, { bias_2_effect: "leg_dropped" }))), [["C-2.8", CODE, "basis[2].bias_2_effect"]]);
+  assert.deepEqual(shape(judgeValue([GOOD[0], { ...GOOD[1], effect: "leg_dropped" }, GOOD[2]])), [["C-2.8", CODE, "the effect on application 2 of the bias applications on basis leg 2"]]);
+  assert.deepEqual(shape(judgeValue(leg(GOOD, { bias_2_effect: "leg_dropped" }))), [["C-2.8", CODE, "the effect on application 2 of basis leg 2"]]);
 });
 
 test("R18 the one encoding (K2479): flattenBiasApplied writes numbered scalar keys from 1 in list order, readBiasApplied reads them back in number order; absent writes {}, an unwritable value null; a non-row reads []", () => {
@@ -106,13 +107,13 @@ test("R18 statement: any non-empty string a scalar can carry is the statement's 
     assert.deepEqual(judgeValue(leg([{ statement: s, effect: "leg_excluded" }])), [], s);
   }
   for (const s of [undefined, null, "", "   ", "\t", 5, true, ["s"], { id: "s" }]) {
-    oneBoth([{ statement: s, effect: "leg_excluded" }], "basis[2].bias_applied[0].statement", "basis[2].bias_1_statement");
+    oneBoth([{ statement: s, effect: "leg_excluded" }], "the statement on application 1 of the bias applications on basis leg 2", "the statement on application 1 of basis leg 2");
     assert.match(judgeValue([{ statement: s, effect: "leg_excluded" }])[0].message, /is missing or empty/);
   }
-  one([{ effect: "leg_excluded" }], "basis[2].bias_applied[0].statement");
-  one({ bias_1_effect: "leg_excluded" }, "basis[2].bias_1_statement");
+  one([{ effect: "leg_excluded" }], "the statement on application 1 of the bias applications on basis leg 2");
+  one({ bias_1_effect: "leg_excluded" }, "the statement on application 1 of basis leg 2");
   for (const s of ["a".repeat(201), "\u{1F4DC}".repeat(201), 'say "x"', "it's", "a\\b", "a\nb", "a\rb", "a#b", "#1"]) {
-    oneBoth([{ statement: s, effect: "leg_excluded" }], "basis[2].bias_applied[0].statement", "basis[2].bias_1_statement");
+    oneBoth([{ statement: s, effect: "leg_excluded" }], "the statement on application 1 of the bias applications on basis leg 2", "the statement on application 1 of basis leg 2");
     assert.match(judgeValue([{ statement: s, effect: "leg_excluded" }])[0].message, /cannot be written in the record: .* at most 200 characters, with no quote, backslash, newline or #$/);
   }
 });
@@ -123,8 +124,8 @@ test("R18 effect: exactly one of the three; anything else (another lens's effect
     assert.deepEqual(judgeValue(leg([a])), [], e);
   }
   for (const e of ["scrutiny_raised", "GRADE_LOWERED", "grade-lowered", " leg_excluded", "", undefined, null, 3, ["leg_excluded"]]) {
-    oneBoth([{ statement: "s", effect: e, from: "Z" }], "basis[2].bias_applied[0].effect", "basis[2].bias_1_effect");
-    assert.match(judgeValue([{ statement: "s", effect: e }])[0].message, /is not one of: grade_lowered, leg_excluded, inference_refused$/);
+    oneBoth([{ statement: "s", effect: e, from: "Z" }], "the effect on application 1 of the bias applications on basis leg 2", "the effect on application 1 of basis leg 2");
+    assert.match(judgeValue([{ statement: "s", effect: e }])[0].message, /is not one of: grade lowered, leg excluded, inference refused$/);
   }
 });
 
@@ -135,48 +136,48 @@ test("R18 grade_lowered names from and to, each a grade letter, to weaker than f
     if (BASIS_GRADES.indexOf(to) > BASIS_GRADES.indexOf(from)) {
       assert.deepEqual(judgeValue(list), [], `${from}->${to}`); assert.deepEqual(judgeValue(leg(list)), [], `${from}->${to}`); clean++;
     } else {
-      oneBoth(list, "basis[2].bias_applied[0]", "basis[2].bias_1");
-      assert.match(judgeValue(leg(list))[0].message, new RegExp(`^basis\\[2\\]\\.bias_1 lowers the grade from ${from} to ${to}, which is not lower`));
+      oneBoth(list, "application 1 of the bias applications on basis leg 2", "application 1 of basis leg 2");
+      assert.match(judgeValue(leg(list))[0].message, new RegExp(`^application 1 of basis leg 2 lowers the grade from ${from} to ${to}, which is not lower`));
     }
   }
   assert.equal(clean, 6, "A>B, A>C, A>D, B>C, B>D, C>D");
   for (const bad of [undefined, null, "", "E", "b", "A+", 1]) {
-    oneBoth([{ statement: "s", effect: "grade_lowered", from: bad, to: "D" }], "basis[2].bias_applied[0].from", "basis[2].bias_1_from");
-    oneBoth([{ statement: "s", effect: "grade_lowered", from: "A", to: bad }], "basis[2].bias_applied[0].to", "basis[2].bias_1_to");
+    oneBoth([{ statement: "s", effect: "grade_lowered", from: bad, to: "D" }], "the grade it started from on application 1 of the bias applications on basis leg 2", "the grade it started from on application 1 of basis leg 2");
+    oneBoth([{ statement: "s", effect: "grade_lowered", from: "A", to: bad }], "the grade it moved to on application 1 of the bias applications on basis leg 2", "the grade it moved to on application 1 of basis leg 2");
   }
   assert.deepEqual(shape(judgeValue(leg([{ statement: "s", effect: "grade_lowered" }]))),
-    [["C-2.8", CODE, "basis[2].bias_1_from"], ["C-2.8", CODE, "basis[2].bias_1_to"]]);
+    [["C-2.8", CODE, "the grade it started from on application 1 of basis leg 2"], ["C-2.8", CODE, "the grade it moved to on application 1 of basis leg 2"]]);
 });
 
 test("R18 from or to on leg_excluded or inference_refused is one error each naming it; absent, null or '' is no letter", () => {
   for (const effect of ["leg_excluded", "inference_refused"]) {
-    oneBoth([{ statement: "s", effect, from: "B" }], "basis[2].bias_applied[0].from", "basis[2].bias_1_from");
-    oneBoth([{ statement: "s", effect, to: "C" }], "basis[2].bias_applied[0].to", "basis[2].bias_1_to");
+    oneBoth([{ statement: "s", effect, from: "B" }], "the grade it started from on application 1 of the bias applications on basis leg 2", "the grade it started from on application 1 of basis leg 2");
+    oneBoth([{ statement: "s", effect, to: "C" }], "the grade it moved to on application 1 of the bias applications on basis leg 2", "the grade it moved to on application 1 of basis leg 2");
     assert.deepEqual(shape(judgeValue(leg([{ statement: "s", effect, from: "B", to: "C" }]))),
-      [["C-2.8", CODE, "basis[2].bias_1_from"], ["C-2.8", CODE, "basis[2].bias_1_to"]]);
+      [["C-2.8", CODE, "the grade it started from on application 1 of basis leg 2"], ["C-2.8", CODE, "the grade it moved to on application 1 of basis leg 2"]]);
     assert.deepEqual(judgeValue(leg([{ statement: "s", effect, from: null, to: "" }])), [], effect);
   }
 });
 
 test("R18 the encoding's own departures on a row: a bias_applied key, a number not written 1, 2, … plainly, a field outside the four, and numbers not contiguous from 1 are one error each; a bias_ key outside the encoding's form is not this arm's", () => {
-  one({ ...FLAT, bias_applied: GOOD }, "basis[2].bias_applied");
-  one({ target: INFO, bias_applied: "[s, leg_excluded]" }, "basis[2].bias_applied");
-  assert.match(judgeValue({ bias_applied: GOOD })[0].message, /not how a bias application is written: .* bias_<n>_statement/);
+  one({ ...FLAT, bias_applied: GOOD }, "the bias applications on basis leg 2");
+  one({ target: INFO, bias_applied: "[s, leg_excluded]" }, "the bias applications on basis leg 2");
+  assert.match(judgeValue({ bias_applied: GOOD })[0].message, /are not written the way the record holds them: each one is recorded beside the leg/);
   for (const k of ["bias_0_statement", "bias_01_statement", "bias_00_effect"]) {
-    const x = one({ ...FLAT, [k]: "s" }, `basis[2].${k}`);
-    assert.match(x.message, /its number is written 1, 2, 3/);
+    const x = one({ ...FLAT, [k]: "s" }, "a numbered entry on basis leg 2");
+    assert.match(x.message, /its number is written as 1, 2, 3/);
   }
   for (const k of ["bias_1_reason", "bias_2_Statement", "bias_1_", "bias_3_statement_x"]) {
-    const x = one({ ...FLAT, [k]: "s" }, `basis[2].${k}`);
-    assert.match(x.message, /which writes statement, effect, from, to only$/);
+    const x = one({ ...FLAT, [k]: "s" }, "an entry on basis leg 2");
+    assert.match(x.message, /which records statement, effect, from, to only$/);
   }
   /* a gap: one error naming the missing numbers, and the applications present still judged by their own numbers */
   const gap = { bias_1_statement: "a", bias_1_effect: "leg_excluded", bias_3_statement: "c", bias_3_effect: "leg_excluded",
                 bias_5_statement: "", bias_5_effect: "leg_excluded" };
   const got = judgeValue(gap);
-  assert.deepEqual(shape(got), [["C-2.8", CODE, "basis[2]'s"], ["C-2.8", CODE, "basis[2].bias_5_statement"]]);
+  assert.deepEqual(shape(got), [["C-2.8", CODE, "basis leg 2's bias applications"], ["C-2.8", CODE, "the statement on application 5 of basis leg 2"]]);
   assert.match(got[0].message, /numbered up to 5 with 2, 4 missing/);
-  one({ bias_2_statement: "b", bias_2_effect: "leg_excluded" }, "basis[2]'s");
+  one({ bias_2_statement: "b", bias_2_effect: "leg_excluded" }, "basis leg 2's bias applications");
   /* not the encoding's: other bias_ keys (a conclusion row's bias_statements_sha), and keys with no number */
   for (const k of ["bias_statements_sha", "bias_note", "bias_x_statement", "biased", "bias__statement"])
     assert.deepEqual(judgeValue({ ...FLAT, [k]: "z" }), [], k);
@@ -187,27 +188,27 @@ test("R18 the caps: at most 32 applications, one error beyond; a statement appli
   assert.deepEqual(judgeValue(many(32)), []);
   assert.deepEqual(judgeValue(leg(many(32))), []);
   for (const v of [many(33), leg(many(33)), many(40)]) {
-    const x = one(v, "basis[2]");
+    const x = one(v, "basis leg 2");
     assert.match(x.message, /carries (33|40) bias applications: at most 32/);
   }
   const twice = [GOOD[1], GOOD[2], { ...GOOD[1] }];
-  oneBoth(twice, "basis[2].bias_applied[2]", "basis[2].bias_3");
-  assert.match(judgeValue(leg(twice))[0].message, /applies the statement s2 as leg_excluded a second time \(basis\[2\]\.bias_1 already does\)/);
+  oneBoth(twice, "application 3 of the bias applications on basis leg 2", "application 3 of basis leg 2");
+  assert.match(judgeValue(leg(twice))[0].message, /applies the statement s2 as leg excluded a second time \(application 1 of basis leg 2 already does\)/);
   assert.deepEqual(judgeValue(leg([GOOD[1], { statement: "s2", effect: "inference_refused" }])), [], "another effect of the same statement");
   assert.deepEqual(judgeValue(leg([GOOD[1], { statement: "S2", effect: "leg_excluded" }])), [], "statements are compared as stated");
   oneBoth([{ statement: "s", effect: "grade_lowered", from: "A", to: "B" }, { statement: "s", effect: "grade_lowered", from: "C", to: "D" }],
-    "basis[2].bias_applied[1]", "basis[2].bias_2");
+    "application 2 of the bias applications on basis leg 2", "application 2 of basis leg 2");
 });
 
 test("R18 a list handed in (flattenBiasApplied's input) is judged as such: not a list, an item not an object, a field outside the four are one error each, the rest of the list still judged", () => {
-  for (const v of ["funder-tilt", 5, true]) one(v, "basis[2].bias_applied");
+  for (const v of ["funder-tilt", 5, true]) one(v, "the bias applications on basis leg 2");
   for (const item of ["s", 5, null, ["s", "leg_excluded"], true])
     assert.deepEqual(shape(judgeValue([GOOD[1], item, { statement: "", effect: "leg_excluded" }])),
-      [["C-2.8", CODE, "basis[2].bias_applied[1]"], ["C-2.8", CODE, "basis[2].bias_applied[2].statement"]], JSON.stringify(item));
-  one([{ statement: "s", effect: "leg_excluded", reason: "x" }], "basis[2].bias_applied[0].reason");
+      [["C-2.8", CODE, "application 2 of the bias applications on basis leg 2"], ["C-2.8", CODE, "the statement on application 3 of the bias applications on basis leg 2"]], JSON.stringify(item));
+  one([{ statement: "s", effect: "leg_excluded", reason: "x" }], "application 1 of the bias applications on basis leg 2");
   assert.deepEqual(shape(judgeValue([{ statement: " ", effect: "grade_lowered", from: "C", to: "B", note: 1 }])), [
-    ["C-2.8", CODE, "basis[2].bias_applied[0].note"], ["C-2.8", CODE, "basis[2].bias_applied[0].statement"],
-    ["C-2.8", CODE, "basis[2].bias_applied[0]"]]);
+    ["C-2.8", CODE, "application 1 of the bias applications on basis leg 2"], ["C-2.8", CODE, "the statement on application 1 of the bias applications on basis leg 2"],
+    ["C-2.8", CODE, "application 1 of the bias applications on basis leg 2"]]);
 });
 
 test("R18 in checkInquiryBasis: a leg carrying well-formed applications is judged exactly as the same leg without them, for every leg case of the corpus under every registry variant (it moves no grade, and every other finding is the catalogue's)", () => {
@@ -237,18 +238,18 @@ test("R18 in checkInquiryBasis a malformed application is one C-2.8 BIAS_APPLICA
     for (const [l, refs] of kinds) {
       assert.deepEqual(ofLegs([{ target: INFO, role: "supports" }, { ...l, ...FLAT }], [INFO, ...refs], pub, earned), [], `${v} ${l.target}: clean`);
       const got = ofLegs([{ target: INFO, role: "supports" }, { ...l, ...bad }], [INFO, ...refs], pub, earned);
-      assert.deepEqual(shape(got), [["C-2.8", CODE, "basis[1].bias_1_statement"], ["C-2.8", CODE, "basis[1].bias_1_effect"]], `${v} ${l.target}: ${JSON.stringify(got)}`);
+      assert.deepEqual(shape(got), [["C-2.8", CODE, "the statement on application 1 of basis leg 1"], ["C-2.8", CODE, "the effect on application 1 of basis leg 1"]], `${v} ${l.target}: ${JSON.stringify(got)}`);
       assert.ok(got.every((x) => x.check === INQUIRY_GRAMMAR_CHECKS[x.code].check));
     }
   }
   /* beside the leg's other departures: after role and note, before the extent */
   assert.deepEqual(shape(ofLegs([{ target: INFO, role: "maybe", note: 5, extent_kind: "dom", bias_applied: "s" }], [INFO])), [
-    ["C-2.8", null, "basis[0].role"], ["C-2.8", null, "basis[0].note"], ["C-2.8", CODE, "basis[0].bias_applied"],
-    ["C-2.8", "CONTENT_EXTENT_NO_PRODUCER", "basis[0]"]]);
+    ["C-2.8", null, "the role of basis leg 0"], ["C-2.8", null, "the note on basis leg 0"], ["C-2.8", CODE, "the bias applications on basis leg 0"],
+    ["C-2.8", "CONTENT_EXTENT_NO_PRODUCER", "basis leg 0"]]);
   assert.deepEqual(shape(ofLegs([{ target: CALC, role: "maybe", grade: "B", bias_1_statement: "s" }], [])), [
-    ["C-2.8", "CALCULATION_LEG_MALFORMED", "basis[0].grade"], ["C-2.8", null, "basis[0].role"], ["C-2.8", CODE, "basis[0].bias_1_effect"]]);
+    ["C-2.8", "CALCULATION_LEG_MALFORMED", "the grade on basis leg 0"], ["C-2.8", null, "the role of basis leg 0"], ["C-2.8", CODE, "the effect on application 1 of basis leg 0"]]);
   /* a lead or a theme is refused by name before any other complaint, the applications included */
-  assert.deepEqual(shape(ofLegs([{ target: "LEAD-2026-0101-abc", role: "supports", ...bad }], [])), [["C-54.1", "LEAD_NOT_EVIDENCE", "basis[0].target"]]);
+  assert.deepEqual(shape(ofLegs([{ target: "LEAD-2026-0101-abc", role: "supports", ...bad }], [])), [["C-54.1", "LEAD_NOT_EVIDENCE", "the target on basis leg 0"]]);
   assert.deepEqual(ofLegs([{ target: INFO, role: "supports", theme: "x", ...bad }], [INFO]).map((x) => x.check), ["C-81.1"]);
   /* negative control: the same keys at the document's top level are not a leg's, and are not judged here */
   assert.deepEqual(plain(run((f) => checkInquiryBasis({ object_type: "inquiry", references: [{ target: INFO }], basis: [{ target: INFO, role: "supports" }],
@@ -260,7 +261,7 @@ test("R18 through this module's three slot arms (INQUIRY_GRAMMARS): a concluded 
     recheck_triggers: [{ text: "x", description: "y", date: "2026-10-09" }], references: [{ target: INFO, rel: "cites", status: "confirmed" }], basis });
   const mine = (fm) => shape(plain(run((f) => { for (const g of INQUIRY_GRAMMARS) g.arm({ fm, publishedRegistry: PUBLISHED, earnedRegistry: EARNED }, f); }).findings));
   assert.deepEqual(mine(doc([leg(GOOD), { target: CALC, role: "cuts_against", ...flattenBiasApplied([GOOD[1]]) }])), []);
-  assert.deepEqual(mine(doc([leg([{ statement: "s", effect: "grade_lowered", from: "D", to: "A" }])])), [["C-2.8", CODE, "basis[0].bias_1"]]);
+  assert.deepEqual(mine(doc([leg([{ statement: "s", effect: "grade_lowered", from: "D", to: "A" }])])), [["C-2.8", CODE, "application 1 of basis leg 0"]]);
 });
 
 test("R18 the shape at another grain: effects and checkId are the caller's (basis-versions R48's conclusion row: inference_refused, scrutiny_raised, beside its bias_statements_sha), the code and its row this module's", () => {
@@ -269,11 +270,11 @@ test("R18 the shape at another grain: effects and checkId are the caller's (basi
     ...flattenBiasApplied([{ statement: "s", effect: "scrutiny_raised" }, { statement: "t", effect: "inference_refused" }]) };
   assert.deepEqual(judgeValue(row, "conclusion", R48), []);
   const got = judgeValue({ ...row, bias_3_statement: "u", bias_3_effect: "grade_lowered", bias_3_from: "A", bias_3_to: "B" }, "conclusion", R48);
-  assert.deepEqual(shape(got), [["C-25.15", CODE, "conclusion.bias_3_effect"]]);
-  assert.match(got[0].message, /is not one of: inference_refused, scrutiny_raised$/);
+  assert.deepEqual(shape(got), [["C-25.15", CODE, "the effect on application 3 of conclusion"]]);
+  assert.match(got[0].message, /is not one of: inference refused, scrutiny raised$/);
   /* negative control: at a leg, with the defaults, scrutiny_raised is no effect */
-  one(leg([{ statement: "s", effect: "scrutiny_raised" }]), "basis[2].bias_1_effect");
-  assert.deepEqual(judgeValue(leg([{ statement: "s", effect: "grade_lowered", from: "A", to: "B" }]), "basis[2]", {}), [], "an empty options object is the defaults");
+  one(leg([{ statement: "s", effect: "scrutiny_raised" }]), "the effect on application 1 of basis leg 2");
+  assert.deepEqual(judgeValue(leg([{ statement: "s", effect: "grade_lowered", from: "A", to: "B" }]), "basis leg 2", {}), [], "an empty options object is the defaults");
 });
 
 test("R18 the row: BIAS_APPLICATION_MALFORMED is {check: C-2.8, where, translation}, the where naming the one site that mints it, the translation member text naming no place", () => {
@@ -299,7 +300,7 @@ test("R18 R9 the arm is pure: it reads no record, lens, clock or network, change
       basis: [leg([...GOOD, { statement: "", effect: "grade_lowered", from: "C", to: "C" }])] });
     const a = plain(run((f) => checkInquiryBasis(fm, f, null, null)).findings);
     assert.deepEqual(a, plain(run((f) => checkInquiryBasis(fm, f, null, null)).findings));
-    assert.deepEqual(shape(a), [["C-2.8", CODE, "basis[0].bias_4_statement"], ["C-2.8", CODE, "basis[0].bias_4"]]);
+    assert.deepEqual(shape(a), [["C-2.8", CODE, "the statement on application 4 of basis leg 0"], ["C-2.8", CODE, "application 4 of basis leg 0"]]);
     const list = freeze(structuredClone(GOOD));
     assert.deepEqual(readBiasApplied(freeze(flattenBiasApplied(list))), GOOD);
     const hostile = Object.create(null); hostile.statement = "s"; hostile.effect = "leg_excluded";
