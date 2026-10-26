@@ -710,3 +710,7 @@ Suites: screens-daily 320/320; find-in + find-in-forms 23/23; users (control-pla
 REPORT (outside my paths): screens-settings/group.mjs:162 still draws form(0, null, null) with no active profile holding a time_zone fact, and :301 sends no path, so Settings > Your team cannot record a zone for a team with no profile. The settings reader should take @team/time_zone as find-in now does; local-facts factconfirm accepts it.
 
 Size (session_01Xb5vaVT3GYT19KYpW2voTC): test runs 7, module lines 4355
+
+## J37 · QUESTION
+
+The label by localize cannot be done in my module: setup-words R13 and checks/words.mjs:473 fail any localize call in a drawn-screen module (screens-*), and finder-states.mjs is a self-contained serialized part. My best reading (the walker's own fallback, causes-rewalk §5): the act borrows the existing word act.search.label.finder (Search), carrying data-widen = the terms joined by OR; the design owes the sentence (K5275). Carrying on with that; if you want a new key, the design stream must write the row first and I will switch to it by key.
