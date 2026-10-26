@@ -32,6 +32,8 @@ export const WORLD_AI_SECRET = "world-account-seal-secret-3b9d71c4e0a5f628";
 export async function storeWorld({ env = {}, ai = false, deliver = null, releaseKeys = null, ...opts } = {}) {
   const name = WORLD_GROUP;
   const holder = {};
+  /* the world hands the owed-work ledger its own delivery (`worldDelivery`), as control-plane hands its `deliverOwedRender` (a later module) */
+  // fixtures-own: harness the world's delivery, made of earlier modules' real acts (the alarm's filing of an owed fetch)
   const world = await assemblyWorld({ ...opts, ...(deliver === true ? { deliver: (a) => worldDelivery(holder.world)(a) } : deliver ? { deliver } : {}),
     ...(releaseKeys === true ? { releaseKeys: WORLD_RELEASE_KEYS } : releaseKeys ? { releaseKeys } : {}),
     env: { ...(releaseKeys === true ? { VERSION: WORLD_RUNNING_VERSION } : {}), ...WORLD_TOKENS, ...(ai ? { ACCOUNT_SEAL_SECRET: WORLD_AI_SECRET, INSTANCE_NAME: name, CIVICSMITH_TEST_INSTANCE: name } : {}), ...env } });

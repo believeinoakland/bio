@@ -496,7 +496,7 @@ export function worldAnswers(op) {
 /* ---- R16: real sign-ins ---- */
 
 export const resultOf = (a) => (a && a.json && a.json.result !== undefined ? a.json.result : a && a.json);
-export const refusedAct = (op, a) => new Error(`storeWorld: ${op} was refused: ${JSON.stringify(a && (a.json ?? a.type)).slice(0, 400)}`);
+export const refusedAct = (op, a) => Object.assign(new Error(`storeWorld: ${op} was refused: ${JSON.stringify(a && (a.json ?? a.type)).slice(0, 400)}`), { answer: a });
 const passwordOf = (handle) => `${handle}-world-passphrase`;
 
 /** R16: `signIn(world, handle, {admin?, capabilities?, device?})` → `{handle, member, token, password, session, act, read}`, by the real acts:

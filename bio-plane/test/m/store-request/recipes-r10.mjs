@@ -5,7 +5,7 @@ import { OWED_SESSION_TTL_MS } from "../../../src/acquisition/index.mjs";
 import { RELEASE_NOTICE_ADDRESS } from "../../../src/setup.mjs";
 import { releaseNoticeStatement, NS_RELEASE_NOTICE } from "../../../src/sshsig.mjs";
 import { signSshsig, signerPublicLine } from "../../../scripts/sign-sshsig.mjs";
-import { signIn, fileDocument } from "./door.mjs";
+import { signIn, fileDocument, resultOf } from "./door.mjs";
 
 /** The release key a world made with `releaseKeys: true` verifies a notice against (the private half is a test's, `BIOKEY-RAW1` seed of 32 bytes). */
 export const WORLD_RELEASE_KEY = `BIOKEY-RAW1.bio-release.${Buffer.from(new Uint8Array(32).map((_, i) => (i * 41 + 9) % 256)).toString("base64")}`;
@@ -15,17 +15,17 @@ export const WORLD_RUNNING_VERSION = "0.84.0";
 
 /** The delivery a world made with `deliver: true` hands the owed-work ledger, as control-plane's `deliverOwedRender` files an owed fetch (its document promoted at `collected` by the
  *  session's opener, under the project the session names; the fetch recorded done for the notice that tells her): from the earlier modules' real acts. An owed fetch whose bytes the record
- *  already holds is linked, not filed again. A session that is gone or has no opener is refused as the real one refuses. */
+ *  already holds is linked, not filed again. The owner's refusal of the promotion is handed back as it answered; a state no real alarm hands it (no document, no session, no opener) throws. */
 export function worldDelivery(world) {
   return async ({ answer, session } = {}) => {
     const doc = answer && typeof answer === "object" ? answer.document : null;
     const sha = doc && doc.capture && doc.capture.sha256;
-    if (typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha)) return { ok: false, reason: "NO_RENDERED_DOCUMENT" };
+    if (typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha)) throw new Error("storeWorld: the delivery was handed no document");
     const cap = captureOf(world.ctx);
     const ld = cap.loadCaptureSession({ session });
-    if (!ld || !ld.found) return { ok: false, reason: "NO_SUCH_SESSION" };
+    if (!ld || !ld.found) throw new Error(`storeWorld: the delivery was handed a session that is gone (${session})`);
     const opener = ld.state && typeof ld.state.opened_by === "string" ? ld.state.opened_by : "";
-    if (!opener) return { ok: false, reason: "NO_OPENER" };
+    if (!opener) throw new Error(`storeWorld: the session ${session} has no opener`);
     const member = opener.startsWith("member:") ? opener.slice("member:".length) : opener;
     const project = ld.state && typeof ld.state.project === "string" ? ld.state.project.trim() : "";
     const done = async (document, filed) => {
@@ -43,8 +43,8 @@ export function worldDelivery(world) {
       await done(filed.bundle, project);
       return { ok: true, bundleId: filed.bundle };
     } catch (e) {
-      const m = /"reason":"([A-Z_]+)"/.exec(String(e && e.message));
-      return { ok: false, reason: m ? m[1] : "PROMOTE_REFUSED" };
+      if (e && e.answer) return { ...resultOf(e.answer), ok: false };   /* the owner's own refusal of the promotion, as it answered it */
+      throw e;
     }
   };
 }
