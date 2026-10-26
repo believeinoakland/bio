@@ -406,3 +406,17 @@ T51 K5222 (fix round 10, plan item 105): citeimported's refusal published beside
 **Generated artifacts.** None made stale: the change is in test files only; `bio-plane/dist/bio-plane.bundled.mjs` bundles src, not tests.
 
 Size (session_01XhXogLsaNXvRTwSopMot47): test runs 5, module lines 7051.
+
+## J20 · COMPLETE
+
+T51 CHANGE B19 (K5226): merged `origin/tranche/T51` (`fb0f6cd668`, STORE-ASSEMBLY #5) into the job branch as a merge commit, no rebase. The merge changed none of this module's paths.
+
+**Re-run after the merge.**
+- `test/m/case-import/*.test.mjs`: 177 pass, 0 fail.
+- `format.mjs`: 178 modules, 0 failures. `architecture.mjs case-import`: 0 failures. `coverage.mjs case-import`: 33 of 33 live ids named, 0 failures.
+- `fixtures.mjs bio case-import --list`: 0 failures.
+- `ownership.mjs case-import tranche/T51 job/T51/case-import`: 3 files, 0 failures. Against the merge base with HEAD: 3 files, 0 failures.
+
+**Changes.** None to the module since the last COMPLETE (ca7beae0c8 fixture and test; the merge commit is the only new commit). Pushed to `origin/job/T51/case-import`. The earlier figures in J19 (the failing-first red then green, the 684 and 60 user-suite counts, and the other checks) still hold.
+
+Size (session_01XhXogLsaNXvRTwSopMot47): test runs 6, module lines 7051.
