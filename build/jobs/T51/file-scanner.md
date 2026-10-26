@@ -1,6 +1,6 @@
 # file-scanner (T51)
 
-**Status** · session_012m6NnUGLKSBYVyTshxCY6U · depth 2 · RUNNING until 2026-10-26T07:59:04Z (docker build renderer image) · handled B21
+**Status** · session_012m6NnUGLKSBYVyTshxCY6U · depth 2 · NEEDS BOB · handled B21
 
 ## J1 · QUESTION
 
