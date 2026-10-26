@@ -49,6 +49,9 @@ function render(cs, view) {
   const doc = proj && proj.state === "ok" ? P.front(proj.value["bundle.md"]) : null;
   const out = [cs.title(cs.w("screen.timeline.name"), { thing: { kind: "project", facts: [doc && doc.title ? doc.title : id] } })];
   /* R33 (2), (3): one matter the project follows, and one progression, each drawn by the module's parts */
+  /* K5304: a matter's or a progression's page is not the Timeline's record form while its project has not answered: drawing that form first asked a
+     document's words (a passage picker's read) whenever the documents answered before the project, so the page's reads depended on which came first */
+  if ((mode === "matter" || mode === "progression") && !(proj && proj.state === "ok")) return out.join("") + cs.state("project", view, () => "");
   if (proj && proj.state === "ok" && mode === "matter") return out.join("") + P.matter(cs, view, id);
   if (proj && proj.state === "ok" && mode === "progression") return out.join("") + P.progressionDef(cs, view, id);
   /* an event's date, as precise as its source states it: a day, a month marked "month known", "on or before" */
