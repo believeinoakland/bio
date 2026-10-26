@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J60
+**Read** · handled J62
 
 ## B1 · START
 
