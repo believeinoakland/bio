@@ -737,3 +737,7 @@ Merged `tranche/T51` first. **Half 1 done: Finder's passage-route widen.** `find
 **Test, red then green.** `round10.test.mjs` "R107 (F-B10 (a), DEC-439)": passages-only widen (count, act label, pressed it asks `ordinance OR zzzqqq`); controls: documents-only and both-routes cases unchanged. Red: no passage count drawn; green after the change.
 **Half 2 waiting.** The `signerknown` act on `signer-self-registered` needs the op declared (`credentials` R83, `queue` R96, jobs running): `OPS` has no `signerknown` yet (grep of `src`). I wait for BOB's CHANGE, then draw it with the item's disposition and label `queue.signer-self-registered.known` and test it red then green through the real store.
 Suite 322 of 322 (screens-daily); `checks/run.mjs`: format 0, architecture 0, coverage (screens-daily) 105 of 105, words 0, fixtures 89 failures none in screens-daily files; ownership 0.
+
+## J39 · REPORT
+
+R107 half 1 done and pushed (2c8866c625): Finder's passage-route widen draws screen.finder.widen.passages {n} and act.search.label.finder.widen (finder-states.mjs:221-232); test red then green; screens-daily 322/322; checks 0 for my files. Half 2 (the signerknown act on signer-self-registered) waits: OPS has no signerknown yet (credentials R83, queue R96 running). Send a CHANGE when they merged.
