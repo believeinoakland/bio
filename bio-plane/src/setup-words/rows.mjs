@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19246 design words, 1157 protected; SHA-256
-   641148afcaa459ad607bdaebe5a1cd86dbcccbd88254a0b40dbf295751bcf83b) followed by 7433 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   641148afcaa459ad607bdaebe5a1cd86dbcccbd88254a0b40dbf295751bcf83b) followed by 7438 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -19524,6 +19524,7 @@ export const WORD_ROWS = Object.freeze([
   ["action-plans.checks.a_judgement_names_a_scenario","A judgement names a scenario of the plan, one of its phases that has a checkpoint, met or not_met, and a note of up to 500 characters. Nothing was written.",null,null,false,"code"],
   ["action-plans.checks.a_phase_starts_after_or","A phase starts after, or a judgement leads to, a phase of the same scenario, or a matter the plan is about. The one named is neither. Nothing was written.",null,null,false,"code"],
   ["action-plans.checks.an_addressee_is_an_office","An addressee is an office by its role and body, a reporter or outlet, an organisation or another civic organization by role and organisation, or a described audience. It is never a private individual. Nothing was written.",null,null,false,"code"],
+  ["action-plans.checks.an_addressee_names_its_role_and_organisation","An addressee needs its role, and its organisation unless it is an office. Say which part is missing. Nothing was written.",null,null,false,"code"],
   ["action-plans.checks.whether_a_checkpoints_condition_was","Whether a checkpoint's condition was met is the team's own judgement. An assistant may not make it. Nothing was written.",null,null,false,"code"],
   ["action-plans.declared.checkpointrecord","scenario-directed: a member judges a phase's checkpoint met or not met, keyed by (plan, scenario, phase); judged once",null,null,false,"code"],
   ["action-plans.declared.optionadd","plan-directed: a member adds an option to a plan, keyed by plan; writes an option row",null,null,false,"code"],
@@ -19540,6 +19541,7 @@ export const WORD_ROWS = Object.freeze([
   ["action-plans.index.a_proposal_names_who_made","a proposal names who made it, and this one came with no stamped caller. Nothing was written.",null,null,false,"code"],
   ["action-plans.index.a_source_named_is_not","a source named is not a finding, determination, standard, consequence, plan or option this caller can see. Nothing was written.",null,null,false,"code"],
   ["action-plans.index.action_plans_provider_was_not","action-plans: {provider} was not given",null,null,false,"code"],
+  ["action-plans.index.addressee_left_part_empty","an addressee's {empty} was left empty; state it. Nothing was written.",null,null,false,"code"],
   ["action-plans.index.id_goes_outside_the_team","{id} goes outside the team before the infraction it serves is documented; say why it goes first, in 1 to {REASON_MAX} characters with no quotation mark, backslash or line break. Nothing was written.",null,null,false,"code"],
   ["action-plans.index.matter_i_is_already_in","matter {i} is already in the open plan {plan_id} of this project. Nothing was written.",null,null,false,"code"],
   ["action-plans.index.matter_is_neither","matter {i} is neither {kind: inquiry, inquiry} nor {kind: outcome, determination, standard}. Nothing was written.",null,null,false,"code"],
@@ -19552,6 +19554,7 @@ export const WORD_ROWS = Object.freeze([
   ["action-plans.index.run_string_is_not_a","run {String} is not a planning run of this plan. Nothing was written.",null,null,false,"code"],
   ["action-plans.index.that_checkpoint_was_judged_judged","that checkpoint was judged {judged} by {author}. Nothing was written.",null,null,false,"code"],
   ["action-plans.index.the_plan_holds_no_scenario","the plan holds no scenario {String}. Nothing was written.",null,null,false,"code"],
+  ["action-plans.index.tier_stated_by_the_option","the tier option {option} of plan {plan} states",null,null,false,"code"],
   ["action-plans.says.phase_leads_here_not_led","the phase that leads here has not led here yet, so no occurrence is read",null,null,false,"code"],
   ["action-plans.why.suspected_matter_concluded","a suspected matter: a question concluded in this project, not yet a determination",null,null,false,"code"],
   ["action-producers.index.a_checkpoint_come_due_is","a checkpoint come due is action-plans' fact (its R17): read here at the read's instant and never stored. It goes to the member who last took it up, else the member who set the scenario's current version, each while an active member who may see the plan, else the project's active owners, else the administrators, and leaves when a member judges it or closes the plan.",null,null,false,"code"],
@@ -22862,6 +22865,8 @@ export const WORD_ROWS = Object.freeze([
   ["explore.declared.explorepreset","read: one preset walk — chain, flows, relations, a path between two nodes, overlaps — or the presets; writes nothing",null,null,false,"code"],
   ["explore.declared.exploreverify","read: whether a derived connection re-derives to its id, and which hops it rests on; writes nothing",null,null,false,"code"],
   ["explore.graph.rings_is_one_or_two","rings is 1 or 2: the graph shows the records one or two steps from the centre",null,null,false,"code"],
+  ["explore.label.event","{kind} · {date}",null,null,false,"code"],
+  ["explore.label.event_undated","{kind} · undated",null,null,false,"code"],
   ["explore.ops.a_preset_is_one_of","a preset is one of {PRESET_NAMES}",null,null,false,"code"],
   ["explore.presets.no_to_named","no to is named: a path between two records names both",null,null,false,"code"],
   ["explore.presets.others_held","with {held} others held{settled}",null,null,false,"code"],
