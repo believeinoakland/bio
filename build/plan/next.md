@@ -56,3 +56,4 @@
 - store-assembly: a world's network double bound per world (STORE-REQUEST #8 J21 (2)).
 - contradiction publishes a member-flagged candidate (`flagged_by`) in `candidatesFor`'s answer, and screens-inquiry `t51-fix11-b89.test.mjs`'s `answer(c)` takes it (SCREENS-INQUIRY #34 J64; K5282).
 - control-plane: a through-the-door case, a team with no place profile states its zone in Settings and Share for review is no longer refused (SCREENS-SETTINGS #23 J47; K5287); the live re-walk checks it meanwhile.
+- following: `checks.test.mjs:20` imports `src/plane/register.mjs`, deleted at `51f57fa193` (plane Wave B); re-point it (JURISDICTIONS #20 J12; K5289).
