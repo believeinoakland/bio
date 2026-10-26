@@ -336,6 +336,7 @@ export const PARTS = Object.freeze({
       /* R61 (4): evidence is a capture (`capture_sha`, or a source spelt `capture:<64 hex>`) drawn as a reference to the document, as Explore's chains draw it (`explore.mjs`), never its fingerprint */
       const ev = (Array.isArray(s.evidence) ? s.evidence : []).map((e) => {
         const spelt = /^capture:([0-9a-f]{64})$/.exec(String(e.source || ""));
+        if (/^testimony:/.test(String(e.source || ""))) return `<span class="mk-small">${cs.w("screen.explore.testimony")}</span>`;
         return e.capture_sha || spelt ? cs.ref("capture", e.capture_sha || spelt[1], cs.w(o.words.cited), []) : e.source ? cs.esc(String(e.source)) : "";
       }).filter(Boolean).join(" ");
       const letter = s.grade && /^[A-D]$/.test(s.grade.assertion || "") ? cs.grade("connection", s.grade.assertion) : "";

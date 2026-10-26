@@ -87,8 +87,9 @@ test("R4 C8 (words) Money, over the world: a fiscal year the team's profile cann
   assert.ok(typeof answer.detail === "string" && answer.detail.length > 10, "with its reason");
   const slot = main(p).querySelector('[data-gap="refused"]');
   assert.ok(slot, "the refusal is drawn beside the act");
-  assert.ok(slot.textContent.includes(word("refusal.BAD_VALIDITY")), "in the design's held sentence for dates that cannot be recorded");
-  assert.ok(slot.textContent.includes(answer.detail), "and the reason the store gives");
+  /* R61 (1) (K5276): the owner's own reason alone; people-facts' "left empty when the passage does not state it" says the opposite of money's rule */
+  assert.ok(slot.textContent.includes(answer.detail), "the reason the store gives");
+  assert.ok(!slot.textContent.includes(word("refusal.BAD_VALIDITY")), "and not people-facts' sentence for a bound left empty");
   assert.ok(!main(p).textContent.includes(word("refusal.BAD_PERIOD")), "never the sentence of a follow's days (following's code)");
 });
 

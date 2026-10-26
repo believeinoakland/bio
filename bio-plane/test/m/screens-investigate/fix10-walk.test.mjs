@@ -221,3 +221,35 @@ test("R61 (5) Due date: a refusal that carries no deadline draws no sentence poi
   assert.ok(!said.textContent.includes("box below") && !said.textContent.includes(word("refusal.NO_SUCH_RULE")), "no sentence points to a box");
   assert.ok(said.textContent.trim().length > 0, "it says something");
 });
+
+/* ---- B47 (K5276): the graph's `testimony:` source, and the owner's own reason for a period it cannot read ---- */
+
+test("R61 (4) Connect: a step whose evidence is a `testimony:` source is drawn by its word (a member's own testimony), never as the source's spelling; control: another source is drawn as written", async () => {
+  const { world, me } = await inWorld();
+  await world.recipes.profiles(me, ["oakland-alameda"]);
+  const entity = async (kind, label) => (await me.act("entitycreate", { body: { kind, label, note: "Named in the minutes." } })).entity_id;
+  const chen = await entity("person", "L. Chen"), alvarez = await entity("person", "R. Alvarez");
+  const roster = await world.recipes.hold(me, "Roster.txt", "L. Chen and R. Alvarez work together.");
+  await me.act("recordline", { body: { kind: "associate_of", from: chen, to: alvarez, valid: { from: "2020-01-01", to: "2030-01-01" }, basis: { captureSha: roster.sha, extent: DOC }, reason: "The roster says so." } });
+  const sourced = (src) => changing(world, me, "exploregraph", (r) => ({ ...r, steps: r.steps.map((s) => ({ ...s, evidence: [{ source: src }] })) }));
+  const p = await openAs(world, me, "/app/explore/" + chen, { plane: { exploregraph: sourced("testimony:TST-2026-0001") } });
+  const g = main(p).querySelector(".mk-graph");
+  assert.ok(g.textContent.includes(word("screen.explore.testimony")), "drawn by its word");
+  assert.ok(!g.textContent.includes("testimony:") && !g.textContent.includes("TST-2026-0001"), "not as the source's spelling");
+  const q = await openAs(world, me, "/app/explore/" + chen, { plane: { exploregraph: sourced("the minutes of June") } });
+  assert.ok(main(q).querySelector(".mk-graph").textContent.includes("the minutes of June"), "control: drawn as written");
+});
+
+test("R61 (1) Money: a period the owner cannot read (no time zone held, a start given) draws the owner's own reason alone, never refusal.BAD_VALIDITY", async () => {
+  const W = await trailWorld({ place: false });
+  const p = await openAs(W.world, W.me, "/app/money/" + W.trail);
+  await readFigure(p, W.lease, { "mf-from-date": "2021-07-01", "mf-to-date": "2022-06-30" });
+  assert.equal(p.byOp("recordfact").length, 1, "a start is sent");
+  const owner = await refused(W.world, W.me, "recordfact", p.byOp("recordfact")[0].body);
+  assert.equal(owner.reason || owner.code, "MONEY_BAD_PERIOD", "the owner's own refusal");
+  assert.ok(typeof owner.detail === "string" && owner.detail.trim(), "with its reason");
+  const said = main(p).querySelector('[data-gap="refused"]');
+  assert.ok(said, "drawn beside the act");
+  assert.ok(said.textContent.includes(owner.detail.trim()), "the owner's reason");
+  assert.ok(!said.textContent.includes(word("refusal.BAD_VALIDITY")), "not people-facts' sentence");
+});
