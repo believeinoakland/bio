@@ -448,3 +448,45 @@ COMPLETE. Job B23 (fix round 10, PUBLIC-READ #37) done.
 **Branch:** merged `origin/tranche/T51` into `job/T51/instance-setup` (52 commits, a merge, never a rebase) before starting.
 
 Size (session_01FGLWM6793qNWhTtMEbtTSc): test runs 1, module lines 1
+
+## J30 · COMPLETE · re B24
+
+Fix round 10 (K5208): `groupIdentityAnswer()` published. The fixture is the module's real `groupidentity` answer; its test is red when the fixture is broken and green when restored.
+
+**Changed (file:line).**
+- `bio-plane/test/m/instance-setup/fixtures.mjs:34-38` `groupIdentityAnswer()` (new, beside `instanceGroupAnswer`'s and `selftestAnswer`'s neighbours): boots a world per call (INSTANCE_NAME `river-town`, `now` fixed at 2026-10-10T08:00Z), records the display name "River Town" by the admin, and answers `w.m.groupIdentity()`. Nothing is stored between calls.
+- `bio-plane/test/m/instance-setup/fixtures.test.mjs:7` import of `groupIdentityAnswer`; `:39` test "fixture groupIdentityAnswer (R11): ..." (new). It checks the recorded name, no domain claimed, `logo` false, empty `domain_checks`, no `detail`, the same answer on a second call, and a new object each call.
+- No product code changed (`bio-plane/src` lines unchanged, 3880).
+
+**Answer shape for interface-shell R24 (`session.test.mjs:207-208`).** `{ok: true, group: "river-town", display_name: "River Town", domain: null, domain_verified_at: null, logo: false, display_name_recorded: "River Town", display_name_history, domain_claim: null, domain_history, domain_checks: [], domain_checks_limit, domain_checks_truncated: false, ...declared stake}`. The `groupIdentity()` shape, not the public one.
+
+**Failing-first, red then green.**
+- Green with the real fixture: `fixtures.test.mjs` 8 pass, 0 fail.
+- Broken once, the fixture returning the hand-built `{ok, group, display_name}`: the new test fails (1 fail, 7 pass). Red.
+- Restored to `w.m.groupIdentity()`: 8 pass, 0 fail. Green.
+
+**Met ids.** None claimed. The test names R11, which is the id the answer is taken from; BOB decides marks.
+
+**Markers.** `fixtures-own` / `fixtures-generic` added: none.
+
+**Suite counts.**
+- `bio-plane/test/m/instance-setup/*.test.mjs`: 250 tests, 250 pass, 0 fail, 0 cancelled.
+- `newgroup/test/steps/*.test.mjs` (impact: installer-steps): 123 tests, 121 pass, 0 fail, 2 todo (not failures, not mine).
+- `newgroup/test/*.test.mjs` and `bio-plane/test/system/newgroup-bundle-fresh.test.mjs` (impact: installer): 13 failing tests, the same names on the tranche tip (`origin/tranche/T51`, 9ec4804160, run in a worktree with the same ignored `node_modules` linked) and on this branch. The system test fails on the tranche tip too. Not caused by this round; they fail at release upload (R8, R20, R33, R55, R61, R71, R11 fleet).
+
+**Checks** (absolute root `/home/user/bio`, on HEAD `f6de5f0e26`):
+- `checks/format.mjs`: 178 modules, 0 failures.
+- `checks/architecture.mjs instance-setup`: 36 product files, 0 failures.
+- `checks/coverage.mjs instance-setup`: 78 of 78 live ids named by a test, 0 failures.
+- `checks/ownership.mjs instance-setup 9ec4804160 HEAD`: 3 files (the two fixture files and my record), 0 failures.
+- `checks/fixtures.mjs /home/user/bio instance-setup --list`: 0 failures; accepted 2 (`fixture.mjs:190`, `:201`, store-replies, store-door later), unchanged.
+- `checks/run.mjs /home/user/bio`: words 19247, identical to the tranche tip (19247); 15 failures, none in my files. Four name instance-setup as the provider of a hand-built answer in other modules, outside my paths (reported below).
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 3 of 178 modules (instance-setup 1/31, installer-steps 1/9, installer 12/23); run above.
+
+**Reported, not in my paths (REPORT).** Four other modules hand-build an answer that instance-setup owns, flagged by the op-table: `interface-shell/harness.mjs:88-89` (`groupidentity`, `interfacewords`), `screens-inquiry/fixtures.mjs:120` (`groupidentity`), `screens-settings/updates.test.mjs:136` (`updatestart`). The `groupidentity` ones are the cases the new fixture is for; interface-shell R24 and screens-inquiry take `groupIdentityAnswer()` in their own jobs.
+
+**Deferred.** None.
+
+**Tranche.** Branch fast-forwarded to `origin/job/T51/instance-setup`, and `origin/tranche/T51` merged in before `mail start` (no rebase).
+
+Size (session_01RYdDdffUXFJqk92FYWoDpE): test runs 6, module lines 3880
