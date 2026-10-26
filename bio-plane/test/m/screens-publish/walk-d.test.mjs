@@ -60,7 +60,7 @@ test("R6 D-M1 the published page names a document its unrated sentence lists by 
 });
 
 test("R6 D-M6 a case that declared no bar draws the sentence of its bar, never the sentence of a standard it was held to", async () => {
-  const NOBAR = "This case declares no required evidentiary strength.", HELD = "the standard of evidence this case was held to";
+  const NOBAR = "This case declares no required evidentiary strength.", HELD = "The bar sentence of a case that has one.";
   const e = { ...PUBLISHED_CASE, bar: { declared: false, source: "none", capture: null, connection: null, detail: NOBAR }, bar_detail: HELD };
   const p = await show(e);
   assert.ok(text(p, main(p).querySelector("[data-bar-none]")).includes(NOBAR) && !text(p).includes(HELD), "the bar's own sentence");
