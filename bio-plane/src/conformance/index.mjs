@@ -1057,19 +1057,24 @@ export class Conformance {
       x.outcome = outcomes[0];
     }
     /* R27 (K1723): bindingness read, never taken from the input; a noncompliant outcome only against a standard that
-       binds the body, an undetermined bindingness refused the same until a member settles it in `standards` */
+       binds the body: a benchmark is `STANDARD_NOT_BINDING`, an undetermined bindingness `STANDARD_BINDING_UNDETERMINED`
+       (R43) until a member settles it in `standards` */
     const bindings = this.#bindings(s.standards.map((x) => x.standard), a.act, viewer);
     for (const x of s.standards) {
       const b = bindings.get(x.standard);
       Object.assign(x, { body: b.body, binds: b.binds, binds_basis: { why: b.why, rests_on: b.rests_on, label: b.label },
                          label: b.label });
       /* DEC-49 REGION is-standard-binding */
-      if (x.outcome === "noncompliant" && b.binds !== true)
-        return refusal("STANDARD_NOT_BINDING", b.binds === false
-          ? `${x.standard} does not bind ${b.body} (${b.label}), so the act is not found noncompliant against it: record `
-            + "the comparison as a benchmark (below, slower than, or above). Nothing was written."
-          : localize("conformance.index.whether_standard_binds_v1_is", "whether {standard} binds {v1} is undetermined ({v2}), and an act is found noncompliant only against a standard that binds its body: a member settles it in standards first. Nothing was written.", { standard: String(x.standard), v1: String(b.body ?? "the body"), v2: String(b.why ?? "not recorded") }), { standard: x.standard, body: b.body, binds: b.binds });
+      if (x.outcome === "noncompliant" && b.binds === false)
+        return refusal("STANDARD_NOT_BINDING", `${x.standard} does not bind ${b.body} (${b.label}), so the act is not found noncompliant against it: record `
+            + "the comparison as a benchmark (below, slower than, or above). Nothing was written.", { standard: x.standard, body: b.body, binds: b.binds });
       /* END DEC-49 REGION is-standard-binding */
+      /* R43 (walk E C2a): a bindingness Civicsmith cannot tell is its own refusal, never read as a benchmark */
+      /* DEC-49 REGION is-standard-binding-determined */
+      if (x.outcome === "noncompliant" && b.binds !== true)
+        return refusal("STANDARD_BINDING_UNDETERMINED",
+          localize("conformance.index.whether_standard_binds_v1_is", "whether {standard} binds {v1} is undetermined ({v2}), and an act is found noncompliant only against a standard that binds its body: a member settles it in standards first. Nothing was written.", { standard: String(x.standard), v1: String(b.body ?? "the body"), v2: String(b.why ?? "not recorded") }), { standard: x.standard, body: b.body, binds: b.binds });
+      /* END DEC-49 REGION is-standard-binding-determined */
     }
     const said = (Array.isArray(questions) ? questions : []).map((x) => (isObj(x) ? x.question : x));
     const worded = this.#benchmarkWords([...r.rows.map((x) => ({ standard: x.standard, texts: [x.requires, x.measure ? null : x.did] })),
