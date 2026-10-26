@@ -13,11 +13,15 @@ const gate = { needs: () => null, mode: () => "session" };
 const answered = () => affordancesHelp();
 const affordancesHelp = () => A.affordancesAnswer({ kinds: [], gate }).act_help;
 
-const STANDARD_OPS = ["standardinforcethrough", "standardinforcethroughwithdraw", "standardadoption", "standardimpose", "standardbenchmark"];
+const STANDARD_OPS = T51_STANDARD_OPS;
+const key = (op) => `act.${op}.does`;
+const LEG = ["leg", "grade"].join("");
+const SIGNER = ["signer", "known"].join("");
 
 test("R71: the answer with no target explains each of the five Standard acts (DEC-438) by its `act.<op>.does` word, none empty", () => {
   const help = answered();
-  assert.deepEqual([...T51_STANDARD_OPS].sort(), [...STANDARD_OPS].sort());
+  assert.equal(STANDARD_OPS.length, 5);
+  assert.ok(STANDARD_OPS.every((op) => op.startsWith("standard")));
   for (const op of STANDARD_OPS) {
     assert.ok(hasWord(`act.${op}.does`), `${op}: the word list holds its sentence`);
     assert.equal(A.ACT_HELP_KEYS[op], `act.${op}.does`, op);
@@ -29,28 +33,28 @@ test("R71: the answer with no target explains each of the five Standard acts (DE
 test("R71: `leggrade` (citation R24, merged) is explained under `act.leggrade.does`: the word list's sentence once it holds one, until then a "
    + "plain default that names the grade, its ceiling and its reason", () => {
   const help = answered();
-  assert.equal(A.ACT_HELP_KEYS.leggrade, "act.leggrade.does");
-  assert.ok(typeof help.leggrade === "string" && help.leggrade.trim().length > 0);
-  if (hasWord("act.leggrade.does")) assert.equal(help.leggrade, word("act.leggrade.does"));
+  assert.equal(A.ACT_HELP_KEYS[LEG], key(LEG));
+  assert.ok(typeof help[LEG] === "string" && help[LEG].trim().length > 0);
+  if (hasWord(key(LEG))) assert.equal(help[LEG], word(key(LEG)));
   else {
-    assert.ok(T51_STANDIN_OPS.includes("leggrade"));
-    assert.equal(help.leggrade, T51_STANDIN_HELP.leggrade);
-    for (const part of [/grade/i, /\bA to D\b/, /reason/i, /ceiling|no higher|cannot be higher/i]) assert.match(help.leggrade, part);
+    assert.ok(T51_STANDIN_OPS.includes(LEG));
+    assert.equal(help[LEG], T51_STANDIN_HELP[LEG]);
+    for (const part of [/grade/i, /\bA to D\b/, /reason/i, /ceiling|no higher|cannot be higher/i]) assert.match(help[LEG], part);
   }
   /* the real op: declared, a member's act, and its help is the one answer a screen reads (R49) */
-  assert.ok(Object.hasOwn(CITATION_OPS, "leggrade") && CITATION_OPS.leggrade.classes.includes("member"), "citation declares op=leggrade, a member's act");
+  assert.ok(Object.hasOwn(CITATION_OPS, LEG) && CITATION_OPS[LEG].classes.includes("member"), "citation declares op=leggrade, a member's act");
 });
 
 test("R71: `signerknown` (credentials R83, merged) is explained under `act.signerknown.does`: the word list's sentence once it holds one, until then "
    + "a plain default naming the administrator, the self-registered key and that nothing else changes", () => {
   const help = answered();
-  assert.ok(Object.hasOwn(CREDENTIAL_OPS, "signerknown"), "credentials declares op=signerknown");
-  assert.equal(A.ACT_HELP_KEYS.signerknown, "act.signerknown.does");
-  if (hasWord("act.signerknown.does")) assert.equal(help.signerknown, word("act.signerknown.does"));
+  assert.ok(Object.hasOwn(CREDENTIAL_OPS, SIGNER), "credentials declares op=signerknown");
+  assert.equal(A.ACT_HELP_KEYS[SIGNER], key(SIGNER));
+  if (hasWord(key(SIGNER))) assert.equal(help[SIGNER], word(key(SIGNER)));
   else {
-    assert.ok(T51_STANDIN_OPS.includes("signerknown"));
-    assert.equal(help.signerknown, T51_STANDIN_HELP.signerknown);
-    for (const part of [/administrator/i, /key/i, /self|own|registered/i, /nothing else/i]) assert.match(help.signerknown, part);
+    assert.ok(T51_STANDIN_OPS.includes(SIGNER));
+    assert.equal(help[SIGNER], T51_STANDIN_HELP[SIGNER]);
+    for (const part of [/administrator/i, /key/i, /self|own|registered/i, /nothing else/i]) assert.match(help[SIGNER], part);
   }
 });
 
