@@ -655,4 +655,10 @@ Neither is fixed by adding `holdsplaced` to the read ground: that would break th
 3. `op-capabilities`: action-holds' record asks for a null row for `holdsplaced`, as for `actionholdpreview`. The row is already supplied by the `sessionread` kind (the R3 composition test passes with `holdsplaced` in it), so no hand row is needed; the record's ask is satisfied by the kind. Flagging it so BOB can confirm.
 4. `screens-action` (hold.mjs): sends `from` to the preview and release, and reads `holdsplaced`. Not mine.
 
+**Impact run (after the commit, origin/tranche/T51 to HEAD).** `build/plan/impact.mjs` names 19 modules, 597 test files (no shared table changed; op-declarations 25 of 25). I ran the 572 test files of the 18 other modules; the run hit my 590-second limit and stopped partway, so it is incomplete. Of what ran (1095 tests: 649 pass, 4 fail), three failures are outside op-declarations and I did not establish whether they predate this change:
+- `control-plane` `t48-door.test.mjs:149`, R92: `TypeError: Cannot set properties of null (setting 'env')` in `ai-use/index.mjs:1001`, reached through `aiUseOps`. Not in any file I touched.
+- `capture` R101 (`captureseenin`, the R2/R26/R29 door check): failing; not in any file I touched.
+- `control-plane` `r8-seam-capture.mjs:206`, R8 (G109): the capture-title fallback row; not in any file I touched.
+- **Caused by this change:** `control-plane` `t51-door.test.mjs:22`, R110: `assert.equal(R110_STAMPED.length, 10)` got 11. That test derives its list from `op-declarations/t51.mjs`'s T51 shares, so `holdsplaced` (a stamped `viewer` read) adds one. It is control-plane's test, so I did not edit it; REPORT to BOB for control-plane to move its pin to 11 (or to name `holdsplaced` as R111-style, as it decides).
+
 **Size (session_012VgFd3nsMnWwNKMK8gzKu2): test runs 7, module lines 3470 src and 6938 test**
