@@ -1,4 +1,4 @@
-/* screens-entry R6 (and R8–R11, R14–R20, R22, R23, R26, R30, R33): `setup`, "Set up your team's Civicsmith", in the setup frame at
+/* screens-entry R6 (and R8–R11, R14–R20, R22, R23, R26, R30, R33, R34): `setup`, "Set up your team's Civicsmith", in the setup frame at
    `/app/setup` (the shell forwards `/#boot=` here and hands the one-time password as `view.fragment.boot`, taken from
    the address on load). Drawn as the design draws it (R22, DEC-279): numbered parts that open and close (`.cs-part`),
    each with its name, one line of what it is for and its state; choices (`.cs-choice`) that open only what they need;
@@ -19,6 +19,10 @@
    radios and checkboxes, watched on the page's clock (`cs.later`) as `join` watches its handle, and the screen redrawn
    when one changes. Self-contained (interface-shell R21). */
 
+/* R34: the fact the team's time zone is stated on (local-facts R21) and the zones the design names (`label.timezones.<id>`) */
+const ZONE_PATH = "@team/time_zone";
+const ZONES = ["America/Los_Angeles", "America/Denver", "America/Phoenix", "America/Chicago", "America/New_York", "America/Anchorage", "Pacific/Honolulu"];
+
 export const setup = {
   id: "setup",
 
@@ -34,6 +38,8 @@ export const setup = {
       // R19: "Show my recovery codes" only before the founder has seen hers
       codes: { op: "recoverycodesstate" },
       profiles: { op: "profiles" },
+      // R34: the team's own time zone as it governs (local-facts R21), on the fact's own path
+      zone: { op: "factstatus", query: { path: ZONE_PATH } },
       place: { op: "placewantedstate" },
       offices: { op: "entitieskind", query: { kind: "office", limit: "500" }, empty: (v) => !(v && Array.isArray(v.entities) && v.entities.length) },
       keepaway: { op: "aikeepawaystate" },
@@ -244,8 +250,30 @@ export const setup = {
         + `<div class="mk-acts">${cs.act("groupdomainset")}</div>` + domainFile() : ""),
       { open: states.group !== "done" }));
 
+    // R34: the team's time zone, a step of part 3. Done once the team itself has stated it (the fact governs by a correction);
+    // a zone only a place gives is offered as the choice, not counted as stated. A stated zone is changed under Settings.
+    const zoneName = (z) => {
+      if (ZONES.includes(z)) return W("label.timezones." + z);
+      let generic = "";
+      try { const f = new Intl.DateTimeFormat("en", { timeZone: z, timeZoneName: "longGeneric" }).formatToParts(new Date()).find((x) => x.type === "timeZoneName"); generic = f ? f.value : ""; } catch (e) { generic = ""; }
+      const city = String(z).split("/").pop().replace(/_/g, " ");
+      return E(generic ? generic + " (" + city + ")" : city);
+    };
+    const zoneStep = () => `<div data-zone>` + cs.state(data.zone, (z) => {
+      const gov = z && z.governs && typeof z.governs.value === "string" ? z.governs : null;
+      const stated = !!gov && gov.origin === "corrected";
+      const head = `<p class="mk-note"><b>${W(S + "zone")}</b>${stated ? ` <span class="cs-due" data-due="met" data-state="zonedone">${W(S + "state.done")}</span>` : ""}</p><p class="mk-note">${W(S + "zone.help")}</p>`;
+      if (stated) return head + `<p data-state="timezone">${W("screen.group.timezone.governs.local", { zone: { html: zoneName(gov.value) } })}</p>`;
+      const cur = gov ? gov.value : ZONES[0];
+      const options = [...ZONES.map((x) => [x, "label.timezones." + x]), ...(ZONES.includes(cur) ? [] : [{ value: cur, text: String(zoneName(cur)).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) }])];
+      return head + cs.choice("su-zone", "screen.group.timezone", options, { value: cur })
+        + cs.field("su-zone-how", "screen.group.timezone.how", { autocomplete: "off" })
+        + cs.field("su-zone-src", "screen.group.timezone.source", { help: "screen.group.timezone.source.help", autocomplete: "off" })
+        + `<div class="mk-acts">${cs.act("factconfirm", { label: "act.factconfirm.label.group" })}</div>`;
+    }) + "</div>";
+
     // 3 Where your team works: the place chosen among those Civicsmith knows, or "Somewhere else", which opens the place
-    // wanted
+    // wanted; then the team's time zone (R34)
     const known = [...active, ...choices.filter((c) => !active.some((a) => a.id === c.id))];
     const place = choice("su-pick", active.length ? String(active[0].id) : known.length ? "" : "other");
     out.push(part(3, "places", S + "places", S + "part.places.why", states.places, cs.state(data.profiles, () =>
@@ -255,7 +283,7 @@ export const setup = {
       + `<p class="mk-note">${W(S + "places.help")}</p>`
       + (place === "other" ? (wanted ? `<p>${W(S + "place.wanted.now", { name: wanted })}</p>` : "")
         + cs.field("su-place", S + "place.wanted", { help: S + "place.wanted.help", value: wanted }) + `<div class="mk-acts">${cs.act("placewanted")}</div>` : "")
-      + `<div class="mk-acts">${cs.act("profilesset")}</div>`)));
+      + `<div class="mk-acts">${cs.act("profilesset")}</div>`) + zoneStep()));
 
     // 4 The officials you deal with: the place's public offices, or, for a place not yet known, offices added by hand
     const placeName = active.length ? active.map((x) => x.name || x.id).join(", ") : "";
@@ -461,6 +489,13 @@ export const setup = {
         view.ui.at = "places";
         const id = String(cs.value("su-pick") || (view.ui.shown || {})["su-pick"] || "");
         return { body: { profiles: id && id !== "other" ? [id] : [] } };
+      } },
+    // R34: the team's own time zone, stated on its own path with how and where it was checked (local-facts R21; the owner
+    // refuses a value that is no zone, and a statement without them); the page composes nothing of the fact
+    { op: "factconfirm", rereads: ["zone"],
+      send(view, el, cs) {
+        view.ui.at = "places";
+        return { body: { act: "correct", value: String(cs.value("su-zone") || "").trim(), how: String(cs.value("su-zone-how") || "").trim(), source: String(cs.value("su-zone-src") || "").trim(), path: ZONE_PATH } };
       } },
     { op: "placewanted", rereads: ["place"],
       send(view, el, cs) { view.ui.at = "places"; const name = String(cs.value("su-place") || "").trim(); return name ? { body: { name } } : { refuse: "screen.setup.place.empty" }; } },

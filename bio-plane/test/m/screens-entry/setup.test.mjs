@@ -46,6 +46,8 @@ async function returned({ env, after } = {}) {
 const partOf = (o, key) => all(o.tree, (e) => e.attrs["data-part"] === key)[0];
 const stateOf = (o, key) => partOf(o, key).attrs["data-state"];
 const isOpen = (o, key) => "open" in partOf(o, key).attrs;
+/* R34: acts `setup` draws that the design's registry has not yet listed for it */
+const OWED_TO_REGISTRY = ["factconfirm"];
 const PARTS = ["claim", "group", "places", "offices", "assistant", "court", "security", "admins"];
 
 test("R6 R17 the claim: the one-time password filled from #boot=, then 'Choose your handle', then the founder's password twice; only the claim is offered before a session", async () => {
@@ -293,6 +295,9 @@ test("R6 after the claim every part is the registry's act for it, each drawn onc
   const parts = (REG.screens || REG).find((r) => r.id === "setup").acts.map((x) => String(x.op).replace(/^owed:/, "").split(/\s/)[0])
     .filter((op) => !["claim", "recoverycodesissue", "founderhandleset"].includes(op));
   assert.ok(parts.length >= 10);
+  /* R34: DEC-439 (D-B1) gives the time zone step its words and names `factconfirm`, but the registry's `setup` does not yet list the act
+     (REPORTed to BOB for the design); the union makes this hold the day the registry lists it, with the same set */
+  parts.push(...OWED_TO_REGISTRY);
   // with the place known and the assistant paid for by the team: all but `placewanted` (a place not known) and
   // `aikeepaway` (keeping AI out), each drawn when chosen
   const drawn = actOps(o.tree);
@@ -914,4 +919,59 @@ test("R33 control: no scanner part draws neither the checked sentence nor a no-s
   const st = lost.requests.find((r) => r.op === "scanstatus").answer;
   assert.ok(!securityText(lost).includes(said("screen.setup.security.scanner")), "unreachable");
   assert.ok(st);
+});
+
+/* R34: the team's time zone, as the plane holds it. The zone the step writes is read back where `jurisdictions.governingZone` reads it
+   (record-core's setting `team_time_zone`, local-facts R22), never composed by the page. */
+const zoneHeld = (world) => { const r = world.sql.exec("SELECT value FROM settings WHERE name='team_time_zone' ORDER BY rowid DESC LIMIT 1").toArray()[0]; return r ? JSON.parse(r.value) : null; };
+const zoneMark = (o) => all(o.tree, (e) => e.attrs["data-state"] === "zonedone");
+const ZONE = { "su-zone": "America/Denver", "su-zone-how": "how-typed-by-the-founder", "su-zone-src": "source-typed-by-the-founder" };
+
+test("R34 setup carries the step screen.setup.zone with its help; its act writes the zone the plane then holds, and the step is done", async () => {
+  const o = await claimed();
+  has(o, "screen.setup.zone"); has(o, "screen.setup.zone.help");
+  assert.ok(actOps(o.tree).includes("factconfirm"), "the step's act is drawn");
+  assert.equal(zoneMark(o).length, 0, "no zone stated: the step is not done");
+  assert.equal(zoneHeld(o.world), null);
+  const r = await o.press("factconfirm", { values: ZONE });
+  assert.equal(r.refused, false);
+  assert.deepEqual(r.sent[0].body, { act: "correct", value: "America/Denver", how: ZONE["su-zone-how"], source: ZONE["su-zone-src"], path: "@team/time_zone" });
+  assert.equal(zoneHeld(o.world), "America/Denver", "the setting jurisdictions.governingZone reads");
+  assert.equal(zoneMark(o).length, 1, "a confirmed zone draws the step done");
+  has(o, "screen.group.timezone.governs.local", { zone: said("label.timezones.America/Denver") });
+});
+
+test("R34 control: a zone confirmed before draws the step done and offers no act; a zone only a place gives, or none, is not done; a refusal sends nothing more", async () => {
+  const done = await returned({ after: ({ world, as }) => act(world, as, "factconfirm", { body: { act: "correct", value: "America/Chicago", how: "how-given", source: "source-given", path: "@team/time_zone" } }) });
+  assert.equal(zoneMark(done).length, 1);
+  has(done, "screen.setup.zone");
+  assert.ok(!actOps(done.tree).includes("factconfirm"), "a stated zone is changed under Settings");
+  // a place gives a zone, but the team has not stated it
+  const placed = await returned({ after: ({ world, as }) => act(world, as, "profilesset", { body: { profiles: [PLACE] } }) });
+  assert.equal(zoneMark(placed).length, 0);
+  assert.ok(actOps(placed.tree).includes("factconfirm"));
+  assert.equal(zoneHeld(placed.world), null, "a place's zone is no stated team zone");
+  // how it was checked is required by the owner: nothing is written, and the step stays
+  const o = await claimed();
+  const r = await o.press("factconfirm", { values: { ...ZONE, "su-zone-how": "" } });
+  assert.equal(r.refused, true);
+  assert.equal(zoneHeld(o.world), null);
+  assert.equal(zoneMark(o).length, 0);
+  assert.deepEqual(o.requests.filter((x) => x.op === "factconfirm").length, 1, "one request, no more");
+  // a read that fails draws the step failed, never done
+  for (const fail of [{ ok: false }, "none"]) {
+    const f = await open("setup", { world: o.world, as: o.as, table: { factstatus: fail } });
+    assert.equal(zoneMark(f).length, 0, JSON.stringify(fail));
+  }
+});
+
+test("R34 the step sits in part 3, 'Where your team works', so skipping that part skips it and sends nothing", async () => {
+  const o = await claimed();
+  assert.ok(textOf(partOf(o, "places")).includes(said("screen.setup.zone")), "the step is drawn inside part 3");
+  assert.ok(!textOf(partOf(o, "group")).includes(said("screen.setup.zone")));
+  const before = o.requests.length;
+  o.fields["su-skip-places"] = true;
+  await o.tick(250);
+  assert.equal(partOf(o, "places").attrs["data-skipped"], "true");
+  assert.equal(o.requests.length, before, "skipping sends nothing");
 });
