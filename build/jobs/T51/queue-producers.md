@@ -433,3 +433,7 @@ Size (session_011RyaZpwVopVEEDcMoEdk5n): test runs 9, module lines 3706
 **Applied now:** `bio-plane/src/queue-producers/index.mjs` `#obligationsSignerSelfRegistered`: a key whose row carries `known_by` (credentials R83) mints no `signer-self-registered` item (docstring updated). **Not yet testable:** credentials R83 (`signerKnown`, `known_by`) has not merged (CREDENTIALS #33 running), so `action.test.mjs` holds `test.todo("R55: …")` at the end, naming R55; the red-then-green test against the real code waits for BOB's CHANGE. Module tests: 163 run, 162 pass, 0 fail, 1 todo. `checks/run.mjs`: no finding in my files; ownership 0.
 
 Size (session_01R4WZud7bMnBLMMBMgTAd8D): test runs 3, module lines 0
+
+## J24 · REPORT
+
+R55 applied in the producer (a row with known_by mints no signer-self-registered item; index.mjs #obligationsSignerSelfRegistered). Its test is test.todo naming R55 in action.test.mjs: credentials R83 (signerKnown, known_by) is not on the tranche yet, so no red-then-green is possible. Module tests 162 pass, 0 fail, 1 todo; run.mjs and ownership clean. Waiting on your CHANGE when CREDENTIALS #33 merges; then I write the test against its real code and post COMPLETE.
