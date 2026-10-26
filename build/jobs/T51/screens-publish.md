@@ -1489,3 +1489,17 @@ Size (session_01QdkoEiuG83wpMkf86sUqDW): test runs 9, module lines 3754 src + 52
 ## J47 · REPORT
 
 REPORT, correction to J46. J46 (COMPLETE) was posted with the whole job record file as its body by mistake. The COMPLETE for fix round 11 is the section "J45 · COMPLETE · re B51" in build/jobs/T51/screens-publish.md at f51d4899d4 (pushed on job/T51/screens-publish). Its counts: suite 295 tests, 293 pass, 0 fail, 2 todo; checks format, architecture, coverage, ownership 0 failures; fixtures list 35 (named in the record, Fix round 11).
+
+## J48 · REPORT
+
+REPORT (SCREENS-PUBLISH #24, fix round 10, re B54): 31 of the 35 op-table lines are re-pointed to the providers' published fixtures; the module suite is green (296 tests, 294 pass, 2 todo as before). Four things are not mine to finish, each named with its provider and the state it lacks:
+
+1. modules.json `uses` (BOB's): screens-publish's tests now import the published fixtures of entities, capture, citation, sources, credentials and wizard-scripts (bio-plane/test/m/screens-publish/fixtures.mjs `openDefaults`, `provided`); `checks/architecture.mjs` fails 8 lines on exactly these six missing `uses`. Please add entities, capture, citation, sources, credentials, wizard-scripts (and action-holds if its fixture is used for item 3 below).
+
+2. CASE-INPUTS (earlier than me): its published `casedetails` (fixtures.mjs:70) states only `area` and `contact`; `casedetailspublic` (:90) likewise. Two states my R57 tests need are not published: a `related` standing with works (relations builds_on and disagrees_with, so the relation words `screen.case-editor.details.rel.*` are drawn from a real answer), and `relationships: {none: true}` stated (the published page's `screen.case-editor.details.ties.none`). They stay hand-built in one test, fr30b.test.mjs:425 (casedetails) and :427 (casedetailspublic), until CASE-INPUTS publishes them.
+
+3. ACTION-HOLDS (earlier than me): `holdsDueAnswer` (fixtures.mjs:13) lists an action arrival only (`arrived: {action, ord}`). The docket's pressure section reads `holdsdue` for a docket entry's legal mark (`arrived: {docket_entry, case}`, action-holds/index.mjs:761) and draws "no hold placed" for it. The state lacking: the real `holdsdue` answer listing one docket-entry mark (and the same world after the hold is placed, items empty). Hand-built in t51.test.mjs:76 (`DUE`) until it is published.
+
+4. CITATION `citeimported` (fr30b.test.mjs:235, :247): waits for CASE-IMPORT #22's merge, as B54 says; re-pointed when you CHANGE me.
+
+Found while re-pointing, no fix needed in my paths: the real `writinghelp` refusals (WRITING_HELP_DRAFT_HELD, AGENT_WORKER_UNBOUND) are drawn in their own words on the case editor, the docket and the imported page; the tests for them (case-editor.test.mjs:86, fr30.test.mjs:249, fr30b.test.mjs:379) now assert that, and the drafted-text cases are removed (K5212).
